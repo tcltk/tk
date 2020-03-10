@@ -107,7 +107,7 @@ DupTextIndexInternalRep(
     TkSizeT epoch;
     TkTextIndex *dupIndexPtr, *indexPtr;
 
-    dupIndexPtr = ckalloc(sizeof(TkTextIndex));
+    dupIndexPtr = (TkTextIndex *)ckalloc(sizeof(TkTextIndex));
     indexPtr = GET_TEXTINDEX(srcPtr);
     epoch = GET_INDEXEPOCH(srcPtr);
 
@@ -139,7 +139,7 @@ UpdateStringOfTextIndex(
 
     len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
 
-    objPtr->bytes = ckalloc(len + 1);
+    objPtr->bytes = (char *)ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
     objPtr->length = len;
 }
@@ -176,7 +176,7 @@ MakeObjIndex(
 				 * position. */
     const TkTextIndex *origPtr)	/* Pointer to index. */
 {
-    TkTextIndex *indexPtr = ckalloc(sizeof(TkTextIndex));
+    TkTextIndex *indexPtr = (TkTextIndex *)ckalloc(sizeof(TkTextIndex));
 
     indexPtr->tree = origPtr->tree;
     indexPtr->linePtr = origPtr->linePtr;
@@ -477,7 +477,7 @@ TkTextMakeCharIndex(
     int charIndex,		/* Index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
-    register TkTextSegment *segPtr;
+    TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
     int ch;
@@ -816,7 +816,7 @@ GetIndex(
 	    hPtr = Tcl_FindHashEntry(&sharedPtr->tagTable, tagName);
 	    *p = '.';
 	    if (hPtr != NULL) {
-		tagPtr = Tcl_GetHashValue(hPtr);
+		tagPtr = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	    }
 	}
 
@@ -832,7 +832,7 @@ GetIndex(
 	    if (tagPtr == textPtr->selTagPtr) {
 		tagName = "sel";
 	    } else if (hPtr != NULL) {
-		tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
+		tagName = (const char *)Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
 	    }
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "text doesn't contain any characters tagged with \"%s\"",
@@ -1151,7 +1151,7 @@ ForwBack(
 				 * or "-" that starts modifier. */
     TkTextIndex *indexPtr)	/* Index to update as specified in string. */
 {
-    register const char *p, *units;
+    const char *p, *units;
     char *end;
     int count, lineIndex, modifier;
     size_t length;
@@ -1499,7 +1499,7 @@ TkTextIndexForwChars(
 	return;
     }
     if (checkElided) {
-	infoPtr = ckalloc(sizeof(TkTextElideInfo));
+	infoPtr = (TkTextElideInfo *)ckalloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
     }
 
@@ -1767,7 +1767,7 @@ TkTextIndexCount(
     seg2Ptr = TkTextIndexToSeg(indexPtr2, &maxBytes);
 
     if (checkElided) {
-	infoPtr = ckalloc(sizeof(TkTextElideInfo));
+	infoPtr = (TkTextElideInfo *)ckalloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, indexPtr1, infoPtr);
     }
 
@@ -1844,9 +1844,9 @@ TkTextIndexCount(
 
 	    if (segPtr->typePtr == &tkTextCharType) {
 		int byteLen = segPtr->size - byteOffset;
-		register unsigned char *str = (unsigned char *)
+		unsigned char *str = (unsigned char *)
 			segPtr->body.chars + byteOffset;
-		register int i;
+		int i;
 
 		if (segPtr == seg2Ptr) {
 		    if (byteLen > (maxBytes - byteOffset)) {
@@ -2025,7 +2025,7 @@ TkTextIndexBackChars(
 	return;
     }
     if (checkElided) {
-	infoPtr = ckalloc(sizeof(TkTextElideInfo));
+	infoPtr = (TkTextElideInfo *)ckalloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
     }
 
@@ -2225,7 +2225,7 @@ StartEnd(
 {
     const char *p;
     size_t length;
-    register TkTextSegment *segPtr;
+    TkTextSegment *segPtr;
     int modifier;
 
     /*

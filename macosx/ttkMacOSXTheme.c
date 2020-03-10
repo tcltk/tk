@@ -169,7 +169,7 @@ static inline CGRect BoxToRect(
  */
 
 static Ttk_StateTable ThemeStateTable[] = {
-    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
+    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeStateUnavailable, TTK_STATE_DISABLED, 0},
     {kThemeStatePressed, TTK_STATE_PRESSED, 0},
     {kThemeStateInactive, TTK_STATE_BACKGROUND, 0},
@@ -257,6 +257,7 @@ static void GetBackgroundColor(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+    (void)context;
 
     while (masterPtr && masterPtr->privatePtr) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
@@ -1046,6 +1047,7 @@ static void DrawDarkSeparator(
     NSColor *fillColor = [NSColor colorWithColorSpace: deviceRGB
 	components: fill
 	count:4];
+    (void)tkwin;
 
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
     CGContextFillRect(context, bounds);
@@ -1170,6 +1172,7 @@ static void DrawDarkListHeader(
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
+    (void)tkwin;
 
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
@@ -1231,7 +1234,7 @@ static ThemeButtonParams
     ListHeaderParams =
 {kThemeListHeaderButton, kThemeMetricListHeaderHeight};
 static Ttk_StateTable ButtonValueTable[] = {
-    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
+    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
@@ -2089,10 +2092,10 @@ static void TrackElementDraw(
 {
     TrackElementData *data = clientData;
     TrackElement *elem = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
 
-    Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, elem->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
@@ -2227,10 +2230,10 @@ static void PbarElementDraw(
     Ttk_State state)
 {
     PbarElement *pbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL, phase = 0;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL, phase = 0;
     double value = 0, maximum = 100, factor;
 
-    Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
@@ -2302,10 +2305,10 @@ static void TroughElementSize(
     Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	*minHeight = thickness;
@@ -2343,13 +2346,13 @@ static void TroughElementDraw(
     Ttk_State state)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *troughColor;
     CGFloat *rgba = TkMacOSXInDarkMode(tkwin) ? darkTrough : lightTrough;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	bounds = CGRectInset(bounds, 0, 1);
     } else {
@@ -2385,9 +2388,9 @@ static void ThumbElementSize(
     Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_VERTICAL) {
 	*minHeight = 18;
 	*minWidth = 8;
@@ -2406,9 +2409,9 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
 
     /*
      * In order to make ttk scrollbars work correctly it is necessary to be

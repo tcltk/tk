@@ -422,6 +422,7 @@ DeleteBitmap(
     Display *display)		/* Display containing window for canvas. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if (bmapPtr->bitmap != None) {
 	Tk_FreeBitmap(display, bmapPtr->bitmap);
@@ -680,6 +681,7 @@ BitmapToPoint(
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = bmapPtr->header.x1;
     y1 = bmapPtr->header.y1;
@@ -738,6 +740,7 @@ BitmapToArea(
 				 * area. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= bmapPtr->header.x1)
 	    || (rectPtr[0] >= bmapPtr->header.x2)
@@ -893,6 +896,7 @@ BitmapToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;

@@ -244,7 +244,7 @@ ConvertPoints(
 	if (tsdPtr->winPoints != NULL) {
 	    ckfree(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = ckalloc(sizeof(POINT) * npoints);
+	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -987,6 +987,7 @@ XFillPolygon(
     HPEN pen;
     TkWinDCState state;
     HDC dc;
+    (void)shape;
 
     if (d == None) {
 	return BadDrawable;
@@ -1407,6 +1408,7 @@ TkScrollWindow(
 {
     HWND hwnd = TkWinGetHWND(Tk_WindowId(tkwin));
     RECT scrollRect;
+    (void)gc;
 
     scrollRect.left = x;
     scrollRect.top = y;
@@ -1483,6 +1485,8 @@ TkpDrawHighlightBorder(
     int highlightWidth,
     Drawable drawable)
 {
+    (void)bgGC;
+
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
 

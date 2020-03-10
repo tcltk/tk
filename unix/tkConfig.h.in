@@ -91,9 +91,6 @@
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
-/* Do we have XkbKeycodeToKeysym? */
-#undef HAVE_XKBKEYCODETOKEYSYM
-
 /* Is XScreenSaver available? */
 #undef HAVE_XSS
 
@@ -181,9 +178,6 @@
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
-
-/* Is XKeycodeToKeysym deprecated? */
-#undef XKEYCODETOKEYSYM_IS_DEPRECATED
 
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE

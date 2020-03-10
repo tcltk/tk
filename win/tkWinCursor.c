@@ -100,6 +100,7 @@ TkGetCursorByName(
     TkWinCursor *cursorPtr;
     int argc;
     const char **argv = NULL;
+    (void)tkwin;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -113,7 +114,7 @@ TkGetCursorByName(
 	goto badCursorSpec;
     }
 
-    cursorPtr = ckalloc(sizeof(TkWinCursor));
+    cursorPtr = (TkWinCursor *)ckalloc(sizeof(TkWinCursor));
     cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
     cursorPtr->winCursor = NULL;
     cursorPtr->system = 0;
@@ -201,6 +202,16 @@ TkCreateCursorFromData(
     XColor fgColor,		/* Foreground color for cursor. */
     XColor bgColor)		/* Background color for cursor. */
 {
+    (void)tkwin;
+    (void)source;
+    (void)mask;
+    (void)width;
+    (void)height;
+    (void)xHot;
+    (void)yHot;
+    (void)fgColor;
+    (void)bgColor;
+
     return NULL;
 }
 
@@ -225,6 +236,8 @@ void
 TkpFreeCursor(
     TkCursor *cursorPtr)
 {
+    (void)cursorPtr;
+
     /* TkWinCursor *winCursorPtr = (TkWinCursor *) cursorPtr; */
 }
 

@@ -184,7 +184,8 @@ ImgBmapCreate(
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
-    BitmapMaster *masterPtr = ckalloc(sizeof(BitmapMaster));
+    BitmapMaster *masterPtr = (BitmapMaster *)ckalloc(sizeof(BitmapMaster));
+    (void)typePtr;
 
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
@@ -239,7 +240,7 @@ ImgBmapConfigureMaster(
 {
     BitmapInstance *instancePtr;
     int maskWidth, maskHeight, dummy1, dummy2;
-    const char **argv = ckalloc((objc+1) * sizeof(char *));
+    const char **argv = (const char **)ckalloc((objc+1) * sizeof(char *));
 
     for (dummy1 = 0; dummy1 < objc; dummy1++) {
 	argv[dummy1] = Tcl_GetString(objv[dummy1]);
@@ -620,7 +621,7 @@ TkGetBitmapData(
 	goto error;
     }
     numBytes = ((width+7)/8) * height;
-    data = ckalloc(numBytes);
+    data = (char *)ckalloc(numBytes);
     for (p = data; numBytes > 0; p++, numBytes--) {
 	if (NextBitmapWord(&pi) != TCL_OK) {
 	    goto error;
@@ -757,7 +758,7 @@ ImgBmapCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const bmapOptions[] = {"cget", "configure", NULL};
-    BitmapMaster *masterPtr = clientData;
+    BitmapMaster *masterPtr = (BitmapMaster *)clientData;
     int index;
 
     if (objc < 2) {
@@ -819,7 +820,7 @@ ImgBmapGet(
     ClientData masterData)	/* Pointer to our master structure for the
 				 * image. */
 {
-    BitmapMaster *masterPtr = masterData;
+    BitmapMaster *masterPtr = (BitmapMaster *)masterData;
     BitmapInstance *instancePtr;
 
     /*
@@ -840,7 +841,7 @@ ImgBmapGet(
      * the image.
      */
 
-    instancePtr = ckalloc(sizeof(BitmapInstance));
+    instancePtr = (BitmapInstance *)ckalloc(sizeof(BitmapInstance));
     instancePtr->refCount = 1;
     instancePtr->masterPtr = masterPtr;
     instancePtr->tkwin = tkwin;
@@ -894,7 +895,7 @@ ImgBmapDisplay(
 				/* Coordinates within drawable that correspond
 				 * to imageX and imageY. */
 {
-    BitmapInstance *instancePtr = clientData;
+    BitmapInstance *instancePtr = (BitmapInstance *)clientData;
     int masking;
 
     /*
@@ -948,7 +949,7 @@ ImgBmapFree(
 				 * instance to be displayed. */
     Display *display)		/* Display containing window that used image. */
 {
-    BitmapInstance *instancePtr = clientData;
+    BitmapInstance *instancePtr = (BitmapInstance *)clientData;
     BitmapInstance *prevPtr;
 
     if (instancePtr->refCount-- > 1) {
@@ -1009,7 +1010,7 @@ ImgBmapDelete(
     ClientData masterData)	/* Pointer to BitmapMaster structure for
 				 * image. Must not have any more instances. */
 {
-    BitmapMaster *masterPtr = masterData;
+    BitmapMaster *masterPtr = (BitmapMaster *)masterData;
 
     if (masterPtr->instancePtr != NULL) {
 	Tcl_Panic("tried to delete bitmap image when instances still exist");
@@ -1050,7 +1051,7 @@ ImgBmapCmdDeletedProc(
     ClientData clientData)	/* Pointer to BitmapMaster structure for
 				 * image. */
 {
-    BitmapMaster *masterPtr = clientData;
+    BitmapMaster *masterPtr = (BitmapMaster *)clientData;
 
     masterPtr->imageCmd = NULL;
     if (masterPtr->tkMaster != NULL) {
@@ -1197,7 +1198,7 @@ ImgBmapPostscript(
     int x, int y, int width, int height,
     int prepass)
 {
-    BitmapMaster *masterPtr = clientData;
+    BitmapMaster *masterPtr = (BitmapMaster *)clientData;
     Tcl_InterpState interpState;
     Tcl_Obj *psObj;
 

@@ -12,11 +12,7 @@
 
 #include "tkInt.h"
 
-#ifdef HAVE_XKBKEYCODETOKEYSYM
-#  include <X11/XKBlib.h>
-#else
-#  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
-#endif
+#include <X11/XKBlib.h>
 
 /*
  * Prototypes for local functions defined in this file:
@@ -129,8 +125,7 @@ TkpGetString(
 
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
-	    && (winPtr->inputContext != NULL)
-	    && (eventPtr->type == KeyPress)) {
+	    && (winPtr->inputContext != NULL)) {
 	Status status;
 
 #if X_HAVE_UTF8_STRING
@@ -185,8 +180,7 @@ TkpGetString(
     {
 	/*
 	 * Fall back to convert a keyboard event to a UTF-8 string using
-	 * XLookupString. This is used when input methods are turned off and
-	 * for KeyRelease events.
+	 * XLookupString. This is used when input methods are turned off.
 	 *
 	 * Note: XLookupString() normally returns a single ISO Latin 1 or
 	 * ASCII control character.
@@ -220,7 +214,7 @@ TkpGetString(
      */
 
 done:
-    kePtr->charValuePtr = ckalloc(len + 1);
+    kePtr->charValuePtr = (char *)ckalloc(len + 1);
     kePtr->charValueLen = len;
     memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), len + 1);
     return Tcl_DStringValue(dsPtr);
@@ -477,7 +471,7 @@ TkpInitKeymapInfo(
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -504,7 +498,7 @@ TkpInitKeymapInfo(
 	     */
 
 	    arraySize *= 2;
-	    newCodes = ckalloc(arraySize * sizeof(KeyCode));
+	    newCodes = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
 	    memcpy(newCodes, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
 	    ckfree(dispPtr->modKeyCodes);

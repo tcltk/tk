@@ -555,8 +555,8 @@ typedef struct _XDisplay {
 	 * list to find the right procedure for each event might be
 	 * expensive if many extensions are being used.
 	 */
-	Bool (*event_vec[128])();  /* vector for wire to event */
-	Status (*wire_vec[128])(); /* vector for event to wire */
+	Bool (*event_vec[128])(void);  /* vector for wire to event */
+	Status (*wire_vec[128])(void); /* vector for event to wire */
 	KeySym lock_meaning;	   /* for XLookupString */
 	struct _XLockInfo *lock;   /* multi-thread state, display lock */
 	struct _XInternalAsync *async_handlers; /* for internal async */
@@ -568,7 +568,7 @@ typedef struct _XDisplay {
 	struct _XDisplayAtoms *atoms; /* for XInternAtom */
 	unsigned int mode_switch;  /* keyboard group modifiers */
 	struct _XContextDB *context_db; /* context database */
-	Bool (**error_vec)();      /* vector for wire to error */
+	Bool (**error_vec)(void);      /* vector for wire to error */
 	/*
 	 * Xcms information
 	 */
@@ -581,7 +581,7 @@ typedef struct _XDisplay {
 	struct _XIMFilter *im_filters;
 	struct _XSQEvent *qfree; /* unallocated event queue elements */
 	unsigned long next_event_serial_num; /* inserted into next queue elt */
-	int (*savedsynchandler)(); /* user synchandler when Xlib usurps */
+	int (*savedsynchandler)(void); /* user synchandler when Xlib usurps */
 } Display;
 
 #if NeedFunctionPrototypes	/* prototypes require event type definitions */
@@ -1726,6 +1726,7 @@ EXTERN XHostAddress *XListHosts(
     int*		/* nhosts_return */,
     Bool*		/* state_return */
 );
+_X_DEPRECATED
 EXTERN KeySym XKeycodeToKeysym(
     Display*		/* display */,
 #if NeedWidePrototypes
