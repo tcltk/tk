@@ -753,7 +753,7 @@ TkpGetFontAttrsForChar(
      * Get the font attributes.
      */
 
-    oldfont = SelectObject(hdc, thisSubFontPtr->hFont0);
+    oldfont = (HFONT)SelectObject(hdc, thisSubFontPtr->hFont0);
     GetTextMetricsW(hdc, &tm);
     SelectObject(hdc, oldfont);
     ReleaseDC(fontPtr->hwnd, hdc);
@@ -831,7 +831,7 @@ Tk_MeasureChars(
 
     hdc = GetDC(fontPtr->hwnd);
     lastSubFontPtr = &fontPtr->subFontArray[0];
-    oldFont = SelectObject(hdc, lastSubFontPtr->hFont0);
+    oldFont = (HFONT)SelectObject(hdc, lastSubFontPtr->hFont0);
 
     /*
      * A three step process:
@@ -1121,7 +1121,7 @@ Tk_DrawChars(
 
 	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
 	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, stipple);
+	oldBrush = (HBRUSH)SelectObject(dc, stipple);
 
 	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
 	SetTextColor(dcMem, gc->foreground);
@@ -1136,7 +1136,7 @@ Tk_DrawChars(
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = SelectObject(dcMem, bitmap);
+	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
 	/*
 	 * The following code is tricky because fonts are rendered in multiple
@@ -1190,7 +1190,7 @@ Tk_DrawChars(
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = SelectObject(dcMem, bitmap);
+	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
 	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent,
 		0.0);
@@ -1270,7 +1270,7 @@ TkDrawAngledChars(
 
 	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
 	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, stipple);
+	oldBrush = (HBRUSH)SelectObject(dc, stipple);
 
 	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
 	SetTextColor(dcMem, gc->foreground);
@@ -1285,7 +1285,7 @@ TkDrawAngledChars(
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = SelectObject(dcMem, bitmap);
+	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
 	/*
 	 * The following code is tricky because fonts are rendered in multiple
@@ -1339,7 +1339,7 @@ TkDrawAngledChars(
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = SelectObject(dcMem, bitmap);
+	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
 	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent,
 		angle);
@@ -1503,9 +1503,9 @@ SelectFont(
     double angle)
 {
     if (angle == 0.0) {
-	return SelectObject(hdc, subFontPtr->hFont0);
+	return (HFONT)SelectObject(hdc, subFontPtr->hFont0);
     } else if (angle == subFontPtr->angle) {
-	return SelectObject(hdc, subFontPtr->hFontAngled);
+	return (HFONT)SelectObject(hdc, subFontPtr->hFontAngled);
     } else {
 	if (subFontPtr->hFontAngled) {
 	    DeleteObject(subFontPtr->hFontAngled);
@@ -1513,10 +1513,10 @@ SelectFont(
 	subFontPtr->hFontAngled = GetScreenFont(&fontPtr->font.fa,
 		subFontPtr->familyPtr->faceName, fontPtr->pixelSize, angle);
 	if (subFontPtr->hFontAngled == NULL) {
-	    return SelectObject(hdc, subFontPtr->hFont0);
+	    return (HFONT)SelectObject(hdc, subFontPtr->hFont0);
 	}
 	subFontPtr->angle = angle;
-	return SelectObject(hdc, subFontPtr->hFontAngled);
+	return (HFONT)SelectObject(hdc, subFontPtr->hFontAngled);
     }
 }
 
@@ -1568,7 +1568,7 @@ InitFont(
     window = Tk_WindowId(tkwin);
     hwnd = (window == None) ? NULL : TkWinGetHWND(window);
     hdc = GetDC(hwnd);
-    oldFont = SelectObject(hdc, hFont);
+    oldFont = (HFONT)SelectObject(hdc, hFont);
 
     GetTextMetricsW(hdc, &tm);
 
@@ -1750,13 +1750,13 @@ AllocFontFamily(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     (void)base;
 
-    hFont = SelectObject(hdc, hFont);
+    hFont = (HFONT)SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
     Tcl_DStringInit(&faceString);
     Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
-    hFont = SelectObject(hdc, hFont);
+    hFont = (HFONT)SelectObject(hdc, hFont);
 
     familyPtr = tsdPtr->fontFamilyList;
     for ( ; familyPtr != NULL; familyPtr = familyPtr->nextPtr) {
@@ -1852,7 +1852,7 @@ FreeFontFamily(
 {
     int i;
     FontFamily **familyPtrPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (familyPtr == NULL) {
@@ -2723,7 +2723,7 @@ LoadFontRanges(
     endCount = NULL;
     *symbolPtr = 0;
 
-    hFont = SelectObject(hdc, hFont);
+    hFont = (HFONT)SelectObject(hdc, hFont);
 
     i = 0;
     s = (char *) &i;

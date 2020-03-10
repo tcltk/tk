@@ -380,12 +380,12 @@ typedef struct 	/* XP element specifications */
     int 	partId;		/* BP_PUSHBUTTON, BP_CHECKBUTTON, etc. */
     const Ttk_StateTable *statemap;	/* Map Tk states to XP states */
     Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
-    int  	flags;
-#   define 	IGNORE_THEMESIZE 0x80000000 /* See NOTE-GetThemePartSize */
-#   define 	PAD_MARGINS	 0x40000000 /* See NOTE-GetThemeMargins */
-#   define 	HEAP_ELEMENT	 0x20000000 /* ElementInfo is on heap */
-#   define 	HALF_HEIGHT	 0x10000000 /* Used by GenericSizedElements */
-#   define 	HALF_WIDTH	 0x08000000 /* Used by GenericSizedElements */
+    unsigned  	flags;
+#   define 	IGNORE_THEMESIZE 0x80000000U /* See NOTE-GetThemePartSize */
+#   define 	PAD_MARGINS	 0x40000000U /* See NOTE-GetThemeMargins */
+#   define 	HEAP_ELEMENT	 0x20000000U /* ElementInfo is on heap */
+#   define 	HALF_HEIGHT	 0x10000000U /* Used by GenericSizedElements */
+#   define 	HALF_WIDTH	 0x08000000U /* Used by GenericSizedElements */
 } ElementInfo;
 
 typedef struct
@@ -961,6 +961,7 @@ TTK_END_LAYOUT_TABLE
 /* name spec className partId statemap padding flags */
 
 static const ElementInfo ElementInfoTable[] = {
+#if 0
     { "Checkbutton.indicator", &GenericElementSpec, L"BUTTON",
     	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Radiobutton.indicator", &GenericElementSpec, L"BUTTON",
@@ -1030,6 +1031,7 @@ static const ElementInfo ElementInfoTable[] = {
     	TP_SPLITBUTTON,toolbutton_statemap, NOPAD,0 },
     { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
     	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
+#endif
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
