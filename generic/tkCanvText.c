@@ -570,6 +570,7 @@ DeleteText(
     Display *display)		/* Display containing window for canvas. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
+    (void)canvas;
 
     if (textPtr->color != NULL) {
 	Tk_FreeColor(textPtr->color);
@@ -1031,7 +1032,7 @@ TextInsert(
 	return;
     }
 
-    newStr = ckalloc(textPtr->numBytes + byteCount + 1);
+    newStr = (char *)ckalloc(textPtr->numBytes + byteCount + 1);
     memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
@@ -1112,7 +1113,7 @@ TextDeleteChars(
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
-    newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
+    newStr = (char *)ckalloc(textPtr->numBytes + 1 - byteCount);
     memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
@@ -1384,6 +1385,7 @@ GetTextIndex(
     int c;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string = TkGetStringFromObj(obj, &length);
+    (void)canvas;
 
     c = string[0];
 
@@ -1478,6 +1480,7 @@ SetTextCursor(
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
+    (void)canvas;
 
     if (index < 0) {
 	textPtr->insertPos = 0;
@@ -1524,6 +1527,7 @@ GetSelText(
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
+    (void)canvas;
 
     if ((textInfoPtr->selectFirst < 0) ||
 	    (textInfoPtr->selectFirst > textInfoPtr->selectLast)) {

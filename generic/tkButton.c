@@ -628,7 +628,7 @@ Tk_RadiobuttonObjCmd(
 
 static int
 ButtonCreate(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument values. */
@@ -639,8 +639,9 @@ ButtonCreate(
     TkButton *butPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     if (!tsdPtr->defaultsInitialized) {
 	TkpButtonSetDefaults();
@@ -788,7 +789,7 @@ ButtonWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     int index;
     int result;
     Tcl_Obj *objPtr;
@@ -1036,7 +1037,7 @@ DestroyButton(
 static int
 ConfigureButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkButton *butPtr,	/* Information about widget;  may or may
+    TkButton *butPtr,	/* Information about widget;  may or may
 				 * not already have values for some fields. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -1348,7 +1349,7 @@ TkButtonWorldChanged(
     XGCValues gcValues;
     GC newGC;
     unsigned long mask;
-    TkButton *butPtr = instanceData;
+    TkButton *butPtr = (TkButton *)instanceData;
 
     /*
      * Recompute GCs.
@@ -1459,7 +1460,7 @@ ButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {
@@ -1517,7 +1518,7 @@ static void
 ButtonCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -1612,9 +1613,11 @@ ButtonVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     const char *value;
     Tcl_Obj *valuePtr;
+    (void)name1;
+    (void)name2;
 
     /*
      * If the variable is being unset, then just re-establish the trace unless
@@ -1722,8 +1725,10 @@ ButtonTextVarProc(
     const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     Tcl_Obj *valuePtr;
+    (void)name1;
+    (void)name2;
 
     if (butPtr->flags & BUTTON_DELETED) {
 	return NULL;
@@ -1817,7 +1822,13 @@ ButtonImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     if (butPtr->tkwin != NULL) {
 	TkpComputeButtonGeometry(butPtr);
@@ -1855,7 +1866,13 @@ ButtonSelectImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {
@@ -1902,7 +1919,13 @@ ButtonTristateImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {

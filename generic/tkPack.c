@@ -196,7 +196,7 @@ Tk_PackObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     const char *argv2;
     static const char *const optionStrings[] = {
 #ifndef TK_NO_DEPRECATED
@@ -259,7 +259,7 @@ Tk_PackObjCmd(
     }
     case PACK_APPEND: {
 	Packer *masterPtr;
-	register Packer *prevPtr;
+	Packer *prevPtr;
 	Tk_Window tkwin2;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
@@ -276,7 +276,7 @@ Tk_PackObjCmd(
     }
     case PACK_BEFORE: {
 	Packer *packPtr, *masterPtr;
-	register Packer *prevPtr;
+	Packer *prevPtr;
 	Tk_Window tkwin2;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
@@ -337,7 +337,7 @@ Tk_PackObjCmd(
 	break;
     }
     case PACK_INFO: {
-	register Packer *slavePtr;
+	Packer *slavePtr;
 	Tk_Window slave;
 	Tcl_Obj *infoObj;
 
@@ -523,7 +523,8 @@ PackReqProc(
     Tk_Window tkwin)		/* Other Tk-related information about the
 				 * window. */
 {
-    register Packer *packPtr = clientData;
+    Packer *packPtr = (Packer *)clientData;
+    (void)tkwin;
 
     packPtr = packPtr->masterPtr;
     if (!(packPtr->flags & REQUESTED_REPACK)) {
@@ -556,7 +557,8 @@ PackLostSlaveProc(
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Packer *slavePtr = clientData;
+    Packer *slavePtr = (Packer *)clientData;
+    (void)tkwin;
 
     if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
@@ -589,8 +591,8 @@ ArrangePacking(
     ClientData clientData)	/* Structure describing master whose slaves
 				 * are to be re-layed out. */
 {
-    register Packer *masterPtr = clientData;
-    register Packer *slavePtr;
+    Packer *masterPtr = (Packer *)clientData;
+    Packer *slavePtr;
     int cavityX, cavityY, cavityWidth, cavityHeight;
 				/* These variables keep track of the
 				 * as-yet-unallocated space remaining in the
@@ -913,7 +915,7 @@ ArrangePacking(
 
 static int
 XExpansion(
-    register Packer *slavePtr,	/* First in list of remaining slaves. */
+    Packer *slavePtr,	/* First in list of remaining slaves. */
     int cavityWidth)		/* Horizontal space left for all remaining
 				 * slaves. */
 {
@@ -979,7 +981,7 @@ XExpansion(
 
 static int
 YExpansion(
-    register Packer *slavePtr,	/* First in list of remaining slaves. */
+    Packer *slavePtr,	/* First in list of remaining slaves. */
     int cavityHeight)		/* Vertical space left for all remaining
 				 * slaves. */
 {
@@ -1042,7 +1044,7 @@ GetPacker(
     Tk_Window tkwin)		/* Token for window for which packer structure
 				 * is desired. */
 {
-    register Packer *packPtr;
+    Packer *packPtr;
     Tcl_HashEntry *hPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -1060,9 +1062,9 @@ GetPacker(
     hPtr = Tcl_CreateHashEntry(&dispPtr->packerHashTable, (char *) tkwin,
 	    &isNew);
     if (!isNew) {
-	return Tcl_GetHashValue(hPtr);
+	return (Packer *)Tcl_GetHashValue(hPtr);
     }
-    packPtr = ckalloc(sizeof(Packer));
+    packPtr = (Packer *)ckalloc(sizeof(Packer));
     packPtr->tkwin = tkwin;
     packPtr->masterPtr = NULL;
     packPtr->nextPtr = NULL;
@@ -1112,7 +1114,7 @@ PackAfter(
 				 * window name and side against which to
 				 * pack. */
 {
-    register Packer *packPtr;
+    Packer *packPtr;
     Tk_Window tkwin, ancestor, parent;
     Tcl_Obj **options;
     int index, optionCount, c;
@@ -1340,9 +1342,9 @@ PackAfter(
 
 static void
 Unlink(
-    register Packer *packPtr)	/* Window to unlink. */
+    Packer *packPtr)	/* Window to unlink. */
 {
-    register Packer *masterPtr, *packPtr2;
+    Packer *masterPtr, *packPtr2;
 
     masterPtr = packPtr->masterPtr;
     if (masterPtr == NULL) {
@@ -1410,7 +1412,7 @@ DestroyPacker(
     void *memPtr)		/* Info about packed window that is now
 				 * dead. */
 {
-    register Packer *packPtr = memPtr;
+    Packer *packPtr = (Packer *)memPtr;
 
     ckfree(packPtr);
 }
@@ -1439,7 +1441,7 @@ PackStructureProc(
 				 * eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Packer *packPtr = clientData;
+    Packer *packPtr = (Packer *)clientData;
 
     if (eventPtr->type == ConfigureNotify) {
 	if ((packPtr->slavePtr != NULL)
@@ -1456,7 +1458,7 @@ PackStructureProc(
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	register Packer *slavePtr, *nextPtr;
+	Packer *slavePtr, *nextPtr;
 
 	if (packPtr->masterPtr != NULL) {
 	    Unlink(packPtr);
@@ -1494,7 +1496,7 @@ PackStructureProc(
 	    Tcl_DoWhenIdle(ArrangePacking, packPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	register Packer *packPtr2;
+	Packer *packPtr2;
 
 	/*
 	 * Unmap all of the slaves when the master gets unmapped, so that they

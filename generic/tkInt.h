@@ -58,6 +58,21 @@
 #   endif
 #endif
 
+#ifndef JOIN
+#  define JOIN(a,b) JOIN1(a,b)
+#  define JOIN1(a,b) a##b
+#endif
+
+#ifndef TCL_UNUSED
+#   if defined(__cplusplus)
+#	define TCL_UNUSED(T) T
+#   elif defined(__GNUC__) && (__GNUC__ > 2)
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__) __attribute__((unused))
+#   else
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__)
+#   endif
+#endif
+
 #ifndef TkSizeT
 #   if TCL_MAJOR_VERSION > 8
 #	define TkSizeT size_t
@@ -67,8 +82,8 @@
 #endif
 
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
-# define Tcl_WCharToUtfDString Tcl_UniCharToUtfDString
-# define Tcl_UtfToWCharDString Tcl_UtfToUniCharDString
+# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
+# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
 # define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 #endif
@@ -179,6 +194,8 @@ typedef struct TkCaret {
  * specific data, since each thread will have its own TkDisplay structure.
  */
 
+typedef enum TkLockUsage {LU_IGNORE, LU_CAPS, LU_SHIFT} TkLockUsage;
+
 typedef struct TkDisplay {
     Display *display;		/* Xlib's info about display. */
     struct TkDisplay *nextPtr;	/* Next in list of all displays. */
@@ -220,7 +237,7 @@ typedef struct TkDisplay {
     unsigned int altModMask;	/* Has one bit set to indicate the modifier
 				 * corresponding to the "Meta" key. If no such
 				 * modifier, then this is zero. */
-    enum {LU_IGNORE, LU_CAPS, LU_SHIFT} lockUsage;
+    TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
     int numModKeyCodes;		/* Number of entries in modKeyCodes array
@@ -1330,6 +1347,8 @@ MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
+MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, TkSizeT*);
+
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
