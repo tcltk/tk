@@ -1429,7 +1429,7 @@ typedef struct {
 _XFUNCPROTOBEGIN
 
 #if defined(WIN32) && !defined(_XLIBINT_)
-#define _Xdebug (*_Xdebug_p)
+#define _Xdebug *_Xdebug_p
 #endif
 
 EXTERN int _Xdebug;
@@ -1726,7 +1726,7 @@ EXTERN XHostAddress *XListHosts(
     int*		/* nhosts_return */,
     Bool*		/* state_return */
 );
-EXTERN KeySym XKeycodeToKeysym(
+EXTERN _X_DEPRECATED KeySym XKeycodeToKeysym(
     Display*		/* display */,
 #if NeedWidePrototypes
     unsigned int	/* keycode */,

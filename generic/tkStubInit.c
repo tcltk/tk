@@ -760,6 +760,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetIMValues, /* 154 */
     XCreateFontSet, /* 155 */
     XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     XSetDashes, /* 0 */
@@ -919,6 +921,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetIMValues, /* 154 */
     XCreateFontSet, /* 155 */
     XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
 #endif /* MACOSX */
 };
 

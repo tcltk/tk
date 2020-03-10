@@ -1556,8 +1556,13 @@ declare 155 win {
 declare 156 win {
     void XFreeStringList(char **list)
 }
-
-
+declare 157 win {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
+}
+declare 158 win {
+    Display *XkbOpenDisplay(char *name, int *ev_rtrn, int *err_rtrn,
+	    int *major_rtrn, int *minor_rtrn, int *reason)
+}
 
 ################################
 # X functions for MacOSX
@@ -2047,6 +2052,13 @@ declare 155 macosx {
 }
 declare 156 macosx {
     void XFreeStringList(char **list)
+}
+declare 157 macosx {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
+}
+declare 158 macosx {
+    Display *XkbOpenDisplay(char *name, int *ev_rtrn, int *err_rtrn,
+	    int *major_rtrn, int *minor_rtrn, int *reason)
 }
 
 # Local Variables:

@@ -3265,7 +3265,7 @@ static int TreeviewSelectionCommand(
  */
 static void SelObjChangeElement(
     Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
-    int add, int remove, int toggle)
+    int add, TCL_UNUSED(int) /*remove*/, int toggle)
 {
     int i, nElements;
     TreeColumn *column, *elemColumn;
@@ -3417,7 +3417,7 @@ static int TreeviewCellSelectionCommand(
 	"set", "add", "remove", "toggle", NULL
     };
 
-    Treeview *tv = recordPtr;
+    Treeview *tv = (Treeview *)recordPtr;
     int selop, i, nElements, nCells;
     TreeItem *item;
     TreeColumn *column;

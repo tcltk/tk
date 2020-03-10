@@ -163,6 +163,23 @@ XKeycodeToKeysym(
     }
     return KeycodeToKeysym(keycode, state, 0);
 }
+
+KeySym
+XkbKeycodeToKeysym(
+    Display *display,
+    unsigned int keycode,
+    int group,
+    int index)
+{
+    int state = 0;
+    (void)display;
+    (void)group;
+
+    if (index & 0x01) {
+	state |= ShiftMask;
+    }
+    return KeycodeToKeysym(keycode, state, 0);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -544,7 +561,7 @@ TkpInitKeymapInfo(
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state that should be used so that when they call XKeycodeToKeysym
+ * modifier state that should be used so that when they call XkbKeycodeToKeysym
  * taking into account the xkey.state, they will get back the original keysym.
  */
 
