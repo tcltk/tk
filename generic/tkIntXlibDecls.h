@@ -413,6 +413,28 @@ EXTERN int		XReparentWindow(Display *d, Window w, Window p,
 EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 				int sx, int sy, int dx, int dy,
 				unsigned int w, unsigned int h);
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+/* 158 */
+EXTERN void		TkUnusedStubEntry(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -733,6 +755,28 @@ EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 				int sx, int sy, int dx, int dy,
 				unsigned int w, unsigned int h);
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+/* 158 */
+EXTERN void		TkUnusedStubEntry(void);
 #endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
@@ -878,6 +922,27 @@ typedef struct TkIntXlibStubs {
     int (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
     int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
+    void (*reserved138)(void);
+    void (*reserved139)(void);
+    void (*reserved140)(void);
+    void (*reserved141)(void);
+    void (*reserved142)(void);
+    void (*reserved143)(void);
+    void (*reserved144)(void);
+    void (*reserved145)(void);
+    void (*reserved146)(void);
+    void (*reserved147)(void);
+    void (*reserved148)(void);
+    void (*reserved149)(void);
+    void (*reserved150)(void);
+    void (*reserved151)(void);
+    void (*reserved152)(void);
+    void (*reserved153)(void);
+    void (*reserved154)(void);
+    void (*reserved155)(void);
+    void (*reserved156)(void);
+    void (*reserved157)(void);
+    void (*tkUnusedStubEntry) (void); /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1018,6 +1083,27 @@ typedef struct TkIntXlibStubs {
     void (*reserved135)(void);
     void (*reserved136)(void);
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
+    void (*reserved138)(void);
+    void (*reserved139)(void);
+    void (*reserved140)(void);
+    void (*reserved141)(void);
+    void (*reserved142)(void);
+    void (*reserved143)(void);
+    void (*reserved144)(void);
+    void (*reserved145)(void);
+    void (*reserved146)(void);
+    void (*reserved147)(void);
+    void (*reserved148)(void);
+    void (*reserved149)(void);
+    void (*reserved150)(void);
+    void (*reserved151)(void);
+    void (*reserved152)(void);
+    void (*reserved153)(void);
+    void (*reserved154)(void);
+    void (*reserved155)(void);
+    void (*reserved156)(void);
+    void (*reserved157)(void);
+    void (*tkUnusedStubEntry) (void); /* 158 */
 #endif /* AQUA */
 } TkIntXlibStubs;
 
@@ -1298,6 +1384,28 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
 #define XPutImage \
 	(tkIntXlibStubsPtr->xPutImage) /* 137 */
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+#define TkUnusedStubEntry \
+	(tkIntXlibStubsPtr->tkUnusedStubEntry) /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \
@@ -1538,6 +1646,28 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 136 is reserved */
 #define XPutImage \
 	(tkIntXlibStubsPtr->xPutImage) /* 137 */
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+#define TkUnusedStubEntry \
+	(tkIntXlibStubsPtr->tkUnusedStubEntry) /* 158 */
 #endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */
@@ -1546,5 +1676,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #endif /* _TKINTXLIBDECLS */
