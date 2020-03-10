@@ -734,6 +734,33 @@ EXTERN int		XDrawPoint(Display *d, Drawable dr, GC gc, int x,
 EXTERN int		XDrawPoints(Display *d, Drawable dr, GC gc,
 				XPoint *p, int n, int m);
 #endif
+/* Slot 136 is reserved */
+/* Slot 137 is reserved */
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+#ifndef TkUnusedStubEntry_TCL_DECLARED
+#define TkUnusedStubEntry_TCL_DECLARED
+/* 158 */
+EXTERN void		TkUnusedStubEntry(void);
+#endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #ifndef XSetDashes_TCL_DECLARED
@@ -1274,6 +1301,77 @@ EXTERN Status		XQueryTree(Display *d, Window w1, Window *w2,
 /* 91 */
 EXTERN int		XSync(Display *display, Bool flag);
 #endif
+/* Slot 92 is reserved */
+/* Slot 93 is reserved */
+/* Slot 94 is reserved */
+/* Slot 95 is reserved */
+/* Slot 96 is reserved */
+/* Slot 97 is reserved */
+/* Slot 98 is reserved */
+/* Slot 99 is reserved */
+/* Slot 100 is reserved */
+/* Slot 101 is reserved */
+/* Slot 102 is reserved */
+/* Slot 103 is reserved */
+/* Slot 104 is reserved */
+/* Slot 105 is reserved */
+/* Slot 106 is reserved */
+/* Slot 107 is reserved */
+/* Slot 108 is reserved */
+/* Slot 109 is reserved */
+/* Slot 110 is reserved */
+/* Slot 111 is reserved */
+/* Slot 112 is reserved */
+/* Slot 113 is reserved */
+/* Slot 114 is reserved */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+/* Slot 136 is reserved */
+/* Slot 137 is reserved */
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+#ifndef TkUnusedStubEntry_TCL_DECLARED
+#define TkUnusedStubEntry_TCL_DECLARED
+/* 158 */
+EXTERN void		TkUnusedStubEntry(void);
+#endif
 #endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
@@ -1417,6 +1515,29 @@ typedef struct TkIntXlibStubs {
     int (*xDrawSegments) (Display *d, Drawable dr, GC gc, XSegment *s, int n); /* 133 */
     int (*xDrawPoint) (Display *d, Drawable dr, GC gc, int x, int y); /* 134 */
     int (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
+    VOID *reserved136;
+    VOID *reserved137;
+    VOID *reserved138;
+    VOID *reserved139;
+    VOID *reserved140;
+    VOID *reserved141;
+    VOID *reserved142;
+    VOID *reserved143;
+    VOID *reserved144;
+    VOID *reserved145;
+    VOID *reserved146;
+    VOID *reserved147;
+    VOID *reserved148;
+    VOID *reserved149;
+    VOID *reserved150;
+    VOID *reserved151;
+    VOID *reserved152;
+    VOID *reserved153;
+    VOID *reserved154;
+    VOID *reserved155;
+    VOID *reserved156;
+    VOID *reserved157;
+    void (*tkUnusedStubEntry) (void); /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1511,6 +1632,73 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
     int (*xSync) (Display *display, Bool flag); /* 91 */
+    VOID *reserved92;
+    VOID *reserved93;
+    VOID *reserved94;
+    VOID *reserved95;
+    VOID *reserved96;
+    VOID *reserved97;
+    VOID *reserved98;
+    VOID *reserved99;
+    VOID *reserved100;
+    VOID *reserved101;
+    VOID *reserved102;
+    VOID *reserved103;
+    VOID *reserved104;
+    VOID *reserved105;
+    VOID *reserved106;
+    VOID *reserved107;
+    VOID *reserved108;
+    VOID *reserved109;
+    VOID *reserved110;
+    VOID *reserved111;
+    VOID *reserved112;
+    VOID *reserved113;
+    VOID *reserved114;
+    VOID *reserved115;
+    VOID *reserved116;
+    VOID *reserved117;
+    VOID *reserved118;
+    VOID *reserved119;
+    VOID *reserved120;
+    VOID *reserved121;
+    VOID *reserved122;
+    VOID *reserved123;
+    VOID *reserved124;
+    VOID *reserved125;
+    VOID *reserved126;
+    VOID *reserved127;
+    VOID *reserved128;
+    VOID *reserved129;
+    VOID *reserved130;
+    VOID *reserved131;
+    VOID *reserved132;
+    VOID *reserved133;
+    VOID *reserved134;
+    VOID *reserved135;
+    VOID *reserved136;
+    VOID *reserved137;
+    VOID *reserved138;
+    VOID *reserved139;
+    VOID *reserved140;
+    VOID *reserved141;
+    VOID *reserved142;
+    VOID *reserved143;
+    VOID *reserved144;
+    VOID *reserved145;
+    VOID *reserved146;
+    VOID *reserved147;
+    VOID *reserved148;
+    VOID *reserved149;
+    VOID *reserved150;
+    VOID *reserved151;
+    VOID *reserved152;
+    VOID *reserved153;
+    VOID *reserved154;
+    VOID *reserved155;
+    VOID *reserved156;
+    VOID *reserved157;
+    void (*tkUnusedStubEntry) (void); /* 158 */
 #endif /* AQUA */
 } TkIntXlibStubs;
 
@@ -2014,6 +2202,32 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XDrawPoints \
 	(tkIntXlibStubsPtr->xDrawPoints) /* 135 */
 #endif
+/* Slot 136 is reserved */
+/* Slot 137 is reserved */
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkIntXlibStubsPtr->tkUnusedStubEntry) /* 158 */
+#endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #ifndef XSetDashes
@@ -2384,6 +2598,76 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XSync \
 	(tkIntXlibStubsPtr->xSync) /* 91 */
 #endif
+/* Slot 92 is reserved */
+/* Slot 93 is reserved */
+/* Slot 94 is reserved */
+/* Slot 95 is reserved */
+/* Slot 96 is reserved */
+/* Slot 97 is reserved */
+/* Slot 98 is reserved */
+/* Slot 99 is reserved */
+/* Slot 100 is reserved */
+/* Slot 101 is reserved */
+/* Slot 102 is reserved */
+/* Slot 103 is reserved */
+/* Slot 104 is reserved */
+/* Slot 105 is reserved */
+/* Slot 106 is reserved */
+/* Slot 107 is reserved */
+/* Slot 108 is reserved */
+/* Slot 109 is reserved */
+/* Slot 110 is reserved */
+/* Slot 111 is reserved */
+/* Slot 112 is reserved */
+/* Slot 113 is reserved */
+/* Slot 114 is reserved */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+/* Slot 136 is reserved */
+/* Slot 137 is reserved */
+/* Slot 138 is reserved */
+/* Slot 139 is reserved */
+/* Slot 140 is reserved */
+/* Slot 141 is reserved */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
+/* Slot 148 is reserved */
+/* Slot 149 is reserved */
+/* Slot 150 is reserved */
+/* Slot 151 is reserved */
+/* Slot 152 is reserved */
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkIntXlibStubsPtr->tkUnusedStubEntry) /* 158 */
+#endif
 #endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
@@ -2392,6 +2676,8 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #if defined(__WIN32__)
 

@@ -75,7 +75,7 @@ static TkWinProcs asciiProcs = {
 	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
 	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExA,
     (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
-	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuA,
+	    UINT uIDNewItem, LPCTSTR lpNewItem))(void *)InsertMenuA,
     (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextA,
 };
 
@@ -93,7 +93,7 @@ static TkWinProcs unicodeProcs = {
 	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
 	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExW,
     (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
-	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuW,
+	    UINT uIDNewItem, LPCTSTR lpNewItem))(void *)InsertMenuW,
     (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextW,
 };
 
@@ -172,7 +172,7 @@ TkGetServerInfo(
     if (!buffer[0]) {
 	HANDLE handle = LoadLibraryW(L"NTDLL");
 	int(__stdcall *getversion)(void *) =
-		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
+		(int(__stdcall *)(void *))(void *)GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);

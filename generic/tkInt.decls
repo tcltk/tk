@@ -1394,6 +1394,9 @@ declare 134 win {
 declare 135 win {
     int XDrawPoints(Display *d, Drawable dr, GC gc, XPoint *p, int n, int m)
 }
+declare 158 win {
+    void TkUnusedStubEntry(void)
+}
 
 ################################
 # X functions for Aqua
@@ -1716,6 +1719,9 @@ declare 90 aqua {
 }
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
+}
+declare 158 aqua {
+    void TkUnusedStubEntry(void)
 }
 
 # Local Variables:

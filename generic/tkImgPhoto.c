@@ -1476,7 +1476,7 @@ ImgPhotoCmd(
 	}
 	Tcl_Panic("unexpected fallthrough");
     }
-
+    /* FALLTHRU */
     case PHOTO_WRITE: {
 	char *data;
 	Tcl_Obj *format;

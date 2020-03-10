@@ -79,20 +79,20 @@ XVisualIDFromVisual(Visual *visual)
 #   undef XSynchronize
 #   undef XSync
 
-#   define TkpCmapStressed (int (*) (Tk_Window, Colormap)) doNothing
-#   define TkpSync (void (*) (Display *)) doNothing
+#   define TkpCmapStressed (int (*) (Tk_Window, Colormap))(void *)doNothing
+#   define TkpSync (void (*) (Display *))(void *)doNothing
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define TkWmCleanup (void (*) (TkDisplay *)) doNothing
-#   define TkSendCleanup (void (*) (TkDisplay *)) doNothing
+#   define TkWmCleanup (void (*) (TkDisplay *))(void *)doNothing
+#   define TkSendCleanup (void (*) (TkDisplay *))(void *)doNothing
 #   define TkpTestsendCmd 0
-#   define XFlush (int (*) (Display *)) doNothing
-#   define XGrabServer (int (*) (Display *)) doNothing
-#   define XUngrabServer (int (*) (Display *)) doNothing
-#   define XNoOp (int (*) (Display *)) doNothing
-#   define XSynchronize (XAfterFunction (*) (Display *, Bool)) doNothing
-#   define XSync (int (*) (Display *, Bool)) doNothing
+#   define XFlush (int (*) (Display *))(void *)doNothing
+#   define XGrabServer (int (*) (Display *))(void *)doNothing
+#   define XUngrabServer (int (*) (Display *))(void *)doNothing
+#   define XNoOp (int (*) (Display *))(void *)doNothing
+#   define XSynchronize (XAfterFunction (*) (Display *, Bool))(void *)doNothing
+#   define XSync (int (*) (Display *, Bool))(void *)doNothing
 
 #else /* !__WIN32__ */
 
@@ -751,6 +751,29 @@ TkIntXlibStubs tkIntXlibStubs = {
     XDrawSegments, /* 133 */
     XDrawPoint, /* 134 */
     XDrawPoints, /* 135 */
+    NULL, /* 136 */
+    NULL, /* 137 */
+    NULL, /* 138 */
+    NULL, /* 139 */
+    NULL, /* 140 */
+    NULL, /* 141 */
+    NULL, /* 142 */
+    NULL, /* 143 */
+    NULL, /* 144 */
+    NULL, /* 145 */
+    NULL, /* 146 */
+    NULL, /* 147 */
+    NULL, /* 148 */
+    NULL, /* 149 */
+    NULL, /* 150 */
+    NULL, /* 151 */
+    NULL, /* 152 */
+    NULL, /* 153 */
+    NULL, /* 154 */
+    NULL, /* 155 */
+    NULL, /* 156 */
+    NULL, /* 157 */
+    TkUnusedStubEntry, /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
@@ -845,6 +868,73 @@ TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
     XSync, /* 91 */
+    NULL, /* 92 */
+    NULL, /* 93 */
+    NULL, /* 94 */
+    NULL, /* 95 */
+    NULL, /* 96 */
+    NULL, /* 97 */
+    NULL, /* 98 */
+    NULL, /* 99 */
+    NULL, /* 100 */
+    NULL, /* 101 */
+    NULL, /* 102 */
+    NULL, /* 103 */
+    NULL, /* 104 */
+    NULL, /* 105 */
+    NULL, /* 106 */
+    NULL, /* 107 */
+    NULL, /* 108 */
+    NULL, /* 109 */
+    NULL, /* 110 */
+    NULL, /* 111 */
+    NULL, /* 112 */
+    NULL, /* 113 */
+    NULL, /* 114 */
+    NULL, /* 115 */
+    NULL, /* 116 */
+    NULL, /* 117 */
+    NULL, /* 118 */
+    NULL, /* 119 */
+    NULL, /* 120 */
+    NULL, /* 121 */
+    NULL, /* 122 */
+    NULL, /* 123 */
+    NULL, /* 124 */
+    NULL, /* 125 */
+    NULL, /* 126 */
+    NULL, /* 127 */
+    NULL, /* 128 */
+    NULL, /* 129 */
+    NULL, /* 130 */
+    NULL, /* 131 */
+    NULL, /* 132 */
+    NULL, /* 133 */
+    NULL, /* 134 */
+    NULL, /* 135 */
+    NULL, /* 136 */
+    NULL, /* 137 */
+    NULL, /* 138 */
+    NULL, /* 139 */
+    NULL, /* 140 */
+    NULL, /* 141 */
+    NULL, /* 142 */
+    NULL, /* 143 */
+    NULL, /* 144 */
+    NULL, /* 145 */
+    NULL, /* 146 */
+    NULL, /* 147 */
+    NULL, /* 148 */
+    NULL, /* 149 */
+    NULL, /* 150 */
+    NULL, /* 151 */
+    NULL, /* 152 */
+    NULL, /* 153 */
+    NULL, /* 154 */
+    NULL, /* 155 */
+    NULL, /* 156 */
+    NULL, /* 157 */
+    TkUnusedStubEntry, /* 158 */
 #endif /* AQUA */
 };
 

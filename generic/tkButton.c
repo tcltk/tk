@@ -150,7 +150,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_BUTTON_WRAP_LENGTH, Tk_Offset(TkButton, wrapLengthPtr),
 	Tk_Offset(TkButton, wrapLength), 0, 0, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 static const Tk_OptionSpec buttonOptionSpecs[] = {

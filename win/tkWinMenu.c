@@ -928,11 +928,12 @@ UpdateEmbeddedMenu(
 {
     RECT rc;
     HWND hMenuWnd = (HWND)clientData;
+
     GetClientRect(hMenuWnd, &rc);
     InvalidateRect(hMenuWnd, &rc, FALSE);
     UpdateWindow(hMenuWnd);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -995,14 +996,14 @@ TkWinEmbeddedMenuProc(
 	if (lResult || (GetCapture() != hwnd)) {
 	    break;
 	}
-
+	/* FALLTHRU */
     default:
 	lResult = DefWindowProc(hwnd, message, wParam, lParam);
 	break;
     }
     return lResult;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2131,8 +2132,7 @@ TkpInitializeMenuBindings(
      */
 
     (void) Tcl_CreateObjCommand(interp, "tk::WinMenuKey",
-	    TkWinMenuKeyObjCmd,
-	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+	    TkWinMenuKeyObjCmd, Tk_MainWindow(interp), NULL);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<Alt_L>", "tk::WinMenuKey %W %N", 0);
@@ -2212,6 +2212,7 @@ DrawMenuEntryLabel(
 	haveImage = 1;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
+
 	Tk_SizeOfBitmap(menuPtr->display, bitmap, &imageWidth, &imageHeight);
 	haveImage = 1;
     }
@@ -2345,7 +2346,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != NULL)) {
+		&& (menuPtr->disabledImageGC)) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
@@ -3343,7 +3344,7 @@ TkpMenuInit(void)
 	Tcl_Panic("Failed to register embedded menu window class.");
     }
 
-    TkCreateExitHandler(MenuExitHandler, (ClientData) NULL);
+    TkCreateExitHandler(MenuExitHandler, NULL);
     SetDefaults(1);
 }
 
@@ -3388,7 +3389,7 @@ TkpMenuThreadInit(void)
     Tcl_InitHashTable(&tsdPtr->winMenuTable, TCL_ONE_WORD_KEYS);
     Tcl_InitHashTable(&tsdPtr->commandTable, TCL_ONE_WORD_KEYS);
 
-    TkCreateThreadExitHandler(MenuThreadExitHandler, (ClientData) NULL);
+    TkCreateThreadExitHandler(MenuThreadExitHandler, NULL);
 }
 
 /*

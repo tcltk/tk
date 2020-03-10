@@ -108,7 +108,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	 */
 	XPThemeProcs *procs = (XPThemeProcs*)ckalloc(sizeof(XPThemeProcs));
 #define LOADPROC(name) \
-	(0 != (procs->name = (name ## Proc *)GetProcAddress(handle, #name) ))
+	(0 != (procs->name = (name ## Proc *)(void *)GetProcAddress(handle, #name) ))
 
 	if (   LOADPROC(OpenThemeData)
 	    && LOADPROC(CloseThemeData)

@@ -2868,7 +2868,7 @@ TkCygwinMainEx(
 	    /* dll is not present */
 	    return 0;
 	}
-	sym = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_MainEx");
+	sym = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))(void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
 	if (!sym) {
 		return 0;
 	}
@@ -2907,7 +2907,7 @@ Tk_Init(
     if (tkcygwindll) {
 	int (*sym)(Tcl_Interp *);
 
-	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_Init");
+	sym = (int (*)(Tcl_Interp *))(void *)GetProcAddress(tkcygwindll, "Tk_Init");
 	if (sym) {
 	    return sym(interp);
 	}
@@ -2980,7 +2980,7 @@ Tk_SafeInit(
     if (tkcygwindll) {
 	int (*sym)(Tcl_Interp *);
 
-	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_SafeInit");
+	sym = (int (*)(Tcl_Interp *))(void *)GetProcAddress(tkcygwindll, "Tk_SafeInit");
 	if (sym) {
 	    return sym(interp);
 	}

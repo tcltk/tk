@@ -126,6 +126,7 @@ PutPixel(
 	 */
 
 	destPtr[3] = 0;
+	/* FALLTHRU */
     case 24:
 	/*
 	 * Pixel is triplet: 0xBBGGRR.
@@ -350,7 +351,7 @@ XGetImageZPixmap(
     if (depth <= 8) {
 	size += sizeof(unsigned short) << depth;
     }
-    bmInfo = (BITMAPINFO *) ckalloc((unsigned)size);
+    bmInfo = (BITMAPINFO *)ckalloc(size);
 
     bmInfo->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
     bmInfo->bmiHeader.biWidth		= width;
@@ -368,7 +369,7 @@ XGetImageZPixmap(
 	unsigned char *p, *pend;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = (unsigned char *) ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -404,7 +405,7 @@ XGetImageZPixmap(
 	unsigned char *p;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = (unsigned char *) ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -614,7 +615,7 @@ XGetImage(
 	imagePtr = XCreateImage(display, NULL, 32, format, 0, NULL,
 		width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
-	imagePtr->data = ckalloc(size);
+	imagePtr->data = (char *)ckalloc(size);
 	ZeroMemory(imagePtr->data, size);
 
 	for (yy = 0; yy < height; yy++) {
@@ -661,8 +662,7 @@ XGetImage(
 
 	imagePtr = XCreateImage(display, NULL, 1, XYBitmap, 0, NULL,
 		width, height, 32, 0);
-	imagePtr->data =
-		ckalloc((unsigned) imagePtr->bytes_per_line*imagePtr->height);
+	imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * imagePtr->height);
 
 	dc = GetDC(NULL);
 

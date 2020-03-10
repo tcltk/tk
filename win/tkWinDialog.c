@@ -322,7 +322,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.lpCustColors	= dwCustColors;
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
-    chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
+    chooseColor.lpfnHook	= (LPOFNHOOKPROC)(void *)ColorDlgHookProc;
     chooseColor.lpTemplateName	= (LPWSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
@@ -692,7 +692,7 @@ GetFileName(
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
 	    | OFN_EXPLORER | OFN_ENABLEHOOK| OFN_ENABLESIZING;
-    ofn.lpfnHook = (LPOFNHOOKPROC) OFNHookProc;
+    ofn.lpfnHook = (LPOFNHOOKPROC)(void *)OFNHookProc;
     ofn.lCustData = (LPARAM) &ofnData;
 
     if (open != 0) {
