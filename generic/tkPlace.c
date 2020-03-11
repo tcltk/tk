@@ -81,13 +81,13 @@ typedef struct Slave {
 #define IN_MASK		1
 
 static const Tk_OptionSpec optionSpecs[] = {
-    {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", -1,
+    {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", TCL_AUTO_LENGTH,
 	 offsetof(Slave, anchor), 0, 0, 0},
-    {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", -1,
+    {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_AUTO_LENGTH,
 	 offsetof(Slave, borderMode), 0, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Slave, heightPtr),
 	 offsetof(Slave, height), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_WINDOW, "-in", NULL, NULL, "", -1, offsetof(Slave, inTkwin),
+    {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_AUTO_LENGTH, offsetof(Slave, inTkwin),
 	 0, 0, IN_MASK},
     {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, "",
 	 offsetof(Slave, relHeightPtr), offsetof(Slave, relHeight),
@@ -95,9 +95,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-relwidth", NULL, NULL, "",
 	 offsetof(Slave, relWidthPtr), offsetof(Slave, relWidth),
 	 TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0", -1,
+    {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0", TCL_AUTO_LENGTH,
 	 offsetof(Slave, relX), 0, 0, 0},
-    {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0", -1,
+    {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0", TCL_AUTO_LENGTH,
 	 offsetof(Slave, relY), 0, 0, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL, "", offsetof(Slave, widthPtr),
 	 offsetof(Slave, width), TK_OPTION_NULL_OK, 0, 0},
@@ -105,7 +105,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 offsetof(Slave, x), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Slave, yPtr),
 	 offsetof(Slave, y), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_AUTO_LENGTH, 0, 0, 0}
 };
 
 /*
