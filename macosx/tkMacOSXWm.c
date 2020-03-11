@@ -18,7 +18,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
-#include "tkMacOSXInt.h"
+#include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXConstants.h"
 
@@ -1048,7 +1048,7 @@ TkWmDeadWindow(
 
 void
 TkWmSetClass(
-    TCL_UNUSED(TkWindow *))		/* Newly-created top-level window. */
+    TkWindow *winPtr)		/* Newly-created top-level window. */
 {
     return;
 }
@@ -1117,7 +1117,7 @@ Tk_WmObjCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(wmTracing != 0));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(wmTracing));
 	    return TCL_OK;
 	}
 	return Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing);
@@ -1235,13 +1235,13 @@ Tk_WmObjCmd(
 
 static int
 WmAspectCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window tkwin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int numer1, denom1, numer2, denom2;
 
     if ((objc != 3) && (objc != 7)) {
@@ -1253,10 +1253,10 @@ WmAspectCmd(
 	if (wmPtr->sizeHintsFlags & PAspect) {
 	    Tcl_Obj *results[4];
 
-	    results[0] = Tcl_NewWideIntObj(wmPtr->minAspect.x);
-	    results[1] = Tcl_NewWideIntObj(wmPtr->minAspect.y);
-	    results[2] = Tcl_NewWideIntObj(wmPtr->maxAspect.x);
-	    results[3] = Tcl_NewWideIntObj(wmPtr->maxAspect.y);
+	    results[0] = Tcl_NewIntObj(wmPtr->minAspect.x);
+	    results[1] = Tcl_NewIntObj(wmPtr->minAspect.y);
+	    results[2] = Tcl_NewIntObj(wmPtr->maxAspect.x);
+	    results[3] = Tcl_NewIntObj(wmPtr->maxAspect.y);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
 	}
 	return TCL_OK;
@@ -1339,7 +1339,7 @@ WmSetAttribute(
 	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean != ((wmPtr->flags & WM_FULLSCREEN) != 0)) {
+	if (boolean != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    [macWindow toggleFullScreen:macWindow];
 #else
@@ -1456,23 +1456,23 @@ WmGetAttribute(
 	result = Tcl_NewDoubleObj([macWindow alphaValue]);
 	break;
     case WMATT_FULLSCREEN:
-	result = Tcl_NewWideIntObj((wmPtr->flags & WM_FULLSCREEN) != 0);
+	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
     case WMATT_MODIFIED:
-	result = Tcl_NewWideIntObj([macWindow isDocumentEdited] != 0);
+	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
 	break;
     case WMATT_NOTIFY:
-	result = Tcl_NewWideIntObj(tkMacOSXWmAttrNotifyVal != 0);
+	result = Tcl_NewBooleanObj(tkMacOSXWmAttrNotifyVal);
 	break;
     case WMATT_TITLEPATH:
 	result = Tcl_NewStringObj([[macWindow representedFilename] UTF8String],
 		-1);
 	break;
     case WMATT_TOPMOST:
-	result = Tcl_NewWideIntObj((wmPtr->flags & WM_TOPMOST) != 0);
+	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TOPMOST);
 	break;
     case WMATT_TRANSPARENT:
-	result = Tcl_NewWideIntObj((wmPtr->flags & WM_TRANSPARENT) != 0);
+	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
 	break;
     case WMATT_TYPE:
 	result = Tcl_NewStringObj("unsupported", -1);
@@ -1503,7 +1503,7 @@ WmGetAttribute(
 
 static int
 WmAttributesCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window tkwin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -1575,13 +1575,13 @@ WmAttributesCmd(
 
 static int
 WmClientCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window tkwin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
     int length;
 
@@ -1637,7 +1637,7 @@ WmColormapwindowsCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList, *winPtr2;
     int i, windowObjc, gotToplevel = 0;
     Tcl_Obj **windowObjv, *resultObj;
@@ -1720,13 +1720,13 @@ WmColormapwindowsCmd(
 
 static int
 WmCommandCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window tkwin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int len;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1783,7 +1783,7 @@ WmDeiconifyCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
 
     if (objc != 3) {
@@ -1862,7 +1862,7 @@ WmFocusmodelCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
 	"active", "passive", NULL };
     enum options {
@@ -1916,7 +1916,7 @@ WmForgetCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window frameWin = (Tk_Window) winPtr;
+    register Tk_Window frameWin = (Tk_Window) winPtr;
 
     if (Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin;
@@ -1982,7 +1982,7 @@ WmFrameCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window window;
     char buf[TCL_INTEGER_SPACE];
 
@@ -2024,7 +2024,7 @@ WmGeometryCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     char xSign = '+', ySign = '+';
     int width, height, x = wmPtr->x, y= wmPtr->y;
@@ -2095,7 +2095,7 @@ WmGridCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int reqWidth, reqHeight, widthInc, heightInc;
     const char *errorMsg;
 
@@ -2108,10 +2108,10 @@ WmGridCmd(
 	if (wmPtr->sizeHintsFlags & PBaseSize) {
 	    Tcl_Obj *results[4];
 
-	    results[0] = Tcl_NewWideIntObj(wmPtr->reqGridWidth);
-	    results[1] = Tcl_NewWideIntObj(wmPtr->reqGridHeight);
-	    results[2] = Tcl_NewWideIntObj(wmPtr->widthInc);
-	    results[3] = Tcl_NewWideIntObj(wmPtr->heightInc);
+	    results[0] = Tcl_NewIntObj(wmPtr->reqGridWidth);
+	    results[1] = Tcl_NewIntObj(wmPtr->reqGridHeight);
+	    results[2] = Tcl_NewIntObj(wmPtr->widthInc);
+	    results[3] = Tcl_NewIntObj(wmPtr->heightInc);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
 	}
 	return TCL_OK;
@@ -2189,7 +2189,7 @@ WmGroupCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
     char *argv3;
     int length;
@@ -2253,7 +2253,7 @@ WmIconbitmapCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
     char *str;
     int len;
@@ -2322,7 +2322,7 @@ WmIconifyCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
@@ -2403,7 +2403,7 @@ WmIconmaskCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
     char *argv3;
 
@@ -2463,7 +2463,7 @@ WmIconnameCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
     int length;
 
@@ -2534,7 +2534,7 @@ WmIconphotoCmd(
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image1 ?image2 ...?");
+			     "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
     }
@@ -2605,7 +2605,7 @@ WmIconpositionCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y;
 
     if ((objc != 3) && (objc != 5)) {
@@ -2617,8 +2617,8 @@ WmIconpositionCmd(
 	if (wmPtr->hints.flags & IconPositionHint) {
 	    Tcl_Obj *results[2];
 
-	    results[0] = Tcl_NewWideIntObj(wmPtr->hints.icon_x);
-	    results[1] = Tcl_NewWideIntObj(wmPtr->hints.icon_y);
+	    results[0] = Tcl_NewIntObj(wmPtr->hints.icon_x);
+	    results[1] = Tcl_NewIntObj(wmPtr->hints.icon_y);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	}
 	return TCL_OK;
@@ -2663,7 +2663,7 @@ WmIconwindowCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
     WmInfo *wmPtr2;
 
@@ -2766,8 +2766,8 @@ WmManageCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window frameWin = (Tk_Window) winPtr;
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register Tk_Window frameWin = (Tk_Window) winPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin = (MacDrawable *) winPtr->window;
@@ -2830,7 +2830,7 @@ WmMaxsizeCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
 
     if ((objc != 3) && (objc != 5)) {
@@ -2842,8 +2842,8 @@ WmMaxsizeCmd(
 	Tcl_Obj *results[2];
 
 	GetMaxSize(winPtr, &width, &height);
-	results[0] = Tcl_NewWideIntObj(width);
-	results[1] = Tcl_NewWideIntObj(height);
+	results[0] = Tcl_NewIntObj(width);
+	results[1] = Tcl_NewIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -2884,7 +2884,7 @@ WmMinsizeCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
 
     if ((objc != 3) && (objc != 5)) {
@@ -2896,8 +2896,8 @@ WmMinsizeCmd(
 	Tcl_Obj *results[2];
 
 	GetMinSize(winPtr, &width, &height);
-	results[0] = Tcl_NewWideIntObj(width);
-	results[1] = Tcl_NewWideIntObj(height);
+	results[0] = Tcl_NewIntObj(width);
+	results[1] = Tcl_NewIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -2948,8 +2948,8 @@ WmOverrideredirectCmd(
     }
 
     if (objc == 3) {
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
-		Tk_Attributes((Tk_Window) winPtr)->override_redirect != 0));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		Tk_Attributes((Tk_Window) winPtr)->override_redirect));
 	return TCL_OK;
     }
 
@@ -2987,7 +2987,7 @@ WmPositionfromCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
 	"program", "user", NULL };
     enum options {
@@ -3053,8 +3053,8 @@ WmProtocolCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    ProtocolHandler *protPtr, *prevPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     char *cmd;
     int cmdLength;
@@ -3154,7 +3154,7 @@ WmResizableCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
     UInt64 oldAttributes = wmPtr->attributes;
     int oldFlags = wmPtr->flags;
@@ -3167,10 +3167,8 @@ WmResizableCmd(
     if (objc == 3) {
 	Tcl_Obj *results[2];
 
-	results[0] = Tcl_NewWideIntObj(
-		(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) == 0);
-	results[1] = Tcl_NewWideIntObj(
-		(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) == 0);
+	results[0] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE));
+	results[1] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE));
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -3233,7 +3231,7 @@ WmSizefromCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
 	"program", "user", NULL };
     enum options {
@@ -3395,7 +3393,7 @@ WmStackorderCmd(
 	} else { /* OPT_ISBELOW */
 	    result = index1 < index2;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result != 0));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
 	return TCL_OK;
     }
 }
@@ -3425,7 +3423,7 @@ WmStateCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
 	"normal", "iconic", "withdrawn", "zoomed", NULL };
     enum options {
@@ -3545,7 +3543,7 @@ WmTitleCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
     int length;
 
@@ -3593,7 +3591,7 @@ WmTransientCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window master;
     TkWindow *masterPtr, *w;
     WmInfo *wmPtr2;
@@ -3721,7 +3719,7 @@ RemoveTransient(
     if (wmPtr == NULL || wmPtr->master == NULL) {
 	return;
     }
-    masterPtr = (TkWindow *) wmPtr->master;
+    masterPtr = (TkWindow*)wmPtr->master;
     wmPtr2 = masterPtr->wmInfoPtr;
     if (wmPtr2 == NULL) {
 	return;
@@ -3773,7 +3771,7 @@ WmWithdrawCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -5818,7 +5816,7 @@ WmWinStyle(
  *      tabbingIdentifier.  In particular, by giving a window a unique
  *      tabbingIdentifier one can prevent it from becoming a tab in any other
  *      window.  Changing the tabbingIdentifier of a window which is already
- *      a tab causes it to become a separate window.
+ *      a tab causes it to become a separate window. 
  *
  *----------------------------------------------------------------------
  */
