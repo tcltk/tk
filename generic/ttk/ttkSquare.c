@@ -51,28 +51,28 @@ typedef struct
 static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), -1,
+     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), TCL_AUTO_LENGTH,
      0,0,GEOMETRY_CHANGED },
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
      DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
-     -1, 0, 0, 0},
+     TCL_AUTO_LENGTH, 0, 0, 0},
 
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-     "50", offsetof(Square,square.widthObj), -1, 0, 0,
+     "50", offsetof(Square,square.widthObj), TCL_AUTO_LENGTH, 0, 0,
      GEOMETRY_CHANGED},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-     "50", offsetof(Square,square.heightObj), -1, 0, 0,
+     "50", offsetof(Square,square.heightObj), TCL_AUTO_LENGTH, 0, 0,
      GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-padding", "padding", "Pad", NULL,
-     offsetof(Square,square.paddingObj), -1,
+     offsetof(Square,square.paddingObj), TCL_AUTO_LENGTH,
      TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-     NULL, offsetof(Square,square.reliefObj), -1, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.reliefObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK, 0, 0},
 
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-     NULL, offsetof(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.anchorObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK, 0, 0},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
