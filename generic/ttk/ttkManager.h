@@ -22,7 +22,7 @@ typedef struct TtkManager_ Ttk_Manager;
  * SlaveRemoved() is called immediately before a slave is removed.
  * NB: the associated slave window may have been destroyed when this
  * routine is called.
- * 
+ *
  * SlaveRequest() is called when a slave requests a size change.
  * It should return 1 if the request should propagate, 0 otherwise.
  */
