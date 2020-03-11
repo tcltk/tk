@@ -13,6 +13,7 @@
 #include "tkUnixInt.h"
 #include <signal.h>
 #ifdef HAVE_XKBKEYCODETOKEYSYM
+#  undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
 #  include <X11/XKBlib.h>
 #else
 #  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(Display *)NULL)
