@@ -17,6 +17,7 @@
 **                does this and sets the USE_XKB flag if xkb is supported.
 **                (should this be function ptr?)
 */
+
 #ifdef HAVE_XKBKEYCODETOKEYSYM
 #  include <X11/XKBlib.h>
 #else
@@ -361,6 +362,12 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
+
+#ifdef __GNUC__
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
     sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
 	    index);
 
@@ -464,6 +471,11 @@ TkpInitKeymapInfo(
 	    continue;
 	}
 	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+
+#ifdef __GNUC__
+#   pragma GCC diagnostic pop
+#endif
+
 	if (keysym == XK_Mode_switch) {
 	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
 	}
