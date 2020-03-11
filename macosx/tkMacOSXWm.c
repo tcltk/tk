@@ -3721,7 +3721,7 @@ RemoveTransient(
     if (wmPtr == NULL || wmPtr->master == NULL) {
 	return;
     }
-    masterPtr = (TkWindow *) wmPtr->master;
+    masterPtr = (TkWindow *)wmPtr->master;
     wmPtr2 = masterPtr->wmInfoPtr;
     if (wmPtr2 == NULL) {
 	return;
