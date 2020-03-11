@@ -135,17 +135,17 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", -1, offsetof(TkTextEmbImage, align), 0, alignStrings, TK_TEXT_LINE_GEOMETRY},
+	"center", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, align), 0, alignStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbImage, padY), 0, 0, TK_TEXT_LINE_GEOMETRY},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padY), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbImage, imageString), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageString), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbImage, imageName), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageName), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tags", NULL, NULL,
-	NULL, -1, -1, TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_AUTO_LENGTH, TCL_AUTO_LENGTH, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

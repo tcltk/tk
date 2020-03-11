@@ -68,7 +68,7 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
 static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
     TCL_CHANNEL_VERSION_5,	/* v4 channel */
-    ConsoleClose,		/* Close proc. */
+    (Tcl_DriverCloseProc *)ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
     NULL,			/* Seek proc. */
