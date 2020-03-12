@@ -12,21 +12,8 @@
 
 #include "tkInt.h"
 
-/*
-** Bug [3607830]: Before using Xkb, it must be initialized.  TkpOpenDisplay
-**                does this and sets the USE_XKB flag if xkb is supported.
-**                (should this be function ptr?)
-*/
-
-#ifdef HAVE_XKBKEYCODETOKEYSYM
-#  include <X11/XKBlib.h>
-#else
-#  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
-#endif
-#define TkKeycodeToKeysym(D,K,G,L)		\
-    ((D)->flags & TK_DISPLAY_USE_XKB) ?		\
-      XkbKeycodeToKeysym((D)->display,K,G,L) :	\
-      XKeycodeToKeysym((D)->display,K,L)
+#undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
+#include <X11/XKBlib.h>
 
 /*
  * Prototypes for local functions defined in this file:
@@ -236,7 +223,7 @@ done:
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state to be used so that when they call TkKeycodeToKeysym taking
+ * modifier state to be used so that when they call XbkKeycodeToKeysym taking
  * into account the xkey.state, they will get back the original keysym.
  */
 
@@ -362,13 +349,7 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
-
-#ifdef __GNUC__
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
+    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, 0,
 	    index);
 
     /*
@@ -383,7 +364,7 @@ TkpGetKeySym(
 		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
 		|| ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
 	    index &= ~1;
-	    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+	    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		    0, index);
 	}
     }
@@ -394,7 +375,7 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && (sym == NoSymbol)) {
-	sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+	sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		0, index & ~1);
     }
     return sym;
@@ -444,7 +425,7 @@ TkpInitKeymapInfo(
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 	if (keysym == XK_Shift_Lock) {
 	    dispPtr->lockUsage = LU_SHIFT;
 	    break;
@@ -470,7 +451,7 @@ TkpInitKeymapInfo(
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 
 #ifdef __GNUC__
 #   pragma GCC diagnostic pop
