@@ -520,57 +520,6 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for XkbKeycodeToKeysym.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no; then
-    tk_oldCFlags=$CFLAGS
-    tk_oldLibs=$LIBS
-    CFLAGS="$CFLAGS $XINCLUDES"
-    LIBS="$LIBS $XLIBSW"
-    AC_CHECK_HEADER(X11/XKBlib.h, [
-	xkblib_header_found=yes
-    ], [
-	xkblib_header_found=no
-    ], [#include <X11/Xlib.h>])
-    if test $xkblib_header_found = "yes" ; then
-	AC_CHECK_LIB(X11, XkbKeycodeToKeysym, [
-	    xkbkeycodetokeysym_found=yes
-	], [
-	    xkbkeycodetokeysym_found=no
-	])
-    else
-	xkbkeycodetokeysym_found=no
-    fi
-    if test $xkbkeycodetokeysym_found = "yes" ; then
-	AC_DEFINE(HAVE_XKBKEYCODETOKEYSYM, 1, [Do we have XkbKeycodeToKeysym?])
-    fi
-    CFLAGS=$tk_oldCFlags
-    LIBS=$tk_oldLibs
-fi
-
-#--------------------------------------------------------------------
-# Check whether XKeycodeToKeysym is deprecated in X11 headers.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no && test "$GCC" = yes; then
-    AC_MSG_CHECKING([whether XKeycodeToKeysym is deprecated])
-    tk_oldCFlags=$CFLAGS
-    CFLAGS="$CFLAGS -Werror"
-    AC_TRY_LINK([
-	#include <X11/Xlib.h>
-    ], [
-	XKeycodeToKeysym(0,0,0);
-    ], [
-	AC_MSG_RESULT([no])
-    ], [
-    AC_MSG_RESULT([yes])
-	AC_DEFINE(XKEYCODETOKEYSYM_IS_DEPRECATED, 1, [Is XKeycodeToKeysym deprecated?])
-	])
-    CFLAGS=$tk_oldCFlags
-fi
-
-#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
