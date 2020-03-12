@@ -5,10 +5,11 @@ addons:
     packages:
       - tcl-dev
       - libx11-dev
-  homebrew:
-    packages:
-      - tcl-tk
-      - xquartz
+# Doesn't work at the moment, see: <https://travis-ci.community/t/macos-build-fails-because-of-homebrew-bundle-unknown-command/7296>
+# homebrew:
+#   packages:
+#     - tcl-tk
+#     - xquartz
 matrix:
   include:
 # Testing on Linux with various compilers
@@ -129,6 +130,10 @@ before_install:
       case $TRAVIS_OS_NAME in
         windows)
           choco install -y magicsplat-tcl-tk
+          ;;
+        osx)
+          brew update
+          brew install tcl-tk xquartz
           ;;
       esac
   - cd ${BUILD_DIR}
