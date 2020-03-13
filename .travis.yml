@@ -133,7 +133,8 @@ before_install:
           ;;
         osx)
           brew update
-          brew install tcl-tk xquartz
+          brew install tcl-tk
+          brew cask install xquartz
           ;;
       esac
   - cd ${BUILD_DIR}
