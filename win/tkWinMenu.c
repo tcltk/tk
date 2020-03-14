@@ -1941,8 +1941,9 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryArrow --
  *
  *	This function draws the arrow bitmap on the right side of a menu
- *	entry. This function is only used when drawing the arrow for a
- *	disabled cascade menu.
+ *	entry. This function is only used when drawing the arrow for:
+ *	 - a disabled cascade item
+ *	 - a cascade item in any state in a torn-off menu
  *
  * Results:
  *	None.
@@ -1974,6 +1975,16 @@ DrawMenuEntryArrow(
 
     if (!drawArrow || (mePtr->type != CASCADE_ENTRY)) {
 	return;
+    }
+
+    /*
+     * Don't draw the arrow if a submenu is not attached to this
+     * cascade entry.
+     */
+
+    if ((mePtr->childMenuRefPtr == NULL)
+           || (mePtr->childMenuRefPtr->menuPtr == NULL)) {
+        return;
     }
 
     oldFgColor = gc->foreground;
