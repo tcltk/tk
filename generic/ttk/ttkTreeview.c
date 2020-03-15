@@ -1811,7 +1811,7 @@ static void DrawHeadings(Treeview *tv, Drawable d)
     x0 = tv->tree.headingArea.x;
     i = FirstColumn(tv);
     x = 0;
-    while (i < tv->tree.nTitleColumns) {
+    while ((i < tv->tree.nTitleColumns) && (i < tv->tree.nDisplayColumns)) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
 	DisplayLayout(tv->tree.headingLayout,
