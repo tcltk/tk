@@ -1181,7 +1181,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	if (TreeviewInitDisplayColumns(interp, tv) != TCL_OK)
 	    return TCL_ERROR;
     }
-    if (mask & (COLUMNS_CHANGED | DCOLUMNS_CHANGED)) {
+    if (mask & COLUMNS_CHANGED) {
 	CellSelectionClear(tv);
     }
     if (tv->tree.nTitleColumns < 0) {
@@ -3287,7 +3287,7 @@ static void SelObjChangeElement(
 	}
     }
     if (add || toggle) {
-	Tcl_ListObjAppendElement(NULL, listPtr, elemPtr);
+	Tcl_ListObjAppendElement(NULL, listPtr, elemColumn->idObj);
     }
 }
 
@@ -3362,12 +3362,19 @@ static int CellSelectionRange(
 	return TCL_ERROR;
     }
 
+    if (fromNo > toNo) {
+	colno = fromNo;
+	fromNo = toNo;
+	toNo = colno;
+    }
+
     /* Make a list of columns in this rectangle.
      */
     columns = Tcl_NewListObj(0, 0);
     Tcl_IncrRefCount(columns);
     for (colno = fromNo; colno <= toNo; colno++) {
-	Tcl_ListObjAppendElement(NULL, columns, Tcl_ObjPrintf("#%d", colno));
+	Tcl_ListObjAppendElement(NULL, columns,
+		tv->tree.displayColumns[colno]->idObj);
     }
 
     /* Set is the only operation that affects items outside its rectangle.
@@ -3375,6 +3382,19 @@ static int CellSelectionRange(
      */
     if (set) {
 	CellSelectionClear(tv);
+    }
+
+    /* Handle if itemTo is before itemFrom
+     */
+    for (item = itemFrom; item; item=NextPreorder(item)) {
+	if (item == itemTo) {
+	    break;
+	}
+    }
+    if (item != itemTo) {
+	item = itemFrom;
+	itemFrom = itemTo;
+	itemTo = item;
     }
     
     /* Go through all items in this rectangle.
@@ -3478,7 +3498,7 @@ static int TreeviewCellSelectionCommand(
 
     /* A two element list might be a single cell */
     if (nCells == 2) {
-	if (GetCellFromObj(interp, tv, objv[3], 1, NULL, &item, &column)
+	if (GetCellFromObj(interp, tv, objv[3], 0, NULL, &item, &column)
 		== TCL_OK) {
 	    nCells = 1;
 	    oneCell = objv[3];
@@ -3489,7 +3509,7 @@ static int TreeviewCellSelectionCommand(
     }
     
     for (i = 0; i < nCells; i++) {
-	if (GetCellFromObj(interp, tv, cells[i], 1, NULL, &item, &column)
+	if (GetCellFromObj(interp, tv, cells[i], 0, NULL, &item, &column)
 		!= TCL_OK) {
 	    return TCL_ERROR;
 	}

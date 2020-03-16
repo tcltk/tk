@@ -609,28 +609,27 @@ test treeview-11.0 "Cellselection set rectangle" -setup {
     .tv configure -columns {a b c d}
     .tv configure -displaycolumns {a b c}
 } -body {
-    .tv cellselection set "nn.n1 a" "nn.n3 b"
+    .tv cellselection set "nn.n3 #2" "nn.n1 a"
     .tv cellselection
-    # Internal processing of rectangle selection translates cols to #N
-} -result [list "nn.n1 #1" "nn.n1 #2" "nn.n2 #1" "nn.n2 #2" "nn.n3 #1" "nn.n3 #2"]
+} -result [list "nn.n1 a" "nn.n1 b" "nn.n2 a" "nn.n2 b" "nn.n3 a" "nn.n3 b"]
 
 test treeview-11.1 "Cellselection set" -body {
-    .tv cellselection set [list "nn.n1 a" "nn.n2 a" "nn.n3 b" "nn.n2 c"]
+    .tv cellselection set [list "nn.n1 a" "nn.n2 a" "nn.n3 #2" "nn.n2 d"]
     .tv cellselection
-} -result [list "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
+} -result [list "nn.n1 a" "nn.n2 a" "nn.n2 d" "nn.n3 b"]
 
 test treeview-11.2 "Cellselection add" -body {
     .tv cellselection add "nn b"
     .tv cellselection
-} -result [list "nn b" "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
+} -result [list "nn b" "nn.n1 a" "nn.n2 a" "nn.n2 d" "nn.n3 b"]
 
 test treeview-11.3 "Cellselection toggle" -body {
     .tv cellselection toggle [list "nn.n2 a" "nn2 b"]
     .tv cellselection
-} -result [list "nn b" "nn.n1 a" "nn.n2 c" "nn.n3 b" "nn2 b"]
+} -result [list "nn b" "nn.n1 a" "nn.n2 d" "nn.n3 b" "nn2 b"]
 
 test treeview-11.4 "Cellselection remove" -body {
-    .tv cellselection remove [list "nn.n2 c" "nn b"]
+    .tv cellselection remove [list "nn.n2 d" "nn b"]
     .tv cellselection
 } -result [list "nn.n1 a" "nn.n3 b" "nn2 b"]
 
@@ -638,8 +637,8 @@ test treeview-11.5 "Cellselection add rectangle" -body {
     .tv cellselection add "nn a" "nn.n1 c"
     .tv cellselection
 } -result [list \
-                   "nn #1" "nn #2" "nn #3" \
-                   "nn.n1 a" "nn.n1 #2" "nn.n1 #3" \
+                   "nn a" "nn b" "nn c" \
+                   "nn.n1 a" "nn.n1 b" "nn.n1 c" \
                    "nn.n3 b" \
                    "nn2 b"]
 
@@ -647,26 +646,26 @@ test treeview-11.6 "Cellselection toggle rectangle" -body {
     .tv cellselection toggle "nn.n1 b" "nn.n3 c"
     .tv cellselection
 } -result [list \
-                   "nn #1" "nn #2" "nn #3" \
+                   "nn a" "nn b" "nn c" \
                    "nn.n1 a" \
-                   "nn.n2 #2" "nn.n2 #3" \
-                   "nn.n3 #3" \
+                   "nn.n2 b" "nn.n2 c" \
+                   "nn.n3 c" \
                    "nn2 b"]
 
 test treeview-11.7 "Cellselection remove rectangle" -body {
     .tv cellselection remove "nn.n1 a" "nn.n3 b"
     .tv cellselection
 } -result [list \
-                   "nn #1" "nn #2" "nn #3" \
-                   "nn.n2 #3" \
-                   "nn.n3 #3" \
+                   "nn a" "nn b" "nn c" \
+                   "nn.n2 c" \
+                   "nn.n3 c" \
                    "nn2 b"]
 
 test treeview-11.8 "Cellselection set rectangle" -body {
     # This tests that "set" clears out all old selections
     .tv cellselection set "nn b" "nn.n1 c"
     .tv cellselection
-} -result [list "nn #2" "nn #3" "nn.n1 #2" "nn.n1 #3"]
+} -result [list "nn b" "nn c" "nn.n1 b" "nn.n1 c"]
 
 test treeview-11.9 "Cellselection - clear" -body {
     .tv cellselection set {}
@@ -715,8 +714,13 @@ test treeview-11.14 "Cellselection - error" -body {
 } -returnCodes 1 -match glob -result {Invalid column index xx}
 
 test treeview-11.15 "Cellselection - error" -body {
-    .tv cellselection set [list "nn d"]
+    .tv cellselection set "nn c" "nn d"
 } -returnCodes 1 -match glob -result {Cell id must be in a visible column}
+
+test treeview-11.16 "Cellselection - non visible" -body {
+    .tv cellselection set [list "nn d"]
+    .tv cellselection
+} -result {{nn d}}
 
 ### identify tests:
 #
