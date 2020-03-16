@@ -3176,6 +3176,7 @@ Initialize(
 	TkpGetAppName(interp, &class);
 	offset = Tcl_DStringLength(&class)+1;
 	Tcl_DStringSetLength(&class, 2*offset);
+	Tcl_DStringSetLength(&class, offset-1);
 	Tcl_DStringAppend(&class, Tcl_DStringValue(&class), offset-1);
 	name = Tcl_DStringValue(&class) + offset;
     } else {
