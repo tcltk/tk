@@ -915,7 +915,7 @@ RedisplayView(
     ClientData clientdata)
 {
     NSView *view = (NSView *) clientdata;
-    
+
     /*
      * Make sure that we are not trying to displaying a view that no longer
      * exists. Must call [NSApp windows] because [NSApp orderedWindows] excludes
