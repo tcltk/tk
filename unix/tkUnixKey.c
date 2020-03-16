@@ -453,10 +453,6 @@ TkpInitKeymapInfo(
 	}
 	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 
-#ifdef __GNUC__
-#   pragma GCC diagnostic pop
-#endif
-
 	if (keysym == XK_Mode_switch) {
 	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
 	}
