@@ -885,11 +885,25 @@ test treeview-identify-10b "bbox works when horizontally scrolled" -body {
                 0 50 100 150    0 50  75 125     0 50  50 100 \
                 0 50 100 150    0 50 100 125     0 50 100 101]
 
+# Followup to trigger crash that happened when title > display
+test treeview-identify-10c "title more than display" -body {
+    .tv configure -titlecolumns 10
+    .tv xview 0
+    update
+    set x1 [.tv xview]
+    # It shouldn't be possible to scroll
+    .tv xview 50
+    update
+    set x2 [.tv xview]
+    set result [list $x1 $x2]
+} -result {{0.0 1.0} {0.0 1.0}}
+
+
 test treeview-identify-11 "bbox supporting -height" -body {
     .tv configure -titlecolumns 0
     .tv xview 0
     .tv item branch2 -open false
-    place .tv -x 0 -y 0 -width 150 -height 120
+    place .tv -x 0 -y 0 -width 150 -height 160
     update
     set base [lindex [.tv bbox branch A] 1]
     set result {}
@@ -898,7 +912,8 @@ test treeview-identify-11 "bbox supporting -height" -body {
         update
         foreach item {item1 item2 item3} {
             set bb [.tv bbox $item A]
-            lappend result [expr {[lindex $bb 1] - $base}]
+            set y [lindex $bb 1]
+            lappend result [expr {$y - $base}]
             lappend result [lindex $bb 3]
         }
     }

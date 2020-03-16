@@ -844,6 +844,9 @@ static int TreeWidth(Treeview *tv)
 	}
 	width += tv->tree.displayColumns[i++]->width;
     }
+    if (tv->tree.nTitleColumns >= tv->tree.nDisplayColumns) {
+	tv->tree.titleWidth = width;
+    }
     return width;
 }
 
