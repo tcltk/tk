@@ -1187,7 +1187,7 @@ TkBitPrint(
 
     assert(bf);
 
-    printf("%d:{ ", TkBitCount(bf));
+    printf("%" TCL_Z_MODIFIER "d:{ ", TkBitCount(bf));
     for (i = TkBitFindFirst(bf); i != TK_BIT_NPOS; i = TkBitFindNext(bf, i)) {
 	printf("%s%d", comma, i);
 	comma = ", ";

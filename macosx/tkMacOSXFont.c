@@ -218,7 +218,7 @@ TkNSStringToUtf(
 {
     unsigned int code;
     size_t i;
-    char *ptr, *bytes = ckalloc(6*[string length] + 1);
+    char *ptr, *bytes = (char *)ckalloc(6*[string length] + 1);
 
     ptr = bytes;
     if (ptr) {
@@ -626,7 +626,7 @@ TkpGetNativeFont(
     ctFont = CTFontCreateUIFontForLanguage(
 	    HIThemeGetUIFontType(themeFontId), 0, NULL);
     if (ctFont) {
-	fontPtr = ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
     }
 
@@ -694,7 +694,7 @@ TkpGetFontFromAttributes(
 	Tcl_Panic("Could not determine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
-	fontPtr = ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
 	fontPtr = (MacFont *) tkFontPtr;
 	TkpDeleteFont(tkFontPtr);

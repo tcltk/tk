@@ -601,7 +601,7 @@ TkMacOSXGetCGContextForDrawable(
 	bytesPerRow = ((size_t)
 		macDraw->size.width * bitsPerPixel + 127) >> 3 & ~15;
 	len = macDraw->size.height * bytesPerRow;
-	data = ckalloc(len);
+	data = (char *)ckalloc(len);
 	bzero(data, len);
 	macDraw->context = CGBitmapContextCreate(data, macDraw->size.width,
 		macDraw->size.height, bitsPerComponent, bytesPerRow,
