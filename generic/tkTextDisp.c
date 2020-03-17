@@ -14811,7 +14811,7 @@ DrawCharsInContext(
     int rangeLength,	/* Length of range to draw in bytes. */
     int x, int y,	/* Coordinates at which to place origin of the whole (not just the range)
     			 * string when drawing. */
-    int xOffset)	/* Offset to x-coordinate, not needed here. */
+    TCL_UNUSED(int))	/* Offset to x-coordinate, not needed here. */
 {
     TkpDrawCharsInContext(display, drawable, gc, tkfont,
 	    source, numBytes, rangeStart, rangeLength, x, y);
@@ -14825,7 +14825,7 @@ DrawChars(
     TkTextDispChunk *chunkPtr,	/* Display the content of this chunk. */
     int x,			/* X-position in dst at which to draw. */
     int y,			/* Y-position at which to draw. */
-    int offsetX,		/* Offset in x-direction. */
+    TCL_UNUSED(int),		/* Offset in x-direction. */
     int offsetBytes,		/* Offset in display string. */
     Display *display,		/* Display to use for drawing. */
     Drawable dst)		/* Pixmap or window in which to draw chunk. */
