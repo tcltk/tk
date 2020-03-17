@@ -77,7 +77,7 @@ TkMacOSXCreateCGImageWithXImage(
 	if (image->bitmap_bit_order != MSBFirst) {
 	    char *srcPtr = image->data + image->xoffset;
 	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = ckalloc(len));
+	    char *destPtr = (data = (char *)ckalloc(len));
 
 	    while (srcPtr < endPtr) {
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
@@ -218,7 +218,7 @@ XGetImage(
 	bitmap_fmt = [bitmap_rep bitmapFormat];
 	size = [bitmap_rep bytesPerPlane];
 	bytes_per_row = [bitmap_rep bytesPerRow];
-	bitmap = ckalloc(size);
+	bitmap = (char *)ckalloc(size);
 	if (!bitmap
 		|| (bitmap_fmt != 0 && bitmap_fmt != 1)
 		|| [bitmap_rep samplesPerPixel] != 4
@@ -460,7 +460,7 @@ XCreateImage(
     (void)visual;
 
     display->request++;
-    ximage = ckalloc(sizeof(XImage));
+    ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
     ximage->width = width;

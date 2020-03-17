@@ -90,7 +90,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 	 * quickly as possible.
 	 */
 
-	eventPtr = ckalloc(sizeof(KillEvent));
+	eventPtr = (KillEvent *)ckalloc(sizeof(KillEvent));
 	eventPtr->header.proc = ReallyKillMe;
 	eventPtr->interp = _eventInterp;
 
@@ -200,7 +200,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
      * procedure, passing the paths contained in the AppleEvent as arguments.
      */
 
-    AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *openCommand = &AEInfo->command;
     Tcl_DStringInit(openCommand);
     Tcl_DStringAppend(openCommand, openDocumentProc, -1);
@@ -238,7 +238,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     NSString* file = [[event paramDescriptorForKeyword:keyDirectObject]
 			 stringValue];
     const char *printFile = [file UTF8String];
-    AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *printCommand = &AEInfo->command;
     (void)replyEvent;
 
@@ -301,7 +301,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                 URLBuffer[actual] = '\0';
                 NSString *urlString = [NSString stringWithUTF8String:(char*)URLBuffer];
                 NSURL *fileURL = [NSURL URLWithString:urlString];
-                AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+                AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptFileCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptFileCommand);
                 Tcl_DStringAppend(scriptFileCommand, scriptFileProc, -1);
@@ -321,11 +321,11 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
          */
 
 	if (actual > 0) {
-	    char *data = ckalloc(actual + 1);
+	    char *data = (char *)ckalloc(actual + 1);
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
-                AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+                AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptTextCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptTextCommand);
                 Tcl_DStringAppend(scriptTextCommand, scriptTextProc, -1);
@@ -350,7 +350,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     NSString* url = [[event paramDescriptorForKeyword:keyDirectObject]
                         stringValue];
     const char *cURL=[url UTF8String];
-    AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *launchCommand = &AEInfo->command;
     (void)replyEvent;
 

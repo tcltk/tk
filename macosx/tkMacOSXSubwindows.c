@@ -1432,7 +1432,7 @@ Tk_GetPixmap(
     if (display != NULL) {
 	display->request++;
     }
-    macPix = ckalloc(sizeof(MacDrawable));
+    macPix = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
     macPix->xOff = 0;
     macPix->yOff = 0;
