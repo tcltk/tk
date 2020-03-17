@@ -2799,7 +2799,7 @@ GetListboxIndex(
 	if (*indexPtr < -1) {
 	    *indexPtr = -1;
 	} else if (*indexPtr > listPtr->nElements) {
-	    *indexPtr = listPtr->nElements + (endIsSize ? 1 : 0);
+	    *indexPtr = listPtr->nElements;
 	}
 	return TCL_OK;
     }
