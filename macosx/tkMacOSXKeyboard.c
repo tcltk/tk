@@ -487,7 +487,7 @@ XGetModifierMapping(
      * MacOSX doesn't use the key codes for the modifiers for anything, and we
      * don't generate them either. So there is no modifier map.
      */
-    modmap = ckalloc(sizeof(XModifierKeymap));
+    modmap = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
     return modmap;

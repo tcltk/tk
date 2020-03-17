@@ -204,7 +204,7 @@ TkpOpenDisplay(
 
     TkMacOSXDisplayChanged(display);
 
-    gMacDisplay = ckalloc(sizeof(TkDisplay));
+    gMacDisplay = (TkDisplay *)ckalloc(sizeof(TkDisplay));
 
     /*
      * This is the quickest way to make sure that all the *Init flags get
@@ -232,8 +232,8 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    Display *display = ckalloc(sizeof(Display));
-    Screen *screen = ckalloc(sizeof(Screen));
+    Display *display = (Display *)ckalloc(sizeof(Display));
+    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     int fd = 0;
     NSArray *cgVers;
     static char vendor[25] = "";
@@ -260,7 +260,7 @@ XkbOpenDisplay(
     screen->white_pixel = 0x00FFFFFF | PIXEL_MAGIC << 24;
     screen->ext_data	= (XExtData *) &maxBounds;
 
-    screen->root_visual = ckalloc(sizeof(Visual));
+    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
     screen->root_visual->c_class      = TrueColor;
     screen->root_visual->red_mask     = 0x00FF0000;

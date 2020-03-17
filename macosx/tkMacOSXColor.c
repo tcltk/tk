@@ -792,7 +792,7 @@ TkpGetColor(
     }
 
 validXColor:
-    tkColPtr = ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
 
     return tkColPtr;
@@ -826,7 +826,7 @@ TkpGetColorByValue(
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     (void)tkwin;
 
     tkColPtr->color.red = colorPtr->red;
