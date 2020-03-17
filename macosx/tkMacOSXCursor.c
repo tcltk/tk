@@ -391,7 +391,7 @@ TkGetCursorByName(
 
     if (Tcl_SplitList(interp, string, &argc, &argv) == TCL_OK) {
 	if (argc) {
-	    macCursorPtr = ckalloc(sizeof(TkMacOSXCursor));
+	    macCursorPtr = (TkMacOSXCursor *)ckalloc(sizeof(TkMacOSXCursor));
 	    macCursorPtr->info.cursor = (Tk_Cursor) macCursorPtr;
 	    macCursorPtr->macCursor = nil;
 	    macCursorPtr->type = 0;

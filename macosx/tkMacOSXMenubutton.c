@@ -135,7 +135,7 @@ TkMenuButton *
 TkpCreateMenuButton(
     Tk_Window tkwin)
 {
-    MacMenuButton *mbPtr = (MacMenuButton *) ckalloc(sizeof(MacMenuButton));
+    MacMenuButton *mbPtr = (MacMenuButton *)ckalloc(sizeof(MacMenuButton));
 
     Tk_CreateEventHandler(tkwin, ActivateMask, MenuButtonEventProc, mbPtr);
     mbPtr->flags = FIRST_DRAW;
