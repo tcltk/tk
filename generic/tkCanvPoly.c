@@ -1247,7 +1247,6 @@ PolygonDeleteCoords(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 PolygonToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1437,7 +1436,6 @@ PolygonToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 PolygonToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */

@@ -142,7 +142,6 @@ TkTestLogDisplay(void) {
  *----------------------------------------------------------------------
  */
 
-        /* ARGSUSED */
 static int
 PressButtonObjCmd(
     ClientData dummy,

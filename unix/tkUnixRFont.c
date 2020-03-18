@@ -1042,7 +1042,7 @@ TkDrawAngledChars(
 
     nglyph = 0;
     currentFtFont = NULL;
-    originX = originY = 0;		/* lint */
+    originX = originY = 0;
 
     while (numBytes > 0) {
 	XftFont *ftFont;

@@ -134,7 +134,6 @@ TkOldTestInit(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ImageCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
@@ -201,7 +200,6 @@ ImageCreate(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ImageObjCmd(
     ClientData clientData,	/* Main window for application. */

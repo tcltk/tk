@@ -282,7 +282,6 @@ TkLineToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkThickPolyLineToArea(
     double *coordPtr,		/* Points to an array of coordinates for the
@@ -652,7 +651,6 @@ TkPolygonToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 double
 TkOvalToPoint(
     double ovalPtr[4],		/* Pointer to array of four coordinates (x1,
@@ -867,7 +865,6 @@ TkOvalToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 TkIncludePoint(
     Tk_Item *itemPtr,	/* Item whose bounding box is being

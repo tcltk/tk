@@ -394,7 +394,6 @@ Tk_MainEx(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */

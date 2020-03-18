@@ -559,7 +559,6 @@ ConsoleOutput(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleInput(
     void *dummy,		/* Unused. */
@@ -592,7 +591,6 @@ ConsoleInput(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleClose(
     ClientData instanceData,
@@ -645,7 +643,6 @@ Console2Close(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ConsoleWatch(
     ClientData dummy,	/* Device ID for the channel. */
@@ -674,7 +671,6 @@ ConsoleWatch(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleHandle(
     ClientData dummy,	/* Device ID for the channel. */

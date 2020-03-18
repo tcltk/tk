@@ -2467,7 +2467,7 @@ CanUseFallback(
     numEncodings = 0;
     Tcl_DStringInit(&dsEncodings);
 
-    charset = NULL;	/* lint, since numNames must be > 0 to get here. */
+    charset = NULL;	/* numNames must be > 0 to get here. */
 
   retry:
     bestIdx[0] = -1;

@@ -426,7 +426,6 @@ DeleteImage(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeImageBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
