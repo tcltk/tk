@@ -1679,16 +1679,25 @@ GetPolygonIndex(
 				 * itemPtr's line. */
     int *indexPtr)		/* Where to store converted index. */
 {
+    TkSizeT length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    const char *string = Tcl_GetString(obj);
+    const char *string;
     (void)canvas;
+	TkSizeT count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
-    if (string[0] == 'e') {
-	if (strncmp(string, "end", obj->length) != 0) {
-	    goto badIndex;
+    if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX) - ((INT_MAX) % count), &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else {
+	    idx = (idx & (TkSizeT)-2) % count;
 	}
-	*indexPtr = 2*(polyPtr->numPoints - polyPtr->autoClosed);
-    } else if (string[0] == '@') {
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(obj, &length);
+
+    if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
 	char *end;
@@ -1716,31 +1725,17 @@ GetPolygonIndex(
 	    coordPtr += 2;
 	}
     } else {
-	int count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
+	/*
+	 * Some of the paths here leave messages in interp->result, so we have to
+	 * clear it out before storing our own message.
+	 */
 
-	if (Tcl_GetIntFromObj(interp, obj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	*indexPtr &= -2; /* if odd, make it even */
-	if (!count) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > 0) {
-	    *indexPtr = ((*indexPtr - 2) % count) + 2;
-	} else {
-	    *indexPtr = -((-(*indexPtr)) % count);
-	}
+    badIndex:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
+	return TCL_ERROR;
     }
     return TCL_OK;
-
-    /*
-     * Some of the paths here leave messages in interp->result, so we have to
-     * clear it out before storing our own message.
-     */
-
-  badIndex:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
-    return TCL_ERROR;
 }
 
 /*

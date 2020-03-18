@@ -1369,12 +1369,20 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    TkSizeT length;
-    const char *string = TkGetStringFromObj(indexObj, &length);
+    TkSizeT length, idx;
+    const char *string;
 
-    if (strncmp(string, "end", length) == 0) {
-	*indexPtr = entryPtr->entry.numChars;
-    } else if (strncmp(string, "insert", length) == 0) {
+    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars, &idx)) {
+    	if (idx + 1 > (TkSizeT)entryPtr->entry.numChars + 1) {
+    	    idx = (TkSizeT)entryPtr->entry.numChars;
+    	}
+    	*indexPtr = (int)idx;
+    	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(indexObj, &length);
+
+    if (strncmp(string, "insert", length) == 0) {
 	*indexPtr = entryPtr->entry.insertPos;
     } else if (strncmp(string, "left", length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.first;
@@ -1426,14 +1434,7 @@ EntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	if (*indexPtr < 0) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > entryPtr->entry.numChars) {
-	    *indexPtr = entryPtr->entry.numChars;
-	}
+	goto badIndex;
     }
     return TCL_OK;
 
@@ -1749,16 +1750,6 @@ static const WidgetSpec EntryWidgetSpec = {
 };
 
 /*------------------------------------------------------------------------
- * Named indices for the combobox "current" command
- */
-static const char *const comboboxCurrentIndexNames[] = {
-    "end", NULL
-};
-enum comboboxCurrentIndices {
-    INDEX_END
-};
-
-/*------------------------------------------------------------------------
  * +++ Combobox widget record.
  */
 
@@ -1859,42 +1850,22 @@ static int ComboboxCurrentCommand(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
-        int result, index;
+	TkSizeT idx;
 
-        result = Tcl_GetIndexFromObj(NULL, objv[2], comboboxCurrentIndexNames,
-                "", 0, &index);
-        if (result == TCL_OK) {
-
-            /*
-             * The index is one of the named indices.
-             */
-
-	    switch (index) {
-	    case INDEX_END:
-	        /* "end" index */
-                currentIndex = nValues - 1;
-                break;
-	    }
-        } else {
-
-            /*
-             * The index should be just an integer.
-             */
-
-	    if (Tcl_GetIntFromObj(NULL, objv[2], &currentIndex) != TCL_OK) {
+	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, &idx)) {
+	    if (idx == TCL_INDEX_NONE || idx > (TkSizeT)nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		        "Incorrect index %s", Tcl_GetString(objv[2])));
-	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
-	        return TCL_ERROR;
-	    }
-
-	    if (currentIndex < 0 || currentIndex >= nValues) {
-	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		        "Index %s out of range", Tcl_GetString(objv[2])));
+		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
 	        return TCL_ERROR;
 	    }
-        }
+	    currentIndex = (int)idx;
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "Incorrect index %s", Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
+	    return TCL_ERROR;
+	}
 
 	cbPtr->combobox.currentIndex = currentIndex;
 
