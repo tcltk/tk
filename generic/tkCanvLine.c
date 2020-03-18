@@ -1749,17 +1749,26 @@ GetLineIndex(
 				 * itemPtr's line. */
     int *indexPtr)		/* Where to store converted index. */
 {
+    TkSizeT idx, length;
     LineItem *linePtr = (LineItem *) itemPtr;
-    const char *string = Tcl_GetString(obj);
+    const char *string;
     (void)canvas;
 
-    if (string[0] == 'e') {
-	if (strncmp(string, "end", obj->length) == 0) {
-	    *indexPtr = 2*linePtr->numPoints;
+    if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > (2*(TkSizeT)linePtr->numPoints)) {
+	    idx = 2*linePtr->numPoints;
 	} else {
-	    goto badIndex;
+	    idx &= (TkSizeT)-2;	/* If index is odd, make it even. */
 	}
-    } else if (string[0] == '@') {
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(obj, &length);
+
+    if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
 	char *end;
@@ -1787,27 +1796,18 @@ GetLineIndex(
 	    coordPtr += 2;
 	}
     } else {
-	if (Tcl_GetIntFromObj(NULL, obj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	*indexPtr &= -2;	/* If index is odd, make it even. */
-	if (*indexPtr < 0){
-	    *indexPtr = 0;
-	} else if (*indexPtr > (2*linePtr->numPoints)) {
-	    *indexPtr = (2*linePtr->numPoints);
-	}
+
+	/*
+	 * Some of the paths here leave messages in interp->result, so we have to
+	 * clear it out before storing our own message.
+	 */
+
+    badIndex:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
+	return TCL_ERROR;
     }
     return TCL_OK;
-
-    /*
-     * Some of the paths here leave messages in interp->result, so we have to
-     * clear it out before storing our own message.
-     */
-
-  badIndex:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
-    return TCL_ERROR;
 }
 
 /*

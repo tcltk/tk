@@ -377,10 +377,10 @@ enum scancommand {
 };
 
 static const char *const indexNames[] = {
-    "active", "anchor", "end", NULL
+    "active", "anchor", NULL
 };
 enum indices {
-    INDEX_ACTIVE, INDEX_ANCHOR, INDEX_END
+    INDEX_ACTIVE, INDEX_ANCHOR
 };
 
 /*
@@ -2737,7 +2737,17 @@ GetListboxIndex(
     int *indexPtr)		/* Where to store converted index. */
 {
     int result, index;
+    TkSizeT idx;
     const char *stringRep;
+
+    result = TkGetIntForIndex(indexObj, listPtr->nElements - (endIsSize ? 0 : 1), &idx);
+    if (result == TCL_OK) {
+    	if (idx + 1 > (TkSizeT)listPtr->nElements + 1) {
+    	    idx = listPtr->nElements;
+    	}
+    	*indexPtr = (int)idx;
+    	return TCL_OK;
+    }
 
     /*
      * First see if the index is one of the named indices.
@@ -2753,10 +2763,6 @@ GetListboxIndex(
 	case INDEX_ANCHOR:
 	    /* "anchor" index */
 	    *indexPtr = listPtr->selectAnchor;
-	    break;
-	case INDEX_END:
-	    /* "end" index */
-	    *indexPtr = listPtr->nElements - (endIsSize ? 0 : 1);
 	    break;
 	}
 	return TCL_OK;
@@ -2788,19 +2794,6 @@ GetListboxIndex(
 	    goto badIndex;
 	}
 	*indexPtr = NearestListboxElement(listPtr, y);
-	return TCL_OK;
-    }
-
-    /*
-     * Maybe the index is just an integer.
-     */
-
-    if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) == TCL_OK) {
-	if (*indexPtr < -1) {
-	    *indexPtr = -1;
-	} else if (*indexPtr > listPtr->nElements) {
-	    *indexPtr = listPtr->nElements;
-	}
 	return TCL_OK;
     }
 

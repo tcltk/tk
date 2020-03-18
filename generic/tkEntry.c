@@ -2651,8 +2651,20 @@ GetEntryIndex(
     Tcl_Obj *indexObj,	/* Specifies character in entryPtr. */
     int *indexPtr)		/* Where to store converted character index */
 {
-    const char *string = Tcl_GetString(indexObj);
-    size_t length = indexObj->length;
+    TkSizeT length, idx;
+    const char *string;
+
+    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > (TkSizeT)entryPtr->numChars) {
+	    idx = (TkSizeT)entryPtr->numChars;
+	}
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(indexObj, &length);
 
     switch (string[0]) {
     case 'a':
@@ -2660,12 +2672,6 @@ GetEntryIndex(
 	    goto badIndex;
 	}
 	*indexPtr = entryPtr->selectAnchor;
-	break;
-    case 'e':
-	if (strncmp(string, "end", length) != 0) {
-	    goto badIndex;
-	}
-	*indexPtr = entryPtr->numChars;
 	break;
     case 'i':
 	if (strncmp(string, "insert", length) != 0) {
@@ -2727,24 +2733,15 @@ GetEntryIndex(
 	break;
     }
     default:
-	if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	if (*indexPtr < 0){
-	    *indexPtr = 0;
-	} else if (*indexPtr > entryPtr->numChars) {
-	    *indexPtr = entryPtr->numChars;
-	}
+	  badIndex:
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad %s index \"%s\"",
+		    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
+	    Tcl_SetErrorCode(interp, "TK",
+		    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
+		    "BAD_INDEX", NULL);
+	    return TCL_ERROR;
     }
     return TCL_OK;
-
-  badIndex:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad %s index \"%s\"",
-	    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
-    Tcl_SetErrorCode(interp, "TK",
-	    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
-	    "BAD_INDEX", NULL);
-    return TCL_ERROR;
 }
 
 /*
