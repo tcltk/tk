@@ -1112,13 +1112,13 @@ ConfigureEntry(
     Spinbox *sbPtr = (Spinbox *) entryPtr;
 				/* Only used when this widget is of type
 				 * TK_SPINBOX */
-    char *oldValues = NULL;	/* lint initialization */
-    char *oldFormat = NULL;	/* lint initialization */
+    char *oldValues = NULL;
+    char *oldFormat = NULL;
     int error;
-    int oldExport = 0;		/* lint initialization */
-    int valuesChanged = 0;	/* lint initialization */
-    double oldFrom = 0.0;	/* lint initialization */
-    double oldTo = 0.0;		/* lint initialization */
+    int oldExport = 0;
+    int valuesChanged = 0;
+    double oldFrom = 0.0;
+    double oldTo = 0.0;
     int code;
 
     /*
@@ -3217,7 +3217,6 @@ EntryFocusProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */

@@ -573,7 +573,6 @@ EmbWinStructureProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 EmbWinRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
@@ -737,7 +736,6 @@ TkTextWinFreeClient(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 EmbWinDeleteProc(
     TkTextSegment *ewPtr,	/* Segment being deleted. */
@@ -819,7 +817,6 @@ EmbWinCleanupProc(
  *--------------------------------------------------------------
  */
 
-	/*ARGSUSED*/
 static int
 EmbWinLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */

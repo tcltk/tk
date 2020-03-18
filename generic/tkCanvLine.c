@@ -1327,7 +1327,6 @@ LineDeleteCoords(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 LineToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1555,7 +1554,6 @@ LineToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 LineToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1931,7 +1929,6 @@ RotateLine(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ParseArrowShape(
     ClientData dummy,	/* Not used. */
@@ -2002,7 +1999,6 @@ ParseArrowShape(
  *--------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static const char *
 PrintArrowShape(
     ClientData dummy,	/* Not used. */
@@ -2159,7 +2155,6 @@ ArrowPrintProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConfigureArrows(
     Tk_Canvas canvas,		/* Canvas in which arrows will be displayed

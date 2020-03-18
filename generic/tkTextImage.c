@@ -444,7 +444,6 @@ EmbImageConfigure(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 EmbImageDeleteProc(
     TkTextSegment *eiPtr,	/* Segment being deleted. */
@@ -529,7 +528,6 @@ EmbImageCleanupProc(
  *--------------------------------------------------------------
  */
 
-	/*ARGSUSED*/
 static int
 EmbImageLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */

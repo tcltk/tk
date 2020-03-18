@@ -515,7 +515,6 @@ Tk_PackObjCmd(
  *------------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 PackReqProc(
     ClientData clientData,	/* Packer's information about window that got
@@ -550,7 +549,6 @@ PackReqProc(
  *------------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 PackLostSlaveProc(
     ClientData clientData,	/* Packer structure for slave window that was

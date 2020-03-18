@@ -474,7 +474,6 @@ DeleteBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeBitmapBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -672,7 +671,6 @@ DisplayBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 BitmapToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -730,7 +728,6 @@ BitmapToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 BitmapToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */

@@ -1529,7 +1529,6 @@ Tk_FreeSavedOptions(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 Tk_FreeConfigOptions(
     void *recordPtr,		/* Record whose fields contain current values

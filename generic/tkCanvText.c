@@ -839,7 +839,7 @@ DisplayCanvText(
     }
 
     selFirstChar = -1;
-    selLastChar = 0;		/* lint. */
+    selLastChar = 0;
     Tk_CanvasDrawableCoords(canvas, textPtr->drawOrigin[0],
 	    textPtr->drawOrigin[1], &drawableX, &drawableY);
 
@@ -1301,7 +1301,6 @@ RotateText(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ScaleText(
     Tk_Canvas canvas,		/* Canvas containing rectangle. */
@@ -1470,7 +1469,6 @@ GetTextIndex(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 SetTextCursor(
     Tk_Canvas canvas,		/* Record describing canvas widget. */
@@ -1645,7 +1643,7 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;	/* lint. */
+    x = 0;  y = 0;  justify = NULL;
     switch (textPtr->anchor) {
     case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;

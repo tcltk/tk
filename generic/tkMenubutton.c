@@ -869,7 +869,6 @@ MenuButtonCmdDeletedProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 MenuButtonTextVarProc(
     ClientData clientData,	/* Information about button. */

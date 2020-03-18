@@ -1119,7 +1119,6 @@ Tk_GetImageMasterData(
  *----------------------------------------------------------------------
  */
 
-/*ARGSUSED*/
 void
 Tk_SetTSOrigin(
     Tk_Window tkwin,

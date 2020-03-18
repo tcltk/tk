@@ -1070,7 +1070,6 @@ TkWmSetClass(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 int
 Tk_WmObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -4059,7 +4058,6 @@ TopLevelEventProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 TopLevelReqProc(
     TCL_UNUSED(void *),		/* Not used. */
@@ -5523,7 +5521,6 @@ TkMacOSXZoomToplevel(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 int
 TkUnsupported1ObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */

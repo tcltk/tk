@@ -1194,7 +1194,6 @@ SlaveStructureProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 PlaceRequestProc(
     ClientData clientData,	/* Pointer to our record for slave. */
@@ -1241,7 +1240,6 @@ PlaceRequestProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 PlaceLostSlaveProc(
     ClientData clientData,	/* Slave structure for slave window that was

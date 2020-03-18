@@ -805,7 +805,6 @@ DupBitmapObjProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 Pixmap
 Tk_GetBitmapFromData(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
