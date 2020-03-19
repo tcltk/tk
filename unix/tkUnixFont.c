@@ -36,7 +36,8 @@ static const char encodingList[][10] = {
 #define FONTMAP_SHIFT		10
 
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
-#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
+#define FONTMAP_NUMCHARS	0x40000
+#define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -192,7 +193,7 @@ static const EncodingAlias encodingAliases[] = {
  * Functions used only in this file.
  */
 
-static void		FontPkgCleanup(ClientData clientData);
+static void		FontPkgCleanup(void *clientData);
 static FontFamily *	AllocFontFamily(Display *display,
 			    XFontStruct *fontStructPtr, int base);
 static SubFont *	CanUseFallback(UnixFont *fontPtr,
@@ -202,7 +203,7 @@ static SubFont *	CanUseFallbackWithAliases(UnixFont *fontPtr,
 			    const char *fallbackName, int ch,
 			    Tcl_DString *nameTriedPtr,
 			    SubFont **fixSubFontPtrPtr);
-static int		ControlUtfProc(ClientData clientData, const char *src,
+static int		ControlUtfProc(void *clientData, const char *src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
@@ -237,11 +238,11 @@ static unsigned		RankAttributes(FontAttributes *wantPtr,
 static void		ReleaseFont(UnixFont *fontPtr);
 static void		ReleaseSubFont(Display *display, SubFont *subFontPtr);
 static int		SeenName(const char *name, Tcl_DString *dsPtr);
-static int		Ucs2beToUtfProc(ClientData clientData, const char*src,
+static int		Ucs2beToUtfProc(void *clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
-static int		UtfToUcs2beProc(ClientData clientData, const char*src,
+static int		UtfToUcs2beProc(void *clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
@@ -266,11 +267,10 @@ static int		UtfToUcs2beProc(ClientData clientData, const char*src,
 
 static void
 FontPkgCleanup(
-    ClientData dummy)
+    TCL_UNUSED(void *))
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     if (tsdPtr->controlFamily.encoding != NULL) {
 	FontFamily *familyPtr = &tsdPtr->controlFamily;
@@ -306,14 +306,13 @@ FontPkgCleanup(
 
 void
 TkpFontPkgInit(
-    TkMainInfo *mainPtr)	/* The application being created. */
+    TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     SubFont dummy;
     int i;
     Tcl_Encoding ucs2;
-    (void)mainPtr;
 
     if (tsdPtr->controlFamily.encoding == NULL) {
 
@@ -363,11 +362,11 @@ TkpFontPkgInit(
 
 static int
 ControlUtfProc(
-    ClientData dummy,	/* Not used. */
+    TCL_UNUSED(void *),	/* Not used. */
     const char *src,		/* Source string in UTF-8. */
     int srcLen,			/* Source string length in bytes. */
-    int flags,			/* Conversion control flags. */
-    Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
+    TCL_UNUSED(int),			/* Conversion control flags. */
+    TCL_UNUSED(Tcl_EncodingState *),/* Place for conversion routine to store state
 				 * information used during a piecewise
 				 * conversion. Contents of statePtr are
 				 * initialized and/or reset by conversion
@@ -396,9 +395,6 @@ ControlUtfProc(
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
     };
-    (void)dummy;
-    (void)flags;
-    (void)statePtr;
 
     result = TCL_OK;
 
@@ -464,11 +460,11 @@ ControlUtfProc(
 
 static int
 Ucs2beToUtfProc(
-    ClientData dummy,	/* Not used. */
+    TCL_UNUSED(void *),		/* Not used. */
     const char *src,		/* Source string in Unicode. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
-    Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
+    TCL_UNUSED(Tcl_EncodingState *),/* Place for conversion routine to store state
 				 * information used during a piecewise
 				 * conversion. Contents of statePtr are
 				 * initialized and/or reset by conversion
@@ -493,8 +489,6 @@ Ucs2beToUtfProc(
     const char *dstEnd, *dstStart;
     int result, numChars, charLimit = INT_MAX;
     unsigned short ch;
-    (void)dummy;
-    (void)statePtr;
 
     if (flags & TCL_ENCODING_CHAR_LIMIT) {
 	charLimit = *dstCharsPtr;
@@ -562,12 +556,12 @@ Ucs2beToUtfProc(
 
 static int
 UtfToUcs2beProc(
-    ClientData dummy,	/* TableEncodingData that specifies
+    TCL_UNUSED(void *),	/* TableEncodingData that specifies
 				 * encoding. */
     const char *src,		/* Source string in UTF-8. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
-    Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
+    TCL_UNUSED(Tcl_EncodingState *),/* Place for conversion routine to store state
 				 * information used during a piecewise
 				 * conversion. Contents of statePtr are
 				 * initialized and/or reset by conversion
@@ -591,8 +585,6 @@ UtfToUcs2beProc(
     const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
     int ch;
-    (void)dummy;
-    (void)statePtr;
 
     srcStart = src;
     srcEnd = src + srcLen;
@@ -1211,7 +1203,7 @@ TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    TCL_UNUSED(int),		/* Maximum number of bytes to consider from
 				 * source string in all. */
     int rangeStart,		/* Index of first byte to measure. */
     int rangeLength,		/* Length of range to measure in bytes. */
@@ -1233,7 +1225,6 @@ TkpMeasureCharsInContext(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-    (void) numBytes; /*unused*/
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
 	    maxLength, flags, lengthPtr);
 }
@@ -1405,7 +1396,7 @@ TkpDrawCharsInContext(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    TCL_UNUSED(int),		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
@@ -1413,8 +1404,6 @@ TkpDrawCharsInContext(
 				 * drawing. */
 {
     int widthUntilStart;
-
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -1830,7 +1819,7 @@ AllocFontFamily(
     Display *display,		/* Display in which font will be used. */
     XFontStruct *fontStructPtr,	/* Screen font whose FontFamily is to be
 				 * returned. */
-    int base)			/* Non-zero if this font family is to be used
+    TCL_UNUSED(int))			/* Non-zero if this font family is to be used
 				 * in the base font of a font object. */
 {
     FontFamily *familyPtr;
@@ -1838,7 +1827,6 @@ AllocFontFamily(
     Tcl_Encoding encoding;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)base;
 
     GetFontAttributes(display, fontStructPtr, &fa);
     encoding = Tcl_GetEncoding(NULL, GetEncodingAlias(fa.xa.charset));
@@ -1988,7 +1976,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (ch < 0 || ch > 0x30000) {
+    if (ch < 0 || ch >= FONTMAP_NUMCHARS) {
 	ch = 0xFFFD;
     }
 
@@ -2142,7 +2130,7 @@ FontMapLookup(
 {
     int row, bitOffset;
 
-    if (ch < 0 ||  ch >= 0x30000) {
+    if (ch < 0 ||  ch >= FONTMAP_NUMCHARS) {
 	return 0;
     }
     row = ch >> FONTMAP_SHIFT;
@@ -2185,7 +2173,7 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    if (ch >= 0 &&  ch < 0x30000) {
+    if (ch >= 0 &&  ch < FONTMAP_NUMCHARS) {
 	row = ch >> FONTMAP_SHIFT;
 	if (subFontPtr->fontMap[row] == NULL) {
 	    FontMapLoadPage(subFontPtr, row);

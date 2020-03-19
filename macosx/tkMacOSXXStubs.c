@@ -225,7 +225,7 @@ TkpOpenDisplay(
 
 Display *
 XkbOpenDisplay(
-	TCL_UNUSED(char *),
+    TCL_UNUSED(char *),
 	int *ev_rtrn,
 	int *err_rtrn,
 	int *major_rtrn,
@@ -514,13 +514,13 @@ XGetGeometry(
 int
 XChangeProperty(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Atom),
-	TCL_UNUSED(Atom),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int),
-	TCL_UNUSED(_Xconst unsigned char *),
-	TCL_UNUSED(int))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Atom),
+    TCL_UNUSED(Atom),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(_Xconst unsigned char *),
+    TCL_UNUSED(int))
 {
     Debugger();
     return Success;
@@ -529,8 +529,8 @@ XChangeProperty(
 int
 XSelectInput(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(long))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(long))
 {
     Debugger();
     return Success;
@@ -539,7 +539,7 @@ XSelectInput(
 int
 XBell(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(int))
+    TCL_UNUSED(int))
 {
     NSBeep();
     return Success;
@@ -549,8 +549,8 @@ XBell(
 void
 XSetWMNormalHints(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(XSizeHints *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(XSizeHints *))
 {
     /*
      * Do nothing. Shouldn't even be called.
@@ -583,10 +583,10 @@ XGContextFromGC(
 Status
 XSendEvent(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Bool),
-	TCL_UNUSED(long),
-	TCL_UNUSED(XEvent *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Bool),
+    TCL_UNUSED(long),
+    TCL_UNUSED(XEvent *))
 {
     Debugger();
     return 0;
@@ -595,7 +595,7 @@ XSendEvent(
 int
 XClearWindow(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window))
+    TCL_UNUSED(Window))
 {
     return Success;
 }
@@ -628,14 +628,14 @@ XDrawPoints(
 int
 XWarpPointer(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int),
-	TCL_UNUSED(unsigned int),
-	TCL_UNUSED(unsigned int),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     return Success;
 }
@@ -643,7 +643,7 @@ XWarpPointer(
 int
 XQueryColor(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Colormap),
+    TCL_UNUSED(Colormap),
     XColor* def_in_out)
 {
     unsigned long p;
@@ -665,13 +665,13 @@ XQueryColor(
 Bool
 XTranslateCoordinates(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int *),
-	TCL_UNUSED(int *),
-	TCL_UNUSED(Window *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(Window *))
 {
     return 0;
 }
@@ -679,9 +679,9 @@ XTranslateCoordinates(
 int
 XSetCommand(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(char **),
-	TCL_UNUSED(int))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(char **),
+    TCL_UNUSED(int))
 {
     return Success;
 }
@@ -689,8 +689,8 @@ XSetCommand(
 int
 XGetWindowAttributes(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(XWindowAttributes *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(XWindowAttributes *))
 {
     return Success;
 }
@@ -698,9 +698,9 @@ XGetWindowAttributes(
 Status
 XGetWMColormapWindows(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Window **),
-	TCL_UNUSED(int *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window **),
+    TCL_UNUSED(int *))
 {
     return Success;
 }
@@ -708,8 +708,8 @@ XGetWMColormapWindows(
 int
 XIconifyWindow(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(int))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int))
 {
     return Success;
 }
@@ -717,8 +717,8 @@ XIconifyWindow(
 XHostAddress *
 XListHosts(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(int *),
-	TCL_UNUSED(Bool *))
+    TCL_UNUSED(int *),
+    TCL_UNUSED(Bool *))
 {
     return NULL;
 }
@@ -726,10 +726,10 @@ XListHosts(
 int
 XLookupColor(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Colormap),
-	TCL_UNUSED(_Xconst char *),
-	TCL_UNUSED(XColor *),
-	TCL_UNUSED(XColor *))
+    TCL_UNUSED(Colormap),
+    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(XColor *),
+    TCL_UNUSED(XColor *))
 {
     return Success;
 }
@@ -737,7 +737,7 @@ XLookupColor(
 int
 XNextEvent(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(XEvent *))
+    TCL_UNUSED(XEvent *))
 {
     return Success;
 }
@@ -745,7 +745,7 @@ XNextEvent(
 int
 XPutBackEvent(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(XEvent *))
+    TCL_UNUSED(XEvent *))
 {
     return Success;
 }
@@ -753,7 +753,7 @@ XPutBackEvent(
 int
 XQueryColors(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Colormap),
+    TCL_UNUSED(Colormap),
     XColor* defs_in_out,
     int ncolors)
 {
@@ -779,11 +779,11 @@ XQueryColors(
 int
 XQueryTree(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Window *),
-	TCL_UNUSED(Window *),
-	TCL_UNUSED(Window **),
-	TCL_UNUSED(unsigned int *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Window **),
+    TCL_UNUSED(unsigned int *))
 {
     return 0;
 }
@@ -792,17 +792,17 @@ XQueryTree(
 int
 XGetWindowProperty(
     Display *display,
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Atom),
-	TCL_UNUSED(long),
-	TCL_UNUSED(long),
-	TCL_UNUSED(Bool),
-	TCL_UNUSED(Atom),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Atom),
+    TCL_UNUSED(long),
+    TCL_UNUSED(long),
+    TCL_UNUSED(Bool),
+    TCL_UNUSED(Atom),
     Atom *actual_type_return,
     int *actual_format_return,
     unsigned long *nitems_return,
     unsigned long *bytes_after_return,
-	TCL_UNUSED(unsigned char **))
+    TCL_UNUSED(unsigned char **))
 {
     display->request++;
     *actual_type_return = None;
@@ -814,9 +814,9 @@ XGetWindowProperty(
 int
 XWindowEvent(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(long),
-	TCL_UNUSED(XEvent *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(long),
+    TCL_UNUSED(XEvent *))
 {
     return Success;
 }
@@ -824,8 +824,8 @@ XWindowEvent(
 int
 XWithdrawWindow(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(int))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int))
 {
     return Success;
 }
@@ -833,11 +833,11 @@ XWithdrawWindow(
 int
 XmbLookupString(
     TCL_UNUSED(XIC),
-	TCL_UNUSED(XKeyPressedEvent *),
-	TCL_UNUSED(char *),
-	TCL_UNUSED(int),
-	TCL_UNUSED(KeySym *),
-	TCL_UNUSED(Status *))
+    TCL_UNUSED(XKeyPressedEvent *),
+    TCL_UNUSED(char *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(KeySym *),
+    TCL_UNUSED(Status *))
 {
     return Success;
 }
@@ -854,8 +854,8 @@ XRefreshKeyboardMapping(
 int
 XSetIconName(
     Display* display,
-	TCL_UNUSED(Window),
-	TCL_UNUSED(const char *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(const char *))
 {
     /*
      * This is a no-op, no icon name for Macs.
@@ -867,7 +867,7 @@ XSetIconName(
 int
 XForceScreenSaver(
     Display* display,
-	TCL_UNUSED(int))
+    TCL_UNUSED(int))
 {
     /*
      * This function is just a no-op. It is defined to reset the screen saver.
@@ -965,9 +965,9 @@ TkGetServerInfo(
 int
 XChangeWindowAttributes(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(unsigned long),
-	TCL_UNUSED(XSetWindowAttributes *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned long),
+    TCL_UNUSED(XSetWindowAttributes *))
 {
     return Success;
 }
@@ -975,8 +975,8 @@ XChangeWindowAttributes(
 int
 XSetWindowBackground(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(unsigned long))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned long))
 {
     return Success;
 }
@@ -984,8 +984,8 @@ XSetWindowBackground(
 int
 XSetWindowBackgroundPixmap(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Pixmap))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Pixmap))
 {
     return Success;
 }
@@ -993,8 +993,8 @@ XSetWindowBackgroundPixmap(
 int
 XSetWindowBorder(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(unsigned long))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned long))
 {
     return Success;
 }
@@ -1002,8 +1002,8 @@ XSetWindowBorder(
 int
 XSetWindowBorderPixmap(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Pixmap))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Pixmap))
 {
     return Success;
 }
@@ -1011,8 +1011,8 @@ XSetWindowBorderPixmap(
 int
 XSetWindowBorderWidth(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned int))
 {
     return Success;
 }
@@ -1020,8 +1020,8 @@ XSetWindowBorderWidth(
 int
 XSetWindowColormap(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Colormap))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Colormap))
 {
     Debugger();
     return Success;
@@ -1030,8 +1030,8 @@ XSetWindowColormap(
 Status
 XStringListToTextProperty(
     TCL_UNUSED(char **),
-	TCL_UNUSED(int),
-	TCL_UNUSED(XTextProperty *))
+    TCL_UNUSED(int),
+    TCL_UNUSED(XTextProperty *))
 {
     Debugger();
     return Success;
@@ -1040,8 +1040,8 @@ XStringListToTextProperty(
 void
 XSetWMClientMachine(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(XTextProperty *))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(XTextProperty *))
 {
     Debugger();
 }
@@ -1056,8 +1056,8 @@ XCreateIC(TCL_UNUSED(XIM), ...)
 int
 XDeleteProperty(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(Atom))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Atom))
 {
     return Success;
 }
@@ -1065,8 +1065,8 @@ XDeleteProperty(
 int
 XGetInputFocus(
     Display *display,
-	TCL_UNUSED(Window *),
-	TCL_UNUSED(int *))
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(int *))
 {
     display->request++;
     return Success;
@@ -1082,7 +1082,7 @@ XVisualIDFromVisual(
 XAfterFunction
 XSynchronize(
     Display *display,
-	TCL_UNUSED(Bool))
+    TCL_UNUSED(Bool))
 {
 	display->request++;
     return NULL;
@@ -1098,7 +1098,7 @@ XUngrabServer(
 int
 XFreeCursor(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Cursor))
+    TCL_UNUSED(Cursor))
 {
     return Success;
 }

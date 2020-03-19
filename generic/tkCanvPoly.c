@@ -566,12 +566,11 @@ ConfigurePolygon(
 
 static void
 DeletePolygon(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    (void)canvas;
 
     Tk_DeleteOutline(display, &polyPtr->outline);
     if (polyPtr->coordPtr != NULL) {
@@ -877,7 +876,10 @@ DisplayPolygon(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y, int width, int height)
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 				/* Describes region of canvas that must be
 				 * redisplayed (not used). */
 {
@@ -885,10 +887,6 @@ DisplayPolygon(
     Tk_State state = itemPtr->state;
     Pixmap stipple = polyPtr->fillStipple;
     double linewidth = polyPtr->outline.width;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
 
     if (((polyPtr->fillGC == NULL) && (polyPtr->outline.gc == NULL)) ||
 	    (polyPtr->numPoints < 1) ||
@@ -1672,7 +1670,7 @@ ScalePolygon(
 static int
 GetPolygonIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
@@ -1682,7 +1680,6 @@ GetPolygonIndex(
     TkSizeT length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     const char *string;
-    (void)canvas;
 	TkSizeT count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
     if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX) - ((INT_MAX) % count), &idx)) {
@@ -1836,7 +1833,7 @@ PolygonToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))	/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -1850,7 +1847,6 @@ PolygonToPostscript(
     double width;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
-    (void)prepass;
 
     if (polyPtr->numPoints < 2 || polyPtr->coordPtr == NULL) {
 	return TCL_OK;
