@@ -1703,7 +1703,7 @@ TkpMenuThreadInit(void)
 void
 TkpMenuNotifyToplevelCreate(
     TCL_UNUSED(Tcl_Interp *),	/* The interp the menu lives in. */
-	TCL_UNUSED(const char *))	/* The name of the menu to reconfigure. */
+    TCL_UNUSED(const char *))	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.
@@ -1732,7 +1732,7 @@ TkpMenuNotifyToplevelCreate(
 void
 TkpInitializeMenuBindings(
     TCL_UNUSED(Tcl_Interp *),		/* The interpreter to set. */
-	TCL_UNUSED(Tk_BindingTable))
+    TCL_UNUSED(Tk_BindingTable))
 				/* The table to add to. */
 {
     /*
@@ -1788,14 +1788,14 @@ TkpDrawMenuEntry(
     TCL_UNUSED(TkMenuEntry *),		/* The entry to draw */
     TCL_UNUSED(Drawable),			/* What to draw into */
     TCL_UNUSED(Tk_Font),		/* Precalculated font for menu */
-	TCL_UNUSED(const Tk_FontMetrics *),
+    TCL_UNUSED(const Tk_FontMetrics *),
 				/* Precalculated metrics for menu */
-	TCL_UNUSED(int),			/* X-coordinate of topleft of entry */
-	TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
-	TCL_UNUSED(int),			/* Width of the entry rectangle */
-	TCL_UNUSED(int),			/* Height of the current rectangle */
-	TCL_UNUSED(int),		/* Boolean flag */
-	TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
+    TCL_UNUSED(int),			/* X-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Width of the entry rectangle */
+    TCL_UNUSED(int),			/* Height of the current rectangle */
+    TCL_UNUSED(int),		/* Boolean flag */
+    TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
 {
 }
@@ -1868,7 +1868,7 @@ TkMacOSXUseMenuID(
 int
 TkMacOSXDispatchMenuEvent(
     TCL_UNUSED(int),			/* The menu id of the menu we are invoking */
-	TCL_UNUSED(int))			/* The one-based index of the item that was
+    TCL_UNUSED(int))			/* The one-based index of the item that was
 				 * selected. */
 {
     return TCL_ERROR;

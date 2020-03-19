@@ -129,7 +129,7 @@ TkStatePrintProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
-	TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
@@ -231,7 +231,7 @@ TkOrientPrintProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
-	TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {

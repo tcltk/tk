@@ -1263,7 +1263,7 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
 static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     ThemeButtonParams *params,
     Ttk_State state,
-	TCL_UNUSED(Tk_Window))
+    TCL_UNUSED(Tk_Window))
 {
 
     /*
@@ -1299,11 +1299,11 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 
 static void ButtonElementMinSize(
     void *clientData,
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     ThemeButtonParams *params = (ThemeButtonParams *)clientData;
 
@@ -1377,7 +1377,7 @@ static void ButtonElementSize(
 
 static void ButtonElementDraw(
     void *clientData,
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -1530,9 +1530,9 @@ static Ttk_StateTable TabPositionTable[] = {
 
 static void TabElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
-	TCL_UNUSED(int *),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *),
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
@@ -1543,7 +1543,7 @@ static void TabElementSize(
 
 static void TabElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -1584,10 +1584,10 @@ static Ttk_ElementSpec TabElementSpec = {
 
 static void PaneElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
-	TCL_UNUSED(int *),
-	TCL_UNUSED(int *),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_MakePadding(9, 5, 9, 9);
@@ -1595,7 +1595,7 @@ static void PaneElementSize(
 
 static void PaneElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -1645,10 +1645,10 @@ static Ttk_ElementSpec PaneElementSpec = {
 
 static void GroupElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
-	TCL_UNUSED(int *),
-	TCL_UNUSED(int *),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_UniformPadding(4);
@@ -1656,7 +1656,7 @@ static void GroupElementSize(
 
 static void GroupElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -1710,10 +1710,10 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
 
 static void EntryElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
-	TCL_UNUSED(int *),
-	TCL_UNUSED(int *),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_MakePadding(7, 5, 7, 6);
@@ -1833,8 +1833,8 @@ static Ttk_Padding ComboboxPadding = {4, 2, 20, 2};
 
 static void ComboboxElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
@@ -1846,7 +1846,7 @@ static void ComboboxElementSize(
 
 static void ComboboxElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -1911,11 +1911,11 @@ static Ttk_Padding SpinbuttonMargins = {0, 0, 2, 0};
 
 static void SpinButtonUpElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     SInt32 s;
 
@@ -1927,7 +1927,7 @@ static void SpinButtonUpElementSize(
 
 static void SpinButtonUpElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -1968,11 +1968,11 @@ static Ttk_ElementSpec SpinButtonUpElementSpec = {
 };
 static void SpinButtonDownElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     SInt32 s;
 
@@ -1984,7 +1984,7 @@ static void SpinButtonDownElementSize(
 
 static void SpinButtonDownElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -2069,11 +2069,11 @@ static Ttk_ElementOptionSpec TrackElementOptions[] = {
 };
 static void TrackElementSize(
     void *clientData,
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     TrackElementData *data = (TrackElementData *)clientData;
     SInt32 size = 24;   /* reasonable default ... */
@@ -2161,11 +2161,11 @@ static Ttk_ElementSpec TrackElementSpec = {
 
 static void SliderElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     *minWidth = *minHeight = 24;
 }
@@ -2209,11 +2209,11 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
 };
 static void PbarElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     SInt32 size = 24;           /* @@@ Check HIG for correct default */
 
@@ -2300,7 +2300,7 @@ static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 static void TroughElementSize(
     TCL_UNUSED(void *),
     void *elementRecord,
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
@@ -2344,7 +2344,7 @@ static void TroughElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-	TCL_UNUSED(Ttk_State))
+    TCL_UNUSED(Ttk_State))
 {
     ScrollbarElement *scrollbar = elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
@@ -2383,10 +2383,10 @@ static Ttk_ElementSpec TroughElementSpec = {
 static void ThumbElementSize(
     TCL_UNUSED(void *),
     void *elementRecord,
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     ScrollbarElement *scrollbar = elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
@@ -2518,11 +2518,11 @@ static Ttk_ElementSpec ThumbElementSpec = {
 };
 static void ArrowElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     if ([NSApp macMinorVersion] < 8) {
 	*minHeight = *minWidth = 14;
@@ -2549,18 +2549,18 @@ static Ttk_ElementSpec ArrowElementSpec = {
 
 static void SeparatorElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     *minWidth = *minHeight = 1;
 }
 
 static void SeparatorElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -2601,11 +2601,11 @@ static const ThemeGrowDirection sizegripGrowDirection
 
 static void SizegripElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     HIThemeGrowBoxDrawInfo info = {
 	.version = 0,
@@ -2623,8 +2623,8 @@ static void SizegripElementSize(
 
 static void SizegripElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     Drawable d,
     Ttk_Box b,
     unsigned int state)
@@ -2700,7 +2700,7 @@ static Ttk_ElementSpec SizegripElementSpec = {
 
 static void FillElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -2737,7 +2737,7 @@ static void BackgroundElementDraw(
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
-	TCL_UNUSED(Ttk_Box),
+    TCL_UNUSED(Ttk_Box),
     unsigned int state)
 {
     FillElementDraw(clientData, elementRecord, tkwin, d, Ttk_WinBox(tkwin),
@@ -2775,11 +2775,11 @@ static Ttk_ElementSpec BackgroundElementSpec = {
 
 static void ToolbarBackgroundElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
-	TCL_UNUSED(Ttk_Box),
-	TCL_UNUSED(Ttk_State))
+    TCL_UNUSED(Ttk_Box),
+    TCL_UNUSED(Ttk_State))
 {
     ThemeBrush brush = kThemeBrushToolbarBackground;
     CGRect bounds = BoxToRect(d, Ttk_WinBox(tkwin));
@@ -2822,7 +2822,7 @@ static void FieldElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-	TCL_UNUSED(Ttk_State))
+    TCL_UNUSED(Ttk_State))
 {
     FieldElement *e = elementRecord;
     Tk_3DBorder backgroundPtr =
@@ -2871,7 +2871,7 @@ static void TreeAreaElementSize (
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     TCL_UNUSED(int *),
-	TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     Ttk_Padding *paddingPtr)
 {
 
@@ -2910,7 +2910,7 @@ static void TreeHeaderElementSize(
 
 static void TreeHeaderElementDraw(
     void *clientData,
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -2967,11 +2967,11 @@ static Ttk_StateTable DisclosureValueTable[] = {
 };
 static void DisclosureElementSize(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
-	TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     int *minWidth,
     int *minHeight,
-	TCL_UNUSED(Ttk_Padding *))
+    TCL_UNUSED(Ttk_Padding *))
 {
     SInt32 s;
 
@@ -2983,7 +2983,7 @@ static void DisclosureElementSize(
 
 static void DisclosureElementDraw(
     TCL_UNUSED(void *),
-	TCL_UNUSED(void *),
+    TCL_UNUSED(void *),
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
