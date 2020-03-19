@@ -1776,7 +1776,6 @@ AppendPropCarefully(
  * operation above.
  */
 
-	/* ARGSUSED */
 static int
 AppendErrorProc(
     ClientData clientData,	/* Command to mark complete, or NULL. */
@@ -1877,7 +1876,6 @@ DeleteProc(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static Tk_RestrictAction
 SendRestrictProc(
     ClientData dummy,		/* Not used. */
@@ -1958,7 +1956,6 @@ UpdateCommWindow(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkpTestsendCmd(
     ClientData clientData,	/* Main window for application. */

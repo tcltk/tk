@@ -961,7 +961,6 @@ TTK_END_LAYOUT_TABLE
 /* name spec className partId statemap padding flags */
 
 static const ElementInfo ElementInfoTable[] = {
-#if 0
     { "Checkbutton.indicator", &GenericElementSpec, L"BUTTON",
     	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Radiobutton.indicator", &GenericElementSpec, L"BUTTON",
@@ -1031,7 +1030,6 @@ static const ElementInfo ElementInfoTable[] = {
     	TP_SPLITBUTTON,toolbutton_statemap, NOPAD,0 },
     { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
     	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
-#endif
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",

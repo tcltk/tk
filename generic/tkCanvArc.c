@@ -758,7 +758,6 @@ DeleteArc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeArcBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -1078,7 +1077,6 @@ DisplayArc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 ArcToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1243,7 +1241,6 @@ ArcToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ArcToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */

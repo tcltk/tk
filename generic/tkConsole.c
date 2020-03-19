@@ -68,7 +68,7 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
 static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
     TCL_CHANNEL_VERSION_5,	/* v4 channel */
-    ConsoleClose,		/* Close proc. */
+    (Tcl_DriverCloseProc *)ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
     NULL,			/* Seek proc. */
@@ -559,7 +559,6 @@ ConsoleOutput(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleInput(
     void *dummy,		/* Unused. */
@@ -592,7 +591,6 @@ ConsoleInput(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleClose(
     ClientData instanceData,
@@ -645,7 +643,6 @@ Console2Close(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ConsoleWatch(
     ClientData dummy,	/* Device ID for the channel. */
@@ -674,7 +671,6 @@ ConsoleWatch(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleHandle(
     ClientData dummy,	/* Device ID for the channel. */

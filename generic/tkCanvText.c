@@ -839,7 +839,7 @@ DisplayCanvText(
     }
 
     selFirstChar = -1;
-    selLastChar = 0;		/* lint. */
+    selLastChar = 0;
     Tk_CanvasDrawableCoords(canvas, textPtr->drawOrigin[0],
 	    textPtr->drawOrigin[1], &drawableX, &drawableY);
 
@@ -1301,7 +1301,6 @@ RotateText(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ScaleText(
     Tk_Canvas canvas,		/* Canvas containing rectangle. */
@@ -1381,17 +1380,26 @@ GetTextIndex(
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    TkSizeT length;
+    TkSizeT length, idx;
     int c;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    const char *string = TkGetStringFromObj(obj, &length);
+    const char *string;
     (void)canvas;
 
+    if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > (TkSizeT)textPtr->numChars) {
+	    idx = textPtr->numChars;
+	}
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(obj, &length);
     c = string[0];
 
-    if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
-	*indexPtr = textPtr->numChars;
-    } else if ((c == 'i')
+    if ((c == 'i')
 	    && (strncmp(string, "insert", length) == 0)) {
 	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (length >= 5)
@@ -1434,12 +1442,6 @@ GetTextIndex(
 	y -= (int) textPtr->drawOrigin[1];
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
 		(int) (x*c - y*s), (int) (y*c + x*s));
-    } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
-	if (*indexPtr < 0) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > textPtr->numChars) {
-	    *indexPtr = textPtr->numChars;
-	}
     } else {
 	/*
 	 * Some of the paths here leave messages in the interp's result, so we
@@ -1470,7 +1472,6 @@ GetTextIndex(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 SetTextCursor(
     Tk_Canvas canvas,		/* Record describing canvas widget. */
@@ -1645,7 +1646,7 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;	/* lint. */
+    x = 0;  y = 0;  justify = NULL;
     switch (textPtr->anchor) {
     case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;

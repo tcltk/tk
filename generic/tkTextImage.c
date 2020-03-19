@@ -83,17 +83,17 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", -1, offsetof(TkTextEmbImage, align),
+	"center", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, align),
 	0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbImage, padY), 0, 0, 0},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbImage, imageString),
+	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbImage, imageName),
+	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -444,7 +444,6 @@ EmbImageConfigure(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 EmbImageDeleteProc(
     TkTextSegment *eiPtr,	/* Segment being deleted. */
@@ -529,7 +528,6 @@ EmbImageCleanupProc(
  *--------------------------------------------------------------
  */
 
-	/*ARGSUSED*/
 static int
 EmbImageLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */

@@ -499,7 +499,6 @@ TkTextMarkNameToIndex(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 MarkDeleteProc(
     TkTextSegment *segPtr,	/* Segment being deleted. */
@@ -626,7 +625,6 @@ MarkLayoutProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 TkTextInsertDisplayProc(
     TkText *textPtr,		/* The current text widget. */
@@ -735,7 +733,6 @@ TkTextInsertDisplayProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 InsertUndisplayProc(
     TkText *textPtr,		/* Overall information about text widget. */

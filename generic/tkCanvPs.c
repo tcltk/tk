@@ -157,7 +157,6 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  *--------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 int
 TkCanvPostscriptCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
@@ -572,7 +571,6 @@ TkCanvPostscriptCmd(
 	    continue;
 	}
 
-	Tcl_ResetResult(interp);
 	result = itemPtr->typePtr->postscriptProc(interp,
 		(Tk_Canvas) canvasPtr, itemPtr, 0);
 	if (result != TCL_OK) {
@@ -585,6 +583,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendToObj(psObj, "gsave\n", -1);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	Tcl_AppendToObj(psObj, "grestore\n", -1);
+	Tcl_ResetResult(interp);
 
 	if (psInfo.chan != NULL) {
 	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {

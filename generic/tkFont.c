@@ -616,7 +616,7 @@ Tk_FontObjCmd(
     	}
     	string = Tcl_GetString(objv[2]);
     	namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, string);
-	nfPtr = NULL;		/* lint. */
+	nfPtr = NULL;
     	if (namedHashPtr != NULL) {
     	    nfPtr = (NamedFont *)Tcl_GetHashValue(namedHashPtr);
     	}

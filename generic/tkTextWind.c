@@ -99,18 +99,18 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", -1, offsetof(TkTextEmbWindow, align),
+	"center", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, align),
 	0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
+	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -573,7 +573,6 @@ EmbWinStructureProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 EmbWinRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
@@ -737,7 +736,6 @@ TkTextWinFreeClient(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 EmbWinDeleteProc(
     TkTextSegment *ewPtr,	/* Segment being deleted. */
@@ -819,7 +817,6 @@ EmbWinCleanupProc(
  *--------------------------------------------------------------
  */
 
-	/*ARGSUSED*/
 static int
 EmbWinLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */

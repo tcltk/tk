@@ -622,7 +622,6 @@ DeleteRectOval(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeRectOvalBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -966,7 +965,6 @@ DisplayRectOval(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 RectToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1086,7 +1084,6 @@ RectToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 OvalToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1141,7 +1138,6 @@ OvalToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 RectToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1215,7 +1211,6 @@ RectToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 OvalToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
