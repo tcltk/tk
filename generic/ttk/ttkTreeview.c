@@ -1101,6 +1101,8 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     tv->tree.showFlags = ~0;
 
     InitColumn(&tv->tree.column0);
+    tv->tree.column0.idObj = Tcl_NewStringObj("#0", 2);
+    Tcl_IncrRefCount(tv->tree.column0.idObj);
     Tk_InitOptions(
 	interp, (ClientData)(&tv->tree.column0),
 	tv->tree.columnOptionTable, tv->core.tkwin);
@@ -1148,6 +1150,7 @@ static void TreeviewCleanup(void *recordPtr)
     if (tv->tree.rowLayout) Ttk_FreeLayout(tv->tree.rowLayout);
     if (tv->tree.separatorLayout) Ttk_FreeLayout(tv->tree.separatorLayout);
 
+    FreeColumn(&tv->tree.column0);
     TreeviewFreeColumns(tv);
 
     if (tv->tree.displayColumns)

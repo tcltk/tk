@@ -186,6 +186,7 @@ The following options may be set on each column:
 The column name.  This is a read-only option.
 For example, [\fI$pathname \fBcolumn #\fIn \fB\-id\fR]
 returns the data column associated with display column #\fIn\fR.
+The tree column has -id \fB#0\fR.
 .TP
 \fB\-anchor \fIanchor\fR
 Specifies how the text in this column should be aligned

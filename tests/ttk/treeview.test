@@ -624,12 +624,12 @@ test treeview-11.2 "Cellselection add" -body {
 } -result [list "nn b" "nn.n1 a" "nn.n2 a" "nn.n2 d" "nn.n3 b"]
 
 test treeview-11.3 "Cellselection toggle" -body {
-    .tv cellselection toggle [list "nn.n2 a" "nn2 b"]
+    .tv cellselection toggle [list "nn.n2 a" "nn2 b" "nn2 #0"]
     .tv cellselection
-} -result [list "nn b" "nn.n1 a" "nn.n2 d" "nn.n3 b" "nn2 b"]
+} -result [list "nn b" "nn.n1 a" "nn.n2 d" "nn.n3 b" "nn2 b" "nn2 #0"]
 
 test treeview-11.4 "Cellselection remove" -body {
-    .tv cellselection remove [list "nn.n2 d" "nn b"]
+    .tv cellselection remove [list "nn.n2 d" "nn b" "nn2 #0"]
     .tv cellselection
 } -result [list "nn.n1 a" "nn.n3 b" "nn2 b"]
 
@@ -775,13 +775,13 @@ test treeview-identify-2 "identify columns" -body {
     .tv configure -displaycolumns #all
     update idletasks
     columnids .tv [identify* .tv column 25 10  75 10  125 10  175 10]
-} -result [list {} A B C]
+} -result [list \#0 A B C]
 
 test treeview-identify-3 "reordered columns" -body {
     .tv configure -displaycolumns {B A C}
     update idletasks
     columnids .tv [identify* .tv column 25 10  75 10  125 10  175 10]
-} -result [list {} B A C]
+} -result [list \#0 B A C]
 
 test treeview-identify-4 "no tree column" -body {
     .tv configure -displaycolumns #all -show {headings}
@@ -1079,5 +1079,18 @@ test treeview-ce470f20fd-4 "changing -stretch resizes columns" -setup {
 } -cleanup {
     destroy .tv
 } -result {60 50 60 50 60 50 1}
+
+test treeview-column0-leak "Test for leak in tree column" -setup {
+    destroy .ttt
+    set heading [string range _Hej_ 1 3]
+} -body {
+    for {set t 0} {$t < 3} {incr t} {
+        ttk::treeview .tapa -columns "hej hopp"
+        .tapa heading #0 -text $heading
+        destroy .tapa
+    }
+    tcl::unsupported::representation $heading
+} -match glob -result {*refcount of 3,*}
+exit
 
 tcltest::cleanupTests
