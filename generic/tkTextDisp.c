@@ -8684,7 +8684,7 @@ MeasureChars(
     int curX, width, ch;
     const char *special, *end, *start;
 
-    ch = 0;			/* lint. */
+    ch = 0;
     curX = startX;
     start = source + rangeStart;
     end = start + rangeLength;

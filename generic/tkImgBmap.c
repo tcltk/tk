@@ -169,7 +169,6 @@ static int		NextBitmapWord(ParseInfo *parseInfoPtr);
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ImgBmapCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing

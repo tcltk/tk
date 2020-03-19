@@ -165,7 +165,7 @@ Tk_SetAppName(
     if (riPtr == NULL) {
 	LPUNKNOWN *objPtr;
 
-	riPtr = ckalloc(sizeof(RegisteredInterp));
+	riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
 	memset(riPtr, 0, sizeof(RegisteredInterp));
 	riPtr->interp = interp;
 

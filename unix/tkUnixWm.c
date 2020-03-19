@@ -1005,7 +1005,6 @@ TkWmSetClass(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_WmObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -1316,7 +1315,7 @@ WmSetAttribute(
 	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
 		wmPtr->reqState.fullscreen);
 	break;
-    case _WMATT_LAST_ATTRIBUTE:	/* NOTREACHED */
+    case _WMATT_LAST_ATTRIBUTE:
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1353,10 +1352,9 @@ WmGetAttribute(
 	return Tcl_NewWideIntObj(wmPtr->attributes.fullscreen != 0);
     case WMATT_TYPE:
 	return GetNetWmType(winPtr);
-    case _WMATT_LAST_ATTRIBUTE:	/*NOTREACHED*/
+    case _WMATT_LAST_ATTRIBUTE:
 	break;
     }
-    /*NOTREACHED*/
     return NULL;
 }
 
@@ -4525,7 +4523,6 @@ WrapperEventProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 TopLevelReqProc(
     ClientData dummy,		/* Not used. */

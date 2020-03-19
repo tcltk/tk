@@ -6056,7 +6056,6 @@ CanvasSetOrigin(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 static const char **
 TkGetStringsFromObjs(
     int objc,

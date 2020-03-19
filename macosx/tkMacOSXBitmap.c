@@ -100,7 +100,7 @@ TkpDefineNativeBitmaps(void)
 	name = Tk_GetUid(builtInPtr->name);
 	predefHashPtr = Tcl_CreateHashEntry(tablePtr, name, &isNew);
 	if (isNew) {
-	    TkPredefBitmap *predefPtr = ckalloc(sizeof(TkPredefBitmap));
+	    TkPredefBitmap *predefPtr = (TkPredefBitmap *)ckalloc(sizeof(TkPredefBitmap));
 
 	    predefPtr->source = UINT2PTR(builtInPtr->iconType);
 	    predefPtr->width = builtInIconSize;
@@ -400,7 +400,7 @@ TkMacOSXIconBitmapObjCmd(
 	}
     }
 #endif
-    ib.value = ckalloc(len + 1);
+    ib.value = (char *)ckalloc(len + 1);
     strcpy(ib.value, value);
     if (!iconBitmapTable.buckets) {
 	Tcl_InitHashTable(&iconBitmapTable, TCL_STRING_KEYS);
@@ -410,7 +410,7 @@ TkMacOSXIconBitmapObjCmd(
 	iconBitmap = Tcl_GetHashValue(hPtr);
 	ckfree(iconBitmap->value);
     } else {
-	iconBitmap = ckalloc(sizeof(IconBitmap));
+	iconBitmap = (IconBitmap *)ckalloc(sizeof(IconBitmap));
 	Tcl_SetHashValue(hPtr, iconBitmap);
     }
     *iconBitmap = ib;

@@ -2037,7 +2037,6 @@ TkBTreeLinesTo(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 TkBTreeLinkSegment(
     TkTextSegment *segPtr,	/* Pointer to new segment to be added to
@@ -2080,7 +2079,6 @@ TkBTreeLinkSegment(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 TkBTreeUnlinkSegment(
     TkTextSegment *segPtr,	/* Segment to be unlinked. */
@@ -3336,7 +3334,6 @@ TkBTreeCharTagged(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 TkTextTag **
 TkBTreeGetTags(
     const TkTextIndex *indexPtr,/* Indicates a particular position in the
@@ -3482,7 +3479,6 @@ TkBTreeGetTags(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkTextIsElided(
     const TkText *textPtr,	/* Overall information about text widget. */
@@ -4592,7 +4588,6 @@ CharSplitProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static TkTextSegment *
 CharCleanupProc(
     TkTextSegment *segPtr,	/* Pointer to first of two adjacent segments
@@ -4634,7 +4629,6 @@ CharCleanupProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 CharDeleteProc(
     TkTextSegment *segPtr,	/* Segment to delete. */
@@ -4667,7 +4661,6 @@ CharDeleteProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 CharCheckProc(
     TkTextSegment *segPtr,	/* Segment to check. */

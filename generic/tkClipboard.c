@@ -706,7 +706,6 @@ TkClipInit(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ClipboardGetProc(
     ClientData clientData,	/* Dynamic string holding partially assembled

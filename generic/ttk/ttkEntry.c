@@ -156,53 +156,53 @@ typedef struct {
 
 static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
-        "ExportSelection", "1", -1, offsetof(Entry, entry.exportSelection),
+        "ExportSelection", "1", TCL_AUTO_LENGTH, offsetof(Entry, entry.exportSelection),
 	0,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_ENTRY_FONT, offsetof(Entry, entry.fontObj),-1,
+	DEF_ENTRY_FONT, offsetof(Entry, entry.fontObj),TCL_AUTO_LENGTH,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
-	NULL, -1, offsetof(Entry, entry.invalidCmd),
+	NULL, TCL_AUTO_LENGTH, offsetof(Entry, entry.invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", -1, offsetof(Entry, entry.justify),
+	"left", TCL_AUTO_LENGTH, offsetof(Entry, entry.justify),
 	0, 0, GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
-	NULL, offsetof(Entry, entry.placeholderObj), -1,
+	NULL, offsetof(Entry, entry.placeholderObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
-        NULL, -1, offsetof(Entry, entry.showChar),
+        NULL, TCL_AUTO_LENGTH, offsetof(Entry, entry.showChar),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-state", "state", "State",
-	"normal", offsetof(Entry, entry.stateObj), -1,
+	"normal", offsetof(Entry, entry.stateObj), TCL_AUTO_LENGTH,
         0,0,STATE_CHANGED},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	NULL, offsetof(Entry, entry.textVariableObj), -1,
+	NULL, offsetof(Entry, entry.textVariableObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
-	"none", -1, offsetof(Entry, entry.validate),
+	"none", TCL_AUTO_LENGTH, offsetof(Entry, entry.validate),
 	0, (ClientData) validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
-	NULL, -1, offsetof(Entry, entry.validateCmd),
+	NULL, TCL_AUTO_LENGTH, offsetof(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-width", "width", "Width",
-	DEF_ENTRY_WIDTH, offsetof(Entry, entry.widthObj), -1,
+	DEF_ENTRY_WIDTH, offsetof(Entry, entry.widthObj), TCL_AUTO_LENGTH,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	NULL, -1, offsetof(Entry, entry.xscroll.scrollCmd),
+	NULL, TCL_AUTO_LENGTH, offsetof(Entry, entry.xscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
     /* EntryStyleData options:
      */
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
-	NULL, offsetof(Entry, entry.styleData.backgroundObj), -1,
+	NULL, offsetof(Entry, entry.styleData.backgroundObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
-	NULL, offsetof(Entry, entry.styleData.foregroundObj), -1,
+	NULL, offsetof(Entry, entry.styleData.foregroundObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
         "PlaceholderForeground", NULL,
-        offsetof(Entry, entry.styleData.placeholderForegroundObj), -1,
+        offsetof(Entry, entry.styleData.placeholderForegroundObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -1369,12 +1369,20 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    TkSizeT length;
-    const char *string = TkGetStringFromObj(indexObj, &length);
+    TkSizeT length, idx;
+    const char *string;
 
-    if (strncmp(string, "end", length) == 0) {
-	*indexPtr = entryPtr->entry.numChars;
-    } else if (strncmp(string, "insert", length) == 0) {
+    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars, &idx)) {
+    	if (idx + 1 > (TkSizeT)entryPtr->entry.numChars + 1) {
+    	    idx = (TkSizeT)entryPtr->entry.numChars;
+    	}
+    	*indexPtr = (int)idx;
+    	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(indexObj, &length);
+
+    if (strncmp(string, "insert", length) == 0) {
 	*indexPtr = entryPtr->entry.insertPos;
     } else if (strncmp(string, "left", length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.first;
@@ -1426,14 +1434,7 @@ EntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	if (*indexPtr < 0) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > entryPtr->entry.numChars) {
-	    *indexPtr = entryPtr->entry.numChars;
-	}
+	goto badIndex;
     }
     return TCL_OK;
 
@@ -1749,16 +1750,6 @@ static const WidgetSpec EntryWidgetSpec = {
 };
 
 /*------------------------------------------------------------------------
- * Named indices for the combobox "current" command
- */
-static const char *const comboboxCurrentIndexNames[] = {
-    "end", NULL
-};
-enum comboboxCurrentIndices {
-    INDEX_END
-};
-
-/*------------------------------------------------------------------------
  * +++ Combobox widget record.
  */
 
@@ -1777,13 +1768,13 @@ typedef struct {
 
 static const Tk_OptionSpec ComboboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-height", "height", "Height",
-        DEF_LIST_HEIGHT, offsetof(Combobox, combobox.heightObj), -1,
+        DEF_LIST_HEIGHT, offsetof(Combobox, combobox.heightObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     {TK_OPTION_STRING, "-postcommand", "postCommand", "PostCommand",
-        "", offsetof(Combobox, combobox.postCommandObj), -1,
+        "", offsetof(Combobox, combobox.postCommandObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
-        "", offsetof(Combobox, combobox.valuesObj), -1,
+        "", offsetof(Combobox, combobox.valuesObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     WIDGET_INHERIT_OPTIONS(EntryOptionSpecs)
 };
@@ -1859,42 +1850,22 @@ static int ComboboxCurrentCommand(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
-        int result, index;
+	TkSizeT idx;
 
-        result = Tcl_GetIndexFromObj(NULL, objv[2], comboboxCurrentIndexNames,
-                "", 0, &index);
-        if (result == TCL_OK) {
-
-            /*
-             * The index is one of the named indices.
-             */
-
-	    switch (index) {
-	    case INDEX_END:
-	        /* "end" index */
-                currentIndex = nValues - 1;
-                break;
-	    }
-        } else {
-
-            /*
-             * The index should be just an integer.
-             */
-
-	    if (Tcl_GetIntFromObj(NULL, objv[2], &currentIndex) != TCL_OK) {
+	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, &idx)) {
+	    if (idx == TCL_INDEX_NONE || idx > (TkSizeT)nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		        "Incorrect index %s", Tcl_GetString(objv[2])));
-	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
-	        return TCL_ERROR;
-	    }
-
-	    if (currentIndex < 0 || currentIndex >= nValues) {
-	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		        "Index %s out of range", Tcl_GetString(objv[2])));
+		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
 	        return TCL_ERROR;
 	    }
-        }
+	    currentIndex = (int)idx;
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "Incorrect index %s", Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
+	    return TCL_ERROR;
+	}
 
 	cbPtr->combobox.currentIndex = currentIndex;
 
@@ -1968,27 +1939,27 @@ typedef struct {
 
 static const Tk_OptionSpec SpinboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-values", "values", "Values",
-        "", offsetof(Spinbox, spinbox.valuesObj), -1,
+        "", offsetof(Spinbox, spinbox.valuesObj), TCL_AUTO_LENGTH,
 	0,0,0 },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From",
-	"0", offsetof(Spinbox,spinbox.fromObj), -1,
+	"0", offsetof(Spinbox,spinbox.fromObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     {TK_OPTION_DOUBLE, "-to", "to", "To",
-	"0", offsetof(Spinbox,spinbox.toObj), -1,
+	"0", offsetof(Spinbox,spinbox.toObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     {TK_OPTION_DOUBLE, "-increment", "increment", "Increment",
-	"1", offsetof(Spinbox,spinbox.incrementObj), -1,
+	"1", offsetof(Spinbox,spinbox.incrementObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     {TK_OPTION_STRING, "-format", "format", "Format",
-	"", offsetof(Spinbox, spinbox.formatObj), -1,
+	"", offsetof(Spinbox, spinbox.formatObj), TCL_AUTO_LENGTH,
 	0,0,0 },
 
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", offsetof(Spinbox, spinbox.commandObj), -1,
+	"", offsetof(Spinbox, spinbox.commandObj), TCL_AUTO_LENGTH,
 	0,0,0 },
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
-	"0", offsetof(Spinbox,spinbox.wrapObj), -1,
+	"0", offsetof(Spinbox,spinbox.wrapObj), TCL_AUTO_LENGTH,
 	0,0,0 },
 
     WIDGET_INHERIT_OPTIONS(EntryOptionSpecs)
