@@ -566,12 +566,11 @@ ConfigurePolygon(
 
 static void
 DeletePolygon(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    (void)canvas;
 
     Tk_DeleteOutline(display, &polyPtr->outline);
     if (polyPtr->coordPtr != NULL) {
@@ -877,7 +876,10 @@ DisplayPolygon(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y, int width, int height)
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 				/* Describes region of canvas that must be
 				 * redisplayed (not used). */
 {
@@ -885,10 +887,6 @@ DisplayPolygon(
     Tk_State state = itemPtr->state;
     Pixmap stipple = polyPtr->fillStipple;
     double linewidth = polyPtr->outline.width;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
 
     if (((polyPtr->fillGC == NULL) && (polyPtr->outline.gc == NULL)) ||
 	    (polyPtr->numPoints < 1) ||
@@ -1247,7 +1245,6 @@ PolygonDeleteCoords(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 PolygonToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1437,7 +1434,6 @@ PolygonToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 PolygonToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1674,23 +1670,31 @@ ScalePolygon(
 static int
 GetPolygonIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
     int *indexPtr)		/* Where to store converted index. */
 {
+    TkSizeT length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    const char *string = Tcl_GetString(obj);
-    (void)canvas;
+    const char *string;
+	TkSizeT count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
-    if (string[0] == 'e') {
-	if (strncmp(string, "end", obj->length) != 0) {
-	    goto badIndex;
+    if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else {
+	    idx = (idx & (TkSizeT)-2) % count;
 	}
-	*indexPtr = 2*(polyPtr->numPoints - polyPtr->autoClosed);
-    } else if (string[0] == '@') {
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(obj, &length);
+
+    if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
 	char *end;
@@ -1718,31 +1722,17 @@ GetPolygonIndex(
 	    coordPtr += 2;
 	}
     } else {
-	int count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
+	/*
+	 * Some of the paths here leave messages in interp->result, so we have to
+	 * clear it out before storing our own message.
+	 */
 
-	if (Tcl_GetIntFromObj(interp, obj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	*indexPtr &= -2; /* if odd, make it even */
-	if (!count) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > 0) {
-	    *indexPtr = ((*indexPtr - 2) % count) + 2;
-	} else {
-	    *indexPtr = -((-(*indexPtr)) % count);
-	}
+    badIndex:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
+	return TCL_ERROR;
     }
     return TCL_OK;
-
-    /*
-     * Some of the paths here leave messages in interp->result, so we have to
-     * clear it out before storing our own message.
-     */
-
-  badIndex:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
-    return TCL_ERROR;
 }
 
 /*
@@ -1843,7 +1833,7 @@ PolygonToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))	/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -1857,7 +1847,6 @@ PolygonToPostscript(
     double width;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
-    (void)prepass;
 
     if (polyPtr->numPoints < 2 || polyPtr->coordPtr == NULL) {
 	return TCL_OK;

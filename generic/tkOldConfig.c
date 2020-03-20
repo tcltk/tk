@@ -976,7 +976,6 @@ Tk_ConfigureValue(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 Tk_FreeOptions(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */

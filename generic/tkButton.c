@@ -1604,7 +1604,6 @@ TkInvokeButton(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 ButtonVarProc(
     ClientData clientData,	/* Information about button. */
@@ -1716,7 +1715,6 @@ ButtonVarProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 ButtonTextVarProc(
     ClientData clientData,	/* Information about button. */

@@ -828,7 +828,6 @@ MessageCmdDeletedProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 MessageTextVarProc(
     ClientData clientData,	/* Information about message. */

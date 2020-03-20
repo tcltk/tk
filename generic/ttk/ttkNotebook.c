@@ -852,6 +852,12 @@ static int FindTabIndex(
     {
 	return TCL_OK;
     }
+    if (*index_rtn == Ttk_NumberSlaves(nb->notebook.mgr)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Invalid slave specification %s", string));
+	Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
+	return TCL_ERROR;
+    }
 
     /* Nothing matched; Ttk_GetSlaveIndexFromObj will have left error message.
      */
@@ -867,6 +873,12 @@ static int GetTabIndex(
     Tcl_Interp *interp, Notebook *nb, Tcl_Obj *objPtr, int *index_rtn)
 {
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
+	if (status == TCL_OK && *index_rtn >= Ttk_NumberSlaves(nb->notebook.mgr)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Slave index %s out of bounds", Tcl_GetString(objPtr)));
+	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
+	    return TCL_ERROR;
+	}
 
     if (status == TCL_OK && *index_rtn < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -936,9 +948,7 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (!strcmp(Tcl_GetString(objv[2]), "end")) {
-	destIndex = Ttk_NumberSlaves(nb->notebook.mgr);
-    } else if (TCL_OK != Ttk_GetSlaveIndexFromObj(
+    if (TCL_OK != Ttk_GetSlaveIndexFromObj(
 		interp, nb->notebook.mgr, objv[2], &destIndex)) {
 	return TCL_ERROR;
     }
@@ -961,6 +971,8 @@ static int NotebookInsertCommand(
 		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
     {
 	return TCL_ERROR;
+    } else if (srcIndex >= Ttk_NumberSlaves(nb->notebook.mgr)) {
+	srcIndex = Ttk_NumberSlaves(nb->notebook.mgr) - 1;
     }
 
     /* Move existing slave:
@@ -1118,15 +1130,6 @@ static int NotebookIndexCommand(
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "tab");
 	return TCL_ERROR;
-    }
-
-    /*
-     * Special-case for "end":
-     */
-    if (!strcmp("end", Tcl_GetString(objv[2]))) {
-	TkSizeT nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(nSlaves));
-	return TCL_OK;
     }
 
     status = FindTabIndex(interp, nb, objv[2], &index);

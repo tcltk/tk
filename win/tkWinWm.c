@@ -2765,7 +2765,6 @@ TkWmSetClass(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_WmObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -5723,7 +5722,6 @@ WmUpdateGeom(
     }
 }
 
-	/*ARGSUSED*/
 static void
 WmWaitVisibilityOrMapProc(
     ClientData clientData,	/* Pointer to window. */
@@ -5986,7 +5984,6 @@ TopLevelEventProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 TopLevelReqProc(
     ClientData dummy,		/* Not used. */

@@ -546,7 +546,7 @@ DrawMenuButtonImageAndText(
 static void
 TkMacOSXDrawMenuButton(
     MacMenuButton *mbPtr, /* Mac menubutton. */
-	TCL_UNUSED(GC),       /* The GC we are drawing into - not used */
+    TCL_UNUSED(GC),       /* The GC we are drawing into - not used */
     Pixmap pixmap)        /* The pixmap we are drawing into - needed for the
                            * bevel button */
 {
@@ -626,8 +626,8 @@ TkMacOSXDrawMenuButton(
 static void
 MenuButtonBackgroundDrawCB (
     MacMenuButton *ptr,
-	TCL_UNUSED(SInt16),
-	TCL_UNUSED(Boolean))
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkMenuButton* butPtr = (TkMenuButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;
@@ -659,11 +659,11 @@ MenuButtonBackgroundDrawCB (
 
 static void
 MenuButtonContentDrawCB (
-	TCL_UNUSED(ThemeButtonKind),
-	TCL_UNUSED(const HIThemeButtonDrawInfo *),
+    TCL_UNUSED(ThemeButtonKind),
+    TCL_UNUSED(const HIThemeButtonDrawInfo *),
     MacMenuButton *ptr,
-	TCL_UNUSED(SInt16),
-	TCL_UNUSED(Boolean))
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkMenuButton *butPtr = (TkMenuButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;

@@ -122,7 +122,6 @@ SetWindowInstanceData(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 static void
 BusyCustodyProc(
     ClientData clientData,	/* Information about the busy window. */
@@ -157,7 +156,6 @@ BusyCustodyProc(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 static void
 BusyGeometryProc(
     ClientData dummy,	/* Information about window that got new

@@ -222,16 +222,21 @@ GetTypeCache(void)
  */
 
 int
-TkGetIntForIndex(Tcl_Obj *indexObj, TkSizeT end, TkSizeT *indexPtr) {
+TkGetIntForIndex(
+    Tcl_Obj *indexObj,
+    TkSizeT end,
+    int lastOK,
+    TkSizeT *indexPtr)
+{
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (Tcl_GetIntForIndex(NULL, indexObj, end, indexPtr) != TCL_OK) {
+    if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (indexObj->typePtr == tsdPtr->endTypePtr) {
 	/* check for "end", but not "end-??" or "end+??" */
-	return (*indexPtr == end) ? TCL_OK :  TCL_ERROR;
+	return (*indexPtr == (end + lastOK)) ? TCL_OK :  TCL_ERROR;
     }
     if (indexObj->typePtr != tsdPtr->intTypePtr) {
 	/* Neither do we accept "??-??" or "??+??" */

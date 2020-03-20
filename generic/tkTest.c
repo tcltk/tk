@@ -339,7 +339,6 @@ Tktest_Init(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestbitmapObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -375,7 +374,6 @@ TestbitmapObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestborderObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -411,7 +409,6 @@ TestborderObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestcolorObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -447,7 +444,6 @@ TestcolorObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestcursorObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -484,7 +480,6 @@ TestcursorObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestdeleteappsObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -525,7 +520,6 @@ TestdeleteappsObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestobjconfigObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1158,7 +1152,6 @@ TestobjconfigObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TrivialConfigObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1341,7 +1334,6 @@ TrivialEventProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestfontObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1401,7 +1393,6 @@ TestfontObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ImageCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
@@ -1468,7 +1459,6 @@ ImageCreate(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ImageObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1718,7 +1708,6 @@ ImageDelete(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestmakeexistObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1759,7 +1748,6 @@ TestmakeexistObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int
 TestmenubarObjCmd(
@@ -1875,7 +1863,6 @@ TestmetricsObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestpropObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1952,7 +1939,6 @@ TestpropObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestprintfObjCmd(
     ClientData dummy,	/* Not used */
@@ -2009,7 +1995,6 @@ TestprintfObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestwrapperObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -2192,7 +2177,6 @@ CustomOptionFree(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 TestPhotoStringMatchCmd(
     ClientData clientData,	/* Main window for application. */

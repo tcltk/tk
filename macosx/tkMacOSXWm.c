@@ -1070,7 +1070,6 @@ TkWmSetClass(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 int
 Tk_WmObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -1912,9 +1911,9 @@ static int
 WmForgetCmd(
     TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel or Frame to work with */
-	TCL_UNUSED(Tcl_Interp *),	/* Current interpreter. */
-	TCL_UNUSED(int),			/* Number of arguments. */
-	TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
+    TCL_UNUSED(Tcl_Interp *),	/* Current interpreter. */
+    TCL_UNUSED(int),			/* Number of arguments. */
+    TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
 
@@ -2763,8 +2762,8 @@ WmManageCmd(
     TCL_UNUSED(Tk_Window),		/* Main window of the application. */
     TkWindow *winPtr,           /* Toplevel or Frame to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TCL_UNUSED(int),			/* Number of arguments. */
-	TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
+    TCL_UNUSED(int),			/* Number of arguments. */
+    TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -4059,7 +4058,6 @@ TopLevelEventProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 TopLevelReqProc(
     TCL_UNUSED(void *),		/* Not used. */
@@ -5306,7 +5304,7 @@ TkMacOSXResizable(
 int
 TkMacOSXGrowToplevel(
     TCL_UNUSED(void *),
-	TCL_UNUSED(XPoint))
+    TCL_UNUSED(XPoint))
 {
     return false;
 }
@@ -5523,7 +5521,6 @@ TkMacOSXZoomToplevel(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 int
 TkUnsupported1ObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -6532,9 +6529,9 @@ TkpGetMS(void)
 int
 XSetInputFocus(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(int),
-	TCL_UNUSED(Time))
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Time))
 {
     /*
      * Don't need to do a thing. Tk manages the focus for us.

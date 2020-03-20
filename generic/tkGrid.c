@@ -1010,8 +1010,8 @@ GridRowColumnConfigureCommand(
     }
 
     masterPtr = GetGrid(master);
-    first = 0; /* lint */
-    last = 0; /* lint */
+    first = 0;
+    last = 0;
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {

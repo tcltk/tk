@@ -724,7 +724,7 @@ test listbox-3.62 {ListboxWidgetCmd procedure, "index" option} -body {
 } -result 18
 test listbox-3.63 {ListboxWidgetCmd procedure, "index" option} -body {
     .l index 34
-} -result 19
+} -result 18
 test listbox-3.64 {ListboxWidgetCmd procedure, "insert" option} -body {
     .l insert
 } -returnCodes error -result {wrong # args: should be ".l insert index ?element ...?"}
@@ -2112,7 +2112,7 @@ test listbox-10.17 {GetListboxIndex procedure} -setup {
     .l index 20
 } -cleanup {
     destroy .l
-} -result {13}
+} -result {12}
 test listbox-10.18 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {
@@ -2143,7 +2143,7 @@ test listbox-10.20 {GetListboxIndex procedure} -setup {
     .l index 1
 } -cleanup {
     destroy .l
-} -result 1
+} -result 0
 
 
 test listbox-11.1 {ChangeListboxView procedure, boundary conditions for index} -setup {
