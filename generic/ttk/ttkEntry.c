@@ -1372,7 +1372,7 @@ EntryIndex(
     TkSizeT length, idx;
     const char *string;
 
-    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars, &idx)) {
+    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
     	if (idx + 1 > (TkSizeT)entryPtr->entry.numChars + 1) {
     	    idx = (TkSizeT)entryPtr->entry.numChars;
     	}
@@ -1852,7 +1852,7 @@ static int ComboboxCurrentCommand(
     } else if (objc == 3) {
 	TkSizeT idx;
 
-	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, &idx)) {
+	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, 0, &idx)) {
 	    if (idx == TCL_INDEX_NONE || idx > (TkSizeT)nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		        "index \"%s\" out of range", Tcl_GetString(objv[2])));

@@ -2654,7 +2654,7 @@ GetEntryIndex(
     TkSizeT length, idx;
     const char *string;
 
-    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars, &idx)) {
+    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
 	} else if (idx > (TkSizeT)entryPtr->numChars) {
