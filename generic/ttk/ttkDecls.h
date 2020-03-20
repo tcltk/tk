@@ -17,6 +17,15 @@ extern const char *TtkInitializeStubs(
 
 #endif
 
+#if !defined(BUILD_tk)
+# define TTK_DEPRECATED(msg) TTKAPI TCL_DEPRECATED_API(msg)
+#elif defined(TK_NO_DEPRECATED)
+# define TTK_DEPRECATED(msg) MODULE_SCOPE
+#else
+# define TTK_DEPRECATED(msg) TTKAPI
+#endif
+
+
 
 /* !BEGIN!: Do not edit below this line. */
 
@@ -130,7 +139,8 @@ TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
 /* Slot 38 is reserved */
 /* Slot 39 is reserved */
 /* 40 */
-TTKAPI int		Ttk_GetOrientFromObj(Tcl_Interp *interp,
+TTK_DEPRECATED("")
+int			Ttk_GetOrientFromObj(Tcl_Interp *interp,
 				Tcl_Obj *objPtr, int *orient);
 
 typedef struct TtkStubs {
@@ -179,7 +189,7 @@ typedef struct TtkStubs {
     void (*reserved37)(void);
     void (*reserved38)(void);
     void (*reserved39)(void);
-    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
+    TCL_DEPRECATED_API("") int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
 } TtkStubs;
 
 extern const TtkStubs *ttkStubsPtr;

@@ -102,9 +102,9 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	 * We have successfully loaded the library. Proceed in storing the
 	 * addresses of the functions we want to use.
 	 */
-	XPThemeProcs *procs = ckalloc(sizeof(XPThemeProcs));
+	XPThemeProcs *procs = (XPThemeProcs *)ckalloc(sizeof(XPThemeProcs));
 #define LOADPROC(name) \
-	(0 != (procs->name = (name ## Proc *)GetProcAddress(handle, #name) ))
+	(0 != (procs->name = (name ## Proc *)(void *)GetProcAddress(handle, #name) ))
 
 	if (   LOADPROC(OpenThemeData)
 	    && LOADPROC(CloseThemeData)
@@ -134,7 +134,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 static void
 XPThemeDeleteProc(void *clientData)
 {
-    XPThemeData *themeData = clientData;
+    XPThemeData *themeData = (XPThemeData *)clientData;
     FreeLibrary(themeData->hlibrary);
     ckfree(clientData);
 }
@@ -142,9 +142,11 @@ XPThemeDeleteProc(void *clientData)
 static int
 XPThemeEnabled(Ttk_Theme theme, void *clientData)
 {
-    XPThemeData *themeData = clientData;
+    XPThemeData *themeData = (XPThemeData *)clientData;
     int active = themeData->procs->IsThemeActive();
     int themed = themeData->procs->IsAppThemed();
+    (void)theme;
+
     return (active && themed);
 }
 
@@ -378,12 +380,12 @@ typedef struct 	/* XP element specifications */
     int 	partId;		/* BP_PUSHBUTTON, BP_CHECKBUTTON, etc. */
     const Ttk_StateTable *statemap;	/* Map Tk states to XP states */
     Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
-    int  	flags;
-#   define 	IGNORE_THEMESIZE 0x80000000 /* See NOTE-GetThemePartSize */
-#   define 	PAD_MARGINS	 0x40000000 /* See NOTE-GetThemeMargins */
-#   define 	HEAP_ELEMENT	 0x20000000 /* ElementInfo is on heap */
-#   define 	HALF_HEIGHT	 0x10000000 /* Used by GenericSizedElements */
-#   define 	HALF_WIDTH	 0x08000000 /* Used by GenericSizedElements */
+    unsigned  	flags;
+#   define 	IGNORE_THEMESIZE 0x80000000U /* See NOTE-GetThemePartSize */
+#   define 	PAD_MARGINS	 0x40000000U /* See NOTE-GetThemeMargins */
+#   define 	HEAP_ELEMENT	 0x20000000U /* ElementInfo is on heap */
+#   define 	HALF_HEIGHT	 0x10000000U /* Used by GenericSizedElements */
+#   define 	HALF_WIDTH	 0x08000000U /* Used by GenericSizedElements */
 } ElementInfo;
 
 typedef struct
@@ -409,7 +411,7 @@ typedef struct
 static ElementData *
 NewElementData(XPThemeProcs *procs, const ElementInfo *info)
 {
-    ElementData *elementData = ckalloc(sizeof(ElementData));
+    ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
 
     elementData->procs = procs;
     elementData->info = info;
@@ -425,12 +427,12 @@ NewElementData(XPThemeProcs *procs, const ElementInfo *info)
  */
 static void DestroyElementData(void *clientData)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
-	ckfree(elementData->info->statemap);
+	ckfree((char *)elementData->info->statemap);
 	ckfree((char *)elementData->info->className);
 	ckfree((char *)elementData->info->elementName);
-	ckfree(elementData->info);
+	ckfree((char *)elementData->info);
     }
     ckfree(clientData);
 }
@@ -493,9 +495,10 @@ static void GenericElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     HRESULT result;
     SIZE size;
+    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -529,8 +532,9 @@ static void GenericElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     RECT rc;
+    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d)) {
 	return;
@@ -574,7 +578,7 @@ GenericSizedElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -610,7 +614,7 @@ SpinboxArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -639,9 +643,10 @@ static void ThumbElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
+    (void)elementRecord;
 
     /*
      * Don't draw the thumb if we are disabled.
@@ -678,7 +683,7 @@ static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     int nBars = 3;
 
     GenericElementSize(clientData, elementRecord, tkwin,
@@ -718,9 +723,10 @@ static void TabElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
     RECT rc = BoxToRect(b);
+    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
@@ -1054,7 +1060,7 @@ static const ElementInfo ElementInfoTable[] = {
 static int
 GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 {
-    static const char *names[] = {
+    static const char *const names[] = {
 	"SM_CXBORDER", "SM_CYBORDER", "SM_CXVSCROLL", "SM_CYVSCROLL",
 	"SM_CXHSCROLL", "SM_CYHSCROLL", "SM_CXMENUCHECK", "SM_CYMENUCHECK",
 	"SM_CXMENUSIZE", "SM_CYMENUSIZE", "SM_CXSIZE", "SM_CYSIZE", "SM_CXSMSIZE",
@@ -1108,7 +1114,7 @@ Ttk_CreateVsapiElement(
     int objc,
     Tcl_Obj *const objv[])
 {
-    XPThemeData *themeData = clientData;
+    XPThemeData *themeData = (XPThemeData *)clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
     LPCWSTR className;
@@ -1215,7 +1221,7 @@ Ttk_CreateVsapiElement(
 	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
 	    goto retErr;
 	/* we over-allocate to ensure there is a terminating entry */
-	stateTable = ckalloc(sizeof(Ttk_StateTable) * (count + 1));
+	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable) * (count + 1));
 	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
 	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
 	    Ttk_StateSpec spec = {0,0};
@@ -1233,11 +1239,11 @@ Ttk_CreateVsapiElement(
 	    return status;
 	}
     } else {
-	stateTable = ckalloc(sizeof(Ttk_StateTable));
+	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable));
 	memset(stateTable, 0, sizeof(Ttk_StateTable));
     }
 
-    elementPtr = ckalloc(sizeof(ElementInfo));
+    elementPtr = (ElementInfo *)ckalloc(sizeof(ElementInfo));
     elementPtr->elementSpec = elementSpec;
     elementPtr->partId = partId;
     elementPtr->statemap = stateTable;
@@ -1245,12 +1251,12 @@ Ttk_CreateVsapiElement(
     elementPtr->flags = HEAP_ELEMENT | flags;
 
     /* set the element name to an allocated copy */
-    name = ckalloc(strlen(elementName) + 1);
+    name = (char *)ckalloc(strlen(elementName) + 1);
     strcpy(name, elementName);
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = ckalloc(Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
+    wname = (LPWSTR)ckalloc(Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
     wcscpy(wname, className);
     elementPtr->className = wname;
 
@@ -1302,7 +1308,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Set theme data and cleanup proc
      */
 
-    themeData = ckalloc(sizeof(XPThemeData));
+    themeData = (XPThemeData *)ckalloc(sizeof(XPThemeData));
     themeData->procs = procs;
     themeData->hlibrary = hlibrary;
 

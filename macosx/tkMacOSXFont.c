@@ -56,25 +56,25 @@ struct SystemFontMapEntry {
 #define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
 static const struct SystemFontMapEntry systemFontMap[] = {
     ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
-    ThemeFont(EmphasizedSystem,		"TkCaptionFont"),
+    ThemeFont(EmphasizedSystem,		"TkCaptionFont", NULL),
     ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
-    ThemeFont(SmallEmphasizedSystem),
-    ThemeFont(Application,		"TkTextFont"),
-    ThemeFont(Label,			"TkSmallCaptionFont"),
-    ThemeFont(Views),
-    ThemeFont(MenuTitle),
-    ThemeFont(MenuItem,			"TkMenuFont"),
-    ThemeFont(MenuItemMark),
-    ThemeFont(MenuItemCmdKey),
-    ThemeFont(WindowTitle),
-    ThemeFont(PushButton),
-    ThemeFont(UtilityWindowTitle),
-    ThemeFont(AlertHeader),
-    ThemeFont(Toolbar),
-    ThemeFont(MiniSystem),
-    { kThemeSystemFontDetail,		"systemDetailSystemFont" },
-    { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont" },
-    { -1, NULL }
+    ThemeFont(SmallEmphasizedSystem, NULL, NULL),
+    ThemeFont(Application,		"TkTextFont", NULL),
+    ThemeFont(Label,			"TkSmallCaptionFont", NULL),
+    ThemeFont(Views, NULL, NULL),
+    ThemeFont(MenuTitle, NULL, NULL),
+    ThemeFont(MenuItem,			"TkMenuFont", NULL),
+    ThemeFont(MenuItemMark, NULL, NULL),
+    ThemeFont(MenuItemCmdKey, NULL, NULL),
+    ThemeFont(WindowTitle, NULL, NULL),
+    ThemeFont(PushButton, NULL, NULL),
+    ThemeFont(UtilityWindowTitle, NULL, NULL),
+    ThemeFont(AlertHeader, NULL, NULL),
+    ThemeFont(Toolbar, NULL, NULL),
+    ThemeFont(MiniSystem, NULL, NULL),
+    { kThemeSystemFontDetail,		"systemDetailSystemFont", NULL, NULL },
+    { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont", NULL, NULL },
+    { -1, NULL, NULL, NULL }
 };
 #undef ThemeFont
 
@@ -218,7 +218,7 @@ TkNSStringToUtf(
 {
     unsigned int code;
     size_t i;
-    char *ptr, *bytes = ckalloc(6*[string length] + 1);
+    char *ptr, *bytes = (char *)ckalloc(6*[string length] + 1);
 
     ptr = bytes;
     if (ptr) {
@@ -612,6 +612,7 @@ TkpGetNativeFont(
     MacFont *fontPtr = NULL;
     ThemeFontID themeFontId;
     CTFontRef ctFont;
+    (void)tkwin;
 
     if (strcmp(name, SYSTEMFONT_NAME) == 0) {
 	themeFontId = kThemeSystemFont;
@@ -625,7 +626,7 @@ TkpGetNativeFont(
     ctFont = CTFontCreateUIFontForLanguage(
 	    HIThemeGetUIFontType(themeFontId), 0, NULL);
     if (ctFont) {
-	fontPtr = ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
     }
 
@@ -693,7 +694,7 @@ TkpGetFontFromAttributes(
 	Tcl_Panic("Could not determine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
-	fontPtr = ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
 	fontPtr = (MacFont *) tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
@@ -759,6 +760,7 @@ TkpGetFontFamilies(
 {
     Tcl_Obj *resultPtr = Tcl_NewListObj(0, NULL);
     NSArray *list = [[NSFontManager sharedFontManager] availableFontFamilies];
+    (void)tkwin;
 
     for (NSString *family in list) {
 	Tcl_ListObjAppendElement(NULL, resultPtr,
@@ -838,6 +840,7 @@ TkpGetFontAttrsForChar(
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
 	UTF16Char ch = (UTF16Char) c;
+    (void)tkwin;
 
 	nsFont = [nsFont bestMatchingFontForCharacters:&ch
 		length:1 attributes:nil actualCoveredLength:NULL];
@@ -1212,6 +1215,7 @@ TkpDrawCharsInContext(
 				 * whole (not just the range) string when
 				 * drawing. */
 {
+    (void)display;
     DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    rangeStart, rangeLength, x, y, 0.0);
 }
@@ -1252,6 +1256,7 @@ DrawCharsInContext(
     NSFont *nsFont;
     CGAffineTransform t;
     int h;
+    (void)display;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
@@ -1379,6 +1384,9 @@ TkMacOSXIsCharacterMissing(
     Tk_Font tkfont,		/* The font we are looking in. */
     unsigned int searchChar)	/* The character we are looking for. */
 {
+    (void)tkfont;
+    (void)searchChar;
+
     return 0;
 }
 

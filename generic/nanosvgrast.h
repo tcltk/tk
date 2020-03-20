@@ -60,7 +60,7 @@ typedef struct NSVGrasterizer NSVGrasterizer;
 */
 
 // Allocated rasterizer context.
-NANOSVG_SCOPE NSVGrasterizer* nsvgCreateRasterizer();
+NANOSVG_SCOPE NSVGrasterizer* nsvgCreateRasterizer(void);
 
 // Rasterizes SVG image, returns RGBA image (non-premultiplied alpha)
 //   r - pointer to rasterizer context
@@ -160,7 +160,7 @@ struct NSVGrasterizer
 };
 
 NANOSVG_SCOPE
-NSVGrasterizer* nsvgCreateRasterizer()
+NSVGrasterizer* nsvgCreateRasterizer(void)
 {
 	NSVGrasterizer* r = (NSVGrasterizer*)NANOSVG_malloc(sizeof(NSVGrasterizer));
 	if (r == NULL) goto error;

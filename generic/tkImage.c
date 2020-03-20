@@ -104,11 +104,12 @@ static void		EventuallyDeleteImage(ImageMaster *masterPtr,
 
 static void
 ImageTypeThreadExitProc(
-    ClientData clientData)	/* not used */
+    ClientData dummy)	/* not used */
 {
     Tk_ImageType *freePtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     while (tsdPtr->oldImageTypeList != NULL) {
 	freePtr = tsdPtr->oldImageTypeList;
@@ -149,14 +150,14 @@ Tk_CreateOldImageType(
 				 * by caller. */
 {
     Tk_ImageType *copyPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
     }
-    copyPtr = ckalloc(sizeof(Tk_ImageType));
+    copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));
     *copyPtr = *typePtr;
     copyPtr->nextPtr = tsdPtr->oldImageTypeList;
     tsdPtr->oldImageTypeList = copyPtr;
@@ -170,14 +171,14 @@ Tk_CreateImageType(
 				 * by caller. */
 {
     Tk_ImageType *copyPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
     }
-    copyPtr = ckalloc(sizeof(Tk_ImageType));
+    copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));
     *copyPtr = *typePtr;
     copyPtr->nextPtr = tsdPtr->imageTypeList;
     tsdPtr->imageTypeList = copyPtr;
@@ -215,7 +216,7 @@ Tk_ImageObjCmd(
 	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
 	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     int i, isNew, firstOption, index;
     Tk_ImageType *typePtr;
     ImageMaster *masterPtr;
@@ -226,7 +227,7 @@ Tk_ImageObjCmd(
     TkDisplay *dispPtr = winPtr->dispPtr;
     const char *arg, *name;
     Tcl_Obj *resultObj;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
@@ -318,7 +319,7 @@ Tk_ImageObjCmd(
 
 	hPtr = Tcl_CreateHashEntry(&winPtr->mainPtr->imageTable, name, &isNew);
 	if (isNew) {
-	    masterPtr = ckalloc(sizeof(ImageMaster));
+	    masterPtr = (ImageMaster *)ckalloc(sizeof(ImageMaster));
 	    masterPtr->typePtr = NULL;
 	    masterPtr->masterData = NULL;
 	    masterPtr->width = masterPtr->height = 1;
@@ -335,7 +336,7 @@ Tk_ImageObjCmd(
 	     * from the master.
 	     */
 
-	    masterPtr = Tcl_GetHashValue(hPtr);
+	    masterPtr = (ImageMaster *)Tcl_GetHashValue(hPtr);
 	    if (masterPtr->typePtr != NULL) {
 		for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
 			imagePtr = imagePtr->nextPtr) {
@@ -363,7 +364,7 @@ Tk_ImageObjCmd(
 	if (oldimage) {
 	    int i;
 
-	    args = ckalloc((objc+1) * sizeof(char *));
+	    args = (Tcl_Obj **)ckalloc((objc+1) * sizeof(Tcl_Obj *));
 	    for (i = 0; i < objc; i++) {
 		args[i] = (Tcl_Obj *) Tcl_GetString(objv[i]);
 	    }
@@ -390,7 +391,7 @@ Tk_ImageObjCmd(
 		    masterPtr->masterData);
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), -1));
+		(const char *)Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), -1));
 	break;
     }
     case IMAGE_DELETE:
@@ -400,7 +401,7 @@ Tk_ImageObjCmd(
 	    if (hPtr == NULL) {
 		goto alreadyDeleted;
 	    }
-	    masterPtr = Tcl_GetHashValue(hPtr);
+	    masterPtr = (ImageMaster *)Tcl_GetHashValue(hPtr);
 	    if (masterPtr->deleted) {
 		goto alreadyDeleted;
 	    }
@@ -415,12 +416,12 @@ Tk_ImageObjCmd(
 	hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
 	resultObj = Tcl_NewObj();
 	for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    masterPtr = Tcl_GetHashValue(hPtr);
+	    masterPtr = (ImageMaster *)Tcl_GetHashValue(hPtr);
 	    if (masterPtr->deleted) {
 		continue;
 	    }
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		    Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), -1));
+		    (const char *)Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), -1));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	break;
@@ -463,7 +464,7 @@ Tk_ImageObjCmd(
 	if (hPtr == NULL) {
 	    goto alreadyDeleted;
 	}
-	masterPtr = Tcl_GetHashValue(hPtr);
+	masterPtr = (ImageMaster *)Tcl_GetHashValue(hPtr);
 	if (masterPtr->deleted) {
 	    goto alreadyDeleted;
 	}
@@ -572,7 +573,7 @@ Tk_NameOfImage(
     if (masterPtr->hPtr == NULL) {
 	return NULL;
     }
-    return Tcl_GetHashKey(masterPtr->tablePtr, masterPtr->hPtr);
+    return (const char *)Tcl_GetHashKey(masterPtr->tablePtr, masterPtr->hPtr);
 }
 
 /*
@@ -617,14 +618,14 @@ Tk_GetImage(
     if (hPtr == NULL) {
 	goto noSuchImage;
     }
-    masterPtr = Tcl_GetHashValue(hPtr);
+    masterPtr = (ImageMaster *)Tcl_GetHashValue(hPtr);
     if (masterPtr->typePtr == NULL) {
 	goto noSuchImage;
     }
     if (masterPtr->deleted) {
 	goto noSuchImage;
     }
-    imagePtr = ckalloc(sizeof(Image));
+    imagePtr = (Image *)ckalloc(sizeof(Image));
     imagePtr->tkwin = tkwin;
     imagePtr->display = Tk_Display(tkwin);
     imagePtr->masterPtr = masterPtr;
@@ -933,7 +934,7 @@ Tk_DeleteImage(
     if (hPtr == NULL) {
 	return;
     }
-    DeleteImage(Tcl_GetHashValue(hPtr));
+    DeleteImage((ImageMaster *)Tcl_GetHashValue(hPtr));
 }
 
 /*
@@ -1045,7 +1046,7 @@ TkDeleteAllImages(
 
     for (hPtr = Tcl_FirstHashEntry(&mainPtr->imageTable, &search);
 	    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	EventuallyDeleteImage(Tcl_GetHashValue(hPtr), 1);
+	EventuallyDeleteImage((ImageMaster *)Tcl_GetHashValue(hPtr), 1);
     }
     Tcl_DeleteHashTable(&mainPtr->imageTable);
 }
@@ -1088,7 +1089,7 @@ Tk_GetImageMasterData(
 	*typePtrPtr = NULL;
 	return NULL;
     }
-    masterPtr = Tcl_GetHashValue(hPtr);
+    masterPtr = (ImageMaster *)Tcl_GetHashValue(hPtr);
     if (masterPtr->deleted) {
 	*typePtrPtr = NULL;
 	return NULL;
@@ -1118,7 +1119,6 @@ Tk_GetImageMasterData(
  *----------------------------------------------------------------------
  */
 
-/*ARGSUSED*/
 void
 Tk_SetTSOrigin(
     Tk_Window tkwin,
