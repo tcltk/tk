@@ -1386,7 +1386,7 @@ GetTextIndex(
     const char *string;
     (void)canvas;
 
-    if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars, &idx)) {
+    if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
 	} else if (idx > (TkSizeT)textPtr->numChars) {

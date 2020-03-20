@@ -1754,7 +1754,7 @@ GetLineIndex(
     const char *string;
     (void)canvas;
 
-    if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, &idx)) {
+    if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 0, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
 	} else if (idx > (2*(TkSizeT)linePtr->numPoints)) {

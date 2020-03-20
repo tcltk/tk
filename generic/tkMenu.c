@@ -2128,7 +2128,7 @@ GetMenuIndex(
     int i;
     const char *string;
 
-    if (TkGetIntForIndex(objPtr, menuPtr->numEntries - ((lastOK) ? 0 : 1), indexPtr) == TCL_OK) {
+    if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
 	if (*indexPtr != TCL_INDEX_NONE) {
 	    if (*indexPtr >= menuPtr->numEntries) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
