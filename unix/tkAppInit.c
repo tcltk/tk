@@ -17,7 +17,13 @@
 #include "tk.h"
 
 #ifdef TK_TEST
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern Tcl_PackageInitProc Tktest_Init;
+#ifdef __cplusplus
+}
+#endif
 #endif /* TK_TEST */
 
 /*

@@ -798,7 +798,7 @@ GetButtonNumber(
 }
 
 static Time
-CurrentTimeInMilliSecs()
+CurrentTimeInMilliSecs(void)
 {
     Tcl_Time now;
     Tcl_GetTime(&now);
@@ -940,6 +940,8 @@ FreePatSeqEntry(
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
+    (void)pool;
+
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
     return next;
@@ -1041,7 +1043,7 @@ MakeListEntry(
     assert(TEST_PSENTRY(psPtr));
 
     if (PSList_IsEmpty(pool)) {
-	newEntry = ckalloc(sizeof(PSEntry));
+	newEntry = (PSEntry *)ckalloc(sizeof(PSEntry));
 	newEntry->lastModMaskArr = NULL;
 	DEBUG(countEntryItems += 1;)
     } else {
@@ -1118,7 +1120,7 @@ GetLookupForEvent(
     key.object = object;
     key.type = eventPtr->xev.type;
     hPtr = Tcl_FindHashEntry(&lookupTables->listTable, (char *) &key);
-    return hPtr ? Tcl_GetHashValue(hPtr) : NULL;
+    return hPtr ? (PSList *)Tcl_GetHashValue(hPtr) : NULL;
 }
 
 /*
@@ -1156,13 +1158,13 @@ ClearLookupTable(
 	nextPtr = Tcl_NextHashEntry(&search);
 
 	if (object) {
-	    const PatternTableKey *key = Tcl_GetHashKey(&lookupTables->listTable, hPtr);
+	    const PatternTableKey *key = (const PatternTableKey *)Tcl_GetHashKey(&lookupTables->listTable, hPtr);
 	    if (key->object != object) {
 		continue;
 	    }
 	}
 
-	psList = Tcl_GetHashValue(hPtr);
+	psList = (PSList *)Tcl_GetHashValue(hPtr);
 	PSList_Move(pool, psList);
 	ckfree(psList);
 	DEBUG(countListItems -= 1;)
@@ -1377,7 +1379,7 @@ TkBindInit(
 
     mainPtr->bindingTable = Tk_CreateBindingTable(mainPtr->interp);
 
-    bindInfoPtr = ckalloc(sizeof(BindInfo));
+    bindInfoPtr = (BindInfo *)ckalloc(sizeof(BindInfo));
     InitVirtualEventTable(&bindInfoPtr->virtualEventTable);
     bindInfoPtr->screenInfo.curDispPtr = NULL;
     bindInfoPtr->screenInfo.curScreenIndex = -1;
@@ -1453,7 +1455,7 @@ Tk_CreateBindingTable(
     Tcl_Interp *interp)		/* Interpreter to associate with the binding table: commands are
     				 * executed in this interpreter. */
 {
-    BindingTable *bindPtr = ckalloc(sizeof(BindingTable));
+    BindingTable *bindPtr = (BindingTable *)ckalloc(sizeof(BindingTable));
     unsigned i;
 
     assert(interp);
@@ -1512,7 +1514,7 @@ Tk_DeleteBindingTable(
 	PatSeq *nextPtr;
 	PatSeq *psPtr;
 
-	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
+	for (psPtr = (PatSeq *)Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	    assert(TEST_PSENTRY(psPtr));
 	    nextPtr = psPtr->nextSeqPtr;
 	    FreePatSeq(psPtr);
@@ -1579,12 +1581,12 @@ InsertPatSeq(
 	hPtr = Tcl_CreateHashEntry(&lookupTables->listTable, (char *) &key, &isNew);
 
 	if (isNew) {
-	    psList = ckalloc(sizeof(PSList));
+	    psList = (PSList *)ckalloc(sizeof(PSList));
 	    PSList_Init(psList);
 	    Tcl_SetHashValue(hPtr, psList);
 	    DEBUG(countListItems += 1;)
 	} else {
-	    psList = Tcl_GetHashValue(hPtr);
+	    psList = (PSList *)Tcl_GetHashValue(hPtr);
 	}
 
 	psEntry = MakeListEntry(&lookupTables->entryPool, psPtr, 0);
@@ -1672,7 +1674,7 @@ Tk_CreateBinding(
 	 */
 
 	hPtr = Tcl_CreateHashEntry(&bindPtr->objectTable, (char *) object, &isNew);
-	psPtr->ptr.nextObj = isNew ? NULL : Tcl_GetHashValue(hPtr);
+	psPtr->ptr.nextObj = isNew ? NULL : (PatSeq *)Tcl_GetHashValue(hPtr);
 	Tcl_SetHashValue(hPtr, psPtr);
 	InsertPatSeq(&bindPtr->lookupTables, psPtr);
     }
@@ -1682,14 +1684,14 @@ Tk_CreateBinding(
 	size_t length1 = strlen(oldStr);
 	size_t length2 = strlen(script);
 
-	newStr = ckalloc(length1 + length2 + 2);
+	newStr = (char *)ckalloc(length1 + length2 + 2);
 	memcpy(newStr, oldStr, length1);
 	newStr[length1] = '\n';
 	memcpy(newStr + length1 + 1, script, length2 + 1);
     } else {
 	size_t length = strlen(script);
 
-	newStr = ckalloc(length + 1);
+	newStr = (char *)ckalloc(length + 1);
 	memcpy(newStr, script, length + 1);
     }
     ckfree(oldStr);
@@ -1744,7 +1746,7 @@ Tk_DeleteBinding(
 	if (!(hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object))) {
 	    Tcl_Panic("Tk_DeleteBinding couldn't find object table entry");
 	}
-	prevPtr = Tcl_GetHashValue(hPtr);
+	prevPtr = (PatSeq *)Tcl_GetHashValue(hPtr);
 	if (prevPtr == psPtr) {
 	    Tcl_SetHashValue(hPtr, psPtr->ptr.nextObj);
 	} else {
@@ -1845,7 +1847,7 @@ Tk_GetAllBindings(
 	 * For each binding, output information about each of the patterns in its sequence.
 	 */
 
-	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = psPtr->ptr.nextObj) {
+	for (psPtr = (const PatSeq *)Tcl_GetHashValue(hPtr); psPtr; psPtr = psPtr->ptr.nextObj) {
 	    assert(TEST_PSENTRY(psPtr));
 	    Tcl_ListObjAppendElement(NULL, resultObj, GetPatternObj(psPtr));
 	}
@@ -1884,7 +1886,7 @@ RemovePatSeqFromLookup(
     SetupPatternKey(&key, psPtr);
 
     if ((hPtr = Tcl_FindHashEntry(&lookupTables->listTable, (char *) &key))) {
-	PSList *psList = Tcl_GetHashValue(hPtr);
+	PSList *psList = (PSList *)Tcl_GetHashValue(hPtr);
 	PSEntry *psEntry;
 
 	TK_DLIST_FOREACH(psEntry, psList) {
@@ -1968,7 +1970,7 @@ DeletePatSeq(
     assert(!psPtr->added);
     assert(!psPtr->owned);
 
-    prevPtr = Tcl_GetHashValue(psPtr->hPtr);
+    prevPtr = (PatSeq *)Tcl_GetHashValue(psPtr->hPtr);
     nextPtr = psPtr->ptr.nextObj;
 
     /*
@@ -2039,7 +2041,7 @@ Tk_DeleteAllBindings(
     ClearLookupTable(&bindPtr->lookupTables, object);
     ClearPromotionLists(bindPtr, object);
 
-    for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
+    for (psPtr = (PatSeq *)Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	assert(TEST_PSENTRY(psPtr));
 	DEBUG(psPtr->added = 0;)
 	nextPtr = DeletePatSeq(psPtr);
@@ -2364,7 +2366,7 @@ Tk_BindEvent(
 
     if ((size_t) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
 	/* it's unrealistic that the buffer size is too small, but who knows? */
-	matchPtrArr = ckalloc(numObjects*sizeof(matchPtrArr[0]));
+	matchPtrArr = (PatSeq **)ckalloc(numObjects*sizeof(matchPtrArr[0]));
     }
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
@@ -2405,8 +2407,8 @@ Tk_BindEvent(
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
-	psl[0] = GetLookupForEvent(physTables, curEvent, objArr[k], 1);
-	psl[1] = GetLookupForEvent(physTables, curEvent, objArr[k], 0);
+	psl[0] = GetLookupForEvent(physTables, curEvent, (Tcl_Obj *)objArr[k], 1);
+	psl[1] = GetLookupForEvent(physTables, curEvent, (Tcl_Obj *)objArr[k], 0);
 
 	assert(psl[0] == NULL || psl[0] != psl[1]);
 
@@ -3448,7 +3450,7 @@ DeleteVirtualEventTable(
 	PatSeq *nextPtr;
 	PatSeq *psPtr;
 
-	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
+	for (psPtr = (PatSeq *)Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	    assert(TEST_PSENTRY(psPtr));
 	    nextPtr = psPtr->nextSeqPtr;
 	    DEBUG(psPtr->owned = 0;)
@@ -3530,7 +3532,7 @@ CreateVirtualEvent(
      * Make virtual event own the physical event.
      */
 
-    owned = Tcl_GetHashValue(vhPtr);
+    owned = (PhysOwned *)Tcl_GetHashValue(vhPtr);
 
     if (!PhysOwned_Contains(owned, psPtr)) {
 	PhysOwned_Append(&owned, psPtr);
@@ -3592,7 +3594,7 @@ DeleteVirtualEvent(
     if (!(vhPtr = Tcl_FindHashEntry(&vetPtr->nameTable, virtUid))) {
 	return TCL_OK;
     }
-    owned = Tcl_GetHashValue(vhPtr);
+    owned = (PhysOwned *)Tcl_GetHashValue(vhPtr);
 
     eventPSPtr = NULL;
     if (eventString) {
@@ -3724,7 +3726,7 @@ GetVirtualEvent(
     }
 
     resultObj = Tcl_NewObj();
-    owned = Tcl_GetHashValue(vhPtr);
+    owned = (const PhysOwned *)Tcl_GetHashValue(vhPtr);
     for (iPhys = 0; iPhys < PhysOwned_Size(owned); ++iPhys) {
 	Tcl_ListObjAppendElement(NULL, resultObj, GetPatternObj(PhysOwned_Get(owned, iPhys)));
     }
@@ -3813,7 +3815,7 @@ HandleEventGenerate(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    union { XEvent general; XVirtualEvent virtual; } event;
+    union { XEvent general; XVirtualEvent virt; } event;
 
     const char *p;
     const char *name;
@@ -3916,7 +3918,7 @@ HandleEventGenerate(
 	} else if (flags & BUTTON) {
 	    event.general.xbutton.button = pat.info;
 	} else if (flags & VIRTUAL) {
-	    event.virtual.name = pat.name;
+	    event.virt.name = pat.name;
 	}
     }
     if (flags & (CREATE|UNMAP|MAP|REPARENT|CONFIG|GRAVITY|CIRC)) {
@@ -4356,7 +4358,7 @@ HandleEventGenerate(
 	     * refcount before firing it into the low-level event subsystem; the
 	     * refcount will be decremented once the event has been processed.
 	     */
-	    event.virtual.user_data = userDataObj;
+	    event.virt.user_data = userDataObj;
 	    Tcl_IncrRefCount(userDataObj);
 	}
 
@@ -4486,7 +4488,7 @@ static void
 DoWarp(
     ClientData clientData)
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
 
     assert(clientData);
 
@@ -4616,7 +4618,7 @@ FindSequence(
     assert(lookupTables);
     assert(eventString);
 
-    psPtr = ckalloc(PATSEQ_MEMSIZE(patsBufSize));
+    psPtr = (PatSeq *)ckalloc(PATSEQ_MEMSIZE(patsBufSize));
 
     /*
      *------------------------------------------------------------------
@@ -4628,7 +4630,7 @@ FindSequence(
 	if (numPats >= patsBufSize) {
 	    unsigned pos = patPtr - psPtr->pats;
 	    patsBufSize += patsBufSize;
-	    psPtr = ckrealloc(psPtr, PATSEQ_MEMSIZE(patsBufSize));
+	    psPtr = (PatSeq *)ckrealloc(psPtr, PATSEQ_MEMSIZE(patsBufSize));
 	    patPtr = psPtr->pats + pos;
 	}
 
@@ -4677,18 +4679,18 @@ FindSequence(
 	return NULL;
     }
     if (patsBufSize > numPats) {
-	psPtr = ckrealloc(psPtr, PATSEQ_MEMSIZE(numPats));
+	psPtr = (PatSeq *)ckrealloc(psPtr, PATSEQ_MEMSIZE(numPats));
     }
 
     patPtr = psPtr->pats;
-    psPtr->object = object;
+    psPtr->object = (Tcl_Obj *)object;
     SetupPatternKey(&key, psPtr);
     hPtr = Tcl_CreateHashEntry(&lookupTables->patternTable, (char *) &key, &isNew);
     if (!isNew) {
 	unsigned sequenceSize = numPats*sizeof(TkPattern);
 	PatSeq *psPtr2;
 
-	for (psPtr2 = Tcl_GetHashValue(hPtr); psPtr2; psPtr2 = psPtr2->nextSeqPtr) {
+	for (psPtr2 = (PatSeq *)Tcl_GetHashValue(hPtr); psPtr2; psPtr2 = psPtr2->nextSeqPtr) {
 	    assert(TEST_PSENTRY(psPtr2));
 	    if (numPats == psPtr2->numPats && memcmp(patPtr, psPtr2->pats, sequenceSize) == 0) {
 		ckfree(psPtr);
@@ -4724,7 +4726,7 @@ FindSequence(
     psPtr->added = 0;
     psPtr->modMaskUsed = (modMask != 0);
     psPtr->script = NULL;
-    psPtr->nextSeqPtr = Tcl_GetHashValue(hPtr);
+    psPtr->nextSeqPtr = (PatSeq *)Tcl_GetHashValue(hPtr);
     psPtr->hPtr = hPtr;
     psPtr->ptr.nextObj = NULL;
     assert(psPtr->ptr.owners == NULL);
@@ -4866,7 +4868,7 @@ ParseEventDescription(
 
 	    size = p - field;
 	    if (size >= sizeof(buf)) {
-		bufPtr = ckalloc(size + 1);
+		bufPtr = (char *)ckalloc(size + 1);
 	    }
 	    strncpy(bufPtr, field, size);
 	    bufPtr[size] = '\0';
@@ -4898,7 +4900,7 @@ ParseEventDescription(
 		if (!(hPtr = Tcl_FindHashEntry(&modTable, field))) {
 		    break;
 		}
-		modPtr = Tcl_GetHashValue(hPtr);
+		modPtr = (ModInfo *)Tcl_GetHashValue(hPtr);
 		patPtr->modMask |= modPtr->mask;
 		if (modPtr->flags & MULT_CLICKS) {
 		    unsigned i = modPtr->flags & MULT_CLICKS;
@@ -4913,7 +4915,7 @@ ParseEventDescription(
 
 	    eventFlags = 0;
 	    if ((hPtr = Tcl_FindHashEntry(&eventTable, field))) {
-		const EventInfo *eiPtr = Tcl_GetHashValue(hPtr);
+		const EventInfo *eiPtr = (const EventInfo *)Tcl_GetHashValue(hPtr);
 
 		patPtr->eventType = eiPtr->type;
 		eventFlags = flagArray[eiPtr->type];
@@ -5293,7 +5295,7 @@ TkKeysymToString(
     hPtr = Tcl_FindHashEntry(&nameTable, INT2PTR(keysym));
 
     if (hPtr) {
-	return Tcl_GetHashValue(hPtr);
+	return (const char *)Tcl_GetHashValue(hPtr);
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 

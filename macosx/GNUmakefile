@@ -25,6 +25,7 @@ EXTRA_CONFIGURE_ARGS	?=
 EXTRA_MAKE_ARGS		?=
 
 INSTALL_PATH		?= /Library/Frameworks
+TCL_INSTALL_PATH	?= ${INSTALL_PATH}/Tcl.framework
 APPLICATION_INSTALL_PATH ?= /Applications/Utilities
 PREFIX			?= /usr/local
 BINDIR			?= ${PREFIX}/bin
@@ -107,7 +108,7 @@ TCL_VERSION		:= ${VERSION}
 wish			:= wish
 WISH			= wish${VERSION}
 
-BUILD_TARGET		:= all tktest
+BUILD_TARGET		:= binaries libraries tktest
 INSTALL_TARGET		:= install
 
 ifneq ($(wildcard $(subst ${space},\ ,${TCL_BUILD_DIR})/tclConfig.sh),)
@@ -115,7 +116,7 @@ TCL_DIR			:= ${TCL_BUILD_DIR}
 TCL_FRAMEWORK_DIR	:= ${TCL_BUILD_DIR}/..
 MAKE_VARS		:=
 else
-TCL_DIR			:= ${TCL_FRAMEWORK_DIR}/Tcl.framework
+TCL_DIR			:= ${TCL_INSTALL_PATH}
 TCL_EXE			:= ${TCLSH_DIR}/tclsh${TCL_VERSION}
 MAKE_VARS		:= TCL_EXE
 export DYLD_FRAMEWORK_PATH := ${TCL_FRAMEWORK_DIR}

@@ -55,6 +55,7 @@ const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 int Ttk_GetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 {
@@ -62,6 +63,7 @@ int Ttk_GetOrientFromObj(
     return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
 	    sizeof(char *), "orientation", 0, resultPtr);
 }
+#endif
 
 int TtkGetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
@@ -195,11 +197,11 @@ int TtkGetOptionValue(
 const Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
-	offsetof(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
+	offsetof(WidgetCore, cursorObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
-	offsetof(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
+	offsetof(WidgetCore,styleObj), TCL_AUTO_LENGTH, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
-	offsetof(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
+	offsetof(WidgetCore,classObj), TCL_AUTO_LENGTH, 0,0,READONLY_OPTION},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

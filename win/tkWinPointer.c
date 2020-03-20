@@ -179,6 +179,12 @@ XGrabKeyboard(
     int keyboard_mode,
     Time time)
 {
+    (void)display;
+    (void)owner_events;
+    (void)pointer_mode;
+    (void)keyboard_mode;
+    (void)time;
+
     keyboardWinPtr = TkWinGetWinPtr(grab_window);
     return GrabSuccess;
 }
@@ -204,6 +210,9 @@ XUngrabKeyboard(
     Display *display,
     Time time)
 {
+    (void)display;
+    (void)time;
+
     keyboardWinPtr = NULL;
     return Success;
 }
@@ -226,9 +235,10 @@ XUngrabKeyboard(
 
 void
 MouseTimerProc(
-    ClientData clientData)
+    ClientData dummy)
 {
     POINT pos;
+    (void)dummy;
 
     mouseTimerSet = 0;
 
@@ -290,6 +300,7 @@ TkGetPointerCoords(
     int *xPtr, int *yPtr)	/* Store pointer coordinates here. */
 {
     POINT point;
+    (void)tkwin;
 
     GetCursorPos(&point);
     *xPtr = point.x;
@@ -327,6 +338,12 @@ XQueryPointer(
     int *win_y_return,
     unsigned int *mask_return)
 {
+    (void)w;
+    (void)root_return;
+    (void)child_return;
+    (void)win_x_return;
+    (void)win_y_return;
+
     display->request++;
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
     *mask_return = TkWinGetModifierState();
@@ -401,6 +418,12 @@ XWarpPointer(
     int dest_y)
 {
     RECT r;
+    (void)display;
+    (void)src_w;
+    (void)src_x;
+    (void)src_y;
+    (void)src_width;
+    (void)src_height;
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
     TkSetCursorPos(r.left+dest_x, r.top+dest_y);
@@ -445,7 +468,7 @@ XGetInputFocus(
 {
     Tk_Window tkwin = Tk_HWNDToWindow(GetFocus());
 
-    *focus_return = tkwin ? Tk_WindowId(tkwin) : None;
+    *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
     display->request++;
     return Success;
@@ -475,6 +498,9 @@ XSetInputFocus(
     int revert_to,
     Time time)
 {
+    (void)revert_to;
+    (void)time;
+
     display->request++;
     if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));

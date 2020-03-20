@@ -14,7 +14,7 @@
 #ifdef HAVE_COREFOUNDATION
 static int		GetLibraryPath(Tcl_Interp *interp);
 #else
-#define GetLibraryPath(dummy)	(void)0
+#define GetLibraryPath(dummy)	(void)dummy
 #endif /* HAVE_COREFOUNDATION */
 
 /*
@@ -132,11 +132,11 @@ TkpDisplayWarning(
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_FRAMEWORK
 static int
 GetLibraryPath(
     Tcl_Interp *interp)
 {
-#ifdef TK_FRAMEWORK
     int foundInFramework = TCL_ERROR;
     char tkLibPath[PATH_MAX + 1];
 
@@ -147,10 +147,15 @@ GetLibraryPath(
         Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
     return foundInFramework;
-#else
-    return TCL_ERROR;
-#endif
 }
+#else
+static int
+GetLibraryPath(
+    TCL_UNUSED(Tcl_Interp *))
+{
+    return TCL_ERROR;
+}
+#endif
 #endif /* HAVE_COREFOUNDATION */
 
 /*
