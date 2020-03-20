@@ -1285,7 +1285,6 @@ TkSelClearSelection(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 SelGetProc(
     ClientData clientData,	/* Dynamic string holding partially assembled

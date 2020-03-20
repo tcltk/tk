@@ -1116,7 +1116,6 @@ WinItemRequestProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 WinItemLostSlaveProc(
     ClientData clientData,	/* WindowItem structure for slave window that

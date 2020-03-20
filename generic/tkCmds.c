@@ -527,7 +527,6 @@ Tk_DestroyObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_LowerObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -587,7 +586,6 @@ Tk_LowerObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_RaiseObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -985,7 +983,6 @@ InactiveCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_TkwaitObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -1114,7 +1111,6 @@ Tk_TkwaitObjCmd(
     return code;
 }
 
-	/* ARGSUSED */
 static char *
 WaitVariableProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
@@ -1133,7 +1129,6 @@ WaitVariableProc(
     return NULL;
 }
 
-	/*ARGSUSED*/
 static void
 WaitVisibilityProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
@@ -1177,7 +1172,6 @@ WaitWindowProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_UpdateObjCmd(
     ClientData dummy,	/* Main window associated with interpreter. */
@@ -1894,7 +1888,6 @@ TkGetDisplayOf(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkDeadAppObjCmd(
     ClientData dummy,	/* Dummy. */

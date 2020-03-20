@@ -364,8 +364,8 @@ GetWidgetDemoPath(
 void
 TkMacOSXHandleMenuSelect(
     TCL_UNUSED(short),
-	TCL_UNUSED(unsigned short),
-	TCL_UNUSED(int))
+    TCL_UNUSED(unsigned short),
+    TCL_UNUSED(int))
 {
     Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
 }

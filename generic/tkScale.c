@@ -1338,7 +1338,6 @@ TkRoundIntervalToResolution(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static char *
 ScaleVarProc(
     ClientData clientData,	/* Information about button. */

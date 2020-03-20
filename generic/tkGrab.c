@@ -166,7 +166,6 @@ static void		ReleaseButtonGrab(TkDisplay *dispPtr);
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_GrabObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */

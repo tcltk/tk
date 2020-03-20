@@ -96,7 +96,6 @@ TkWinCleanupContainerList(void)
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkpTestembedCmd(
     ClientData dummy,

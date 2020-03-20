@@ -29,7 +29,8 @@
 #define FONTMAP_SHIFT	    10
 
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
-#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
+#define FONTMAP_NUMCHARS	0x40000
+#define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -653,15 +654,13 @@ TkpGetFontFamilies(
 static int CALLBACK
 WinFontFamilyEnumProc(
     ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
-    NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
-    int fontType,		/* Type of font (not used). */
+    TCL_UNUSED(NEWTEXTMETRIC *),	/* Physical-font data (not used). */
+    TCL_UNUSED(int),		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
     WCHAR *faceName = lfPtr->elfLogFont.lfFaceName;
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
-    (void)tmPtr;
-    (void)fontType;
 
     Tcl_DStringInit(&faceString);
     Tcl_WCharToUtfDString(faceName, wcslen(faceName), &faceString);
@@ -1017,7 +1016,7 @@ TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    TCL_UNUSED(int),		/* Maximum number of bytes to consider from
 				 * source string in all. */
     int rangeStart,		/* Index of first byte to measure. */
     int rangeLength,		/* Length of range to measure in bytes. */
@@ -1039,7 +1038,6 @@ TkpMeasureCharsInContext(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-    (void) numBytes; /*unused*/
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
 	    maxLength, flags, lengthPtr);
 }
@@ -1065,7 +1063,7 @@ Tk_DrawChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
-    Tk_Font tkfont,		/* Font in which characters will be drawn;
+    TCL_UNUSED(Tk_Font),	/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
@@ -1081,7 +1079,6 @@ Tk_DrawChars(
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
-    (void)tkfont;
 
     fontPtr = (WinFont *) gc->font;
     display->request++;
@@ -1213,7 +1210,7 @@ TkDrawAngledChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
-    Tk_Font tkfont,		/* Font in which characters will be drawn;
+    TCL_UNUSED(Tk_Font),	/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
@@ -1230,7 +1227,6 @@ TkDrawAngledChars(
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
-    (void)tkfont;
 
     fontPtr = (WinFont *) gc->font;
     display->request++;
@@ -1389,7 +1385,7 @@ TkpDrawCharsInContext(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    TCL_UNUSED(int),		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
@@ -1397,8 +1393,6 @@ TkpDrawCharsInContext(
 				 * drawing. */
 {
     int widthUntilStart;
-
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -1738,7 +1732,7 @@ AllocFontFamily(
     HDC hdc,			/* HDC in which font can be selected. */
     HFONT hFont,		/* Screen font whose FontFamily is to be
 				 * returned. */
-    int base)			/* Non-zero if this font family is to be used
+    TCL_UNUSED(int))			/* Non-zero if this font family is to be used
 				 * in the base font of a font object. */
 {
     Tk_Uid faceName;
@@ -1748,7 +1742,6 @@ AllocFontFamily(
     WCHAR buf[LF_FACESIZE];
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)base;
 
     hFont = (HFONT)SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
@@ -1929,7 +1922,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if ((ch < BASE_CHARS) || (ch >= 0x30000)) {
+    if ((ch < BASE_CHARS) || (ch >= FONTMAP_NUMCHARS)) {
 	return &fontPtr->subFontArray[0];
     }
 
@@ -2037,8 +2030,8 @@ FindSubFontForChar(
 static int CALLBACK
 WinFontCanUseProc(
     ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
-    NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
-    int fontType,		/* Type of font (not used). */
+    TCL_UNUSED(NEWTEXTMETRIC *),	/* Physical-font data (not used). */
+    TCL_UNUSED(int),		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
     int ch;
@@ -2049,8 +2042,6 @@ WinFontCanUseProc(
     SubFont *subFontPtr;
     Tcl_DString faceString;
     Tcl_DString *nameTriedPtr;
-    (void)tmPtr;
-    (void)fontType;
 
     canUsePtr	    = (CanUse *) lParam;
     ch		    = canUsePtr->ch;
@@ -2104,7 +2095,7 @@ FontMapLookup(
 {
     int row, bitOffset;
 
-    if (ch < 0 || ch >= 0x30000) {
+    if (ch < 0 || ch >= FONTMAP_NUMCHARS) {
 	return 0;
     }
 
@@ -2148,7 +2139,7 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    if (ch >= 0 && ch < 0x30000) {
+    if (ch >= 0 && ch < FONTMAP_NUMCHARS) {
 	row = ch >> FONTMAP_SHIFT;
 	if (subFontPtr->fontMap[row] == NULL) {
 	    FontMapLoadPage(subFontPtr, row);
@@ -2560,16 +2551,11 @@ FamilyOrAliasExists(
 
 static int CALLBACK
 WinFontExistProc(
-    ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
-    NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
-    int fontType,		/* Type of font (not used). */
-    LPARAM lParam)		/* EnumFontData to hold result. */
+    TCL_UNUSED(ENUMLOGFONTW *),		/* Logical-font data. */
+    TCL_UNUSED(NEWTEXTMETRIC *),	/* Physical-font data (not used). */
+    TCL_UNUSED(int),		/* Type of font (not used). */
+    TCL_UNUSED(LPARAM))		/* EnumFontData to hold result. */
 {
-    (void)lfPtr;
-    (void)tmPtr;
-    (void)fontType;
-    (void)lParam;
-
     return 0;
 }
 

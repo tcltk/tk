@@ -157,7 +157,6 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  *--------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 int
 TkCanvPostscriptCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
