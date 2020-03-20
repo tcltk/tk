@@ -2731,7 +2731,7 @@ GetListboxIndex(
     Listbox *listPtr,		/* Listbox for which the index is being
 				 * specified. */
     Tcl_Obj *indexObj,		/* Specifies an element in the listbox. */
-    int endIsSize,		/* If 1, "end" refers to the number of entries
+    int lastOK,		/* If 1, "end" refers to the number of entries
 				 * in the listbox. If 0, "end" refers to 1
 				 * less than the number of entries. */
     int *indexPtr)		/* Where to store converted index. */
@@ -2740,7 +2740,7 @@ GetListboxIndex(
     TkSizeT idx;
     const char *stringRep;
 
-    result = TkGetIntForIndex(indexObj, listPtr->nElements - (endIsSize ? 0 : 1), &idx);
+    result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
     	if (idx + 1 > (TkSizeT)listPtr->nElements + 1) {
     	    idx = listPtr->nElements;

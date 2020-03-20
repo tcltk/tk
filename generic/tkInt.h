@@ -1347,7 +1347,7 @@ MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
-MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, TkSizeT*);
+MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
 
 #ifdef _WIN32
