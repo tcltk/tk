@@ -662,9 +662,7 @@ static int PanedInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (!strcmp(Tcl_GetString(objv[2]), "end")) {
-	destIndex = Ttk_NumberSlaves(pw->paned.mgr);
-    } else if (TCL_OK != Ttk_GetSlaveIndexFromObj(
+    if (TCL_OK != Ttk_GetSlaveIndexFromObj(
 		interp,pw->paned.mgr,objv[2],&destIndex))
     {
 	return TCL_ERROR;
@@ -703,6 +701,8 @@ static int PanedForgetCommand(
 		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
+    } else if (paneIndex >= Ttk_NumberSlaves(pw->paned.mgr)) {
+	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
     Ttk_ForgetSlave(pw->paned.mgr, paneIndex);
 
@@ -783,6 +783,8 @@ static int PanedPaneCommand(
 		    interp,pw->paned.mgr,objv[2],&paneIndex))
     {
 	return TCL_ERROR;
+    } else if (paneIndex >= Ttk_NumberSlaves(pw->paned.mgr)) {
+	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
 
     pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, paneIndex);
