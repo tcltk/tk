@@ -98,7 +98,7 @@ even if \fB\-show tree\fR is not specified.
 .OP \-striped striped Striped
 Boolean specifying zebra striped row coloring.
 Note:
-Striped items gets the "alternate" state and it is up to the theme to display this.
+Striped items uses the "-stripedbackground" option if set by the theme or a tag.
 If not supported by the current theme, it will not show.
 .OP \-titlecolumns titleColumns TitleColumns
 Number of display columns at the left that should not be scrolled. The tree column counts, even
@@ -497,6 +497,8 @@ The following options may be specified on tags:
 Specifies the text foreground color.
 .IP \fB\-background\fR
 Specifies the cell or item background color.
+.IP \fB\-stripedbackground\fR
+Specifies the cell or item background color for alternate lines, if \fB\-striped\fB is true.
 .IP \fB\-font\fR
 Specifies the font to use when drawing text.
 .\" ??? Maybe: .IP \-anchor
@@ -556,12 +558,14 @@ The treeview header class name is \fBHeading\fP.
 The treeview item class name is \fBItem\fP.
 The treeview cell class name is \fBCell\fP.
 .PP
-Dynamic states: \fBalternate\fP, \fBdisabled\fP, \fBselected\fP.
+Dynamic states: \fBdisabled\fP, \fBselected\fP.
 .PP
 \fBTreeview\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
 \fB\-background\fP \fIcolor\fP
+.br
+\fB\-stripedbackground\fP \fIcolor\fP
 .br
 \fB\-fieldbackground\fP \fIcolor\fP
 .br
