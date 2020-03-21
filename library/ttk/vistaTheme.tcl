@@ -45,13 +45,13 @@ namespace eval ttk::theme::vista {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
-	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Treeview -background SystemWindow \
+                -stripedbackground System3dLight
 	ttk::style configure Treeview.Separator \
                 -background System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-                                selected SystemHighlight \
-                                alternate System3dLight] \
+                                selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 

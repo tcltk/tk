@@ -108,14 +108,14 @@ namespace eval ttk::theme::default {
 	#
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview \
-	    -background $colors(-window) \
+            -background $colors(-window) \
+            -stripedbackground $colors(-alternate) \
 	    -foreground $colors(-text) ;
 	ttk::style configure Treeview.Separator \
                 -background $colors(-alternate)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-                                selected $colors(-selectbg) \
-                                alternate $colors(-alternate)] \
+                                selected $colors(-selectbg)] \
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 

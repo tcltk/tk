@@ -261,12 +261,23 @@ int Ttk_ConfigureTag(
 
 #define OBJ_AT(record, offset) (*(Tcl_Obj**)(((char*)record)+offset))
 
+void Ttk_TagSetDefaults(Ttk_TagTable tagTable, Ttk_Style style, void *record)
+{
+    const Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
+    memset(record, 0, tagTable->recordSize);
+
+    while (optionSpec->type != TK_OPTION_END) {
+	int offset = optionSpec->objOffset;
+	const char *optionName = optionSpec->optionName;
+	OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
+	++optionSpec;
+    }
+}
+    
 void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 {
     const int LOWEST_PRIORITY = 0x7FFFFFFF;
     int i, j;
-
-    memset(record, 0, tagTable->recordSize);
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
 	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
@@ -294,8 +305,6 @@ void Ttk_TagSetApplyStyle(
 	Tcl_Obj *val = Ttk_StyleMap(style, optionName, state);
 	if (val) {
 	    OBJ_AT(record, offset) = val;
-	} else if (OBJ_AT(record, offset) == 0) {
-	    OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
 	}
 	++optionSpec;
     }

@@ -202,6 +202,7 @@ typedef struct {
     Tcl_Obj *imageObj;		/* taken from item */
     Tcl_Obj *anchorObj;		/* from column <<NOTE-ANCHOR>> */
     Tcl_Obj *backgroundObj;	/* remainder from tag */
+    Tcl_Obj *stripedBgObj;
     Tcl_Obj *foregroundObj;
     Tcl_Obj *fontObj;
 } DisplayItem;
@@ -218,6 +219,9 @@ static const Tk_OptionSpec TagOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(DisplayItem,backgroundObj), TCL_AUTO_LENGTH,
+	TK_OPTION_NULL_OK,0,0 },
+    {TK_OPTION_COLOR, "-stripedbackground", "windowColor", "WindowColor",
+	NULL, offsetof(DisplayItem,stripedBgObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
 	NULL, offsetof(DisplayItem,foregroundObj), TCL_AUTO_LENGTH,
@@ -1839,8 +1843,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
     int x = tv->tree.treeArea.x;
     int i;
 
-    Ttk_TagSetValues(tv->tree.tagTable, tv->tree.root->tagset, &displayItem);
-    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, 0, &displayItem);
+    Ttk_TagSetDefaults(tv->tree.tagTable, style, &displayItem);
 
     for (i = FirstColumn(tv); i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
@@ -1864,8 +1867,17 @@ static void PrepareItem(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State state)
 {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
+    int striped = item->itemPos % 2 && tv->tree.striped;
 
+    Ttk_TagSetDefaults(tv->tree.tagTable, style, displayItem);
+    if (striped && displayItem->stripedBgObj) {
+	displayItem->backgroundObj = displayItem->stripedBgObj;
+	displayItem->stripedBgObj = NULL;
+    }
     Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
+    if (striped && displayItem->stripedBgObj) {
+	displayItem->backgroundObj = displayItem->stripedBgObj;
+    }
     Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
 }
 
@@ -1946,8 +1958,6 @@ static void DrawItem(
     int xTitle = tv->tree.treeArea.x;
     int dispRow = DisplayRow(item->rowPos, tv);
     int y = tv->tree.treeArea.y + tv->tree.rowHeight * dispRow;
-
-    if (item->itemPos % 2 && tv->tree.striped) state |= TTK_STATE_ALTERNATE;
 
     PrepareItem(tv, item, &displayItem, state);
     PrepareItem(tv, item, &displayItemSel, state | TTK_STATE_SELECTED);
