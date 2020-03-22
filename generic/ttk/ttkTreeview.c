@@ -2027,26 +2027,26 @@ static void DrawCells(
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x, y, column->width, rowHeight);
+	DisplayItem *displayItemUsed = displayItem;
+	Ttk_State stateCell = state;
 	x += column->width;
 	if (title  && i >= tv->tree.nTitleColumns) break;
 	if (!title && i <  tv->tree.nTitleColumns) continue;
 	if (!title && x <  tv->tree.titleWidth) continue;
 
 	if (column->selected) {
-	    DisplayLayout(tv->tree.rowLayout, displayItemSel, state, parcel, d);
+	    displayItemUsed = displayItemSel;
+	    stateCell |= TTK_STATE_SELECTED;
+	}
+	if (displayItemUsed != displayItem) {
+	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell, parcel, d);
 	}
 
 	parcel = Ttk_PadBox(parcel, cellPadding);
 
-	if (column->selected) {
-	    displayItemSel->textObj = column->data;
-	    displayItemSel->anchorObj = column->anchorObj;/* <<NOTE-ANCHOR>> */
-	    DisplayLayout(layout, displayItemSel, state, parcel, d);
-	} else {
-	    displayItem->textObj = column->data;
-	    displayItem->anchorObj = column->anchorObj;	/* <<NOTE-ANCHOR>> */
-	    DisplayLayout(layout, displayItem, state, parcel, d);
-	}
+	displayItemUsed->textObj = column->data;
+	displayItemUsed->anchorObj = column->anchorObj;/* <<NOTE-ANCHOR>> */
+	DisplayLayout(layout, displayItemUsed, state, parcel, d);
     }
 }
 
