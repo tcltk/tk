@@ -207,16 +207,19 @@ typedef struct {
     Tcl_Obj *fontObj;
 } DisplayItem;
 
-static const Tk_OptionSpec TagOptionSpecs[] = {
+static const Tk_OptionSpec DisplayOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	NULL, offsetof(DisplayItem,textObj), TCL_AUTO_LENGTH,
-	TK_OPTION_NULL_OK,0,0 },
-    {TK_OPTION_STRING, "-image", "image", "Image",
-	NULL, offsetof(DisplayItem,imageObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	NULL, offsetof(DisplayItem,anchorObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
+    /* From here down are the tags options. The index in TagOptionSpecs
+     * below should be kept in synch with this position.
+     */
+    {TK_OPTION_STRING, "-image", "image", "Image",
+	NULL, offsetof(DisplayItem,imageObj), TCL_AUTO_LENGTH,
+	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(DisplayItem,backgroundObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0 },
@@ -232,6 +235,8 @@ static const Tk_OptionSpec TagOptionSpecs[] = {
 
     {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
 };
+
+static const Tk_OptionSpec *TagOptionSpecs = &DisplayOptionSpecs[2];
 
 /*------------------------------------------------------------------------
  * +++ Columns.
@@ -390,7 +395,7 @@ typedef struct {
     Tk_OptionTable itemOptionTable;
     Tk_OptionTable columnOptionTable;
     Tk_OptionTable headingOptionTable;
-    Tk_OptionTable tagOptionTable;
+    Tk_OptionTable displayOptionTable;
     Tk_BindingTable bindingTable;
     Ttk_TagTable tagTable;
 
@@ -1178,8 +1183,8 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 	Tk_CreateOptionTable(interp, ColumnOptionSpecs);
     tv->tree.headingOptionTable =
 	Tk_CreateOptionTable(interp, HeadingOptionSpecs);
-    tv->tree.tagOptionTable =
-	Tk_CreateOptionTable(interp, TagOptionSpecs);
+    tv->tree.displayOptionTable =
+	Tk_CreateOptionTable(interp, DisplayOptionSpecs);
 
     tv->tree.tagTable = Ttk_CreateTagTable(
 	interp, tv->core.tkwin, TagOptionSpecs, sizeof(DisplayItem));
@@ -1787,15 +1792,15 @@ static Ttk_Layout TreeviewGetLayout(
     if (!(
 	treeLayout
      && GetSublayout(interp, themePtr, treeLayout, ".Item",
-	    tv->tree.tagOptionTable, &tv->tree.itemLayout)
+	    tv->tree.displayOptionTable, &tv->tree.itemLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Cell",
-	    tv->tree.tagOptionTable, &tv->tree.cellLayout)
+	    tv->tree.displayOptionTable, &tv->tree.cellLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Heading",
 	    tv->tree.headingOptionTable, &tv->tree.headingLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Row",
-	    tv->tree.tagOptionTable, &tv->tree.rowLayout)
+	    tv->tree.displayOptionTable, &tv->tree.rowLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Separator",
-	    tv->tree.tagOptionTable, &tv->tree.separatorLayout)
+	    tv->tree.displayOptionTable, &tv->tree.separatorLayout)
     )) {
 	return 0;
     }
@@ -2117,7 +2122,8 @@ static void DrawItem(
 
 	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
 	Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
-	if (item->textObj) { displayItemUsed->textObj = item->textObj; }
+	displayItemUsed->textObj = item->textObj;
+	/* Item's image can be null, and may come from the tag */
 	if (item->imageObj) { displayItemUsed->imageObj = item->imageObj; }
 
 	if (displayItemUsed != &displayItem) {

@@ -499,9 +499,6 @@ Specifies the text foreground color.
 Specifies the cell or item background color.
 .IP \fB\-font\fR
 Specifies the font to use when drawing text.
-.\" ??? Maybe: .IP \-anchor
-.\" ??? Maybe: .IP \-padding
-.\" ??? Maybe: .IP \-text
 .IP \fB\-image\fR
 Specifies the item image, in case the item's \fB\-image\fR option is empty.
 .IP \fB\-stripedbackground\fR
