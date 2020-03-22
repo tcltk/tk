@@ -907,7 +907,13 @@ test treeview-identify-11 "bbox supporting -height" -body {
     .tv configure -titlecolumns 0
     .tv xview 0
     .tv item branch2 -open false
-    place .tv -x 0 -y 0 -width 150 -height 120
+    # Add extra items to make sure it scrolls
+    .tv insert {} end -id item5 -text item5
+    .tv insert {} end -id item6 -text item6
+    # Height needs to be big enough to show the items we measure
+    # and small enough to make scrolling happen.
+    .tv configure -height 6
+    pack .tv -side top
     update
     set base [lindex [.tv bbox branch A] 1]
     set result {}
@@ -917,7 +923,12 @@ test treeview-identify-11 "bbox supporting -height" -body {
         foreach item {item1 item2 item3} {
             set bb [.tv bbox $item A]
             set y [lindex $bb 1]
-            lappend result [expr {$y - $base}]
+            if {$y eq ""} {
+                # This is to get a clearer error if this goes wrong
+                lappend result {}
+            } else {
+                lappend result [expr {$y - $base}]
+            }
             lappend result [lindex $bb 3]
         }
     }
