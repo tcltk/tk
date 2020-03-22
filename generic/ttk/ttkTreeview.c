@@ -15,6 +15,7 @@
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
 
+static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
 static const int DEFAULT_ROWHEIGHT 	= 20;
 static const int DEFAULT_INDENT 	= 20;
 static const int HALO   		= 4;	/* heading separator */
@@ -53,7 +54,7 @@ struct TreeItemRec {
     Tcl_Obj	*openObj;
     Tcl_Obj	*tagsObj;
     Tcl_Obj     *selObj;
-    Tk_Anchor   imageAnchor;
+    Tcl_Obj     *imageAnchorObj;
     int		height; 	/* Height is in number of row heights */
 
     /*
@@ -79,8 +80,8 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
 	NULL, offsetof(TreeItem,imageObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_IMAGE_CHANGED },
     {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
-	"w", -1, offsetof(TreeItem,imageAnchor),
-	0,0,0 },
+	NULL, offsetof(TreeItem,imageAnchorObj), TCL_AUTO_LENGTH,
+	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
 	NULL, offsetof(TreeItem,valuesObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0 },
@@ -111,7 +112,7 @@ static TreeItem *NewItem(void)
     item->openObj = NULL;
     item->tagsObj = NULL;
     item->selObj = NULL;
-    item->imageAnchor = TK_ANCHOR_W;
+    item->imageAnchorObj = NULL;
     item->height = 1;
 
     item->tagset = NULL;
@@ -131,6 +132,7 @@ static void FreeItem(TreeItem *item)
     if (item->openObj) { Tcl_DecrRefCount(item->openObj); }
     if (item->tagsObj) { Tcl_DecrRefCount(item->tagsObj); }
     if (item->selObj) { Tcl_DecrRefCount(item->selObj); }
+    if (item->imageAnchorObj) { Tcl_DecrRefCount(item->imageAnchorObj); }
 
     if (item->tagset)	{ Ttk_FreeTagSet(item->tagset); }
     if (item->imagespec) { TtkFreeImageSpec(item->imagespec); }
@@ -199,7 +201,8 @@ static TreeItem *NextPreorder(TreeItem *item)
 
 typedef struct {
     Tcl_Obj *textObj;		/* taken from item / data cell */
-    Tcl_Obj *imageObj;		/* taken from item */
+    Tcl_Obj *imageObj;		/* taken from item or tag*/
+    Tcl_Obj *imageAnchorObj;	/* taken from item or tag */
     Tcl_Obj *anchorObj;		/* from column <<NOTE-ANCHOR>> */
     Tcl_Obj *backgroundObj;	/* remainder from tag */
     Tcl_Obj *stripedBgObj;
@@ -219,6 +222,9 @@ static const Tk_OptionSpec DisplayOptionSpecs[] = {
      */
     {TK_OPTION_STRING, "-image", "image", "Image",
 	NULL, offsetof(DisplayItem,imageObj), TCL_AUTO_LENGTH,
+	TK_OPTION_NULL_OK,0,0 },
+    {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
+	NULL, offsetof(DisplayItem,imageAnchorObj), TCL_AUTO_LENGTH,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(DisplayItem,backgroundObj), TCL_AUTO_LENGTH,
@@ -2112,7 +2118,7 @@ static void DrawItem(
 	Ttk_Box parcel = Ttk_MakeBox(xTree, y, colwidth, rowHeight);
 	DisplayItem *displayItemUsed = &displayItem;
 	Ttk_State stateCell = state;
-	Tk_Anchor textAnchor;
+	Tk_Anchor textAnchor, imageAnchor = DEFAULT_IMAGEANCHOR;
 	Ttk_Padding cellPadding = {indent, 0, 0, 0};
 
 	if (column->selected) {
@@ -2124,7 +2130,16 @@ static void DrawItem(
 	Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
 	displayItemUsed->textObj = item->textObj;
 	/* Item's image can be null, and may come from the tag */
-	if (item->imageObj) { displayItemUsed->imageObj = item->imageObj; }
+	if (item->imageObj) {
+	    displayItemUsed->imageObj = item->imageObj;
+	}
+	if (item->imageAnchorObj) {
+	    displayItemUsed->imageAnchorObj = item->imageAnchorObj;
+	}
+	if (displayItemUsed->imageAnchorObj) {
+	    Tk_GetAnchorFromObj(NULL, displayItemUsed->imageAnchorObj,
+		    &imageAnchor);
+	}
 
 	if (displayItemUsed != &displayItem) {
 	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell,
@@ -2132,7 +2147,7 @@ static void DrawItem(
 	}
 
 	parcel = Ttk_PadBox(parcel, cellPadding);
-	DisplayLayoutTree(item->imageAnchor, textAnchor,
+	DisplayLayoutTree(imageAnchor, textAnchor,
 		tv->tree.itemLayout, displayItemUsed, state, parcel, d);
 	xTitle += colwidth;
     }
