@@ -2029,6 +2029,7 @@ static void DrawCells(
 	Ttk_Box parcel = Ttk_MakeBox(x, y, column->width, rowHeight);
 	DisplayItem *displayItemUsed = displayItem;
 	Ttk_State stateCell = state;
+
 	x += column->width;
 	if (title  && i >= tv->tree.nTitleColumns) break;
 	if (!title && i <  tv->tree.nTitleColumns) continue;
@@ -2038,14 +2039,16 @@ static void DrawCells(
 	    displayItemUsed = displayItemSel;
 	    stateCell |= TTK_STATE_SELECTED;
 	}
-	if (displayItemUsed != displayItem) {
-	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell, parcel, d);
-	}
-
-	parcel = Ttk_PadBox(parcel, cellPadding);
 
 	displayItemUsed->textObj = column->data;
 	displayItemUsed->anchorObj = column->anchorObj;/* <<NOTE-ANCHOR>> */
+
+	if (displayItemUsed != displayItem) {
+	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell,
+		    parcel, d);
+	}
+
+	parcel = Ttk_PadBox(parcel, cellPadding);
 	DisplayLayout(layout, displayItemUsed, state, parcel, d);
     }
 }
@@ -2096,28 +2099,35 @@ static void DrawItem(
      */
     x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     if (tv->tree.showFlags & SHOW_TREE) {
+	TreeColumn *column = &tv->tree.column0;
 	int indent = depth * tv->tree.indent;
 	int colwidth = tv->tree.column0.width -
 		(tv->tree.showFlags & SHOW_SEPARATORS ? COLUMN_SEPARATOR : 0);
 	int xTree = tv->tree.nTitleColumns >= 1 ? xTitle : x;
+	Ttk_Box parcel = Ttk_MakeBox(xTree, y, colwidth, rowHeight);
+	DisplayItem *displayItemUsed = &displayItem;
+	Ttk_State stateCell = state;
 	Tk_Anchor textAnchor;
-	Ttk_Box parcel = Ttk_MakeBox(
-		xTree+indent, y, colwidth-indent, rowHeight);
-	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
-	Tk_GetAnchorFromObj(NULL, tv->tree.column0.anchorObj, &textAnchor);
-	if (tv->tree.column0.selected) {
-	    Ttk_Box parcelBg = Ttk_MakeBox(xTree, y, colwidth, rowHeight);
-	    if (item->textObj) { displayItemSel.textObj = item->textObj; }
-	    if (item->imageObj) { displayItemSel.imageObj = item->imageObj; }
-	    DisplayLayout(tv->tree.rowLayout, &displayItemSel, state, parcelBg, d);
-	    DisplayLayoutTree(item->imageAnchor, textAnchor,
-		    tv->tree.itemLayout, &displayItemSel, state, parcel, d);
-	} else {
-	    if (item->textObj) { displayItem.textObj = item->textObj; }
-	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	    DisplayLayoutTree(item->imageAnchor, textAnchor,
-		    tv->tree.itemLayout, &displayItem, state, parcel, d);
+	Ttk_Padding cellPadding = {indent, 0, 0, 0};
+
+	if (column->selected) {
+	    displayItemUsed = &displayItemSel;
+ 	    stateCell |= TTK_STATE_SELECTED;
 	}
+
+	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
+	Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
+	if (item->textObj) { displayItemUsed->textObj = item->textObj; }
+	if (item->imageObj) { displayItemUsed->imageObj = item->imageObj; }
+
+	if (displayItemUsed != &displayItem) {
+	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell,
+		    parcel, d);
+	}
+
+	parcel = Ttk_PadBox(parcel, cellPadding);
+	DisplayLayoutTree(item->imageAnchor, textAnchor,
+		tv->tree.itemLayout, displayItemUsed, state, parcel, d);
 	xTitle += colwidth;
     }
 
