@@ -907,7 +907,7 @@ test treeview-identify-11 "bbox supporting -height" -body {
     .tv configure -titlecolumns 0
     .tv xview 0
     .tv item branch2 -open false
-    place .tv -x 0 -y 0 -width 150 -height 160
+    place .tv -x 0 -y 0 -width 150 -height 120
     update
     set base [lindex [.tv bbox branch A] 1]
     set result {}
