@@ -7,7 +7,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2012 Adrian Robert.
- * Copyright 2015-2019 Marc Culler.
+ * Copyright 2015-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,18 +24,15 @@
 */
 #define NS_KEYLOG 0
 
-static Tk_Window keyboardGrabWinPtr = NULL;
-				/* Current keyboard grab window. */
-static NSWindow *keyboardGrabNSWindow = nil;
-				/* NSWindow for the current keyboard grab
-				 * window. */
+static Tk_Window keyboardGrabWinPtr = NULL; /* Current keyboard grab window. */
+static NSWindow *keyboardGrabNSWindow = nil; /* Its underlying NSWindow.*/
 static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
 static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-static unsigned short releaseCode;
+static TkWindow *caret_win = NULL;
 
-static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
+static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 static unsigned	isFunctionKey(unsigned int code);
 
 
@@ -48,29 +45,21 @@ static unsigned	isFunctionKey(unsigned int code);
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    NSWindow *w;
-    NSEventType type = [theEvent type];
+    unsigned short keyCode = [theEvent keyCode];
+    NSWindow *w = [theEvent window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
+    NSString *characters = nil;
+    NSString *charactersIgnoringModifiers = nil;
     NSUInteger len = 0;
-    BOOL repeat = NO;
-    unsigned short keyCode = [theEvent keyCode];
-    NSString *characters = nil, *charactersIgnoringModifiers = nil;
+    int code = 0;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray;
 
     if (nsEvArray == nil) {
         nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
         processingCompose = NO;
-    }
-
-    w = [theEvent window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-    Tk_Window tkwin = (Tk_Window) winPtr;
-    XEvent xEvent;
-
-    if (!winPtr) {
-	return theEvent;
     }
 
     /*
@@ -83,171 +72,133 @@ static unsigned	isFunctionKey(unsigned int code);
 	return theEvent;
     }
 
-    switch (type) {
-    case NSKeyUp:
-	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
-	setupXEvent(&xEvent, w, 0);
-	xEvent.xany.type = KeyRelease;
-	xEvent.xkey.keycode = releaseCode;
-	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    case NSKeyDown:
-	repeat = [theEvent isARepeat];
-	characters = [theEvent characters];
-	charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
-        len = [charactersIgnoringModifiers length];
-    case NSFlagsChanged:
-
-#if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
-	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
-#endif
-	break;
-
-    default:
-	return theEvent; /* Unrecognized key event. */
+    if (!winPtr) {
+	return theEvent;
     }
 
     /*
-     * Create an Xevent to add to the Tk queue.
+     * If a local grab is in effect, key events for windows in the
+     * grabber's application are redirected to the grabber.  Key events
+     * for other applications are delivered normally.  If a global
+     * grab is in effect all key events are redirected to the grabber.
      */
 
-    if (!processingCompose) {
-        unsigned int state = 0;
-
-        if (modifiers & NSAlphaShiftKeyMask) {
-	    state |= LockMask;
-        }
-        if (modifiers & NSShiftKeyMask) {
-	    state |= ShiftMask;
-        }
-        if (modifiers & NSControlKeyMask) {
-	    state |= ControlMask;
-        }
-        if (modifiers & NSCommandKeyMask) {
-	    state |= Mod1Mask;		/* command key */
-        }
-        if (modifiers & NSAlternateKeyMask) {
-	    state |= Mod2Mask;		/* option key */
-        }
-        if (modifiers & NSNumericPadKeyMask) {
-	    state |= Mod3Mask;
-        }
-        if (modifiers & NSFunctionKeyMask) {
-	    state |= Mod4Mask;
-        }
-
-        /*
-         * Key events are only received for the front Window on the Macintosh. So
-	 * to build an XEvent we look up the Tk window associated to the Front
-	 * window.
-         */
-
-        TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-        Tk_Window tkwin = (Tk_Window) winPtr;
-
-	if (tkwin) {
-	    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
-
-	    /*
-	     * If a local grab is in effect, key events for windows in the
-	     * grabber's application are redirected to the grabber.  Key events
-	     * for other applications are delivered normally.  If a global
-	     * grab is in effect all key events are redirected to the grabber.
-	     */
-
-	    if (grabWinPtr) {
-		if (winPtr->dispPtr->grabFlags ||  /* global grab */
-		    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same appl. */
-			tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
-		    }
-	    }
-	} else {
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
+    if (grabWinPtr) {
+	if (winPtr->dispPtr->grabFlags ||  /* global grab */
+	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
 	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
 	}
-        if (!tkwin) {
-	    TkMacOSXDbgMsg("tkwin == NULL");
-	    return theEvent;  /* Give up. No window for this event. */
-        }
+    }
 
-        /*
-         * If it's a function key, or we have modifiers other than Shift or
-         * Alt, pass it straight to Tk.  Otherwise we'll send for input
-         * processing.
-         */
+    NSEventType type = [theEvent type];
+    BOOL has_modifiers = NO;
+    XEvent xEvent;
 
-        int code = (len == 0) ? 0 :
-		[charactersIgnoringModifiers characterAtIndex: 0];
-        if (type != NSKeyDown || isFunctionKey(code)
-		|| (len > 0 && state & (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask))) {
-            XEvent xEvent;
+    /*
+     * Check whether this key event belongs to the caret window.
+     */
 
-            setupXEvent(&xEvent, w, state);
-            if (type == NSFlagsChanged) {
-		if (savedModifiers > modifiers) {
-		    xEvent.xany.type = KeyRelease;
-		} else {
-		    xEvent.xany.type = KeyPress;
-		}
+    setupXEvent(&xEvent, tkwin, modifiers);
+    Bool has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
+    
+    /*
+     * A KeyDown event received for the caret window which is not a function key
+     * and has no modifiers other than Shift or Alt will be processed with the
+     * TextInputClient protocol below.  All other key events are handled here
+     * by queueing the XEvent created above.
+     */
 
-		/*
-		 * Use special '-1' to signify a special keycode to our
-		 * platform specific code in tkMacOSXKeyboard.c. This is rather
-		 * like what happens on Windows.
+    if (!processingCompose || !has_caret) {
+	switch (type) {
+	case NSFlagsChanged:
+	    if (savedModifiers > modifiers) {
+		xEvent.xany.type = KeyRelease;
+	    } else {
+		xEvent.xany.type = KeyPress;
+	    }
+
+	    /*
+	     * The value -1 indicates a special keycode to the platform
+	     * specific code in tkMacOSXKeyboard.c.
+	     */
+
+	    xEvent.xany.send_event = -1;
+	    xEvent.xkey.keycode = (modifiers ^ savedModifiers);
+	    break;
+	case NSKeyUp:
+	    xEvent.xany.type = KeyRelease;
+	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
+	    break;
+	case NSKeyDown:
+	    xEvent.xany.type = KeyPress;
+	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
+	    characters = [theEvent characters];
+	    charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
+	    len = [charactersIgnoringModifiers length];
+	    if (len > 0) {
+		code = [charactersIgnoringModifiers characterAtIndex:0];
+		has_modifiers = xEvent.xkey.state &
+		    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask); 
+	    }
+	    break;
+	default:
+	    return theEvent; /* Unrecognized key event. */
+	}
+
+#if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
+	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d",
+	      [self class], self, _cmd, repeat, modifiers, characters,
+	      charactersIgnoringModifiers, keyCode,
+	      ([charactersIgnoringModifiers length] == 0) ? 0 :
+	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
+#endif
+	
+        if (type != NSKeyDown || !has_caret || isFunctionKey(code) || has_modifiers) {
+	    if (type == KeyPress && [theEvent isARepeat]) {
+
+		/* 
+		 * Insert a KeyRelease XEvent before a repeated KeyPress.
 		 */
 
-		xEvent.xany.send_event = -1;
-
-		/*
-		 * Set keycode (which was zero) to the changed modifier
-		 */
-
-		xEvent.xkey.keycode = (modifiers ^ savedModifiers);
-            } else {
-		if (type == NSKeyUp || repeat) {
-		    xEvent.xany.type = KeyRelease;
-		} else {
-		    xEvent.xany.type = KeyPress;
-		}
-
-		if ([characters length] > 0) {
-		    xEvent.xkey.keycode = (keyCode << 16) |
-			    (UInt16) [characters characterAtIndex:0];
-		    if (![characters getCString:xEvent.xkey.trans_chars
-			    maxLength:XMaxTransChars encoding:NSUTF8StringEncoding]) {
-			/* prevent SF bug 2907388 (crash on some composite chars) */
-			//PENDING: we might not need this anymore
-			TkMacOSXDbgMsg("characters too long");
-			return theEvent;
-		    }
-		}
-
-		if (repeat) {
-		    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-		    xEvent.xany.type = KeyPress;
-		    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-		}
+		xEvent.xany.type = KeyRelease;
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+		xEvent.xany.type = KeyPress;
             }
+
+	    /*
+	     * Queue the XEvent and return.
+	     */
+	    
             Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
             savedModifiers = modifiers;
             return theEvent;
-	}  /* if this is a function key or has modifiers */
-    }  /* if not processing compose */
+	}
+    }
 
+    /*
+     * Either we are processing a composition or this is a normal KeyDown event
+     * for the caret window. Either way the event should be passed to
+     * interpretKeyEvents.  But we only need to send KeyDown events.
+     */
+    
     if (type == NSKeyDown) {
-        if (NS_KEYLOG) {
+	if (NS_KEYLOG) {
 	    TKLog(@"keyDown: %s compose sequence.\n",
-		    processingCompose == YES ? "Continue" : "Begin");
+		  processingCompose == YES ? "Continue" : "Begin");
 	}
 
 	/*
-	 * Call the interpretKeyEvents method to interpret composition key
-	 * strokes.  When it detects a complete composition sequence it will
-	 * call our implementation of insertText: replacementRange, which
-	 * generates a key down XEvent with the appropriate character.  In IME
-	 * when multiple characters have the same composition sequence and the
-	 * chosen character is not the default it may be necessary to hit the
-	 * enter key multiple times before the character is accepted and
-	 * rendered. We send enter key events until inputText has cleared
-	 * the processingCompose flag.
+	 * Call the interpretKeyEvents method to handle the event as a
+	 * TextInputClient.  When the composition sequence is complete, our
+	 * implementation of insertText: replacementRange will be called.  that
+	 * method generates a key down XEvent with the selected character.  In
+	 * IME when multiple characters have the same composition sequence and
+	 * the selected character is not the default it may be necessary to hit
+	 * the Enter key multiple times before the character is accepted and
+	 * rendered. So we repeatedly send Enter key events until inputText has
+	 * cleared the processingCompose flag.
 	 */
 
 	processingCompose = YES;
@@ -282,7 +233,7 @@ static unsigned	isFunctionKey(unsigned int code);
 
 /* [NSTextInputClient inputText: replacementRange:] is called by
  * interpretKeyEvents when a composition sequence is complete.  It is also
- * called when we delete over working text.  In that case the call is followed
+ * called when we delete working text.  In that case the call is followed
  * immediately by doCommandBySelector: deleteBackward:
  */
 - (void)insertText: (id)aString
@@ -291,7 +242,9 @@ static unsigned	isFunctionKey(unsigned int code);
     int i, len;
     XEvent xEvent;
     NSString *str;
-
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    Tk_Window tkwin = (Tk_Window) winPtr; 
+    
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
     len = [str length];
@@ -314,7 +267,7 @@ static unsigned	isFunctionKey(unsigned int code);
      * Insert the string as a sequence of keystrokes.
      */
 
-    setupXEvent(&xEvent, [self window], 0);
+    setupXEvent(&xEvent, tkwin, 0);
     xEvent.xany.type = KeyPress;
 
     /*
@@ -325,7 +278,6 @@ static unsigned	isFunctionKey(unsigned int code);
      */
 
     if (repRange.location == 0) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
 	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
@@ -355,7 +307,6 @@ static unsigned	isFunctionKey(unsigned int code);
     	xEvent.xany.type = KeyPress;
     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
-    releaseCode = (UInt16) [str characterAtIndex: 0];
 }
 
 /*
@@ -580,15 +531,18 @@ static unsigned	isFunctionKey(unsigned int code);
  */
 
 static void
-setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state)
+setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-    Tk_Window tkwin = (Tk_Window) winPtr;
-
-    if (!winPtr) {
-	return;
+    unsigned int state = 0;
+    if (modifiers) {
+	state = (modifiers & NSAlphaShiftKeyMask) ? LockMask    : 0 |
+	    (modifiers & NSShiftKeyMask)      ? ShiftMask   : 0 |
+	    (modifiers & NSControlKeyMask)    ? ControlMask : 0 |
+	    (modifiers & NSCommandKeyMask)    ? Mod1Mask    : 0 |
+	    (modifiers & NSAlternateKeyMask)  ? Mod2Mask    : 0 |
+	    (modifiers & NSNumericPadKeyMask) ? Mod3Mask    : 0 |
+	    (modifiers & NSFunctionKeyMask)   ? Mod4Mask    : 0 ;
     }
-
     memset(xEvent, 0, sizeof(XEvent));
     xEvent->xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     xEvent->xany.display = Tk_Display(tkwin);
@@ -727,7 +681,7 @@ Tk_SetCaretPos(
     int height)
  {
     TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
-
+    
     /*
      * Prevent processing anything if the values haven't changed. Windows only
      * has one display, so we can do this with statics.
@@ -738,6 +692,7 @@ Tk_SetCaretPos(
 	return;
     }
 
+    caret_win = (TkWindow*) tkwin;
     caretPtr->winPtr = ((TkWindow *) tkwin);
     caretPtr->x = x;
     caretPtr->y = y;
