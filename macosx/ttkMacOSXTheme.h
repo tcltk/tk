@@ -24,14 +24,11 @@
 
 /*
  *  A scale factor used to map a range of non-negative doubles into
- *  a range of 32-bit integers without losing too much information.
+ *  a range of non-negative 32-bit integers without losing too much
+ *  information.
  */
 
-#ifdef __LP64__
-#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
-#else
-#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
-#endif /* __LP64__ */
+#define RangeToFactor(max) ((double) (2147483647.0) / (max < 1.0 ? 1.0 : max))
 
 /*
  * Meanings of Ttk states represented by User1 and User2.
