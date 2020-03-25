@@ -23,12 +23,12 @@
 #define NoThemeMetric 0xFFFFFFFF
 
 /*
- *  A scale factor used to map a range of non-negative doubles into
- *  a range of non-negative 32-bit integers without losing too much
- *  information.
+ *  A scale factor used to map a range of non-negative doubles into a large
+ *  range of non-negative 32-bit integers without losing too much information.
+ *  (Use 1073741824 == 2^30 so we don't get surprised by roundoff.)
  */
 
-#define RangeToFactor(max) ((double) (2147483647.0) / (max < 1.0 ? 1.0 : max))
+#define RangeToFactor(max) ((double) (1073741824.0) / (max < 1.0 ? 1.0 : max))
 
 /*
  * Meanings of Ttk states represented by User1 and User2.
