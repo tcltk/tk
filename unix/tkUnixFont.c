@@ -36,11 +36,12 @@ static const char *const encodingList[] = {
 #define FONTMAP_SHIFT		10
 
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
-#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
+#define FONTMAP_NUMCHARS	0x40000
+#define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
-    int refCount;		/* How many SubFonts are referring to this
+    size_t refCount;		/* How many SubFonts are referring to this
 				 * FontFamily. When the refCount drops to
 				 * zero, this FontFamily may be freed. */
     /*
@@ -839,7 +840,7 @@ TkpGetFontFamilies(
     Tk_Window tkwin)		/* For display to query. */
 {
     int i, new, numNames;
-    const char *family, **nameList;
+    char *family, **nameList;
     Tcl_HashTable familyTable;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -848,7 +849,7 @@ TkpGetFontFamilies(
     Tcl_InitHashTable(&familyTable, TCL_STRING_KEYS);
     nameList = ListFonts(Tk_Display(tkwin), "*", &numNames);
     for (i = 0; i < numNames; i++) {
-	const char *familyEnd;
+	char *familyEnd;
 
 	family = strchr(nameList[i] + 1, '-');
 	if (family == NULL) {
@@ -1910,8 +1911,7 @@ FreeFontFamily(
     if (familyPtr == NULL) {
 	return;
     }
-    familyPtr->refCount--;
-    if (familyPtr->refCount > 0) {
+    if (familyPtr->refCount-- > 1) {
 	return;
     }
     if (familyPtr->encoding) {
@@ -1979,7 +1979,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (ch < 0 || ch > 0x30000) {
+    if (ch < 0 || ch >= FONTMAP_NUMCHARS) {
 	ch = 0xFFFD;
     }
 
@@ -2133,7 +2133,7 @@ FontMapLookup(
 {
     int row, bitOffset;
 
-    if (ch < 0 ||  ch >= 0x30000) {
+    if (ch < 0 ||  ch >= FONTMAP_NUMCHARS) {
 	return 0;
     }
     row = ch >> FONTMAP_SHIFT;
@@ -2176,7 +2176,7 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    if (ch >= 0 &&  ch < 0x30000) {
+    if (ch >= 0 &&  ch < FONTMAP_NUMCHARS) {
 	row = ch >> FONTMAP_SHIFT;
 	if (subFontPtr->fontMap[row] == NULL) {
 	    FontMapLoadPage(subFontPtr, row);

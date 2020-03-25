@@ -906,10 +906,11 @@ RedisplayView(
 
     /*
      * Make sure that we are not trying to displaying a view that no longer
-     * exists.
+     * exists. Must call [NSApp windows] because [NSApp orderedWindows] excludes
+     * floating/utility windows and other window panels.
      */
 
-    for (NSWindow *w in [NSApp orderedWindows]) {
+    for (NSWindow *w in [NSApp windows]) {
 	if ([w contentView] == view) {
 	    [view setNeedsDisplay:YES];
 	    break;
