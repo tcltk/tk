@@ -17,6 +17,7 @@
 **                does this and sets the USE_XKB flag if xkb is supported.
 **                (should this be function ptr?)
 */
+
 #ifdef HAVE_XKBKEYCODETOKEYSYM
 #  include <X11/XKBlib.h>
 #else
@@ -138,8 +139,7 @@ TkpGetString(
 
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
-	    && (winPtr->inputContext != NULL)
-	    && (eventPtr->type == KeyPress)) {
+	    && (winPtr->inputContext != NULL)) {
 	Status status;
 
 #if X_HAVE_UTF8_STRING
@@ -194,8 +194,7 @@ TkpGetString(
     {
 	/*
 	 * Fall back to convert a keyboard event to a UTF-8 string using
-	 * XLookupString. This is used when input methods are turned off and
-	 * for KeyRelease events.
+	 * XLookupString. This is used when input methods are turned off.
 	 *
 	 * Note: XLookupString() normally returns a single ISO Latin 1 or
 	 * ASCII control character.
@@ -307,6 +306,10 @@ TkpSetKeycodeAndState(
  *----------------------------------------------------------------------
  */
 
+#ifdef __GNUC__
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 KeySym
 TkpGetKeySym(
     TkDisplay *dispPtr,		/* Display in which to map keycode. */
@@ -363,6 +366,7 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
+
     sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
 	    index);
 
@@ -466,6 +470,7 @@ TkpInitKeymapInfo(
 	    continue;
 	}
 	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+
 	if (keysym == XK_Mode_switch) {
 	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
 	}

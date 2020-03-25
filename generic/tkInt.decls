@@ -1496,6 +1496,9 @@ declare 137 win {
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
 }
+declare 158 win {
+    void TkUnusedStubEntry(void)
+}
 
 ################################
 # X functions for Aqua
@@ -1844,6 +1847,9 @@ declare 137 aqua {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
+}
+declare 158 aqua {
+    void TkUnusedStubEntry(void)
 }
 
 # Local Variables:
