@@ -1997,6 +1997,36 @@ static void PrepareItem(
     Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
 }
 
+/* Fill in data from item to temporary storage in columns. */
+static void PrepareCells(
+   Treeview *tv, TreeItem *item)
+{
+    int i, nValues = 0;
+    Tcl_Obj **values = NULL;
+    TreeColumn *column;
+
+    if (item->valuesObj) {
+	Tcl_ListObjGetElements(NULL, item->valuesObj, &nValues, &values);
+    }
+    for (i = 0; i < tv->tree.nColumns; ++i) {
+	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
+	tv->tree.columns[i].selected = 0;
+    }
+    tv->tree.column0.data = NULL;
+    tv->tree.column0.selected = 0;
+
+    if (item->selObj != NULL) {
+	Tcl_ListObjGetElements(NULL, item->selObj, &nValues, &values);
+	for (i = 0; i < nValues; ++i) {
+	    column = FindColumn(NULL, tv, values[i]);
+	    /* Just in case. It should not be possible for column to be NULL */
+	    if (column != NULL) {
+		column->selected = 1;
+	    }
+	}
+    }
+}
+
 /* + DrawCells --
  *	Draw data cells for specified item.
  */
@@ -2009,31 +2039,7 @@ static void DrawCells(
     Ttk_State state = ItemState(tv, item);
     Ttk_Padding cellPadding = {4, 0, 4, 0};
     int rowHeight = tv->tree.rowHeight * item->height;
-    int nValues = 0;
-    TreeColumn *column;
-    Tcl_Obj **values = 0;
     int i;
-
-    if (!item->valuesObj) {
-	return;
-    }
-
-    Tcl_ListObjGetElements(NULL, item->valuesObj, &nValues, &values);
-    for (i = 0; i < tv->tree.nColumns; ++i) {
-	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
-	tv->tree.columns[i].selected = 0;
-    }
-    tv->tree.column0.selected = 0;
-    if (item->selObj != NULL) {
-	Tcl_ListObjGetElements(NULL, item->selObj, &nValues, &values);
-	for (i = 0; i < nValues; ++i) {
-	    column = FindColumn(NULL, tv, values[i]);
-	    /* Just in case. It should not be possible for column to be NULL */
-	    if (column != NULL) {
-		column->selected = 1;
-	    }
-	}
-    }
 
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
@@ -2096,6 +2102,7 @@ static void DrawItem(
 
     /* Draw data cells:
      */
+    PrepareCells(tv, item);
     DrawCells(tv, item, &displayItem, &displayItemSel, d, x, y, 0);
 
     /* Draw row background for non-scrolled area:
