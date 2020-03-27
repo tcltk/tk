@@ -1794,6 +1794,8 @@ static Ttk_Layout TreeviewGetLayout(
     Ttk_Layout treeLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
     Tcl_Obj *objPtr;
     int unused;
+    DisplayItem displayItem;
+    Ttk_Style style;
 
     if (!(
 	treeLayout
@@ -1816,10 +1818,17 @@ static Ttk_Layout TreeviewGetLayout(
     Ttk_RebindSublayout(tv->tree.headingLayout, &tv->tree.column0);
     Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
 
+    /* Compute item height.
+     * Pick up default font from the style.
+     */
+    style = Ttk_LayoutStyle(tv->tree.itemLayout);
+    Ttk_TagSetDefaults(tv->tree.tagTable, style, &displayItem);
+    Ttk_RebindSublayout(tv->tree.itemLayout, &displayItem);
+    Ttk_LayoutSize(tv->tree.itemLayout, 0, &unused, &tv->tree.rowHeight);
+
     /* Get item height, indent from style:
      * @@@ TODO: sanity-check.
      */
-    tv->tree.rowHeight = DEFAULT_ROWHEIGHT;
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
