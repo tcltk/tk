@@ -549,6 +549,7 @@ test treeview-9.1 "scrolling" -setup {
 
 test treeview-10.0 "See command" -setup {
     # Setup common for all 10.* tests
+    ttk::style configure Treeview -rowheight 20
     tvSetupWithItems
     set ::baseBbY [lindex [.tv bbox nn "#1"] 1]
     proc bbY {item} {
@@ -750,6 +751,7 @@ proc columnids {tv dcols} {
 test treeview-identify-setup "identify series - setup" -body {
     destroy .tv
     ttk::setTheme default
+    ttk::style configure Treeview -rowheight 20
     ttk::treeview .tv -columns [list A B C]
     .tv insert {} end -id branch -text branch -open true
     .tv insert branch end -id item1 -text item1 -height 2

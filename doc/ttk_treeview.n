@@ -570,16 +570,17 @@ are:
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
-\fB\-rowheight\fP \fIamount\fP
+\fB\-rowheight\fP \fIpixels\fP
 .RS
-The \fB\-rowheight\fP value is not corrected by the \fBtk scaling\fP
-value or by the configured font size and must always be set.  Also make
-sure that the \fB\-rowheight\fP is large enough to contain any images.
+This is the standard height for an item.
+If \fB\-rowheight\fP is not set by the style, it is set by measuring an
+Item layout with the style's settings. This thus picks up the font and
+any focus ring or padding from the theme's layout.
+The \fB\-rowheight\fP may need to be set to make sure that a row
+is large enough to contain any images.
 .PP
-To adjust the \fB\-rowheight\fP for the Treeview style, use the following code
-after \fBtk scaling\fP has been applied.
-Note that even if you do not support or change \fBtk scaling\fP
-in your program, your users may have it set in their .wishrc.
+Example of how to set \fB\-rowheight\fP, adapting to a font in a similar
+way to how the default value is set:
 .RE
 .PP
 .CS
