@@ -941,6 +941,47 @@ test treeview-identify-cleanup "identify - cleanup" -body {
     destroy .tv
 }
 
+
+test treeview-rowheight-1 "rowheight - setup" -body {
+    destroy .tv
+    ttk::setTheme default
+    # Test that style rowheight is in control
+    ttk::style configure Treeview -rowheight 73
+    tvSetupWithItems
+    lindex [.tv bbox nn a] 3
+} -result 73
+
+test treeview-rowheight-2 "rowheight change" -body {
+    # Reacts to style changes
+    ttk::style configure Treeview -rowheight 25
+    update
+    lindex [.tv bbox nn a] 3
+} -result 25
+
+test treeview-rowheight-3 "rowheight adapts to font" -body {
+    ttk::style configure Treeview -rowheight {}
+    ttk::style configure Treeview -font "Courier -20"
+    update
+    set baseline [lindex [.tv bbox nn a] 3]
+    ttk::style configure Treeview -font "Courier -25"
+    update
+    set after [lindex [.tv bbox nn a] 3]
+    set diff [expr {$after - $baseline}]
+    # Nominal difference is 5 but depends on font environment
+    expr {4 <= $diff && $diff <= 6 ? "OK" : $diff}
+} -result OK
+
+test treeview-rowheight-3 "rowheight adapts to padding" -body {
+    # Test that things from Item style is picked up.
+    ttk::style configure Item -padding "2 2 2 2"
+    update
+    set baseline [lindex [.tv bbox nn a] 3]
+    ttk::style configure Item -padding "2 3 2 5"
+    update
+    set after [lindex [.tv bbox nn a] 3]
+    set diff [expr {$after - $baseline}]
+} -result 4
+
 ### NEED: tests for focus item, selection
 
 ### Misc. tests:

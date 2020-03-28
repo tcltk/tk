@@ -1819,9 +1819,9 @@ static Ttk_Layout TreeviewGetLayout(
     Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
 
     /* Compute item height.
-     * Pick up default font from the style.
+     * Pick up default font from the Treeview style.
      */
-    style = Ttk_LayoutStyle(tv->tree.itemLayout);
+    style = Ttk_LayoutStyle(treeLayout);
     Ttk_TagSetDefaults(tv->tree.tagTable, style, &displayItem);
     Ttk_RebindSublayout(tv->tree.itemLayout, &displayItem);
     Ttk_LayoutSize(tv->tree.itemLayout, 0, &unused, &tv->tree.rowHeight);
