@@ -16,7 +16,6 @@
 #define DEF_MINWIDTH		"20"
 
 static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
-static const int DEFAULT_ROWHEIGHT 	= 20;
 static const int DEFAULT_INDENT 	= 20;
 static const int HALO   		= 4;	/* heading separator */
 static const int COLUMN_SEPARATOR       = 1;    /* column separator width */
@@ -1204,7 +1203,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 	= tv->tree.rowLayout
 	= tv->tree.separatorLayout
 	= 0;
-    tv->tree.headingHeight = tv->tree.rowHeight = DEFAULT_ROWHEIGHT;
+    tv->tree.headingHeight = tv->tree.rowHeight = 0;
     tv->tree.indent = DEFAULT_INDENT;
 
     Tcl_InitHashTable(&tv->tree.columnNames, TCL_STRING_KEYS);
@@ -1793,7 +1792,7 @@ static Ttk_Layout TreeviewGetLayout(
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Layout treeLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
     Tcl_Obj *objPtr;
-    int unused;
+    int unused, cellHeight;
     DisplayItem displayItem;
     Ttk_Style style;
 
@@ -1818,21 +1817,30 @@ static Ttk_Layout TreeviewGetLayout(
     Ttk_RebindSublayout(tv->tree.headingLayout, &tv->tree.column0);
     Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
 
-    /* Compute item height.
+    /* Get row height from style, or compute it to fit Item and Cell.
      * Pick up default font from the Treeview style.
      */
     style = Ttk_LayoutStyle(treeLayout);
     Ttk_TagSetDefaults(tv->tree.tagTable, style, &displayItem);
+
     Ttk_RebindSublayout(tv->tree.itemLayout, &displayItem);
     Ttk_LayoutSize(tv->tree.itemLayout, 0, &unused, &tv->tree.rowHeight);
 
-    /* Get item height, indent from style:
-     * @@@ TODO: sanity-check.
-     */
-    tv->tree.indent = DEFAULT_INDENT;
+    Ttk_RebindSublayout(tv->tree.cellLayout, &displayItem);
+    Ttk_LayoutSize(tv->tree.cellLayout, 0, &unused, &cellHeight);
+
+    if (cellHeight > tv->tree.rowHeight) {
+	tv->tree.rowHeight = cellHeight;
+    }
+    
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
     }
+
+    /* Get item indent from style:
+     * @@@ TODO: sanity-check.
+     */
+    tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.indent);
     }
