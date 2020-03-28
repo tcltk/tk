@@ -25,6 +25,8 @@ static const int COLUMN_SEPARATOR       = 1;    /* column separator width */
 
 #define STATE_CHANGED	 	(0x100)	/* item state option changed */
 
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+
 /*------------------------------------------------------------------------
  * +++ Tree items.
  *
@@ -55,6 +57,9 @@ struct TreeItemRec {
     Tcl_Obj     *selObj;
     Tcl_Obj     *imageAnchorObj;
     int		height; 	/* Height is in number of row heights */
+
+    Ttk_TagSet  *cellTagSets;
+    int         nTagSets;
 
     /*
      * Derived resources:
@@ -113,6 +118,8 @@ static TreeItem *NewItem(void)
     item->selObj = NULL;
     item->imageAnchorObj = NULL;
     item->height = 1;
+    item->cellTagSets = NULL;
+    item->nTagSets = 0;
 
     item->tagset = NULL;
     item->imagespec = NULL;
@@ -125,6 +132,7 @@ static TreeItem *NewItem(void)
  */
 static void FreeItem(TreeItem *item)
 {
+    int i;
     if (item->textObj) { Tcl_DecrRefCount(item->textObj); }
     if (item->imageObj) { Tcl_DecrRefCount(item->imageObj); }
     if (item->valuesObj) { Tcl_DecrRefCount(item->valuesObj); }
@@ -135,6 +143,14 @@ static void FreeItem(TreeItem *item)
 
     if (item->tagset)	{ Ttk_FreeTagSet(item->tagset); }
     if (item->imagespec) { TtkFreeImageSpec(item->imagespec); }
+    if (item->cellTagSets) {
+	for (i = 0; i < item->nTagSets; ++i) {
+	    if (item->cellTagSets[i] != NULL) {
+		Ttk_FreeTagSet(item->cellTagSets[i]);
+	    }
+	}
+	ckfree(item->cellTagSets);
+    }
 
     ckfree(item);
 }
@@ -271,6 +287,7 @@ typedef struct {
      */
     Tcl_Obj 	*data;
     int         selected;
+    Ttk_TagSet	tagset;
 } TreeColumn;
 
 static void InitColumn(TreeColumn *column)
@@ -289,6 +306,7 @@ static void InitColumn(TreeColumn *column)
     column->headingCommandObj = 0;
 
     column->data = 0;
+    column->tagset = NULL;
 }
 
 static void FreeColumn(TreeColumn *column)
@@ -1117,6 +1135,7 @@ static TreeCell *GetCellListFromObj(
  */
 
 static TreeItem *IdentifyItem(Treeview *tv, int y); /*forward*/
+static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1); /*forward*/
 
 static const unsigned long TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
@@ -1130,6 +1149,8 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
     Treeview *tv = (Treeview *)clientData;
     TreeItem *item = NULL;
     Ttk_TagSet tagset;
+    int unused, colno = -1;
+    TreeColumn *column = NULL;
 
     /*
      * Figure out where to deliver the event.
@@ -1144,9 +1165,11 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
 	case ButtonPress:
 	case ButtonRelease:
 	    item = IdentifyItem(tv, event->xbutton.y);
+	    colno = IdentifyDisplayColumn(tv, event->xbutton.x, &unused);
 	    break;
 	case MotionNotify:
 	    item = IdentifyItem(tv, event->xmotion.y);
+	    colno = IdentifyDisplayColumn(tv, event->xmotion.x, &unused);
 	    break;
 	default:
 	    break;
@@ -1161,6 +1184,23 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
      * in case a binding script stomps on -tags.
      */
     tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, item->tagsObj);
+
+    /*
+     * Pick up any cell tags.
+     */
+    if (colno >= 0) {
+	column = tv->tree.displayColumns[colno];
+	if (column == &tv->tree.column0) {
+	    colno = 0;
+	} else {
+	    colno = column - tv->tree.columns + 1;
+	}
+	if (colno < item->nTagSets) {
+	    if (item->cellTagSets[colno] != NULL) {
+		Ttk_TagSetAddSet(tagset, item->cellTagSets[colno]);
+	    }
+	}
+    }
 
     /*
      * Fire binding:
@@ -2028,9 +2068,11 @@ static void PrepareCells(
     for (i = 0; i < tv->tree.nColumns; ++i) {
 	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
 	tv->tree.columns[i].selected = 0;
+	tv->tree.columns[i].tagset = NULL;
     }
     tv->tree.column0.data = NULL;
     tv->tree.column0.selected = 0;
+    tv->tree.column0.tagset = NULL;
 
     if (item->selObj != NULL) {
 	Tcl_ListObjGetElements(NULL, item->selObj, &nValues, &values);
@@ -2041,6 +2083,12 @@ static void PrepareCells(
 		column->selected = 1;
 	    }
 	}
+    }
+    if (item->nTagSets > 0) {
+	tv->tree.column0.tagset = item->cellTagSets[0];
+    }
+    for (i = 1; i < item->nTagSets && i <= tv->tree.nColumns; ++i) {
+	tv->tree.columns[i-1].tagset = item->cellTagSets[i];
     }
 }
 
@@ -2053,8 +2101,10 @@ static void DrawCells(
     Drawable d, int x, int y, int title)
 {
     Ttk_Layout layout = tv->tree.cellLayout;
+    Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
     Ttk_Padding cellPadding = {4, 0, 4, 0};
+    DisplayItem displayItemLocal;
     int rowHeight = tv->tree.rowHeight * item->height;
     int i;
 
@@ -2072,6 +2122,15 @@ static void DrawCells(
 	if (column->selected) {
 	    displayItemUsed = displayItemSel;
 	    stateCell |= TTK_STATE_SELECTED;
+	}
+
+	if (column->tagset) {
+	    displayItemLocal = *displayItemUsed;
+	    displayItemUsed = &displayItemLocal;
+	    Ttk_TagSetValues(tv->tree.tagTable, column->tagset,
+		    displayItemUsed);
+	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, stateCell,
+		    displayItemUsed);
 	}
 
 	displayItemUsed->textObj = column->data;
@@ -2093,8 +2152,9 @@ static void DrawCells(
 static void DrawItem(
 	Treeview *tv, TreeItem *item, Drawable d, int depth)
 {
+    Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
-    DisplayItem displayItem, displayItemSel;
+    DisplayItem displayItem, displayItemSel, displayItemLocal;
     int rowHeight = tv->tree.rowHeight * item->height;
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int xTitle = tv->tree.treeArea.x;
@@ -2148,6 +2208,15 @@ static void DrawItem(
 	if (column->selected) {
 	    displayItemUsed = &displayItemSel;
  	    stateCell |= TTK_STATE_SELECTED;
+	}
+
+	if (column->tagset) {
+	    displayItemLocal = *displayItemUsed;
+	    displayItemUsed = &displayItemLocal;
+	    Ttk_TagSetValues(tv->tree.tagTable, column->tagset,
+		    displayItemUsed);
+	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, stateCell,
+		    displayItemUsed);
 	}
 
 	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
@@ -3788,6 +3857,65 @@ static int TreeviewTagHasCommand(
     }
 }
 
+/* + $tv tag cell has $tag ?$cell?
+ */
+static int TreeviewCtagHasCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeCell cell;
+    int i, columnNumber;
+
+    if (objc == 5) {	/* Return list of all cells with tag */
+	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
+	TreeItem *item = tv->tree.root;
+	Tcl_Obj *result = Tcl_NewListObj(0,0);
+
+	while (item) {
+	    for (i = 0; i < item->nTagSets && i <= tv->tree.nColumns; ++i) {
+		if (item->cellTagSets[i] != NULL) {
+		    if (Ttk_TagSetContains(item->cellTagSets[i], tag)) {
+			Tcl_Obj *elem[2];
+			elem[0] = ItemID(tv, item);
+			if (i == 0) {
+			    elem[1] = tv->tree.column0.idObj;
+			} else {
+			    elem[1] = tv->tree.columns[i-1].idObj;
+			}
+			Tcl_ListObjAppendElement(NULL, result,
+				Tcl_NewListObj(2, elem));
+		    }
+		}
+	    }
+	    item = NextPreorder(item);
+	}
+
+	Tcl_SetObjResult(interp, result);
+	return TCL_OK;
+    } else if (objc == 6) {	/* Test if cell has specified tag */
+	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
+	int result = 0;
+	if (GetCellFromObj(interp, tv, objv[4], 0, NULL, &cell) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (cell.column == &tv->tree.column0) {
+	    columnNumber = 0;
+	} else {
+	    columnNumber = cell.column - tv->tree.columns + 1;
+	}
+	if (columnNumber < cell.item->nTagSets) {
+	    result = Ttk_TagSetContains(cell.item->cellTagSets[columnNumber],
+		    tag);
+	}
+	
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+	return TCL_OK;
+    } else {
+    	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cell?");
+	return TCL_ERROR;
+    }
+}
+
 /* + $tv tag names
  */
 static int TreeviewTagNamesCommand(
@@ -3844,6 +3972,70 @@ static int TreeviewTagAddCommand(
     return TCL_OK;
 }
 
+/* Make sure tagset at column is allocated and initialised */
+static void AllocCellTagSets(Treeview *tv, TreeItem *item, int columnNumber)
+{
+    int i, newSize = MAX(columnNumber + 1, tv->tree.nColumns + 1);
+    if (item->nTagSets < newSize) {
+	if (item->cellTagSets == NULL) {
+	    item->cellTagSets = (Ttk_TagSet *)
+		    ckalloc(sizeof(Ttk_TagSet)*newSize);
+	} else {
+	    item->cellTagSets = (Ttk_TagSet *)
+		    ckrealloc(item->cellTagSets, sizeof(Ttk_TagSet) * newSize);
+	}
+	for (i = item->nTagSets; i < newSize; i++) {
+	    item->cellTagSets[i] = NULL;
+	}
+	item->nTagSets = newSize;
+    }
+
+    if (item->cellTagSets[columnNumber] == NULL) {
+	item->cellTagSets[columnNumber] =
+		Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
+    }
+}
+
+/* + $tv tag cell add $tag $cells
+ */
+static int TreeviewCtagAddCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    Ttk_Tag tag;
+    TreeCell *cells;
+    TreeItem *item;
+    int i, nCells, columnNumber;
+
+    if (objc != 6) {
+	Tcl_WrongNumArgs(interp, 4, objv, "tagName cells");
+	return TCL_ERROR;
+    }
+
+    cells = GetCellListFromObj(interp, tv, objv[5], &nCells);
+    if (cells == NULL) {
+	return TCL_ERROR;
+    }
+
+    tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
+
+    for (i = 0; i < nCells; i++) {
+	if (cells[i].column == &tv->tree.column0) {
+	    columnNumber = 0;
+	} else {
+	    columnNumber = cells[i].column - tv->tree.columns  + 1;
+	}
+	item = cells[i].item;
+	AllocCellTagSets(tv, item, columnNumber);
+	Ttk_TagSetAdd(item->cellTagSets[columnNumber], tag);
+    }
+
+    ckfree(cells);
+    TtkRedisplayWidget(&tv->core);
+
+    return TCL_OK;
+}
+
 /* + $tv tag remove $tag ?$items?
  */
 static void RemoveTag(TreeItem *item, Ttk_Tag tag)
@@ -3861,8 +4053,8 @@ static int TreeviewTagRemoveCommand(
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Tag tag;
 
-    if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 3, objv, "tagName items");
+    if (objc < 4 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?items?");
 	return TCL_ERROR;
     }
 
@@ -3892,9 +4084,69 @@ static int TreeviewTagRemoveCommand(
     return TCL_OK;
 }
 
+/* + $tv tag cell remove $tag ?$cells?
+ */
+static int TreeviewCtagRemoveCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    Ttk_Tag tag;
+    TreeCell *cells;
+    TreeItem *item;
+    int i, nCells, columnNumber;
+
+    if (objc < 5 || objc > 6) {
+	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cells?");
+	return TCL_ERROR;
+    }
+
+    tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
+
+    if (objc == 6) {
+	cells = GetCellListFromObj(interp, tv, objv[5], &nCells);
+	if (cells == NULL) {
+	    return TCL_ERROR;
+	}
+
+	for (i = 0; i < nCells; i++) {
+	    if (cells[i].column == &tv->tree.column0) {
+		columnNumber = 0;
+	    } else {
+		columnNumber = cells[i].column - tv->tree.columns  + 1;
+	    }
+	    item = cells[i].item;
+	    AllocCellTagSets(tv, item, columnNumber);
+	    Ttk_TagSetRemove(item->cellTagSets[columnNumber], tag);
+	}
+	ckfree(cells);
+    } else {
+	TreeItem *item = tv->tree.root;
+	while (item) {
+	    for (i = 0; i < item->nTagSets; i++) {
+		if (item->cellTagSets[i] != NULL) {
+		    Ttk_TagSetRemove(item->cellTagSets[i], tag);
+		}
+	    }
+	    item=NextPreorder(item);
+	}
+    }
+
+    TtkRedisplayWidget(&tv->core);
+
+    return TCL_OK;
+}
+
+static const Ttk_Ensemble TreeviewCtagCommands[] = {
+    { "add",		TreeviewCtagAddCommand,0 },
+    { "has",		TreeviewCtagHasCommand,0 },
+    { "remove",		TreeviewCtagRemoveCommand,0 },
+    { 0,0,0 }
+};
+
 static const Ttk_Ensemble TreeviewTagCommands[] = {
     { "add",		TreeviewTagAddCommand,0 },
     { "bind",		TreeviewTagBindCommand,0 },
+    { "cell",    	0,TreeviewCtagCommands },
     { "configure",	TreeviewTagConfigureCommand,0 },
     { "has",		TreeviewTagHasCommand,0 },
     { "names",		TreeviewTagNamesCommand,0 },
