@@ -971,7 +971,7 @@ test treeview-rowheight-3 "rowheight adapts to font" -body {
     expr {4 <= $diff && $diff <= 6 ? "OK" : $diff}
 } -result OK
 
-test treeview-rowheight-3 "rowheight adapts to padding" -body {
+test treeview-rowheight-3 "rowheight adapts to item padding" -body {
     # Test that things from Item style is picked up.
     ttk::style configure Item -padding "2 2 2 2"
     update
@@ -981,6 +981,17 @@ test treeview-rowheight-3 "rowheight adapts to padding" -body {
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
 } -result 4
+
+test treeview-rowheight-4 "rowheight adapts to cell padding" -body {
+    # Test that things from Cell style is picked up.
+    ttk::style configure Cell -padding "2 5 2 5"
+    update
+    set baseline [lindex [.tv bbox nn a] 3]
+    ttk::style configure Cell -padding "2 8 2 9"
+    update
+    set after [lindex [.tv bbox nn a] 3]
+    set diff [expr {$after - $baseline}]
+} -result 7
 
 ### NEED: tests for focus item, selection
 
