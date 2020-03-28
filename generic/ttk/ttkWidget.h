@@ -238,6 +238,7 @@ MODULE_SCOPE void Ttk_FreeTagSet(Ttk_TagSet);
 
 MODULE_SCOPE int Ttk_TagSetContains(Ttk_TagSet, Ttk_Tag tag);
 MODULE_SCOPE int Ttk_TagSetAdd(Ttk_TagSet, Ttk_Tag tag);
+MODULE_SCOPE int Ttk_TagSetAddSet(Ttk_TagSet, Ttk_TagSet);
 MODULE_SCOPE int Ttk_TagSetRemove(Ttk_TagSet, Ttk_Tag tag);
 
 MODULE_SCOPE void Ttk_TagSetDefaults(Ttk_TagTable, Ttk_Style, void *);

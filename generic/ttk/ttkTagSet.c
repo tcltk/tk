@@ -191,6 +191,35 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
     return 1;
 }
 
+/* Ttk_TagSetAddSet -- add a tag set to a tag set.
+ *
+ * Returns: 0 if tagset already contained tags,
+ * 1 if tagset was modified.
+ */
+int Ttk_TagSetAddSet(Ttk_TagSet tagset, Ttk_TagSet tagsetFrom)
+{
+    int i, j, result = 0, found, total, nTags = tagset->nTags;
+    Ttk_Tag tag;
+
+    total = tagsetFrom->nTags + tagset->nTags;
+    tagset->tags = (Ttk_Tag *)ckrealloc(tagset->tags,
+	    (total)*sizeof(tagset->tags[0]));
+    for (j = 0; j < tagsetFrom->nTags; ++j) {
+	tag = tagsetFrom->tags[j];
+	found = 0;
+	for (i = 0; i < nTags; ++i) {
+	    if (tagset->tags[i] == tag) {
+		found = 1;
+		break;
+	    }
+	}
+	if (found) continue;
+	tagset->tags[tagset->nTags++] = tag;
+	result = 1;
+    }
+    return result;
+}
+
 /* Ttk_TagSetRemove -- remove a tag from a tag set.
  *
  * Returns: 0 if tagset did not contain tag,
