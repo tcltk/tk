@@ -1644,7 +1644,13 @@ GetMenuAccelGeometry(
 {
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-	*widthPtr = 0;
+        /*
+         * Cascade entries have no accelerator but do show an arrow. Set
+         * this field width to the width of the OBM_MNARROW system bitmap
+         * used to display the arrow. I couldn't find how to query the
+         * system for this value, therefore I resort to hardcoding.
+         */
+	*widthPtr = CASCADE_ARROW_WIDTH;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
@@ -1963,8 +1969,9 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryArrow --
  *
  *	This function draws the arrow bitmap on the right side of a menu
- *	entry. This function is only used when drawing the arrow for a
- *	disabled cascade menu.
+ *	entry. This function is only used when drawing the arrow for:
+ *	 - a disabled cascade item
+ *	 - a cascade item in any state in a torn-off menu
  *
  * Results:
  *	None.
@@ -1998,6 +2005,16 @@ DrawMenuEntryArrow(
 
     if (!drawArrow || (mePtr->type != CASCADE_ENTRY)) {
 	return;
+    }
+
+    /*
+     * Don't draw the arrow if a submenu is not attached to this
+     * cascade entry.
+     */
+
+    if ((mePtr->childMenuRefPtr == NULL)
+           || (mePtr->childMenuRefPtr->menuPtr == NULL)) {
+        return;
     }
 
     oldFgColor = gc->foreground;
