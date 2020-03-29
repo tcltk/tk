@@ -123,7 +123,7 @@ InitBoxes(void)
      * For DLLs like Tk, the HINSTANCE is the same as the HMODULE.
      */
 
-    HMODULE module = (HINSTANCE) Tk_GetHINSTANCE();
+    HMODULE module = (HMODULE) Tk_GetHINSTANCE();
     HRSRC hrsrc;
     HGLOBAL hblk;
     LPBITMAPINFOHEADER newBitmap;
@@ -256,7 +256,7 @@ CreateProc(
     }
     butPtr->hwnd = CreateWindowW(windowClass, NULL, butPtr->style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
-	    parent, NULL, Tk_GetHINSTANCE(), NULL);
+	    parent, NULL, (HINSTANCE)Tk_GetHINSTANCE(), NULL);
     SetWindowPos(butPtr->hwnd, HWND_TOP, 0, 0, 0, 0,
 		    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     butPtr->oldProc = (WNDPROC)SetWindowLongPtrW(butPtr->hwnd, GWLP_WNDPROC,

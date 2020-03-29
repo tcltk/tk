@@ -1078,23 +1078,63 @@ interface tkPlat
 # Windows specific functions
 
 declare 0 win {
-    Window Tk_AttachHWND(Tk_Window tkwin, HWND hwnd)
+    Window Tk_AttachHWND(Tk_Window tkwin, void *hwnd)
 }
 declare 1 win {
-    HINSTANCE Tk_GetHINSTANCE(void)
+    void *Tk_GetHINSTANCE(void)
 }
 declare 2 win {
-    HWND Tk_GetHWND(Window window)
+    void *Tk_GetHWND(Window window)
 }
 declare 3 win {
-    Tk_Window Tk_HWNDToWindow(HWND hwnd)
+    Tk_Window Tk_HWNDToWindow(void *hwnd)
 }
 declare 4 win {
-    void Tk_PointerEvent(HWND hwnd, int x, int y)
+    void Tk_PointerEvent(void *hwnd, int x, int y)
 }
 declare 5 win {
-    int Tk_TranslateWinEvent(HWND hwnd,
-	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
+    int Tk_TranslateWinEvent(void *hwnd,
+	    unsigned int message, size_t wParam, ptrdiff_t lParam, ptrdiff_t *result)
+}
+declare 6 win {
+    void TkMacOSXInvalClipRgns(Tk_Window tkwin)
+}
+declare 7 win {
+    void *TkMacOSXGetDrawablePort(Drawable drawable)
+}
+declare 8 win {
+    void *TkMacOSXGetRootControl(Drawable drawable)
+}
+declare 9 win {
+    void Tk_MacOSXSetupTkNotifier(void)
+}
+declare 10 win {
+    int Tk_MacOSXIsAppInFront(void)
+}
+declare 11 win {
+    void Tk_MacOSXSetEmbedHandler(
+	    int (*registerWinProcPtr)(long winID, Tk_Window window),
+	    void *(*getPortProcPtr)(Tk_Window window),
+	    int (*containerExistProcPtr)(Tk_Window window),
+	    void (*getClipProc)(Tk_Window window, Region rgn),
+	    void (*getOffsetProc)(Tk_Window window, void *ulCorner))
+}
+
+declare 12 win {
+    void Tk_MacOSXTurnOffMenus(void)
+}
+declare 13 win {
+    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
+}
+declare 14 win {
+    void TkMacOSXInitMenus(Tcl_Interp *interp)
+}
+declare 15 win {
+    void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
+}
+declare 16 win {
+    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
+	    int height, int flags)
 }
 
 ################################
@@ -1102,11 +1142,11 @@ declare 5 win {
 
 declare 0 aqua {
     void Tk_MacOSXSetEmbedHandler(
-	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacOSXEmbedGetClipProc *getClipProc,
-	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
+	    int (*registerWinProcPtr)(long winID, Tk_Window window),
+	    void *(*getPortProcPtr)(Tk_Window window),
+	    int (*containerExistProcPtr)(Tk_Window window),
+	    void (*getClipProc)(Tk_Window window, Region rgn),
+	    void (*getOffsetProc)(Tk_Window window, void *ulCorner))
 }
 declare 1 aqua {
     void Tk_MacOSXTurnOffMenus(void)
@@ -1138,6 +1178,31 @@ declare 9 aqua {
 }
 declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
+}
+declare 11 aqua {
+    void Tk_MacOSXSetEmbedHandler_(
+	    int (*registerWinProcPtr)(long winID, Tk_Window window),
+	    void *(*getPortProcPtr)(Tk_Window window),
+	    int (*containerExistProcPtr)(Tk_Window window),
+	    void (*getClipProc)(Tk_Window window, Region rgn),
+	    void (*getOffsetProc)(Tk_Window window, void *ulCorner))
+}
+
+declare 12 aqua {
+    void Tk_MacOSXTurnOffMenus_(void)
+}
+declare 13 aqua {
+    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
+}
+declare 14 aqua {
+    void TkMacOSXInitMenus_(Tcl_Interp *interp)
+}
+declare 15 aqua {
+    void TkMacOSXInitAppleEvents_(Tcl_Interp *interp)
+}
+declare 16 aqua {
+    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
+	    int height, int flags)
 }
 
 ##############################################################################

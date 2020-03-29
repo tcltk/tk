@@ -157,7 +157,7 @@ TkGetCursorByName(
 	     * one of our application resources.
 	     */
 
-	    cursorPtr->winCursor = LoadCursorA(Tk_GetHINSTANCE(), argv[0]);
+	    cursorPtr->winCursor = LoadCursorA((HINSTANCE)Tk_GetHINSTANCE(), argv[0]);
 	} else {
 	    cursorPtr->system = 1;
 	}

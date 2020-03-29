@@ -841,14 +841,15 @@ TkWinChildProc(
  *
  *----------------------------------------------------------------------
  */
+unsigned int message, size_t wParam, ptrdiff_t lParam, ptrdiff_t *result)
 
 int
 Tk_TranslateWinEvent(
-    HWND hwnd,
-    UINT message,
-    WPARAM wParam,
-    LPARAM lParam,
-    LRESULT *resultPtr)
+    void *hwnd,
+    unsigned int message,
+    size_t wParam,
+    ptrdiff_t lParam,
+    ptrdiff_t *resultPtr)
 {
     *resultPtr = 0;
     switch (message) {

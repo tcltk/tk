@@ -47,7 +47,7 @@ static void		NotifyVisibility(XEvent *eventPtr, TkWindow *winPtr);
 Window
 Tk_AttachHWND(
     Tk_Window tkwin,
-    HWND hwnd)
+    void *hwnd)
 {
     int isNew;
     Tcl_HashEntry *entryPtr;
@@ -79,7 +79,7 @@ Tk_AttachHWND(
      * Insert the new HWND into the window table.
      */
 
-    twdPtr->window.handle = hwnd;
+    twdPtr->window.handle = (HWND)hwnd;
     entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &isNew);
     Tcl_SetHashValue(entryPtr, tkwin);
 
@@ -105,7 +105,7 @@ Tk_AttachHWND(
 
 Tk_Window
 Tk_HWNDToWindow(
-    HWND hwnd)
+    void *hwnd)
 {
     Tcl_HashEntry *entryPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -138,7 +138,7 @@ Tk_HWNDToWindow(
  *----------------------------------------------------------------------
  */
 
-HWND
+void *
 Tk_GetHWND(
     Window window)
 {
