@@ -291,6 +291,48 @@ EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 EXTERN int		TkpTestsendCmd(ClientData clientData,
 				Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[]);
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
+/* Slot 16 is reserved */
+/* Slot 17 is reserved */
+/* Slot 18 is reserved */
+/* Slot 19 is reserved */
+/* Slot 20 is reserved */
+/* Slot 21 is reserved */
+/* Slot 22 is reserved */
+/* Slot 23 is reserved */
+/* Slot 24 is reserved */
+/* Slot 25 is reserved */
+/* Slot 26 is reserved */
+/* Slot 27 is reserved */
+/* Slot 28 is reserved */
+/* Slot 29 is reserved */
+/* Slot 30 is reserved */
+/* Slot 31 is reserved */
+/* Slot 32 is reserved */
+/* Slot 33 is reserved */
+/* Slot 34 is reserved */
+/* Slot 35 is reserved */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* 38 */
+EXTERN int		TkpCmapStressed_(Tk_Window tkwin, Colormap colormap);
+/* 39 */
+EXTERN void		TkpSync_(Display *display);
+/* 40 */
+EXTERN Window		TkUnixContainerId_(TkWindow *winPtr);
+/* 41 */
+EXTERN int		TkUnixDoOneXEvent_(Tcl_Time *timePtr);
+/* 42 */
+EXTERN void		TkUnixSetMenubar_(Tk_Window tkwin, Tk_Window menubar);
+/* 43 */
+EXTERN void		TkWmCleanup_(TkDisplay *dispPtr);
+/* 44 */
+EXTERN void		TkSendCleanup_(TkDisplay *dispPtr);
+/* 45 */
+EXTERN int		TkpTestsendCmd_(ClientData clientData,
+				Tcl_Interp *interp, int objc,
+				Tcl_Obj *const objv[]);
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -420,6 +462,38 @@ typedef struct TkIntPlatStubs {
     void (*reserved11)(void);
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 12 */
     int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 13 */
+    void (*reserved14)(void);
+    void (*reserved15)(void);
+    void (*reserved16)(void);
+    void (*reserved17)(void);
+    void (*reserved18)(void);
+    void (*reserved19)(void);
+    void (*reserved20)(void);
+    void (*reserved21)(void);
+    void (*reserved22)(void);
+    void (*reserved23)(void);
+    void (*reserved24)(void);
+    void (*reserved25)(void);
+    void (*reserved26)(void);
+    void (*reserved27)(void);
+    void (*reserved28)(void);
+    void (*reserved29)(void);
+    void (*reserved30)(void);
+    void (*reserved31)(void);
+    void (*reserved32)(void);
+    void (*reserved33)(void);
+    void (*reserved34)(void);
+    void (*reserved35)(void);
+    void (*reserved36)(void);
+    void (*reserved37)(void);
+    int (*tkpCmapStressed_) (Tk_Window tkwin, Colormap colormap); /* 38 */
+    void (*tkpSync_) (Display *display); /* 39 */
+    Window (*tkUnixContainerId_) (TkWindow *winPtr); /* 40 */
+    int (*tkUnixDoOneXEvent_) (Tcl_Time *timePtr); /* 41 */
+    void (*tkUnixSetMenubar_) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
+    void (*tkWmCleanup_) (TkDisplay *dispPtr); /* 43 */
+    void (*tkSendCleanup_) (TkDisplay *dispPtr); /* 44 */
+    int (*tkpTestsendCmd_) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
 #endif /* X11 */
 } TkIntPlatStubs;
 
@@ -663,11 +737,60 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
 #define TkpTestsendCmd \
 	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 13 */
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
+/* Slot 16 is reserved */
+/* Slot 17 is reserved */
+/* Slot 18 is reserved */
+/* Slot 19 is reserved */
+/* Slot 20 is reserved */
+/* Slot 21 is reserved */
+/* Slot 22 is reserved */
+/* Slot 23 is reserved */
+/* Slot 24 is reserved */
+/* Slot 25 is reserved */
+/* Slot 26 is reserved */
+/* Slot 27 is reserved */
+/* Slot 28 is reserved */
+/* Slot 29 is reserved */
+/* Slot 30 is reserved */
+/* Slot 31 is reserved */
+/* Slot 32 is reserved */
+/* Slot 33 is reserved */
+/* Slot 34 is reserved */
+/* Slot 35 is reserved */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+#define TkpCmapStressed_ \
+	(tkIntPlatStubsPtr->tkpCmapStressed_) /* 38 */
+#define TkpSync_ \
+	(tkIntPlatStubsPtr->tkpSync_) /* 39 */
+#define TkUnixContainerId_ \
+	(tkIntPlatStubsPtr->tkUnixContainerId_) /* 40 */
+#define TkUnixDoOneXEvent_ \
+	(tkIntPlatStubsPtr->tkUnixDoOneXEvent_) /* 41 */
+#define TkUnixSetMenubar_ \
+	(tkIntPlatStubsPtr->tkUnixSetMenubar_) /* 42 */
+#define TkWmCleanup_ \
+	(tkIntPlatStubsPtr->tkWmCleanup_) /* 43 */
+#define TkSendCleanup_ \
+	(tkIntPlatStubsPtr->tkSendCleanup_) /* 44 */
+#define TkpTestsendCmd_ \
+	(tkIntPlatStubsPtr->tkpTestsendCmd_) /* 45 */
 #endif /* X11 */
 
 #endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#undef TkpCmapStressed_
+#undef TkpSync_
+#undef TkUnixContainerId_
+#undef TkUnixDoOneXEvent_
+#undef TkUnixSetMenubar_
+#undef TkWmCleanup_
+#undef TkSendCleanup_
+#undef TkpTestsendCmd_
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

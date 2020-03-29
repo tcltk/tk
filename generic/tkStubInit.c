@@ -47,6 +47,21 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XFlush
 #define TkUnusedStubEntry 0
 
+#define TkpCmapStressed_ TkpCmapStressed
+#define TkpSync_ TkpSync
+#define TkUnixContainerId_ TkUnixContainerId
+#define TkUnixDoOneXEvent_ TkUnixDoOneXEvent
+#define TkUnixSetMenubar_ TkUnixSetMenubar
+#define TkWmCleanup_ TkWmCleanup
+#define TkSendCleanup_ TkSendCleanup
+#define TkpTestsendCmd_ TkpTestsendCmd
+#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
+#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
+#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
+#define TkMacOSXInitMenus_ TkMacOSXInitMenus
+#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
+#define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
+
 #ifdef _WIN32
 
 int
@@ -598,6 +613,38 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 11 */
     TkpWmSetState, /* 12 */
     TkpTestsendCmd, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
+    0, /* 16 */
+    0, /* 17 */
+    0, /* 18 */
+    0, /* 19 */
+    0, /* 20 */
+    0, /* 21 */
+    0, /* 22 */
+    0, /* 23 */
+    0, /* 24 */
+    0, /* 25 */
+    0, /* 26 */
+    0, /* 27 */
+    0, /* 28 */
+    0, /* 29 */
+    0, /* 30 */
+    0, /* 31 */
+    0, /* 32 */
+    0, /* 33 */
+    0, /* 34 */
+    0, /* 35 */
+    0, /* 36 */
+    0, /* 37 */
+    TkpCmapStressed_, /* 38 */
+    TkpSync_, /* 39 */
+    TkUnixContainerId_, /* 40 */
+    TkUnixDoOneXEvent_, /* 41 */
+    TkUnixSetMenubar_, /* 42 */
+    TkWmCleanup_, /* 43 */
+    TkSendCleanup_, /* 44 */
+    TkpTestsendCmd_, /* 45 */
 #endif /* X11 */
 };
 
@@ -951,6 +998,12 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
+    Tk_MacOSXSetEmbedHandler_, /* 11 */
+    Tk_MacOSXTurnOffMenus_, /* 12 */
+    Tk_MacOSXTkOwnsCursor_, /* 13 */
+    TkMacOSXInitMenus_, /* 14 */
+    TkMacOSXInitAppleEvents_, /* 15 */
+    TkGenWMConfigureEvent_, /* 16 */
 #endif /* AQUA */
 };
 
