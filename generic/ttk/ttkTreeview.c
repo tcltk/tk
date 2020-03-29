@@ -602,11 +602,21 @@ static void DisplayLayoutTree(
     Tk_Anchor imageAnchor, Tk_Anchor textAnchor,
     Ttk_Layout layout, void *recordPtr, Ttk_State state, Ttk_Box b, Drawable d)
 {
+    Ttk_Element elem;
     Ttk_RebindSublayout(layout, recordPtr);
-    
-    Ttk_AnchorElement(Ttk_FindElement(layout, "image"), imageAnchor);
-    Ttk_AnchorElement(Ttk_FindElement(layout, "text"), textAnchor);
-    Ttk_AnchorElement(Ttk_FindElement(layout, "focus"), textAnchor);
+
+    elem = Ttk_FindElement(layout, "image");
+    if (elem != NULL) {
+	Ttk_AnchorElement(elem, imageAnchor);
+    }
+    elem = Ttk_FindElement(layout, "text");
+    if (elem != NULL) {
+	Ttk_AnchorElement(elem, textAnchor);
+    }
+    elem = Ttk_FindElement(layout, "focus");
+    if (elem != NULL) {
+	Ttk_AnchorElement(elem, textAnchor);
+    }
 
     Ttk_PlaceLayout(layout, state, b);
     Ttk_DrawLayout(layout, state, d);
