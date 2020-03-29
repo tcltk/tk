@@ -2815,7 +2815,7 @@ static int TreeviewIdentifyCommand(
 	    Ttk_Layout layout = 0;
 	    DisplayItem displayItem;
 	    Ttk_Element element;
-	    Ttk_State state = ItemState(tv, item);
+	    Ttk_State state;
 
 	    switch (region) {
 		case REGION_NOTHING:
@@ -2833,10 +2833,13 @@ static int TreeviewIdentifyCommand(
 		    break;
 	    }
 
+	    if (item == NULL) {
+		return TCL_OK;
+	    }
 	    if (!BoundingBox(tv, item, column, &bbox)) {
 		return TCL_OK;
 	    }
-
+	    state = ItemState(tv, item);
 	    PrepareItem(tv, item, &displayItem, state);
             if (item->textObj) { displayItem.textObj = item->textObj; }
             if (item->imageObj) { displayItem.imageObj = item->imageObj; }
