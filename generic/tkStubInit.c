@@ -61,6 +61,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkMacOSXInitMenus_ TkMacOSXInitMenus
 #define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
+#define TkGenerateActivateEvents_ TkGenerateActivateEvents
 
 #ifdef _WIN32
 
@@ -199,7 +200,6 @@ int TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define Tk_PointerEvent 0
 #	define Tk_TranslateWinEvent 0
 #	define TkAlignImageData 0
-#	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
 #	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
@@ -543,7 +543,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents_, /* 2 */
     TkPointerDeadWindow, /* 3 */
     TkpSetCapture, /* 4 */
     TkpSetCursor, /* 5 */
@@ -601,7 +601,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents, /* 2 */
     TkpCmapStressed, /* 3 */
     TkpSync, /* 4 */
     TkUnixContainerId, /* 5 */
