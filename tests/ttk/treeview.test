@@ -542,7 +542,10 @@ test treeview-9.1 "scrolling" -setup {
     }
 } -body {
     .tree yview scroll 5 units
-    .tree identify item 2 2
+    # This is sensitive to the exact layout of a tree.
+    # It assumes that (8,8) should be far enough in to be in the tree,
+    # while still being in the first item.
+    .tree identify item 8 8
 } -cleanup {
     destroy .tree
 } -result {I006}
@@ -822,6 +825,13 @@ test treeview-identify-8 "identify element" -body {
     identify* .tv {item element} 10 10  30 30  50 50
 } -match glob -result [list \
 	branch $disclosure branch2 $disclosure branch3 $disclosure]
+
+test treeview-identify-8.1 "identify element" -body {
+    .tv configure -show {tree headings}
+    update
+    identify* .tv element 1 1  10 10  25 25
+    # Heading elements are currently not reported
+} -result [list {} {} text]
 
 # See #2381555
 test treeview-identify-9 "identify works when horizontally scrolled" -setup {
