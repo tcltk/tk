@@ -2043,6 +2043,22 @@ static void DrawSeparators(Treeview *tv, Drawable d)
     }
 }
 
+/* + OverrideStriped --
+ * 	Each level of settings might add stripedbackground, and it should
+ * 	override background if this is indeed on a striped item.
+ * 	By copying it between each level, and NULL-ing stripedBgObj,
+ * 	it can be detected if the next level overrides it.
+ */
+ static void OverrideStriped(
+    Treeview *tv, TreeItem *item, DisplayItem *displayItem)
+{
+    int striped = item->itemPos % 2 && tv->tree.striped;
+    if (striped && displayItem->stripedBgObj) {
+	displayItem->backgroundObj = displayItem->stripedBgObj;
+	displayItem->stripedBgObj = NULL;
+    }
+}
+
 /* + PrepareItem --
  * 	Fill in a displayItem record.
  */
@@ -2050,17 +2066,11 @@ static void PrepareItem(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State state)
 {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
-    int striped = item->itemPos % 2 && tv->tree.striped;
-
+    
     Ttk_TagSetDefaults(tv->tree.tagTable, style, displayItem);
-    if (striped && displayItem->stripedBgObj) {
-	displayItem->backgroundObj = displayItem->stripedBgObj;
-	displayItem->stripedBgObj = NULL;
-    }
+    OverrideStriped(tv, item, displayItem);
     Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
-    if (striped && displayItem->stripedBgObj) {
-	displayItem->backgroundObj = displayItem->stripedBgObj;
-    }
+    OverrideStriped(tv, item, displayItem);
     Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
 }
 
@@ -2139,6 +2149,7 @@ static void DrawCells(
 	    displayItemUsed = &displayItemLocal;
 	    Ttk_TagSetValues(tv->tree.tagTable, column->tagset,
 		    displayItemUsed);
+	    OverrideStriped(tv, item, displayItemUsed);
 	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, stateCell,
 		    displayItemUsed);
 	}
@@ -2225,6 +2236,7 @@ static void DrawItem(
 	    displayItemUsed = &displayItemLocal;
 	    Ttk_TagSetValues(tv->tree.tagTable, column->tagset,
 		    displayItemUsed);
+	    OverrideStriped(tv, item, displayItemUsed);
 	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, stateCell,
 		    displayItemUsed);
 	}
