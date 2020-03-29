@@ -687,6 +687,32 @@ declare 13 x11 {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
+declare 38 x11 {
+    int TkpCmapStressed_(Tk_Window tkwin, Colormap colormap)
+}
+declare 39 x11 {
+    void TkpSync_(Display *display)
+}
+declare 40 x11 {
+    Window TkUnixContainerId_(TkWindow *winPtr)
+}
+declare 41 x11 {
+    int TkUnixDoOneXEvent_(Tcl_Time *timePtr)
+}
+declare 42 x11 {
+    void TkUnixSetMenubar_(Tk_Window tkwin, Tk_Window menubar)
+}
+declare 43 x11 {
+    void TkWmCleanup_(TkDisplay *dispPtr)
+}
+declare 44 x11 {
+    void TkSendCleanup_(TkDisplay *dispPtr)
+}
+# only needed by tktest:
+declare 45 x11 {
+    int TkpTestsendCmd_(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
+}
 
 ################################
 # Windows specific functions
