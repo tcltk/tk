@@ -218,7 +218,7 @@ test treetags-4.6 "tag cell remove" -body {
     $tv tag cell has tag1
 } -result {{item1 C}}
 
-test treetags-4.8 "tag cell remove" -body {
+test treetags-4.7 "tag cell remove" -body {
     $tv tag cell remove tag2
     $tv tag cell has tag2
 } -result {}
