@@ -424,13 +424,13 @@ declare 119 {
     int XUnionRectWithRegion(XRectangle *rect,
 	    Region src, Region dr_return)
 }
-declare 121 aqua {
+declare 121 {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 }
-declare 122 aqua {
+declare 122 {
     void TkpDefineNativeBitmaps(void)
 }
-declare 124 aqua {
+declare 124 {
     Pixmap TkpGetNativeAppBitmap(Display *display,
 	    const char *name, int *width, int *height)
 }

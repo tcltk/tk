@@ -110,7 +110,7 @@ TkWinGetModifierState(void)
 
 void
 Tk_PointerEvent(
-    HWND hwnd,			/* Window for coords, or NULL for the root
+    void *hwnd,			/* Window for coords, or NULL for the root
 				 * window. */
     int x, int y)		/* Coords relative to hwnd, or screen if hwnd
 				 * is NULL. */

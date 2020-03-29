@@ -34,7 +34,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN char *		TkAlignImageData(XImage *image, int alignment,
 				int bitOrder);
@@ -146,7 +146,7 @@ EXTERN int		TkpTestsendCmd(ClientData clientData,
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
 /* 0 */
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
@@ -262,7 +262,7 @@ EXTERN void *		TkMacOSXDrawable(Drawable drawable);
 EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
 EXTERN void		TkCreateXEventSource(void);
 /* Slot 1 is reserved */
@@ -297,7 +297,7 @@ typedef struct TkIntPlatStubs {
     int magic;
     void *hooks;
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     char * (*tkAlignImageData) (XImage *image, int alignment, int bitOrder); /* 0 */
     void (*reserved1)(void);
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
@@ -347,7 +347,7 @@ typedef struct TkIntPlatStubs {
     void (*reserved46)(void);
     Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
     void (*reserved1)(void);
     void (*reserved2)(void);
@@ -405,7 +405,7 @@ typedef struct TkIntPlatStubs {
     void * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
     void (*reserved1)(void);
     void (*reserved2)(void);
@@ -435,7 +435,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define TkAlignImageData \
 	(tkIntPlatStubsPtr->tkAlignImageData) /* 0 */
 /* Slot 1 is reserved */
@@ -531,7 +531,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpGetCapture \
 	(tkIntPlatStubsPtr->tkpGetCapture) /* 47 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 0 */
 /* Slot 1 is reserved */
@@ -637,7 +637,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpScanWindowId \
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
 /* Slot 1 is reserved */
