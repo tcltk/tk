@@ -1630,6 +1630,47 @@ TkQueueEventForAllChildren(
 /*
  *----------------------------------------------------------------------
  *
+ * TkGenerateActivateEvents --
+ *
+ *	This function is called by the Mac and Windows window manager routines
+ *	when a toplevel window is activated or deactivated.
+ *	Activate/Deactivate events will be sent to every subwindow of the
+ *	toplevel followed by a FocusIn/FocusOut message.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Generates X events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkGenerateActivateEvents(
+    TkWindow *winPtr,		/* Toplevel to activate. */
+    int active)			/* Non-zero if the window is being activated,
+				 * else 0.*/
+{
+    XEvent event;
+
+    /*
+     * Generate Activate and Deactivate events. This event is sent to every
+     * subwindow in a toplevel window.
+     */
+
+    event.xany.serial = NextRequest(winPtr->display);
+    event.xany.send_event = False;
+    event.xany.display = winPtr->display;
+    event.xany.window = winPtr->window;
+
+    event.xany.type = active ? ActivateNotify : DeactivateNotify;
+    TkQueueEventForAllChildren(winPtr, &event);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WindowEventProc --
  *
  *	This function is called by Tcl_DoOneEvent when a window event reaches

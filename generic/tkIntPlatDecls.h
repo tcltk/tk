@@ -151,7 +151,9 @@ EXTERN Tk_Window	TkpGetCapture(void);
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
 /* Slot 1 is reserved */
-/* Slot 2 is reserved */
+/* 2 */
+EXTERN void		TkGenerateActivateEvents_(TkWindow *winPtr,
+				int active);
 /* 3 */
 EXTERN void		TkPointerDeadWindow(TkWindow *winPtr);
 /* 4 */
@@ -266,7 +268,9 @@ EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 /* 0 */
 EXTERN void		TkCreateXEventSource(void);
 /* Slot 1 is reserved */
-/* Slot 2 is reserved */
+/* 2 */
+EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
+				int active);
 /* 3 */
 EXTERN int		TkpCmapStressed(Tk_Window tkwin, Colormap colormap);
 /* 4 */
@@ -392,7 +396,7 @@ typedef struct TkIntPlatStubs {
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
     void (*reserved1)(void);
-    void (*reserved2)(void);
+    void (*tkGenerateActivateEvents_) (TkWindow *winPtr, int active); /* 2 */
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 3 */
     void (*tkpSetCapture) (TkWindow *winPtr); /* 4 */
     void (*tkpSetCursor) (TkpCursor cursor); /* 5 */
@@ -450,7 +454,7 @@ typedef struct TkIntPlatStubs {
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
     void (*reserved1)(void);
-    void (*reserved2)(void);
+    void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
     int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 3 */
     void (*tkpSync) (Display *display); /* 4 */
     Window (*tkUnixContainerId) (TkWindow *winPtr); /* 5 */
@@ -609,7 +613,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 0 */
 /* Slot 1 is reserved */
-/* Slot 2 is reserved */
+#define TkGenerateActivateEvents_ \
+	(tkIntPlatStubsPtr->tkGenerateActivateEvents_) /* 2 */
 #define TkPointerDeadWindow \
 	(tkIntPlatStubsPtr->tkPointerDeadWindow) /* 3 */
 #define TkpSetCapture \
@@ -715,7 +720,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
 /* Slot 1 is reserved */
-/* Slot 2 is reserved */
+#define TkGenerateActivateEvents \
+	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 2 */
 #define TkpCmapStressed \
 	(tkIntPlatStubsPtr->tkpCmapStressed) /* 3 */
 #define TkpSync \
@@ -791,6 +797,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkWmCleanup_
 #undef TkSendCleanup_
 #undef TkpTestsendCmd_
+#undef TkGenerateActivateEvents_
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
