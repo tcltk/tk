@@ -971,7 +971,7 @@ test treeview-rowheight-3 "rowheight adapts to font" -body {
     expr {4 <= $diff && $diff <= 6 ? "OK" : $diff}
 } -result OK
 
-test treeview-rowheight-3 "rowheight adapts to item padding" -body {
+test treeview-rowheight-4 "rowheight adapts to item padding" -body {
     # Test that things from Item style is picked up.
     ttk::style configure Item -padding "2 2 2 2"
     update
@@ -982,7 +982,7 @@ test treeview-rowheight-3 "rowheight adapts to item padding" -body {
     set diff [expr {$after - $baseline}]
 } -result 4
 
-test treeview-rowheight-4 "rowheight adapts to cell padding" -body {
+test treeview-rowheight-5 "rowheight adapts to cell padding" -body {
     # Test that things from Cell style is picked up.
     ttk::style configure Cell -padding "2 5 2 5"
     update
