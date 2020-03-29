@@ -966,9 +966,7 @@ BitmapToPostscript(
 		x, y, width, height, -width);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, bgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -983,9 +981,7 @@ BitmapToPostscript(
 
     if (fgColor != NULL) {
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (width > 60000) {
@@ -1014,10 +1010,8 @@ BitmapToPostscript(
 		    (double) rowsThisTime, width, rowsThisTime);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
-		    0, curRow, width, rowsThisTime) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsBitmap(interp, canvas, bitmap, 0, curRow, width,
+		    rowsThisTime);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    Tcl_AppendToObj(psObj, "\n} imagemask\n", -1);
