@@ -120,13 +120,6 @@
 #define TkpSync(display)
 
 /*
- * This macro stores a representation of the window handle in a string.
- */
-
-#define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%lx", (unsigned long) (w))
-
-/*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.
  */
 
