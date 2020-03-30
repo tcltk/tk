@@ -1864,6 +1864,7 @@ TkMacOSXGetClipRgn(
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
 	NSView *view = TkMacOSXDrawableView(macDraw);
+	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);
 	CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0,
