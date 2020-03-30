@@ -154,7 +154,9 @@ proc ::tk::MenuDup {src dst type} {
     # Copy tags to x, replacing each substring of src with dst.
 
     while {[set index [string first $src $tags]] != -1} {
-	append x [string range $tags 0 [expr {$index - 1}]]$dst
+	if {$index > 0} {
+	    append x [string range $tags 0 [expr {$index - 1}]]$dst
+	}
 	set tags [string range $tags [expr {$index + $srcLen}] end]
     }
     append x $tags
@@ -169,7 +171,9 @@ proc ::tk::MenuDup {src dst type} {
 	# Copy script to x, replacing each substring of event with dst.
 
 	while {[set index [string first $event $script]] != -1} {
-	    append x [string range $script 0 [expr {$index - 1}]]
+	    if {$index > 0} {
+		append x [string range $script 0 [expr {$index - 1}]]
+	    }
 	    append x $dst
 	    set script [string range $script [expr {$index + $eventLen}] end]
 	}
