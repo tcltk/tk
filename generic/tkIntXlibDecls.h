@@ -52,7 +52,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -469,7 +469,7 @@ EXTERN Display *	XkbOpenDisplay(char *name, int *ev_rtrn,
 				int *err_rtrn, int *major_rtrn,
 				int *minor_rtrn, int *reason);
 #endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
+#ifdef MAC_OSX_TCL /* MACOSX */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -894,7 +894,7 @@ typedef struct TkIntXlibStubs {
     int magic;
     void *hooks;
 
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -1055,7 +1055,7 @@ typedef struct TkIntXlibStubs {
     KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
     Display * (*xkbOpenDisplay) (char *name, int *ev_rtrn, int *err_rtrn, int *major_rtrn, int *minor_rtrn, int *reason); /* 158 */
 #endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
+#ifdef MAC_OSX_TCL /* MACOSX */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -1230,7 +1230,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
@@ -1535,7 +1535,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XkbOpenDisplay \
 	(tkIntXlibStubsPtr->xkbOpenDisplay) /* 158 */
 #endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
+#ifdef MAC_OSX_TCL /* MACOSX */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
