@@ -43,6 +43,15 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#undef TkpCreateNativeBitmap
+#undef TkpDefineNativeBitmaps
+#undef TkpGetNativeAppBitmap
+
+#ifndef MAC_OSX_TK
+#define TkpDefineNativeBitmaps 0
+#define TkpCreateNativeBitmap 0
+#define TkpGetNativeAppBitmap 0
+#endif
 
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
@@ -76,6 +85,22 @@ static int TkWinGetPlatformId(void) {
 }
 #endif /* defined(_WIN32) || defined(__CYGWIN__) */
 #endif /* !TK_NO_DEPRECATED */
+
+#define TkpCmapStressed_ TkpCmapStressed
+#define TkpSync_ TkpSync
+#define TkUnixContainerId_ TkUnixContainerId
+#define TkUnixDoOneXEvent_ TkUnixDoOneXEvent
+#define TkUnixSetMenubar_ TkUnixSetMenubar
+#define TkWmCleanup_ TkWmCleanup
+#define TkSendCleanup_ TkSendCleanup
+#define TkpTestsendCmd_ TkpTestsendCmd
+#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
+#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
+#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
+#define TkMacOSXInitMenus_ TkMacOSXInitMenus
+#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
+#define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
+#define TkGenerateActivateEvents_ TkGenerateActivateEvents
 
 #ifdef _WIN32
 
@@ -189,7 +214,6 @@ TkPutImage(
 #	define Tk_PointerEvent 0
 #	define Tk_TranslateWinEvent 0
 #	define TkAlignImageData 0
-#	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
 #	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
@@ -463,7 +487,7 @@ static const TkIntStubs tkIntStubs = {
 static const TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     TkAlignImageData, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
@@ -513,10 +537,10 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 46 */
     TkpGetCapture, /* 47 */
 #endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
+#ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents_, /* 2 */
     TkPointerDeadWindow, /* 3 */
     TkpSetCapture, /* 4 */
     TkpSetCursor, /* 5 */
@@ -571,10 +595,10 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXDrawable, /* 54 */
     TkpScanWindowId, /* 55 */
 #endif /* AQUA */
-#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents, /* 2 */
     TkpCmapStressed, /* 3 */
     TkpSync, /* 4 */
     TkUnixContainerId, /* 5 */
@@ -586,13 +610,45 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 11 */
     TkpWmSetState, /* 12 */
     TkpTestsendCmd, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
+    0, /* 16 */
+    0, /* 17 */
+    0, /* 18 */
+    0, /* 19 */
+    0, /* 20 */
+    0, /* 21 */
+    0, /* 22 */
+    0, /* 23 */
+    0, /* 24 */
+    0, /* 25 */
+    0, /* 26 */
+    0, /* 27 */
+    0, /* 28 */
+    0, /* 29 */
+    0, /* 30 */
+    0, /* 31 */
+    0, /* 32 */
+    0, /* 33 */
+    0, /* 34 */
+    0, /* 35 */
+    0, /* 36 */
+    0, /* 37 */
+    TkpCmapStressed_, /* 38 */
+    TkpSync_, /* 39 */
+    TkUnixContainerId_, /* 40 */
+    TkUnixDoOneXEvent_, /* 41 */
+    TkUnixSetMenubar_, /* 42 */
+    TkWmCleanup_, /* 43 */
+    TkSendCleanup_, /* 44 */
+    TkpTestsendCmd_, /* 45 */
 #endif /* X11 */
 };
 
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -753,7 +809,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XkbKeycodeToKeysym, /* 157 */
     XkbOpenDisplay, /* 158 */
 #endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
+#ifdef MAC_OSX_TCL /* MACOSX */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -919,7 +975,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
 static const TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */
@@ -931,31 +987,31 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    0, /* 11 */
+    Tk_MacOSXSetEmbedHandler, /* 11 */
     Tk_MacOSXTurnOffMenus, /* 12 */
     Tk_MacOSXTkOwnsCursor, /* 13 */
     TkMacOSXInitMenus, /* 14 */
     TkMacOSXInitAppleEvents, /* 15 */
     TkGenWMConfigureEvent, /* 16 */
 #endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
-    0, /* 0 */
-    Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
-    TkMacOSXInitMenus, /* 3 */
-    TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent, /* 5 */
+#ifdef MAC_OSX_TK /* AQUA */
+    Tk_MacOSXSetEmbedHandler_, /* 0 */
+    Tk_MacOSXTurnOffMenus_, /* 1 */
+    Tk_MacOSXTkOwnsCursor_, /* 2 */
+    TkMacOSXInitMenus_, /* 3 */
+    TkMacOSXInitAppleEvents_, /* 4 */
+    TkGenWMConfigureEvent_, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
     TkMacOSXGetDrawablePort, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    0, /* 11 */
-    Tk_MacOSXTurnOffMenus_, /* 12 */
-    Tk_MacOSXTkOwnsCursor_, /* 13 */
-    TkMacOSXInitMenus_, /* 14 */
-    TkMacOSXInitAppleEvents_, /* 15 */
-    TkGenWMConfigureEvent_, /* 16 */
+    Tk_MacOSXSetEmbedHandler, /* 11 */
+    Tk_MacOSXTurnOffMenus, /* 12 */
+    Tk_MacOSXTkOwnsCursor, /* 13 */
+    TkMacOSXInitMenus, /* 14 */
+    TkMacOSXInitAppleEvents, /* 15 */
+    TkGenWMConfigureEvent, /* 16 */
 #endif /* AQUA */
 };
 

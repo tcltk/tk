@@ -1113,11 +1113,11 @@ declare 10 win {
 }
 declare 11 win {
     void Tk_MacOSXSetEmbedHandler(
-	    int (*registerWinProcPtr)(long winID, Tk_Window window),
-	    void *(*getPortProcPtr)(Tk_Window window),
-	    int (*containerExistProcPtr)(Tk_Window window),
-	    void (*getClipProc)(Tk_Window window, Region rgn),
-	    void (*getOffsetProc)(Tk_Window window, void *ulCorner))
+	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
+	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
+	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
+	    Tk_MacOSXEmbedGetClipProc *getClipProc,
+	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 }
 
 declare 12 win {
@@ -1141,27 +1141,27 @@ declare 16 win {
 # Aqua specific functions
 
 declare 0 aqua {
-    void Tk_MacOSXSetEmbedHandler(
-	    int (*registerWinProcPtr)(long winID, Tk_Window window),
-	    void *(*getPortProcPtr)(Tk_Window window),
-	    int (*containerExistProcPtr)(Tk_Window window),
-	    void (*getClipProc)(Tk_Window window, Region rgn),
-	    void (*getOffsetProc)(Tk_Window window, void *ulCorner))
+    void Tk_MacOSXSetEmbedHandler_(
+	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
+	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
+	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
+	    Tk_MacOSXEmbedGetClipProc *getClipProc,
+	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 }
 declare 1 aqua {
-    void Tk_MacOSXTurnOffMenus(void)
+    void Tk_MacOSXTurnOffMenus_(void)
 }
 declare 2 aqua {
-    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
+    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
 }
 declare 3 aqua {
-    void TkMacOSXInitMenus(Tcl_Interp *interp)
+    void TkMacOSXInitMenus_(Tcl_Interp *interp)
 }
 declare 4 aqua {
-    void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
+    void TkMacOSXInitAppleEvents_(Tcl_Interp *interp)
 }
 declare 5 aqua {
-    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
+    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
 declare 6 aqua {
@@ -1180,28 +1180,27 @@ declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
 declare 11 aqua {
-    void Tk_MacOSXSetEmbedHandler_(
-	    int (*registerWinProcPtr)(long winID, Tk_Window window),
-	    void *(*getPortProcPtr)(Tk_Window window),
-	    int (*containerExistProcPtr)(Tk_Window window),
-	    void (*getClipProc)(Tk_Window window, Region rgn),
-	    void (*getOffsetProc)(Tk_Window window, void *ulCorner))
+    void Tk_MacOSXSetEmbedHandler(
+	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
+	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
+	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
+	    Tk_MacOSXEmbedGetClipProc *getClipProc,
+	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 }
-
 declare 12 aqua {
-    void Tk_MacOSXTurnOffMenus_(void)
+    void Tk_MacOSXTurnOffMenus(void)
 }
 declare 13 aqua {
-    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
+    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
 }
 declare 14 aqua {
-    void TkMacOSXInitMenus_(Tcl_Interp *interp)
+    void TkMacOSXInitMenus(Tcl_Interp *interp)
 }
 declare 15 aqua {
-    void TkMacOSXInitAppleEvents_(Tcl_Interp *interp)
+    void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
 declare 16 aqua {
-    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
+    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
 
