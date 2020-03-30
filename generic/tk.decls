@@ -1139,6 +1139,30 @@ declare 9 aqua {
 declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
+declare 11 aqua {
+    void Tk_MacOSXSetEmbedHandler_(
+	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
+	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
+	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
+	    Tk_MacOSXEmbedGetClipProc *getClipProc,
+	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
+}
+declare 12 aqua {
+    void Tk_MacOSXTurnOffMenus_(void)
+}
+declare 13 aqua {
+    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
+}
+declare 14 aqua {
+    void TkMacOSXInitMenus_(Tcl_Interp *interp)
+}
+declare 15 aqua {
+    void TkMacOSXInitAppleEvents_(Tcl_Interp *interp)
+}
+declare 16 aqua {
+    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
+	    int height, int flags)
+}
 
 ##############################################################################
 
