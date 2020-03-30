@@ -34,7 +34,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN char *		TkAlignImageData(XImage *image, int alignment,
 				int bitOrder);
@@ -62,50 +62,52 @@ EXTERN void		TkSetPixmapColormap(Pixmap pixmap, Colormap colormap);
 /* 11 */
 EXTERN void		TkWinCancelMouseTimer(void);
 /* 12 */
-EXTERN void		TkWinClipboardRender(TkDisplay *dispPtr, UINT format);
+EXTERN void		TkWinClipboardRender(TkDisplay *dispPtr,
+				unsigned int format);
 /* 13 */
-EXTERN LRESULT		TkWinEmbeddedEventProc(HWND hwnd, UINT message,
-				WPARAM wParam, LPARAM lParam);
+EXTERN ptrdiff_t	TkWinEmbeddedEventProc(void *hwnd,
+				unsigned int message, size_t wParam,
+				ptrdiff_t lParam);
 /* 14 */
-EXTERN void		TkWinFillRect(HDC dc, int x, int y, int width,
+EXTERN void		TkWinFillRect(void *dc, int x, int y, int width,
 				int height, int pixel);
 /* 15 */
-EXTERN COLORREF		TkWinGetBorderPixels(Tk_Window tkwin,
+EXTERN void *		TkWinGetBorderPixels(Tk_Window tkwin,
 				Tk_3DBorder border, int which);
 /* 16 */
-EXTERN HDC		TkWinGetDrawableDC(Display *display, Drawable d,
-				TkWinDCState *state);
+EXTERN void *		TkWinGetDrawableDC(Display *display, Drawable d,
+				void *state);
 /* 17 */
 EXTERN int		TkWinGetModifierState(void);
 /* 18 */
-EXTERN HPALETTE		TkWinGetSystemPalette(void);
+EXTERN void *		TkWinGetSystemPalette(void);
 /* 19 */
-EXTERN HWND		TkWinGetWrapperWindow(Tk_Window tkwin);
+EXTERN void *		TkWinGetWrapperWindow(Tk_Window tkwin);
 /* 20 */
-EXTERN int		TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage,
-				WPARAM *pwParam, LPARAM *plParam,
-				LRESULT *plResult);
+EXTERN int		TkWinHandleMenuEvent(void *phwnd, void *pMessage,
+				void *pwParam, ptrdiff_t *plParam,
+				ptrdiff_t *plResult);
 /* 21 */
 EXTERN int		TkWinIndexOfColor(XColor *colorPtr);
 /* 22 */
-EXTERN void		TkWinReleaseDrawableDC(Drawable d, HDC hdc,
-				TkWinDCState *state);
+EXTERN void		TkWinReleaseDrawableDC(Drawable d, void *hdc,
+				void *state);
 /* 23 */
-EXTERN LRESULT		TkWinResendEvent(WNDPROC wndproc, HWND hwnd,
+EXTERN ptrdiff_t	TkWinResendEvent(void *wndproc, void *hwnd,
 				XEvent *eventPtr);
 /* 24 */
-EXTERN HPALETTE		TkWinSelectPalette(HDC dc, Colormap colormap);
+EXTERN void *		TkWinSelectPalette(void *dc, Colormap colormap);
 /* 25 */
-EXTERN void		TkWinSetMenu(Tk_Window tkwin, HMENU hMenu);
+EXTERN void		TkWinSetMenu(Tk_Window tkwin, void *hMenu);
 /* 26 */
-EXTERN void		TkWinSetWindowPos(HWND hwnd, HWND siblingHwnd,
+EXTERN void		TkWinSetWindowPos(void *hwnd, void *siblingHwnd,
 				int pos);
 /* 27 */
-EXTERN void		TkWinWmCleanup(HINSTANCE hInstance);
+EXTERN void		TkWinWmCleanup(void *hInstance);
 /* 28 */
-EXTERN void		TkWinXCleanup(ClientData clientData);
+EXTERN void		TkWinXCleanup(void *clientData);
 /* 29 */
-EXTERN void		TkWinXInit(HINSTANCE hInstance);
+EXTERN void		TkWinXInit(void *hInstance);
 /* 30 */
 EXTERN void		TkWinSetForegroundWindow(TkWindow *winPtr);
 /* 31 */
@@ -116,12 +118,12 @@ EXTERN Tcl_Obj *	TkWinGetMenuSystemDefault(Tk_Window tkwin,
 /* 33 */
 EXTERN int		TkWinGetPlatformId(void);
 /* 34 */
-EXTERN void		TkWinSetHINSTANCE(HINSTANCE hInstance);
+EXTERN void		TkWinSetHINSTANCE(void *hInstance);
 /* 35 */
 EXTERN int		TkWinGetPlatformTheme(void);
 /* 36 */
-EXTERN LRESULT __stdcall TkWinChildProc(HWND hwnd, UINT message,
-				WPARAM wParam, LPARAM lParam);
+EXTERN ptrdiff_t __stdcall TkWinChildProc(void *hwnd, unsigned int message,
+				size_t wParam, ptrdiff_t lParam);
 /* 37 */
 EXTERN void		TkCreateXEventSource(void);
 /* 38 */
@@ -146,7 +148,7 @@ EXTERN int		TkpTestsendCmd(ClientData clientData,
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
 /* 0 */
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
@@ -264,7 +266,7 @@ EXTERN void *		TkMacOSXDrawable(Drawable drawable);
 EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
 EXTERN void		TkCreateXEventSource(void);
 /* Slot 1 is reserved */
@@ -343,7 +345,7 @@ typedef struct TkIntPlatStubs {
     int magic;
     void *hooks;
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     char * (*tkAlignImageData) (XImage *image, int alignment, int bitOrder); /* 0 */
     void (*reserved1)(void);
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
@@ -356,31 +358,31 @@ typedef struct TkIntPlatStubs {
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 9 */
     void (*tkSetPixmapColormap) (Pixmap pixmap, Colormap colormap); /* 10 */
     void (*tkWinCancelMouseTimer) (void); /* 11 */
-    void (*tkWinClipboardRender) (TkDisplay *dispPtr, UINT format); /* 12 */
-    LRESULT (*tkWinEmbeddedEventProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 13 */
-    void (*tkWinFillRect) (HDC dc, int x, int y, int width, int height, int pixel); /* 14 */
-    COLORREF (*tkWinGetBorderPixels) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 15 */
-    HDC (*tkWinGetDrawableDC) (Display *display, Drawable d, TkWinDCState *state); /* 16 */
+    void (*tkWinClipboardRender) (TkDisplay *dispPtr, unsigned int format); /* 12 */
+    ptrdiff_t (*tkWinEmbeddedEventProc) (void *hwnd, unsigned int message, size_t wParam, ptrdiff_t lParam); /* 13 */
+    void (*tkWinFillRect) (void *dc, int x, int y, int width, int height, int pixel); /* 14 */
+    void * (*tkWinGetBorderPixels) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 15 */
+    void * (*tkWinGetDrawableDC) (Display *display, Drawable d, void *state); /* 16 */
     int (*tkWinGetModifierState) (void); /* 17 */
-    HPALETTE (*tkWinGetSystemPalette) (void); /* 18 */
-    HWND (*tkWinGetWrapperWindow) (Tk_Window tkwin); /* 19 */
-    int (*tkWinHandleMenuEvent) (HWND *phwnd, UINT *pMessage, WPARAM *pwParam, LPARAM *plParam, LRESULT *plResult); /* 20 */
+    void * (*tkWinGetSystemPalette) (void); /* 18 */
+    void * (*tkWinGetWrapperWindow) (Tk_Window tkwin); /* 19 */
+    int (*tkWinHandleMenuEvent) (void *phwnd, void *pMessage, void *pwParam, ptrdiff_t *plParam, ptrdiff_t *plResult); /* 20 */
     int (*tkWinIndexOfColor) (XColor *colorPtr); /* 21 */
-    void (*tkWinReleaseDrawableDC) (Drawable d, HDC hdc, TkWinDCState *state); /* 22 */
-    LRESULT (*tkWinResendEvent) (WNDPROC wndproc, HWND hwnd, XEvent *eventPtr); /* 23 */
-    HPALETTE (*tkWinSelectPalette) (HDC dc, Colormap colormap); /* 24 */
-    void (*tkWinSetMenu) (Tk_Window tkwin, HMENU hMenu); /* 25 */
-    void (*tkWinSetWindowPos) (HWND hwnd, HWND siblingHwnd, int pos); /* 26 */
-    void (*tkWinWmCleanup) (HINSTANCE hInstance); /* 27 */
-    void (*tkWinXCleanup) (ClientData clientData); /* 28 */
-    void (*tkWinXInit) (HINSTANCE hInstance); /* 29 */
+    void (*tkWinReleaseDrawableDC) (Drawable d, void *hdc, void *state); /* 22 */
+    ptrdiff_t (*tkWinResendEvent) (void *wndproc, void *hwnd, XEvent *eventPtr); /* 23 */
+    void * (*tkWinSelectPalette) (void *dc, Colormap colormap); /* 24 */
+    void (*tkWinSetMenu) (Tk_Window tkwin, void *hMenu); /* 25 */
+    void (*tkWinSetWindowPos) (void *hwnd, void *siblingHwnd, int pos); /* 26 */
+    void (*tkWinWmCleanup) (void *hInstance); /* 27 */
+    void (*tkWinXCleanup) (void *clientData); /* 28 */
+    void (*tkWinXInit) (void *hInstance); /* 29 */
     void (*tkWinSetForegroundWindow) (TkWindow *winPtr); /* 30 */
     void (*tkWinDialogDebug) (int debug); /* 31 */
     Tcl_Obj * (*tkWinGetMenuSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 32 */
     int (*tkWinGetPlatformId) (void); /* 33 */
-    void (*tkWinSetHINSTANCE) (HINSTANCE hInstance); /* 34 */
+    void (*tkWinSetHINSTANCE) (void *hInstance); /* 34 */
     int (*tkWinGetPlatformTheme) (void); /* 35 */
-    LRESULT (__stdcall *tkWinChildProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 36 */
+    ptrdiff_t (__stdcall *tkWinChildProc) (void *hwnd, unsigned int message, size_t wParam, ptrdiff_t lParam); /* 36 */
     void (*tkCreateXEventSource) (void); /* 37 */
     int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 38 */
     void (*tkpSync) (Display *display); /* 39 */
@@ -393,7 +395,7 @@ typedef struct TkIntPlatStubs {
     void (*reserved46)(void);
     Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
     void (*reserved1)(void);
     void (*tkGenerateActivateEvents_) (TkWindow *winPtr, int active); /* 2 */
@@ -451,7 +453,7 @@ typedef struct TkIntPlatStubs {
     void * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
     void (*reserved1)(void);
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
@@ -513,7 +515,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define TkAlignImageData \
 	(tkIntPlatStubsPtr->tkAlignImageData) /* 0 */
 /* Slot 1 is reserved */
@@ -609,7 +611,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpGetCapture \
 	(tkIntPlatStubsPtr->tkpGetCapture) /* 47 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 0 */
 /* Slot 1 is reserved */
@@ -716,7 +718,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpScanWindowId \
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
 /* Slot 1 is reserved */
@@ -798,6 +800,13 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkSendCleanup_
 #undef TkpTestsendCmd_
 #undef TkGenerateActivateEvents_
+#undef TkpPrintWindowId
+
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+#define TkpPrintWindowId(buf,w) \
+	sprintf((buf), "%#08lx", (unsigned long) (w))
+#endif
+
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

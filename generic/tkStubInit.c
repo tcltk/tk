@@ -46,6 +46,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkpCreateNativeBitmap
 #undef TkpDefineNativeBitmaps
 #undef TkpGetNativeAppBitmap
+#undef TkpPrintWindowId
 
 #ifndef MAC_OSX_TK
 #define TkpDefineNativeBitmaps 0
@@ -487,7 +488,7 @@ static const TkIntStubs tkIntStubs = {
 static const TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     TkAlignImageData, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
@@ -537,7 +538,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 46 */
     TkpGetCapture, /* 47 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
     TkGenerateActivateEvents, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents_, /* 2 */
@@ -595,7 +596,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXDrawable, /* 54 */
     TkpScanWindowId, /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !((TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
@@ -648,7 +649,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -809,7 +810,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XkbKeycodeToKeysym, /* 157 */
     XkbOpenDisplay, /* 158 */
 #endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -975,7 +976,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
 static const TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */
@@ -994,7 +995,7 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXInitAppleEvents, /* 15 */
     TkGenWMConfigureEvent, /* 16 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
     Tk_MacOSXSetEmbedHandler_, /* 0 */
     Tk_MacOSXTurnOffMenus_, /* 1 */
     Tk_MacOSXTkOwnsCursor_, /* 2 */

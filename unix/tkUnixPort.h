@@ -157,14 +157,4 @@
 #define TkSetPixmapColormap(p,c) {}
 #endif
 
-/*
- * This macro stores a representation of the window handle in a string.
- * This should perhaps use the real size of an XID.
- */
-
-#ifndef __CYGWIN__
-#define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
-#endif
-
 #endif /* _UNIXPORT */

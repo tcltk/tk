@@ -37,7 +37,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN Window		Tk_AttachHWND(Tk_Window tkwin, void *hwnd);
 /* 1 */
@@ -81,7 +81,7 @@ EXTERN void		TkMacOSXInitAppleEvents(Tcl_Interp *interp);
 EXTERN void		TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
 				int width, int height, int flags);
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
 /* 0 */
 EXTERN void		Tk_MacOSXSetEmbedHandler_(
 				Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
@@ -134,7 +134,7 @@ typedef struct TkPlatStubs {
     int magic;
     void *hooks;
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, void *hwnd); /* 0 */
     void * (*tk_GetHINSTANCE) (void); /* 1 */
     void * (*tk_GetHWND) (Window window); /* 2 */
@@ -153,7 +153,7 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 15 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
     void (*tk_MacOSXSetEmbedHandler_) (Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacOSXEmbedGetClipProc *getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc); /* 0 */
     void (*tk_MacOSXTurnOffMenus_) (void); /* 1 */
     void (*tk_MacOSXTkOwnsCursor_) (int tkOwnsIt); /* 2 */
@@ -186,7 +186,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define Tk_AttachHWND \
 	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
 #define Tk_GetHINSTANCE \
@@ -222,7 +222,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #define TkGenWMConfigureEvent \
 	(tkPlatStubsPtr->tkGenWMConfigureEvent) /* 16 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
 #define Tk_MacOSXSetEmbedHandler_ \
 	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler_) /* 0 */
 #define Tk_MacOSXTurnOffMenus_ \

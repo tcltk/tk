@@ -754,61 +754,61 @@ declare 11 win {
     void TkWinCancelMouseTimer(void)
 }
 declare 12 win {
-    void TkWinClipboardRender(TkDisplay *dispPtr, UINT format)
+    void TkWinClipboardRender(TkDisplay *dispPtr, unsigned int format)
 }
 declare 13 win {
-    LRESULT TkWinEmbeddedEventProc(HWND hwnd, UINT message,
-	    WPARAM wParam, LPARAM lParam)
+    ptrdiff_t TkWinEmbeddedEventProc(void *hwnd, unsigned int message,
+	    size_t wParam, ptrdiff_t lParam)
 }
 declare 14 win {
-    void TkWinFillRect(HDC dc, int x, int y, int width, int height, int pixel)
+    void TkWinFillRect(void *dc, int x, int y, int width, int height, int pixel)
 }
 declare 15 win {
-    COLORREF TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
+    void *TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
 	    int which)
 }
 declare 16 win {
-    HDC TkWinGetDrawableDC(Display *display, Drawable d, TkWinDCState *state)
+    void *TkWinGetDrawableDC(Display *display, Drawable d, void *state)
 }
 declare 17 win {
     int TkWinGetModifierState(void)
 }
 declare 18 win {
-    HPALETTE TkWinGetSystemPalette(void)
+    void *TkWinGetSystemPalette(void)
 }
 declare 19 win {
-    HWND TkWinGetWrapperWindow(Tk_Window tkwin)
+    void *TkWinGetWrapperWindow(Tk_Window tkwin)
 }
 declare 20 win {
-    int TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
-	    LPARAM *plParam, LRESULT *plResult)
+    int TkWinHandleMenuEvent(void *phwnd, void *pMessage, void *pwParam,
+	    ptrdiff_t *plParam, ptrdiff_t *plResult)
 }
 declare 21 win {
     int TkWinIndexOfColor(XColor *colorPtr)
 }
 declare 22 win {
-    void TkWinReleaseDrawableDC(Drawable d, HDC hdc, TkWinDCState *state)
+    void TkWinReleaseDrawableDC(Drawable d, void *hdc, void *state)
 }
 declare 23 win {
-    LRESULT TkWinResendEvent(WNDPROC wndproc, HWND hwnd, XEvent *eventPtr)
+    ptrdiff_t TkWinResendEvent(void *wndproc, void *hwnd, XEvent *eventPtr)
 }
 declare 24 win {
-    HPALETTE TkWinSelectPalette(HDC dc, Colormap colormap)
+    void *TkWinSelectPalette(void *dc, Colormap colormap)
 }
 declare 25 win {
-    void TkWinSetMenu(Tk_Window tkwin, HMENU hMenu)
+    void TkWinSetMenu(Tk_Window tkwin, void *hMenu)
 }
 declare 26 win {
-    void TkWinSetWindowPos(HWND hwnd, HWND siblingHwnd, int pos)
+    void TkWinSetWindowPos(void *hwnd, void *siblingHwnd, int pos)
 }
 declare 27 win {
-    void TkWinWmCleanup(HINSTANCE hInstance)
+    void TkWinWmCleanup(void *hInstance)
 }
 declare 28 win {
-    void TkWinXCleanup(ClientData clientData)
+    void TkWinXCleanup(void *clientData)
 }
 declare 29 win {
-    void TkWinXInit(HINSTANCE hInstance)
+    void TkWinXInit(void *hInstance)
 }
 
 # new for 8.1
@@ -830,7 +830,7 @@ declare 33 win {
 # new for 8.4.1
 
 declare 34 win {
-    void TkWinSetHINSTANCE(HINSTANCE hInstance)
+    void TkWinSetHINSTANCE(void *hInstance)
 }
 declare 35 win {
     int TkWinGetPlatformTheme(void)
@@ -839,8 +839,8 @@ declare 35 win {
 # Exported through stub table since Tk 8.4.20/8.5.9
 
 declare 36 win {
-    LRESULT __stdcall TkWinChildProc(HWND hwnd,
-	    UINT message, WPARAM wParam, LPARAM lParam)
+    ptrdiff_t __stdcall TkWinChildProc(void *hwnd,
+	    unsigned int message, size_t wParam, ptrdiff_t lParam)
 }
 
 # new for 8.4.20+/8.5.12+, Cygwin only
