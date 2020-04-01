@@ -559,7 +559,7 @@ TkpOpenDisplay(
 
 Display *
 XkbOpenDisplay(
-	char *name,
+	const char *name,
 	int *ev_rtrn,
 	int *err_rtrn,
 	int *major_rtrn,

@@ -1552,7 +1552,7 @@ declare 157 win {
     KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
 }
 declare 158 win {
-    Display *XkbOpenDisplay(char *name, int *ev_rtrn, int *err_rtrn,
+    Display *XkbOpenDisplay(const char *name, int *ev_rtrn, int *err_rtrn,
 	    int *major_rtrn, int *minor_rtrn, int *reason)
 }
 
@@ -2049,7 +2049,7 @@ declare 157 macosx {
     KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
 }
 declare 158 macosx {
-    Display *XkbOpenDisplay(char *name, int *ev_rtrn, int *err_rtrn,
+    Display *XkbOpenDisplay(const char *name, int *ev_rtrn, int *err_rtrn,
 	    int *major_rtrn, int *minor_rtrn, int *reason)
 }
 

@@ -13,7 +13,9 @@
 #include "tkInt.h"
 
 #undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
+#define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
 #include <X11/XKBlib.h>
+#undef XkbOpenDisplay
 
 /*
  * Prototypes for local functions defined in this file:
