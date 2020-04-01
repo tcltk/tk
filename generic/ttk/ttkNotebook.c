@@ -571,7 +571,7 @@ static void NotebookDoLayout(void *recordPtr)
  * 	Set the position and size of a child widget
  * 	based on the current client area and slave options:
  */
-static void NotebookPlaceSlave(Notebook *nb, int slaveIndex)
+static void NotebookPlaceSlave(Notebook *nb, TkSizeT slaveIndex)
 {
     Tab *tab = (Tab *)Ttk_SlaveData(nb->notebook.mgr, slaveIndex);
     Tk_Window slaveWindow = Ttk_SlaveWindow(nb->notebook.mgr, slaveIndex);
@@ -852,7 +852,7 @@ static int FindTabIndex(
     {
 	return TCL_OK;
     }
-    if (*index_rtn == Ttk_NumberSlaves(nb->notebook.mgr)) {
+    if (*index_rtn == (int)Ttk_NumberSlaves(nb->notebook.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Invalid slave specification %s", string));
 	Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
@@ -873,7 +873,7 @@ static int GetTabIndex(
     Tcl_Interp *interp, Notebook *nb, Tcl_Obj *objPtr, int *index_rtn)
 {
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
-	if (status == TCL_OK && *index_rtn >= Ttk_NumberSlaves(nb->notebook.mgr)) {
+	if (status == TCL_OK && *index_rtn >= (int)Ttk_NumberSlaves(nb->notebook.mgr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Slave index %s out of bounds", Tcl_GetString(objPtr)));
 	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
@@ -971,7 +971,7 @@ static int NotebookInsertCommand(
 		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
     {
 	return TCL_ERROR;
-    } else if (srcIndex >= Ttk_NumberSlaves(nb->notebook.mgr)) {
+    } else if (srcIndex >= (int)Ttk_NumberSlaves(nb->notebook.mgr)) {
 	srcIndex = Ttk_NumberSlaves(nb->notebook.mgr) - 1;
     }
 
