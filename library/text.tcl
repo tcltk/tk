@@ -1278,7 +1278,11 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
     set nUndoMarks [llength $undoMarks]
     set n [expr {$nUndoMarks / 2}]
     set undoMarks [lsort -dictionary $undoMarks]
-    set Lmarks [lrange $undoMarks 0 [expr {$n - 1}]]
+    if {$n > 0} {
+	set Lmarks [lrange $undoMarks 0 [expr {$n - 1}]]
+    } else {
+	set Lmarks {}
+    }
     set Rmarks [lrange $undoMarks $n [llength $undoMarks]]
     foreach Lmark $Lmarks Rmark $Rmarks {
         lappend indices [$w index $Lmark] [$w index $Rmark]

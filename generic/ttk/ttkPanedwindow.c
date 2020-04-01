@@ -701,7 +701,7 @@ static int PanedForgetCommand(
 		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex >= Ttk_NumberSlaves(pw->paned.mgr)) {
+    } else if (paneIndex >= (int)Ttk_NumberSlaves(pw->paned.mgr)) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
     Ttk_ForgetSlave(pw->paned.mgr, paneIndex);
@@ -783,7 +783,7 @@ static int PanedPaneCommand(
 		    interp,pw->paned.mgr,objv[2],&paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex >= Ttk_NumberSlaves(pw->paned.mgr)) {
+    } else if (paneIndex >= (int)Ttk_NumberSlaves(pw->paned.mgr)) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
 
