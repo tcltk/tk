@@ -93,7 +93,7 @@ TkWinGetModifierState(void)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_PointerEvent --
+ * TkWinPointerEvent --
  *
  *	This procedure is called for each pointer-related event. It converts
  *	the position to root coords and updates the global pointer state
@@ -109,7 +109,7 @@ TkWinGetModifierState(void)
  */
 
 void
-Tk_PointerEvent(
+TkWinPointerEvent(
     HWND hwnd,			/* Window for coords, or NULL for the root
 				 * window. */
     int x, int y)		/* Coords relative to hwnd, or screen if hwnd
@@ -248,7 +248,7 @@ MouseTimerProc(
      */
 
     GetCursorPos(&pos);
-    Tk_PointerEvent(NULL, pos.x, pos.y);
+    TkWinPointerEvent(NULL, pos.x, pos.y);
 }
 
 /*
