@@ -802,7 +802,7 @@ TkWinChildProc(
 	    result = 1;
 	} else {
 	    /* If the event was translated, we must return 0 */
-            if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+            if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
                 result = 0;
 	    } else {
 	        result = 1;
@@ -811,7 +811,7 @@ TkWinChildProc(
 	break;
 
     default:
-	if (!Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
@@ -828,7 +828,7 @@ TkWinChildProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_TranslateWinEvent --
+ * TkTranslateWinEvent --
  *
  *	This function is called by widget window functions to handle the
  *	translation from Win32 events to Tk events.
@@ -843,7 +843,7 @@ TkWinChildProc(
  */
 
 int
-Tk_TranslateWinEvent(
+TkTranslateWinEvent(
     HWND hwnd,
     UINT message,
     WPARAM wParam,
@@ -912,7 +912,7 @@ Tk_TranslateWinEvent(
     case WM_RBUTTONUP:
     case WM_XBUTTONUP:
     case WM_MOUSEMOVE:
-	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
+	TkWinPointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
     case WM_SYSKEYDOWN:

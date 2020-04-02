@@ -44,6 +44,15 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 
+#if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
+#   define Tk_TranslateWinEvent TkTranslateWinEvent
+#   define Tk_PointerEvent TkWinPointerEvent
+#else
+#   define Tk_TranslateWinEvent 0
+#   define Tk_PointerEvent 0
+#endif
+
+
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
 #define Tk_FreeXId 0
@@ -190,8 +199,6 @@ TkPutImage(
 #	define Tk_AttachHWND 0
 #	define Tk_GetHWND 0
 #	define Tk_HWNDToWindow 0
-#	define Tk_PointerEvent 0
-#	define Tk_TranslateWinEvent 0
 #	define TkAlignImageData 0
 #	define TkpGetMS 0
 #	define TkpGetCapture 0
