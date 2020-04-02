@@ -146,13 +146,13 @@ matrix:
         - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
     - name: "macOS/Xcode 9/Shared"
       os: osx
-      osx_image: xcode9
+      osx_image: xcode9.2
       env:
         - BUILD_DIR=unix
         - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
     - name: "macOS/Xcode 8/Shared"
       os: osx
-      osx_image: xcode8
+      osx_image: xcode8.3
       env:
         - BUILD_DIR=unix
         - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
