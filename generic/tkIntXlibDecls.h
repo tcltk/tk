@@ -1845,6 +1845,10 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !define(MAC_OSX_TCL) /* X11, Except MacOS/Cygwin */
+EXTERN Display *XkbOpenDisplay(const char *, int *, int *, int *, int *, int *);
+#endif
+
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
