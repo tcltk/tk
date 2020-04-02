@@ -841,7 +841,7 @@ TkpPostMenu(
     Tcl_SetServiceMode(oldServiceMode);
 
     GetCursorPos(&point);
-    Tk_PointerEvent(NULL, point.x, point.y);
+    TkWinPointerEvent(NULL, point.x, point.y);
 
     if (tsdPtr->inPostMenu) {
 	tsdPtr->inPostMenu = 0;

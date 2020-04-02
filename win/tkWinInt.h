@@ -200,6 +200,10 @@ MODULE_SCOPE long		TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
 MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
 MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
 
+MODULE_SCOPE int		TkTranslateWinEvent(HWND hwnd, UINT message,
+			    WPARAM wParam, LPARAM lParam, LRESULT *result);
+MODULE_SCOPE void		TkWinPointerEvent(HWND hwnd, int x, int y);
+
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c
  */
