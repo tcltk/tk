@@ -326,6 +326,7 @@ TkWinXCleanup(
  *	The return value is one of:
  *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
  *	    TK_THEME_WIN_XP		XP not in classic mode
+ *	    TK_THEME_WIN_VISTA	Vista or higher
  *
  *----------------------------------------------------------------------
  */
@@ -339,13 +340,16 @@ TkWinGetPlatformTheme(void)
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	GetVersionExW(&os);
 
+	if (os.dwPlatformId != VER_PLATFORM_WIN32_NT) {
+	    Tcl_Panic("Windows NT is the only supported platform");
+	}
+
 	/*
-	 * Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC. The
+	 * Set tkWinTheme to be TK_THEME_WIN_(CLASSIC|XP|VISTA). The
 	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
 	 * windows classic theme was selected.
 	 */
-
-	if ((os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	if ((os.dwMajorVersion == 5) && (os.dwMinorVersion == 1)) {
 	    HKEY hKey;
 	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
 	    LPCWSTR szCurrent = L"Current";
@@ -365,6 +369,8 @@ TkWinGetPlatformTheme(void)
 		    tkWinTheme = TK_THEME_WIN_XP;
 		}
 	    }
+	} else if (os.dwMajorVersion > 5) {
+	    tkWinTheme = TK_THEME_WIN_VISTA;
 	} else {
 	    tkWinTheme = TK_THEME_WIN_CLASSIC;
 	}
