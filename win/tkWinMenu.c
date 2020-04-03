@@ -1943,7 +1943,7 @@ DrawMenuEntryAccelerator(
      * Draw disabled 3D text highlight only with the Win95/98 look.
      */
 
-    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+    if (TkWinGetPlatformTheme() != TK_THEME_WIN_XP) {
 	if ((mePtr->state == ENTRY_DISABLED)
 		&& (menuPtr->disabledFgPtr != NULL) && (accel != NULL)) {
 	    COLORREF oldFgColor = gc->foreground;
@@ -2495,7 +2495,7 @@ DrawMenuEntryLabel(
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
-	    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+	    if (TkWinGetPlatformTheme() != TK_THEME_WIN_XP) {
 		/*
 		 * Win 95/98 systems draw disabled menu text with a 3D
 		 * highlight, unless the menu item is highlighted,
@@ -3389,7 +3389,6 @@ SetDefaults(
         int padding;
 #endif
     } nc;
-    OSVERSIONINFOW os;
 
     /*
      * Set all of the default options. The loop will terminate when we run out
@@ -3409,9 +3408,7 @@ SetDefaults(
 
     nc.metrics.cbSize = sizeof(nc);
 
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-    GetVersionExW(&os);
-    if (os.dwMajorVersion < 6) {
+    if (TkWinGetPlatformTheme() != TK_THEME_WIN_VISTA) {
 	nc.metrics.cbSize -= sizeof(int);
     }
 
