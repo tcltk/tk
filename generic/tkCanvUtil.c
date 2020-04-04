@@ -1489,19 +1489,11 @@ Tk_CanvasPsOutline(
 	Tcl_AppendToObj(psObj, "] 0 setdash\n", -1);
     }
 
-    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    /*
-     * Note that psObj might hold an invalid reference now.
-     */
+    Tk_CanvasPsColor(interp, canvas, color);
 
     if (stipple != None) {
 	Tcl_AppendToObj(GetPostscriptBuffer(interp), "StrokeClip ", -1);
-	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-	    return TCL_ERROR;
-	}
+	Tk_CanvasPsStipple(interp, canvas, stipple);
     } else {
 	Tcl_AppendToObj(GetPostscriptBuffer(interp), "stroke\n", -1);
     }

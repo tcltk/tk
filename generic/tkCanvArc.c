@@ -2087,18 +2087,14 @@ ArcToPostscript(
 		ang1, ang2);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (arcPtr->outline.gc != NULL) {
@@ -2124,9 +2120,7 @@ ArcToPostscript(
 		ang1, ang2);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (arcPtr->style != ARC_STYLE) {
@@ -2139,18 +2133,14 @@ ArcToPostscript(
 	    } else {
 		Tk_CanvasPsPath(interp, canvas, arcPtr->outlinePtr,
 			PIE_OUTLINE1_PTS);
-		if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-		    goto error;
-		}
+		Tk_CanvasPsColor(interp, canvas, color);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 		if (stipple != None) {
 		    Tcl_AppendToObj(psObj, "clip ", -1);
 
 		    Tcl_ResetResult(interp);
-		    if (Tk_CanvasPsStipple(interp, canvas, stipple) !=TCL_OK){
-			goto error;
-		    }
+		    Tk_CanvasPsStipple(interp, canvas, stipple);
 		    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 		} else {
 		    Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2162,18 +2152,14 @@ ArcToPostscript(
 			arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS);
 	    }
-	    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsColor(interp, canvas, color);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (stipple != None) {
 		Tcl_AppendToObj(psObj, "clip ", -1);
 
 		Tcl_ResetResult(interp);
-		if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		    goto error;
-		}
+		Tk_CanvasPsStipple(interp, canvas, stipple);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    } else {
 		Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2189,11 +2175,6 @@ ArcToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*
