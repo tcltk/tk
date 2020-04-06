@@ -85,6 +85,8 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	    && ([lindex $vals 2]/256 == $blue)
 }
 
+testConstraint pressbutton [llength [info commands pressbutton]]
+
 test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} -constraints {
 	unix
 } -setup {
@@ -1262,6 +1264,56 @@ test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 } -cleanup {
 	deleteWindows
 } -result {70x300+0+0}
+
+test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
+	unix
+} -setup {
+	deleteWindows
+} -body {
+    toplevel .t
+    pack [frame .t.f -container 1 -width 200 -height 200] -fill both
+    update idletasks
+    toplevel .embed -use [winfo id .t.f] -bg green
+    update idletasks
+    focus -force .t
+    focus -force .embed
+    focus
+} -cleanup {
+    deleteWindows
+} -result .embed
+test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
+	unix pressbutton
+} -setup {
+	deleteWindows
+} -body {
+    toplevel .main
+    set result {}
+    pack [button .main.b -text "Main Button" \
+	      -command {lappend result ".main.b"}] -padx 30 -pady 30
+    pack [frame .main.f -container 1 -width 200 -height 200] -fill both
+    update idletasks
+    toplevel .embed -use [winfo id .main.f] -bg green
+    pack [button .embed.b -text "Emb Button" \
+	      -command {lappend result ".embed.b"}] -padx 30 -pady 30
+    wm geometry .main 200x400+100+100
+    update idletasks
+    focus -force .main
+    set x [expr {[winfo x .main ] + [winfo x .main.b] + 40}]
+    set y [expr {[winfo y .main ] + [winfo y .main.b] + 38}]
+    lappend result [winfo containing $x $y]
+    after 200
+    pressbutton $x $y
+    update
+    set y [expr {$y + 80}]
+    lappend result [winfo containing $x $y]
+    after 200
+    pressbutton $x $y
+    update
+    set result
+} -cleanup {
+    deleteWindows
+} -result {.main.b .main.b .embed.b .embed.b}
+
 
 # cleanup
 deleteWindows

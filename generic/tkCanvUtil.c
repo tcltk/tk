@@ -28,14 +28,15 @@ const Tk_SmoothMethod tkBezierSmoothMethod = {
     "true",
     TkMakeBezierCurve,
     (void (*) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr,
-	    int numPoints, int numSteps)) TkMakeBezierPostscript,
+	    int numPoints, int numSteps))(void *)TkMakeBezierPostscript,
 };
 static const Tk_SmoothMethod tkRawSmoothMethod = {
     "raw",
     TkMakeRawCurve,
     (void (*) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr,
-	    int numPoints, int numSteps)) TkMakeRawCurvePostscript,
+	    int numPoints, int numSteps))(void *)TkMakeRawCurvePostscript,
 };
+
 
 /*
  * Function forward-declarations.

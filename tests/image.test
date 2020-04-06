@@ -62,16 +62,16 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     .c create image 100 150 -image myimage
     update
     set x {}
-    set timer [after 500 {lappend x "timeout"}]
+    set timer [after 500 {lappend x "timed out"}]
     image create test myimage -variable x
     update idletasks
     update
     # On MacOS we need to wait for the test image display procedure to run.
-    while {"timeout" ni $x && [lindex $x end 1] ne "display"} {
+    while {"timed out" ni $x && [lindex $x end 1] ne "display"} {
         vwait x
     }
     after cancel timer
-    if {[lindex $x end] eq "timeout"} {
+    if {[lindex $x end] eq "timed out"} {
        return [lreplace $x end end]
     }
     return $x
@@ -90,10 +90,10 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
     image delete myimage
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     image create test myimage -variable x
-    # macOS Catalina needs a delay here.
-    after 20
-    update
+    vwait x
+    after cancel $timer
     return $x
 } -cleanup {
     .c delete all
@@ -372,15 +372,15 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c create image 50 50 -image foo
     update
     set x {}
-    set timer [after 500 {lappend x "timeout"}]
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 5 6 7 8 30 15
     update idletasks
     update
     # On MacOS we need to wait for the test image display procedure to run.
-    while {"timeout" ni $x && [lindex $x end 1] ne "display"} {
+    while {"timed out" ni $x && [lindex $x end 1] ne "display"} {
         vwait x
     }
-    after cancel timer
+    after cancel $timer
     return $x
 } -cleanup {
     .c delete all
@@ -403,10 +403,10 @@ test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     update
     set x {}
     foo changed 5 6 7 8 30 15
+    set timer [after 500 {lappend x "timed out"}]
     image create test myimage -variable x
-    # macOS Catalina needs a delay here.
-    after 20
-    update
+    vwait x
+    after cancel $timer
     return $x
 } -cleanup {
     .c delete all
@@ -445,10 +445,10 @@ test image-11.1 {Tk_FreeImage procedure} -constraints testImageType -setup {
     update
     set x {}
     .c delete i1
+    set timer [after 500 {lappend x "timed out"}]
     pack .c
-    update
-    # macOS Catalina needs a delay here.
-    after 20
+    vwait x
+    after cancel $timer
     list [imageNames] $x
 } -cleanup {
     .c delete all

@@ -45,6 +45,23 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XGrabServer
 #undef XFree
 #undef XFlush
+#define TkUnusedStubEntry 0
+
+#define TkpCmapStressed_ TkpCmapStressed
+#define TkpSync_ TkpSync
+#define TkUnixContainerId_ TkUnixContainerId
+#define TkUnixDoOneXEvent_ TkUnixDoOneXEvent
+#define TkUnixSetMenubar_ TkUnixSetMenubar
+#define TkWmCleanup_ TkWmCleanup
+#define TkSendCleanup_ TkSendCleanup
+#define TkpTestsendCmd_ TkpTestsendCmd
+#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
+#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
+#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
+#define TkMacOSXInitMenus_ TkMacOSXInitMenus
+#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
+#define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
+#define TkGenerateActivateEvents_ TkGenerateActivateEvents
 
 #ifdef _WIN32
 
@@ -183,7 +200,6 @@ int TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define Tk_PointerEvent 0
 #	define Tk_TranslateWinEvent 0
 #	define TkAlignImageData 0
-#	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
 #	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
@@ -244,6 +260,14 @@ int TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
  * below should be made in the generic/tk.decls script.
  */
 
+#ifdef __GNUC__
+/*
+ * The rest of this file shouldn't warn about deprecated functions; they're
+ * there because we intend them to be so and know that this file is OK to
+ * touch those fields.
+ */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 /* !BEGIN!: Do not edit below this line. */
 
 static const TkIntStubs tkIntStubs = {
@@ -519,7 +543,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents_, /* 2 */
     TkPointerDeadWindow, /* 3 */
     TkpSetCapture, /* 4 */
     TkpSetCursor, /* 5 */
@@ -577,7 +601,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents, /* 2 */
     TkpCmapStressed, /* 3 */
     TkpSync, /* 4 */
     TkUnixContainerId, /* 5 */
@@ -589,6 +613,38 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 11 */
     TkpWmSetState, /* 12 */
     TkpTestsendCmd, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
+    0, /* 16 */
+    0, /* 17 */
+    0, /* 18 */
+    0, /* 19 */
+    0, /* 20 */
+    0, /* 21 */
+    0, /* 22 */
+    0, /* 23 */
+    0, /* 24 */
+    0, /* 25 */
+    0, /* 26 */
+    0, /* 27 */
+    0, /* 28 */
+    0, /* 29 */
+    0, /* 30 */
+    0, /* 31 */
+    0, /* 32 */
+    0, /* 33 */
+    0, /* 34 */
+    0, /* 35 */
+    0, /* 36 */
+    0, /* 37 */
+    TkpCmapStressed_, /* 38 */
+    TkpSync_, /* 39 */
+    TkUnixContainerId_, /* 40 */
+    TkUnixDoOneXEvent_, /* 41 */
+    TkUnixSetMenubar_, /* 42 */
+    TkWmCleanup_, /* 43 */
+    TkSendCleanup_, /* 44 */
+    TkpTestsendCmd_, /* 45 */
 #endif /* X11 */
 };
 
@@ -734,6 +790,27 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDrawPoints, /* 135 */
     XReparentWindow, /* 136 */
     XPutImage, /* 137 */
+    0, /* 138 */
+    0, /* 139 */
+    0, /* 140 */
+    0, /* 141 */
+    0, /* 142 */
+    0, /* 143 */
+    0, /* 144 */
+    0, /* 145 */
+    0, /* 146 */
+    0, /* 147 */
+    0, /* 148 */
+    0, /* 149 */
+    0, /* 150 */
+    0, /* 151 */
+    0, /* 152 */
+    0, /* 153 */
+    0, /* 154 */
+    0, /* 155 */
+    0, /* 156 */
+    0, /* 157 */
+    TkUnusedStubEntry, /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
@@ -874,6 +951,27 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 135 */
     0, /* 136 */
     XPutImage, /* 137 */
+    0, /* 138 */
+    0, /* 139 */
+    0, /* 140 */
+    0, /* 141 */
+    0, /* 142 */
+    0, /* 143 */
+    0, /* 144 */
+    0, /* 145 */
+    0, /* 146 */
+    0, /* 147 */
+    0, /* 148 */
+    0, /* 149 */
+    0, /* 150 */
+    0, /* 151 */
+    0, /* 152 */
+    0, /* 153 */
+    0, /* 154 */
+    0, /* 155 */
+    0, /* 156 */
+    0, /* 157 */
+    TkUnusedStubEntry, /* 158 */
 #endif /* AQUA */
 };
 
@@ -900,6 +998,12 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
+    Tk_MacOSXSetEmbedHandler_, /* 11 */
+    Tk_MacOSXTurnOffMenus_, /* 12 */
+    Tk_MacOSXTkOwnsCursor_, /* 13 */
+    TkMacOSXInitMenus_, /* 14 */
+    TkMacOSXInitAppleEvents_, /* 15 */
+    TkGenWMConfigureEvent_, /* 16 */
 #endif /* AQUA */
 };
 

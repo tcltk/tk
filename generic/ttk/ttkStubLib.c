@@ -36,10 +36,10 @@ TtkInitializeStubs(
     int exact = 0;
     const char *packageName = "Ttk";
     const char *errMsg = NULL;
-    ClientData pkgClientData = NULL;
+    void *pkgClientData = NULL;
     const char *actualVersion = Tcl_PkgRequireEx(
 	interp, packageName, version, exact, &pkgClientData);
-    const TtkStubs *stubsPtr = pkgClientData;
+    const TtkStubs *stubsPtr = (const TtkStubs *)pkgClientData;
 
     if (!actualVersion) {
 	return NULL;
@@ -67,7 +67,7 @@ error:
 	"Error loading ", packageName, " package",
 	" (requested version '", version,
 	"', loaded version '", actualVersion, "'): ",
-	errMsg, 
+	errMsg,
 	NULL);
     return NULL;
 }

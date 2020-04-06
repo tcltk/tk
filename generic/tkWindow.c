@@ -124,7 +124,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *) TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -939,7 +939,7 @@ TkCreateMainWindow(
 	    clientData = NULL;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
-	    ((TkInitProc *) cmdPtr->objProc)(interp, clientData);
+	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
@@ -2866,7 +2866,7 @@ TkCygwinMainEx(
 	return 0;
     }
     tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
-	    GetProcAddress(tkcygwindll, "Tk_MainEx");
+	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
     if (!tkmainex) {
 	return 0;
     }
@@ -2906,7 +2906,7 @@ Tk_Init(
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
-	tkinit = (int(*)(Tcl_Interp *)) GetProcAddress(tkcygwindll,"Tk_Init");
+	tkinit = (int(*)(Tcl_Interp *))(void *)GetProcAddress(tkcygwindll,"Tk_Init");
 	if (tkinit) {
 	    return tkinit(interp);
 	}
@@ -2980,7 +2980,7 @@ Tk_SafeInit(
 	int (*tksafeinit)(Tcl_Interp *);
 
 	tksafeinit = (int (*)(Tcl_Interp *))
-		GetProcAddress(tkcygwindll, "Tk_SafeInit");
+		(void *)GetProcAddress(tkcygwindll, "Tk_SafeInit");
 	if (tksafeinit) {
 	    return tksafeinit(interp);
 	}

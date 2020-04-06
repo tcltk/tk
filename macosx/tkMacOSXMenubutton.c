@@ -246,7 +246,7 @@ TkpDestroyMenuButton(
 
 void
 TkpComputeMenuButtonGeometry(butPtr)
-    register TkMenuButton *butPtr;	/* Widget record for menu button. */
+    TkMenuButton *butPtr;	/* Widget record for menu button. */
 {
     int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
@@ -393,7 +393,7 @@ DrawMenuButtonImageAndText(
     DrawParams *dpPtr = &mbPtr->drawParams;
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
-    if (butPtr->image != None) {
+    if (butPtr->image != NULL) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {

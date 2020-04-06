@@ -41,7 +41,7 @@ SOFTWARE.
 /* Resources */
 
 #ifdef _WIN64
-typedef __int64 XID;
+typedef unsigned __int64 XID;
 #else
 typedef unsigned long XID;
 #endif

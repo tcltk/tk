@@ -137,18 +137,12 @@ typedef struct TkMacOSXDrawingContext {
  * Variables internal to TkAqua.
  */
 
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenHeight;
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenTop;
 MODULE_SCOPE long tkMacOSXMacOSXVersion;
 
 /*
  * Prototypes for TkMacOSXRegion.c.
  */
 
-#if 0
-MODULE_SCOPE void	TkMacOSXEmtpyRegion(TkRegion r);
-MODULE_SCOPE int	TkMacOSXIsEmptyRegion(TkRegion r);
-#endif
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
 MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
 			    HIShapeRef rgn);
@@ -177,6 +171,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
 			    const char *symbol);
 MODULE_SCOPE void	TkMacOSXDisplayChanged(Display *display);
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenHeight();
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenTop();
 MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
@@ -239,6 +235,10 @@ MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE NSString*  TkUtfToNSString(const char *source, size_t numBytes);
+MODULE_SCOPE int        TkUtfAtIndex(NSString *string, int index, char *uni,
+				      unsigned int *code);
+MODULE_SCOPE char*      TkNSStringToUtf(NSString *string, int *numBytes);
 
 #pragma mark Private Objective-C Classes
 
@@ -265,8 +265,9 @@ VISIBILITY_HIDDEN
     Tcl_Interp *_eventInterp;
     NSMenu *_servicesMenu;
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
+    NSMenuItem *_demoMenuItem;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
-    NSArray *_defaultHelpMenuItems;
+    NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
@@ -339,7 +340,12 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView <NSTextInput>
+/*
+ * Subclass TKContentView from NSTextInputClient to enable composition and
+ * input from the Character Palette.
+ */
+
+@interface TKContentView : NSView <NSTextInputClient>
 {
 @private
     NSString *privateWorkingText;
@@ -353,13 +359,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
 @end
 
 @interface NSWindow(TKWm)
