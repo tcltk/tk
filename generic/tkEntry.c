@@ -1965,7 +1965,7 @@ EntryComputeGeometry(
 
     if (entryPtr->showChar != NULL) {
 	int ch;
-	char buf[4];
+	char buf[6];
 	int size;
 
 	/*
