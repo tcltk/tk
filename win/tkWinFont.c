@@ -2182,7 +2182,7 @@ FontMapLoadPage(
     Tcl_Encoding encoding;
     int i, j, bitOffset, end, segCount;
     USHORT *startCount, *endCount;
-    char buf[16], src[4];
+    char buf[16], src[6];
 
     subFontPtr->fontMap[row] = (char *)ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);

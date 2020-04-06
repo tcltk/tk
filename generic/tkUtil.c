@@ -1240,8 +1240,9 @@ TkUtfToUniChar(
  *
  * TkUniCharToUtf --
  *
- *	Almost the same as Tcl_UniCharToUtf but producing 4-byte UTF-8
- *	sequences even when TCL_UTF_MAX==3. So, up to 4 bytes might be produced.
+ *	Almost the same as Tcl_UniCharToUtf but producing 2 x 3-byte UTF-8
+ *	sequences for out-of-bmp characters when TCL_UTF_MAX==3.
+ *	So, up to 6 bytes might be produced.
  *
  * Results:
  *	*buf is filled with the UTF-8 string, and the return value is the
@@ -1255,16 +1256,13 @@ TkUtfToUniChar(
 
 int TkUniCharToUtf(int ch, char *buf)
 {
-    if (((unsigned)(ch - 0x10000) <= 0xFFFFF)) {
-	/* Spit out a 4-byte UTF-8 character */
-	*buf++ = (char) ((ch >> 18) | 0xF0);
-	*buf++ = (char) (((ch >> 12) | 0x80) & 0xBF);
-	*buf++ = (char) (((ch >> 6) | 0x80) & 0xBF);
-	*buf = (char) ((ch | 0x80) & 0xBF);
-	return 4;
-    } else {
-	return Tcl_UniCharToUtf(ch, buf);
+    if ((sizeof(Tcl_UniChar) == 2) && (((unsigned)(ch - 0x10000) <= 0xFFFFF))) {
+	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
+	 * version and/or TCL_UTF_MAX build value */
+	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
+	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
     }
+    return Tcl_UniCharToUtf(ch, buf);
 }
 
 
