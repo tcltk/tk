@@ -650,8 +650,12 @@ static int EntryRevalidate(Tcl_Interp *interp, Entry *entryPtr, VREASON reason)
 static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
 {
     Tcl_Interp *interp = entryPtr->core.interp;
-    if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
-	Tcl_BackgroundException(interp, TCL_ERROR);
+    VMODE vmode = entryPtr->entry.validate;
+
+    if (EntryNeedsValidation(vmode, reason)) {
+        if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
+	    Tcl_BackgroundException(interp, TCL_ERROR);
+        }
     }
 }
 
@@ -1378,7 +1382,7 @@ EntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetInt(interp, string, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(interp, indexObj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0) {

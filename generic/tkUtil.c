@@ -299,6 +299,7 @@ TkOffsetParseProc(
 	    tsoffset.flags = INT_MAX;
 	    goto goodTSOffset;
 	}
+	break;
     case 'w':
 	if (value[1] != '\0') {goto badTSOffset;}
 	tsoffset.flags = TK_OFFSET_LEFT|TK_OFFSET_MIDDLE;
@@ -1177,7 +1178,7 @@ TkSendVirtualEvent(
     const char *eventName,
     Tcl_Obj *detail)
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
@@ -1185,10 +1186,8 @@ TkSendVirtualEvent(
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(target);
     event.general.xany.display = Tk_Display(target);
-    event.virtual.name = Tk_GetUid(eventName);
-    if (detail != NULL) {
-        event.virtual.user_data = detail;
-    }
+    event.virt.name = Tk_GetUid(eventName);
+    event.virt.user_data = detail;
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
@@ -1216,26 +1215,23 @@ TkSendVirtualEvent(
 int
 TkUtfToUniChar(
     const char *src,	/* The UTF-8 string. */
-    int *chPtr)		/* Filled with the Tcl_UniChar represented by
+    int *chPtr)		/* Filled with the Unicode value represented by
 			 * the UTF-8 string. */
 {
     Tcl_UniChar uniChar = 0;
 
     int len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((uniChar & 0xfc00) == 0xd800) {
-	Tcl_UniChar high = uniChar;
+    if ((sizeof(Tcl_UniChar) == 2) && ((uniChar & 0xFC00) == 0xD800)) {
+	Tcl_UniChar low = uniChar;
 	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
 	 * or when a high surrogate character is detected in UTF-8 form */
-	int len2 = Tcl_UtfToUniChar(src+len, &uniChar);
-	if ((uniChar & 0xfc00) == 0xdc00) {
-	    *chPtr = (((high & 0x3ff) << 10) | (uniChar & 0x3ff)) + 0x10000;
-	    len += len2;
-	} else {
-	    *chPtr = high;
+	int len2 = Tcl_UtfToUniChar(src+len, &low);
+	if ((low & 0xFC00) == 0xDC00) {
+	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
+	    return len + len2;
 	}
-    } else {
-	*chPtr = uniChar;
     }
+    *chPtr = uniChar;
     return len;
 }
 
@@ -1244,8 +1240,9 @@ TkUtfToUniChar(
  *
  * TkUniCharToUtf --
  *
- *	Almost the same as Tcl_UniCharToUtf but producing surrogates if
- *	TCL_UTF_MAX==3. So, up to 6 bytes might be produced.
+ *	Almost the same as Tcl_UniCharToUtf but producing 2 x 3-byte UTF-8
+ *	sequences for out-of-bmp characters when TCL_UTF_MAX==3.
+ *	So, up to 6 bytes might be produced.
  *
  * Results:
  *	*buf is filled with the UTF-8 string, and the return value is the
@@ -1259,15 +1256,13 @@ TkUtfToUniChar(
 
 int TkUniCharToUtf(int ch, char *buf)
 {
-    int size = Tcl_UniCharToUtf(ch, buf);
-    if ((((unsigned)(ch - 0x10000) <= 0xFFFFF)) && (size < 4)) {
-	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
-	 * The best thing we can do is spit out 2 surrogates */
-	ch -= 0x10000;
-	size = Tcl_UniCharToUtf(((ch >> 10) | 0xd800), buf);
-	size += Tcl_UniCharToUtf(((ch & 0x3ff) | 0xdc00), buf+size);
+    if ((sizeof(Tcl_UniChar) == 2) && (((unsigned)(ch - 0x10000) <= 0xFFFFF))) {
+	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
+	 * version and/or TCL_UTF_MAX build value */
+	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
+	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
     }
-    return size;
+    return Tcl_UniCharToUtf(ch, buf);
 }
 
 

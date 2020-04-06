@@ -70,7 +70,6 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
-static int tkPlatformId = 0;		/* version of Windows platform */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
@@ -139,8 +138,8 @@ TkGetServerInfo(
 
     if (!buffer[0]) {
 	HANDLE handle = GetModuleHandleW(L"NTDLL");
-	int(__stdcall *getversion)(void *) =
-		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
+	int(__stdcall *getversion)(void *) = (int(__stdcall *)(void *))
+		(void *)GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
@@ -328,42 +327,38 @@ TkWinXCleanup(
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformId --
+ * TkWinGetPlatformTheme --
  *
- *	Determines whether running under NT, 95, or Win32s, to allow runtime
- *	conditional code. Win32s is no longer supported.
+ *	Return the Windows drawing style we should be using.
  *
  * Results:
  *	The return value is one of:
- *		VER_PLATFORM_WIN32s	   Win32s on Windows 3.1 (not supported)
- *		VER_PLATFORM_WIN32_WINDOWS Win32 on Windows 95, 98, ME (not supported)
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
- *		VER_PLATFORM_WIN32_CE	Win32 on Windows CE
- *
- * Side effects:
- *	None.
+ *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
+ *	    TK_THEME_WIN_XP		XP not in classic mode
+ *	    TK_THEME_WIN_VISTA	Vista or higher
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkWinGetPlatformId(void)
+TkWinGetPlatformTheme(void)
 {
-    if (tkPlatformId == 0) {
+    if (tkWinTheme == 0) {
 	OSVERSIONINFOW os;
 
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	GetVersionExW(&os);
-	tkPlatformId = os.dwPlatformId;
+
+	if (os.dwPlatformId != VER_PLATFORM_WIN32_NT) {
+	    Tcl_Panic("Windows NT is the only supported platform");
+	}
 
 	/*
-	 * Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC. The
+	 * Set tkWinTheme to be TK_THEME_WIN_(CLASSIC|XP|VISTA). The
 	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
 	 * windows classic theme was selected.
 	 */
-
-	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
-		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	if (os.dwMajorVersion == 5 && os.dwMinorVersion == 1) {
 	    HKEY hKey;
 	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
 	    LPCWSTR szCurrent = L"Current";
@@ -383,40 +378,39 @@ TkWinGetPlatformId(void)
 		    tkWinTheme = TK_THEME_WIN_XP;
 		}
 	    }
+	} else if (os.dwMajorVersion > 5) {
+	    tkWinTheme = TK_THEME_WIN_VISTA;
 	} else {
 	    tkWinTheme = TK_THEME_WIN_CLASSIC;
 	}
     }
-    return tkPlatformId;
+    return tkWinTheme;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformTheme --
+ * TkWinGetPlatformId --
  *
- *	Return the Windows drawing style we should be using.
+ *	Determines whether running under NT, 95, or Win32s, to allow runtime
+ *	conditional code. Win32s is no longer supported.
  *
  * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
+ *	The return value is always:
+ *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
  *
  * Side effects:
- *	Could invoke TkWinGetPlatformId.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkWinGetPlatformTheme(void)
+TkWinGetPlatformId(void)
 {
-    if (tkPlatformId == 0) {
-	TkWinGetPlatformId();
-    }
-    return tkWinTheme;
+    return VER_PLATFORM_WIN32_NT;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1478,8 +1472,7 @@ GetTranslatedKey(
 	if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
 	    xkey->state = 0;
 	}
-	xkey->trans_chars[xkey->nbytes] = (char) msg.wParam;
-	xkey->nbytes++;
+	xkey->trans_chars[xkey->nbytes++] = (char) msg.wParam;
 
 	if (((unsigned short) msg.wParam) > ((unsigned short) 0xff)) {
 	    /*

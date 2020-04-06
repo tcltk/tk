@@ -116,12 +116,16 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
-
     /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
+     * The call to activateIgnoringOtherApps was moved here to avoid this.
+     * However, with the release of macOS 10.15 (Catalina) that was no longer
+     * sufficient.  (See ticket bf93d098d7.)  The call to setActivationPolicy
+     * needed to be moved into this function as well.
      */
 
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps: YES];
 
     /*
@@ -173,15 +177,10 @@ static char scriptPath[PATH_MAX + 1] = "";
     [self setDelegate:self];
 
     /*
-     * Make sure we are allowed to open windows.
-     */
-
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
-    /*
      * If no icon has been set from an Info.plist file, use the Wish icon from
      * the Tk framework.
      */
+
     NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
 						    @"CFBundleIconFile"];
     if (!iconFile) {
@@ -396,16 +395,13 @@ TkpInit(
 	    }
 	}
 
-
 	/*
 	 * Initialize the NSServices object here. Apple's docs say to do this
 	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
-	 * initialized until this function call.  Only the main interpreter
-	 * is allowed to provide services.
+	 * initialized until this function call.
 	 */
 
 	TkMacOSXServices_Init(interp);
-
     }
 
     if (tkLibPath[0] != '\0') {
@@ -422,9 +418,6 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
-	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
-
     return TCL_OK;
 }
 

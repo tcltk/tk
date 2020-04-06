@@ -692,7 +692,7 @@ test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     destroy .tv
 } -result {0 0 0}
 
-test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview is forbidden" -setup {
+test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview is allowed" -setup {
     pack [ttk::treeview .tv]
     .tv heading #0 -text "Drag my right edge -->" 
     update
@@ -702,7 +702,7 @@ test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview
     lappend res [expr {[.tv column #0 -width] > $res}]
 } -cleanup {
     destroy .tv
-} -result {200 0}
+} -result {200 1}
 
 proc nostretch {tv} {
     foreach col [$tv cget -columns] {

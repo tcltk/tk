@@ -1160,6 +1160,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TkSetRegion
 #undef TkSubtractRegion
 #undef TkUnionRectWithRegion
+#undef TkpCmapStressed_
+#undef TkpSync_
+#undef TkUnixContainerId_
+#undef TkUnixDoOneXEvent_
+#undef TkUnixSetMenubar_
+#undef TkWmCleanup_
+#undef TkSendCleanup_
+#undef TkpTestsendCmd_
 
 #define TkClipBox(rgn, rect) XClipBox((Region) rgn, rect)
 #define TkCreateRegion() (TkRegion) XCreateRegion()

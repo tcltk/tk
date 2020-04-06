@@ -2144,7 +2144,7 @@ TkGetMenuIndex(
     }
 
     if (isdigit(UCHAR(string[0]))) {
-	if (Tcl_GetInt(interp, string, &i) == TCL_OK) {
+	if (Tcl_GetIntFromObj(interp, objPtr, &i) == TCL_OK) {
 	    if (i >= menuPtr->numEntries) {
 		if (lastOK) {
 		    i = menuPtr->numEntries;

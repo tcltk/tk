@@ -74,11 +74,6 @@ bind Entry <<TraverseIn>> {
 
 # Standard Motif bindings:
 
-bind Entry <Map> {
-    if {[tk windowingsystem] eq "aqua"} {
-    	::tk::RegisterServiceWidget %W
-    }
-}
 bind Entry <1> {
     tk::EntryButton1 %W %x
     %W selection clear
@@ -275,6 +270,25 @@ bind Entry <Meta-Delete> {
     if {!$tk_strictMotif} {
 	%W delete [tk::EntryPreviousWord %W insert] insert
     }
+}
+
+# Bindings for IME text input and accents.
+
+bind Entry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Entry <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W selection range $mark insert
+    }
+}
+bind Entry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+bind Entry <<TkAccentBackspace>> {
+    tk::EntryBackspace %W
 }
 
 # A few additional bindings of my own.

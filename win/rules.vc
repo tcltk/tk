@@ -24,7 +24,7 @@ _RULES_VC = 1
 # For modifications that are not backward-compatible, you *must* change
 # the major version.
 RULES_VERSION_MAJOR = 1
-RULES_VERSION_MINOR = 4
+RULES_VERSION_MINOR = 6
 
 # The PROJECT macro must be defined by parent makefile.
 !if "$(PROJECT)" == ""
@@ -686,6 +686,7 @@ LINKERFLAGS     = $(LINKERFLAGS) -ltcg
 #           configuration (ignored for Tcl itself)
 # _USE_64BIT_TIME_T - forces a build using 64-bit time_t for 32-bit build
 #           (CRT library should support this)
+# TCL_UTF_MAX=4 - forces a build allowing 4-byte UTF-8 sequences internally.
 # Further, LINKERFLAGS are modified based on above.
 
 # Default values for all the above
@@ -750,13 +751,18 @@ TCL_USE_STATIC_PACKAGES	= 0
 TCL_THREADS = 0
 USE_THREAD_ALLOC= 0
 !else
-TCL_THREADS	= 1
+TCL_THREADS    = 1
 USE_THREAD_ALLOC= 1
 !endif
 
 !if [nmakehlp -f $(OPTS) "time64bit"]
 !message *** Force 64-bit time_t
 _USE_64BIT_TIME_T = 1
+!endif
+
+!if [nmakehlp -f $(OPTS) "utfmax"]
+!message *** Force allowing 4-byte UTF-8 sequences internally
+TCL_UTF_MAX = 4
 !endif
 
 # Yes, it's weird that the "symbols" option controls DEBUG and
@@ -984,6 +990,19 @@ VERSION = $(TK_VERSION)
 VERSION         = $(DOTVERSION:.=)
 
 !endif # $(DOING_TCL) ... etc.
+
+# Windows RC files have 3 version components. Ensure this irrespective
+# of how many components the package has specified. Basically, ensure
+# minimum 4 components by appending 4 0's and then pick out the first 4.
+# Also take care of the fact that DOTVERSION may have "a" or "b" instead
+# of "." separating the version components.
+DOTSEPARATED=$(DOTVERSION:a=.)
+DOTSEPARATED=$(DOTSEPARATED:b=.)
+!if [echo RCCOMMAVERSION = \> versions.vc] \
+  || [for /f "tokens=1,2,3,4,5* delims=." %a in ("$(DOTSEPARATED).0.0.0.0") do echo %a,%b,%c,%d >> versions.vc]
+!error *** Could not generate RCCOMMAVERSION ***
+!endif
+!include versions.vc
 
 ################################################################
 # 10. Construct output directory and file paths
@@ -1278,6 +1297,14 @@ INCLUDE_INSTALL_DIR	= $(_INSTALLDIR)\..\include
 #    define PRJ_LIBS before including rules.rc if additional libs are needed
 
 OPTDEFINES	= /DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) /DSTDC_HEADERS
+!if $(VCVERSION) >= 1600
+OPTDEFINES	= $(OPTDEFINES) /DHAVE_STDINT_H=1
+!else
+OPTDEFINES	= $(OPTDEFINES) /DMP_NO_STDINT=1
+!endif
+!if $(VCVERSION) >= 1800
+OPTDEFINES	= $(OPTDEFINES) /DHAVE_INTTYPES_H=1 /DHAVE_STDBOOL_H=1
+!endif
 
 !if $(TCL_MEM_DEBUG)
 OPTDEFINES	= $(OPTDEFINES) /DTCL_MEM_DEBUG
@@ -1293,6 +1320,11 @@ OPTDEFINES	= $(OPTDEFINES) /DUSE_THREAD_ALLOC=1
 !endif
 !if $(STATIC_BUILD)
 OPTDEFINES	= $(OPTDEFINES) /DSTATIC_BUILD
+!elseif $(TCL_VERSION) > 86
+OPTDEFINES	= $(OPTDEFINES) /DTCL_WITH_EXTERNAL_TOMMATH
+!if "$(MACHINE)" == "AMD64"
+OPTDEFINES	= $(OPTDEFINES) /DMP_64BIT
+!endif
 !endif
 !if $(TCL_NO_DEPRECATED)
 OPTDEFINES	= $(OPTDEFINES) /DTCL_NO_DEPRECATED
@@ -1322,11 +1354,14 @@ OPTDEFINES	= $(OPTDEFINES) /DTCL_CFG_PROFILED
 OPTDEFINES	= $(OPTDEFINES) /DTCL_CFG_DO64BIT
 !endif
 !if $(VCVERSION) < 1300
-OPTDEFINES	= $(OPTDEFINES) /DNO_STRTOI64
+OPTDEFINES	= $(OPTDEFINES) /DNO_STRTOI64=1
 !endif
 
 !if "$(_USE_64BIT_TIME_T)" == "1"
-OPTDEFINES	= $(OPTDEFINES) /D_USE_64BIT_TIME_T
+OPTDEFINES	= $(OPTDEFINES) /D_USE_64BIT_TIME_T=1
+!endif
+!if "$(TCL_UTF_MAX)" == "4"
+OPTDEFINES	= $(OPTDEFINES) /DTCL_UTF_MAX=4
 !endif
 
 # _ATL_XP_TARGETING - Newer SDK's need this to build for XP
@@ -1508,7 +1543,7 @@ GUIEXECMD = $(link32) $(guilflags) -out:$@ $(baselibs) $(tcllibs) $(tklibs)
 RESCMD  = $(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" \
 	    $(TCL_INCLUDES) \
 	    /DDEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
-	    /DCOMMAVERSION=$(DOTVERSION:.=,),0 \
+	    /DCOMMAVERSION=$(RCCOMMAVERSION) \
 	    /DDOTVERSION=\"$(DOTVERSION)\" \
 	    /DVERSION=\"$(VERSION)\" \
 	    /DSUFX=\"$(SUFX)\" \
