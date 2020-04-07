@@ -1634,9 +1634,7 @@ TextToPostscript(
     }
 
     Tcl_ResetResult(interp);
-    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	goto error;
-    }
+    Tk_CanvasPsColor(interp, canvas, color);
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     if (stipple != None) {
