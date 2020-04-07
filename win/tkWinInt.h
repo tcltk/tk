@@ -185,6 +185,7 @@ MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 
 #define TK_THEME_WIN_CLASSIC    1
 #define TK_THEME_WIN_XP         2
+#define TK_THEME_WIN_VISTA      3
 
 /*
  * The following is implemented in tkWinWm and used by tkWinEmbed.c
@@ -199,6 +200,10 @@ MODULE_SCOPE long		TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
 			    int reqValue);
 MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
 MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
+
+MODULE_SCOPE int		TkTranslateWinEvent(HWND hwnd, UINT message,
+			    WPARAM wParam, LPARAM lParam, LRESULT *result);
+MODULE_SCOPE void		TkWinPointerEvent(HWND hwnd, int x, int y);
 
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c

@@ -1521,18 +1521,14 @@ RectOvalToPostscript(
 	Tcl_AppendObjToObj(psObj, pathObj);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    if (color != NULL) {
 		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
@@ -1551,10 +1547,7 @@ RectOvalToPostscript(
 	Tcl_AppendToObj(psObj, "0 setlinejoin 2 setlinecap\n", -1);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr,
-		&rectOvalPtr->outline)!= TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &rectOvalPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     }
 
@@ -1567,12 +1560,6 @@ RectOvalToPostscript(
     Tcl_DecrRefCount(psObj);
     Tcl_DecrRefCount(pathObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    Tcl_DecrRefCount(pathObj);
-    return TCL_ERROR;
 }
 
 /*

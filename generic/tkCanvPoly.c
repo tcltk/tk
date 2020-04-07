@@ -1927,18 +1927,14 @@ PolygonToPostscript(
 	 */
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, color);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, stipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
 	    Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -1959,18 +1955,14 @@ PolygonToPostscript(
 	    polyPtr->smooth->postscriptProc(interp, canvas, polyPtr->coordPtr,
 		    polyPtr->numPoints, polyPtr->splineSteps);
 	}
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "eoclip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (color != NULL) {
@@ -2006,9 +1998,7 @@ PolygonToPostscript(
 	Tcl_AppendPrintfToObj(psObj, "%d setlinejoin 1 setlinecap\n", style);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr, &polyPtr->outline) != TCL_OK){
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &polyPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     }
 
@@ -2021,11 +2011,6 @@ PolygonToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*
