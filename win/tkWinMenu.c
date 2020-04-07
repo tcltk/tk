@@ -841,7 +841,7 @@ TkpPostMenu(
     Tcl_SetServiceMode(oldServiceMode);
 
     GetCursorPos(&point);
-    Tk_PointerEvent(NULL, point.x, point.y);
+    TkWinPointerEvent(NULL, point.x, point.y);
 
     if (tsdPtr->inPostMenu) {
 	tsdPtr->inPostMenu = 0;
@@ -1644,7 +1644,13 @@ GetMenuAccelGeometry(
 {
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-	*widthPtr = 0;
+        /*
+         * Cascade entries have no accelerator but do show an arrow. Set
+         * this field width to the width of the OBM_MNARROW system bitmap
+         * used to display the arrow. I couldn't find how to query the
+         * system for this value, therefore I resort to hardcoding.
+         */
+	*widthPtr = CASCADE_ARROW_WIDTH;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
@@ -1937,7 +1943,7 @@ DrawMenuEntryAccelerator(
      * Draw disabled 3D text highlight only with the Win95/98 look.
      */
 
-    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+    if (TkWinGetPlatformTheme() != TK_THEME_WIN_XP) {
 	if ((mePtr->state == ENTRY_DISABLED)
 		&& (menuPtr->disabledFgPtr != NULL) && (accel != NULL)) {
 	    COLORREF oldFgColor = gc->foreground;
@@ -1963,8 +1969,9 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryArrow --
  *
  *	This function draws the arrow bitmap on the right side of a menu
- *	entry. This function is only used when drawing the arrow for a
- *	disabled cascade menu.
+ *	entry. This function is only used when drawing the arrow for:
+ *	 - a disabled cascade item
+ *	 - a cascade item in any state in a torn-off menu
  *
  * Results:
  *	None.
@@ -1998,6 +2005,16 @@ DrawMenuEntryArrow(
 
     if (!drawArrow || (mePtr->type != CASCADE_ENTRY)) {
 	return;
+    }
+
+    /*
+     * Don't draw the arrow if a submenu is not attached to this
+     * cascade entry.
+     */
+
+    if ((mePtr->childMenuRefPtr == NULL)
+           || (mePtr->childMenuRefPtr->menuPtr == NULL)) {
+        return;
     }
 
     oldFgColor = gc->foreground;
@@ -2478,7 +2495,7 @@ DrawMenuEntryLabel(
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
-	    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
+	    if (TkWinGetPlatformTheme() != TK_THEME_WIN_XP) {
 		/*
 		 * Win 95/98 systems draw disabled menu text with a 3D
 		 * highlight, unless the menu item is highlighted,
@@ -3383,7 +3400,6 @@ SetDefaults(
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
     NONCLIENTMETRICSW metrics;
-    OSVERSIONINFOW os;
 
     /*
      * Set all of the default options. The loop will terminate when we run out
@@ -3403,9 +3419,7 @@ SetDefaults(
 
     metrics.cbSize = sizeof(metrics);
 
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-    GetVersionExW(&os);
-    if (os.dwMajorVersion < 6) {
+    if (TkWinGetPlatformTheme() != TK_THEME_WIN_VISTA) {
 	metrics.cbSize -= sizeof(int);
     }
 

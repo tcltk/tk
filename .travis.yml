@@ -3,13 +3,21 @@ language: c
 addons:
   apt:
     packages:
+      - binutils-mingw-w64-i686
+      - binutils-mingw-w64-x86-64
+      - gcc-mingw-w64
+      - gcc-mingw-w64-base
+      - gcc-mingw-w64-i686
+      - gcc-mingw-w64-x86-64
+      - gcc-multilib
       - tcl-dev
       - libx11-dev
-# Doesn't work at the moment, see: <https://travis-ci.community/t/macos-build-fails-because-of-homebrew-bundle-unknown-command/7296>
-# homebrew:
-#   packages:
-#     - tcl-tk
-#     - xquartz
+  homebrew:
+    packages:
+      - tcl-tk
+    casks:
+      - xquartz
+    update: true
 matrix:
   include:
 # Testing on Linux with various compilers
@@ -152,13 +160,7 @@ matrix:
         - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
     - name: "macOS/Xcode 9/Shared"
       os: osx
-      osx_image: xcode9
-      env:
-        - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 8/Shared"
-      os: osx
-      osx_image: xcode8
+      osx_image: xcode9.4
       env:
         - BUILD_DIR=unix
         - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -180,11 +182,6 @@ before_install:
       case $TRAVIS_OS_NAME in
         windows)
           choco install -y magicsplat-tcl-tk
-          ;;
-        osx)
-          brew update
-          brew install tcl-tk
-          brew cask install xquartz
           ;;
       esac
   - cd ${BUILD_DIR}
