@@ -1303,7 +1303,7 @@ ButtonProc(
     }
     /* FALLTHRU */
     default:
-	if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    return result;
 	}
     }

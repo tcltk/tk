@@ -44,6 +44,20 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 
+#if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
+#   define Tk_TranslateWinEvent TkTranslateWinEvent
+#   define Tk_PointerEvent TkWinPointerEvent
+#define TkWinGetPlatformId winGetPlatformId
+static int TkWinGetPlatformId(void) {
+    return 2;
+}
+#else
+#   define Tk_TranslateWinEvent 0
+#   define Tk_PointerEvent 0
+#   define TkWinGetPlatformId 0
+#endif
+
+
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
 #define Tk_FreeXId 0
@@ -62,19 +76,13 @@ doNothing(void)
 {
     /* dummy implementation, no need to do anything */
 }
-#define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
-#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *)) doNothing)
+#define Tk_FreeXId ((void (*)(Display *, XID))(void *)doNothing)
+#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *))(void *)doNothing)
 #define Tk_GetStyleFromObj getStyleFromObj
 static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 {
 	return Tk_AllocStyleFromObj(NULL, obj);
 }
-#if defined(_WIN32) || defined(__CYGWIN__)
-#define TkWinGetPlatformId winGetPlatformId
-static int TkWinGetPlatformId(void) {
-    return 2;
-}
-#endif /* defined(_WIN32) || defined(__CYGWIN__) */
 #endif /* !TK_NO_DEPRECATED */
 
 #define TkpCmapStressed_ TkpCmapStressed
@@ -120,8 +128,8 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
-#   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
+#   define TkWmCleanup (void (*)(TkDisplay *))(void *)TkpSync
+#   define TkSendCleanup (void (*)(TkDisplay *))(void *)TkpSync
 #   define TkpTestsendCmd 0
 
 #else /* !_WIN32 */
@@ -190,8 +198,6 @@ TkPutImage(
 #	define Tk_AttachHWND 0
 #	define Tk_GetHWND 0
 #	define Tk_HWNDToWindow 0
-#	define Tk_PointerEvent 0
-#	define Tk_TranslateWinEvent 0
 #	define TkAlignImageData 0
 #	define TkpGetMS 0
 #	define TkpGetCapture 0

@@ -225,7 +225,7 @@ TkpOpenDisplay(
 
 Display *
 XkbOpenDisplay(
-    TCL_UNUSED(char *),
+    TCL_UNUSED(const char *),
 	int *ev_rtrn,
 	int *err_rtrn,
 	int *major_rtrn,
