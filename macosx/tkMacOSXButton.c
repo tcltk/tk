@@ -332,39 +332,40 @@ TkpComputeButtonGeometry(
 	haveText = 1;
     }
 
-    if (haveImage && haveText) { /* Image and Text */
-	switch ((enum compound) butPtr->compound) {
-	case COMPOUND_TOP:
-	case COMPOUND_BOTTOM:
-	    /*
-	     * Image is above or below text.
-	     */
+    if (haveImage) {
+	if (haveText) { /* Image and Text */
+	    switch ((enum compound) butPtr->compound) {
+	    case COMPOUND_TOP:
+	    case COMPOUND_BOTTOM:
+		/*
+		* Image is above or below text.
+		*/
 
-	    height += txtHeight + butPtr->padY;
-	    width = (width > txtWidth ? width : txtWidth);
-	    break;
-	case COMPOUND_LEFT:
-	case COMPOUND_RIGHT:
-	    /*
-	     * Image is left or right of text.
-	     */
+		height += txtHeight + butPtr->padY;
+		width = (width > txtWidth ? width : txtWidth);
+		break;
+	    case COMPOUND_LEFT:
+	    case COMPOUND_RIGHT:
+		/*
+		* Image is left or right of text.
+		*/
 
-	    width += txtWidth + 2*butPtr->padX;
-	    height = (height > txtHeight ? height : txtHeight);
-	    break;
-	case COMPOUND_CENTER:
-	    /*
-	     * Image and text are superimposed.
-	     */
+		width += txtWidth + 2*butPtr->padX;
+		height = (height > txtHeight ? height : txtHeight);
+		break;
+	    case COMPOUND_CENTER:
+		/*
+		* Image and text are superimposed.
+		*/
 
-	    width = (width > txtWidth ? width : txtWidth);
-	    height = (height > txtHeight ? height : txtHeight);
-	    break;
-	default:
-	    break;
+		width = (width > txtWidth ? width : txtWidth);
+		height = (height > txtHeight ? height : txtHeight);
+		break;
+	    default:
+		break;
+	    }
 	}
-	width += butPtr->indicatorSpace;
-    } else if (haveImage) { /* Image only */
+	/* Image with or without text */
 	width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
 	height = butPtr->height > 0 ? butPtr->height : height;
 	if (butPtr->type == TYPE_BUTTON) {
@@ -465,7 +466,7 @@ DrawButtonImageAndText(
 
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
-    if (butPtr->image != None) {
+    if (butPtr->image != NULL) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {
@@ -481,7 +482,7 @@ DrawButtonImageAndText(
     }
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
-    if (haveImage && haveText) { /* Image and Text */
+    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) { /* Image and Text */
         int x, y;
 
         switch ((enum compound) butPtr->compound) {

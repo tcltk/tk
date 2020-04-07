@@ -176,7 +176,7 @@ TkUtfAtIndex(
 	*code = CFStringGetLongCharacterForSurrogatePair(
 	    uniChar, lowChar);
 	ptr += Tcl_UniCharToUtf(uniChar, ptr);
-        ptr += Tcl_UniCharToUtf(lowChar, ptr);
+	ptr += Tcl_UniCharToUtf(lowChar, ptr);
 	return ptr - uni;
     } else {
 	*code = (int) uniChar;
