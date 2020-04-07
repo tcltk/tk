@@ -1289,10 +1289,6 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     ElementInfo *infoPtr;
-    OSVERSIONINFOW os;
-
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-    GetVersionExW(&os);
 
     procs = LoadXPThemeProcs(&hlibrary);
     if (!procs)
@@ -1325,7 +1321,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * enable function. The theme itself is defined in script.
      */
 
-    if (os.dwPlatformId == VER_PLATFORM_WIN32_NT && os.dwMajorVersion > 5) {
+    if (TkWinGetPlatformTheme() == TK_THEME_WIN_VISTA) {
 	vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
 	if (vistaPtr) {
 	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, themeData);
