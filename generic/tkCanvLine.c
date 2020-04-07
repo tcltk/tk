@@ -2383,17 +2383,13 @@ LineToPostscript(
 		" scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n", -1);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, color);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, stipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
 	    Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2462,9 +2458,7 @@ LineToPostscript(
     Tcl_AppendPrintfToObj(psObj, "%d setlinejoin\n", style);
 
     Tcl_ResetResult(interp);
-    if (Tk_CanvasPsOutline(canvas, itemPtr, &linePtr->outline) != TCL_OK) {
-	goto error;
-    }
+    Tk_CanvasPsOutline(canvas, itemPtr, &linePtr->outline);
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     /*
@@ -2475,19 +2469,15 @@ LineToPostscript(
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	}
-	if (ArrowheadPostscript(interp, canvas, linePtr,
-		linePtr->firstArrowPtr, psObj) != TCL_OK) {
-	    goto error;
-	}
+	ArrowheadPostscript(interp, canvas, linePtr,
+		linePtr->firstArrowPtr, psObj);
     }
     if (linePtr->lastArrowPtr != NULL) {
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	}
-	if (ArrowheadPostscript(interp, canvas, linePtr,
-		linePtr->lastArrowPtr, psObj) != TCL_OK) {
-	    goto error;
-	}
+	ArrowheadPostscript(interp, canvas, linePtr,
+		linePtr->lastArrowPtr, psObj);
     }
 
     /*
@@ -2499,11 +2489,6 @@ LineToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*
@@ -2563,9 +2548,7 @@ ArrowheadPostscript(
 	Tcl_AppendToObj(psObj, "clip ", -1);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-	    return TCL_ERROR;
-	}
+	Tk_CanvasPsStipple(interp, canvas, stipple);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     } else {
 	Tcl_AppendToObj(psObj, "fill\n", -1);
