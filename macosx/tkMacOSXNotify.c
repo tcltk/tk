@@ -171,15 +171,13 @@ void DebugPrintQueue(void)
  *----------------------------------------------------------------------
  */
 
-NSString *
+static NSString *
 GetRunLoopMode(NSModalSession modalSession)
 {
     NSString *runLoopMode = nil;
 
     if (modalSession) {
 	runLoopMode = NSModalPanelRunLoopMode;
-    } else if (TkMacOSXGetCapture()) {
-	runLoopMode = NSEventTrackingRunLoopMode;
     }
     if (!runLoopMode) {
 	runLoopMode = [[NSRunLoop currentRunLoop] currentMode];
