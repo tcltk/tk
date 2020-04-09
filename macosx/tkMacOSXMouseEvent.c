@@ -94,6 +94,19 @@ enum {
 
     if (eventWindow) {
 	local = [theEvent locationInWindow];
+
+	/*
+	 * Do not send Press or Release XEvents for MouseDown events that start
+	 * a resize.  The MouseUp is discarded by LiveResize.
+	 */
+
+	if (eventType == NSEventTypeLeftMouseDown &&
+	    ([eventWindow styleMask] & NSWindowStyleMaskResizable)) {
+	    NSRect frame = [eventWindow frame];
+	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
+		return theEvent;
+	    }
+	}
 	global = [eventWindow tkConvertPointToScreen: local];
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
