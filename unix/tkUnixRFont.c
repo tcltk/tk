@@ -255,6 +255,23 @@ GetTkFontMetrics(
  *---------------------------------------------------------------------------
  */
 
+static void
+FinishedWithFont(
+    UnixFtFont *fontPtr);
+
+static int
+InitFontErrorProc(
+    ClientData clientData,
+    XErrorEvent *errorPtr)
+{
+    int *errorFlagPtr = (int *) clientData;
+
+    if (errorFlagPtr != NULL) {
+	*errorFlagPtr = 1;
+    }
+    return 0;
+}
+
 static UnixFtFont *
 InitFont(
     Tk_Window tkwin,
@@ -265,7 +282,8 @@ InitFont(
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    int i, iWidth;
+    int i, iWidth, errorFlag;
+    Tk_ErrorHandler handler;
 
     if (!fontPtr) {
 	fontPtr = ckalloc(sizeof(UnixFtFont));
@@ -318,8 +336,17 @@ InitFont(
 
     ftFont = GetFont(fontPtr, 0, 0.0);
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+		    -1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
+    errorFlag = 0;
     GetTkFontAttributes(ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
+    Tk_DeleteErrorHandler(handler);
+    if (errorFlag) {
+	FinishedWithFont(fontPtr);
+	ckfree(fontPtr);
+	return NULL;
+    }
 
     /*
      * Fontconfig can't report any information about the position or thickness
@@ -344,7 +371,16 @@ InitFont(
 	TkFont *fPtr = &fontPtr->font;
 
 	fPtr->underlinePos = fPtr->fm.descent / 2;
+	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+			-1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
+	errorFlag = 0;
 	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
+	Tk_DeleteErrorHandler(handler);
+	if (errorFlag) {
+	    FinishedWithFont(fontPtr);
+	    ckfree(fontPtr);
+	    return NULL;
+	}
 	fPtr->underlineHeight = iWidth / 3;
 	if (fPtr->underlineHeight == 0) {
 	    fPtr->underlineHeight = 1;
