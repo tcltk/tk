@@ -96,12 +96,14 @@ enum {
 	local = [theEvent locationInWindow];
 
 	/*
-	 * Do not send Press or Release XEvents for MouseDown events that start
-	 * a resize.  The MouseUp is discarded by LiveResize.
+	 * Do not send ButtonPress XEvents for MouseDown NSEvents that start a
+	 * resize.  (The MouseUp will be handled during LiveResize.)  See
+	 * ticket [d72abe6b54].
 	 */
 
 	if (eventType == NSEventTypeLeftMouseDown &&
-	    ([eventWindow styleMask] & NSWindowStyleMaskResizable)) {
+	    ([eventWindow styleMask] & NSWindowStyleMaskResizable) &&
+	    [NSApp macMinorVersion] > 6) {
 	    NSRect frame = [eventWindow frame];
 	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
 		return theEvent;
