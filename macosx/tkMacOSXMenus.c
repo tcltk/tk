@@ -199,6 +199,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) orderFrontStandardAboutPanel: (id) sender
 {
+    (void)sender;
+
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	TkAboutDlg();
@@ -231,6 +233,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkSource: (id) sender
 {
+    (void)sender;
+
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
@@ -256,6 +260,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkDemo: (id) sender
 {
+	(void)sender;
+
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
 
@@ -281,6 +287,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
 {
+    (void)anItem;
+
     return YES;
 }
 
@@ -355,9 +363,9 @@ GetWidgetDemoPath(
 
 void
 TkMacOSXHandleMenuSelect(
-    short theMenu,
-    unsigned short theItem,
-    int optionKeyPressed)
+    TCL_UNUSED(short),
+    TCL_UNUSED(unsigned short),
+    TCL_UNUSED(int))
 {
     Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
 }
@@ -380,7 +388,7 @@ TkMacOSXHandleMenuSelect(
 
 void
 TkMacOSXInitMenus(
-    Tcl_Interp *interp)
+    TCL_UNUSED(Tcl_Interp *))
 {
     [NSApp _setupMenus];
 }

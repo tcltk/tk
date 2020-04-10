@@ -41,7 +41,7 @@ static const struct {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
     SPECIALMENU(window,	WINDOWS),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef SPECIALMENU
 
@@ -58,7 +58,7 @@ static const struct {
     MODIFIER(Command,	NSCommandKeyMask),
     MODIFIER(Cmd,	NSCommandKeyMask),
     MODIFIER(Meta,	NSCommandKeyMask),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef MODIFIER
 
@@ -86,7 +86,7 @@ static const struct {
     ACCEL(Help,		NSHelpFunctionKey),
     ACCEL(Power,	0x233d),
     ACCEL(Eject,	0xf804),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef ACCEL
 #undef sl
@@ -287,6 +287,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
+    (void)menu;
+
     /*
      * Use lowercaseString when comparing keyEquivalents since the notion of
      * a shifted upper case letter does not make much sense.
@@ -343,6 +345,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuWillOpen: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
@@ -352,6 +356,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuDidClose: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	RecursivelyClearActiveMenu(_tkMenu);
     }
@@ -359,6 +365,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menu: (NSMenu *) menu willHighlightItem: (NSMenuItem *) item
 {
+    (void)menu;
+
     if (_tkMenu) {
 	GenerateMenuSelectEvent(self, item);
     }
@@ -367,6 +375,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) menuNeedsUpdate: (NSMenu *) menu
 {
     TkMenu *menuPtr = (TkMenu *) _tkMenu;
+    (void)menu;
 
     if (menuPtr) {
 	Tcl_Interp *interp = menuPtr->interp;
@@ -392,6 +401,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuBeginTracking: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -401,6 +411,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuEndTracking: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -785,7 +796,7 @@ TkpDestroyMenuEntry(
 
 int
 TkpPostMenu(
-    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TCL_UNUSED(Tcl_Interp *),		/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
@@ -882,7 +893,7 @@ TkpPostMenu(
 
 int
 TkpPostTearoffMenu(
-    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TCL_UNUSED(Tcl_Interp *),	/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y, int index)	/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
@@ -1691,8 +1702,8 @@ TkpMenuThreadInit(void)
 
 void
 TkpMenuNotifyToplevelCreate(
-    Tcl_Interp *interp,		/* The interp the menu lives in. */
-    const char *menuName)	/* The name of the menu to reconfigure. */
+    TCL_UNUSED(Tcl_Interp *),	/* The interp the menu lives in. */
+    TCL_UNUSED(const char *))	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.
@@ -1720,8 +1731,8 @@ TkpMenuNotifyToplevelCreate(
 
 void
 TkpInitializeMenuBindings(
-    Tcl_Interp *interp,		/* The interpreter to set. */
-    Tk_BindingTable bindingTable)
+    TCL_UNUSED(Tcl_Interp *),		/* The interpreter to set. */
+    TCL_UNUSED(Tk_BindingTable))
 				/* The table to add to. */
 {
     /*
@@ -1774,17 +1785,17 @@ TkpComputeMenubarGeometry(
 
 void
 TkpDrawMenuEntry(
-    TkMenuEntry *mePtr,		/* The entry to draw */
-    Drawable d,			/* What to draw into */
-    Tk_Font tkfont,		/* Precalculated font for menu */
-    const Tk_FontMetrics *menuMetricsPtr,
+    TCL_UNUSED(TkMenuEntry *),		/* The entry to draw */
+    TCL_UNUSED(Drawable),			/* What to draw into */
+    TCL_UNUSED(Tk_Font),		/* Precalculated font for menu */
+    TCL_UNUSED(const Tk_FontMetrics *),
 				/* Precalculated metrics for menu */
-    int x,			/* X-coordinate of topleft of entry */
-    int y,			/* Y-coordinate of topleft of entry */
-    int width,			/* Width of the entry rectangle */
-    int height,			/* Height of the current rectangle */
-    int strictMotif,		/* Boolean flag */
-    int drawArrow)		/* Whether or not to draw the cascade arrow
+    TCL_UNUSED(int),			/* X-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Width of the entry rectangle */
+    TCL_UNUSED(int),			/* Height of the current rectangle */
+    TCL_UNUSED(int),		/* Boolean flag */
+    TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
 {
 }
@@ -1833,7 +1844,7 @@ TkMacOSXPreprocessMenu(void)
 
 int
 TkMacOSXUseMenuID(
-    short macID)		/* The id to take out of the table */
+    TCL_UNUSED(short))		/* The id to take out of the table */
 {
     return TCL_OK;
 }
@@ -1856,8 +1867,8 @@ TkMacOSXUseMenuID(
 
 int
 TkMacOSXDispatchMenuEvent(
-    int menuID,			/* The menu id of the menu we are invoking */
-    int index)			/* The one-based index of the item that was
+    TCL_UNUSED(int),			/* The menu id of the menu we are invoking */
+    TCL_UNUSED(int))			/* The one-based index of the item that was
 				 * selected. */
 {
     return TCL_ERROR;

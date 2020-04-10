@@ -369,11 +369,12 @@ SetCGColorComponents(
 			colorUsingColorSpace:sRGB];
 	    break;
 	case 8:
-	    if ([NSApp macMinorVersion] >= 14) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		color = [[NSColor controlAccentColor]
-			    colorUsingColorSpace:sRGB];
+	    if (@available(macOS 14, *)) {
+#else
+	    if (false) {
 #endif
+		color = [[NSColor controlAccentColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor
 			    colorForControlTint:[NSColor currentControlTint]]
@@ -792,7 +793,7 @@ TkpGetColor(
     }
 
 validXColor:
-    tkColPtr = ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
 
     return tkColPtr;
@@ -826,7 +827,8 @@ TkpGetColorByValue(
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
+    (void)tkwin;
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
@@ -858,6 +860,8 @@ XAllocColor(
     Colormap map,		/* Not used. */
     XColor *colorPtr)		/* XColor struct to modify. */
 {
+    (void)map;
+
     display->request++;
     colorPtr->pixel = TkpGetPixel(colorPtr);
     return 1;
@@ -871,6 +875,10 @@ XCreateColormap(
     int alloc)			/* Not used. */
 {
     static Colormap index = 1;
+    (void)display;
+    (void)window;
+    (void)visual;
+    (void)alloc;
 
     /*
      * Just return a new value each time.
@@ -883,6 +891,9 @@ XFreeColormap(
     Display* display,		/* Display. */
     Colormap colormap)		/* Colormap. */
 {
+    (void)display;
+    (void)colormap;
+
     return Success;
 }
 
@@ -894,6 +905,12 @@ XFreeColors(
     int npixels,		/* Number of pixels. */
     unsigned long planes)	/* Number of pixel planes. */
 {
+    (void)display;
+    (void)colormap;
+    (void)pixels;
+    (void)npixels;
+    (void)planes;
+
     /*
      * The Macintosh version of Tk uses TrueColor. Nothing
      * needs to be done to release colors as there really is

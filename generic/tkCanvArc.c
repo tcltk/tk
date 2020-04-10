@@ -712,6 +712,7 @@ DeleteArc(
     Display *display)		/* Display containing window for canvas. */
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
+    (void)canvas;
 
     Tk_DeleteOutline(display, &(arcPtr->outline));
     if (arcPtr->numOutlinePoints != 0) {
@@ -757,7 +758,6 @@ DeleteArc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeArcBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -909,6 +909,10 @@ DisplayArc(
     double lineWidth;
     Tk_State state = itemPtr->state;
     Pixmap stipple;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1073,7 +1077,6 @@ DisplayArc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 ArcToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1238,7 +1241,6 @@ ArcToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ArcToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1632,7 +1634,7 @@ ComputeArcOutline(
      */
 
     if (arcPtr->numOutlinePoints == 0) {
-	arcPtr->outlinePtr = ckalloc(26 * sizeof(double));
+	arcPtr->outlinePtr = (double *)ckalloc(26 * sizeof(double));
 	arcPtr->numOutlinePoints = 22;
     }
     outlinePtr = arcPtr->outlinePtr;
@@ -2012,6 +2014,7 @@ ArcToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     y1 = Tk_CanvasPsY(canvas, arcPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, arcPtr->bbox[3]);
@@ -2084,18 +2087,14 @@ ArcToPostscript(
 		ang1, ang2);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (arcPtr->outline.gc != NULL) {
@@ -2121,9 +2120,7 @@ ArcToPostscript(
 		ang1, ang2);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (arcPtr->style != ARC_STYLE) {
@@ -2136,18 +2133,14 @@ ArcToPostscript(
 	    } else {
 		Tk_CanvasPsPath(interp, canvas, arcPtr->outlinePtr,
 			PIE_OUTLINE1_PTS);
-		if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-		    goto error;
-		}
+		Tk_CanvasPsColor(interp, canvas, color);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 		if (stipple != None) {
 		    Tcl_AppendToObj(psObj, "clip ", -1);
 
 		    Tcl_ResetResult(interp);
-		    if (Tk_CanvasPsStipple(interp, canvas, stipple) !=TCL_OK){
-			goto error;
-		    }
+		    Tk_CanvasPsStipple(interp, canvas, stipple);
 		    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 		} else {
 		    Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2159,18 +2152,14 @@ ArcToPostscript(
 			arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS);
 	    }
-	    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsColor(interp, canvas, color);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (stipple != None) {
 		Tcl_AppendToObj(psObj, "clip ", -1);
 
 		Tcl_ResetResult(interp);
-		if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		    goto error;
-		}
+		Tk_CanvasPsStipple(interp, canvas, stipple);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    } else {
 		Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2186,11 +2175,6 @@ ArcToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*
@@ -2213,7 +2197,7 @@ ArcToPostscript(
 
 static int
 StyleParseProc(
-    ClientData clientData,	/* some flags.*/
+    ClientData dummy,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
@@ -2222,8 +2206,9 @@ StyleParseProc(
 {
     int c;
     size_t length;
-
-    register Style *stylePtr = (Style *) (widgRec + offset);
+    Style *stylePtr = (Style *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*stylePtr = PIESLICE_STYLE;
@@ -2277,7 +2262,7 @@ StyleParseProc(
 
 static const char *
 StylePrintProc(
-    ClientData clientData,	/* Ignored. */
+    ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Ignored. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
@@ -2285,7 +2270,10 @@ StylePrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Style *stylePtr = (Style *) (widgRec + offset);
+    Style *stylePtr = (Style *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
+    (void)freeProcPtr;
 
     if (*stylePtr == ARC_STYLE) {
 	return "arc";

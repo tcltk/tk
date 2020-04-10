@@ -24,6 +24,9 @@ ServicesEventProc(
     int flags)
 {
     TkMainInfo *info = TkGetMainInfoList();
+    (void)event;
+    (void)flags;
+
     Tcl_GlobalEval(info->interp, "::tk::mac::PerformService");
     return 1;
 }
@@ -104,6 +107,8 @@ ServicesEventProc(
     NSString *pboardString = nil, *pboardType = nil;
     NSArray *types = [pboard types];
     Tcl_Event *event;
+    (void)data;
+    (void)error;
 
     /*
      * Get a string from the private pasteboard and copy it to the general
@@ -123,7 +128,7 @@ ServicesEventProc(
 	[generalpasteboard declareTypes:[NSArray arrayWithObjects:pboardType, nil]
 				  owner:nil];
 	[generalpasteboard setString:pboardString forType:pboardType];
-	event = ckalloc(sizeof(Tcl_Event));
+	event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
 	event->proc = ServicesEventProc;
 	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     }
@@ -138,8 +143,9 @@ ServicesEventProc(
 
 int
 TkMacOSXServices_Init(
-    Tcl_Interp *interp)
+    Tcl_Interp *dummy)
 {
+    (void)dummy;
     /*
      * Initialize an instance of TkService and register it with the NSApp.
      */

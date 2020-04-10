@@ -227,6 +227,16 @@ test canvas-2.4 {CanvasWidgetCmd, xview option} -constraints nonPortable -body {
     update
     lappend x [.c xview]
 } -result {{0.6 0.9} {0.66 0.96}}
+test canvas-2.5 {CanvasWidgetCmd, raise/lower option, no error on non-existing tags} -setup {
+    .c create line 0 0 10 10 -tags aline
+} -body {
+    .c raise aline noline
+    .c raise bline aline
+    .c lower aline noline
+    .c lower bline aline
+} -cleanup {
+    .c delete aline
+} -result {}
 catch {destroy .c}
 
 # Canvas used in 3.* test cases

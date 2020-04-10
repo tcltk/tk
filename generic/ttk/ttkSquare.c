@@ -51,28 +51,28 @@ typedef struct
 static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), -1,
+     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), TCL_AUTO_LENGTH,
      0,0,GEOMETRY_CHANGED },
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
      DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
-     -1, 0, 0, 0},
+     TCL_AUTO_LENGTH, 0, 0, 0},
 
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-     "50", offsetof(Square,square.widthObj), -1, 0, 0,
+     "50", offsetof(Square,square.widthObj), TCL_AUTO_LENGTH, 0, 0,
      GEOMETRY_CHANGED},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-     "50", offsetof(Square,square.heightObj), -1, 0, 0,
+     "50", offsetof(Square,square.heightObj), TCL_AUTO_LENGTH, 0, 0,
      GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-padding", "padding", "Pad", NULL,
-     offsetof(Square,square.paddingObj), -1,
+     offsetof(Square,square.paddingObj), TCL_AUTO_LENGTH,
      TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-     NULL, offsetof(Square,square.reliefObj), -1, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.reliefObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK, 0, 0},
 
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-     NULL, offsetof(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.anchorObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK, 0, 0},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -109,7 +109,7 @@ SquareDoLayout(void *clientData)
      */
 
     if (squareNode) {
-	Square *squarePtr = clientData;
+	Square *squarePtr = (Square *)clientData;
 	Tk_Anchor anchor = TK_ANCHOR_CENTER;
 	Ttk_Box b;
 
@@ -143,7 +143,7 @@ static const Ttk_Ensemble SquareCommands[] = {
  * with Tk in the package initialization code (see bottom).
  */
 
-static WidgetSpec SquareWidgetSpec =
+static const WidgetSpec SquareWidgetSpec =
 {
     "TSquare",			/* className */
     sizeof(Square),		/* recordSize */
@@ -188,7 +188,7 @@ static const Ttk_ElementOptionSpec SquareElementOptions[] =
     	"raised" },
     { "-width",  TK_OPTION_PIXELS, offsetof(SquareElement,widthObj), "20"},
     { "-height", TK_OPTION_PIXELS, offsetof(SquareElement,heightObj), "20"},
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 /*
@@ -198,11 +198,12 @@ static const Ttk_ElementOptionSpec SquareElementOptions[] =
  */
 
 static void SquareElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    SquareElement *square = elementRecord;
+    SquareElement *square = (SquareElement *)elementRecord;
     int borderWidth = 0;
+    (void)dummy;
 
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
@@ -215,12 +216,14 @@ static void SquareElementSize(
  */
 
 static void SquareElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    SquareElement *square = elementRecord;
+    SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
+    (void)dummy;
+    (void)state;
 
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);

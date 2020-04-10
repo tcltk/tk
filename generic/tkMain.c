@@ -35,13 +35,13 @@ static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
-typedef struct {
+typedef struct TclIntPlatStubs {
     int magic;
     void *hooks;
     void (*dummy[16]) (void); /* dummy entries 0-15, not used */
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
-extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+const TclIntPlatStubs *tclIntPlatStubsPtr;
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -394,7 +394,6 @@ Tk_MainEx(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
@@ -403,9 +402,10 @@ StdinProc(
     char *cmd;
     int code;
     size_t count;
-    InteractiveState *isPtr = clientData;
+    InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
+    (void)mask;
 
     count = (size_t)Tcl_Gets(chan, &isPtr->line);
 

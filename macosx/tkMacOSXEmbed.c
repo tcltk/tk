@@ -90,7 +90,7 @@ Tk_MacOSXSetEmbedHandler(
     Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 {
     if (tkMacOSXEmbedHandler == NULL) {
-	tkMacOSXEmbedHandler = ckalloc(sizeof(TkMacOSXEmbedHandler));
+	tkMacOSXEmbedHandler = (TkMacOSXEmbedHandler *)ckalloc(sizeof(TkMacOSXEmbedHandler));
     }
     tkMacOSXEmbedHandler->registerWinProc = registerWinProc;
     tkMacOSXEmbedHandler->getPortProc = getPortProc;
@@ -121,6 +121,7 @@ TkpMakeWindow(
     Window parent)
 {
     MacDrawable *macWin;
+    (void)parent;
 
     /*
      * If this window is marked as embedded then the window structure should
@@ -134,7 +135,7 @@ TkpMakeWindow(
 	 * Allocate sub window
 	 */
 
-	macWin = ckalloc(sizeof(MacDrawable));
+	macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
 	if (macWin == NULL) {
 	    winPtr->privatePtr = NULL;
 	    return None;
@@ -306,7 +307,7 @@ TkpUseWindow(
      * Make the embedded window.
      */
 
-    macWin = ckalloc(sizeof(MacDrawable));
+    macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     if (macWin == NULL) {
 	winPtr->privatePtr = NULL;
 	return TCL_ERROR;
@@ -392,7 +393,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = ckalloc(sizeof(Container));
+    containerPtr = (Container *)ckalloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentPtr = winPtr;
     containerPtr->embedded = None;
@@ -559,7 +560,7 @@ TkpClaimFocus(
 
 int
 TkpTestembedCmd(
-    ClientData clientData,	/* Main window for application. */
+    ClientData dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -569,6 +570,7 @@ TkpTestembedCmd(
     Tcl_DString dString;
     char buffer[50];
     Tcl_Interp *embeddedInterp = NULL, *parentInterp = NULL;
+    (void)dummy;
 
     if ((objc > 1) && (strcmp(Tcl_GetString(objv[1]), "all") == 0)) {
 	all = 1;
@@ -667,6 +669,9 @@ TkpRedirectKeyEvent(
     XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
+    (void)winPtr;
+    (void)eventPtr;
+
     /* TODO: Implement this or decide it definitely needs no implementation */
 }
 
@@ -1084,6 +1089,7 @@ static void
 EmbedSendConfigure(
     Container *containerPtr)	/* Information about the embedding. */
 {
+    (void)containerPtr;
 }
 
 /*
@@ -1191,12 +1197,14 @@ void
 TkpShowBusyWindow(
     TkBusy busy)
 {
+    (void)busy;
 }
 
 void
 TkpHideBusyWindow(
     TkBusy busy)
 {
+    (void)busy;
 }
 
 void
@@ -1204,6 +1212,8 @@ TkpMakeTransparentWindowExist(
     Tk_Window tkwin,		/* Token for window. */
     Window parent)		/* Parent window. */
 {
+    (void)tkwin;
+    (void)parent;
 }
 
 void
@@ -1214,6 +1224,11 @@ TkpCreateBusy(
     Tk_Window tkParent,
     TkBusy busy)
 {
+    (void)winPtr;
+    (void)tkRef;
+    (void)parentPtr;
+    (void)tkParent;
+    (void)busy;
 }
 
 /*

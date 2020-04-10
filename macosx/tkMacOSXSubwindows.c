@@ -55,6 +55,7 @@ XDestroyWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
+    (void)display;
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -676,6 +677,7 @@ XConfigureWindow(
 {
     MacDrawable *macWin = (MacDrawable *) w;
     TkWindow *winPtr = macWin->winPtr;
+    (void)values;
 
     display->request++;
 
@@ -992,6 +994,7 @@ InvalViewRect(
 {
     static CGAffineTransform t;
     NSView *view = ref;
+    (void)rgn;
 
     if (!view) {
 	return paramErr;
@@ -1122,6 +1125,8 @@ void *
 TkMacOSXGetDrawablePort(
     Drawable drawable)
 {
+    (void)drawable;
+
     return NULL;
 }
 
@@ -1422,11 +1427,12 @@ Tk_GetPixmap(
     int depth)		/* Bits per pixel for pixmap. */
 {
     MacDrawable *macPix;
+    (void)d;
 
     if (display != NULL) {
 	display->request++;
     }
-    macPix = ckalloc(sizeof(MacDrawable));
+    macPix = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
     macPix->xOff = 0;
     macPix->yOff = 0;

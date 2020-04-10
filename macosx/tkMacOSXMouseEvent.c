@@ -94,6 +94,21 @@ enum {
 
     if (eventWindow) {
 	local = [theEvent locationInWindow];
+
+	/*
+	 * Do not send ButtonPress XEvents for MouseDown NSEvents that start a
+	 * resize.  (The MouseUp will be handled during LiveResize.)  See
+	 * ticket [d72abe6b54].
+	 */
+
+	if (eventType == NSEventTypeLeftMouseDown &&
+	    ([eventWindow styleMask] & NSWindowStyleMaskResizable) &&
+	    [NSApp macMinorVersion] > 6) {
+	    NSRect frame = [eventWindow frame];
+	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
+		return theEvent;
+	    }
+	}
 	global = [eventWindow tkConvertPointToScreen: local];
 	tkwin = TkpGetCapture();
 	if (tkwin) {
@@ -463,6 +478,9 @@ XQueryPointer(
 {
     int getGlobal = (root_x_return && root_y_return);
     int getLocal = (win_x_return && win_y_return && w != None);
+    (void)display;
+    (void)root_return;
+    (void)child_return;
 
     if (getGlobal || getLocal) {
 	NSPoint global = [NSEvent mouseLocation];

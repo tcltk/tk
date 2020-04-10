@@ -49,7 +49,7 @@ Tk_AttachHWND(
     Tk_Window tkwin,
     HWND hwnd)
 {
-    int new;
+    int isNew;
     Tcl_HashEntry *entryPtr;
     TkWinDrawable *twdPtr = (TkWinDrawable *) Tk_WindowId(tkwin);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -66,7 +66,7 @@ Tk_AttachHWND(
      */
 
     if (twdPtr == NULL) {
-	twdPtr = ckalloc(sizeof(TkWinDrawable));
+	twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 	twdPtr->type = TWD_WINDOW;
 	twdPtr->window.winPtr = (TkWindow *) tkwin;
     } else if (twdPtr->window.handle != NULL) {
@@ -80,7 +80,7 @@ Tk_AttachHWND(
      */
 
     twdPtr->window.handle = hwnd;
-    entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &new);
+    entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &isNew);
     Tcl_SetHashValue(entryPtr, tkwin);
 
     return (Window)twdPtr;

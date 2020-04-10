@@ -133,6 +133,8 @@ XSync(
     Display *display,
     Bool discard)
 {
+    (void)discard;
+
     if (display) {
 	display->request++;
     }

@@ -46,7 +46,7 @@ EvalObjv(
 
     cmdObj = Tcl_NewStringObj(cmdName, -1);
     Tcl_IncrRefCount(cmdObj);
-    objs = ckalloc(sizeof(Tcl_Obj *) * (objc+1));
+    objs = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc+1));
     objs[0] = cmdObj;
     memcpy(objs+1, objv, sizeof(Tcl_Obj *) * (unsigned)objc);
 
