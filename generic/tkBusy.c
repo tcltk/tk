@@ -23,7 +23,7 @@
 
 static const Tk_OptionSpec busyOptionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_BUSY_CURSOR, -1, offsetof(Busy, cursor),
+	DEF_BUSY_CURSOR, TCL_AUTO_LENGTH, offsetof(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -54,7 +54,7 @@ static void		MakeTransparentWindowExist(Tk_Window tkwin,
 			    Window parent);
 static inline Tk_Window	NextChild(Tk_Window tkwin);
 static void		RefWinEventProc(ClientData clientData,
-			    register XEvent *eventPtr);
+			    XEvent *eventPtr);
 static inline void	SetWindowInstanceData(Tk_Window tkwin,
 			    ClientData instanceData);
 
@@ -122,13 +122,13 @@ SetWindowInstanceData(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 static void
 BusyCustodyProc(
     ClientData clientData,	/* Information about the busy window. */
     Tk_Window tkwin)		/* Not used. */
 {
-    Busy *busyPtr = clientData;
+    Busy *busyPtr = (Busy *)clientData;
+    (void)tkwin;
 
     Tk_DeleteEventHandler(busyPtr->tkBusy, StructureNotifyMask, BusyEventProc,
 	    busyPtr);
@@ -156,14 +156,16 @@ BusyCustodyProc(
  *----------------------------------------------------------------------
  */
 
-/* ARGSUSED */
 static void
 BusyGeometryProc(
-    ClientData clientData,	/* Information about window that got new
+    ClientData dummy,	/* Information about window that got new
 				 * preferred geometry. */
     Tk_Window tkwin)		/* Other Tk-related information about the
 				 * window. */
 {
+    (void)dummy;
+    (void)tkwin;
+
     /* Should never get here */
 }
 
@@ -249,9 +251,9 @@ DoConfigureNotify(
 static void
 RefWinEventProc(
     ClientData clientData,	/* Busy window record */
-    register XEvent *eventPtr)	/* Event which triggered call to routine */
+    XEvent *eventPtr)	/* Event which triggered call to routine */
 {
-    register Busy *busyPtr = clientData;
+    Busy *busyPtr = (Busy *)clientData;
 
     switch (eventPtr->type) {
     case ReparentNotify:
@@ -333,7 +335,7 @@ static void
 DestroyBusy(
     void *data)			/* Busy window structure record */
 {
-    register Busy *busyPtr = data;
+    Busy *busyPtr = (Busy *)data;
 
     if (busyPtr->hashPtr != NULL) {
 	Tcl_DeleteHashEntry(busyPtr->hashPtr);
@@ -377,7 +379,7 @@ BusyEventProc(
     ClientData clientData,	/* Busy window record */
     XEvent *eventPtr)		/* Event which triggered call to routine */
 {
-    Busy *busyPtr = clientData;
+    Busy *busyPtr = (Busy *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	busyPtr->tkBusy = NULL;
@@ -527,10 +529,10 @@ CreateBusy(
     Window parent;
     Tk_FakeWin *winPtr;
 
-    busyPtr = ckalloc(sizeof(Busy));
+    busyPtr = (Busy *)ckalloc(sizeof(Busy));
     x = y = 0;
     length = strlen(Tk_Name(tkRef));
-    name = ckalloc(length + 6);
+    name = (char *)ckalloc(length + 6);
     if (Tk_IsTopLevel(tkRef)) {
 	fmt = "_Busy";		/* Child */
 	tkParent = tkRef;
@@ -696,7 +698,7 @@ GetBusy(
 		Tcl_GetString(windowObj), NULL);
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Busy *)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -746,7 +748,7 @@ HoldBusy(
 	Tcl_SetHashValue(hPtr, busyPtr);
 	busyPtr->hashPtr = hPtr;
     } else {
-	busyPtr = Tcl_GetHashValue(hPtr);
+	busyPtr = (Busy *)Tcl_GetHashValue(hPtr);
     }
 
     busyPtr->tablePtr = busyTablePtr;
@@ -792,7 +794,7 @@ Tk_BusyObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     Tcl_HashTable *busyTablePtr = &((TkWindow *) tkwin)->mainPtr->busyTable;
     Busy *busyPtr;
     Tcl_Obj *objPtr;
@@ -894,7 +896,7 @@ Tk_BusyObjCmd(
 	objPtr = Tcl_NewObj();
 	for (hPtr = Tcl_FirstHashEntry(busyTablePtr, &cursor); hPtr != NULL;
 		hPtr = Tcl_NextHashEntry(&cursor)) {
-	    busyPtr = Tcl_GetHashValue(hPtr);
+	    busyPtr = (Busy *)Tcl_GetHashValue(hPtr);
 	    if (pattern == NULL ||
 		    Tcl_StringCaseMatch(Tk_PathName(busyPtr->tkRef), pattern, 0)) {
 		Tcl_ListObjAppendElement(interp, objPtr,

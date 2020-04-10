@@ -108,6 +108,11 @@ Tk_UpdatePointer(
     int x, int y,		/* Pointer location in root coords. */
     int state)			/* Modifier state mask. */
 {
+  (void)tkwin;
+  (void)x;
+  (void)y;
+  (void)state;
+
   /*
    * This function intentionally left blank
    */

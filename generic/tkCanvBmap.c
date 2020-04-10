@@ -422,6 +422,7 @@ DeleteBitmap(
     Display *display)		/* Display containing window for canvas. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if (bmapPtr->bitmap != None) {
 	Tk_FreeBitmap(display, bmapPtr->bitmap);
@@ -473,7 +474,6 @@ DeleteBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeBitmapBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -671,7 +671,6 @@ DisplayBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 BitmapToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -680,6 +679,7 @@ BitmapToPoint(
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = bmapPtr->header.x1;
     y1 = bmapPtr->header.y1;
@@ -728,7 +728,6 @@ BitmapToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 BitmapToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -738,6 +737,7 @@ BitmapToArea(
 				 * area. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= bmapPtr->header.x1)
 	    || (rectPtr[0] >= bmapPtr->header.x2)
@@ -893,6 +893,7 @@ BitmapToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -965,9 +966,7 @@ BitmapToPostscript(
 		x, y, width, height, -width);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, bgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -982,9 +981,7 @@ BitmapToPostscript(
 
     if (fgColor != NULL) {
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (width > 60000) {
@@ -1013,10 +1010,8 @@ BitmapToPostscript(
 		    (double) rowsThisTime, width, rowsThisTime);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
-		    0, curRow, width, rowsThisTime) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsBitmap(interp, canvas, bitmap, 0, curRow, width,
+		    rowsThisTime);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    Tcl_AppendToObj(psObj, "\n} imagemask\n", -1);

@@ -76,6 +76,8 @@ static void		DrawMenuButtonImageAndText(TkMenuButton *butPtr);
 Tk_ClassProcs tkpMenubuttonClass = {
     sizeof(Tk_ClassProcs),	/* size */
     TkMenuButtonWorldChanged,	/* worldChangedProc */
+	NULL,
+	NULL
 };
 
 /*
@@ -133,7 +135,7 @@ TkMenuButton *
 TkpCreateMenuButton(
     Tk_Window tkwin)
 {
-    MacMenuButton *mbPtr = (MacMenuButton *) ckalloc(sizeof(MacMenuButton));
+    MacMenuButton *mbPtr = (MacMenuButton *)ckalloc(sizeof(MacMenuButton));
 
     Tk_CreateEventHandler(tkwin, ActivateMask, MenuButtonEventProc, mbPtr);
     mbPtr->flags = FIRST_DRAW;
@@ -222,7 +224,7 @@ TkpDisplayMenuButton(
 
 void
 TkpDestroyMenuButton(
-    TkMenuButton *mbPtr)
+    TCL_UNUSED(TkMenuButton *))
 {
 }
 
@@ -393,7 +395,7 @@ DrawMenuButtonImageAndText(
     DrawParams *dpPtr = &mbPtr->drawParams;
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
-    if (butPtr->image != None) {
+    if (butPtr->image != NULL) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {
@@ -544,8 +546,7 @@ DrawMenuButtonImageAndText(
 static void
 TkMacOSXDrawMenuButton(
     MacMenuButton *mbPtr, /* Mac menubutton. */
-    GC gc,                /* The GC we are drawing into - needed for the bevel
-                           * button */
+    TCL_UNUSED(GC),       /* The GC we are drawing into - not used */
     Pixmap pixmap)        /* The pixmap we are drawing into - needed for the
                            * bevel button */
 {
@@ -625,8 +626,8 @@ TkMacOSXDrawMenuButton(
 static void
 MenuButtonBackgroundDrawCB (
     MacMenuButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkMenuButton* butPtr = (TkMenuButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;
@@ -658,11 +659,11 @@ MenuButtonBackgroundDrawCB (
 
 static void
 MenuButtonContentDrawCB (
-    ThemeButtonKind kind,
-    const HIThemeButtonDrawInfo *drawinfo,
+    TCL_UNUSED(ThemeButtonKind),
+    TCL_UNUSED(const HIThemeButtonDrawInfo *),
     MacMenuButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkMenuButton *butPtr = (TkMenuButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;

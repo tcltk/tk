@@ -178,7 +178,7 @@ Tk_CreateOptionTable(
     const Tk_OptionSpec *specPtr, *specPtr2;
     Option *optionPtr;
     size_t numOptions, i;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -202,7 +202,7 @@ Tk_CreateOptionTable(
     hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->hashTable, (char *) templatePtr,
 	    &newEntry);
     if (!newEntry) {
-	tablePtr = Tcl_GetHashValue(hashEntryPtr);
+	tablePtr = (OptionTable *)Tcl_GetHashValue(hashEntryPtr);
 	tablePtr->refCount++;
 	return (Tk_OptionTable) tablePtr;
     }
@@ -216,7 +216,7 @@ Tk_CreateOptionTable(
     for (specPtr = templatePtr; specPtr->type != TK_OPTION_END; specPtr++) {
 	numOptions++;
     }
-    tablePtr = ckalloc(sizeof(OptionTable) + (numOptions * sizeof(Option)));
+    tablePtr = (OptionTable *)ckalloc(sizeof(OptionTable) + (numOptions * sizeof(Option)));
     tablePtr->refCount = 1;
     tablePtr->hashEntryPtr = hashEntryPtr;
     tablePtr->nextPtr = NULL;
@@ -266,7 +266,7 @@ Tk_CreateOptionTable(
 		    || (specPtr->type == TK_OPTION_BORDER))
 		    && (specPtr->clientData != NULL)) {
 		optionPtr->extra.monoColorPtr =
-			Tcl_NewStringObj(specPtr->clientData, -1);
+			Tcl_NewStringObj((const char *)specPtr->clientData, -1);
 		Tcl_IncrRefCount(optionPtr->extra.monoColorPtr);
 	    }
 
@@ -275,7 +275,7 @@ Tk_CreateOptionTable(
 		 * Get the custom parsing, etc., functions.
 		 */
 
-		optionPtr->extra.custom = specPtr->clientData;
+		optionPtr->extra.custom = (const Tk_ObjCustomOption *)specPtr->clientData;
 	    }
 	}
 	if (((specPtr->type == TK_OPTION_STRING)
@@ -300,7 +300,7 @@ Tk_CreateOptionTable(
 
     if (specPtr->clientData != NULL) {
 	tablePtr->nextPtr = (OptionTable *)
-		Tk_CreateOptionTable(interp, specPtr->clientData);
+		Tk_CreateOptionTable(interp, (Tk_OptionSpec *)specPtr->clientData);
     }
 
     return (Tk_OptionTable) tablePtr;
@@ -664,7 +664,7 @@ DoObjConfig(
 	if (internalPtr != NULL) {
 	    if (valuePtr != NULL) {
 		value = TkGetStringFromObj(valuePtr, &length);
-		newStr = ckalloc(length + 1);
+		newStr = (char *)ckalloc(length + 1);
 		strcpy(newStr, value);
 	    } else {
 		newStr = NULL;
@@ -883,7 +883,7 @@ DoObjConfig(
 	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 
 	if (custom->setProc(custom->clientData, interp, tkwin,
-		&valuePtr, recordPtr, optionPtr->specPtr->internalOffset,
+		&valuePtr, (char *)recordPtr, optionPtr->specPtr->internalOffset,
 		(char *)oldInternalPtr, optionPtr->specPtr->flags) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1165,9 +1165,9 @@ TkGetOptionSpec(
 
 static void
 FreeOptionInternalRep(
-    register Tcl_Obj *objPtr)	/* Object whose internal rep to free. */
+    Tcl_Obj *objPtr)	/* Object whose internal rep to free. */
 {
-    register Tk_OptionTable tablePtr = (Tk_OptionTable) objPtr->internalRep.twoPtrValue.ptr1;
+    Tk_OptionTable tablePtr = (Tk_OptionTable) objPtr->internalRep.twoPtrValue.ptr1;
 
     Tk_DeleteOptionTable(tablePtr);
     objPtr->typePtr = NULL;
@@ -1191,7 +1191,7 @@ DupOptionInternalRep(
     Tcl_Obj *srcObjPtr,		/* The object we are copying from. */
     Tcl_Obj *dupObjPtr)		/* The object we are copying to. */
 {
-    register OptionTable *tablePtr = (OptionTable *) srcObjPtr->internalRep.twoPtrValue.ptr1;
+    OptionTable *tablePtr = (OptionTable *) srcObjPtr->internalRep.twoPtrValue.ptr1;
     tablePtr->refCount++;
     dupObjPtr->typePtr = srcObjPtr->typePtr;
     dupObjPtr->internalRep = srcObjPtr->internalRep;
@@ -1288,7 +1288,7 @@ Tk_SetOptions(
 	     * more space.
 	     */
 
-	    newSavePtr = ckalloc(sizeof(Tk_SavedOptions));
+	    newSavePtr = (Tk_SavedOptions *)ckalloc(sizeof(Tk_SavedOptions));
 	    newSavePtr->recordPtr = recordPtr;
 	    newSavePtr->tkwin = tkwin;
 	    newSavePtr->numItems = 0;
@@ -1400,7 +1400,7 @@ Tk_RestoreSavedOptions(
 		    = savePtr->items[i].valuePtr;
 	}
 	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
-	    register char *ptr = (char *) &savePtr->items[i].internalForm;
+	    char *ptr = (char *) &savePtr->items[i].internalForm;
 
 	    CLANG_ASSERT(internalPtr);
 	    switch (specPtr->type) {
@@ -1458,7 +1458,7 @@ Tk_RestoreSavedOptions(
 
 		if (custom->restoreProc != NULL) {
 		    custom->restoreProc(custom->clientData, savePtr->tkwin,
-			    internalPtr, ptr);
+			    (char *)internalPtr, ptr);
 		}
 		break;
 	    }
@@ -1529,7 +1529,6 @@ Tk_FreeSavedOptions(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 Tk_FreeConfigOptions(
     void *recordPtr,		/* Record whose fields contain current values
@@ -1679,7 +1678,7 @@ FreeResources(
     case TK_OPTION_CUSTOM: {
 	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 	if (internalFormExists && custom->freeProc != NULL) {
-	    custom->freeProc(custom->clientData, tkwin, internalPtr);
+	    custom->freeProc(custom->clientData, tkwin, (char *)internalPtr);
 	}
 	break;
     }
@@ -1969,7 +1968,7 @@ GetObjectForOption(
     case TK_OPTION_CUSTOM: {
 	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 
-	objPtr = custom->getProc(custom->clientData, tkwin, recordPtr,
+	objPtr = custom->getProc(custom->clientData, tkwin, (char *)recordPtr,
 		optionPtr->specPtr->internalOffset);
 	break;
     }
@@ -2066,7 +2065,7 @@ Tk_GetOptionValue(
 
 Tcl_Obj *
 TkDebugConfig(
-    Tcl_Interp *interp,		/* Interpreter in which the table is
+    Tcl_Interp *dummy,		/* Interpreter in which the table is
 				 * defined. */
     Tk_OptionTable table)	/* Table about which information is to be
 				 * returned. May not necessarily exist in the
@@ -2076,8 +2075,9 @@ TkDebugConfig(
     Tcl_HashEntry *hashEntryPtr;
     Tcl_HashSearch search;
     Tcl_Obj *objPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     objPtr = Tcl_NewObj();
     if (!tablePtr || !tsdPtr->initialized) {

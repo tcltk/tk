@@ -570,6 +570,7 @@ DeleteText(
     Display *display)		/* Display containing window for canvas. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
+    (void)canvas;
 
     if (textPtr->color != NULL) {
 	Tk_FreeColor(textPtr->color);
@@ -838,7 +839,7 @@ DisplayCanvText(
     }
 
     selFirstChar = -1;
-    selLastChar = 0;		/* lint. */
+    selLastChar = 0;
     Tk_CanvasDrawableCoords(canvas, textPtr->drawOrigin[0],
 	    textPtr->drawOrigin[1], &drawableX, &drawableY);
 
@@ -1031,7 +1032,7 @@ TextInsert(
 	return;
     }
 
-    newStr = ckalloc(textPtr->numBytes + byteCount + 1);
+    newStr = (char *)ckalloc(textPtr->numBytes + byteCount + 1);
     memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
@@ -1112,7 +1113,7 @@ TextDeleteChars(
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
-    newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
+    newStr = (char *)ckalloc(textPtr->numBytes + 1 - byteCount);
     memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
@@ -1300,7 +1301,6 @@ RotateText(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ScaleText(
     Tk_Canvas canvas,		/* Canvas containing rectangle. */
@@ -1380,16 +1380,26 @@ GetTextIndex(
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    TkSizeT length;
+    TkSizeT length, idx;
     int c;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    const char *string = TkGetStringFromObj(obj, &length);
+    const char *string;
+    (void)canvas;
 
+    if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > (TkSizeT)textPtr->numChars) {
+	    idx = textPtr->numChars;
+	}
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(obj, &length);
     c = string[0];
 
-    if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
-	*indexPtr = textPtr->numChars;
-    } else if ((c == 'i')
+    if ((c == 'i')
 	    && (strncmp(string, "insert", length) == 0)) {
 	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (length >= 5)
@@ -1432,12 +1442,6 @@ GetTextIndex(
 	y -= (int) textPtr->drawOrigin[1];
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
 		(int) (x*c - y*s), (int) (y*c + x*s));
-    } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
-	if (*indexPtr < 0) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > textPtr->numChars) {
-	    *indexPtr = textPtr->numChars;
-	}
     } else {
 	/*
 	 * Some of the paths here leave messages in the interp's result, so we
@@ -1468,7 +1472,6 @@ GetTextIndex(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 SetTextCursor(
     Tk_Canvas canvas,		/* Record describing canvas widget. */
@@ -1478,6 +1481,7 @@ SetTextCursor(
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
+    (void)canvas;
 
     if (index < 0) {
 	textPtr->insertPos = 0;
@@ -1524,6 +1528,7 @@ GetSelText(
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
+    (void)canvas;
 
     if ((textInfoPtr->selectFirst < 0) ||
 	    (textInfoPtr->selectFirst > textInfoPtr->selectLast)) {
@@ -1629,9 +1634,7 @@ TextToPostscript(
     }
 
     Tcl_ResetResult(interp);
-    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	goto error;
-    }
+    Tk_CanvasPsColor(interp, canvas, color);
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     if (stipple != None) {
@@ -1641,7 +1644,7 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;	/* lint. */
+    x = 0;  y = 0;  justify = NULL;
     switch (textPtr->anchor) {
     case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;

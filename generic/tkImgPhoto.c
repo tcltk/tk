@@ -219,11 +219,12 @@ static const char *	GetExtension(const char *path);
 
 static void
 PhotoFormatThreadExitProc(
-    ClientData clientData)	/* not used */
+    ClientData dummy)	/* not used */
 {
     Tk_PhotoImageFormat *freePtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     while (tsdPtr->oldFormatList != NULL) {
 	freePtr = tsdPtr->oldFormatList;
@@ -265,14 +266,14 @@ Tk_CreateOldPhotoImageFormat(
 				 * by caller. */
 {
     Tk_PhotoImageFormat *copyPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
-    copyPtr = ckalloc(sizeof(Tk_PhotoImageFormat));
+    copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     copyPtr->nextPtr = tsdPtr->oldFormatList;
     tsdPtr->oldFormatList = copyPtr;
@@ -286,21 +287,21 @@ Tk_CreatePhotoImageFormat(
 				 * by caller. */
 {
     Tk_PhotoImageFormat *copyPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
-    copyPtr = ckalloc(sizeof(Tk_PhotoImageFormat));
+    copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     if (isupper((unsigned char) *formatPtr->name)) {
 	copyPtr->nextPtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = copyPtr;
     } else {
 	/* for compatibility with aMSN: make a copy of formatPtr->name */
-	char *name = ckalloc(strlen(formatPtr->name) + 1);
+	char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
 	strcpy(name, formatPtr->name);
 	copyPtr->name = name;
 	copyPtr->nextPtr = tsdPtr->formatList;
@@ -340,12 +341,13 @@ ImgPhotoCreate(
 				 * will be returned in later callbacks. */
 {
     PhotoMaster *masterPtr;
+    (void)typePtr;
 
     /*
      * Allocate and initialize the photo image master record.
      */
 
-    masterPtr = ckalloc(sizeof(PhotoMaster));
+    masterPtr = (PhotoMaster *)ckalloc(sizeof(PhotoMaster));
     memset(masterPtr, 0, sizeof(PhotoMaster));
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
@@ -404,7 +406,7 @@ ImgPhotoCmd(
 	PHOTO_WRITE
     };
 
-    PhotoMaster *masterPtr = clientData;
+    PhotoMaster *masterPtr = (PhotoMaster *)clientData;
     int result, index, x, y, width, height;
     struct SubcommandOptions options;
     unsigned char *pixelPtr;
@@ -414,7 +416,7 @@ ImgPhotoCmd(
     int imageWidth, imageHeight, matched, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
@@ -768,7 +770,7 @@ ImgPhotoCmd(
 		    Tk_PhotoImageBlock *blockPtr);
 
 	    Tcl_DStringInit(&buffer);
-	    result = ((OldStringWriteProc) stringWriteProc)(interp, &buffer,
+	    result = ((OldStringWriteProc)(void *)stringWriteProc)(interp, &buffer,
 		    Tcl_GetString(options.format), &block);
 	    if (result == TCL_OK) {
 		Tcl_DStringResult(interp, &buffer);
@@ -780,7 +782,7 @@ ImgPhotoCmd(
 		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
 		    void *dummy);
 
-	    result = ((NewStringWriteProc) stringWriteProc)(interp,
+	    result = ((NewStringWriteProc)(void *)stringWriteProc)(interp,
 		    options.format, &block, NULL);
 	}
 	if (options.background) {
@@ -1765,7 +1767,7 @@ ImgPhotoConfigureMaster(
     Tk_PhotoImageFormat *imageFormat;
     const char **args;
 
-    args = ckalloc((objc + 1) * sizeof(char *));
+    args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
 	args[j] = TkGetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
@@ -2105,7 +2107,7 @@ ImgPhotoDelete(
     ClientData masterData)	/* Pointer to PhotoMaster structure for image.
 				 * Must not have any more instances. */
 {
-    PhotoMaster *masterPtr = masterData;
+    PhotoMaster *masterPtr = (PhotoMaster *)masterData;
     PhotoInstance *instancePtr;
 
     while ((instancePtr = masterPtr->instancePtr) != NULL) {
@@ -2157,7 +2159,7 @@ ImgPhotoCmdDeletedProc(
     ClientData clientData)	/* Pointer to PhotoMaster structure for
 				 * image. */
 {
-    PhotoMaster *masterPtr = clientData;
+    PhotoMaster *masterPtr = (PhotoMaster *)clientData;
 
     masterPtr->imageCmd = NULL;
     if (masterPtr->tkMaster != NULL) {
@@ -2230,7 +2232,7 @@ ImgPhotoSetSize(
 	if (newPixSize == 0) {
 	    newPix32 = NULL;
 	} else {
-	    newPix32 = attemptckalloc(newPixSize);
+	    newPix32 = (unsigned char *)attemptckalloc(newPixSize);
 	    if (newPix32 == NULL) {
 		return TCL_ERROR;
 	    }
@@ -2393,7 +2395,7 @@ MatchFileFormat(
 {
     int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *formatString = NULL;
 
@@ -2533,7 +2535,7 @@ MatchStringFormat(
 {
     int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr, *defaultFormatPtr = NULL;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *formatString = NULL;
 
@@ -2743,7 +2745,7 @@ Tk_PhotoPutBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    register PhotoMaster *masterPtr = (PhotoMaster *) handle;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
     Tk_PhotoImageBlock sourceBlock;
     unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
@@ -2791,7 +2793,7 @@ Tk_PhotoPutBlock(
     if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
+	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(sourceBlock.height
 		* sourceBlock.pitch);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
@@ -3084,10 +3086,10 @@ Tk_PhotoPutBlock(
 	 */
 
 	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
-	    register int x1;
+	    int x1;
 
 	    for (x1=x ; x1<x+width ; x1++) {
-		register unsigned char newAlpha;
+		unsigned char newAlpha;
 
 		destLinePtr = masterPtr->pix32 + (y*masterPtr->width + x1)*4;
 		newAlpha = destLinePtr[3];
@@ -3169,8 +3171,8 @@ Tk_PhotoPutZoomedBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    register PhotoMaster *masterPtr = (PhotoMaster *) handle;
-    register Tk_PhotoImageBlock sourceBlock;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
+    Tk_PhotoImageBlock sourceBlock;
     unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, blockWid, blockHt;
@@ -3225,7 +3227,7 @@ Tk_PhotoPutZoomedBlock(
     if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
+	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(sourceBlock.height
 		* sourceBlock.pitch);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
@@ -3845,7 +3847,7 @@ ImgGetPhoto(
 	if (blockPtr->height > (int)((UINT_MAX/newPixelSize)/blockPtr->width)) {
 	    return NULL;
 	}
-	data = attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
+	data = (char *)attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
 	if (data == NULL) {
 	    return NULL;
 	}
@@ -4027,6 +4029,8 @@ ImgPhotoPostscript(
     int prepass)		/* (unused) */
 {
     Tk_PhotoImageBlock block;
+    (void)tkwin;
+    (void)prepass;
 
     Tk_PhotoGetImage(clientData, &block);
     block.pixelPtr += y * block.pitch + x * block.pixelSize;

@@ -21,6 +21,8 @@ int
 _XInitImageFuncPtrs(
     XImage *image)
 {
+    (void)image;
+
     return 0;
 }
 
@@ -42,6 +44,9 @@ _XInitImageFuncPtrs(
  */
 
 static void ReleaseData(void *info, const void *data, size_t size) {
+    (void)data;
+    (void)size;
+
     ckfree(info);
 }
 
@@ -72,7 +77,7 @@ TkMacOSXCreateCGImageWithXImage(
 	if (image->bitmap_bit_order != MSBFirst) {
 	    char *srcPtr = image->data + image->xoffset;
 	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = ckalloc(len));
+	    char *destPtr = (data = (char *)ckalloc(len));
 
 	    while (srcPtr < endPtr) {
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
@@ -176,6 +181,7 @@ XGetImage(
     unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
     NSWindow *win = TkMacOSXDrawableWindow(drawable);
     static enum {unknown, no, yes} has_retina = unknown;
+    (void)plane_mask;
 
     if (win && has_retina == unknown) {
 #ifdef __clang__
@@ -212,7 +218,7 @@ XGetImage(
 	bitmap_fmt = [bitmap_rep bitmapFormat];
 	size = [bitmap_rep bytesPerPlane];
 	bytes_per_row = [bitmap_rep bytesPerRow];
-	bitmap = ckalloc(size);
+	bitmap = (char *)ckalloc(size);
 	if (!bitmap
 		|| (bitmap_fmt != 0 && bitmap_fmt != 1)
 		|| [bitmap_rep samplesPerPixel] != 4
@@ -451,9 +457,10 @@ XCreateImage(
     int bytes_per_line)
 {
     XImage *ximage;
+    (void)visual;
 
     display->request++;
-    ximage = ckalloc(sizeof(XImage));
+    ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
     ximage->width = width;

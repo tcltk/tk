@@ -86,6 +86,9 @@ extern "C" {
 #ifndef RC_INVOKED
 
 #if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
@@ -193,16 +196,16 @@ typedef struct Tk_OptionSpec {
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
 				 * record. Use the offsetof macro to generate
-				 * values for this. -1 means don't store the
-				 * Tcl_Obj in the record. */
+				 * values for this. TCL_AUTO_LENGTH means don't
+				 * store the Tcl_Obj in the record. */
     size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
 				 * such as an int or XColor *. This field is
 				 * specified as an offset in bytes from the
 				 * start of the record. Use the offsetof
-				 * macro to generate values for it. -1 means
-				 * don't store the internal representation in
-				 * the record. */
+				 * macro to generate values for it.
+				 * TCL_AUTO_LENGTH means don't store the
+				 * internal representation in the record. */
 #else
     int objOffset;
     int internalOffset;

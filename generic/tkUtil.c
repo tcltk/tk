@@ -48,7 +48,7 @@ int
 TkStateParseProc(
     ClientData clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
@@ -57,8 +57,7 @@ TkStateParseProc(
     int flags = PTR2INT(clientData);
     size_t length;
     Tcl_Obj *msgObj;
-
-    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
     if (value == NULL || *value == 0) {
 	*statePtr = TK_STATE_NULL;
@@ -126,15 +125,15 @@ TkStateParseProc(
 
 const char *
 TkStatePrintProc(
-    ClientData clientData,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
     switch (*statePtr) {
     case TK_STATE_NORMAL:
@@ -170,17 +169,16 @@ TkStatePrintProc(
 
 int
 TkOrientParseProc(
-    ClientData clientData,	/* some flags.*/
+    TCL_UNUSED(void *),	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
 {
     int c;
     size_t length;
-
-    register int *orientPtr = (int *) (widgRec + offset);
+    int *orientPtr = (int *) (widgRec + offset);
 
     if (value == NULL || *value == 0) {
 	*orientPtr = 0;
@@ -229,15 +227,15 @@ TkOrientParseProc(
 
 const char *
 TkOrientPrintProc(
-    ClientData clientData,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register int *statePtr = (int *) (widgRec + offset);
+    int *statePtr = (int *) (widgRec + offset);
 
     if (*statePtr) {
 	return "vertical";
@@ -299,6 +297,7 @@ TkOffsetParseProc(
 	    tsoffset.flags = INT_MAX;
 	    goto goodTSOffset;
 	}
+	break;
     case 'w':
 	if (value[1] != '\0') {goto badTSOffset;}
 	tsoffset.flags = TK_OFFSET_LEFT|TK_OFFSET_MIDDLE;
@@ -410,8 +409,8 @@ TkOffsetParseProc(
 
 const char *
 TkOffsetPrintProc(
-    ClientData clientData,	/* not used */
-    Tk_Window tkwin,		/* not used */
+    TCL_UNUSED(void *),	/* not used */
+    TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
     int offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
@@ -423,7 +422,7 @@ TkOffsetPrintProc(
 	if (offsetPtr->flags >= INT_MAX) {
 	    return "end";
 	}
-	p = ckalloc(32);
+	p = (char *)ckalloc(32);
 	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
@@ -453,7 +452,7 @@ TkOffsetPrintProc(
 	    return "se";
 	}
     }
-    q = p = ckalloc(32);
+    q = p = (char *)ckalloc(32);
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
@@ -511,14 +510,14 @@ TkPixelParseProc(
 
 const char *
 TkPixelPrintProc(
-    ClientData clientData,	/* not used */
-    Tk_Window tkwin,		/* not used */
+    TCL_UNUSED(void *),	/* not used */
+    TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
     int offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
-    char *p = ckalloc(24);
+    char *p = (char *)ckalloc(24);
 
     Tcl_PrintDouble(NULL, *doublePtr, p);
     *freeProcPtr = TCL_DYNAMIC;
@@ -1086,7 +1085,7 @@ TkBackgroundEvalObjv(
 Tcl_Command
 TkMakeEnsemble(
     Tcl_Interp *interp,
-    const char *namespace,
+    const char *namesp,
     const char *name,
     ClientData clientData,
     const TkEnsemble map[])
@@ -1103,11 +1102,11 @@ TkMakeEnsemble(
 
     Tcl_DStringInit(&ds);
 
-    namespacePtr = Tcl_FindNamespace(interp, namespace, NULL, 0);
+    namespacePtr = Tcl_FindNamespace(interp, namesp, NULL, 0);
     if (namespacePtr == NULL) {
-	namespacePtr = Tcl_CreateNamespace(interp, namespace, NULL, NULL);
+	namespacePtr = Tcl_CreateNamespace(interp, namesp, NULL, NULL);
 	if (namespacePtr == NULL) {
-	    Tcl_Panic("failed to create namespace \"%s\"", namespace);
+	    Tcl_Panic("failed to create namespace \"%s\"", namesp);
 	}
     }
 
@@ -1123,8 +1122,8 @@ TkMakeEnsemble(
     }
 
     Tcl_DStringSetLength(&ds, 0);
-    Tcl_DStringAppend(&ds, namespace, -1);
-    if (!(strlen(namespace) == 2 && namespace[1] == ':')) {
+    Tcl_DStringAppend(&ds, namesp, -1);
+    if (!(strlen(namesp) == 2 && namesp[1] == ':')) {
 	Tcl_DStringAppend(&ds, "::", -1);
     }
     Tcl_DStringAppend(&ds, name, -1);
@@ -1243,8 +1242,9 @@ TkUtfToUniChar(
  *
  * TkUniCharToUtf --
  *
- *	Almost the same as Tcl_UniCharToUtf but producing 4-byte UTF-8
- *	sequences even when TCL_UTF_MAX==3. So, up to 4 bytes might be produced.
+ *	Almost the same as Tcl_UniCharToUtf but producing 2 x 3-byte UTF-8
+ *	sequences for out-of-bmp characters when TCL_UTF_MAX==3.
+ *	So, up to 6 bytes might be produced.
  *
  * Results:
  *	*buf is filled with the UTF-8 string, and the return value is the
@@ -1258,16 +1258,13 @@ TkUtfToUniChar(
 
 size_t TkUniCharToUtf(int ch, char *buf)
 {
-    if (((unsigned)(ch - 0x10000) <= 0xFFFFF)) {
-	/* Spit out a 4-byte UTF-8 character */
-	*buf++ = (char) ((ch >> 18) | 0xF0);
-	*buf++ = (char) (((ch >> 12) | 0x80) & 0xBF);
-	*buf++ = (char) (((ch >> 6) | 0x80) & 0xBF);
-	*buf = (char) ((ch | 0x80) & 0xBF);
-	return 4;
-    } else {
-	return Tcl_UniCharToUtf(ch, buf);
+    if ((sizeof(Tcl_UniChar) == 2) && (((unsigned)(ch - 0x10000) <= 0xFFFFF))) {
+	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
+	 * version and/or TCL_UTF_MAX build value */
+	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
+	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
     }
+    return Tcl_UniCharToUtf(ch, buf);
 }
 
 

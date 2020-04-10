@@ -99,7 +99,7 @@ Tk_BellObjCmd(
 	"-displayof", "-nice", NULL
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     int i, index, nice = 0;
     Tk_ErrorHandler handler;
 
@@ -163,7 +163,7 @@ Tk_BindObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
     ClientData object;
     const char *string;
@@ -187,7 +187,7 @@ Tk_BindObjCmd(
 	}
 	object = (ClientData) winPtr->pathName;
     } else {
-	winPtr = clientData;
+	winPtr = (TkWindow *)clientData;
 	object = (ClientData) Tk_GetUid(string);
     }
 
@@ -285,10 +285,10 @@ TkBindEventProc(
 	 */
 
 	if (winPtr->numTags > MAX_OBJS) {
-	    objPtr = ckalloc(winPtr->numTags * sizeof(ClientData));
+	    objPtr = (void **)ckalloc(winPtr->numTags * sizeof(void *));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
-	    p = winPtr->tagPtr[i];
+	    p = (const char *)winPtr->tagPtr[i];
 	    if (*p == '.') {
 		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->nameTable, p);
 		if (hPtr != NULL) {
@@ -347,7 +347,7 @@ Tk_BindtagsObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr, *winPtr2;
     int i, length;
     const char *p;
@@ -399,7 +399,7 @@ Tk_BindtagsObjCmd(
     }
 
     winPtr->numTags = length;
-    winPtr->tagPtr = ckalloc(length * sizeof(ClientData));
+    winPtr->tagPtr = (void **)ckalloc(length * sizeof(void *));
     for (i = 0; i < length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
@@ -412,7 +412,7 @@ Tk_BindtagsObjCmd(
 	     * is one.
 	     */
 
-	    copy = ckalloc(strlen(p) + 1);
+	    copy = (char *)ckalloc(strlen(p) + 1);
 	    strcpy(copy, p);
 	    winPtr->tagPtr[i] = (ClientData) copy;
 	} else {
@@ -448,7 +448,7 @@ TkFreeBindingTags(
     const char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
-	p = winPtr->tagPtr[i];
+	p = (const char *)winPtr->tagPtr[i];
 	if (*p == '.') {
 	    /*
 	     * Names starting with "." are malloced rather than Uids, so they
@@ -488,7 +488,7 @@ Tk_DestroyObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window window;
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     int i;
 
     for (i = 1; i < objc; i++) {
@@ -527,7 +527,6 @@ Tk_DestroyObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_LowerObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -535,7 +534,7 @@ Tk_LowerObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window mainwin = clientData;
+    Tk_Window mainwin = (Tk_Window)clientData;
     Tk_Window tkwin, other;
 
     if ((objc != 2) && (objc != 3)) {
@@ -587,7 +586,6 @@ Tk_LowerObjCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_RaiseObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -595,7 +593,7 @@ Tk_RaiseObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window mainwin = clientData;
+    Tk_Window mainwin = (Tk_Window)clientData;
     Tk_Window tkwin, other;
 
     if ((objc != 2) && (objc != 3)) {
@@ -683,7 +681,7 @@ AppnameCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
     const char *string;
 
@@ -715,7 +713,7 @@ CaretCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     int index;
     Tcl_Obj *objPtr;
     TkCaret *caretPtr;
@@ -807,7 +805,7 @@ ScalingCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     Screen *screenPtr;
     int skip, width, height;
     double d;
@@ -858,7 +856,7 @@ UseinputmethodsCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkDisplay *dispPtr;
     int skip;
 
@@ -899,12 +897,13 @@ UseinputmethodsCmd(
 
 int
 WindowingsystemCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    ClientData dummy,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     const char *windowingsystem;
+    (void)dummy;
 
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
@@ -928,7 +927,7 @@ InactiveCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     int skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
 
     if (skip < 0) {
@@ -984,7 +983,6 @@ InactiveCmd(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_TkwaitObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
@@ -992,7 +990,7 @@ Tk_TkwaitObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     int done, index;
     int code = TCL_OK;
     static const char *const optionStrings[] = {
@@ -1113,28 +1111,30 @@ Tk_TkwaitObjCmd(
     return code;
 }
 
-	/* ARGSUSED */
 static char *
 WaitVariableProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
-    Tcl_Interp *interp,		/* Interpreter containing variable. */
+    Tcl_Interp *dummy,		/* Interpreter containing variable. */
     const char *name1,		/* Name of variable. */
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    int *donePtr = clientData;
+    int *donePtr = (int *)clientData;
+    (void)dummy;
+    (void)name1;
+    (void)name2;
+    (void)flags;
 
     *donePtr = 1;
     return NULL;
 }
 
-	/*ARGSUSED*/
 static void
 WaitVisibilityProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
     XEvent *eventPtr)		/* Information about event (not used). */
 {
-    int *donePtr = clientData;
+    int *donePtr = (int *)clientData;
 
     if (eventPtr->type == VisibilityNotify) {
 	*donePtr = 1;
@@ -1148,7 +1148,7 @@ WaitWindowProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    int *donePtr = clientData;
+    int *donePtr = (int *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	*donePtr = 1;
@@ -1172,10 +1172,9 @@ WaitWindowProc(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 Tk_UpdateObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    ClientData dummy,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1184,6 +1183,7 @@ Tk_UpdateObjCmd(
     int flags, index;
     TkDisplay *dispPtr;
     int code = TCL_OK;
+    (void)dummy;
 
     if (objc == 1) {
 	flags = TCL_DONT_WAIT;
@@ -1281,7 +1281,7 @@ Tk_WinfoObjCmd(
     int index, x, y, width, height, useX, useY, c_class, skip;
     const char *string;
     TkWindow *winPtr;
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
 
     static const TkStateMap visualMap[] = {
 	{PseudoColor,	"pseudocolor"},
@@ -1751,7 +1751,7 @@ Tk_WinfoObjCmd(
 	break;
     }
     case WIN_VISUALSAVAILABLE: {
-	XVisualInfo template, *visInfoPtr;
+	XVisualInfo templ, *visInfoPtr;
 	int count, i;
 	int includeVisualId;
 	Tcl_Obj *strPtr, *resultPtr;
@@ -1772,9 +1772,9 @@ Tk_WinfoObjCmd(
 	    return TCL_ERROR;
 	}
 
-	template.screen = Tk_ScreenNumber(tkwin);
+	templ.screen = Tk_ScreenNumber(tkwin);
 	visInfoPtr = XGetVisualInfo(Tk_Display(tkwin), VisualScreenMask,
-		&template, &count);
+		&templ, &count);
 	if (visInfoPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't find any visuals for screen", -1));
@@ -1888,14 +1888,16 @@ TkGetDisplayOf(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkDeadAppObjCmd(
-    ClientData clientData,	/* Dummy. */
+    ClientData dummy,	/* Dummy. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
+	(void)dummy;
+	(void)objc;
+
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "can't invoke \"%s\" command: application has been destroyed",
 	    Tcl_GetString(objv[0])));

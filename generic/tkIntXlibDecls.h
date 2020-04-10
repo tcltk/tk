@@ -461,6 +461,13 @@ EXTERN XFontSet		XCreateFontSet(Display *display,
 				char **def_string);
 /* 156 */
 EXTERN void		XFreeStringList(char **list);
+/* 157 */
+EXTERN KeySym		XkbKeycodeToKeysym(Display *d, unsigned int k, int g,
+				int i);
+/* 158 */
+EXTERN Display *	XkbOpenDisplay(const char *name, int *ev_rtrn,
+				int *err_rtrn, int *major_rtrn,
+				int *minor_rtrn, int *reason);
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
 /* 0 */
@@ -874,6 +881,13 @@ EXTERN XFontSet		XCreateFontSet(Display *display,
 				char **def_string);
 /* 156 */
 EXTERN void		XFreeStringList(char **list);
+/* 157 */
+EXTERN KeySym		XkbKeycodeToKeysym(Display *d, unsigned int k, int g,
+				int i);
+/* 158 */
+EXTERN Display *	XkbOpenDisplay(const char *name, int *ev_rtrn,
+				int *err_rtrn, int *major_rtrn,
+				int *minor_rtrn, int *reason);
 #endif /* MACOSX */
 
 typedef struct TkIntXlibStubs {
@@ -1038,6 +1052,8 @@ typedef struct TkIntXlibStubs {
     char * (*xSetIMValues) (XIM im, ...); /* 154 */
     XFontSet (*xCreateFontSet) (Display *display, _Xconst char *base_font_name_list, char ***missing_charset_list, int *missing_charset_count, char **def_string); /* 155 */
     void (*xFreeStringList) (char **list); /* 156 */
+    KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
+    Display * (*xkbOpenDisplay) (const char *name, int *ev_rtrn, int *err_rtrn, int *major_rtrn, int *minor_rtrn, int *reason); /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1197,6 +1213,8 @@ typedef struct TkIntXlibStubs {
     char * (*xSetIMValues) (XIM im, ...); /* 154 */
     XFontSet (*xCreateFontSet) (Display *display, _Xconst char *base_font_name_list, char ***missing_charset_list, int *missing_charset_count, char **def_string); /* 155 */
     void (*xFreeStringList) (char **list); /* 156 */
+    KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
+    Display * (*xkbOpenDisplay) (const char *name, int *ev_rtrn, int *err_rtrn, int *major_rtrn, int *minor_rtrn, int *reason); /* 158 */
 #endif /* MACOSX */
 } TkIntXlibStubs;
 
@@ -1512,6 +1530,10 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xCreateFontSet) /* 155 */
 #define XFreeStringList \
 	(tkIntXlibStubsPtr->xFreeStringList) /* 156 */
+#define XkbKeycodeToKeysym \
+	(tkIntXlibStubsPtr->xkbKeycodeToKeysym) /* 157 */
+#define XkbOpenDisplay \
+	(tkIntXlibStubsPtr->xkbOpenDisplay) /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
 #define XSetDashes \
@@ -1813,11 +1835,19 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xCreateFontSet) /* 155 */
 #define XFreeStringList \
 	(tkIntXlibStubsPtr->xFreeStringList) /* 156 */
+#define XkbKeycodeToKeysym \
+	(tkIntXlibStubsPtr->xkbKeycodeToKeysym) /* 157 */
+#define XkbOpenDisplay \
+	(tkIntXlibStubsPtr->xkbOpenDisplay) /* 158 */
 #endif /* MACOSX */
 
 #endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC_OSX_TCL) /* X11, Except MacOS/Cygwin */
+EXTERN Display *XkbOpenDisplay(const char *, int *, int *, int *, int *, int *);
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

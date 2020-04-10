@@ -103,6 +103,9 @@ FileMatchPPM(
     Tcl_Interp *interp)		/* unused */
 {
     int dummy;
+    (void)fileName;
+    (void)format;
+    (void)interp;
 
     return ReadPPMFileHeader(chan, widthPtr, heightPtr, &dummy);
 }
@@ -145,6 +148,7 @@ FileReadPPM(
     size_t nBytes, count;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
+    (void)format;
 
     type = ReadPPMFileHeader(chan, &fileWidth, &fileHeight, &maxIntensity);
     if (type == 0) {
@@ -212,7 +216,7 @@ FileReadPPM(
 	nLines = 1;
     }
     nBytes = nLines * block.pitch;
-    pixelPtr = ckalloc(nBytes);
+    pixelPtr = (unsigned char *)ckalloc(nBytes);
     block.pixelPtr = pixelPtr + srcX * block.pixelSize;
 
     for (h = height; h > 0; h -= nLines) {
@@ -290,6 +294,7 @@ FileWritePPM(
     size_t nBytes;
     unsigned char *pixelPtr, *pixLinePtr;
     char header[16 + TCL_INTEGER_SPACE * 2];
+    (void)format;
 
     chan = Tcl_OpenFileChannel(interp, fileName, "w", 0666);
     if (chan == NULL) {
@@ -377,6 +382,7 @@ StringWritePPM(
     unsigned char *pixLinePtr, *byteArray;
     char header[16 + TCL_INTEGER_SPACE * 2];
     Tcl_Obj *byteArrayObj;
+    (void)format;
 
     sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
 
@@ -454,6 +460,8 @@ StringMatchPPM(
     Tcl_Interp *interp)		/* unused */
 {
     int dummy;
+    (void)format;
+    (void)interp;
 
     return ReadPPMStringHeader(dataObj, widthPtr, heightPtr,
 	    &dummy, NULL, NULL);
@@ -494,6 +502,7 @@ StringReadPPM(
     int nLines, nBytes, h, type, count, dataSize, bytesPerChannel = 1;
     unsigned char *pixelPtr, *dataBuffer;
     Tk_PhotoImageBlock block;
+    (void)format;
 
     type = ReadPPMStringHeader(dataObj, &fileWidth, &fileHeight,
 	    &maxIntensity, &dataBuffer, &dataSize);
@@ -580,7 +589,7 @@ StringReadPPM(
 	nLines = 1;
     }
     nBytes = nLines * block.pitch;
-    pixelPtr = ckalloc(nBytes);
+    pixelPtr = (unsigned char *)ckalloc(nBytes);
     block.pixelPtr = pixelPtr + srcX * block.pixelSize;
 
     for (h = height; h > 0; h -= nLines) {

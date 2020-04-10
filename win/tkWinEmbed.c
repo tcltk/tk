@@ -69,7 +69,7 @@ void
 TkWinCleanupContainerList(void)
 {
     Container *nextPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (; tsdPtr->firstContainerPtr != NULL;
@@ -96,14 +96,18 @@ TkWinCleanupContainerList(void)
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkpTestembedCmd(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
+
     return TCL_OK;
 }
 
@@ -371,7 +375,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = ckalloc(sizeof(Container));
+    containerPtr = (Container *)ckalloc(sizeof(Container));
     containerPtr->parentPtr = winPtr;
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
@@ -1050,6 +1054,8 @@ TkpRedirectKeyEvent(
     XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
+    (void)winPtr;
+    (void)eventPtr;
     /* not implemented */
 }
 

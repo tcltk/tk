@@ -142,10 +142,9 @@ TkTestLogDisplay(void) {
  *----------------------------------------------------------------------
  */
 
-        /* ARGSUSED */
 static int
 PressButtonObjCmd(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -157,6 +156,7 @@ PressButtonObjCmd(
     NSArray *screens = [NSScreen screens];
     CGFloat ScreenHeight = 0;
     enum {X=1, Y};
+    (void)dummy;
 
     if (screens && [screens count]) {
 	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
