@@ -334,11 +334,17 @@ InitFont(
      * Fill in platform-specific fields of TkFont.
      */
 
-    ftFont = GetFont(fontPtr, 0, 0.0);
-    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
+    errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
 		    -1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
-    errorFlag = 0;
+    ftFont = GetFont(fontPtr, 0, 0.0);
+    if ((ftFont == NULL) || errorFlag) {
+	Tk_DeleteErrorHandler(handler);
+	FinishedWithFont(fontPtr);
+	ckfree(fontPtr);
+	return NULL;
+    }
+    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
     GetTkFontAttributes(ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
     Tk_DeleteErrorHandler(handler);
