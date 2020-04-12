@@ -2808,7 +2808,7 @@ MatchPatterns(
 
 		    psEntry->expired = 1; /* remove it from promotion list */
 
-		    if ((modMask & ~curModMask) == 0) {
+		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
 
 			if (patIndex < PSModMaskArr_Size(psEntry->lastModMaskArr)) {
