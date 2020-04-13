@@ -711,12 +711,15 @@ Tk_MeasureChars(
     FcChar32 c;
     XGlyphInfo extents;
     int clen, curX, newX, curByte, newByte, sawNonSpace;
-    int termByte = 0, termX = 0;
+    int termByte = 0, termX = 0, errorFlag = 0;
+    Tk_ErrorHandler handler;
 #if DEBUG_FONTSEL
     char string[256];
     int len = 0;
 #endif /* DEBUG_FONTSEL */
 
+    handler = Tk_CreateErrorHandler(fontPtr->display,
+	    -1, -1, -1, InitFontErrorProc, &errorFlag);
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
@@ -752,7 +755,12 @@ Tk_MeasureChars(
 #endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c, 0.0);
 
-	XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	if (!errorFlag) {
+	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	} else {
+	    extents.xOff = 0;
+	    errorFlag = 0;
+	}
 
 	newX = curX + extents.xOff;
 	newByte = curByte + clen;
@@ -781,6 +789,7 @@ Tk_MeasureChars(
 	curX = newX;
 	curByte = newByte;
     }
+    Tk_DeleteErrorHandler(handler);
 #if DEBUG_FONTSEL
     string[len] = '\0';
     printf("MeasureChars %s length %d bytes %d\n", string, curX, curByte);
