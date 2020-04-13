@@ -1293,6 +1293,12 @@ DrawCharsInContext(
 
 	line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start));
 	startBounds = CTLineGetImageBounds(line, context);
+
+	/*
+	 * Expand the rectangle by half a pixel to allow room for anitaliasing.
+	 */
+
+	startBounds = CGRectInset(startBounds, -0.5, -0.5);
 	CFRelease(line);
 	clipRect.origin.x = startBounds.origin.x + startBounds.size.width;
 	CGContextClipToRect(context, clipRect);
