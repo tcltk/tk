@@ -102,7 +102,7 @@ static unsigned	isFunctionKey(unsigned int code);
 
     setupXEvent(&xEvent, tkwin, modifiers);
     Bool has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
-    
+
     /*
      * A KeyDown event received for the caret window which is not a function key
      * and has no modifiers other than Shift or Alt will be processed with the
@@ -140,7 +140,7 @@ static unsigned	isFunctionKey(unsigned int code);
 	    if (len > 0) {
 		code = [charactersIgnoringModifiers characterAtIndex:0];
 		has_modifiers = xEvent.xkey.state &
-		    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask); 
+		    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask);
 	    }
 	    break;
 	default:
@@ -154,11 +154,11 @@ static unsigned	isFunctionKey(unsigned int code);
 	      ([charactersIgnoringModifiers length] == 0) ? 0 :
 	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
-	
+
         if (type != NSKeyDown || !has_caret || isFunctionKey(code) || has_modifiers) {
 	    if (type == KeyPress && [theEvent isARepeat]) {
 
-		/* 
+		/*
 		 * Insert a KeyRelease XEvent before a repeated KeyPress.
 		 */
 
@@ -170,7 +170,7 @@ static unsigned	isFunctionKey(unsigned int code);
 	    /*
 	     * Queue the XEvent and return.
 	     */
-	    
+
             Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
             savedModifiers = modifiers;
             return theEvent;
@@ -182,7 +182,7 @@ static unsigned	isFunctionKey(unsigned int code);
      * for the caret window. Either way the event should be passed to
      * interpretKeyEvents.  But we only need to send KeyDown events.
      */
-    
+
     if (type == NSKeyDown) {
 	if (NS_KEYLOG) {
 	    TKLog(@"keyDown: %s compose sequence.\n",
@@ -243,8 +243,8 @@ static unsigned	isFunctionKey(unsigned int code);
     XEvent xEvent;
     NSString *str;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr; 
-    
+    Tk_Window tkwin = (Tk_Window) winPtr;
+
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
     len = [str length];
@@ -681,7 +681,7 @@ Tk_SetCaretPos(
     int height)
  {
     TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
-    
+
     /*
      * Prevent processing anything if the values haven't changed. Windows only
      * has one display, so we can do this with statics.
