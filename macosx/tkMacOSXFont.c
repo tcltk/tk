@@ -1244,18 +1244,19 @@ DrawCharsInContext(
     NSAttributedString *attributedString;
     CTTypesetterRef typesetter;
     CFIndex start, len;
-    CTLineRef line;
+    CTLineRef line, full=nil;
     MacDrawable *macWin = (MacDrawable *) drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
     CGColorRef fg;
     NSFont *nsFont;
     CGAffineTransform t;
+    CGFloat width;
     int h;
 
-    if (rangeStart < 0 || rangeLength <= 0 ||
-	    rangeStart + rangeLength > numBytes ||
-	    !TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
+    if (rangeStart < 0 || rangeLength <= 0  ||
+	rangeStart + rangeLength > numBytes ||
+	!TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
     string = TkUtfToNSString((const char *)source, numBytes);
@@ -1285,25 +1286,24 @@ DrawCharsInContext(
 		CGAffineTransformTranslate(t, x, y), angle*PI/180.0), -x, -y);
     }
     CGContextConcatCTM(context, t);
-    CGContextSetTextPosition(context, x, y);
     start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source, rangeStart + rangeLength);
+    len = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
+    line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, len));
     if (start > 0) {
-	CGRect clipRect = CGRectInfinite, startBounds;
-
-	line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start));
-	startBounds = CTLineGetImageBounds(line, context);
-
+	
 	/*
-	 * Expand the rectangle by half a pixel to allow room for anitaliasing.
+	 * We are only drawing part of the string.  To compute the x coordinate
+	 * of the part we are drawing we subtract its typographical length from
+	 * the typographical length of the full string.  This accounts for the
+	 * kerning after the initial part of the string.
 	 */
 
-	startBounds = CGRectInset(startBounds, -0.5, -0.5);
-	CFRelease(line);
-	clipRect.origin.x = startBounds.origin.x + startBounds.size.width;
-	CGContextClipToRect(context, clipRect);
+	full = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start + len));
+	width = CTLineGetTypographicBounds(full, NULL, NULL, NULL);
+	CFRelease(full);
+	x += (width - CTLineGetTypographicBounds(line, NULL, NULL, NULL));
     }
-    line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, len));
+    CGContextSetTextPosition(context, x, y);
     CTLineDraw(line, context);
     CFRelease(line);
     CFRelease(typesetter);
