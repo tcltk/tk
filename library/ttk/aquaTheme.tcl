@@ -156,8 +156,10 @@ namespace eval ttk::theme::aqua {
 		selected systemSelectedTextBackgroundColor
 	    }
 
-	# Enable animation for ttk::progressbar widget:
-	ttk::style configure TProgressbar -period 100 -maxphase 255
+	# Enable animation for ttk::progressbar widget on older systems:
+	if { [::tk::mac::macOSMinorVersion] < 11sud } {
+	    ttk::style configure TProgressbar -period 100 -maxphase 255
+	}
 
 	# For Aqua, labelframe labels should appear outside the border,
 	# with a 14 pixel inset and 4 pixels spacing between border and label
