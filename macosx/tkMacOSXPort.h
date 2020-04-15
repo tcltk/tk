@@ -146,7 +146,7 @@
 /*
  * The following macro returns the pixel value that corresponds to the
  * 16-bit RGB values in the given XColor structure.
- * The format is: (PIXEL_MAGIC <<< 24) | (R << 16) | (G << 8) | B
+ * The format is: (PIXEL_MAGIC << 24) | (R << 16) | (G << 8) | B
  * where each of R, G and B is the high order byte of a 16-bit component.
  */
 
