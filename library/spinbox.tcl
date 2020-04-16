@@ -280,14 +280,27 @@ bind Spinbox <Meta-Delete> {
 
 # A few additional bindings of my own.
 
-bind Spinbox <2> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanMark %W %x
+if {[tk windowingsystem] ne "aqua"} {
+    bind Spinbox <2> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
     }
-}
-bind Spinbox <B2-Motion> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanDrag %W %x
+    bind Spinbox <B2-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
+    }
+} else {
+    bind Spinbox <3> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
+    }
+    bind Spinbox <B3-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
     }
 }
 
