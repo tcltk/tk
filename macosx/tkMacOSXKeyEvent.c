@@ -128,14 +128,15 @@ static unsigned	isFunctionKey(unsigned int code);
 	    xEvent.xkey.keycode = (modifiers ^ savedModifiers);
 	    break;
 	case NSKeyUp:
+	    characters = [theEvent characters];
 	    xEvent.xany.type = KeyRelease;
 	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
 	    break;
 	case NSKeyDown:
-	    xEvent.xany.type = KeyPress;
-	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
 	    characters = [theEvent characters];
 	    charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
+	    xEvent.xany.type = KeyPress;
+	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
 	    len = [charactersIgnoringModifiers length];
 	    if (len > 0) {
 		code = [charactersIgnoringModifiers characterAtIndex:0];
@@ -149,14 +150,14 @@ static unsigned	isFunctionKey(unsigned int code);
 
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d",
-	      [self class], self, _cmd, repeat, modifiers, characters,
-	      charactersIgnoringModifiers, keyCode,
+	      [self class], self, _cmd, (type == NSKeyDown) && [theEvent isARepeat],
+	      modifiers, characters, charactersIgnoringModifiers, keyCode,
 	      ([charactersIgnoringModifiers length] == 0) ? 0 :
 	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
 
         if (type != NSKeyDown || !has_caret || isFunctionKey(code) || has_modifiers) {
-	    if (type == KeyPress && [theEvent isARepeat]) {
+	    if (type == NSKeyDown && [theEvent isARepeat]) {
 
 		/*
 		 * Insert a KeyRelease XEvent before a repeated KeyPress.
@@ -545,13 +546,13 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
     unsigned int state = 0;
     if (modifiers) {
-	state = (modifiers & NSAlphaShiftKeyMask) ? LockMask    : 0 |
-	    (modifiers & NSShiftKeyMask)      ? ShiftMask   : 0 |
-	    (modifiers & NSControlKeyMask)    ? ControlMask : 0 |
-	    (modifiers & NSCommandKeyMask)    ? Mod1Mask    : 0 |
-	    (modifiers & NSAlternateKeyMask)  ? Mod2Mask    : 0 |
-	    (modifiers & NSNumericPadKeyMask) ? Mod3Mask    : 0 |
-	    (modifiers & NSFunctionKeyMask)   ? Mod4Mask    : 0 ;
+	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
+	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
+	        (modifiers & NSControlKeyMask    ? ControlMask : 0) |
+	        (modifiers & NSCommandKeyMask    ? Mod1Mask    : 0) |
+	        (modifiers & NSAlternateKeyMask  ? Mod2Mask    : 0) |
+	        (modifiers & NSNumericPadKeyMask ? Mod3Mask    : 0) |
+	        (modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
     }
     memset(xEvent, 0, sizeof(XEvent));
     xEvent->xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
