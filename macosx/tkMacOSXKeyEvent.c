@@ -33,8 +33,6 @@ static int caret_x = 0, caret_y = 0, caret_height = 0;
 static TkWindow *caret_win = NULL;
 
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
-static unsigned	isFunctionKey(unsigned int code);
-
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -52,8 +50,7 @@ static unsigned	isFunctionKey(unsigned int code);
 			    NSDeviceIndependentModifierFlagsMask);
     NSString *characters = nil;
     NSString *charactersIgnoringModifiers = nil;
-    NSUInteger len = 0;
-    int code = 0;
+    UniChar unichar = 0;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray;
 
@@ -96,6 +93,20 @@ static unsigned	isFunctionKey(unsigned int code);
     BOOL has_modifiers = NO;
     XEvent xEvent;
 
+    if (type == NSKeyUp || type == NSKeyDown) {
+	characters = [theEvent characters];
+	unichar = [characters characterAtIndex:0];
+	charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
+
+#if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
+	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' keyCode=%u c=%d %@ %d",
+	      [self class], self, _cmd, (type == NSKeyDown) && [theEvent isARepeat],
+	      modifiers, characters, charactersIgnoringModifiers, keyCode,
+	      ([charactersIgnoringModifiers length] == 0) ? 0 :
+	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
+#endif
+    }
+    
     /*
      * Check whether this key event belongs to the caret window.
      */
@@ -128,18 +139,13 @@ static unsigned	isFunctionKey(unsigned int code);
 	    xEvent.xkey.keycode = (modifiers ^ savedModifiers);
 	    break;
 	case NSKeyUp:
-	    characters = [theEvent characters];
 	    xEvent.xany.type = KeyRelease;
-	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
+	    xEvent.xkey.keycode = (keyCode << 16) | unichar;
 	    break;
 	case NSKeyDown:
-	    characters = [theEvent characters];
-	    charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
 	    xEvent.xany.type = KeyPress;
-	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
-	    len = [charactersIgnoringModifiers length];
-	    if (len > 0) {
-		code = [charactersIgnoringModifiers characterAtIndex:0];
+	    xEvent.xkey.keycode = (keyCode << 16) | unichar;
+	    if ([charactersIgnoringModifiers length] > 0) {
 		has_modifiers = xEvent.xkey.state &
 		    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask);
 	    }
@@ -148,15 +154,10 @@ static unsigned	isFunctionKey(unsigned int code);
 	    return theEvent; /* Unrecognized key event. */
 	}
 
-#if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
-	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d",
-	      [self class], self, _cmd, (type == NSKeyDown) && [theEvent isARepeat],
-	      modifiers, characters, charactersIgnoringModifiers, keyCode,
-	      ([charactersIgnoringModifiers length] == 0) ? 0 :
-	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
-#endif
-
-        if (type != NSKeyDown || !has_caret || isFunctionKey(code) || has_modifiers) {
+        if (type != NSKeyDown ||
+	    !has_caret        ||
+	    has_modifiers     ||
+	    ((keyCode >= 0xF700) && (keyCode <= 0xF8FF))) {
 	    if (type == NSKeyDown && [theEvent isARepeat]) {
 
 		/*
@@ -721,84 +722,6 @@ Tk_SetCaretPos(
     caret_x = x;
     caret_y = y;
     caret_height = height;
-}
-
-
-static unsigned convert_ns_to_X_keysym[] =
-{
-    NSHomeFunctionKey,		0x50,
-    NSLeftArrowFunctionKey,	0x51,
-    NSUpArrowFunctionKey,	0x52,
-    NSRightArrowFunctionKey,	0x53,
-    NSDownArrowFunctionKey,	0x54,
-    NSPageUpFunctionKey,	0x55,
-    NSPageDownFunctionKey,	0x56,
-    NSEndFunctionKey,		0x57,
-    NSBeginFunctionKey,		0x58,
-    NSSelectFunctionKey,	0x60,
-    NSPrintFunctionKey,		0x61,
-    NSExecuteFunctionKey,	0x62,
-    NSInsertFunctionKey,	0x63,
-    NSUndoFunctionKey,		0x65,
-    NSRedoFunctionKey,		0x66,
-    NSMenuFunctionKey,		0x67,
-    NSFindFunctionKey,		0x68,
-    NSHelpFunctionKey,		0x6A,
-    NSBreakFunctionKey,		0x6B,
-
-    NSF1FunctionKey,		0xBE,
-    NSF2FunctionKey,		0xBF,
-    NSF3FunctionKey,		0xC0,
-    NSF4FunctionKey,		0xC1,
-    NSF5FunctionKey,		0xC2,
-    NSF6FunctionKey,		0xC3,
-    NSF7FunctionKey,		0xC4,
-    NSF8FunctionKey,		0xC5,
-    NSF9FunctionKey,		0xC6,
-    NSF10FunctionKey,		0xC7,
-    NSF11FunctionKey,		0xC8,
-    NSF12FunctionKey,		0xC9,
-    NSF13FunctionKey,		0xCA,
-    NSF14FunctionKey,		0xCB,
-    NSF15FunctionKey,		0xCC,
-    NSF16FunctionKey,		0xCD,
-    NSF17FunctionKey,		0xCE,
-    NSF18FunctionKey,		0xCF,
-    NSF19FunctionKey,		0xD0,
-    NSF20FunctionKey,		0xD1,
-    NSF21FunctionKey,		0xD2,
-    NSF22FunctionKey,		0xD3,
-    NSF23FunctionKey,		0xD4,
-    NSF24FunctionKey,		0xD5,
-
-    NSBackspaceCharacter,	0x08,  /* 8: Not on some KBs. */
-    NSDeleteCharacter,		0xFF,  /* 127: Big 'delete' key upper right. */
-    NSDeleteFunctionKey,	0x9F,  /* 63272: Del forw key off main array. */
-
-    NSTabCharacter,		0x09,
-    0x19,			0x09,  /* left tab->regular since pass shift */
-    NSCarriageReturnCharacter,	0x0D,
-    NSNewlineCharacter,		0x0D,
-    NSEnterCharacter,		0x8D,
-
-    0x1B,			0x1B   /* escape */
-};
-
-
-static unsigned
-isFunctionKey(
-    unsigned code)
-{
-    const unsigned last_keysym = (sizeof(convert_ns_to_X_keysym)
-                                / sizeof(convert_ns_to_X_keysym[0]));
-    unsigned keysym;
-
-    for (keysym = 0; keysym < last_keysym; keysym += 2) {
-	if (code == convert_ns_to_X_keysym[keysym]) {
-	    return 0xFF00 | convert_ns_to_X_keysym[keysym + 1];
-	}
-    }
-    return 0;
 }
 
 /*
