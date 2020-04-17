@@ -23,7 +23,7 @@
 
 #define LATIN1_MAX	 255
 #define MAC_KEYCODE_MAX	 0x7F
-#define MAC_KEYCODE_MASK 0x7F
+#define MAC_KEYCODE_MASK 0xFF
 #define COMMAND_MASK	 Mod1Mask
 #define OPTION_MASK	 Mod2Mask
 
@@ -35,65 +35,49 @@
  */
 
 typedef struct {
-    int keycode;		/* Macintosh keycode. */
+    int keycode;		/* Macintosh keycode in NSEvent */
     KeySym keysym;		/* X windows keysym. */
 } KeyInfo;
 
-/*
- * Notes on keyArray:
- *
- * 0x34, XK_Return - Powerbooks use this and some keymaps define it.
- *
- * 0x4C, XK_Return - XFree86 and Apple's X11 call this one XK_KP_Enter.
- *
- * 0x47, XK_Clear - This key is NumLock when used on PCs, but Mac
- * applications don't use it like that, nor does Apple's X11.
- *
- * All other keycodes are taken from the published ADB keyboard layouts.
- */
 
 static KeyInfo keyArray[] = {
-    {0x24,	XK_Return},
-    {0x30,	XK_Tab},
-    {0x33,	XK_BackSpace},
-    {0x34,	XK_Return},
-    {0x35,	XK_Escape},
-
-    {0x47,	XK_Clear},
-    {0x4C,	XK_KP_Enter},
-
-    {0x72,	XK_Help},
-    {0x73,	XK_Home},
-    {0x74,	XK_Page_Up},
-    {0x75,	XK_Delete},
-    {0x77,	XK_End},
-    {0x79,	XK_Page_Down},
-
-    {0x7B,	XK_Left},
-    {0x7C,	XK_Right},
-    {0x7D,	XK_Down},
-    {0x7E,	XK_Up},
-
-    {0,		0}
-};
-
-static KeyInfo virtualkeyArray[] = {
-    {122,	XK_F1},
-    {120,	XK_F2},
-    {99,	XK_F3},
-    {118,	XK_F4},
+    {36,	XK_Return},
+    {48,	XK_Tab},
+    {51,	XK_BackSpace},
+    {52,	XK_Return},  /* Used on some powerbooks. */
+    {53,	XK_Escape},
+    {64,	XK_F17},
+    {71,	XK_Clear},   /* Numlock on PC */
+    {76,	XK_KP_Enter},
+    {79,	XK_F18},
+    {80,	XK_F19},
     {96,	XK_F5},
     {97,	XK_F6},
     {98,	XK_F7},
+    {99,	XK_F3},
     {100,	XK_F8},
     {101,	XK_F9},
-    {109,	XK_F10},
     {103,	XK_F11},
-    {111,	XK_F12},
     {105,	XK_F13},
+    {106,	XK_F16},
     {107,	XK_F14},
+    {109,	XK_F10},
+    {111,	XK_F12},
     {113,	XK_F15},
-    {0,		0}
+    {114,	XK_Help},
+    {115,	XK_Home},
+    {116,	XK_Page_Up},
+    {117,	XK_Delete},
+    {118,	XK_F4},
+    {119,	XK_End},
+    {120,	XK_F2},
+    {121,	XK_Page_Down},
+    {122,	XK_F1},
+    {123,	XK_Left},
+    {124,	XK_Right},
+    {125,	XK_Down},
+    {126,	XK_Up},
+    {0,		0},
 };
 
 #define NUM_MOD_KEYCODES 14
@@ -116,9 +100,6 @@ static KeyCode modKeyArray[NUM_MOD_KEYCODES] = {
 
 static int initialized = 0;
 static Tcl_HashTable keycodeTable;	/* keyArray hashed by keycode value. */
-static Tcl_HashTable vkeyTable;		/* virtualkeyArray hashed by virtual
-					 * keycode value. */
-
 static int latin1Table[LATIN1_MAX+1];	/* Reverse mapping table for
 					 * controls, ASCII and Latin-1. */
 
@@ -179,12 +160,6 @@ InitKeyMaps(void)
     Tcl_InitHashTable(&keycodeTable, TCL_ONE_WORD_KEYS);
     for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
 	hPtr = Tcl_CreateHashEntry(&keycodeTable, INT2PTR(kPtr->keycode),
-		&dummy);
-	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
-    }
-    Tcl_InitHashTable(&vkeyTable, TCL_ONE_WORD_KEYS);
-    for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
-	hPtr = Tcl_CreateHashEntry(&vkeyTable, INT2PTR(kPtr->keycode),
 		&dummy);
 	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
     }
@@ -381,7 +356,7 @@ XKeycodeToKeysym(
     newKeycode = keycode >> 16;
 
     if ((keycode & 0xFFFF) >= 0xF700) { /* NSEvent.h function key unicodes */
-	hPtr = Tcl_FindHashEntry(&vkeyTable, INT2PTR(newKeycode));
+	hPtr = Tcl_FindHashEntry(&keycodeTable, INT2PTR(newKeycode));
 	if (hPtr != NULL) {
 	    return (KeySym) Tcl_GetHashValue(hPtr);
 	}
@@ -592,7 +567,8 @@ XKeysymToMacKeycode(
 	    return kPtr->keycode;
 	}
     }
-    for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
+    /* Should do hash lookup. */
+    for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
 	if (kPtr->keysym == keysym) {
 	    return kPtr->keycode;
 	}
@@ -646,13 +622,12 @@ XKeysymToKeycode(
     KeyCode result;
 
     /*
-     * See also TkpSetKeycodeAndState. The 0x0010 magic is used in
-     * XKeycodeToKeysym. For special keys like XK_Return the lower 8 bits of
-     * the keysym are usually a related ASCII control code.
+     * See also TkpSetKeycodeAndState.  For special keys like XK_Return the
+     * lower 8 bits of the keysym are usually a related ASCII control code.
      */
 
     if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
-	result = 0x0010;
+	    result = 0xf704 + keysym - XK_F1;
     } else {
 	result = 0x00FF & keysym;
     }
@@ -705,8 +680,16 @@ TkpSetKeycodeAndState(
 	/*
 	 * See also XKeysymToKeycode.
 	 */
+
 	if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
-	    eventPtr->xkey.keycode = 0x0010;
+
+	    /*
+	     * NSEvent.h defines the unicode values in the "Private Use" range
+	     * 0xF700-0xF8FF to correspond to function keys.  The first four
+	     * are arrow keys, followed by the Fn function keys in order.
+	     */
+
+	    eventPtr->xkey.keycode = 0xf704 + keysym - XK_F1;
 	} else {
 	    eventPtr->xkey.keycode = 0x00FF & keysym;
 	}
