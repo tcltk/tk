@@ -93,10 +93,6 @@ static void		InitFont(NSFont *nsFont,
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name,
 			    TkFontAttributes *faPtr);
-static void		DrawCharsInContext(Display *display, Drawable drawable,
-			    GC gc, Tk_Font tkfont, const char *source,
-			    int numBytes, int rangeStart, int rangeLength,
-			    int x, int y, double angle);
 
 #pragma mark -
 #pragma mark Font Helpers:
@@ -1115,7 +1111,7 @@ done:
  *	Draw a string of characters on the screen.
  *
  *	With ATSUI we need the line context to do this right, so we have the
- *	actual implementation in TkpDrawCharsInContext().
+ *	actual implementation in TkpDrawAngledCharsInContext().
  *
  * Results:
  *	None.
@@ -1144,7 +1140,7 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    0, numBytes, x, y, 0.0);
 }
 
@@ -1167,7 +1163,7 @@ TkDrawAngledChars(
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    0, numBytes, x, y, angle);
 }
 
@@ -1212,12 +1208,12 @@ TkpDrawCharsInContext(
 				 * whole (not just the range) string when
 				 * drawing. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    rangeStart, rangeLength, x, y, 0.0);
 }
 
-static void
-DrawCharsInContext(
+void
+TkpDrawAngledCharsInContext(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
@@ -1233,10 +1229,10 @@ DrawCharsInContext(
     int numBytes,		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
-    int x, int y,		/* Coordinates at which to place origin of the
+    double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
-    double angle)
+    double angle)		/* What angle to put text at, in degrees. */
 {
     const MacFont *fontPtr = (const MacFont *) tkfont;
     NSString *string;
