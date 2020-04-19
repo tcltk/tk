@@ -2842,10 +2842,6 @@ static int TreeviewSeeCommand(
 	    TtkRedisplayWidget(&tv->core);
 	}
     }
-    TtkScrolled(tv->tree.yscrollHandle,
-            tv->tree.yscroll.first,
-            tv->tree.yscroll.last,
-            CountRows(tv->tree.root) - 1);
 
     /* Make sure item is visible:
      */
