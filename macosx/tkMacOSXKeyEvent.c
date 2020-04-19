@@ -43,14 +43,14 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    unsigned short keyCode = [theEvent keyCode];
+    unsigned int keyCode = [theEvent keyCode];
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
     NSString *characters = nil;
     NSString *charactersIgnoringModifiers = nil;
-    UniChar unichar = 0;
+    UniChar keychar = 0;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray;
 
@@ -95,9 +95,9 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 
     if (type == NSKeyUp || type == NSKeyDown) {
 	characters = [theEvent characters];
-	unichar = [characters characterAtIndex:0];
+	keychar = [characters length] > 0 ? [characters characterAtIndex:0] : 0;
 	charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
-
+	
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' keyCode=%u c=%d %@ %d",
 	      [self class], self, _cmd, (type == NSKeyDown) && [theEvent isARepeat],
@@ -105,50 +105,63 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 	      ([charactersIgnoringModifiers length] == 0) ? 0 :
 	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
+
     }
-    
+    if (type == NSKeyDown) {
+	has_modifiers = xEvent.xkey.state &
+	    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask);
+    }
+
+    /*
+     * Build the XEvent.
+     */
+
+    setupXEvent(&xEvent, tkwin, modifiers);
+
     /*
      * Check whether this key event belongs to the caret window.
      */
 
-    setupXEvent(&xEvent, tkwin, modifiers);
     Bool has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
 
     /*
      * A KeyDown event received for the caret window which is not a function key
-     * and has no modifiers other than Shift or Alt will be processed with the
+     * and has no modifiers other than Shift or Option will be processed with the
      * TextInputClient protocol below.  All other key events are handled here
      * by queueing the XEvent created above.
      */
 
     if (!processingCompose || !has_caret) {
+	xEvent.xkey.keycode = (keyCode << 16) | keychar;
 	switch (type) {
 	case NSFlagsChanged:
-	    if (savedModifiers > modifiers) {
-		xEvent.xany.type = KeyRelease;
-	    } else {
-		xEvent.xany.type = KeyPress;
-	    }
 
 	    /*
-	     * The value -1 indicates a special keycode to the platform
-	     * specific code in tkMacOSXKeyboard.c.
+	     * If the highest bit where they differ was set then this is a press.
+	     */
+
+	    xEvent.xany.type = modifiers > savedModifiers ? KeyPress : KeyRelease;
+
+	    /*
+	     * The value -1 signals a modifier keycode to the function TkpGetKeySym
+	     * defined in tkMacOSXKeyboard.c.
 	     */
 
 	    xEvent.xany.send_event = -1;
-	    xEvent.xkey.keycode = (modifiers ^ savedModifiers);
+
+	    /*
+	     * Update savedModifiers for NSFlagsChanged events and no others,
+	     * since some non-modifier keys (e.g. function keys) have modifier
+	     * flags set
+	     */
+
+            savedModifiers = modifiers;
 	    break;
 	case NSKeyUp:
 	    xEvent.xany.type = KeyRelease;
-	    xEvent.xkey.keycode = (keyCode << 16) | unichar;
 	    break;
 	case NSKeyDown:
 	    xEvent.xany.type = KeyPress;
-	    xEvent.xkey.keycode = (keyCode << 16) | unichar;
-	    if ([charactersIgnoringModifiers length] > 0) {
-		has_modifiers = xEvent.xkey.state &
-		    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask);
-	    }
 	    break;
 	default:
 	    return theEvent; /* Unrecognized key event. */
@@ -157,7 +170,7 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
         if (type != NSKeyDown ||
 	    !has_caret        ||
 	    has_modifiers     ||
-	    ((keyCode >= 0xF700) && (keyCode <= 0xF8FF))) {
+	    ((keychar >= 0xF700) && (keychar <= 0xF8FF))) {
 	    if (type == NSKeyDown && [theEvent isARepeat]) {
 
 		/*
@@ -174,7 +187,6 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 	     */
 
             Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-            savedModifiers = modifiers;
             return theEvent;
 	}
     }
@@ -185,7 +197,8 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
      * interpretKeyEvents.  But we only need to send KeyDown events.
      */
 
-    if (type == NSKeyDown) {
+    switch (type) {
+    case NSKeyDown:
 	if (NS_KEYLOG) {
 	    TKLog(@"keyDown: %s compose sequence.\n",
 		  processingCompose == YES ? "Continue" : "Begin");
@@ -212,8 +225,13 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 		break;
 	    }
 	}
+	break;
+    case NSFlagsChanged:
+	savedModifiers = modifiers;
+	break;
+    default:
+	break;
     }
-    savedModifiers = modifiers;
     return theEvent;
 }
 @end
