@@ -2304,6 +2304,10 @@ Tk_DrawTextLayout(
 				 * draw from the given text item. A number < 0
 				 * means to draw all characters. */
 {
+#if 0
+    /* Use TkDrawAngledTextLayout() implementation */
+    TkDrawAngledTextLayout(display, drawable, gc, layout, x, y, 0.0, firstChar, lastChar);
+#else
     TextLayout *layoutPtr = (TextLayout *) layout;
     int i, numDisplayChars, drawX;
     const char *firstByte, *lastByte;
@@ -2333,8 +2337,14 @@ Tk_DrawTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+#if TK_DRAW_IN_CONTEXT
+	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
+		    chunkPtr->start, chunkPtr->numBytes, firstChar,
+		    numDisplayChars - firstChar, x+chunkPtr->x, y+chunkPtr->y);
+#else /* !TK_DRAW_IN_CONTEXT */
 	    Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont, firstByte,
 		    lastByte - firstByte, x+chunkPtr->x+drawX, y+chunkPtr->y);
+#endif /* TK_DRAW_IN_CONTEXT */
 	}
 	firstChar -= chunkPtr->numChars;
 	lastChar -= chunkPtr->numChars;
@@ -2343,6 +2353,7 @@ Tk_DrawTextLayout(
 	}
 	chunkPtr++;
     }
+#endif /* Use TkDrawAngledTextLayout() implementation */
 }
 
 void
@@ -2395,6 +2406,21 @@ TkDrawAngledTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+#if TK_DRAW_IN_CONTEXT
+	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
+	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
+	    if (angle == 0.0) {
+		TkpDrawCharsInContext(display, drawable, gc,
+			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
+			firstChar, numDisplayChars - firstChar,
+			(int)(x + dx), (int)(y + dy));
+	    } else {
+		TkpDrawAngledCharsInContext(display, drawable, gc,
+			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
+			firstChar, numDisplayChars - firstChar,
+			x+dx, y+dy, angle);
+	    }
+#else /* !TK_DRAW_IN_CONTEXT */
 	    dx = cosA * (chunkPtr->x + drawX) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x + drawX) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
@@ -2405,6 +2431,7 @@ TkDrawAngledTextLayout(
 		TkDrawAngledChars(display, drawable, gc, layoutPtr->tkfont,
 			firstByte, lastByte - firstByte, x+dx, y+dy, angle);
 	    }
+#endif /* TK_DRAW_IN_CONTEXT */
 	}
 	firstChar -= chunkPtr->numChars;
 	lastChar -= chunkPtr->numChars;
