@@ -67,16 +67,6 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     }
 
     /*
-     * Control-Tab and Control-Shift-Tab are used to switch tabs in a tabbed
-     * window.  We do not want to generate an Xevent for these since that might
-     * cause the deselected tab to be reactivated.
-     */
-
-    if (keyCode == 48 && (modifiers & NSControlKeyMask) == NSControlKeyMask) {
-	return theEvent;
-    }
-
-    /*
      * If a local grab is in effect, key events for windows in the
      * grabber's application are redirected to the grabber.  Key events
      * for other applications are delivered normally.  If a global
@@ -101,7 +91,8 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 	} else {
 
 	    /*
-	     * This is a dead key, so it should go to the TextInputClient.
+	     * This is a dead key, such as Option-e, so it should go to the
+	     * TextInputClient.
 	     */
 
 	    use_text_input = YES;
@@ -117,7 +108,7 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     /*
      * Build a skeleton XEvent.  We need to build it here, even if we will not
      * send it, so we can pass it to TkFocusKeyEvent to determine whether the
-     * target windows has the caret.
+     * target window has the caret.
      */
 
     setupXEvent(&xEvent, tkwin, modifiers);
@@ -125,7 +116,7 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
 
     /*
-     * A KeyDown event targeting the caret window and having alphanumeric
+     * A KeyDown event targeting the caret window and having an alphanumeric
      * keychar should be processed by our TextInputClient.  The XEvent will not
      * be sent in this case.
      */
@@ -148,8 +139,9 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 	 * IME when multiple characters have the same composition sequence and
 	 * the selected character is not the default it may be necessary to hit
 	 * the Enter key multiple times before the character is accepted and
-	 * rendered. So we repeatedly send Enter key events until the inputText
-	 * method has cleared the processingCompose flag.
+	 * rendered (See ticket 39de9677aa]). So we repeatedly send Enter key
+	 * events until the inputText method has cleared the processingCompose
+	 * flag.
 	 */
 
 	processingCompose = YES;
@@ -173,21 +165,21 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     case NSFlagsChanged:
 
 	/*
-	 * We simulate KeyPress and KeyRelease events whenever a modifier flag
-	 * change is reported.  To determine the type, note that the highest
-	 * bit where the flags differ is 1 if and only if it is a KeyPress.
-	 * Remember the modifiers for the next flag change.
+	 * This XEvent is a simulated KeyPress or KeyRelease event for a
+	 * modifier key.  To determine the type, note that the highest bit
+	 * where the flags differ is 1 if and only if it is a KeyPress. The
+	 * modifiers are saved so we can detect the next flag change.
 	 */
 
 	xEvent.xany.type = modifiers > savedModifiers ? KeyPress : KeyRelease;
 	savedModifiers = modifiers;
 
 	/*
-	 * The value -1 signals a modifier keycode to the function TkpGetKeySym
-	 * (see tkMacOSXKeyboard.c).
+	 * Set the keychar to 0xF8FF, the largest value reserved for a function
+	 * key, as a signal to TkpGetKeySym (see tkMacOSXKeyboard.c) that this
+	 * is a modifier key event.
 	 */
-
-	xEvent.xany.send_event = -1;
+	xEvent.xkey.keycode |= 0xF8FF;
 	break;
     case NSKeyUp:
 	xEvent.xany.type = KeyRelease;
