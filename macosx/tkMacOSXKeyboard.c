@@ -673,12 +673,10 @@ TkpGetKeySym(
     }
 
     /*
-     * Handle pure modifier keys specially. We use -1 as a signal for
-     * this.
+     * Modifier key events have a special mac keycode (see tkProcessKeyEvent).
      */
-
-    if (eventPtr->xany.send_event == -1) {
-	switch (eventPtr->xkey.keycode >> 16) {
+    if ((eventPtr->xkey.keycode & MAC_KEYCODE_MASK) == 0xF8FF) {
+	switch (eventPtr->xkey.keycode >> 16) { /* the virtual keyCode */
 	case 54:
 	    return XK_Meta_R;
 	case 55:
@@ -802,7 +800,7 @@ TkpInitKeymapInfo(
     dispPtr->bindInfoStale = 0;
 
     /*
-     * Behaviours that are variable on X11 are defined constant on MacOSX.
+     * Behaviors that are variable on X11 are defined constant on MacOSX.
      * lockUsage is only used above in TkpGetKeySym(), nowhere else currently.
      * There is no offical "Mode_switch" key.
      */
