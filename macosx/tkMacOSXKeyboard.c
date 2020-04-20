@@ -75,10 +75,9 @@ static const KeyInfo keyArray[] = {
     {101,	XK_F9,		NSF9FunctionKey},
     {103,	XK_F11,		NSF11FunctionKey},
     {105,	XK_F13,		NSF13FunctionKey},
+    {106,	XK_F16,		NSF16FunctionKey},
     {107,	XK_F14,		NSF14FunctionKey},
     {109,	XK_F10,		NSF10FunctionKey},
-    {105,	XK_F13,		NSF13FunctionKey},
-    {106,	XK_F16,		NSF16FunctionKey},
     {111,	XK_F12,		NSF12FunctionKey},
     {113,	XK_F15,		NSF15FunctionKey},
     {114,	XK_Help,	NSHelpFunctionKey},
@@ -102,7 +101,7 @@ static const KeyInfo keyArray[] = {
  */
 
 #define NUM_MOD_KEYCODES 14
-static KeyCode modKeyArray[NUM_MOD_KEYCODES] = {
+static const KeyCode modKeyArray[NUM_MOD_KEYCODES] = {
     XK_Shift_L,
     XK_Shift_R,
     XK_Control_L,
@@ -119,8 +118,8 @@ static KeyCode modKeyArray[NUM_MOD_KEYCODES] = {
     XK_Hyper_R,
 };
 
-static int initialized = 0;
-static int keyboardChanged = 1;
+static BOOL initialized = NO;
+static BOOL keyboardChanged = YES;
 static Tcl_HashTable virtual2keysym;	/* Maps Mac keyCode to X11 keysym. */
 static Tcl_HashTable keysym2keycode;	/* Maps X11 keysym to Mac keycode. */
 static int latin1Table[LATIN1_MAX+1];	/* Reverse mapping table for Latin-1. */
@@ -143,7 +142,7 @@ static int	KeycodeToUnicode(UniChar * uniChars, int maxChars,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
-    keyboardChanged = 1;
+    keyboardChanged = YES;
 }
 @end
 
@@ -182,7 +181,7 @@ InitKeyMaps(void)
 				   &dummy);
 	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keychar | (kPtr->virtual << 16)));
     }
-    initialized = 1;
+    initialized = YES;
 }
 
 /*
