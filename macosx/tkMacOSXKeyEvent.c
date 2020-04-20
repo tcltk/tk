@@ -44,9 +44,8 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
     NSWindow *w = [theEvent window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr;
     Tk_Window tkwin = (Tk_Window) winPtr;
-    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
     NSEventType type = [theEvent type];
     NSUInteger keyCode = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
@@ -80,10 +79,11 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     /*
      * If a local grab is in effect, key events for windows in the
      * grabber's application are redirected to the grabber.  Key events
-     * for <other applications are delivered normally.  If a global
+     * for other applications are delivered normally.  If a global
      * grab is in effect all key events are redirected to the grabber.
      */
 
+    grabWinPtr = winPtr->dispPtr->grabWinPtr;
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
@@ -125,7 +125,7 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
 
     /*
-     * A KeyDown event targetting the caret window and having alphanumeric
+     * A KeyDown event targeting the caret window and having alphanumeric
      * keychar should be processed by our TextInputClient.  The XEvent will not
      * be sent in this case.
      */
