@@ -122,7 +122,7 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
      */
 
     if (type == NSKeyDown && has_caret && !has_modifiers &&
-	(keychar >= 0x0020) && (keychar <= 0x00FF)) {
+	(keychar >= 0x0020) && (keychar <= 0xF700)) {
 	use_text_input = YES;
     }
     if (use_text_input) {
