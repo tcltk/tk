@@ -1300,6 +1300,86 @@ TkDrawAngledChars(
     }
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpDrawCharsInContext --
+ *
+ *	Draw a string of characters on the screen like Tk_DrawChars(), but
+ *	with access to all the characters on the line for context. On X11 this
+ *	context isn't consulted, so we just call Tk_DrawChars().
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information gets drawn on the screen.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkpDrawCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    int x, int y)		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+{
+    int widthUntilStart;
+
+    (void) numBytes; /*unused*/
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+widthUntilStart, y);
+}
+
+void
+TkpDrawAngledCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that is
+				 * passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    int widthUntilStart;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    (void) numBytes; /*unused*/
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
+}
+
 void
 TkUnixSetXftClipRegion(
     TkRegion clipRegion)	/* The clipping region to install. */
