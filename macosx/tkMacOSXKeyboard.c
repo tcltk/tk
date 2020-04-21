@@ -22,21 +22,22 @@
  */
 
 #define LATIN1_MAX	 255
-#define MAC_KEYCODE_MAX	 0x7F
+#define VIRTUAL_MAX	 0x7F
 #define MAC_KEYCODE_MASK 0xFF
 #define COMMAND_MASK	 Mod1Mask
 #define OPTION_MASK	 Mod2Mask
 
-
 /*
- * Table enumerating the special keys defined on Mac keyboards. These are
- * necessary for correct keysym mappings for all keys where the keysyms are
- * not identical with their ASCII or Latin-1 code points.
+ * This table enumerates the keys on Mac keyboards which do not represent
+ * letters.  This is static data -- these keys do not change when the keyboard
+ * layout changes.  The unicode representation of a special key which is not a
+ * modifier and does not have an ASCII code point lies in the reserved range
+ * 0xF700 - 0xF8FF.
  *
- * This table includes every key listed in Apple's documentation of Function-Key
- * Unicodes which is not marked as "Not on most Macintosh keyboards".  I
- * know of no reliable way to find the Apple "Virtual Keycode" for any of the
- * keys that are so marked.
+ * The table includes every key listed in Apple's documentation of Function-Key
+ * Unicodes which is not marked as "Not on most Macintosh keyboards", as well
+ * as F20, which is reported to be usable in scripts even though it does not
+ * appear on any Macintosh keyboard.
  */
 
 typedef struct {
@@ -118,18 +119,23 @@ static const KeyCode modKeyArray[NUM_MOD_KEYCODES] = {
     XK_Hyper_R,
 };
 
-static BOOL initialized = NO;
-static BOOL keyboardChanged = YES;
+typedef struct {
+    KeyCode keycode;
+    int state;
+} Latin1KeyInfo;
+
+static Latin1KeyInfo latin1Table[LATIN1_MAX+1];	/* keysym to Latin1KeyInfo. */
 static Tcl_HashTable virtual2keysym;	/* Maps Mac keyCode to X11 keysym. */
 static Tcl_HashTable keysym2keycode;	/* Maps X11 keysym to Mac keycode. */
-static int latin1Table[LATIN1_MAX+1];	/* Reverse mapping table for Latin-1. */
+static BOOL initialized = NO;
+static BOOL keyboardChanged = YES;
 
 /*
  * Prototypes for static functions used in this file.
  */
 
 static void	InitKeyMaps (void);
-static void	InitLatin1Table(Display *display);
+static void	InitLatin1Table(void);
 static int	KeycodeToUnicode(UniChar * uniChars, int maxChars,
 			UInt16 keyaction, UInt32 keycode, UInt32 modifiers,
 			UInt32 * deadKeyStatePtr);
@@ -206,13 +212,11 @@ InitKeyMaps(void)
  */
 
 static void
-InitLatin1Table(
-    Display *display)
+InitLatin1Table(void)
 {
-    int keycode;
+    int virtual;
     KeySym keysym;
     int state;
-    int modifiers;
 
     memset(latin1Table, 0, sizeof(latin1Table));
 
@@ -230,18 +234,11 @@ InitLatin1Table(
      */
 
     for (state = 3; state >= 0; state--) {
-	modifiers = 0;
-	if (state & 1) {
-	    modifiers |= shiftKey;
-	}
-	if (state & 2) {
-	    modifiers |= optionKey;
-	}
-
-	for (keycode = 0; keycode <= MAC_KEYCODE_MAX; keycode++) {
-	    keysym = XKeycodeToKeysym(display, keycode<<16, state);
+	for (virtual = 0; virtual <= VIRTUAL_MAX; virtual++) {
+	    keysym = XKeycodeToKeysym(NULL, virtual<<16, state);
 	    if (keysym != NoSymbol && keysym <= LATIN1_MAX) {
-		latin1Table[keysym] = modifiers << 16 | keycode << 16 | keysym;
+		latin1Table[keysym].state = state;
+		latin1Table[keysym].keycode = virtual << 16 | keysym;
 	    }
 	}
     }
@@ -388,7 +385,11 @@ XKeycodeToKeysym(
     }
 
     /*
-     * This keycode does not belong to a key on any known Macintosh keyboard.
+     * Unfortunately we currently cannot generate keysyms for alphabetical keys
+     * whose unicode value is outside of Latin-1. This means that when such a
+     * letter key is pressed or released on, say, a Greek keyboard the XEvent
+     * that is sent will have its keysym field set to NoSymbol.  Also, it is not
+     * possible to generate events for these keys.
      */
 
     return NoSymbol;
@@ -562,10 +563,10 @@ XKeysymToKeycode(
 	 */
 
 	if (keyboardChanged) {
-	    InitLatin1Table(display);
+	    InitLatin1Table();
 	    keyboardChanged = 0;
 	}
-	return latin1Table[keysym];
+	return latin1Table[keysym].keycode;
     }
 
     /*
@@ -619,19 +620,19 @@ TkpSetKeycodeAndState(
     if (keysym == NoSymbol) {
 	eventPtr->xkey.keycode = 0;
     } else {
-	Display *display = Tk_Display(tkwin);
-	eventPtr->xkey.keycode = XKeysymToKeycode(display, keysym);
-	if ((shiftKey << 16) & eventPtr->xkey.keycode) {
-	    eventPtr->xkey.state |= ShiftMask;
-	}
-	if ((optionKey << 16) & eventPtr->xkey.keycode) {
-	    eventPtr->xkey.state |= OPTION_MASK;
-	}
-	eventPtr->xkey.keycode &= 0xFFFFFF;
 	if (keysym <= LATIN1_MAX) {
+	    if (keyboardChanged) {
+		InitLatin1Table();
+		keyboardChanged = 0;
+	    }
+	    Latin1KeyInfo info = latin1Table[keysym];
 	    int length = TkUniCharToUtf(keysym, eventPtr->xkey.trans_chars);
 	    eventPtr->xkey.trans_chars[length] = 0;
+	    eventPtr->xkey.keycode = info.keycode;
+	    eventPtr->xkey.state |= info.state;
 	} else {
+	    Display *display = Tk_Display(tkwin);
+	    eventPtr->xkey.keycode = XKeysymToKeycode(display, keysym);
 	    eventPtr->xkey.trans_chars[0] = 0;
 	}
     }
