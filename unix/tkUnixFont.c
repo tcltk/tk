@@ -1413,7 +1413,6 @@ TkpDrawCharsInContext(
 	    rangeLength, x+widthUntilStart, y);
 }
 
-/* UNTESTED */
 void
 TkpDrawAngledCharsInContext(
     Display *display,		/* Display on which to draw. */
@@ -1437,12 +1436,13 @@ TkpDrawAngledCharsInContext(
     double angle)		/* What angle to put text at, in degrees. */
 {
     int widthUntilStart;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
 
     (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
-	    rangeLength, x+widthUntilStart, y, angle);
+	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
 }
 
 /*
