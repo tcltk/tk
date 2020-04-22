@@ -215,8 +215,8 @@ static int		LoadFontRanges(HDC hdc, HFONT hFont,
 			    USHORT **startCount, USHORT **endCount,
 			    int *symbolPtr);
 static void		MultiFontTextOut(HDC hdc, WinFont *fontPtr,
-			    const char *source, int numBytes, int x, int y,
-			    double angle);
+			    const char *source, int numBytes,
+			    double x, double y, double angle);
 static void		ReleaseFont(WinFont *fontPtr);
 static inline void	ReleaseSubFont(SubFont *subFontPtr);
 static int		SeenName(const char *name, Tcl_DString *dsPtr);
@@ -1429,7 +1429,7 @@ MultiFontTextOut(
 				 * following string. */
     const char *source,		/* Potentially multilingual UTF-8 string. */
     int numBytes,		/* Length of string in bytes. */
-    int x, int y,		/* Coordinates at which to place origin of
+    double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)
 {
@@ -1441,6 +1441,7 @@ MultiFontTextOut(
     const char *p, *end, *next;
     SubFont *lastSubFontPtr, *thisSubFontPtr;
     TEXTMETRICW tm;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
 
     lastSubFontPtr = &fontPtr->subFontArray[0];
     oldFont = SelectFont(hdc, fontPtr, lastSubFontPtr, angle);
@@ -1470,7 +1471,8 @@ MultiFontTextOut(
 			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
-		x += size.cx;
+		x += cosA*size.cx;
+		y -= sinA*size.cx;
 		Tcl_DStringFree(&runString);
 	    }
 	    lastSubFontPtr = thisSubFontPtr;
