@@ -16,6 +16,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -33,6 +34,7 @@ static int caret_x = 0, caret_y = 0, caret_height = 0;
 static TkWindow *caret_win = NULL;
 
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
+static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -190,9 +192,10 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
     default:
 	return theEvent; /* Unrecognized key event. */
     }
+    setXeventPoint(&xEvent, tkwin, w);
 
     /*
-     * Finally we can queue an XEvent, inserting a KeyRelease before a
+     * Finally we can queue the XEvent, inserting a KeyRelease before a
      * repeated KeyPress.
      */
 
@@ -258,6 +261,7 @@ static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
      */
 
     setupXEvent(&xEvent, tkwin, 0);
+    setXeventPoint(&xEvent, tkwin, [self window]);
     xEvent.xany.type = KeyPress;
 
     /*
@@ -544,6 +548,41 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
     xEvent->xkey.same_screen = true;
     /* No need to initialize other fields implicitly here,
      * because of the memset() above. */
+}
+
+static void
+setXeventPoint(
+    XEvent *xEvent,
+    Tk_Window tkwin,
+    NSWindow *w)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    NSPoint local = [w  mouseLocationOutsideOfEventStream];
+    NSPoint global = [w tkConvertPointToScreen: local];
+    int win_x, win_y;
+
+    if (Tk_IsEmbedded(winPtr)) {
+	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	if (Tk_IsTopLevel(contPtr)) {
+	    local.x -= contPtr->wmInfoPtr->xInParent;
+	    local.y -= contPtr->wmInfoPtr->yInParent;
+	} else {
+	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
+	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	}
+    } else {
+	local.x -= winPtr->wmInfoPtr->xInParent;
+	local.y -= winPtr->wmInfoPtr->yInParent;
+    }
+    tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
+    local.x = win_x;
+    local.y = win_y;
+    global.y = TkMacOSXZeroScreenHeight() - global.y;
+    xEvent->xbutton.x = local.x;
+    xEvent->xbutton.y = local.y;
+    xEvent->xbutton.x_root = global.x;
+    xEvent->xbutton.y_root = global.y;
 }
 
 #pragma mark -
