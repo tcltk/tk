@@ -31,9 +31,9 @@
  */
 
 typedef struct {
-    int virtual;	       /* value of [NSEvent keyCode] */
-    KeySym keysym;	       /* X11 keysym */
-    KeyCode keychar;           /* XEvent keycode & 0xFFFF */
+    int virtual;	/* value of [NSEvent keyCode] */
+    KeySym keysym;	/* X11 keysym */
+    KeyCode keychar;	/* XEvent keycode & 0xFFFF */
 } KeyInfo;
 
 static const KeyInfo keyArray[] = {
@@ -52,11 +52,27 @@ static const KeyInfo keyArray[] = {
     {61,	XK_Alt_R,	XK_Alt_R},
     {62,	XK_Control_R,	XK_Control_R},
     {63,	XK_Super_L,	XK_Super_L},
+    {65,	XK_KP_Decimal,	'.'},
+    {67,	XK_KP_Multiply, '*'},
+    {69,	XK_KP_Add,	'+'},
     {71,	XK_Clear,       NSClearLineFunctionKey}, /* Numlock on PC */
+    {75,	XK_KP_Divide,   '/'},
     {76,	XK_KP_Enter,	NSEnterCharacter},       /* Fn Return */
+    {78,	XK_KP_Subtract, '-'},
     {79,	XK_F18,		NSF18FunctionKey},
     {80,	XK_F19,		NSF19FunctionKey},
+    {81,	XK_KP_Equal,	'='},
+    {82,	XK_KP_0,	'0'},
+    {83,	XK_KP_1,	'1'},
+    {84,	XK_KP_2,	'2'},
+    {85,	XK_KP_3,	'3'},
+    {86,	XK_KP_4,	'4'},
+    {87,	XK_KP_5,	'5'},
+    {88,	XK_KP_6,	'6'},
+    {89,	XK_KP_7,	'7'},
     {90,	XK_F20,		NSF20FunctionKey}, /* For scripting only */
+    {91,	XK_KP_8,	'8'},
+    {92,	XK_KP_9,	'9'},
     {96,	XK_F5,		NSF5FunctionKey},
     {97,	XK_F6,		NSF6FunctionKey},
     {98,	XK_F7,		NSF7FunctionKey},
@@ -68,6 +84,7 @@ static const KeyInfo keyArray[] = {
     {106,	XK_F16,		NSF16FunctionKey},
     {107,	XK_F14,		NSF14FunctionKey},
     {109,	XK_F10,		NSF10FunctionKey},
+    {110,       XK_Menu,	XK_Menu},
     {111,	XK_F12,		NSF12FunctionKey},
     {113,	XK_F15,		NSF15FunctionKey},
     {114,	XK_Help,	NSHelpFunctionKey},
