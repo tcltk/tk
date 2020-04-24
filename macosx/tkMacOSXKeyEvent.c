@@ -650,15 +650,17 @@ TkMacOSXGetModalSession(void)
  *
  * Tk_SetCaretPos --
  *
- *	This enables correct placement of the XIM caret. This is called by
- *	widgets to indicate their cursor placement, and the caret location is
- *	used by TkpGetString to place the XIM caret.
+ *	This enables correct placement of the popups used for character
+ *      selection by the NSTextInputClient.  It gets called by text entry
+ *      widgets whenever the cursor is drawn.  It does nothing if the widget's
+ *      NSWindow is not the current KeyWindow.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	None
+ *	May update the display's caret window as well as the static
+ *      variables caret_win, caret_x, caret_y and caret_height.
  *
  *----------------------------------------------------------------------
  */
@@ -670,28 +672,32 @@ Tk_SetCaretPos(
     int y,
     int height)
  {
-    TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkCaret *caretPtr = &(winPtr->dispPtr->caret);
+    NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
 
-    /*
-     * Prevent processing anything if the values haven't changed. Windows only
-     * has one display, so we can do this with statics.
-     */
-
-    if ((caretPtr->winPtr == ((TkWindow *) tkwin))
-	    && (caretPtr->x == x) && (caretPtr->y == y)) {
+    if (w && ![w isKeyWindow]) {
 	return;
     }
-
-    caret_win = (TkWindow*) tkwin;
-    caretPtr->winPtr = ((TkWindow *) tkwin);
+    if ((caretPtr->winPtr == winPtr
+	 && caretPtr->x == x) && (caretPtr->y == y)) {
+	return;
+    }
+    caretPtr->winPtr = winPtr;
     caretPtr->x = x;
     caretPtr->y = y;
     caretPtr->height = height;
 
     /*
-     * As in Windows, adjust to the toplevel to get the coords right.
+     * Record the window and and the caret geometry in static variables for use
+     * when processing key events.  (Only caret windows use the NSTextClient
+     * protocol.)  We use the coordinate system of the containing toplevel's
+     * TKContextView for this.
      */
 
+    caret_win = winPtr;
+    caret_x = x;
+    caret_height = height;
     while (!Tk_IsTopLevel(tkwin)) {
 	x += Tk_X(tkwin);
 	y += Tk_Y(tkwin);
@@ -700,16 +706,7 @@ Tk_SetCaretPos(
 	    return;
 	}
     }
-
-    /*
-     * But adjust for fact that NS uses flipped view.
-     */
-
-    y = Tk_Height(tkwin) - y;
-
-    caret_x = x;
-    caret_y = y;
-    caret_height = height;
+    caret_y = Tk_Height(tkwin) - y;
 }
 
 /*
