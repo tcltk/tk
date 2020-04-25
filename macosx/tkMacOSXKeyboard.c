@@ -554,11 +554,21 @@ TkpSetKeycodeAndState(
     if (keysym == NoSymbol) {
 	eventPtr->xkey.keycode = 0;
     } else {
-	int state;
+	int state, length = 0;
+	UniChar keychar;
 	Display *display = Tk_Display(tkwin);
-	eventPtr->xkey.keycode = XKeysymToKeycodeWithState(display, keysym, &state);
+	eventPtr->xkey.keycode = XKeysymToKeycodeWithState(display, keysym,
+							   &state);
 	eventPtr->xkey.state |= state;
-	int length = TkUniCharToUtf(keysym, eventPtr->xkey.trans_chars);
+	keychar = eventPtr->xkey.keycode & 0xFFFF;
+	
+	/*
+	 * Set trans_chars for keychars outside of the private-use range.
+	 */
+
+	if (keychar < 0xF700) {
+	    length = TkUniCharToUtf(keychar, eventPtr->xkey.trans_chars);
+	}
 	eventPtr->xkey.trans_chars[length] = 0;
     }
 }
