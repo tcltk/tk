@@ -31,7 +31,6 @@ static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
 static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-static TkWindow *caret_win = NULL;
 
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
@@ -47,6 +46,7 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 #endif
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr;
+    TkCaret caret = winPtr->dispPtr->caret;
     Tk_Window tkwin = (Tk_Window) winPtr;
     NSEventType type = [theEvent type];
     NSUInteger keyCode = [theEvent keyCode];
@@ -115,7 +115,8 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
     setupXEvent(&xEvent, tkwin, modifiers);
     has_modifiers = xEvent.xkey.state & XEVENT_MOD_MASK;
-    has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
+    has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret.winPtr);
+
 
     /*
      * A KeyDown event targeting the caret window and having an alphanumeric
@@ -123,10 +124,13 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * be sent in this case.
      */
 
-    if (type == NSKeyDown && has_caret && !has_modifiers &&
-	(keychar >= 0x0020) && (keychar <= 0xF700)) {
+    if (processingCompose ||
+	(type == NSKeyDown && has_caret && !has_modifiers &&
+	     (keychar >= 0x0020) && (keychar < 0xF700))
+	) {
 	use_text_input = YES;
     }
+    
     if (use_text_input) {
 #if (NS_KEYLOG)
 	TKLog(@"keyDown: %s compose sequence.\n",
@@ -692,14 +696,16 @@ TkMacOSXGetModalSession(void)
  *	This enables correct placement of the popups used for character
  *      selection by the NSTextInputClient.  It gets called by text entry
  *      widgets whenever the cursor is drawn.  It does nothing if the widget's
- *      NSWindow is not the current KeyWindow.
+ *      NSWindow is not the current KeyWindow.  Otherwise it udpates the
+ *      display's caret structure and records the caret geometry in static
+ *      variables for use by the NSTextInputClient implementation.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	May update the display's caret window as well as the static
- *      variables caret_win, caret_x, caret_y and caret_height.
+ *	May update the display's caret structure as well as the static
+ *      variables caret_x, caret_y and caret_height.
  *
  *----------------------------------------------------------------------
  */
@@ -728,13 +734,11 @@ Tk_SetCaretPos(
     caretPtr->height = height;
 
     /*
-     * Record the window and and the caret geometry in static variables for use
-     * when processing key events.  (Only caret windows use the NSTextClient
-     * protocol.)  We use the coordinate system of the containing toplevel's
+     * Record the caret geometry in static variables for use when processing
+     * key events.  We use the coordinate system of the containing toplevel's
      * TKContextView for this.
      */
 
-    caret_win = winPtr;
     caret_x = x;
     caret_height = height;
     while (!Tk_IsTopLevel(tkwin)) {
