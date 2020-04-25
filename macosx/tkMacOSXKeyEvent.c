@@ -33,7 +33,7 @@ static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
 
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
-static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
+static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -210,7 +210,7 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * Set the trans_chars for keychars outside of the private-use range.
      */
     
-    setXeventPoint(&xEvent, tkwin, w);
+    setXEventPoint(&xEvent, tkwin, w);
     if (keychar < 0xF700) {
 	length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
     }
@@ -285,7 +285,7 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     setupXEvent(&xEvent, tkwin, 0);
-    setXeventPoint(&xEvent, tkwin, [self window]);
+    setXEventPoint(&xEvent, tkwin, [self window]);
     xEvent.xany.type = KeyPress;
 
     /*
@@ -551,6 +551,8 @@ static void
 setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
     unsigned int state = 0;
+    Display *display = Tk_Display(tkwin);
+
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
 	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
@@ -561,11 +563,11 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 	        (modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
     }
     memset(xEvent, 0, sizeof(XEvent));
-    xEvent->xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    xEvent->xany.serial = LastKnownRequestProcessed(display);
     xEvent->xany.display = Tk_Display(tkwin);
     xEvent->xany.window = Tk_WindowId(tkwin);
 
-    xEvent->xkey.root = XRootWindow(Tk_Display(tkwin), 0);
+    xEvent->xkey.root = XRootWindow(display, 0);
     xEvent->xkey.time = TkpGetMS();
     xEvent->xkey.state = state;
     xEvent->xkey.same_screen = true;
@@ -574,7 +576,7 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 }
 
 static void
-setXeventPoint(
+setXEventPoint(
     XEvent *xEvent,
     Tk_Window tkwin,
     NSWindow *w)
@@ -594,7 +596,7 @@ setXeventPoint(
 	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
 	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
 	}
-    } else {
+    } else if (winPtr->wmInfoPtr != NULL) {
 	local.x -= winPtr->wmInfoPtr->xInParent;
 	local.y -= winPtr->wmInfoPtr->yInParent;
     }
