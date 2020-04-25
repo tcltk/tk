@@ -15848,9 +15848,9 @@ BranchInspectProc(
     const TkSharedText *sharedTextPtr,
     const TkTextSegment *segPtr)
 {
+    Tcl_Obj *objPtr = Tcl_NewObj();
     (void)sharedTextPtr;
 
-    Tcl_Obj *objPtr = Tcl_NewObj();
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     return objPtr;
 }
@@ -16042,9 +16042,9 @@ LinkInspectProc(
     const TkSharedText *sharedTextPtr,
     const TkTextSegment *segPtr)
 {
+    Tcl_Obj *objPtr = Tcl_NewObj();
     (void)sharedTextPtr;
 
-    Tcl_Obj *objPtr = Tcl_NewObj();
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     return objPtr;
 }

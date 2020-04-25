@@ -272,9 +272,9 @@ UndoChangeTagPriorityDestroy(
     TkTextUndoToken *item,
     bool isRedo)
 {
+    UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
     (void)isRedo;
 
-    UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
     TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
 }
 
