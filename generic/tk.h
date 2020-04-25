@@ -884,6 +884,10 @@ typedef struct Tk_FakeWin {
  *				window.
  * TK_WM_MANAGEABLE		1 marks a window as capable of being converted
  *				into a toplevel using [wm manage].
+ * TK_CAN_INPUT_TEXT            1 means that this window accepts text input.
+ *                              Used on macOS to indicate that key events can be
+ *                              processed with the NSTextInputClient protocol.
+ *                              Not currently accessible through the public API.
  */
 
 #define TK_MAPPED		1
@@ -897,6 +901,7 @@ typedef struct Tk_FakeWin {
 #define TK_EMBEDDED		0x100
 #define TK_CONTAINER		0x200
 #define TK_BOTH_HALVES		0x400
+
 #define TK_WRAPPER		0x1000
 #define TK_REPARENTED		0x2000
 #define TK_ANONYMOUS_WINDOW	0x4000
@@ -905,6 +910,7 @@ typedef struct Tk_FakeWin {
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
 #define TK_WM_MANAGEABLE	0x80000
+#define TK_CAN_INPUT_TEXT       0x100000
 
 /*
  *----------------------------------------------------------------------
