@@ -293,14 +293,27 @@ bind Entry <<TkAccentBackspace>> {
 
 # A few additional bindings of my own.
 
-bind Entry <Button-2> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanMark %W %x
+if {[tk windowingsystem] ne "aqua"} {
+    bind Entry <Button-2> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
     }
-}
-bind Entry <B2-Motion> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanDrag %W %x
+    bind Entry <B2-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
+    }
+} else {
+    bind Entry <Button-3> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
+    }
+    bind Entry <B3-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
     }
 }
 

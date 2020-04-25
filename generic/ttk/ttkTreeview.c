@@ -2841,7 +2841,6 @@ static int TreeviewSeeCommand(
 	    TtkRedisplayWidget(&tv->core);
 	}
     }
-    tv->tree.yscroll.total = CountRows(tv->tree.root) - 1;
 
     /* Make sure item is visible:
      */
