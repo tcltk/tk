@@ -52,6 +52,7 @@ static const KeyInfo keyArray[] = {
     {61,	XK_Alt_R,	XK_Alt_R},
     {62,	XK_Control_R,	XK_Control_R},
     {63,	XK_Super_L,	XK_Super_L},
+    {64,	XK_F17,		NSF17FunctionKey},
     {65,	XK_KP_Decimal,	'.'},
     {67,	XK_KP_Multiply, '*'},
     {69,	XK_KP_Add,	'+'},
