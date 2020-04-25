@@ -54,6 +54,7 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     XEvent xEvent;
     UniChar keychar = 0;
     Bool can_input_text, has_modifiers = NO, use_text_input = NO;
+    int length = 0;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
 
@@ -192,6 +193,7 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	 * key, as a signal to TkpGetKeySym (see tkMacOSXKeyboard.c) that this
 	 * is a modifier key event.
 	 */
+
 	xEvent.xkey.keycode |= 0xF8FF;
 	break;
     case NSKeyUp:
@@ -203,8 +205,17 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     default:
 	return theEvent; /* Unrecognized key event. */
     }
-    setXeventPoint(&xEvent, tkwin, w);
 
+    /*
+     * Set the trans_chars for keychars outside of the private-use range.
+     */
+    
+    setXeventPoint(&xEvent, tkwin, w);
+    if (keychar < 0xF700) {
+	length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
+    }
+    xEvent.xkey.trans_chars[length] = 0;
+    
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
      * repeated KeyPress.
