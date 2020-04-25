@@ -45,18 +45,15 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
     NSWindow *w = [theEvent window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr;
-    TkCaret caret = winPtr->dispPtr->caret;
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
     Tk_Window tkwin = (Tk_Window) winPtr;
     NSEventType type = [theEvent type];
-    NSUInteger keyCode = [theEvent keyCode];
+    NSUInteger virtual = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
     XEvent xEvent;
-    Bool has_modifiers = NO;
-    Bool has_caret = NO;
-    Bool use_text_input = NO;
     UniChar keychar = 0;
+    Bool can_input_text, has_modifiers = NO, use_text_input = NO;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
 
@@ -79,7 +76,8 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
-	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	    winPtr =winPtr->dispPtr->focusPtr;
+	    tkwin = (Tk_Window) winPtr;
 	}
     }
 
@@ -103,20 +101,20 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
 	      [self class], self, _cmd,
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
-	      keyCode, w, type);
+	      virtual, w, type);
 #endif
     }
 
     /*
      * Build a skeleton XEvent.  We need to build it here, even if we will not
      * send it, so we can pass it to TkFocusKeyEvent to determine whether the
-     * target window has the caret.
+     * target widget can input text.
      */
 
     setupXEvent(&xEvent, tkwin, modifiers);
+    focusWinPtr = TkFocusKeyEvent(winPtr, &xEvent);
     has_modifiers = xEvent.xkey.state & XEVENT_MOD_MASK;
-    has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret.winPtr);
-
+    can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
 
     /*
      * A KeyDown event targeting the caret window and having an alphanumeric
@@ -124,39 +122,48 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * be sent in this case.
      */
 
+#if (NS_KEYLOG)
+    TKLog(@"keyDown: %s compose sequence.\n",
+	  processingCompose == YES ? "Continue" : "Begin");
+#endif
+
     if (processingCompose ||
-	(type == NSKeyDown && has_caret && !has_modifiers &&
-	     (keychar >= 0x0020) && (keychar < 0xF700))
+	(type == NSKeyDown && can_input_text && !has_modifiers &&
+	 (keychar >= 0x0020) && (keychar < 0xF700))
 	) {
 	use_text_input = YES;
     }
-    
     if (use_text_input) {
-#if (NS_KEYLOG)
-	TKLog(@"keyDown: %s compose sequence.\n",
-	      processingCompose == YES ? "Continue" : "Begin");
-#endif
 
 	/*
-	 * Call our interpretKeyEvents method to handle the event as a
-	 * TextInputClient.  When the composition sequence is complete, our
+	 * Call our interpretKeyEvents method to handle the event as an
+	 * NSTextInputClient.  When the composition sequence is complete, our
 	 * implementation of insertText: replacementRange will be called.  That
-	 * method generates a keyPress XEvent with the selected character.  In
-	 * IME when multiple characters have the same composition sequence and
-	 * the selected character is not the default it may be necessary to hit
-	 * the Enter key multiple times before the character is accepted and
-	 * rendered (See ticket 39de9677aa]). So we repeatedly send Enter key
-	 * events until the inputText method has cleared the processingCompose
-	 * flag.
+	 * method generates a keyPress XEvent with the selected character.
 	 */
 
-	processingCompose = YES;
-	while(processingCompose) {
+	if (!processingCompose) {
 	    [nsEvArray addObject: theEvent];
 	    [[w contentView] interpretKeyEvents: nsEvArray];
 	    [nsEvArray removeObject: theEvent];
-	    if ([theEvent keyCode] != 36) {
-		break;
+	} else {
+
+	    /*
+	     * In IME when there are multiple choices with the same composition
+	     * sequence and the selected choice is not the default it may be
+	     * necessary to hit the Enter key twice before the character is
+	     * accepted and rendered (See ticket 39de9677aa]). So when sending
+	     * an Enter key, we continue sending Enter keys until the inputText
+	     * method has cleared the processingCompose flag.
+	     */
+
+	    while(processingCompose) {
+		[nsEvArray addObject: theEvent];
+		[[w contentView] interpretKeyEvents: nsEvArray];
+		[nsEvArray removeObject: theEvent];
+		if ([theEvent keyCode] != 36) {
+		    break;
+		}
 	    }
 	}
 	return theEvent;
@@ -166,7 +173,7 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * We need to send an XEvent.  Finish constructing it.
      */
 
-    xEvent.xkey.keycode = (keyCode << 16) | keychar;
+    xEvent.xkey.keycode = (virtual << 16) | keychar;
     switch (type) {
     case NSFlagsChanged:
 
@@ -207,6 +214,8 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
+    }
+    if (xEvent.xany.type == KeyPress) {
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;
@@ -334,7 +343,6 @@ static void setXeventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
-
     if (focusWin) {
 
 	/*
@@ -698,14 +706,17 @@ TkMacOSXGetModalSession(void)
  *      widgets whenever the cursor is drawn.  It does nothing if the widget's
  *      NSWindow is not the current KeyWindow.  Otherwise it udpates the
  *      display's caret structure and records the caret geometry in static
- *      variables for use by the NSTextInputClient implementation.
+ *      variables for use by the NSTextInputClient implementation.  Any
+ *      widget passed to this function will be marked as being able to input
+ *      text by setting the TK_CAN_INPUT_TEXT flag.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	May update the display's caret structure as well as the static
- *      variables caret_x, caret_y and caret_height.
+ *      Sets the CAN_INPUT_TEXT flag on the widget passed as tkwin.  May update
+ *      the display's caret structure as well as the static variables caret_x,
+ *      caret_y and caret_height.
  *
  *----------------------------------------------------------------------
  */
@@ -721,6 +732,13 @@ Tk_SetCaretPos(
     TkCaret *caretPtr = &(winPtr->dispPtr->caret);
     NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
 
+    /*
+     * Register this widget as being capable of text input, so we know we
+     * should process (appropriate) key events for this window with the
+     * NSTextInputClient protocol.
+     */
+
+    winPtr->flags |= TK_CAN_INPUT_TEXT;
     if (w && ![w isKeyWindow]) {
 	return;
     }
@@ -728,6 +746,11 @@ Tk_SetCaretPos(
 	 && caretPtr->x == x) && (caretPtr->y == y)) {
 	return;
     }
+
+    /*
+     * Update the display's caret information.
+     */
+
     caretPtr->winPtr = winPtr;
     caretPtr->x = x;
     caretPtr->y = y;
@@ -735,8 +758,7 @@ Tk_SetCaretPos(
 
     /*
      * Record the caret geometry in static variables for use when processing
-     * key events.  We use the coordinate system of the containing toplevel's
-     * TKContextView for this.
+     * key events.  We use the TKContextView coordinate system for this.
      */
 
     caret_x = x;
