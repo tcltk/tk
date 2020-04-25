@@ -3346,7 +3346,6 @@ static int TreeviewSeeCommand(
     if (tv->tree.rowPosNeedsUpdate) {
 	UpdatePositionTree(tv);
     }
-    tv->tree.yscroll.total = tv->tree.totalRows - tv->tree.titleRows;
 
     /* Make sure item is visible:
      */

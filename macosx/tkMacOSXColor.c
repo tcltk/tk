@@ -369,11 +369,12 @@ SetCGColorComponents(
 			colorUsingColorSpace:sRGB];
 	    break;
 	case 8:
-	    if ([NSApp macMinorVersion] >= 14) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		color = [[NSColor controlAccentColor]
-			    colorUsingColorSpace:sRGB];
+	    if (@available(macOS 14, *)) {
+#else
+	    if (false) {
 #endif
+		color = [[NSColor controlAccentColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor
 			    colorForControlTint:[NSColor currentControlTint]]
