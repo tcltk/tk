@@ -1294,11 +1294,11 @@ TkDrawAngledChars(
 	 */
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, (int)x, (int)y, angle);
+	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, (int)x, (int)y, angle);
+	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
@@ -1315,7 +1315,7 @@ TkDrawAngledChars(
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, (int)x, (int)y, angle);
+	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
