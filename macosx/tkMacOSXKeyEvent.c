@@ -17,6 +17,7 @@
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXWm.h"
+#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar < 0xF700))
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -54,7 +55,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     XEvent xEvent;
     UniChar keychar = 0;
     Bool can_input_text, has_modifiers = NO, use_text_input = NO;
-    int length = 0;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
 
@@ -117,64 +117,63 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     has_modifiers = xEvent.xkey.state & XEVENT_MOD_MASK;
     can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
 
-    /*
-     * A KeyDown event targeting the caret window and having an alphanumeric
-     * keychar should be processed by our TextInputClient.  The XEvent will not
-     * be sent in this case.
-     */
-
 #if (NS_KEYLOG)
     TKLog(@"keyDown: %s compose sequence.\n",
 	  processingCompose == YES ? "Continue" : "Begin");
 #endif
 
+    /*
+     * Decide whether this event should be processed with the NSTextInputClient
+     * protocol.
+     */
+
     if (processingCompose ||
 	(type == NSKeyDown && can_input_text && !has_modifiers &&
-	 (keychar >= 0x0020) && (keychar < 0xF700))
+	 IS_PRINTABLE(keychar))
 	) {
 	use_text_input = YES;
     }
+
+    /*
+     * If we are processing this KeyDown event as an NSTextInputClient we do
+     * not queue an XEvent.  We pass the NSEvent to our interpretKeyEvents
+     * method.  When the composition sequence is complete, the callback method
+     * insertText: replacementRange will be called.  That method generates a
+     * keyPress XEvent with the selected character.
+     */
+
     if (use_text_input) {
 
 	/*
-	 * Call our interpretKeyEvents method to handle the event as an
-	 * NSTextInputClient.  When the composition sequence is complete, our
-	 * implementation of insertText: replacementRange will be called.  That
-	 * method generates a keyPress XEvent with the selected character.
+	 * In IME the Enter key is used to terminate a composition sequence.
+	 * when there are multiple choices of input text available, and the
+	 * user's selected choice is not the default it may be necessary to hit
+	 * the Enter key multiple times before the text is accepted and
+	 * rendered (See ticket 39de9677aa]). So when sending an Enter key
+	 * during composition, we continue sending Enter keys until the
+	 * inputText method has cleared the processingCompose flag.
 	 */
 
-	if (!processingCompose) {
+	if (processingCompose && [theEvent keyCode] == 36) {
+	    [nsEvArray addObject: theEvent];
+	    while(processingCompose) {
+		[[w contentView] interpretKeyEvents: nsEvArray];
+	    }
+	    [nsEvArray removeObject: theEvent];
+	} else {
 	    [nsEvArray addObject: theEvent];
 	    [[w contentView] interpretKeyEvents: nsEvArray];
 	    [nsEvArray removeObject: theEvent];
-	} else {
-
-	    /*
-	     * In IME when there are multiple choices with the same composition
-	     * sequence and the selected choice is not the default it may be
-	     * necessary to hit the Enter key twice before the character is
-	     * accepted and rendered (See ticket 39de9677aa]). So when sending
-	     * an Enter key, we continue sending Enter keys until the inputText
-	     * method has cleared the processingCompose flag.
-	     */
-
-	    while(processingCompose) {
-		[nsEvArray addObject: theEvent];
-		[[w contentView] interpretKeyEvents: nsEvArray];
-		[nsEvArray removeObject: theEvent];
-		if ([theEvent keyCode] != 36) {
-		    break;
-		}
-	    }
 	}
 	return theEvent;
     }
 
     /*
-     * We need to send an XEvent.  Finish constructing it.
+     * We are not handling this event as an NSTextInputClient, so we need to
+     * finish constructing the XEvent and queue it.
      */
 
-    xEvent.xkey.keycode = (virtual << 16) | keychar;
+    xEvent.xkey.keycode = (virtual << 24) | keychar;
     switch (type) {
     case NSFlagsChanged:
 
@@ -209,15 +208,14 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     /*
      * Set the trans_chars for keychars outside of the private-use range.
      */
-    
+
     setXEventPoint(&xEvent, tkwin, w);
-    if ((keychar >= 0x20) && (keychar < 0xF700)) {
-	length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
+    if (IS_PRINTABLE(keychar)) {
+	xEvent.xkey.nbytes = 0;  /* This string is null-terminated. */
+	int length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
 	xEvent.xkey.trans_chars[length] = 0;
-    } else {
-	    xEvent.xkey.nbytes = 0;
     }
-    
+
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
      * repeated KeyPress.
