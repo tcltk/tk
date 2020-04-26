@@ -566,10 +566,12 @@ TkpSetKeycodeAndState(
 	 * Set trans_chars for keychars outside of the private-use range.
 	 */
 
-	if (keychar < 0xF700) {
+	if ((keychar >= 0x20) && (keychar < 0xF700)) {
 	    length = TkUniCharToUtf(keychar, eventPtr->xkey.trans_chars);
+	    eventPtr->xkey.trans_chars[length] = 0;
+	} else {
+	    eventPtr->xkey.nbytes = 0;
 	}
-	eventPtr->xkey.trans_chars[length] = 0;
     }
 }
 

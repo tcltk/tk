@@ -211,10 +211,12 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
     
     setXEventPoint(&xEvent, tkwin, w);
-    if (keychar < 0xF700) {
+    if ((keychar >= 0x20) && (keychar < 0xF700)) {
 	length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
+	xEvent.xkey.trans_chars[length] = 0;
+    } else {
+	    xEvent.xkey.nbytes = 0;
     }
-    xEvent.xkey.trans_chars[length] = 0;
     
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
