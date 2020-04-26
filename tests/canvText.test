@@ -964,6 +964,20 @@ test canvText-20.1 {angled text bounding box} -setup {
     rename transpose {}
 } -result {ok ok ok}
 
+test canvText-20.2 {crash on angled text selection (Linux, without xft) - bug 2712f43f6e} -setup {
+    destroy .c
+    canvas .c -background bisque -selectforeground green2
+    grid .c
+    set id [.c create text 50 150 -anchor w -text "Angled text" \
+	    -angle 30 -font {Helvetica 32} -fill darkblue]
+} -body {
+    .c select clear
+    .c select from $id 0
+    .c select to $id 8 ; update    ;  # used to crash on Linux (--disable-xft build only)
+} -cleanup {
+    destroy .c
+} -result {}
+
 # cleanup
 cleanupTests
 return
