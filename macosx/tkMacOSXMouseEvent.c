@@ -123,6 +123,7 @@ enum {
 	    }
 	}
 	local.y = [eventWindow frame].size.height - local.y;
+	global.y = TkMacOSXZeroScreenHeight() - global.y;
     } else {
 
 	/*
@@ -142,6 +143,7 @@ enum {
 	}
 	local = [eventWindow tkConvertPointFromScreen: global];
 	local.y = [eventWindow frame].size.height - local.y;
+	global.y = TkMacOSXZeroScreenHeight() - global.y;
     }
 
     /*
@@ -220,7 +222,6 @@ enum {
     tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     local.x = win_x;
     local.y = win_y;
-    global.y = TkMacOSXZeroScreenHeight() - global.y;
 
     /*
      *  Generate an XEvent for this mouse event.
