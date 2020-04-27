@@ -21,7 +21,7 @@
 			       (keychar < 0xF700))
 #define ON_KEYPAD(virtual) ((virtual >= 0x41) && (virtual <= 0x5C))
 #define VIRTUAL_MAX	 0x7F
-#define MAC_KEYCHAR_MASK 0xFFFF
+#define MAC_KEYCHAR_MASK 0xFFFFFF
 
 /*
  * About keyboards
@@ -315,7 +315,7 @@ KeyDataToUnicode(
 	UInt32 dummyState;
 	OSStatus err;
 
-	virtual &= MAC_KEYCHAR_MASK;
+	virtual &= 0xFF;
 	modifiers = (modifiers >> 8) & 0xFF;
 	if (!deadKeyStatePtr) {
 	    options = kUCKeyTranslateNoDeadKeysMask;
@@ -381,7 +381,7 @@ XKeycodeToKeysym(
      * an Fn function key or Tab, Backspace, Home, End, etc.
      */
 
-    virtual = (keycode >> 24) & MAC_KEYCHAR_MASK;
+    virtual = (keycode >> 24) & 0xFF;
     if (virtual) {
 	hPtr = Tcl_FindHashEntry(&virtual2keysym, INT2PTR(virtual));
 	if (hPtr != NULL) {
