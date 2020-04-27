@@ -39,8 +39,9 @@
  * key identifier as a "virtual keycode", usually the value of a variable named
  * "virtual".
  *
- * Some of the keys on a keyboard are "modifier" keys.  The effect of
- * pressing or releasing a key depends on three quantities:
+ * Some of the keys on a keyboard, such as the Shift, Option, Command or
+ * Control keys, are "modifier" keys.  The effect of pressing or releasing a
+ * key depends on three quantities:
  *     - which key is being pressed or released
  *     - which modifier keys are being held down at the moment
  *     - the current keyboard layout
@@ -54,7 +55,7 @@
  * value known as a keysym.  Every keysym has an associated string name, also
  * known as a keysym.  The Tk bind command uses the X11 keysym string to
  * specify a key event which should invoke a certain action and it provides the
- * numeric and symbolic keysyms to the bound proc as %K and %N respectively.
+ * numeric and symbolic keysyms to the bound proc as %N and %K respectively.
  * An X11 XEvent which reports a KeyPress or KeyRelease does not include the
  * keysym.  Instead it includes a platform-specific numerical value called a
  * keycode which is available to the bound procedure as %k.  A platform port of
