@@ -17,7 +17,9 @@
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXWm.h"
-#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar < 0xF700))
+#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && \
+			       (keychar != 0x7f) && \
+			       (keychar < 0xF700))
 
 /*
 #ifdef TK_MAC_DEBUG
