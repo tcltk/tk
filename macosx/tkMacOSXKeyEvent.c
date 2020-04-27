@@ -115,8 +115,21 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     setupXEvent(&xEvent, tkwin, modifiers);
-    focusWinPtr = TkFocusKeyEvent(winPtr, &xEvent);
     has_modifiers = xEvent.xkey.state & XEVENT_MOD_MASK;
+    focusWinPtr = TkFocusKeyEvent(winPtr, &xEvent);
+    if (focusWinPtr == NULL) {
+
+	/*
+	 * This NSEvent is being sent to a window which no longer has focus.
+	 * This has been observed to happen when the user deactivates the Tk
+	 * app while the NSTextInputClient's popup character selection window
+	 * is still open.  We attempt to abandon any ongoing composition
+	 * operation and discard the event.
+	 */
+
+	[[w contentView] cancelComposingText];
+	return theEvent;
+    }
     can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
 
 #if (NS_KEYLOG)
@@ -398,7 +411,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     return privateWorkingText != nil;
 }
 
-
 - (NSRange)markedRange
 {
     NSRange rng = privateWorkingText != nil
@@ -428,7 +440,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     [self deleteWorkingText];
     processingCompose = NO;
 }
-
 
 /*
  * Called by the system to get a position for popup character selection windows
