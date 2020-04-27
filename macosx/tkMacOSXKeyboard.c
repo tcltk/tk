@@ -25,7 +25,7 @@
 
 /*
  * About keyboards
-
+ * ---------------
  * Keyboards are complicated.  This long comment is an attempt to provide
  * enough information about them to make it possible to read and understand
  * the code in this file.
@@ -67,17 +67,15 @@
  *
  * When the keyboard focus is on a Tk widget which provides text input, there
  * are some X11 KeyPress events which cause text to be inserted.  We will call
- * these "printable" events.  The text which should be inserted is contained in
- * the xkeys.trans_chars field of a key XEvent as a unicode string encoded with
- * a special Tcl encoding.  The string is assumed to be null-terminated if the
- * nbytes field of the XEvent is non-zero.  Otherwise the length is given by
- * the value of nbytes.  The value of the trans_chars string in an Xevent
- * depends on more than the three items above.  It may also depend on the
- * sequence of keypresses that preceded the one being reported by the XEvent.
- * For example, on macOS an <Alt-e> event does not cause text to be inserted
- * but a following <a> event causes an accented a to be inserted.  The events
- * in such a composition sequence, other than the final one, are known as
- * "dead-key" events.
+ * these "printable" events.  On macOS the text which should be inserted is
+ * contained in the xkeys.trans_chars field of a key XEvent as a
+ * null-terminated unicode string encoded with a special Tcl encoding.  The
+ * value of the trans_chars string in an Xevent depends on more than the three
+ * items above.  It may also depend on the sequence of keypresses that preceded
+ * the one being reported by the XEvent.  For example, on macOS an <Alt-e>
+ * event does not cause text to be inserted but a following <a> event causes an
+ * accented 'a' to be inserted.  The events in such a composition sequence,
+ * other than the final one, are known as "dead-key" events.
  *
  * MacOS packages the information described above in a different way.  Every
  * meaningful effect from a key action *other than changing the state of
@@ -217,7 +215,8 @@ InitHashTables(void)
  *	Called when the keyboard changes to update the hash table that
  *      maps unicode characters to virtual keycodes with states.  In order
  *      for this to be well-defined we have to ignore virtual keycodes for
- *      keypad keys.
+ *      keypad keys, since each keypad key has the same character as the
+ *      corresponding key on the main keyboard.
  *
  * Results:
  *	None.
@@ -346,13 +345,13 @@ KeyDataToUnicode(
  *
  * XKeycodeToKeysym --
  *
- *	This is a stub function which translates from the keycode used
- *      in an XEvent to an X11 keysym.  On the Macintosh, the display input
- *      is ignored and only the virtual keycode in bits 24-31 is used.
+ *	This is a stub function which translates from the keycode used in an
+ *      XEvent to a numerical keysym.  On macOS, the display input variable is
+ *      ignored and only the virtual keycode in bits 24-31 is used.
  *
  * Results:
- *      Returns the corresponding keysym, or NoSymbol if the keysym cannot
- *	be found.
+ *      Returns the corresponding numerical keysym, or NoSymbol if the keysym
+ *      cannot be found.
  *
  * Side effects:
  *	None.
@@ -639,7 +638,6 @@ TkpSetKeycodeAndState(
 	 */
 
 	if (IS_PRINTABLE(keychar)) {
-	    eventPtr->xkey.nbytes = 0; /* This string is null-terminated. */
 	    int length = TkUniCharToUtf(keychar, eventPtr->xkey.trans_chars);
 	    eventPtr->xkey.trans_chars[length] = 0;
 	}
@@ -651,8 +649,8 @@ TkpSetKeycodeAndState(
  *
  * TkpGetKeySym --
  *
- *	Given an X KeyPress or KeyRelease event, map the keycode in the event
- *	to a keysym.
+ *	This is a stub function called in tkBind.c.  Given an X KeyPress or
+ *	KeyRelease event, map the keycode in the event to a keysym.
  *
  * Results:
  *	The return value is the keysym corresponding to eventPtr, or NoSymbol
@@ -710,15 +708,6 @@ TkpGetKeySym(
 	default:
 	    return NoSymbol;
 	}
-    }
-
-    /*
-     * If nbytes has been set, it's not a function key, but a regular key that
-     * has been translated in tkMacOSXKeyEvent.c; just use that.
-     */
-
-    if (eventPtr->xkey.nbytes) {
-	return eventPtr->xkey.keycode;
     }
 
     /*

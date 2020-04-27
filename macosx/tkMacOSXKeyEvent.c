@@ -226,7 +226,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
     setXEventPoint(&xEvent, tkwin, w);
     if (IS_PRINTABLE(keychar)) {
-	xEvent.xkey.nbytes = 0;  /* This string is null-terminated. */
 	int length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
 	xEvent.xkey.trans_chars[length] = 0;
     }
@@ -332,8 +331,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     for (i = 0; i < len; i++) {
-	xEvent.xkey.nbytes = TkUtfAtIndex(str, i, xEvent.xkey.trans_chars,
-					   &xEvent.xkey.keycode);
+	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &xEvent.xkey.keycode);
 	if (xEvent.xkey.keycode > 0xffff){
 	    i++;
 	}
