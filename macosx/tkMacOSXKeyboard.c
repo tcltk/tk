@@ -6,6 +6,7 @@
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -347,8 +348,9 @@ KeyDataToUnicode(
  * XKeycodeToKeysym --
  *
  *	This is a stub function which translates from the keycode used in an
- *      XEvent to a numerical keysym.  On macOS, the display input variable is
- *      ignored and only the virtual keycode in bits 24-31 is used.
+ *      XEvent to a numerical keysym.  On macOS, the display parameter is
+ *      ignored and only the the virtual keycode stored in bits 24-31 is
+ *      used.
  *
  * Results:
  *      Returns the corresponding numerical keysym, or NoSymbol if the keysym
@@ -408,11 +410,11 @@ XKeycodeToKeysym(
  *
  * TkpGetString --
  *
- *	Retrieve the string stored in the transchars field of an XEvent
- *      and convert it to a DString.
+ *	This is a stub function which retrieves the string stored in the
+ *      transchars field of an XEvent and converts it to a Tcl_DString.
  *
  * Results:
- *	Returns the DString.
+ *	Returns a pointer to the string value of the DString.
  *
  * Side effects:
  *	None.
@@ -441,10 +443,11 @@ TkpGetString(
  *
  * XGetModifierMapping --
  *
- *	Fetch the current keycodes used as modifiers.
+ *	X11 stub function to get the keycodes used as modifiers.  This
+ *      is never called by the macOS port.
  *
  * Results:
- *	Returns a new modifier map.
+ *	Returns a newly allocated modifier map.
  *
  * Side effects:
  *	Allocates a new modifier map data structure.
@@ -458,13 +461,6 @@ XGetModifierMapping(
 {
     XModifierKeymap *modmap;
 
-    (void) display; /*unused*/
-
-    /*
-     * MacOS doesn't use the key codes for the modifiers for anything, and we
-     * don't generate them either. So there is no modifier map.
-     */
-
     modmap = ckalloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
@@ -476,7 +472,8 @@ XGetModifierMapping(
  *
  * XFreeModifiermap --
  *
- *	Deallocate a modifier map that was created by XGetModifierMapping.
+ *	Deallocates a modifier map that was created by XGetModifierMapping.
+ *      This is also never called by the macOS port.
  *
  * Results:
  *	None.
@@ -503,9 +500,10 @@ XFreeModifiermap(
  *
  * XKeysymToString, XStringToKeysym --
  *
- *	These X window functions map keysyms to strings & strings to keysyms.
- *      They are never called because we define REDO_KEYSYM_LOOKUP, which
- *      instructs tkBind to do the conversion for us.
+ *	These X11 stub functions map keysyms to strings & strings to keysyms.
+ *      A platform can do its own conversion by defining these and undefining
+ *      REDO_KEYSYM_LOOKUP.  The macOS port defines REDO_KEYSYM_LOOKUP so these
+ *      are never called and Tk does the conversion for us.
  *
  * Results:
  *	None.
@@ -535,15 +533,16 @@ XStringToKeysym(
  *
  * XKeysymToKeycode --
  *
- *	This is a stub function which onverts a numerical keysym to the keycode
- *      which should be used as the in a KeyPress or KeyRelease XEvent for the
- *      corresponding key.
+ *	This is a stub function which converts a numerical keysym to the
+ *      platform-specific keycode used in a KeyPress or KeyRelease XEvent.  The
+ *      implementation calls a static function which also provides information
+ *      about the modifier state, needed by TkpSetKeycodeAndState.
  *
  * Results:
  *
- *      An X11 KeyCode with a unicode character in the low 16 bits and the
- *	8-bit "virtual keycode" in the highest byte.  See the description of
- *      keycodes on the Macintosh at the top of this file.
+ *      On macOS, a KeyCode with a unicode character in the lowest 16 bits and
+ *	the 8-bit "virtual keycode" in the highest byte.  See the description
+ *	of keycodes on the Macintosh at the top of this file.
  *
  * Side effects:
  *	None.
@@ -612,8 +611,8 @@ XKeysymToKeycode(
  *
  *	Modifies the XEvent. Sets the xkey.keycode to a keycode value formatted
  *	by XKeysymToKeycode and sets the shift and option flags in xkey.state
- *	to the values implied by the keysym. Also fills in xkey.trans_chars, so
- *	that the actual characters can be retrieved later.
+ *	to the values implied by the keysym. Also fills in xkey.trans_chars for
+ *	printable events.
  *
  *----------------------------------------------------------------------
  */
@@ -650,16 +649,17 @@ TkpSetKeycodeAndState(
  *
  * TkpGetKeySym --
  *
- *	This is a stub function called in tkBind.c.  Given an X KeyPress or
- *	KeyRelease event, map the keycode in the event to a keysym.
+ *	This is a stub function called in tkBind.c.  Given a KeyPress or
+ *	KeyRelease XEvent, it maps the keycode in the event to a numerical
+ *      keysym.
  *
  * Results:
  *	The return value is the keysym corresponding to eventPtr, or NoSymbol
  *	if no matching keysym could be found.
  *
  * Side effects:
- *	In the first call for a given display, keycode-to-keysym maps get
- *	loaded.
+ *	In the first call for a given display, calls TkpInitKeymapInfo.
+ *
  *
  *----------------------------------------------------------------------
  */
@@ -714,17 +714,15 @@ TkpGetKeySym(
     /*
      * Figure out which of the four slots in the keymap vector to use for this
      * key. Refer to Xlib documentation for more info on how this computation
-     * works. (Note: We use "Option" in keymap columns 2 and 3 where other
-     * implementations have "Mode_switch".)
+     * works.
      */
 
     index = 0;
     if (eventPtr->xkey.state & Mod2Mask) { /* Option */
 	index |= 2;
     }
-    if ((eventPtr->xkey.state & ShiftMask)
-	    || (/* (dispPtr->lockUsage != LU_IGNORE)
-	    && */ (eventPtr->xkey.state & LockMask))) {
+    if ((eventPtr->xkey.state & ShiftMask) || /* Shift or caps lock. */
+	(eventPtr->xkey.state & LockMask)) {
 	index |= 1;
     }
 
@@ -767,15 +765,14 @@ TkpGetKeySym(
  *
  * TkpInitKeymapInfo --
  *
- *	This procedure is invoked to scan keymap information to recompute stuff
- *	that's important for binding, such as the modifier key (if any) that
- *	corresponds to the "Mode_switch" keysym.
+ *	This procedure initializes fields in the display that pertain
+ *      to modifier keys.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Keymap-related information in dispPtr is updated.
+ *	Modifier key information in dispPtr is initialized.
  *
  *--------------------------------------------------------------
  */
@@ -788,34 +785,32 @@ TkpInitKeymapInfo(
     dispPtr->bindInfoStale = 0;
 
     /*
-     * Behaviors that are variable on X11 are defined constant on MacOSX.
-     * lockUsage is only used above in TkpGetKeySym(), nowhere else currently.
+     * On macOS the caps lock key is always interpreted to mean that alphabetic
+     * keys become uppercase but other keys do not get shifted.  (X11 allows
+     * a configuration option which makes the caps lock equivalent to holding
+     * down the shift key.)
      * There is no offical "Mode_switch" key.
      */
 
     dispPtr->lockUsage = LU_CAPS;
+
+    /* This field is no longer used by tkBind.c */
+
     dispPtr->modeModMask = 0;
-#if 0
-    /*
-     * With this, <Alt> and <Meta> become synonyms for <Command> and <Option>
-     * in bindings like they are (and always have been) in the keysyms that
-     * are reported by KeyPress events. But the init scripts like text.tcl
-     * have some disabling bindings for <Meta>, so we don't want this without
-     * some changes in those scripts. See also bug #700311.
+
+    /* The Alt and Meta keys are interchanged on Macintosh keyboards compared
+     * to PC keyboards.  These fields could be set to make the Alt key on a PC
+     * keyboard behave likd an Alt key. That would also require interchanging
+     * Mod1Mask and Mod2Mask in tkMacOSXKeyEvent.c.
      */
 
-    dispPtr->altModMask = Mod2Mask;  /* Option key */
-    dispPtr->metaModMask = Mod1Mask; /* Command key */
-#else
     dispPtr->altModMask = 0;
     dispPtr->metaModMask = 0;
-#endif
 
     /*
-     * MacOSX doesn't create a key event when a modifier key is pressed or
-     * released.  However, it is possible to generate key events for
-     * modifier keys, and this is done in the tests.  So we construct an array
-     * containing the keycodes of the standard modifier keys from static data.
+     * The modKeyCodes table lists the keycodes that appear in KeyPress or
+     * KeyRelease XEvents for modifier keys.  In tkBind.c this table is
+     * searched to determine whether an XEvent corresponds to a modifier key.
      */
 
     if (dispPtr->modKeyCodes != NULL) {
