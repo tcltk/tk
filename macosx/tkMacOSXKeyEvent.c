@@ -17,9 +17,10 @@
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXWm.h"
-#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && \
-			       (keychar != 0x7f) && \
-			       (keychar < 0xF700))
+
+/*
+ * See tkMacOSXPrivate.h for the definition of IS_PRINTABLE.
+ */
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -118,7 +119,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     has_modifiers = xEvent.xkey.state & XEVENT_MOD_MASK;
     focusWinPtr = TkFocusKeyEvent(winPtr, &xEvent);
     if (focusWinPtr == NULL) {
-
+	TKContentView *contentView = [w contentView];
 	/*
 	 * This NSEvent is being sent to a window which no longer has focus.
 	 * This has been observed to happen when the user deactivates the Tk
@@ -127,7 +128,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	 * operation and discard the event.
 	 */
 
-	[[w contentView] cancelComposingText];
+	[contentView cancelComposingText];
 	return theEvent;
     }
     can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
@@ -331,10 +332,12 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     for (i = 0; i < len; i++) {
-	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &xEvent.xkey.keycode);
-	if (xEvent.xkey.keycode > 0xffff){
+	unsigned int code;
+	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &code);
+	if (code > 0xFFFF){
 	    i++;
 	}
+	xEvent.xkey.keycode = code;
     	xEvent.xany.type = KeyPress;
     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
@@ -419,15 +422,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	TKLog(@"markedRange request");
     }
     return rng;
-}
-
-- (void)cancelComposingText
-{
-    if (NS_KEYLOG) {
-	TKLog(@"cancelComposingText");
-    }
-    [self deleteWorkingText];
-    processingCompose = NO;
 }
 
 - (void)unmarkText
@@ -552,6 +546,16 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	}
     }
 }
+
+- (void)cancelComposingText
+{
+    if (NS_KEYLOG) {
+	TKLog(@"cancelComposingText");
+    }
+    [self deleteWorkingText];
+    processingCompose = NO;
+}
+
 @end
 
 /*

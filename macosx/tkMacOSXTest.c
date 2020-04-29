@@ -229,18 +229,18 @@ InjectKeyEventObjCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    int i, index, key, mods = 0, x = 0, y = 0;
-    const char *character, *unmod=nil;
-    NSEvent *keyEvent;
-    NSString *unmodChar = nil;
-    NSUInteger type;
-    
     static const char *const optionStrings[] = {
-	"press", "release", "flagschanged"};
+	"press", "release", "flagschanged", NULL};
     NSUInteger types[3] = {NSKeyDown, NSKeyUp, NSFlagsChanged};
     static const char *const argStrings[] = {
-	"-unmod", "-modifiers", "-x", "-y"};
-    enum args {KEYEVENT_UNMOD, KEYEVENT_MODIFIERS, KEYEVENT_X, KEYEVENT_Y};
+	"-shift", "-control", "-option", "-command", "-x", "-y", NULL};
+    enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION,
+	       KEYEVENT_COMMAND, KEYEVENT_X, KEYEVENT_Y};
+    int i, index, key, mods = 0, x = 0, y = 0;
+    NSString *keyChar, *unmod;
+    NSEvent *keyEvent;
+    NSUInteger type;
+    
     if (objc < 4) {
     wrongArgs:
         Tcl_WrongNumArgs(interp, 1, objv, "option key char ?arg?");
@@ -263,34 +263,33 @@ InjectKeyEventObjCmd(
 	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEY", NULL);
         return TCL_ERROR;
     }
-    character = Tcl_GetString(objv[3]);
+    keyChar = [[[NSString alloc] initWithUTF8String:Tcl_GetString(objv[3])]
+		  autorelease];
+    unmod = keyChar;
     for (i = 4; i < objc; i++) {
-        if (Tcl_GetIndexFromObjStruct(interp, objv[i], &argStrings,
-	        sizeof(char *), "option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], argStrings,
+                sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
             return TCL_ERROR;
         }
         switch ((enum args) index) {
-	case KEYEVENT_UNMOD:
-	    if (++i >= objc) {
-                goto wrongArgs;
-            }
-            unmod = Tcl_GetString(objv[i]),
-	    unmodChar = [[[NSString alloc] initWithUTF8String:unmod]
-			    autorelease];
+	case KEYEVENT_SHIFT:
+	    mods |= NSShiftKeyMask;
+	    unmod = [keyChar lowercaseString];
             break;
-	case KEYEVENT_MODIFIERS:
-	    if (++i >= objc) {
-                goto wrongArgs;
-            }
-	    if (Tcl_GetIntFromObj(interp,objv[i],&mods) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    break;
+	case KEYEVENT_CONTROL:
+	    mods |= NSShiftKeyMask;
+            break;
+	case KEYEVENT_OPTION:
+	    mods |= NSShiftKeyMask;
+            break;
+	case KEYEVENT_COMMAND:
+	    mods |= NSShiftKeyMask;
+            break;
 	case KEYEVENT_X:
 	    if (++i >= objc) {
                 goto wrongArgs;
             }
-	    if (Tcl_GetIntFromObj(interp,objv[i],&x) != TCL_OK) {
+	    if (Tcl_GetIntFromObj(interp,objv[i], &x) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -298,9 +297,10 @@ InjectKeyEventObjCmd(
 	    if (++i >= objc) {
                 goto wrongArgs;
             }
-	    if (Tcl_GetIntFromObj(interp,objv[i],&y) != TCL_OK) {
+	    if (Tcl_GetIntFromObj(interp,objv[i], &y) != TCL_OK) {
 		return TCL_ERROR;
 	    }
+	    break;
 	}
     }
     keyEvent = [NSEvent keyEventWithType:type
@@ -309,9 +309,8 @@ InjectKeyEventObjCmd(
 	timestamp:GetCurrentEventTime()
 	windowNumber:0
 	context:nil
-	characters:[[[NSString alloc] initWithUTF8String:character]
-		       autorelease]
-	charactersIgnoringModifiers:unmodChar
+	characters:keyChar
+	charactersIgnoringModifiers:unmod
 	isARepeat:NO
 	keyCode:key];
     [NSApp postEvent:keyEvent atStart:NO];
