@@ -17,13 +17,6 @@
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXKeysyms.h"
 
-#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && \
-			       (keychar != 0x7f) && \
-			       (keychar < 0xF700))
-#define ON_KEYPAD(virtual) ((virtual >= 0x41) && (virtual <= 0x5C))
-#define VIRTUAL_MAX	 0x7F
-#define MAC_KEYCHAR_MASK 0xFFFFFF
-
 /*
  * About keyboards
  * ---------------
@@ -97,7 +90,7 @@
  * numerical X11 keysyms and macOS keychars; this file constructs Tcl hash
  * tables to do this job, using data defined in the file tkMacOSXKeysyms.h.
  * The code here adopts the convention that the keychar of any modifier key
- * is 0xF8FF, the last value in the private-use range.
+ * is MOD_KEYCHAR.
  *
  * The macosx platform-specific scheme for generating a keycode when mapping an
  * NSEvent of type KeyUp, KeyDown or FlagsChanged to an XEvent of type KeyPress
@@ -109,15 +102,42 @@
  * requires 21 bits.  So, in the future, when macs have emoji keyboards, no
  * change will be needed in how keycodes are generated.  Second, the KeyCode
  * type for the keycode field in an XEvent is currently defined as unsigned
- * long, which means that it is 64 bits on modern macOS systems. Finally, there
- * is no obstruction to generating KeyPress events for keys that represent
- * letters which do not exist on the current keyboard layout.  And different
- * keyboard layouts can assign a given letter to different keys.  So we need a
- * convention for what value to assign to "virtual" when computing the keycode
- * for a generated event.  The convention used here is as follows:
- *   If there is a key on the current keyboard which produces the keychar,
- *   use the virtual keycode of that key.  Otherwise set virtual = 0.
+ * int, which was modified from the unsigned short used in X11 in order to
+ * accomodate macOS. Finally, there is no obstruction to generating KeyPress
+ * events for keys that represent letters which do not exist on the current
+ * keyboard layout.  And different keyboard layouts can assign a given letter
+ * to different keys.  So we need a convention for what value to assign to
+ * "virtual" when computing the keycode for a generated event.  The convention
+ * used here is as follows: If there is a key on the current keyboard which
+ * produces the keychar, use the virtual keycode of that key.  Otherwise set
+ * virtual = NO_VIRTUAL.
  */
+
+
+/*
+ * See tkMacOSXPrivate.h for the definition of IS_PRINTABLE.
+ */
+
+#define ON_KEYPAD(virtual) ((virtual >= 0x41) && (virtual <= 0x5C))
+#define VIRTUAL_MAX	 0x7F
+#define NO_VIRTUAL 0xFF
+#define MAC_KEYCHAR_MASK 0xFFFFFF
+#define MOD_KEYCHAR 0xF8FE
+
+/*
+ * An "index" is an int containing two modifier flags for Option and Shift
+ * in bits 0-1.  It is used as an index when building the keymap hash
+ * tables.
+ */
+
+#define INDEX_SHIFT 1
+#define INDEX_OPTION 2
+#define INDEX2STATE(index) ((index & INDEX_SHIFT ? ShiftMask : 0) |	\
+			    (index & INDEX_OPTION ? Mod2Mask : 0))
+#define INDEX2CARBON(index) ((index & INDEX_SHIFT ? shiftKey : 0) |	\
+			     (index & INDEX_OPTION ? optionKey : 0))
+#define STATE2INDEX(state) ((state & ShiftMask ? INDEX_SHIFT : 0) |	\
+			    (state & Mod2Mask ? INDEX_OPTION : 0))
 
 /*
  * Hash tables used to translate between various key attributes.
@@ -127,7 +147,8 @@ static Tcl_HashTable virtual2keysym;	/* Special virtual keycode to keysym */
 static Tcl_HashTable keysym2keycode;	/* keysym to XEvent keycode */
 static Tcl_HashTable keysym2unichar;	/* keysym to unichar */
 static Tcl_HashTable unichar2keysym;	/* unichar to X11 keysym */
-static Tcl_HashTable unichar2virtual;	/* unichar to virtual keycode */
+static Tcl_HashTable unichar2virtual;	/* unichar to virtual with index */
+static Tcl_HashTable virtual2unichar;	/* virtual with index to unichar */
 
 /*
  * Flags.
@@ -141,7 +162,7 @@ static BOOL keyboardChanged = YES;
  */
 
 static void	InitHashTables(void);
-static void     UpdateKeymap(void);
+static void     UpdateKeymaps(void);
 static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
 			UInt16 keyaction, UInt32 virtual, UInt32 modifiers,
 			UInt32 * deadKeyStatePtr);
@@ -155,7 +176,7 @@ static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     keyboardChanged = YES;
-    UpdateKeymap();
+    UpdateKeymaps();
 }
 @end
 
@@ -205,14 +226,14 @@ InitHashTables(void)
 				   &dummy);
 	Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->keysym));
     }
-    UpdateKeymap();
+    UpdateKeymaps();
     initialized = YES;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * UpdateKeymap --
+ * UpdateKeymaps --
  *
  *	Called when the keyboard changes to update the hash table that
  *      maps unicode characters to virtual keycodes with states.  In order
@@ -230,30 +251,41 @@ InitHashTables(void)
  */
 
 static void
-UpdateKeymap()
+UpdateKeymaps()
 {
     static int keymapInitialized = 0;
     UniChar keychar;
     Tcl_HashEntry *hPtr;
-    int virtual, state, modifiers, dummy;
+    int virtual, index, modifiers, dummy;
 
     if (!keymapInitialized) {
 	Tcl_InitHashTable(&unichar2virtual, TCL_ONE_WORD_KEYS);
+	Tcl_InitHashTable(&virtual2unichar, TCL_ONE_WORD_KEYS);
     } else {
 	Tcl_DeleteHashTable(&unichar2virtual);
+	Tcl_DeleteHashTable(&virtual2unichar);
     }
-    for (state = 4; state >= 0; state--) {
+
+    /*
+     * This for loop goes backwards so that a unichar lookup will
+     * provide the minimal modifier mask.  Simpler combinations
+     * will overwrite more complex ones.
+     */
+
+    for (index = 4; index >= 0; index--) {
 	for (virtual = 0; virtual <= VIRTUAL_MAX; virtual++) {
 	    if (ON_KEYPAD(virtual)) {
 		continue;
 	    }
-	    modifiers =  (state & 1 ? shiftKey : 0) |
-		(state & 2 ? optionKey : 0);
+	    modifiers = INDEX2CARBON(index);
 	    KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, virtual, modifiers,
 			     NULL);
 	    hPtr = Tcl_CreateHashEntry(&unichar2virtual, INT2PTR(keychar),
 				       &dummy);
-	    Tcl_SetHashValue(hPtr, INT2PTR(state << 8 | virtual));
+	    Tcl_SetHashValue(hPtr, INT2PTR(index << 8 | virtual));
+	    hPtr = Tcl_CreateHashEntry(&virtual2unichar,
+				       INT2PTR(index << 8 | virtual), &dummy);
+	    Tcl_SetHashValue(hPtr, INT2PTR(keychar));
 	}
     }
 }
@@ -390,6 +422,18 @@ XKeycodeToKeysym(
 	    return (KeySym) Tcl_GetHashValue(hPtr);
 	}
     }
+
+    /*
+     * If there is no key with this keysym, try using the keychar to look up a
+     * keysym.
+     */
+
+    if (virtual == NO_VIRTUAL)
+	hPtr = Tcl_FindHashEntry(&unichar2keysym,
+				 INT2PTR(keycode & MAC_KEYCHAR_MASK));
+	if (hPtr != NULL) {
+	    return (KeySym) Tcl_GetHashValue(hPtr);
+	}
 
     /*
      * If not, use the Carbon Framework to find the unicode character and
@@ -550,16 +594,29 @@ XStringToKeysym(
  *----------------------------------------------------------------------
  */
 static KeyCode
-XKeysymToKeycodeWithState(
+XKeysymToKeycodeWithIndex(
     Display *display,
     KeySym keysym,
-    int *state)
+    int *index)
 {
     Tcl_HashEntry *hPtr;
 
     if (!initialized) {
 	InitHashTables();
     }
+
+    /*
+     * First check for a special key.
+     */
+
+    hPtr = Tcl_FindHashEntry(&keysym2keycode, INT2PTR(keysym));
+    if (hPtr != NULL) {
+	return (KeyCode) Tcl_GetHashValue(hPtr);
+    }
+
+    /*
+     * Next check for printable keys.
+     */
 
     hPtr = Tcl_FindHashEntry(&keysym2unichar, INT2PTR(keysym));
     if (hPtr != NULL) {
@@ -568,23 +625,23 @@ XKeysymToKeycodeWithState(
 	if (hPtr != NULL) {
 	    KeyCode lookup = ((KeyCode) Tcl_GetHashValue(hPtr));
 	    KeyCode virtual = lookup & 0xFF;
-	    *state = lookup >> 8;
+	    *index = lookup >> 8;
 	    return virtual << 24 | character;
 	} else {
-	    return character;
+
+	    /*
+	     * The keysym does not exist on the current keyboard.
+	     */
+
+	    return (NO_VIRTUAL << 24) | character;
 	}
     }
 
-    hPtr = Tcl_FindHashEntry(&keysym2keycode, INT2PTR(keysym));
-    if (hPtr != NULL) {
-	return (KeyCode) Tcl_GetHashValue(hPtr);
-    }
-
     /*
-     * Could not construct a keycode.
+     * Would not construct a keycode.  Set the keychar to 0.
      */
 
-    return 0;
+    return (NO_VIRTUAL << 24) ;
 }
 
 KeyCode
@@ -592,8 +649,8 @@ XKeysymToKeycode(
     Display *display,
     KeySym keysym)
 {
-    int state;
-    return XKeysymToKeycodeWithState(display, keysym, &state);
+    int index;
+    return XKeysymToKeycodeWithIndex(display, keysym, &index);
 }
 
 /*
@@ -625,18 +682,36 @@ TkpSetKeycodeAndState(
     if (keysym == NoSymbol) {
 	eventPtr->xkey.keycode = 0;
     } else {
-	int state;
-	UniChar keychar;
+	int index = 0, eventIndex = STATE2INDEX(eventPtr->xkey.state);
 	Display *display = Tk_Display(tkwin);
-	eventPtr->xkey.keycode = XKeysymToKeycodeWithState(display, keysym,
-							   &state);
-	eventPtr->xkey.state |= state;
-	keychar = eventPtr->xkey.keycode & MAC_KEYCHAR_MASK;
+	KeyCode keycode = XKeysymToKeycodeWithIndex(display, keysym, &index);
+	UniChar keychar = keycode & MAC_KEYCHAR_MASK;
+	int virtual = (keycode >> 24) & 0xFF;
 
 	/*
-	 * Set trans_chars for keychars outside of the private-use range.
+	 * We now have a virtual keycode and a minimal choice of Shift and
+	 * Option modifiers which which generates the keychar that corresponds
+	 * to the specified keysym.  But we might not have the correct keychar
+	 * yet, because the xEvent may have specified modifiers beyond our
+	 * minimal set.  For example, the events described by <Oslash>,
+	 * <Shift-oslash>, <Shift-Option-O> and <Shift-Option-o> should all
+	 * produce the same uppercase Danish O.  So we may need to add some
+	 * extra modifiers and do another lookup for the keychar.
 	 */
 
+	if (index != eventIndex) {
+	    Tcl_HashEntry *hPtr;
+	    eventIndex |= index;
+	    hPtr = Tcl_FindHashEntry(&virtual2unichar,
+				     INT2PTR(eventIndex << 8 | virtual));
+	    if (hPtr != NULL) {
+		keychar = ((UniChar) Tcl_GetHashValue(hPtr));
+	    }
+	    keycode = virtual << 24 | keychar;
+	}
+	eventPtr->xkey.keycode = keycode;
+	eventPtr->xkey.state |= INDEX2STATE(eventIndex);
+	keychar = eventPtr->xkey.keycode & MAC_KEYCHAR_MASK;
 	if (IS_PRINTABLE(keychar)) {
 	    int length = TkUniCharToUtf(keychar, eventPtr->xkey.trans_chars);
 	    eventPtr->xkey.trans_chars[length] = 0;
@@ -684,7 +759,7 @@ TkpGetKeySym(
      * Modifier key events have a special mac keycode (see tkProcessKeyEvent).
      */
 
-    if ((eventPtr->xkey.keycode & MAC_KEYCHAR_MASK) == 0xF8FF) {
+    if ((eventPtr->xkey.keycode & MAC_KEYCHAR_MASK) == MOD_KEYCHAR) {
 	switch (eventPtr->xkey.keycode >> 24) { /* the virtual keyCode */
 	case 54:
 	    return XK_Meta_R;
@@ -717,12 +792,8 @@ TkpGetKeySym(
      * works.
      */
 
-    index = 0;
-    if (eventPtr->xkey.state & Mod2Mask) { /* Option */
-	index |= 2;
-    }
-    if ((eventPtr->xkey.state & ShiftMask) || /* Shift or caps lock. */
-	(eventPtr->xkey.state & LockMask)) {
+    index = STATE2INDEX(eventPtr->xkey.state);
+    if (eventPtr->xkey.state & LockMask) {
 	index |= 1;
     }
 
@@ -733,16 +804,14 @@ TkpGetKeySym(
     sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, index);
 
     /*
-     * Special handling: If the key was shifted because of Lock, but lock is
-     * only caps lock, not shift lock, and the shifted keysym isn't upper-case
-     * alphabetic, then switch back to the unshifted keysym.
+     * Special handling: If the key was shifted because of Lock, which is only
+     * caps lock on macOS, not shift lock, and if the shifted keysym isn't
+     * upper-case alphabetic, then switch back to the unshifted keysym.
      */
 
-    if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
-	    /*&& (dispPtr->lockUsage == LU_CAPS)*/ ) {
-
+    if ((index & INDEX_SHIFT) && !(eventPtr->xkey.state & ShiftMask)) {
 	if ((sym == NoSymbol) || !Tcl_UniCharIsUpper(sym)) {
-	    index &= ~1;
+	    index &= ~INDEX_SHIFT;
 	    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		    index);
 	}
@@ -753,9 +822,9 @@ TkpGetKeySym(
      * no keysym defined, then use the keysym for the unshifted key.
      */
 
-    if ((index & 1) && (sym == NoSymbol)) {
+    if ((index & INDEX_SHIFT) && (sym == NoSymbol)) {
 	sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		index & ~1);
+		index & ~INDEX_SHIFT);
     }
     return sym;
 }

@@ -39,7 +39,7 @@ typedef struct {
 static const KeyInfo keyArray[] = {
     {36,	XK_Return,	NSNewlineCharacter},
     {48,	XK_Tab,		NSTabCharacter},
-    {51,	XK_BackSpace,	NSBackspaceCharacter},
+    {51,	XK_BackSpace,	NSDeleteCharacter},
     {52,	XK_Return,	NSNewlineCharacter},  /* Used on some Powerbooks */
     {53,	XK_Escape,	0x1B},
     {54,	XK_Meta_R,      XK_Meta_R},
@@ -105,7 +105,8 @@ static const KeyInfo keyArray[] = {
 };
 
 /*
- * X11 keysyms for modifier keys, in order.
+ * X11 keysyms for modifier keys, in order.  This list includes keys which
+ * do not appear on Apple keyboards, such as Shift_Lock and Super_R.
  */
 
 #define NUM_MOD_KEYCODES 14

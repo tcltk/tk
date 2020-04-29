@@ -547,7 +547,7 @@ typedef struct {
 	int x, y;		/* pointer x, y coordinates in event window */
 	int x_root, y_root;	/* coordinates relative to root */
 	unsigned int state;	/* key or button mask */
-	unsigned int keycode;	/* detail */
+	KeyCode keycode;	/* detail */
 	Bool same_screen;	/* same screen flag */
 	char trans_chars[XMaxTransChars];
 				/* translated characters */

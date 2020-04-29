@@ -123,6 +123,15 @@
     }
 
 /*
+ * Macro used in tkMacOSXKeyboard.c and tkMacOSXKeyEvent.c to check if an
+ * XEvent should have a non-empty trans_chars field.
+ */
+
+#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && \
+			       (keychar != 0x7f) && \
+			       (keychar < 0xF700))
+
+/*
  * Structure encapsulating current drawing environment.
  */
 
@@ -356,6 +365,7 @@ VISIBILITY_HIDDEN
 
 @interface TKContentView(TKKeyEvent)
 - (void) deleteWorkingText;
+- (void) cancelComposingText;
 @end
 
 @interface TKContentView(TKWindowEvent)
