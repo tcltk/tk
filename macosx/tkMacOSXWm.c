@@ -1008,20 +1008,13 @@ TkWmDeadWindow(
 	    }
 	}
 
-	/*
-	 * Process all window events immediately to force the closed window to
-	 * be deallocated.  But don't do this for the root window as that is
-	 * unnecessary and can lead to segfaults.
-	 */
-
-	if (winPtr->parentPtr) {
-	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-	}
 	[NSApp _resetAutoreleasePool];
+
 #if DEBUG_ZOMBIES > 0
 	fprintf(stderr, "================= Pool dump ===================\n");
 	[NSAutoreleasePool showPools];
 #endif
+
     }
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
