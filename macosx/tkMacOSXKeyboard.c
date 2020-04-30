@@ -428,12 +428,13 @@ XKeycodeToKeysym(
      * keysym.
      */
 
-    if (virtual == NO_VIRTUAL)
+    if (virtual == NO_VIRTUAL) {
 	hPtr = Tcl_FindHashEntry(&unichar2keysym,
 				 INT2PTR(keycode & MAC_KEYCHAR_MASK));
 	if (hPtr != NULL) {
 	    return (KeySym) Tcl_GetHashValue(hPtr);
 	}
+    }
 
     /*
      * If not, use the Carbon Framework to find the unicode character and
