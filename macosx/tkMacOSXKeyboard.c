@@ -639,7 +639,8 @@ XKeysymToKeycodeWithIndex(
     }
 
     /*
-     * Would not construct a keycode.  Set the keychar to 0.
+     * Could not construct a keycode.  Set the keychar to 0 and the
+     * virtual keycode to NO_VIRTUAL.
      */
 
     return (NO_VIRTUAL << 24) ;
@@ -668,9 +669,9 @@ XKeysymToKeycode(
  * Side effects:
  *
  *	Modifies the XEvent. Sets the xkey.keycode to a keycode value formatted
- *	by XKeysymToKeycode and sets the shift and option flags in xkey.state
- *	to the values implied by the keysym. Also fills in xkey.trans_chars for
- *	printable events.
+ *	by XKeysymToKeycode and updates the shift and option flags in
+ *	xkey.state if either of those modifiers is required to generate the
+ *	keysym. Also fills in xkey.trans_chars for printable events.
  *
  *----------------------------------------------------------------------
  */
@@ -691,13 +692,13 @@ TkpSetKeycodeAndState(
 
 	/*
 	 * We now have a virtual keycode and a minimal choice of Shift and
-	 * Option modifiers which which generates the keychar that corresponds
-	 * to the specified keysym.  But we might not have the correct keychar
-	 * yet, because the xEvent may have specified modifiers beyond our
-	 * minimal set.  For example, the events described by <Oslash>,
-	 * <Shift-oslash>, <Shift-Option-O> and <Shift-Option-o> should all
-	 * produce the same uppercase Danish O.  So we may need to add some
-	 * extra modifiers and do another lookup for the keychar.
+	 * Option modifiers which generates the keychar that corresponds to the
+	 * specified keysym.  But we might not have the correct keychar yet,
+	 * because the xEvent may have specified modifiers beyond our minimal
+	 * set.  For example, the events described by <Oslash>, <Shift-oslash>,
+	 * <Shift-Option-O> and <Shift-Option-o> should all produce the same
+	 * uppercase Danish O.  So we may need to add some extra modifiers and
+	 * do another lookup for the keychar.
 	 */
 
 	if (index != eventIndex) {
