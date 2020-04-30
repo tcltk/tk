@@ -235,11 +235,12 @@ InitHashTables(void)
  *
  * UpdateKeymaps --
  *
- *	Called when the keyboard changes to update the hash table that
- *      maps unicode characters to virtual keycodes with states.  In order
- *      for this to be well-defined we have to ignore virtual keycodes for
- *      keypad keys, since each keypad key has the same character as the
- *      corresponding key on the main keyboard.
+ *	Called when the keyboard changes to update the hash tables that provide
+ *      maps between unicode characters and virtual keycodes with indexes.  In
+ *      order for the map from characters to virtual keycodes to be
+ *      well-defined we have to ignore virtual keycodes for keypad keys, since
+ *      each keypad key has the same character as the corresponding key on the
+ *      main keyboard.
  *
  * Results:
  *	None.
@@ -267,22 +268,21 @@ UpdateKeymaps()
     }
 
     /*
-     * This for loop goes backwards so that a unichar lookup will
-     * provide the minimal modifier mask.  Simpler combinations
-     * will overwrite more complex ones.
+     * This loop goes backwards so that a unichar lookup will provide the
+     * minimal modifier mask.  Simpler combinations will overwrite more complex
+     * ones when constructing the table.
      */
 
     for (index = 4; index >= 0; index--) {
 	for (virtual = 0; virtual <= VIRTUAL_MAX; virtual++) {
-	    if (ON_KEYPAD(virtual)) {
-		continue;
+	    if (! ON_KEYPAD(virtual)) {
+		modifiers = INDEX2CARBON(index);
+		KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, virtual,
+				 modifiers, NULL);
+		hPtr = Tcl_CreateHashEntry(&unichar2virtual, INT2PTR(keychar),
+					   &dummy);
+		Tcl_SetHashValue(hPtr, INT2PTR(index << 8 | virtual));
 	    }
-	    modifiers = INDEX2CARBON(index);
-	    KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, virtual, modifiers,
-			     NULL);
-	    hPtr = Tcl_CreateHashEntry(&unichar2virtual, INT2PTR(keychar),
-				       &dummy);
-	    Tcl_SetHashValue(hPtr, INT2PTR(index << 8 | virtual));
 	    hPtr = Tcl_CreateHashEntry(&virtual2unichar,
 				       INT2PTR(index << 8 | virtual), &dummy);
 	    Tcl_SetHashValue(hPtr, INT2PTR(keychar));
@@ -708,6 +708,17 @@ TkpSetKeycodeAndState(
 				     INT2PTR(eventIndex << 8 | virtual));
 	    if (hPtr != NULL) {
 		keychar = ((UniChar) Tcl_GetHashValue(hPtr));
+	    } else if (eventIndex & INDEX_SHIFT) {
+
+		/*
+		 * Even though the keychar is not on the keyboard, we can still
+		 * apply the Shift modifier. However, we can't guess the effect
+		 * of the Option modifier and so must ignore it.
+		 */
+
+		NSString *upper = [[[NSString alloc] initWithCharacters:&keychar
+				      length:1] uppercaseString];
+		keychar = [upper characterAtIndex:0];
 	    }
 	    keycode = virtual << 24 | keychar;
 	}
