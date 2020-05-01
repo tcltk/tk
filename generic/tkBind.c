@@ -2328,7 +2328,7 @@ Tk_BindEvent(
      */
 
     curEvent->xev = *eventPtr;
-    if (flags & KEY) {
+    if ((flags & KEY) && (eventPtr->type != MouseWheelEvent)) {
 	curEvent->detail.info = TkpGetKeySym(dispPtr, eventPtr);
     } else if (flags & BUTTON) {
 	curEvent->detail.info = eventPtr->xbutton.button;
