@@ -957,19 +957,23 @@ DisplayCanvText(
      */
 
     if ((selFirstChar >= 0) && (textPtr->selTextGC != textPtr->gc)) {
-	TkDrawAngledTextLayout(display, drawable, textPtr->gc,
-		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
-		0, selFirstChar);
+	if (0 < selFirstChar) {
+	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
+		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
+		    0, selFirstChar);
+	}
 	TkDrawAngledTextLayout(display, drawable, textPtr->selTextGC,
 		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
 		selFirstChar, selLastChar + 1);
-	TkDrawAngledTextLayout(display, drawable, textPtr->gc,
-		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
-		selLastChar + 1, -1);
+	if (selLastChar + 1 < textPtr->numChars) {
+	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
+		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
+		    selLastChar + 1, textPtr->numChars);
+	}
     } else {
 	TkDrawAngledTextLayout(display, drawable, textPtr->gc,
 		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
-		0, -1);
+		0, textPtr->numChars);
     }
     TkUnderlineAngledTextLayout(display, drawable, textPtr->gc,
 	    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
