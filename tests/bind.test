@@ -6624,6 +6624,57 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     # because both bindings are homogeneous equal, so the most recently defined
     # must be preferred.
 } -result {last}
+test bind-33.16 {simulate use of the keyboard to trigger a pattern sequence with modifier - bug [16ef161925]} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Escape><Control-c> { lappend x "Esc_Control-c" }
+    event generate .t.f <Escape>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control-c>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Esc_Control-c}
+test bind-33.17 {simulate use of the keyboard to trigger a pattern sequence with modifier - bug [16ef161925]} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Escape><Control-c> { lappend x "Esc_Control-c" }
+    bind .t.f <Escape><Control_L><Control-c> { lappend x "Esc_Ctrl_L_Control-c" }
+    event generate .t.f <Escape>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control-c>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Esc_Ctrl_L_Control-c}
+test bind-33.18 {simulate use of the keyboard to trigger a pattern sequence with modifier - bug [16ef161925]} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Escape><Control-c> { lappend x "Esc_Control-c" }
+    bind .t.f <Escape><Control_L><Control-c> { lappend x "Esc_Ctrl_L_Control-c" }
+    bind .t.f <Escape><Control_L><Control_L><Control-c> { lappend x "Esc_Ctrl_L(2)_Control-c" }
+    event generate .t.f <Escape>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control-c>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Esc_Ctrl_L(2)_Control-c}
 
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
