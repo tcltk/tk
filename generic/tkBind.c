@@ -59,7 +59,9 @@
 
 /*
  * In old implementation (the one that used an event ring), <Double-1> and <1><1> were
- * equivalent sequences. However it is logical to give <Double-1> higher precedence.
+ * equivalent sequences. However it is logical to give <Double-1> higher precedence
+ * since it is more specific. Indeed <Double-1> includes time and space requirements,
+ * which is not the case for <1><1>.
  * This can be achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
  */
 
@@ -2192,7 +2194,7 @@ Tk_BindEvent(
      * Ignore the event completely if it is an Enter, Leave, FocusIn, or
      * FocusOut event with detail NotifyInferior. The reason for ignoring
      * these events is that we don't want transitions between a window and its
-     * children to visible to bindings on the parent: this would cause
+     * children to be visible to bindings on the parent: this would cause
      * problems for mega-widgets, since the internal structure of a
      * mega-widget isn't supposed to be visible to people watching the parent.
      *
