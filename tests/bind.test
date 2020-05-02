@@ -6675,6 +6675,22 @@ test bind-33.18 {simulate use of the keyboard to trigger a pattern sequence with
 } -cleanup {
     destroy .t.f
 } -result {Esc_Ctrl_L(2)_Control-c}
+test bind-33.19 {simulate use of the keyboard to trigger a pattern sequence with modifier - bug [16ef161925]} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Escape><Control-c> { lappend x "Esc_Control-c" }
+    bind .t.f <Escape><KeyPress><KeyPress><Control-c> { lappend x "Esc_Key(2)_Control-c" }
+    event generate .t.f <Escape>
+    event generate .t.f <Alt_L>
+    event generate .t.f <Control_L>
+    event generate .t.f <Control-c>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Esc_Key(2)_Control-c}
 
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
