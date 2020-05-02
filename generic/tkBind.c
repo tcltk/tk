@@ -854,18 +854,25 @@ MatchEventNearby(
 	    && TestNearbyCoords(rhs->xbutton.y_root, lhs->xbutton.y_root);
 }
 
+int
+IsKeyEventType(
+    unsigned eventType)
+{
+    return eventType == KeyPress || eventType == KeyRelease;
+}
+
 static int
 MatchEventRepeat(
-    const XEvent *lhs,	/* previous key event */
-    const XEvent *rhs)	/* current key event */
+    const XKeyEvent *lhs,	/* previous key event */
+    const XKeyEvent *rhs)	/* current key event */
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == KeyPress || lhs->type == KeyRelease);
+    assert(IsKeyEventType(lhs->type));
     assert(lhs->type == rhs->type);
 
-    /* assert: lhs->xkey.time <= rhs->xkey.time */
-    return TestNearbyTime(rhs->xkey.time, lhs->xkey.time);
+    /* assert: lhs->time <= rhs->time */
+    return lhs->keycode == rhs->keycode && TestNearbyTime(lhs->time, rhs->time);
 }
 
 static void
@@ -2278,7 +2285,7 @@ Tk_BindEvent(
 	switch (eventPtr->type) {
 	case KeyPress:
 	case KeyRelease:
-	    if (MatchEventRepeat(&curEvent->xev, eventPtr)) {
+	    if (MatchEventRepeat(&curEvent->xev.xkey, &eventPtr->xkey)) {
 		if (curEvent->xev.xkey.keycode == eventPtr->xkey.keycode) {
 		    ++curEvent->countDetailed;
 		} else {
@@ -2767,6 +2774,7 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     ModMask bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
+    int isModKeyOnly;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2780,6 +2788,7 @@ MatchPatterns(
     bestPtr = NULL;
     bestPhysPtr = NULL;
     window = curEvent->xev.xany.window;
+    isModKeyOnly = IsKeyEventType(curEvent->xev.type) && curEvent->xev.xkey.keycode == 0;
 
     for (psEntry = PSList_First(psList); psEntry; psEntry = PSList_Next(psEntry)) {
 	if (patIndex == 0 || psEntry->window == window) {
@@ -2790,11 +2799,13 @@ MatchPatterns(
 	    assert(psPtr->object || patIndex == 0);
 	    assert(psPtr->numPats > patIndex);
 
+            /* ignore modifier key events */
+            psEntry->keepIt = isModKeyOnly;
+
 	    if (psPtr->object
 		    ? psPtr->object == object
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
-                unsigned i;
 
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
@@ -2810,6 +2821,7 @@ MatchPatterns(
 		    ModMask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = 1; /* remove it from promotion list */
+                    psEntry->keepIt = 0; /* don't keep matching patterns */
 
 		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2876,25 +2888,6 @@ MatchPatterns(
 			}
 		    }
 		}
- 
-                /*
-                 * Modifier key events interlaced between patterns parts of a
-                 * sequence shall not prevent a sequence from ultimately
-                 * matching. Example: when trying to trigger <a><Control-c>
-                 * from the keyboard, the sequence of events actually seen is
-                 * <a> then <Control_L> (possibly repeating if the key is hold
-                 * down), and finally <Control-c>. At the time <Control_L> is
-                 * seen, we shall keep the <a><Control-c> pattern sequence in
-                 * the promotion list, otherwise it is impossible to trigger
-                 * it from the keyboard. See bug [16ef161925].
-                 */
-                for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
-                    if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
-                        DEBUG(psEntry->expired = 0;)
-                        psEntry->keepIt = 1;
-                    }
-                }
-
 	    }
 	}
     }
