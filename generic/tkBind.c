@@ -2794,6 +2794,7 @@ MatchPatterns(
 		    ? psPtr->object == object
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
+                unsigned i;
 
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
@@ -2875,6 +2876,25 @@ MatchPatterns(
 			}
 		    }
 		}
+ 
+                /*
+                 * Modifier key events interlaced between patterns parts of a
+                 * sequence shall not prevent a sequence from ultimately
+                 * matching. Example: when trying to trigger <a><Control-c>
+                 * from the keyboard, the sequence of events actually seen is
+                 * <a> then <Control_L> (possibly repeating if the key is hold
+                 * down), and finally <Control-c>. At the time <Control_L> is
+                 * seen, we shall keep the <a><Control-c> pattern sequence in
+                 * the promotion list, otherwise it is impossible to trigger
+                 * it from the keyboard. See bug [16ef161925].
+                 */
+                for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
+                    if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
+                        DEBUG(psEntry->expired = 0;)
+                        psEntry->keepIt = 1;
+                    }
+                }
+
 	    }
 	}
     }
