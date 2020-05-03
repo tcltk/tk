@@ -123,13 +123,66 @@
     }
 
 /*
- * Macro used in tkMacOSXKeyboard.c and tkMacOSXKeyEvent.c to check if an
- * XEvent should have a non-empty trans_chars field.
+ *  The structure of a 32-bit XEvent keycode on macOS. It may be viewed as
+ *  an unsigned int or as having either two or three bitfields.
  */
 
-#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && \
-			       (keychar != 0x7f) && \
-			       (keychar < 0xF700))
+typedef struct keycode_v_t {
+    unsigned keychar: 22;    /* UCS-32 character */
+    unsigned o_s: 2;         /* state of Option and Shift keys */
+    unsigned virtual: 8;     /* virtual keycode */
+} keycode_v;
+
+typedef struct keycode_x_t {
+    unsigned keychar: 22;     /* UCS-32 character */
+    unsigned xvirtual: 10;    /* lookup key for key maps */
+} keycode_x;
+
+typedef union MacKeycode_t {
+  unsigned int uint;
+  keycode_v v;
+  keycode_x x;
+} MacKeycode;
+
+/*
+ * Macros used in tkMacOSXKeyboard.c and tkMacOSXKeyEvent.c.
+ * Note that 0x7f is del and 0xF8FF is the Apple Logo character.
+ */
+
+#define ON_KEYPAD(virtual) ((virtual >= 0x41) && (virtual <= 0x5C))
+#define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar != 0x7f) &&\
+                               ((keychar < 0xF700) || keychar >= 0xF8FF))
+
+/*
+ * An "index" is 2-bit bitfield showing the state of the Option and Shift
+ * keys.  It is used as an index when building the keymaps and it
+ * is the value of the o_s bitfield of a keycode_v.
+ */
+
+#define INDEX_SHIFT 1
+#define INDEX_OPTION 2
+#define INDEX2STATE(index) ((index & INDEX_SHIFT ? ShiftMask : 0) |	\
+			    (index & INDEX_OPTION ? Mod2Mask : 0))
+#define INDEX2CARBON(index) ((index & INDEX_SHIFT ? shiftKey : 0) |	\
+			     (index & INDEX_OPTION ? optionKey : 0))
+#define STATE2INDEX(state) ((state & ShiftMask ? INDEX_SHIFT : 0) |	\
+			    (state & Mod2Mask ? INDEX_OPTION : 0))
+
+/*
+ * Special values for the virtual bitfield.
+ */
+
+#define NO_VIRTUAL 0xFF /* No virtual keycode could be deduced. */
+#define REPLACEMENT_VIRTUAL 0x80 /* A BMP char sent by the NSTextInputClient. */
+#define NON_BMP_VIRTUAL 0x81 /* A non-BMP char sent by the NSTextInputClient. */
+
+/*
+ * A special character used in the keycode for modifier KeyPress or KeyRelease
+ * XEvents.  It is near the end of the private-use range but different from the
+ * UniChar 0xF8FF which Apple uses for their logo character.
+ */
+
+#define MOD_KEYCHAR 0xF8FE
 
 /*
  * Structure encapsulating current drawing environment.
@@ -248,6 +301,7 @@ MODULE_SCOPE NSString*  TkUtfToNSString(const char *source, size_t numBytes);
 MODULE_SCOPE int        TkUtfAtIndex(NSString *string, int index, char *uni,
 				      unsigned int *code);
 MODULE_SCOPE char*      TkNSStringToUtf(NSString *string, int *numBytes);
+MODULE_SCOPE unsigned int  TkMacOSXGetVirtual(unsigned int keycode);
 
 #pragma mark Private Objective-C Classes
 

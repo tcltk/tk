@@ -19,7 +19,7 @@
 #include "tkMacOSXWm.h"
 
 /*
- * See tkMacOSXPrivate.h for the definition of IS_PRINTABLE.
+ * See tkMacOSXPrivate.h for macros related to key event processing.
  */
 
 /*
@@ -27,6 +27,7 @@
 #define TK_MAC_DEBUG_KEYBOARD
 #endif
 */
+
 #define NS_KEYLOG 0
 #define XEVENT_MOD_MASK (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask)
 static Tk_Window keyboardGrabWinPtr = NULL; /* Current keyboard grab window. */
@@ -56,10 +57,12 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
     XEvent xEvent;
+    MacKeycode macKC;
     UniChar keychar = 0;
     Bool can_input_text, has_modifiers = NO, use_text_input = NO;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
+
 
     if (nsEvArray == nil) {
         nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
@@ -92,6 +95,13 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     if (type == NSKeyUp || type == NSKeyDown) {
 	if ([[theEvent characters] length] > 0) {
 	    keychar = [[theEvent characters] characterAtIndex:0];
+#if 0   /* Currently, real keys always send BMP characters. */
+	    if (CFStringIsSurrogateHighCharacter(keychar)) {
+		UniChar lowChar = [str characterAtIndex:1];
+		keychar = CFStringGetLongCharacterForSurrogatePair(
+		    (UniChar)keychar, lowChar);
+	    }
+#endif
 	} else {
 
 	    /*
@@ -101,12 +111,14 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
 	    use_text_input = YES;
 	}
+
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
 	      [self class], self, _cmd,
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
 	      virtual, w, type);
 #endif
+
     }
 
     /*
@@ -120,12 +132,13 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     focusWinPtr = TkFocusKeyEvent(winPtr, &xEvent);
     if (focusWinPtr == NULL) {
 	TKContentView *contentView = [w contentView];
+
 	/*
-	 * This NSEvent is being sent to a window which no longer has focus.
-	 * This has been observed to happen when the user deactivates the Tk
-	 * app while the NSTextInputClient's popup character selection window
-	 * is still open.  We attempt to abandon any ongoing composition
-	 * operation and discard the event.
+	 * This NSEvent is being sent to a window which does not have focus.
+	 * This could mean, for example, that the user deactivated the Tk app
+	 * while the NSTextInputClient's popup character selection window was
+	 * still open.  We attempt to abandon any ongoing composition operation
+	 * and discard the event.
 	 */
 
 	[contentView cancelComposingText];
@@ -162,9 +175,9 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
 	/*
 	 * In IME the Enter key is used to terminate a composition sequence.
-	 * when there are multiple choices of input text available, and the
-	 * user's selected choice is not the default it may be necessary to hit
-	 * the Enter key multiple times before the text is accepted and
+	 * When there are multiple choices of input text available, and the
+	 * user's selected choice is not the default, it may be necessary to
+	 * hit the Enter key multiple times before the text is accepted and
 	 * rendered (See ticket 39de9677aa]). So when sending an Enter key
 	 * during composition, we continue sending Enter keys until the
 	 * inputText method has cleared the processingCompose flag.
@@ -189,7 +202,9 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * finish constructing the XEvent and queue it.
      */
 
-    xEvent.xkey.keycode = (virtual << 24) | keychar;
+    macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
+		    (modifiers & NSAlternateKeyMask ? INDEX_OPTION : 0));
+    macKC.v.virtual = virtual;
     switch (type) {
     case NSFlagsChanged:
 
@@ -204,12 +219,11 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	savedModifiers = modifiers;
 
 	/*
-	 * Set the keychar to 0xF8FF, the largest value reserved for a function
-	 * key, as a signal to TkpGetKeySym (see tkMacOSXKeyboard.c) that this
-	 * is a modifier key event.
+	 * Set the keychar to MOD_KEYCHAR as a signal to TkpGetKeySym (see
+	 * tkMacOSXKeyboard.c) that this is a modifier key event.
 	 */
 
-	xEvent.xkey.keycode |= 0xF8FF;
+	keychar = MOD_KEYCHAR;
 	break;
     case NSKeyUp:
 	xEvent.xany.type = KeyRelease;
@@ -220,6 +234,8 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     default:
 	return theEvent; /* Unrecognized key event. */
     }
+    macKC.v.keychar = keychar;
+    xEvent.xkey.keycode = macKC.uint;
 
     /*
      * Set the trans_chars for keychars outside of the private-use range.
@@ -285,8 +301,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	TKLog(@"insertText '%@'\tlen = %d", aString, len);
     }
 
-    processingCompose = NO;
-
     /*
      * Clear any working text.
      */
@@ -317,27 +331,46 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
     /*
      * Next we generate an XEvent for each unicode character in our string.
+     * This string could contain non-BMP characters, for example if the
+     * emoji palette was used.
      *
      * NSString uses UTF-16 internally, which means that a non-BMP character is
-     * represented by a sequence of two 16-bit "surrogates".  In principle we
-     * could record this in the XEvent by setting the keycode to the 32-bit
-     * unicode code point and setting the trans_chars string to the 4-byte
-     * UTF-8 string for the non-BMP character.  However, that will not work
-     * when TCL_UTF_MAX is set to 3, as is the case for Tcl 8.6.  A workaround
-     * used internally by Tcl 8.6 is to encode each surrogate as a 3-byte
-     * sequence using the UTF-8 algorithm (ignoring the fact that the UTF-8
-     * encoding specification does not allow encoding UTF-16 surrogates).
-     * This gives a 6-byte encoding of the non-BMP character which we write into
-     * the trans_chars field of the XEvent.
+     * represented by a sequence of two 16-bit "surrogates".  We record this in
+     * the XEvent by setting the low order 21-bits of the keycode to the UCS-32
+     * value value of the character and the virtual keycode in the high order
+     * byte to the special value NON_BMP. In principle we could set the
+     * trans_chars string to the UTF-8 string for the non-BMP character.
+     * However, that will not work when TCL_UTF_MAX is set to 3, as is the case
+     * for Tcl 8.6.  A workaround used internally by Tcl 8.6 is to encode each
+     * surrogate as a 3-byte sequence using the UTF-8 algorithm (ignoring the
+     * fact that the UTF-8 encoding specification does not allow encoding
+     * UTF-16 surrogates).  This gives a 6-byte encoding of the non-BMP
+     * character which we write into the trans_chars field of the XEvent.
      */
 
     for (i = 0; i < len; i++) {
 	unsigned int code;
+	UniChar keychar;
+	MacKeycode macKC = {0};
+
+	keychar = [str characterAtIndex:i];
+	macKC.v.keychar = keychar;
+	if (CFStringIsSurrogateHighCharacter(keychar)) {
+	    UniChar lowChar = [str characterAtIndex:i+1];
+	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
+				  (UniChar)keychar, lowChar);
+	    macKC.v.virtual = NON_BMP_VIRTUAL;
+	} else if (repRange.location == 0) {
+	    macKC.v.virtual = REPLACEMENT_VIRTUAL;
+	} else {
+	    macKC.v.virtual = TkMacOSXGetVirtual(macKC.uint);
+	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
+	}
 	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &code);
 	if (code > 0xFFFF){
 	    i++;
 	}
-	xEvent.xkey.keycode = code;
+	xEvent.xkey.keycode = macKC.uint;
     	xEvent.xany.type = KeyPress;
     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
@@ -400,10 +433,10 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    processingCompose = YES;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
-    processingCompose = YES;
     TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
