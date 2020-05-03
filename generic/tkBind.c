@@ -2774,7 +2774,7 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     ModMask bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
-    int isModKeyOnly;
+    int i, isModKeyOnly = 0;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2788,7 +2788,26 @@ MatchPatterns(
     bestPtr = NULL;
     bestPhysPtr = NULL;
     window = curEvent->xev.xany.window;
-    isModKeyOnly = IsKeyEventType(curEvent->xev.type) && curEvent->xev.xkey.keycode == 0;
+
+    /*
+     * Modifier key events interlaced between patterns parts of a
+     * sequence shall not prevent a sequence from ultimately
+     * matching. Example: when trying to trigger <a><Control-c>
+     * from the keyboard, the sequence of events actually seen is
+     * <a> then <Control_L> (possibly repeating if the key is hold
+     * down), and finally <Control-c>. At the time <Control_L> is
+     * seen, we shall keep the <a><Control-c> pattern sequence in
+     * the promotion list, otherwise it is impossible to trigger
+     * it from the keyboard. See bug [16ef161925].
+     */
+    if (IsKeyEventType(curEvent->xev.type)) {
+        for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+            if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
+                isModKeyOnly = 1;
+                break;
+            }
+        }
+    }
 
     for (psEntry = PSList_First(psList); psEntry; psEntry = PSList_Next(psEntry)) {
 	if (patIndex == 0 || psEntry->window == window) {
@@ -2799,13 +2818,13 @@ MatchPatterns(
 	    assert(psPtr->object || patIndex == 0);
 	    assert(psPtr->numPats > patIndex);
 
-            /* ignore modifier key events */
-            psEntry->keepIt = isModKeyOnly;
-
 	    if (psPtr->object
 		    ? psPtr->object == object
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
+
+                /* ignore modifier key events */
+                psEntry->keepIt = isModKeyOnly;
 
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
