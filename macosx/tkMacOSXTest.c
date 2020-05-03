@@ -236,14 +236,15 @@ InjectKeyEventObjCmd(
 	"-shift", "-control", "-option", "-command", "-x", "-y", NULL};
     enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION,
 	       KEYEVENT_COMMAND, KEYEVENT_X, KEYEVENT_Y};
-    int i, index, key, mods = 0, x = 0, y = 0;
-    NSString *keyChar, *unmod;
+    int i, index, keysym, mods = 0, x = 0, y = 0;
+    NSString *chars = nil;
     NSEvent *keyEvent;
     NSUInteger type;
+    MacKeycode macKC;
     
-    if (objc < 4) {
+    if (objc < 3) {
     wrongArgs:
-        Tcl_WrongNumArgs(interp, 1, objv, "option key char ?arg?");
+        Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
         return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
@@ -251,22 +252,14 @@ InjectKeyEventObjCmd(
         return TCL_ERROR;
     }
     type = types[index];
-    if (Tcl_GetIntFromObj(interp, objv[2], &key) != TCL_OK) {
+    if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			 "virtual key code must be an integer"));
-	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEY", NULL);
+			 "keysym must be an integer"));
+	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEYSYM", NULL);
 	return TCL_ERROR;
     }
-    if (key < 0 || key > 127) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			 "virtual key code must be between 0 and 127"));
-	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEY", NULL);
-        return TCL_ERROR;
-    }
-    keyChar = [[[NSString alloc] initWithUTF8String:Tcl_GetString(objv[3])]
-		  autorelease];
-    unmod = keyChar;
-    for (i = 4; i < objc; i++) {
+    macKC.uint = XKeysymToKeycode(NULL, keysym);
+    for (i = 3; i < objc; i++) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], argStrings,
                 sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
             return TCL_ERROR;
@@ -274,7 +267,6 @@ InjectKeyEventObjCmd(
         switch ((enum args) index) {
 	case KEYEVENT_SHIFT:
 	    mods |= NSShiftKeyMask;
-	    unmod = [keyChar lowercaseString];
             break;
 	case KEYEVENT_CONTROL:
 	    mods |= NSShiftKeyMask;
@@ -303,16 +295,20 @@ InjectKeyEventObjCmd(
 	    break;
 	}
     }
+    if (type != NSFlagsChanged) {
+	UniChar keychar = macKC.v.keychar;
+	chars = [[NSString alloc] initWithCharacters: &keychar length:1];	
+    }
     keyEvent = [NSEvent keyEventWithType:type
 	location:NSMakePoint(x, y)
         modifierFlags:mods
 	timestamp:GetCurrentEventTime()
 	windowNumber:0
 	context:nil
-	characters:keyChar
-	charactersIgnoringModifiers:unmod
+	characters:chars
+	charactersIgnoringModifiers:chars ? [chars lowercaseString] : nil
 	isARepeat:NO
-	keyCode:key];
+	keyCode:macKC.v.virtual];
     [NSApp postEvent:keyEvent atStart:NO];
     return TCL_OK;
 }

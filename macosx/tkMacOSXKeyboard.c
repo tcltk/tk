@@ -894,7 +894,7 @@ TkpInitKeymapInfo(
  *
  *--------------------------------------------------------------
  */
-unsigned int
+unsigned
 TkMacOSXAddVirtual(
     unsigned int keycode)
 {
@@ -914,7 +914,6 @@ TkMacOSXAddVirtual(
     }
     return macKC.uint;
 }
-
 /*
  * Local Variables:
  * mode: objc
