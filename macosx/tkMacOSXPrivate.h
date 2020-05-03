@@ -301,7 +301,7 @@ MODULE_SCOPE NSString*  TkUtfToNSString(const char *source, size_t numBytes);
 MODULE_SCOPE int        TkUtfAtIndex(NSString *string, int index, char *uni,
 				      unsigned int *code);
 MODULE_SCOPE char*      TkNSStringToUtf(NSString *string, int *numBytes);
-MODULE_SCOPE unsigned int  TkMacOSXGetVirtual(unsigned int keycode);
+MODULE_SCOPE unsigned int  TkMacOSXAddVirtual(unsigned int keycode);
 
 #pragma mark Private Objective-C Classes
 

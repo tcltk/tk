@@ -36,7 +36,6 @@ static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
 static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 
@@ -292,6 +291,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     NSString *str;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
@@ -306,6 +306,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     if (privateWorkingText != nil) {
+	sendingIMEText = YES;
     	[self deleteWorkingText];
     }
 
@@ -360,10 +361,10 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
 				  (UniChar)keychar, lowChar);
 	    macKC.v.virtual = NON_BMP_VIRTUAL;
-	} else if (repRange.location == 0) {
+	} else if (repRange.location == 0 || sendingIMEText) {
 	    macKC.v.virtual = REPLACEMENT_VIRTUAL;
 	} else {
-	    macKC.v.virtual = TkMacOSXGetVirtual(macKC.uint);
+	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
 	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
 	}
 	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &code);
