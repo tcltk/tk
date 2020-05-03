@@ -837,6 +837,20 @@ CountSpecialized(
     return sndCount - fstCount;
 }
 
+int
+IsKeyEventType(
+    unsigned eventType)
+{
+    return eventType == KeyPress || eventType == KeyRelease;
+}
+
+int
+IsButtonEventType(
+    unsigned eventType)
+{
+    return eventType == ButtonPress || eventType == ButtonRelease;
+}
+
 static int
 MatchEventNearby(
     const XEvent *lhs,	/* previous button event */
@@ -844,7 +858,7 @@ MatchEventNearby(
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == ButtonPress || lhs->type == ButtonRelease);
+    assert(IsButtonEventType(lhs->type));
     assert(lhs->type == rhs->type);
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
@@ -852,13 +866,6 @@ MatchEventNearby(
     return TestNearbyTime(rhs->xbutton.time, lhs->xbutton.time)
 	    && TestNearbyCoords(rhs->xbutton.x_root, lhs->xbutton.x_root)
 	    && TestNearbyCoords(rhs->xbutton.y_root, lhs->xbutton.y_root);
-}
-
-int
-IsKeyEventType(
-    unsigned eventType)
-{
-    return eventType == KeyPress || eventType == KeyRelease;
 }
 
 static int
@@ -2509,13 +2516,13 @@ Tk_BindEvent(
 		switch (patPtr->eventType) {
 		case ButtonPress:
 		case ButtonRelease:
-		    if (curEvent->xev.type == KeyPress || curEvent->xev.type == KeyRelease) {
+		    if (IsKeyEventType(curEvent->xev.type)) {
 			RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 		    }
 		    break;
 		case KeyPress:
 		case KeyRelease:
-		    if (curEvent->xev.type == ButtonPress || curEvent->xev.type == ButtonRelease) {
+		    if (IsButtonEventType(curEvent->xev.type)) {
 			RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 		    }
 		    break;
