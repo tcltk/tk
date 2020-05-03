@@ -3203,7 +3203,11 @@ ExpandPercents(
 	}
 
 	if (number != NO_NUMBER) {
-	    snprintf(numStorage, sizeof(numStorage), "%d", (int) number);
+	    if (evPtr->type != MouseWheelEvent) {
+		snprintf(numStorage, sizeof(numStorage), "%ld", number);
+	    } else {
+		snprintf(numStorage, sizeof(numStorage), "%d", (int) number);
+	    }		
 	    string = numStorage;
 	}
 	{   /* local scope */
