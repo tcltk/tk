@@ -6707,6 +6707,143 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -cleanup {
 } -result {ok ok ok ok}
 
+set keyInfo {}
+set numericKeysym {}
+proc testKey {window event type mods} {
+    global keyInfo numericKeysym
+    set keyInfo {}
+    set numericKeysym {}
+    bind $window <KeyPress> {
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericKeysym %N
+    }
+    focus -force $window
+    update
+    event generate $window $event
+    if {$keyInfo == {}} {
+        vwait keyInfo
+    }
+    set save $keyInfo
+    set keyInfo {}
+    set injectcmd [list injectkeyevent $type $numericKeysym]
+    foreach {option} $mods {
+	lappend injectcmd $option
+    }
+    eval $injectcmd
+    if {$keyInfo == {}} {
+        vwait keyInfo
+    }
+    if {$save != $keyInfo} {
+	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
+    }
+    return pass
+}    
+proc testKeyWithMods {window keysym type} {
+    set result [testKey $window "<$keysym>" $type {}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Shift-$keysym>" $type {-shift}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Option-$keysym>" $type {-option}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Shift-Option-$keysym>" $type {-shift -option}]
+    if {$result != {pass}} {
+	return $result
+    }
+    return pass
+}
+proc testModifierKey {window event option} {
+    global KeyInfo numericKeysym
+    bind . <KeyPress> {
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericKeysym %N
+    }
+    wm iconify $window
+    wm deiconify $window
+    update
+    focus -force $window
+    set keyInfo {}
+    event generate $window $event
+    if {$keyInfo == {}} {
+	vwait keyInfo
+    }
+    set save $keyInfo
+    set keyInfo {}
+    injectkeyevent flagschanged $numericKeysym -shift
+    if {$keyInfo == {}} {
+	vwait keyInfo
+    }
+    if {$save != $keyInfo} {
+	return "[format "0x%x" $numericKeysym]: $save != $keyInfo"
+    } else {
+	return pass
+    }
+}
+
+test bind-35.0 {Generated and real key events agree} -constraints {aqua} -body {
+    foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
+	set result [testKeyWithMods . $k press]
+	if {$result != "pass"} {
+	    return $result
+	}
+    }
+    return pass
+} -cleanup {
+} -result pass
+
+test bind-35.1 {Key events agree for entry widgets} -constraints {aqua} -setup {
+    toplevel .new
+    entry .new.e
+    pack .new.e
+} -body {
+    foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
+	set result [testKeyWithMods .new.e $k press]
+	if {$result != "pass"} {
+	    return $result
+	}
+    }
+    return pass
+} -cleanup {
+    destroy .new.e
+    destroy .new
+} -result pass
+
+test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
+    global keyInfo numericKeysym
+    bind . <KeyPress> {}
+    bind . <KeyPress> {
+	lappend keyInfo %K
+	set numericKeysym %N
+    }
+    set keyInfo {}
+    set numericKeysym {}
+    focus -force .
+    event generate . <F2>
+    injectkeyevent press $numericKeysym -function
+    vwait keyInfo
+    return $keyInfo
+} -cleanup {
+} -result {F2 F2}
+
+## For some reason this hangs after the call to event generate:
+# test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -body {
+#     return [testModifierKey . <Control_L> -control]
+# } -cleanup {
+# } -result pass
+## but this works fine:
+# $ tktest
+# % bind . <KeyPress> {puts [format "%K 0x%%X 0x%%X %A" %N %k]}
+# % event generate . <Control_L>
+# % focus -force . ; event generate . <Control_L>
+# Control_L 0xFFE3 0x3B00F8FE {}
+# focus -force . ; injectkeyevent flagschanged 0xFFE3 -control
+# % Control_L 0xFFE3 0x3B00F8FE {}
+
 # cleanup
 cleanupTests
 return
