@@ -184,21 +184,32 @@ InitHashTables(void)
     Tcl_HashEntry *hPtr;
     const KeyInfo *kPtr;
     const KeysymInfo *ksPtr;
-    int dummy;
+    int dummy, index;
 
     Tcl_InitHashTable(&special2keysym, TCL_ONE_WORD_KEYS);
     Tcl_InitHashTable(&keysym2keycode, TCL_ONE_WORD_KEYS);
     for (kPtr = keyArray; kPtr->virtual != 0; kPtr++) {
-	MacKeycode keycode;
-	keycode.v.o_s = 0;
+	MacKeycode macKC;
+	macKC.v.o_s = 0;
 	hPtr = Tcl_CreateHashEntry(&special2keysym, INT2PTR(kPtr->virtual),
 				   &dummy);
 	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
 	hPtr = Tcl_CreateHashEntry(&keysym2keycode, INT2PTR(kPtr->keysym),
 				   &dummy);
-	keycode.v.virtual = kPtr->virtual;
-	keycode.v.keychar = kPtr->keychar;
-	Tcl_SetHashValue(hPtr, INT2PTR(keycode.uint));
+	macKC.v.virtual = kPtr->virtual;
+	macKC.v.keychar = kPtr->keychar;
+	Tcl_SetHashValue(hPtr, INT2PTR(macKC.uint));
+
+	/*
+	 * The Carbon framework does not work for finding the unicode character
+	 * of a special key.  But that does not depend on the keyboard layout,
+	 * so we can record the information here.
+	 */
+
+	for (index = 3; index >= 0; index--) {
+	    macKC.v.o_s = index;
+	    xvirtual2unichar[macKC.x.xvirtual] = macKC.x.keychar;
+	}
     }
     Tcl_InitHashTable(&keysym2unichar, TCL_ONE_WORD_KEYS);
     Tcl_InitHashTable(&unichar2keysym, TCL_ONE_WORD_KEYS);
@@ -264,13 +275,21 @@ UpdateKeymaps()
 	    UniChar keychar = 0;
 	    result = KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, virtual,
 				      modifiers, NULL);
+	    if (keychar == 0x10) {
+
+		/*
+		 * This is a special key, handled in InitHashTables.
+		 */
+
+		continue;
+	    }
 	    macKC.v.keychar = keychar;
 	    if (! ON_KEYPAD(virtual)) {
 		hPtr = Tcl_CreateHashEntry(&unichar2xvirtual,
 					   INT2PTR(macKC.x.keychar), &dummy);
 		Tcl_SetHashValue(hPtr, INT2PTR(macKC.x.xvirtual));
             }
-           xvirtual2unichar[macKC.x.xvirtual] = macKC.x.keychar;
+	    xvirtual2unichar[macKC.x.xvirtual] = macKC.x.keychar;
 	}
     }
 }
@@ -666,25 +685,28 @@ TkpSetKeycodeAndState(
 	 * set.  For example, the events described by <Oslash>, <Shift-oslash>,
 	 * <Shift-Option-O> and <Shift-Option-o> should all produce the same
 	 * uppercase Danish O.  So we may need to add the extra modifiers and
-	 * do another lookup for the keychar.
+	 * do another lookup for the keychar.  We don't want to do this for
+	 * special keys, however.
 	 */
 
 	if (macKC.v.o_s != eventIndex) {
 	    macKC.v.o_s |= eventIndex;
+	}
+	if (macKC.v.keychar < 0xF700) {
+	    UniChar keychar = macKC.v.keychar;
+	    NSString *str, *lower, *upper;
 	    if (macKC.v.virtual != NO_VIRTUAL) {
 		macKC.x.keychar = xvirtual2unichar[macKC.x.xvirtual];
-	    } else if (macKC.v.o_s & INDEX_SHIFT) {
-
-	        /*
-		 * Even though this keychar is not on the keyboard, we can
-		 * still apply the Shift modifier. However, we can't guess the
-		 * effect of the Option modifier and so we ignore it.
-		 */
-
-		UniChar keychar = macKC.v.keychar;
-		NSString *upper = [[[NSString alloc] initWithCharacters:&keychar
-				      length:1] uppercaseString];
-		macKC.v.keychar = [upper characterAtIndex:0];
+	    } else {
+		str = [[NSString alloc] initWithCharacters:&keychar length:1];
+		lower = [str lowercaseString];
+		upper = [str uppercaseString];
+		if (![str isEqual: lower]) {
+		    macKC.v.o_s |= INDEX_SHIFT;
+		}
+		if (macKC.v.o_s & INDEX_SHIFT) {
+		    macKC.v.keychar = [upper characterAtIndex:0];
+		}
 	    }
 	}
 	eventPtr->xkey.keycode = macKC.uint;

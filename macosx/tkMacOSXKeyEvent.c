@@ -38,6 +38,7 @@ static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
 static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
+static NSUInteger textInputModifiers;
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -61,7 +62,6 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     Bool can_input_text, has_modifiers = NO, use_text_input = NO;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
-
 
     if (nsEvArray == nil) {
         nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
@@ -94,13 +94,16 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
     if (type == NSKeyUp || type == NSKeyDown) {
 	if ([[theEvent characters] length] > 0) {
 	    keychar = [[theEvent characters] characterAtIndex:0];
-#if 0   /* Currently, real keys always send BMP characters. */
+
+	    /*
+	     * Currently, real keys always send BMP characters, but who knows?
+	     */
+
 	    if (CFStringIsSurrogateHighCharacter(keychar)) {
-		UniChar lowChar = [str characterAtIndex:1];
+		UniChar lowChar = [[theEvent characters] characterAtIndex:1];
 		keychar = CFStringGetLongCharacterForSurrogatePair(
-		    (UniChar)keychar, lowChar);
+		    keychar, lowChar);
 	    }
-#endif
 	} else {
 
 	    /*
@@ -171,6 +174,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      */
 
     if (use_text_input) {
+	textInputModifiers = modifiers;
 
 	/*
 	 * In IME the Enter key is used to terminate a composition sequence.
@@ -286,9 +290,9 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 - (void)insertText: (id)aString
   replacementRange: (NSRange)repRange
 {
-    int i, len;
+    int i, len, state;
     XEvent xEvent;
-    NSString *str;
+    NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
     Bool sendingIMEText = NO;
@@ -314,7 +318,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * Insert the string as a sequence of keystrokes.
      */
 
-    setupXEvent(&xEvent, tkwin, 0);
+    setupXEvent(&xEvent, tkwin, textInputModifiers);
     setXEventPoint(&xEvent, tkwin, [self window]);
     xEvent.xany.type = KeyPress;
 
@@ -349,6 +353,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
      * character which we write into the trans_chars field of the XEvent.
      */
 
+    state = xEvent.xkey.state;
     for (i = 0; i < len; i++) {
 	unsigned int code;
 	UniChar keychar;
@@ -367,6 +372,15 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
 	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
 	}
+	keystr = [[NSString alloc] initWithCharacters:&keychar length:1];
+	lower = [keystr lowercaseString];
+	if (![keystr isEqual: lower]) {
+	    macKC.v.o_s |= INDEX_SHIFT;
+	    xEvent.xkey.state |= ShiftMask;
+	}
+	if (xEvent.xkey.state & Mod2Mask) {
+	    macKC.v.o_s |= INDEX_OPTION;
+	}
 	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &code);
 	if (code > 0xFFFF){
 	    i++;
@@ -374,6 +388,7 @@ static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
 	xEvent.xkey.keycode = macKC.uint;
     	xEvent.xany.type = KeyPress;
     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	xEvent.xkey.state = state;
     }
 }
 

@@ -233,15 +233,15 @@ InjectKeyEventObjCmd(
 	"press", "release", "flagschanged", NULL};
     NSUInteger types[3] = {NSKeyDown, NSKeyUp, NSFlagsChanged};
     static const char *const argStrings[] = {
-	"-shift", "-control", "-option", "-command", "-x", "-y", NULL};
-    enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION,
-	       KEYEVENT_COMMAND, KEYEVENT_X, KEYEVENT_Y};
+	"-shift", "-control", "-option", "-command", "-function", "-x", "-y", NULL};
+    enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION, KEYEVENT_COMMAND,
+	       KEYEVENT_FUNCTION, KEYEVENT_X, KEYEVENT_Y};
     int i, index, keysym, mods = 0, x = 0, y = 0;
-    NSString *chars = nil;
+    NSString *chars = nil, *unmod = nil, *upper, *lower;
     NSEvent *keyEvent;
     NSUInteger type;
     MacKeycode macKC;
-    
+
     if (objc < 3) {
     wrongArgs:
         Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
@@ -269,13 +269,16 @@ InjectKeyEventObjCmd(
 	    mods |= NSShiftKeyMask;
             break;
 	case KEYEVENT_CONTROL:
-	    mods |= NSShiftKeyMask;
+	    mods |= NSControlKeyMask;
             break;
 	case KEYEVENT_OPTION:
-	    mods |= NSShiftKeyMask;
+	    mods |= NSAlternateKeyMask;
             break;
 	case KEYEVENT_COMMAND:
-	    mods |= NSShiftKeyMask;
+	    mods |= NSCommandKeyMask;
+            break;
+	case KEYEVENT_FUNCTION:
+	    mods |= NSFunctionKeyMask;
             break;
 	case KEYEVENT_X:
 	    if (++i >= objc) {
@@ -297,7 +300,22 @@ InjectKeyEventObjCmd(
     }
     if (type != NSFlagsChanged) {
 	UniChar keychar = macKC.v.keychar;
-	chars = [[NSString alloc] initWithCharacters: &keychar length:1];	
+	chars = [[NSString alloc] initWithCharacters: &keychar length:1];
+	upper = [chars uppercaseString];
+	lower = [chars lowercaseString];
+	if (![upper isEqual: lower] && [chars isEqual: upper]) {
+	    mods |= NSShiftKeyMask;
+	}
+	if (mods & NSShiftKeyMask) {
+	    chars = upper;
+	    unmod = lower;
+	    macKC.v.o_s |= INDEX_SHIFT;
+	} else {
+	    unmod = chars;
+	}
+	if (macKC.v.o_s & INDEX_OPTION) {
+	    mods |= NSAlternateKeyMask;
+	}
     }
     keyEvent = [NSEvent keyEventWithType:type
 	location:NSMakePoint(x, y)
@@ -306,7 +324,7 @@ InjectKeyEventObjCmd(
 	windowNumber:0
 	context:nil
 	characters:chars
-	charactersIgnoringModifiers:chars ? [chars lowercaseString] : nil
+	charactersIgnoringModifiers:unmod
 	isARepeat:NO
 	keyCode:macKC.v.virtual];
     [NSApp postEvent:keyEvent atStart:NO];
