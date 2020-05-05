@@ -300,12 +300,15 @@ UpdateKeymaps()
  * KeyDataToUnicode --
  *
  *	Given MacOS key event data this function generates the keychar.  It
- *	does this by using OS resources from the Carbon framework.
+ *	does this by using OS resources from the Carbon framework.  Note that
+ *      the Carbon functions used here are not aware of the keychars in the
+ *      private-use range which macOS now uses for special keys.  For those
+ *      keys this function returns 0x10 (ASCII dle).
  *
  *	The parameter deadKeyStatePtr can be NULL, if no deadkey handling is
  *	needed (which is always the case here).
  *
- *	This function is called from XKeycodeToKeysym().
+ *	This function is called in XKeycodeToKeysym and UpdateKeymaps.
  *
  * Results:
  *	The number of characters generated if any, 0 if we are waiting for
