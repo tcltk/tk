@@ -116,7 +116,7 @@
 
 
 /*
- * See tkMacOSXPrivate.h for macros related to key event processing.
+ * See tkMacOSXPrivate.h for macros and structures related to key event processing.
  */
 
 /*
@@ -427,8 +427,9 @@ XKeycodeToKeysym(
     }
 
     /*
-     * If the virtual value does not correspond to an actual key, try using its
-     * keychar to look up a keysym.
+     * If the virtual value in this keycode does not correspond to an actual
+     * key in the current keyboard layout, try using its keychar to look up a
+     * keysym.
      */
 
     if (macKC.v.virtual > 127) {
@@ -440,9 +441,9 @@ XKeycodeToKeysym(
 
     /*
      * If the virtual keycode does belong to a key, use the virtual and the
-     * Option-Shift from index to look up a keychar; then use the Carbon
-     * Framework to find a unicode character; then translate that to a keysym
-     * using the unicode2keysym hash table.
+     * Option-Shift from index to look up a keychar by using the Carbon
+     * Framework; then translate the keychar to a keysym using the
+     * unicode2keysym hash table.
      */
 
     modifiers = INDEX2CARBON(macKC.v.o_s);
@@ -591,7 +592,7 @@ XStringToKeysym(
  * Results:
  *
  *      A macOS KeyCode. See the description of keycodes at the top of this
- *	file.
+ *	file and in tkMacOSXPrivate.h.
  *
  * Side effects:
  *	None.
@@ -796,7 +797,7 @@ TkpGetKeySym(
 
     index = STATE2INDEX(eventPtr->xkey.state);
     if (eventPtr->xkey.state & LockMask) {
-	index |= 1;
+	index |= INDEX_SHIFT;
     }
 
     /*
