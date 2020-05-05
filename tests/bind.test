@@ -6629,7 +6629,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
 } -body {
     # In order to avoid platform-dependent coordinate results due to
-    # decorations and borders, this test warps the pointer twice 
+    # decorations and borders, this test warps the pointer twice
     # relatively to a window that moved in the meantime, and checks
     # how much the pointer moved
     wm geometry .top +200+200
@@ -6737,7 +6737,7 @@ proc testKey {window event type mods} {
 	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
     }
     return pass
-}    
+}
 proc testKeyWithMods {window keysym type} {
     set result [testKey $window "<$keysym>" $type {}]
     if {$result != {pass}} {
@@ -6757,34 +6757,6 @@ proc testKeyWithMods {window keysym type} {
     }
     return pass
 }
-proc testModifierKey {window event option} {
-    global KeyInfo numericKeysym
-    bind . <KeyPress> {
-	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-	set numericKeysym %N
-    }
-    wm iconify $window
-    wm deiconify $window
-    update
-    focus -force $window
-    set keyInfo {}
-    event generate $window $event
-    if {$keyInfo == {}} {
-	vwait keyInfo
-    }
-    set save $keyInfo
-    set keyInfo {}
-    injectkeyevent flagschanged $numericKeysym -shift
-    if {$keyInfo == {}} {
-	vwait keyInfo
-    }
-    if {$save != $keyInfo} {
-	return "[format "0x%x" $numericKeysym]: $save != $keyInfo"
-    } else {
-	return pass
-    }
-}
-
 test bind-35.0 {Generated and real key events agree} -constraints {aqua} -body {
     foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
 	set result [testKeyWithMods . $k press]
@@ -6830,19 +6802,41 @@ test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
 } -cleanup {
 } -result {F2 F2}
 
-## For some reason this hangs after the call to event generate:
-# test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -body {
-#     return [testModifierKey . <Control_L> -control]
-# } -cleanup {
-# } -result pass
-## but this works fine:
-# $ tktest
-# % bind . <KeyPress> {puts [format "%K 0x%%X 0x%%X %A" %N %k]}
-# % event generate . <Control_L>
-# % focus -force . ; event generate . <Control_L>
-# Control_L 0xFFE3 0x3B00F8FE {}
-# focus -force . ; injectkeyevent flagschanged 0xFFE3 -control
-# % Control_L 0xFFE3 0x3B00F8FE {}
+test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
+} -body {
+    global keyInfo numericalKeysym
+    set result {}
+    bind . <KeyPress> {
+    	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+    	set numericalKeysym [format "0x%x" %N]
+    }
+    foreach event {
+	{<Control_L> -control}
+	{<Control_R> -control}
+	{<Alt_L> -option}
+	{<Alt_R> -option}
+	{<Meta_L> -command}
+	{<Meta_R> -command}
+	{<Shift_L> -shift}
+	{<Shift_R> -shift}
+    } {
+	set keyInfo {}
+	event generate . [lindex $event 0]
+	if {$keyInfo == {}} {
+	    vwait keyInfo
+	}
+	set save $keyInfo
+	injectkeyevent flagschanged $numericKeysym [lindex $event 1]
+	if {$keyInfo == {}} {
+	    vwait keyInfo
+	}
+	if {$save != $keyInfo} {
+	    return "$save != $keyInfo"
+	}
+    }
+    return pass
+} -cleanup {
+} -result pass
 
 # cleanup
 cleanupTests
