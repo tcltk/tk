@@ -388,8 +388,8 @@ KeyDataToUnicode(
  *
  *	This is a stub function which translates from the keycode used in an
  *      XEvent to a numerical keysym.  On macOS, the display parameter is
- *      ignored and only the the virtual keycode stored in bits 24-31 is
- *      used.
+ *      ignored and only the the virtual keycode stored in the .virtual bitfield
+ *      of a MacKeycode.v.
  *
  * Results:
  *      Returns the corresponding numerical keysym, or NoSymbol if the keysym
@@ -591,11 +591,13 @@ XStringToKeysym(
  *
  *	This is a stub function which converts a numerical keysym to the
  *      platform-specific keycode used in a KeyPress or KeyRelease XEvent.
+ *      For macOS the keycode is an unsigned int with bitfields described
+ *      in the definition of the MacKeycode type.
  *
  * Results:
  *
  *      A macOS KeyCode. See the description of keycodes at the top of this
- *	file and in tkMacOSXPrivate.h.
+ *	file and the definition of the MacKeycode type in tkMacOSXPrivate.h.
  *
  * Side effects:
  *	None.
