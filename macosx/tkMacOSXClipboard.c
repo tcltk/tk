@@ -35,7 +35,9 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = TkUtfToNSString(cbPtr->buffer, cbPtr->length);
+		    NSString *s = [[TKNSString alloc]
+				      initWithTclUtfBytes:cbPtr->buffer
+						   length:cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}

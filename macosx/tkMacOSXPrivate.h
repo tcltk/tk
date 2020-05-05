@@ -429,6 +429,38 @@ VISIBILITY_HIDDEN
 - (void) setAppleMenu: (NSMenu *) menu;
 @end
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TKNSString --
+ *
+ * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
+ * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
+ * encoding requires 4 bytes.
+ *
+ * As a workaround, these versions of Tcl encode non-BMP characters as a string
+ * of length 6 in which the high and low UTF-16 surrogates have been encoded
+ * using the UTF-8 algorithm.  The UTF-8 encoding does not allow encoding
+ * surrogates, so these 6-byte strings are not valid UTF-8, and hence Apple's
+ * NString class will refuse to instantiate an NSString from the 6-byte
+ * encoding.
+ *
+ * This subclass of NSString adds a new initialization method which accepts
+ * a C string encoded with the scheme described above.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+@interface TKNSString:NSString {
+@private
+    Tcl_DString _ds;
+    NSString *_string;
+}
+@property const char *UTF8String;
+- (instancetype)initWithTclUtfBytes:(const void *)bytes
+			     length:(NSUInteger)len;
+@end
+
 #endif /* _TKMACPRIV */
 
 /*

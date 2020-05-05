@@ -102,46 +102,46 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 #pragma mark Font Helpers:
 
 /*
- *---------------------------------------------------------------------------
- *
- * TkUtfToNSString --
- *
- * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
- * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
- * encoding requires 4 bytes.
- *
- * As a workaround, these versions of Tcl encode non-BMP characters as a string
- * of length 6 in which the high and low UTF-16 surrogates have been encoded
- * using the UTF-8 algorithm.  The UTF-8 encoding does not allow encoding
- * surrogates, so these 6-byte strings are not valid UTF-8, and hence Apple's
- * NString class will refuse to instantiate an NSString from the 6-byte
- * encoding.  This function allows creating an NSString from a C-string which
- * has been encoded using this scheme.
- *
- * Results:
- *	An NSString, which may be nil.
- *
- * Side effects:
- *	None.
- *---------------------------------------------------------------------------
+ * To avoid an extra copy, a TKNSString object wraps a Tcl_DString with an
+ * NSString that uses the DString's buffer as its character buffer.
  */
 
-MODULE_SCOPE NSString*
-TkUtfToNSString(
-   const char *source,
-   size_t numBytes)
-{
-    NSString *string;
-    Tcl_DString ds;
+@implementation TKNSString
 
-    Tcl_DStringInit(&ds);
-    Tcl_UtfToChar16DString(source, numBytes, &ds);
-    string = [[NSString alloc] initWithCharacters:(const unichar *)Tcl_DStringValue(&ds)
-	    length:(Tcl_DStringLength(&ds)>>1)];
-    Tcl_DStringFree(&ds);
-    return string;
+- (instancetype)initWithTclUtfBytes:(const void *)bytes
+		       length:(NSUInteger)len
+{
+    if (self = [self init]) {
+	Tcl_DStringInit(&_ds);
+	Tcl_UtfToUniCharDString(bytes, len, &_ds);
+	_string = [[NSString alloc]
+	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
+			       length:Tcl_DStringLength(&_ds)>>1
+			 freeWhenDone:NO];
+	self.UTF8String = _string.UTF8String;
+    }
+    return self;
 }
-
+
+- (void)dealloc
+{
+    Tcl_DStringFree(&_ds);
+    [_string release];
+    [super dealloc];
+}
+
+- (NSUInteger)length
+{
+    return _string.length;
+}
+
+- (unichar)characterAtIndex:(NSUInteger)index
+{
+    return [_string characterAtIndex:index];
+}
+
+@end
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -150,7 +150,7 @@ TkUtfToNSString(
  *  Write a sequence of bytes up to length 6 which is an encoding of a UTF-16
  *  character in an NSString.  Also record the unicode code point of the character.
  *  this may be a non-BMP character constructed by reading two surrogates from
- *  the NSString.
+ *  the NSString.  See the documentation for TKNSString in tkMacOSXPrivate.h.
  *
  * Results:
  *	Returns the number of bytes written.
@@ -982,7 +982,7 @@ TkpMeasureCharsInContext(
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
-    string = TkUtfToNSString((const char *)source, numBytes);
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
 	length = 0;
 	fit = rangeLength;
@@ -1263,7 +1263,7 @@ DrawCharsInContext(
 	!TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
-    string = TkUtfToNSString((const char *)source, numBytes);
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
 	return;
     }
