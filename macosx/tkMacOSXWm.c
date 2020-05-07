@@ -879,7 +879,9 @@ TkWmDeadWindow(
     TkWindow *winPtr)		/* Top-level window that's being deleted. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
-
+    NSArray *allNSWindows;
+    NSWindow *ourNSWindow;
+    
     if (wmPtr == NULL) {
 	return;
     }
@@ -950,7 +952,7 @@ TkWmDeadWindow(
 	wmPtr->transientPtr = transientPtr->nextPtr;
 	ckfree(transientPtr);
     }
-
+ 
     /*
      * Delete the Mac window and remove it from the windowTable. The window
      * could be nil if the window was never mapped. However, we don't do this
@@ -958,38 +960,41 @@ TkWmDeadWindow(
      * own their portPtr's.
      */
 
-    NSWindow *window = wmPtr->window;
-
-    if (window && !Tk_IsEmbedded(winPtr)) {
-	NSWindow *parent = [window parentWindow];
+    ourNSWindow = wmPtr->window;
+    if (ourNSWindow && !Tk_IsEmbedded(winPtr)) {
+	NSWindow *parent = [ourNSWindow parentWindow];
 
 	if (parent) {
-	    [parent removeChildWindow:window];
+	    [parent removeChildWindow:ourNSWindow];
 	}
 #if DEBUG_ZOMBIES > 0
 	{
-	    const char *title = [[window title] UTF8String];
+	    const char *title = [[ourNSWindow title] UTF8String];
 	    if (title == nil) {
 		title = "unnamed window";
 	    }
 	    fprintf(stderr, ">>>> Closing <%s>. Count is: %lu\n", title,
-		    [window retainCount]);
+		    [ourNSWindow retainCount]);
 	}
 #endif
-	[window close];
-	TkMacOSXUnregisterMacWindow(window);
+	TkMacOSXUnregisterMacWindow(ourNSWindow);
         if (winPtr->window) {
             ((MacDrawable *) winPtr->window)->view = nil;
         }
 	wmPtr->window = NULL;
-        [window release];
 
-	/* Activate the highest window left on the screen. */
-	NSArray *windows = [NSApp orderedWindows];
-	for (id nswindow in windows) {
+	/*
+	 * Close the window and order it out.  Then activate the highest window
+	 * left on the screen.
+	 */
+
+	[ourNSWindow close];
+	[ourNSWindow orderOut:NSApp];
+	allNSWindows = [NSApp orderedWindows];
+	for (id nswindow in allNSWindows) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
 
-	    if (winPtr2 && nswindow != window) {
+	    if (winPtr2) {
 		WmInfo *wmPtr = winPtr2->wmInfoPtr;
 		BOOL minimized = (wmPtr->hints.initial_state == IconicState
 			|| wmPtr->hints.initial_state == WithdrawnState);
@@ -1008,6 +1013,11 @@ TkWmDeadWindow(
 	    }
 	}
 
+	/*
+	 * Deallocate.
+	 */
+	
+        [ourNSWindow release];
 	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 0
