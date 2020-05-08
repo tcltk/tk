@@ -372,6 +372,13 @@ With no additional arguments,
 returns a dictionary of the option settings for \fItagName\fR.
 See \fBTAG OPTIONS\fR for the list of available options.
 .TP
+\fIpathName \fBtag delete \fItagName\fR
+.
+Deletes all tag information for the \fItagName\fR argument. The
+command removes the tag from all items in the widget and also deletes any
+other information associated with the tag, such as bindings and display
+information. The command returns an empty string.
+.TP
 \fIpathName \fBtag has \fItagName\fR ?\fIitem\fR?
 If \fIitem\fR is specified, returns 1 or 0
 depending on whether the specified item has the named tag.

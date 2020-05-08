@@ -226,6 +226,8 @@ MODULE_SCOPE int Ttk_EnumerateTagOptions(
 
 MODULE_SCOPE int Ttk_EnumerateTags(Tcl_Interp *, Ttk_TagTable);
 
+MODULE_SCOPE void Ttk_DeleteTagFromTable(Ttk_TagTable, Ttk_Tag);
+
 MODULE_SCOPE int Ttk_ConfigureTag(
     Tcl_Interp *interp, Ttk_TagTable tagTable, Ttk_Tag tag,
     int objc, Tcl_Obj *const objv[]);
