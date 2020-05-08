@@ -79,6 +79,9 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
 };
 
+/* Forward declaration */
+static void RemoveTag(TreeItem *, Ttk_Tag);
+
 /* + NewItem --
  * 	Allocate a new, uninitialized, unlinked item
  */
@@ -3102,6 +3105,34 @@ static int TreeviewTagConfigureCommand(
     return Ttk_ConfigureTag(interp, tagTable, tag, objc - 4, objv + 4);
 }
 
+/* + $tv tag delete $tag
+ */
+static int TreeviewTagDeleteCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    Ttk_TagTable tagTable = tv->tree.tagTable;
+    TreeItem *item = tv->tree.root;
+    Ttk_Tag tag;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName");
+	return TCL_ERROR;
+    }
+
+    tag = Ttk_GetTagFromObj(tagTable, objv[3]);
+    /* remove the tag from all items */
+    while (item) {
+	RemoveTag(item, tag);
+	item=NextPreorder(item);
+    }
+    /* then remove the tag from the tag table */
+    Ttk_DeleteTagFromTable(tagTable, tag);
+    TtkRedisplayWidget(&tv->core);
+
+    return TCL_OK;
+}
+
 /* + $tv tag has $tag ?$item?
  */
 static int TreeviewTagHasCommand(
@@ -3244,6 +3275,7 @@ static const Ttk_Ensemble TreeviewTagCommands[] = {
     { "add",		TreeviewTagAddCommand,0 },
     { "bind",		TreeviewTagBindCommand,0 },
     { "configure",	TreeviewTagConfigureCommand,0 },
+    { "delete",		TreeviewTagDeleteCommand,0 },
     { "has",		TreeviewTagHasCommand,0 },
     { "names",		TreeviewTagNamesCommand,0 },
     { "remove",		TreeviewTagRemoveCommand,0 },
