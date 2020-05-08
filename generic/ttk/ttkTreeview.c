@@ -2963,7 +2963,7 @@ static int TreeviewSelectionCommand(
 
     if (objc == 2) {
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
-	for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
+	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	    if (item->state & TTK_STATE_SELECTED)
 		Tcl_ListObjAppendElement(NULL, result, ItemID(tv, item));
 	}
@@ -2989,7 +2989,7 @@ static int TreeviewSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
-	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
+	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
 		item->state &= ~TTK_STATE_SELECTED;
 	    }
 	    /*FALLTHRU*/
@@ -3124,7 +3124,7 @@ static int TreeviewTagDeleteCommand(
     /* remove the tag from all items */
     while (item) {
 	RemoveTag(item, tag);
-	item=NextPreorder(item);
+	item = NextPreorder(item);
     }
     /* then remove the tag from the tag table */
     Ttk_DeleteTagFromTable(tagTable, tag);
@@ -3262,7 +3262,7 @@ static int TreeviewTagRemoveCommand(
 	TreeItem *item = tv->tree.root;
 	while (item) {
 	    RemoveTag(item, tag);
-	    item=NextPreorder(item);
+	    item = NextPreorder(item);
 	}
     }
 
