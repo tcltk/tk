@@ -358,6 +358,10 @@ static void             RemoveTransient(TkWindow *winPtr);
 
 @implementation TKWindow: NSWindow
 
+- (NSTouchBar *) makeTouchBar {
+    return nil;
+}
+
 @end
 
 @implementation TKWindow(TKWm)
