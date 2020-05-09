@@ -223,6 +223,12 @@ test treetags-4.7 "tag cell remove" -body {
     $tv tag cell has tag2
 } -result {}
 
+test treetags-4.8 "tag delete with tagged cells" -body {
+    $tv tag cell add tag6 "item1 A"
+    $tv tag delete tag6
+    $tv tag cell has tag6
+} -result {}
+
 # The next test exercises tag resource management.
 # If options are not properly freed, the message:
 # Test file error: "Font times 20 still in cache."
