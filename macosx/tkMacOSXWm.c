@@ -991,6 +991,7 @@ TkWmDeadWindow(
 	[ourNSWindow setExcludedFromWindowsMenu:YES];
 	[ourNSWindow orderOut:NSApp];
 	[ourNSWindow close];
+	[ourNSWindow makeFirstResponder:nil];
 	allNSWindows = [NSApp orderedWindows];
 	for (id nswindow in allNSWindows) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
