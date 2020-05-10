@@ -3152,13 +3152,13 @@ ExpandPercents(
 	    }
 	    break;
 	case 'R':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.root);
 		string = numStorage;
 	    }
 	    break;
 	case 'S':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.subwindow);
 		string = numStorage;
 	    }
@@ -3174,12 +3174,12 @@ ExpandPercents(
 	    break;
 	}
 	case 'X':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		SET_NUMBER(evPtr->xkey.x_root);
 	    }
 	    break;
 	case 'Y':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		SET_NUMBER(evPtr->xkey.y_root);
 	    }
 	    break;
@@ -3898,7 +3898,7 @@ HandleEventGenerate(
 	event.general.xcreatewindow.window = event.general.xany.window;
     }
 
-    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 	event.general.xkey.x_root = -1;
 	event.general.xkey.y_root = -1;
     }
@@ -4129,7 +4129,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.root = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4139,7 +4139,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.x_root = number;
 	    } else {
 		badOpt = 1;
@@ -4188,11 +4188,11 @@ HandleEventGenerate(
 	    event.general.xany.serial = number;
 	    break;
 	case EVENT_STATE:
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+		if (flags & (KEY|BUTTON|MOTION|WHEEL)) {
 		    event.general.xkey.state = number;
 		} else {
 		    event.general.xcrossing.state = number;
@@ -4210,7 +4210,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.subwindow = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4224,7 +4224,7 @@ HandleEventGenerate(
 	    } else if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.time = number;
 	    } else if (flags & PROP) {
 		event.general.xproperty.time = number;
@@ -4259,7 +4259,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.x = number;
 
 		/*
@@ -4286,7 +4286,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.y = number;
 
 		/*
