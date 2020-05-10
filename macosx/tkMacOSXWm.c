@@ -883,9 +883,8 @@ TkWmDeadWindow(
     TkWindow *winPtr)		/* Top-level window that's being deleted. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
-    NSArray *allNSWindows;
     NSWindow *ourNSWindow;
-    
+
     if (wmPtr == NULL) {
 	return;
     }
@@ -956,17 +955,21 @@ TkWmDeadWindow(
 	wmPtr->transientPtr = transientPtr->nextPtr;
 	ckfree(transientPtr);
     }
- 
+
     /*
-     * Delete the Mac window and remove it from the windowTable. The window
-     * could be nil if the window was never mapped. However, we don't do this
-     * for embedded windows, they don't go in the window list, and they do not
-     * own their portPtr's.
+     * Unregister the NSWindow and remove all references to it from the Tk
+     * data structures.  If the NSWindow is a child, disassociate it from
+     * the parent.  Then close and release the NSWindow.
      */
 
     ourNSWindow = wmPtr->window;
     if (ourNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [ourNSWindow parentWindow];
+	TkMacOSXUnregisterMacWindow(ourNSWindow);
+        if (winPtr->window) {
+            ((MacDrawable *) winPtr->window)->view = nil;
+        }
+	wmPtr->window = NULL;
 
 	if (parent) {
 	    [parent removeChildWindow:ourNSWindow];
@@ -981,49 +984,8 @@ TkWmDeadWindow(
 		    [ourNSWindow retainCount]);
 	}
 #endif
-	TkMacOSXUnregisterMacWindow(ourNSWindow);
-        if (winPtr->window) {
-            ((MacDrawable *) winPtr->window)->view = nil;
-        }
-	wmPtr->window = NULL;
-
-	/*
-	 * Close the window and order it out.  Then activate the highest window
-	 * left on the screen.
-	 */
-
-	[ourNSWindow setExcludedFromWindowsMenu:YES];
-	[ourNSWindow orderOut:NSApp];
 	[ourNSWindow close];
-	[ourNSWindow makeFirstResponder:nil];
-	allNSWindows = [NSApp orderedWindows];
-	for (id nswindow in allNSWindows) {
-	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
-
-	    if (winPtr2) {
-		WmInfo *wmPtr = winPtr2->wmInfoPtr;
-		BOOL minimized = (wmPtr->hints.initial_state == IconicState
-			|| wmPtr->hints.initial_state == WithdrawnState);
-
-		/*
-		 * If no windows are left on the screen and the next window is
-		 * iconified or withdrawn, we don't want to make it be the
-		 * KeyWindow because that would cause it to be displayed on the
-		 * screen.
-		 */
-
-		if ([nswindow canBecomeKeyWindow] && !minimized) {
-		    [nswindow makeKeyAndOrderFront:NSApp];
-		    break;
-		}
-	    }
-	}
-
-	/*
-	 * Deallocate.
-	 */
-	
-        [ourNSWindow release];
+	[ourNSWindow release];
 	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 0
@@ -1032,6 +994,11 @@ TkWmDeadWindow(
 #endif
 
     }
+
+    /*
+     * Deallocate the wmInfo and clear the wmInfoPtr.
+     */
+
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
