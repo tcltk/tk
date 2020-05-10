@@ -3074,8 +3074,10 @@ ExpandPercents(
 	    }
 	    break;
 	case 'x':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL|CROSSING)) {
+	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
 		SET_NUMBER(evPtr->xkey.x);
+	    } else if (flags & CROSSING) {
+		SET_NUMBER(evPtr->xcrossing.x);
 	    } else if (flags & EXPOSE) {
 		SET_NUMBER(evPtr->xexpose.x);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
@@ -3089,8 +3091,10 @@ ExpandPercents(
 	    }
 	    break;
 	case 'y':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL|CROSSING)) {
+	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
 		SET_NUMBER(evPtr->xkey.y);
+	    } else if (flags & CROSSING) {
+		SET_NUMBER(evPtr->xcrossing.y);
 	    } else if (flags & EXPOSE) {
 		SET_NUMBER(evPtr->xexpose.y);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
