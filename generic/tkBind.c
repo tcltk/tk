@@ -4149,7 +4149,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & (KEY|BUTTON|MOTION|CROSSING|WHEEL)) {
 		event.general.xkey.y_root = number;
 	    } else {
 		badOpt = 1;
