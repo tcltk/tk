@@ -75,7 +75,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSApplicationDidBecomeActiveNotification, applicationActivate:);
-    observe(NSApplicationDidResignActiveNotification, applicationDeactivate:);
+    observe(NSApplicationWillResignActiveNotification, applicationDeactivate:);
     observe(NSApplicationDidUnhideNotification, applicationShowHide:);
     observe(NSApplicationDidHideNotification, applicationShowHide:);
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
@@ -437,7 +437,7 @@ TkpInit(
 	/*
 	 * Add the system image type for named NSImages.
 	 */
-	
+
 	TkMacOSXNSImage_Init(interp);
     }
 

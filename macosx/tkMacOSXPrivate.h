@@ -432,6 +432,16 @@ VISIBILITY_HIDDEN
 - (void) setAppleMenu: (NSMenu *) menu;
 @end
 
+/*
+ * These methods are used to prevent zombie windows on systems with a TouchBar
+ * since the TouchBar prevents deallocation of the key window.
+ */
+
+@interface NSApplication(TkWm)
+- (void) _setKeyWindow: (NSWindow *) window;
+- (void) _setMainWindow: (NSWindow *) window;
+@end
+
 #endif /* _TKMACPRIV */
 
 int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
