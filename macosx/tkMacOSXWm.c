@@ -22,6 +22,12 @@
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXConstants.h"
 
+/*
+ * Setting this to 1 prints when each window is freed, setting it to 2 adds
+ * dumps of the autorelease pools, and setting it to 3 also shows each retain
+ * and release.
+ */
+
 #define DEBUG_ZOMBIES 0
 
 /*
@@ -434,6 +440,7 @@ static void             RemoveTransient(TkWindow *winPtr);
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+
     if (!winPtr || !winPtr->wmInfoPtr) {
 	return NO;
     }
@@ -450,7 +457,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 1) {
+    if (DEBUG_ZOMBIES > 2) {
 	fprintf(stderr, "Retained <%s>. Count is: %lu\n",
 		title, [self retainCount]);
     }
@@ -464,7 +471,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 1) {
+    if (DEBUG_ZOMBIES > 2) {
 	fprintf(stderr, "Autoreleased <%s>. Count is %lu\n",
 		title, [self retainCount]);
     }
@@ -476,7 +483,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 1) {
+    if (DEBUG_ZOMBIES > 2) {
 	fprintf(stderr, "Releasing <%s>. Count is %lu\n",
 		title, [self retainCount]);
     }
@@ -491,17 +498,10 @@ static void             RemoveTransient(TkWindow *winPtr);
     if (DEBUG_ZOMBIES > 0) {
 	fprintf(stderr, ">>>> Freeing <%s>. Count is %lu\n",
 		title, [self retainCount]);
-	fprintf(stderr, "Key window is %p\n", [NSApp keyWindow]);
     }
-    TkMacOSXUnregisterMacWindow(self);
     [super dealloc];
 }
 
-#else
-- (void) dealloc {
-    TkMacOSXUnregisterMacWindow(self);
-    [super dealloc];
-}
 #endif
 @end
 
@@ -971,7 +971,7 @@ TkWmDeadWindow(
     ourNSWindow = wmPtr->window;
     if (ourNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [ourNSWindow parentWindow];
-	//TkMacOSXUnregisterMacWindow(ourNSWindow);
+	TkMacOSXUnregisterMacWindow(ourNSWindow);
         if (winPtr->window) {
             ((MacDrawable *) winPtr->window)->view = nil;
         }
@@ -981,7 +981,7 @@ TkWmDeadWindow(
 	    [parent removeChildWindow:ourNSWindow];
 	}
 
-#if DEBUG_ZOMBIES > 0
+#if DEBUG_ZOMBIES > 1
 	{
 	    const char *title = [[ourNSWindow title] UTF8String];
 	    if (title == nil) {
@@ -993,19 +993,25 @@ TkWmDeadWindow(
 #endif
 
 	/*
-	 * Apple's documentation says that calling the orderOut method of the key
-	 * window will cause the next window below to become the key window.  But
-	 * experiments show that this is not the case.  So we have to do it for
-	 * ourselves.  If the window is the last one on the screen, and if the
-	 * host computer has a TouchBar then the window will not be deallocated
-	 * until it stops being the key window, which only happens when another
-	 * window becomes the key window.  This can cause the window to reappear
-	 * as a zombie if the NSApplication is deactivated and then reactivated.
-	 * (See bug [411359dc3b]).  To avoid this we do two things.  First remove
-	 * the dead window from the Window Menu, to prevent calling up the zombie
-	 * from the Window Menu and second, make canBecomeKeyWindow return NO
-	 * whenever the window's wmInfoPtr is NULL, as it will be when this function
-	 * returns.
+	 * Apple's documentation says that calling the orderOut method of the
+	 * key window will cause the next window below to become the key
+	 * window.  But experiment shows that this is not the case.  So we have
+	 * to reset the key window ourselves.  But when the window is the last
+	 * one on the screen there is no choice for a new key window as Apple
+	 * provides no way to force the application to have a nil key window.
+	 * Moreover, if the host computer has a TouchBar then the TouchBar
+	 * holds a reference to the window which prevents it from being
+	 * deallocated until it stops being the key window, which can only
+	 * happen by making another window becomes the key window. The closed
+	 * window will still be listed in the Window Menu and if the
+	 * NSApplication is deactivated and then reactivated it will reappear
+	 * on the screen as a non-responsive zombie. (See bug [411359dc3b]).
+	 * We can (and do) explicitly exclude the window from the window menu
+	 * but we found no way to prevent it from being displayed when the
+	 * application is reactivated.  As a last resort, we set it to have
+	 * size 0 and to be located as far as possible from the screen origin.
+	 * At least this prevents it from being a distraction as it waits for
+	 * the TouchBar to allow it to be deallocated.
 	 */
 
 	[ourNSWindow setExcludedFromWindowsMenu:YES];
@@ -1016,10 +1022,11 @@ TkWmDeadWindow(
 	    }
 	}
 	[ourNSWindow close];
+	[ourNSWindow setFrame:NSMakeRect(-16000, -16000, 0, 0) display:NO];
 	[ourNSWindow release];
 	[NSApp _resetAutoreleasePool];
 
-#if DEBUG_ZOMBIES > 0
+#if DEBUG_ZOMBIES > 1
 	fprintf(stderr, "================= Pool dump ===================\n");
 	[NSAutoreleasePool showPools];
 #endif
@@ -1030,7 +1037,7 @@ TkWmDeadWindow(
      * Deallocate the wmInfo and clear the wmInfoPtr, which should prevent this
      * window from becoming a key window.
      */
-    
+
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
