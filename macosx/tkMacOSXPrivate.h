@@ -430,6 +430,19 @@ VISIBILITY_HIDDEN
 @end
 
 /*
+ * These methods are exposed because they are needed to prevent zombie windows
+ * on systems with a TouchBar.  The TouchBar Key-Value observer holds a
+ * reference to the key window, which prevents deallocation of the key window
+ * when it is closed.
+ */
+
+@interface NSApplication(TkWm)
+- (id) _setKeyWindow: (NSWindow *) window;
+- (id) _setMainWindow: (NSWindow *) window;
+@end
+
+
+/*
  *---------------------------------------------------------------------------
  *
  * TKNSString --
