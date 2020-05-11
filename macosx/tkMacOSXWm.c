@@ -1005,10 +1005,10 @@ TkWmDeadWindow(
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 	    BOOL isOnScreen;
 
-	    wmPtr2 = winPtr2->wmInfoPtr;
-	    if (!winPtr2 || !wmPtr2) {
+	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 		continue;
 	    }
+	    wmPtr2 = winPtr2->wmInfoPtr;
 	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != ourNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
