@@ -363,11 +363,6 @@ static void             RemoveTransient(TkWindow *winPtr);
 #pragma mark TKWindow(TKWm)
 
 @implementation TKWindow: NSWindow
-
-- (NSTouchBar *) makeTouchBar {
-    return nil;
-}
-
 @end
 
 @implementation TKWindow(TKWm)
@@ -444,7 +439,8 @@ static void             RemoveTransient(TkWindow *winPtr);
     if (!winPtr || !winPtr->wmInfoPtr) {
 	return NO;
     }
-    return ((winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
+    return (winPtr->wmInfoPtr &&
+	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
 	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
 	    ) ? NO : YES;
 }
@@ -1016,7 +1012,14 @@ TkWmDeadWindow(
 
 	[ourNSWindow setExcludedFromWindowsMenu:YES];
 	for (NSWindow *w in [NSApp orderedWindows]) {
-	    if (w != ourNSWindow && [w canBecomeKeyWindow] && ![w isMiniaturized]) {
+	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
+	    BOOL isOnScreen;
+	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
+		continue;
+	    }
+	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
+			  wmPtr2->hints.initial_state != WithdrawnState);
+	    if (w != ourNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
 		[w makeKeyAndOrderFront:NSApp];
 		break;
 	    }
