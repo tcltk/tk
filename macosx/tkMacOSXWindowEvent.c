@@ -315,6 +315,18 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+
+    /*
+     * To prevent zombie windows on systems with a TouchBar we set
+     * our key window to nil if it does not belong to a Tk window.
+     */
+
+    TkWindow *winPtr = TkMacOSXGetTkWindow([NSApp keyWindow]);
+    if (!winPtr) {
+	[NSApp _setKeyWindow:nil];
+	[NSApp _setMainWindow:nil];
+    }
+
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
