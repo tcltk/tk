@@ -434,11 +434,10 @@ static void             RemoveTransient(TkWindow *winPtr);
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    if (!winPtr) {
+    if (!winPtr || !winPtr->wmInfoPtr) {
 	return NO;
     }
-    return (winPtr->wmInfoPtr &&
-	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
+    return ((winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
 	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
 	    ) ? NO : YES;
 }
@@ -492,10 +491,17 @@ static void             RemoveTransient(TkWindow *winPtr);
     if (DEBUG_ZOMBIES > 0) {
 	fprintf(stderr, ">>>> Freeing <%s>. Count is %lu\n",
 		title, [self retainCount]);
+	fprintf(stderr, "Key window is %p\n", [NSApp keyWindow]);
     }
+    TkMacOSXUnregisterMacWindow(self);
     [super dealloc];
 }
 
+#else
+- (void) dealloc {
+    TkMacOSXUnregisterMacWindow(self);
+    [super dealloc];
+}
 #endif
 @end
 
@@ -965,7 +971,7 @@ TkWmDeadWindow(
     ourNSWindow = wmPtr->window;
     if (ourNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [ourNSWindow parentWindow];
-	TkMacOSXUnregisterMacWindow(ourNSWindow);
+	//TkMacOSXUnregisterMacWindow(ourNSWindow);
         if (winPtr->window) {
             ((MacDrawable *) winPtr->window)->view = nil;
         }
@@ -974,6 +980,7 @@ TkWmDeadWindow(
 	if (parent) {
 	    [parent removeChildWindow:ourNSWindow];
 	}
+
 #if DEBUG_ZOMBIES > 0
 	{
 	    const char *title = [[ourNSWindow title] UTF8String];
@@ -984,6 +991,30 @@ TkWmDeadWindow(
 		    [ourNSWindow retainCount]);
 	}
 #endif
+
+	/*
+	 * Apple's documentation says that calling the orderOut method of the key
+	 * window will cause the next window below to become the key window.  But
+	 * experiments show that this is not the case.  So we have to do it for
+	 * ourselves.  If the window is the last one on the screen, and if the
+	 * host computer has a TouchBar then the window will not be deallocated
+	 * until it stops being the key window, which only happens when another
+	 * window becomes the key window.  This can cause the window to reappear
+	 * as a zombie if the NSApplication is deactivated and then reactivated.
+	 * (See bug [411359dc3b]).  To avoid this we do two things.  First remove
+	 * the dead window from the Window Menu, to prevent calling up the zombie
+	 * from the Window Menu and second, make canBecomeKeyWindow return NO
+	 * whenever the window's wmInfoPtr is NULL, as it will be when this function
+	 * returns.
+	 */
+
+	[ourNSWindow setExcludedFromWindowsMenu:YES];
+	for (NSWindow *w in [NSApp orderedWindows]) {
+	    if (w != ourNSWindow && [w canBecomeKeyWindow] && ![w isMiniaturized]) {
+		[w makeKeyAndOrderFront:NSApp];
+		break;
+	    }
+	}
 	[ourNSWindow close];
 	[ourNSWindow release];
 	[NSApp _resetAutoreleasePool];
@@ -996,9 +1027,10 @@ TkWmDeadWindow(
     }
 
     /*
-     * Deallocate the wmInfo and clear the wmInfoPtr.
+     * Deallocate the wmInfo and clear the wmInfoPtr, which should prevent this
+     * window from becoming a key window.
      */
-
+    
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
@@ -3765,7 +3797,7 @@ WmWithdrawCmd(
     TkpWmSetState(winPtr, WithdrawnState);
 
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win orderOut:nil];
+    [win orderOut:NSApp];
     [win setExcludedFromWindowsMenu:YES];
 
     /*
