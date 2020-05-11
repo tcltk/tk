@@ -559,6 +559,27 @@ static int eventArrayIndex[TK_LASTEVENT];
 #define	RESIZEREQ		(1<<22)
 #define CIRCREQ			(1<<23)
 
+/*
+ * These structs agree with xkey for the fields type, serial, send_event, display,
+ * window, root, subwindow, time, x, y, x_root, and y_root.  So when accessing
+ * these fields we may pretend that we are using a struct xkey.
+ */
+
+#define HAS_XKEY_HEAD (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)
+
+/* 
+ * The xcrossing struct puts the state field in a different location, but the other
+ * events above agree on where state is located.
+ */
+
+#define HAS_XKEY_HEAD_AND_STATE (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)
+
+/*
+ * Event types which support -warp.
+ */
+
+#define CAN_WARP (KEY|BUTTON|MOTION|WHEEL)
+
 static const int flagArray[TK_LASTEVENT] = {
    /* Not used */		0,
    /* Not used */		0,
@@ -2164,7 +2185,7 @@ Tk_BindEvent(
 	return;
     }
 
-    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 	bindPtr->curModMask = eventPtr->xkey.state;
     } else if (flags & CROSSING) {
 	bindPtr->curModMask = eventPtr->xcrossing.state;
@@ -2910,15 +2931,21 @@ ExpandPercents(
     evPtr = &eventPtr->xev;
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
-#define SET_NUMBER(value)   { number = value; haveNumber = 1; };
-#define SET_UNUMBER(value)  { unumber = value; haveUnumber = 1; };
+#define SET_NUMBER(value)   { number = value;			     \
+    snprintf(numStorage, sizeof(numStorage), "%ld", number);	     \
+    string = numStorage;					     \
+    }
+
+#define SET_UNUMBER(value)  { unumber = value;				\
+	snprintf(numStorage, sizeof(numStorage), "%lu", unumber);	\
+	string = numStorage;						\
+    }
 
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
 	Tcl_WideInt number;     /* signed */
 	Tcl_WideUInt unumber;   /* unsigned */
-	int haveNumber = 0, haveUnumber = 0;
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -2940,7 +2967,6 @@ ExpandPercents(
 	 */
 
 	string = "??";
-
 	switch (before[1]) {
 	case '#':
 	    SET_UNUMBER(evPtr->xany.serial);
@@ -2953,13 +2979,12 @@ ExpandPercents(
 	    break;
 	case 'b':
 	    if (flags & BUTTON) {
-		/* This should be unsigned ???*/
-		SET_NUMBER(evPtr->xbutton.button);
+		SET_UNUMBER(evPtr->xbutton.button);
 	    }
 	    break;
 	case 'c':
 	    if (flags & EXPOSE) {
-		SET_UNUMBER(evPtr->xexpose.count);
+		SET_NUMBER(evPtr->xexpose.count);
 	    }
 	    break;
 	case 'd':
@@ -2984,15 +3009,15 @@ ExpandPercents(
 	    break;
 	case 'h':
 	    if (flags & EXPOSE) {
-		SET_UNUMBER(evPtr->xexpose.height);
+		SET_NUMBER(evPtr->xexpose.height);
 	    } else if (flags & CONFIG) {
-		SET_UNUMBER(evPtr->xconfigure.height);
+		SET_NUMBER(evPtr->xconfigure.height);
 	    } else if (flags & CREATE) {
-		SET_UNUMBER(evPtr->xcreatewindow.height);
+		SET_NUMBER(evPtr->xcreatewindow.height);
 	    } else if (flags & CONFIGREQ) {
-		SET_UNUMBER(evPtr->xconfigurerequest.height);
+		SET_NUMBER(evPtr->xconfigurerequest.height);
 	    } else if (flags & RESIZEREQ) {
-		SET_UNUMBER(evPtr->xresizerequest.height);
+		SET_NUMBER(evPtr->xresizerequest.height);
 	    }
 	    break;
 	case 'i':
@@ -3038,7 +3063,7 @@ ExpandPercents(
 	    }
 	    break;
 	case 's':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 		SET_UNUMBER(evPtr->xkey.state);
 	    } else if (flags & CROSSING) {
 		SET_UNUMBER(evPtr->xcrossing.state);
@@ -3049,10 +3074,8 @@ ExpandPercents(
 	    }
 	    break;
 	case 't':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		SET_UNUMBER(evPtr->xkey.time);
-	    } else if (flags & CROSSING) {
-		SET_UNUMBER(evPtr->xcrossing.time);
 	    } else if (flags & PROP) {
 		SET_UNUMBER(evPtr->xproperty.time);
 	    }
@@ -3062,22 +3085,20 @@ ExpandPercents(
 	    break;
 	case 'w':
 	    if (flags & EXPOSE) {
-		SET_UNUMBER(evPtr->xexpose.width);
+		SET_NUMBER(evPtr->xexpose.width);
 	    } else if (flags & CONFIG) {
-		SET_UNUMBER(evPtr->xconfigure.width);
+		SET_NUMBER(evPtr->xconfigure.width);
 	    } else if (flags & CREATE) {
-		SET_UNUMBER(evPtr->xcreatewindow.width);
+		SET_NUMBER(evPtr->xcreatewindow.width);
 	    } else if (flags & CONFIGREQ) {
-		SET_UNUMBER(evPtr->xconfigurerequest.width);
+		SET_NUMBER(evPtr->xconfigurerequest.width);
 	    } else if (flags & RESIZEREQ) {
-		SET_UNUMBER(evPtr->xresizerequest.width);
+		SET_NUMBER(evPtr->xresizerequest.width);
 	    }
 	    break;
 	case 'x':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		SET_NUMBER(evPtr->xkey.x);
-	    } else if (flags & CROSSING) {
-		SET_NUMBER(evPtr->xcrossing.x);
 	    } else if (flags & EXPOSE) {
 		SET_NUMBER(evPtr->xexpose.x);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
@@ -3091,10 +3112,8 @@ ExpandPercents(
 	    }
 	    break;
 	case 'y':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		SET_NUMBER(evPtr->xkey.y);
-	    } else if (flags & CROSSING) {
-		SET_NUMBER(evPtr->xcrossing.y);
 	    } else if (flags & EXPOSE) {
 		SET_NUMBER(evPtr->xexpose.y);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
@@ -3115,11 +3134,11 @@ ExpandPercents(
 	    break;
 	case 'B':
 	    if (flags & CREATE) {
-		SET_UNUMBER(evPtr->xcreatewindow.border_width);
+		SET_NUMBER(evPtr->xcreatewindow.border_width);
 	    } else if (flags & CONFIGREQ) {
-		SET_UNUMBER(evPtr->xconfigurerequest.border_width);
+		SET_NUMBER(evPtr->xconfigurerequest.border_width);
 	    } else if (flags & CONFIG) {
-		SET_UNUMBER(evPtr->xconfigure.border_width);
+		SET_NUMBER(evPtr->xconfigure.border_width);
 	    }
 	    break;
 	case 'D':
@@ -3152,19 +3171,19 @@ ExpandPercents(
 	    }
 	    break;
 	case 'R':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.root);
 		string = numStorage;
 	    }
 	    break;
 	case 'S':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.subwindow);
 		string = numStorage;
 	    }
 	    break;
 	case 'T':
-	    SET_UNUMBER(evPtr->type);
+	    SET_NUMBER(evPtr->type);
 	    break;
 	case 'W': {
 	    Tk_Window tkwin = Tk_IdToWindow(evPtr->xany.display, evPtr->xany.window);
@@ -3174,12 +3193,12 @@ ExpandPercents(
 	    break;
 	}
 	case 'X':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		SET_NUMBER(evPtr->xkey.x_root);
 	    }
 	    break;
 	case 'Y':
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		SET_NUMBER(evPtr->xkey.y_root);
 	    }
 	    break;
@@ -3188,13 +3207,6 @@ ExpandPercents(
 	    numStorage[1] = '\0';
 	    string = numStorage;
 	    break;
-	}
-	if (haveNumber) {
-	    snprintf(numStorage, sizeof(numStorage), "%ld", number);
-	    string = numStorage;
-	} else if (haveUnumber){
-	    snprintf(numStorage, sizeof(numStorage), "%lu", unumber);
-	    string = numStorage;
 	}
 	{   /* local scope */
 	    int cvtFlags;
@@ -3884,7 +3896,7 @@ HandleEventGenerate(
 	Tk_DestroyWindow(tkwin);
 	return TCL_OK;
     }
-    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 	event.general.xkey.state = pat.modMask;
 	if (flags & KEY) {
 	    TkpSetKeycodeAndState(tkwin, pat.info, &event.general);
@@ -3898,7 +3910,7 @@ HandleEventGenerate(
 	event.general.xcreatewindow.window = event.general.xany.window;
     }
 
-    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+    if (flags & HAS_XKEY_HEAD) {
 	event.general.xkey.x_root = -1;
 	event.general.xkey.y_root = -1;
     }
@@ -3946,7 +3958,7 @@ HandleEventGenerate(
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &warp) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (!(flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL))) {
+	    if (!(flags & CAN_WARP)) {
 		badOpt = 1;
 	    }
 	    break;
@@ -4129,7 +4141,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.root = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4139,7 +4151,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.x_root = number;
 	    } else {
 		badOpt = 1;
@@ -4149,7 +4161,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.y_root = number;
 	    } else {
 		badOpt = 1;
@@ -4188,11 +4200,11 @@ HandleEventGenerate(
 	    event.general.xany.serial = number;
 	    break;
 	case EVENT_STATE:
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (flags & (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)) {
+		if (flags & HAS_XKEY_HEAD_AND_STATE) {
 		    event.general.xkey.state = number;
 		} else {
 		    event.general.xcrossing.state = number;
@@ -4210,7 +4222,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.subwindow = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4224,7 +4236,7 @@ HandleEventGenerate(
 	    } else if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.time = number;
 	    } else if (flags & PROP) {
 		event.general.xproperty.time = number;
@@ -4259,7 +4271,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.x = number;
 
 		/*
@@ -4286,7 +4298,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.y = number;
 
 		/*
