@@ -433,13 +433,15 @@ VISIBILITY_HIDDEN
 @end
 
 /*
- * These methods are used to prevent zombie windows on systems with a TouchBar
- * since the TouchBar prevents deallocation of the key window.
+ * These methods are exposed because they are needed to prevent zombie windows
+ * on systems with a TouchBar.  The TouchBar Key-Value observer holds a
+ * reference to the key window, which prevents deallocation of the key window
+ * when it is closed.
  */
 
 @interface NSApplication(TkWm)
-- (void) _setKeyWindow: (NSWindow *) window;
-- (void) _setMainWindow: (NSWindow *) window;
+- (id) _setKeyWindow: (NSWindow *) window;
+- (id) _setMainWindow: (NSWindow *) window;
 @end
 
 #endif /* _TKMACPRIV */
