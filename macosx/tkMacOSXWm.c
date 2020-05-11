@@ -989,32 +989,24 @@ TkWmDeadWindow(
 #endif
 
 	/*
-	 * Apple's documentation says that calling the orderOut method of the
-	 * key window will cause the next window below to become the key
-	 * window.  But experiment shows that this is not the case.  So we have
-	 * to reset the key window ourselves.  But when the window is the last
-	 * one on the screen there is no choice for a new key window as Apple
-	 * provides no way to force the application to have a nil key window.
-	 * Moreover, if the host computer has a TouchBar then the TouchBar
-	 * holds a reference to the window which prevents it from being
-	 * deallocated until it stops being the key window, which can only
-	 * happen by making another window becomes the key window. The closed
-	 * window will still be listed in the Window Menu and if the
-	 * NSApplication is deactivated and then reactivated it will reappear
-	 * on the screen as a non-responsive zombie. (See bug [411359dc3b]).
-	 * We can (and do) explicitly exclude the window from the window menu
-	 * but we found no way to prevent it from being displayed when the
-	 * application is reactivated.  As a last resort, we set it to have
-	 * size 0 and to be located as far as possible from the screen origin.
-	 * At least this prevents it from being a distraction as it waits for
-	 * the TouchBar to allow it to be deallocated.
+	 * When a window is closed we want to move the focus to the next
+	 * highest window.  Apple's documentation says that calling the
+	 * orderOut method of the key window will accomplish this.  But
+	 * experiment shows that this is not the case.  So we have to reset the
+	 * key window ourselves.  When the window is the last one on the screen
+	 * there is no choice for a new key window.  Moreover, if the host
+	 * computer has a TouchBar then the TouchBar holds a reference to the
+	 * key window which prevents it from being deallocated until it stops
+	 * being the key window.  On these systems the only option for
+	 * preventing zombies is to set the key window to nil.
 	 */
 
-	[ourNSWindow setExcludedFromWindowsMenu:YES];
 	for (NSWindow *w in [NSApp orderedWindows]) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 	    BOOL isOnScreen;
-	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
+
+	    wmPtr2 = winPtr2->wmInfoPtr;
+	    if (!winPtr2 || !wmPtr2) {
 		continue;
 	    }
 	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
@@ -1024,8 +1016,16 @@ TkWmDeadWindow(
 		break;
 	    }
 	}
+
+	/*
+	 * Prevent zombies on systems with a TouchBar.
+	 */
+
+	if (ourNSWindow == [NSApp keyWindow]) {
+	    [NSApp _setKeyWindow:nil];
+	    [NSApp _setMainWindow:nil];
+	}
 	[ourNSWindow close];
-	[ourNSWindow setFrame:NSMakeRect(-16000, -16000, 0, 0) display:NO];
 	[ourNSWindow release];
 	[NSApp _resetAutoreleasePool];
 
@@ -1037,8 +1037,7 @@ TkWmDeadWindow(
     }
 
     /*
-     * Deallocate the wmInfo and clear the wmInfoPtr, which should prevent this
-     * window from becoming a key window.
+     * Deallocate the wmInfo and clear the wmInfoPtr.
      */
 
     ckfree(wmPtr);
