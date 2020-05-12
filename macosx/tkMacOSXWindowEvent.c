@@ -315,6 +315,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+
+    /*
+     * To prevent zombie windows on systems with a TouchBar, set the key window
+     * to nil if the current key window is not visible.  This allows a closed
+     * Help or About window to be deallocated so it will not reappear as a
+     * zombie when the app is reactivated.
+     */
+
+    NSWindow *keywindow = [NSApp keyWindow];
+    if (keywindow && ![keywindow isVisible]) {
+	[NSApp _setKeyWindow:nil];
+	[NSApp _setMainWindow:nil];
+    }
+
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
