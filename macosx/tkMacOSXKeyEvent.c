@@ -114,6 +114,14 @@ static NSUInteger textInputModifiers;
 	    use_text_input = YES;
 	}
 
+	/*
+	 * Apple uses 0x10 for unrecognized keys.
+	 */
+
+	if (keychar == 0x10) {
+	    keychar = UNKNOWN_KEYCHAR;
+	}
+
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
 	      [self class], self, _cmd,

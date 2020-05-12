@@ -85,7 +85,7 @@ static const KeyInfo keyArray[] = {
     {106,	XK_F16,		NSF16FunctionKey},
     {107,	XK_F14,		NSF14FunctionKey},
     {109,	XK_F10,		NSF10FunctionKey},
-    {110,       XK_Menu,	XK_Menu},
+    {110,       XK_Menu,	UNKNOWN_KEYCHAR},
     {111,	XK_F12,		NSF12FunctionKey},
     {113,	XK_F15,		NSF15FunctionKey},
     {114,	XK_Help,	NSHelpFunctionKey},
@@ -105,8 +105,11 @@ static const KeyInfo keyArray[] = {
 };
 
 /*
- * X11 keysyms for modifier keys, in order.  This list includes keys which
- * do not appear on Apple keyboards, such as Shift_Lock and Super_R.
+ * X11 keysyms for modifier keys, in order.  This list includes keys
+ * which do not appear on Apple keyboards, such as Shift_Lock and
+ * Super_R.  While most systems don't provide events for the "fn"
+ * function key, Apple does.  We map it to Super_L when processing a
+ * FlagsChanged NSEvent.
  */
 
 #define NUM_MOD_KEYCODES 14

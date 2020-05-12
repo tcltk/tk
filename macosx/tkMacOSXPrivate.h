@@ -183,9 +183,12 @@ typedef union MacKeycode_t {
  * A special character is used in the keycode for simulated modifier KeyPress
  * or KeyRelease XEvents.  It is near the end of the private-use range but
  * different from the UniChar 0xF8FF which Apple uses for their logo character.
+ * A different special character is used for keys, like the Menu key, which do
+ * not appear on Macintosh keyboards.
  */
 
 #define MOD_KEYCHAR 0xF8FE
+#define UNKNOWN_KEYCHAR 0xF8FD
 
 /*
  * Structure encapsulating current drawing environment.

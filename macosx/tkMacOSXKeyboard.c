@@ -90,7 +90,8 @@
  * numerical X11 keysyms and macOS keychars; this file constructs Tcl hash
  * tables to do this job, using data defined in the file tkMacOSXKeysyms.h.
  * The code here adopts the convention that the keychar of any modifier key
- * is MOD_KEYCHAR.
+ * is MOD_KEYCHAR.  Keys which do not appear on any Macintosh keyboard, such
+ * as the Menu key on PC keyboards, are assigned UNKNOWN_KEYCHAR.
  *
  * The macosx platform-specific scheme for generating a keycode when mapping an
  * NSEvent of type KeyUp, KeyDown or FlagsChanged to an XEvent of type KeyPress
