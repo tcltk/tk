@@ -16,25 +16,29 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
+
+/*
+ * See tkMacOSXPrivate.h for macros related to key event processing.
+ */
 
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_KEYBOARD
 #endif
 */
-#define NS_KEYLOG 0
 
+#define NS_KEYLOG 0
+#define XEVENT_MOD_MASK (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask)
 static Tk_Window keyboardGrabWinPtr = NULL; /* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil; /* Its underlying NSWindow.*/
 static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
 static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-static TkWindow *caret_win = NULL;
-
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
-static unsigned	isFunctionKey(unsigned int code);
-
+static void setXEventPoint(XEvent *xEvent, Tk_Window tkwin, NSWindow *w);
+static NSUInteger textInputModifiers;
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -45,33 +49,24 @@ static unsigned	isFunctionKey(unsigned int code);
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    unsigned short keyCode = [theEvent keyCode];
     NSWindow *w = [theEvent window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    NSEventType type = [theEvent type];
+    NSUInteger virtual = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
-    NSString *characters = nil;
-    NSString *charactersIgnoringModifiers = nil;
-    NSUInteger len = 0;
-    int code = 0;
+    XEvent xEvent;
+    MacKeycode macKC;
+    UniChar keychar = 0;
+    Bool can_input_text, has_modifiers = NO, use_text_input = NO;
     static NSUInteger savedModifiers = 0;
-    static NSMutableArray *nsEvArray;
+    static NSMutableArray *nsEvArray = nil;
 
     if (nsEvArray == nil) {
         nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
         processingCompose = NO;
     }
-
-    /*
-     * Control-Tab and Control-Shift-Tab are used to switch tabs in a tabbed
-     * window.  We do not want to generate an Xevent for these since that might
-     * cause the deselected tab to be reactivated.
-     */
-
-    if (keyCode == 48 && (modifiers & NSControlKeyMask) == NSControlKeyMask) {
-	return theEvent;
-    }
-
     if (!winPtr) {
 	return theEvent;
     }
@@ -83,136 +78,199 @@ static unsigned	isFunctionKey(unsigned int code);
      * grab is in effect all key events are redirected to the grabber.
      */
 
-    Tk_Window tkwin = (Tk_Window) winPtr;
-    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
+    grabWinPtr = winPtr->dispPtr->grabWinPtr;
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
-	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	}
-    }
-
-    NSEventType type = [theEvent type];
-    BOOL has_modifiers = NO;
-    XEvent xEvent;
-
-    /*
-     * Check whether this key event belongs to the caret window.
-     */
-
-    setupXEvent(&xEvent, tkwin, modifiers);
-    Bool has_caret = (TkFocusKeyEvent(winPtr, &xEvent) == caret_win);
-
-    /*
-     * A KeyDown event received for the caret window which is not a function key
-     * and has no modifiers other than Shift or Alt will be processed with the
-     * TextInputClient protocol below.  All other key events are handled here
-     * by queueing the XEvent created above.
-     */
-
-    if (!processingCompose || !has_caret) {
-	switch (type) {
-	case NSFlagsChanged:
-	    if (savedModifiers > modifiers) {
-		xEvent.xany.type = KeyRelease;
-	    } else {
-		xEvent.xany.type = KeyPress;
-	    }
-
-	    /*
-	     * The value -1 indicates a special keycode to the platform
-	     * specific code in tkMacOSXKeyboard.c.
-	     */
-
-	    xEvent.xany.send_event = -1;
-	    xEvent.xkey.keycode = (modifiers ^ savedModifiers);
-	    break;
-	case NSKeyUp:
-	    characters = [theEvent characters];
-	    xEvent.xany.type = KeyRelease;
-	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
-	    break;
-	case NSKeyDown:
-	    characters = [theEvent characters];
-	    charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
-	    xEvent.xany.type = KeyPress;
-	    xEvent.xkey.keycode = (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
-	    len = [charactersIgnoringModifiers length];
-	    if (len > 0) {
-		code = [charactersIgnoringModifiers characterAtIndex:0];
-		has_modifiers = xEvent.xkey.state &
-		    (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask);
-	    }
-	    break;
-	default:
-	    return theEvent; /* Unrecognized key event. */
-	}
-
-#if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
-	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d",
-	      [self class], self, _cmd, (type == NSKeyDown) && [theEvent isARepeat],
-	      modifiers, characters, charactersIgnoringModifiers, keyCode,
-	      ([charactersIgnoringModifiers length] == 0) ? 0 :
-	      [charactersIgnoringModifiers characterAtIndex: 0], w, type);
-#endif
-
-        if (type != NSKeyDown || !has_caret || isFunctionKey(code) || has_modifiers) {
-	    if (type == NSKeyDown && [theEvent isARepeat]) {
-
-		/*
-		 * Insert a KeyRelease XEvent before a repeated KeyPress.
-		 */
-
-		xEvent.xany.type = KeyRelease;
-		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-		xEvent.xany.type = KeyPress;
-            }
-
-	    /*
-	     * Queue the XEvent and return.
-	     */
-
-            Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-            savedModifiers = modifiers;
-            return theEvent;
+	    winPtr =winPtr->dispPtr->focusPtr;
+	    tkwin = (Tk_Window) winPtr;
 	}
     }
 
     /*
-     * Either we are processing a composition or this is a normal KeyDown event
-     * for the caret window. Either way the event should be passed to
-     * interpretKeyEvents.  But we only need to send KeyDown events.
+     * Extract the unicode character from KeyUp and KeyDown events.
      */
 
-    if (type == NSKeyDown) {
-	if (NS_KEYLOG) {
-	    TKLog(@"keyDown: %s compose sequence.\n",
-		  processingCompose == YES ? "Continue" : "Begin");
+    if (type == NSKeyUp || type == NSKeyDown) {
+	if ([[theEvent characters] length] > 0) {
+	    keychar = [[theEvent characters] characterAtIndex:0];
+
+	    /*
+	     * Currently, real keys always send BMP characters, but who knows?
+	     */
+
+	    if (CFStringIsSurrogateHighCharacter(keychar)) {
+		UniChar lowChar = [[theEvent characters] characterAtIndex:1];
+		keychar = CFStringGetLongCharacterForSurrogatePair(
+		    keychar, lowChar);
+	    }
+	} else {
+
+	    /*
+	     * This is a dead key, such as Option-e, so it should go to the
+	     * TextInputClient.
+	     */
+
+	    use_text_input = YES;
 	}
 
 	/*
-	 * Call the interpretKeyEvents method to handle the event as a
-	 * TextInputClient.  When the composition sequence is complete, our
-	 * implementation of insertText: replacementRange will be called.  that
-	 * method generates a key down XEvent with the selected character.  In
-	 * IME when multiple characters have the same composition sequence and
-	 * the selected character is not the default it may be necessary to hit
-	 * the Enter key multiple times before the character is accepted and
-	 * rendered. So we repeatedly send Enter key events until inputText has
-	 * cleared the processingCompose flag.
+	 * Apple uses 0x10 for unrecognized keys.
 	 */
 
-	processingCompose = YES;
-	while(processingCompose) {
+	if (keychar == 0x10) {
+	    keychar = UNKNOWN_KEYCHAR;
+	}
+
+#if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
+	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
+	      [self class], self, _cmd,
+	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
+	      virtual, w, type);
+#endif
+
+    }
+
+    /*
+     * Build a skeleton XEvent.  We need to build it here, even if we will not
+     * send it, so we can pass it to TkFocusKeyEvent to determine whether the
+     * target widget can input text.
+     */
+
+    setupXEvent(&xEvent, tkwin, modifiers);
+    has_modifiers = xEvent.xkey.state & XEVENT_MOD_MASK;
+    focusWinPtr = TkFocusKeyEvent(winPtr, &xEvent);
+    if (focusWinPtr == NULL) {
+	TKContentView *contentView = [w contentView];
+
+	/*
+	 * This NSEvent is being sent to a window which does not have focus.
+	 * This could mean, for example, that the user deactivated the Tk app
+	 * while the NSTextInputClient's popup character selection window was
+	 * still open.  We attempt to abandon any ongoing composition operation
+	 * and discard the event.
+	 */
+
+	[contentView cancelComposingText];
+	return theEvent;
+    }
+    can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
+
+#if (NS_KEYLOG)
+    TKLog(@"keyDown: %s compose sequence.\n",
+	  processingCompose == YES ? "Continue" : "Begin");
+#endif
+
+    /*
+     * Decide whether this event should be processed with the NSTextInputClient
+     * protocol.
+     */
+
+    if (processingCompose ||
+	(type == NSKeyDown && can_input_text && !has_modifiers &&
+	 IS_PRINTABLE(keychar))
+	) {
+	use_text_input = YES;
+    }
+
+    /*
+     * If we are processing this KeyDown event as an NSTextInputClient we do
+     * not queue an XEvent.  We pass the NSEvent to our interpretKeyEvents
+     * method.  When the composition sequence is complete, the callback method
+     * insertText: replacementRange will be called.  That method generates a
+     * keyPress XEvent with the selected character.
+     */
+
+    if (use_text_input) {
+	textInputModifiers = modifiers;
+
+	/*
+	 * In IME the Enter key is used to terminate a composition sequence.
+	 * When there are multiple choices of input text available, and the
+	 * user's selected choice is not the default, it may be necessary to
+	 * hit the Enter key multiple times before the text is accepted and
+	 * rendered (See ticket 39de9677aa]). So when sending an Enter key
+	 * during composition, we continue sending Enter keys until the
+	 * inputText method has cleared the processingCompose flag.
+	 */
+
+	if (processingCompose && [theEvent keyCode] == 36) {
+	    [nsEvArray addObject: theEvent];
+	    while(processingCompose) {
+		[[w contentView] interpretKeyEvents: nsEvArray];
+	    }
+	    [nsEvArray removeObject: theEvent];
+	} else {
 	    [nsEvArray addObject: theEvent];
 	    [[w contentView] interpretKeyEvents: nsEvArray];
 	    [nsEvArray removeObject: theEvent];
-	    if ([theEvent keyCode] != 36) {
-		break;
-	    }
 	}
+	return theEvent;
     }
-    savedModifiers = modifiers;
+
+    /*
+     * We are not handling this event as an NSTextInputClient, so we need to
+     * finish constructing the XEvent and queue it.
+     */
+
+    macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
+		    (modifiers & NSAlternateKeyMask ? INDEX_OPTION : 0));
+    macKC.v.virtual = virtual;
+    switch (type) {
+    case NSFlagsChanged:
+
+	/*
+	 * This XEvent is a simulated KeyPress or KeyRelease event for a
+	 * modifier key.  To determine the type, note that the highest bit
+	 * where the flags differ is 1 if and only if it is a KeyPress. The
+	 * modifiers are saved so we can detect the next flag change.
+	 */
+
+	xEvent.xany.type = modifiers > savedModifiers ? KeyPress : KeyRelease;
+	savedModifiers = modifiers;
+
+	/*
+	 * Set the keychar to MOD_KEYCHAR as a signal to TkpGetKeySym (see
+	 * tkMacOSXKeyboard.c) that this is a modifier key event.
+	 */
+
+	keychar = MOD_KEYCHAR;
+	break;
+    case NSKeyUp:
+	xEvent.xany.type = KeyRelease;
+	break;
+    case NSKeyDown:
+	xEvent.xany.type = KeyPress;
+	break;
+    default:
+	return theEvent; /* Unrecognized key event. */
+    }
+    macKC.v.keychar = keychar;
+    xEvent.xkey.keycode = macKC.uint;
+
+    /*
+     * Set the trans_chars for keychars outside of the private-use range.
+     */
+
+    setXEventPoint(&xEvent, tkwin, w);
+    if (IS_PRINTABLE(keychar)) {
+	int length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
+	xEvent.xkey.trans_chars[length] = 0;
+    }
+
+    /*
+     * Finally we can queue the XEvent, inserting a KeyRelease before a
+     * repeated KeyPress.
+     */
+
+    if (type == NSKeyDown && [theEvent isARepeat]) {
+	xEvent.xany.type = KeyRelease;
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	xEvent.xany.type = KeyPress;
+    }
+    if (xEvent.xany.type == KeyPress) {
+    }
+    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;
 }
 @end
@@ -240,11 +298,12 @@ static unsigned	isFunctionKey(unsigned int code);
 - (void)insertText: (id)aString
   replacementRange: (NSRange)repRange
 {
-    int i, len;
+    int i, len, state;
     XEvent xEvent;
-    NSString *str;
+    NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
@@ -254,13 +313,12 @@ static unsigned	isFunctionKey(unsigned int code);
 	TKLog(@"insertText '%@'\tlen = %d", aString, len);
     }
 
-    processingCompose = NO;
-
     /*
      * Clear any working text.
      */
 
     if (privateWorkingText != nil) {
+	sendingIMEText = YES;
     	[self deleteWorkingText];
     }
 
@@ -268,7 +326,8 @@ static unsigned	isFunctionKey(unsigned int code);
      * Insert the string as a sequence of keystrokes.
      */
 
-    setupXEvent(&xEvent, tkwin, 0);
+    setupXEvent(&xEvent, tkwin, textInputModifiers);
+    setXEventPoint(&xEvent, tkwin, [self window]);
     xEvent.xany.type = KeyPress;
 
     /*
@@ -285,28 +344,59 @@ static unsigned	isFunctionKey(unsigned int code);
 
     /*
      * Next we generate an XEvent for each unicode character in our string.
+     * This string could contain non-BMP characters, for example if the
+     * emoji palette was used.
      *
      * NSString uses UTF-16 internally, which means that a non-BMP character is
-     * represented by a sequence of two 16-bit "surrogates".  In principle we
-     * could record this in the XEvent by setting the keycode to the 32-bit
-     * unicode code point and setting the trans_chars string to the 4-byte
-     * UTF-8 string for the non-BMP character.  However, that will not work
-     * when TCL_UTF_MAX is set to 3, as is the case for Tcl 8.6.  A workaround
-     * used internally by Tcl 8.6 is to encode each surrogate as a 3-byte
-     * sequence using the UTF-8 algorithm (ignoring the fact that the UTF-8
-     * encoding specification does not allow encoding UTF-16 surrogates).
-     * This gives a 6-byte encoding of the non-BMP character which we write into
-     * the trans_chars field of the XEvent.
+     * represented by a sequence of two 16-bit "surrogates".  We record this in
+     * the XEvent by setting the low order 21-bits of the keycode to the UCS-32
+     * value value of the character and the virtual keycode in the high order
+     * byte to the special value NON_BMP. In principle we could set the
+     * trans_chars string to the UTF-8 string for the non-BMP character.
+     * However, that will not work when TCL_UTF_MAX is set to 3, as is the case
+     * for Tcl 8.6.  A workaround used internally by Tcl 8.6 is to encode each
+     * surrogate as a 3-byte sequence using the UTF-8 algorithm (ignoring the
+     * fact that the UTF-8 encoding specification does not allow encoding
+     * UTF-16 surrogates).  This gives a 6-byte encoding of the non-BMP
+     * character which we write into the trans_chars field of the XEvent.
      */
 
+    state = xEvent.xkey.state;
     for (i = 0; i < len; i++) {
-	xEvent.xkey.nbytes = TkUtfAtIndex(str, i, xEvent.xkey.trans_chars,
-					   &xEvent.xkey.keycode);
-	if (xEvent.xkey.keycode > 0xffff){
+	unsigned int code;
+	UniChar keychar;
+	MacKeycode macKC = {0};
+
+	keychar = [str characterAtIndex:i];
+	macKC.v.keychar = keychar;
+	if (CFStringIsSurrogateHighCharacter(keychar)) {
+	    UniChar lowChar = [str characterAtIndex:i+1];
+	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
+				  (UniChar)keychar, lowChar);
+	    macKC.v.virtual = NON_BMP_VIRTUAL;
+	} else if (repRange.location == 0 || sendingIMEText) {
+	    macKC.v.virtual = REPLACEMENT_VIRTUAL;
+	} else {
+	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
+	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
+	}
+	keystr = [[NSString alloc] initWithCharacters:&keychar length:1];
+	lower = [keystr lowercaseString];
+	if (![keystr isEqual: lower]) {
+	    macKC.v.o_s |= INDEX_SHIFT;
+	    xEvent.xkey.state |= ShiftMask;
+	}
+	if (xEvent.xkey.state & Mod2Mask) {
+	    macKC.v.o_s |= INDEX_OPTION;
+	}
+	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &code);
+	if (code > 0xFFFF){
 	    i++;
 	}
+	xEvent.xkey.keycode = macKC.uint;
     	xEvent.xany.type = KeyPress;
     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	xEvent.xkey.state = state;
     }
 }
 
@@ -337,7 +427,6 @@ static unsigned	isFunctionKey(unsigned int code);
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
-
     if (focusWin) {
 
 	/*
@@ -368,10 +457,10 @@ static unsigned	isFunctionKey(unsigned int code);
      */
 
     TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    processingCompose = YES;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
-    processingCompose = YES;
     TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
@@ -379,7 +468,6 @@ static unsigned	isFunctionKey(unsigned int code);
 {
     return privateWorkingText != nil;
 }
-
 
 - (NSRange)markedRange
 {
@@ -393,15 +481,6 @@ static unsigned	isFunctionKey(unsigned int code);
     return rng;
 }
 
-- (void)cancelComposingText
-{
-    if (NS_KEYLOG) {
-	TKLog(@"cancelComposingText");
-    }
-    [self deleteWorkingText];
-    processingCompose = NO;
-}
-
 - (void)unmarkText
 {
     if (NS_KEYLOG) {
@@ -410,7 +489,6 @@ static unsigned	isFunctionKey(unsigned int code);
     [self deleteWorkingText];
     processingCompose = NO;
 }
-
 
 /*
  * Called by the system to get a position for popup character selection windows
@@ -525,6 +603,16 @@ static unsigned	isFunctionKey(unsigned int code);
 	}
     }
 }
+
+- (void)cancelComposingText
+{
+    if (NS_KEYLOG) {
+	TKLog(@"cancelComposingText");
+    }
+    [self deleteWorkingText];
+    processingCompose = NO;
+}
+
 @end
 
 /*
@@ -535,6 +623,11 @@ static void
 setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
     unsigned int state = 0;
+    Display *display = Tk_Display(tkwin);
+
+    if (tkwin == NULL) {
+	return;
+    }
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
 	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
@@ -545,16 +638,51 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 	        (modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
     }
     memset(xEvent, 0, sizeof(XEvent));
-    xEvent->xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    xEvent->xany.serial = LastKnownRequestProcessed(display);
     xEvent->xany.display = Tk_Display(tkwin);
     xEvent->xany.window = Tk_WindowId(tkwin);
 
-    xEvent->xkey.root = XRootWindow(Tk_Display(tkwin), 0);
+    xEvent->xkey.root = XRootWindow(display, 0);
     xEvent->xkey.time = TkpGetMS();
     xEvent->xkey.state = state;
     xEvent->xkey.same_screen = true;
     /* No need to initialize other fields implicitly here,
      * because of the memset() above. */
+}
+
+static void
+setXEventPoint(
+    XEvent *xEvent,
+    Tk_Window tkwin,
+    NSWindow *w)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    NSPoint local = [w  mouseLocationOutsideOfEventStream];
+    NSPoint global = [w tkConvertPointToScreen: local];
+    int win_x, win_y;
+
+    if (Tk_IsEmbedded(winPtr)) {
+	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	if (Tk_IsTopLevel(contPtr)) {
+	    local.x -= contPtr->wmInfoPtr->xInParent;
+	    local.y -= contPtr->wmInfoPtr->yInParent;
+	} else {
+	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
+	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	}
+    } else if (winPtr->wmInfoPtr != NULL) {
+	local.x -= winPtr->wmInfoPtr->xInParent;
+	local.y -= winPtr->wmInfoPtr->yInParent;
+    }
+    tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
+    local.x = win_x;
+    local.y = win_y;
+    global.y = TkMacOSXZeroScreenHeight() - global.y;
+    xEvent->xbutton.x = local.x;
+    xEvent->xbutton.y = local.y;
+    xEvent->xbutton.x_root = global.x;
+    xEvent->xbutton.y_root = global.y;
 }
 
 #pragma mark -
@@ -661,15 +789,22 @@ TkMacOSXGetModalSession(void)
  *
  * Tk_SetCaretPos --
  *
- *	This enables correct placement of the XIM caret. This is called by
- *	widgets to indicate their cursor placement, and the caret location is
- *	used by TkpGetString to place the XIM caret.
+ *	This enables correct placement of the popups used for character
+ *      selection by the NSTextInputClient.  It gets called by text entry
+ *      widgets whenever the cursor is drawn.  It does nothing if the widget's
+ *      NSWindow is not the current KeyWindow.  Otherwise it udpates the
+ *      display's caret structure and records the caret geometry in static
+ *      variables for use by the NSTextInputClient implementation.  Any
+ *      widget passed to this function will be marked as being able to input
+ *      text by setting the TK_CAN_INPUT_TEXT flag.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	None
+ *      Sets the CAN_INPUT_TEXT flag on the widget passed as tkwin.  May update
+ *      the display's caret structure as well as the static variables caret_x,
+ *      caret_y and caret_height.
  *
  *----------------------------------------------------------------------
  */
@@ -681,28 +816,41 @@ Tk_SetCaretPos(
     int y,
     int height)
  {
-    TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkCaret *caretPtr = &(winPtr->dispPtr->caret);
+    NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
 
     /*
-     * Prevent processing anything if the values haven't changed. Windows only
-     * has one display, so we can do this with statics.
+     * Register this widget as being capable of text input, so we know we
+     * should process (appropriate) key events for this window with the
+     * NSTextInputClient protocol.
      */
 
-    if ((caretPtr->winPtr == ((TkWindow *) tkwin))
-	    && (caretPtr->x == x) && (caretPtr->y == y)) {
+    winPtr->flags |= TK_CAN_INPUT_TEXT;
+    if (w && ![w isKeyWindow]) {
+	return;
+    }
+    if ((caretPtr->winPtr == winPtr
+	 && caretPtr->x == x) && (caretPtr->y == y)) {
 	return;
     }
 
-    caret_win = (TkWindow*) tkwin;
-    caretPtr->winPtr = ((TkWindow *) tkwin);
+    /*
+     * Update the display's caret information.
+     */
+
+    caretPtr->winPtr = winPtr;
     caretPtr->x = x;
     caretPtr->y = y;
     caretPtr->height = height;
 
     /*
-     * As in Windows, adjust to the toplevel to get the coords right.
+     * Record the caret geometry in static variables for use when processing
+     * key events.  We use the TKContextView coordinate system for this.
      */
 
+    caret_x = x;
+    caret_height = height;
     while (!Tk_IsTopLevel(tkwin)) {
 	x += Tk_X(tkwin);
 	y += Tk_Y(tkwin);
@@ -711,94 +859,7 @@ Tk_SetCaretPos(
 	    return;
 	}
     }
-
-    /*
-     * But adjust for fact that NS uses flipped view.
-     */
-
-    y = Tk_Height(tkwin) - y;
-
-    caret_x = x;
-    caret_y = y;
-    caret_height = height;
-}
-
-
-static unsigned convert_ns_to_X_keysym[] =
-{
-    NSHomeFunctionKey,		0x50,
-    NSLeftArrowFunctionKey,	0x51,
-    NSUpArrowFunctionKey,	0x52,
-    NSRightArrowFunctionKey,	0x53,
-    NSDownArrowFunctionKey,	0x54,
-    NSPageUpFunctionKey,	0x55,
-    NSPageDownFunctionKey,	0x56,
-    NSEndFunctionKey,		0x57,
-    NSBeginFunctionKey,		0x58,
-    NSSelectFunctionKey,	0x60,
-    NSPrintFunctionKey,		0x61,
-    NSExecuteFunctionKey,	0x62,
-    NSInsertFunctionKey,	0x63,
-    NSUndoFunctionKey,		0x65,
-    NSRedoFunctionKey,		0x66,
-    NSMenuFunctionKey,		0x67,
-    NSFindFunctionKey,		0x68,
-    NSHelpFunctionKey,		0x6A,
-    NSBreakFunctionKey,		0x6B,
-
-    NSF1FunctionKey,		0xBE,
-    NSF2FunctionKey,		0xBF,
-    NSF3FunctionKey,		0xC0,
-    NSF4FunctionKey,		0xC1,
-    NSF5FunctionKey,		0xC2,
-    NSF6FunctionKey,		0xC3,
-    NSF7FunctionKey,		0xC4,
-    NSF8FunctionKey,		0xC5,
-    NSF9FunctionKey,		0xC6,
-    NSF10FunctionKey,		0xC7,
-    NSF11FunctionKey,		0xC8,
-    NSF12FunctionKey,		0xC9,
-    NSF13FunctionKey,		0xCA,
-    NSF14FunctionKey,		0xCB,
-    NSF15FunctionKey,		0xCC,
-    NSF16FunctionKey,		0xCD,
-    NSF17FunctionKey,		0xCE,
-    NSF18FunctionKey,		0xCF,
-    NSF19FunctionKey,		0xD0,
-    NSF20FunctionKey,		0xD1,
-    NSF21FunctionKey,		0xD2,
-    NSF22FunctionKey,		0xD3,
-    NSF23FunctionKey,		0xD4,
-    NSF24FunctionKey,		0xD5,
-
-    NSBackspaceCharacter,	0x08,  /* 8: Not on some KBs. */
-    NSDeleteCharacter,		0xFF,  /* 127: Big 'delete' key upper right. */
-    NSDeleteFunctionKey,	0x9F,  /* 63272: Del forw key off main array. */
-
-    NSTabCharacter,		0x09,
-    0x19,			0x09,  /* left tab->regular since pass shift */
-    NSCarriageReturnCharacter,	0x0D,
-    NSNewlineCharacter,		0x0D,
-    NSEnterCharacter,		0x8D,
-
-    0x1B,			0x1B   /* escape */
-};
-
-
-static unsigned
-isFunctionKey(
-    unsigned code)
-{
-    const unsigned last_keysym = (sizeof(convert_ns_to_X_keysym)
-                                / sizeof(convert_ns_to_X_keysym[0]));
-    unsigned keysym;
-
-    for (keysym = 0; keysym < last_keysym; keysym += 2) {
-	if (code == convert_ns_to_X_keysym[keysym]) {
-	    return 0xFF00 | convert_ns_to_X_keysym[keysym + 1];
-	}
-    }
-    return 0;
+    caret_y = Tk_Height(tkwin) - y;
 }
 
 /*
