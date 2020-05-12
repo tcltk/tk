@@ -6773,7 +6773,7 @@ test bind-35.1 {Key events agree for entry widgets} -constraints {aqua} -setup {
     entry .new.e
     pack .new.e
 } -body {
-    foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
+    foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA Menu} {
 	set result [testKeyWithMods .new.e $k press]
 	if {$result != "pass"} {
 	    return $result
