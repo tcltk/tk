@@ -82,7 +82,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSApplicationDidBecomeActiveNotification, applicationActivate:);
-    observe(NSApplicationDidResignActiveNotification, applicationDeactivate:);
+    observe(NSApplicationWillResignActiveNotification, applicationDeactivate:);
     observe(NSApplicationDidUnhideNotification, applicationShowHide:);
     observe(NSApplicationDidHideNotification, applicationShowHide:);
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
