@@ -3018,7 +3018,7 @@ ExpandPercents(
 	    break;
 	case 'f':
 	    if (flags & CROSSING) {
-		SET_UNUMBER(evPtr->xcrossing.focus);
+		SET_NUMBER(evPtr->xcrossing.focus != 0);
 	    }
 	    break;
 	case 'h':
@@ -3060,13 +3060,13 @@ ExpandPercents(
 	    break;
 	case 'o':
 	    if (flags & CREATE) {
-		SET_UNUMBER(evPtr->xcreatewindow.override_redirect);
+		SET_NUMBER(evPtr->xcreatewindow.override_redirect != 0);
 	    } else if (flags & MAP) {
-		SET_UNUMBER(evPtr->xmap.override_redirect);
+		SET_NUMBER(evPtr->xmap.override_redirect != 0);
 	    } else if (flags & REPARENT) {
-		SET_UNUMBER(evPtr->xreparent.override_redirect);
+		SET_NUMBER(evPtr->xreparent.override_redirect != 0);
 	    } else if (flags & CONFIG) {
-		SET_UNUMBER(evPtr->xconfigure.override_redirect);
+		SET_NUMBER(evPtr->xconfigure.override_redirect != 0);
 	    }
 	    break;
 	case 'p':
@@ -3119,8 +3119,6 @@ ExpandPercents(
 		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & REPARENT) {
 		SET_NUMBER(evPtr->xreparent.x);
-	    } else if (flags & CREATE) {
-		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & CONFIGREQ) {
 		SET_NUMBER(evPtr->xconfigurerequest.x);
 	    }
@@ -3134,8 +3132,6 @@ ExpandPercents(
 		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & REPARENT) {
 		SET_NUMBER(evPtr->xreparent.y);
-	    } else if (flags & CREATE) {
-		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & CONFIGREQ) {
 		SET_NUMBER(evPtr->xconfigurerequest.y);
 	    }
@@ -3161,7 +3157,7 @@ ExpandPercents(
 	    }
 	    break;
 	case 'E':
-	    SET_UNUMBER(evPtr->xany.send_event);
+	    SET_NUMBER(evPtr->xany.send_event != 0);
 	    break;
 	case 'K':
 	    if (flags & KEY) {
