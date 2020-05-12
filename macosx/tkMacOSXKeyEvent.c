@@ -849,7 +849,6 @@ Tk_SetCaretPos(
      * key events.  We use the TKContextView coordinate system for this.
      */
 
-    caret_x = x;
     caret_height = height;
     while (!Tk_IsTopLevel(tkwin)) {
 	x += Tk_X(tkwin);
@@ -859,6 +858,7 @@ Tk_SetCaretPos(
 	    return;
 	}
     }
+    caret_x = x;
     caret_y = Tk_Height(tkwin) - y;
 }
 
