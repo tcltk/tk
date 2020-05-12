@@ -194,6 +194,10 @@ if {[winfo depth .] == 1} {
 	-foreground blue -underline 1
     .t tag configure visited -lmargin1 1c -lmargin2 1c \
 	-foreground #303080 -underline 1
+    if {[tk windowingsystem] eq "aqua"} {
+	.t tag configure demo -foreground systemLinkColor
+	.t tag configure visited -foreground purple
+    }
     .t tag configure hot -foreground red -underline 1
 }
 .t tag bind demo <ButtonRelease-1> {
