@@ -344,14 +344,6 @@ typedef struct PatSeq {
 #define NEARBY_MS	500
 
 /*
- * Needed as "no-number" constant for integers. The value of this constant is
- * outside of integer range (type "int"). (Unfortunatly current version of
- * Tcl/Tk does not provide C99 integer support.)
- */
-
-#define NO_NUMBER (((Tcl_WideInt) (~ (unsigned) 0)) + 1)
-
-/*
  * The following structure is used in the nameTable of a virtual event table
  * to associate a virtual event with all the physical events that can trigger
  * it.
@@ -569,13 +561,32 @@ static int eventArrayIndex[TK_LASTEVENT];
 #define COLORMAP		(1<<16)
 #define VIRTUAL			(1<<17)
 #define ACTIVATE		(1<<18)
-#define	MAPREQ			(1<<19)
-#define	CONFIGREQ		(1<<20)
-#define	RESIZEREQ		(1<<21)
-#define CIRCREQ			(1<<22)
+#define WHEEL			(1<<19)
+#define	MAPREQ			(1<<20)
+#define	CONFIGREQ		(1<<21)
+#define	RESIZEREQ		(1<<22)
+#define CIRCREQ			(1<<23)
 
-#define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
-#define KEY_BUTTON_MOTION_CROSSING	(KEY|BUTTON|MOTION|VIRTUAL|CROSSING)
+/*
+ * These structs agree with xkey for the fields type, serial, send_event, display,
+ * window, root, subwindow, time, x, y, x_root, and y_root.  So when accessing
+ * these fields we may pretend that we are using a struct xkey.
+ */
+
+#define HAS_XKEY_HEAD (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)
+
+/* 
+ * The xcrossing struct puts the state field in a different location, but the other
+ * events above agree on where state is located.
+ */
+
+#define HAS_XKEY_HEAD_AND_STATE (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)
+
+/*
+ * Event types which support -warp.
+ */
+
+#define CAN_WARP (KEY|BUTTON|MOTION|WHEEL)
 
 static const int flagArray[TK_LASTEVENT] = {
    /* Not used */		0,
@@ -616,7 +627,7 @@ static const int flagArray[TK_LASTEVENT] = {
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,
    /* Deactivate */		ACTIVATE,
-   /* MouseWheel */		KEY
+   /* MouseWheel */		WHEEL
 };
 
 /*
@@ -1247,10 +1258,6 @@ TkBindInit(
 
     /* ensure that our matching algorithm is working (when testing detail) */
     assert(sizeof(Detail) == sizeof(Tk_Uid));
-
-    /* test that constant NO_NUMBER is indeed out of integer range */
-    assert(sizeof(NO_NUMBER) > sizeof(int));
-    assert(((int) NO_NUMBER) == 0 && NO_NUMBER != 0);
 
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
@@ -2192,7 +2199,7 @@ Tk_BindEvent(
 	return;
     }
 
-    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
+    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 	bindPtr->curModMask = eventPtr->xkey.state;
     } else if (flags & CROSSING) {
 	bindPtr->curModMask = eventPtr->xcrossing.state;
@@ -2938,10 +2945,21 @@ ExpandPercents(
     evPtr = &eventPtr->xev;
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
+#define SET_NUMBER(value)   { number = value;			     \
+    snprintf(numStorage, sizeof(numStorage), "%ld", number);	     \
+    string = numStorage;					     \
+    }
+
+#define SET_UNUMBER(value)  { unumber = value;				\
+	snprintf(numStorage, sizeof(numStorage), "%lu", unumber);	\
+	string = numStorage;						\
+    }
+
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
-	Tcl_WideInt number;
+	Tcl_WideInt number;     /* signed */
+	Tcl_WideUInt unumber;   /* unsigned */
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -2962,12 +2980,10 @@ ExpandPercents(
 	 * There's a percent sequence here. Process it.
 	 */
 
-	number = NO_NUMBER;
 	string = "??";
-
 	switch (before[1]) {
 	case '#':
-	    number = evPtr->xany.serial;
+	    SET_UNUMBER(evPtr->xany.serial);
 	    break;
 	case 'a':
 	    if (flags & CONFIG) {
@@ -2977,12 +2993,12 @@ ExpandPercents(
 	    break;
 	case 'b':
 	    if (flags & BUTTON) {
-		number = evPtr->xbutton.button;
+		SET_UNUMBER(evPtr->xbutton.button);
 	    }
 	    break;
 	case 'c':
 	    if (flags & EXPOSE) {
-		number = evPtr->xexpose.count;
+		SET_NUMBER(evPtr->xexpose.count);
 	    }
 	    break;
 	case 'd':
@@ -3002,20 +3018,20 @@ ExpandPercents(
 	    break;
 	case 'f':
 	    if (flags & CROSSING) {
-		number = evPtr->xcrossing.focus;
+		SET_UNUMBER(evPtr->xcrossing.focus);
 	    }
 	    break;
 	case 'h':
 	    if (flags & EXPOSE) {
-		number = evPtr->xexpose.height;
+		SET_NUMBER(evPtr->xexpose.height);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.height;
+		SET_NUMBER(evPtr->xconfigure.height);
 	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.height;
+		SET_NUMBER(evPtr->xcreatewindow.height);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.height;
+		SET_NUMBER(evPtr->xconfigurerequest.height);
 	    } else if (flags & RESIZEREQ) {
-		number = evPtr->xresizerequest.height;
+		SET_NUMBER(evPtr->xresizerequest.height);
 	    }
 	    break;
 	case 'i':
@@ -3031,8 +3047,8 @@ ExpandPercents(
 	    string = numStorage;
 	    break;
 	case 'k':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
-		number = evPtr->xkey.keycode;
+	    if (flags & KEY) {
+		SET_UNUMBER(evPtr->xkey.keycode);
 	    }
 	    break;
 	case 'm':
@@ -3044,13 +3060,13 @@ ExpandPercents(
 	    break;
 	case 'o':
 	    if (flags & CREATE) {
-		number = evPtr->xcreatewindow.override_redirect;
+		SET_UNUMBER(evPtr->xcreatewindow.override_redirect);
 	    } else if (flags & MAP) {
-		number = evPtr->xmap.override_redirect;
+		SET_UNUMBER(evPtr->xmap.override_redirect);
 	    } else if (flags & REPARENT) {
-		number = evPtr->xreparent.override_redirect;
+		SET_UNUMBER(evPtr->xreparent.override_redirect);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.override_redirect;
+		SET_UNUMBER(evPtr->xconfigure.override_redirect);
 	    }
 	    break;
 	case 'p':
@@ -3061,10 +3077,10 @@ ExpandPercents(
 	    }
 	    break;
 	case 's':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = evPtr->xkey.state;
+	    if (flags & HAS_XKEY_HEAD_AND_STATE) {
+		SET_UNUMBER(evPtr->xkey.state);
 	    } else if (flags & CROSSING) {
-		number = evPtr->xcrossing.state;
+		SET_UNUMBER(evPtr->xcrossing.state);
 	    } else if (flags & PROP) {
 		string = TkFindStateString(propNotify, evPtr->xproperty.state);
 	    } else if (flags & VISIBILITY) {
@@ -3072,92 +3088,83 @@ ExpandPercents(
 	    }
 	    break;
 	case 't':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = (int) evPtr->xkey.time;
-	    } else if (flags & CROSSING) {
-		number = (int) evPtr->xcrossing.time;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_UNUMBER(evPtr->xkey.time);
 	    } else if (flags & PROP) {
-		number = (int) evPtr->xproperty.time;
+		SET_UNUMBER(evPtr->xproperty.time);
 	    }
 	    break;
 	case 'v':
-	    number = evPtr->xconfigurerequest.value_mask;
+	    SET_UNUMBER(evPtr->xconfigurerequest.value_mask);
 	    break;
 	case 'w':
 	    if (flags & EXPOSE) {
-		number = evPtr->xexpose.width;
+		SET_NUMBER(evPtr->xexpose.width);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.width;
+		SET_NUMBER(evPtr->xconfigure.width);
 	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.width;
+		SET_NUMBER(evPtr->xcreatewindow.width);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.width;
+		SET_NUMBER(evPtr->xconfigurerequest.width);
 	    } else if (flags & RESIZEREQ) {
-		number = evPtr->xresizerequest.width;
+		SET_NUMBER(evPtr->xresizerequest.width);
 	    }
 	    break;
 	case 'x':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = evPtr->xkey.x;
-	    } else if (flags & CROSSING) {
-		number = evPtr->xcrossing.x;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.x);
 	    } else if (flags & EXPOSE) {
-		number = evPtr->xexpose.x;
+		SET_NUMBER(evPtr->xexpose.x);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
-		number = evPtr->xcreatewindow.x;
+		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & REPARENT) {
-		number = evPtr->xreparent.x;
+		SET_NUMBER(evPtr->xreparent.x);
 	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.x;
+		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.x;
+		SET_NUMBER(evPtr->xconfigurerequest.x);
 	    }
 	    break;
 	case 'y':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = evPtr->xkey.y;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.y);
 	    } else if (flags & EXPOSE) {
-		number = evPtr->xexpose.y;
+		SET_NUMBER(evPtr->xexpose.y);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
-		number = evPtr->xcreatewindow.y;
+		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & REPARENT) {
-		number = evPtr->xreparent.y;
-	    } else if (flags & CROSSING) {
-		number = evPtr->xcrossing.y;
+		SET_NUMBER(evPtr->xreparent.y);
 	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.y;
+		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.y;
+		SET_NUMBER(evPtr->xconfigurerequest.y);
 	    }
 	    break;
 	case 'A':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
+	    if (flags & KEY) {
 		Tcl_DStringFree(&buf);
 		string = TkpGetString(winPtr, evPtr, &buf);
 	    }
 	    break;
 	case 'B':
 	    if (flags & CREATE) {
-		number = evPtr->xcreatewindow.border_width;
+		SET_NUMBER(evPtr->xcreatewindow.border_width);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.border_width;
+		SET_NUMBER(evPtr->xconfigurerequest.border_width);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.border_width;
+		SET_NUMBER(evPtr->xconfigure.border_width);
 	    }
 	    break;
 	case 'D':
-	    /*
-	     * This is used only by the MouseWheel event.
-	     */
-	    if ((flags & KEY) && evPtr->type == MouseWheelEvent) {
-		number = evPtr->xkey.keycode;
+	    if (flags & WHEEL) {
+		SET_NUMBER(evPtr->xwheel.delta);
 	    }
 	    break;
 	case 'E':
-	    number = (int) evPtr->xany.send_event;
+	    SET_UNUMBER(evPtr->xany.send_event);
 	    break;
 	case 'K':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
+	    if (flags & KEY) {
 		const char *name = TkKeysymToString(eventPtr->detail.info);
 		if (name) {
 		    string = name;
@@ -3165,11 +3172,11 @@ ExpandPercents(
 	    }
 	    break;
 	case 'M':
-	    number = scriptCount;
+	    SET_UNUMBER(scriptCount);
 	    break;
 	case 'N':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
-		number = (int) eventPtr->detail.info;
+	    if (flags & KEY) {
+		SET_UNUMBER(eventPtr->detail.info);
 	    }
 	    break;
 	case 'P':
@@ -3178,19 +3185,19 @@ ExpandPercents(
 	    }
 	    break;
 	case 'R':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.root);
 		string = numStorage;
 	    }
 	    break;
 	case 'S':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.subwindow);
 		string = numStorage;
 	    }
 	    break;
 	case 'T':
-	    number = evPtr->type;
+	    SET_NUMBER(evPtr->type);
 	    break;
 	case 'W': {
 	    Tk_Window tkwin = Tk_IdToWindow(evPtr->xany.display, evPtr->xany.window);
@@ -3200,13 +3207,13 @@ ExpandPercents(
 	    break;
 	}
 	case 'X':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		number = evPtr->xkey.x_root;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.x_root);
 	    }
 	    break;
 	case 'Y':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		number = evPtr->xkey.y_root;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.y_root);
 	    }
 	    break;
 	default:
@@ -3214,11 +3221,6 @@ ExpandPercents(
 	    numStorage[1] = '\0';
 	    string = numStorage;
 	    break;
-	}
-
-	if (number != NO_NUMBER) {
-	    snprintf(numStorage, sizeof(numStorage), "%d", (int) number);
-	    string = numStorage;
 	}
 	{   /* local scope */
 	    int cvtFlags;
@@ -3232,6 +3234,9 @@ ExpandPercents(
 	    before += 2;
 	}
     }
+
+#undef SET_NUMBER
+#undef SET_UNUMBER   
 
     Tcl_DStringFree(&buf);
 }
@@ -3905,9 +3910,9 @@ HandleEventGenerate(
 	Tk_DestroyWindow(tkwin);
 	return TCL_OK;
     }
-    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
+    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 	event.general.xkey.state = pat.modMask;
-	if ((flags & KEY) && event.general.xany.type != MouseWheelEvent) {
+	if (flags & KEY) {
 	    TkpSetKeycodeAndState(tkwin, pat.info, &event.general);
 	} else if (flags & BUTTON) {
 	    event.general.xbutton.button = pat.info;
@@ -3919,7 +3924,7 @@ HandleEventGenerate(
 	event.general.xcreatewindow.window = event.general.xany.window;
     }
 
-    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+    if (flags & HAS_XKEY_HEAD) {
 	event.general.xkey.x_root = -1;
 	event.general.xkey.y_root = -1;
     }
@@ -3967,7 +3972,7 @@ HandleEventGenerate(
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &warp) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (!(flags & KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (!(flags & CAN_WARP)) {
 		badOpt = 1;
 	    }
 	    break;
@@ -4034,8 +4039,8 @@ HandleEventGenerate(
 	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if ((flags & KEY) && event.general.xkey.type == MouseWheelEvent) {
-		event.general.xkey.keycode = number;
+	    if (flags & WHEEL) {
+		event.general.xwheel.delta = number;
 	    } else {
 		badOpt = 1;
 	    }
@@ -4079,7 +4084,7 @@ HandleEventGenerate(
 	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if ((flags & KEY) && event.general.xkey.type != MouseWheelEvent) {
+	    if (flags & KEY) {
 		event.general.xkey.keycode = number;
 	    } else {
 		badOpt = 1;
@@ -4103,7 +4108,7 @@ HandleEventGenerate(
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, NULL);
 		return TCL_ERROR;
 	    }
-	    if (!(flags & KEY) || (event.general.xkey.type == MouseWheelEvent)) {
+	    if (!(flags & KEY)) {
 		badOpt = 1;
 	    }
 	    break;
@@ -4150,7 +4155,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.root = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4160,7 +4165,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.x_root = number;
 	    } else {
 		badOpt = 1;
@@ -4170,7 +4175,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.y_root = number;
 	    } else {
 		badOpt = 1;
@@ -4209,11 +4214,11 @@ HandleEventGenerate(
 	    event.general.xany.serial = number;
 	    break;
 	case EVENT_STATE:
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
+		if (flags & HAS_XKEY_HEAD_AND_STATE) {
 		    event.general.xkey.state = number;
 		} else {
 		    event.general.xcrossing.state = number;
@@ -4231,7 +4236,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.subwindow = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4245,7 +4250,7 @@ HandleEventGenerate(
 	    } else if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.time = number;
 	    } else if (flags & PROP) {
 		event.general.xproperty.time = number;
@@ -4280,7 +4285,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.x = number;
 
 		/*
@@ -4307,7 +4312,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.y = number;
 
 		/*
