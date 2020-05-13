@@ -6659,7 +6659,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
 test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
     # Contrary to bind-34.1, we're directly checking screen coordinates
-    event generate {} <Motion> -x 20 -y 20 -warp 1
+    event generate {} <Motion> -x 25 -y 25 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
     set res [winfo pointerxy .]
@@ -6668,7 +6668,7 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
     after 50         ; # Win specific - wait for SendInput to be executed
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
-} -result {20 20 200 200}
+} -result {25 25 200 200}
 test bind-34.3 {-warp works with null or negative coordinates} -setup {
     # On some OS/WM, at least Linux with KDE, the "Screen edges" feature
     # provides hot spots that can be associated with some action.
