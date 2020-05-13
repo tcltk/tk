@@ -224,7 +224,7 @@ PressButtonObjCmd(
 
 static int
 InjectKeyEventObjCmd(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -241,6 +241,7 @@ InjectKeyEventObjCmd(
     NSEvent *keyEvent;
     NSUInteger type;
     MacKeycode macKC;
+    (void)dummy;
 
     if (objc < 3) {
     wrongArgs:
