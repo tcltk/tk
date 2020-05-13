@@ -214,6 +214,12 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 
 
 /*
+ * Where the mousewheel delta value is stored in an XEvent
+ */
+
+#define MOUSEWHEEL_DELTA xkey.keycode
+
+/*
  * The following functions are not present in old versions of Windows
  * API headers but are used in the Tk source to ensure 64bit
  * compatibility.

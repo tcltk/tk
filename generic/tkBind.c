@@ -567,7 +567,7 @@ static int eventArrayIndex[TK_LASTEVENT];
 
 #define HAS_XKEY_HEAD (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)
 
-/* 
+/*
  * The xcrossing struct puts the state field in a different location, but the other
  * events above agree on where state is located.
  */
@@ -2931,12 +2931,12 @@ ExpandPercents(
     evPtr = &eventPtr->xev;
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
-#define SET_NUMBER(value)   { number = value;			     \
-    snprintf(numStorage, sizeof(numStorage), "%ld", number);	     \
-    string = numStorage;					     \
+#define SET_NUMBER(value)   { number = (int) (value);                \
+        snprintf(numStorage, sizeof(numStorage), "%ld", number);     \
+        string = numStorage;					     \
     }
 
-#define SET_UNUMBER(value)  { unumber = value;				\
+#define SET_UNUMBER(value)  { unumber = (unsigned int) (value);         \
 	snprintf(numStorage, sizeof(numStorage), "%lu", unumber);	\
 	string = numStorage;						\
     }
@@ -3139,7 +3139,7 @@ ExpandPercents(
 	    break;
 	case 'D':
 	    if (flags & WHEEL) {
-		SET_NUMBER(evPtr->xwheel.delta);
+		SET_NUMBER(evPtr->MOUSEWHEEL_DELTA);
 	    }
 	    break;
 	case 'E':
@@ -3218,7 +3218,7 @@ ExpandPercents(
     }
 
 #undef SET_NUMBER
-#undef SET_UNUMBER   
+#undef SET_UNUMBER
 
     Tcl_DStringFree(&buf);
 }
@@ -4022,7 +4022,7 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & WHEEL) {
-		event.general.xwheel.delta = number;
+		event.general.MOUSEWHEEL_DELTA = number;
 	    } else {
 		badOpt = 1;
 	    }

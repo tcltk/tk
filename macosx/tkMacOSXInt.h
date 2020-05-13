@@ -206,6 +206,12 @@ MODULE_SCOPE Bool TkTestLogDisplay(void);
 MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 
 /*
+ * Where the mousewheel delta value is stored in an XEvent
+ */
+
+#define MOUSEWHEEL_DELTA xwheel.delta
+
+/*
  * Include the stubbed internal platform-specific API.
  */
 
