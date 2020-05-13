@@ -943,9 +943,9 @@ predecessor.
 systemControlAccentColor
 systemControlTextColor
 systemDisabledControlTextColor
-systemLabelColor  
+systemLabelColor
 systemLinkColor
-systemSelectedTextBackgroundColor  
+systemSelectedTextBackgroundColor
 systemSelectedTextColor
 systemTextBackgroundColor
 systemTextColor
