@@ -24,6 +24,12 @@
 
 #include "tkIntPlatDecls.h"
 
+/*
+ * Where the mousewheel delta value is stored in an XEvent
+ */
+
+#define MOUSEWHEEL_DELTA xkey.keycode
+
 #endif /* _TKUNIXINT */
 
 /*
