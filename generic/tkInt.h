@@ -854,7 +854,7 @@ typedef struct TkWindow {
 
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
     char trans_chars[XMaxTransChars];
 				/* translated characters */
     unsigned char nbytes;		/* Length of trans_chars. */
@@ -872,19 +872,19 @@ typedef struct {
 } TkKeyEvent;
 
 typedef struct {
-    int type;		/* of event */
-    unsigned long serial;	/* # of last request processed by server */
-    Bool send_event;	/* true if this came from a SendEvent request */
-    Display *display;	/* Display the event was read from */
-    Window window;	        /* "event" window it is reported relative to */
-    Window root;	        /* root window that the event occured on */
-    Window subwindow;	/* child window */
-    Time time;		/* milliseconds */
-    int x, y;		/* pointer x, y coordinates in event window */
-    int x_root, y_root;	/* coordinates relative to root */
-    int delta;	/* delta */
-    unsigned int button;	/* detail */
-    Bool same_screen;	/* same screen flag */
+    int type;		    /* of event */
+    unsigned long serial;   /* # of last request processed by server */
+    Bool send_event;	    /* true if this came from a SendEvent request */
+    Display *display;	    /* Display the event was read from */
+    Window window;	    /* "event" window it is reported relative to */
+    Window root;	    /* root window that the event occured on */
+    Window subwindow;	    /* child window */
+    Time time;		    /* milliseconds */
+    int x, y;		    /* pointer x, y coordinates in event window */
+    int x_root, y_root;	    /* coordinates relative to root */
+    int delta;		    /* delta */
+    unsigned int state;     /* detail */
+    Bool same_screen;	    /* same screen flag */
 } TkWheelEvent;
 
 /*
