@@ -1264,7 +1264,36 @@ int TkUniCharToUtf(int ch, char *buf)
     }
     return Tcl_UniCharToUtf(ch, buf);
 }
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfPrev --
+ *
+ *	Almost the same as Tcl_UtfPrev.
+ *	This function is capable of jumping over a upper/lower surrogate pair.
+ *	So, might jump back up to 6 bytes.
+ *
+ * Results:
+ *	pointer to the first byte of the current UTF-8 character. A surrogate
+ *	pair is also handled as being a single entity.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
 
+const char *
+TkUtfPrev(
+    const char *src,	/* The UTF-8 string. */
+    const char *start)		/* Start position of string */
+{
+    const char *p = Tcl_UtfPrev(src, start);
+    const char *first = Tcl_UtfPrev(p, start);
+    int ch;
+
+    return (first + TkUtfToUniChar(first, &ch) >= src) ? first : p ;
+}
 
 #endif
 /*
