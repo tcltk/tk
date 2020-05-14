@@ -25,6 +25,8 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
+static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const objv[]);
 
 
 /*
@@ -56,6 +58,7 @@ TkplatformtestInit(
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
 
     return TCL_OK;
 }
@@ -219,7 +222,114 @@ PressButtonObjCmd(
     return TCL_OK;
 }
 
+static int
+InjectKeyEventObjCmd(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    static const char *const optionStrings[] = {
+	"press", "release", "flagschanged", NULL};
+    NSUInteger types[3] = {NSKeyDown, NSKeyUp, NSFlagsChanged};
+    static const char *const argStrings[] = {
+	"-shift", "-control", "-option", "-command", "-function", "-x", "-y", NULL};
+    enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION, KEYEVENT_COMMAND,
+	       KEYEVENT_FUNCTION, KEYEVENT_X, KEYEVENT_Y};
+    int i, index, keysym, mods = 0, x = 0, y = 0;
+    NSString *chars = nil, *unmod = nil, *upper, *lower;
+    NSEvent *keyEvent;
+    NSUInteger type;
+    MacKeycode macKC;
 
+    if (objc < 3) {
+    wrongArgs:
+        Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
+        return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+            &index) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    type = types[index];
+    if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			 "keysym must be an integer"));
+	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEYSYM", NULL);
+	return TCL_ERROR;
+    }
+    macKC.uint = XKeysymToKeycode(NULL, keysym);
+    for (i = 3; i < objc; i++) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], argStrings,
+                sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+            return TCL_ERROR;
+        }
+        switch ((enum args) index) {
+	case KEYEVENT_SHIFT:
+	    mods |= NSShiftKeyMask;
+            break;
+	case KEYEVENT_CONTROL:
+	    mods |= NSControlKeyMask;
+            break;
+	case KEYEVENT_OPTION:
+	    mods |= NSAlternateKeyMask;
+            break;
+	case KEYEVENT_COMMAND:
+	    mods |= NSCommandKeyMask;
+            break;
+	case KEYEVENT_FUNCTION:
+	    mods |= NSFunctionKeyMask;
+            break;
+	case KEYEVENT_X:
+	    if (++i >= objc) {
+                goto wrongArgs;
+            }
+	    if (Tcl_GetIntFromObj(interp,objv[i], &x) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
+	case KEYEVENT_Y:
+	    if (++i >= objc) {
+                goto wrongArgs;
+            }
+	    if (Tcl_GetIntFromObj(interp,objv[i], &y) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
+	}
+    }
+    if (type != NSFlagsChanged) {
+	UniChar keychar = macKC.v.keychar;
+	chars = [[NSString alloc] initWithCharacters: &keychar length:1];
+	upper = [chars uppercaseString];
+	lower = [chars lowercaseString];
+	if (![upper isEqual: lower] && [chars isEqual: upper]) {
+	    mods |= NSShiftKeyMask;
+	}
+	if (mods & NSShiftKeyMask) {
+	    chars = upper;
+	    unmod = lower;
+	    macKC.v.o_s |= INDEX_SHIFT;
+	} else {
+	    unmod = chars;
+	}
+	if (macKC.v.o_s & INDEX_OPTION) {
+	    mods |= NSAlternateKeyMask;
+	}
+    }
+    keyEvent = [NSEvent keyEventWithType:type
+	location:NSMakePoint(x, y)
+        modifierFlags:mods
+	timestamp:GetCurrentEventTime()
+	windowNumber:0
+	context:nil
+	characters:chars
+	charactersIgnoringModifiers:unmod
+	isARepeat:NO
+	keyCode:macKC.v.virtual];
+    [NSApp postEvent:keyEvent atStart:NO];
+    return TCL_OK;
+}
 /*
  * Local Variables:
  * mode: objc

@@ -2932,12 +2932,12 @@ ExpandPercents(
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
 #define SET_NUMBER(value)   { number = (int) (value);                \
-        snprintf(numStorage, sizeof(numStorage), "%ld", number);     \
+        snprintf(numStorage, sizeof(numStorage), "%" TCL_LL_MODIFIER "d", number);     \
         string = numStorage;					     \
     }
 
 #define SET_UNUMBER(value)  { unumber = (unsigned int) (value);         \
-	snprintf(numStorage, sizeof(numStorage), "%lu", unumber);	\
+	snprintf(numStorage, sizeof(numStorage), "%" TCL_LL_MODIFIER "u", unumber);	\
 	string = numStorage;						\
     }
 
