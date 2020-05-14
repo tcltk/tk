@@ -994,7 +994,7 @@ GenerateXEvent(
     WPARAM wParam,
     LPARAM lParam)
 {
-    union {XEvent x; TkKeyEvent key;; TkWheelEvent wheel;} event;
+    union {XEvent x; TkKeyEvent key; TkWheelEvent wheel;} event;
     TkWindow *winPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
