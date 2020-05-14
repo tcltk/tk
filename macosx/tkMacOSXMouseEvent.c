@@ -55,6 +55,7 @@ enum {
     TkWindow *winPtr = NULL, *grabWinPtr;
     Tk_Window tkwin;
     NSPoint local, global;
+    NSInteger button = -1;
 #if 0
     NSTrackingArea *trackingArea = nil;
     NSInteger eventNumber, clickCount, buttonNumber;
@@ -65,18 +66,19 @@ enum {
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
     switch (eventType) {
-    case NSMouseEntered:
-    case NSMouseExited:
-    case NSCursorUpdate:
     case NSLeftMouseDown:
-    case NSLeftMouseUp:
     case NSRightMouseDown:
-    case NSRightMouseUp:
     case NSOtherMouseDown:
-    case NSOtherMouseUp:
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+	button = [theEvent buttonNumber] + Button1;
+    case NSMouseEntered:
+    case NSMouseExited:
+    case NSCursorUpdate:
+    case NSLeftMouseUp:
+    case NSRightMouseUp:
+    case NSOtherMouseUp:
     case NSMouseMoved:
     case NSTabletPoint:
     case NSTabletProximity:
@@ -94,6 +96,21 @@ enum {
 
     if (eventWindow) {
 	local = [theEvent locationInWindow];
+
+	/*
+	 * Do not send ButtonPress XEvents for MouseDown NSEvents that start a
+	 * resize.  (The MouseUp will be handled during LiveResize.)  See
+	 * ticket [d72abe6b54].
+	 */
+
+	if (eventType == NSEventTypeLeftMouseDown &&
+	    ([eventWindow styleMask] & NSWindowStyleMaskResizable) &&
+	    [NSApp macMinorVersion] > 6) {
+	    NSRect frame = [eventWindow frame];
+	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
+		return theEvent;
+	    }
+	}
 	global = [eventWindow tkConvertPointToScreen: local];
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
@@ -211,26 +228,8 @@ enum {
      */
 
     unsigned int state = 0;
-    int button = [theEvent buttonNumber] + Button1;
-    EventRef eventRef = (EventRef)[theEvent eventRef];
-    UInt32 buttons;
-    OSStatus err = GetEventParameter(eventRef, kEventParamMouseChord,
-	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
-
-    if (err == noErr) {
-	state |= (buttons & 0x1F) * Button1Mask;
-    } else if (button <= Button5) {
-	switch (eventType) {
-	case NSLeftMouseDown:
-	case NSRightMouseDown:
-	case NSLeftMouseDragged:
-	case NSRightMouseDragged:
-	case NSOtherMouseDown:
-	    state |= TkGetButtonMask(button);
-	    break;
-	default:
-	    break;
-	}
+    if (button > 0) {
+	state |= TkGetButtonMask(button);
     }
 
     NSUInteger modifiers = [theEvent modifierFlags];

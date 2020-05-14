@@ -82,13 +82,20 @@ bind TEntry <<ToggleSelection>> {
     %W instate {!readonly !disabled} { %W icursor @%x ; focus %W }
 }
 
-## Button2 bindings:
+## Button2 (Button3 on Aqua) bindings:
 #	Used for scanning and primary transfer.
-#	Note: ButtonRelease-2 is mapped to <<PasteSelection>> in tk.tcl.
+#	Note: ButtonRelease-2 (ButtonRelease-3 on Aqua)
+#	is mapped to <<PasteSelection>> in tk.tcl.
 #
-bind TEntry <ButtonPress-2> 		{ ttk::entry::ScanMark %W %x }
-bind TEntry <B2-Motion> 		{ ttk::entry::ScanDrag %W %x }
-bind TEntry <ButtonRelease-2>		{ ttk::entry::ScanRelease %W %x }
+if {[tk windowingsystem] ne "aqua"} {
+    bind TEntry <ButtonPress-2> 		{ ttk::entry::ScanMark %W %x }
+    bind TEntry <B2-Motion> 		{ ttk::entry::ScanDrag %W %x }
+    bind TEntry <ButtonRelease-2>		{ ttk::entry::ScanRelease %W %x }
+} else {
+    bind TEntry <ButtonPress-3> 		{ ttk::entry::ScanMark %W %x }
+    bind TEntry <B3-Motion> 		{ ttk::entry::ScanDrag %W %x }
+    bind TEntry <ButtonRelease-3>		{ ttk::entry::ScanRelease %W %x }
+}
 bind TEntry <<PasteSelection>>		{ ttk::entry::ScanRelease %W %x }
 
 ## Keyboard navigation bindings:
