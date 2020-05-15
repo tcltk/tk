@@ -1747,13 +1747,15 @@ CleanUpTkEvent(
     switch (eventPtr->type) {
     case KeyPress:
     case KeyRelease: {
-	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 	if (kePtr->charValuePtr != NULL) {
 	    ckfree(kePtr->charValuePtr);
 	    kePtr->charValuePtr = NULL;
 	    kePtr->charValueLen = 0;
 	}
+#endif
 	break;
     }
 
