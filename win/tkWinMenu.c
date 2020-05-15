@@ -2229,18 +2229,16 @@ TkWinMenuKeyObjCmd(
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
 	    scanCode = MapVirtualKeyW(virtualKey, 0);
 	    if (0 != scanCode) {
-		union {XEvent x; TkKeyEvent tk;} xkey;
-		memcpy(&xkey, &eventPtr->xkey, sizeof(XEvent));
+		TkKeyEvent xkey;
+		memcpy(&xkey, eventPtr, sizeof(xkey));
 		CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey,
 			(int) ((scanCode << 16) | (1 << 29)));
-		if (xkey.tk.nbytes > 0) {
-		    for (i = 0; i < xkey.tk.nbytes; i++) {
-			CallWindowProcW(DefWindowProcW,
-				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
-				xkey.tk.trans_chars[i],
-				(int) ((scanCode << 16) | (1 << 29)));
-		    }
+		for (i = 0; i < xkey.nbytes; i++) {
+		    CallWindowProcW(DefWindowProcW,
+			    Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
+			    xkey.trans_chars[i],
+			    (int) ((scanCode << 16) | (1 << 29)));
 		}
 	    }
 	}
