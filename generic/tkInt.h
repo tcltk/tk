@@ -846,30 +846,10 @@ typedef struct TkWindow {
 } TkWindow;
 
 /*
- * Real definition of some events. Note that these events come from outside
- * but have internally generated pieces added to them.
+ * Modified version of XButtonEvent which replaces the unsigned button field
+ * with a signed delta field to correctly reflect how MouseWheelEvents report
+ * the delta.
  */
-
-#define XMaxTransChars 7
-
-typedef struct {
-    XKeyEvent keyEvent;		/* The real event from X11. */
-#ifdef _WIN32
-    char trans_chars[XMaxTransChars];
-                            /* translated characters */
-    unsigned char nbytes;
-#else
-    char *charValuePtr;		/* A pointer to a string that holds the key's
-				 * %A substitution text (before backslash
-				 * adding), or NULL if that has not been
-				 * computed yet. If non-NULL, this string was
-				 * allocated with ckalloc(). */
-    int charValueLen;		/* Length of string in charValuePtr when that
-				 * is non-NULL. */
-    KeySym keysym;		/* Key symbol computed after input methods
-				 * have been invoked */
-#endif
-} TkKeyEvent;
 
 typedef struct {
     int type;		    /* of event */
@@ -882,8 +862,8 @@ typedef struct {
     Time time;		    /* milliseconds */
     int x, y;		    /* pointer x, y coordinates in event window */
     int x_root, y_root;	    /* coordinates relative to root */
-    unsigned int state;     /* key or button mask */
-    int delta;		    /* delta */
+    unsigned int state;     /* modifier key mask */
+    int delta;		    /* delta detail */
     Bool same_screen;	    /* same screen flag */
 } TkWheelEvent;
 

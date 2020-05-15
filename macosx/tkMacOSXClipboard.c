@@ -36,7 +36,7 @@ static Tk_Window clipboardOwner = NULL;
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
 		    NSString *s = [[TKNSString alloc]
-				      initWithTclUtfBytes:cbPtr->buffer
+				      initWithCESU8Bytes:cbPtr->buffer
 						   length:cbPtr->length];
 		    [string appendString:s];
 		    [s release];
