@@ -893,8 +893,13 @@ typedef struct TkWindow {
  */
 
 typedef struct {
-    XKeyEvent keyEvent;	/* The real event from X11. */
-    char *charValuePtr;	/* A pointer to a string that holds the key's
+    XKeyEvent keyEvent;		/* The real event from X11. */
+#ifdef _WIN32
+    char trans_chars[XMaxTransChars];
+                            /* translated characters */
+    unsigned char nbytes;
+#else
+    char *charValuePtr;		/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
@@ -903,6 +908,7 @@ typedef struct {
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
+#endif
 } TkKeyEvent;
 
 /*
@@ -1405,7 +1411,6 @@ MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
 #define TkGetStringFromObj Tcl_GetStringFromObj
 #define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
 #endif
-
 
 /*
  * Unsupported commands.
