@@ -7,19 +7,42 @@ namespace eval ttk::scale {
     array set State  {
 	dragging 0
     }
+
+    variable Actions
+    # Actions(-left)        -- left mouse button action
+    # Actions(-middle)      -- middle mouse button action
+    # Actions(-right)       -- right mouse button action
+    # Actions(-alternate)   -- alternate button action
+    #                          for shift/alt left click
+    #                          This gets changed on swap.
+    # valid actions
+    #  page, jump, asarrow, none
+
+    set Actions(-left)      page
+    set Actions(-middle)    jump
+    set Actions(-right)     asarrow
+    set Actions(-alternate) jump
 }
 
-bind TScale <ButtonPress-1>   { ttk::scale::Press %W %x %y }
+bind TScale <ButtonPress-1>   { ttk::scale::PressSwitch %W %x %y -left }
 bind TScale <B1-Motion>       { ttk::scale::Drag %W %x %y }
 bind TScale <ButtonRelease-1> { ttk::scale::Release %W %x %y }
 
-bind TScale <ButtonPress-2>   { ttk::scale::Jump %W %x %y }
-bind TScale <B2-Motion>       { ttk::scale::Drag %W %x %y }
-bind TScale <ButtonRelease-2> { ttk::scale::Release %W %x %y }
-
-bind TScale <ButtonPress-3>   { ttk::scale::Jump %W %x %y }
-bind TScale <B3-Motion>       { ttk::scale::Drag %W %x %y }
-bind TScale <ButtonRelease-3> { ttk::scale::Release %W %x %y }
+if { [tk windowingsystem] eq "aqua" } {
+  bind TScale <ButtonPress-3>     { ttk::scale::PressSwitch %W %x %y -middle }
+  bind TScale <B3-Motion>         { ttk::scale::Drag %W %x %y }
+  bind TScale <ButtonRelease-3>   { ttk::scale::Release %W %x %y }
+  bind TScale <ButtonPress-2> 	  { ttk::scale::PressSwitch %W %x %y -right }
+  bind TScale <ButtonRelease-2>   { ttk::scale::Release %W %x %y }
+  bind TScale <Alt-ButtonPress-1> { ttk::scale::PressSwitch %W %x %y -alternate }
+} else {
+  bind TScale <ButtonPress-2>     { ttk::scale::PressSwitch %W %x %y -middle }
+  bind TScale <B2-Motion>         { ttk::scale::Drag %W %x %y }
+  bind TScale <ButtonRelease-2>   { ttk::scale::Release %W %x %y }
+  bind TScale <ButtonPress-3> 	  { ttk::scale::PressSwitch %W %x %y -right }
+  bind TScale <ButtonRelease-3>   { ttk::scale::Release %W %x %y }
+  bind TScale <Shift-ButtonPress-1> { ttk::scale::PressSwitch %W %x %y -alternate }
+}
 
 ## Keyboard navigation bindings:
 #
@@ -35,11 +58,50 @@ bind TScale <<PrevPara>>      { ttk::scale::Increment %W -10 }
 bind TScale <<NextWord>>      { ttk::scale::Increment %W 10 }
 bind TScale <<NextPara>>      { ttk::scale::Increment %W 10 }
 
-proc ttk::scale::Press {w x y} {
+proc ttk::scale::Swap {} {
+  variable Actions
+
+  set temp $Actions(-left)
+  set Actions(-left) $Actions(-middle)
+  set Actions(-middle) $temp
+  set Actions(-alternate) $Actions(-middle)
+}
+
+proc ttk::scale::PressSwitch {w x y which} {
+  variable Actions
+
+  if { ! [info exists Actions($which)] } {
+    set which none
+  }
+  set action $Actions($which)
+
+  switch -exact -- $action {
+    page {
+      ::ttk::scale::Press $w $x $y
+    }
+    asarrow {
+      ::ttk::scale::Press $w $x $y -asarrow
+    }
+    jump {
+      ::ttk::scale::Jump $w $x $y
+    }
+    none -
+    default {
+      ;
+    }
+  }
+}
+
+proc ttk::scale::Press {w x y {asarrow {}} } {
     variable State
     set State(dragging) 0
 
-    switch -glob -- [$w identify $x $y] {
+    set ident [$w identify $x $y]
+    if { $asarrow ne {} } {
+      set ident trough
+    }
+
+    switch -glob -- $ident {
 	*track -
         *trough {
             set inc [expr {([$w get $x $y] <= [$w get]) ^ ([$w cget -from] > [$w cget -to]) ? -1 : 1}]
