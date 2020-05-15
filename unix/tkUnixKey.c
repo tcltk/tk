@@ -11,6 +11,7 @@
  */
 
 #include "tkInt.h"
+#include "tkUnixInt.h"
 
 /*
 ** Bug [3607830]: Before using Xkb, it must be initialized.  TkpOpenDisplay
