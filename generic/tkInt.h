@@ -854,10 +854,10 @@ typedef struct TkWindow {
 
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
-#if defined(_WIN32)
+#ifdef _WIN32
     char trans_chars[XMaxTransChars];
-				/* translated characters */
-    unsigned char nbytes;		/* Length of trans_chars. */
+                            /* translated characters */
+    unsigned char nbytes;
 #else
     char *charValuePtr;		/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
