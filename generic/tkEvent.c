@@ -15,6 +15,16 @@
 
 #include "tkInt.h"
 
+/* 
+ * Include platform-specific TkKeyEvent
+ */
+
+#if defined(_WIN32)
+#include "tkWinInt.h"
+#elif !defined(MAC_OSX_TK)
+#include "tkUnixInt.h"
+#endif
+
 /*
  * There's a potential problem if a handler is deleted while it's current
  * (i.e. its function is executing), since Tk_HandleEvent will need to read
