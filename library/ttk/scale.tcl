@@ -58,13 +58,21 @@ bind TScale <<PrevPara>>      { ttk::scale::Increment %W -10 }
 bind TScale <<NextWord>>      { ttk::scale::Increment %W 10 }
 bind TScale <<NextPara>>      { ttk::scale::Increment %W 10 }
 
-proc ttk::scale::Swap {} {
+proc ttk::scale::SetBehavior { type } {
   variable Actions
 
-  set temp $Actions(-left)
-  set Actions(-left) $Actions(-middle)
-  set Actions(-middle) $temp
+  if { $type ne "page" && $type ne "jump" } {
+    return error
+  }
+
+  set alttype page
+  if { $type eq "page" } {
+    set alttype jump
+  }
+  set Actions(-left) $type
+  set Actions(-middle) $alttype
   set Actions(-alternate) $Actions(-middle)
+  return ok
 }
 
 proc ttk::scale::PressSwitch {w x y which} {

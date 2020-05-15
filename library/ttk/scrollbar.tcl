@@ -79,13 +79,21 @@ proc ttk::scrollbar::Moveto {w fraction} {
     }
 }
 
-proc ttk::scrollbar::Swap {} {
+proc ttk::scrollbar::SetBehavior { type } {
   variable Actions
 
-  set temp $Actions(-left)
-  set Actions(-left) $Actions(-middle)
-  set Actions(-middle) $temp
+  if { $type ne "page" && $type ne "jump" } {
+    return error
+  }
+
+  set alttype page
+  if { $type eq "page" } {
+    set alttype jump
+  }
+  set Actions(-left) $type
+  set Actions(-middle) $alttype
   set Actions(-alternate) $Actions(-middle)
+  return ok
 }
 
 proc ttk::scrollbar::PressSwitch {w x y which} {
