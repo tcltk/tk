@@ -540,7 +540,7 @@ VISIBILITY_HIDDEN
     NSString *_string;
 }
 @property const char *UTF8String;
-- (instancetype)initWithTclUtfBytes:(const void *)bytes
+- (instancetype)initWithCESU8Bytes:(const void *)bytes
 			     length:(NSUInteger)len;
 @end
 
