@@ -31,7 +31,7 @@ if { [tk windowingsystem] eq "aqua" } {
   bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
   bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
   bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
-  bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Press %W %x %y -right }
+  bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
   bind TScrollbar <ButtonRelease-2> 	{ ttk::scrollbar::Release %W %x %y }
   bind TScrollbar <Alt-ButtonPress-1>   { ttk::scrollbar::PressSwitch %W %x %y -alternate }
 } else {
