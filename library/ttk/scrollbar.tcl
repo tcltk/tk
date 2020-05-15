@@ -8,13 +8,19 @@ namespace eval ttk::scrollbar {
     # State(yPress)	-- initial position of mouse at start of drag.
     # State(first)	-- value of -first at start of drag.
     variable Actions
-    # Actions(-left)     -- left mouse button action
-    # Actions(-middle)   -- middle mouse button action
-    # Actions(-right)    -- right mouse button action
+    # Actions(-left)        -- left mouse button action
+    # Actions(-middle)      -- middle mouse button action
+    # Actions(-right)       -- right mouse button action
+    # Actions(-alternate)   -- alternate button action
+    #                          for shift/alt left click
+    #                          This gets changed on swap.
+    # valid actions
+    #  page, jump, asarrow, none
 
-    set Actions(-left)     page
-    set Actions(-middle)   jump
-    set Actions(-right)    asarrow
+    set Actions(-left)      page
+    set Actions(-middle)    jump
+    set Actions(-right)     asarrow
+    set Actions(-alternate) jump
 }
 
 bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::PressSwitch %W %x %y -left }
@@ -27,12 +33,14 @@ if { [tk windowingsystem] eq "aqua" } {
   bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
   bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Press %W %x %y -right }
   bind TScrollbar <ButtonRelease-2> 	{ ttk::scrollbar::Release %W %x %y }
+  bind TScrollbar <Alt-ButtonPress-1>   { ttk::scrollbar::PressSwitch %W %x %y -alternate }
 } else {
   bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
   bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
   bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
   bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
   bind TScrollbar <ButtonRelease-3> 	{ ttk::scrollbar::Release %W %x %y }
+  bind TScrollbar <Shift-ButtonPress-1> { ttk::scrollbar::PressSwitch %W %x %y -alternate }
 }
 
 
@@ -77,18 +85,31 @@ proc ttk::scrollbar::Swap {} {
   set temp $Actions(-left)
   set Actions(-left) $Actions(-middle)
   set Actions(-middle) $temp
+  set Actions(-alternate) $Actions(-middle)
 }
 
 proc ttk::scrollbar::PressSwitch {w x y which} {
   variable Actions
 
+  if { ! [info exists Actions($which)] } {
+    set which none
+  }
   set action $Actions($which)
-  if { $action eq "page" } {
-    ::ttk::scrollbar::Press $w $x $y
-  } elseif { $action eq "asarrow" } {
-    ::ttk::scrollbar::Press $w $x $y -asarrow
-  } elseif { $action eq "jump" } {
-    ::ttk::scrollbar::Jump $w $x $y
+
+  switch -exact -- $action {
+    page {
+      ::ttk::scrollbar::Press $w $x $y
+    }
+    asarrow {
+      ::ttk::scrollbar::Press $w $x $y -asarrow
+    }
+    jump {
+      ::ttk::scrollbar::Jump $w $x $y
+    }
+    none -
+    default {
+      ;
+    }
   }
 }
 
