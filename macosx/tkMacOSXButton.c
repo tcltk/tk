@@ -186,9 +186,6 @@ TkpDisplayButton(
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
 
-    if (butPtr->flags & BUTTON_DELETED) {
-	return;
-    }
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -1048,7 +1045,8 @@ TkMacOSXComputeButtonParams(
 	if (drawinfo->state != kThemeStatePressed) {
 	    drawinfo->adornment |= kThemeAdornmentDefault;
 	}
-        if (!mbPtr->defaultPulseHandler) {
+        if (!mbPtr->defaultPulseHandler && ([NSApp macMinorVersion] <= 9)) {
+	    // Enable pulsing, which is used on OS X 10.9 and earlier
             mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
                     PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
         }
@@ -1178,6 +1176,13 @@ PulseDefaultButtonProc(ClientData clientData)
     MacButton *mbPtr = clientData;
 
     TkpDisplayButton(clientData);
+    /*
+     * Fix 40ada90762: any idle calls to TkpDisplayButton need to be canceled
+     * in case the button is destroyed and has its data freed before the idle
+     * event is handled (DestroyButton only cancels calls when REDRAW_PENDING
+     * is set, which is not the case after calling TkpDisplayButton directly).
+     */
+    Tcl_CancelIdleCall(TkpDisplayButton, clientData);
     mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
             PULSE_TIMER_MSECS, PulseDefaultButtonProc, clientData);
 }
