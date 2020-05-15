@@ -7,19 +7,34 @@ namespace eval ttk::scrollbar {
     # State(xPress)	--
     # State(yPress)	-- initial position of mouse at start of drag.
     # State(first)	-- value of -first at start of drag.
+    variable Actions
+    # Actions(-left)     -- left mouse button action
+    # Actions(-middle)   -- middle mouse button action
+    # Actions(-right)    -- right mouse button action
+
+    set Actions(-left)     page
+    set Actions(-middle)   jump
+    set Actions(-right)    asarrow
 }
 
-bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::Press %W %x %y }
+bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::PressSwitch %W %x %y -left }
 bind TScrollbar <B1-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
 
-bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
-bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
-bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
+if { [tk windowingsystem] eq "aqua" } {
+  bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
+  bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+  bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
+  bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Press %W %x %y -right }
+  bind TScrollbar <ButtonRelease-2> 	{ ttk::scrollbar::Release %W %x %y }
+} else {
+  bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
+  bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+  bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
+  bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
+  bind TScrollbar <ButtonRelease-3> 	{ ttk::scrollbar::Release %W %x %y }
+}
 
-bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::Jump %W %x %y }
-bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
-bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
 
 # Redirect scrollwheel bindings to the scrollbar widget
 #
@@ -56,13 +71,44 @@ proc ttk::scrollbar::Moveto {w fraction} {
     }
 }
 
-proc ttk::scrollbar::Press {w x y} {
+proc ttk::scrollbar::Swap {} {
+  variable Actions
+
+  set temp $Actions(-left)
+  set Actions(-left) $Actions(-middle)
+  set Actions(-middle) $temp
+}
+
+proc ttk::scrollbar::PressSwitch {w x y which} {
+  variable Actions
+
+  set action $Actions($which)
+  if { $action eq "page" } {
+    ::ttk::scrollbar::Press $w $x $y
+  } elseif { $action eq "asarrow" } {
+    ::ttk::scrollbar::Press $w $x $y -asarrow
+  } elseif { $action eq "jump" } {
+    ::ttk::scrollbar::Jump $w $x $y
+  }
+}
+
+proc ttk::scrollbar::Press {w x y {asarrow {}} } {
     variable State
 
     set State(xPress) $x
     set State(yPress) $y
 
-    switch -glob -- [$w identify $x $y] {
+    set ident [$w identify $x $y]
+    if { $asarrow ne {} } {
+      set f [$w fraction $x $y]
+      if {$f < [lindex [$w get] 0]} {
+        set ident uparrow
+      } elseif {$f > [lindex [$w get] 1]} {
+        set ident downarrow
+      }
+    }
+
+    switch -glob -- $ident {
     	*uparrow -
 	*leftarrow {
 	    ttk::Repeatedly Scroll $w -1 units
@@ -102,7 +148,7 @@ proc ttk::scrollbar::Drag {w x y} {
     Moveto $w [expr {$State(first) + [$w delta $xDelta $yDelta]}]
 }
 
-proc ttk::scrollbar::Release {w x y} {
+proc ttk::scrollbar::Release {w x y } {
     variable State
     unset -nocomplain State(xPress) State(yPress) State(first)
     ttk::CancelRepeat
