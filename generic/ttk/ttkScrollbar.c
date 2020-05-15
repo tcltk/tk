@@ -281,6 +281,57 @@ ScrollbarFractionCommand(
     return TCL_OK;
 }
 
+/* $sb jumplocation $x $y --
+ *      Calculate the fraction, and subtract half the thumb's size.
+ */
+static int
+ScrollbarJumpLocation(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Scrollbar *sb = (Scrollbar *)recordPtr;
+    WidgetCore *corePtr = &sb->core;
+    Ttk_Element thumb;
+    Ttk_Box thumbBox;
+    Ttk_Box trough = sb->scrollbar.troughBox;
+    double x, y;
+    double loc = 0.0;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetDoubleFromObj(interp, objv[2], &x) != TCL_OK
+	|| Tcl_GetDoubleFromObj(interp, objv[3], &y) != TCL_OK)
+    {
+	return TCL_ERROR;
+    }
+
+    thumb = Ttk_FindElement(corePtr->layout, "thumb");
+    if (!thumb)	/* Something has gone wrong -- bail */
+    {
+	return TCL_ERROR;
+    }
+
+    sb->scrollbar.troughBox = thumbBox = Ttk_ElementParcel(thumb);
+
+    /* compute the fraction, and add in half the thumb's length */
+    if (sb->scrollbar.orient == TTK_ORIENT_VERTICAL) {
+	if (trough.height > 0.0) {
+	    loc = (double)(y - trough.y) / (double)trough.height;
+	}
+        loc -= (thumbBox.height / (double)trough.height) / 2.0;
+    } else {
+	if (trough.width > 0.0) {
+	    loc = (double)(x - trough.x) / (double)trough.width;
+	}
+        loc -= (thumbBox.width / (double)trough.width) / 2.0;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(loc));
+    return TCL_OK;
+}
+
 static const Ttk_Ensemble ScrollbarCommands[] = {
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
@@ -289,6 +340,7 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
     { "get",    	ScrollbarGetCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
+    { "jumplocation",   ScrollbarJumpLocation,0 },
     { "set",  		ScrollbarSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { 0,0,0 }

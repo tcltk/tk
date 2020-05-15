@@ -118,7 +118,7 @@ proc ttk::scrollbar::Jump {w x y} {
     switch -glob -- [$w identify $x $y] {
 	*thumb -
 	*trough {
-	    set State(first) [$w fraction $x $y]
+            set State(first) [$w jumplocation $x $y]
 	    Moveto $w $State(first)
 	    set State(xPress) $x
 	    set State(yPress) $y
