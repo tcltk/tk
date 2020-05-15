@@ -17,6 +17,10 @@ bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
+bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::Jump %W %x %y }
+bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
+
 # Redirect scrollwheel bindings to the scrollbar widget
 #
 # The shift-bindings scroll left/right (not up/down)
@@ -89,7 +93,7 @@ proc ttk::scrollbar::Press {w x y} {
 proc ttk::scrollbar::Drag {w x y} {
     variable State
     if {![info exists State(first)]} {
-    	# Initial buttonpress was not on the thumb, 
+    	# Initial buttonpress was not on the thumb,
 	# or something screwy has happened.  In either case, ignore:
 	return;
     }
