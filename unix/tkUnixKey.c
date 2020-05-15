@@ -119,10 +119,10 @@ TkpGetString(
      * If we have the value cached already, use it now. [Bug 1373712]
      */
 
-    if (kePtr->charValuePtr != NULL) {
-	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
-	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
-		(unsigned) kePtr->charValueLen+1);
+    if (kePtr->nbytes > 0) {
+	Tcl_DStringSetLength(dsPtr, kePtr->nbytes);
+	memcpy(Tcl_DStringValue(dsPtr), kePtr->trans_chars,
+		(unsigned) kePtr->nbytes+1);
 	return Tcl_DStringValue(dsPtr);
     }
 
@@ -228,9 +228,8 @@ TkpGetString(
      */
 
 done:
-    kePtr->charValuePtr = ckalloc(len + 1);
-    kePtr->charValueLen = len;
-    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
+    kePtr->nbytes = len;
+    memcpy(kePtr->trans_chars, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
     return Tcl_DStringValue(dsPtr);
 }
 
@@ -336,7 +335,7 @@ TkpGetKeySym(
 
     if (eventPtr->type == KeyPress && dispPtr
 	    && (dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (kePtr->charValuePtr == NULL) {
+	if (kePtr->nbytes == 0) {
 	    Tcl_DString ds;
 	    TkWindow *winPtr = (TkWindow *)
 		Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
@@ -345,7 +344,7 @@ TkpGetKeySym(
 	    (void) TkpGetString(winPtr, eventPtr, &ds);
 	    Tcl_DStringFree(&ds);
 	}
-	if (kePtr->charValuePtr != NULL) {
+	if (kePtr->nbytes > 0) {
 	    return kePtr->keysym;
 	}
     }
