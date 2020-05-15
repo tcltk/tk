@@ -850,20 +850,20 @@ typedef struct TkWindow {
  * but have internally generated pieces added to them.
  */
 
+#ifndef XMaxTransChars
+#   if defined(_WIN32)
+#	define XMaxTransChars 15
+#   else
+#	define XMaxTransChars 27
+#   endif
+#endif
+
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
-#ifdef _WIN32
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;
-#else
-    char *charValuePtr;		/* A pointer to a string that holds the key's
-				 * %A substitution text (before backslash
-				 * adding), or NULL if that has not been
-				 * computed yet. If non-NULL, this string was
-				 * allocated with ckalloc(). */
-    int charValueLen;		/* Length of string in charValuePtr when that
-				 * is non-NULL. */
+#if !defined(_WIN32)
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
 #endif

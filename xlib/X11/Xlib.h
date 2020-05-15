@@ -530,7 +530,9 @@ typedef struct _XDisplay {
 #endif
 #ifndef _XEVENT_
 
-#define XMaxTransChars 7
+#ifdef MAC_OSX_TK
+#   define XMaxTransChars 27
+#endif
 
 /*
  * Definitions of specific events.
