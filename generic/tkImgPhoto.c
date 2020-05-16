@@ -2772,7 +2772,7 @@ Tk_PhotoPutBlock(
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
 	/*
-	 * Fix 0123456789: avoid reading
+	 * Fix 5c51be6411: avoid reading
 	 *
 	 *	(sourceBlock.pitch - sourceBlock.width * sourceBlock.pixelSize)
 	 *
@@ -3218,7 +3218,7 @@ Tk_PhotoPutZoomedBlock(
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
 	/*
-	 * Fix 0123456789: avoid reading
+	 * Fix 5c51be6411: avoid reading
 	 *
 	 *	(sourceBlock.pitch - sourceBlock.width * sourceBlock.pixelSize)
 	 *
