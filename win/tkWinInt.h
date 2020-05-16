@@ -28,15 +28,15 @@
 
 /*
  * Platform specific extension of the XKeyEvent struct which appends a
- * character string to be used for the %A percent replacement. 
+ * character string to be used for the %A percent replacement.
  */
 
-#define XMaxTransChars 7
+#define XMaxTransChars 15
 
 typedef struct {
     XKeyEvent keyEvent;		      /* The real event from X11. */
     char trans_chars[XMaxTransChars]; /* translated characters */
-    unsigned char nbytes;             /* size of trans_chars string */
+    unsigned char nbytes;             /* length of trans_chars string */
 } TkKeyEvent;
 
 /*
