@@ -641,25 +641,15 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
-    NSPoint loc;
-    int wNum;
 
     if (dispPtr->warpWindow) {
 	int x, y;
-	TkWindow *winPtr = (TkWindow *) dispPtr->warpWindow;
-	TkWindow *topPtr = winPtr->privatePtr->toplevel->winPtr;
-	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-	wNum = [w windowNumber];
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
-	loc.x = dispPtr->warpX;
-	loc.y = Tk_Height(topPtr) - dispPtr->warpY;
     } else {
-	wNum = 0;
-	pt.x = loc.x = dispPtr->warpX;
+	pt.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
-	loc.y = TkMacOSXZeroScreenHeight() - pt.y;
     }
 
     CGWarpMouseCursorPosition(pt);
