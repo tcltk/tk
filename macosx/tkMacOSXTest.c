@@ -153,7 +153,7 @@ PressButtonObjCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    int x, y, i, value, wNum;
+    int x = 0, y = 0, i, value, wNum;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;

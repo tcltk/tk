@@ -623,7 +623,7 @@ XKeysymToKeycode(
 
     hPtr = Tcl_FindHashEntry(&keysym2keycode, INT2PTR(keysym));
     if (hPtr != NULL) {
-	return (unsigned int) Tcl_GetHashValue(hPtr);
+	return (KeyCode) Tcl_GetHashValue(hPtr);
     }
 
     /*
@@ -640,15 +640,18 @@ XKeysymToKeycode(
      * xvirtual field if the key exists on the current keyboard.
      */
 
-    hPtr = Tcl_FindHashEntry(&keysym2unichar, INT2PTR(keysym));
+    hPtr = (Tcl_HashEntry *) Tcl_FindHashEntry(&keysym2unichar,
+					       INT2PTR(keysym));
     if (hPtr != NULL) {
-	macKC.x.keychar = (unsigned int) Tcl_GetHashValue(hPtr);
+	unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	macKC.x.keychar = (unsigned int) data;
 	hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.x.keychar));
 	if (hPtr != NULL) {
-	    macKC.x.xvirtual = (unsigned int) Tcl_GetHashValue(hPtr);
+	    unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	    macKC.x.xvirtual = (unsigned int) data;
 	}
     }
-    return macKC.uint;
+    return (KeyCode) macKC.uint;
 }
 
 /*
@@ -935,9 +938,11 @@ TkMacOSXAddVirtual(
 	InitHashTables();
     }
 
-    hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.v.keychar));
+    hPtr = (Tcl_HashEntry *) Tcl_FindHashEntry(&unichar2xvirtual,
+					       INT2PTR(macKC.v.keychar));
     if (hPtr != NULL) {
-	macKC.x.xvirtual = (unsigned int) Tcl_GetHashValue(hPtr);
+	unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	macKC.x.xvirtual = (unsigned int) data;
     } else {
 	macKC.v.virtual = NO_VIRTUAL;
     }

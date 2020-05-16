@@ -19,6 +19,10 @@
 #error Objective-C compiler required
 #endif
 
+#ifndef __clang__
+#define instancetype id
+#endif
+
 #define TextStyle MacTextStyle
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
