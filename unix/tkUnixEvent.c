@@ -397,8 +397,7 @@ TransferXEventsToTcl(
 	    continue;
 	}
 	if (event.type == KeyPress || event.type == KeyRelease) {
-	    event.k.charValuePtr = NULL;
-	    event.k.charValueLen = 0;
+	    event.k.nbytes = 0;
 	    event.k.keysym = NoSymbol;
 
 	    /*
