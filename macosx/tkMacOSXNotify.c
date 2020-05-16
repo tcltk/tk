@@ -145,18 +145,18 @@ void DebugPrintQueue(void)
     /*
      * Workaround for an Apple bug.  When an accented character is selected
      * from an NSTextInputClient popup character viewer with the mouse, Apple
-     * sends an event of type NSEventTypeAppKitDefined and subtype 21. If that
-     * event is sent up the responder chain it causes Apple to print a warning
-     * to the console log and, extremely obnoxiously, also to stderr, which
-     * says "Window move completed without beginning."  Apparently they are
-     * sending the "move completed" event without having sent the "move began"
-     * event of subtype 20, and then announcing their error on our stderr.
-     * Also, of course, no movement is occurring.  The popup is not movable and
-     * is just being closed.  The bug has been reported to Apple.  If they ever
-     * fix it, this block should be removed.
+     * sends an event of type NSAppKitDefined and subtype 21. If that event is
+     * sent up the responder chain it causes Apple to print a warning to the
+     * console log and, extremely obnoxiously, also to stderr, which says
+     * "Window move completed without beginning."  Apparently they are sending
+     * the "move completed" event without having sent the "move began" event of
+     * subtype 20, and then announcing their error on our stderr.  Also, of
+     * course, no movement is occurring.  The popup is not movable and is just
+     * being closed.  The bug has been reported to Apple.  If they ever fix it,
+     * this block should be removed.
      */
 
-    if ([theEvent type] == NSEventTypeAppKitDefined) {
+    if ([theEvent type] == NSAppKitDefined) {
 	static Bool aWindowIsMoving = NO;
 	switch([theEvent subtype]) {
 	case 20:

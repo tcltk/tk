@@ -111,7 +111,8 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 - (instancetype)initWithTclUtfBytes:(const void *)bytes
 		       length:(NSUInteger)len
 {
-    if (self = [self init]) {
+    self = [self init];
+    if (self) {
 	Tcl_DStringInit(&_ds);
 	Tcl_UtfToUniCharDString(bytes, len, &_ds);
 	_string = [[NSString alloc]
@@ -139,7 +140,9 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 {
     return [_string characterAtIndex:index];
 }
-
+#ifndef __clang__
+@synthesize UTF8String = _UTF8String;
+#endif
 @end
 
 /*
