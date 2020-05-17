@@ -547,6 +547,7 @@ VISIBILITY_HIDDEN
 #endif /* _TKMACPRIV */
 
 int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+int TkMacOSXScrollerPagingBehaviorObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 
 /*
  * Local Variables:
