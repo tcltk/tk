@@ -108,7 +108,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 
 @implementation TKNSString
 
-- (instancetype)initWithCESU8Bytes:(const void *)bytes
+- (instancetype)initWithTclUtfBytes:(const void *)bytes
 		       length:(NSUInteger)len
 {
     if (self = [self init]) {
@@ -979,7 +979,7 @@ TkpMeasureCharsInContext(
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
-    string = [[TKNSString alloc] initWithCESU8Bytes:source length:numBytes];
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
 	length = 0;
 	fit = rangeLength;
@@ -1258,7 +1258,7 @@ DrawCharsInContext(
 	!TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
-    string = [[TKNSString alloc] initWithCESU8Bytes:source length:numBytes];
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
 	return;
     }
