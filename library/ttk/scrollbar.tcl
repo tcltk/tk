@@ -3,67 +3,9 @@
 #
 
 namespace eval ttk::scrollbar {
-    variable State
-    # State(xPress)	--
-    # State(yPress)	-- initial position of mouse at start of drag.
-    # State(first)	-- value of -first at start of drag.
-    variable Actions
-    # Actions(-left)        -- left mouse button action
-    # Actions(-middle)      -- middle mouse button action
-    # Actions(-right)       -- right mouse button action
-    # Actions(-alternate)   -- alternate button action
-    #                          for shift/alt left click
-    #                          This gets changed on swap.
-    # valid actions
-    #  page, jump, asarrow, none
-
-    set Actions(-left)      page
-    set Actions(-middle)    jump
-    set Actions(-right)     asarrow
-    set Actions(-alternate) jump
+  variable State
+  variable Actions
 }
-
-bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::PressSwitch %W %x %y -left }
-bind TScrollbar <B1-Motion>		{ ttk::scrollbar::Drag %W %x %y }
-bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
-
-if { [tk windowingsystem] eq "aqua" } {
-  bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
-  bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
-  bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
-  bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
-  bind TScrollbar <ButtonRelease-2> 	{ ttk::scrollbar::Release %W %x %y }
-  bind TScrollbar <Alt-ButtonPress-1>   { ttk::scrollbar::PressSwitch %W %x %y -alternate }
-} else {
-  bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
-  bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
-  bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
-  bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
-  bind TScrollbar <ButtonRelease-3> 	{ ttk::scrollbar::Release %W %x %y }
-  bind TScrollbar <Shift-ButtonPress-1> { ttk::scrollbar::PressSwitch %W %x %y -alternate }
-}
-
-
-# Redirect scrollwheel bindings to the scrollbar widget
-#
-# The shift-bindings scroll left/right (not up/down)
-# if a widget has both possibilities
-set eventList [list <MouseWheel> <Shift-MouseWheel>]
-switch [tk windowingsystem] {
-    aqua {
-        lappend eventList <Option-MouseWheel> <Shift-Option-MouseWheel>
-    }
-    x11 {
-        lappend eventList <Button-4> <Button-5> \
-                <Shift-Button-4> <Shift-Button-5>
-        # For tk 8.7, the event list should be extended by
-        # <Button-6> <Button-7>
-    }
-}
-foreach event $eventList {
-    bind TScrollbar $event [bind Scrollbar $event]
-}
-unset eventList event
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]
@@ -93,6 +35,7 @@ proc ttk::scrollbar::SetBehavior { type } {
   set Actions(-left) $type
   set Actions(-middle) $alttype
   set Actions(-alternate) $Actions(-middle)
+  set Actions(-none) none
   return ok
 }
 
@@ -100,7 +43,7 @@ proc ttk::scrollbar::PressSwitch {w x y which} {
   variable Actions
 
   if { ! [info exists Actions($which)] } {
-    set which none
+    set which -none
   }
   set action $Actions($which)
 
@@ -203,3 +146,78 @@ proc ttk::scrollbar::Jump {w x y} {
 	}
     }
 }
+
+proc ttk::scrollbar::Init { } {
+  variable State
+  # State(xPress)	--
+  # State(yPress)	-- initial position of mouse at start of drag.
+  # State(first)	-- value of -first at start of drag.
+
+  variable Actions
+  # Actions(-left)        -- left mouse button action
+  # Actions(-middle)      -- middle mouse button action
+  # Actions(-right)       -- right mouse button action
+  # Actions(-alternate)   -- alternate button action
+  #                          for shift/alt left click
+  #                          This gets changed on swap.
+  # valid actions
+  #  page, jump, asarrow, none
+
+  set Actions(-left)      page
+  set Actions(-middle)    jump
+  set Actions(-right)     asarrow
+  set Actions(-alternate) jump
+
+  bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::PressSwitch %W %x %y -left }
+  bind TScrollbar <B1-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+  bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
+
+  if { [tk windowingsystem] eq "aqua" } {
+    bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
+    bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+    bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
+    bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
+    bind TScrollbar <ButtonRelease-2> 	{ ttk::scrollbar::Release %W %x %y }
+    bind TScrollbar <Alt-ButtonPress-1>   { ttk::scrollbar::PressSwitch %W %x %y -alternate }
+
+    if { [info commands ::tk::mac::scrollerPagingBehavior] ne {} } {
+      if { [::tk::mac::scrollerPagingBehavior] } {
+        ::ttk::scrollbar::SetBehavior jump
+      }
+    }
+  } else {
+    bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::PressSwitch %W %x %y -middle }
+    bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+    bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
+    bind TScrollbar <ButtonPress-3> 	{ ttk::scrollbar::PressSwitch %W %x %y -right }
+    bind TScrollbar <ButtonRelease-3> 	{ ttk::scrollbar::Release %W %x %y }
+    bind TScrollbar <Shift-ButtonPress-1> { ttk::scrollbar::PressSwitch %W %x %y -alternate }
+
+    if { [tk windowingsystem] eq "x11" &&
+        [package vcompare [info patch] 8.7] >= 0 } {
+      ::ttk::scrollbar::SetBehavior jump
+    }
+  }
+
+  # Redirect scrollwheel bindings to the scrollbar widget
+  #
+  # The shift-bindings scroll left/right (not up/down)
+  # if a widget has both possibilities
+  set eventList [list <MouseWheel> <Shift-MouseWheel>]
+  switch [tk windowingsystem] {
+      aqua {
+          lappend eventList <Option-MouseWheel> <Shift-Option-MouseWheel>
+      }
+      x11 {
+          lappend eventList <Button-4> <Button-5> \
+                  <Shift-Button-4> <Shift-Button-5>
+          # For tk 8.7, the event list should be extended by
+          # <Button-6> <Button-7>
+      }
+  }
+  foreach event $eventList {
+      bind TScrollbar $event [bind Scrollbar $event]
+  }
+}
+
+::ttk::scrollbar::Init

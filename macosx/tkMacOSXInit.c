@@ -418,6 +418,43 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::scrollerPagingBehavior",
+	    TkMacOSXScrollerPagingBehaviorObjCmd, NULL, NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXScrollerPagingBehaviorObjCmd --
+ *
+ *	Retrieve whether left-clicking a scrollbar (without holding the
+ *	Option key) should jump by page (0) or jump to the spot clicked (1),
+ *	based on what is set in	System Preferences > General.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXScrollerPagingBehaviorObjCmd(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    if (objc > 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+	    [[NSUserDefaults standardUserDefaults]
+	     boolForKey:@"AppleScrollerPagingBehavior"]));
     return TCL_OK;
 }
 
