@@ -211,14 +211,6 @@ MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 
 #include "tkIntPlatDecls.h"
 
-/*
- * The size of a buffer needed to hold a single UCS-32 character
- * when encoded using Tcl's internal CESU-8 encoding.
- */
-
-#define XMaxTransChars 7
-
-
 #endif /* _TKMACINT */
 
 /*

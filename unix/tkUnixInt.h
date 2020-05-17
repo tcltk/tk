@@ -24,21 +24,6 @@
 
 #include "tkIntPlatDecls.h"
 
-/*
- * Platform specific extension of the XKeyEvent struct which appends a
- * character string to be used for the %A percent replacement.
- */
-
-#define XMaxTransChars 27
-
-typedef struct {
-    XKeyEvent keyEvent;			/* The real event from X11. */
-    char trans_chars[XMaxTransChars];   /* translated characters */
-    unsigned char nbytes;		/* length of trans_chars string */
-    KeySym keysym;			/* Key symbol computed after input
-					 * methods have been invoked */
-} TkKeyEvent;
-
 #endif /* _TKUNIXINT */
 
 /*

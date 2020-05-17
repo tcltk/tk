@@ -3139,7 +3139,7 @@ ExpandPercents(
 	    break;
 	case 'D':
 	    if (flags & WHEEL) {
-		SET_NUMBER(((TkWheelEvent *)evPtr)->delta);
+		SET_NUMBER((int)evPtr->xbutton.button); /* mis-use button field for this */
 	    }
 	    break;
 	case 'E':
@@ -3796,7 +3796,7 @@ HandleEventGenerate(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    union { XEvent general; XVirtualEvent virtual; TkWheelEvent wheel;} event;
+    union { XEvent general; XVirtualEvent virtual; } event;
 
     const char *p;
     const char *name;
@@ -4022,7 +4022,7 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & WHEEL) {
-		event.wheel.delta = number;
+		event.general.xbutton.button = (unsigned)number; /* mis-use button field for this */
 	    } else {
 		badOpt = 1;
 	    }
