@@ -247,16 +247,7 @@ static NSUInteger textInputModifiers;
     }
     macKC.v.keychar = keychar;
     xEvent.xkey.keycode = macKC.uint;
-
-    /*
-     * Set the trans_chars for keychars outside of the private-use range.
-     */
-
     setXEventPoint(&xEvent, tkwin, w);
-    if (IS_PRINTABLE(keychar)) {
-	int length = TkUniCharToUtf(keychar, xEvent.xkey.trans_chars);
-	xEvent.xkey.trans_chars[length] = 0;
-    }
 
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
@@ -351,26 +342,18 @@ static NSUInteger textInputModifiers;
      * represented by a sequence of two 16-bit "surrogates".  We record this in
      * the XEvent by setting the low order 21-bits of the keycode to the UCS-32
      * value value of the character and the virtual keycode in the high order
-     * byte to the special value NON_BMP. In principle we could set the
-     * trans_chars string to the UTF-8 string for the non-BMP character.
-     * However, that will not work when TCL_UTF_MAX is set to 3, as is the case
-     * for Tcl 8.6.  A workaround used internally by Tcl 8.6 is to encode each
-     * surrogate as a 3-byte sequence using the UTF-8 algorithm (ignoring the
-     * fact that the UTF-8 encoding specification does not allow encoding
-     * UTF-16 surrogates).  This gives a 6-byte encoding of the non-BMP
-     * character which we write into the trans_chars field of the XEvent.
+     * byte to the special value NON_BMP.
      */
 
     state = xEvent.xkey.state;
     for (i = 0; i < len; i++) {
-	unsigned int code;
 	UniChar keychar;
 	MacKeycode macKC = {0};
 
 	keychar = [str characterAtIndex:i];
 	macKC.v.keychar = keychar;
 	if (CFStringIsSurrogateHighCharacter(keychar)) {
-	    UniChar lowChar = [str characterAtIndex:i+1];
+	    UniChar lowChar = [str characterAtIndex:++i];
 	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
 				  (UniChar)keychar, lowChar);
 	    macKC.v.virtual = NON_BMP_VIRTUAL;
@@ -388,10 +371,6 @@ static NSUInteger textInputModifiers;
 	}
 	if (xEvent.xkey.state & Mod2Mask) {
 	    macKC.v.o_s |= INDEX_OPTION;
-	}
-	TkUtfAtIndex(str, i, xEvent.xkey.trans_chars, &code);
-	if (code > 0xFFFF){
-	    i++;
 	}
 	xEvent.xkey.keycode = macKC.uint;
     	xEvent.xany.type = KeyPress;

@@ -898,7 +898,7 @@ typedef struct {
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;
-#else
+#elif !defined(MAC_OSC_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been

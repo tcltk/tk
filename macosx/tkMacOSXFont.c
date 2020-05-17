@@ -185,7 +185,7 @@ TkUtfAtIndex(
 	*code = (int) uniChar;
 	[[string substringWithRange: NSMakeRange(index, 1)]
      	        getCString: uni
-		 maxLength: XMaxTransChars
+		 maxLength: 7
 		  encoding: NSUTF8StringEncoding];
 	return strlen(uni);
     }
