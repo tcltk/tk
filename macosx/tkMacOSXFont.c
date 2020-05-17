@@ -103,7 +103,9 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 
 /*
  * To avoid an extra copy, a TKNSString object wraps a Tcl_DString with an
- * NSString that uses the DString's buffer as its character buffer.
+ * NSString that uses the DString's buffer as its character buffer.  It can be
+ * constructed from a Tcl_DString and it has a DString property that handles
+ * converting from an NSString to a Tcl_DString
  */
 
 @implementation TKNSString
@@ -124,6 +126,17 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
     return self;
 }
 
+- (instancetype)initWithString:(NSString *)aString
+{
+    self = [self init];
+    if (self) {
+	_string = [[NSString alloc] initWithString:aString];
+	self.UTF8String = _string.UTF8String;
+    }
+    printf("Initialized with string %s\n", self.UTF8String);
+    return self;
+}
+
 - (void)dealloc
 {
     Tcl_DStringFree(&_ds);
@@ -140,104 +153,53 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 {
     return [_string characterAtIndex:index];
 }
+
+# ifndef __clang__
+@synthesize DString = _ds;
+#endif
+
+- (Tcl_DString)DString
+{
+    if ( _ds.string == NULL) {
+
+	/*
+	 * The DString has not been initialized. Construct it from
+	 * our string's unicode characters.
+	 */
+
+	char buffer[2*TCL_UTF_MAX];
+	unsigned int index, length, ch;
+
+	Tcl_DStringInit(&_ds);
+#if TCL_UTF_MAX == 3
+	for (index = 0; index < [_string length]; index++) {
+	    UniChar uni = [_string characterAtIndex: index];
+
+	    if (CFStringIsSurrogateHighCharacter(uni)) {
+		UniChar low = [_string characterAtIndex: ++index];
+		ch = CFStringGetLongCharacterForSurrogatePair(uni, low);
+	    } else {
+		ch = uni;
+	    }
+	    length = TkUniCharToUtf(ch, buffer);
+	    Tcl_DStringAppend(&_ds, buffer, length);
+	}
+#else
+	for (index = 0; index < [_string length]; index++) {
+	    ch = (int) [_string characterAtIndex: index];
+	    length = Tcl_UniCharToUtf(ch, buffer);
+	    Tcl_DStringAppend(&_ds, buffer, length);
+	}
+
+#endif
+    }
+    return _ds;
+}
+
 #ifndef __clang__
 @synthesize UTF8String = _UTF8String;
 #endif
 @end
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkUtfAtIndex --
- *
- *  Write a sequence of bytes up to length 6 which is an encoding of a UTF-16
- *  character in an NSString.  Also record the unicode code point of the character.
- *  this may be a non-BMP character constructed by reading two surrogates from
- *  the NSString.  See the documentation for TKNSString in tkMacOSXPrivate.h.
- *
- * Results:
- *	Returns the number of bytes written.
- *
- * Side effects:
- *	Bytes are written to the char array referenced by the pointer uni and
- *      the unicode code point is written to the integer referenced by the
- *      pointer code.
- *
- */
-
-MODULE_SCOPE int
-TkUtfAtIndex(
-    NSString *string,
-    int index,
-    char *uni,
-    unsigned int *code)
-{
-    char *ptr = uni;
-    UniChar uniChar = [string characterAtIndex: index];
-    if (CFStringIsSurrogateHighCharacter(uniChar)) {
-	UniChar lowChar = [string characterAtIndex: ++index];
-	*code = CFStringGetLongCharacterForSurrogatePair(
-	    uniChar, lowChar);
-	ptr += Tcl_UniCharToUtf(uniChar, ptr);
-	ptr += Tcl_UniCharToUtf(lowChar, ptr);
-	return ptr - uni;
-    } else {
-	*code = (int) uniChar;
-	[[string substringWithRange: NSMakeRange(index, 1)]
-     	        getCString: uni
-		 maxLength: 7
-		  encoding: NSUTF8StringEncoding];
-	return strlen(uni);
-    }
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkNSStringToUtf --
- *
- * Encodes the unicode string represented by an NSString object with the
- * internal encoding that Tcl uses when TCL_UTF_MAX = 3.  This encoding
- * is similar to UTF-8 except that non-BMP characters are encoded as two
- * successive 3-byte sequences which are constructed from UTF-16 surrogates
- * by applying the UTF-8 algorithm.  Even though the UTF-8 encoding does not
- * allow encoding surrogates, the algorithm does produce a well-defined
- * 3-byte sequence.
- *
- * Results:
- *	Returns a pointer to a null-terminated byte array which encodes the
- *	NSString.
- *
- * Side effects:
- *      Memory is allocated to hold the byte array, which must be freed with
- *      ckalloc.  If the pointer numBytes is not NULL the number of non-null
- *      bytes written to the array is stored in the integer it references.
- */
-
-MODULE_SCOPE char*
-TkNSStringToUtf(
-   NSString *string,
-   int *numBytes)
-{
-    unsigned int code;
-    size_t i;
-    char *ptr, *bytes = (char *)ckalloc(6*[string length] + 1);
-
-    ptr = bytes;
-    if (ptr) {
-	for (i = 0; i < [string length]; i++) {
-	    ptr += TkUtfAtIndex(string, i, ptr, &code);
-	    if (code > 0xffff){
-		i++;
-	    }
-	}
-	*ptr = '\0';
-    }
-    if (numBytes) {
-	*numBytes = ptr - bytes;
-    }
-    return bytes;
-}
 
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
 	((faPtr)->weight == TK_FW_BOLD ? NSBoldFontMask : NSUnboldFontMask) | \
