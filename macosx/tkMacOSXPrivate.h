@@ -210,6 +210,7 @@ typedef struct TkMacOSXDrawingContext {
  */
 
 MODULE_SCOPE long tkMacOSXMacOSXVersion;
+MODULE_SCOPE bool tkMacOSXIsHandlingIdleEventsBeforeDrawing;
 
 /*
  * Prototypes for TkMacOSXRegion.c.
@@ -274,7 +275,8 @@ MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
 MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
 			    int active);
 MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin);
+MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin,
+			    MacDrawable **viewMacWinPtr);
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
