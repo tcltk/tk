@@ -15,16 +15,6 @@
 
 #include "tkInt.h"
 
-/* 
- * Include platform-specific TkKeyEvent
- */
-
-#if defined(_WIN32)
-#include "tkWinInt.h"
-#elif !defined(MAC_OSX_TK)
-#include "tkUnixInt.h"
-#endif
-
 /*
  * There's a potential problem if a handler is deleted while it's current
  * (i.e. its function is executing), since Tk_HandleEvent will need to read
@@ -1759,6 +1749,20 @@ CleanUpTkEvent(
     XEvent *eventPtr)
 {
     switch (eventPtr->type) {
+    case KeyPress:
+    case KeyRelease: {
+
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
+	if (kePtr->charValuePtr != NULL) {
+	    ckfree(kePtr->charValuePtr);
+	    kePtr->charValuePtr = NULL;
+	    kePtr->charValueLen = 0;
+	}
+#endif
+	break;
+    }
+
     case VirtualEvent: {
 	XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
 

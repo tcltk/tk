@@ -994,7 +994,7 @@ GenerateXEvent(
     WPARAM wParam,
     LPARAM lParam)
 {
-    union {XEvent x; TkKeyEvent key; TkWheelEvent wheel;} event;
+    union {XEvent x; TkKeyEvent key;} event;
     TkWindow *winPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1182,7 +1182,7 @@ GenerateXEvent(
 	    event.x.type = MouseWheelEvent;
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
-	    event.wheel.delta = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    event.x.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
 	    tsdPtr->vWheelAcc = tsdPtr->vWheelAcc % WHEEL_DELTA;
 	    break;
 	}
@@ -1215,7 +1215,7 @@ GenerateXEvent(
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
 	    event.x.xkey.state |= ShiftMask;
-	    event.wheel.delta = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    event.x.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
 	    tsdPtr->hWheelAcc = tsdPtr->hWheelAcc % WHEEL_DELTA;
 	    break;
 	}

@@ -103,8 +103,8 @@ enum {
 	 * ticket [d72abe6b54].
 	 */
 
-	if (eventType == NSEventTypeLeftMouseDown &&
-	    ([eventWindow styleMask] & NSWindowStyleMaskResizable) &&
+	if (eventType == NSLeftMouseDown &&
+	    ([eventWindow styleMask] & NSResizableWindowMask) &&
 	    [NSApp macMinorVersion] > 6) {
 	    NSRect frame = [eventWindow frame];
 	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
@@ -275,34 +275,34 @@ enum {
 
 	CGFloat delta;
 	int coarseDelta;
-	TkWheelEvent wheelEvent;
+	XEvent xEvent;
 
-	wheelEvent.type = MouseWheelEvent;
-	wheelEvent.x = local.x;
-	wheelEvent.y = local.y;
-	wheelEvent.x_root = global.x;
-	wheelEvent.y_root = global.y;
-	wheelEvent.send_event = false;
-	wheelEvent.display = Tk_Display(tkwin);
-	wheelEvent.window = Tk_WindowId(tkwin);
+	xEvent.type = MouseWheelEvent;
+	xEvent.xbutton.x = local.x;
+	xEvent.xbutton.y = local.y;
+	xEvent.xbutton.x_root = global.x;
+	xEvent.xbutton.y_root = global.y;
+	xEvent.xany.send_event = false;
+	xEvent.xany.display = Tk_Display(tkwin);
+	xEvent.xany.window = Tk_WindowId(tkwin);
 
 	delta = [theEvent deltaY];
 	if (delta != 0.0) {
 	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
 		    (signbit(delta) ? -1 : 1) : lround(delta);
-	    wheelEvent.state = state;
-	    wheelEvent.delta = coarseDelta;
-	    wheelEvent.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent((XEvent *) &wheelEvent, TCL_QUEUE_TAIL);
+	    xEvent.xbutton.state = state;
+	    xEvent.xkey.keycode = coarseDelta;
+	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
 	delta = [theEvent deltaX];
 	if (delta != 0.0) {
 	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
 		    (signbit(delta) ? -1 : 1) : lround(delta);
-	    wheelEvent.state = state | ShiftMask;
-	    wheelEvent.delta = coarseDelta;
-	    wheelEvent.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent((XEvent *) &wheelEvent, TCL_QUEUE_TAIL);
+	    xEvent.xbutton.state = state | ShiftMask;
+	    xEvent.xkey.keycode = coarseDelta;
+	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
     }
     return theEvent;

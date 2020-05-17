@@ -11,7 +11,6 @@
  */
 
 #include "tkInt.h"
-#include "tkUnixInt.h"
 
 /*
 ** Bug [3607830]: Before using Xkb, it must be initialized.  TkpOpenDisplay
@@ -120,10 +119,10 @@ TkpGetString(
      * If we have the value cached already, use it now. [Bug 1373712]
      */
 
-    if (kePtr->nbytes > 0) {
-	Tcl_DStringSetLength(dsPtr, kePtr->nbytes);
-	memcpy(Tcl_DStringValue(dsPtr), kePtr->trans_chars,
-		(unsigned) kePtr->nbytes+1);
+    if (kePtr->charValuePtr != NULL) {
+	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
+	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
+		(unsigned) kePtr->charValueLen+1);
 	return Tcl_DStringValue(dsPtr);
     }
 
@@ -229,8 +228,9 @@ TkpGetString(
      */
 
 done:
-    kePtr->nbytes = len;
-    memcpy(kePtr->trans_chars, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
+    kePtr->charValuePtr = ckalloc(len + 1);
+    kePtr->charValueLen = len;
+    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
     return Tcl_DStringValue(dsPtr);
 }
 
@@ -336,7 +336,7 @@ TkpGetKeySym(
 
     if (eventPtr->type == KeyPress && dispPtr
 	    && (dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (kePtr->nbytes == 0) {
+	if (kePtr->charValuePtr == NULL) {
 	    Tcl_DString ds;
 	    TkWindow *winPtr = (TkWindow *)
 		Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
@@ -345,7 +345,7 @@ TkpGetKeySym(
 	    (void) TkpGetString(winPtr, eventPtr, &ds);
 	    Tcl_DStringFree(&ds);
 	}
-	if (kePtr->nbytes > 0) {
+	if (kePtr->charValuePtr != NULL) {
 	    return kePtr->keysym;
 	}
     }
