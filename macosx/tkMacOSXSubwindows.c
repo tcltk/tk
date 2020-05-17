@@ -101,6 +101,18 @@ XDestroyWindow(
 	CFRelease(macWin->drawRgn);
         macWin->drawRgn = NULL;
     }
+    // Cancel any postponed calls to setNeedsDisplayInRect for the view
+    if (macWin->postponedSNDIRCalls != nil) {
+	TkMacOSXPostponedSNDIR *holder;
+	NSHashEnumerator holderEnumerator = NSEnumerateHashTable(
+		macWin->postponedSNDIRCalls);
+	while ((holder = NSNextHashEnumeratorItem(&holderEnumerator))) {
+	    Tcl_DeleteTimerHandler(holder->token);
+	    ckfree(holder);
+	}
+	[macWin->postponedSNDIRCalls release];
+	macWin->postponedSNDIRCalls = nil;
+    }
     macWin->view = nil;
 
     /*
@@ -322,7 +334,7 @@ XUnmapWindow(
 
 	if (parentPtr && parentPtr->privatePtr->visRgn) {
 	    TkMacOSXInvalidateViewRegion(
-		    TkMacOSXDrawableView(parentPtr->privatePtr),
+		    TkMacOSXDrawableView(parentPtr->privatePtr, NULL),
 		    parentPtr->privatePtr->visRgn);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) parentPtr);
@@ -697,7 +709,7 @@ XConfigureWindow(
      */
 
     if (value_mask & CWStackMode) {
-	NSView *view = TkMacOSXDrawableView(macWin);
+	NSView *view = TkMacOSXDrawableView(macWin, NULL);
 	Rect bounds;
 	NSRect r;
 
@@ -1050,7 +1062,7 @@ TkMacOSXInvalidateWindow(
     if (macWin->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macWin->winPtr);
     }
-    TkMacOSXInvalidateViewRegion(TkMacOSXDrawableView(macWin),
+    TkMacOSXInvalidateViewRegion(TkMacOSXDrawableView(macWin, NULL),
 	    (flag == TK_WINDOW_ONLY) ? macWin->visRgn : macWin->aboveVisRgn);
 }
 
@@ -1134,7 +1146,9 @@ TkMacOSXGetDrawablePort(
  *	This function returns the NSView for a given X drawable.
  *
  * Results:
- *	A NSView* or nil.
+ *	A NSView* or nil. If viewMacWinPtr != NULL, then the (MacDrawable *)
+ *	that viewMacWinPtr points to is set either to the MacDrawable
+ *	containing the returned view, or to NULL.
  *
  * Side effects:
  *	None.
@@ -1144,22 +1158,31 @@ TkMacOSXGetDrawablePort(
 
 NSView *
 TkMacOSXDrawableView(
-    MacDrawable *macWin)
+    MacDrawable *macWin,
+    MacDrawable **viewMacWinPtr)
 {
     NSView *result = nil;
+    MacDrawable *viewMacWin = NULL;
 
     if (!macWin) {
 	result = nil;
+	viewMacWin = NULL;
     } else if (!macWin->toplevel) {
 	result = macWin->view;
+	viewMacWin = macWin;
     } else if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
 	result = macWin->toplevel->view;
+	viewMacWin = macWin->toplevel;
     } else {
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXDrawableView(contWinPtr->privatePtr);
+	    result = TkMacOSXDrawableView(contWinPtr->privatePtr, &viewMacWin);
 	}
+    }
+
+    if (viewMacWinPtr != NULL) {
+	*viewMacWinPtr = viewMacWin;
     }
     return result;
 }
@@ -1188,7 +1211,7 @@ TkMacOSXGetRootControl(
      * will probably need to fix this up for embedding
      */
 
-    return TkMacOSXDrawableView((MacDrawable *) drawable);
+    return TkMacOSXDrawableView((MacDrawable *) drawable, NULL);
 }
 
 /*
@@ -1438,6 +1461,7 @@ Tk_GetPixmap(
     macPix->toplevel = NULL;
     macPix->flags = TK_IS_PIXMAP | (depth == 1 ? TK_IS_BW_PIXMAP : 0);
     macPix->view = nil;
+    macPix->postponedSNDIRCalls = nil;
     macPix->context = NULL;
     macPix->size = CGSizeMake(width, height);
 

@@ -6152,6 +6152,10 @@ TkMacOSXMakeRealWindowExist(
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = window.contentView;
+    macWin->postponedSNDIRCalls = [[NSHashTable alloc]
+	    initWithOptions:(NSPointerFunctionsOpaqueMemory |
+			     NSPointerFunctionsOpaquePersonality)
+		   capacity:0];
     TkMacOSXApplyWindowAttributes(winPtr, window);
     NSRect geometry = InitialWindowBounds(winPtr, window);
     geometry.size.width += structureRect.size.width;

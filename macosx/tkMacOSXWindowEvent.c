@@ -36,6 +36,9 @@ static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
 static void		DoWindowActivate(ClientData clientData);
 
+// See comment in drawRect for explanation
+bool tkMacOSXIsHandlingIdleEventsBeforeDrawing = false;
+
 #pragma mark TKApplication(TKWindowEvent)
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -956,6 +959,21 @@ RedisplayView(
 	}
 	return;
     }
+
+    /*
+     * See tickets 2a61eca3a8 and 06d8246baf: widgets can fail to redraw if
+     * generateExposeEvents is allowed to handle idle events which aren't the
+     * result of handling the Expose events it generates, i.e. idle events which
+     * were already queued before entering drawRect. Since there doesn't appear
+     * to be a way to postpone handling of already-queued idle events until
+     * outside of drawRect, they must be handled now and as if not currently
+     * drawing. (It would be nice if there were such a way to postpone handling
+     * of these events, as Apple advises doing as little work as possible while
+     * in drawRect.)
+     */
+    tkMacOSXIsHandlingIdleEventsBeforeDrawing = true;
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+    tkMacOSXIsHandlingIdleEventsBeforeDrawing = false;
 
     [NSApp setIsDrawing: YES];
 

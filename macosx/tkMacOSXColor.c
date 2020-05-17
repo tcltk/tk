@@ -446,7 +446,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
         TkWindow *winPtr = (TkWindow*) tkwin;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXDrawableView(winPtr->privatePtr);
+	    view = TkMacOSXDrawableView(winPtr->privatePtr, NULL);
 	}
 	if (view) {
 	    result = [view.effectiveAppearance.name isEqualToString:darkAqua];

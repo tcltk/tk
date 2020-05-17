@@ -174,7 +174,7 @@ TkMacOSXBitmapRepFromDrawableRect(
 	if (cg_image) {
 	    CGImageRelease(cg_image);
 	}
-    } else if ((view = TkMacOSXDrawableView(mac_drawable)) != NULL) {
+    } else if ((view = TkMacOSXDrawableView(mac_drawable, NULL)) != NULL) {
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
 	 */
@@ -1467,7 +1467,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
-    TKContentView *view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+    TKContentView *view = (TKContentView *) TkMacOSXDrawableView(macDraw, NULL);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1622,7 +1622,8 @@ TkMacOSXSetupDrawingContext(
     if (dc.context) {
 	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
     } else if (win) {
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	MacDrawable *viewMacWin = NULL;
+	NSView *view = TkMacOSXDrawableView(macDraw, &viewMacWin);
 
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
@@ -1634,34 +1635,78 @@ TkMacOSXSetupDrawingContext(
 	 * and belongs to the view.  Validity can only be guaranteed inside of
 	 * a view's drawRect or setFrame methods.  The isDrawing attribute
 	 * tells us whether we are being called from one of those methods.
+	 * The region to be drawn into must intersect with the area for the
+	 * current drawRect call.  The drawing being done must also be the
+	 * result of handling an Expose event generated in generateExposeEvents,
+	 * and not due to an event already queued when entering drawRect.
 	 *
-	 * If the CGContext is not valid then we mark our view as needing
+	 * If these conditions are not met, then we mark our view as needing
 	 * display in the bounding rectangle of the clipping region and
 	 * return failure.  That rectangle should get drawn in a later call
 	 * to drawRect.
-	 *
-	 * As an exception to the above, if mouse buttons are pressed at the
-	 * moment when we fail to obtain a valid context we schedule the entire
-	 * view for a redraw rather than just the clipping region.  The purpose
-	 * of this is to make sure that scrollbars get updated correctly.
 	 */
 
-	if (![NSApp isDrawing] || view != [NSView focusView]) {
-	    NSRect bounds = [view bounds];
-	    NSRect dirtyNS = bounds;
-	    if ([NSEvent pressedMouseButtons]) {
-		[view setNeedsDisplay:YES];
+	NSRect bounds = [view bounds];
+	NSRect dirtyNS = bounds;
+	if (dc.clipRgn) {
+	    CGRect dirtyCG;
+	    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
+	    CGAffineTransform t = {
+		.a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+		.ty = dirtyNS.size.height
+	    };
+	    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
+	}
+
+	/*
+	 * If setNeedsDisplayInRect needs to be called, it should only be called
+	 * while outside of drawRect; see ticket 06d8246baf.
+	 */
+	bool doSetNeedsDisplayInRectNow = false;
+
+	if ([NSApp isDrawing]) {
+	    if (view != [NSView focusView]) {
+		canDraw = false;
+		doSetNeedsDisplayInRectNow = false;
+	    } else if (![view needsToDrawRect:dirtyNS]) {
+		canDraw = false;
+		doSetNeedsDisplayInRectNow = false;
 	    } else {
-		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-					.ty = dirtyNS.size.height};
-		if (dc.clipRgn) {
-		    CGRect dirtyCG = NSRectToCGRect(dirtyNS);
-		    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
-		    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
-		}
-		[view setNeedsDisplayInRect:dirtyNS];
+		/*
+		 * All of the known necessary conditions for drawing are met.
+		 * Note that drawing can still be discarded, such as when
+		 * drawRect coalesces drawing for nonadjacent rectangles into
+		 * a single larger rectangle; only the original nonadjacent
+		 * rectangles are drawable, but Expose events will be generated
+		 * for any widgets in the larger coalesced rectangle, including
+		 * those not in the drawable portion of it.  Other measures are
+		 * taken to ensure this does not cause widgets to fail to
+		 * redraw; see tickets 2a61eca3a8 and 06d8246baf.
+		 */
+		canDraw = true;
 	    }
+	} else {
 	    canDraw = false;
+	    if (tkMacOSXIsHandlingIdleEventsBeforeDrawing) {
+		doSetNeedsDisplayInRectNow = false;
+	    } else {
+		doSetNeedsDisplayInRectNow = true;
+	    }
+	}
+	if (!canDraw) {
+	    if (doSetNeedsDisplayInRectNow) {
+		[view setNeedsDisplayInRect:dirtyNS];
+	    } else {
+		// Call setNeedsDisplayInRect: later when not in drawRect.
+		TkMacOSXPostponedSNDIR *holder =
+			ckalloc(sizeof(TkMacOSXPostponedSNDIR));
+		holder->macWin = viewMacWin;
+		holder->dirtyRect = dirtyNS;
+		holder->token = Tcl_CreateTimerHandler(
+			0, TkMacOSXDoPostponedSNDIR, holder);
+		NSHashInsertKnownAbsent(
+			viewMacWin->postponedSNDIRCalls, holder);
+	    }
 	    goto end;
 	}
 
@@ -1826,6 +1871,47 @@ TkMacOSXRestoreDrawingContext(
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXDoPostponedSNDIR --
+ *
+ *	Check whether currently in drawRect, and if not, do the call to
+ *	[view setNeedsDisplayInRect:dirtyRect], which was postponed either by
+ *	TkMacOSXSetupDrawingContext or by an earlier TkMacOSXDoPostponedSNDIR
+ *	attempt due to already being in drawRect; otherwise postpone it again.
+ *	This is needed because calling setNeedsDisplayInRect while in drawRect
+ *	does not cause drawRect to be called again right away, delaying the
+ *	redrawing of widgets; see ticket 06d8246baf.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Either setNeedsDisplayInRect is called and the holder for the call's
+ *	arguments is both removed from the list of postponed calls for the
+ *	view and freed, or a new timer handler is created to postpone the call
+ *	again.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXDoPostponedSNDIR(
+    ClientData clientData)
+{
+    TkMacOSXPostponedSNDIR *holder = clientData;
+    if (!(tkMacOSXIsHandlingIdleEventsBeforeDrawing || [NSApp isDrawing])) {
+	[holder->macWin->view setNeedsDisplayInRect:holder->dirtyRect];
+	NSHashRemove(holder->macWin->postponedSNDIRCalls, holder);
+	ckfree(holder);
+    } else {
+	// Postpone again
+	holder->token = Tcl_CreateTimerHandler(
+		0, TkMacOSXDoPostponedSNDIR, holder);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacOSXGetClipRgn --
  *
  *	Get the clipping region needed to restrict drawing to the given
@@ -1852,7 +1938,7 @@ TkMacOSXGetClipRgn(
 #ifdef TK_MAC_DEBUG_DRAWING
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	NSView *view = TkMacOSXDrawableView(macDraw, NULL);
 	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);

@@ -60,6 +60,9 @@
 struct TkWindowPrivate {
     TkWindow *winPtr;		/* Ptr to tk window or NULL if Pixmap */
     NSView *view;
+    NSHashTable *postponedSNDIRCalls;
+				/* Data for any postponed calls to
+				 * setNeedsDisplayInRect for the view */
     CGContextRef context;
     int xOff;			/* X offset from toplevel window */
     int yOff;			/* Y offset from toplevel window */
@@ -186,6 +189,13 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
 #define TK_DRAW_IN_CONTEXT		1
 
+// Structure to hold arguments for postponed setNeedsDisplayInRect: calls
+typedef struct {
+    MacDrawable *macWin;
+    Tcl_TimerToken token;
+    NSRect dirtyRect;
+} TkMacOSXPostponedSNDIR;
+
 /*
  * Prototypes of internal procs not in the stubs table.
  */
@@ -204,6 +214,7 @@ MODULE_SCOPE Bool TkpAppIsDrawing(void);
 MODULE_SCOPE void TkpDisplayWindow(Tk_Window tkwin);
 MODULE_SCOPE Bool TkTestLogDisplay(void);
 MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
+MODULE_SCOPE void TkMacOSXDoPostponedSNDIR(ClientData clientData);
 
 /*
  * Include the stubbed internal platform-specific API.
