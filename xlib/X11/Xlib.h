@@ -608,11 +608,6 @@ typedef struct {
 	unsigned int state;	/* key or button mask */
 	unsigned int keycode;	/* detail */
 	Bool same_screen;	/* same screen flag */
-#ifdef MAC_OSX_TK /* Only used on MacOSX. To be removed. */
-	char trans_chars[XMaxTransChars];
-				/* translated characters */
-	unsigned char nbytes;
-#endif
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;
