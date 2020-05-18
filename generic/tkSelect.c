@@ -1400,11 +1400,12 @@ HandleTclCommand(
 		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
 		cmdInfoPtr->buffer[0] = '\0';
 	    } else {
+		Tcl_UniChar ch = 0;
 		p = string;
 		string += count;
 		numChars = 0;
 		while (p < string) {
-		    p = Tcl_UtfNext(p);
+		    p += Tcl_UtfToUniChar(p, &ch);
 		    numChars++;
 		}
 		cmdInfoPtr->charOffset += numChars;
