@@ -549,9 +549,6 @@ typedef struct {
 	unsigned int state;	/* key or button mask */
 	unsigned int keycode;	/* detail */
 	Bool same_screen;	/* same screen flag */
-	char trans_chars[XMaxTransChars];
-				/* translated characters */
-	unsigned char nbytes;
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;
