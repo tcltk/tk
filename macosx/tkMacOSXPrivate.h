@@ -19,6 +19,10 @@
 #error Objective-C compiler required
 #endif
 
+#ifndef __clang__
+#define instancetype id
+#endif
+
 #define TextStyle MacTextStyle
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
@@ -283,7 +287,6 @@ MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
 MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
-MODULE_SCOPE Tcl_Obj *	TkMacOSXGetStringObjFromCFString(CFStringRef str);
 MODULE_SCOPE TkWindow*	TkMacOSXGetTkWindow(NSWindow *w);
 MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
@@ -303,10 +306,6 @@ MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE NSString*  TkUtfToNSString(const char *source, size_t numBytes);
-MODULE_SCOPE int        TkUtfAtIndex(NSString *string, int index, char *uni,
-				      unsigned int *code);
-MODULE_SCOPE char*      TkNSStringToUtf(NSString *string, int *numBytes);
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
 
 #pragma mark Private Objective-C Classes
@@ -519,17 +518,16 @@ VISIBILITY_HIDDEN
  *
  * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
  * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
- * encoding requires 4 bytes.
- *
- * As a workaround, these versions of Tcl encode non-BMP characters as a string
- * of length 6 in which the high and low UTF-16 surrogates have been encoded
- * using the UTF-8 algorithm.  The UTF-8 encoding does not allow encoding
- * surrogates, so these 6-byte strings are not valid UTF-8, and hence Apple's
- * NString class will refuse to instantiate an NSString from the 6-byte
- * encoding.
- *
- * This subclass of NSString adds a new initialization method which accepts
- * a C string encoded with the scheme described above.
+ * encoding requires 4 bytes. Instead, when using these versions of Tcl, Tk
+ * uses the CESU-8 encoding internally.  This encoding is similar to UTF-8
+ * except that it allows encoding surrogate characters as 3-byte sequences
+ * using the same algorithm which UTF-8 uses for non-surrogates.  This means
+ * that a non-BMP character is encoded as a string of length 6.  Apple's
+ * NSString class does not provide a constructor which accepts a CESU-8 encoded
+ * byte sequence as initial data.  So we add a new class which does provide
+ * such a constructor.  It also has a DString property which is a DString whose
+ * string pointer is a byte sequence encoding the NSString with the current Tk
+ * encoding, namely UTF-8 if TCL_MAX >= 4 or CESU-8 if TCL_MAX = 3.
  *
  *---------------------------------------------------------------------------
  */
@@ -540,6 +538,7 @@ VISIBILITY_HIDDEN
     NSString *_string;
 }
 @property const char *UTF8String;
+@property (readonly) Tcl_DString DString;
 - (instancetype)initWithTclUtfBytes:(const void *)bytes
 			     length:(NSUInteger)len;
 @end
