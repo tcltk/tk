@@ -1529,7 +1529,11 @@ UpdateInputLanguage(
 	return;
     }
 
-    sprintf(codepage, "cp%d", charsetInfo.ciACP);
+    if (charsetInfo.ciACP == CP_UTF8) {
+	strcpy(codepage, "utf-8");
+    } else {
+	sprintf(codepage, "cp%d", charsetInfo.ciACP);
+    }
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
 	/*

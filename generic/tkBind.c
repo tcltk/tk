@@ -567,7 +567,7 @@ static int eventArrayIndex[TK_LASTEVENT];
 
 #define HAS_XKEY_HEAD (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)
 
-/* 
+/*
  * The xcrossing struct puts the state field in a different location, but the other
  * events above agree on where state is located.
  */
@@ -3218,7 +3218,7 @@ ExpandPercents(
     }
 
 #undef SET_NUMBER
-#undef SET_UNUMBER   
+#undef SET_UNUMBER
 
     Tcl_DStringFree(&buf);
 }
