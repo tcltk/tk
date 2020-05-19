@@ -1292,6 +1292,13 @@ TkUtfPrev(
     const char *first = Tcl_UtfPrev(p, start);
     int ch;
 
+#if TCL_UTF_MAX == 3
+    if ((src - start > 3) && ((src[-1] & 0xC0) == 0x80) && ((src[-2] & 0xC0) == 0x80)
+	    && ((src[-3] & 0xC0) == 0x80) && (UCHAR(src[-4]) >= 0xF0)) {
+	return src - 4;
+    }
+#endif
+
     return (first + TkUtfToUniChar(first, &ch) >= src) ? first : p ;
 }
 
