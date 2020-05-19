@@ -1397,15 +1397,15 @@ HandleTclCommand(
 
 	if (cmdInfoPtr->interp != NULL) {
 	    if (length <= maxBytes) {
-		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
+		cmdInfoPtr->charOffset += TkNumUtfChars(string, -1);
 		cmdInfoPtr->buffer[0] = '\0';
 	    } else {
-		Tcl_UniChar ch = 0;
+		int ch;
 		p = string;
 		string += count;
 		numChars = 0;
 		while (p < string) {
-		    p += Tcl_UtfToUniChar(p, &ch);
+		    p += TkUtfToUniChar(p, &ch);
 		    numChars++;
 		}
 		cmdInfoPtr->charOffset += numChars;

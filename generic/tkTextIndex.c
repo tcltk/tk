@@ -1053,7 +1053,7 @@ TkTextPrintIndex(
 	    break;
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
-	    charIndex += Tcl_NumUtfChars(segPtr->body.chars, segPtr->size);
+	    charIndex += TkNumUtfChars(segPtr->body.chars, segPtr->size);
 	} else {
 	    charIndex += segPtr->size;
 	}
@@ -1061,7 +1061,7 @@ TkTextPrintIndex(
     }
 
     if (segPtr->typePtr == &tkTextCharType) {
-	charIndex += Tcl_NumUtfChars(segPtr->body.chars, numBytes);
+	charIndex += TkNumUtfChars(segPtr->body.chars, numBytes);
     } else {
 	charIndex += numBytes;
     }
@@ -1858,11 +1858,11 @@ TkTextIndexCount(
 		/*
 		 * This is a speed sensitive function, so run specially over
 		 * the string to count continuous ascii characters before
-		 * resorting to the Tcl_NumUtfChars call. This is a long form
+		 * resorting to the TkNumUtfChars call. This is a long form
 		 * of:
 		 *
 		 *   stringPtr->numChars =
-		 *	     Tcl_NumUtfChars(objPtr->bytes, objPtr->length);
+		 *	     TkNumUtfChars(objPtr->bytes, objPtr->length);
 		 */
 
 		while (i && (*str < 0xC0)) {
@@ -1871,7 +1871,7 @@ TkTextIndexCount(
 		}
 		count += byteLen - i;
 		if (i) {
-		    count += Tcl_NumUtfChars(segPtr->body.chars + byteOffset
+		    count += TkNumUtfChars(segPtr->body.chars + byteOffset
 			    + (byteLen - i), i);
 		}
 	    } else {
