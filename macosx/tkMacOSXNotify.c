@@ -338,6 +338,7 @@ TkMacOSXEventsSetupProc(
 	 * Call this with dequeue=NO -- just checking if the queue is empty.
 	 */
 
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 	NSEvent *currentEvent =
 	        [NSApp nextEventMatchingMask:NSAnyEventMask
 			untilDate:[NSDate distantPast]
@@ -407,6 +408,7 @@ TkMacOSXEventsCheckProc(
 
 	[NSApp _lockAutoreleasePool];
 	do {
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 	    modalSession = TkMacOSXGetModalSession();
 	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 		    untilDate:[NSDate distantPast]
@@ -420,6 +422,7 @@ TkMacOSXEventsCheckProc(
 	    if (testEvent && [[testEvent window] inLiveResize]) {
 		break;
 	    }
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 		    untilDate:[NSDate distantPast]
 		    inMode:GetRunLoopMode(modalSession)
