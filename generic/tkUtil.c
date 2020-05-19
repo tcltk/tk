@@ -1308,8 +1308,7 @@ TkUtfPrev(
  * TkUtfAtIndex --
  *
  *	Returns a pointer to the specified character (not byte) position in
- *	a CESU-8 string.  That is, a pair of CESU-8 encoded surrogates counts
- *      as a single character.
+ *	a CESU-8 string.  This will never point at a low surrogate.
  *
  * Results:
  *	As above.
@@ -1325,72 +1324,12 @@ TkUtfAtIndex(
     const char *src,	/* The UTF-8 string. */
     int index)		/* The position of the desired character. */
 {
-    int len = 0;
     int ch;
-    
-    while (index-- > 0) {
-	len = TkUtfToUniChar(src, &ch);
-	src += len;
+    const char *p = Tcl_UtfAtIndex(src, index);
+    if ((p > src) && (UCHAR(p[-1]) > 0xF0)) {
+	return p + TkUtfToUniChar(p - 1, &ch);
     }
-    return src;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkNumUtfChars --
- *
- *	Returns the number of characters (not bytes) in the UTF-8 string, not
- *	including the terminating NULL byte. This differs from Tcl_NumUtfChars
- *	in that a pair of CESU-8 encoded surrogates counts as one unicode
- *	character.
- *
- * Results:
- *	As above.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-int
-TkNumUtfChars(
-    const char *src,	/* The UTF-8 string to measure. */
-    int length)		/* The length of the string in bytes, or -1
-			 * for strlen(string). */
-{
-    int ch;
-    int i = 0;
-    Tcl_UniChar ch2 = 0;
-
-    if (length < 0) {
-	/* string is NUL-terminated, so TclUtfToUniChar calls are safe. */
-	while ((*src != '\0') && (i < INT_MAX)) {
-	    src += TkUtfToUniChar(src, &ch);
-	    i++;
-	}
-    } else {
-	/* No need to call TkUtfCharComplete() up to endPtr */
-	const char *endPtr = src + length - 6;
-	while (src < endPtr) {
-	    src += TkUtfToUniChar(src, &ch);
-	    i++;
-	}
-	/* Pointer to the end of string. Never read endPtr[0] */
-	endPtr += 6;
-	while (src < endPtr) {
-	    if (TkUtfCharComplete(src, endPtr - src)) {
-		src += TkUtfToUniChar(src, &ch);
-	    } else if (Tcl_UtfCharComplete(src, endPtr - src)) {
-		src += Tcl_UtfToUniChar(src, &ch2);
-	    } else {
-		src++;
-	    }
-	    i++;
-	}
-    }
-    return i;
+    return p;
 }
 #endif
 
