@@ -1353,8 +1353,9 @@ TkNumUtfChars(
     int length)		/* The length of the string in bytes, or -1
 			 * for strlen(string). */
 {
-    int ch = 0;
+    int ch;
     int i = 0;
+    Tcl_UniChar ch2 = 0;
 
     if (length < 0) {
 	/* string is NUL-terminated, so TclUtfToUniChar calls are safe. */
@@ -1363,10 +1364,22 @@ TkNumUtfChars(
 	    i++;
 	}
     } else {
-	/* Pointer to the end of string. Never read endPtr[0] */
-	const char *endPtr = src + length;
+	/* No need to call TkUtfCharComplete() up to endPtr */
+	const char *endPtr = src + length - 6;
 	while (src < endPtr) {
 	    src += TkUtfToUniChar(src, &ch);
+	    i++;
+	}
+	/* Pointer to the end of string. Never read endPtr[0] */
+	endPtr += 6;
+	while (src < endPtr) {
+	    if (TkUtfCharComplete(src, endPtr - src)) {
+		src += TkUtfToUniChar(src, &ch);
+	    } else if (Tcl_UtfCharComplete(src, endPtr - src)) {
+		src += Tcl_UtfToUniChar(src, &ch2);
+	    } else {
+		src++;
+	    }
 	    i++;
 	}
     }
