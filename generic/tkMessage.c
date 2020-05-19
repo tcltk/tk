@@ -491,7 +491,7 @@ ConfigureMessage(
      * be specified to Tk_ConfigureWidget.
      */
 
-    msgPtr->numChars = Tcl_NumUtfChars(msgPtr->string, -1);
+    msgPtr->numChars = TkNumUtfChars(msgPtr->string, -1);
 
     if (msgPtr->highlightWidth < 0) {
 	msgPtr->highlightWidth = 0;
@@ -881,7 +881,7 @@ MessageTextVarProc(
     if (msgPtr->string != NULL) {
 	ckfree(msgPtr->string);
     }
-    msgPtr->numChars = Tcl_NumUtfChars(value, -1);
+    msgPtr->numChars = TkNumUtfChars(value, -1);
     msgPtr->string = ckalloc(strlen(value) + 1);
     strcpy(msgPtr->string, value);
     ComputeMessageGeometry(msgPtr);

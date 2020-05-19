@@ -954,8 +954,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
+    start = TkNumUtfChars(source, rangeStart);
+    len = TkNumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -1252,8 +1252,8 @@ DrawCharsInContext(
              -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
+    start = TkNumUtfChars(source, rangeStart);
+    length = TkNumUtfChars(source, rangeStart + rangeLength) - start;
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
 

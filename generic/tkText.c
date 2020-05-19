@@ -4056,12 +4056,12 @@ TextSearchIndexInLine(
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
 		} else {
-		    index += Tcl_NumUtfChars(segPtr->body.chars, leftToScan);
+		    index += TkNumUtfChars(segPtr->body.chars, leftToScan);
 		}
 	    } else if (searchSpecPtr->exact) {
 		index += segPtr->size;
 	    } else {
-		index += Tcl_NumUtfChars(segPtr->body.chars, -1);
+		index += TkNumUtfChars(segPtr->body.chars, -1);
 	    }
 	}
 	leftToScan -= segPtr->size;
@@ -4256,7 +4256,7 @@ TextSearchFoundMatch(
     if (searchSpecPtr->exact) {
 	const char *startOfLine = Tcl_GetString(theLine);
 
-	numChars = Tcl_NumUtfChars(startOfLine + matchOffset, matchLength);
+	numChars = TkNumUtfChars(startOfLine + matchOffset, matchLength);
     } else {
 	numChars = matchLength;
     }
@@ -4315,13 +4315,13 @@ TextSearchFoundMatch(
 		if (searchSpecPtr->exact) {
 		    matchOffset += segPtr->size;
 		} else {
-		    matchOffset += Tcl_NumUtfChars(segPtr->body.chars, -1);
+		    matchOffset += TkNumUtfChars(segPtr->body.chars, -1);
 		}
 	    } else {
 		if (searchSpecPtr->exact) {
 		    leftToScan -= segPtr->size;
 		} else {
-		    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
+		    leftToScan -= TkNumUtfChars(segPtr->body.chars, -1);
 		}
 	    }
 	    curIndex.byteIndex += segPtr->size;
@@ -4406,13 +4406,13 @@ TextSearchFoundMatch(
 	    continue;
 	} else if (!searchSpecPtr->searchElide
 		&& TkTextIsElided(textPtr, &curIndex, NULL)) {
-	    numChars += Tcl_NumUtfChars(segPtr->body.chars, -1);
+	    numChars += TkNumUtfChars(segPtr->body.chars, -1);
 	    continue;
 	}
 	if (searchSpecPtr->exact) {
 	    leftToScan -= segPtr->size;
 	} else {
-	    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
+	    leftToScan -= TkNumUtfChars(segPtr->body.chars, -1);
 	}
     }
 
