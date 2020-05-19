@@ -2049,7 +2049,7 @@ InsertChars(
     char *newStr;
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
+    byteIndex = TkUtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
 	return TCL_OK;
@@ -2073,16 +2073,18 @@ InsertChars(
     entryPtr->string = newStr;
 
     /*
+     * ??? Is this construction still needed with TkNumUtfChars ???
+     *
      * The following construction is used because inserting improperly formed
      * UTF-8 sequences between other improperly formed UTF-8 sequences could
      * result in actually forming valid UTF-8 sequences; the number of
-     * characters added may not be Tcl_NumUtfChars(string, -1), because of
+     * characters added may not be TkNumUtfChars(string, -1), because of
      * context. The actual number of characters added is how many characters
      * are in the string now minus the number that used to be there.
      */
 
     oldChars = entryPtr->numChars;
-    entryPtr->numChars = Tcl_NumUtfChars(newStr, -1);
+    entryPtr->numChars = TkNumUtfChars(newStr, -1);
     charsAdded = entryPtr->numChars - oldChars;
     entryPtr->numBytes += byteCount;
 
@@ -2153,8 +2155,8 @@ DeleteChars(
     }
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
-    byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
+    byteIndex = TkUtfAtIndex(string, index) - string;
+    byteCount = TkUtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
     newStr = ckalloc(newByteCount);
@@ -2382,7 +2384,7 @@ EntrySetValue(
 	entryPtr->string = tmp;
     }
     entryPtr->numBytes = valueLen;
-    entryPtr->numChars = Tcl_NumUtfChars(value, valueLen);
+    entryPtr->numChars = TkNumUtfChars(value, valueLen);
 
     if (entryPtr->displayString == oldSource) {
 	entryPtr->displayString = entryPtr->string;
@@ -2815,8 +2817,8 @@ EntryFetchSelection(
 	return -1;
     }
     string = entryPtr->displayString;
-    selStart = Tcl_UtfAtIndex(string, entryPtr->selectFirst);
-    selEnd = Tcl_UtfAtIndex(selStart,
+    selStart = TkUtfAtIndex(string, entryPtr->selectFirst);
+    selEnd = TkUtfAtIndex(selStart,
 	    entryPtr->selectLast - entryPtr->selectFirst);
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {

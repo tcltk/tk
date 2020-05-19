@@ -1295,7 +1295,85 @@ TkUtfPrev(
     return (first + TkUtfToUniChar(first, &ch) >= src) ? first : p ;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfAtIndex --
+ *
+ *	Returns a pointer to the specified character (not byte) position in
+ *	a CESU-8 string.  That is, a pair of CESU-8 encoded surrogates counts
+ *      as a single character.
+ *
+ * Results:
+ *	As above.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *
+TkUtfAtIndex(
+    const char *src,	/* The UTF-8 string. */
+    int index)		/* The position of the desired character. */
+{
+    int len = 0;
+    int ch;
+    
+    while (index-- > 0) {
+	len = TkUtfToUniChar(src, &ch);
+	src += len;
+    }
+    return src;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkNumUtfChars --
+ *
+ *	Returns the number of characters (not bytes) in the UTF-8 string, not
+ *	including the terminating NULL byte. This differs from Tcl_NumUtfChars
+ *	in that a pair of CESU-8 encoded surrogates counts as one unicode
+ *	character.
+ *
+ * Results:
+ *	As above.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkNumUtfChars(
+    const char *src,	/* The UTF-8 string to measure. */
+    int length)		/* The length of the string in bytes, or -1
+			 * for strlen(string). */
+{
+    int ch = 0;
+    int i = 0;
+
+    if (length < 0) {
+	/* string is NUL-terminated, so TclUtfToUniChar calls are safe. */
+	while ((*src != '\0') && (i < INT_MAX)) {
+	    src += TkUtfToUniChar(src, &ch);
+	    i++;
+	}
+    } else {
+	/* Pointer to the end of string. Never read endPtr[0] */
+	const char *endPtr = src + length;
+	while (src < endPtr) {
+	    src += TkUtfToUniChar(src, &ch);
+	    i++;
+	}
+    }
+    return i;
+}
 #endif
+
 /*
  * Local Variables:
  * mode: c

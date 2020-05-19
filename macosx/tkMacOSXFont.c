@@ -105,7 +105,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
  * To avoid an extra copy, a TKNSString object wraps a Tcl_DString with an
  * NSString that uses the DString's buffer as its character buffer.  It can be
  * constructed from a Tcl_DString and it has a DString property that handles
- * converting from an NSString to a Tcl_DString
+ * converting from an NSString to a Tcl_DString.
  */
 
 @implementation TKNSString
@@ -1056,7 +1056,7 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
+    fit = (TkUtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
