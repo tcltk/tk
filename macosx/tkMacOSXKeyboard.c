@@ -529,7 +529,7 @@ TkpGetString(
 
 XModifierKeymap *
 XGetModifierMapping(
-    Display *display)
+    TCL_UNUSED(Display *))
 {
     XModifierKeymap *modmap;
 
@@ -627,7 +627,7 @@ XStringToKeysym(
 
 KeyCode
 XKeysymToKeycode(
-    Display *display,
+    TCL_UNUSED(Display *),
     KeySym keysym)
 {
     Tcl_HashEntry *hPtr;
@@ -695,7 +695,7 @@ XKeysymToKeycode(
  */
 void
 TkpSetKeycodeAndState(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     KeySym keysym,
     XEvent *eventPtr)
 {
@@ -827,7 +827,7 @@ TkpGetKeySym(
      * First do the straightforward lookup.
      */
 
-    sym = XKeycodeToKeysym(dispPtr->display, macKC.uint, index);
+    sym = XkbKeycodeToKeysym(dispPtr->display, macKC.uint, 0, index);
 
     /*
      * Special handling: If the key was shifted because of Lock, which is only
@@ -837,7 +837,7 @@ TkpGetKeySym(
 
     if ((index & INDEX_SHIFT) && !(eventPtr->xkey.state & ShiftMask)) {
 	if ((sym == NoSymbol) || !Tcl_UniCharIsUpper(sym)) {
-	    sym = XKeycodeToKeysym(dispPtr->display, macKC.uint,
+	    sym = XkbKeycodeToKeysym(dispPtr->display, macKC.uint, 0,
 				   index & ~INDEX_SHIFT);
 	}
     }
@@ -848,7 +848,7 @@ TkpGetKeySym(
      */
 
     if ((index & INDEX_SHIFT) && (sym == NoSymbol)) {
-	sym = XKeycodeToKeysym(dispPtr->display, macKC.uint,
+	sym = XkbKeycodeToKeysym(dispPtr->display, macKC.uint, 0,
 			       index & ~INDEX_SHIFT);
     }
     return sym;

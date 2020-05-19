@@ -415,7 +415,7 @@ TkpGetKeySym(
 	TkpInitKeymapInfo(dispPtr);
     }
 
-    sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+    sym = XkbKeycodeToKeysym(eventPtr->xkey.keycode, state, 0, 0);
 
     /*
      * Special handling: if this is a ctrl-alt or shifted key, and there is no
@@ -424,11 +424,11 @@ TkpGetKeySym(
 
     if ((sym == NoSymbol) && ((state & ControlMask) || (state & Mod2Mask))) {
 	state &= ~(ControlMask | Mod2Mask);
-	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+	sym = XkbKeycodeToKeysym(eventPtr->xkey.keycode, state, 0, 0);
     }
     if ((sym == NoSymbol) && (state & ShiftMask)) {
 	state &= ~ShiftMask;
-	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+	sym = XkbKeycodeToKeysym(eventPtr->xkey.keycode, state, 0, 0);
     }
     return sym;
 }
@@ -477,7 +477,7 @@ TkpInitKeymapInfo(
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = KeycodeToKeysym(*codePtr, 0, 1);
+	keysym = XkbKeycodeToKeysym(*codePtr, 0, 0, 1);
 	if (keysym == XK_Shift_Lock) {
 	    dispPtr->lockUsage = LU_SHIFT;
 	    break;
@@ -503,7 +503,7 @@ TkpInitKeymapInfo(
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = KeycodeToKeysym(*codePtr, 0, 1);
+	keysym = XkbKeycodeToKeysym(*codePtr, 0, 0, 1);
 	if (keysym == XK_Mode_switch) {
 	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
 	}
