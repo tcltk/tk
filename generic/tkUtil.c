@@ -1302,6 +1302,36 @@ TkUtfPrev(
     return (first + TkUtfToUniChar(first, &ch) >= src) ? first : p ;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfAtIndex --
+ *
+ *	Returns a pointer to the specified character (not byte) position in
+ *	a CESU-8 string.  This will never point at a low surrogate.
+ *
+ * Results:
+ *	As above.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *
+TkUtfAtIndex(
+    const char *src,	/* The UTF-8 string. */
+    int index)		/* The position of the desired character. */
+{
+    int ch;
+    const char *p = Tcl_UtfAtIndex(src, index);
+    if ((p > src) && (UCHAR(p[-1]) >= 0xF0)) {
+	--p;
+	return p + TkUtfToUniChar(p, &ch);
+    }
+    return p;
+}
 #endif
 
 /*

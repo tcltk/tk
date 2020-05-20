@@ -2021,7 +2021,7 @@ Tk_ComputeTextLayout(
 
     curX = 0;
 
-    end = Tcl_UtfAtIndex(string, numChars);
+    end = TkUtfAtIndex(string, numChars);
     special = string;
 
     flags &= TK_IGNORE_TABS | TK_IGNORE_NEWLINES;
@@ -2325,14 +2325,14 @@ Tk_DrawTextLayout(
 		firstChar = 0;
 		firstByte = chunkPtr->start;
 	    } else {
-		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
+		firstByte = TkUtfAtIndex(chunkPtr->start, firstChar);
 		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
 			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
-	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
 	    Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont, firstByte,
 		    lastByte - firstByte, x+chunkPtr->x+drawX, y+chunkPtr->y);
 	}
@@ -2387,14 +2387,14 @@ TkDrawAngledTextLayout(
 		firstChar = 0;
 		firstByte = chunkPtr->start;
 	    } else {
-		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
+		firstByte = TkUtfAtIndex(chunkPtr->start, firstChar);
 		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
 			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
-	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
 	    dx = cosA * (chunkPtr->x + drawX) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x + drawX) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
@@ -2736,7 +2736,7 @@ Tk_CharBbox(
 		goto check;
 	    }
 	} else if (index < chunkPtr->numChars) {
-	    end = Tcl_UtfAtIndex(chunkPtr->start, index);
+	    end = TkUtfAtIndex(chunkPtr->start, index);
 	    if (xPtr != NULL) {
 		Tk_MeasureChars(tkfont, chunkPtr->start,
 			end - chunkPtr->start, -1, 0, &x);
