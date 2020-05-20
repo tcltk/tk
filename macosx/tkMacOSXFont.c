@@ -105,7 +105,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
  * To avoid an extra copy, a TKNSString object wraps a Tcl_DString with an
  * NSString that uses the DString's buffer as its character buffer.  It can be
  * constructed from a Tcl_DString and it has a DString property that handles
- * converting from an NSString to a Tcl_DString
+ * converting from an NSString to a Tcl_DString.
  */
 
 @implementation TKNSString
@@ -165,32 +165,16 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 	 * The DString has not been initialized. Construct it from
 	 * our string's unicode characters.
 	 */
-
-	char buffer[2*TCL_UTF_MAX];
-	unsigned int index, length, ch;
+	char *p;
+	int index;
 
 	Tcl_DStringInit(&_ds);
-#if TCL_UTF_MAX == 3
+	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
+	p = Tcl_DStringValue(&_ds);
 	for (index = 0; index < [_string length]; index++) {
-	    UniChar uni = [_string characterAtIndex: index];
-
-	    if (CFStringIsSurrogateHighCharacter(uni)) {
-		UniChar low = [_string characterAtIndex: ++index];
-		ch = CFStringGetLongCharacterForSurrogatePair(uni, low);
-	    } else {
-		ch = uni;
-	    }
-	    length = TkUniCharToUtf(ch, buffer);
-	    Tcl_DStringAppend(&_ds, buffer, length);
+	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
 	}
-#else
-	for (index = 0; index < [_string length]; index++) {
-	    ch = (int) [_string characterAtIndex: index];
-	    length = Tcl_UniCharToUtf(ch, buffer);
-	    Tcl_DStringAppend(&_ds, buffer, length);
-	}
-
-#endif
+	Tcl_DStringSetLength(&_ds, p - Tcl_DStringValue(&_ds));
     }
     return _ds;
 }
