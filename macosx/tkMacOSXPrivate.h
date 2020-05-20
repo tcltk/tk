@@ -527,7 +527,7 @@ VISIBILITY_HIDDEN
  * byte sequence as initial data.  So we add a new class which does provide
  * such a constructor.  It also has a DString property which is a DString whose
  * string pointer is a byte sequence encoding the NSString with the current Tk
- * encoding, namely UTF-8 if TCL_MAX >= 4 or CESU-8 if TCL_MAX = 3.
+ * encoding, namely UTF-8 if TCL_UTF_MAX >= 4 or CESU-8 if TCL_UTF_MAX = 3.
  *
  *---------------------------------------------------------------------------
  */

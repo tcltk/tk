@@ -1327,7 +1327,8 @@ TkUtfAtIndex(
     int ch;
     const char *p = Tcl_UtfAtIndex(src, index);
     if ((p > src) && (UCHAR(p[-1]) >= 0xF0)) {
-	return p + TkUtfToUniChar(p - 1, &ch);
+	--p;
+	return p + TkUtfToUniChar(p, &ch);
     }
     return p;
 }
