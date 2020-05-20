@@ -60,7 +60,7 @@ ClipboardHandler(
     TkClipboardBuffer *cbPtr;
     char *srcPtr, *destPtr;
     size_t count = 0;
-    int scanned = 0;
+    size_t scanned = 0;
     size_t length, freeCount;
 
     /*
@@ -71,7 +71,7 @@ ClipboardHandler(
 	if (cbPtr == NULL) {
 	    return 0;
 	}
-	if (scanned + cbPtr->length > offset) {
+	if (scanned + cbPtr->length > (size_t)offset) {
 	    break;
 	}
 	scanned += cbPtr->length;
