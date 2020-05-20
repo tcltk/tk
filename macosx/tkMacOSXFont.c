@@ -116,7 +116,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
     self = [self init];
     if (self) {
 	Tcl_DStringInit(&_ds);
-	Tcl_UtfToUniCharDString(bytes, len, &_ds);
+	Tcl_UtfToChar16DString(bytes, len, &_ds);
 	_string = [[NSString alloc]
 	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
 			       length:Tcl_DStringLength(&_ds)>>1
@@ -133,7 +133,6 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 	_string = [[NSString alloc] initWithString:aString];
 	self.UTF8String = _string.UTF8String;
     }
-    printf("Initialized with string %s\n", self.UTF8String);
     return self;
 }
 
