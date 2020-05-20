@@ -166,7 +166,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 	 * our string's unicode characters.
 	 */
 	char *p;
-	unsigned int index;
+	NSUInteger index;
 
 	Tcl_DStringInit(&_ds);
 	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
