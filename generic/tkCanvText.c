@@ -1025,7 +1025,7 @@ TextInsert(
     if (index > textPtr->numChars) {
 	index = textPtr->numChars;
     }
-    byteIndex = Tcl_UtfAtIndex(text, index) - text;
+    byteIndex = TkUtfAtIndex(text, index) - text;
     byteCount = strlen(string);
     if (byteCount == 0) {
 	return;
@@ -1108,8 +1108,8 @@ TextDeleteChars(
     }
     charsRemoved = last + 1 - first;
 
-    byteIndex = Tcl_UtfAtIndex(text, first) - text;
-    byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
+    byteIndex = TkUtfAtIndex(text, first) - text;
+    byteCount = TkUtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
     newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
@@ -1497,8 +1497,8 @@ GetSelText(
 	return 0;
     }
     text = textPtr->text;
-    selStart = Tcl_UtfAtIndex(text, textInfoPtr->selectFirst);
-    selEnd = Tcl_UtfAtIndex(selStart,
+    selStart = TkUtfAtIndex(text, textInfoPtr->selectFirst);
+    selEnd = TkUtfAtIndex(selStart,
 	    textInfoPtr->selectLast + 1 - textInfoPtr->selectFirst);
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
