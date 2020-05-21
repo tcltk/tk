@@ -1697,10 +1697,12 @@ LayoutDLine(
 	    ckfree(chunkPtr);
 	}
 	if (breakByteOffset != breakChunkPtr->numBytes) {
+	    TkSizeT byteOffset1;
 	    if (breakChunkPtr->undisplayProc != NULL) {
 		breakChunkPtr->undisplayProc(textPtr, breakChunkPtr);
 	    }
-	    segPtr = TkTextIndexToSeg(&breakIndex, &byteOffset);
+	    segPtr = TkTextIndexToSeg(&breakIndex, &byteOffset1);
+	    byteOffset = byteOffset1;
 	    segPtr->typePtr->layoutProc(textPtr, &breakIndex, segPtr,
 		    byteOffset, maxX, breakByteOffset, 0, wrapMode,
 		    breakChunkPtr);

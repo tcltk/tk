@@ -2686,9 +2686,11 @@ TkBTreeStartSearch(
 	searchPtr->nextPtr = seg0Ptr;	/* Will be returned by NextTag. */
 	index1Ptr = &index0;
     } else {
+	TkSizeT offset1;
 	searchPtr->curIndex = *index1Ptr;
 	searchPtr->segPtr = NULL;
-	searchPtr->nextPtr = TkTextIndexToSeg(index1Ptr, &offset);
+	searchPtr->nextPtr = TkTextIndexToSeg(index1Ptr, &offset1);
+	offset = offset1;
 	searchPtr->curIndex.byteIndex -= offset;
     }
     searchPtr->lastPtr = TkTextIndexToSeg(index2Ptr, NULL);
@@ -2751,6 +2753,7 @@ TkBTreeStartSearchBack(
 				 * progress. */
 {
     int offset;
+	TkSizeT offset1;
     TkTextIndex index0;		/* Last index of the tag. */
     TkTextIndex backOne;	/* One character before starting index. */
     TkTextSegment *seg0Ptr;	/* Last segment of the tag. */
@@ -2787,7 +2790,8 @@ TkBTreeStartSearchBack(
 		COUNT_INDICES);
     }
     searchPtr->segPtr = NULL;
-    searchPtr->nextPtr = TkTextIndexToSeg(&searchPtr->curIndex, &offset);
+    searchPtr->nextPtr = TkTextIndexToSeg(&searchPtr->curIndex, &offset1);
+    offset = offset1;
     searchPtr->curIndex.byteIndex -= offset;
 
     /*

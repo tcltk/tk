@@ -1106,7 +1106,7 @@ MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
-			    int *offsetPtr);
+			    TkSizeT *offsetPtr);
 MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex,

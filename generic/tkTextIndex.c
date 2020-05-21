@@ -565,14 +565,14 @@ TkTextMakeCharIndex(
 TkTextSegment *
 TkTextIndexToSeg(
     const TkTextIndex *indexPtr,/* Text index. */
-    int *offsetPtr)		/* Where to store offset within segment, or
+    TkSizeT *offsetPtr)		/* Where to store offset within segment, or
 				 * NULL if offset isn't wanted. */
 {
     TkTextSegment *segPtr;
-    int offset;
+    TkSizeT offset;
 
     for (offset = indexPtr->byteIndex, segPtr = indexPtr->linePtr->segPtr;
-	    offset >= segPtr->size;
+	    offset >= (TkSizeT)segPtr->size;
 	    offset -= segPtr->size, segPtr = segPtr->nextPtr) {
 	/* Empty loop body. */
     }
@@ -1488,6 +1488,7 @@ TkTextIndexForwChars(
     TkTextLine *linePtr;
     TkTextSegment *segPtr;
     TkTextElideInfo *infoPtr = NULL;
+    TkSizeT byteOffset1;
     int byteOffset;
     char *start, *end, *p;
     int ch;
@@ -1519,7 +1520,8 @@ TkTextIndexForwChars(
 	segPtr = infoPtr->segPtr;
 	byteOffset = dstPtr->byteIndex - infoPtr->segOffset;
     } else {
-	segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
+	segPtr = TkTextIndexToSeg(dstPtr, &byteOffset1);
+	byteOffset = byteOffset1;
     }
 
     while (1) {
@@ -1677,6 +1679,7 @@ IndexCountBytesOrdered(
 				 * at which to stop the count. */
 {
     int byteCount, offset;
+    TkSizeT offset1;
     TkTextSegment *segPtr, *segPtr1;
     TkTextLine *linePtr;
 
@@ -1692,7 +1695,8 @@ IndexCountBytesOrdered(
      *   bytes between start of the indexPtr2 line and indexPtr2
      */
 
-    segPtr1 = TkTextIndexToSeg(indexPtr1, &offset);
+    segPtr1 = TkTextIndexToSeg(indexPtr1, &offset1);
+    offset = offset1;
     byteCount = -offset;
     for (segPtr = segPtr1; segPtr != NULL; segPtr = segPtr->nextPtr) {
         byteCount += segPtr->size;
@@ -1753,6 +1757,7 @@ TkTextIndexCount(
     TkTextLine *linePtr1;
     TkTextSegment *segPtr, *seg2Ptr = NULL;
     TkTextElideInfo *infoPtr = NULL;
+    TkSizeT byteOffset1, maxBytes1;
     int byteOffset, maxBytes, count = 0, elide = 0;
     int checkElided = (type & COUNT_DISPLAY);
 
@@ -1761,10 +1766,12 @@ TkTextIndexCount(
      * count in the given segment.
      */
 
-    segPtr = TkTextIndexToSeg(indexPtr1, &byteOffset);
+    segPtr = TkTextIndexToSeg(indexPtr1, &byteOffset1);
+    byteOffset = byteOffset1;
     linePtr1 = indexPtr1->linePtr;
 
-    seg2Ptr = TkTextIndexToSeg(indexPtr2, &maxBytes);
+    seg2Ptr = TkTextIndexToSeg(indexPtr2, &maxBytes1);
+    maxBytes = maxBytes1;
 
     if (checkElided) {
 	infoPtr = (TkTextElideInfo *)ckalloc(sizeof(TkTextElideInfo));
@@ -2296,6 +2303,7 @@ StartEnd(
     } else if ((*string == 'w') && (strncmp(string, "wordend", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
+	TkSizeT offset1;
 	int offset;
 
 	/*
@@ -2308,7 +2316,8 @@ StartEnd(
 	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr,
 		    COUNT_DISPLAY_INDICES);
 	}
-	segPtr = TkTextIndexToSeg(indexPtr, &offset);
+	segPtr = TkTextIndexToSeg(indexPtr, &offset1);
+	offset = offset1;
 	while (1) {
 	    int chSize = 1;
 
@@ -2324,7 +2333,8 @@ StartEnd(
 	    offset += chSize;
 	    indexPtr->byteIndex += chSize;
 	    if (offset >= segPtr->size) {
-		segPtr = TkTextIndexToSeg(indexPtr, &offset);
+		segPtr = TkTextIndexToSeg(indexPtr, &offset1);
+		offset = offset1;
 	    }
 	}
 	if (firstChar) {
@@ -2340,6 +2350,7 @@ StartEnd(
 	    && (length >= 5)) {
 	int firstChar = 1;
 	int offset;
+	TkSizeT offset1;
 
 	if (modifier == TKINDEX_DISPLAY) {
 	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr,
@@ -2353,7 +2364,8 @@ StartEnd(
 	 * position.
 	 */
 
-	segPtr = TkTextIndexToSeg(indexPtr, &offset);
+	segPtr = TkTextIndexToSeg(indexPtr, &offset1);
+	offset = offset1;
 	while (1) {
 	    int chSize = 1;
 
@@ -2387,7 +2399,8 @@ StartEnd(
 		if (indexPtr->byteIndex == 0) {
 		    goto done;
 		}
-		segPtr = TkTextIndexToSeg(indexPtr, &offset);
+		segPtr = TkTextIndexToSeg(indexPtr, &offset1);
+		offset = offset1;
 	    }
 	}
 
