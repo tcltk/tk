@@ -3484,10 +3484,12 @@ TextFetchSelection(
 	 */
 
 	while (1) {
+	    TkSizeT offsetInSeg1;
 	    if (maxBytes == 0) {
 		goto fetchDone;
 	    }
-	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg);
+	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg1);
+	    offsetInSeg = offsetInSeg1;
 	    chunkSize = segPtr->size - offsetInSeg;
 	    if (chunkSize > (int)maxBytes) {
 		chunkSize = (int)maxBytes;
@@ -5433,7 +5435,7 @@ TextGetText(
 
     if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
 	while (1) {
-	    int offset;
+	    TkSizeT offset;
 	    TkTextSegment *segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
 	    int last = segPtr->size, last2;
 
