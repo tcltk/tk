@@ -146,9 +146,9 @@ static void		DeleteText(Tk_Canvas canvas,
 static void		DisplayCanvText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
-static int		GetSelText(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int offset, char *buffer,
-			    int maxBytes);
+static TkSizeT	GetSelText(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, TkSizeT offset, char *buffer,
+			    TkSizeT maxBytes);
 static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    Tcl_Obj *obj, int *indexPtr);
@@ -1516,14 +1516,14 @@ SetTextCursor(
  *--------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 GetSelText(
     Tk_Canvas canvas,		/* Canvas containing selection. */
     Tk_Item *itemPtr,		/* Text item containing selection. */
-    int offset,			/* Byte offset within selection of first
+	TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -1534,7 +1534,7 @@ GetSelText(
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     (void)canvas;
 
-    if ((textInfoPtr->selectFirst < 0) ||
+    if ((textInfoPtr->selectFirst == -1) ||
 	    (textInfoPtr->selectFirst > textInfoPtr->selectLast)) {
 	return 0;
     }
@@ -1542,12 +1542,12 @@ GetSelText(
     selStart = Tcl_UtfAtIndex(text, textInfoPtr->selectFirst);
     selEnd = Tcl_UtfAtIndex(selStart,
 	    textInfoPtr->selectLast + 1 - textInfoPtr->selectFirst);
+    if (selEnd  <= selStart + offset) {
+	return 0;
+    }
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
 	byteCount = maxBytes;
-    }
-    if (byteCount <= 0) {
-	return 0;
     }
     memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';

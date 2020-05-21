@@ -365,8 +365,8 @@ static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		TextFetchSelection(ClientData clientData, int offset,
-			    char *buffer, int maxBytes);
+static TkSizeT	TextFetchSelection(ClientData clientData, TkSizeT offset,
+			    char *buffer, TkSizeT maxBytes);
 static int		TextIndexSortProc(const void *first,
 			    const void *second);
 static int		TextInsertCmd(TkSharedText *sharedTextPtr,
@@ -3413,13 +3413,13 @@ DeleteIndexRange(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-    int offset,			/* Offset within selection of first character
+	TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -3489,8 +3489,8 @@ TextFetchSelection(
 	    }
 	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg);
 	    chunkSize = segPtr->size - offsetInSeg;
-	    if (chunkSize > maxBytes) {
-		chunkSize = maxBytes;
+	    if (chunkSize > (int)maxBytes) {
+		chunkSize = (int)maxBytes;
 	    }
 	    if (textPtr->selIndex.linePtr == search.curIndex.linePtr) {
 		int leftInRange;

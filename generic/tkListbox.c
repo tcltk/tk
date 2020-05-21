@@ -409,8 +409,8 @@ static void		ListboxComputeGeometry(Listbox *listPtr,
 			    int fontChanged, int maxIsStale, int updateGrid);
 static void		ListboxEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		ListboxFetchSelection(ClientData clientData,
-			    int offset, char *buffer, int maxBytes);
+static TkSizeT	ListboxFetchSelection(ClientData clientData,
+			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
 static void		ListboxLostSelection(ClientData clientData);
 static void		GenerateListboxSelectEvent(Listbox *listPtr);
 static void		EventuallyRedrawRange(Listbox *listPtr,
@@ -3112,13 +3112,13 @@ ListboxSelect(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 ListboxFetchSelection(
     ClientData clientData,	/* Information about listbox widget. */
-    int offset,			/* Offset within selection of first byte to be
+	TkSizeT offset,			/* Offset within selection of first byte to be
 				 * returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -3163,12 +3163,12 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    if (length <= (TkSizeT)offset) {
+    if (length <= offset) {
 	count = 0;
     } else {
 	count = length - offset;
-	if (count > maxBytes) {
-	    count = maxBytes;
+	if (count > (int)maxBytes) {
+	    count = (int)maxBytes;
 	}
 	memcpy(buffer, Tcl_DStringValue(&selection) + offset, count);
     }
