@@ -1067,8 +1067,13 @@ typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 #endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
+#if TCL_MAJOR_VERSION > 8
+typedef size_t	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t offset, char *buffer, size_t maxBytes);
+#else
 typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
+#endif
 #ifdef USE_OLD_CANVAS
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, char *string);
@@ -1579,8 +1584,13 @@ typedef int (Tk_GetSelProc) (ClientData clientData, Tcl_Interp *interp,
 typedef void (Tk_LostSelProc) (ClientData clientData);
 typedef Tk_RestrictAction (Tk_RestrictProc) (ClientData clientData,
 	XEvent *eventPtr);
+#if TCL_MAJOR_VERSION > 8
+typedef size_t (Tk_SelectionProc) (ClientData clientData, size_t offset,
+	char *buffer, size_t maxBytes);
+#else
 typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 	char *buffer, int maxBytes);
+#endif
 
 /*
  *----------------------------------------------------------------------

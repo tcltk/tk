@@ -412,8 +412,8 @@ static void		EntryComputeGeometry(Entry *entryPtr);
 static void		EntryEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		EntryFocusProc(Entry *entryPtr, int gotFocus);
-static int		EntryFetchSelection(ClientData clientData, int offset,
-			    char *buffer, int maxBytes);
+static TkSizeT	EntryFetchSelection(ClientData clientData, TkSizeT offset,
+			    char *buffer, TkSizeT maxBytes);
 static void		EntryLostSelection(ClientData clientData);
 static void		EventuallyRedraw(Entry *entryPtr);
 static void		EntryScanTo(Entry *entryPtr, int y);
@@ -2680,7 +2680,7 @@ GetEntryIndex(
 	*indexPtr = entryPtr->insertPos;
 	break;
     case 's':
-	if (entryPtr->selectFirst < 0) {
+	if (entryPtr->selectFirst == -1) {
 	    Tcl_ResetResult(interp);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
@@ -2885,21 +2885,21 @@ EntrySelectTo(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 EntryFetchSelection(
     ClientData clientData,	/* Information about entry widget. */
-    int offset,			/* Byte offset within selection of first
+	TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NUL character. */
 {
     Entry *entryPtr = (Entry *)clientData;
-    int byteCount;
+    TkSizeT byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
-    if ((entryPtr->selectFirst < 0) || (!entryPtr->exportSelection)
+    if ((entryPtr->selectFirst == -1) || (!entryPtr->exportSelection)
 	    || Tcl_IsSafe(entryPtr->interp)) {
 	return -1;
     }
@@ -2907,14 +2907,14 @@ EntryFetchSelection(
     selStart = Tcl_UtfAtIndex(string, entryPtr->selectFirst);
     selEnd = Tcl_UtfAtIndex(selStart,
 	    entryPtr->selectLast - entryPtr->selectFirst);
+    if (selEnd <= selStart + offset) {
+	return 0;
+    }
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
 	byteCount = maxBytes;
     }
-    if (byteCount <= 0) {
-	return 0;
-    }
-    memcpy(buffer, selStart + offset, (size_t) byteCount);
+    memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
     return byteCount;
 }

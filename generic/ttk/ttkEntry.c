@@ -350,31 +350,31 @@ EntryEditable(Entry *entryPtr)
 /* EntryFetchSelection --
  *	Selection handler for entry widgets.
  */
-static int
+static TkSizeT
 EntryFetchSelection(
-    ClientData clientData, int offset, char *buffer, int maxBytes)
+    ClientData clientData, TkSizeT offset, char *buffer, TkSizeT maxBytes)
 {
     Entry *entryPtr = (Entry *)clientData;
-    int byteCount;
+    TkSizeT byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
-    if (entryPtr->entry.selectFirst < 0 || (!entryPtr->entry.exportSelection)
+    if (entryPtr->entry.selectFirst == -1 || (!entryPtr->entry.exportSelection)
 	    || Tcl_IsSafe(entryPtr->core.interp)) {
-	return -1;
+	return TCL_INDEX_NONE;
     }
     string = entryPtr->entry.displayString;
 
     selStart = Tcl_UtfAtIndex(string, entryPtr->entry.selectFirst);
     selEnd = Tcl_UtfAtIndex(selStart,
 	    entryPtr->entry.selectLast - entryPtr->entry.selectFirst);
+    if (selEnd  <= selStart + offset) {
+	return 0;
+    }
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
     /* @@@POSSIBLE BUG: Can transfer partial UTF-8 sequences.  Is this OK? */
 	byteCount = maxBytes;
-    }
-    if (byteCount <= 0) {
-	return 0;
     }
     memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
@@ -1389,7 +1389,7 @@ EntryIndex(
     } else if (strncmp(string, "right", length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.last;
     } else if (strncmp(string, "sel.", 4) == 0) {
-	if (entryPtr->entry.selectFirst < 0) {
+	if (entryPtr->entry.selectFirst == -1) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
 		    Tk_PathName(entryPtr->core.tkwin)));
