@@ -856,8 +856,8 @@ typedef void		Tk_SegLineChangeProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 typedef int		Tk_SegLayoutProc(struct TkText *textPtr,
 			    struct TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, TkSizeT offset, int maxX,
+				TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    struct TkTextDispChunk *chunkPtr);
 typedef void		Tk_SegCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
@@ -1060,7 +1060,7 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, int noBreakYet,
+			    TkSizeT offset, int maxX, TkSizeT maxChars, int noBreakYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,

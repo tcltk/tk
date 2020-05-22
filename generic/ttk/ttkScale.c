@@ -53,10 +53,10 @@ typedef struct
 static const Tk_OptionSpec ScaleOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	offsetof(Scale,scale.commandObj), TCL_AUTO_LENGTH,
+	offsetof(Scale,scale.commandObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable", "",
-	offsetof(Scale,scale.variableObj), TCL_AUTO_LENGTH,
+	offsetof(Scale,scale.variableObj), TCL_INDEX_NONE,
 	0,0,0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Scale,scale.orientObj),
@@ -64,17 +64,17 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 	(ClientData)ttkOrientStrings, STYLE_CHANGED },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
-	offsetof(Scale,scale.fromObj), TCL_AUTO_LENGTH, 0, 0, 0},
+	offsetof(Scale,scale.fromObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_DOUBLE, "-to", "to", "To", "1.0",
-	offsetof(Scale,scale.toObj), TCL_AUTO_LENGTH, 0, 0, 0},
+	offsetof(Scale,scale.toObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_DOUBLE, "-value", "value", "Value", "0",
-	offsetof(Scale,scale.valueObj), TCL_AUTO_LENGTH, 0, 0, 0},
+	offsetof(Scale,scale.valueObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
-	DEF_SCALE_LENGTH, offsetof(Scale,scale.lengthObj), TCL_AUTO_LENGTH, 0, 0,
+	DEF_SCALE_LENGTH, offsetof(Scale,scale.lengthObj), TCL_INDEX_NONE, 0, 0,
     	GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-state", "state", "State",
-	"normal", offsetof(Scale,scale.stateObj), TCL_AUTO_LENGTH,
+	"normal", offsetof(Scale,scale.stateObj), TCL_INDEX_NONE,
         0,0,STATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,

@@ -279,7 +279,7 @@ Tk_CreateOptionTable(
 	    }
 	}
 	if (((specPtr->type == TK_OPTION_STRING)
-		&& (specPtr->internalOffset != TCL_AUTO_LENGTH))
+		&& (specPtr->internalOffset != TCL_INDEX_NONE))
 		|| (specPtr->type == TK_OPTION_COLOR)
 		|| (specPtr->type == TK_OPTION_FONT)
 		|| (specPtr->type == TK_OPTION_BITMAP)
@@ -584,7 +584,7 @@ DoObjConfig(
      */
 
     specPtr = optionPtr->specPtr;
-    if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+    if (specPtr->objOffset != TCL_INDEX_NONE) {
 	slotPtrPtr = (Tcl_Obj **) ((char *)recordPtr + specPtr->objOffset);
 	oldPtr = *slotPtrPtr;
     } else {
@@ -597,7 +597,7 @@ DoObjConfig(
      * object and internal forms, if they exist.
      */
 
-    if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+    if (specPtr->internalOffset != TCL_INDEX_NONE) {
 	internalPtr = (char *)recordPtr + specPtr->internalOffset;
     } else {
 	internalPtr = NULL;
@@ -1374,12 +1374,12 @@ Tk_RestoreSavedOptions(
 	 * record.
 	 */
 
-	if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+	if (specPtr->objOffset != TCL_INDEX_NONE) {
 	    newPtr = *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset));
 	} else {
 	    newPtr = NULL;
 	}
-	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+	if (specPtr->internalOffset != TCL_INDEX_NONE) {
 	    internalPtr = (char *)savePtr->recordPtr + specPtr->internalOffset;
 	} else {
 	    internalPtr = NULL;
@@ -1395,11 +1395,11 @@ Tk_RestoreSavedOptions(
 	 * Now restore the old value of the option.
 	 */
 
-	if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+	if (specPtr->objOffset != TCL_INDEX_NONE) {
 	    *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset))
 		    = savePtr->items[i].valuePtr;
 	}
-	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+	if (specPtr->internalOffset != TCL_INDEX_NONE) {
 	    char *ptr = (char *) &savePtr->items[i].internalForm;
 
 	    CLANG_ASSERT(internalPtr);
@@ -1552,14 +1552,14 @@ Tk_FreeConfigOptions(
 	    if (specPtr->type == TK_OPTION_SYNONYM) {
 		continue;
 	    }
-	    if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+	    if (specPtr->objOffset != TCL_INDEX_NONE) {
 		oldPtrPtr = (Tcl_Obj **) ((char *)recordPtr + specPtr->objOffset);
 		oldPtr = *oldPtrPtr;
 		*oldPtrPtr = NULL;
 	    } else {
 		oldPtr = NULL;
 	    }
-	    if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+	    if (specPtr->internalOffset != TCL_INDEX_NONE) {
 		oldInternalPtr = (char *)recordPtr + specPtr->internalOffset;
 	    } else {
 		oldInternalPtr = NULL;
@@ -1611,7 +1611,7 @@ FreeResources(
      * form, then use the object form.
      */
 
-    internalFormExists = optionPtr->specPtr->internalOffset != TCL_AUTO_LENGTH;
+    internalFormExists = optionPtr->specPtr->internalOffset != TCL_INDEX_NONE;
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_STRING:
 	if (internalFormExists) {
@@ -1828,7 +1828,7 @@ GetConfigList(
 	}
 	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
-	if (optionPtr->specPtr->objOffset != TCL_AUTO_LENGTH) {
+	if (optionPtr->specPtr->objOffset != TCL_INDEX_NONE) {
 	    elementPtr = *((Tcl_Obj **) ((char *)recordPtr
 		    + optionPtr->specPtr->objOffset));
 	    if (elementPtr == NULL) {
@@ -2023,7 +2023,7 @@ Tk_GetOptionValue(
     if (optionPtr->specPtr->type == TK_OPTION_SYNONYM) {
 	optionPtr = optionPtr->extra.synonymPtr;
     }
-    if (optionPtr->specPtr->objOffset != TCL_AUTO_LENGTH) {
+    if (optionPtr->specPtr->objOffset != TCL_INDEX_NONE) {
 	resultPtr = *((Tcl_Obj **) ((char *)recordPtr+optionPtr->specPtr->objOffset));
 	if (resultPtr == NULL) {
 	    /*

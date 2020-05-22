@@ -113,10 +113,6 @@
 #   endif
 #endif
 
-#ifndef TCL_AUTO_LENGTH
-#   define TCL_AUTO_LENGTH (-1)
-#endif
-
 #ifndef TCL_Z_MODIFIER
 #   if defined(_WIN64)
 #	define TCL_Z_MODIFIER	"I"
@@ -1287,6 +1283,15 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
+#if TCL_MAJOR_VERSION > 8
+MODULE_SCOPE int TkCanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
+    Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
+#define TkCanvasTagsParseProc Tk_CanvasTagsParseProc
+#define TkCanvasTagsPrintProc Tk_CanvasTagsPrintProc
+#endif
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,

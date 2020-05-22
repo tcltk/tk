@@ -196,7 +196,7 @@ typedef struct Tk_OptionSpec {
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
 				 * record. Use the offsetof macro to generate
-				 * values for this. TCL_AUTO_LENGTH means don't
+				 * values for this. TCL_INDEX_NONE means don't
 				 * store the Tcl_Obj in the record. */
     size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
@@ -204,7 +204,7 @@ typedef struct Tk_OptionSpec {
 				 * specified as an offset in bytes from the
 				 * start of the record. Use the offsetof
 				 * macro to generate values for it.
-				 * TCL_AUTO_LENGTH means don't store the
+				 * TCL_INDEX_NONE means don't store the
 				 * internal representation in the record. */
 #else
     int objOffset;
@@ -238,11 +238,19 @@ typedef struct Tk_OptionSpec {
  * option config code to handle a custom option.
  */
 
+#if TCL_MAJOR_VERSION > 8
+typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
+	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
+	size_t offset, char *saveInternalPtr, int flags);
+typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
+	Tk_Window tkwin, char *widgRec, size_t offset);
+#else
 typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
 	int offset, char *saveInternalPtr, int flags);
 typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset);
+#endif
 typedef void (Tk_CustomOptionRestoreProc) (ClientData clientData,
 	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr);
 typedef void (Tk_CustomOptionFreeProc) (ClientData clientData, Tk_Window tkwin,
@@ -346,10 +354,17 @@ typedef struct Tk_SavedOptions {
 
 #ifndef __NO_OLD_CONFIG
 
+#if TCL_MAJOR_VERSION > 8
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
-	Tk_Window tkwin, const char *value, char *widgRec, int offset);
+	Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
+	Tk_Window tkwin, char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
+typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
+	Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
 typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+#endif
 
 typedef struct Tk_CustomOption {
     Tk_OptionParseProc *parseProc;
