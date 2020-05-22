@@ -1270,7 +1270,7 @@ TkWinHandleMenuEvent(
 	    for (i = 0; i < menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
-		if ((underline != TCL_AUTO_LENGTH) && (labelPtr != NULL)) {
+		if ((underline != TCL_INDEX_NONE) && (labelPtr != NULL)) {
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */

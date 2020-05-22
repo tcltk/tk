@@ -99,18 +99,18 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, align),
+	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align),
 	0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
-	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
-	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
