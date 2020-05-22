@@ -196,7 +196,7 @@ typedef struct Tk_OptionSpec {
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
 				 * record. Use the offsetof macro to generate
-				 * values for this. TCL_AUTO_LENGTH means don't
+				 * values for this. TCL_INDEX_NONE means don't
 				 * store the Tcl_Obj in the record. */
     size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
@@ -204,7 +204,7 @@ typedef struct Tk_OptionSpec {
 				 * specified as an offset in bytes from the
 				 * start of the record. Use the offsetof
 				 * macro to generate values for it.
-				 * TCL_AUTO_LENGTH means don't store the
+				 * TCL_INDEX_NONE means don't store the
 				 * internal representation in the record. */
 #else
     int objOffset;

@@ -113,10 +113,6 @@
 #   endif
 #endif
 
-#ifndef TCL_AUTO_LENGTH
-#   define TCL_AUTO_LENGTH (-1)
-#endif
-
 #ifndef TCL_Z_MODIFIER
 #   if defined(_WIN64)
 #	define TCL_Z_MODIFIER	"I"
