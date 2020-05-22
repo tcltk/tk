@@ -58,26 +58,26 @@ typedef struct
 static const Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
-	"normal", TCL_AUTO_LENGTH, offsetof(Tab,state),
+	"normal", TCL_INDEX_NONE, offsetof(Tab,state),
 	0,(ClientData)TabStateStrings,0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	offsetof(Tab,textObj), TCL_AUTO_LENGTH, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,textObj), TCL_INDEX_NONE, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
-	offsetof(Tab,imageObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	offsetof(Tab,imageObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	NULL, offsetof(Tab,compoundObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
-	offsetof(Tab,underlineObj), TCL_AUTO_LENGTH, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,underlineObj), TCL_INDEX_NONE, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
 static const Tk_OptionSpec PaneOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-padding", "padding", "Padding", "0",
-	offsetof(Tab,paddingObj), TCL_AUTO_LENGTH, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,paddingObj), TCL_INDEX_NONE, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-sticky", "sticky", "Sticky", "nsew",
-	offsetof(Tab,stickyObj), TCL_AUTO_LENGTH, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,stickyObj), TCL_INDEX_NONE, 0,0,GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(TabOptionSpecs)
 };
@@ -110,13 +110,13 @@ typedef struct
 static const Tk_OptionSpec NotebookOptionSpecs[] =
 {
     {TK_OPTION_INT, "-width", "width", "Width", "0",
-	offsetof(Notebook,notebook.widthObj),TCL_AUTO_LENGTH,
+	offsetof(Notebook,notebook.widthObj),TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-height", "height", "Height", "0",
-	offsetof(Notebook,notebook.heightObj),TCL_AUTO_LENGTH,
+	offsetof(Notebook,notebook.heightObj),TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Padding", NULL,
-	offsetof(Notebook,notebook.paddingObj),TCL_AUTO_LENGTH,
+	offsetof(Notebook,notebook.paddingObj),TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     WIDGET_TAKEFOCUS_TRUE,

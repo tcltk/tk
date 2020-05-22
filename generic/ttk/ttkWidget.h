@@ -117,17 +117,17 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
  */
 #define WIDGET_TAKEFOCUS_TRUE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"ttk::takefocus", offsetof(WidgetCore, takeFocusPtr), TCL_AUTO_LENGTH, 0,0,0 }
+	"ttk::takefocus", offsetof(WidgetCore, takeFocusPtr), TCL_INDEX_NONE, 0,0,0 }
 #define WIDGET_TAKEFOCUS_FALSE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"", offsetof(WidgetCore, takeFocusPtr), TCL_AUTO_LENGTH, 0,0,0 }
+	"", offsetof(WidgetCore, takeFocusPtr), TCL_INDEX_NONE, 0,0,0 }
 
 /* WIDGET_INHERIT_OPTIONS(baseOptionSpecs) --
  * Add this at the end of an OptionSpecs table to inherit
  * the options from 'baseOptionSpecs'.
  */
 #define WIDGET_INHERIT_OPTIONS(baseOptionSpecs) \
-    {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0, baseOptionSpecs, 0}
+    {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0, baseOptionSpecs, 0}
 
 /* All widgets should inherit from ttkCoreOptionSpecs[].
  */
