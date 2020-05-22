@@ -213,10 +213,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
     /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
     { "SecondaryLabelColor",		    ttkBackground, 14 },					    /* 183 */
+    { "LinkColor",			    semantic, 9 },						    /* 184 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 183
+#define MAX_PIXELCODE 184
 
 /*
  *----------------------------------------------------------------------
@@ -279,11 +280,6 @@ SetCGColorComponents(
     OSStatus err = noErr;
     NSColor *bgColor, *color = nil;
     CGFloat rgba[4] = {0, 0, 0, 1};
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
-    NSInteger colorVariant;
-    static CGFloat graphiteAccentRGBA[4] =
-	{152.0 / 255, 152.0 / 255, 152.0 / 255, 1.0};
-#endif
 
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
@@ -371,14 +367,23 @@ SetCGColorComponents(
 	case 8:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	    if (@available(macOS 14, *)) {
-#else
-	    if (false) {
-#endif
 		color = [[NSColor controlAccentColor] colorUsingColorSpace:sRGB];
+#else
+	    if(false) {
+#endif
 	    } else {
 		color = [[NSColor
 			    colorForControlTint:[NSColor currentControlTint]]
 			        colorUsingColorSpace: sRGB];
+	    }
+	    break;
+	case 9:
+	    if ([NSApp macMinorVersion] >= 10) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+		color = [[NSColor linkColor] colorUsingColorSpace:sRGB];
+#endif
+	    } else {
+		color = [[NSColor blueColor] colorUsingColorSpace:sRGB];
 	    }
 	    break;
 	default:

@@ -103,8 +103,8 @@ enum {
 	 * ticket [d72abe6b54].
 	 */
 
-	if (eventType == NSEventTypeLeftMouseDown &&
-	    ([eventWindow styleMask] & NSWindowStyleMaskResizable) &&
+	if (eventType == NSLeftMouseDown &&
+	    ([eventWindow styleMask] & NSResizableWindowMask) &&
 	    [NSApp macMinorVersion] > 6) {
 	    NSRect frame = [eventWindow frame];
 	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
