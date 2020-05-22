@@ -3,13 +3,21 @@ language: c
 addons:
   apt:
     packages:
+      - binutils-mingw-w64-i686
+      - binutils-mingw-w64-x86-64
+      - gcc-mingw-w64
+      - gcc-mingw-w64-base
+      - gcc-mingw-w64-i686
+      - gcc-mingw-w64-x86-64
+      - gcc-multilib
       - tcl-dev
       - libx11-dev
-# Doesn't work at the moment, see: <https://travis-ci.community/t/macos-build-fails-because-of-homebrew-bundle-unknown-command/7296>
-# homebrew:
-#   packages:
-#     - tcl-tk
-#     - xquartz
+  homebrew:
+    packages:
+      - tcl-tk
+    casks:
+      - xquartz
+    update: true
 matrix:
   include:
 # Testing on Linux with various compilers
@@ -106,9 +114,9 @@ matrix:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Xcode 11.4/Shared/Unix-like"
+    - name: "macOS/Xcode 11.5/Shared/XQuartz"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -130,11 +138,6 @@ before_install:
       case $TRAVIS_OS_NAME in
         windows)
           choco install -y magicsplat-tcl-tk
-          ;;
-        osx)
-          brew update
-          brew install tcl-tk
-          brew cask install xquartz
           ;;
       esac
   - cd ${BUILD_DIR}
