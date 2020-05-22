@@ -1528,7 +1528,7 @@ GetSelText(
 				 * character. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteCount;
+    TkSizeT byteCount;
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
