@@ -1173,7 +1173,8 @@ LayoutDLine(
 				/* Pointer to last chunk in display lines with
 				 * numBytes > 0. Used to drop 0-sized chunks
 				 * from the end of the line. */
-    int byteOffset, ascent, descent, code, elide, elidesize;
+    TkSizeT byteOffset;
+    int ascent, descent, code, elide, elidesize;
     StyleValues *sValuePtr;
     TkTextElideInfo info;	/* Keep track of elide state. */
 
@@ -1334,7 +1335,7 @@ LayoutDLine(
   connectNextLogicalLine:
     byteOffset = curIndex.byteIndex;
     segPtr = curIndex.linePtr->segPtr;
-    while ((byteOffset > 0) && (byteOffset >= segPtr->size)) {
+    while ((byteOffset + 1 > 1) && (byteOffset >= (TkSizeT)segPtr->size)) {
 	byteOffset -= segPtr->size;
 	segPtr = segPtr->nextPtr;
 
@@ -1374,7 +1375,7 @@ LayoutDLine(
 	if (elide && (lastChunkPtr != NULL)
 		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
 	    elidesize = segPtr->size - byteOffset;
-	    if (elidesize > 0) {
+	    if ((TkSizeT)segPtr->size > byteOffset) {
 		curIndex.byteIndex += elidesize;
 		lastChunkPtr->numBytes += elidesize;
 		breakByteOffset = lastChunkPtr->breakIndex
@@ -1620,7 +1621,7 @@ LayoutDLine(
 	}
 	curIndex.byteIndex += chunkPtr->numBytes;
 	byteOffset += chunkPtr->numBytes;
-	if (byteOffset >= segPtr->size) {
+	if (byteOffset >= (TkSizeT)segPtr->size) {
 	    byteOffset = 0;
 	    segPtr = segPtr->nextPtr;
 	    if (elide && segPtr == NULL) {
@@ -1697,12 +1698,10 @@ LayoutDLine(
 	    ckfree(chunkPtr);
 	}
 	if (breakByteOffset != breakChunkPtr->numBytes) {
-	    TkSizeT byteOffset1;
 	    if (breakChunkPtr->undisplayProc != NULL) {
 		breakChunkPtr->undisplayProc(textPtr, breakChunkPtr);
 	    }
-	    segPtr = TkTextIndexToSeg(&breakIndex, &byteOffset1);
-	    byteOffset = byteOffset1;
+	    segPtr = TkTextIndexToSeg(&breakIndex, &byteOffset);
 	    segPtr->typePtr->layoutProc(textPtr, &breakIndex, segPtr,
 		    byteOffset, maxX, breakByteOffset, 0, wrapMode,
 		    breakChunkPtr);
@@ -3061,7 +3060,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH
+    if (dInfoPtr->metricEpoch == TCL_INDEX_NONE
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -3245,7 +3244,7 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == TCL_AUTO_LENGTH && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == TCL_INDEX_NONE && lineNum == endLine) {
 
 
 		/*
@@ -7605,11 +7604,11 @@ TkTextCharLayoutProc(
     TkTextIndex *indexPtr,	/* Index of first character to lay out
 				 * (corresponds to segPtr and offset). */
     TkTextSegment *segPtr,	/* Segment being layed out. */
-    int byteOffset,		/* Byte offset within segment of first
+    TkSizeT byteOffset,		/* Byte offset within segment of first
 				 * character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    int maxBytes,		/* Chunk must not include more than this many
+	TkSizeT maxBytes,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this display line yet. */
@@ -7686,7 +7685,7 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    if (bytesThatFit < maxBytes) {
+    if ((TkSizeT)bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    int ch;
 	    int chLen = TkUtfToUniChar(p, &ch);
@@ -7823,7 +7822,7 @@ TkTextCharLayoutProc(
 	    }
 	}
     checkForNextChunk:
-	if ((bytesThatFit + byteOffset) == segPtr->size) {
+	if ((bytesThatFit + byteOffset) == (TkSizeT)segPtr->size) {
 	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
 		    nextPtr = nextPtr->nextPtr) {
 		if (nextPtr->size != 0) {
