@@ -2026,6 +2026,10 @@ integer. This command used to be used for scrolling, but now it is obsolete.
 .PP
 Tk automatically creates class bindings for texts that give them the following
 default behavior.
+In the descriptions below,
+.QW word
+is dependent on the value of
+the \fBtcl_wordchars\fR variable.  See \fBtclvars\fR(n).
 .IP [1]
 Clicking mouse button 1 positions the insertion cursor just before the
 character underneath the mouse cursor, sets the input focus to this widget,
