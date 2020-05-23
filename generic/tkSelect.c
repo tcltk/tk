@@ -1369,8 +1369,8 @@ HandleTclCommand(
      * the offset and maximum # of bytes.
      */
 
-    command = Tcl_ObjPrintf("%s %d %" TCL_Z_MODIFIER "d",
-	    cmdInfoPtr->command, charOffset, maxBytes);
+    command = Tcl_ObjPrintf("%s %d %d",
+	    cmdInfoPtr->command, charOffset, (int)maxBytes);
     Tcl_IncrRefCount(command);
 
     /*
