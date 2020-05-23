@@ -361,7 +361,7 @@ typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
 #else
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
-	Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+	Tk_Window tkwin, const char *value, char *widgRec, int offset);
 typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 #endif
