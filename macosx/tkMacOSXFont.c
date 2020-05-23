@@ -184,6 +184,407 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 #endif
 @end
 
+/*
+ * Implementation of the TextManager for macOS.
+ *
+ * The TextManager is really nothing more than an NSMutableString, except
+ * that Apple says this about the UTF8String property:
+ *
+ *    "This C string is a pointer to a structure inside the string object,
+ *     which may have a lifetime shorter than the string object and will
+ *     certainly not have a longer lifetime. Therefore, you should copy the C
+ *     string if it needs to be stored outside of the memory context in which
+ *     you use this property."
+ *
+ */
+
+typedef struct TextManager {
+    NSMutableString *string;
+    char *utf8string;
+    int numClusters;
+} TextManager;
+
+/*
+ * Static functions used to access a TextManager.
+ */
+
+/*
+ * Called after the NSMutableString has been changed.  It resets the counts of
+ * bytes and chars and saves a copy of the UTF8String of the NSMutableString.
+ */
+
+static char *
+TextManagerUpdate(
+    TextManager *managerPtr,
+    int *numChars,
+    int *numBytes)
+{
+    *numChars = [managerPtr->string length];
+    *numBytes = [managerPtr->string lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+    if (managerPtr->utf8string) {
+	ckfree(managerPtr->utf8string);
+    }
+    managerPtr->utf8string = ckalloc(*numBytes + 1);
+    strcpy(managerPtr->utf8string, [managerPtr->string UTF8String]);
+    managerPtr->numClusters = -1;  /* recomputed by TkpTextManagerNumClusters */
+    return managerPtr->utf8string;
+}
+
+/*
+ * Returns the character index of the base character of the cluster with
+ * given index, or the string length.
+ *
+ * NOTE: A future optimization could cache the character index of the last base
+ * character which was looked up inside the TextManager, as a hint.  Then the
+ * next time a base character index were needed, the search could begin at the
+ * hint location instead of the beginning of the string.  Since changes to the
+ * insert cursor are usually small, this would be quite a bit faster.
+ */
+
+static NSUInteger
+IndexOfClusterBase(
+    NSString *string,
+    NSUInteger clusterIndex)
+{
+    NSRange clusterRange = NSMakeRange(0, 0);
+    NSUInteger i, charIndex = 0, end = [string length];
+
+    if (end > 0) {
+	for (i = 0; i < clusterIndex; i++) {
+	    clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:charIndex];
+	    charIndex = clusterRange.location + clusterRange.length;
+	    if (charIndex >= end) {
+		charIndex = end;
+		break;
+	    }
+	}
+    }
+    return charIndex;
+}
+
+/*
+ * Returns the index of the cluster which constains the the character with
+ * given index, or the total number of clusters.
+ *
+ * NOTE: This could also benefit from a cached hint.
+ */
+
+static NSUInteger
+IndexOfContainingCluster(
+    NSString *string,
+    NSUInteger charIndex)
+{
+    NSRange clusterRange;
+    NSUInteger idx, clusterIndex;
+
+    if (charIndex > string.length) {
+	charIndex = string.length;
+    }
+    for (idx = 0, clusterIndex = 0; idx < charIndex; clusterIndex++) {
+	clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:idx];
+	idx += clusterRange.length;
+	if (idx > charIndex) {
+	    return clusterIndex;
+	}
+    }
+    return clusterIndex;
+}
+
+/*
+ * Computes the range of characters filled by a range of clusters of given
+ * length, such that a given character is contained in the first cluster.
+ * Used by TkpTextManagerDelete to determine which chars to delete from
+ * the NSMutableString.
+ */
+
+static NSRange
+CharRangeFromClusterRange(
+    NSString *string,
+    NSUInteger charIndex,
+    NSUInteger clusterCount)
+{
+    NSRange clusterRange;
+    NSUInteger max = string.length, charLocation, charLength = 0;
+
+    if (max == 0 || charIndex >= max) {
+	return NSMakeRange(max, 0);
+    }
+    clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:charIndex];
+    charLocation = clusterRange.location;
+    charIndex = charLocation;
+
+    while (clusterCount--) {
+	clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:charIndex];
+	charLength += clusterRange.length;
+	charIndex += clusterRange.length;
+	if (charIndex >= max) {
+	    return NSMakeRange(charLocation, max - charLocation);
+	}
+    }
+    return NSMakeRange(charLocation, charLength);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerCreate --
+ *
+ *	Allocate and initialize a TextManager to handle glyph-based indexing.
+ *
+ * Results:
+ *	A pointer to a TextManager, cast as an opaque ClientData type.
+ *
+ * Side effects:
+ *	Allocates a TextManager, an NSString and a UTF-8 char buffer.
+ *      Also stores a pointer to the initial (empty) UTF-8 string in
+ *      the variable referenced by the initialString parameter.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+ClientData
+TkpTextManagerCreate(
+    const char **initialString)
+{
+    TextManager *managerPtr = (TextManager *) ckalloc(sizeof(TextManager));
+    int dummy;
+
+    managerPtr->string = [[NSMutableString string] retain];
+    managerPtr->utf8string = NULL;
+    *initialString = TextManagerUpdate(managerPtr, &dummy, &dummy);
+    return (ClientData) managerPtr;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerDestroy --
+ *
+ *	Free the resources associated to a TextManager
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Release the NSString, frees the UTF8 string and the TextManager.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkpTextManagerDestroy(
+ClientData clientData)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+
+    [managerPtr->string release];
+    if (managerPtr->utf8string) {
+	ckfree(managerPtr->utf8string);
+    }
+    ckfree(managerPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerClusterBaseChar --
+ *
+ *	Computes the character index of the base character of the cluster
+ *      with the given cluster index.
+ *
+ * Results:
+ *	A cluster index.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpTextManagerClusterBaseChar(
+    ClientData clientData,
+    int clusterIndex)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    if (clusterIndex < 0) {
+	return 0;
+    }
+    return (int) IndexOfClusterBase(managerPtr->string, clusterIndex);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerContainingCluster --
+ *
+ *	Given a character index, find the index of the cluster which contains
+ *      the indexed character.
+ *
+ * Results:
+ *	A cluster index.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpTextManagerContainingCluster(
+    ClientData clientData,
+    int charIndex)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    if (charIndex < 0) {
+	return 0;
+    }
+    return (int) IndexOfContainingCluster(managerPtr->string, charIndex);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerNumClusters --
+ *
+ *	Return the (cached) number of clusters in the entire NSMutableString.
+ *
+ * Results:
+ *	The number of clusters.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpTextManagerNumClusters(
+    ClientData clientData)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    NSString *string = managerPtr->string;
+
+    if (managerPtr->numClusters < 0) {
+	managerPtr->numClusters = IndexOfContainingCluster(string,
+	    string.length);
+    }
+    return managerPtr->numClusters;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerSet --
+ *
+ *	Set the contents of the NSMutableString from a UTF-8 encoded string.
+ *
+ * Results:
+ *	A pointer to the TextManager's cached UTF-8 string.
+ *
+ * Side effects:
+ *	The number of unichars and bytes are recorded in the integer variables
+ *      referenced by the numChars and numBytes parameters.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *
+TkpTextManagerSet(
+    ClientData clientData,
+    const char *value,
+    int *numChars,
+    int *numBytes)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    NSString *valueString = [[NSString alloc] initWithUTF8String: value];
+
+    [managerPtr->string setString:valueString];
+    return TextManagerUpdate(managerPtr, numChars, numBytes);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerInsert --
+ *
+ *	Insert the string, as described by the UTF-8 encoded byte array
+ *      referenced by the value parameter, at the provided character index.
+ *      Inserting a cluster may be done with sequential calls that each provide
+ *      a single unicode code point.  The macOS port always provides both
+ *      surrogate pairs in a single XEvent, so there should not be misplaced
+ *      surrogates, but the modifiers following the base char may be incomplete
+ *      after calling this.  Also, the provided character index may not refer
+ *      to a base character in some calls.
+ *
+ * Results:
+ *	A pointer to the TextManager's cached UTF-8 string.
+ *
+ * Side effects:
+ *	The number of unichars and bytes are recorded in the integer variables
+ *      referenced by the numChars and numBytes parameters.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char*
+TkpTextManagerInsert(
+    ClientData clientData,
+    int charIndex,
+    const char *value,
+    int *numChars,
+    int *numBytes)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    NSMutableString *str = managerPtr->string;
+    NSString *valueString = [[NSString alloc] initWithUTF8String: value];
+
+    [str insertString:valueString atIndex:charIndex];
+    return TextManagerUpdate(managerPtr, numChars, numBytes);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerDelete --
+ *
+ *      Delete the number of clusters specified by the count parameter,
+ *      starting at the cluster containing the character referenced by
+ *      the charIndex parameter.  If that character is not a base character
+ *      the entire cluster which contains it will be deleted, so the
+ *      resulting string is a sequence of well-formed clusters.
+ *
+ * Results:
+ *	A pointer to the TextManager's cached UTF-8 string.
+ *
+ * Side effects:
+ *      The number of unichars and bytes in the modified NSMutableString are
+ *	recorded in the integer variables referenced by the numChars and
+ *	numBytes parameters.  Also the number of characters which were removed
+ *	is recorded in the integer variable charsDeleted.  The index of each
+ *	remaining base character will change by addition or subtraction of this
+ *	number.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char*
+TkpTextManagerDelete(
+    ClientData clientData,
+    int charIndex,
+    int count,
+    int *numChars,
+    int *numBytes,
+    int *charsDeleted)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    NSRange deleteRange = CharRangeFromClusterRange(managerPtr->string,
+						    charIndex, count);
+    [managerPtr->string deleteCharactersInRange: deleteRange];
+    *charsDeleted = deleteRange.length;
+    return TextManagerUpdate(managerPtr, numChars, numBytes);
+}
+
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
 	((faPtr)->weight == TK_FW_BOLD ? NSBoldFontMask : NSUnboldFontMask) | \
 	((faPtr)->slant == TK_FS_ITALIC ? NSItalicFontMask : NSUnitalicFontMask)
