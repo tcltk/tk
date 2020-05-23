@@ -484,7 +484,7 @@ static const Tk_ClassProcs entryClass = {
 
 int
 Tk_EntryObjCmd(
-    ClientData dummy,	/* NULL. */
+    ClientData dummy,		/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -492,7 +492,6 @@ Tk_EntryObjCmd(
     Entry *entryPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    char *tmp;
     (void)dummy;
 
     if (objc < 2) {
@@ -531,9 +530,15 @@ Tk_EntryObjCmd(
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_ENTRY;
-    tmp				= (char *)ckalloc(1);
-    tmp[0]			= '\0';
-    entryPtr->string		= tmp;
+#ifndef USE_GLYPH_INDEXES
+    {
+	char *tmp = (char *)ckalloc(1);
+	tmp[0] = '\0';
+	entryPtr->string = tmp;
+    }
+#else
+    entryPtr->manager		= TkpTextManagerCreate(&entryPtr->string);
+#endif
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
@@ -735,6 +740,11 @@ EntryWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
+
+#ifdef USE_GLYPH_INDEXES
+	index = TkpTextManagerContainingCluster(entryPtr->manager, index);
+#endif
+
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
@@ -1041,7 +1051,12 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
+#ifndef USE_GLYPH_INDEXING
     ckfree((char *)entryPtr->string);
+#else
+    TkpTextManagerDestroy(entryPtr->manager);
+#endif
+	
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar2(entryPtr->interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1767,7 +1782,6 @@ DisplayEntry(
      * Draw the text in two pieces: first the unselected portion, then the
      * selected portion on top of it.
      */
-
     if ((entryPtr->numChars != 0) || (entryPtr->placeholderChars == 0)) {
         Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
@@ -2115,7 +2129,7 @@ EntryComputeGeometry(
  *
  * InsertChars --
  *
- *	Add new characters to an entry widget.
+ *	Add new grapheme clusters to an entry widget.
  *
  * Results:
  *	A standard Tcl result. If an error occurred then an error message is
@@ -2134,18 +2148,21 @@ InsertChars(
     int index,			/* Add the new elements before this character
 				 * index. */
     const char *value)		/* New characters to add (NULL-terminated
-				 * string). */
+				 * UTF-8 encoded string). */
 {
-    size_t byteIndex, byteCount, newByteCount, oldChars, charsAdded;
-    const char *string;
+    int byteCount, oldChars, charsAdded;
     char *newStr;
 
-    string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
 	return TCL_OK;
     }
+
+#ifndef USE_GLYPH_INDEXES
+    size_t  byteIndex, newByteCount;
+    const char *string;
+    string = entryPtr->string;
+    byteIndex = Tcl_UtfAtIndex(string, index) - string;
 
     newByteCount = entryPtr->numBytes + byteCount + 1;
     newStr = (char *)ckalloc(newByteCount);
@@ -2154,15 +2171,14 @@ InsertChars(
     strcpy(newStr + byteIndex + byteCount, string + byteIndex);
 
     if ((entryPtr->validate == VALIDATE_KEY ||
-	    entryPtr->validate == VALIDATE_ALL) &&
-	    EntryValidateChange(entryPtr, value, newStr, index,
-		    VALIDATE_INSERT) != TCL_OK) {
+	entryPtr->validate == VALIDATE_ALL) &&
+	EntryValidateChange(entryPtr, value, newStr, index,
+			    VALIDATE_INSERT) != TCL_OK) {
 	ckfree(newStr);
 	return TCL_OK;
     }
 
     ckfree((char *)string);
-    entryPtr->string = newStr;
 
     /*
      * The following construction is used because inserting improperly formed
@@ -2177,11 +2193,19 @@ InsertChars(
     entryPtr->numChars = Tcl_NumUtfChars(newStr, TCL_INDEX_NONE);
     charsAdded = entryPtr->numChars - oldChars;
     entryPtr->numBytes += byteCount;
+#else
+    oldChars = entryPtr->numChars;
 
-    if (entryPtr->displayString == string) {
+    newStr = (char *) TkpTextManagerInsert(entryPtr->manager, index, value,
+			  &entryPtr->numChars, &entryPtr->numBytes);
+    charsAdded = entryPtr->numChars - oldChars;
+#endif
+
+    if (entryPtr->displayString == entryPtr->string) {
 	entryPtr->displayString = newStr;
 	entryPtr->numDisplayBytes = entryPtr->numBytes;
     }
+    entryPtr->string = newStr;
 
     /*
      * Inserting characters invalidates all indexes into the string. Touch up
@@ -2214,7 +2238,7 @@ InsertChars(
  *
  * DeleteChars --
  *
- *	Remove one or more characters from an entry widget.
+ *	Remove one or more grapheme clusters from an entry widget.
  *
  * Results:
  *	A standard Tcl result. If an error occurred then an error message is
@@ -2230,12 +2254,15 @@ InsertChars(
 static int
 DeleteChars(
     Entry *entryPtr,		/* Entry widget to modify. */
-    int index,			/* Index of first character to delete. */
-    int count)			/* How many characters to delete. */
+    int index,			/* Index of first cluster to delete. */
+    int count)			/* How many clusters to delete. */
 {
+    char *newStr;
+    const char *string = entryPtr->string;
+
+#ifndef USE_GLYPH_INDEXES
     int byteIndex, byteCount, newByteCount;
-    const char *string;
-    char *newStr, *toDelete;
+    char *toDelete;
 
     if ((index + count) > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
@@ -2268,9 +2295,13 @@ DeleteChars(
 
     ckfree(toDelete);
     ckfree((char *)entryPtr->string);
-    entryPtr->string = newStr;
     entryPtr->numChars -= count;
     entryPtr->numBytes -= byteCount;
+#else
+    newStr = (char *) TkpTextManagerDelete(entryPtr->manager, index, count,
+			  &entryPtr->numChars, &entryPtr->numBytes, &count);
+#endif
+    entryPtr->string = newStr;
 
     if (entryPtr->displayString == string) {
 	entryPtr->displayString = newStr;
@@ -2463,6 +2494,8 @@ EntrySetValue(
     }
 
     oldSource = entryPtr->string;
+
+#ifndef USE_GLYPH_INDEXES
     ckfree((char *)entryPtr->string);
 
     if (malloced) {
@@ -2475,10 +2508,14 @@ EntrySetValue(
     }
     entryPtr->numBytes = valueLen;
     entryPtr->numChars = Tcl_NumUtfChars(value, valueLen);
+#else
+    entryPtr->string = TkpTextManagerSet(entryPtr->manager, value,
+			   &entryPtr->numChars, &entryPtr->numBytes);
+#endif
 
     if (entryPtr->displayString == oldSource) {
 	entryPtr->displayString = entryPtr->string;
-	entryPtr->numDisplayBytes = entryPtr->numBytes;
+	entryPtr->numDisplayBytes = entryPtr->numChars;
     }
 
     if (entryPtr->selectFirst >= 0) {
@@ -2647,13 +2684,14 @@ static int
 GetEntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry for which the index is being
-				 * specified. */
-    Tcl_Obj *indexObj,	/* Specifies character in entryPtr. */
+				   specified. */
+    Tcl_Obj *indexObj,		/* Specifies character in entryPtr. */
     int *indexPtr)		/* Where to store converted character index */
 {
     TkSizeT length, idx;
     const char *string;
 
+#ifndef USE_GLYPH_INDEXES
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
@@ -2663,6 +2701,25 @@ GetEntryIndex(
 	*indexPtr = (int)idx;
 	return TCL_OK;
     }
+#else
+
+    /*
+     * If we are doing glyph indexing, integer objects are given as glyph
+     * indexes so we need to convert them to character indexes.
+     */
+
+    TkSizeT clusterLength = (TkSizeT) TkpTextManagerNumClusters(
+	                                  entryPtr->manager);
+    if (TCL_OK == TkGetIntForIndex(indexObj, clusterLength, 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > clusterLength) {
+	    idx = (TkSizeT) clusterLength + 1;
+	}
+	*indexPtr = TkpTextManagerClusterBaseChar(entryPtr->manager, idx);
+	return TCL_OK;
+    }
+#endif
 
     string = TkGetStringFromObj(indexObj, &length);
 

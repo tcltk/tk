@@ -1349,8 +1349,42 @@ MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
-MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
+MODULE_SCOPE int	TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
+/*
+ * Unicode strings describing text are actually sequences of so-called grapheme
+ * clusters, each of which describes what the user perceives as a single glyph.
+ * When editing text, users expect to insert or delete entire glyphs, so the
+ * underlying string operations should insert or delete entire grapheme clusters.
+ * Also, indexes into the string, such as the insert cursor, should refer to
+ * a glyph, not a character in the string and underlying character indexes should
+ * always point to the base character of a grapheme cluster.
+ *
+ * The functions declared below provide an interface to an abstract TextManager
+ * object which can recognize boundaries of grapheme clusters and manage a
+ * glyph-based indexing system for Tk text-related widgets.  To enable the features
+ * described above, a platform port should define the conditional compilation
+ * variable USE_GLYPH_INDEXES and implement these functions.
+ */
+
+#if defined(MAC_OSX_TK)
+#define USE_GLYPH_INDEXES
+MODULE_SCOPE ClientData  TkpTextManagerCreate(const char **initialString);
+MODULE_SCOPE void	 TkpTextManagerDestroy(ClientData clientData);
+MODULE_SCOPE int	 TkpTextManagerClusterBaseChar(ClientData clientData,
+							   int clusterIndex);
+MODULE_SCOPE int	 TkpTextManagerContainingCluster(ClientData clientData,
+							   int charIndex);
+MODULE_SCOPE int	 TkpTextManagerNumClusters(ClientData clientData);
+MODULE_SCOPE const char* TkpTextManagerInsert(ClientData clientData,
+			     int charIndex, const char *value,
+			     int *numChars, int *numBytes);
+MODULE_SCOPE const char* TkpTextManagerSet(ClientData clientData,
+			     const char *value, int *numChars, int *numBytes);
+MODULE_SCOPE const char* TkpTextManagerDelete(ClientData clientData, int charIndex,
+			     int count, int *numChars, int *numBytes,
+			     int *charsDeleted);
+#endif
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

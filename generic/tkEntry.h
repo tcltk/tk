@@ -38,15 +38,14 @@ typedef struct {
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this widget. */
     enum EntryType type;	/* Specialized type of Entry widget */
+    ClientData manager;		/* Platform-specific TextManager. */
 
     /*
      * Fields that are set by widget commands other than "configure".
      */
 
-    const char *string;		/* Pointer to storage for string;
-				 * NULL-terminated; malloc-ed. */
-    int insertPos;		/* Character index before which next typed
-				 * character will be inserted. */
+    const char *string;		/* Pointer to storage for string. */
+    int insertPos;		/* Index of the character after the cursor */
 
     /*
      * Information about what's selected, if any.
