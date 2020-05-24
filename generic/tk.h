@@ -68,10 +68,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	7
 #define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	2
+#define TK_RELEASE_SERIAL	4
 
 #define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a2"
+#define TK_PATCH_LEVEL		"8.7a4"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -85,13 +85,17 @@ extern "C" {
 
 #ifndef RC_INVOKED
 
-#ifndef _XLIB_H
+#if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
 #   endif
 #endif
-#ifdef __STDC__
+#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
+     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
 #   include <stddef.h>
 #endif
 
@@ -110,7 +114,7 @@ extern "C" {
  * Decide whether or not to use input methods.
  */
 
-#ifdef XNQueryInputStyle
+#if defined(XNQueryInputStyle) && !defined(_WIN32) && !defined(MAC_OSX_TK)
 #define TK_USE_INPUT_METHODS
 #endif
 
@@ -191,17 +195,17 @@ typedef struct Tk_OptionSpec {
     size_t objOffset;		/* Where in record to store a Tcl_Obj * that
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
-				 * record. Use the Tk_Offset macro to generate
-				 * values for this. -1 means don't store the
-				 * Tcl_Obj in the record. */
+				 * record. Use the offsetof macro to generate
+				 * values for this. TCL_INDEX_NONE means don't
+				 * store the Tcl_Obj in the record. */
     size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
 				 * such as an int or XColor *. This field is
 				 * specified as an offset in bytes from the
-				 * start of the record. Use the Tk_Offset
-				 * macro to generate values for it. -1 means
-				 * don't store the internal representation in
-				 * the record. */
+				 * start of the record. Use the offsetof
+				 * macro to generate values for it.
+				 * TCL_INDEX_NONE means don't store the
+				 * internal representation in the record. */
 #else
     int objOffset;
     int internalOffset;
@@ -268,10 +272,12 @@ typedef struct Tk_ObjCustomOption {
  * Computes number of bytes from beginning of structure to a given field.
  */
 
-#ifdef offsetof
-#define Tk_Offset(type, field) ((int) offsetof(type, field))
-#else
-#define Tk_Offset(type, field) ((int) ((char *) &((type *) 0)->field))
+#ifndef TK_NO_DEPRECATED
+#   define Tk_Offset(type, field) ((int) offsetof(type, field))
+#endif
+/* Workaround for platforms missing offsetof(), e.g. VC++ 6.0 */
+#ifndef offsetof
+#   define offsetof(type, field) ((size_t) ((char *) &((type *) 0)->field))
 #endif
 
 /*
@@ -376,7 +382,7 @@ typedef struct Tk_ConfigSpec {
 				 * in command line or database. */
 #if TCL_MAJOR_VERSION > 8
     size_t offset;			/* Where in widget record to store value; use
-				 * Tk_Offset macro to generate values for
+				 * offsetof macro to generate values for
 				 * this. */
 #else
     int offset;
@@ -438,9 +444,9 @@ typedef struct {
     const char *key;		/* The key string that flags the option in the
 				 * argv array. */
     int type;			/* Indicates option type; see below. */
-    char *src;			/* Value to be used in setting dst; usage
+    void *src;			/* Value to be used in setting dst; usage
 				 * depends on type. */
-    char *dst;			/* Address of value to be modified; usage
+    void *dst;			/* Address of value to be modified; usage
 				 * depends on type. */
     const char *help;		/* Documentation message describing this
 				 * option. */
@@ -616,12 +622,12 @@ typedef struct Tk_ClassProcs {
  *
  *	#define Tk_GetField(name, who, which) \
  *	    (((who) == NULL) ? NULL :
- *	    (((who)->size <= Tk_Offset(name, which)) ? NULL :(name)->which))
+ *	    (((who)->size <= offsetof(name, which)) ? NULL :(name)->which))
  */
 
 #define Tk_GetClassProc(procs, which) \
     (((procs) == NULL) ? NULL : \
-    (((procs)->size <= (size_t)Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+    (((procs)->size <= offsetof(Tk_ClassProcs, which)) ? NULL:(procs)->which))
 
 /*
  * Each geometry manager (the packer, the placer, etc.) is represented by a
@@ -810,7 +816,7 @@ typedef struct Tk_FakeWin {
     unsigned long dummy7;	/* dirtyAtts */
     unsigned int flags;
     char *dummy8;		/* handlerList */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
     ClientData *dummy10;	/* tagPtr */
@@ -830,9 +836,14 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
-    char *dummy20;		/* geometryMaster */
-#ifdef TK_USE_INPUT_METHODS
-    int dummy21;
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
+    int dummy20;
+#endif /* TK_USE_INPUT_METHODS */
+    char *dummy21;		/* geomMgrName */
+    Tk_Window dummy22;		/* maintainerPtr */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIC dummy9;			/* inputContext */
+    int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
@@ -899,6 +910,10 @@ typedef struct Tk_FakeWin {
  *				window.
  * TK_WM_MANAGEABLE		1 marks a window as capable of being converted
  *				into a toplevel using [wm manage].
+ * TK_CAN_INPUT_TEXT            1 means that this window accepts text input.
+ *                              Used on macOS to indicate that key events can be
+ *                              processed with the NSTextInputClient protocol.
+ *                              Not currently accessible through the public API.
  */
 
 #define TK_MAPPED		1
@@ -912,6 +927,7 @@ typedef struct Tk_FakeWin {
 #define TK_EMBEDDED		0x100
 #define TK_CONTAINER		0x200
 #define TK_BOTH_HALVES		0x400
+
 #define TK_WRAPPER		0x1000
 #define TK_REPARENTED		0x2000
 #define TK_ANONYMOUS_WINDOW	0x4000
@@ -920,6 +936,7 @@ typedef struct Tk_FakeWin {
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
 #define TK_WM_MANAGEABLE	0x80000
+#define TK_CAN_INPUT_TEXT       0x100000
 
 /*
  *----------------------------------------------------------------------
@@ -1034,6 +1051,8 @@ typedef int	(Tk_ItemAreaProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double *rectPtr);
 typedef int	(Tk_ItemPostscriptProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int prepass);
+typedef void	(Tk_ItemRotateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    double originX, double originY, double angleRadians);
 typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double originX, double originY, double scaleX,
 		    double scaleY);
@@ -1117,7 +1136,9 @@ typedef struct Tk_ItemType {
 				/* Procedure to delete characters from an
 				 * item. */
     struct Tk_ItemType *nextPtr;/* Used to link types together into a list. */
-    char *reserved1;		/* Reserved for future extension. */
+    Tk_ItemRotateProc *rotateProc;
+				/* Procedure to rotate an item's coordinates
+				 * about a point. */
     int reserved2;		/* Carefully compatible with */
     char *reserved3;		/* Jan Nijtmans dash patch */
     char *reserved4;

@@ -3444,12 +3444,12 @@ test button-5.24 {ConfigureButton - computing geometry} -constraints {
     set expectedwidth [expr {$textwidth + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness] + 2*[.b cget -padx]}]
     incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
-    set result [expr $expectedwidth == [winfo reqwidth .b]]
+    set result [expr {$expectedwidth == [winfo reqwidth .b]}]
     set linespace [lindex [font metrics [.b cget -font] -displayof .b] 5]
     set expectedheight [expr {$linespace + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness] + 2*[.b cget -pady]}]
     incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
-    lappend result [expr $expectedheight == [winfo reqheight .b]]
+    lappend result [expr {$expectedheight == [winfo reqheight .b]}]
     # 2. button with a bitmap image
     # there is no access to characteristics the predefined bitmaps,
     # so define one as an image (copied from questhead.xbm)
@@ -3468,11 +3468,11 @@ test button-5.24 {ConfigureButton - computing geometry} -constraints {
     set expectedwidth [expr {[image width $myquesthead] + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness]}]
     incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
-    lappend result [expr $expectedwidth == [winfo reqwidth .b]]
+    lappend result [expr {$expectedwidth == [winfo reqwidth .b]}]
     set expectedheight [expr {[image height $myquesthead] + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness]}]
     incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
-    lappend result [expr $expectedheight == [winfo reqheight .b]]
+    lappend result [expr {$expectedheight == [winfo reqheight .b]}]
 } -cleanup {
     destroy .b
 } -result {1 1 1 1}
@@ -3957,6 +3957,45 @@ test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destr
 } -cleanup {
     destroy .top.b .top
 } -result {}
+
+test button-15.1 {Bug [5d991b822e]} {
+    # Want this not to segfault
+    set var INIT
+    button .b -textvariable var
+    trace add variable var unset {apply {args {
+	.b configure -textvariable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
+test button-15.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    button .b -textvariable var
+    trace add variable var unset {apply {args {
+	.b configure -textvariable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
+test button-15.3 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    checkbutton .b -variable var
+    trace add variable var unset {apply {args {
+	.b configure -variable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
+
 
 imageFinish
 cleanupTests

@@ -200,7 +200,7 @@ test unixbutton-1.9 {TkpComputeButtonGeometry procedure} -constraints {
     list [winfo reqwidth .b2] [winfo reqheight .b2]
 } -cleanup {
     deleteWindows
-} -result [list [expr {17 + $defaultBorder}] [expr {27 + $defaultBorder}]] 
+} -result [list [expr {17 + $defaultBorder}] [expr {27 + $defaultBorder}]]
 test unixbutton-1.10 {TkpComputeButtonGeometry procedure} -constraints {
     unix
 } -setup {

@@ -292,8 +292,8 @@ static void		GridLostSlaveProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		GridReqProc(ClientData clientData, Tk_Window tkwin);
 static void		InitMasterData(Gridder *masterPtr);
-static Tcl_Obj *	NewPairObj(int, int);
-static Tcl_Obj *	NewQuadObj(int, int, int, int);
+static Tcl_Obj *	NewPairObj(Tcl_WideInt, Tcl_WideInt);
+static Tcl_Obj *	NewQuadObj(Tcl_WideInt, Tcl_WideInt, Tcl_WideInt, Tcl_WideInt);
 static int		ResolveConstraints(Gridder *gridPtr, int rowOrColumn,
 			    int maxOffset);
 static void		SetGridSize(Gridder *gridPtr);
@@ -335,7 +335,7 @@ Tk_GridObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     static const char *const optionStrings[] = {
 	"anchor", "bbox", "columnconfigure", "configure",
 	"forget", "info", "location", "propagate", "remove",
@@ -720,7 +720,7 @@ GridInfoCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register Gridder *slavePtr;
+    Gridder *slavePtr;
     Tk_Window slave;
     Tcl_Obj *infoObj;
 
@@ -741,13 +741,13 @@ GridInfoCommand(
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
 	    TkNewWindowObj(slavePtr->masterPtr->tkwin));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-column", -1),
-	    Tcl_NewIntObj(slavePtr->column));
+	    Tcl_NewWideIntObj(slavePtr->column));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-row", -1),
-	    Tcl_NewIntObj(slavePtr->row));
+	    Tcl_NewWideIntObj(slavePtr->row));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-columnspan", -1),
-	    Tcl_NewIntObj(slavePtr->numCols));
+	    Tcl_NewWideIntObj(slavePtr->numCols));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-rowspan", -1),
-	    Tcl_NewIntObj(slavePtr->numRows));
+	    Tcl_NewWideIntObj(slavePtr->numRows));
     TkAppendPadAmount(infoObj, "-ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
     TkAppendPadAmount(infoObj, "-ipady", slavePtr->iPadY/2, slavePtr->iPadY);
     TkAppendPadAmount(infoObj, "-padx", slavePtr->padLeft, slavePtr->padX);
@@ -785,7 +785,7 @@ GridLocationCommand(
     Tk_Window master;
     Gridder *masterPtr;		/* Master grid record. */
     GridMaster *gridPtr;	/* Pointer to grid data. */
-    register SlotInfo *slotPtr;
+    SlotInfo *slotPtr;
     int x, y;			/* Offset in pixels, from edge of master. */
     int i, j;			/* Corresponding column and row indeces. */
     int endX, endY;		/* End of grid. */
@@ -1010,8 +1010,8 @@ GridRowColumnConfigureCommand(
     }
 
     masterPtr = GetGrid(master);
-    first = 0; /* lint */
-    last = 0; /* lint */
+    first = 0;
+    last = 0;
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
@@ -1055,17 +1055,17 @@ GridRowColumnConfigureCommand(
 
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-minsize", -1));
-	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(minsize));
+	    Tcl_ListObjAppendElement(interp, res, Tcl_NewWideIntObj(minsize));
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-pad", -1));
-	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(pad));
+	    Tcl_ListObjAppendElement(interp, res, Tcl_NewWideIntObj(pad));
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-uniform", -1));
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj(uniform == NULL ? "" : uniform, -1));
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-weight", -1));
-	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(weight));
+	    Tcl_ListObjAppendElement(interp, res, Tcl_NewWideIntObj(weight));
 	    Tcl_SetObjResult(interp, res);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_OK;
@@ -1082,10 +1082,10 @@ GridRowColumnConfigureCommand(
 	    return TCL_ERROR;
 	}
 	if (index == ROWCOL_MINSIZE) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		    (ok == TCL_OK) ? slotPtr[slot].minSize : 0));
 	} else if (index == ROWCOL_WEIGHT) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		    (ok == TCL_OK) ? slotPtr[slot].weight : 0));
 	} else if (index == ROWCOL_UNIFORM) {
 	    Tk_Uid value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
@@ -1093,7 +1093,7 @@ GridRowColumnConfigureCommand(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    (value == NULL) ? "" : value, -1));
 	} else if (index == ROWCOL_PAD) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		    (ok == TCL_OK) ? slotPtr[slot].pad : 0));
 	}
 	Tcl_DecrRefCount(listCopy);
@@ -1431,7 +1431,8 @@ GridReqProc(
     Tk_Window tkwin)		/* Other Tk-related information about the
 				 * window. */
 {
-    register Gridder *gridPtr = clientData;
+    Gridder *gridPtr = (Gridder *)clientData;
+    (void)tkwin;
 
     gridPtr = gridPtr->masterPtr;
     if (gridPtr && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
@@ -1463,7 +1464,8 @@ GridLostSlaveProc(
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Gridder *slavePtr = clientData;
+    Gridder *slavePtr = (Gridder *)clientData;
+    (void)tkwin;
 
     if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
@@ -1496,9 +1498,9 @@ static int
 AdjustOffsets(
     int size,			/* The total layout size (in pixels). */
     int slots,			/* Number of slots. */
-    register SlotInfo *slotPtr)	/* Pointer to slot array. */
+    SlotInfo *slotPtr)	/* Pointer to slot array. */
 {
-    register int slot;		/* Current slot. */
+    int slot;		/* Current slot. */
     int diff;			/* Extra pixels needed to add to the layout. */
     int totalWeight;		/* Sum of the weights for all the slots. */
     int weight;			/* Sum of the weights so far. */
@@ -1721,8 +1723,8 @@ ArrangeGrid(
     ClientData clientData)	/* Structure describing master whose slaves
 				 * are to be re-layed out. */
 {
-    register Gridder *masterPtr = clientData;
-    register Gridder *slavePtr;
+    Gridder *masterPtr = (Gridder *)clientData;
+    Gridder *slavePtr;
     GridMaster *slotPtr = masterPtr->masterDataPtr;
     int abort;
     int width, height;		/* Requested size of layout, in pixels. */
@@ -1902,8 +1904,8 @@ ResolveConstraints(
     int maxOffset)		/* The actual maximum size of this layout in
 				 * pixels, or 0 (not currently used). */
 {
-    register SlotInfo *slotPtr;	/* Pointer to row/col constraints. */
-    register Gridder *slavePtr;	/* List of slave windows in this grid. */
+    SlotInfo *slotPtr;	/* Pointer to row/col constraints. */
+    Gridder *slavePtr;	/* List of slave windows in this grid. */
     int constraintCount;	/* Count of rows or columns that have
 				 * constraints. */
     int slotCount;		/* Last occupied row or column. */
@@ -1912,7 +1914,7 @@ ResolveConstraints(
     GridLayout *layoutPtr;	/* Temporary layout structure. */
     int requiredSize;		/* The natural size of the grid (pixels).
 				 * This is the minimum size needed to
-				 * accomodate all of the slaves at their
+				 * accommodate all of the slaves at their
 				 * requested sizes. */
     int offset;			/* The pixel offset of the right edge of the
 				 * current slot from the beginning of the
@@ -1955,7 +1957,7 @@ ResolveConstraints(
 
     gridCount = MAX(constraintCount, slotCount);
     if (gridCount >= TYPICAL_SIZE) {
-	layoutPtr = ckalloc(sizeof(GridLayout) * (1+gridCount));
+	layoutPtr = (GridLayout *)ckalloc(sizeof(GridLayout) * (1+gridCount));
     } else {
 	layoutPtr = layoutData;
     }
@@ -2077,7 +2079,7 @@ ResolveConstraints(
 			    * sizeof(UniformGroup);
 		    size_t newSize = (uniformGroupsAlloced + UNIFORM_PREALLOC)
 			    * sizeof(UniformGroup);
-		    UniformGroup *newUG = ckalloc(newSize);
+		    UniformGroup *newUG = (UniformGroup *)ckalloc(newSize);
 		    UniformGroup *oldUG = uniformGroupPtr;
 
 		    memcpy(newUG, oldUG, oldSize);
@@ -2421,7 +2423,7 @@ GetGrid(
     Tk_Window tkwin)		/* Token for window for which grid structure
 				 * is desired. */
 {
-    register Gridder *gridPtr;
+    Gridder *gridPtr;
     Tcl_HashEntry *hPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -2438,9 +2440,9 @@ GetGrid(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->gridHashTable, (char*) tkwin, &isNew);
     if (!isNew) {
-	return Tcl_GetHashValue(hPtr);
+	return (Gridder *)Tcl_GetHashValue(hPtr);
     }
-    gridPtr = ckalloc(sizeof(Gridder));
+    gridPtr = (Gridder *)ckalloc(sizeof(Gridder));
     gridPtr->tkwin = tkwin;
     gridPtr->masterPtr = NULL;
     gridPtr->masterDataPtr = NULL;
@@ -2485,7 +2487,7 @@ GetGrid(
  * Side effects:
  *	The width and height arguments are filled in the master data
  *	structure. Additional space is allocated for the constraints to
- *	accomodate the offsets.
+ *	accommodate the offsets.
  *
  *----------------------------------------------------------------------
  */
@@ -2494,7 +2496,7 @@ static void
 SetGridSize(
     Gridder *masterPtr)		/* The geometry master for this grid. */
 {
-    register Gridder *slavePtr;	/* Current slave window. */
+    Gridder *slavePtr;	/* Current slave window. */
     int maxX = 0, maxY = 0;
 
     for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
@@ -2650,7 +2652,7 @@ CheckSlotData(
 	    int newNumSlot = slot + PREALLOC;
 	    size_t oldSize = numSlot * sizeof(SlotInfo);
 	    size_t newSize = newNumSlot * sizeof(SlotInfo);
-	    SlotInfo *newSI = ckalloc(newSize);
+	    SlotInfo *newSI = (SlotInfo *)ckalloc(newSize);
 	    SlotInfo *oldSI = (slotType == ROW)
 		    ? masterPtr->masterDataPtr->rowPtr
 		    : masterPtr->masterDataPtr->columnPtr;
@@ -2700,17 +2702,17 @@ InitMasterData(
     Gridder *masterPtr)
 {
     if (masterPtr->masterDataPtr == NULL) {
-	GridMaster *gridPtr = masterPtr->masterDataPtr =
+	GridMaster *gridPtr = masterPtr->masterDataPtr = (GridMaster *)
 		ckalloc(sizeof(GridMaster));
 	size_t size = sizeof(SlotInfo) * TYPICAL_SIZE;
 
 	gridPtr->columnEnd = 0;
 	gridPtr->columnMax = 0;
-	gridPtr->columnPtr = ckalloc(size);
+	gridPtr->columnPtr = (SlotInfo *)ckalloc(size);
 	gridPtr->columnSpace = TYPICAL_SIZE;
 	gridPtr->rowEnd = 0;
 	gridPtr->rowMax = 0;
-	gridPtr->rowPtr = ckalloc(size);
+	gridPtr->rowPtr = (SlotInfo *)ckalloc(size);
 	gridPtr->rowSpace = TYPICAL_SIZE;
 	gridPtr->startX = 0;
 	gridPtr->startY = 0;
@@ -2740,9 +2742,9 @@ InitMasterData(
 
 static void
 Unlink(
-    register Gridder *slavePtr)	/* Window to unlink. */
+    Gridder *slavePtr)	/* Window to unlink. */
 {
-    register Gridder *masterPtr, *slavePtr2;
+    Gridder *masterPtr, *slavePtr2;
 
     masterPtr = slavePtr->masterPtr;
     if (masterPtr == NULL) {
@@ -2812,7 +2814,7 @@ static void
 DestroyGrid(
     void *memPtr)		/* Info about window that is now dead. */
 {
-    register Gridder *gridPtr = memPtr;
+    Gridder *gridPtr = (Gridder *)memPtr;
 
     if (gridPtr->masterDataPtr != NULL) {
 	if (gridPtr->masterDataPtr->rowPtr != NULL) {
@@ -2853,7 +2855,7 @@ GridStructureProc(
 				 * eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Gridder *gridPtr = clientData;
+    Gridder *gridPtr = (Gridder *)clientData;
     TkDisplay *dispPtr = ((TkWindow *) gridPtr->tkwin)->dispPtr;
 
     if (eventPtr->type == ConfigureNotify) {
@@ -2871,7 +2873,7 @@ GridStructureProc(
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	register Gridder *slavePtr, *nextPtr;
+	Gridder *slavePtr, *nextPtr;
 
 	if (gridPtr->masterPtr != NULL) {
 	    Unlink(gridPtr);
@@ -2898,7 +2900,7 @@ GridStructureProc(
 	    Tcl_DoWhenIdle(ArrangeGrid, gridPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	register Gridder *slavePtr;
+	Gridder *slavePtr;
 
 	for (slavePtr = gridPtr->slavePtr; slavePtr != NULL;
 		slavePtr = slavePtr->nextPtr) {
@@ -2941,6 +2943,7 @@ ConfigureSlaves(
     Gridder *masterPtr = NULL;
     Gridder *slavePtr;
     Tk_Window other, slave, parent, ancestor;
+    TkWindow *master;
     int i, j, tmp;
     int numWindows;
     int width;
@@ -2968,7 +2971,7 @@ ConfigureSlaves(
 
     firstChar = 0;
     for (numWindows=0, i=0; i < objc; i++) {
-	size_t length;
+	TkSizeT length;
 	char prevChar = firstChar;
 
 	string = TkGetStringFromObj(objv[i], &length);
@@ -3355,17 +3358,23 @@ ConfigureSlaves(
 	}
 
 	/*
-	 * Try to make sure our master isn't managed by us.
+	 * Check for management loops.
 	 */
 
-     	if (masterPtr->masterPtr == slavePtr) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	for (master = (TkWindow *)masterPtr->tkwin; master != NULL;
+	     master = (TkWindow *)TkGetGeomMaster(master)) {
+	    if (master == (TkWindow *)slave) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
-		    Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
-	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
-	    Unlink(slavePtr);
-	    return TCL_ERROR;
-     	}
+	            Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+		Unlink(slavePtr);
+		return TCL_ERROR;
+	    }
+	}
+	if (masterPtr->tkwin != Tk_Parent(slave)) {
+	    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)masterPtr->tkwin;
+	}
 
 	Tk_ManageGeometry(slave, &gridMgrType, slavePtr);
 
@@ -3631,12 +3640,12 @@ StringToSticky(
 
 static Tcl_Obj *
 NewPairObj(
-    int val1, int val2)
+    Tcl_WideInt val1, Tcl_WideInt val2)
 {
     Tcl_Obj *ary[2];
 
-    ary[0] = Tcl_NewIntObj(val1);
-    ary[1] = Tcl_NewIntObj(val2);
+    ary[0] = Tcl_NewWideIntObj(val1);
+    ary[1] = Tcl_NewWideIntObj(val2);
     return Tcl_NewListObj(2, ary);
 }
 
@@ -3658,14 +3667,14 @@ NewPairObj(
 
 static Tcl_Obj *
 NewQuadObj(
-    int val1, int val2, int val3, int val4)
+    Tcl_WideInt val1, Tcl_WideInt val2, Tcl_WideInt val3, Tcl_WideInt val4)
 {
     Tcl_Obj *ary[4];
 
-    ary[0] = Tcl_NewIntObj(val1);
-    ary[1] = Tcl_NewIntObj(val2);
-    ary[2] = Tcl_NewIntObj(val3);
-    ary[3] = Tcl_NewIntObj(val4);
+    ary[0] = Tcl_NewWideIntObj(val1);
+    ary[1] = Tcl_NewWideIntObj(val2);
+    ary[2] = Tcl_NewWideIntObj(val3);
+    ary[3] = Tcl_NewWideIntObj(val4);
     return Tcl_NewListObj(4, ary);
 }
 

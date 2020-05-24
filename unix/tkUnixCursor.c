@@ -245,7 +245,7 @@ TkGetCursorByName(
     if ((argv[0][0] != '@') && !inTkTable) {
 	XColor fg, bg;
 	unsigned int maskIndex;
-	register const struct CursorName *namePtr;
+	const struct CursorName *namePtr;
 	TkDisplay *dispPtr;
 
 	/*
@@ -338,7 +338,7 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
@@ -608,7 +608,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }

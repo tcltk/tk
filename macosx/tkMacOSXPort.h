@@ -1,7 +1,7 @@
 /*
  * tkMacOSXPort.h --
  *
- *	This file is included by all of the Tk C files. It contains
+ *	This file is included by all of the Tk C files.  It contains
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
@@ -17,13 +17,15 @@
 #define _TKMACPORT
 
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <math.h>
 #include <pwd.h>
-#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -47,6 +49,9 @@
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -106,19 +111,6 @@
 #define REDO_KEYSYM_LOOKUP
 
 /*
- * Defines for X functions that are used by Tk but are treated as
- * no-op functions on the Macintosh.
- */
-
-#define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XGrabServer(display)
-#define XNoOp(display) {display->request++;}
-#define XUngrabServer(display)
-#define XSynchronize(display, bool) {display->request++;}
-#define XVisualIDFromVisual(visual) (visual->visualid)
-
-/*
  * The following functions are not used on the Mac, so we stub them out.
  */
 
@@ -126,17 +118,6 @@
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)
-
-/*
- * The following macro returns the pixel value that corresponds to the
- * RGB values in the given XColor structure.
- */
-
-#define PIXEL_MAGIC ((unsigned char) 0x69)
-#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
 
 /*
  * This macro stores a representation of the window handle in a string.
@@ -159,19 +140,20 @@
  */
 
 #define TRANSPARENT_PIXEL		30
-#define HIGHLIGHT_PIXEL			31
-#define HIGHLIGHT_SECONDARY_PIXEL	32
-#define HIGHLIGHT_TEXT_PIXEL		33
-#define HIGHLIGHT_ALTERNATE_PIXEL	34
-#define CONTROL_TEXT_PIXEL		35
-#define CONTROL_BODY_PIXEL		37
-#define CONTROL_FRAME_PIXEL		39
-#define WINDOW_BODY_PIXEL		41
-#define MENU_ACTIVE_PIXEL		43
-#define MENU_ACTIVE_TEXT_PIXEL		45
-#define MENU_BACKGROUND_PIXEL		47
-#define MENU_DISABLED_PIXEL		49
-#define MENU_TEXT_PIXEL			51
 #define APPEARANCE_PIXEL		52
+#define PIXEL_MAGIC ((unsigned char) 0x69)
+
+/*
+ * The following macro returns the pixel value that corresponds to the
+ * 16-bit RGB values in the given XColor structure.
+ * The format is: (PIXEL_MAGIC << 24) | (R << 16) | (G << 8) | B
+ * where each of R, G and B is the high order byte of a 16-bit component.
+ */
+
+#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
+	| (((p)->red >> 8) & 0xff)) << 8) \
+	| (((p)->green >> 8) & 0xff)) << 8) \
+	| (((p)->blue >> 8) & 0xff))
+
 
 #endif /* _TKMACPORT */

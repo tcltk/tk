@@ -34,7 +34,7 @@ typedef struct Container {
 				 * process. */
 } Container;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     Container *firstContainerPtr;
 				/* First in list of all containers managed by
 				 * this process. */
@@ -69,7 +69,7 @@ void
 TkWinCleanupContainerList(void)
 {
     Container *nextPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (; tsdPtr->firstContainerPtr != NULL;
@@ -96,14 +96,18 @@ TkWinCleanupContainerList(void)
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkpTestembedCmd(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
+
     return TCL_OK;
 }
 
@@ -160,7 +164,7 @@ void Tk_MapEmbeddedWindow(
 {
     if(!(winPtr->flags & TK_ALREADY_DEAD)) {
 	HWND hwnd = (HWND)winPtr->privatePtr;
-	int state = SendMessage(hwnd, TK_STATE, -1, -1) - 1;
+	int state = SendMessageW(hwnd, TK_STATE, -1, -1) - 1;
 
 	if (state < 0 || state > 3) {
 	    state = NormalState;
@@ -283,9 +287,9 @@ TkpUseWindow(
 	return TCL_ERROR;
     }
 
-    id = SendMessage(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
+    id = SendMessageW(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
     if (id == PTR2INT(hwnd)) {
-	if (!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
+	if (!SendMessageW(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "The container is already in use", -1));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", NULL);
@@ -303,10 +307,10 @@ TkpUseWindow(
 	 * order to avoid bug 1096074 in future.
 	 */
 
-	TCHAR msg[256];
+	WCHAR msg[256];
 
-	wsprintf(msg, TEXT("Unable to get information of window \"%.40hs\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching."), string);
-	if (IDCANCEL == MessageBox(hwnd, msg, TEXT("Tk Warning"),
+	wsprintfW(msg, L"Unable to get information of window \"%.40hs\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
+	if (IDCANCEL == MessageBoxW(hwnd, msg, L"Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Operation has been canceled", -1));
@@ -371,7 +375,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = ckalloc(sizeof(Container));
+    containerPtr = (Container *)ckalloc(sizeof(Container));
     containerPtr->parentPtr = winPtr;
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
@@ -1018,7 +1022,7 @@ TkpClaimFocus(
 				 * it. */
 {
     HWND hwnd = GetParent(Tk_GetHWND(topLevelPtr->window));
-    SendMessage(hwnd, TK_CLAIMFOCUS, (WPARAM) force, 0);
+    SendMessageW(hwnd, TK_CLAIMFOCUS, (WPARAM) force, 0);
 }
 
 /*
@@ -1050,6 +1054,8 @@ TkpRedirectKeyEvent(
     XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
+    (void)winPtr;
+    (void)eventPtr;
     /* not implemented */
 }
 
@@ -1096,7 +1102,7 @@ EmbedWindowDeleted(
 	    break;
 	}
 	if (containerPtr->parentPtr == winPtr) {
-	    SendMessage(containerPtr->embeddedHWnd, WM_CLOSE, 0, 0);
+	    SendMessageW(containerPtr->embeddedHWnd, WM_CLOSE, 0, 0);
 	    containerPtr->parentPtr = NULL;
 	    containerPtr->embeddedPtr = NULL;
 	    break;

@@ -384,15 +384,16 @@ total width of the listbox text is off-screen to the left.
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR or an abbreviation
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR or an abbreviation
 of one of these.
-If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
-\fInumber\fR character units (the width of the \fB0\fR character)
-on the display;  if it is \fBpages\fR then the view adjusts by
+If \fIwhat\fR is \fBpages\fR then the view adjusts by
 \fInumber\fR screenfuls.
 If \fInumber\fR is negative then characters farther to the left
 become visible;  if it is positive then characters farther to the right
 become visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
+\fInumber\fR character units (the width of the \fB0\fR character)
+on the display.
 .RE
 .TP
 \fIpathName \fByview \fR?\fIargs\fR?
@@ -431,13 +432,14 @@ way through the listbox, and so on.
 This command adjusts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
-If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
-\fInumber\fR lines;  if it is \fBpages\fR then
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
+If \fIwhat\fR is \fBpages\fR then
 the view adjusts by \fInumber\fR screenfuls.
 If \fInumber\fR is negative then earlier elements
 become visible;  if it is positive then later elements
 become visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
+\fInumber\fR lines.
 .RE
 .SH "DEFAULT BINDINGS"
 .PP

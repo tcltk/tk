@@ -158,7 +158,8 @@ Tk_PhotoImageFormat tkImgFmtDefault = {
     NULL,           /* fileReadProc: format doesn't support file read */
     StringReadDef,  /* stringReadProc */
     NULL,           /* fileWriteProc: format doesn't support file write */
-    StringWriteDef  /* stringWriteProc */
+    StringWriteDef, /* stringWriteProc */
+    NULL            /* nextPtr */
 };
 
 /*
@@ -195,7 +196,8 @@ ParseFormatOptions(
                                        * this struct */
 
 {
-    int index, optIndex, typeIndex, first;
+    int index, optIndex, first;
+    enum ColorFormatType typeIndex;
     const char *option;
 
     first = 1;
@@ -256,7 +258,7 @@ ParseFormatOptions(
                 return TCL_ERROR;
             }
             if (Tcl_GetIndexFromObj(NULL, objv[index], colorFormatNames, "",
-                    TCL_EXACT, &typeIndex) != TCL_OK
+                    TCL_EXACT, (int *)&typeIndex) != TCL_OK
                     || (typeIndex != COLORFORMAT_LIST
                     && typeIndex != COLORFORMAT_RGB2
                     && typeIndex != COLORFORMAT_RGBA2) ) {
@@ -365,6 +367,7 @@ StringMatchDef(
     int y, rowCount, colCount, curColCount;
     unsigned char dummy;
     Tcl_Obj **rowListPtr, *pixelData;
+    (void)formatString;
 
     /*
      * See if data can be parsed as a list, if every element is itself a valid
@@ -549,7 +552,7 @@ StringReadDef(
     srcBlock.offset[1] = 1;
     srcBlock.offset[2] = 2;
     srcBlock.offset[3] = 3;
-    srcBlock.pixelPtr = attemptckalloc(srcBlock.pitch * srcBlock.height);
+    srcBlock.pixelPtr = (unsigned char *)attemptckalloc(srcBlock.pitch * srcBlock.height);
     if (srcBlock.pixelPtr == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
         Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
@@ -772,7 +775,7 @@ ParseColor(
     unsigned char *alphaPtr)
 {
     const char *specString;
-    size_t charCount;
+    TkSizeT charCount;
 
     /*
      * Find out which color format we have
@@ -836,7 +839,7 @@ ParseColor(
  */
 static int
 ParseColorAsList(
-    Tcl_Interp *interp,         /* not used */
+    Tcl_Interp *dummy,         /* not used */
     const char *colorString,    /* the color data to parse */
     int colorStrLen,            /* length of the color string */
     unsigned char *redPtr,      /* the result is written to these pointers */
@@ -844,7 +847,6 @@ ParseColorAsList(
     unsigned char *bluePtr,
     unsigned char *alphaPtr)
 {
-
     /*
      * This is kinda ugly. The code would be certainly nicer if it
      * used Tcl_ListObjGetElements() and Tcl_GetIntFromObj(). But with
@@ -854,6 +856,8 @@ ParseColorAsList(
     const char *curPos;
     int values[4];
     int i;
+    (void)dummy;
+    (void)colorStrLen;
 
     curPos = colorString;
     i = 0;
@@ -863,7 +867,7 @@ ParseColorAsList(
      * To avoid that, avance the pointer to the next non-blank char.
      */
 
-    while(isspace(*curPos)) {
+    while(isspace(UCHAR(*curPos))) {
         ++curPos;
     }
     while (i < 4 && *curPos != '\0') {
@@ -871,7 +875,7 @@ ParseColorAsList(
         if (values[i] < 0 || values[i] > 255) {
             return TCL_ERROR;
         }
-        while(isspace(*curPos)) {
+        while(isspace(UCHAR(*curPos))) {
             ++curPos;
         }
         ++i;

@@ -2698,7 +2698,7 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 5} {incr i} {
-      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .t tag configure hidden -elide true
     .t tag add hidden 2.15 3.10
@@ -2720,7 +2720,7 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
     for {set i 1} {$i < 5} {incr i} {
       #                    0          1          2          3          4
       #                    012345 678901234 567890123 456789012 34567890123456789
-      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .mytop.t tag configure hidden -elide true
     .mytop.t tag add hidden 2.30 3.10
@@ -6145,9 +6145,9 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     .t insert end "1\t2\t3\t4\t55.5"
     .t configure -tabs {100 right 200 left 300 center 400 numeric}
     update idletasks
-    list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
+    list [expr {[lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]}] \
 	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2}] \
 	    [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
@@ -6159,9 +6159,9 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     .t insert end "1\t2\t3\t4\t55.5"
     .t configure -tabs {105 r 205 l 305 c 405 n}
     update idletasks
-    list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
+    list [expr {[lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]}] \
 	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2}] \
 	    [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
@@ -6705,7 +6705,8 @@ test text-27.15d {<<Selection>> virtual event on <Delete> with cursor inside sel
     update
     set ::retval no_<<Selection>>_event_fired
     .t mark set insert 1.15
-    focus .t
+    update idletasks
+    focus -force .t
     event generate .t <Delete>
     update
     set ::retval
@@ -6822,14 +6823,14 @@ test text-27.18 {patch 1469210 - inserting after undo} -setup {
 } -cleanup {
     destroy .t
 } -result 1
-test text-27.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
+test text-27.19 {patch 1669632 (i) - undo after <Control-Button-1>} -setup {
     destroy .t
 } -body {
     text .t -undo 1
     .t insert end foo\nbar
     .t edit reset
     .t insert 2.2 WORLD
-    event generate .t <Control-1> -x 1 -y 1
+    event generate .t <Control-Button-1> -x 1 -y 1
     .t insert insert HELLO
     .t edit undo
     .t get 2.2 2.7
@@ -6862,7 +6863,7 @@ test text-27.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -se
     .t insert end "This is an example text"
     .t edit reset
     .t insert 1.5 "WORLD "
-    event generate .t <Control-1> -x 1 -y 1
+    event generate .t <Control-Button-1> -x 1 -y 1
     .t insert insert HELLO
     event generate .t <<Undo>>
     .t insert insert E
@@ -7817,8 +7818,8 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     pack [set w [text .t-1]]
 } -body {
     tkwait visibility $w
-    event generate $w <1>
-    event generate $w <1>
+    event generate $w <Button-1>
+    event generate $w <Button-1>
     update
     set ::my_error
 } -cleanup {
@@ -7835,8 +7836,8 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     pack [set w [text .t+1]]
 } -body {
     tkwait visibility $w
-    event generate $w <1>
-    event generate $w <1>
+    event generate $w <Button-1>
+    event generate $w <Button-1>
     update
     set ::my_error
 } -cleanup {
@@ -7853,8 +7854,8 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     pack [set w [text .t*1]]
 } -body {
     tkwait visibility $w
-    event generate $w <1>
-    event generate $w <1>
+    event generate $w <Button-1>
+    event generate $w <Button-1>
     update
     set ::my_error
 } -cleanup {

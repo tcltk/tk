@@ -31,8 +31,8 @@ typedef struct {			/* Manager hooks */
 
     int  (*RequestedSize)(void *managerData, int *widthPtr, int *heightPtr);
     void (*PlaceSlaves)(void *managerData);
-    int  (*SlaveRequest)(void *managerData, int slaveIndex, int w, int h);
-    void (*SlaveRemoved)(void *managerData, int slaveIndex);
+    int  (*SlaveRequest)(void *managerData, TkSizeT slaveIndex, int w, int h);
+    void (*SlaveRemoved)(void *managerData, TkSizeT slaveIndex);
 } Ttk_ManagerSpec;
 
 /*
@@ -49,18 +49,18 @@ MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
 MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
 MODULE_SCOPE void Ttk_InsertSlave(
-    Ttk_Manager *, int position, Tk_Window, void *slaveData);
+    Ttk_Manager *, TkSizeT position, Tk_Window, void *slaveData);
 
-MODULE_SCOPE void Ttk_ForgetSlave(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE void Ttk_ForgetSlave(Ttk_Manager *, TkSizeT slaveIndex);
 
-MODULE_SCOPE void Ttk_ReorderSlave(Ttk_Manager *, int fromIndex, int toIndex);
+MODULE_SCOPE void Ttk_ReorderSlave(Ttk_Manager *, TkSizeT fromIndex, TkSizeT toIndex);
     /* Rearrange slave positions */
 
 MODULE_SCOPE void Ttk_PlaceSlave(
-    Ttk_Manager *, int slaveIndex, int x, int y, int width, int height);
+    Ttk_Manager *, TkSizeT slaveIndex, int x, int y, int width, int height);
     /* Position and map the slave */
 
-MODULE_SCOPE void Ttk_UnmapSlave(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE void Ttk_UnmapSlave(Ttk_Manager *, TkSizeT slaveIndex);
     /* Unmap the slave */
 
 MODULE_SCOPE void Ttk_ManagerSizeChanged(Ttk_Manager *);
@@ -69,7 +69,7 @@ MODULE_SCOPE void Ttk_ManagerLayoutChanged(Ttk_Manager *);
 
 /* Utilities:
  */
-MODULE_SCOPE int Ttk_SlaveIndex(Ttk_Manager *, Tk_Window);
+MODULE_SCOPE TkSizeT Ttk_SlaveIndex(Ttk_Manager *, Tk_Window);
     /* Returns: index in slave array of specified window, -1 if not found */
 
 MODULE_SCOPE int Ttk_GetSlaveIndexFromObj(
@@ -77,13 +77,13 @@ MODULE_SCOPE int Ttk_GetSlaveIndexFromObj(
 
 /* Accessor functions:
  */
-MODULE_SCOPE int Ttk_NumberSlaves(Ttk_Manager *);
+MODULE_SCOPE TkSizeT Ttk_NumberSlaves(Ttk_Manager *);
     /* Returns: number of managed slaves */
 
-MODULE_SCOPE void *Ttk_SlaveData(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE void *Ttk_SlaveData(Ttk_Manager *, TkSizeT slaveIndex);
     /* Returns: client data associated with slave */
 
-MODULE_SCOPE Tk_Window Ttk_SlaveWindow(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE Tk_Window Ttk_SlaveWindow(Ttk_Manager *, TkSizeT slaveIndex);
     /* Returns: slave window */
 
 MODULE_SCOPE int Ttk_Maintainable(Tcl_Interp *, Tk_Window slave, Tk_Window master);

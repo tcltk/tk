@@ -2,24 +2,6 @@
 # Bindings for TScrollbar widget
 #
 
-# Still don't have a working ttk::scrollbar under OSX -
-# Swap in a [tk::scrollbar] on that platform,
-# unless user specifies -class or -style.
-#
-if {[tk windowingsystem] eq "aqua"} {
-    rename ::ttk::scrollbar ::ttk::_scrollbar
-    proc ttk::scrollbar {w args} {
-	set constructor ::tk::scrollbar
-	foreach {option _} $args {
-	    if {$option eq "-class" || $option eq "-style"} {
-		set constructor ::ttk::_scrollbar
-		break
-	    }
-	}
-	return [$constructor $w {*}$args]
-    }
-}
-
 namespace eval ttk::scrollbar {
     variable State
     # State(xPress)	--
@@ -27,13 +9,31 @@ namespace eval ttk::scrollbar {
     # State(first)	-- value of -first at start of drag.
 }
 
-bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::Press %W %x %y }
+bind TScrollbar <Button-1> 		{ ttk::scrollbar::Press %W %x %y }
 bind TScrollbar <B1-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
 
-bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
+bind TScrollbar <Button-2> 		{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
+
+# Redirect scrollwheel bindings to the scrollbar widget
+#
+# The shift-bindings scroll left/right (not up/down)
+# if a widget has both possibilities
+set eventList [list <MouseWheel>]
+switch [tk windowingsystem] {
+    aqua {
+        lappend eventList <Option-MouseWheel>
+    }
+    x11 {
+        lappend eventList <Button-4> <Button-5> <Button-6> <Button-7>
+    }
+}
+foreach event $eventList {
+    bind TScrollbar $event [bind Scrollbar $event]
+}
+unset eventList event
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]
@@ -101,7 +101,7 @@ proc ttk::scrollbar::Release {w x y} {
     ttk::CancelRepeat
 }
 
-# scrollbar::Jump -- ButtonPress-2 binding for scrollbars.
+# scrollbar::Jump -- Button-2 binding for scrollbars.
 # 	Behaves exactly like scrollbar::Press, except that
 #	clicking in the trough jumps to the the selected position.
 #

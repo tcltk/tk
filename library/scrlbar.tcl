@@ -39,7 +39,7 @@ bind Scrollbar <Leave> {
     }
     %W activate {}
 }
-bind Scrollbar <1> {
+bind Scrollbar <Button-1> {
     tk::ScrollButtonDown %W %x %y
 }
 bind Scrollbar <B1-Motion> {
@@ -57,13 +57,13 @@ bind Scrollbar <B1-Leave> {
 bind Scrollbar <B1-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <2> {
+bind Scrollbar <Button-2> {
     tk::ScrollButton2Down %W %x %y
 }
-bind Scrollbar <B1-2> {
+bind Scrollbar <B1-Button-2> {
     # Do nothing, since button 1 is already down.
 }
-bind Scrollbar <B2-1> {
+bind Scrollbar <B2-Button-1> {
     # Do nothing, since button 2 is already down.
 }
 bind Scrollbar <B2-Motion> {
@@ -84,10 +84,10 @@ bind Scrollbar <B2-Leave> {
 bind Scrollbar <B2-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <Control-1> {
+bind Scrollbar <Control-Button-1> {
     tk::ScrollTopBottom %W %x %y
 }
-bind Scrollbar <Control-2> {
+bind Scrollbar <Control-Button-2> {
     tk::ScrollTopBottom %W %x %y
 }
 
@@ -128,42 +128,37 @@ bind Scrollbar <<LineEnd>> {
     tk::ScrollToPos %W 1
 }
 }
-switch [tk windowingsystem] {
-    "aqua" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D)}]
-	}
-	bind Scrollbar <Option-MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {-10 * (%D)}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D)}]
-	}
-	bind Scrollbar <Shift-Option-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {-10 * (%D)}]
-	}
+
+if {[tk windowingsystem] eq "aqua"} {
+    bind Scrollbar <MouseWheel> {
+	tk::ScrollByUnits %W hv [expr {-(%D)}]
     }
-    "win32" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D / 120) * 4}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D / 120) * 4}]
-	}
+    bind Scrollbar <Option-MouseWheel> {
+	tk::ScrollByUnits %W hv [expr {-10 * (%D)}]
     }
-    "x11" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D /120 ) * 4}]
+} else {
+    # We must make sure that positive and negative movements are rounded
+    # equally to integers, avoiding the problem that
+    #     (int)1/30 = 0,
+    # but
+    #     (int)-1/30 = -1
+    # The following code ensure equal +/- behaviour.
+    bind Scrollbar <MouseWheel> {
+	if {%D >= 0} {
+	    tk::ScrollByUnits %W hv [expr {-%D/30}]
+	} else {
+	    tk::ScrollByUnits %W hv [expr {(29-%D)/30}]
 	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D /120 ) * 4}]
-	}
-	bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
-	bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
-	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
-	bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
     }
 }
+
+if {[tk windowingsystem] eq "x11"} {
+    bind Scrollbar <Button-4> {tk::ScrollByUnits %W hv -5}
+    bind Scrollbar <Button-5> {tk::ScrollByUnits %W hv 5}
+    bind Scrollbar <Button-6> {tk::ScrollByUnits %W hv -5}
+    bind Scrollbar <Button-7> {tk::ScrollByUnits %W hv 5}
+}
+
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
 # It changes the way the scrollbar is displayed and takes actions

@@ -25,6 +25,7 @@ EXTRA_CONFIGURE_ARGS	?=
 EXTRA_MAKE_ARGS		?=
 
 INSTALL_PATH		?= /Library/Frameworks
+TCL_INSTALL_PATH	?= ${INSTALL_PATH}/Tcl.framework
 APPLICATION_INSTALL_PATH ?= /Applications/Utilities
 PREFIX			?= /usr/local
 BINDIR			?= ${PREFIX}/bin
@@ -107,7 +108,7 @@ TCL_VERSION		:= ${VERSION}
 wish			:= wish
 WISH			= wish${VERSION}
 
-BUILD_TARGET		:= all tktest
+BUILD_TARGET		:= binaries libraries tktest
 INSTALL_TARGET		:= install
 
 ifneq ($(wildcard $(subst ${space},\ ,${TCL_BUILD_DIR})/tclConfig.sh),)
@@ -115,7 +116,7 @@ TCL_DIR			:= ${TCL_BUILD_DIR}
 TCL_FRAMEWORK_DIR	:= ${TCL_BUILD_DIR}/..
 MAKE_VARS		:=
 else
-TCL_DIR			:= ${TCL_FRAMEWORK_DIR}/Tcl.framework
+TCL_DIR			:= ${TCL_INSTALL_PATH}
 TCL_EXE			:= ${TCLSH_DIR}/tclsh${TCL_VERSION}
 MAKE_VARS		:= TCL_EXE
 export DYLD_FRAMEWORK_PATH := ${TCL_FRAMEWORK_DIR}
@@ -225,22 +226,6 @@ ifeq (${EMBEDDED_BUILD},1)
 	@rm -f "${INSTALL_ROOT}${BINDIR}/${WISH}" && \
 	rmdir -p "${INSTALL_ROOT}${BINDIR}" 2>&- || true
 else
-# redo prebinding (when not building for Mac OS X 10.4 or later only)
-	@if [ "`echo "$${MACOSX_DEPLOYMENT_TARGET}" | \
-	awk -F '10\\.' '{print int($$2)}'`" -lt 4 -a "`echo "$${CFLAGS}" | \
-	awk -F '-mmacosx-version-min=10\\.' '{print int($$2)}'`" -lt 4 ]; \
-	then cd ${INSTALL_ROOT}/; \
-	if [ ! -d usr/lib ]; then mkdir -p usr && ln -fs /usr/lib usr/ && RM_USRLIB=1; fi; \
-	if [ -n "${TK_X11}" -a ! -d usr/X11R6 ]; then mkdir -p usr && ln -fs /usr/X11R6 usr/ && RM_USRX11=1; fi; \
-	if [ ! -d System ]; then ln -fs /System . && RM_SYSTEM=1; fi; \
-	if [ ! -d "./${LIBDIR}/Tcl.framework" ]; then ln -fs "${TCL_FRAMEWORK_DIR}/Tcl.framework" "./${LIBDIR}"; RM_TCL=1; fi; \
-	redo_prebinding -r . "./${TK_FMWK_DIR}/${PRODUCT_NAME}"; \
-	if [ -z "${TK_X11}" ]; then redo_prebinding -r . "./${TK_FMWK_DIR}/Resources/Wish.app/Contents/MacOS/Wish"; \
-	else redo_prebinding -r . "./${BINDIR}/${WISH}"; fi; \
-	if [ -n "$${RM_USRLIB:-}" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi; \
-	if [ -n "$${RM_USRX11:-}" ]; then rm -f usr/X11R6; rmdir -p usr 2>&-; fi; \
-	if [ -n "$${RM_SYSTEM:-}" ]; then rm -f System; fi; \
-	if [ -n "$${RM_TCL:-}" ]; then rm -f "./${LIBDIR}/Tcl.framework"; fi; fi
 # install wish symbolic link
 	@ln -fs ${WISH} "${INSTALL_ROOT}${BINDIR}/${wish}"
 endif

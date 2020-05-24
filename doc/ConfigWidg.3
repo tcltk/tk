@@ -107,7 +107,7 @@ typedef struct {
     const char *\fIdbName\fR;
     const char *\fIdbClass\fR;
     const char *\fIdefValue\fR;
-    int \fIoffset\fR;
+    size_t \fIoffset\fR;
     int \fIspecFlags\fR;
     const Tk_CustomOption *\fIcustomPtr\fR;
 } \fBTk_ConfigSpec\fR;
@@ -161,9 +161,8 @@ contain information relevant to the manager of the widget;  its exact
 type is unknown to \fBTk_ConfigureWidget\fR.  The \fIoffset\fR field
 of each \fIspecs\fR entry indicates where in \fIwidgRec\fR to store
 the information about this configuration option.  You should use the
-\fBTk_Offset\fR macro to generate \fIoffset\fR values (see below for
-a description of \fBTk_Offset\fR).  The location indicated by
-\fIwidgRec\fR and \fIoffset\fR will be referred to as the
+\fBoffsetof\fR macro to generate \fIoffset\fR values.  The location
+indicated by \fIwidgRec\fR and \fIoffset\fR will be referred to as the
 .QW target
 in the descriptions below.
 .PP
@@ -469,13 +468,6 @@ for which this entry is valid.  When calling \fBTk_ConfigureWidget\fR,
 \fIflags\fR will have a single one of these bits set to select the
 entries for the desired widget type.  For a working example of
 this feature, see the code in tkButton.c.
-.SH TK_OFFSET
-.PP
-The \fBTk_Offset\fR macro is provided as a safe way of generating
-the \fIoffset\fR values for entries in Tk_ConfigSpec structures.
-It takes two arguments:  the name of a type of record, and the
-name of a field in that record.  It returns the byte offset of
-the named field in records of the given type.
 .SH TK_CONFIGUREINFO
 .PP
 The \fBTk_ConfigureInfo\fR procedure may be used to obtain

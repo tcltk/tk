@@ -433,11 +433,11 @@ package require Tk 8.6
 	#
 	bind $canvas <Configure>	[namespace code {my WhenIdle Arrange}]
 
-	bind $canvas <1>		[namespace code {my Btn1 %x %y}]
+	bind $canvas <Button-1>		[namespace code {my Btn1 %x %y}]
 	bind $canvas <B1-Motion>	[namespace code {my Motion1 %x %y}]
 	bind $canvas <B1-Leave>		[namespace code {my Leave1 %x %y}]
-	bind $canvas <Control-1>	[namespace code {my CtrlBtn1 %x %y}]
-	bind $canvas <Shift-1>		[namespace code {my ShiftBtn1 %x %y}]
+	bind $canvas <Control-Button-1>	[namespace code {my CtrlBtn1 %x %y}]
+	bind $canvas <Shift-Button-1>	[namespace code {my ShiftBtn1 %x %y}]
 	bind $canvas <B1-Enter>		[list tk::CancelRepeat]
 	bind $canvas <ButtonRelease-1>	[list tk::CancelRepeat]
 	bind $canvas <Double-ButtonRelease-1> \
@@ -446,14 +446,27 @@ package require Tk 8.6
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
+	if {[tk windowingsystem] eq "aqua"} {
+	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel [expr {40 * (%D)}]}]
+	    bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel [expr {400 * (%D)}]}]
+	} else {
+	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
+	}
+	if {[tk windowingsystem] eq "x11"} {
+	    bind $canvas <Shift-Button-4>	[namespace code {my MouseWheel 120}]
+	    bind $canvas <Shift-Button-5>	[namespace code {my MouseWheel -120}]
+	    bind $canvas <Button-6>		[namespace code {my MouseWheel 120}]
+	    bind $canvas <Button-7>		[namespace code {my MouseWheel -120}]
+	}
+
 	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
 	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]
 	bind $canvas <<PrevChar>>	[namespace code {my LeftRight -1}]
 	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
-	bind $canvas <KeyPress>		[namespace code {my KeyPress %A}]
-	bind $canvas <Control-KeyPress> ";"
-	bind $canvas <Alt-KeyPress>	";"
+	bind $canvas <Key>		[namespace code {my KeyPress %A}]
+	bind $canvas <Control-Key> ";"
+	bind $canvas <Alt-Key>	";"
 
 	bind $canvas <FocusIn>		[namespace code {my FocusIn}]
 	bind $canvas <FocusOut>		[namespace code {my FocusOut}]
@@ -492,6 +505,22 @@ package require Tk 8.6
     # ----------------------------------------------------------------------
 
     # Event handlers
+    method MouseWheel {amount} {
+	if {$noScroll || $::tk_strictMotif} {
+	    return
+	}
+	# We must make sure that positive and negative movements are rounded
+	# equally to integers, avoiding the problem that
+	#     (int)1/120 = 0,
+	# but
+	#     (int)-1/120 = -1
+	# The following code ensure equal +/- behaviour.
+	if {$amount > 0} {
+	    $canvas xview scroll [expr {(-119-$amount) / 120}] units
+	} else {
+	    $canvas xview scroll [expr {-($amount / 120)}] units
+	}
+    }
     method Btn1 {x y} {
 	focus $canvas
 	set i [$w index @$x,$y]

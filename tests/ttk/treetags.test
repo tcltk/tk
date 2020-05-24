@@ -11,12 +11,11 @@ proc assert {expr {message ""}} {
         error "PANIC: $message ($expr failed)"
     }
 }
-proc in {e l} { expr {[lsearch -exact $l $e] >= 0} }
 
 proc itemConstraints {tv item} {
     # $tag in [$tv item $item -tags] <==> [$tv tag has $tag $item]
     foreach tag [$tv item $item -tags] {
-	assert {[in $item [$tv tag has $tag]]}
+	assert {$item in [$tv tag has $tag]}
     }
     foreach child [$tv children $item] {
 	itemConstraints $tv $child
@@ -28,7 +27,7 @@ proc treeConstraints {tv} {
     #
     foreach tag [$tv tag names] {
 	foreach item [$tv tag has $tag] {
-	    assert {[in $tag [$tv item $item -tags]]}
+	    assert {$tag in [$tv item $item -tags]}
 	}
     }
 
@@ -114,6 +113,12 @@ test treetags-1.10 "tag names - tag configured" -body {
     lsort [$tv tag names]
 } -result [list tag1 tag2 tag3 tag4 tag5]
 
+test treetags-1.11 "tag delete" -body {
+    $tv tag delete tag5
+    $tv tag delete tag4
+    lsort [$tv tag names]
+} -result [list tag1 tag2 tag3]
+
 test treetags-1.end "cleanup" -body {
     $tv item item1 -tags tag1
     $tv item item2 -tags tag2
@@ -123,28 +128,28 @@ test treetags-1.end "cleanup" -body {
 } -result [list [list item1] [list item2] [list]]
 
 test treetags-2.0 "tag bind" -body {
-    $tv tag bind tag1 <KeyPress> {set ::KEY %A}
-    $tv tag bind tag1 <KeyPress>
+    $tv tag bind tag1 <Key> {set ::KEY %A}
+    $tv tag bind tag1 <Key>
 } -cleanup {
     treeConstraints $tv
 } -result {set ::KEY %A}
 
 test treetags-2.1 "Events delivered to tags" -body {
-    focus -force $tv ; update	;# needed so [event generate] delivers KeyPress
+    focus -force $tv ; update	;# needed so [event generate] delivers Key
     $tv focus item1
-    event generate $tv <KeyPress-a>
+    event generate $tv <a>
     set ::KEY
 } -cleanup {
     treeConstraints $tv
 } -result a
 
 test treetags-2.2 "Events delivered to correct tags" -body {
-    $tv tag bind tag2 <KeyPress> [list set ::KEY2 %A]
+    $tv tag bind tag2 <Key> [list set ::KEY2 %A]
 
     $tv focus item1
-    event generate $tv <KeyPress-b>
+    event generate $tv <b>
     $tv focus item2
-    event generate $tv <KeyPress-c>
+    event generate $tv <c>
 
     list $::KEY $::KEY2
 } -cleanup {

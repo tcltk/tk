@@ -28,6 +28,13 @@ static char tkLibPath[PATH_MAX + 1] = "";
 
 static char scriptPath[PATH_MAX + 1] = "";
 
+/*
+ * Forward declarations...
+ */
+
+static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
+			    int objc, Tcl_Obj *const objv[]);
+
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
@@ -45,7 +52,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 @implementation TKApplication(TKInit)
 - (void) _resetAutoreleasePool
 {
-    if([self poolLock] == 0) {
+    if ([self poolLock] == 0) {
 	[_mainPool drain];
 	_mainPool = [NSAutoreleasePool new];
     } else {
@@ -75,7 +82,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSApplicationDidBecomeActiveNotification, applicationActivate:);
-    observe(NSApplicationDidResignActiveNotification, applicationDeactivate:);
+    observe(NSApplicationWillResignActiveNotification, applicationDeactivate:);
     observe(NSApplicationDidUnhideNotification, applicationShowHide:);
     observe(NSApplicationDidHideNotification, applicationShowHide:);
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
@@ -85,6 +92,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
+    (void)aNotification;
 
     /*
      * Initialize notifications.
@@ -116,19 +124,25 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+    (void)notification;
+
     /*
-     * It is not safe to force activation of the NSApp until this
-     * method is called.  Activating too early can cause the menu
-     * bar to be unresponsive.
+     * It is not safe to force activation of the NSApp until this method is
+     * called. Activating too early can cause the menu bar to be unresponsive.
+     * The call to activateIgnoringOtherApps was moved here to avoid this.
+     * However, with the release of macOS 10.15 (Catalina) that was no longer
+     * sufficient.  (See ticket bf93d098d7.)  The call to setActivationPolicy
+     * needed to be moved into this function as well.
      */
 
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps: YES];
 
     /*
-     * Process events to ensure that the root window is fully
-     * initialized. See ticket 56a1823c73.
+     * Process events to ensure that the root window is fully initialized. See
+     * ticket 56a1823c73.
      */
-    
+
     [NSApp _lockAutoreleasePool];
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
@@ -151,7 +165,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * Record the OS version we are running on.
      */
     int minorVersion;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
 #else
     NSOperatingSystemVersion systemVersion;
@@ -173,15 +187,10 @@ static char scriptPath[PATH_MAX + 1] = "";
     [self setDelegate:self];
 
     /*
-     * Make sure we are allowed to open windows.
-     */
-
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-
-    /*
      * If no icon has been set from an Info.plist file, use the Wish icon from
      * the Tk framework.
      */
+
     NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
 						    @"CFBundleIconFile"];
     if (!iconFile) {
@@ -310,8 +319,8 @@ TkpInit(
 	}
 
 	/*
-	 * Instantiate our NSApplication object. This needs to be
-	 * done before we check whether to open a console window.
+	 * Instantiate our NSApplication object. This needs to be done before
+	 * we check whether to open a console window.
 	 */
 
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -325,7 +334,43 @@ TkpInit(
 	[TKApplication sharedApplication];
 	[pool drain];
 	[NSApp _setup:interp];
+
+        /*
+         * WARNING: The finishLaunching method runs asynchronously, apparently
+         * in a separate thread.  This creates a race between the
+         * initialization of the NSApplication and the initialization of Tk.
+         * If Tk wins the race bad things happen with the root window (see
+         * below).  If the NSApplication wins then an AppleEvent created during
+         * launch, e.g. by dropping a file icon on the application icon, will
+         * be delivered before the procedure meant to to handle the AppleEvent
+         * has been defined.  This is now handled by processing the AppleEvent
+         * as an idle task.  See tkMacOSXHLEvents.c.
+         */
+
 	[NSApp finishLaunching];
+
+        /*
+         * Create a Tk event source based on the Appkit event queue.
+         */
+
+	Tk_MacOSXSetupTkNotifier();
+
+	/*
+	 * If Tk initialization wins the race, the root window is mapped before
+         * the NSApplication is initialized.  This can cause bad things to
+         * happen.  The root window can open off screen with no way to make it
+         * appear on screen until the app icon is clicked.  This will happen if
+         * a Tk application opens a modal window in its startup script (see
+         * ticket 56a1823c73).  In other cases, an empty root window can open
+         * on screen and remain visible for a noticeable amount of time while
+         * the Tk initialization finishes (see ticket d1989fb7cf).  The call
+         * below forces Tk to block until the Appkit event queue has been
+         * created.  This seems to be sufficient to ensure that the
+         * NSApplication initialization wins the race, avoiding these bad
+         * window behaviors.
+	 */
+
+	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of
@@ -342,8 +387,8 @@ TkpInit(
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
 
 	    /*
-	     * Only show the console if we don't have a startup script
-	     * and tcl_interactive hasn't been set already.
+	     * Only show the console if we don't have a startup script and
+	     * tcl_interactive hasn't been set already.
 	     */
 
 	    if (Tcl_GetStartupScript(NULL) == NULL) {
@@ -360,9 +405,14 @@ TkpInit(
 	    }
 	}
 
-    }
+	/*
+	 * Initialize the NSServices object here. Apple's docs say to do this
+	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
+	 * initialized until this function call.
+	 */
 
-    Tk_MacOSXSetupTkNotifier();
+	TkMacOSXServices_Init(interp);
+    }
 
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
@@ -377,15 +427,8 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-
-    /*
-     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
-     * if displayed before main window. This places console in background and it
-     * accepts input after being raised.
-     */
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
+	    TkMacOSXGetAppPathCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -424,6 +467,56 @@ TkpGetAppName(
 	}
     }
     Tcl_DStringAppend(namePtr, name, -1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetAppPathCmd --
+ *
+ *	Returns the path of the Wish application bundle.
+ *
+ * Results:
+ *	Returns the application path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXGetAppPathCmd(
+    ClientData dummy,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    (void)dummy;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
+
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
+
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
+    return TCL_OK;
 }
 
 /*
@@ -492,7 +585,7 @@ TkMacOSXDefaultStartupScript(void)
 	    CFURLRef scriptFldrURL;
 	    char startupScript[PATH_MAX + 1];
 
-	    if (CFURLGetFileSystemRepresentation (appMainURL, true,
+	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
 		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
@@ -533,50 +626,12 @@ TkMacOSXGetNamedSymbol(
     const char* symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
+    (void)module;
+
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */
     }
     return addr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetStringObjFromCFString --
- *
- *	Get a string object from a CFString as efficiently as possible.
- *
- * Results:
- *	New string object or NULL if conversion failed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Tcl_Obj*
-TkMacOSXGetStringObjFromCFString(
-    CFStringRef str)
-{
-    Tcl_Obj *obj = NULL;
-    const char *c = CFStringGetCStringPtr(str, kCFStringEncodingUTF8);
-
-    if (c) {
-	obj = Tcl_NewStringObj(c, -1);
-    } else {
-	CFRange all = CFRangeMake(0, CFStringGetLength(str));
-	CFIndex len;
-
-	if (CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false, NULL,
-		0, &len) > 0 && len < INT_MAX) {
-	    obj = Tcl_NewObj();
-	    Tcl_SetObjLength(obj, len);
-	    CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false,
-		    (UInt8*) obj->bytes, len, NULL);
-	}
-    }
-    return obj;
 }
 
 /*

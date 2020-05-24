@@ -41,7 +41,7 @@ static const struct {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
     SPECIALMENU(window,	WINDOWS),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef SPECIALMENU
 
@@ -58,7 +58,7 @@ static const struct {
     MODIFIER(Command,	NSCommandKeyMask),
     MODIFIER(Cmd,	NSCommandKeyMask),
     MODIFIER(Meta,	NSCommandKeyMask),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef MODIFIER
 
@@ -86,7 +86,7 @@ static const struct {
     ACCEL(Help,		NSHelpFunctionKey),
     ACCEL(Power,	0x233d),
     ACCEL(Eject,	0xf804),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef ACCEL
 #undef sl
@@ -193,10 +193,10 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) insertItem: (NSMenuItem *) newItem atIndex: (NSInteger) index
 {
     if (_tkMenu && index >= 0) {
-	if ((NSUInteger)index <= _tkOffset) {
+	if ((NSUInteger) index <= _tkOffset) {
 	    _tkOffset++;
 	} else {
-	    NSAssert((NSUInteger)index >= _tkItemCount + _tkOffset,
+	    NSAssert((NSUInteger) index >= _tkItemCount + _tkOffset,
 		    @"Cannot insert in the middle of Tk menu");
 	}
     }
@@ -206,9 +206,9 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) removeItemAtIndex: (NSInteger) index
 {
     if (_tkMenu && index >= 0) {
-	if ((NSUInteger)index < _tkOffset) {
+	if ((NSUInteger) index < _tkOffset) {
 	    _tkOffset--;
-	} else if ((NSUInteger)index < _tkItemCount + _tkOffset) {
+	} else if ((NSUInteger) index < _tkItemCount + _tkOffset) {
 	    _tkItemCount--;
 	}
     }
@@ -221,7 +221,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	    action:@selector(tkMenuItemInvoke:) keyEquivalent:@""];
 
     [menuItem setTarget:self];
-    [menuItem setTag:(NSInteger)mePtr];
+    [menuItem setTag:(NSInteger) mePtr];
     return menuItem;
 }
 @end
@@ -252,15 +252,16 @@ static int	ModifierCharWidth(Tk_Font tkfont);
      */
 
     if ([sender isKindOfClass:[NSMenuItem class]]) {
-	NSMenuItem *menuItem = (NSMenuItem *)sender;
-	TkMenu *menuPtr = (TkMenu *)_tkMenu;
-	TkMenuEntry *mePtr = (TkMenuEntry *)[menuItem tag];
+	NSMenuItem *menuItem = (NSMenuItem *) sender;
+	TkMenu *menuPtr = (TkMenu *) _tkMenu;
+	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
 
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
 
-	    /*Add time for errors to fire if necessary. This is sub-optimal
-	     *but avoids issues with Tcl/Cocoa event loop integration.
+	    /*
+	     * Add time for errors to fire if necessary. This is sub-optimal
+	     * but avoids issues with Tcl/Cocoa event loop integration.
 	     */
 
 	    //Tcl_Sleep(100);
@@ -286,6 +287,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
+    (void)menu;
+
     /*
      * Use lowercaseString when comparing keyEquivalents since the notion of
      * a shifted upper case letter does not make much sense.
@@ -305,8 +308,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	return NO;
     } else if (modifiers == (NSControlKeyMask | NSShiftKeyMask) &&
 	    [event keyCode] == 48) {
-
-	/* Starting with OSX 10.12 Control-Tab and Control-Shift-Tab are used
+	/*
+	 * Starting with OSX 10.12 Control-Tab and Control-Shift-Tab are used
 	 * to select window tabs.  But for some even more mysterious reason the
 	 * Control-Shift-Tab event has character 0x19 = NSBackTabCharacter
 	 * rather than 0x09 = NSTabCharacter.  At the same time, the
@@ -317,7 +320,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	key = @"\t";
     } else if (([event modifierFlags] & NSCommandKeyMask) == NSCommandKeyMask) {
-
 	/*
 	 * If the command modifier is set, use the full character string so
 	 * things like the dvorak / qwerty layout will work.
@@ -343,6 +345,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuWillOpen: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
@@ -352,6 +356,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuDidClose: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	RecursivelyClearActiveMenu(_tkMenu);
     }
@@ -359,6 +365,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menu: (NSMenu *) menu willHighlightItem: (NSMenuItem *) item
 {
+    (void)menu;
+
     if (_tkMenu) {
 	GenerateMenuSelectEvent(self, item);
     }
@@ -367,6 +375,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) menuNeedsUpdate: (NSMenu *) menu
 {
     TkMenu *menuPtr = (TkMenu *) _tkMenu;
+    (void)menu;
 
     if (menuPtr) {
 	Tcl_Interp *interp = menuPtr->interp;
@@ -392,6 +401,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuBeginTracking: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -401,6 +411,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuEndTracking: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -628,6 +639,10 @@ TkpConfigureMenuEntry(
 		&imageHeight);
 	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
+	if (gc->foreground == defaultFg) {
+	    // Use a semantic foreground color by default
+	    [image setTemplate:YES];
+	}
     }
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
@@ -650,7 +665,7 @@ TkpConfigureMenuEntry(
 		    gc->foreground!=defaultFg? gc->foreground:gc->background);
 
 	    attributes = [[attributes mutableCopy] autorelease];
-	    [(NSMutableDictionary *)attributes setObject:color
+	    [(NSMutableDictionary *) attributes setObject:color
 		    forKey:NSForegroundColorAttributeName];
 	}
 	if (attributes) {
@@ -690,21 +705,31 @@ TkpConfigureMenuEntry(
 		[submenu setTitle:title];
 
     		if ([menuItem isEnabled]) {
-		  /* This menuItem might have been previously disabled (XXX:
-		     track this), which would have disabled entries; we must
-		     re-enable the entries here. */
-		  int i = 0;
-		  NSArray *itemArray = [submenu itemArray];
-		  for (NSMenuItem *item in itemArray) {
-		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-		    /* Work around an apparent bug where itemArray can have
-                      more items than the menu's entries[] array. */
-                    if (i >= menuRefPtr->menuPtr->numEntries) break;
-		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
-		    i++;
-		  }
-		}
 
+		    /*
+		     * This menuItem might have been previously disabled (XXX:
+		     * track this), which would have disabled entries; we must
+		     * re-enable the entries here.
+		     */
+
+		    int i = 0;
+		    NSArray *itemArray = [submenu itemArray];
+
+		    for (NSMenuItem *item in itemArray) {
+			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
+
+			/*
+			 * Work around an apparent bug where itemArray can have
+			 * more items than the menu's entries[] array.
+			 */
+
+			if (i >= (int) menuRefPtr->menuPtr->numEntries) {
+			    break;
+			}
+			[item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
+			i++;
+		    }
+		}
 	    }
 	}
     }
@@ -755,10 +780,10 @@ TkpDestroyMenuEntry(
  *
  * TkpPostMenu --
  *
- *	Posts a menu on the screen. If entry is < 0 then the menu is
- *      drawn so its top left corner is located at the point with
- *      screen coordinates (x, y).  Otherwise the top left corner of
- *      the specified entry is located at that point.
+ *	Posts a menu on the screen. If entry is < 0 then the menu is drawn so
+ *      its top left corner is located at the point with screen coordinates
+ *      (x,y).  Otherwise the top left corner of the specified entry is located
+ *      at that point.
  *
  * Results:
  *	Returns a standard Tcl result.
@@ -771,7 +796,7 @@ TkpDestroyMenuEntry(
 
 int
 TkpPostMenu(
-    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TCL_UNUSED(Tcl_Interp *),		/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
@@ -779,20 +804,35 @@ TkpPostMenu(
     int index)
 {
     int result;
-    Tk_Window root = Tk_MainWindow(interp);
+    Tk_Window realWin = menuPtr->tkwin;
+    TkWindow *realWinPtr;
+    NSView *realWinView;
 
-    if (root == NULL) {
-	return TCL_ERROR;
+    while (1) {
+	if (realWin == NULL) {
+	    return TCL_ERROR;
+	}
+	/*
+	 * Fix for bug 07cfc9f03e: use the view for the parent real (non-menu)
+	 * toplevel window, rather than always using the root window.
+	 * This allows menus to appear on a separate monitor than the root
+	 * window, and to use the appearance of their parent real window
+	 * rather than the appearance of the root window.
+	 */
+	realWinPtr = (TkWindow*) realWin;
+	realWinView = TkMacOSXDrawableView(realWinPtr->privatePtr);
+	if (realWinView != nil) {
+	    break;
+	}
+	realWin = Tk_Parent(realWin);
     }
-    Drawable d = Tk_WindowId(root);
-    NSView *rootview = TkMacOSXGetRootControl(d);
-    NSWindow *win = [rootview window];
+    NSWindow *win = [realWinView window];
     NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSInteger itemIndex = index;
     NSInteger numItems = [menu numberOfItems];
     NSMenuItem *item = nil;
-    NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    NSPoint location = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     inPostMenu = 1;
     result = TkPreprocessMenu(menuPtr);
@@ -806,7 +846,7 @@ TkpPostMenu(
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
     }
-    
+
     /*
      * The post commands could have deleted the menu, which means we are dead
      * and should go away.
@@ -828,13 +868,13 @@ TkpPostMenu(
  *
  * TkpPostTearoffMenu --
  *
- *	Tearoff menus are not supported on the Mac.  This placeholder
- *      function, which is simply a copy of the unix function, posts a
- *      completely useless window with a black background on the screen. If
- *      entry is < 0 then the window is positioned so that its top left corner
- *      is located at the point with screen coordinates (x, y).  Otherwise the
- *      window position is offset so that top left corner of the specified
- *      entry would be located at that point, if there actually were a menu.
+ *	Tearoff menus are not supported on the Mac.  This placeholder function,
+ *      which is simply a copy of the unix function, posts a completely useless
+ *      window with a black background on the screen. If entry is < 0 then the
+ *      window is positioned so that its top left corner is located at the
+ *      point with screen coordinates (x, y).  Otherwise the window position is
+ *      offset so that top left corner of the specified entry would be located
+ *      at that point, if there actually were a menu.
  *
  *      Mac menus steal all mouse or keyboard input from the application until
  *      the menu is dismissed, with or without a selection, by a mouse or key
@@ -853,7 +893,7 @@ TkpPostMenu(
 
 int
 TkpPostTearoffMenu(
-    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TCL_UNUSED(Tcl_Interp *),	/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y, int index)	/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
@@ -862,7 +902,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (index >= menuPtr->numEntries) {
+    if (index >= (int) menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -960,12 +1000,12 @@ TkpSetWindowMenuBar(
  *
  * TkpSetMainMenubar --
  *
- *	Puts the menu associated with a window into the menubar. Should only
- *	be called when the window is in front.
+ *	Puts the menu associated with a window into the menubar. Should only be
+ *	called when the window is in front.
  *
  *      This is a no-op on all other platforms.  On OS X it is a no-op when
- *      passed a NULL menuName or a nonexistent menuName, with an exception
- *      for the first call in a new interpreter.  In that special case, passing a
+ *      passed a NULL menuName or a nonexistent menuName, with an exception for
+ *      the first call in a new interpreter.  In that special case, passing a
  *      NULL menuName installs the default menu.
  *
  * Results:
@@ -993,19 +1033,21 @@ TkpSetMainMenubar(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
-	    return;
-	}
+	return;
+    }
 
     if (menuName) {
 	Tk_Window menubar = NULL;
+
 	if (winPtr->wmInfoPtr &&
-	    winPtr->wmInfoPtr->menuPtr &&
-	    winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
+		winPtr->wmInfoPtr->menuPtr &&
+		winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
 	    menubar = winPtr->wmInfoPtr->menuPtr->masterMenuPtr->tkwin;
 	}
 
 	/*
-	 * Attempt to find the NSMenu directly.  If that fails, ask Tk to find it.
+	 * Attempt to find the NSMenu directly.  If that fails, ask Tk to find
+	 * it.
 	 */
 
 	if (menubar != NULL && strcmp(menuName, Tk_PathName(menubar)) == 0) {
@@ -1013,6 +1055,7 @@ TkpSetMainMenubar(
 	} else {
 	    TkMenuReferences *menuRefPtr = TkFindMenuReferences(interp,
 		    menuName);
+
 	    if (menuRefPtr && menuRefPtr->menuPtr &&
 		    menuRefPtr->menuPtr->platformData) {
 		menu = (TKMenu *) menuRefPtr->menuPtr->platformData;
@@ -1021,11 +1064,10 @@ TkpSetMainMenubar(
     }
 
     /*
-     * If we couldn't find a menu, do nothing unless the window belongs
-     * to a different application.  In that case, install the default
-     * menubar.
+     * If we couldn't find a menu, do nothing unless the window belongs to a
+     * different application.  In that case, install the default menubar.
      */
-    
+
     if (menu || interp != currentInterp) {
 	[NSApp tkSetMainMenu:menu];
     }
@@ -1038,8 +1080,8 @@ TkpSetMainMenubar(
  * CheckForSpecialMenu --
  *
  *	Given a menu, check to see whether or not it is a cascade in a menubar
- *	with one of the special names ".apple", ".help" or ".window".  If it
- *	is, the entry that points to this menu will be marked.
+ *	with one of the special names ".apple", ".help" or ".window". If it is,
+ *	the entry that points to this menu will be marked.
  *
  * Results:
  *	None.
@@ -1230,11 +1272,12 @@ TkpComputeStandardMenuGeometry(
     /*
      * Do nothing if this menu is a clone.
      */
+
     if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
 	return;
     }
-    
-    menuSize = [(NSMenu *)menuPtr->platformData size];
+
+    menuSize = [(NSMenu *) menuPtr->platformData size];
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
@@ -1248,16 +1291,16 @@ TkpComputeStandardMenuGeometry(
      * want to do it intelligently. We are going to precalculate them and pass
      * them down to all of the measuring and drawing routines. We will measure
      * the font metrics of the menu once. If an entry does not have its own
-     * font set, then we give the geometry/drawing routines the menu's font
-     * and metrics. If an entry has its own font, we will measure that font
-     * and give all of the geometry/drawing the entry's font and metrics.
+     * font set, then we give the geometry/drawing routines the menu's font and
+     * metrics. If an entry has its own font, we will measure that font and
+     * give all of the geometry/drawing the entry's font and metrics.
      */
 
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     Tk_GetFontMetrics(menuFont, &menuMetrics);
     menuModifierCharWidth = ModifierCharWidth(menuFont);
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int) menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == CASCADE_ENTRY || mePtr->accelLength > 0) {
 	    haveAccel = 1;
@@ -1265,7 +1308,7 @@ TkpComputeStandardMenuGeometry(
 	}
     }
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int) menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == TEAROFF_ENTRY) {
 	    continue;
@@ -1295,6 +1338,7 @@ TkpComputeStandardMenuGeometry(
 
 	    NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
 	    int haveImage = 0, width = 0, height = 0;
+
 	    if (mePtr->image) {
 		Tk_SizeOfImage(mePtr->image, &width, &height);
 		haveImage = 1;
@@ -1302,6 +1346,7 @@ TkpComputeStandardMenuGeometry(
 	    } else if (mePtr->bitmapPtr) {
 		Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin,
 			mePtr->bitmapPtr);
+
 		Tk_SizeOfBitmap(menuPtr->display, bitmap, &width, &height);
 		haveImage = 1;
 		height += 2; /* tweak */
@@ -1413,7 +1458,7 @@ GenerateMenuSelectEvent(
     if (menuPtr) {
 	int index = [menu tkIndexOfItem:menuItem];
 
-	if (index < 0 || index >= menuPtr->numEntries ||
+	if (index < 0 || index >= (int) menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
 	    TkActivateMenuEntry(menuPtr, -1);
 	} else {
@@ -1492,7 +1537,7 @@ RecursivelyClearActiveMenu(
     int i;
 
     TkActivateMenuEntry(menuPtr, -1);
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int) menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 
 	if (mePtr->type == CASCADE_ENTRY
@@ -1527,7 +1572,10 @@ TkMacOSXClearMenubarActive(void)
     if (mainMenu && [mainMenu isKindOfClass:[TKMenu class]]) {
 	TkMenu *menuPtr = [(TKMenu *) mainMenu tkMenu];
 
-	if (menuPtr && menuPtr->numEntries && menuPtr->entries) {
+	if (menuPtr &&
+	    !(menuPtr->menuFlags & MENU_DELETION_PENDING) &&
+	    menuPtr->numEntries > 0 &&
+	    menuPtr->entries != NULL) {
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
@@ -1654,8 +1702,8 @@ TkpMenuThreadInit(void)
 
 void
 TkpMenuNotifyToplevelCreate(
-    Tcl_Interp *interp,		/* The interp the menu lives in. */
-    const char *menuName)	/* The name of the menu to reconfigure. */
+    TCL_UNUSED(Tcl_Interp *),	/* The interp the menu lives in. */
+    TCL_UNUSED(const char *))	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.
@@ -1683,8 +1731,8 @@ TkpMenuNotifyToplevelCreate(
 
 void
 TkpInitializeMenuBindings(
-    Tcl_Interp *interp,		/* The interpreter to set. */
-    Tk_BindingTable bindingTable)
+    TCL_UNUSED(Tcl_Interp *),		/* The interpreter to set. */
+    TCL_UNUSED(Tk_BindingTable))
 				/* The table to add to. */
 {
     /*
@@ -1737,17 +1785,17 @@ TkpComputeMenubarGeometry(
 
 void
 TkpDrawMenuEntry(
-    TkMenuEntry *mePtr,		/* The entry to draw */
-    Drawable d,			/* What to draw into */
-    Tk_Font tkfont,		/* Precalculated font for menu */
-    const Tk_FontMetrics *menuMetricsPtr,
+    TCL_UNUSED(TkMenuEntry *),		/* The entry to draw */
+    TCL_UNUSED(Drawable),			/* What to draw into */
+    TCL_UNUSED(Tk_Font),		/* Precalculated font for menu */
+    TCL_UNUSED(const Tk_FontMetrics *),
 				/* Precalculated metrics for menu */
-    int x,			/* X-coordinate of topleft of entry */
-    int y,			/* Y-coordinate of topleft of entry */
-    int width,			/* Width of the entry rectangle */
-    int height,			/* Height of the current rectangle */
-    int strictMotif,		/* Boolean flag */
-    int drawArrow)		/* Whether or not to draw the cascade arrow
+    TCL_UNUSED(int),			/* X-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Width of the entry rectangle */
+    TCL_UNUSED(int),			/* Height of the current rectangle */
+    TCL_UNUSED(int),		/* Boolean flag */
+    TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
 {
 }
@@ -1781,7 +1829,7 @@ TkMacOSXPreprocessMenu(void)
  * TkMacOSXUseID --
  *
  *	Take the ID out of the available list for new menus. Used by the
- *	default menu bar's menus so that they do not get created at the tk
+ *	default menu bar's menus so that they do not get created at the Tk
  *	level. See TkMacOSXGetNewMenuID for more information.
  *
  * Results:
@@ -1796,7 +1844,7 @@ TkMacOSXPreprocessMenu(void)
 
 int
 TkMacOSXUseMenuID(
-    short macID)		/* The id to take out of the table */
+    TCL_UNUSED(short))		/* The id to take out of the table */
 {
     return TCL_OK;
 }
@@ -1806,8 +1854,7 @@ TkMacOSXUseMenuID(
  *
  * TkMacOSXDispatchMenuEvent --
  *
- *	Given a menu id and an item, dispatches the command associated with
- *	it.
+ *	Given a menu id and an item, dispatches the command associated with it.
  *
  * Results:
  *	None.
@@ -1820,8 +1867,8 @@ TkMacOSXUseMenuID(
 
 int
 TkMacOSXDispatchMenuEvent(
-    int menuID,			/* The menu id of the menu we are invoking */
-    int index)			/* The one-based index of the item that was
+    TCL_UNUSED(int),			/* The menu id of the menu we are invoking */
+    TCL_UNUSED(int))			/* The one-based index of the item that was
 				 * selected. */
 {
     return TCL_ERROR;
@@ -1857,9 +1904,10 @@ TkMacOSXHandleTearoffMenu(void)
  *
  * TkMacOSXSetHelpMenuItemCount --
  *
- *	Has to be called after the first call to InsertMenu. Sets up the
- *	global variable for the number of items in the unmodified help menu.
- *	NB. Nobody uses this any more, since you can get the number of system
+ *	Has to be called after the first call to InsertMenu. Sets up the global
+ *	variable for the number of items in the unmodified help menu.
+ *
+ *	NB: Nobody uses this any more, since you can get the number of system
  *	help items from HMGetHelpMenu trivially. But it is in the stubs
  *	table...
  *

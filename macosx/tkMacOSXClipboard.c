@@ -35,10 +35,9 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
-			    cbPtr->buffer length:cbPtr->length
-			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
-
+		    NSString *s = [[TKNSString alloc]
+				      initWithTclUtfBytes:cbPtr->buffer
+						   length:cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}
@@ -123,8 +122,9 @@ TkSelGetSelection(
 {
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    int haveExternalClip =
+	    ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
 
-    int haveExternalClip = ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
     if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
 	        && selection == dispPtr->clipboardAtom
 	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
@@ -136,12 +136,20 @@ TkSelGetSelection(
 	if (type) {
 	    string = [pb stringForType:type];
 	}
-	result = proc(clientData, interp, string ? [string UTF8String] : "");
+	if (string) {
+	    if (target == dispPtr->utf8Atom) {
+		result = proc(clientData, interp, string.UTF8String);
+	    } else if (target == XA_STRING) {
+		const char *latin1 = [string
+		    cStringUsingEncoding:NSISOLatin1StringEncoding];
+		result = proc(clientData, interp, latin1);
+	    }
+	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%s selection doesn't exist or form \"%s\" not defined",
-		Tk_GetAtomName(tkwin, selection),
-		Tk_GetAtomName(tkwin, target)));
+	     "%s selection doesn't exist or form \"%s\" not defined",
+	     Tk_GetAtomName(tkwin, selection),
+	     Tk_GetAtomName(tkwin, target)));
 	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     }
     return result;
@@ -172,11 +180,13 @@ XSetSelectionOwner(
     Time time)			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
+    (void)time;
 
     if (dispPtr && selection == dispPtr->clipboardAtom) {
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
+
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
@@ -188,8 +198,8 @@ XSetSelectionOwner(
  *
  * TkMacOSXSelDeadWindow --
  *
- *	This function is invoked just before a TkWindow is deleted. It
- *	performs selection-related cleanup.
+ *	This function is invoked just before a TkWindow is deleted. It performs
+ *	selection-related cleanup.
  *
  * Results:
  *	None.
@@ -233,6 +243,8 @@ TkSelUpdateClipboard(
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
+    (void)winPtr;
+    (void)targetPtr;
 
     changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
 	    owner:NSApp];
@@ -257,7 +269,7 @@ TkSelUpdateClipboard(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
@@ -285,8 +297,9 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
+    (void)eventPtr;
 }
 
 /*
