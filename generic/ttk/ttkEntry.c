@@ -1463,7 +1463,7 @@ EntryBBoxCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((index == entryPtr->entry.numChars) && (index > 0)) {
+    if ((index == (int)entryPtr->entry.numChars) && (index > 0)) {
 	index--;
     }
     Tk_CharBbox(entryPtr->entry.textLayout, index,
