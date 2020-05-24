@@ -803,7 +803,7 @@ FileReadGIF(
  *	data, and 0 otherwise.
  *
  * Side effects:
- *	The size of the image is placed in widthPtr and heightPtr.
+ *	The access position in the source is incremented.
  *
  *----------------------------------------------------------------------
  */
@@ -1033,6 +1033,29 @@ ReadColorMap(
     return 1;
 }
 
+/*
+*----------------------------------------------------------------------
+*
+* DoExtension --
+*
+*	Process a GIF extension block
+*
+* Results:
+*	-1 to trigger an extension read error
+*       >= 0 ok
+*
+* Side effects:
+*	The transparent color is set if present in current extensions
+*       The data of the following extensions are saved to the metadata dict:
+*       - Application extension
+*         - XMP data is stored in key "XMP"
+*         - any other under the key Application_<name><code>
+*         - Comment extension in key "Comment"
+*       Plain text extensions are currently ignored.
+*
+*----------------------------------------------------------------------
+*/
+
 static int
 DoExtension(
     GIFImageConfig *gifConfPtr,
@@ -1046,18 +1069,102 @@ DoExtension(
     Tcl_Obj *metadataData;
     int length;
     unsigned char *bytePtr;
+    /* Prepare extension name
+     * Maximum string size: "Application_"(12) + App(8) + Code(3) + trailing zero
+     */
+    char extensionStreamName[24];
+    extensionStreamName[0] = '\0';
 
     switch (label) {
     case 0x01:			/* Plain Text Extension */
+        /* this extension is ignored, skip below */
 	break;
 
     case 0xff:			/* Application Extension */
+	/* Length: fix = 11
+	 * Application Identifier: 8 bytes
+	 * Application Authentication code: 3 Bytes
+	 */
+	count = GetDataBlock(gifConfPtr, chan, buf);
+	if (count != 11) {
+	    return -1;
+	}
+	/* Detect XMP extension */
+	if (0 == memcmp(buf,"XMP DataXMP",11)) {
+	    /* XMP format does not use the block structure of GIF
+	     * The data is utf-8 which never contains 0's
+	     * A magic header of 258 bytes is added with the following data:
+	     * 0x01 0xff 0xfe ... 0x01 0x00 0x00
+	     */
+	    Tcl_Encoding encoding;
+	    Tcl_DString recodedDString;
+	    int result;
+	    length = 0;
+	    bytePtr = ckalloc(1);
+	    for (;;) {
+		if (1 != Fread(gifConfPtr, bytePtr+length, 1, 1, chan)) {
+		    /* read error */
+		    ckfree(bytePtr);
+		    return -1;
+		}
+		/* check for end of xmp header */
+		if (bytePtr[length] == '\0') {
+		    break;
+		}
+		length ++;
+		bytePtr = ckrealloc(bytePtr,length);
+	    }
+	    /* check if trailer of 258 bytes is present (length is -1) */
+	    if (length < 257) {
+		ckfree(bytePtr);
+		return -1;
+	    }
+	    length -= 257;
+	    /* save in metadata dict key "XMP" */
+	    encoding = Tcl_GetEncoding(NULL, "utf-8"); 
+	    if (NULL == encoding) {
+		return -1;
+	    }
+	    Tcl_DStringInit(&recodedDString);
+	    Tcl_ExternalToUtfDString(encoding, bytePtr, length, &recodedDString);
+	    result = Tcl_DictObjPut(NULL, metadata,
+		    Tcl_NewStringObj("XMP",-1),
+		    Tcl_NewStringObj(Tcl_DStringValue(&recodedDString),
+			Tcl_DStringLength(&recodedDString)));
+	    Tcl_DStringFree(&recodedDString);
+	    Tcl_FreeEncoding(encoding);
+	    if ( TCL_OK != result ) {
+		return -1;
+	    }
+	    return length;
+	} else {
+	    /* Other extension */
+	    /* Name the extension: Application_xxxxxxxxxxx */
+            /*                     012345678901234567890123*/
+	    strcpy(extensionStreamName,"Application_");
+	    memcpy(extensionStreamName+12,buf,11);
+	    extensionStreamName[23]='\0';
+	}
 	break;
 
     case 0xfe:			/* Comment Extension */
+	strcpy(extensionStreamName,"Comment");
+        /* copy the extension data below */
+	break;
+    case 0xf9:			/* Graphic Control Extension */
+	count = GetDataBlock(gifConfPtr, chan, buf);
+	if (count < 0) {
+	    return -1;
+	}
+	if ((buf[0] & 0x1) != 0) {
+	    *transparent = buf[3];
+	}
+	break;
+    }
+    /* Add extension to dict */
+    if (extensionStreamName[0] != '\0' ) {
 	length = 0;
-	while ( 0 <
-		(count = GetDataBlock(gifConfPtr, chan, buf)) ) {
+	while ( 0 < (count = GetDataBlock(gifConfPtr, chan, buf)) ) {
 	    if (length == 0) {
 		metadataData = Tcl_NewByteArrayObj(buf, count);
 	    } else {
@@ -1068,28 +1175,18 @@ DoExtension(
 	}
 	if (length > 0) {
 	    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
-		    Tcl_NewStringObj("comment",-1), metadataData)) {
+		    Tcl_NewByteArrayObj(extensionStreamName,-1), metadataData)) {
 		return -1;
 	    }
 	}
+	/* this triggers a read error if returned count < 0 */
 	return count;
-
-    case 0xf9:			/* Graphic Control Extension */
-	count = GetDataBlock(gifConfPtr, chan, buf);
-	if (count < 0) {
-	    /* HaO: return 1 on file read error will not show error - why ? */
-	    return 1;
-	}
-	if ((buf[0] & 0x1) != 0) {
-	    *transparent = buf[3];
-	}
-	break;
     }
-
+    /* skip eventual remaining data block bytes */
     do {
 	count = GetDataBlock(gifConfPtr, chan, buf);
     } while (count > 0);
-    return count;
+    return count; /* this may be -1 for error or 0 */
 }
 
 static int
