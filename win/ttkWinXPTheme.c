@@ -373,10 +373,6 @@ static Ttk_StateTable tabitem_statemap[] =
  * <<NOTE-GetThemePartSize>>:
  *	This gives bogus metrics for some parts (in particular,
  *	BP_PUSHBUTTONS).  Set the IGNORE_THEMESIZE flag to skip this call.
- *
- * <<NOTE-GetThemePartSize-2>>:
- *      It seems that fetching the part size more than once on checkbuttons 
- *      and radiobuttons does not work properly.
  */
 
 typedef struct 	/* XP element specifications */
@@ -394,7 +390,6 @@ typedef struct 	/* XP element specifications */
 #   define 	HEAP_ELEMENT	 0x20000000U /* ElementInfo is on heap */
 #   define 	HALF_HEIGHT	 0x10000000U /* Used by GenericSizedElements */
 #   define 	HALF_WIDTH	 0x08000000U /* Used by GenericSizedElements */
-#   define      FETCH_ONCE       0x04000000U /* Used by GenericElementSize See NOTE-GetThemePartSize-2 */
 } ElementInfo;
 
 typedef struct
@@ -412,12 +407,6 @@ typedef struct
     HDC		hDC;
     HWND	hwnd;
 
-    /*
-     * To work around fetch of size returning wrong data
-     */
-    SIZE        origSize;
-    int         fetched;
-
     /* For TkWinDrawableReleaseDC: */
     Drawable	drawable;
     TkWinDCState dcState;
@@ -431,7 +420,6 @@ NewElementData(XPThemeProcs *procs, ElementInfo *info)
     elementData->procs = procs;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
-    elementData->fetched = 0;
 
     return elementData;
 }
@@ -520,28 +508,19 @@ static void GenericElementSize(
 	return;
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-        if ((elementData->info->flags & FETCH_ONCE) && elementData->fetched) {
-            size = elementData->origSize;
-            result = S_OK;
-        } else {
-	  result = elementData->procs->GetThemePartSize(
-	      elementData->hTheme,
-	      elementData->hDC,
-	      elementData->info->partId,
-	      Ttk_StateTableLookup(elementData->info->statemap, 0),
-	      NULL /*RECT *prc*/,
-	      TS_TRUE,
-	      &size);
-        }
+	result = elementData->procs->GetThemePartSize(
+	    elementData->hTheme,
+	    NULL,
+	    elementData->info->partId,
+	    Ttk_StateTableLookup(elementData->info->statemap, 0),
+	    NULL /*RECT *prc*/,
+	    TS_TRUE,
+	    &size);
 
 	if (SUCCEEDED(result)) {
 	    *widthPtr = size.cx;
 	    *heightPtr = size.cy;
 	}
-        if ((elementData->info->flags & FETCH_ONCE) && !elementData->fetched) {
-            elementData->origSize = size; 
-            elementData->fetched = 1;
-        }
     }
 
     /* See NOTE-GetThemeMargins
@@ -987,9 +966,9 @@ TTK_END_LAYOUT_TABLE
 
 static ElementInfo ElementInfoTable[] = {
     { "Checkbutton.indicator", &GenericElementSpec, L"BUTTON",
-    	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS | FETCH_ONCE },
+    	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Radiobutton.indicator", &GenericElementSpec, L"BUTTON",
-    	BP_RADIOBUTTON, radiobutton_statemap, PAD(0, 0, 4, 0), PAD_MARGINS | FETCH_ONCE },
+    	BP_RADIOBUTTON, radiobutton_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Button.button", &GenericElementSpec, L"BUTTON",
     	BP_PUSHBUTTON, pushbutton_statemap, PAD(3, 3, 3, 3), IGNORE_THEMESIZE },
     { "Labelframe.border", &GenericElementSpec, L"BUTTON",
@@ -1058,7 +1037,7 @@ static ElementInfo ElementInfoTable[] = {
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
-    	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS | FETCH_ONCE },
+    	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
     	HP_HEADERITEM, header_statemap, PAD(4,0,4,0),0 },
     { "sizegrip", &GenericElementSpec, L"STATUS",
