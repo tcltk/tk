@@ -275,9 +275,9 @@ but rather refers to the context in which the color should be used.
 Tk now provides the following semantic colors as system colors:
 systemTextColor, systemTextBackgroundColor, systemSelectedTextColor,
 systemSelectedTextBackgroundColor, systemControlTextColor,
-systemDisabledControlTextColor, systemLabelColor, and
-systemControlAccentColor.  All of these except the last two were
-present in OSX 10.0 (and those two are simulated in systems where they
+systemDisabledControlTextColor, systemLabelColor, systemLinkColor, and
+systemControlAccentColor.  All of these except the last three were
+present in OSX 10.0 (and those three are simulated in systems where they
 do not exist).  The change in 10.14 was that the RGB color value of
 these colors became dynamic, meaning that the color value can change
 when the application appearance changes.  In particular, when a user

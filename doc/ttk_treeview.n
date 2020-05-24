@@ -406,6 +406,11 @@ Modify or query the widget state; see \fIttk::widget(n)\fR.
 \fIpathName \fBtag \fIargs...\fR
 .RS
 .TP
+\fIpathName \fBtag add \fItag items\fR
+Adds the specified \fItag\fR to each of the listed \fIitems\fR.
+If \fItag\fR is already present for a particular item,
+then the \fB\-tags\fR for that item are unchanged.
+.TP
 \fIpathName \fBtag bind \fItagName \fR?\fIsequence\fR? ?\fIscript\fR?
 Add a Tk binding script for the event sequence \fIsequence\fR
 to the tag \fItagName\fR.  When an X event is delivered to an item,
@@ -434,6 +439,12 @@ With no additional arguments,
 returns a dictionary of the option settings for \fItagName\fR.
 See \fBTAG OPTIONS\fR for the list of available options.
 .TP
+\fIpathName \fBtag delete \fItagName\fR
+Deletes all tag information for the \fItagName\fR argument. The
+command removes the tag from all items in the widget and also deletes any
+other information associated with the tag, such as bindings and display
+information. The command returns an empty string.
+.TP
 \fIpathName \fBtag has \fItagName\fR ?\fIitem\fR?
 If \fIitem\fR is specified, returns 1 or 0
 depending on whether the specified item has the named tag.
@@ -442,11 +453,6 @@ the specified tag.
 .TP
 \fIpathName \fBtag names\fR
 Returns a list of all tags used by the widget.
-.TP
-\fIpathName \fBtag add \fItag items\fR
-Adds the specified \fItag\fR to each of the listed \fIitems\fR.
-If \fItag\fR is already present for a particular item,
-then the \fB\-tags\fR for that item are unchanged.
 .TP
 \fIpathName \fBtag remove \fItag\fR ?\fIitems\fR?
 Removes the specified \fItag\fR from each of the listed \fIitems\fR.

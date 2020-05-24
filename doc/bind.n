@@ -510,6 +510,9 @@ For \fBButton\fR, \fBButtonRelease\fR, \fBMotion\fR,
 \fBKey\fR, \fBKeyRelease\fR, and \fBMouseWheel\fR events,
 \fB%x\fR and \fB%y\fR indicate the position of the mouse pointer
 relative to the receiving window.
+For key events on the Macintosh these are the coordinates of the
+mouse at the moment when an X11 KeyEvent is sent to Tk, which could
+be slightly later than the time of the physical press or release.
 For \fBEnter\fR and \fBLeave\fR events, the position where the
 mouse pointer crossed the window, relative to the receiving window.
 For \fBConfigure\fR and \fBCreate\fR requests, the \fIx\fR and \fIy\fR

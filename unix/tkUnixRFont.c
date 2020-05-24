@@ -267,9 +267,9 @@ FinishedWithFont(
 static int
 InitFontErrorProc(
     ClientData clientData,
-    XErrorEvent *errorPtr)
+    TCL_UNUSED(XErrorEvent *))
 {
-    int *errorFlagPtr = (int *) clientData;
+    int *errorFlagPtr = (int *)clientData;
 
     if (errorFlagPtr != NULL) {
 	*errorFlagPtr = 1;

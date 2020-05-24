@@ -35,7 +35,9 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = TkUtfToNSString(cbPtr->buffer, cbPtr->length);
+		    NSString *s = [[TKNSString alloc]
+				      initWithTclUtfBytes:cbPtr->buffer
+						   length:cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}
@@ -135,26 +137,19 @@ TkSelGetSelection(
 	    string = [pb stringForType:type];
 	}
 	if (string) {
-
-	    /*
-	     * Encode the string using the encoding which is used in Tcl
-	     * when TCL_UTF_MAX = 3.  This replaces each UTF-16 surrogate with
-	     * a 3-byte sequence generated using the UTF-8 algorithm. (Even
-	     * though UTF-8 does not allow encoding surrogates, the algorithm
-	     * does produce a 3-byte sequence.)
-	     */
-
-	    char *bytes = TkNSStringToUtf(string, NULL);
-	    result = proc(clientData, interp, bytes);
-	    if (bytes) {
-		ckfree(bytes);
+	    if (target == dispPtr->utf8Atom) {
+		result = proc(clientData, interp, string.UTF8String);
+	    } else if (target == XA_STRING) {
+		const char *latin1 = [string
+		    cStringUsingEncoding:NSISOLatin1StringEncoding];
+		result = proc(clientData, interp, latin1);
 	    }
 	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%s selection doesn't exist or form \"%s\" not defined",
-		Tk_GetAtomName(tkwin, selection),
-		Tk_GetAtomName(tkwin, target)));
+	     "%s selection doesn't exist or form \"%s\" not defined",
+	     Tk_GetAtomName(tkwin, selection),
+	     Tk_GetAtomName(tkwin, target)));
 	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     }
     return result;

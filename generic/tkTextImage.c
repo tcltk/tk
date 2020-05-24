@@ -83,17 +83,17 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, align),
+	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
 	0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padY), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageString),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageName),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };

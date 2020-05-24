@@ -121,49 +121,49 @@ matrix:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Xcode 11.4/Shared"
+    - name: "macOS/Xcode 11.5/Shared"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 11.4/Static"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
+    - name: "macOS/Xcode 11.5/Static"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 11.4/Debug"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CFLAGS=-I/usr/local/opt/tcl-tk/include"
+    - name: "macOS/Xcode 11.5/Debug"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 11.4/Shared/XQuartz"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CFLAGS=-I/usr/local/opt/tcl-tk/include"
+    - name: "macOS/Xcode 11.5/Shared/XQuartz"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
 # Older MacOS versions
     - name: "macOS/Xcode 11/Shared"
       os: osx
       osx_image: xcode11
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
     - name: "macOS/Xcode 10/Shared"
       os: osx
       osx_image: xcode10.3
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
     - name: "macOS/Xcode 9/Shared"
       os: osx
       osx_image: xcode9.4
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
 # Test on Windows with MSVC native
 #   - name: "Windows/MSVC/Shared"
 #     os: windows

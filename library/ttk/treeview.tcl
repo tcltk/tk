@@ -322,9 +322,9 @@ proc ttk::treeview::SelectOp {w item cell op} {
 
 ## -selectmode none:
 #
-proc ttk::treeview::select.choose.none {w item cell} { $w focus $item }
-proc ttk::treeview::select.toggle.none {w item cell} { $w focus $item }
-proc ttk::treeview::select.extend.none {w item cell} { $w focus $item }
+proc ttk::treeview::select.choose.none {w item cell} { $w focus $item; $w see $item }
+proc ttk::treeview::select.toggle.none {w item cell} { $w focus $item; $w see $item }
+proc ttk::treeview::select.extend.none {w item cell} { $w focus $item; $w see $item }
 
 ## -selectmode browse:
 #
