@@ -161,7 +161,7 @@ static int		CharDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 static TkTextSegment *	CharCleanupProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
-static TkTextSegment *	CharSplitProc(TkTextSegment *segPtr, int index);
+static TkTextSegment *	CharSplitProc(TkTextSegment *segPtr, TkSizeT index);
 static void		CheckNodeConsistency(Node *nodePtr, int references);
 static void		CleanupLine(TkTextLine *linePtr);
 static void		DeleteSummaries(Summary *tagPtr);
@@ -1197,7 +1197,7 @@ SplitSeg(
     segPtr = linePtr->segPtr;
 
     while (segPtr != NULL) {
-	if (segPtr->size > count) {
+	if (segPtr->size > (TkSizeT)count) {
 	    if (count == 0) {
 		return prevPtr;
 	    }
@@ -3244,7 +3244,7 @@ TkBTreeCharTagged(
 
     toggleSegPtr = NULL;
     for (index = 0, segPtr = indexPtr->linePtr->segPtr;
-	    (index + segPtr->size) <= indexPtr->byteIndex;
+	    (index + (int)segPtr->size) <= indexPtr->byteIndex;
 	    index += segPtr->size, segPtr = segPtr->nextPtr) {
 	if (((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType))
@@ -3364,7 +3364,7 @@ TkBTreeGetTags(
     linePtr = indexPtr->linePtr;
     index = 0;
     segPtr = linePtr->segPtr;
-    while ((index + segPtr->size) <= indexPtr->byteIndex) {
+    while ((index + (int)segPtr->size) <= indexPtr->byteIndex) {
 	if ((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    IncCount(segPtr->body.toggle.tagPtr, 1, &tagInfo);
@@ -3528,7 +3528,7 @@ TkTextIsElided(
     index = 0;
     linePtr = indexPtr->linePtr;
     segPtr = linePtr->segPtr;
-    while ((index + segPtr->size) <= indexPtr->byteIndex) {
+    while ((index + (int)segPtr->size) <= indexPtr->byteIndex) {
 	if ((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    tagPtr = segPtr->body.toggle.tagPtr;
@@ -3865,7 +3865,7 @@ TkBTreeCheck(
     }
     if (segPtr->size != 1) {
 	Tcl_Panic("TkBTreeCheck: last line has wrong # characters: %d",
-		segPtr->size);
+		(int)segPtr->size);
     }
     if ((segPtr->body.chars[0] != '\n') || (segPtr->body.chars[1] != 0)) {
 	Tcl_Panic("TkBTreeCheck: last line had bad value: %s",
@@ -4549,7 +4549,7 @@ TkBTreeNumPixels(
 static TkTextSegment *
 CharSplitProc(
     TkTextSegment *segPtr,	/* Pointer to segment to split. */
-    int index)			/* Position within segment at which to
+    TkSizeT index)			/* Position within segment at which to
 				 * split. */
 {
     TkTextSegment *newPtr1, *newPtr2;
@@ -4675,10 +4675,10 @@ CharCheckProc(
      * to each other: they should be merged together.
      */
 
-    if (segPtr->size <= 0) {
+    if (segPtr->size + 1 <= 1) {
 	Tcl_Panic("CharCheckProc: segment has size <= 0");
     }
-    if (strlen(segPtr->body.chars) != (size_t) segPtr->size) {
+    if (strlen(segPtr->body.chars) != (size_t)segPtr->size) {
 	Tcl_Panic("CharCheckProc: segment has wrong size");
     }
     if (segPtr->nextPtr == NULL) {

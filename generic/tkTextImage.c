@@ -631,7 +631,7 @@ EmbImageCheckProc(
     }
     if (eiPtr->size != 1) {
 	Tcl_Panic("EmbImageCheckProc: embedded image has size %d",
-		eiPtr->size);
+		(int)eiPtr->size);
     }
 }
 

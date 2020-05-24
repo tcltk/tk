@@ -165,7 +165,7 @@ typedef struct TkTextSegment {
     struct TkTextSegment *nextPtr;
 				/* Next in list of segments for this line, or
 				 * NULL for end of list. */
-    int size;			/* Size of this segment (# of bytes of index
+    TkSizeT size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
 	char chars[2];		/* Characters that make up character info.

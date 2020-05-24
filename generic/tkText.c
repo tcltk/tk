@@ -4097,14 +4097,14 @@ TextSearchIndexInLine(
 	if ((segPtr->typePtr == &tkTextCharType) &&
 		(searchSpecPtr->searchElide
 		|| !TkTextIsElided(textPtr, &curIndex, NULL))) {
-	    if (leftToScan < segPtr->size) {
+	    if (leftToScan < (int)segPtr->size) {
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
 		} else {
 		    index += Tcl_NumUtfChars(segPtr->body.chars, leftToScan);
 		}
 	    } else if (searchSpecPtr->exact) {
-		index += segPtr->size;
+		index += (int)segPtr->size;
 	    } else {
 		index += Tcl_NumUtfChars(segPtr->body.chars, -1);
 	    }
@@ -4364,7 +4364,7 @@ TextSearchFoundMatch(
 		}
 	    } else {
 		if (searchSpecPtr->exact) {
-		    leftToScan -= segPtr->size;
+		    leftToScan -= (int)segPtr->size;
 		} else {
 		    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
 		}
