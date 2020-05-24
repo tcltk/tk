@@ -522,7 +522,7 @@ static void GenericElementSize(
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
         if ((elementData->info->flags & FETCH_ONCE) && elementData->fetched) {
             size = elementData->origSize;
-            result = 0; /* non-negative is success */
+            result = S_OK;
         } else {
 	  result = elementData->procs->GetThemePartSize(
 	      elementData->hTheme,
@@ -538,7 +538,7 @@ static void GenericElementSize(
 	    *widthPtr = size.cx;
 	    *heightPtr = size.cy;
 	}
-        if ((elementData->info->flags & FETCH_ONCE) && ! elementData->fetched) {
+        if ((elementData->info->flags & FETCH_ONCE) && !elementData->fetched) {
             elementData->origSize = size; 
             elementData->fetched = 1;
         }
