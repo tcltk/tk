@@ -847,7 +847,7 @@ typedef struct TkText {
  */
 
 typedef TkTextSegment *	Tk_SegSplitProc(struct TkTextSegment *segPtr,
-			    int index);
+			    TkSizeT index);
 typedef int		Tk_SegDeleteProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 typedef TkTextSegment *	Tk_SegCleanupProc(struct TkTextSegment *segPtr,
