@@ -1058,7 +1058,7 @@ static ElementInfo ElementInfoTable[] = {
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
-    	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
+    	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS | FETCH_ONCE },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
     	HP_HEADERITEM, header_statemap, PAD(4,0,4,0),0 },
     { "sizegrip", &GenericElementSpec, L"STATUS",
