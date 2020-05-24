@@ -75,29 +75,32 @@ struct TreeItemRec {
 
 static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
-	"", offsetof(TreeItem,textObj), TCL_AUTO_LENGTH,
+	"", offsetof(TreeItem,textObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_INT, "-height", "height", "Height",
 	"1", -1, offsetof(TreeItem,height),
 	0,0,0 },
     {TK_OPTION_STRING, "-image", "image", "Image",
-	NULL, offsetof(TreeItem,imageObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(TreeItem,imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_IMAGE_CHANGED },
     {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
-	NULL, offsetof(TreeItem,imageAnchorObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(TreeItem,imageAnchorObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
-	NULL, offsetof(TreeItem,valuesObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(TreeItem,valuesObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_BOOLEAN, "-open", "open", "Open",
-	"0", offsetof(TreeItem,openObj), TCL_AUTO_LENGTH,
+	"0", offsetof(TreeItem,openObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_STRING, "-tags", "tags", "Tags",
-	NULL, offsetof(TreeItem,tagsObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(TreeItem,tagsObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_TAGS_CHANGED },
 
-    {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
+    {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
+
+/* Forward declaration */
+static void RemoveTag(TreeItem *, Ttk_Tag);
 
 /* + NewItem --
  * 	Allocate a new, uninitialized, unlinked item
@@ -227,34 +230,34 @@ typedef struct {
 
 static const Tk_OptionSpec DisplayOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
-	NULL, offsetof(DisplayItem,textObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,textObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, offsetof(DisplayItem,anchorObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     /* From here down are the tags options. The index in TagOptionSpecs
      * below should be kept in synch with this position.
      */
     {TK_OPTION_STRING, "-image", "image", "Image",
-	NULL, offsetof(DisplayItem,imageObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
-	NULL, offsetof(DisplayItem,imageAnchorObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,imageAnchorObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
-	NULL, offsetof(DisplayItem,backgroundObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-stripedbackground", "windowColor", "WindowColor",
-	NULL, offsetof(DisplayItem,stripedBgObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,stripedBgObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
-	NULL, offsetof(DisplayItem,foregroundObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
-	NULL, offsetof(DisplayItem,fontObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(DisplayItem,fontObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
-    {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
+    {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
 
 static const Tk_OptionSpec *TagOptionSpecs = &DisplayOptionSpecs[2];
@@ -325,40 +328,40 @@ static void FreeColumn(TreeColumn *column)
 
 static const Tk_OptionSpec ColumnOptionSpecs[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
-	DEF_COLWIDTH, TCL_AUTO_LENGTH, offsetof(TreeColumn,width),
+	DEF_COLWIDTH, TCL_INDEX_NONE, offsetof(TreeColumn,width),
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-minwidth", "minWidth", "MinWidth",
-	DEF_MINWIDTH, TCL_AUTO_LENGTH, offsetof(TreeColumn,minWidth),
+	DEF_MINWIDTH, TCL_INDEX_NONE, offsetof(TreeColumn,minWidth),
 	0,0,0 },
     {TK_OPTION_BOOLEAN, "-stretch", "stretch", "Stretch",
-	"1", TCL_AUTO_LENGTH, offsetof(TreeColumn,stretch),
+	"1", TCL_INDEX_NONE, offsetof(TreeColumn,stretch),
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	"w", offsetof(TreeColumn,anchorObj), TCL_AUTO_LENGTH,	/* <<NOTE-ANCHOR>> */
+	"w", offsetof(TreeColumn,anchorObj), TCL_INDEX_NONE,	/* <<NOTE-ANCHOR>> */
 	0,0,0 },
     {TK_OPTION_STRING, "-id", "id", "ID",
-	NULL, offsetof(TreeColumn,idObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(TreeColumn,idObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,READONLY_OPTION },
-    {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
+    {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
 
 static const Tk_OptionSpec HeadingOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
-	"", offsetof(TreeColumn,headingObj), TCL_AUTO_LENGTH,
+	"", offsetof(TreeColumn,headingObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_STRING, "-image", "image", "Image",
-	"", offsetof(TreeColumn,headingImageObj), TCL_AUTO_LENGTH,
+	"", offsetof(TreeColumn,headingImageObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	"center", offsetof(TreeColumn,headingAnchorObj), TCL_AUTO_LENGTH,
+	"center", offsetof(TreeColumn,headingAnchorObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_STRING, "-command", "", "",
-	"", offsetof(TreeColumn,headingCommandObj), TCL_AUTO_LENGTH,
+	"", offsetof(TreeColumn,headingCommandObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "state", "", "",
-	"", offsetof(TreeColumn,headingStateObj), TCL_AUTO_LENGTH,
+	"", offsetof(TreeColumn,headingStateObj), TCL_INDEX_NONE,
 	0,0,STATE_CHANGED },
-    {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
+    {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
 
 /*------------------------------------------------------------------------
@@ -500,27 +503,27 @@ static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
 
 static const Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
-	"", offsetof(Treeview,tree.columnsObj), TCL_AUTO_LENGTH,
+	"", offsetof(Treeview,tree.columnsObj), TCL_INDEX_NONE,
 	0,0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
     {TK_OPTION_STRING, "-displaycolumns","displayColumns","DisplayColumns",
-	"#all", offsetof(Treeview,tree.displayColumnsObj), TCL_AUTO_LENGTH,
+	"#all", offsetof(Treeview,tree.displayColumnsObj), TCL_INDEX_NONE,
 	0,0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-show", "show", "Show",
-	DEFAULT_SHOW, offsetof(Treeview,tree.showObj), TCL_AUTO_LENGTH,
+	DEFAULT_SHOW, offsetof(Treeview,tree.showObj), TCL_INDEX_NONE,
 	0,0,SHOW_CHANGED | GEOMETRY_CHANGED },
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
-	"extended", offsetof(Treeview,tree.selectModeObj), TCL_AUTO_LENGTH,
+	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
 	0,(ClientData)SelectModeStrings,0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
 	"item", offsetof(Treeview,tree.selectTypeObj), -1,
 	0,(ClientData)SelectTypeStrings,0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_AUTO_LENGTH,
+	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
-	NULL, offsetof(Treeview,tree.paddingObj), TCL_AUTO_LENGTH,
+	NULL, offsetof(Treeview,tree.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-titlecolumns", "titlecolumns", "Titlecolumns",
 	DEF_TITLECOLUMNS, -1, offsetof(Treeview,tree.nTitleColumns),
@@ -533,10 +536,10 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 	0,0,GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	NULL, TCL_AUTO_LENGTH, offsetof(Treeview, tree.xscroll.scrollCmd),
+	NULL, TCL_INDEX_NONE, offsetof(Treeview, tree.xscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	NULL, TCL_AUTO_LENGTH, offsetof(Treeview, tree.yscroll.scrollCmd),
+	NULL, TCL_INDEX_NONE, offsetof(Treeview, tree.yscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -3475,7 +3478,7 @@ static int TreeviewSelectionCommand(
 
     if (objc == 2) {
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
-	for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
+	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	    if (item->state & TTK_STATE_SELECTED)
 		Tcl_ListObjAppendElement(NULL, result, ItemID(tv, item));
 	}
@@ -3501,7 +3504,7 @@ static int TreeviewSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
-	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
+	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
 		item->state &= ~TTK_STATE_SELECTED;
 	    }
 	    /*FALLTHRU*/
@@ -3845,6 +3848,34 @@ static int TreeviewTagConfigureCommand(
     return Ttk_ConfigureTag(interp, tagTable, tag, objc - 4, objv + 4);
 }
 
+/* + $tv tag delete $tag
+ */
+static int TreeviewTagDeleteCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    Ttk_TagTable tagTable = tv->tree.tagTable;
+    TreeItem *item = tv->tree.root;
+    Ttk_Tag tag;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName");
+	return TCL_ERROR;
+    }
+
+    tag = Ttk_GetTagFromObj(tagTable, objv[3]);
+    /* remove the tag from all items */
+    while (item) {
+	RemoveTag(item, tag);
+	item = NextPreorder(item);
+    }
+    /* then remove the tag from the tag table */
+    Ttk_DeleteTagFromTable(tagTable, tag);
+    TtkRedisplayWidget(&tv->core);
+
+    return TCL_OK;
+}
+
 /* + $tv tag has $tag ?$item?
  */
 static int TreeviewTagHasCommand(
@@ -4099,7 +4130,7 @@ static int TreeviewTagRemoveCommand(
 	TreeItem *item = tv->tree.root;
 	while (item) {
 	    RemoveTag(item, tag);
-	    item=NextPreorder(item);
+	    item = NextPreorder(item);
 	}
     }
 
@@ -4172,6 +4203,7 @@ static const Ttk_Ensemble TreeviewTagCommands[] = {
     { "bind",		TreeviewTagBindCommand,0 },
     { "cell",    	0,TreeviewCtagCommands },
     { "configure",	TreeviewTagConfigureCommand,0 },
+    { "delete",		TreeviewTagDeleteCommand,0 },
     { "has",		TreeviewTagHasCommand,0 },
     { "names",		TreeviewTagNamesCommand,0 },
     { "remove",		TreeviewTagRemoveCommand,0 },

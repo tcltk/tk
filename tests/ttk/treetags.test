@@ -11,12 +11,11 @@ proc assert {expr {message ""}} {
         error "PANIC: $message ($expr failed)"
     }
 }
-proc in {e l} { expr {[lsearch -exact $l $e] >= 0} }
 
 proc itemConstraints {tv item} {
     # $tag in [$tv item $item -tags] <==> [$tv tag has $tag $item]
     foreach tag [$tv item $item -tags] {
-	assert {[in $item [$tv tag has $tag]]}
+	assert {$item in [$tv tag has $tag]}
     }
     foreach child [$tv children $item] {
 	itemConstraints $tv $child
@@ -28,7 +27,7 @@ proc treeConstraints {tv} {
     #
     foreach tag [$tv tag names] {
 	foreach item [$tv tag has $tag] {
-	    assert {[in $tag [$tv item $item -tags]]}
+	    assert {$tag in [$tv item $item -tags]}
 	}
     }
 
@@ -113,6 +112,12 @@ test treetags-1.10 "tag names - tag configured" -body {
     $tv tag configure tag5
     lsort [$tv tag names]
 } -result [list tag1 tag2 tag3 tag4 tag5]
+
+test treetags-1.11 "tag delete" -body {
+    $tv tag delete tag5
+    $tv tag delete tag4
+    lsort [$tv tag names]
+} -result [list tag1 tag2 tag3]
 
 test treetags-1.end "cleanup" -body {
     $tv item item1 -tags tag1
