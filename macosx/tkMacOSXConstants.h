@@ -19,6 +19,10 @@
 #define NSFullScreenWindowMask (1 << 14)
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+typedef NSInteger NSModalResponse;
+#endif
+
 /*
  * Let's raise a glass for the project manager who improves our lives by
  * generating deprecation warnings about pointless changes of the names
@@ -79,22 +83,8 @@
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical
 #define NSCenterTextAlignment NSTextAlignmentCenter
-#define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
-#define NSCommandKeyMask NSEventModifierFlagCommand
-#define NSShiftKeyMask NSEventModifierFlagShift
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSAlternateKeyMask NSEventModifierFlagOption
-#define NSControlKeyMask NSEventModifierFlagControl
-#define NSNumericPadKeyMask NSEventModifierFlagNumericPad
-#define NSFunctionKeyMask NSEventModifierFlagFunction
-#define NSKeyUp NSEventTypeKeyUp
-#define NSKeyDown NSEventTypeKeyDown
-#define NSFlagsChanged NSEventTypeFlagsChanged
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSShiftKeyMask NSEventModifierFlagShift
 #define NSAnyEventMask NSEventMaskAny
 #define NSApplicationDefinedMask NSEventMaskApplicationDefined
-#define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel
 #define NSDocModalWindowMask NSWindowStyleMaskDocModalWindow

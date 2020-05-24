@@ -133,25 +133,29 @@ The column name.  This is a read-only option.
 For example, [\fI$pathname \fBcolumn #\fIn \fB\-id\fR]
 returns the data column associated with display column #\fIn\fR.
 .TP
-\fB\-anchor\fR
+\fB\-anchor \fIanchor\fR
 Specifies how the text in this column should be aligned
-with respect to the cell. One of
+with respect to the cell. \fIAnchor\fR is one of
 \fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
 \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR.
 .TP
-\fB\-minwidth\fR
+\fB\-minwidth \fIminwidth\fR
 The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
 \fB\-minwidth\fR when the widget is resized or the user drags a
+column separator.  Default is 20 pixels.
+.TP
+\fB\-stretch \fIboolean\fR
+Specifies whether or not the column width should be adjusted
+when the widget is resized or the user drags a column separator.
+\fIBoolean\fR may have any of the forms accepted by \fBTcl_GetBoolean\fR.
+By default columns are stretchable.
+.TP
+\fB\-width \fIwidth\fR
+The width of the column in pixels.  Default is 200 pixels. The specified
+column width may be changed by Tk in order to honor \fB\-stretch\fR
+and/or \fB\-minwidth\fR, or when the widget is resized or the user drags a
 column separator.
-.TP
-\fB\-stretch\fR
-Specifies whether or not the column's width should be adjusted
-when the widget is resized.
-.TP
-\fB\-width \fIw\fR
-The width of the column in pixels.  Default is something reasonable,
-probably 200 or so.
 .PP
 Use \fIpathname column #0\fR to configure the tree column.
 .RE
@@ -231,7 +235,7 @@ A data cell.
 Returns the item ID of the item at position \fIy\fR.
 .TP
 \fIpathname \fBidentify column \fIx y\fR
-Returns the data column identifier of the cell at position \fIx\fR.
+Returns the display column identifier of the cell at position \fIx\fR.
 The tree column has ID \fB#0\fR.
 .TP
 \fIpathname \fBidentify element \fIx y\fR
@@ -340,6 +344,11 @@ Modify or query the widget state; see \fIttk::widget(n)\fR.
 \fIpathName \fBtag \fIargs...\fR
 .RS
 .TP
+\fIpathName \fBtag add \fItag items\fR
+Adds the specified \fItag\fR to each of the listed \fIitems\fR.
+If \fItag\fR is already present for a particular item,
+then the \fB\-tags\fR for that item are unchanged.
+.TP
 \fIpathName \fBtag bind \fItagName \fR?\fIsequence\fR? ?\fIscript\fR?
 Add a Tk binding script for the event sequence \fIsequence\fR
 to the tag \fItagName\fR.  When an X event is delivered to an item,
@@ -347,9 +356,9 @@ binding scripts for each of the item's \fB\-tags\fR are evaluated
 in order as per \fIbindtags(n)\fR.
 .RS
 .PP
-\fB<KeyPress>\fR, \fB<KeyRelease>\fR, and virtual events
+\fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events
 are sent to the focus item.
-\fB<ButtonPress>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
+\fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
 are sent to the item under the mouse pointer.
 No other event types are supported.
 .PP
@@ -368,6 +377,12 @@ With no additional arguments,
 returns a dictionary of the option settings for \fItagName\fR.
 See \fBTAG OPTIONS\fR for the list of available options.
 .TP
+\fIpathName \fBtag delete \fItagName\fR
+Deletes all tag information for the \fItagName\fR argument. The
+command removes the tag from all items in the widget and also deletes any
+other information associated with the tag, such as bindings and display
+information. The command returns an empty string.
+.TP
 \fIpathName \fBtag has \fItagName\fR ?\fIitem\fR?
 If \fIitem\fR is specified, returns 1 or 0
 depending on whether the specified item has the named tag.
@@ -377,23 +392,19 @@ the specified tag.
 \fIpathName \fBtag names\fR
 Returns a list of all tags used by the widget.
 .TP
-\fIpathName \fBtag add \fItag items\fR
-Adds the specified \fItag\fR to each of the listed \fIitems\fR.
-If \fItag\fR is already present for a particular item,
-then the \fB\-tags\fR for that item are unchanged.
-.TP
 \fIpathName \fBtag remove \fItag\fR ?\fIitems\fR?
 Removes the specified \fItag\fR from each of the listed \fIitems\fR.
 If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .RE
-.TP
-\fIpathName \fBxview \fIargs\fR
-Standard command for horizontal scrolling; see \fIwidget(n)\fR.
-.TP
-\fIpathName \fByview \fIargs\fR
-Standard command for vertical scrolling; see \fIttk::widget(n)\fR.
+.PP
+The treeview widget also supports the following generic \fBttk::widget\fR
+widget subcommands (see \fIttk::widget(n)\fR for details):
+.DS
+.ta 5.5c 11c
+\fBxview\fR	\fByview\fR
+.DE
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items

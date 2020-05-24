@@ -180,7 +180,9 @@
  */
 
 #define DEF_FRAME_BG_COLOR		NORMAL_BG
+#define DEF_FRAME_BG_IMAGE		NULL
 #define DEF_FRAME_BG_MONO		WHITE
+#define DEF_FRAME_BG_TILE		"0"
 #define DEF_FRAME_BORDER_WIDTH		"0"
 #define DEF_FRAME_CLASS			"Frame"
 #define DEF_FRAME_COLORMAP		""
@@ -519,6 +521,14 @@
  */
 
 #define DEF_CANVTEXT_FONT		"TkDefaultFont"
+
+/*
+ * Defaults for canvas items
+ * (arcs, bitmaps, lines, polygons, rectangles, and ovals):
+ */
+
+#define DEF_CANVBMAP_FG			NORMAL_FG
+#define DEF_CANVITEM_OUTLINE		NORMAL_FG
 
 /*
  * Defaults for toplevels (most of the defaults for frames also apply

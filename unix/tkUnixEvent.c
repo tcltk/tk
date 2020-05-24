@@ -12,18 +12,17 @@
 
 #include "tkUnixInt.h"
 #include <signal.h>
-#ifdef HAVE_XKBKEYCODETOKEYSYM
-#  include <X11/XKBlib.h>
-#else
-#  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(NULL))
-#endif
+#undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
+#define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
+#include <X11/XKBlib.h>
+#undef XkbOpenDisplay
 
 /*
  * The following static indicates whether this module has been initialized in
  * the current thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -92,10 +91,11 @@ TkCreateXEventSource(void)
 
 static void
 DisplayExitHandler(
-    ClientData clientData)	/* Not used. */
+    ClientData dummy)	/* Not used. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     Tcl_DeleteEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
     tsdPtr->initialized = 0;
@@ -129,9 +129,8 @@ TkpOpenDisplay(
     int major = 1;
     int minor = 0;
     int reason = 0;
-    unsigned int use_xkb = 0;
     /* Disabled, until we have a better test. See [Bug 3613668] */
-#if 0 && defined(XKEYCODETOKEYSYM_IS_DEPRECATED)
+#if 0
     static int xinited = 0;
     static Tcl_Mutex xinitMutex = NULL;
 
@@ -154,31 +153,19 @@ TkpOpenDisplay(
 
     /*
     ** Bug [3607830]: Before using Xkb, it must be initialized and confirmed
-    **                that the serve supports it.  The XkbOpenDisplay call
+    **                that the server supports it.  The XkbOpenDisplay call
     **                will perform this check and return NULL if the extension
     **                is not supported.
-    **
-    ** Work around un-const-ified Xkb headers using (char *) cast.
     */
-    display = XkbOpenDisplay((char *)displayNameStr, &event, &error, &major,
+    display = XkbOpenDisplay(displayNameStr, &event, &error, &major,
 	    &minor, &reason);
-
-    if (display == NULL) {
-	/*fprintf(stderr,"event=%d error=%d major=%d minor=%d reason=%d\nDisabling xkb\n",
-	event, error, major, minor, reason);*/
-	display  = XOpenDisplay(displayNameStr);
-    } else {
-	use_xkb = TK_DISPLAY_USE_XKB;
-	/*fprintf(stderr, "Using xkb %d.%d\n", major, minor);*/
-    }
 
     if (display == NULL) {
 	return NULL;
     }
-    dispPtr = ckalloc(sizeof(TkDisplay));
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
-    dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
     OpenIM(dispPtr);
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
@@ -186,6 +173,31 @@ TkpOpenDisplay(
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 	    DisplayFileProc, dispPtr);
+
+    /*
+     * Observed weird WidthMMOfScreen() in X on Wayland on a
+     * Fedora 30/i386 running in a VM. Fallback to 75 dpi,
+     * otherwise many other strange things may happen later.
+     * See: [https://core.tcl-lang.org/tk/tktview?name=a01b6f7227]
+     */
+    if (WidthMMOfScreen(DefaultScreenOfDisplay(display)) <= 0) {
+	int mm;
+
+	mm = WidthOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0);
+	WidthMMOfScreen(DefaultScreenOfDisplay(display)) = mm;
+    }
+    if (HeightMMOfScreen(DefaultScreenOfDisplay(display)) <= 0) {
+	int mm;
+
+	mm = HeightOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0);
+	HeightMMOfScreen(DefaultScreenOfDisplay(display)) = mm;
+    }
+
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(dispPtr);
+
     return dispPtr;
 }
 
@@ -286,11 +298,12 @@ TkClipCleanup(
 
 static void
 DisplaySetupProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
     static Tcl_Time blockTime = { 0, 0 };
+    (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -335,9 +348,6 @@ TransferXEventsToTcl(
 	int type;
 	XEvent x;
 	TkKeyEvent k;
-#ifdef GenericEvent
-	xGenericEvent xge;
-#endif
     } event;
     Window w;
     TkDisplay *dispPtr = NULL;
@@ -355,12 +365,9 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
-#ifdef GenericEvent
-	if (event.type == GenericEvent) {
-	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)",
-		    event.xge.extension, event.xge.evtype);
+	if (event.type > MappingNotify) {
+	    continue;
 	}
-#endif
 	w = None;
 	if (event.type == KeyPress || event.type == KeyRelease) {
 	    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
@@ -424,10 +431,11 @@ TransferXEventsToTcl(
 
 static void
 DisplayCheckProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
+    (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -462,9 +470,10 @@ DisplayFileProc(
     ClientData clientData,	/* The display pointer. */
     int flags)			/* Should be TCL_READABLE. */
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
     Display *display = dispPtr->display;
     int numFound;
+    (void)flags;
 
     XFlush(display);
     numFound = XEventsQueued(display, QueuedAfterReading);
@@ -489,9 +498,9 @@ DisplayFileProc(
 	 * nice (?!) message.
 	 */
 
-	void (*oldHandler)();
+	void (*oldHandler)(int);
 
-	oldHandler = (void (*)()) signal(SIGPIPE, SIG_IGN);
+	oldHandler = (void (*)(int)) signal(SIGPIPE, SIG_IGN);
 	XNoOp(display);
 	XFlush(display);
 	(void) signal(SIGPIPE, oldHandler);
@@ -675,6 +684,8 @@ InstantiateIMCallback(
     XPointer     call_data)
 {
     TkDisplay    *dispPtr;
+    (void)display;
+    (void)call_data;
 
     dispPtr = (TkDisplay *) client_data;
     OpenIM(dispPtr);
@@ -689,6 +700,8 @@ DestroyIMCallback(
     XPointer    call_data)
 {
     TkDisplay   *dispPtr;
+    (void)im;
+    (void)call_data;
 
     dispPtr = (TkDisplay *) client_data;
     dispPtr->inputMethod = NULL;

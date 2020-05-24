@@ -79,31 +79,31 @@ bind Spinbox <<TraverseIn>> {
 
 # Standard Motif bindings:
 
-bind Spinbox <1> {
+bind Spinbox <Button-1> {
     ::tk::spinbox::ButtonDown %W %x %y
 }
 bind Spinbox <B1-Motion> {
     ::tk::spinbox::Motion %W %x %y
 }
-bind Spinbox <Double-1> {
+bind Spinbox <Double-Button-1> {
     ::tk::spinbox::ArrowPress %W %x %y
     set tk::Priv(selectMode) word
     ::tk::spinbox::MouseSelect %W %x sel.first
 }
-bind Spinbox <Triple-1> {
+bind Spinbox <Triple-Button-1> {
     ::tk::spinbox::ArrowPress %W %x %y
     set tk::Priv(selectMode) line
     ::tk::spinbox::MouseSelect %W %x 0
 }
-bind Spinbox <Shift-1> {
+bind Spinbox <Shift-Button-1> {
     set tk::Priv(selectMode) char
     %W selection adjust @%x
 }
-bind Spinbox <Double-Shift-1> {
+bind Spinbox <Double-Shift-Button-1> {
     set tk::Priv(selectMode) word
     ::tk::spinbox::MouseSelect %W %x
 }
-bind Spinbox <Triple-Shift-1> {
+bind Spinbox <Triple-Shift-Button-1> {
     set tk::Priv(selectMode) line
     ::tk::spinbox::MouseSelect %W %x
 }
@@ -117,7 +117,7 @@ bind Spinbox <B1-Enter> {
 bind Spinbox <ButtonRelease-1> {
     ::tk::spinbox::ButtonUp %W %x %y
 }
-bind Spinbox <Control-1> {
+bind Spinbox <Control-Button-1> {
     %W icursor @%x
 }
 
@@ -200,18 +200,18 @@ bind Spinbox <<SelectAll>> {
 bind Spinbox <<SelectNone>> {
     %W selection clear
 }
-bind Spinbox <KeyPress> {
+bind Spinbox <Key> {
     ::tk::EntryInsert %W %A
 }
 
 # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
-# <KeyPress> class binding will also fire and insert the character,
+# <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
 
-bind Spinbox <Alt-KeyPress> {# nothing}
-bind Spinbox <Meta-KeyPress> {# nothing}
-bind Spinbox <Control-KeyPress> {# nothing}
+bind Spinbox <Alt-Key> {# nothing}
+bind Spinbox <Meta-Key> {# nothing}
+bind Spinbox <Control-Key> {# nothing}
 bind Spinbox <Escape> {# nothing}
 bind Spinbox <Return> {# nothing}
 bind Spinbox <KP_Enter> {# nothing}
@@ -219,7 +219,7 @@ bind Spinbox <Tab> {# nothing}
 bind Spinbox <Prior> {# nothing}
 bind Spinbox <Next> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
-    bind Spinbox <Command-KeyPress> {# nothing}
+    bind Spinbox <Command-Key> {# nothing}
 }
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
@@ -280,14 +280,27 @@ bind Spinbox <Meta-Delete> {
 
 # A few additional bindings of my own.
 
-bind Spinbox <2> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanMark %W %x
+if {[tk windowingsystem] ne "aqua"} {
+    bind Spinbox <Button-2> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
     }
-}
-bind Spinbox <B2-Motion> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanDrag %W %x
+    bind Spinbox <B2-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
+    }
+} else {
+    bind Spinbox <Button-3> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
+    }
+    bind Spinbox <B3-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
     }
 }
 

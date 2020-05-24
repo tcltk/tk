@@ -90,7 +90,7 @@ Tk_MacOSXSetEmbedHandler(
     Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 {
     if (tkMacOSXEmbedHandler == NULL) {
-	tkMacOSXEmbedHandler = ckalloc(sizeof(TkMacOSXEmbedHandler));
+	tkMacOSXEmbedHandler = (TkMacOSXEmbedHandler *)ckalloc(sizeof(TkMacOSXEmbedHandler));
     }
     tkMacOSXEmbedHandler->registerWinProc = registerWinProc;
     tkMacOSXEmbedHandler->getPortProc = getPortProc;
@@ -121,6 +121,7 @@ TkpMakeWindow(
     Window parent)
 {
     MacDrawable *macWin;
+    (void)parent;
 
     /*
      * If this window is marked as embedded then the window structure should
@@ -134,7 +135,7 @@ TkpMakeWindow(
 	 * Allocate sub window
 	 */
 
-	macWin = ckalloc(sizeof(MacDrawable));
+	macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
 	if (macWin == NULL) {
 	    winPtr->privatePtr = NULL;
 	    return None;
@@ -306,7 +307,7 @@ TkpUseWindow(
      * Make the embedded window.
      */
 
-    macWin = ckalloc(sizeof(MacDrawable));
+    macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     if (macWin == NULL) {
 	winPtr->privatePtr = NULL;
 	return TCL_ERROR;
@@ -334,15 +335,15 @@ TkpUseWindow(
 
     macWin->flags |= TK_EMBEDDED;
     macWin->xOff = parent->winPtr->privatePtr->xOff +
-	parent->winPtr->changes.border_width +
-	winPtr->changes.x;
+	    parent->winPtr->changes.border_width +
+	    winPtr->changes.x;
     macWin->yOff = parent->winPtr->privatePtr->yOff +
-	parent->winPtr->changes.border_width +
-	winPtr->changes.y;
+	    parent->winPtr->changes.border_width +
+	    winPtr->changes.y;
 
     /*
-     * Finish filling up the container structure with the embedded
-     * window's information.
+     * Finish filling up the container structure with the embedded window's
+     * information.
      */
 
     containerPtr->embedded = (Window) macWin;
@@ -353,8 +354,8 @@ TkpUseWindow(
      * tkwin is eventually deleted.
      */
 
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbeddedEventProc,
-			  winPtr);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+	    EmbeddedEventProc, winPtr);
 
     return TCL_OK;
 }
@@ -392,7 +393,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = ckalloc(sizeof(Container));
+    containerPtr = (Container *)ckalloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentPtr = winPtr;
     containerPtr->embedded = None;
@@ -559,7 +560,7 @@ TkpClaimFocus(
 
 int
 TkpTestembedCmd(
-    ClientData clientData,	/* Main window for application. */
+    ClientData dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -569,6 +570,7 @@ TkpTestembedCmd(
     Tcl_DString dString;
     char buffer[50];
     Tcl_Interp *embeddedInterp = NULL, *parentInterp = NULL;
+    (void)dummy;
 
     if ((objc > 1) && (strcmp(Tcl_GetString(objv[1]), "all") == 0)) {
 	all = 1;
@@ -588,16 +590,25 @@ TkpTestembedCmd(
 	    continue;
 	}
 	Tcl_DStringStartSublist(&dString);
-	/* Parent id */
+
+	/*
+	 * Parent id
+	 */
+
 	if (containerPtr->parent == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
-	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->parent);
+	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x",
+		    (size_t) containerPtr->parent);
 	    Tcl_DStringAppendElement(&dString, buffer);
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");
 	}
-	/* Parent pathName */
+
+	/*
+	 * Parent pathName
+	 */
+
 	if (containerPtr->parentPtr == NULL ||
 	    parentInterp != interp) {
 	    Tcl_DStringAppendElement(&dString, "");
@@ -605,11 +616,17 @@ TkpTestembedCmd(
 	    Tcl_DStringAppendElement(&dString,
 		    containerPtr->parentPtr->pathName);
 	}
+
 	/*
 	 * On X11 embedded is a wrapper, which does not exist on macOS.
 	 */
+
 	Tcl_DStringAppendElement(&dString, "");
-	/* Embedded window pathName */
+
+	/*
+	 * Embedded window pathName
+	 */
+
 	if (containerPtr->embeddedPtr == NULL ||
 	    embeddedInterp != interp) {
 	    Tcl_DStringAppendElement(&dString, "");
@@ -652,6 +669,9 @@ TkpRedirectKeyEvent(
     XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
+    (void)winPtr;
+    (void)eventPtr;
+
     /* TODO: Implement this or decide it definitely needs no implementation */
 }
 
@@ -768,6 +788,7 @@ ContainerEventProc(
 	/*
 	 * When the interpreter is being dismantled this can be nil.
 	 */
+
 	return;
     }
 
@@ -833,7 +854,9 @@ ContainerEventProc(
 		eventPtr->xmaprequest.window);
     } else if (eventPtr->type == DestroyNotify) {
 	/*
-	 * The embedded application is gone. Destroy the container window.
+	 * It is not clear whether the container should be destroyed
+	 * when an embedded window is destroyed.  See ticket [67384bce7d].
+	 * Here we are following unix, by destroying the container.
 	 */
 
 	Tk_DestroyWindow((Tk_Window) winPtr);
@@ -920,6 +943,7 @@ EmbedActivateProc(
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = clientData;
+
     if (containerPtr->embeddedPtr != NULL) {
 	if (eventPtr->type == ActivateNotify) {
 	    TkGenerateActivateEvents(containerPtr->embeddedPtr,1);
@@ -1024,11 +1048,10 @@ EmbedGeometryRequest(
     /*
      * Forward the requested size into our geometry management hierarchy via
      * the container window. We need to send a Configure event back to the
-     * embedded application if we decide not to honor its request; to make
-     * this happen, process all idle event handlers synchronously here (so
-     * that the geometry managers have had a chance to do whatever they want
-     * to do), and if the window's size didn't change then generate a
-     * configure event.
+     * embedded application if we decide not to honor its request; to make this
+     * happen, process all idle event handlers synchronously here (so that the
+     * geometry managers have had a chance to do whatever they want to do), and
+     * if the window's size didn't change then generate a configure event.
      */
 
     Tk_GeometryRequest((Tk_Window) winPtr, width, height);
@@ -1050,8 +1073,8 @@ EmbedGeometryRequest(
  *	application of its current size and location. This procedure is called
  *	when the embedded application made a geometry request that we did not
  *	grant, so that the embedded application knows that its geometry didn't
- *	change after all. It is a response to ConfigureRequest events, which
- *	we do not currently synthesize on the Mac
+ *	change after all. It is a response to ConfigureRequest events, which we
+ *	do not currently synthesize on the Mac
  *
  * Results:
  *	None.
@@ -1066,6 +1089,7 @@ static void
 EmbedSendConfigure(
     Container *containerPtr)	/* Information about the embedding. */
 {
+    (void)containerPtr;
 }
 
 /*
@@ -1111,8 +1135,8 @@ EmbedWindowDeleted(
 		    containerPtr->parentPtr->flags & TK_BOTH_HALVES) {
 		XEvent event;
 
-		event.xany.serial =
-			LastKnownRequestProcessed(Tk_Display(containerPtr->parentPtr));
+		event.xany.serial = LastKnownRequestProcessed(
+			Tk_Display(containerPtr->parentPtr));
 		event.xany.send_event = False;
 		event.xany.display = Tk_Display(containerPtr->parentPtr);
 
@@ -1173,12 +1197,14 @@ void
 TkpShowBusyWindow(
     TkBusy busy)
 {
+    (void)busy;
 }
 
 void
 TkpHideBusyWindow(
     TkBusy busy)
 {
+    (void)busy;
 }
 
 void
@@ -1186,6 +1212,8 @@ TkpMakeTransparentWindowExist(
     Tk_Window tkwin,		/* Token for window. */
     Window parent)		/* Parent window. */
 {
+    (void)tkwin;
+    (void)parent;
 }
 
 void
@@ -1196,6 +1224,11 @@ TkpCreateBusy(
     Tk_Window tkParent,
     TkBusy busy)
 {
+    (void)winPtr;
+    (void)tkRef;
+    (void)parentPtr;
+    (void)tkParent;
+    (void)busy;
 }
 
 /*

@@ -26,8 +26,15 @@
 /*
  * Declaration for internal Xlib function used here:
  */
-
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern int		_XInitImageFuncPtrs(XImage *image);
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 /*
  * Forward declarations
@@ -212,7 +219,7 @@ TkImgPhotoGet(
     ClientData masterData)	/* Pointer to our master structure for the
 				 * image. */
 {
-    PhotoMaster *masterPtr = masterData;
+    PhotoMaster *masterPtr = (PhotoMaster *)masterData;
     PhotoInstance *instancePtr;
     Colormap colormap;
     int mono, nRed, nGreen, nBlue, numVisuals;
@@ -278,7 +285,7 @@ TkImgPhotoGet(
      * a new instance of the image.
      */
 
-    instancePtr = ckalloc(sizeof(PhotoInstance));
+    instancePtr = (PhotoInstance *)ckalloc(sizeof(PhotoInstance));
     instancePtr->masterPtr = masterPtr;
     instancePtr->display = Tk_Display(tkwin);
     instancePtr->colormap = Tk_Colormap(tkwin);
@@ -309,7 +316,7 @@ TkImgPhotoGet(
     nGreen = nBlue = 0;
     mono = 1;
     instancePtr->visualInfo = *visInfoPtr;
-    switch (visInfoPtr->class) {
+    switch (visInfoPtr->c_class) {
     case DirectColor:
     case TrueColor:
 	nRed = 1 << CountBits(visInfoPtr->red_mask);
@@ -611,7 +618,7 @@ TkImgPhotoDisplay(
     int drawableX,int drawableY)/* Coordinates within drawable that correspond
 				 * to imageX and imageY. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
 #ifndef TKPUTIMAGE_CAN_BLEND
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
@@ -645,7 +652,7 @@ TkImgPhotoDisplay(
 
     if ((instancePtr->masterPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
-	    && (visInfo.class == DirectColor || visInfo.class == TrueColor)) {
+	    && (visInfo.c_class == DirectColor || visInfo.c_class == TrueColor)) {
 	Tk_ErrorHandler handler;
 	XImage *bgImg = NULL;
 
@@ -700,7 +707,7 @@ TkImgPhotoDisplay(
 	XSetClipMask(display, instancePtr->gc, None);
 	XSetClipOrigin(display, instancePtr->gc, 0, 0);
     }
-    XFlush(display);
+    (void)XFlush(display);
 #endif
 }
 
@@ -729,8 +736,9 @@ TkImgPhotoFree(
     Display *display)		/* Display containing window that used
 				 * image. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     ColorTable *colorPtr;
+    (void)display;
 
     if (instancePtr->refCount-- > 1) {
 	return;
@@ -829,7 +837,7 @@ TkImgPhotoInstanceSetSize(
 	     * such possibility.
 	     */
 
-	    newError = ckalloc(masterPtr->height * masterPtr->width
+	    newError = (schar *)ckalloc(masterPtr->height * masterPtr->width
 		    * 3 * sizeof(schar));
 
 	    /*
@@ -867,8 +875,8 @@ TkImgPhotoInstanceSetSize(
 	    if (masterPtr->width == instancePtr->width) {
 		offset = validBox.y * masterPtr->width * 3;
 		memcpy(newError + offset, instancePtr->error + offset,
-			(size_t) (validBox.height
-			* masterPtr->width * 3 * sizeof(schar)));
+			(size_t) validBox.height
+			* masterPtr->width * 3 * sizeof(schar));
 
 	    } else if (validBox.width > 0 && validBox.height > 0) {
 		errDestPtr = newError +
@@ -948,7 +956,7 @@ IsValidPalette(
 	mono = 0;
     }
 
-    switch (instancePtr->visualInfo.class) {
+    switch (instancePtr->visualInfo.c_class) {
     case DirectColor:
     case TrueColor:
 	if ((nRed > (1 << CountBits(instancePtr->visualInfo.red_mask)))
@@ -1058,13 +1066,13 @@ GetColorTable(
 	 * Re-use the existing entry.
 	 */
 
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
     } else {
 	/*
 	 * No color table currently available; need to make one.
 	 */
 
-	colorPtr = ckalloc(sizeof(ColorTable));
+	colorPtr = (ColorTable *)ckalloc(sizeof(ColorTable));
 
 	/*
 	 * The following line of code should not normally be needed due to the
@@ -1212,8 +1220,8 @@ AllocateColors(
 	 * store them in *colors.
 	 */
 
-	if ((colorPtr->visualInfo.class == DirectColor)
-		|| (colorPtr->visualInfo.class == TrueColor)) {
+	if ((colorPtr->visualInfo.c_class == DirectColor)
+		|| (colorPtr->visualInfo.c_class == TrueColor)) {
 
 	    /*
 	     * Direct/True Color: allocate shades of red, green, blue
@@ -1225,7 +1233,7 @@ AllocateColors(
 	    } else {
 		numColors = MAX(MAX(nRed, nGreen), nBlue);
 	    }
-	    colors = ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
 
 	    for (i = 0; i < numColors; ++i) {
 		if (igam == 1.0) {
@@ -1245,7 +1253,7 @@ AllocateColors(
 	     */
 
 	    numColors = (mono) ? nRed: (nRed * nGreen * nBlue);
-	    colors = ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
 
 	    if (!mono) {
 		/*
@@ -1289,7 +1297,7 @@ AllocateColors(
 	 * Now try to allocate the colors we've calculated.
 	 */
 
-	pixels = ckalloc(numColors * sizeof(unsigned long));
+	pixels = (unsigned long *)ckalloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
 	    if (!XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
 		    &colors[i])) {
@@ -1367,8 +1375,8 @@ AllocateColors(
 	 */
 
 #ifndef _WIN32
-	if ((colorPtr->visualInfo.class != DirectColor)
-		&& (colorPtr->visualInfo.class != TrueColor)) {
+	if ((colorPtr->visualInfo.c_class != DirectColor)
+		&& (colorPtr->visualInfo.c_class != TrueColor)) {
 	    colorPtr->flags |= MAP_COLORS;
 	}
 #endif /* _WIN32 */
@@ -1394,8 +1402,8 @@ AllocateColors(
 	} else {
 	    g = (i * (nGreen - 1) + 127) / 255;
 	    b = (i * (nBlue - 1) + 127) / 255;
-	    if ((colorPtr->visualInfo.class == DirectColor)
-		    || (colorPtr->visualInfo.class == TrueColor)) {
+	    if ((colorPtr->visualInfo.c_class == DirectColor)
+		    || (colorPtr->visualInfo.c_class == TrueColor)) {
 		colorPtr->redValues[i] =
 			colors[r].pixel & colorPtr->visualInfo.red_mask;
 		colorPtr->greenValues[i] =
@@ -1449,7 +1457,7 @@ DisposeColorTable(
     ClientData clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
-    ColorTable *colorPtr = clientData;
+    ColorTable *colorPtr = (ColorTable *)clientData;
     Tcl_HashEntry *entry;
 
     if (colorPtr->pixelMap != NULL) {
@@ -1509,7 +1517,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while (entry != NULL) {
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0 )&& (colorPtr->numColors != 0)
@@ -1538,7 +1546,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while ((entry != NULL) && (numColors > 0)) {
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0) && (colorPtr->numColors != 0)
@@ -1583,7 +1591,7 @@ TkImgDisposeInstance(
     ClientData clientData)	/* Pointer to the instance whose resources are
 				 * to be released. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     PhotoInstance *prevPtr;
 
     if (instancePtr->pixels != None) {
@@ -1653,8 +1661,8 @@ TkImgDitherInstance(
      * DirectColor with many colors).
      */
 
-    if ((colorPtr->visualInfo.class == DirectColor)
-	    || (colorPtr->visualInfo.class == TrueColor)) {
+    if ((colorPtr->visualInfo.c_class == DirectColor)
+	    || (colorPtr->visualInfo.c_class == TrueColor)) {
 	int nRed, nGreen, nBlue, result;
 
 	result = sscanf(colorPtr->id.palette, "%d/%d/%d", &nRed,
@@ -1693,7 +1701,7 @@ TkImgDitherInstance(
      * recovering from the failure.
      */
 
-    imagePtr->data = ckalloc(imagePtr->bytes_per_line * nLines);
+    imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * nLines);
     bigEndian = imagePtr->bitmap_bit_order == MSBFirst;
     firstBit = bigEndian? (1 << (imagePtr->bitmap_unit - 1)): 1;
 
@@ -1982,8 +1990,8 @@ TkImgResetDither(
 {
     if (instancePtr->error) {
 	memset(instancePtr->error, 0,
-	       /*(size_t)*/ (instancePtr->masterPtr->width
-		* instancePtr->masterPtr->height * 3 * sizeof(schar)));
+		(size_t) instancePtr->masterPtr->width
+		* instancePtr->masterPtr->height * 3 * sizeof(schar));
     }
 }
 

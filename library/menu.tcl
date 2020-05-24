@@ -88,7 +88,7 @@ bind Menubutton <Enter> {
 bind Menubutton <Leave> {
     tk::MbLeave %W
 }
-bind Menubutton <1> {
+bind Menubutton <Button-1> {
     if {$tk::Priv(inMenubutton) ne ""} {
 	tk::MbPost $tk::Priv(inMenubutton) %X %Y
     }
@@ -138,7 +138,7 @@ bind Menu <Leave> {
 bind Menu <Motion> {
     tk::MenuMotion %W %x %y %s
 }
-bind Menu <ButtonPress> {
+bind Menu <Button> {
     tk::MenuButtonDown %W
 }
 bind Menu <ButtonRelease> {
@@ -168,7 +168,7 @@ bind Menu <<PrevLine>> {
 bind Menu <<NextLine>> {
     tk::MenuDownArrow %W
 }
-bind Menu <KeyPress> {
+bind Menu <Key> {
     tk::TraverseWithinMenu %W %A
     break
 }
@@ -177,7 +177,7 @@ bind Menu <KeyPress> {
 # implement keyboard menu traversal.
 
 if {[tk windowingsystem] eq "x11"} {
-    bind all <Alt-KeyPress> {
+    bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
@@ -185,7 +185,7 @@ if {[tk windowingsystem] eq "x11"} {
 	tk::FirstMenu %W
     }
 } else {
-    bind Menubutton <Alt-KeyPress> {
+    bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
@@ -1176,15 +1176,6 @@ if {[tk windowingsystem] eq "aqua"} {
 	    set entry [MenuFindName $menu [$button cget -text]]
 	    if {$entry eq ""} {
 		set entry 0
-	    }
-	}
-	if {$entry ne ""} {
-	    if {$entry == [$menu index last]} {
-		set entryHeight [expr {[winfo reqheight $menu] \
-				       - [$menu yposition $entry]}]
-	    } else {
-		set entryHeight [expr {[$menu yposition [expr {$entry+1}]] \
-					- [$menu yposition $entry]}]
 	    }
 	}
 	set x [winfo rootx $button]

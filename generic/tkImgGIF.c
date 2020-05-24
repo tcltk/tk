@@ -63,9 +63,9 @@ typedef struct mFile {
  * Most data in a GIF image is binary and is treated as such. However, a few
  * key bits are stashed in ASCII. If we try to compare those pieces to the
  * char they represent, it will fail on any non-ASCII (eg, EBCDIC) system. To
- * accomodate these systems, we test against the numeric value of the ASCII
+ * accommodate these systems, we test against the numeric value of the ASCII
  * characters instead of the characters themselves. This is encoding
- * independant.
+ * independent.
  */
 
 static const char GIF87a[] = {			/* ASCII GIF87a */
@@ -353,9 +353,12 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Interp *interp)		/* not used */
+    Tcl_Interp *dummy)		/* not used */
 {
     GIFImageConfig gifConf;
+    (void)fileName;
+    (void)format;
+    (void)dummy;
 
     memset(&gifConf, 0, sizeof(GIFImageConfig));
     return ReadGIFHeader(&gifConf, chan, widthPtr, heightPtr);
@@ -602,7 +605,7 @@ FileReadGIF(
 		    goto error;
 		}
 		nBytes = fileWidth * fileHeight * 3;
-		trashBuffer = ckalloc(nBytes);
+		trashBuffer = (unsigned char *)ckalloc(nBytes);
 		if (trashBuffer) {
 		    memset(trashBuffer, 0, nBytes);
 		}
@@ -697,7 +700,7 @@ FileReadGIF(
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;
-	block.pixelPtr = ckalloc(nBytes);
+	block.pixelPtr = (unsigned char *)ckalloc(nBytes);
 	if (block.pixelPtr) {
 	    memset(block.pixelPtr, 0, nBytes);
 	}
@@ -851,11 +854,13 @@ StringMatchGIF(
     Tcl_Obj *format,		/* the image format object, or NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Interp *interp)		/* not used */
+    Tcl_Interp *dummy)		/* not used */
 {
     unsigned char *data, header[10];
-    size_t got, length;
+    TkSizeT got, length;
     MFile handle;
+    (void)format;
+    (void)dummy;
 
     data = TkGetByteArrayFromObj(dataObj, &length);
 
@@ -923,7 +928,7 @@ StringReadGIF(
     int srcX, int srcY)
 {
     MFile handle, *hdlPtr = &handle;
-    size_t length;
+    TkSizeT length;
     const char *xferFormat;
     unsigned char *data = TkGetByteArrayFromObj(dataObj, &length);
 
@@ -1147,15 +1152,17 @@ ReadImage(
 {
     unsigned char initialCodeSize;
     int xpos = 0, ypos = 0, pass = 0, i, count;
-    register unsigned char *pixelPtr;
+    unsigned char *pixelPtr;
     static const int interlaceStep[] = { 8, 8, 4, 2 };
     static const int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char append[(1 << MAX_LWZ_BITS)];
     unsigned char stack[(1 << MAX_LWZ_BITS)*2];
-    register unsigned char *top;
+    unsigned char *top;
     int codeSize, clearCode, inCode, endCode, oldCode, maxCode;
     int code, firstCode, v;
+    (void)srcX;
+    (void)srcY;
 
     /*
      * Initialize the decoder
@@ -1372,7 +1379,7 @@ ReadImage(
      *
      * The field "stack" is abused for temporary buffer. it has 4096 bytes
      * and we need 256.
-     * 
+     *
      * Loop until we hit a 0 length block which is the end sign.
      */
     while ( 0 < (count = GetDataBlock(gifConfPtr, chan, stack)))
@@ -1791,7 +1798,7 @@ WriteToChannel(
     const char *bytes,
     size_t byteCount)
 {
-    Tcl_Channel handle = clientData;
+    Tcl_Channel handle = (Tcl_Channel)clientData;
 
     return Tcl_Write(handle, bytes, byteCount);
 }
@@ -1802,7 +1809,7 @@ WriteToByteArray(
     const char *bytes,
     size_t byteCount)
 {
-    Tcl_Obj *objPtr = clientData;
+    Tcl_Obj *objPtr = (Tcl_Obj *)clientData;
     Tcl_Obj *tmpObj = Tcl_NewByteArrayObj((unsigned char *) bytes, byteCount);
 
     Tcl_IncrRefCount(tmpObj);
@@ -1824,6 +1831,7 @@ CommonWriteGIF(
     long width, height, x;
     unsigned char c;
     unsigned int top, left;
+    (void)format;
 
     top = 0;
     left = 0;
@@ -2269,9 +2277,9 @@ ClearHashTable(			/* Reset code table. */
     GIFState_t *statePtr,
     int hSize)
 {
-    register int *hashTablePtr = statePtr->hashTable + hSize;
-    register long i;
-    register long m1 = -1;
+    int *hashTablePtr = statePtr->hashTable + hSize;
+    long i;
+    long m1 = -1;
 
     i = hSize - 16;
     do {			/* might use Sys V memset(3) here */

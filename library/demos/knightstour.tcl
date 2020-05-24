@@ -175,7 +175,7 @@ proc CreateGUI {} {
     wm withdraw $dlg
     set f [ttk::frame $dlg.f]
     set c [canvas $f.c -width 240 -height 240]
-    text $f.txt -width 10 -height 1 -background white \
+    text $f.txt -width 10 -height 1 \
         -yscrollcommand [list $f.vs set] -font {Arial 8}
     ttk::scrollbar $f.vs -command [list $f.txt yview]
 
@@ -200,7 +200,7 @@ proc CreateGUI {} {
             set coords [list [expr {$col * 30 + 4}] [expr {$row * 30 + 4}] \
                             [expr {$col * 30 + 30}] [expr {$row * 30 + 30}]]
             $c create rectangle $coords -fill $fill -disabledfill $dfill \
-                -width 2 -state disabled
+                -width 2 -state disabled -outline black
         }
     }
     if {[tk windowingsystem] ne "x11"} {
@@ -218,7 +218,7 @@ proc CreateGUI {} {
             -fill black -activefill "#600000"
     }
     $c moveto knight {*}[lrange [$c coords [expr {1 + int(rand() * 64)}]] 0 1]
-    $c bind knight <ButtonPress-1> [namespace code [list DragStart %W %x %y]]
+    $c bind knight <Button-1> [namespace code [list DragStart %W %x %y]]
     $c bind knight <Motion> [namespace code [list DragMotion %W %x %y]]
     $c bind knight <ButtonRelease-1> [namespace code [list DragEnd %W %x %y]]
 

@@ -118,7 +118,26 @@ test place-4.4 {ConfigureSlave procedure, bad -in option} -setup {
 } -body {
     place .t.f2 -in .
 } -returnCodes error -result {can't place .t.f2 relative to .}
-
+test place-4.5 {ConfigureSlave procedure, bad -in option} -setup {
+} -body {
+    frame .t.f1
+    place .t.f1 -in .t.f1
+} -returnCodes error -result {can't place .t.f1 relative to itself}
+test place-4.6 {prevent management loops} -setup {
+    place forget .t.f1
+} -body {
+    place .t.f1 -in .t.f2
+    place .t.f2 -in .t.f1
+} -returnCodes error -result {can't put .t.f2 inside .t.f1, would cause management loop}
+test place-4.7 {prevent management loops} -setup {
+    place forget .t.f1
+    place forget .t.f2
+} -body {
+    frame .t.f3
+    place .t.f1 -in .t.f2
+    place .t.f2 -in .t.f3
+    place .t.f3 -in .t.f1
+} -returnCodes error -result {can't put .t.f3 inside .t.f1, would cause management loop}
 
 test place-5.1 {ConfigureSlave procedure, -relwidth option} -body {
     place .t.f2 -relwidth abcd

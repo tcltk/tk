@@ -10,7 +10,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "assert.h"
 #include "tkInt.h"
 
 #define	PNG_INT32(a,b,c,d)	\
@@ -127,7 +126,7 @@ typedef struct {
     Tcl_Channel channel;	/* Channel for from-file reads. */
     Tcl_Obj *objDataPtr;
     unsigned char *strDataBuf;	/* Raw source data for from-string reads. */
-    size_t strDataLen;		/* Length of source data. */
+    TkSizeT strDataLen;		/* Length of source data. */
     unsigned char *base64Data;	/* base64 encoded string data. */
     unsigned char base64Bits;	/* Remaining bits from last base64 read. */
     unsigned char base64State;	/* Current state of base64 decoder. */
@@ -2098,7 +2097,7 @@ ReadIDAT(
      */
 
     while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)) {
-	size_t len1, len2;
+	TkSizeT len1, len2;
 
 	/*
 	 * Read another block of input into the zlib stream if data remains.
@@ -2154,7 +2153,7 @@ ReadIDAT(
 	}
 	TkGetByteArrayFromObj(pngPtr->thisLineObj, &len2);
 
-	if (len2 == (size_t)pngPtr->phaseSize) {
+	if (len2 == (TkSizeT)pngPtr->phaseSize) {
 	    if (pngPtr->phase > 7) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"extra data after final scan line of final phase",
@@ -2238,14 +2237,14 @@ ApplyAlpha(
     PNGImage *pngPtr)
 {
     if (pngPtr->alpha != 1.0) {
-	register unsigned char *p = pngPtr->block.pixelPtr;
+	unsigned char *p = pngPtr->block.pixelPtr;
 	unsigned char *endPtr = p + pngPtr->blockLen;
 	int offset = pngPtr->block.offset[3];
 
 	p += offset;
 
 	if (16 == pngPtr->bitDepth) {
-	    register unsigned int channel;
+	    unsigned int channel;
 
 	    while (p < endPtr) {
 		channel = (unsigned int)
@@ -2521,7 +2520,7 @@ DecodePNG(
     pngPtr->thisLineObj = Tcl_NewObj();
     Tcl_IncrRefCount(pngPtr->thisLineObj);
 
-    pngPtr->block.pixelPtr = attemptckalloc(pngPtr->blockLen);
+    pngPtr->block.pixelPtr = (unsigned char *)attemptckalloc(pngPtr->blockLen);
     if (!pngPtr->block.pixelPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"memory allocation failed", -1));
@@ -2677,6 +2676,8 @@ FileMatchPNG(
 {
     PNGImage png;
     int match = 0;
+    (void)fileName;
+    (void)fmtObj;
 
     InitPNGImage(NULL, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2726,6 +2727,11 @@ FileReadPNG(
 {
     PNGImage png;
     int result = TCL_ERROR;
+    (void)fileName;
+    (void)width;
+    (void)height;
+    (void)srcX;
+    (void)srcY;
 
     result = InitPNGImage(interp, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2765,6 +2771,7 @@ StringMatchPNG(
 {
     PNGImage png;
     int match = 0;
+    (void)fmtObj;
 
     InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2813,6 +2820,10 @@ StringReadPNG(
 {
     PNGImage png;
     int result = TCL_ERROR;
+    (void)width;
+    (void)height;
+    (void)srcX;
+    (void)srcY;
 
     result = InitPNGImage(interp, &png, NULL, pObjData,
 	    TCL_ZLIB_STREAM_INFLATE);
@@ -2863,7 +2874,7 @@ WriteData(
      */
 
     if (pngPtr->objDataPtr) {
-	size_t objSz;
+	TkSizeT objSz;
 	unsigned char *destPtr;
 
 	TkGetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
@@ -3135,7 +3146,7 @@ WriteIDAT(
     int rowNum, flush = TCL_ZLIB_NO_FLUSH, result;
     Tcl_Obj *outputObj;
     unsigned char *outputBytes;
-    size_t outputSize;
+    TkSizeT outputSize;
 
     /*
      * Filter and compress each row one at a time.
@@ -3460,6 +3471,7 @@ FileWritePNG(
     Tcl_Channel chan;
     PNGImage png;
     int result = TCL_ERROR;
+    (void)fmtObj;
 
     /*
      * Open a Tcl file channel where the image data will be stored. Tk ought
@@ -3530,6 +3542,7 @@ StringWritePNG(
     Tcl_Obj *resultObj = Tcl_NewObj();
     PNGImage png;
     int result = TCL_ERROR;
+    (void)fmtObj;
 
     /*
      * Initalize PNGImage instance for encoding.

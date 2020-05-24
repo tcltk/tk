@@ -724,7 +724,7 @@ test listbox-3.62 {ListboxWidgetCmd procedure, "index" option} -body {
 } -result 18
 test listbox-3.63 {ListboxWidgetCmd procedure, "index" option} -body {
     .l index 34
-} -result 34
+} -result 18
 test listbox-3.64 {ListboxWidgetCmd procedure, "insert" option} -body {
     .l insert
 } -returnCodes error -result {wrong # args: should be ".l insert index ?element ...?"}
@@ -2112,7 +2112,7 @@ test listbox-10.17 {GetListboxIndex procedure} -setup {
     .l index 20
 } -cleanup {
     destroy .l
-} -result {20}
+} -result {12}
 test listbox-10.18 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {
@@ -2132,7 +2132,7 @@ test listbox-10.19 {GetListboxIndex procedure} -setup {
     .l index -2
 } -cleanup {
     destroy .l
-} -result  -2
+} -result  -1
 test listbox-10.20 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {
@@ -2143,7 +2143,7 @@ test listbox-10.20 {GetListboxIndex procedure} -setup {
     .l index 1
 } -cleanup {
     destroy .l
-} -result 1
+} -result 0
 
 
 test listbox-11.1 {ChangeListboxView procedure, boundary conditions for index} -setup {
@@ -2209,6 +2209,7 @@ test listbox-11.5 {ChangeListboxView procedure} -setup {
 } -body {
     listbox .l -height 5 -yscrollcommand "record y"
     pack .l
+    update
     .l insert 0 a b c d e f g h i j
     .l yview 3
     update
@@ -2662,10 +2663,11 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     destroy .l
 } -body {
     catch {unset x}
-    set log {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    set log {}
     pack .l
-    update
+    set timeout [after 500 {set log timeout}]
+    vwait log
     lappend x "0000000000"
     update
     lappend x "00000000000000000000"
@@ -2673,15 +2675,17 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     set log
 } -cleanup {
     destroy .l
+    after cancel $timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5}]
 test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
     catch {unset x}
-    set log {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    set log {}
     pack .l
-    update
+    set timeout [after 500 {set log timeout}]
+    vwait log
     lappend x "0000000000"
     update
     lappend x "00000000000000000000"
@@ -2691,6 +2695,7 @@ test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setu
     set log
 } -cleanup {
     destroy .l
+    after cancel timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5} {x 0 1}]
 test listbox-21.11 {ListboxListVarProc, bad list} -setup {
     destroy .l
@@ -2755,15 +2760,19 @@ test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
     destroy .l
 } -body {
     catch {unset x}
+    listbox .l -font $fixed -height 3 -yscrollcommand "record y" -listvar x
+    update
     set log {}
-    listbox .l -listvar x -yscrollcommand "record y" -font fixed -height 3
     pack .l
+    set timeout [after 500 {set log timeout}]
+    vwait log
     update
     lappend x a b c d e f
-    update
+    vwait log
     set log
 } -cleanup {
     destroy .l
+    after cancel $timeout
 } -result [list {y 0 1} {y 0 0.5}]
 test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
     destroy .l
@@ -2771,7 +2780,6 @@ test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
     catch {unset x}
     listbox .l -listvar x -height 3
     pack .l
-    update
     set x [list 0 1 2 3 4 5]
     .l yview scroll 3 units
     update
@@ -2792,17 +2800,19 @@ test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
 test listbox-22.1 {UpdateHScrollbar} -setup {
     destroy .l
 } -body {
-    set log {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x"
+    set log {}
     pack .l
-    update
+    set timeout [after 500 {set log timeout}]
+    vwait log
     .l insert end "0000000000"
     update
     .l insert end "00000000000000000000"
-    update
+    vwait log
     set log
 } -cleanup {
     destroy .l
+    after cancel $timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5}]
 
 
@@ -3146,7 +3156,7 @@ test listbox-31.1 {<<ListboxSelect>> event} -setup {
     bind .l <<ListboxSelect>> {lappend res [%W curselection]}
     .l insert end a b c
     focus -force .l
-    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    event generate .l <Button-1> -x 5 -y 5  ; # <<ListboxSelect>> fires
     .l configure -state disabled
     focus -force .l
     event generate .l <Control-Home> ; # <<ListboxSelect>> does NOT fire
@@ -3169,13 +3179,40 @@ test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
     bind .l <<ListboxSelect>> {lappend res [list [selection own] [%W curselection]]}
     .l insert end a b c
     focus -force .l
-    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    event generate .l <Button-1> -x 5 -y 5  ; # <<ListboxSelect>> fires
     selection clear                  ; # <<ListboxSelect>> fires again
     update
     set res
 } -cleanup {
     destroy .l
 } -result {{.l 0} {{} {}}}
+
+test listbox-32.1 {Bug [5d991b822e]} {
+    # Want this not to segfault, or write to variable with empty name
+    set var INIT
+    listbox .b -listvariable var
+    trace add variable var unset {apply {args {
+        .b configure -listvariable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+    info exists {}
+} 0
+test listbox-32.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    listbox .b -listvariable var
+    trace add variable var unset {apply {args {
+        .b configure -listvariable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
 
 resetGridInfo
 deleteWindows

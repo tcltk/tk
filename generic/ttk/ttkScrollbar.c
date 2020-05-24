@@ -31,14 +31,14 @@ typedef struct
     ScrollbarPart scrollbar;
 } Scrollbar;
 
-static Tk_OptionSpec ScrollbarOptionSpecs[] =
+static const Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0,0,0},
+	offsetof(Scrollbar,scrollbar.commandObj), TCL_INDEX_NONE, 0,0,0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	Tk_Offset(Scrollbar,scrollbar.orientObj),
-	Tk_Offset(Scrollbar,scrollbar.orient),
+	offsetof(Scrollbar,scrollbar.orientObj),
+	offsetof(Scrollbar,scrollbar.orient),
 	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -50,9 +50,11 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
  */
 
 static void
-ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
+ScrollbarInitialize(Tcl_Interp *dummy, void *recordPtr)
 {
-    Scrollbar *sb = recordPtr;
+    Scrollbar *sb = (Scrollbar *)recordPtr;
+    (void)dummy;
+
     sb->scrollbar.first = 0.0;
     sb->scrollbar.last = 1.0;
 
@@ -62,7 +64,7 @@ ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
 static Ttk_Layout ScrollbarGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
-    Scrollbar *sb = recordPtr;
+    Scrollbar *sb = (Scrollbar *)recordPtr;
     return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, sb->scrollbar.orientObj);
 }
@@ -76,7 +78,7 @@ static Ttk_Layout ScrollbarGetLayout(
  */
 static void ScrollbarDoLayout(void *recordPtr)
 {
-    Scrollbar *sb = recordPtr;
+    Scrollbar *sb = (Scrollbar *)recordPtr;
     WidgetCore *corePtr = &sb->core;
     Ttk_Element thumb;
     Ttk_Box thumbBox;
@@ -132,7 +134,7 @@ static int
 ScrollbarSetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scrollbar *scrollbar = recordPtr;
+    Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *firstObj, *lastObj;
     double first, last;
 
@@ -183,7 +185,7 @@ static int
 ScrollbarGetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scrollbar *scrollbar = recordPtr;
+    Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *result[2];
 
     if (objc != 2) {
@@ -206,7 +208,7 @@ static int
 ScrollbarDeltaCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scrollbar *sb = recordPtr;
+    Scrollbar *sb = (Scrollbar *)recordPtr;
     double dx, dy;
     double delta = 0.0;
 
@@ -246,7 +248,7 @@ static int
 ScrollbarFractionCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scrollbar *sb = recordPtr;
+    Scrollbar *sb = (Scrollbar *)recordPtr;
     Ttk_Box b = sb->scrollbar.troughBox;
     int minSize = sb->scrollbar.minSize;
     double x, y;
@@ -294,7 +296,7 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
 /*------------------------------------------------------------------------
  * +++ Widget specification.
  */
-static WidgetSpec ScrollbarWidgetSpec =
+static const WidgetSpec ScrollbarWidgetSpec =
 {
     "TScrollbar",		/* className */
     sizeof(Scrollbar),		/* recordSize */

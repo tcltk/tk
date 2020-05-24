@@ -803,6 +803,14 @@ test textIndex-19.12 {Display lines} {
     .t index "2.40 -1displaylines"
 } {2.20}
 
+test textIndex-19.12.1 {Display lines} {
+    .t index "2.50 - 100 displaylines"
+} {1.0}
+
+test textIndex-19.12.2 {Display lines} {
+    .t compare [.t index "2.50 + 100 displaylines"] == "end - 1 c"
+} {1}
+
 test textIndex-19.13 {Display lines} {
     destroy {*}[pack slaves .]
     text .txt -height 1 -wrap word -yscroll ".sbar set" -width 400

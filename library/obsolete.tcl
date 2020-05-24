@@ -103,7 +103,7 @@ proc ::tk::classic::restore_listbox {args} {
 	option add *Listbox.selectBorderWidth	1 $prio; # 0
     }
     # Remove focus into Listbox added for 8.5
-    bind Listbox <1> {
+    bind Listbox <Button-1> {
 	if {[winfo exists %W]} {
 	    tk::ListboxBeginSelect %W [%W index @%x,%y]
 	}

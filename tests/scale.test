@@ -1364,7 +1364,7 @@ test scale-18.2 {Scale button 1 events [Bug 787065]} -setup {
     pack .s
     tkwait visibility .s
     list [catch {
-        event generate .s <1> -x 0 -y 0
+        event generate .s <Button-1> -x 0 -y 0
         event generate .s <ButtonRelease-1> -x 0 -y 0
         update
         set ::error
@@ -1385,7 +1385,7 @@ test scale-18.3 {Scale button 2 events [Bug 787065]} -setup {
     pack .s
     tkwait visibility .s
     list [catch {
-        event generate .s <2> -x 0 -y 0
+        event generate .s <Button-2> -x 0 -y 0
         event generate .s <ButtonRelease-2> -x 0 -y 0
         update
         set ::error
@@ -1411,16 +1411,16 @@ test scale-19 {Bug [3529885fff] - Click in through goes in wrong direction} \
     } \
     -body {
         foreach {x y} [.s1 coord 50] {}
-        event generate .s1 <1> -x $x -y $y
+        event generate .s1 <Button-1> -x $x -y $y
         event generate .s1 <ButtonRelease-1> -x $x -y $y
         foreach {x y} [.s2 coord 50] {}
-        event generate .s2 <1> -x $x -y $y
+        event generate .s2 <Button-1> -x $x -y $y
         event generate .s2 <ButtonRelease-1> -x $x -y $y
         foreach {x y} [.s3 coord 50] {}
-        event generate .s3 <1> -x $x -y $y
+        event generate .s3 <Button-1> -x $x -y $y
         event generate .s3 <ButtonRelease-1> -x $x -y $y
         foreach {x y} [.s4 coord 50] {}
-        event generate .s4 <1> -x $x -y $y
+        event generate .s4 <Button-1> -x $x -y $y
         event generate .s4 <ButtonRelease-1> -x $x -y $y
         update
         list $x1 $x2 $x3 $x4
@@ -1478,10 +1478,12 @@ test scale-20.4 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     scale .s -from 1 -to 50 -command {set commandedVar}
     .s set 10
     pack .s
-    update  ; # -command callback shall fire
+    set timeout [after 500 {set $commandedVar "timeout"}]
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
+    after cancel $timeout
 } -result {10 10}
 test scale-20.5 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 5} -setup {
     catch {destroy .s}
@@ -1506,10 +1508,12 @@ test scale-20.6 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     pack .s
     .s configure -command {set commandedVar}
     .s set 10
-    update  ; # -command callback shall fire
+    set timeout [after 500 {set $commandedVar "timeout"}]
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
+    after cancel $timeout
 } -result {10 10}
 test scale-20.7 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 7} -setup {
     catch {destroy .s}
@@ -1519,10 +1523,12 @@ test scale-20.7 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     scale .s -from 1 -to 50 -command {set commandedVar}
     pack .s
     .s set 10
-    update  ; # -command callback shall fire
+    set timeout [after 500 {set $commandedVar "timeout"}]
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
+    after cancel $timeout
 } -result {10 10}
 test scale-20.8 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 8} -setup {
     catch {destroy .s}
@@ -1533,10 +1539,12 @@ test scale-20.8 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     scale .s -from 1 -to 50 -variable scaleVar -command {set commandedVar}
     pack .s
     .s set 10
-    update  ; # -command callback shall fire
+    set timeout [after 500 {set $commandedVar "timeout"}]
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
+    after cancel $timeout
 } -result {10 10}
 
 test scale-21.1 {Bug [55b95f578a] - Associating variable with bignum value with scale crashes it} -setup {
@@ -1558,6 +1566,32 @@ test scale-21.2 {Bug [55b95f578a] again - Bignum value for -from/-to with scale 
 } -cleanup {
     destroy .s
 } -result {}
+
+test scale-22.1 {Bug [5d991b822e]} {
+    # Want this not to crash
+    set var INIT
+    scale .b -variable var
+    trace add variable var unset {apply {args {
+        .b configure -variable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
+test scale-22.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    scale .b -variable var
+    trace add variable var unset {apply {args {
+        .b configure -variable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
 
 option clear
 

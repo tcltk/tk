@@ -70,9 +70,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:
 		    [NSString stringWithFormat:@"About %@", aboutName]
 		    action:@selector(orderFrontStandardAboutPanel:)] atIndex:0];
-
-    TKMenu *fileMenu = [TKMenu menuWithTitle:@"File" menuItems:
-	    [NSArray arrayWithObjects:
+    _defaultFileMenuItems =
+	    [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"Source%C", 0x2026]
 		   action:@selector(tkSource:)],
@@ -80,7 +79,10 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 		   action:@selector(tkDemo:)],
 	    [NSMenuItem itemWithTitle:@"Close" action:@selector(performClose:)
 		   target:nil keyEquivalent:@"w"],
-	    nil]];
+	    nil] retain];
+    _demoMenuItem = [_defaultFileMenuItems objectAtIndex:1];
+    TKMenu *fileMenu = [TKMenu menuWithTitle:@"File"
+	    menuItems: _defaultFileMenuItems];
     TKMenu *editMenu = [TKMenu menuWithTitle:@"Edit" menuItems:
 	    [NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:@"Undo" action:@selector(undo:)
@@ -141,16 +143,13 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     [_defaultWindowsMenuItems retain];
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
     				      _defaultWindowsMenuItems];
-
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"%@ Help", applicationName]
 		   action:@selector(showHelp:) keyEquivalent:@"?"],
 	    nil] retain];
-
     TKMenu *helpMenu = [TKMenu menuWithTitle:@"Help" menuItems:
 	    _defaultHelpMenuItems];
-
     [self setServicesMenu:_servicesMenu];
     [self setWindowsMenu:windowsMenu];
     _defaultMainMenu = [[TKMenu menuWithTitle:@"" submenus:[NSArray
@@ -169,6 +168,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     [_defaultHelpMenuItems release];
     [_defaultWindowsMenuItems release];
     [_defaultApplicationMenuItems release];
+    [_defaultFileMenuItems release];
     [super dealloc];
 }
 
@@ -177,7 +177,6 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     SEL action = [anItem action];
 
     if (sel_isEqual(action, @selector(preferences:))) {
-
 	return (_eventInterp && Tcl_FindCommand(_eventInterp,
 		"::tk::mac::ShowPreferences", NULL, 0));
     } else if (sel_isEqual(action, @selector(tkDemo:))) {
@@ -200,6 +199,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) orderFrontStandardAboutPanel: (id) sender
 {
+    (void)sender;
+
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	TkAboutDlg();
@@ -232,6 +233,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkSource: (id) sender
 {
+    (void)sender;
+
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
@@ -257,12 +260,15 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkDemo: (id) sender
 {
+	(void)sender;
+
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
 
 	if (path) {
 	    Tcl_IncrRefCount(path);
 
+	    [_demoMenuItem setHidden:YES];
 	    int code = Tcl_FSEvalFileEx(_eventInterp, path, NULL);
 
 	    if (code != TCL_OK) {
@@ -281,6 +287,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
 {
+    (void)anItem;
+
     return YES;
 }
 
@@ -322,19 +330,18 @@ static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
 {
-    Tcl_Obj *libpath, *result = NULL;
+    Tcl_Obj *result = NULL;
 
-    libpath = Tcl_GetVar2Ex(interp, "tk_library", NULL, TCL_GLOBAL_ONLY);
-    if (libpath) {
-	Tcl_Obj *demo[2] = {	Tcl_NewStringObj("demos", 5),
-				Tcl_NewStringObj("widget", 6) };
+    if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
+		   -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *libpath, *demo[1] = { Tcl_NewStringObj("widget", 6) };
 
+	libpath = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(libpath);
-	result = Tcl_FSJoinToPath(libpath, 2, demo);
+	result = Tcl_FSJoinToPath(libpath, 1, demo);
 	Tcl_DecrRefCount(libpath);
-    } else {
-	Tcl_ResetResult(interp);
     }
+    Tcl_ResetResult(interp);
     return result;
 }
 
@@ -356,9 +363,9 @@ GetWidgetDemoPath(
 
 void
 TkMacOSXHandleMenuSelect(
-    short theMenu,
-    unsigned short theItem,
-    int optionKeyPressed)
+    TCL_UNUSED(short),
+    TCL_UNUSED(unsigned short),
+    TCL_UNUSED(int))
 {
     Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
 }
@@ -381,7 +388,7 @@ TkMacOSXHandleMenuSelect(
 
 void
 TkMacOSXInitMenus(
-    Tcl_Interp *interp)
+    TCL_UNUSED(Tcl_Interp *))
 {
     [NSApp _setupMenus];
 }

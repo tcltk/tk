@@ -51,7 +51,7 @@ typedef struct RegisteredInterp {
  * A registry of all interpreters for a display is kept in a property
  * "InterpRegistry" on the root window of the display. It is organized as a
  * series of zero or more concatenated strings (in no particular order), each
- * of the form
+ * of the form:
  *	window space name '\0'
  * where "window" is the hex id of the comm. window to use to talk to an
  * interpreter named "name".
@@ -78,7 +78,7 @@ typedef struct NameRegistry {
 				 * XFree; zero means use ckfree. */
 } NameRegistry;
 
-static int initialized = 0; /* A flag to denote if we have initialized
+static int initialized = 0;	/* A flag to denote if we have initialized
 				 * yet. */
 
 static RegisteredInterp *interpListPtr = NULL;
@@ -281,9 +281,9 @@ Tk_SetAppName(
      * We have found a unique name. Now add it to the registry.
      */
 
-    riPtr = ckalloc(sizeof(RegisteredInterp));
+    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
-    riPtr->name = ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
     riPtr->nextPtr = interpListPtr;
     interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);
@@ -320,7 +320,7 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Used only for deletion */
+    ClientData dummy,	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
@@ -332,6 +332,7 @@ Tk_SendObjCmd(
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
+    (void)dummy;
 
     for (i = 1; i < (objc - 1); ) {
 	stringRep = Tcl_GetString(objv[i]);
@@ -466,6 +467,7 @@ TkGetInterpNames(
 {
     Tcl_Obj *listObjPtr;
     RegisteredInterp *riPtr;
+    (void)tkwin;
 
     listObjPtr = Tcl_NewListObj(0, NULL);
     riPtr = interpListPtr;
@@ -498,10 +500,9 @@ TkGetInterpNames(
 
 static int
 SendInit(
-    Tcl_Interp *interp)		/* Interpreter to use for error reporting (no
-				 * errors are ever returned, but the
-				 * interpreter is needed anyway). */
+    Tcl_Interp *dummy)		/* Not used */
 {
+    (void)dummy;
     return TCL_OK;
 }
 

@@ -22,7 +22,7 @@
  * the current thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;
     Tcl_HashTable uidTable;
 } ThreadSpecificData;
@@ -493,10 +493,11 @@ Tk_NameOfJustify(
 
 static void
 FreeUidThreadExitProc(
-    ClientData clientData)		/* Not used. */
+    ClientData dummy)		/* Not used. */
 {
-    ThreadSpecificData *tsdPtr =
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     Tcl_DeleteHashTable(&tsdPtr->uidTable);
     tsdPtr->initialized = 0;
@@ -529,7 +530,7 @@ Tk_GetUid(
     const char *string)		/* String to convert. */
 {
     int dummy;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_HashTable *tablePtr = &tsdPtr->uidTable;
 

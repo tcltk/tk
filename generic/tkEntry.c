@@ -63,108 +63,108 @@ enum validateType {
 
 static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
+	DEF_ENTRY_BG_COLOR, TCL_INDEX_NONE, offsetof(Entry, normalBorder),
 	0, DEF_ENTRY_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, "-borderwidth", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, "-background", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 0, 0, 0},
+	DEF_ENTRY_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_ENTRY_CURSOR, -1, Tk_Offset(Entry, cursor),
+	DEF_ENTRY_CURSOR, TCL_INDEX_NONE, offsetof(Entry, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-disabledbackground", "disabledBackground",
-	"DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, -1,
-	Tk_Offset(Entry, disabledBorder), TK_OPTION_NULL_OK,
+	"DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, disabledBorder), TK_OPTION_NULL_OK,
 	(ClientData) DEF_ENTRY_DISABLED_BG_MONO, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
-	"DisabledForeground", DEF_ENTRY_DISABLED_FG, -1,
-	Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+	"DisabledForeground", DEF_ENTRY_DISABLED_FG, TCL_INDEX_NONE,
+	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
-	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
-	Tk_Offset(Entry, exportSelection), 0, 0, 0},
+	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
+	offsetof(Entry, exportSelection), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, "-foreground", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_ENTRY_FONT, -1, Tk_Offset(Entry, tkfont), 0, 0, 0},
+	DEF_ENTRY_FONT, TCL_INDEX_NONE, offsetof(Entry, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_ENTRY_FG, -1, Tk_Offset(Entry, fgColorPtr), 0, 0, 0},
+	DEF_ENTRY_FG, TCL_INDEX_NONE, offsetof(Entry, fgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_ENTRY_HIGHLIGHT_BG,
-	-1, Tk_Offset(Entry, highlightBgColorPtr), 0, 0, 0},
+	TCL_INDEX_NONE, offsetof(Entry, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_ENTRY_HIGHLIGHT, -1, Tk_Offset(Entry, highlightColorPtr), 0, 0, 0},
+	DEF_ENTRY_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Entry, highlightColorPtr), 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, -1,
-	Tk_Offset(Entry, highlightWidth), 0, 0, 0},
+	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	offsetof(Entry, highlightWidth), 0, 0, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
-	DEF_ENTRY_INSERT_BG, -1, Tk_Offset(Entry, insertBorder), 0, 0, 0},
+	DEF_ENTRY_INSERT_BG, TCL_INDEX_NONE, offsetof(Entry, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
-	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, -1,
-	Tk_Offset(Entry, insertBorderWidth), 0,
+	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, insertBorderWidth), 0,
 	(ClientData) DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
-	DEF_ENTRY_INSERT_OFF_TIME, -1, Tk_Offset(Entry, insertOffTime),
+	DEF_ENTRY_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOffTime),
 	0, 0, 0},
     {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
-	DEF_ENTRY_INSERT_ON_TIME, -1, Tk_Offset(Entry, insertOnTime), 0, 0, 0},
+	DEF_ENTRY_INSERT_ON_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOnTime), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_ENTRY_INSERT_WIDTH, -1, Tk_Offset(Entry, insertWidth), 0, 0, 0},
+	DEF_ENTRY_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(Entry, insertWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
-	DEF_ENTRY_INVALIDCMD, -1, Tk_Offset(Entry, invalidCmd),
+	DEF_ENTRY_INVALIDCMD, TCL_INDEX_NONE, offsetof(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
-	NULL, 0, -1, 0, "-invalidcommand", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), 0, 0, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
-	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
+	DEF_ENTRY_PLACEHOLDER, TCL_INDEX_NONE, offsetof(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
-        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, -1,
-        Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
+        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
+        offsetof(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
-	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, -1,
-	Tk_Offset(Entry, readonlyBorder), TK_OPTION_NULL_OK,
+	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, readonlyBorder), TK_OPTION_NULL_OK,
 	(ClientData) DEF_ENTRY_READONLY_BG_MONO, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 0, 0, 0},
+	DEF_ENTRY_RELIEF, TCL_INDEX_NONE, offsetof(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_ENTRY_SELECT_COLOR, -1, Tk_Offset(Entry, selBorder),
+	DEF_ENTRY_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Entry, selBorder),
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, -1,
-	Tk_Offset(Entry, selBorderWidth),
+	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, selBorderWidth),
 	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_ENTRY_SELECT_FG_COLOR, -1, Tk_Offset(Entry, selFgColorPtr),
+	DEF_ENTRY_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Entry, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
-	DEF_ENTRY_SHOW, -1, Tk_Offset(Entry, showChar),
+	DEF_ENTRY_SHOW, TCL_INDEX_NONE, offsetof(Entry, showChar),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_ENTRY_STATE, -1, Tk_Offset(Entry, state),
+	DEF_ENTRY_STATE, TCL_INDEX_NONE, offsetof(Entry, state),
 	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_ENTRY_TAKE_FOCUS, -1, Tk_Offset(Entry, takeFocus),
+	DEF_ENTRY_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Entry, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	DEF_ENTRY_TEXT_VARIABLE, -1, Tk_Offset(Entry, textVarName),
+	DEF_ENTRY_TEXT_VARIABLE, TCL_INDEX_NONE, offsetof(Entry, textVarName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
-	DEF_ENTRY_VALIDATE, -1, Tk_Offset(Entry, validate),
+	DEF_ENTRY_VALIDATE, TCL_INDEX_NONE, offsetof(Entry, validate),
 	0, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand","ValidateCommand",
-	NULL, -1, Tk_Offset(Entry, validateCmd), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(Entry, validateCmd), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
-	NULL, 0, -1, 0, "-validatecommand", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-validatecommand", 0},
     {TK_OPTION_INT, "-width", "width", "Width",
-	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
+	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_ENTRY_SCROLL_COMMAND, -1, Tk_Offset(Entry, scrollCmd),
+	DEF_ENTRY_SCROLL_COMMAND, TCL_INDEX_NONE, offsetof(Entry, scrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
 /*
@@ -186,141 +186,141 @@ static const Tk_OptionSpec entryOptSpec[] = {
 
 static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Background",
-	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(Spinbox, activeBorder),
+	DEF_BUTTON_ACTIVE_BG_COLOR, TCL_INDEX_NONE, offsetof(Spinbox, activeBorder),
 	0, DEF_BUTTON_ACTIVE_BG_MONO, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
+	DEF_ENTRY_BG_COLOR, TCL_INDEX_NONE, offsetof(Entry, normalBorder),
 	0, DEF_ENTRY_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, "-borderwidth", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, "-background", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 0, 0, 0},
-    {TK_OPTION_BORDER, "-buttonbackground", "Button.background", "Background",
-	DEF_BUTTON_BG_COLOR, -1, Tk_Offset(Spinbox, buttonBorder),
+	DEF_ENTRY_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Entry, borderWidth), 0, 0, 0},
+    {TK_OPTION_BORDER, "-buttonbackground", "buttonBackground", "Background",
+	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(Spinbox, buttonBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
-    {TK_OPTION_CURSOR, "-buttoncursor", "Button.cursor", "Cursor",
-	DEF_BUTTON_CURSOR, -1, Tk_Offset(Spinbox, bCursor),
+    {TK_OPTION_CURSOR, "-buttoncursor", "buttonCursor", "Cursor",
+	DEF_BUTTON_CURSOR, TCL_INDEX_NONE, offsetof(Spinbox, bCursor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_RELIEF, "-buttondownrelief", "Button.relief", "Relief",
-	DEF_BUTTON_RELIEF, -1, Tk_Offset(Spinbox, bdRelief), 0, 0, 0},
-    {TK_OPTION_RELIEF, "-buttonuprelief", "Button.relief", "Relief",
-	DEF_BUTTON_RELIEF, -1, Tk_Offset(Spinbox, buRelief), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-buttondownrelief", "buttonDownRelief", "Relief",
+	DEF_BUTTON_RELIEF, TCL_INDEX_NONE, offsetof(Spinbox, bdRelief), 0, 0, 0},
+    {TK_OPTION_RELIEF, "-buttonuprelief", "buttonUpRelief", "Relief",
+	DEF_BUTTON_RELIEF, TCL_INDEX_NONE, offsetof(Spinbox, buRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	DEF_SPINBOX_CMD, -1, Tk_Offset(Spinbox, command),
+	DEF_SPINBOX_CMD, TCL_INDEX_NONE, offsetof(Spinbox, command),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_ENTRY_CURSOR, -1, Tk_Offset(Entry, cursor),
+	DEF_ENTRY_CURSOR, TCL_INDEX_NONE, offsetof(Entry, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-disabledbackground", "disabledBackground",
-	"DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, -1,
-	Tk_Offset(Entry, disabledBorder), TK_OPTION_NULL_OK,
+	"DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, disabledBorder), TK_OPTION_NULL_OK,
 	(ClientData) DEF_ENTRY_DISABLED_BG_MONO, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
-	"DisabledForeground", DEF_ENTRY_DISABLED_FG, -1,
-	Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+	"DisabledForeground", DEF_ENTRY_DISABLED_FG, TCL_INDEX_NONE,
+	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
-	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
-	Tk_Offset(Entry, exportSelection), 0, 0, 0},
+	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
+	offsetof(Entry, exportSelection), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, "-foreground", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_ENTRY_FONT, -1, Tk_Offset(Entry, tkfont), 0, 0, 0},
+	DEF_ENTRY_FONT, TCL_INDEX_NONE, offsetof(Entry, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_ENTRY_FG, -1, Tk_Offset(Entry, fgColorPtr), 0, 0, 0},
+	DEF_ENTRY_FG, TCL_INDEX_NONE, offsetof(Entry, fgColorPtr), 0, 0, 0},
     {TK_OPTION_STRING, "-format", "format", "Format",
-	DEF_SPINBOX_FORMAT, -1, Tk_Offset(Spinbox, reqFormat),
+	DEF_SPINBOX_FORMAT, TCL_INDEX_NONE, offsetof(Spinbox, reqFormat),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-from", "from", "From",
-	DEF_SPINBOX_FROM, -1, Tk_Offset(Spinbox, fromValue), 0, 0, 0},
+	DEF_SPINBOX_FROM, TCL_INDEX_NONE, offsetof(Spinbox, fromValue), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_ENTRY_HIGHLIGHT_BG,
-	-1, Tk_Offset(Entry, highlightBgColorPtr), 0, 0, 0},
+	TCL_INDEX_NONE, offsetof(Entry, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_ENTRY_HIGHLIGHT, -1, Tk_Offset(Entry, highlightColorPtr), 0, 0, 0},
+	DEF_ENTRY_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Entry, highlightColorPtr), 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, -1,
-	Tk_Offset(Entry, highlightWidth), 0, 0, 0},
+	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	offsetof(Entry, highlightWidth), 0, 0, 0},
     {TK_OPTION_DOUBLE, "-increment", "increment", "Increment",
-	DEF_SPINBOX_INCREMENT, -1, Tk_Offset(Spinbox, increment), 0, 0, 0},
+	DEF_SPINBOX_INCREMENT, TCL_INDEX_NONE, offsetof(Spinbox, increment), 0, 0, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
-	DEF_ENTRY_INSERT_BG, -1, Tk_Offset(Entry, insertBorder), 0, 0, 0},
+	DEF_ENTRY_INSERT_BG, TCL_INDEX_NONE, offsetof(Entry, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
-	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, -1,
-	Tk_Offset(Entry, insertBorderWidth), 0,
+	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, insertBorderWidth), 0,
 	(ClientData) DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
-	DEF_ENTRY_INSERT_OFF_TIME, -1, Tk_Offset(Entry, insertOffTime),
+	DEF_ENTRY_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOffTime),
 	0, 0, 0},
     {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
-	DEF_ENTRY_INSERT_ON_TIME, -1, Tk_Offset(Entry, insertOnTime), 0, 0, 0},
+	DEF_ENTRY_INSERT_ON_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOnTime), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_ENTRY_INSERT_WIDTH, -1, Tk_Offset(Entry, insertWidth), 0, 0, 0},
+	DEF_ENTRY_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(Entry, insertWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
-	DEF_ENTRY_INVALIDCMD, -1, Tk_Offset(Entry, invalidCmd),
+	DEF_ENTRY_INVALIDCMD, TCL_INDEX_NONE, offsetof(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
-	NULL, 0, -1, 0, "-invalidcommand", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), 0, 0, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
-	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
+	DEF_ENTRY_PLACEHOLDER, TCL_INDEX_NONE, offsetof(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
-        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, -1,
-        Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
+        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
+        offsetof(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 0, 0, 0},
+	DEF_ENTRY_RELIEF, TCL_INDEX_NONE, offsetof(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
-	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, -1,
-	Tk_Offset(Entry, readonlyBorder), TK_OPTION_NULL_OK,
+	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, readonlyBorder), TK_OPTION_NULL_OK,
 	(ClientData) DEF_ENTRY_READONLY_BG_MONO, 0},
     {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
-	DEF_SPINBOX_REPEAT_DELAY, -1, Tk_Offset(Spinbox, repeatDelay),
+	DEF_SPINBOX_REPEAT_DELAY, TCL_INDEX_NONE, offsetof(Spinbox, repeatDelay),
 	0, 0, 0},
     {TK_OPTION_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
-	DEF_SPINBOX_REPEAT_INTERVAL, -1, Tk_Offset(Spinbox, repeatInterval),
+	DEF_SPINBOX_REPEAT_INTERVAL, TCL_INDEX_NONE, offsetof(Spinbox, repeatInterval),
 	0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_ENTRY_SELECT_COLOR, -1, Tk_Offset(Entry, selBorder),
+	DEF_ENTRY_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Entry, selBorder),
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, -1,
-	Tk_Offset(Entry, selBorderWidth),
+	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, TCL_INDEX_NONE,
+	offsetof(Entry, selBorderWidth),
 	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_ENTRY_SELECT_FG_COLOR, -1, Tk_Offset(Entry, selFgColorPtr),
+	DEF_ENTRY_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Entry, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_ENTRY_STATE, -1, Tk_Offset(Entry, state),
+	DEF_ENTRY_STATE, TCL_INDEX_NONE, offsetof(Entry, state),
 	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_ENTRY_TAKE_FOCUS, -1, Tk_Offset(Entry, takeFocus),
+	DEF_ENTRY_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Entry, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	DEF_ENTRY_TEXT_VARIABLE, -1, Tk_Offset(Entry, textVarName),
+	DEF_ENTRY_TEXT_VARIABLE, TCL_INDEX_NONE, offsetof(Entry, textVarName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-to", "to", "To",
-	DEF_SPINBOX_TO, -1, Tk_Offset(Spinbox, toValue), 0, 0, 0},
+	DEF_SPINBOX_TO, TCL_INDEX_NONE, offsetof(Spinbox, toValue), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
-	DEF_ENTRY_VALIDATE, -1, Tk_Offset(Entry, validate),
+	DEF_ENTRY_VALIDATE, TCL_INDEX_NONE, offsetof(Entry, validate),
 	0, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand","ValidateCommand",
-	NULL, -1, Tk_Offset(Entry, validateCmd), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(Entry, validateCmd), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-values", "values", "Values",
-	DEF_SPINBOX_VALUES, -1, Tk_Offset(Spinbox, valueStr),
+	DEF_SPINBOX_VALUES, TCL_INDEX_NONE, offsetof(Spinbox, valueStr),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
-	NULL, 0, -1, 0, "-validatecommand", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-validatecommand", 0},
     {TK_OPTION_INT, "-width", "width", "Width",
-	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
+	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
-	DEF_SPINBOX_WRAP, -1, Tk_Offset(Spinbox, wrap), 0, 0, 0},
+	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_ENTRY_SCROLL_COMMAND, -1, Tk_Offset(Entry, scrollCmd),
+	DEF_ENTRY_SCROLL_COMMAND, TCL_INDEX_NONE, offsetof(Entry, scrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
 /*
@@ -438,7 +438,7 @@ static int		EntryWidgetObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
-			    const char *string, int *indexPtr);
+			    Tcl_Obj *indexObj, int *indexPtr);
 static int		InsertChars(Entry *entryPtr, int index, const char *string);
 
 /*
@@ -484,15 +484,16 @@ static const Tk_ClassProcs entryClass = {
 
 int
 Tk_EntryObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register Entry *entryPtr;
+    Entry *entryPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
     char *tmp;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -519,7 +520,7 @@ Tk_EntryObjCmd(
      * initialized as memset covers the rest.
      */
 
-    entryPtr = ckalloc(sizeof(Entry));
+    entryPtr = (Entry *)ckalloc(sizeof(Entry));
     memset(entryPtr, 0, sizeof(Entry));
 
     entryPtr->tkwin		= tkwin;
@@ -530,7 +531,7 @@ Tk_EntryObjCmd(
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_ENTRY;
-    tmp				= ckalloc(1);
+    tmp				= (char *)ckalloc(1);
     tmp[0]			= '\0';
     entryPtr->string		= tmp;
     entryPtr->selectFirst	= -1;
@@ -602,7 +603,7 @@ EntryWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
     int cmdIndex, selIndex, result;
     Tcl_Obj *objPtr;
 
@@ -632,7 +633,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -640,10 +641,10 @@ EntryWidgetObjCmd(
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
-	bbox[0] = Tcl_NewIntObj(x + entryPtr->layoutX);
-	bbox[1] = Tcl_NewIntObj(y + entryPtr->layoutY);
-	bbox[2] = Tcl_NewIntObj(width);
-	bbox[3] = Tcl_NewIntObj(height);
+	bbox[0] = Tcl_NewWideIntObj(x + entryPtr->layoutX);
+	bbox[1] = Tcl_NewWideIntObj(y + entryPtr->layoutY);
+	bbox[2] = Tcl_NewWideIntObj(width);
+	bbox[3] = Tcl_NewWideIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, bbox));
 	break;
     }
@@ -684,13 +685,13 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&first) != TCL_OK) {
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first + 1;
-	} else if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	} else if (GetEntryIndex(interp, entryPtr, objv[3],
 		&last) != TCL_OK) {
 	    goto error;
 	}
@@ -708,7 +709,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, TCL_INDEX_NONE));
 	break;
 
     case COMMAND_ICURSOR:
@@ -716,7 +717,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pos");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&entryPtr->insertPos) != TCL_OK) {
 	    goto error;
 	}
@@ -730,11 +731,11 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
 
@@ -745,7 +746,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -825,7 +826,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (entryPtr->selectFirst >= 0) {
@@ -865,7 +866,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    entryPtr->selectAnchor = index;
@@ -885,11 +886,11 @@ EntryWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 3, objv, "start end");
 		goto error;
 	    }
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	    if (GetEntryIndex(interp, entryPtr, objv[3],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[4]),
+	    if (GetEntryIndex(interp, entryPtr, objv[4],
 		    &index2) != TCL_OK) {
 		goto error;
 	    }
@@ -916,7 +917,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    EntrySelectTo(entryPtr, index);
@@ -956,7 +957,7 @@ EntryWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, span));
 	    goto done;
 	} else if (objc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	    if (GetEntryIndex(interp, entryPtr, objv[2],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
@@ -1033,7 +1034,7 @@ static void
 DestroyEntry(
     void *memPtr)		/* Info about entry widget. */
 {
-    Entry *entryPtr = memPtr;
+    Entry *entryPtr = (Entry *)memPtr;
 
     /*
      * Free up all the stuff that requires special handling, then let
@@ -1111,13 +1112,13 @@ ConfigureEntry(
     Spinbox *sbPtr = (Spinbox *) entryPtr;
 				/* Only used when this widget is of type
 				 * TK_SPINBOX */
-    char *oldValues = NULL;	/* lint initialization */
-    char *oldFormat = NULL;	/* lint initialization */
+    char *oldValues = NULL;
+    char *oldFormat = NULL;
     int error;
-    int oldExport = 0;		/* lint initialization */
-    int valuesChanged = 0;	/* lint initialization */
-    double oldFrom = 0.0;	/* lint initialization */
-    double oldTo = 0.0;		/* lint initialization */
+    int oldExport = 0;
+    int valuesChanged = 0;
+    double oldFrom = 0.0;
+    double oldTo = 0.0;
     int code;
 
     /*
@@ -1236,7 +1237,7 @@ ConfigureEntry(
 		if (formatSpace < TCL_DOUBLE_SPACE) {
 		    formatSpace = TCL_DOUBLE_SPACE;
 		}
-		sbPtr->formatBuf = ckrealloc(sbPtr->formatBuf, formatSpace);
+		sbPtr->formatBuf = (char *)ckrealloc(sbPtr->formatBuf, formatSpace);
 
 		/*
 		 * We perturb the value of oldFrom to allow us to go into the
@@ -1259,7 +1260,7 @@ ConfigureEntry(
 		    Tcl_Obj *newObjPtr;
 		    int nelems;
 
-		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, -1);
+		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, TCL_INDEX_NONE);
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
 			    != TCL_OK) {
 			valuesChanged = -1;
@@ -1450,7 +1451,7 @@ EntryWorldChanged(
     unsigned long mask;
     Tk_3DBorder border;
     XColor *colorPtr;
-    Entry *entryPtr = instanceData;
+    Entry *entryPtr = (Entry *)instanceData;
 
     entryPtr->avgWidth = Tk_TextWidth(entryPtr->tkfont, "0", 1);
     if (entryPtr->avgWidth == 0) {
@@ -1541,17 +1542,15 @@ EntryWorldChanged(
  *
  * TkpDrawEntryBorderAndFocus --
  *
- *	This function redraws the border of an entry widget. It overrides the
- *	generic border drawing code if the entry widget parameters are such
- *	that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native entry borders.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1562,6 +1561,10 @@ TkpDrawEntryBorderAndFocus(
     Drawable pixmap,
     int isSpinbox)
 {
+    (void)entryPtr;
+    (void)pixmap;
+    (void)isSpinbox;
+
     return 0;
 }
 
@@ -1570,17 +1573,15 @@ TkpDrawEntryBorderAndFocus(
  *
  * TkpDrawSpinboxButtons --
  *
- *	This function redraws the buttons of an spinbox widget. It overrides
- *	the generic button drawing code if the spinbox widget parameters are
- *	such that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native spinbox buttons.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1590,6 +1591,9 @@ TkpDrawSpinboxButtons(
     Spinbox *sbPtr,
     Pixmap pixmap)
 {
+    (void)sbPtr;
+    (void)pixmap;
+
     return 0;
 }
 #endif /* Not MAC_OSX_TK */
@@ -1614,7 +1618,7 @@ static void
 DisplayEntry(
     ClientData clientData)	/* Information about window. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
     Tk_Window tkwin = entryPtr->tkwin;
     int baseY, selStartX, selEndX, cursorX;
     int showSelection, xBound;
@@ -1975,7 +1979,7 @@ EntryComputeGeometry(
 	size = TkUniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
-	p = ckalloc(entryPtr->numDisplayBytes + 1);
+	p = (char *)ckalloc(entryPtr->numDisplayBytes + 1);
 	entryPtr->displayString = p;
 
 	for (i = entryPtr->numChars; --i >= 0; ) {
@@ -2144,7 +2148,7 @@ InsertChars(
     }
 
     newByteCount = entryPtr->numBytes + byteCount + 1;
-    newStr = ckalloc(newByteCount);
+    newStr = (char *)ckalloc(newByteCount);
     memcpy(newStr, string, byteIndex);
     strcpy(newStr + byteIndex, value);
     strcpy(newStr + byteIndex + byteCount, string + byteIndex);
@@ -2170,7 +2174,7 @@ InsertChars(
      */
 
     oldChars = entryPtr->numChars;
-    entryPtr->numChars = Tcl_NumUtfChars(newStr, -1);
+    entryPtr->numChars = Tcl_NumUtfChars(newStr, TCL_INDEX_NONE);
     charsAdded = entryPtr->numChars - oldChars;
     entryPtr->numBytes += byteCount;
 
@@ -2245,11 +2249,11 @@ DeleteChars(
     byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
-    newStr = ckalloc(newByteCount);
+    newStr = (char *)ckalloc(newByteCount);
     memcpy(newStr, string, (size_t) byteIndex);
     strcpy(newStr + byteIndex, string + byteIndex + byteCount);
 
-    toDelete = ckalloc(byteCount + 1);
+    toDelete = (char *)ckalloc(byteCount + 1);
     memcpy(toDelete, string + byteIndex, (size_t) byteCount);
     toDelete[byteCount] = '\0';
 
@@ -2435,7 +2439,7 @@ EntrySetValue(
 	 * during validation
 	 */
 
-	char *tmp = ckalloc(valueLen + 1);
+	char *tmp = (char *)ckalloc(valueLen + 1);
 
 	strcpy(tmp, value);
 	value = tmp;
@@ -2464,7 +2468,7 @@ EntrySetValue(
     if (malloced) {
 	entryPtr->string = value;
     } else {
-	char *tmp = ckalloc(valueLen + 1);
+	char *tmp = (char *)ckalloc(valueLen + 1);
 
 	strcpy(tmp, value);
 	entryPtr->string = tmp;
@@ -2524,10 +2528,10 @@ EntryEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
 
     if ((entryPtr->type == TK_SPINBOX) && (eventPtr->type == MotionNotify)) {
-	Spinbox *sbPtr = clientData;
+	Spinbox *sbPtr = (Spinbox *)clientData;
 	int elem;
 
 	elem = GetSpinboxElement(sbPtr, eventPtr->xmotion.x,
@@ -2605,7 +2609,7 @@ static void
 EntryCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -2644,12 +2648,23 @@ GetEntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry for which the index is being
 				 * specified. */
-    const char *string,	/* Specifies character in entryPtr. */
+    Tcl_Obj *indexObj,	/* Specifies character in entryPtr. */
     int *indexPtr)		/* Where to store converted character index */
 {
-    size_t length;
+    TkSizeT length, idx;
+    const char *string;
 
-    length = strlen(string);
+    if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars - 1, 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > (TkSizeT)entryPtr->numChars) {
+	    idx = (TkSizeT)entryPtr->numChars;
+	}
+	*indexPtr = (int)idx;
+	return TCL_OK;
+    }
+
+    string = TkGetStringFromObj(indexObj, &length);
 
     switch (string[0]) {
     case 'a':
@@ -2657,12 +2672,6 @@ GetEntryIndex(
 	    goto badIndex;
 	}
 	*indexPtr = entryPtr->selectAnchor;
-	break;
-    case 'e':
-	if (strncmp(string, "end", length) != 0) {
-	    goto badIndex;
-	}
-	*indexPtr = entryPtr->numChars;
 	break;
     case 'i':
 	if (strncmp(string, "insert", length) != 0) {
@@ -2724,24 +2733,15 @@ GetEntryIndex(
 	break;
     }
     default:
-	if (Tcl_GetInt(NULL, string, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	if (*indexPtr < 0){
-	    *indexPtr = 0;
-	} else if (*indexPtr > entryPtr->numChars) {
-	    *indexPtr = entryPtr->numChars;
-	}
+	  badIndex:
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad %s index \"%s\"",
+		    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
+	    Tcl_SetErrorCode(interp, "TK",
+		    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
+		    "BAD_INDEX", NULL);
+	    return TCL_ERROR;
     }
     return TCL_OK;
-
-  badIndex:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad %s index \"%s\"",
-	    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
-    Tcl_SetErrorCode(interp, "TK",
-	    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
-	    "BAD_INDEX", NULL);
-    return TCL_ERROR;
 }
 
 /*
@@ -2894,7 +2894,7 @@ EntryFetchSelection(
     int maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NUL character. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
     int byteCount;
     const char *string;
     const char *selStart, *selEnd;
@@ -2941,7 +2941,7 @@ static void
 EntryLostSelection(
     ClientData clientData)	/* Information about entry widget. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
 
     entryPtr->flags &= ~GOT_SELECTION;
 
@@ -3089,12 +3089,12 @@ EntryUpdateScrollbar(
     Tcl_PrintDouble(NULL, first, firstStr);
     Tcl_PrintDouble(NULL, last, lastStr);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, entryPtr->scrollCmd, -1);
-    Tcl_DStringAppend(&buf, " ", -1);
-    Tcl_DStringAppend(&buf, firstStr, -1);
-    Tcl_DStringAppend(&buf, " ", -1);
-    Tcl_DStringAppend(&buf, lastStr, -1);
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    Tcl_DStringAppend(&buf, entryPtr->scrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, firstStr, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, lastStr, TCL_INDEX_NONE);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);
     Tcl_DStringFree(&buf);
     if (code != TCL_OK) {
 	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
@@ -3128,7 +3128,7 @@ static void
 EntryBlinkProc(
     ClientData clientData)	/* Pointer to record describing entry. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
 
     if ((entryPtr->state == STATE_DISABLED) ||
 	    (entryPtr->state == STATE_READONLY) ||
@@ -3214,17 +3214,18 @@ EntryFocusProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
-    Entry *entryPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
     const char *value;
+    (void)name1;
+    (void)name2;
 
     if (entryPtr->flags & ENTRY_DELETED) {
 	/*
@@ -3234,32 +3235,39 @@ EntryTextVarProc(
     }
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (entryPtr->textVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    EntryTextVarProc, clientData);
-	}
- 	return NULL;
-     }
-
-    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        entryPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        EntryTextVarProc, probe);
+                if (probe == (ClientData)entryPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
 		    entryPtr->string, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
-	}
+        }
 	return NULL;
     }
 
@@ -3299,14 +3307,14 @@ EntryTextVarProc(
 
 static int
 EntryValidate(
-     register Entry *entryPtr,	/* Entry that needs validation. */
-     register char *cmd)	/* Validation command (NULL-terminated
+     Entry *entryPtr,	/* Entry that needs validation. */
+     char *cmd)	/* Validation command (NULL-terminated
 				 * string). */
 {
-    register Tcl_Interp *interp = entryPtr->interp;
-    int code, bool;
+    Tcl_Interp *interp = entryPtr->interp;
+    int code, isOK;
 
-    code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
+    code = Tcl_EvalEx(interp, cmd, TCL_INDEX_NONE, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 
     /*
      * We accept TCL_OK and TCL_RETURN as valid return codes from the command
@@ -3326,7 +3334,7 @@ EntryValidate(
      */
 
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
-	    &bool) != TCL_OK) {
+	    &isOK) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		 "\n    (invalid boolean result from validation command)");
 	Tcl_BackgroundException(interp, TCL_ERROR);
@@ -3335,7 +3343,7 @@ EntryValidate(
     }
 
     Tcl_ResetResult(interp);
-    return (bool ? TCL_OK : TCL_BREAK);
+    return (isOK ? TCL_OK : TCL_BREAK);
 }
 
 /*
@@ -3359,7 +3367,7 @@ EntryValidate(
 
 static int
 EntryValidateChange(
-     register Entry *entryPtr,	/* Entry that needs validation. */
+     Entry *entryPtr,	/* Entry that needs validation. */
      const char *change,	/* Characters to be added/deleted
 				 * (NUL-terminated string). */
      const char *newValue,	/* Potential new value of entry string */
@@ -3498,8 +3506,8 @@ EntryValidateChange(
 
 static void
 ExpandPercents(
-     register Entry *entryPtr,	/* Entry that needs validation. */
-     register const char *before,
+     Entry *entryPtr,	/* Entry that needs validation. */
+     const char *before,
 				/* Command containing percent expressions to
 				 * be replaced. */
      const char *change,	/* Characters to added/deleted (NUL-terminated
@@ -3513,7 +3521,7 @@ ExpandPercents(
     int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, length;
-    register const char *string;
+    const char *string;
     int ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
@@ -3663,16 +3671,17 @@ ExpandPercents(
 
 int
 Tk_SpinboxObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register Entry *entryPtr;
-    register Spinbox *sbPtr;
+    Entry *entryPtr;
+    Spinbox *sbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
     char *tmp;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -3699,7 +3708,7 @@ Tk_SpinboxObjCmd(
      * initialized as memset covers the rest.
      */
 
-    sbPtr = ckalloc(sizeof(Spinbox));
+    sbPtr = (Spinbox *)ckalloc(sizeof(Spinbox));
     entryPtr			= (Entry *) sbPtr;
     memset(sbPtr, 0, sizeof(Spinbox));
 
@@ -3711,7 +3720,7 @@ Tk_SpinboxObjCmd(
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_SPINBOX;
-    tmp				= ckalloc(1);
+    tmp				= (char *)ckalloc(1);
     tmp[0]			= '\0';
     entryPtr->string		= tmp;
     entryPtr->selectFirst	= -1;
@@ -3738,7 +3747,7 @@ Tk_SpinboxObjCmd(
     sbPtr->fromValue		= 0.0;
     sbPtr->toValue		= 100.0;
     sbPtr->increment		= 1.0;
-    sbPtr->formatBuf		= ckalloc(TCL_DOUBLE_SPACE);
+    sbPtr->formatBuf		= (char *)ckalloc(TCL_DOUBLE_SPACE);
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
@@ -3801,8 +3810,8 @@ SpinboxWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Entry *entryPtr = clientData;
-    Spinbox *sbPtr = clientData;
+    Entry *entryPtr = (Entry *)clientData;
+    Spinbox *sbPtr = (Spinbox *)clientData;
     int cmdIndex, selIndex, result;
     Tcl_Obj *objPtr;
 
@@ -3832,7 +3841,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3840,10 +3849,10 @@ SpinboxWidgetObjCmd(
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
-	bbox[0] = Tcl_NewIntObj(x + entryPtr->layoutX);
-	bbox[1] = Tcl_NewIntObj(y + entryPtr->layoutY);
-	bbox[2] = Tcl_NewIntObj(width);
-	bbox[3] = Tcl_NewIntObj(height);
+	bbox[0] = Tcl_NewWideIntObj(x + entryPtr->layoutX);
+	bbox[1] = Tcl_NewWideIntObj(y + entryPtr->layoutY);
+	bbox[2] = Tcl_NewWideIntObj(width);
+	bbox[3] = Tcl_NewWideIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, bbox));
 	break;
     }
@@ -3883,14 +3892,14 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&first) != TCL_OK) {
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first + 1;
 	} else {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	    if (GetEntryIndex(interp, entryPtr, objv[3],
 		    &last) != TCL_OK) {
 		goto error;
 	    }
@@ -3917,7 +3926,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pos");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&entryPtr->insertPos) != TCL_OK) {
 	    goto error;
 	}
@@ -3950,11 +3959,11 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
 
@@ -3965,7 +3974,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -4062,7 +4071,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (entryPtr->selectFirst >= 0) {
@@ -4102,7 +4111,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    entryPtr->selectAnchor = index;
@@ -4123,11 +4132,11 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[4]),& index2) != TCL_OK) {
+		    objv[4],& index2) != TCL_OK) {
 		goto error;
 	    }
 	    if (index >= index2) {
@@ -4153,7 +4162,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    EntrySelectTo(entryPtr, index);
@@ -4233,7 +4242,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, span));
 	    goto done;
 	} else if (objc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	    if (GetEntryIndex(interp, entryPtr, objv[2],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
@@ -4348,8 +4357,8 @@ GetSpinboxElement(
 
 static int
 SpinboxInvoke(
-    register Tcl_Interp *interp,/* Current interpreter. */
-    register Spinbox *sbPtr,	/* Spinbox to invoke. */
+    Tcl_Interp *interp,/* Current interpreter. */
+    Spinbox *sbPtr,	/* Spinbox to invoke. */
     int element)		/* Element to invoke, either the "up" or
 				 * "down" button. */
 {
@@ -4385,7 +4394,7 @@ SpinboxInvoke(
 		 */
 
 		int i, listc;
-		size_t elemLen, length = entryPtr->numChars;
+		TkSizeT elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;
 

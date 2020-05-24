@@ -7072,7 +7072,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
 
---- Released 8.6.1, September 19, 2013 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.1, September 19, 2013 --- https://core.tcl-lang.org/tk/ for details
 
 2013-10-27 (bug fix) OSX drawing lags (deily,steffen,walzer)
 
@@ -7120,7 +7120,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-08-01 (bug fix) OSX font config crash (rob@bitkeeper)
 
---- Released 8.6.2, August 27, 2014 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.2, August 27, 2014 --- https://core.tcl-lang.org/tk/ for details
 
 2014-08-27 (bug) Cocoa: Crash after [$button destroy] (walzer)
 
@@ -7144,7 +7144,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-11-07 (bug)[3529885] [scale] handling of negative resolution (vogel)
 
---- Released 8.6.3, November 12, 2014 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.3, November 12, 2014 --- https://core.tcl-lang.org/tk/ for details
 
 2014-11-14 (bug)[d43a10] shimmer-related crash in [tk_getOpenFile] (nadkarni)
 
@@ -7166,7 +7166,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
         *** POTENTIAL INCOMPATIBILITY ***
 
---- Released 8.6.4, March 12, 2015 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.4, March 12, 2015 --- https://core.tcl-lang.org/tk/ for details
 
 2015-03-10 (bug) Cocoa: premature image free crash (walzer)
 
@@ -7265,7 +7265,7 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
---- Released 8.6.5, February 29, 2016 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.5, February 29, 2016 --- https://core.tcl-lang.org/tk/ for details
 
 2016-03-07 (bug)[3137232] spinbox teardown hygiene (vogel)
 
@@ -7312,7 +7312,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2016-07-21 (bug)[450bb0] Aqua: memory corruption from [tk busy] (porter)
 
---- Released 8.6.6, July 27, 2016 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.6, July 27, 2016 --- https://core.tcl-lang.org/tk/ for details
 
 2016-08-23 (bug)[a2abc4] Wrong warp cursor position on 2nd display (vogel)
 
@@ -7414,7 +7414,30 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-08-08 (bug)[4966ca] Scidb race in notebook tab selection (cramer)
 
---- Released 8.6.7, August 9, 2017 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.7, August 9, 2017 --- https://core.tcl-lang.org/tk/ for details
+
+Changes to 8.7a1 include all changes to the 8.6 line through 8.6.7,
+plus the following, which focuses on the high-level feature changes
+in this changeset (new minor version) rather than bug fixes:
+
+2016-03-07 (feature)[841280] spinbox autoswap -to/-from to get ordering (vogel)
+
+2016-03-27 (feature)[38dc27] Support <Button-6> & <Button-7> (nijtmans)
+
+2016-08-29 (TIP 449) [text] undo/redo return character range (vogel)
+
+2016-11-02 (feature) Removed undocumented command [tk_getFileType] (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2017-02-05 (bug)[c0dbdd] Compatibility fonts shadowed system fonts (vogel)
+
+2017-03-21 (TIP 442) display text in a progressbar (zaumseil)
+
+2017-04-13 \u escaped content in msg files converted to true utf-8 (nijtmans)
+
+2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
+
+--- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
 
 2017-08-24 (bug)[f1a3ca] Memory leak in [text] B-tree (edhume3)
 
@@ -7494,7 +7517,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-12-18 (bug)[b77626] Make [tk busy -cursor] silent no-op on macOS (vogel)
 
---- Released 8.6.8, December 22, 2017 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.8, December 22, 2017 --- https://core.tcl-lang.org/tk/ for details
 
 2017-12-31 (bug)[aa7679] crash using window after master destroyed (vogel)
 
@@ -7540,7 +7563,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-07-17 (bug)[1088825] fix frame-2.17,3.9,3.10 on Mac (vogel)
 
-2018-07-27 (bug)[fabed1] GIF photo support for "deferred clear code" (vogel)
+2018-07-27 (bug)[fbaed1] GIF photo support for "deferred clear code" (vogel)
 
 2018-08-08 (feature) Modern full-screen support on Mac OSX (walzer)
 
@@ -7568,27 +7591,170 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-11-04 (bug)[6b22d4] [treeview] binding fix (ohagan)
 
-- Released 8.6.9, November 16, 2018 - http://core.tcl-lang.org/tk/ for details -
+- Released 8.6.9, November 16, 2018 - https://core.tcl-lang.org/tk/ for details
 
-Changes to 8.7a1 include all changes to the 8.6 line through 8.6.7,
+2018-11-19 (bug)[0a9c91] crash in text-11a.22 (vogel)
+
+2018-11-20 (bug)[9705d1] crash activating "Alt" theme (culler)
+
+2018-11-24 (bug)[e3b954] cursor offset at full screen display (culler)
+
+2019-01-04 (bug)[18a4ba] cross-platform [winfo containing] (culler)
+
+2019-01-08 (feature) local grab on Mac OSX (culler)
+
+2019-01-10 (build) 'None', 'ControlMask' symbol conflicts (nijtmans)
+
+2019-01-20 (bug)[509caf] [treeview tag configure] regression (mcdonald,vogel)
+
+2019-01-26 (bug)[3003895] [scale] res rounds and -from (tischler,pieper,vogel)
+
+2019-02-02 (new)[TIP 533] [$mb post x y idx] (culler,vogel)
+
+2019-02-08 (bug)[1529659] embed toplevel blocks outer menu (culler)
+
+2019-02-10 (bug)[8814bd] crash in [NSMenu size] (culler)
+
+2019-02-13 (bug)[b389df] Aqua: mouse position on dual screen (culler)
+
+2019-02-23 (bug)[56a182] Aqua: [tk_getOpenFile] causes off-screen toplevels (culler,walzer)
+
+2019-02-23 (bug)[9771ae] Aqua: workaround incompatible transient window models (culler,walzer)
+
+2019-03-01 (bug)[1951ab] Prevent transient window cycles (crashed on Aqua) (culler,vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-03-04 (bug)[4da219] Incomplete read of multi-image GIF (oehlmann)
+
+2019-03-14 (bug)[609e00] Aqua: wrong coords from MouseWheel binding (vogel,culler)
+
+2019-03-25 (bug)[48c394] Aqua: recompute text layout for empty string (culler)
+
+2019-03-31 (new)[TIP 535] Precision of ::scale widget tick mark values (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-03-31 (bug)[da3914] [$treeview identify element] failure (ulfalizer,vogel)
+
+2019-04-06 (bug)[897ffe] Prevent cross-manager loops of geom management (culler,vogel)
+
+2019-04-11 (new) Apple Dark Mode support (culler)
+
+2019-04-14 (new) Aqua: Use color names consistent with NSColor (culler)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-04-14 (new) Aqua: [tk::unsupported::MacWindowStyle isdark] (culler)
+
+2019-04-19 (bug)[368fa4] Prevent toggle of hidden treeview indicators (ulfalizer,vogel)
+
+2019-04-24 (bug)[4d2e8d] Aqua: notebook pane redraws (culler)
+
+2019-04-24 (bug)[928652] Apply TIP 533 for ttk::menubutton (culler,vogel)
+
+2019-04-24 (bug)[1001070] X-platform rework of label options -highlight* (seal,culler,vogel)
+
+2019-04-28 (bug)[6286fd] checkbutton handling of -selectcolor (ralfixx)
+
+2019-04-30 (bug)[4f9a99] Win: crash in [style element create] (oehlman,vogel)
+
+2019-05-08 (bug) Ttk scrolling bugs, see tests treeview-9.1, entry-3.[3-6] (vogel)
+
+2019-05-08 (bug)[51b4b1] Aqua: combobox use native ttk scrollbar (bll,vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-05-18 (new)[eb2996] Win: support for horizontal scrolling (chavez,vogel)
+
+2019-05-26 (new)[TIP 541] [combobox current] support "end" index (vogel)
+
+2019-05-26 (bug)[2a6c62] <<TreeviewSelect>> trigger on item delete (vogel)
+
+2019-06-05 (bug)[9ebc6f] Aqua: fix incorrect reports of mouse coords (chavez, culler)
+
+2019-06-14 (bug)[436ad6] Corrected Aqua regressions in [wm manage] (walzer, culler)
+
+2019-06-15 (bug)[75b8fb] Crash with some [event generate]d <ButtonRelease> (leunissen,vogel)
+
+2019-06-15 (new)[TIP 536] New tk::mac::* commands for IPC on Mac OSX (walzer)
+
+2019-07-13 (bug)[4566e2] Aqua: Make default background color of Tk and Ttk agree (walzer,culler)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-07-16 (bug)[5ddeca] Stop app switching exposing withdrawn windows as zombies (culler)
+
+2019-07-25 (new)[1fb7af] Win support for buttons 4 and 5 (chavez,vogel,nijtmans)
+
+2019-08-18 (new) Refactor all MouseWheel bindings (nijtmans)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-08-21 (bug)[c8ccd1] up array key in [text] takes to index 1.0 (ulfalizer,vogel)
+
+2019-08-28 (new)[TIP 532] Tk event loop rewrite to prevent ring overflow (cramer)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-08-28 (bug)[943d5e] Win: embedded widget destruction cancels window resize (nemethi,vogel,nijtmans)
+
+2019-09-12 (bug)[2834776] Stop disabled spinbox from generating <<Increment>> & <<Decrement>> (vogel)
+
+2019-09-24 (bug)[96bce5] Aqua: Prevent crash drawing 1x1 rounded rectangles (bll,culler)
+
+2019-10-03 (bug)[3ed5b6] Win: root window position with highlightthickness>0 (leunissem,vogel,nijtmans)
+
+2019-10-09 (bug)[a01b6f7] Workaround XWayland bug reporting screen width (werner,nijtmans)
+
+2019-10-10 (bug) Aqua: Prevent crash deactivating menu during menu deletion (culler)
+
+2019-10-21 (bug)[aea00b] Aqua: Better handling of resolution changes (chavez, culler)
+
+2019-10-25 (bug)[b82bd4] Fix [style configure -compound] (culler,vogel)
+
+2019-10-27 (bug)[f7a4f7] Aqua: embedded toplevel, forced focus and mouse coords (naaus,culler)
+
+2019-11-13 (new) Win: keycodes Mail, AudioMedia, Launch0, Launch1 (nijtmans)
+
+2019-11-15 (bug)[69b48f] failing test textTag-18.1 (vogel)
+
+2019-11-17 (bug)[c4abd2] panic in stackorder command (culler)
+
+2019-11-17 (bug)[53d280] [wm iconphoto] crash on empty image (culler)
+
+2019-11-17 [90d555] workaround NSFontManager bad selections (culler)
+
+2019-11-19 (new) Partial Emoji support in text displays (nijtmans,culler)
+
+- Released 8.6.10, Nov 21, 2019 - https://core.tcl-lang.org/tk/ for details
+
+Changes to 8.7a3 include all changes to the 8.6 line through 8.6.10,
 plus the following, which focuses on the high-level feature changes
 in this changeset (new minor version) rather than bug fixes:
 
-2016-03-07 (feature)[841280] spinbox autoswap -to/-from to get ordering (vogel)
-
-2016-03-27 (feature)[38dc27] Support <Button-6> & <Button-7> (nijtmans)
-
-2016-08-29 (TIP 449) [text] undo/redo return character range (vogel)
-
-2016-11-02 (feature) Removed undocumented command [tk_getFileType] (vogel)
+2017-11-25 [TIP 161] $menu -tearoff default changed to false (roseman,vogel)
         *** POTENTIAL INCOMPATIBILITY ***
 
-2017-02-05 (bug)[c0dbdd] Compatibility fonts shadowed system fonts (vogel)
+2017-12-07 [TIP 487] End support for pre-XP Windows (nijtmans)
 
-2017-03-21 (TIP 442) display text in a progressbar (zaumseil)
+2018-03-04 [TIP 489] New subcommand [$canvas image] (pitcher,vogel)
 
-2017-04-13 \u escaped content in msg files converted to true utf-8 (nijtmans)
+2018-05-13 [TIP 496] New options -placeholder* for entries (zaumseil,vogel)
 
-2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
+2018-09-23 [TIP 517] New option -activerelief for menus (vogel)
 
---- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
+2018-11-03 [TIP 512] Deprecate stub for Tk_MainEx() (nijtmans)
+
+2018-11-06 [TIP 415] New option -height for [$canvas create arc] (geard)
+
+2018-11-06 [TIP 518] New event <<NoMangedChild>> (oehlmann)
+
+2019-04-14 [TIP 164] New subcommand [$canvas rotate] (fellows)
+
+2019-04-14 [TIP 507] New photo image format 'svg' (zaumseil)
+
+2019-04-14 [TIP 483] Record more configuration items (cassoff)
+
+2019-04-14 [TIP 482] Record configured directory for demos (cassoff)
+
+2019-05-25 [TIP 262] New frame options -backgroundimage, -tile (fellows)
+
+2019-06-15 [TIP 528] Deprecate Tk_Offset() (nijtmans)
+
+2019-08-19 [TIP 545] Revised options for photo image format 'svg' (oehlmann)
+
+--- Released 8.7a3, November 25, 2019 --- http://core.tcl.tk/tk/ for details

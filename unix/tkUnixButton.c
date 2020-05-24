@@ -173,7 +173,7 @@ TkpDrawCheckIndicator(
      * Sanity check.
      */
 
-    if (tkwin == NULL || display == None || d == None || bgBorder == NULL
+    if (tkwin == NULL || display == NULL || d == None || bgBorder == NULL
 	    || indicatorColor == NULL) {
 	return;
     }
@@ -328,9 +328,9 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    UnixButton *butPtr = ckalloc(sizeof(UnixButton));
+    (void)tkwin;
 
-    return (TkButton *) butPtr;
+    return (TkButton *)ckalloc(sizeof(UnixButton));
 }
 
 /*
@@ -396,7 +396,7 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
@@ -860,7 +860,7 @@ TkpDisplayButton(
 
 void
 TkpComputeButtonGeometry(
-    register TkButton *butPtr)	/* Button whose geometry may have changed. */
+    TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
     int width, height, avgWidth, txtWidth, txtHeight;
     int haveImage = 0, haveText = 0;

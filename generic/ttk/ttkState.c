@@ -145,14 +145,14 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     len = Tcl_DStringLength(&result);
     if (len) {
 	/* 'len' includes extra trailing ' ' */
-	objPtr->bytes = ckalloc(len);
+	objPtr->bytes = (char *)ckalloc(len);
 	objPtr->length = len-1;
 	strncpy(objPtr->bytes, Tcl_DStringValue(&result), len-1);
 	objPtr->bytes[len-1] = '\0';
     } else {
 	/* empty string */
 	objPtr->length = 0;
-	objPtr->bytes = ckalloc(1);
+	objPtr->bytes = (char *)ckalloc(1);
 	*objPtr->bytes = '\0';
     }
 
@@ -261,7 +261,7 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
  * Ttk_StateTableLooup --
  * 	Look up an index from a statically allocated state table.
  */
-int Ttk_StateTableLookup(Ttk_StateTable *map, unsigned int state)
+int Ttk_StateTableLookup(const Ttk_StateTable *map, unsigned int state)
 {
     while ((state & map->onBits) != map->onBits
 	    || (~state & map->offBits) != map->offBits)

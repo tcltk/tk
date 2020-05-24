@@ -104,6 +104,7 @@ DllMain(
 #ifdef HAVE_NO_SEH
     TCLEXCEPTION_REGISTRATION registration;
 #endif
+    (void)reserved;
 
     /*
      * If we are attaching to the DLL from a new process, tell Tk about the
@@ -150,7 +151,7 @@ DllMain(
 	     * Call TkFinalize
 	     */
 
-	    "movq	$0x0,		0x0(%%esp)"		"\n\t"
+	    "movq	$0x0,		0x0(%%rsp)"		"\n\t"
 	    "call	TkFinalize"			"\n\t"
 
 	    /*

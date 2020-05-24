@@ -39,6 +39,11 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
+# This update is needed on MacOS to make sure that the window is mapped
+# when the tests begin.
+
+update
+
 set bw [.t cget -borderwidth]
 set px [.t cget -padx]
 set py [.t cget -pady]
@@ -955,7 +960,7 @@ test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     place .t -x 30 -y 50
     frame .f -width 30 -height 20 -bg $color
     .t window create 1.12 -window .f
-    update
+    update ; after 100 ; update
     winfo geom .f
 } -cleanup {
     destroy .f
@@ -975,7 +980,7 @@ test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     place .t -x 30 -y 50
     frame .t.f -width 30 -height 20 -bg $color
     .t window create 1.12 -window .t.f
-    update
+    update ; after 100 ; update
     winfo geom .t.f
 } -cleanup {
     destroy .t.f

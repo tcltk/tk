@@ -1733,8 +1733,8 @@ all the sequences for which bindings have been defined for \fItagName\fR.
 .RS
 .PP
 The only events for which bindings may be specified are those related to the
-mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, \fBButtonPress\fR,
-\fBMotion\fR, and \fBKeyPress\fR) or virtual events. Event bindings for a text
+mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, \fBButton\fR,
+\fBMotion\fR, and \fBKey\fR) or virtual events. Event bindings for a text
 widget use the \fBcurrent\fR mark described under \fBMARKS\fR above. An
 \fBEnter\fR event triggers for a tag when the tag first becomes present on the
 current character, and a \fBLeave\fR event triggers for a tag when it ceases
@@ -1930,18 +1930,18 @@ and 1.
 \fIpathName \fBxview scroll \fInumber what\fR
 .
 This command shifts the view in the window left or right according to
-\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBunits\fR, \fBpages\fR or
-\fBpixels\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR
-must be an integer, otherwise number may be specified in any of the forms
-acceptable to \fBTk_GetPixels\fR, such as
+\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBpages\fR,
+\fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBpages\fR or
+\fBunits\fR then \fInumber\fR must be an integer, otherwise number may be
+specified in any of the forms acceptable to \fBTk_GetPixels\fR, such as
 .QW 2.0c
 or
 .QW 1i
 (the result is rounded to the nearest integer value. If no units are given,
-pixels are assumed). If \fIwhat\fR is \fBunits\fR, the view adjusts left or
-right by \fInumber\fR average-width characters on the display; if it is
-\fBpages\fR then the view adjusts by \fInumber\fR screenfuls; if it is
-\fBpixels\fR then the view adjusts by \fInumber\fR pixels. If \fInumber\fR is
+pixels are assumed). If \fIwhat\fR is \fBpages\fR then the view adjusts by
+\fInumber\fR screenfuls; if it is \fBpixels\fR then the view adjusts by
+\fInumber\fR pixels; if it is \fBunits\fR, the view adjusts left or
+right by \fInumber\fR average-width characters on the display. If \fInumber\fR is
 negative then characters farther to the left become visible; if it is positive
 then characters farther to the right become visible.
 .RE
@@ -1978,10 +1978,10 @@ the bottom of the window, and some other pixel is at the top.
 \fIpathName \fByview scroll \fInumber what\fR
 .
 This command adjust the view in the window up or down according to
-\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBunits\fR, \fBpages\fR or
-\fBpixels\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR
-must be an integer, otherwise number may be specified in any of the forms
-acceptable to \fBTk_GetPixels\fR, such as
+\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBpages\fR,
+\fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then
+\fInumber\fR must be an integer, otherwise number may be specified in any of
+the forms acceptable to \fBTk_GetPixels\fR, such as
 .QW 2.0c
 or
 .QW 1i
@@ -2027,10 +2027,11 @@ integer. This command used to be used for scrolling, but now it is obsolete.
 .SH BINDINGS
 .PP
 Tk automatically creates class bindings for texts that give them the following
-default behavior. In the descriptions below,
+default behavior.
+In the descriptions below,
 .QW word
-is dependent on the value of the \fBtcl_wordchars\fR variable. See
-\fBtclvars\fR(n).
+is dependent on the value of
+the \fBtcl_wordchars\fR variable.  See \fBtclvars\fR(n).
 .IP [1]
 Clicking mouse button 1 positions the insertion cursor just before the
 character underneath the mouse cursor, sets the input focus to this widget,
@@ -2059,10 +2060,11 @@ insertion cursor without affecting the selection.
 If any normal printing characters are typed, they are inserted at the point of
 the insertion cursor.
 .IP [7]
-The view in the widget can be adjusted by dragging with mouse button 2. If
-mouse button 2 is clicked without moving the mouse, the selection is copied
-into the text at the position of the mouse cursor. The Insert key also inserts
-the selection, but at the position of the insertion cursor.
+The view in the widget can be adjusted by dragging with the middle mouse
+button (button 2, or button 3 in TkAqua). If the middle mouse button is
+clicked without moving the mouse, the selection is copied into the text at the
+position of the mouse cursor. The Insert key also inserts the selection,
+but at the position of the insertion cursor.
 .IP [8]
 If the mouse is dragged out of the widget while button 1 is pressed, the entry
 will automatically scroll to make more text visible (if there is more text
