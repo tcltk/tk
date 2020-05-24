@@ -80,6 +80,17 @@ void Ttk_DeleteTagTable(Ttk_TagTable tagTable)
     ckfree(tagTable);
 }
 
+void Ttk_DeleteTagFromTable(Ttk_TagTable tagTable, Ttk_Tag tag)
+{
+    Tcl_HashEntry *entryPtr;
+
+    entryPtr = Tcl_FindHashEntry(&tagTable->tags, tag->tagName);
+    if (entryPtr != NULL) {
+        DeleteTag(tagTable, tag);
+        Tcl_DeleteHashEntry(entryPtr);
+    }
+}
+
 Ttk_Tag Ttk_GetTag(Ttk_TagTable tagTable, const char *tagName)
 {
     int isNew = 0;
