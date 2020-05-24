@@ -579,7 +579,7 @@ test imgPhoto-4.31 {ImgPhotoCmd procedure: read option} -constraints {
     photo1 read $teapotPhotoFile -zoom 2
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {unrecognized option "-zoom": must be -format, -from, -shrink, -to or -metadata}
+} -result {unrecognized option "-zoom": must be -format, -from, -shrink, -to, or -metadata}
 test imgPhoto-4.32 {ImgPhotoCmd procedure: read option} -setup {
     image create photo photo1
 } -body {
@@ -1242,7 +1242,7 @@ test imgPhoto-4.104 {ImgPhotoCmd data: existing but not accepted opt} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-{unrecognized option "-to": must be -background, -format, -from, -grayscale}
+{unrecognized option "-to": must be -background, -format, -from, -grayscale, or -metadata}
 test imgPhoto-4.105 {ImgPhotoCmd data: invalid option} -setup {
     image create photo photo1
 } -body {
@@ -1250,7 +1250,7 @@ test imgPhoto-4.105 {ImgPhotoCmd data: invalid option} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-{unrecognized option "-bogus": must be -background, -format, -from, or -grayscale}
+{unrecognized option "-bogus": must be -background, -format, -from, -grayscale, or -metadata}
 test imgPhoto-4.106 {ImgPhotoCmd data: extra arg before options} -setup {
     image create photo photo1
 } -body {
