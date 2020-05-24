@@ -32,7 +32,7 @@ typedef struct TextItem {
      */
 
     double x, y;		/* Positioning point for text. */
-    int insertPos;		/* Character index of character just before
+    TkSizeT insertPos;		/* Character index of character just before
 				 * which the insertion cursor is displayed. */
 
     /*
@@ -62,8 +62,8 @@ typedef struct TextItem {
      * configuration settings above.
      */
 
-    int numChars;		/* Length of text in characters. */
-    int numBytes;		/* Length of text in bytes. */
+    TkSizeT numChars;		/* Length of text in characters. */
+    TkSizeT numBytes;		/* Length of text in bytes. */
     Tk_TextLayout textLayout;	/* Cached text layout information. */
     int actualWidth;		/* Width of text as computed. Used to make
 				 * selections of wrapped text display
@@ -510,19 +510,19 @@ ConfigureText(
     textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
 
-	if (textInfoPtr->selectFirst >= textPtr->numChars) {
+	if (textInfoPtr->selectFirst >= (int)textPtr->numChars) {
 	    textInfoPtr->selItemPtr = NULL;
 	} else {
-	    if (textInfoPtr->selectLast >= textPtr->numChars) {
+	    if (textInfoPtr->selectLast >= (int)textPtr->numChars) {
 		textInfoPtr->selectLast = textPtr->numChars - 1;
 	    }
 	    if ((textInfoPtr->anchorItemPtr == itemPtr)
-		    && (textInfoPtr->selectAnchor >= textPtr->numChars)) {
+		    && (textInfoPtr->selectAnchor >= (int)textPtr->numChars)) {
 		textInfoPtr->selectAnchor = textPtr->numChars - 1;
 	    }
 	}
     }
-    if (textPtr->insertPos >= textPtr->numChars) {
+    if (textPtr->insertPos + 1 >= textPtr->numChars + 1) {
 	textPtr->insertPos = textPtr->numChars;
     }
 
@@ -846,7 +846,7 @@ DisplayCanvText(
     if (textInfoPtr->selItemPtr == itemPtr) {
 	selFirstChar = textInfoPtr->selectFirst;
 	selLastChar = textInfoPtr->selectLast;
-	if (selLastChar > textPtr->numChars) {
+	if (selLastChar > (int)textPtr->numChars) {
 	    selLastChar = textPtr->numChars - 1;
 	}
 	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
@@ -969,7 +969,7 @@ DisplayCanvText(
 	TkDrawAngledTextLayout(display, drawable, textPtr->selTextGC,
 		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
 		selFirstChar, selLastChar + 1);
-	if (selLastChar + 1 < textPtr->numChars) {
+	if (selLastChar + 1 < (int)textPtr->numChars) {
 	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
 		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
 		    selLastChar + 1, textPtr->numChars);
@@ -1027,7 +1027,7 @@ TextInsert(
     if (index < 0) {
 	index = 0;
     }
-    if (index > textPtr->numChars) {
+    if (index > (int)textPtr->numChars) {
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
@@ -1064,7 +1064,7 @@ TextInsert(
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos >= index) {
+    if (textPtr->insertPos + 1 >= (TkSizeT)index + 1) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
@@ -1105,7 +1105,7 @@ TextDeleteChars(
     if (first < 0) {
 	first = 0;
     }
-    if (last >= textPtr->numChars) {
+    if (last >= (int)textPtr->numChars) {
 	last = textPtr->numChars - 1;
     }
     if (first > last) {
@@ -1155,9 +1155,9 @@ TextDeleteChars(
 	    }
 	}
     }
-    if (textPtr->insertPos > first) {
+    if ((int)textPtr->insertPos > first) {
 	textPtr->insertPos -= charsRemoved;
-	if (textPtr->insertPos < first) {
+	if ((int)textPtr->insertPos < first) {
 	    textPtr->insertPos = first;
 	}
     }
@@ -1393,7 +1393,7 @@ GetTextIndex(
     if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
-	} else if (idx > (TkSizeT)textPtr->numChars) {
+	} else if (idx > textPtr->numChars) {
 	    idx = textPtr->numChars;
 	}
 	*indexPtr = (int)idx;
@@ -1489,7 +1489,7 @@ SetTextCursor(
 
     if (index < 0) {
 	textPtr->insertPos = 0;
-    } else if (index > textPtr->numChars) {
+    } else if (index > (int)textPtr->numChars) {
 	textPtr->insertPos = textPtr->numChars;
     } else {
 	textPtr->insertPos = index;

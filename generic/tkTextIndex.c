@@ -425,7 +425,7 @@ TkTextMakeByteIndex(
 	    indexPtr->byteIndex = index - sizeof(char);
 	    break;
 	}
-	if (index + segPtr->size > byteIndex) {
+	if (index + (int)segPtr->size > byteIndex) {
 	    indexPtr->byteIndex = byteIndex;
 	    if ((byteIndex > index) && (segPtr->typePtr == &tkTextCharType)) {
 		/*
@@ -531,7 +531,7 @@ TkTextMakeCharIndex(
 		index += offset;
 	    }
 	} else {
-	    if (charIndex < segPtr->size) {
+	    if (charIndex < (int)segPtr->size) {
 		indexPtr->byteIndex = index;
 		break;
 	    }
@@ -572,7 +572,7 @@ TkTextIndexToSeg(
     TkSizeT offset;
 
     for (offset = indexPtr->byteIndex, segPtr = indexPtr->linePtr->segPtr;
-	    offset >= (TkSizeT)segPtr->size;
+	    offset >= segPtr->size;
 	    offset -= segPtr->size, segPtr = segPtr->nextPtr) {
 	/* Empty loop body. */
     }
@@ -1049,7 +1049,7 @@ TkTextPrintIndex(
 	    linePtr = TkBTreeNextLine(NULL, linePtr);
 	    segPtr = linePtr->segPtr;
 	}
-	if (numBytes <= segPtr->size) {
+	if (numBytes <= (int)segPtr->size) {
 	    break;
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
@@ -1597,7 +1597,7 @@ TkTextIndexForwChars(
 			charCount--;
 		    }
 		} else if (type & COUNT_INDICES) {
-		    if (charCount + byteOffset < (TkSizeT)segPtr->size) {
+		    if (charCount + byteOffset < segPtr->size) {
 			dstPtr->byteIndex += charCount;
 			goto forwardCharDone;
 		    }
@@ -2056,7 +2056,7 @@ TkTextIndexBackChars(
 		linePtr = TkBTreeNextLine(NULL, linePtr);
 		segPtr = linePtr->segPtr;
 	    }
-	    if (segSize <= segPtr->size) {
+	    if (segSize <= (int)segPtr->size) {
 		break;
 	    }
 	    segSize -= segPtr->size;
@@ -2324,7 +2324,7 @@ StartEnd(
 	    }
 	    offset += chSize;
 	    indexPtr->byteIndex += chSize;
-	    if (offset >= (TkSizeT)segPtr->size) {
+	    if (offset >= segPtr->size) {
 		segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	    }
 	}

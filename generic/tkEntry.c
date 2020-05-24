@@ -637,7 +637,7 @@ EntryWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	if ((index == entryPtr->numChars) && (index > 0)) {
+	if ((index == (int)entryPtr->numChars) && (index > 0)) {
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
@@ -989,7 +989,7 @@ EntryWidgetObjCmd(
 		break;
 	    }
 	}
-	if (index >= entryPtr->numChars) {
+	if (index >= (int)entryPtr->numChars) {
 	    index = entryPtr->numChars - 1;
 	}
 	if (index < 0) {
@@ -1706,8 +1706,8 @@ DisplayEntry(
 	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
     if (showSelection && (entryPtr->state != STATE_DISABLED)
-	    && (entryPtr->selectLast > entryPtr->leftIndex)) {
-	if (entryPtr->selectFirst <= entryPtr->leftIndex) {
+	    && (entryPtr->selectLast > (int)entryPtr->leftIndex)) {
+	if (entryPtr->selectFirst <= (int)entryPtr->leftIndex) {
 	    selStartX = entryPtr->leftX;
 	} else {
 	    Tk_CharBbox(entryPtr->textLayout, entryPtr->selectFirst,
@@ -1749,7 +1749,7 @@ DisplayEntry(
 	cursorX -= (entryPtr->insertWidth == 1) ? 1 : (entryPtr->insertWidth)/2;
 	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
 		fm.ascent + fm.descent);
-	if (entryPtr->insertPos >= entryPtr->leftIndex && cursorX < xBound) {
+	if ((entryPtr->insertPos >= (int)entryPtr->leftIndex) && cursorX < xBound) {
 	    if (entryPtr->flags & CURSOR_ON) {
 		Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
 			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
@@ -1783,7 +1783,7 @@ DisplayEntry(
 	    && (entryPtr->selectFirst < entryPtr->selectLast)) {
 	int selFirst;
 
-	if (entryPtr->selectFirst < entryPtr->leftIndex) {
+	if (entryPtr->selectFirst < (int)entryPtr->leftIndex) {
 	    selFirst = entryPtr->leftIndex;
 	} else {
 	    selFirst = entryPtr->selectFirst;
@@ -1982,7 +1982,7 @@ EntryComputeGeometry(
 	p = (char *)ckalloc(entryPtr->numDisplayBytes + 1);
 	entryPtr->displayString = p;
 
-	for (i = entryPtr->numChars; --i >= 0; ) {
+	for (i = entryPtr->numChars; i-- > 0; ) {
 	    memcpy(p, buf, size);
 	    p += size;
 	}
@@ -2083,7 +2083,7 @@ EntryComputeGeometry(
 	if (rightX < overflow) {
 	    maxOffScreen++;
 	}
-	if (entryPtr->leftIndex > maxOffScreen) {
+	if (entryPtr->leftIndex + 1 > (TkSizeT)maxOffScreen + 1) {
 	    entryPtr->leftIndex = maxOffScreen;
 	}
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->leftIndex, &rightX,
@@ -2200,7 +2200,7 @@ InsertChars(
     if ((entryPtr->selectAnchor > index) || (entryPtr->selectFirst >= index)) {
 	entryPtr->selectAnchor += charsAdded;
     }
-    if (entryPtr->leftIndex > index) {
+    if (entryPtr->leftIndex + 1 > (TkSizeT)index + 1) {
 	entryPtr->leftIndex += charsAdded;
     }
     if (entryPtr->insertPos >= index) {
@@ -2237,7 +2237,7 @@ DeleteChars(
     const char *string;
     char *newStr, *toDelete;
 
-    if ((index + count) > entryPtr->numChars) {
+    if ((index + count) > (int)entryPtr->numChars) {
 	count = entryPtr->numChars - index;
     }
     if (count <= 0) {
@@ -2308,8 +2308,8 @@ DeleteChars(
 	    entryPtr->selectAnchor = index;
 	}
     }
-    if (entryPtr->leftIndex > index) {
-	if (entryPtr->leftIndex >= (index + count)) {
+    if (entryPtr->leftIndex + 1 > (TkSizeT)index + 1) {
+	if (entryPtr->leftIndex + 1 >= (TkSizeT)index + count + 1) {
 	    entryPtr->leftIndex -= count;
 	} else {
 	    entryPtr->leftIndex = index;
@@ -2482,21 +2482,21 @@ EntrySetValue(
     }
 
     if (entryPtr->selectFirst >= 0) {
-	if (entryPtr->selectFirst >= entryPtr->numChars) {
+	if (entryPtr->selectFirst >= (int)entryPtr->numChars) {
 	    entryPtr->selectFirst = -1;
 	    entryPtr->selectLast = -1;
-	} else if (entryPtr->selectLast > entryPtr->numChars) {
+	} else if (entryPtr->selectLast > (int)entryPtr->numChars) {
 	    entryPtr->selectLast = entryPtr->numChars;
 	}
     }
-    if (entryPtr->leftIndex >= entryPtr->numChars) {
-	if (entryPtr->numChars > 0) {
+    if (entryPtr->leftIndex + 1 >= entryPtr->numChars + 1) {
+	if (entryPtr->numChars + 1 > 1) {
 	    entryPtr->leftIndex = entryPtr->numChars - 1;
 	} else {
 	    entryPtr->leftIndex = 0;
 	}
     }
-    if (entryPtr->insertPos > entryPtr->numChars) {
+    if (entryPtr->insertPos > (int)entryPtr->numChars) {
 	entryPtr->insertPos = entryPtr->numChars;
     }
 
@@ -2657,8 +2657,8 @@ GetEntryIndex(
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
-	} else if (idx > (TkSizeT)entryPtr->numChars) {
-	    idx = (TkSizeT)entryPtr->numChars;
+	} else if (idx > entryPtr->numChars) {
+	    idx = entryPtr->numChars;
 	}
 	*indexPtr = (int)idx;
 	return TCL_OK;
@@ -2727,7 +2727,7 @@ GetEntryIndex(
 	 * be selected, for example.
 	 */
 
-	if (roundUp && (*indexPtr < entryPtr->numChars)) {
+	if (roundUp && (*indexPtr < (int)entryPtr->numChars)) {
 	    *indexPtr += 1;
 	}
 	break;
@@ -2781,7 +2781,7 @@ EntryScanTo(
 
     newLeftIndex = entryPtr->scanMarkIndex
 	    - (10 * (x - entryPtr->scanMarkX)) / entryPtr->avgWidth;
-    if (newLeftIndex >= entryPtr->numChars) {
+    if (newLeftIndex >= (int)entryPtr->numChars) {
 	newLeftIndex = entryPtr->scanMarkIndex = entryPtr->numChars - 1;
 	entryPtr->scanMarkX = x;
     }
@@ -2790,11 +2790,11 @@ EntryScanTo(
 	entryPtr->scanMarkX = x;
     }
 
-    if (newLeftIndex != entryPtr->leftIndex) {
+    if ((TkSizeT)newLeftIndex != entryPtr->leftIndex) {
 	entryPtr->leftIndex = newLeftIndex;
 	entryPtr->flags |= UPDATE_SCROLLBAR;
 	EntryComputeGeometry(entryPtr);
-	if (newLeftIndex != entryPtr->leftIndex) {
+	if ((TkSizeT)newLeftIndex != entryPtr->leftIndex) {
 	    entryPtr->scanMarkIndex = entryPtr->leftIndex;
 	    entryPtr->scanMarkX = x;
 	}
@@ -2842,8 +2842,8 @@ EntrySelectTo(
      * Pick new starting and ending points for the selection.
      */
 
-    if (entryPtr->selectAnchor > entryPtr->numChars) {
-	entryPtr->selectAnchor = entryPtr->numChars;
+    if (entryPtr->selectAnchor > (int)entryPtr->numChars) {
+	entryPtr->selectAnchor = (int)entryPtr->numChars;
     }
     if (entryPtr->selectAnchor <= index) {
 	newFirst = entryPtr->selectAnchor;
@@ -3035,7 +3035,7 @@ EntryVisibleRange(
 	charsInWindow = Tk_PointToChar(entryPtr->textLayout,
 		Tk_Width(entryPtr->tkwin) - entryPtr->inset
 		- entryPtr->xWidth - entryPtr->layoutX - 1, 0);
-	if (charsInWindow < entryPtr->numChars) {
+	if (charsInWindow < (int)entryPtr->numChars) {
 	    charsInWindow++;
 	}
 	charsInWindow -= entryPtr->leftIndex;
@@ -3845,7 +3845,7 @@ SpinboxWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	if ((index == entryPtr->numChars) && (index > 0)) {
+	if ((index == (int)entryPtr->numChars) && (index > 0)) {
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
@@ -4275,7 +4275,7 @@ SpinboxWidgetObjCmd(
 		break;
 	    }
 	}
-	if (index >= entryPtr->numChars) {
+	if (index >= (int)entryPtr->numChars) {
 	    index = entryPtr->numChars - 1;
 	}
 	if (index < 0) {
