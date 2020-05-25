@@ -538,7 +538,7 @@ declare 162 {
 	    int byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
-    int TkTextPrintIndex(const struct TkText *textPtr,
+    TkSizeT TkTextPrintIndex(const struct TkText *textPtr,
 	    const struct TkTextIndex *indexPtr, char *string)
 }
 declare 164 {

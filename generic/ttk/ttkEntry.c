@@ -1088,7 +1088,7 @@ static int EntryPostConfigure(Tcl_Interp *dummy, void *recordPtr, int mask)
  * 	Precondition: textLayout and layoutX up-to-date.
  */
 static int
-EntryCharPosition(Entry *entryPtr, int index)
+EntryCharPosition(Entry *entryPtr, TkSizeT index)
 {
     int xPos;
     Tk_CharBbox(entryPtr->entry.textLayout, index, &xPos, NULL, NULL, NULL);

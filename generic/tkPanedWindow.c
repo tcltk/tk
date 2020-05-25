@@ -3035,7 +3035,7 @@ ObjectIsEmpty(
 static void *
 ComputeSlotAddress(
     void *recordPtr,	/* Pointer to the start of a record. */
-	TkSizeT offset)		/* Offset of a slot within that record; may be TCL_INDEX_NONE. */
+    TkSizeT offset)		/* Offset of a slot within that record; may be TCL_INDEX_NONE. */
 {
     if (offset != TCL_INDEX_NONE) {
 	return (char *)recordPtr + offset;

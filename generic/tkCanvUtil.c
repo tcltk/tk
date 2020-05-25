@@ -430,9 +430,9 @@ TkCanvasTagsParseProc(
      * Make sure that there's enough space in the item to hold the tag names.
      */
 
-    if (itemPtr->tagSpace < argc) {
+    if ((int)itemPtr->tagSpace < argc) {
 	newPtr = (Tk_Uid *)ckalloc(argc * sizeof(Tk_Uid));
-	for (i = itemPtr->numTags-1; i >= 0; i--) {
+	for (i = (int)itemPtr->numTags - 1; i >= 0; i--) {
 	    newPtr[i] = itemPtr->tagPtr[i];
 	}
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
@@ -558,7 +558,7 @@ TkCanvasDashPrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-	TkSizeT offset,			/* Offset in record for item. */
+    TkSizeT offset,			/* Offset in record for item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -747,7 +747,7 @@ TkSmoothParseProc(
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-	TkSizeT offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     const Tk_SmoothMethod **smoothPtr =
 	    (const Tk_SmoothMethod **) (widgRec + offset);

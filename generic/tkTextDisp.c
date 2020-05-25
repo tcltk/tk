@@ -7608,7 +7608,7 @@ TkTextCharLayoutProc(
 				 * character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-	TkSizeT maxBytes,		/* Chunk must not include more than this many
+    TkSizeT maxBytes,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this display line yet. */

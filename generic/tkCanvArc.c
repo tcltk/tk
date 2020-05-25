@@ -2202,7 +2202,7 @@ StyleParseProc(
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-	TkSizeT offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -2265,7 +2265,7 @@ StylePrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Ignored. */
     char *widgRec,		/* Pointer to record for item. */
-	TkSizeT offset,			/* Offset into item. */
+    TkSizeT offset,			/* Offset into item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */

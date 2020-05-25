@@ -61,7 +61,7 @@ struct TtkManager_
     void 		*managerData;
     Tk_Window   	masterWindow;
     unsigned		flags;
-    int 	 	nSlaves;
+    TkSizeT 	 	nSlaves;
     Ttk_Slave 		**slaves;
 };
 
@@ -142,7 +142,7 @@ static const int ManagerEventMask = StructureNotifyMask;
 static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
-    int i;
+    TkSizeT i;
 
     switch (eventPtr->type)
     {
@@ -248,9 +248,9 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 /* ++ InsertSlave --
  * 	Adds slave to the list of managed windows.
  */
-static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, int index)
+static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, TkSizeT index)
 {
-    int endIndex = mgr->nSlaves++;
+    TkSizeT endIndex = mgr->nSlaves++;
     mgr->slaves = (Ttk_Slave **)ckrealloc(mgr->slaves, mgr->nSlaves * sizeof(Ttk_Slave *));
 
     while (endIndex > index) {
@@ -277,10 +277,10 @@ static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, int index)
  * [1] It's safe to call Tk_UnmapWindow / Tk_UnmaintainGeometry even if this
  * routine is called from the slave's DestroyNotify event handler.
  */
-static void RemoveSlave(Ttk_Manager *mgr, int index)
+static void RemoveSlave(Ttk_Manager *mgr, TkSizeT index)
 {
     Ttk_Slave *slave = mgr->slaves[index];
-    int i;
+    TkSizeT i;
 
     /* Notify manager:
      */
@@ -427,7 +427,7 @@ Tk_Window Ttk_SlaveWindow(Ttk_Manager *mgr, TkSizeT slaveIndex)
  */
 TkSizeT Ttk_SlaveIndex(Ttk_Manager *mgr, Tk_Window slaveWindow)
 {
-    int index;
+    TkSizeT index;
     for (index = 0; index < mgr->nSlaves; ++index)
 	if (mgr->slaves[index]->slaveWindow == slaveWindow)
 	    return index;
@@ -447,7 +447,7 @@ int Ttk_GetSlaveIndexFromObj(
     Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, int *indexPtr)
 {
     const char *string = Tcl_GetString(objPtr);
-    int slaveIndex = 0;
+    TkSizeT slaveIndex = 0;
     TkSizeT idx;
     Tk_Window tkwin;
 
@@ -455,7 +455,7 @@ int Ttk_GetSlaveIndexFromObj(
      */
     if (TkGetIntForIndex(objPtr, mgr->nSlaves - 1, 1, &idx) == TCL_OK) {
 	slaveIndex = idx;
-	if (slaveIndex < 0 || slaveIndex > mgr->nSlaves) {
+	if (slaveIndex + 1 > mgr->nSlaves + 1) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Slave index %d out of bounds", slaveIndex));
 	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
@@ -470,7 +470,7 @@ int Ttk_GetSlaveIndexFromObj(
     if ((*string == '.') &&
 	    (tkwin = Tk_NameToWindow(interp, string, mgr->masterWindow))) {
 	slaveIndex = Ttk_SlaveIndex(mgr, tkwin);
-	if (slaveIndex < 0) {
+	if (slaveIndex == TCL_INDEX_NONE) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
 		    Tk_PathName(mgr->masterWindow)));

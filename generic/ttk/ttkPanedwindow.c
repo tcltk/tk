@@ -647,8 +647,9 @@ static int PanedInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
-    int srcIndex, destIndex;
+    TkSizeT nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
+    TkSizeT srcIndex;
+    int destIndex;
     Tk_Window slaveWindow;
 
     if (objc < 4) {
@@ -669,11 +670,11 @@ static int PanedInsertCommand(
     }
 
     srcIndex = Ttk_SlaveIndex(pw->paned.mgr, slaveWindow);
-    if (srcIndex < 0) { /* New slave: */
+    if (srcIndex == TCL_INDEX_NONE) { /* New slave: */
 	return AddPane(interp, pw, destIndex, slaveWindow, objc-4, objv+4);
     } /* else -- move existing slave: */
 
-    if (destIndex >= nSlaves)
+    if ((TkSizeT) destIndex + 1 >= nSlaves + 1)
 	destIndex  = nSlaves - 1;
     Ttk_ReorderSlave(pw->paned.mgr, srcIndex, destIndex);
 
@@ -701,7 +702,7 @@ static int PanedForgetCommand(
 		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex >= (int)Ttk_NumberSlaves(pw->paned.mgr)) {
+    } else if ((TkSizeT)paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
     Ttk_ForgetSlave(pw->paned.mgr, paneIndex);
@@ -783,7 +784,7 @@ static int PanedPaneCommand(
 		    interp,pw->paned.mgr,objv[2],&paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex >= (int)Ttk_NumberSlaves(pw->paned.mgr)) {
+    } else if ((TkSizeT)paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
 
