@@ -2750,7 +2750,7 @@ TkBTreeStartSearchBack(
 				/* Where to store information about search's
 				 * progress. */
 {
-	TkSizeT offset;
+    TkSizeT offset;
     TkTextIndex index0;		/* Last index of the tag. */
     TkTextIndex backOne;	/* One character before starting index. */
     TkTextSegment *seg0Ptr;	/* Last segment of the tag. */

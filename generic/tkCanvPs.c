@@ -576,7 +576,7 @@ TkCanvPostscriptCmd(
 	if (result != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (generating Postscript for item %d)",
-		    itemPtr->id));
+		    (int)itemPtr->id));
 	    goto cleanup;
 	}
 

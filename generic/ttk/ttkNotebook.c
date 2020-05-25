@@ -940,7 +940,7 @@ static int NotebookInsertCommand(
 {
     Notebook *nb = (Notebook *)recordPtr;
     int current = nb->notebook.currentIndex;
-    int nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
+    TkSizeT nSlaves1 = Ttk_NumberSlaves(nb->notebook.mgr);
     int srcIndex, destIndex;
 
     if (objc < 4) {
@@ -964,14 +964,14 @@ static int NotebookInsertCommand(
 	}
 
 	srcIndex = Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow);
-	if (srcIndex < 0) {	/* New slave */
+	if (srcIndex == -1) {	/* New slave */
 	    return AddTab(interp, nb, destIndex, slaveWindow, objc-4,objv+4);
 	}
     } else if (Ttk_GetSlaveIndexFromObj(
 		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
     {
 	return TCL_ERROR;
-    } else if (srcIndex >= (int)Ttk_NumberSlaves(nb->notebook.mgr)) {
+    } else if ((TkSizeT)srcIndex + 1 >= Ttk_NumberSlaves(nb->notebook.mgr) + 1) {
 	srcIndex = Ttk_NumberSlaves(nb->notebook.mgr) - 1;
     }
 
@@ -985,8 +985,8 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (destIndex >= nSlaves) {
-	destIndex  = nSlaves - 1;
+    if (destIndex >= (int)nSlaves1) {
+	destIndex  = nSlaves1 - 1;
     }
     Ttk_ReorderSlave(nb->notebook.mgr, srcIndex, destIndex);
 

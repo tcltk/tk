@@ -1024,7 +1024,7 @@ GetIndex(
  *---------------------------------------------------------------------------
  */
 
-int
+TkSizeT
 TkTextPrintIndex(
     const TkText *textPtr,
     const TkTextIndex *indexPtr,/* Pointer to index. */

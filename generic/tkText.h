@@ -857,7 +857,7 @@ typedef void		Tk_SegLineChangeProc(struct TkTextSegment *segPtr,
 typedef int		Tk_SegLayoutProc(struct TkText *textPtr,
 			    struct TkTextIndex *indexPtr,
 			    TkTextSegment *segPtr, TkSizeT offset, int maxX,
-				TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    struct TkTextDispChunk *chunkPtr);
 typedef void		Tk_SegCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);

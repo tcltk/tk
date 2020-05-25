@@ -2888,10 +2888,10 @@ EntrySelectTo(
 static TkSizeT
 EntryFetchSelection(
     ClientData clientData,	/* Information about entry widget. */
-	TkSizeT offset,			/* Byte offset within selection of first
+    TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NUL character. */
 {
     Entry *entryPtr = (Entry *)clientData;

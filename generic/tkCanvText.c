@@ -510,14 +510,14 @@ ConfigureText(
     textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
 
-	if (textInfoPtr->selectFirst >= (int)textPtr->numChars) {
+	if (textInfoPtr->selectFirst + 1 >= textPtr->numChars + 1) {
 	    textInfoPtr->selItemPtr = NULL;
 	} else {
-	    if (textInfoPtr->selectLast >= (int)textPtr->numChars) {
+	    if (textInfoPtr->selectLast + 1 >= textPtr->numChars + 1) {
 		textInfoPtr->selectLast = textPtr->numChars - 1;
 	    }
 	    if ((textInfoPtr->anchorItemPtr == itemPtr)
-		    && (textInfoPtr->selectAnchor >= (int)textPtr->numChars)) {
+		    && (textInfoPtr->selectAnchor + 1 >= textPtr->numChars + 1)) {
 		textInfoPtr->selectAnchor = textPtr->numChars - 1;
 	    }
 	}
@@ -1053,14 +1053,14 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst >= index) {
+	if (textInfoPtr->selectFirst + 1 >= (TkSizeT)index + 1) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast >= index) {
+	if (textInfoPtr->selectLast + 1 >= (TkSizeT)index + 1) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor >= index)) {
+		&& (textInfoPtr->selectAnchor + 1 >= (TkSizeT)index + 1)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
@@ -1132,32 +1132,32 @@ TextDeleteChars(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst > first) {
+	if (textInfoPtr->selectFirst + 1 > (TkSizeT)first + 1) {
 	    textInfoPtr->selectFirst -= charsRemoved;
-	    if (textInfoPtr->selectFirst < first) {
+	    if (textInfoPtr->selectFirst + 1 < (TkSizeT)first + 1) {
 		textInfoPtr->selectFirst = first;
 	    }
 	}
-	if (textInfoPtr->selectLast >= first) {
+	if (textInfoPtr->selectLast + 1 >= (TkSizeT)first + 1) {
 	    textInfoPtr->selectLast -= charsRemoved;
-	    if (textInfoPtr->selectLast < first - 1) {
+	    if (textInfoPtr->selectLast + 1 < (TkSizeT)first) {
 		textInfoPtr->selectLast = first - 1;
 	    }
 	}
-	if (textInfoPtr->selectFirst > textInfoPtr->selectLast) {
+	if (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1) {
 	    textInfoPtr->selItemPtr = NULL;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor > first)) {
+		&& (textInfoPtr->selectAnchor + 1 > (TkSizeT)first + 1)) {
 	    textInfoPtr->selectAnchor -= charsRemoved;
-	    if (textInfoPtr->selectAnchor < first) {
+	    if (textInfoPtr->selectAnchor + 1 < (TkSizeT)first + 1) {
 		textInfoPtr->selectAnchor = first;
 	    }
 	}
     }
-    if ((int)textPtr->insertPos > first) {
+    if (textPtr->insertPos + 1 > (TkSizeT)first + 1) {
 	textPtr->insertPos -= charsRemoved;
-	if ((int)textPtr->insertPos < first) {
+	if (textPtr->insertPos + 1 < (TkSizeT)first + 1) {
 	    textPtr->insertPos = first;
 	}
     }
@@ -1520,10 +1520,10 @@ static TkSizeT
 GetSelText(
     Tk_Canvas canvas,		/* Canvas containing selection. */
     Tk_Item *itemPtr,		/* Text item containing selection. */
-	TkSizeT offset,			/* Byte offset within selection of first
+    TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -1534,8 +1534,8 @@ GetSelText(
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     (void)canvas;
 
-    if ((textInfoPtr->selectFirst == -1) ||
-	    (textInfoPtr->selectFirst > textInfoPtr->selectLast)) {
+    if ((textInfoPtr->selectFirst == TCL_INDEX_NONE) ||
+	    (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1)) {
 	return 0;
     }
     text = textPtr->text;
