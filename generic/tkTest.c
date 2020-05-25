@@ -186,19 +186,10 @@ static int		TestmetricsObjCmd(ClientData dummy,
 static int		TestobjconfigObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
-static int		CustomOptionSet(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr,
-			    int internalOffset, char *saveInternalPtr,
-			    int flags);
-static Tcl_Obj *	CustomOptionGet(ClientData clientData,
-			    Tk_Window tkwin, char *recordPtr,
-			    int internalOffset);
-static void		CustomOptionRestore(ClientData clientData,
-			    Tk_Window tkwin, char *internalPtr,
-			    char *saveInternalPtr);
-static void		CustomOptionFree(ClientData clientData,
-			    Tk_Window tkwin, char *internalPtr);
+static Tk_CustomOptionSetProc CustomOptionSet;
+static Tk_CustomOptionGetProc CustomOptionGet;
+static Tk_CustomOptionRestoreProc CustomOptionRestore;
+static Tk_CustomOptionFreeProc CustomOptionFree;
 static int		TestpropObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -2047,8 +2038,7 @@ TestwrapperObjCmd(
  *		CustomOptionSet		Sets option value to new setting.
  *		CustomOptionGet		Creates a new Tcl_Obj.
  *		CustomOptionRestore	Resets option value to original value.
- *		CustomOptionFree	Free storage for internal rep of
- *					option.
+ *		CustomOptionFree	Free storage for internal rep of option.
  *
  *----------------------------------------------------------------------
  */
@@ -2060,7 +2050,7 @@ CustomOptionSet(
     Tk_Window tkwin,
     Tcl_Obj **value,
     char *recordPtr,
-    int internalOffset,
+	TkSizeT internalOffset,
     char *saveInternalPtr,
     int flags)
 {
@@ -2071,7 +2061,7 @@ CustomOptionSet(
 
     objEmpty = 0;
 
-    if (internalOffset != -1) {
+    if (internalOffset != TCL_INDEX_NONE) {
 	internalPtr = recordPtr + internalOffset;
     } else {
 	internalPtr = NULL;
@@ -2121,7 +2111,7 @@ CustomOptionGet(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,
-    int internalOffset)
+	TkSizeT internalOffset)
 {
     (void)dummy;
     (void)tkwin;

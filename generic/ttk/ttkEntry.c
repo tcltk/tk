@@ -84,8 +84,8 @@ typedef struct {
      * Internal state:
      */
     char *string;		/* Storage for string (malloced) */
-    int numBytes;		/* Length of string in bytes. */
-    int numChars;		/* Length of string in characters. */
+    TkSizeT numBytes;		/* Length of string in bytes. */
+    TkSizeT numChars;		/* Length of string in characters. */
 
     int insertPos;		/* Insert index */
     int selectFirst;		/* Index of start of selection, or -1 */
@@ -350,31 +350,31 @@ EntryEditable(Entry *entryPtr)
 /* EntryFetchSelection --
  *	Selection handler for entry widgets.
  */
-static int
+static TkSizeT
 EntryFetchSelection(
-    ClientData clientData, int offset, char *buffer, int maxBytes)
+    ClientData clientData, TkSizeT offset, char *buffer, TkSizeT maxBytes)
 {
     Entry *entryPtr = (Entry *)clientData;
-    int byteCount;
+    TkSizeT byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
-    if (entryPtr->entry.selectFirst < 0 || (!entryPtr->entry.exportSelection)
+    if (entryPtr->entry.selectFirst == -1 || (!entryPtr->entry.exportSelection)
 	    || Tcl_IsSafe(entryPtr->core.interp)) {
-	return -1;
+	return TCL_INDEX_NONE;
     }
     string = entryPtr->entry.displayString;
 
     selStart = Tcl_UtfAtIndex(string, entryPtr->entry.selectFirst);
     selEnd = Tcl_UtfAtIndex(selStart,
 	    entryPtr->entry.selectLast - entryPtr->entry.selectFirst);
+    if (selEnd  <= selStart + offset) {
+	return 0;
+    }
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
     /* @@@POSSIBLE BUG: Can transfer partial UTF-8 sequences.  Is this OK? */
 	byteCount = maxBytes;
-    }
-    if (byteCount <= 0) {
-	return 0;
     }
     memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
@@ -734,7 +734,7 @@ static void
 EntryStoreValue(Entry *entryPtr, const char *value)
 {
     size_t numBytes = strlen(value);
-    int numChars = Tcl_NumUtfChars(value, numBytes);
+    TkSizeT numChars = Tcl_NumUtfChars(value, numBytes);
 
     if (entryPtr->core.flags & VALIDATING)
 	entryPtr->core.flags |= VALIDATION_SET_VALUE;
@@ -886,7 +886,7 @@ DeleteChars(
     if (index < 0) {
 	index = 0;
     }
-    if (count > entryPtr->entry.numChars - index) {
+    if (count + index > (int)entryPtr->entry.numChars) {
 	count = entryPtr->entry.numChars - index;
     }
     if (count <= 0) {
@@ -1373,8 +1373,8 @@ EntryIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
-    	if (idx + 1 > (TkSizeT)entryPtr->entry.numChars + 1) {
-    	    idx = (TkSizeT)entryPtr->entry.numChars;
+    	if (idx + 1 > entryPtr->entry.numChars + 1) {
+    	    idx = entryPtr->entry.numChars;
     	}
     	*indexPtr = (int)idx;
     	return TCL_OK;
@@ -1389,7 +1389,7 @@ EntryIndex(
     } else if (strncmp(string, "right", length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.last;
     } else if (strncmp(string, "sel.", 4) == 0) {
-	if (entryPtr->entry.selectFirst < 0) {
+	if (entryPtr->entry.selectFirst == -1) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
 		    Tk_PathName(entryPtr->core.tkwin)));
@@ -1430,7 +1430,7 @@ EntryIndex(
 	 * last character to be selected, for example.
 	 */
 
-	if (roundUp && (*indexPtr < entryPtr->entry.numChars)) {
+	if (roundUp && (*indexPtr < (int)entryPtr->entry.numChars)) {
 	    *indexPtr += 1;
 	}
     } else {
@@ -1463,7 +1463,7 @@ EntryBBoxCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((index == entryPtr->entry.numChars) && (index > 0)) {
+    if ((index == (int)entryPtr->entry.numChars) && (index > 0)) {
 	index--;
     }
     Tk_CharBbox(entryPtr->entry.textLayout, index,
