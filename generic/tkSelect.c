@@ -59,8 +59,8 @@ static Tcl_ThreadDataKey dataKey;
  * Forward declarations for functions defined in this file:
  */
 
-static int		HandleTclCommand(ClientData clientData,
-			    int offset, char *buffer, int maxBytes);
+static TkSizeT	HandleTclCommand(ClientData clientData,
+			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
 static void		LostSelection(ClientData clientData);
 static int		SelGetProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *portion);
@@ -1319,13 +1319,13 @@ SelGetProc(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 HandleTclCommand(
     ClientData clientData,	/* Information about command to execute. */
-    int offset,			/* Return selection bytes starting at this
+	TkSizeT offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    int maxBytes)		/* Maximum # of bytes to store at buffer. */
+	TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     CommandInfo *cmdInfoPtr = (CommandInfo *)clientData;
     int length;
@@ -1349,7 +1349,7 @@ HandleTclCommand(
      * character.
      */
 
-    if (offset == cmdInfoPtr->byteOffset) {
+    if ((int)offset == cmdInfoPtr->byteOffset) {
 	charOffset = cmdInfoPtr->charOffset;
 	extraBytes = strlen(cmdInfoPtr->buffer);
 	if (extraBytes > 0) {
@@ -1370,7 +1370,7 @@ HandleTclCommand(
      */
 
     command = Tcl_ObjPrintf("%s %d %d",
-	    cmdInfoPtr->command, charOffset, maxBytes);
+	    cmdInfoPtr->command, charOffset, (int)maxBytes);
     Tcl_IncrRefCount(command);
 
     /*
@@ -1387,7 +1387,7 @@ HandleTclCommand(
 	 */
 
 	string = Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &length);
-	count = (length > maxBytes) ? maxBytes : length;
+	count = (length > (int)maxBytes) ? (int)maxBytes : length;
 	memcpy(buffer, string, count);
 	buffer[count] = '\0';
 
@@ -1397,7 +1397,7 @@ HandleTclCommand(
 	 */
 
 	if (cmdInfoPtr->interp != NULL) {
-	    if (length <= maxBytes) {
+	    if (length <= (int)maxBytes) {
 		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
 		cmdInfoPtr->buffer[0] = '\0';
 	    } else {

@@ -1283,6 +1283,15 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
+#if TCL_MAJOR_VERSION > 8
+MODULE_SCOPE int TkCanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
+    Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
+#define TkCanvasTagsParseProc Tk_CanvasTagsParseProc
+#define TkCanvasTagsPrintProc Tk_CanvasTagsPrintProc
+#endif
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
@@ -1390,8 +1399,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
 #if TCL_UTF_MAX > 4
-#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
-#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
+#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
+#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
 #   define TkUtfPrev Tcl_UtfPrev
 #else
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
