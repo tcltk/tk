@@ -455,7 +455,7 @@ int Ttk_GetSlaveIndexFromObj(
      */
     if (TkGetIntForIndex(objPtr, mgr->nSlaves - 1, 1, &idx) == TCL_OK) {
 	slaveIndex = idx;
-	if (slaveIndex + 1 > mgr->nSlaves + 1) {
+	if ((size_t)slaveIndex > (size_t)mgr->nSlaves) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Slave index %d out of bounds", slaveIndex));
 	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
