@@ -187,7 +187,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 /*
  * Implementation of the TextManager for macOS.
  *
- * The TextManager is really nothing more than an NSMutableString, except
+ * The TextManager is really little more than an NSMutableString, except
  * that Apple says this about the UTF8String property:
  *
  *    "This C string is a pointer to a structure inside the string object,
@@ -200,7 +200,8 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 
 typedef struct TextManager {
     NSMutableString *string;
-    char *utf8string;
+    NSMutableString *backup;
+    char *utf8string;       /* We need to store a copy of the UTF8String */
     int numClusters;
 } TextManager;
 
@@ -231,7 +232,35 @@ TextManagerUpdate(
 }
 
 /*
- * Returns the character index of the base character of the cluster with
+ * Destroy the cached NSString, if there is one.
+ */
+
+static void
+TextManagerClearCache(
+    TextManager *managerPtr)
+{
+    if (managerPtr->backup) {
+	[managerPtr->backup release];
+	managerPtr->backup = nil;
+    }
+}
+
+/*
+ * Cache a copy of the current string, for use when reverting changes after
+ * validation fails.
+ */
+
+static void
+TextManagerCache(
+    TextManager *managerPtr)
+{
+    TextManagerClearCache(managerPtr);
+    managerPtr->backup = [[NSMutableString stringWithString:managerPtr->string]
+			     retain];
+}
+
+/*
+ * Return the character index of the base character of the cluster with
  * given index, or the string length.
  *
  * NOTE: A future optimization could cache the character index of the last base
@@ -323,7 +352,7 @@ CharRangeFromClusterRange(
     }
     return NSMakeRange(charLocation, charLength);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -350,6 +379,7 @@ TkpTextManagerCreate(
     int dummy;
 
     managerPtr->string = [[NSMutableString string] retain];
+    managerPtr->backup = nil;
     managerPtr->utf8string = NULL;
     *initialString = TextManagerUpdate(managerPtr, &dummy, &dummy);
     return (ClientData) managerPtr;
@@ -378,6 +408,9 @@ ClientData clientData)
     TextManager *managerPtr = (TextManager *) clientData;
 
     [managerPtr->string release];
+    if (managerPtr->backup) {
+	[managerPtr->backup release];
+    }
     if (managerPtr->utf8string) {
 	ckfree(managerPtr->utf8string);
     }
@@ -506,6 +539,41 @@ TkpTextManagerSet(
 /*
  *---------------------------------------------------------------------------
  *
+ *  TkpTextManagerRevert --
+ *
+ *	Restore the previous state of the text from the cache.  This assumes
+ *      that the cache was created before making the last change to the text.
+ *      Otherwise it has no effect.
+ *
+ * Results:
+ *	A pointer to the UTF-8 string for the restored text.
+ *
+ * Side effects:
+ *	The TextManager's string is set to the cached string and the cache is
+ *      cleared.
+ *
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *
+TkpTextManagerRevert(
+   ClientData clientData,
+   int *numChars,
+   int *numBytes)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    if (managerPtr->backup) {
+        [managerPtr->string release];
+	managerPtr->string = managerPtr->backup;
+	managerPtr->backup = nil;
+    }
+    return TextManagerUpdate(managerPtr, numChars, numBytes);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  *  TkpTextManagerInsert --
  *
  *	Insert the string, as described by the UTF-8 encoded byte array
@@ -515,14 +583,21 @@ TkpTextManagerSet(
  *      surrogate pairs in a single XEvent, so there should not be misplaced
  *      surrogates, but the modifiers following the base char may be incomplete
  *      after calling this.  Also, the provided character index may not refer
- *      to a base character in some calls.
+ *      to a base character in some calls.  If the oldString parameter is not
+ *      NULL the pointer which it references will be set to the address of a
+ *      UTF-8 encoding of the text prior to the insertion.  This is intended for
+ *      use in validating the change to the string, and may not persist after
+ *      the next iteration of the event loop.
  *
  * Results:
- *	A pointer to the TextManager's cached UTF-8 string.
+ *	A pointer to the TextManager's UTF-8 string.
  *
  * Side effects:
- *	The number of unichars and bytes are recorded in the integer variables
- *      referenced by the numChars and numBytes parameters.
+ *      The number of unichars and bytes are recorded in the integer variables
+ *	referenced by the numChars and numBytes parameters.  The pointer
+ *	referenced by the parameter oldString may be set to the address of an
+ *	encoded byte sequence representing the cached prior state of the
+ *	string.
  *
  *---------------------------------------------------------------------------
  */
@@ -533,13 +608,19 @@ TkpTextManagerInsert(
     int charIndex,
     const char *value,
     int *numChars,
-    int *numBytes)
+    int *numBytes,
+    const char **oldString)
 {
     TextManager *managerPtr = (TextManager *) clientData;
-    NSMutableString *str = managerPtr->string;
     NSString *valueString = [[NSString alloc] initWithUTF8String: value];
-
-    [str insertString:valueString atIndex:charIndex];
+    if (oldString) {
+	TextManagerCache(managerPtr);
+	[managerPtr->string insertString:valueString atIndex:charIndex];
+	*oldString = (char *) [managerPtr->backup UTF8String];
+    } else {
+	TextManagerClearCache(managerPtr);
+	[managerPtr->string insertString:valueString atIndex:charIndex];
+    }
     return TextManagerUpdate(managerPtr, numChars, numBytes);
 }
 
@@ -558,12 +639,20 @@ TkpTextManagerInsert(
  *	A pointer to the TextManager's cached UTF-8 string.
  *
  * Side effects:
+
  *      The number of unichars and bytes in the modified NSMutableString are
  *	recorded in the integer variables referenced by the numChars and
  *	numBytes parameters.  Also the number of characters which were removed
  *	is recorded in the integer variable charsDeleted.  The index of each
  *	remaining base character will change by addition or subtraction of this
- *	number.
+ *	number.  If the parameter charsDeleted is a non-null pointer then it
+ *	will be set to the address of a UTF-8 encoded C string containing the
+ *	deleted characters.  If the parameter oldString is non-NULL then the
+ *	value of the string will be cached before the characters are deleted
+ *	and the pointer referenced by oldString be set to a UTF8-encoded
+ *	C-string representing the cached string.  These strings are meant for
+ *	immediate use in validating the change, and may not persist after the
+ *	next iteration of the event loop.
  *
  *---------------------------------------------------------------------------
  */
@@ -575,17 +664,32 @@ TkpTextManagerDelete(
     int count,
     int *numChars,
     int *numBytes,
-    int *charsDeleted)
+    int *numDeleted,
+    const char **charsDeleted,
+    const char **oldString)
 {
     TextManager *managerPtr = (TextManager *) clientData;
     NSRange deleteRange = CharRangeFromClusterRange(managerPtr->string,
 						    charIndex, count);
+    if (charsDeleted || oldString) {
+	NSString *diffString = [managerPtr->string
+				   substringWithRange:deleteRange];
+	TextManagerCache(managerPtr);
+	if (charsDeleted) {
+	    *charsDeleted = [diffString UTF8String];
+	}
+	if (oldString) {
+	    *oldString = [managerPtr->backup UTF8String];
+	}
+    } else {
+	TextManagerClearCache(managerPtr);
+    }
     [managerPtr->string deleteCharactersInRange: deleteRange];
-    *charsDeleted = deleteRange.length;
+    *numDeleted = deleteRange.length;
     return TextManagerUpdate(managerPtr, numChars, numBytes);
 }
 
-#define GetNSFontTraitsFromTkFontAttributes(faPtr) \
+#define GetNSFontTraitsFromTkFontAttributes(faPtr)			\
 	((faPtr)->weight == TK_FW_BOLD ? NSBoldFontMask : NSUnboldFontMask) | \
 	((faPtr)->slant == TK_FS_ITALIC ? NSItalicFontMask : NSUnitalicFontMask)
 

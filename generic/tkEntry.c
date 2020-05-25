@@ -1056,7 +1056,7 @@ DestroyEntry(
 #else
     TkpTextManagerDestroy(entryPtr->manager);
 #endif
-	
+
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar2(entryPtr->interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -2195,9 +2195,21 @@ InsertChars(
     entryPtr->numBytes += byteCount;
 #else
     oldChars = entryPtr->numChars;
-
-    newStr = (char *) TkpTextManagerInsert(entryPtr->manager, index, value,
-			  &entryPtr->numChars, &entryPtr->numBytes);
+    if (entryPtr->validate == VALIDATE_KEY ||
+	entryPtr->validate == VALIDATE_ALL) {
+	newStr = (char *) TkpTextManagerInsert(entryPtr->manager, index, value,
+			      &entryPtr->numChars, &entryPtr->numBytes,
+			      &entryPtr->string);
+	if (EntryValidateChange(entryPtr, value, newStr, index,
+				VALIDATE_INSERT) != TCL_OK) {
+	    entryPtr->string = TkpTextManagerRevert(entryPtr->manager, &entryPtr->numChars,
+				 &entryPtr->numBytes);
+	    return TCL_OK;
+	}
+    } else {
+	newStr = (char *) TkpTextManagerInsert(entryPtr->manager, index, value,
+			      &entryPtr->numChars, &entryPtr->numBytes, NULL);
+    }
     charsAdded = entryPtr->numChars - oldChars;
 #endif
 
@@ -2259,10 +2271,10 @@ DeleteChars(
 {
     char *newStr;
     const char *string = entryPtr->string;
+    char *toDelete;
 
 #ifndef USE_GLYPH_INDEXES
     int byteIndex, byteCount, newByteCount;
-    char *toDelete;
 
     if ((index + count) > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
@@ -2292,14 +2304,27 @@ DeleteChars(
 	ckfree(toDelete);
 	return TCL_OK;
     }
-
     ckfree(toDelete);
     ckfree((char *)entryPtr->string);
     entryPtr->numChars -= count;
     entryPtr->numBytes -= byteCount;
 #else
-    newStr = (char *) TkpTextManagerDelete(entryPtr->manager, index, count,
-			  &entryPtr->numChars, &entryPtr->numBytes, &count);
+    if ((entryPtr->validate == VALIDATE_KEY ||
+	 entryPtr->validate == VALIDATE_ALL)) {
+	newStr = (char *) TkpTextManagerDelete(entryPtr->manager, index, count,
+			      &entryPtr->numChars, &entryPtr->numBytes, &count,
+			      &toDelete, &entryPtr->string);
+	if (EntryValidateChange(entryPtr, toDelete, newStr, index,
+		    VALIDATE_DELETE) != TCL_OK) {
+	    entryPtr->string = TkpTextManagerRevert(entryPtr->manager, &entryPtr->numChars,
+				   &entryPtr->numBytes);
+	    return TCL_OK;
+	}
+    } else {
+	newStr = (char *) TkpTextManagerDelete(entryPtr->manager, index, count,
+			      &entryPtr->numChars, &entryPtr->numBytes, &count,
+			      NULL, NULL);
+    }
 #endif
     entryPtr->string = newStr;
 
