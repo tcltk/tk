@@ -274,12 +274,33 @@ proc ttk::entry::PrevWord {w start} {
     return $pos
 }
 
+## NextChar -- Find the next char position.
+#
+proc ttk::entry::NextChar {w start} {
+    variable State
+    set pos [tcl_endOfChar [$w get] [expr {[$w index $start]+1}]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+## PrevChar -- Find the previous word position.
+#
+proc ttk::entry::PrevChar {w start} {
+    set pos [tcl_startOfChar [$w get] [expr {[$w index $start]-1}]]
+    if {$pos < 0} {
+	return 0
+    }
+    return $pos
+}
+
 ## RelIndex -- Compute character/word/line-relative index.
 #
 proc ttk::entry::RelIndex {w where {index insert}} {
     switch -- $where {
-	prevchar	{ expr {[$w index $index] - 1} }
-    	nextchar	{ expr {[$w index $index] + 1} }
+	prevchar	{ PrevChar $w $index }
+    	nextchar	{ NextChar $w $index }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
 	home		{ return 0 }

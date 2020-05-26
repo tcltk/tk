@@ -119,17 +119,17 @@ bind Entry <Control-Button-1> {
 }
 
 bind Entry <<PrevChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
+    tk::EntrySetCursor %W [tk::EntryPreviousChar %W insert]
 }
 bind Entry <<NextChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
+    tk::EntrySetCursor %W [tk::EntryNextChar %W insert]
 }
 bind Entry <<SelectPrevChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
+    tk::EntryKeySelect %W [tk::EntryPreviousChar %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert] + 1}]
+    tk::EntryKeySelect %W [tk::EntryNextChar %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<PrevWord>> {
@@ -518,7 +518,7 @@ proc ::tk::EntryBackspace w {
     if {[$w selection present]} {
 	$w delete sel.first sel.last
     } else {
-	set x [expr {[$w index insert] - 1}]
+	set x [tcl_startOfChar [$w get] [$w index insert]]
 	if {$x >= 0} {
 	    $w delete $x
 	}
@@ -628,6 +628,22 @@ if {[tk windowingsystem] eq "win32"}  {
 
 proc ::tk::EntryPreviousWord {w start} {
     set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return 0
+    }
+    return $pos
+}
+
+proc ::tk::EntryNextChar {w start} {
+    set pos [tcl_endOfChar [$w get] [expr {[$w index $start]+1}]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+proc ::tk::EntryPreviousChar {w start} {
+    set pos [tcl_startOfChar [$w get] [expr {[$w index $start]-1}]]
     if {$pos < 0} {
 	return 0
     }

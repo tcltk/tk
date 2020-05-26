@@ -99,10 +99,10 @@ bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
-    tk::TextSetCursor %W insert-1displayindices
+    tk::TextSetCursor %W [tk::TextPrevPos %W {insert-1displayindices} tcl_startOfChar]
 }
 bind Text <<NextChar>> {
-    tk::TextSetCursor %W insert+1displayindices
+    tk::TextSetCursor %W [tk::TextNextPos %W {insert+1displayindices} tcl_endOfChar]
 }
 bind Text <<PrevLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W -1]
@@ -114,7 +114,7 @@ bind Text <<SelectPrevChar>> {
     tk::TextKeySelect %W [%W index {insert - 1displayindices}]
 }
 bind Text <<SelectNextChar>> {
-    tk::TextKeySelect %W [%W index {insert + 1displayindices}]
+    tk::TextKeySelect %W [tk::TextNextPos %W {insert + 1displayindices} tcl_endOfChar]
 }
 bind Text <<SelectPrevLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
