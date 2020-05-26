@@ -676,7 +676,7 @@ proc ::tk::EntryScanDrag {w x} {
 # w -         The entry window from which the text to get
 
 proc ::tk::EntryGetSelection {w} {
-    set entryString [string range [$w get] [$w index sel.first] \
+    set entryString [$w range [$w index sel.first] \
 	    [expr {[$w index sel.last] - 1}]]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
