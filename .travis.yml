@@ -146,7 +146,7 @@ matrix:
       osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib CC=clang++ --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include\ -D__private_extern__=extern"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib CC=clang++ --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-D__private_extern__=extern"
     - name: "macOS/Clang/Xcode 11.5/Shared"
       os: osx
       osx_image: xcode11.5
