@@ -73,7 +73,7 @@ MODULE_SCOPE TkSizeT Ttk_SlaveIndex(Ttk_Manager *, Tk_Window);
     /* Returns: index in slave array of specified window, -1 if not found */
 
 MODULE_SCOPE int Ttk_GetSlaveIndexFromObj(
-    Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, int *indexPtr);
+    Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, TkSizeT *indexPtr);
 
 /* Accessor functions:
  */

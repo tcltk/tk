@@ -7621,7 +7621,8 @@ TkTextCharLayoutProc(
 				 * set by the caller. */
 {
     Tk_Font tkfont;
-    int nextX, bytesThatFit, count;
+    int nextX, count;
+    TkSizeT bytesThatFit;
     CharInfo *ciPtr;
     char *p;
     TkTextSegment *nextPtr;
@@ -7685,7 +7686,7 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    if ((TkSizeT)bytesThatFit + 1 <= maxBytes) {
+    if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    int ch;
 	    int chLen = TkUtfToUniChar(p, &ch);

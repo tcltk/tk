@@ -151,19 +151,19 @@ static TkSizeT	GetSelText(Tk_Canvas canvas,
 			    TkSizeT maxBytes);
 static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static void		ScaleText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
 static void		SetTextCursor(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int index);
+			    Tk_Item *itemPtr, TkSizeT index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int argc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int first, int last);
 static void		TextInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		TextToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		TextToPoint(Tk_Canvas canvas,
@@ -802,7 +802,7 @@ DisplayCanvText(
 {
     TextItem *textPtr;
     Tk_CanvasTextInfo *textInfoPtr;
-    int selFirstChar, selLastChar;
+    TkSizeT selFirstChar, selLastChar;
     short drawableX, drawableY;
     Pixmap stipple;
     Tk_State state = itemPtr->state;
@@ -838,7 +838,7 @@ DisplayCanvText(
 	Tk_CanvasSetOffset(canvas, textPtr->gc, &textPtr->tsoffset);
     }
 
-    selFirstChar = -1;
+    selFirstChar = TCL_INDEX_NONE;
     selLastChar = 0;
     Tk_CanvasDrawableCoords(canvas, textPtr->drawOrigin[0],
 	    textPtr->drawOrigin[1], &drawableX, &drawableY);
@@ -846,10 +846,10 @@ DisplayCanvText(
     if (textInfoPtr->selItemPtr == itemPtr) {
 	selFirstChar = textInfoPtr->selectFirst;
 	selLastChar = textInfoPtr->selectLast;
-	if (selLastChar > (int)textPtr->numChars) {
+	if (selLastChar + 1 > textPtr->numChars + 1 ) {
 	    selLastChar = textPtr->numChars - 1;
 	}
-	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
+	if (((int)selFirstChar >= 0) && (selFirstChar + 1 <= selLastChar + 1 )) {
 	    int xFirst, yFirst, hFirst;
 	    int xLast, yLast, wLast;
 
@@ -969,7 +969,7 @@ DisplayCanvText(
 	TkDrawAngledTextLayout(display, drawable, textPtr->selTextGC,
 		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
 		selFirstChar, selLastChar + 1);
-	if (selLastChar + 1 < (int)textPtr->numChars) {
+	if (selLastChar + 1 < textPtr->numChars) {
 	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
 		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
 		    selLastChar + 1, textPtr->numChars);
@@ -1009,7 +1009,7 @@ static void
 TextInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Text item to be modified. */
-    int index,			/* Character index before which string is to
+    TkSizeT index,			/* Character index before which string is to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
@@ -1024,10 +1024,10 @@ TextInsert(
 
     text = textPtr->text;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	index = 0;
     }
-    if (index > (int)textPtr->numChars) {
+    if (index + 1 > textPtr->numChars + 1) {
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
@@ -1053,18 +1053,18 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 >= (TkSizeT)index + 1) {
+	if (textInfoPtr->selectFirst + 1 >= index + 1) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast + 1 >= (TkSizeT)index + 1) {
+	if (textInfoPtr->selectLast + 1 >= index + 1) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 >= (TkSizeT)index + 1)) {
+		&& (textInfoPtr->selectAnchor + 1 >= index + 1)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos + 1 >= (TkSizeT)index + 1) {
+    if (textPtr->insertPos + 1 >= index + 1) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
@@ -1134,7 +1134,7 @@ TextDeleteChars(
     if (textInfoPtr->selItemPtr == itemPtr) {
 	if (textInfoPtr->selectFirst + 1 > (TkSizeT)first + 1) {
 	    textInfoPtr->selectFirst -= charsRemoved;
-	    if (textInfoPtr->selectFirst + 1 < (TkSizeT)first + 1) {
+	    if ((int)textInfoPtr->selectFirst + 1 < (int)first + 1) {
 		textInfoPtr->selectFirst = first;
 	    }
 	}
@@ -1144,7 +1144,7 @@ TextDeleteChars(
 		textInfoPtr->selectLast = first - 1;
 	    }
 	}
-	if (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1) {
+	if ((int)textInfoPtr->selectFirst + 1 > (int)textInfoPtr->selectLast + 1) {
 	    textInfoPtr->selItemPtr = NULL;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
@@ -1157,7 +1157,7 @@ TextDeleteChars(
     }
     if (textPtr->insertPos + 1 > (TkSizeT)first + 1) {
 	textPtr->insertPos -= charsRemoved;
-	if (textPtr->insertPos + 1 < (TkSizeT)first + 1) {
+	if ((int)textPtr->insertPos + 1 < (int)first + 1) {
 	    textPtr->insertPos = first;
 	}
     }
@@ -1380,7 +1380,7 @@ GetTextIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
 				 * itemPtr's text. */
-    int *indexPtr)		/* Where to store converted character
+    TkSizeT *indexPtr)		/* Where to store converted character
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1396,7 +1396,7 @@ GetTextIndex(
 	} else if (idx > textPtr->numChars) {
 	    idx = textPtr->numChars;
 	}
-	*indexPtr = (int)idx;
+	*indexPtr = idx;
 	return TCL_OK;
     }
 
@@ -1481,15 +1481,15 @@ SetTextCursor(
     Tk_Canvas canvas,		/* Record describing canvas widget. */
     Tk_Item *itemPtr,		/* Text item in which cursor position is to be
 				 * set. */
-    int index)			/* Character index of character just before
+    TkSizeT index)			/* Character index of character just before
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     (void)canvas;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	textPtr->insertPos = 0;
-    } else if (index > (int)textPtr->numChars) {
+    } else if (index > textPtr->numChars) {
 	textPtr->insertPos = textPtr->numChars;
     } else {
 	textPtr->insertPos = index;
@@ -1534,7 +1534,7 @@ GetSelText(
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     (void)canvas;
 
-    if ((textInfoPtr->selectFirst == TCL_INDEX_NONE) ||
+    if (((int)textInfoPtr->selectFirst < 0) ||
 	    (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1)) {
 	return 0;
     }

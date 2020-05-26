@@ -230,7 +230,7 @@ static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
 static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
 static void		CanvasLostSelection(ClientData clientData);
 static void		CanvasSelectTo(TkCanvas *canvasPtr,
-			    Tk_Item *itemPtr, int index);
+			    Tk_Item *itemPtr, TkSizeT index);
 static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
@@ -467,12 +467,12 @@ ItemDisplay(
 	    canvasPtr->display, pixmap, screenX1, screenY1, width, height);
 }
 
-static inline int
+static int
 ItemIndex(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
     Tcl_Obj *objPtr,
-    int *indexPtr)
+    TkSizeT *indexPtr)
 {
     Tcl_Interp *interp = canvasPtr->interp;
 
@@ -1194,7 +1194,7 @@ CanvasWidgetCmd(
 	tmpObj = Tcl_NewListObj(2, objv+4);
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
-	    int index;
+	    TkSizeT index;
 	    int x1, x2, y1, y2;
 	    int dontRedraw1, dontRedraw2;
 
@@ -1340,7 +1340,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DCHARS: {
-	int first, last;
+	TkSizeT first, last;
 	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
@@ -1538,7 +1538,7 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_ICURSOR: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId index");
@@ -1563,7 +1563,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INDEX: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId string");
@@ -1591,7 +1591,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INSERT: {
-	int beforeThis;
+	TkSizeT beforeThis;
 	int x1, x2, y1, y2;
 
 	if (objc != 5) {
@@ -1809,7 +1809,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_RCHARS: {
-	int first, last;
+	TkSizeT first, last;
 	int x1, x2, y1, y2;
 	int dontRedraw1, dontRedraw2;
 
@@ -1962,7 +1962,8 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_SELECT: {
-	int index, optionindex;
+	TkSizeT index;
+	int optionindex;
 	static const char *const optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
 	};
@@ -2011,7 +2012,7 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	    if (canvasPtr->textInfo.selItemPtr == itemPtr) {
-		if (index < (int)((canvasPtr->textInfo.selectFirst
+		if (index + 1 <= ((canvasPtr->textInfo.selectFirst
 			+ canvasPtr->textInfo.selectLast)/2)) {
 		    canvasPtr->textInfo.selectAnchor =
 			    canvasPtr->textInfo.selectLast + 1;
@@ -5627,10 +5628,10 @@ static void
 CanvasSelectTo(
     TkCanvas *canvasPtr,	/* Information about widget. */
     Tk_Item *itemPtr,		/* Item that is to hold selection. */
-    int index)			/* Index of element that is to become the
+    TkSizeT index)			/* Index of element that is to become the
 				 * "other" end of the selection. */
 {
-    int oldFirst, oldLast;
+    TkSizeT oldFirst, oldLast;
     Tk_Item *oldSelPtr;
 
     oldFirst = canvasPtr->textInfo.selectFirst;
@@ -5653,15 +5654,15 @@ CanvasSelectTo(
 	canvasPtr->textInfo.anchorItemPtr = itemPtr;
 	canvasPtr->textInfo.selectAnchor = index;
     }
-    if (canvasPtr->textInfo.selectAnchor + 1 <= (TkSizeT)index + 1) {
+    if (canvasPtr->textInfo.selectAnchor + 1 <= index + 1) {
 	canvasPtr->textInfo.selectFirst = canvasPtr->textInfo.selectAnchor;
 	canvasPtr->textInfo.selectLast = index;
     } else {
-	canvasPtr->textInfo.selectFirst = index;
+	canvasPtr->textInfo.selectFirst = ((int)index < 0) ? TCL_INDEX_NONE : index;
 	canvasPtr->textInfo.selectLast = canvasPtr->textInfo.selectAnchor - 1;
     }
-    if ((canvasPtr->textInfo.selectFirst != (TkSizeT)oldFirst)
-	    || (canvasPtr->textInfo.selectLast != (TkSizeT)oldLast)
+    if ((canvasPtr->textInfo.selectFirst != oldFirst)
+	    || (canvasPtr->textInfo.selectLast != oldLast)
 	    || (itemPtr != oldSelPtr)) {
 	EventuallyRedrawItem(canvasPtr, itemPtr);
     }

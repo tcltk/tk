@@ -1190,14 +1190,14 @@ SplitSeg(
 {
     TkTextSegment *prevPtr, *segPtr;
     TkTextLine *linePtr;
-    int count = indexPtr->byteIndex;
+    TkSizeT count = indexPtr->byteIndex;
 
     linePtr = indexPtr->linePtr;
     prevPtr = NULL;
     segPtr = linePtr->segPtr;
 
     while (segPtr != NULL) {
-	if (segPtr->size > (TkSizeT)count) {
+	if (segPtr->size + 1 > count + 1) {
 	    if (count == 0) {
 		return prevPtr;
 	    }

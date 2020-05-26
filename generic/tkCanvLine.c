@@ -92,14 +92,14 @@ static void		DisplayLine(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetLineIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static int		LineCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		LineDeleteCoords(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int first, int last);
 static void		LineInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		LineToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		LineToPoint(Tk_Canvas canvas,
@@ -959,7 +959,7 @@ static void
 LineInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    int beforeThis,		/* Index before which new coordinates are to
+    TkSizeT beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
@@ -978,10 +978,10 @@ LineInsert(
 	return;
     }
     length = 2*linePtr->numPoints;
-    if (beforeThis < 0) {
+    if (beforeThis == TCL_INDEX_NONE) {
 	beforeThis = 0;
     }
-    if (beforeThis > length) {
+    if (beforeThis + 1 > (TkSizeT)length + 1) {
 	beforeThis = length;
     }
     if (linePtr->firstArrowPtr != NULL) {
@@ -993,7 +993,7 @@ LineInsert(
 	linePtr->coordPtr[length-1] = linePtr->lastArrowPtr[1];
     }
     newCoordPtr = (double *)ckalloc(sizeof(double) * (length + objc));
-    for (i=0; i<beforeThis; i++) {
+    for (i=0; i<(int)beforeThis; i++) {
 	newCoordPtr[i] = linePtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -1027,25 +1027,25 @@ LineInsert(
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
 
-	if (beforeThis > 0) {
+	if ((int)beforeThis > 0) {
 	    beforeThis -= 2;
 	    objc += 2;
 	}
-	if (beforeThis+objc < length) {
+	if ((int)beforeThis+objc < length) {
 	    objc += 2;
 	}
 	if (linePtr->smooth) {
-	    if (beforeThis > 0) {
+	    if ((int)beforeThis > 0) {
 		beforeThis -= 2;
 		objc += 2;
 	    }
-	    if (beforeThis+objc+2 < length) {
+	    if ((int)beforeThis+objc+2 < length) {
 		objc += 2;
 	    }
 	}
 	itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
 	itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 1)) {
+	if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 1)) {
 	    /*
 	     * Include old first arrow.
 	     */
@@ -1055,7 +1055,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
+	if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
 	    /*
 	     * Include old last arrow.
 	     */
@@ -1087,7 +1087,7 @@ LineInsert(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis > 2)) {
+	if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis > 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1097,7 +1097,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc < length-2)) {
+	if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc < length-2)) {
 	    /*
 	     * Include new right arrow.
 	     */
@@ -1747,7 +1747,7 @@ GetLineIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     TkSizeT idx, length;
     LineItem *linePtr = (LineItem *) itemPtr;
@@ -1762,7 +1762,7 @@ GetLineIndex(
 	} else {
 	    idx &= (TkSizeT)-2;	/* If index is odd, make it even. */
 	}
-	*indexPtr = (int)idx;
+	*indexPtr = idx;
 	return TCL_OK;
     }
 

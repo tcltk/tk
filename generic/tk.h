@@ -1084,6 +1084,9 @@ typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 #ifdef USE_OLD_CANVAS
 typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
+#elif TCL_MAJOR_VERSION > 8
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, size_t *indexPtr);
 #else
 typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
@@ -1102,6 +1105,9 @@ typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 #ifdef USE_OLD_CANVAS
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, char *string);
+#elif TCL_MAJOR_VERSION > 8
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t beforeThis, Tcl_Obj *string);
 #else
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, Tcl_Obj *string);
@@ -1201,7 +1207,7 @@ typedef struct Tk_CanvasTextInfo {
     Tk_Item *selItemPtr;	/* Pointer to selected item. NULL means
 				 * selection isn't in this canvas. Writable by
 				 * items. */
-#if TCL__MAJOR_VERSION > 8
+#if TCL_MAJOR_VERSION > 8
     size_t selectFirst;		/* Character index of first selected
 				 * character. Writable by items. */
     size_t selectLast;		/* Character index of last selected character.
@@ -1212,7 +1218,7 @@ typedef struct Tk_CanvasTextInfo {
     Tk_Item *anchorItemPtr;	/* Item corresponding to "selectAnchor": not
 				 * necessarily selItemPtr. Read-only to
 				 * items. */
-#if TCL__MAJOR_VERSION > 8
+#if TCL_MAJOR_VERSION > 8
     size_t selectAnchor;		/* Character index of fixed end of selection
 				 * (i.e. "select to" operation will use this
 				 * as one end of the selection). Writable by
