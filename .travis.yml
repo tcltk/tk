@@ -55,6 +55,20 @@ matrix:
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-Dregister=dont+use+register"
+    - name: "Linux/G++/Shared UTF_MAX=4"
+      os: linux
+      dist: bionic
+      compiler: g++
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="CC=g++ CFLAGS=-DTCL_UTF_MAX=4"
+    - name: "Linux/G++/Shared UTF_MAX=6"
+      os: linux
+      dist: bionic
+      compiler: g++
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="CC=g++ CFLAGS=-DTCL_UTF_MAX=6"
 # Older versions of GCC...
     - name: "Linux/GCC 7/Shared"
       os: linux

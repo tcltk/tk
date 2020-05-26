@@ -57,7 +57,7 @@ static int		EmbWinDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 static int		EmbWinLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars,int noCharsYet,
+			    TkSizeT offset, int maxX, TkSizeT maxChars,int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 static void		EmbWinStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -822,11 +822,11 @@ EmbWinLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
     TkTextSegment *ewPtr,	/* Segment corresponding to indexPtr. */
-    int offset,			/* Offset within segPtr corresponding to
+	TkSizeT offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    int maxChars,		/* Chunk must not include more than this many
+	TkSizeT maxChars,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
@@ -1063,7 +1063,7 @@ EmbWinCheckProc(
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", (int)ewPtr->size);
     }
 }
 
