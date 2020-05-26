@@ -33,7 +33,7 @@ typedef struct {
  * managed by this file:
  */
 
-typedef struct {
+typedef struct Listbox {
     Tk_Window tkwin;		/* Window that embodies the listbox. NULL
 				 * means that the window has been destroyed
 				 * but the data structures haven't yet been
@@ -51,6 +51,10 @@ typedef struct {
     char *listVarName;		/* List variable name */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
     int nElements;		/* Holds the current count of elements */
+    int column;                 /* >=0 display column number, <0 all columns */
+    Tk_Window masterwin;        /* Controlling master listbox widget */
+    struct Listbox *masterListbox; /* Master listbox handle */
+    Tcl_HashTable *dependentsTable; /* Dependent listbox widgets */
     Tcl_HashTable *selection;	/* Tracks selection */
     Tcl_HashTable *itemAttrTable;
 				/* Tracks item attributes */
@@ -210,6 +214,12 @@ typedef struct {
 #define MAXWIDTH_IS_STALE	16
 #define LISTBOX_DELETED		32
 
+
+/*
+ * Access (any) other Listbox widget instance data
+ */
+#define LISTBOX_CLIENTDATA(otherListboxTkwin) ((otherListboxTkwin) ? (((struct TkWindow *) (otherListboxTkwin))->instanceData) : NULL)
+
 /*
  * The following enum is used to define a type for the -state option of the
  * Listbox widget. These values are used as indices into the string table
@@ -251,6 +261,8 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_LISTBOX_BORDER_WIDTH, -1, Tk_Offset(Listbox, borderWidth),
 	 0, 0, 0},
+    {TK_OPTION_INT, "-column", "column", "Column",
+	 DEF_LISTBOX_COLUMN, -1, Tk_Offset(Listbox, column), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_LISTBOX_CURSOR, -1, Tk_Offset(Listbox, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -279,6 +291,9 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 Tk_Offset(Listbox, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_LISTBOX_JUSTIFY, -1, Tk_Offset(Listbox, justify), 0, 0, 0},
+    {TK_OPTION_WINDOW, "-master", NULL, NULL,
+	 DEF_LISTBOX_MASTER, -1, Tk_Offset(Listbox, masterwin),
+	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	 DEF_LISTBOX_RELIEF, -1, Tk_Offset(Listbox, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
@@ -552,6 +567,9 @@ Tk_ListboxObjCmd(
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
     listPtr->justify             = TK_JUSTIFY_LEFT;
+    listPtr->masterwin           = NULL;
+    listPtr->masterListbox       = NULL;
+    listPtr->dependentsTable     = NULL;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the listbox,
@@ -1195,6 +1213,10 @@ ListboxSelectionSubCmd(
 	return TCL_OK;
     }
 
+    if (listPtr->masterListbox) {
+	return ListboxSelectionSubCmd(interp, listPtr->masterListbox, objc, objv);
+    }
+    
     switch (selCmdIndex) {
     case SELECTION_ANCHOR:
 	if (objc != 4) {
@@ -1375,7 +1397,11 @@ ListboxYviewSubCmd(
 	default:
 	    return TCL_ERROR;
 	}
-	ChangeListboxView(listPtr, index);
+	if (listPtr->masterListbox) {
+	    ChangeListboxView(listPtr->masterListbox, index);
+	} else {
+	    ChangeListboxView(listPtr, index);
+	}
     }
     return TCL_OK;
 }
@@ -1450,6 +1476,29 @@ DestroyListbox(
     Tcl_HashEntry *entry;
     Tcl_HashSearch search;
 
+    /*
+     * Unlink master and dependent
+     */
+    if (listPtr->dependentsTable) {
+	Tcl_HashEntry *hPtr;
+	Tcl_HashSearch search;
+	Listbox *otherListbox;
+	
+	hPtr = Tcl_FirstHashEntry(listPtr->dependentsTable, &search);
+	while (hPtr) {
+	    otherListbox = (Listbox*) Tcl_GetHashValue(hPtr);
+	    otherListbox->masterwin = NULL;
+	    otherListbox->masterListbox = NULL;
+	    hPtr = Tcl_NextHashEntry(&search);
+	}
+	Tcl_DeleteHashTable(listPtr->dependentsTable);
+    } else if (listPtr->masterListbox && listPtr->masterListbox->dependentsTable) {
+	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(listPtr->masterListbox->dependentsTable, (char*) listPtr->tkwin);
+	if (hPtr) Tcl_DeleteHashEntry(hPtr);
+	listPtr->masterListbox = NULL;
+	listPtr->masterwin = NULL;
+    }
+	
     /*
      * If we have an internal list object, free it.
      */
@@ -1670,6 +1719,36 @@ ConfigureListbox(
 	Tcl_IncrRefCount(listPtr->listObj);
 	if (oldListObj != NULL) {
 	    Tcl_DecrRefCount(oldListObj);
+	}
+
+	/* (re)Register this listbox with Master listbox widget */
+	if (listPtr->masterwin) {
+	    Listbox *otherListboxPtr = LISTBOX_CLIENTDATA(listPtr->masterwin);
+	    Tcl_HashEntry *hPtr;
+	    if (listPtr->masterListbox && listPtr->masterListbox != otherListboxPtr) {
+		// Clean up old reference
+		hPtr = Tcl_FindHashEntry(listPtr->masterListbox->dependentsTable, (char*) listPtr->tkwin);
+		if (hPtr) Tcl_DeleteHashEntry(hPtr);
+	    }
+	    if (otherListboxPtr) {
+		int isNew;
+		if (otherListboxPtr->dependentsTable == NULL) {
+		    otherListboxPtr->dependentsTable = ckalloc(sizeof(Tcl_HashTable));
+		    Tcl_InitHashTable(otherListboxPtr->dependentsTable, TCL_ONE_WORD_KEYS);
+		}
+		hPtr = Tcl_CreateHashEntry(otherListboxPtr->dependentsTable, (char*) listPtr->tkwin, &isNew);
+		Listbox *priorPtr = Tcl_GetHashValue(hPtr);
+		if (isNew || priorPtr != listPtr) {
+		    Tcl_SetHashValue(hPtr, listPtr);
+		    // Trigger update?
+		}
+	    }
+	    listPtr->masterListbox = otherListboxPtr;
+	} else if (listPtr->masterListbox) {
+	    Tcl_HashEntry *hPtr;
+	    // Clean up old reference
+	    hPtr = Tcl_FindHashEntry(listPtr->masterListbox->dependentsTable, (char*) listPtr->tkwin);
+	    if (hPtr) Tcl_DeleteHashEntry(hPtr);
 	}
 	break;
     }
@@ -2074,7 +2153,18 @@ DisplayListbox(
 	 */
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+	if (curElement && listPtr->column >= 0) {
+	    Tcl_Obj *colObj = NULL;
+	    int result = Tcl_ListObjIndex(listPtr->interp, curElement,
+					  listPtr->column, &colObj);
+	    if (result == TCL_OK) {
+		curElement = colObj;
+	    } else {
+		printf("result=%d colObj=%p interp=%s\n",result,colObj,Tcl_GetStringResult(listPtr->interp));
+	    }
+	}
+	stringLen = 0;
+        stringRep = curElement ? Tcl_GetStringFromObj(curElement, &stringLen) :"";
         textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -2256,6 +2346,15 @@ ListboxComputeGeometry(
 		    &element);
 	    if (result != TCL_OK) {
 		continue;
+	    }
+	    if (listPtr->column >= 0) {
+		Tcl_Obj *colObj = NULL;
+		int result = Tcl_ListObjIndex(listPtr->interp, element,
+					      listPtr->column, &colObj);
+		if (result != TCL_OK || colObj == NULL) {
+		    continue;
+		}
+		element = colObj;
 	    }
 	    text = Tcl_GetStringFromObj(element, &textLength);
 	    Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -3076,14 +3175,32 @@ ListboxSelect(
 	}
     }
 
-    if (firstRedisplay >= 0) {
-	EventuallyRedrawRange(listPtr, first, last);
-    }
-    if ((oldCount == 0) && (listPtr->numSelected > 0)
+    /* 
+     * If we are the master, propagate the update to all the 
+     * dependent widgets.  If not, let the master do it.
+     */
+    if (listPtr->masterwin == NULL) {
+	if (firstRedisplay >= 0) {
+	    EventuallyRedrawRange(listPtr, first, last);
+	}
+	if ((oldCount == 0) && (listPtr->numSelected > 0)
 	    && (listPtr->exportSelection)
 	    && (!Tcl_IsSafe(listPtr->interp))) {
-	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
-		ListboxLostSelection, listPtr);
+	    Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
+			    ListboxLostSelection, listPtr);
+	}
+	if (listPtr->dependentsTable) {
+	    Tcl_HashEntry *hPtr;
+	    Tcl_HashSearch search;
+	    Listbox *otherListbox;
+	
+	    hPtr = Tcl_FirstHashEntry(listPtr->dependentsTable, &search);
+	    while (hPtr) {
+		otherListbox = (Listbox*) Tcl_GetHashValue(hPtr);
+		ListboxSelect(otherListbox, first, last, select);
+		hPtr = Tcl_NextHashEntry(&search);
+	    }
+	}
     }
     return TCL_OK;
 }
@@ -3267,6 +3384,33 @@ EventuallyRedrawRange(
     }
     listPtr->flags |= REDRAW_PENDING;
     Tcl_DoWhenIdle(DisplayListbox, listPtr);
+
+    /* The master commands all dependents to Display also */
+    if (listPtr->dependentsTable) {
+	Tcl_HashEntry *hPtr;
+	Tcl_HashSearch search;
+	Listbox *otherListbox;
+	
+	hPtr = Tcl_FirstHashEntry(listPtr->dependentsTable, &search);
+	while (hPtr) {
+	    otherListbox = (Listbox*) Tcl_GetHashValue(hPtr);
+	    //if (otherListbox->listobj)
+	    // something doen with listobj and listvarname
+	    otherListbox->nElements = listPtr->nElements;
+	    otherListbox->topIndex = listPtr->topIndex;
+	    otherListbox->active = listPtr->active;
+	    otherListbox->numSelected = listPtr->numSelected;
+	    otherListbox->selectAnchor = listPtr->selectAnchor;
+	    otherListbox->flags = listPtr->flags;
+	    otherListbox->fullLines = listPtr->fullLines;
+	    otherListbox->partialLine = listPtr->partialLine;
+
+	    /* Schedule redraw of other listbox */
+	    Tcl_DoWhenIdle(DisplayListbox, otherListbox);
+	    
+	    hPtr = Tcl_NextHashEntry(&search);
+	}
+    }
 }
 
 /*
@@ -3299,7 +3443,8 @@ ListboxUpdateVScrollbar(
     Tcl_Interp *interp;
     Tcl_DString buf;
 
-    if (listPtr->yScrollCmd == NULL) {
+    if (listPtr->yScrollCmd == NULL ||
+	listPtr->masterwin) { // let master do this
 	return;
     }
     if (listPtr->nElements == 0) {
