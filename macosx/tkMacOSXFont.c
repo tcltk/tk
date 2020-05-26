@@ -260,8 +260,8 @@ TextManagerCache(
 }
 
 /*
- * Return the character index of the base character of the cluster with
- * given index, or the string length.
+ * Return the character range of of the cluster with given index, or a range
+ * with length 0 and location equal to the string length.
  *
  * NOTE: A future optimization could cache the character index of the last base
  * character which was looked up inside the TextManager, as a hint.  Then the
@@ -270,25 +270,26 @@ TextManagerCache(
  * insert cursor are usually small, this would be quite a bit faster.
  */
 
-static NSUInteger
-IndexOfClusterBase(
+static NSRange
+ClusterRange(
     NSString *string,
     NSUInteger clusterIndex)
 {
     NSRange clusterRange = NSMakeRange(0, 0);
     NSUInteger i, charIndex = 0, end = [string length];
 
-    if (end > 0) {
-	for (i = 0; i < clusterIndex; i++) {
-	    clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:charIndex];
-	    charIndex = clusterRange.location + clusterRange.length;
-	    if (charIndex >= end) {
-		charIndex = end;
-		break;
-	    }
+    if (end == 0) {
+	return NSMakeRange(0,0);
+    }
+    for (i = 0; i < clusterIndex; i++) {
+	clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:charIndex];
+	charIndex = clusterRange.location + clusterRange.length;
+	if (charIndex >= end) {
+	    return NSMakeRange(charIndex, 0);
+	    break;
 	}
     }
-    return charIndex;
+    return [string rangeOfComposedCharacterSequenceAtIndex:charIndex];
 }
 
 /*
@@ -301,7 +302,8 @@ IndexOfClusterBase(
 static NSUInteger
 IndexOfContainingCluster(
     NSString *string,
-    NSUInteger charIndex)
+    NSUInteger charIndex,
+    int *clusterLength)
 {
     NSRange clusterRange;
     NSUInteger idx, clusterIndex;
@@ -313,9 +315,16 @@ IndexOfContainingCluster(
 	clusterRange = [string rangeOfComposedCharacterSequenceAtIndex:idx];
 	idx += clusterRange.length;
 	if (idx > charIndex) {
+	    if (clusterLength) {
+		clusterLength = 0;
+	    }
 	    return clusterIndex;
 	}
     }
+    if (clusterLength) {
+	*clusterLength = clusterRange.length;
+    }
+
     return clusterIndex;
 }
 
@@ -420,10 +429,12 @@ ClientData clientData)
 /*
  *---------------------------------------------------------------------------
  *
- *  TkpTextManagerClusterBaseChar --
+ *  TkpTextManagerClusterPosition --
  *
  *	Computes the character index of the base character of the cluster
- *      with the given cluster index.
+ *      with the given cluster index.  If the clusterLength parameter is
+ *      not NULL, the integer variable that it references is set to the
+ *      length of the cluster.
  *
  * Results:
  *	A cluster index.
@@ -435,15 +446,21 @@ ClientData clientData)
  */
 
 int
-TkpTextManagerClusterBaseChar(
+TkpTextManagerClusterPosition(
     ClientData clientData,
-    int clusterIndex)
+    int clusterIndex,
+    int *clusterLength)
 {
     TextManager *managerPtr = (TextManager *) clientData;
+    NSRange range;
     if (clusterIndex < 0) {
-	return 0;
+	clusterIndex = 0;
     }
-    return (int) IndexOfClusterBase(managerPtr->string, clusterIndex);
+    range = ClusterRange(managerPtr->string, clusterIndex);
+    if (clusterLength) {
+	*clusterLength = range.length;
+    }
+    return range.location; 
 }
 
 /*
@@ -452,7 +469,8 @@ TkpTextManagerClusterBaseChar(
  *  TkpTextManagerContainingCluster --
  *
  *	Given a character index, find the index of the cluster which contains
- *      the indexed character.
+ *      the indexed character.  If the parameter clusterLength is not NULL the
+ *      integer variable that it references is set to the length of the cluster.
  *
  * Results:
  *	A cluster index.
@@ -466,13 +484,15 @@ TkpTextManagerClusterBaseChar(
 int
 TkpTextManagerContainingCluster(
     ClientData clientData,
-    int charIndex)
+    int charIndex,
+    int *clusterLength)
 {
     TextManager *managerPtr = (TextManager *) clientData;
     if (charIndex < 0) {
 	return 0;
     }
-    return (int) IndexOfContainingCluster(managerPtr->string, charIndex);
+    return (int) IndexOfContainingCluster(managerPtr->string, charIndex,
+		     clusterLength);
 }
 
 /*
@@ -500,7 +520,7 @@ TkpTextManagerNumClusters(
 
     if (managerPtr->numClusters < 0) {
 	managerPtr->numClusters = IndexOfContainingCluster(string,
-	    string.length);
+				      string.length, NULL);
     }
     return managerPtr->numClusters;
 }
@@ -665,7 +685,7 @@ TkpTextManagerDelete(
     int *numChars,
     int *numBytes,
     int *numDeleted,
-    const char **charsDeleted,
+    char **charsDeleted,
     const char **oldString)
 {
     TextManager *managerPtr = (TextManager *) clientData;

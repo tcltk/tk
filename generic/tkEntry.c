@@ -742,7 +742,7 @@ EntryWidgetObjCmd(
 	}
 
 #ifdef USE_GLYPH_INDEXES
-	index = TkpTextManagerContainingCluster(entryPtr->manager, index);
+	index = TkpTextManagerContainingCluster(entryPtr->manager, index, NULL);
 #endif
 
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
@@ -2741,7 +2741,7 @@ GetEntryIndex(
 	} else if (idx > clusterLength) {
 	    idx = (TkSizeT) clusterLength + 1;
 	}
-	*indexPtr = TkpTextManagerClusterBaseChar(entryPtr->manager, idx);
+	*indexPtr = TkpTextManagerClusterPosition(entryPtr->manager, idx, NULL);
 	return TCL_OK;
     }
 #endif
