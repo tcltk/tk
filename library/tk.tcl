@@ -694,6 +694,35 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+proc tcl_endOfChar {str start} {
+    if {$start >= [string length $str]} {
+	return -1;
+    }
+    if {[string length [string index $str $start]] > 1} {
+	set start [expr {$start+1}]
+    }
+    if {[string index $str $start] eq {^}} {
+	set start [expr {$start+1}]
+    }
+    return $start
+}
+
+proc tcl_startOfChar {str start} {
+    if {$start eq "end"} {
+	set start [expr {[string length $str]-1}]
+    }
+    if {$start < 1} {
+	return 0;
+    }
+    if {[string index $str $start] eq {^}} {
+	set start [expr {$start-1}]
+    }
+    if {[string length [string index $str $start-1]] > 1} {
+	return [expr {$start-1}]
+    }
+    return $start
+}
+
 # Create a dictionary to store the starting index of the IME marked
 # text in an Entry or Text widget.
 
