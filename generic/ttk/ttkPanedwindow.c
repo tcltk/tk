@@ -648,8 +648,7 @@ static int PanedInsertCommand(
 {
     Paned *pw = (Paned *)recordPtr;
     TkSizeT nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
-    TkSizeT srcIndex;
-    int destIndex;
+    TkSizeT srcIndex, destIndex;
     Tk_Window slaveWindow;
 
     if (objc < 4) {
@@ -664,7 +663,7 @@ static int PanedInsertCommand(
     }
 
     if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		interp,pw->paned.mgr,objv[2],&destIndex))
+		interp,pw->paned.mgr, objv[2], &destIndex))
     {
 	return TCL_ERROR;
     }
@@ -674,7 +673,7 @@ static int PanedInsertCommand(
 	return AddPane(interp, pw, destIndex, slaveWindow, objc-4, objv+4);
     } /* else -- move existing slave: */
 
-    if ((TkSizeT) destIndex + 1 >= nSlaves + 1)
+    if (destIndex + 1 >= nSlaves + 1)
 	destIndex  = nSlaves - 1;
     Ttk_ReorderSlave(pw->paned.mgr, srcIndex, destIndex);
 
@@ -682,7 +681,7 @@ static int PanedInsertCommand(
 	ConfigurePane(interp, pw,
 		(Pane *)Ttk_SlaveData(pw->paned.mgr, destIndex),
 		Ttk_SlaveWindow(pw->paned.mgr, destIndex),
-		objc-4,objv+4);
+		objc-4, objv+4);
 }
 
 /* $pw forget $pane
@@ -691,7 +690,7 @@ static int PanedForgetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int paneIndex;
+    TkSizeT paneIndex;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2,objv, "pane");
@@ -702,7 +701,7 @@ static int PanedForgetCommand(
 		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if ((TkSizeT)paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
+    } else if (paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
     Ttk_ForgetSlave(pw->paned.mgr, paneIndex);
@@ -771,7 +770,7 @@ static int PanedPaneCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int paneIndex;
+    TkSizeT paneIndex;
     Tk_Window slaveWindow;
     Pane *pane;
 
@@ -781,10 +780,10 @@ static int PanedPaneCommand(
     }
 
     if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		    interp,pw->paned.mgr,objv[2],&paneIndex))
+		    interp,pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if ((TkSizeT)paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
+    } else if (paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
 
@@ -847,7 +846,7 @@ static int PanedSashposCommand(
     if (Tcl_GetIntFromObj(interp, objv[2], &sashIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (sashIndex < 0 || (TkSizeT)(sashIndex + 1) >= Ttk_NumberSlaves(pw->paned.mgr)) {
+    if (sashIndex < 0 || (TkSizeT)sashIndex + 1 >= (size_t)Ttk_NumberSlaves(pw->paned.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "sash index %d out of range", sashIndex));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);

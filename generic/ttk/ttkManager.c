@@ -444,7 +444,7 @@ TkSizeT Ttk_SlaveIndex(Ttk_Manager *mgr, Tk_Window slaveWindow)
  */
 
 int Ttk_GetSlaveIndexFromObj(
-    Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, int *indexPtr)
+    Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, TkSizeT *indexPtr)
 {
     const char *string = Tcl_GetString(objPtr);
     TkSizeT slaveIndex = 0;
@@ -457,7 +457,7 @@ int Ttk_GetSlaveIndexFromObj(
 	slaveIndex = idx;
 	if ((size_t)slaveIndex > (size_t)mgr->nSlaves) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Slave index %d out of bounds", slaveIndex));
+		"Slave index %d out of bounds", (int)slaveIndex));
 	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
