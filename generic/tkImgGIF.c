@@ -506,7 +506,7 @@ FileReadGIF(
 	    destX + width, destY + height) != TCL_OK) {
 	return TCL_ERROR;
     }
-    
+
     /*
      * -------------------------------------------------------------------------
      * From here on, go to error to not leave memory leaks
@@ -781,7 +781,7 @@ FileReadGIF(
     if (trashBuffer != NULL) {
 	ckfree(trashBuffer);
     }
-    
+
     /*
      * free the metadata object in case of error.
      * Otherwise, it is not freed as the ref count was incremented above.
@@ -1100,7 +1100,7 @@ DoExtension(
 	    Tcl_DString recodedDString;
 	    int result;
 	    length = 0;
-	    bytePtr = ckalloc(1);
+	    bytePtr = (unsigned char *)ckalloc(1);
 	    for (;;) {
 		if (1 != Fread(gifConfPtr, bytePtr+length, 1, 1, chan)) {
 		    /* read error */
@@ -1112,7 +1112,7 @@ DoExtension(
 		    break;
 		}
 		length ++;
-		bytePtr = ckrealloc(bytePtr,length);
+		bytePtr = (unsigned char *)ckrealloc(bytePtr,length);
 	    }
 	    /* check if trailer of 258 bytes is present (length is -1) */
 	    if (length < 257) {
@@ -1121,12 +1121,9 @@ DoExtension(
 	    }
 	    length -= 257;
 	    /* save in metadata dict key "XMP" */
-	    encoding = Tcl_GetEncoding(NULL, "utf-8"); 
-	    if (NULL == encoding) {
-		return -1;
-	    }
+	    encoding = Tcl_GetEncoding(NULL, "utf-8");
 	    Tcl_DStringInit(&recodedDString);
-	    Tcl_ExternalToUtfDString(encoding, bytePtr, length, &recodedDString);
+	    Tcl_ExternalToUtfDString(encoding, (char *)bytePtr, length, &recodedDString);
 	    result = Tcl_DictObjPut(NULL, metadata,
 		    Tcl_NewStringObj("XMP",-1),
 		    Tcl_NewStringObj(Tcl_DStringValue(&recodedDString),
@@ -1175,7 +1172,7 @@ DoExtension(
 	}
 	if (length > 0) {
 	    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
-		    Tcl_NewByteArrayObj(extensionStreamName,-1), metadataData)) {
+		    Tcl_NewByteArrayObj((unsigned char *)extensionStreamName,-1), metadataData)) {
 		return -1;
 	    }
 	}

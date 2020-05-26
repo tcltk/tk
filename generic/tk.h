@@ -238,11 +238,19 @@ typedef struct Tk_OptionSpec {
  * option config code to handle a custom option.
  */
 
+#if TCL_MAJOR_VERSION > 8
+typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
+	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
+	size_t offset, char *saveInternalPtr, int flags);
+typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
+	Tk_Window tkwin, char *widgRec, size_t offset);
+#else
 typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
 	int offset, char *saveInternalPtr, int flags);
 typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset);
+#endif
 typedef void (Tk_CustomOptionRestoreProc) (ClientData clientData,
 	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr);
 typedef void (Tk_CustomOptionFreeProc) (ClientData clientData, Tk_Window tkwin,
@@ -346,10 +354,17 @@ typedef struct Tk_SavedOptions {
 
 #ifndef __NO_OLD_CONFIG
 
+#if TCL_MAJOR_VERSION > 8
+typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
+	Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
+	Tk_Window tkwin, char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
 	Tk_Window tkwin, const char *value, char *widgRec, int offset);
 typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+#endif
 
 typedef struct Tk_CustomOption {
     Tk_OptionParseProc *parseProc;
@@ -1067,8 +1082,13 @@ typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 #endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
+#if TCL_MAJOR_VERSION > 8
+typedef size_t	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t offset, char *buffer, size_t maxBytes);
+#else
 typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
+#endif
 #ifdef USE_OLD_CANVAS
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, char *string);
@@ -1579,8 +1599,13 @@ typedef int (Tk_GetSelProc) (ClientData clientData, Tcl_Interp *interp,
 typedef void (Tk_LostSelProc) (ClientData clientData);
 typedef Tk_RestrictAction (Tk_RestrictProc) (ClientData clientData,
 	XEvent *eventPtr);
+#if TCL_MAJOR_VERSION > 8
+typedef size_t (Tk_SelectionProc) (ClientData clientData, size_t offset,
+	char *buffer, size_t maxBytes);
+#else
 typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 	char *buffer, int maxBytes);
+#endif
 
 /*
  *----------------------------------------------------------------------

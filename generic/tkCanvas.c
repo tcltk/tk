@@ -223,8 +223,8 @@ static void		CanvasCmdDeletedProc(ClientData clientData);
 static void		CanvasDoEvent(TkCanvas *canvasPtr, XEvent *eventPtr);
 static void		CanvasEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		CanvasFetchSelection(ClientData clientData, int offset,
-			    char *buffer, int maxBytes);
+static TkSizeT	CanvasFetchSelection(ClientData clientData, TkSizeT offset,
+			    char *buffer, TkSizeT maxBytes);
 static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
 			    double coords[2]);
 static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
@@ -5689,13 +5689,13 @@ CanvasSelectTo(
  *--------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 CanvasFetchSelection(
     ClientData clientData,	/* Information about canvas widget. */
-    int offset,			/* Offset within selection of first character
+	TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {

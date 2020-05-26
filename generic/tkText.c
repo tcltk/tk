@@ -96,11 +96,11 @@ static const char *const insertUnfocussedStrings[] = {
 static int		SetLineStartEnd(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj **value, char *recordPtr,
-			    int internalOffset, char *oldInternalPtr,
+			    TkSizeT internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetLineStartEnd(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr,
-			    int internalOffset);
+			    TkSizeT internalOffset);
 static void		RestoreLineStartEnd(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
@@ -365,8 +365,8 @@ static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		TextFetchSelection(ClientData clientData, int offset,
-			    char *buffer, int maxBytes);
+static TkSizeT	TextFetchSelection(ClientData clientData, TkSizeT offset,
+			    char *buffer, TkSizeT maxBytes);
 static int		TextIndexSortProc(const void *first,
 			    const void *second);
 static int		TextInsertCmd(TkSharedText *sharedTextPtr,
@@ -3413,13 +3413,13 @@ DeleteIndexRange(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-    int offset,			/* Offset within selection of first character
+	TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -3484,13 +3484,15 @@ TextFetchSelection(
 	 */
 
 	while (1) {
+	    TkSizeT offsetInSeg1;
 	    if (maxBytes == 0) {
 		goto fetchDone;
 	    }
-	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg);
+	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg1);
+	    offsetInSeg = offsetInSeg1;
 	    chunkSize = segPtr->size - offsetInSeg;
-	    if (chunkSize > maxBytes) {
-		chunkSize = maxBytes;
+	    if (chunkSize > (int)maxBytes) {
+		chunkSize = (int)maxBytes;
 	    }
 	    if (textPtr->selIndex.linePtr == search.curIndex.linePtr) {
 		int leftInRange;
@@ -4095,14 +4097,14 @@ TextSearchIndexInLine(
 	if ((segPtr->typePtr == &tkTextCharType) &&
 		(searchSpecPtr->searchElide
 		|| !TkTextIsElided(textPtr, &curIndex, NULL))) {
-	    if (leftToScan < segPtr->size) {
+	    if (leftToScan < (int)segPtr->size) {
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
 		} else {
 		    index += Tcl_NumUtfChars(segPtr->body.chars, leftToScan);
 		}
 	    } else if (searchSpecPtr->exact) {
-		index += segPtr->size;
+		index += (int)segPtr->size;
 	    } else {
 		index += Tcl_NumUtfChars(segPtr->body.chars, -1);
 	    }
@@ -4362,7 +4364,7 @@ TextSearchFoundMatch(
 		}
 	    } else {
 		if (searchSpecPtr->exact) {
-		    leftToScan -= segPtr->size;
+		    leftToScan -= (int)segPtr->size;
 		} else {
 		    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
 		}
@@ -5433,7 +5435,7 @@ TextGetText(
 
     if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
 	while (1) {
-	    int offset;
+	    TkSizeT offset;
 	    TkTextSegment *segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
 	    int last = segPtr->size, last2;
 
@@ -6778,14 +6780,14 @@ GetLineStartEnd(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the
+    TkSizeT internalOffset)		/* Offset within *recordPtr containing the
 				 * line value. */
 {
     TkTextLine *linePtr = *(TkTextLine **)(recordPtr + internalOffset);
     (void)dummy;
     (void)tkwin;
 
-    if (linePtr == NULL) {
+    if ((internalOffset == TCL_INDEX_NONE) || (recordPtr == NULL)) {
 	return Tcl_NewObj();
     }
     return Tcl_NewWideIntObj(1 + TkBTreeLinesTo(NULL, linePtr));
@@ -6819,7 +6821,7 @@ SetLineStartEnd(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
@@ -6830,7 +6832,7 @@ SetLineStartEnd(
     (void)dummy;
     (void)tkwin;
 
-    if (internalOffset >= 0) {
+    if (internalOffset != TCL_INDEX_NONE) {
 	internalPtr = (char *)recordPtr + internalOffset;
     } else {
 	internalPtr = NULL;

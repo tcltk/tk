@@ -36,8 +36,8 @@ static TkTextSegment *	MarkCleanupProc(TkTextSegment *segPtr,
 static void		MarkCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static int		MarkLayoutProc(TkText *textPtr, TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, TkSizeT offset, int maxX,
+			    TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
 static int		MarkFindNext(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *markName);
@@ -564,11 +564,11 @@ MarkLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
     TkTextSegment *segPtr,	/* Segment corresponding to indexPtr. */
-    int offset,			/* Offset within segPtr corresponding to
+	TkSizeT offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    int maxChars,		/* Chunk must not include more than this many
+	TkSizeT maxChars,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
