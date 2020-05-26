@@ -92,9 +92,19 @@ and relief.  The \fBentry\fR command returns its
 there must not exist a window named \fIpathName\fR, but
 \fIpathName\fR's parent must exist.
 .PP
-An entry is a widget that displays a one-line text string and
-allows that string to be edited using widget commands described below, which
+An entry is a widget that displays one line of text and
+allows that text to be edited using widget commands described below, which
 are typically bound to keystrokes and mouse actions.
+.PP
+The text is represented internally as a sequence of unicode code points.  If
+Tk is compiled with the flag USE_GLYPH_INDEXES then the text is viewed as a
+sequence of glyphs, each represented by a unicode grapheme cluster which may
+contain several unicode code points. (For example, the flag of Wales requires
+seven code points while some emojis require four.)  In this case, the word
+"character" should be understood to mean a glyph in the discussion below.  If
+the USE_GLYPH_INDEXES flag is not defined then it refers to a single unicode
+code point.
+.PP
 When first created, an entry's string is empty.
 A portion of the entry may be selected as described below.
 If an entry is exporting its selection (see the \fB\-exportselection\fR
@@ -295,6 +305,14 @@ Returns the numerical index corresponding to \fIindex\fR.
 \fIpathName \fBinsert \fIindex string\fR
 Insert the characters of \fIstring\fR just before the character
 indicated by \fIindex\fR.  Returns an empty string.
+.TP
+\fIpathName \fBrange \fIfirst last\fR
+Returns a string consisting of the characters in the entry beginning with the
+character represented by the index \fIfirst\fR and ending with the character
+represented by the index \fIlast\fR.  The numerical values of \fIfirst\fR and
+\fIlast\fR can be arbitrary, but negative values are replaced by 0 while
+values larger than the length of the entry string is the length. An empyt
+string is returned if \fIfirst\fR > \fIlast\fR.
 .TP
 \fIpathName \fBscan\fR \fIoption args\fR
 This command is used to implement scanning on entries.  It has

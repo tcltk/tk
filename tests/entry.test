@@ -984,7 +984,7 @@ test entry-3.31 {EntryWidgetCmd procedure, "index" widget command} -setup {
     .e in
 } -cleanup {
     destroy .e
-} -returnCodes error -result {ambiguous option "in": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, validate, or xview}
+} -returnCodes error -result {ambiguous option "in": must be bbox, cget, configure, delete, get, icursor, index, insert, range, scan, selection, validate, or xview}
 test entry-3.32 {EntryWidgetCmd procedure, "index" widget command} -setup {
     entry .e
 } -body {
@@ -1580,7 +1580,67 @@ test entry-3.82 {EntryWidgetCmd procedure} -setup {
     .e gorp
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad option "gorp": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, validate, or xview}
+} -returnCodes error -result {bad option "gorp": must be bbox, cget, configure, delete, get, icursor, index, insert, range, scan, selection, validate, or xview}
+test entry-3.87 {EntryWidgetCmd procedure, "range" widget command} -setup {
+    entry .e
+    pack .e
+    update
+} -body {
+    .e insert end "01234567890"
+    .e range 1
+} -cleanup {
+    destroy .e
+} -returnCodes 1 -result {wrong # args: should be ".e range first last"}
+test entry-3.88 {EntryWidgetCmd procedure, "range" widget command} -setup {
+    entry .e
+    pack .e
+    update
+} -body {
+    .e insert end "01234567890"
+    .e range 1 5
+} -cleanup {
+    destroy .e
+} -result {12345}
+test entry-3.89 {EntryWidgetCmd procedure, "range" widget command} -setup {
+    entry .e
+    pack .e
+    update
+} -body {
+    .e insert end "01234567890"
+    .e range 5 1
+} -cleanup {
+    destroy .e
+} -result {}
+test entry-3.90 {EntryWidgetCmd procedure, "range" widget command} -setup {
+    entry .e
+    pack .e
+    update
+} -body {
+    .e insert end "01234567890"
+    .e range 5 1
+} -cleanup {
+    destroy .e
+} -result {}
+test entry-3.91 {EntryWidgetCmd procedure, "range" widget command} -setup {
+    entry .e
+    pack .e
+    update
+} -body {
+    .e insert end "01234567890"
+    .e range -10 5
+} -cleanup {
+    destroy .e
+} -result {012345}
+test entry-3.92 {EntryWidgetCmd procedure, "range" widget command} -setup {
+    entry .e
+    pack .e
+    update
+} -body {
+    .e insert end "01234567890"
+    .e range -10 20
+} -cleanup {
+    destroy .e
+} -result {01234567890}
 
 # The test below doesn't actually check anything directly, but if run
 # with Purify or some other memory-allocation-checking program it will

@@ -524,6 +524,61 @@ TkpTextManagerNumClusters(
     }
     return managerPtr->numClusters;
 }
+/*
+ *---------------------------------------------------------------------------
+ *
+ *  TkpTextManagerCharRangeOfClusterRange --
+ *
+ *	Return a pointer to a UTF-8 encoded C string which represents a
+ *      substring of the text manager's string.  The result includes all
+ *      clusters with index >= first and <= last.  It is allowed for first
+ *      to be negative and last to be greater than or equal to numClusters.
+ *      The resulting pointer has an indeterminate lifespan since it is
+ *      equal to the UTF8String property of an NSString.  So it should be
+ *      copied or used before the current iteration of the event loop
+ *      terminates.
+ *
+ * Results:
+ *	The number of clusters.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *
+TkpTextManagerUTF8StringForClusterRange(
+    ClientData clientData,
+    int firstCluster,
+    int lastCluster)
+{
+    TextManager *managerPtr = (TextManager *) clientData;
+    NSRange clusterRange, fullRange;
+    NSUInteger location, charIndex, clusterIndex;
+    int length;
+    NSString *str = managerPtr->string, *temp;
+    static char empty = '\0';
+    
+    if (firstCluster < 0) {
+	firstCluster = 0;
+    }
+    if (lastCluster < firstCluster) {
+	return &empty;
+    }
+    clusterIndex = firstCluster;
+    location = TkpTextManagerClusterPosition(managerPtr, firstCluster, &length);
+    charIndex = location;
+    while (clusterIndex <= (unsigned int) lastCluster &&
+	   charIndex < [managerPtr->string length]) {
+	clusterRange = [str rangeOfComposedCharacterSequenceAtIndex:charIndex];
+	charIndex += clusterRange.length;
+	clusterIndex++;
+    }
+    fullRange = NSMakeRange(location, charIndex - location);
+    temp = [str substringWithRange:fullRange];
+    return [temp UTF8String];
+}
 
 /*
  *---------------------------------------------------------------------------
@@ -696,7 +751,7 @@ TkpTextManagerDelete(
 				   substringWithRange:deleteRange];
 	TextManagerCache(managerPtr);
 	if (charsDeleted) {
-	    *charsDeleted = [diffString UTF8String];
+	    *charsDeleted = (char *) [diffString UTF8String];
 	}
 	if (oldString) {
 	    *oldString = [managerPtr->backup UTF8String];

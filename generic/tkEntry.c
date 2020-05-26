@@ -331,12 +331,12 @@ static const Tk_OptionSpec sbOptSpec[] = {
 
 static const char *const entryCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "index",
-    "insert", "scan", "selection", "validate", "xview", NULL
+    "insert", "range", "scan", "selection", "validate", "xview", NULL
 };
 
 enum entryCmd {
     COMMAND_BBOX, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELETE,
-    COMMAND_GET, COMMAND_ICURSOR, COMMAND_INDEX, COMMAND_INSERT,
+    COMMAND_GET, COMMAND_ICURSOR, COMMAND_INDEX, COMMAND_INSERT, COMMAND_RANGE,
     COMMAND_SCAN, COMMAND_SELECTION, COMMAND_VALIDATE, COMMAND_XVIEW
 };
 
@@ -769,6 +769,48 @@ EntryWidgetObjCmd(
 	break;
     }
 
+    case COMMAND_RANGE: {
+	const char *substring;
+	int first, last;
+	if (objc != 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "first last");
+	    goto error;
+	}
+	if (Tcl_GetIntFromObj(interp, objv[2], &first) != TCL_OK) {
+	    goto error;
+	}
+	if (Tcl_GetIntFromObj(interp, objv[3], &last) != TCL_OK) {
+	    goto error;
+	}
+#ifndef USE_GLYPH_INDEXES
+	if (first < 0) {
+	    first = 0;
+	}
+	if (last < first) {
+	    Tcl_SetObjResult(interp, Tcl_NewObj());
+	} else {
+	    const char *end;
+	    int length;
+	    Tcl_UniChar ch = 0;
+	    substring = Tcl_UtfAtIndex(entryPtr->displayString, first);
+	    length = Tcl_NumUtfChars(entryPtr->displayString, TCL_INDEX_NONE);
+	    if (last >= length) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(substring, TCL_INDEX_NONE));
+	    } else {
+		end = Tcl_UtfAtIndex(entryPtr->displayString, last);
+		end += Tcl_UtfToUniChar(end, &ch);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(substring,
+		    end - substring));
+	    }
+	}
+#else
+	substring = TkpTextManagerUTF8StringForClusterRange(entryPtr->manager,
+		        first, last);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(substring, TCL_INDEX_NONE));
+#endif
+	break;
+    }
+
     case COMMAND_SCAN: {
 	int x;
 	const char *minorCmd;
@@ -1051,7 +1093,7 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-#ifndef USE_GLYPH_INDEXING
+#ifndef USE_GLYPH_INDEXES
     ckfree((char *)entryPtr->string);
 #else
     TkpTextManagerDestroy(entryPtr->manager);

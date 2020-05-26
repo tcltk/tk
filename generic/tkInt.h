@@ -1371,11 +1371,13 @@ MODULE_SCOPE int	TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 #define USE_GLYPH_INDEXES
 MODULE_SCOPE ClientData  TkpTextManagerCreate(const char **initialString);
 MODULE_SCOPE void	 TkpTextManagerDestroy(ClientData clientData);
+MODULE_SCOPE int	 TkpTextManagerNumClusters(ClientData clientData);
 MODULE_SCOPE int	 TkpTextManagerClusterPosition(ClientData clientData,
 			     int clusterIndex, int *clusterLength);
 MODULE_SCOPE int	 TkpTextManagerContainingCluster(ClientData clientData,
 			     int charIndex, int *clusterLength);
-MODULE_SCOPE int	 TkpTextManagerNumClusters(ClientData clientData);
+MODULE_SCOPE const char* TkpTextManagerUTF8StringForClusterRange(ClientData clientData,
+			     int first, int last);
 MODULE_SCOPE const char* TkpTextManagerSet(ClientData clientData,
 			     const char *value, int *numChars, int *numBytes);
 MODULE_SCOPE const char* TkpTextManagerInsert(ClientData clientData,
