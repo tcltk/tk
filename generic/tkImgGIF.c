@@ -1172,7 +1172,7 @@ DoExtension(
 	}
 	if (length > 0) {
 	    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
-		    Tcl_NewByteArrayObj((unsigned char *)extensionStreamName,-1), metadataData)) {
+		    Tcl_NewByteArrayObj((unsigned char *)extensionStreamName, strlen(extensionStreamName)), metadataData)) {
 		return -1;
 	    }
 	}
