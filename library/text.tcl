@@ -222,7 +222,7 @@ bind Text <Delete> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare end != insert+1c]} {
-	    %W delete [tk::TextPrevPos %W insert+1c ::tk::startOfGlyphCluster] [expr {[tk::TextNextPos %W insert ::tk::endOfGlyphCluster]+1}]
+	    %W delete [tk::TextPrevPos %W insert+1c ::tk::startOfGlyphCluster] "[tk::TextNextPos %W insert ::tk::endOfGlyphCluster]+1c"
 	}
 	%W see insert
     }
@@ -232,7 +232,7 @@ bind Text <BackSpace> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare insert != 1.0]} {
-	    %W delete [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster] [expr {[tk::TextNextPos %W insert-1c ::tk::endOfGlyphCluster]+1}]
+	    %W delete [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster] "[tk::TextNextPos %W insert-1c ::tk::endOfGlyphCluster]+1c"
 	}
 	%W see insert
     }
