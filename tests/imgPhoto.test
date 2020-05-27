@@ -2133,8 +2133,7 @@ test imgPhoto-22.3 {option -metadata, clear value} -setup {
 
 # 23.x GIF images with metadata
 
-# The following gif prefix data is used by the following data.
-# The trailer \x3b is missing
+# The following gif core data is used by the following data.
 # N.B. this is the same image as test imgPhoto-18.10
 
 # size 16x16, global color table size: 8
@@ -2175,6 +2174,96 @@ test imgPhoto-23.2 {GIF comment after image data} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -result {Comment ABCD}
+
+test imgPhoto-23.3 {Two GIF comment blocks} -setup {
+    set data $::gifstart
+	# Append a comment extension block with data "1234"
+	append data "\x21\xfe\x04" "1234" "\x0"
+	append data $::gifdata
+	# Append a comment extension block with data "ABCD"
+	append data "\x21\xfe\x04" "ABCD" "\x0"
+	# Trailer
+	append data $::gifend
+} -body {
+    image create photo gif1 -data $data
+	gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {Comment ABCD}
+
+test imgPhoto-23.4 {XMP comment block before image} -setup {
+    set data $::gifstart
+	# Append an XMP comment extension block (including a Unicode codepoint 2022
+	set xmpdata "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
+			xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\">\
+			<rdf:Description rdf:about=\"1\u2022\">\
+			<xmp:Rating>3</xmp:Rating></rdf:Description></rdf:RDF>"
+	append data "\x21\xff\x0B" "XMP DataXMP" [encoding convertto utf-8 $xmpdata]
+	# Special trailer of 1 ff fe ... 02 01 00 00
+	append data "\x01"
+	for {set i 0xff} {$i != -1} {incr i -1} {
+		append data [binary format c $i]
+	}
+	append data "\x00"
+				 
+	append data $::gifdata
+	# Trailer
+	append data $::gifend
+} -body {
+    image create photo gif1 -data $data
+	set d [dict get [gif1 cget -metadata] XMP]
+	expr {$d eq $xmpdata}
+} -cleanup {
+    catch {image delete gif1}
+} -result {1}
+
+test imgPhoto-23.5 {XMP comment block after image} -setup {
+    set data $::gifstart
+	append data $::gifdata
+
+	# Append an XMP comment extension block (including a Unicode codepoint 2022
+	set xmpdata "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
+			xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\">\
+			<rdf:Description rdf:about=\"1\u2022\">\
+			<xmp:Rating>3</xmp:Rating></rdf:Description></rdf:RDF>"
+	append data "\x21\xff\x0B" "XMP DataXMP" [encoding convertto utf-8 $xmpdata]
+	# Special trailer of 1 ff fe ... 02 01 00 00
+	append data "\x01"
+	for {set i 0xff} {$i != -1} {incr i -1} {
+		append data [binary format c $i]
+	}
+	append data "\x00"
+				 
+	# Trailer
+	append data $::gifend
+} -body {
+    image create photo gif1 -data $data
+	set d [dict get [gif1 cget -metadata] XMP]
+	expr {$d eq $xmpdata}
+} -cleanup {
+    catch {image delete gif1}
+} -result {1}
+
+test imgPhoto-23.6 {empty XMP comment block after image} -setup {
+    set data $::gifstart
+	append data $::gifdata
+
+	append data "\x21\xff\x0B" "XMP DataXMP"
+	# Special trailer of 1 ff fe ... 02 01 00 00
+	append data "\x01"
+	for {set i 0xff} {$i != -1} {incr i -1} {
+		append data [binary format c $i]
+	}
+	append data "\x00"
+				 
+	# Trailer
+	append data $::gifend
+} -body {
+    image create photo gif1 -data $data
+	dict get [gif1 cget -metadata] XMP
+} -cleanup {
+    catch {image delete gif1}
+} -result {}
 
 unset -nocomplain gifstart gifdata gifend
 

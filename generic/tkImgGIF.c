@@ -1061,14 +1061,11 @@ DoExtension(
     GIFImageConfig *gifConfPtr,
     Tcl_Channel chan,
     int label,
-    unsigned char *buf,
+    unsigned char *buf, /* defined as 280 byte working buffer */
     int *transparent,
     Tcl_Obj *metadata)
 {
     int count;
-    Tcl_Obj *metadataData;
-    int length;
-    unsigned char *bytePtr;
     /* Prepare extension name
      * Maximum string size: "Application_"(12) + App(8) + Code(3) + trailing zero
      */
@@ -1079,9 +1076,21 @@ DoExtension(
     case 0x01:			/* Plain Text Extension */
         /* this extension is ignored, skip below */
 	break;
-
+    case 0xf9:			/* Graphic Control Extension */
+	count = GetDataBlock(gifConfPtr, chan, buf);
+	if (count < 0) {
+	    return -1;
+	}
+	if ((buf[0] & 0x1) != 0) {
+	    *transparent = buf[3];
+	}
+	break;
+    case 0xfe:			/* Comment Extension */
+	strcpy(extensionStreamName,"Comment");
+        /* copy the extension data below */
+	break;
     case 0xff:			/* Application Extension */
-	/* Length: fix = 11
+	/* Length: 11
 	 * Application Identifier: 8 bytes
 	 * Application Authentication code: 3 Bytes
 	 */
@@ -1093,91 +1102,105 @@ DoExtension(
 	if (0 == memcmp(buf,"XMP DataXMP",11)) {
 	    /* XMP format does not use the block structure of GIF
 	     * The data is utf-8 which never contains 0's
-	     * A magic header of 258 bytes is added with the following data:
+	     * A magic trailer of 258 bytes is added with the following data:
 	     * 0x01 0xff 0xfe ... 0x01 0x00 0x00
 	     */
 	    Tcl_Encoding encoding;
 	    Tcl_DString recodedDString;
+	    Tcl_DString dataDString;
+	    int length;
 	    int result;
-	    length = 0;
-	    bytePtr = (unsigned char *)ckalloc(1);
+	    unsigned char lastbyte = 1;
+	    Tcl_DStringInit(&dataDString);
+
 	    for (;;) {
-		if (1 != Fread(gifConfPtr, bytePtr+length, 1, 1, chan)) {
+		unsigned char byte;
+		if (1 != Fread(gifConfPtr, &byte, 1, 1, chan)) {
 		    /* read error */
-		    ckfree(bytePtr);
+		    Tcl_DStringFree(&dataDString);
 		    return -1;
 		}
+		Tcl_DStringAppend(&dataDString,&byte,1);
 		/* check for end of xmp header */
-		if (bytePtr[length] == '\0') {
+		if (byte == 0 && lastbyte == 0) {
 		    break;
 		}
-		length ++;
-		bytePtr = (unsigned char *)ckrealloc(bytePtr,length);
+		lastbyte = byte;
 	    }
-	    /* check if trailer of 258 bytes is present (length is -1) */
-	    if (length < 257) {
-		ckfree(bytePtr);
+
+	    /* check if trailer of 258 bytes is present */
+	    length = Tcl_DStringLength(&dataDString);
+	    if (length < 258) {
+		Tcl_DStringFree(&dataDString);
 		return -1;
 	    }
-	    length -= 257;
-	    /* save in metadata dict key "XMP" */
+	    /* Remove the trailer from the data */
+	    length -= 258;
+	    /* save the utf-8 data in the metadata dict key "XMP" */
 	    encoding = Tcl_GetEncoding(NULL, "utf-8");
 	    Tcl_DStringInit(&recodedDString);
-	    Tcl_ExternalToUtfDString(encoding, (char *)bytePtr, length, &recodedDString);
+	    Tcl_ExternalToUtfDString(encoding, Tcl_DStringValue(&dataDString), length, &recodedDString);
 	    result = Tcl_DictObjPut(NULL, metadata,
 		    Tcl_NewStringObj("XMP",-1),
 		    Tcl_NewStringObj(Tcl_DStringValue(&recodedDString),
 			Tcl_DStringLength(&recodedDString)));
 	    Tcl_DStringFree(&recodedDString);
+	    Tcl_DStringFree(&dataDString);
 	    Tcl_FreeEncoding(encoding);
 	    if ( TCL_OK != result ) {
 		return -1;
 	    }
-	    return length;
+	    return 0;
 	} else {
-	    /* Other extension */
-	    /* Name the extension: Application_xxxxxxxxxxx */
-            /*                     012345678901234567890123*/
+	    /*
+	     * Other extension
+	     * Name the extension: Application_xxxxxxxxxxx
+	     *                     012345678901234567890123
+	     */
+	    /* Untested code commented out, no use case
+	     */
+	    /*
 	    strcpy(extensionStreamName,"Application_");
 	    memcpy(extensionStreamName+12,buf,11);
 	    extensionStreamName[23]='\0';
-	}
-	break;
-
-    case 0xfe:			/* Comment Extension */
-	strcpy(extensionStreamName,"Comment");
-        /* copy the extension data below */
-	break;
-    case 0xf9:			/* Graphic Control Extension */
-	count = GetDataBlock(gifConfPtr, chan, buf);
-	if (count < 0) {
-	    return -1;
-	}
-	if ((buf[0] & 0x1) != 0) {
-	    *transparent = buf[3];
+	    */
 	}
 	break;
     }
     /* Add extension to dict */
     if (extensionStreamName[0] != '\0' ) {
-	length = 0;
-	while ( 0 < (count = GetDataBlock(gifConfPtr, chan, buf)) ) {
-	    if (length == 0) {
-		metadataData = Tcl_NewByteArrayObj(buf, count);
-	    } else {
-		bytePtr = Tcl_SetByteArrayLength(metadataData, length+count);
-		memcpy(bytePtr+length,buf,count);
-	    }
-	    length += count;
-	}
-	if (length > 0) {
-	    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
-		    Tcl_NewByteArrayObj((unsigned char *)extensionStreamName, strlen(extensionStreamName)), metadataData)) {
+	Tcl_Obj *metadataData;
+	int length = 0;
+	for (;;) {
+	    count = GetDataBlock(gifConfPtr, chan, buf);
+	    switch (count) {
+	    case -1: /* error */
 		return -1;
+	    case 0: /* end of data */
+		if (length > 0) {
+		    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
+			    Tcl_NewByteArrayObj((unsigned char *)extensionStreamName,
+			    strlen(extensionStreamName)), metadataData)) {
+			return -1;
+		    }
+		}
+		/* return success */
+		return 0;
+	    default: /* block received */
+		if (length == 0) {
+		    /* first block */
+		    metadataData = Tcl_NewByteArrayObj(buf, count);
+		    length = count;
+		} else {
+		    /* consecutive block */
+		    unsigned char *bytePtr;
+		    bytePtr = Tcl_SetByteArrayLength(metadataData, length+count);
+		    memcpy(bytePtr+length,buf,count);
+		    length += count;
+		}
+		break;
 	    }
-	}
-	/* this triggers a read error if returned count < 0 */
-	return count;
+	} /* for */
     }
     /* skip eventual remaining data block bytes */
     do {
