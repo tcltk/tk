@@ -1322,10 +1322,10 @@ SelGetProc(
 static TkSizeT
 HandleTclCommand(
     ClientData clientData,	/* Information about command to execute. */
-	TkSizeT offset,			/* Return selection bytes starting at this
+    TkSizeT offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-	TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     CommandInfo *cmdInfoPtr = (CommandInfo *)clientData;
     int length;
