@@ -2050,7 +2050,7 @@ CustomOptionSet(
     Tk_Window tkwin,
     Tcl_Obj **value,
     char *recordPtr,
-	TkSizeT internalOffset,
+    TkSizeT internalOffset,
     char *saveInternalPtr,
     int flags)
 {
@@ -2111,7 +2111,7 @@ CustomOptionGet(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,
-	TkSizeT internalOffset)
+    TkSizeT internalOffset)
 {
     (void)dummy;
     (void)tkwin;

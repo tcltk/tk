@@ -163,14 +163,14 @@ static void		DisplayPolygon(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetPolygonIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static int		PolygonCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		PolygonDeleteCoords(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int first, int last);
 static void		PolygonInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		PolygonToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		PolygonToPoint(Tk_Canvas canvas,
@@ -1003,7 +1003,7 @@ DisplayPolygon(
  *
  * PolygonInsert --
  *
- *	Insert coords into a polugon item at a given index.
+ *	Insert coords into a polygon item at a given index.
  *
  * Results:
  *	None.
@@ -1018,7 +1018,7 @@ static void
 PolygonInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    int beforeThis,		/* Index before which new coordinates are to
+    TkSizeT beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
@@ -1037,14 +1037,14 @@ PolygonInsert(
 	return;
     }
     length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
-    while (beforeThis > length) {
+    while ((int)beforeThis > length) {
 	beforeThis -= length;
     }
-    while (beforeThis < 0) {
+    while ((int)beforeThis < 0) {
 	beforeThis += length;
     }
     newCoordPtr = (double *)ckalloc(sizeof(double) * (length + 2 + objc));
-    for (i=0; i<beforeThis; i++) {
+    for (i=0; i<(int)beforeThis; i++) {
 	newCoordPtr[i] = polyPtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -1055,7 +1055,7 @@ PolygonInsert(
 	}
     }
 
-    for (i=beforeThis; i<length; i++) {
+    for (i=(int)beforeThis; i<length; i++) {
 	newCoordPtr[i+objc] = polyPtr->coordPtr[i];
     }
     if (polyPtr->coordPtr) {
@@ -1121,7 +1121,7 @@ PolygonInsert(
 	 * Be careful; beforeThis could now be negative
 	 */
 
-	for (i=beforeThis; i<beforeThis+objc; i+=2) {
+	for (i=beforeThis; i<(int)beforeThis+objc; i+=2) {
 	    j = i;
 	    if (j < 0) {
 		j += length;
@@ -1675,12 +1675,12 @@ GetPolygonIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     TkSizeT length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     const char *string;
-	TkSizeT count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
+    TkSizeT count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
     if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
@@ -1688,7 +1688,7 @@ GetPolygonIndex(
 	} else {
 	    idx = (idx & (TkSizeT)-2) % count;
 	}
-	*indexPtr = (int)idx;
+	*indexPtr = idx;
 	return TCL_OK;
     }
 
