@@ -129,10 +129,10 @@ ClipboardHandler(
 static TkSizeT
 ClipboardAppHandler(
     ClientData clientData,	/* Pointer to TkDisplay structure. */
-	TkSizeT offset,			/* Return selection bytes starting at this
+    TkSizeT offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-	TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
     TkSizeT length;
@@ -174,10 +174,10 @@ ClipboardAppHandler(
 static TkSizeT
 ClipboardWindowHandler(
     ClientData dummy,	/* Not used. */
-	TkSizeT offset,			/* Return selection bytes starting at this
+    TkSizeT offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-	TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     (void)dummy;
     (void)offset;

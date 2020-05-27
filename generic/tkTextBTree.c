@@ -1190,14 +1190,14 @@ SplitSeg(
 {
     TkTextSegment *prevPtr, *segPtr;
     TkTextLine *linePtr;
-    int count = indexPtr->byteIndex;
+    TkSizeT count = indexPtr->byteIndex;
 
     linePtr = indexPtr->linePtr;
     prevPtr = NULL;
     segPtr = linePtr->segPtr;
 
     while (segPtr != NULL) {
-	if (segPtr->size > (TkSizeT)count) {
+	if (segPtr->size + 1 > count + 1) {
 	    if (count == 0) {
 		return prevPtr;
 	    }
@@ -2750,7 +2750,7 @@ TkBTreeStartSearchBack(
 				/* Where to store information about search's
 				 * progress. */
 {
-	TkSizeT offset;
+    TkSizeT offset;
     TkTextIndex index0;		/* Last index of the tag. */
     TkTextIndex backOne;	/* One character before starting index. */
     TkTextSegment *seg0Ptr;	/* Last segment of the tag. */

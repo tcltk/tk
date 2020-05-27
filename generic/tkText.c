@@ -3416,16 +3416,17 @@ DeleteIndexRange(
 static TkSizeT
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-	TkSizeT offset,			/* Offset within selection of first character
+    TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
     TkText *textPtr = (TkText *)clientData;
     TkTextIndex eof;
-    int count, chunkSize, offsetInSeg;
+    int count, chunkSize;
+    TkSizeT offsetInSeg;
     TkTextSearch search;
     TkTextSegment *segPtr;
 
@@ -3484,12 +3485,10 @@ TextFetchSelection(
 	 */
 
 	while (1) {
-	    TkSizeT offsetInSeg1;
 	    if (maxBytes == 0) {
 		goto fetchDone;
 	    }
-	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg1);
-	    offsetInSeg = offsetInSeg1;
+	    segPtr = TkTextIndexToSeg(&textPtr->selIndex, &offsetInSeg);
 	    chunkSize = segPtr->size - offsetInSeg;
 	    if (chunkSize > (int)maxBytes) {
 		chunkSize = (int)maxBytes;

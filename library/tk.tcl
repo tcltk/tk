@@ -694,7 +694,7 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-proc tcl_endOfChar {str start} {
+proc ::tk::endOfGlyphCluster {str start} {
     if {$start >= [string length $str]} {
 	return -1;
     }
@@ -702,22 +702,22 @@ proc tcl_endOfChar {str start} {
 	set start [expr {$start+1}]
     }
     if {[string index $str $start] eq {^}} {
-	set start [expr {$start+1}]
+	set start [expr {$start+1}];# For demo purposes only
     }
     return $start
 }
 
-proc tcl_startOfChar {str start} {
+proc ::tk::startOfGlyphCluster {str start} {
     if {$start eq "end"} {
 	set start [expr {[string length $str]-1}]
     }
-    if {$start < 1} {
-	return 0;
+    if {$start < 0} {
+	return -1;
     }
     if {[string index $str $start] eq {^}} {
-	set start [expr {$start-1}]
+	set start [expr {$start-1}];# For demo purposes only
     }
-    if {[string length [string index $str $start-1]] > 1} {
+    if {[string length [string index $str [expr {$start-1}]]] > 1} {
 	return [expr {$start-1}]
     }
     return $start

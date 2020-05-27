@@ -7608,7 +7608,7 @@ TkTextCharLayoutProc(
 				 * character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-	TkSizeT maxBytes,		/* Chunk must not include more than this many
+    TkSizeT maxBytes,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this display line yet. */
@@ -7621,7 +7621,8 @@ TkTextCharLayoutProc(
 				 * set by the caller. */
 {
     Tk_Font tkfont;
-    int nextX, bytesThatFit, count;
+    int nextX, count;
+    TkSizeT bytesThatFit;
     CharInfo *ciPtr;
     char *p;
     TkTextSegment *nextPtr;
@@ -7685,7 +7686,7 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    if ((TkSizeT)bytesThatFit + 1 <= maxBytes) {
+    if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    int ch;
 	    int chLen = TkUtfToUniChar(p, &ch);
