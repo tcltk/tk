@@ -45,18 +45,18 @@ typedef struct {
 
     const char *string;		/* Pointer to storage for string;
 				 * NULL-terminated; malloc-ed. */
-    int insertPos;		/* Character index before which next typed
+    TkSizeT insertPos;		/* Character index before which next typed
 				 * character will be inserted. */
 
     /*
      * Information about what's selected, if any.
      */
 
-    int selectFirst;		/* Character index of first selected character
+    TkSizeT selectFirst;		/* Character index of first selected character
 				 * (-1 means nothing selected. */
-    int selectLast;		/* Character index just after last selected
+    TkSizeT selectLast;		/* Character index just after last selected
 				 * character (-1 means nothing selected. */
-    int selectAnchor;		/* Fixed end of selection (i.e. "select to"
+    TkSizeT selectAnchor;		/* Fixed end of selection (i.e. "select to"
 				 * operation will use this as one end of the
 				 * selection). */
 

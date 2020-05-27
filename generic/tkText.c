@@ -3416,10 +3416,10 @@ DeleteIndexRange(
 static TkSizeT
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-	TkSizeT offset,			/* Offset within selection of first character
+    TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-	TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {

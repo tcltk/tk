@@ -87,9 +87,9 @@ typedef struct {
     TkSizeT numBytes;		/* Length of string in bytes. */
     TkSizeT numChars;		/* Length of string in characters. */
 
-    int insertPos;		/* Insert index */
-    int selectFirst;		/* Index of start of selection, or -1 */
-    int selectLast;		/* Index of end of selection, or -1 */
+    TkSizeT insertPos;		/* Insert index */
+    TkSizeT selectFirst;		/* Index of start of selection, or TCL_INDEX_NONE */
+    TkSizeT selectLast;		/* Index of end of selection, or TCL_INDEX_NONE */
 
     Scrollable xscroll;		/* Current scroll position */
     ScrollHandle xscrollHandle;
@@ -359,7 +359,7 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if (entryPtr->entry.selectFirst == -1 || (!entryPtr->entry.exportSelection)
+    if (entryPtr->entry.selectFirst == TCL_INDEX_NONE || (!entryPtr->entry.exportSelection)
 	    || Tcl_IsSafe(entryPtr->core.interp)) {
 	return TCL_INDEX_NONE;
     }
@@ -389,7 +389,7 @@ static void EntryLostSelection(ClientData clientData)
 {
     Entry *entryPtr = (Entry *)clientData;
     entryPtr->core.flags &= ~GOT_SELECTION;
-    entryPtr->entry.selectFirst = entryPtr->entry.selectLast = -1;
+    entryPtr->entry.selectFirst = entryPtr->entry.selectLast = TCL_INDEX_NONE;
     TtkRedisplayWidget(&entryPtr->core);
 }
 
@@ -421,7 +421,7 @@ ExpandPercents(
      Entry *entryPtr,		/* Entry that needs validation. */
      const char *templ, 	/* Script template */
      const char *newValue,		/* Potential new value of entry string */
-     int index,			/* index of insert/delete */
+     TkSizeT index,			/* index of insert/delete */
      int count,			/* #changed characters */
      VREASON reason,		/* Reason for change */
      Tcl_DString *dsPtr)	/* Result of %-substitutions */
@@ -473,7 +473,7 @@ ExpandPercents(
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
-		sprintf(numStorage, "%d", index);
+		sprintf(numStorage, "%d", (int)index);
 		string = numStorage;
 		break;
 	    case 'P': /* 'Peeked' new value of the string */
@@ -531,8 +531,8 @@ static int RunValidationScript(
     const char *templ,	/* Script template */
     const char *optionName,	/* "-validatecommand", "-invalidcommand" */
     const char *newValue,	/* Potential new value of entry string */
-    int index,			/* index of insert/delete */
-    int count,			/* #changed characters */
+    TkSizeT index,			/* index of insert/delete */
+    TkSizeT count,			/* #changed characters */
     VREASON reason)		/* Reason for change */
 {
     Tcl_DString script;
@@ -592,8 +592,8 @@ static int
 EntryValidateChange(
     Entry *entryPtr,		/* Entry that needs validation. */
     const char *newValue,	/* Potential new value of entry string */
-    int index,			/* index of insert/delete, -1 otherwise */
-    int count,			/* #changed characters */
+    TkSizeT index,			/* index of insert/delete, TCL_INDEX_NONE otherwise */
+    TkSizeT count,			/* #changed characters */
     VREASON reason)		/* Reason for change */
 {
     Tcl_Interp *interp = entryPtr->core.interp;
@@ -720,8 +720,8 @@ static void AdjustIndices(Entry *entryPtr, int index, int nChars)
     e->selectLast   = AdjustIndex(e->selectLast, index+g, nChars);
     e->xscroll.first= AdjustIndex(e->xscroll.first, index+g, nChars);
 
-    if (e->selectLast <= e->selectFirst)
-	e->selectFirst = e->selectLast = -1;
+    if (e->selectLast + 1 <= e->selectFirst + 1)
+	e->selectFirst = e->selectLast = TCL_INDEX_NONE;
 }
 
 /* EntryStoreValue --
@@ -835,7 +835,7 @@ static void EntryTextVariableTrace(void *recordPtr, const char *value)
 static int
 InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
-    int index,			/* Insert before this index */
+    TkSizeT index,			/* Insert before this index */
     const char *value)		/* New characters to add */
 {
     char *string = entryPtr->entry.string;
@@ -875,21 +875,21 @@ InsertChars(
 static int
 DeleteChars(
     Entry *entryPtr,		/* Entry widget to modify. */
-    int index,			/* Index of first character to delete. */
-    int count)			/* How many characters to delete. */
+    TkSizeT index,			/* Index of first character to delete. */
+    TkSizeT count)			/* How many characters to delete. */
 {
     char *string = entryPtr->entry.string;
     size_t byteIndex, byteCount, newByteCount;
     char *newBytes;
     int code;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	index = 0;
     }
-    if (count + index > (int)entryPtr->entry.numChars) {
+    if (count + index + 1 > entryPtr->entry.numChars + 1) {
 	count = entryPtr->entry.numChars - index;
     }
-    if (count <= 0) {
+    if (count + 1 <= 1) {
 	return TCL_OK;
     }
 
@@ -973,8 +973,8 @@ EntryInitialize(Tcl_Interp *dummy, void *recordPtr)
 	TtkCreateScrollHandle(&entryPtr->core, &entryPtr->entry.xscroll);
 
     entryPtr->entry.insertPos		= 0;
-    entryPtr->entry.selectFirst 	= -1;
-    entryPtr->entry.selectLast		= -1;
+    entryPtr->entry.selectFirst 	= TCL_INDEX_NONE;
+    entryPtr->entry.selectLast		= TCL_INDEX_NONE;
 }
 
 static void
@@ -1029,7 +1029,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Claim the selection, in case we've suddenly started exporting it.
      */
-    if (entryPtr->entry.exportSelection && (entryPtr->entry.selectFirst != -1)
+    if (entryPtr->entry.exportSelection && (entryPtr->entry.selectFirst != TCL_INDEX_NONE)
 	    && (!Tcl_IsSafe(entryPtr->core.interp))) {
 	EntryOwnSelection(entryPtr);
     }
@@ -1088,7 +1088,7 @@ static int EntryPostConfigure(Tcl_Interp *dummy, void *recordPtr, int mask)
  * 	Precondition: textLayout and layoutX up-to-date.
  */
 static int
-EntryCharPosition(Entry *entryPtr, int index)
+EntryCharPosition(Entry *entryPtr, TkSizeT index)
 {
     int xPos;
     Tk_CharBbox(entryPtr->entry.textLayout, index, &xPos, NULL, NULL, NULL);
@@ -1197,7 +1197,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 {
     Entry *entryPtr = (Entry *)clientData;
     Tk_Window tkwin = entryPtr->core.tkwin;
-    int leftIndex = entryPtr->entry.xscroll.first,
+    TkSizeT leftIndex = entryPtr->entry.xscroll.first,
 	rightIndex = entryPtr->entry.xscroll.last + 1,
 	selFirst = entryPtr->entry.selectFirst,
 	selLast = entryPtr->entry.selectLast;
@@ -1215,22 +1215,21 @@ static void EntryDisplay(void *clientData, Drawable d)
     showCursor =
 	   (entryPtr->core.flags & CURSOR_ON)
 	&& EntryEditable(entryPtr)
-	&& entryPtr->entry.insertPos >= leftIndex
-	&& entryPtr->entry.insertPos <= rightIndex
+	&& entryPtr->entry.insertPos + 1 >= leftIndex + 1
+	&& entryPtr->entry.insertPos + 1 <= rightIndex + 1
 	;
     showSelection =
 	   !(entryPtr->core.state & TTK_STATE_DISABLED)
-	&& selFirst > -1
-	&& selLast > leftIndex
-	&& selFirst <= rightIndex
-	;
+	&& selFirst != TCL_INDEX_NONE
+	&& selLast + 1 > leftIndex + 1
+	&& selFirst + 1 <= rightIndex + 1;
 
     /* Adjust selection range to keep in display bounds.
      */
     if (showSelection) {
-	if (selFirst < leftIndex)
+	if (selFirst + 1 < leftIndex + 1)
 	    selFirst = leftIndex;
-	if (selLast > rightIndex)
+	if (selLast + 1 > rightIndex + 1)
 	    selLast = rightIndex;
     }
 
@@ -1313,7 +1312,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&rightIndex);
+	TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
     } else {
 	foregroundObj = es.foregroundObj;
     }
@@ -1366,7 +1365,7 @@ EntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry widget to query */
     Tcl_Obj *indexObj,		/* Symbolic index name */
-    int *indexPtr)		/* Return value */
+    TkSizeT *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
     TkSizeT length, idx;
@@ -1376,7 +1375,7 @@ EntryIndex(
     	if (idx + 1 > entryPtr->entry.numChars + 1) {
     	    idx = entryPtr->entry.numChars;
     	}
-    	*indexPtr = (int)idx;
+    	*indexPtr = idx;
     	return TCL_OK;
     }
 
@@ -1389,7 +1388,7 @@ EntryIndex(
     } else if (strncmp(string, "right", length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.last;
     } else if (strncmp(string, "sel.", 4) == 0) {
-	if (entryPtr->entry.selectFirst == -1) {
+	if (entryPtr->entry.selectFirst == TCL_INDEX_NONE) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
 		    Tk_PathName(entryPtr->core.tkwin)));
@@ -1419,7 +1418,7 @@ EntryIndex(
 		x - entryPtr->entry.layoutX, 0);
 
         TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
-	if (*indexPtr < entryPtr->entry.xscroll.first) {
+	if (*indexPtr + 1 < (TkSizeT)entryPtr->entry.xscroll.first + 1) {
 	    *indexPtr = entryPtr->entry.xscroll.first;
 	}
 
@@ -1430,7 +1429,7 @@ EntryIndex(
 	 * last character to be selected, for example.
 	 */
 
-	if (roundUp && (*indexPtr < (int)entryPtr->entry.numChars)) {
+	if (roundUp && ((TkSizeT)*indexPtr + 1 < entryPtr->entry.numChars + 1 )) {
 	    *indexPtr += 1;
 	}
     } else {
@@ -1454,7 +1453,7 @@ EntryBBoxCommand(
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Ttk_Box b;
-    int index;
+    TkSizeT index;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -1463,7 +1462,7 @@ EntryBBoxCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((index == (int)entryPtr->entry.numChars) && (index > 0)) {
+    if ((index == entryPtr->entry.numChars) && (index + 1 > 1)) {
 	index--;
     }
     Tk_CharBbox(entryPtr->entry.textLayout, index,
@@ -1483,7 +1482,7 @@ EntryDeleteCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    int first, last;
+    TkSizeT first, last;
 
     if ((objc < 3) || (objc > 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
@@ -1498,7 +1497,7 @@ EntryDeleteCommand(
 	return TCL_ERROR;
     }
 
-    if (last >= first && EntryEditable(entryPtr)) {
+    if (last + 1 >= first + 1 && EntryEditable(entryPtr)) {
 	return DeleteChars(entryPtr, first, last - first);
     }
     return TCL_OK;
@@ -1548,7 +1547,7 @@ EntryIndexCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    int index;
+    TkSizeT index;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "string");
@@ -1570,7 +1569,7 @@ EntryInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    int index;
+    TkSizeT index;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "index text");
@@ -1597,7 +1596,7 @@ static int EntrySelectionClearCommand(
 	Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	return TCL_ERROR;
     }
-    entryPtr->entry.selectFirst = entryPtr->entry.selectLast = -1;
+    entryPtr->entry.selectFirst = entryPtr->entry.selectLast = TCL_INDEX_NONE;
     TtkRedisplayWidget(&entryPtr->core);
     return TCL_OK;
 }
@@ -1614,7 +1613,7 @@ static int EntrySelectionPresentCommand(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp,
-	    Tcl_NewWideIntObj(entryPtr->entry.selectFirst >= 0));
+	    Tcl_NewWideIntObj(entryPtr->entry.selectFirst != TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -1625,7 +1624,7 @@ static int EntrySelectionRangeCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    int start, end;
+    TkSizeT start, end;
     if (objc != 5) {
 	Tcl_WrongNumArgs(interp, 3, objv, "start end");
 	return TCL_ERROR;
@@ -1638,8 +1637,8 @@ static int EntrySelectionRangeCommand(
 	return TCL_OK;
     }
 
-    if (start >= end) {
-	entryPtr->entry.selectFirst = entryPtr->entry.selectLast = -1;
+    if (start + 1 >= end + 1 ) {
+	entryPtr->entry.selectFirst = entryPtr->entry.selectLast = TCL_INDEX_NONE;
     } else {
 	entryPtr->entry.selectFirst = start;
 	entryPtr->entry.selectLast = end;
@@ -1702,7 +1701,7 @@ static int EntryXViewCommand(
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc == 3) {
-	int newFirst;
+	TkSizeT newFirst;
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
