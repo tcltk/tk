@@ -51,7 +51,7 @@ TkStateParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-	TkSizeT offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     int flags = PTR2INT(clientData);
@@ -174,7 +174,7 @@ TkOrientParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-	TkSizeT offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -412,7 +412,7 @@ TkOffsetPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-	TkSizeT offset,			/* Offset of tile in record */
+    TkSizeT offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
@@ -479,7 +479,7 @@ TkPixelParseProc(
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-	TkSizeT offset)			/* Offset of tile in record */
+    TkSizeT offset)			/* Offset of tile in record */
 {
     double *doublePtr = (double *) (widgRec + offset);
     int result;

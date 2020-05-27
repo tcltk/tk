@@ -165,7 +165,7 @@ bind Entry <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete insert
+	%W delete [::tk::startOfGlyphCluster [%W get] [%W index insert]]] [expr {[::tk::endOfGlyphCluster [%W get] [%W index insert]]+1}]]
     }
 }
 bind Entry <BackSpace> {
@@ -518,9 +518,9 @@ proc ::tk::EntryBackspace w {
     if {[$w selection present]} {
 	$w delete sel.first sel.last
     } else {
-	set x [tcl_startOfChar [$w get] [$w index insert]]
+	set x [expr {[$w index insert] - 1}]
 	if {$x >= 0} {
-	    $w delete $x
+	    $w delete [::tk::startOfGlyphCluster [$w get] $x] [expr {[::tk::endOfGlyphCluster [$w get] $x]+1}]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -635,7 +635,7 @@ proc ::tk::EntryPreviousWord {w start} {
 }
 
 proc ::tk::EntryNextChar {w start} {
-    set pos [tcl_endOfChar [$w get] [expr {[$w index $start]+1}]]
+    set pos [::tk::endOfGlyphCluster [$w get] [expr {[$w index $start]+1}]]
     if {$pos < 0} {
 	return end
     }
@@ -643,12 +643,21 @@ proc ::tk::EntryNextChar {w start} {
 }
 
 proc ::tk::EntryPreviousChar {w start} {
-    set pos [tcl_startOfChar [$w get] [expr {[$w index $start]-1}]]
+    set pos [::tk::startOfGlyphCluster [$w get] [expr {[$w index $start]-1}]]
     if {$pos < 0} {
 	return 0
     }
     return $pos
 }
+
+proc ::tk::EntryInsertChar {w start} {
+    set pos [::tk::endOfGlyphCluster [$w get] [expr {[$w index $start]+1}]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
 
 # ::tk::EntryScanMark --
 #

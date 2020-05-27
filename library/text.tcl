@@ -99,10 +99,10 @@ bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W {insert-1displayindices} tcl_startOfChar]
+    tk::TextSetCursor %W [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster]
 }
 bind Text <<NextChar>> {
-    tk::TextSetCursor %W [tk::TextNextPos %W {insert+1displayindices} tcl_endOfChar]
+    tk::TextSetCursor %W [tk::TextNextPos %W insert+1c ::tk::endOfGlyphCluster]
 }
 bind Text <<PrevLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W -1]
@@ -111,10 +111,10 @@ bind Text <<NextLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<SelectPrevChar>> {
-    tk::TextKeySelect %W [%W index {insert - 1displayindices}]
+    tk::TextKeySelect %W [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster]
 }
 bind Text <<SelectNextChar>> {
-    tk::TextKeySelect %W [tk::TextNextPos %W {insert + 1displayindices} tcl_endOfChar]
+    tk::TextKeySelect %W [tk::TextNextPos %W insert ::tk::endOfGlyphCluster]
 }
 bind Text <<SelectPrevLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
@@ -222,7 +222,7 @@ bind Text <Delete> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare end != insert+1c]} {
-	    %W delete insert
+	    %W delete [tk::TextPrevPos %W insert+1c ::tk::startOfGlyphCluster] [expr {[tk::TextNextPos %W insert ::tk::endOfGlyphCluster]+1}]
 	}
 	%W see insert
     }
@@ -232,7 +232,7 @@ bind Text <BackSpace> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare insert != 1.0]} {
-	    %W delete insert-1c
+	    %W delete [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster] [expr {[tk::TextNextPos %W insert-1c ::tk::endOfGlyphCluster]+1}]
 	}
 	%W see insert
     }
