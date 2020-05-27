@@ -564,11 +564,11 @@ MarkLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
     TkTextSegment *segPtr,	/* Segment corresponding to indexPtr. */
-	TkSizeT offset,			/* Offset within segPtr corresponding to
+    TkSizeT offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-	TkSizeT maxChars,		/* Chunk must not include more than this many
+    TkSizeT maxChars,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
