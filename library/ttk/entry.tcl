@@ -278,7 +278,7 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::NextChar {w start} {
     variable State
-    set pos [::tk::endOfGlyphCluster [$w get] [expr {[$w index $start]+1}]]
+    set pos [::tk::endOfGlyphCluster [$w get] [$w index $start]]
     if {$pos < 0} {
 	return end
     }
@@ -631,7 +631,7 @@ proc ttk::entry::Backspace {w} {
     set x [expr {[$w index insert] - 1}]
     if {$x < 0} { return }
 
-    $w delete [::tk::startOfGlyphCluster [$w get] $x] [expr {[::tk::endOfGlyphCluster [$w get] $x]+1}]
+    $w delete [::tk::startOfGlyphCluster [$w get] $x] [::tk::endOfGlyphCluster [$w get] $x]
 
     if {[$w index @0] >= [$w index insert]} {
 	set range [$w xview]
@@ -646,7 +646,7 @@ proc ttk::entry::Backspace {w} {
 #
 proc ttk::entry::Delete {w} {
     if {![PendingDelete $w]} {
-	$w delete [::tk::startOfGlyphCluster [$w get] [$w index insert]] [expr {[::tk::endOfGlyphCluster [$w get] [$w index insert]]+1}]
+	$w delete [::tk::startOfGlyphCluster [$w get] [$w index insert]] [::tk::endOfGlyphCluster [$w get] [$w index insert]]
     }
 }
 
