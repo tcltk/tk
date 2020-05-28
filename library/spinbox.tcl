@@ -129,18 +129,18 @@ bind Spinbox <<NextLine>> {
 }
 
 bind Spinbox <<PrevChar>> {
-    ::tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
+    tk::EntrySetCursor %W [tk::EntryPreviousChar %W insert]
 }
 bind Spinbox <<NextChar>> {
-    ::tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
+    tk::EntrySetCursor %W [tk::EntryNextChar %W insert]
 }
 bind Spinbox <<SelectPrevChar>> {
-    ::tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
-    ::tk::EntrySeeInsert %W
+    tk::EntryKeySelect %W [tk::EntryPreviousChar %W insert]
+    tk::EntrySeeInsert %W
 }
 bind Spinbox <<SelectNextChar>> {
-    ::tk::EntryKeySelect %W [expr {[%W index insert] + 1}]
-    ::tk::EntrySeeInsert %W
+    tk::EntryKeySelect %W [tk::EntryNextChar %W insert]
+    tk::EntrySeeInsert %W
 }
 bind Spinbox <<PrevWord>> {
     ::tk::EntrySetCursor %W [::tk::EntryPreviousWord %W insert]
@@ -175,7 +175,7 @@ bind Spinbox <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete insert
+	%W delete [::tk::startOfGlyphCluster [%W get] [%W index insert]] [::tk::endOfGlyphCluster [%W get] [%W index insert]]
     }
 }
 bind Spinbox <BackSpace> {

@@ -701,6 +701,7 @@ proc ::tk::endOfGlyphCluster {str start} {
     if {[string length [string index $str $start]] > 1} {
 	set start [expr {$start+1}]
     }
+    set start [expr {$start+1}]
     if {[string index $str $start] eq {^}} {
 	set start [expr {$start+1}];# For demo purposes only
     }

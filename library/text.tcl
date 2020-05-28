@@ -102,7 +102,7 @@ bind Text <<PrevChar>> {
     tk::TextSetCursor %W [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster]
 }
 bind Text <<NextChar>> {
-    tk::TextSetCursor %W [tk::TextNextPos %W insert+1c ::tk::endOfGlyphCluster]
+    tk::TextSetCursor %W [tk::TextNextPos %W insert ::tk::endOfGlyphCluster]
 }
 bind Text <<PrevLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W -1]
@@ -222,7 +222,7 @@ bind Text <Delete> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare end != insert+1c]} {
-	    %W delete [tk::TextPrevPos %W insert+1c ::tk::startOfGlyphCluster] "[tk::TextNextPos %W insert ::tk::endOfGlyphCluster]+1c"
+	    %W delete [tk::TextPrevPos %W insert+1c ::tk::startOfGlyphCluster] [tk::TextNextPos %W insert ::tk::endOfGlyphCluster]
 	}
 	%W see insert
     }
@@ -232,7 +232,7 @@ bind Text <BackSpace> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare insert != 1.0]} {
-	    %W delete [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster] "[tk::TextNextPos %W insert-1c ::tk::endOfGlyphCluster]+1c"
+	    %W delete [tk::TextPrevPos %W insert ::tk::startOfGlyphCluster] [tk::TextNextPos %W insert-1c ::tk::endOfGlyphCluster]
 	}
 	%W see insert
     }
