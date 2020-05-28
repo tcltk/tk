@@ -1120,7 +1120,7 @@ DoExtension(
 		    Tcl_DStringFree(&dataDString);
 		    return -1;
 		}
-		Tcl_DStringAppend(&dataDString,&byte,1);
+		Tcl_DStringAppend(&dataDString,(char *)&byte,1);
 		/* check for end of xmp header */
 		if (byte == 0 && lastbyte == 0) {
 		    break;
