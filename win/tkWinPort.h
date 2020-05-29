@@ -129,4 +129,11 @@
 #define TkpCreateNativeBitmap(display, source) None
 #define TkpGetNativeAppBitmap(display, name, w, h) None
 
+/*
+ * Other functions not used under Windows
+ */
+
+#define TkpAppCanDraw(tkwin) 1
+#define TkpRedrawWidget(tkwin)
+
 #endif /* _WINPORT */
