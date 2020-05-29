@@ -13,9 +13,7 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#if defined(MAC_OSX_TK)
-#include "tkMacOSXInt.h"
-#endif
+
 /*
  * The following structure is used to keep track of all the fonts that exist
  * in the current application. It must be stored in the TkMainInfo for the
@@ -874,18 +872,18 @@ TheWorldHasChanged(
     ClientData clientData)	/* Info about application's fonts. */
 {
     TkFontInfo *fiPtr = clientData;
-#if defined(MAC_OSX_TK)
 
     /*
      * On macOS it is catastrophic to recompute all widgets while the
      * [NSView drawRect] method is drawing. The best that we can do in
      * that situation is to abort the recomputation and hope for the best.
+     * This is ignored on other platforms.
      */
 
-    if (TkpAppIsDrawing()) {
+    if (TkpAppCanDraw(NULL)) {
 	return;
     }
-#endif
+
     fiPtr->updatePending = 0;
     RecomputeWidgets(fiPtr->mainPtr->winPtr);
 }
