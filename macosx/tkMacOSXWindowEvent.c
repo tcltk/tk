@@ -30,8 +30,8 @@
  * Declaration of functions used only in this file
  */
 
-static int		GenerateUpdates(HIShapeRef updateRgn,
-			   CGRect *updateBounds, TkWindow *winPtr);
+static int		GenerateUpdates(
+			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
 static void		DoWindowActivate(ClientData clientData);
@@ -407,16 +407,29 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 int
 TkpAppCanDraw(Tk_Window tkwin) {
-    if (![NSApp isDrawing]) {
-	return 0;
-    }
+    int result;
     if (tkwin) {
 	TkWindow *winPtr = (TkWindow *)tkwin;
-	NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
-	return (view == [NSView focusView]);
+	TKContentView *view = (TKContentView *) TkMacOSXDrawableView(
+						    winPtr->privatePtr);
+	result = ([NSApp isDrawing] && view == [NSView focusView]);
+#if 0
+	printf("TkAppCanDraw: %s %d  %d \n", Tk_PathName(tkwin),
+	       [NSApp isDrawing], (view == [NSView focusView]));
+	if (!result) {
+	    NSRect dirtyRect;
+	    TkMacOSXWinNSBounds(winPtr, view, &dirtyRect);
+	    printf("TkpAppCanDraw: dirtyRect for %s is %s\n",
+		   Tk_PathName(tkwin),
+		   NSStringFromRect(dirtyRect).UTF8String);
+	    [view setTkNeedsDisplay:YES];
+	    [view setTkDirtyRect:dirtyRect];
+	}
+#endif
     } else {
-	return 1;
+	result = [NSApp isDrawing];
     }
+    return result;
 }
 
 /*
@@ -424,9 +437,9 @@ TkpAppCanDraw(Tk_Window tkwin) {
  *
  * GenerateUpdates --
  *
- *	Given a Macintosh update region and a Tk window this function geneates
+ *	Given an update rectangle and a Tk window, this function geneates
  *	an X Expose event for the window if it meets the update region. The
- *	function will then recursivly have each damaged window generate Expose
+ *	function will then recursively have each damaged window generate Expose
  *	events for its child windows.
  *
  * Results:
@@ -440,20 +453,15 @@ TkpAppCanDraw(Tk_Window tkwin) {
 
 static int
 GenerateUpdates(
-    HIShapeRef updateRgn,
     CGRect *updateBounds,
     TkWindow *winPtr)
 {
     TkWindow *childPtr;
     XEvent event;
     CGRect bounds, damageBounds;
-    HIShapeRef boundsRgn, damageRgn;
 
     TkMacOSXWinCGBounds(winPtr, &bounds);
     if (!CGRectIntersectsRect(bounds, *updateBounds)) {
-	return 0;
-    }
-    if (!HIShapeIntersectsRect(updateRgn, &bounds)) {
 	return 0;
     }
 
@@ -461,18 +469,7 @@ GenerateUpdates(
      * Compute the bounding box of the area that the damage occured in.
      */
 
-    boundsRgn = HIShapeCreateWithRect(&bounds);
-    damageRgn = HIShapeCreateIntersection(updateRgn, boundsRgn);
-    if (HIShapeIsEmpty(damageRgn)) {
-	CFRelease(damageRgn);
-	CFRelease(boundsRgn);
-	return 0;
-    }
-    HIShapeGetBounds(damageRgn, &damageBounds);
-
-    CFRelease(damageRgn);
-    CFRelease(boundsRgn);
-
+    damageBounds = CGRectIntersection(bounds, *updateBounds);
     event.xany.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     event.xany.send_event = false;
     event.xany.window = Tk_WindowId(winPtr);
@@ -486,7 +483,7 @@ GenerateUpdates(
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    TKLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
+    TKLog(@"Exposed %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
 #endif
 
@@ -499,7 +496,7 @@ GenerateUpdates(
 	if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
 	    continue;
 	}
-	GenerateUpdates(updateRgn, updateBounds, childPtr);
+	GenerateUpdates(updateBounds, childPtr);
     }
 
     /*
@@ -509,7 +506,7 @@ GenerateUpdates(
     if (Tk_IsContainer(winPtr)) {
 	childPtr = TkpGetOtherWindow(winPtr);
 	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
-	    GenerateUpdates(updateRgn, updateBounds, childPtr);
+	    GenerateUpdates(updateBounds, childPtr);
 	}
 
 	/*
@@ -928,10 +925,10 @@ ConfigureRestrictProc(
  */
 
 static void
-RedisplayView(
+RedisplayView( 
     ClientData clientdata)
 {
-    NSView *view = (NSView *) clientdata;
+    TKContentView *view = (TKContentView *) clientdata;
 
     /*
      * Make sure that we are not trying to displaying a view that no longer
@@ -941,7 +938,8 @@ RedisplayView(
 
     for (NSWindow *w in [NSApp windows]) {
 	if ([w contentView] == view) {
-	    [view setNeedsDisplay:YES];
+	    [view setTkNeedsDisplay:YES];
+	    [view setTkDirtyRect:[view bounds]];
 	    break;
 	}
     }
@@ -951,13 +949,13 @@ RedisplayView(
 
 - (void) drawRect: (NSRect) rect
 {
-    const NSRect *rectsBeingDrawn;
-    NSInteger rectsBeingDrawnCount;
 
 #ifdef TK_MAC_DEBUG_DRAWING
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    if (winPtr) fprintf(stderr, "drawRect: drawing %s\n",
-			Tk_PathName(winPtr));
+    if (winPtr) {
+	fprintf(stderr, "drawRect: drawing %s in %s\n",
+	    Tk_PathName(winPtr), NSStringFromRect(rect).UTF8String);
+    }
 #endif
 
     /*
@@ -974,29 +972,20 @@ RedisplayView(
 
     [NSApp setIsDrawing: YES];
 
-    [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
-    CGFloat height = [self bounds].size.height;
-    HIMutableShapeRef drawShape = HIShapeCreateMutable();
-
-    while (rectsBeingDrawnCount--) {
-	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
-
 #ifdef TK_MAC_DEBUG_DRAWING
-	fprintf(stderr, "drawRect: %dx%d@(%d,%d)\n", (int)r.size.width,
-	       (int)r.size.height, (int)r.origin.x, (int)r.origin.y);
+    fprintf(stderr, "drawRect: %s\n", NSStringFromRect(rect).UTF8String;
 #endif
 
-	r.origin.y = height - (r.origin.y + r.size.height);
-	HIShapeUnionWithRect(drawShape, &r);
-    }
-    [self generateExposeEvents:(HIShapeRef)drawShape];
-    CFRelease(drawShape);
+    [self generateExposeEvents:rect];
     [NSApp setIsDrawing: NO];
 
     if ([self needsRedisplay]) {
 	[self setNeedsRedisplay:NO];
 	Tcl_DoWhenIdle(RedisplayView, self);
     }
+
+    [self setTkNeedsDisplay:NO];
+    [self setTkDirtyRect:NSZeroRect];
 
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
@@ -1056,9 +1045,7 @@ RedisplayView(
 	  * Generate and process expose events to redraw the window.
 	  */
 
-	HIRect bounds = NSRectToCGRect([self bounds]);
-	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
-	[self generateExposeEvents: shape];
+	[self generateExposeEvents: [self bounds]];
 	[w displayIfNeeded];
 
 	/*
@@ -1076,11 +1063,11 @@ RedisplayView(
  * pending idle events are processed so the drawing will actually take place.
  */
 
-- (void) generateExposeEvents: (HIShapeRef) shape
+- (void) generateExposeEvents: (NSRect) rect
 {
     unsigned long serial;
-    CGRect updateBounds;
     int updatesNeeded;
+    CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
@@ -1089,19 +1076,17 @@ RedisplayView(
     }
 
     /*
-     * Generate Tk Expose events.
+     * Generate Tk Expose events.  All of these events will share the same
+     * serial number.
      */
-
-    HIShapeGetBounds(shape, &updateBounds);
-
-    /*
-     * All of these events will share the same serial number.
-     */
-
-    serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    updatesNeeded = GenerateUpdates(shape, &updateBounds, winPtr);
-
+    
+    updateBounds = NSRectToCGRect(rect);
+    updateBounds.origin.y = ([self bounds].size.height - updateBounds.origin.y
+			     - updateBounds.size.height);
+    updatesNeeded = GenerateUpdates(&updateBounds, winPtr);
     if (updatesNeeded) {
+
+	serial = LastKnownRequestProcessed(Tk_Display(winPtr));
 
 	/*
 	 * First process all of the Expose events.
@@ -1120,9 +1105,10 @@ RedisplayView(
 	 * effect.)
 	 *
 	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
-	 * So we can do the drawing by processing all of the idle events that
-	 * were created when the expose events were processed.
+	 * So we can do the drawing now by processing all of the idle events
+	 * that were created when the expose events were processed.
 	 */
+
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
@@ -1202,9 +1188,14 @@ RedisplayView(
 - (BOOL) isOpaque
 {
     NSWindow *w = [self window];
-      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
-    	    ![w isOpaque]) ? NO : YES);
+    return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+		  ![w isOpaque]) ? NO : YES);
 }
+
+/*
+ * On Catalina this is never called and drawRect clips to the rect that
+ * is passed to it by AppKit.
+ */
 
 - (BOOL) wantsDefaultClipping
 {

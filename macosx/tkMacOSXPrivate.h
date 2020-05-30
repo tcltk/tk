@@ -307,6 +307,8 @@ MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
+MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
+					    NSRect *bounds);
 
 #pragma mark Private Objective-C Classes
 
@@ -418,8 +420,12 @@ VISIBILITY_HIDDEN
 @private
     NSString *privateWorkingText;
     Bool _needsRedisplay;
+    Bool _tkNeedsDisplay;
+    NSRect _tkDirtyRect;
 }
 @property Bool needsRedisplay;
+@property Bool tkNeedsDisplay;
+@property NSRect tkDirtyRect;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -428,7 +434,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) generateExposeEvents: (HIShapeRef) shape;
+ //(HIShapeRef) shape;
+- (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
 @end
 
