@@ -698,16 +698,10 @@ XConfigureWindow(
 
     if (value_mask & CWStackMode) {
 	NSView *view = TkMacOSXDrawableView(macWin);
-	Rect bounds;
-	NSRect r;
 
 	if (view) {
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
-	    TkMacOSXWinBounds(winPtr, &bounds);
-	    r = NSMakeRect(bounds.left,
-		    [view bounds].size.height - bounds.bottom,
-		    bounds.right - bounds.left, bounds.bottom - bounds.top);
-	    [view setNeedsDisplayInRect:r];
+	    TkpRedrawWidget((Tk_Window) winPtr);
 	}
     }
 

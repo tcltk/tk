@@ -436,7 +436,7 @@ TkTextMakeByteIndex(
 		 */
 
 		start = segPtr->body.chars + (byteIndex - index);
-		p = Tcl_UtfPrev(start, segPtr->body.chars);
+		p = TkUtfPrev(start, segPtr->body.chars);
 		p += TkUtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }
@@ -2125,7 +2125,7 @@ TkTextIndexBackChars(
 	    if (segPtr->typePtr == &tkTextCharType) {
 		start = segPtr->body.chars;
 		end = segPtr->body.chars + segSize;
-		for (p = end; ; p = Tcl_UtfPrev(p, start)) {
+		for (p = end; ; p = TkUtfPrev(p, start)) {
 		    if (charCount == 0) {
 			dstPtr->byteIndex -= (end - p);
 			goto backwardCharDone;
@@ -2366,7 +2366,7 @@ StartEnd(
 		}
 		if (offset > 0) {
 		    chSize = (segPtr->body.chars + offset
-			    - Tcl_UtfPrev(segPtr->body.chars + offset,
+			    - TkUtfPrev(segPtr->body.chars + offset,
 			    segPtr->body.chars));
 		}
 		firstChar = 0;

@@ -634,6 +634,15 @@ declare 184 {
 	    Tk_Font tkfont, const char *source, int numBytes, double x,
 	    double y, double angle)
 }
+
+# Support for aqua's inability to draw outside [NSView drawRect:]
+declare 185 aqua {
+    void TkpRedrawWidget(Tk_Window tkwin)
+}
+declare 186 aqua {
+    int TkpAppCanDraw(Tk_Window tkwin)
+}
+
 
 ##############################################################################
 
