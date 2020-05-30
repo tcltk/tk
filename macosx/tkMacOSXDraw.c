@@ -174,7 +174,9 @@ TkMacOSXBitmapRepFromDrawableRect(
 	if (cg_image) {
 	    CGImageRelease(cg_image);
 	}
-    } else if ((view = TkMacOSXDrawableView(mac_drawable)) != NULL) {
+    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
+	TKContentView *tkview = (TKContentView *)view;
+ 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
 	 */
@@ -197,7 +199,8 @@ TkMacOSXBitmapRepFromDrawableRect(
 	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
 	} else {
 	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    [view setNeedsDisplay:YES];
+	    [tkview setTkNeedsDisplay:YES];
+	    [tkview setTkDirtyRect:[tkview bounds]];
 	    return NULL;
 	}
     } else {
@@ -1622,7 +1625,7 @@ TkMacOSXSetupDrawingContext(
     if (dc.context) {
 	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
     } else if (win) {
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
 
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
@@ -1636,31 +1639,22 @@ TkMacOSXSetupDrawingContext(
 	 * tells us whether we are being called from one of those methods.
 	 *
 	 * If the CGContext is not valid then we mark our view as needing
-	 * display in the bounding rectangle of the clipping region and
-	 * return failure.  That rectangle should get drawn in a later call
-	 * to drawRect.
-	 *
-	 * As an exception to the above, if mouse buttons are pressed at the
-	 * moment when we fail to obtain a valid context we schedule the entire
-	 * view for a redraw rather than just the clipping region.  The purpose
-	 * of this is to make sure that scrollbars get updated correctly.
+	 * display.  We could try to optimize by computing a smaller dirty rect
+	 * here.
 	 */
 
 	if (![NSApp isDrawing] || view != [NSView focusView]) {
-	    NSRect bounds = [view bounds];
-	    NSRect dirtyNS = bounds;
-	    if ([NSEvent pressedMouseButtons]) {
-		[view setNeedsDisplay:YES];
-	    } else {
+	    NSRect dirtyRect = [view bounds];
+	    if (dc.clipRgn) {
+		CGRect clipRect;
 		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-					.ty = dirtyNS.size.height};
-		if (dc.clipRgn) {
-		    CGRect dirtyCG = NSRectToCGRect(dirtyNS);
-		    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
-		    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
-		}
-		[view setNeedsDisplayInRect:dirtyNS];
+					.ty = dirtyRect.size.height};
+		HIShapeGetBounds(dc.clipRgn, &clipRect);
+		clipRect = CGRectApplyAffineTransform(clipRect, t);
+		dirtyRect = NSRectFromCGRect(clipRect);
 	    }
+	    [view setTkNeedsDisplay:YES];
+	    [view setTkDirtyRect:NSUnionRect([view tkDirtyRect], dirtyRect)];
 	    canDraw = false;
 	    goto end;
 	}

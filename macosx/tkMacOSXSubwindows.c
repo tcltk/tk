@@ -157,6 +157,7 @@ XMapWindow(
     winPtr->flags |= TK_MAPPED;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
+	    TKContentView *view = [win contentView];
 
 	    /*
 	     * We want to activate Tk when a toplevel is mapped but we must not
@@ -169,7 +170,8 @@ XMapWindow(
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:NO];
-	    [[win contentView] setNeedsDisplay:YES];
+	    [view setTkNeedsDisplay:YES];
+	    [view setTkDirtyRect: [view bounds]];
 	    if ([win canBecomeKeyWindow]) {
 		[win makeKeyAndOrderFront:NSApp];
 	    } else {
@@ -215,7 +217,9 @@ XMapWindow(
     if ([NSApp isDrawing]) {
 	[[win contentView] setNeedsRedisplay:YES];
     } else {
-	[[win contentView] setNeedsDisplay:YES];
+	TKContentView *view = [win contentView];
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:[view bounds]];
     }
 
     /*
@@ -332,7 +336,9 @@ XUnmapWindow(
     if ([NSApp isDrawing]) {
 	[[win contentView] setNeedsRedisplay:YES];
     } else {
-	[[win contentView] setNeedsDisplay:YES];
+	TKContentView *view = [win contentView];
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:[view bounds]];
     }
     return Success;
 }
@@ -986,8 +992,9 @@ InvalViewRect(
     void *ref)
 {
     static CGAffineTransform t;
-    NSView *view = ref;
-
+    TKContentView *view = ref;
+    NSRect dirtyRect;
+    
     if (!view) {
 	return paramErr;
     }
@@ -997,8 +1004,9 @@ InvalViewRect(
 		NSHeight([view bounds]));
 	break;
     case kHIShapeEnumerateRect:
-	[view setNeedsDisplayInRect:NSRectFromCGRect(
-		CGRectApplyAffineTransform(*rect, t))];
+	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:NSUnionRect([view tkDirtyRect], dirtyRect)];
 	break;
     }
     return noErr;
@@ -1275,16 +1283,15 @@ TkMacOSXInvalClipRgns(
  *
  * TkMacOSXWinBounds --
  *
- *	Given a Tk window this function determines the windows bounds in
- *	relation to the Macintosh window's coordinate system. This is also the
- *	same coordinate system as the Tk toplevel window in which this window
- *	is contained.
+ *	Given a Tk window this function determines the window's bounds in
+ *	the coordinate system of the Tk toplevel window in which this window
+ *	is contained.  This fills in a Rect struct.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Fills in a Rect.
  *
  *----------------------------------------------------------------------
  */
@@ -1307,16 +1314,15 @@ TkMacOSXWinBounds(
  *
  * TkMacOSXWinCGBounds --
  *
- *	Given a Tk window this function determines the windows bounds in
- *	relation to the Macintosh window's coordinate system. This is also the
- *	same coordinate system as the Tk toplevel window in which this window
- *	is contained.
+ *	Given a Tk window this function determines the window's bounds in
+ *	the coordinate system of the Tk toplevel window in which this window
+ *	is contained.  This fills in a CGRect struct.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Fill in a CGRect.
  *
  *----------------------------------------------------------------------
  */
@@ -1330,6 +1336,39 @@ TkMacOSXWinCGBounds(
     bounds->origin.y = winPtr->privatePtr->yOff;
     bounds->size.width = winPtr->changes.width;
     bounds->size.height = winPtr->changes.height;
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXWinNSBounds --
+ *
+ *	Given a Tk window this function determines the window's bounds in
+ *	the coordinate system of the TKContentView in which this Tk window
+ *	is contained, which has the origin at the lower left corner.  This
+ *      fills in an NSRect struct and requires the TKContentView as a
+ *      parameter
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Fills in an NSRect.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXWinNSBounds(
+    TkWindow *winPtr,
+    NSView *view,
+    NSRect *bounds)
+{
+    bounds->size.width = winPtr->changes.width;
+    bounds->size.height = winPtr->changes.height;
+    bounds->origin.x = winPtr->privatePtr->xOff;
+    bounds->origin.y = ([view bounds].size.height -
+		       bounds->size.height -
+		       winPtr->privatePtr->yOff);
 }
 
 /*

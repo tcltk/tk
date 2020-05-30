@@ -6201,13 +6201,14 @@ TkpRedrawWidget(Tk_Window tkwin) {
     }
     w = TkMacOSXDrawableWindow(winPtr->window);
     if (w) {
-	NSView *view = [w contentView];
+	TKContentView *view = [w contentView];
 	TkMacOSXWinBounds(winPtr, &tkBounds);
 	bounds = NSMakeRect(tkBounds.left,
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view setNeedsDisplayInRect:bounds];
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:bounds];
     }
 }
 
