@@ -485,6 +485,26 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 185 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 185 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpRedrawWidget, /* 185 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 186 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 186 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpAppCanDraw, /* 186 */
+#endif /* AQUA */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {

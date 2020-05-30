@@ -20,15 +20,13 @@
 #include "tkWinInt.h"
 #elif defined(__CYGWIN__)
 #include "tkUnixInt.h"
+#elif defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"
+#define OK_TO_LOG (!TkpAppCanDraw(textPtr->tkwin))
 #endif
 
-#ifdef MAC_OSX_TK
-#include "tkMacOSXInt.h"
-#define OK_TO_LOG (!TkpAppIsDrawing())
-#define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
-#else
+#if !defined(MAC_OSX_TK)
 #define OK_TO_LOG 1
-#define FORCE_DISPLAY(winPtr)
 #endif
 
 /*
@@ -3157,7 +3155,7 @@ GenerateWidgetViewSyncEvent(
      */
 
     if (!tkTextDebug) {
-	FORCE_DISPLAY(textPtr->tkwin);
+	TkpRedrawWidget(textPtr->tkwin);
     }
 
     if (NewSyncState != OldSyncState) {
@@ -4176,19 +4174,7 @@ DisplayText(
 				 * warnings. */
     Tcl_Interp *interp;
 
-#ifdef MAC_OSX_TK
-    /*
-     * If drawing is disabled, all we need to do is
-     * clear the REDRAW_PENDING flag.
-     */
-    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
-	dInfoPtr->flags &= ~REDRAW_PENDING;
-    	return;
-     }
-#endif
-
+    
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 	/*
 	 * The widget has been deleted.	 Don't do anything.
@@ -4196,6 +4182,22 @@ DisplayText(
 
 	return;
     }
+
+#ifdef MAC_OSX_TK
+    /*
+     * If the toplevel is being resized it would be dangerous to try redrawing
+     * the widget.  But we can just clear the REDRAW_PENDING flag and return.
+     * This display proc will be called again after the widget has been
+     * reconfigured.
+     */
+
+    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
+    MacDrawable *macWin = winPtr->privatePtr;
+    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
+	dInfoPtr->flags &= ~REDRAW_PENDING;
+    	return;
+     }
+#endif
 
     interp = textPtr->interp;
     Tcl_Preserve(interp);
