@@ -1440,6 +1440,30 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 #endif /* USE_OLD_IMAGE */
 
 /*
+ * The following alternate definitions are used with the Tk8.7 file format
+ * supporting a metadata dict
+ */
+
+typedef struct Tk_PhotoImageFormat87 Tk_PhotoImageFormat87;
+typedef int (Tk_ImageFileMatchProc87) (Tcl_Channel chan, const char *fileName,
+	Tcl_Obj *format, int *widthPtr, int *heightPtr, Tcl_Interp *interp,
+	Tcl_Obj **metadataPtr);
+typedef int (Tk_ImageStringMatchProc87) (Tcl_Obj *dataObj, Tcl_Obj *format,
+	int *widthPtr, int *heightPtr, Tcl_Interp *interp, Tcl_Obj **metadataPtr);
+typedef int (Tk_ImageFileReadProc87) (Tcl_Interp *interp, Tcl_Channel chan,
+	const char *fileName, Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+	int destX, int destY, int width, int height, int srcX, int srcY,
+	Tcl_Obj **metadataPtr);
+typedef int (Tk_ImageStringReadProc87) (Tcl_Interp *interp, Tcl_Obj *dataObj,
+	Tcl_Obj *format, Tk_PhotoHandle imageHandle, int destX, int destY,
+	int width, int height, int srcX, int srcY, Tcl_Obj **metadataPtr);
+typedef int (Tk_ImageFileWriteProc87) (Tcl_Interp *interp, const char *fileName,
+	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
+typedef int (Tk_ImageStringWriteProc87) (Tcl_Interp *interp, Tcl_Obj *format,
+	Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
+
+
+/*
  * The following structure represents a particular file format for storing
  * images (e.g., PPM, GIF, JPEG, etc.). It provides information to allow image
  * files of that format to be recognized and read into a photo image.
@@ -1467,6 +1491,38 @@ struct Tk_PhotoImageFormat {
 				 * representation of the data in a photo
 				 * image.*/
     struct Tk_PhotoImageFormat *nextPtr;
+				/* Next in list of all photo image formats
+				 * currently known. Filled in by Tk, not by
+				 * image format handler. */
+};
+
+/*
+ * The following structure is the same plus added support for the metadata
+ * structure.
+ */
+
+struct Tk_PhotoImageFormat87 {
+    const char *name;		/* Name of image file format */
+    Tk_ImageFileMatchProc87 *fileMatchProc;
+				/* Procedure to call to determine whether an
+				 * image file matches this format. */
+    Tk_ImageStringMatchProc87 *stringMatchProc;
+				/* Procedure to call to determine whether the
+				 * data in a string matches this format. */
+    Tk_ImageFileReadProc87 *fileReadProc;
+				/* Procedure to call to read data from an
+				 * image file into a photo image. */
+    Tk_ImageStringReadProc87 *stringReadProc;
+				/* Procedure to call to read data from a
+				 * string into a photo image. */
+    Tk_ImageFileWriteProc87 *fileWriteProc;
+				/* Procedure to call to write data from a
+				 * photo image to a file. */
+    Tk_ImageStringWriteProc87 *stringWriteProc;
+				/* Procedure to call to obtain a string
+				 * representation of the data in a photo
+				 * image.*/
+    struct Tk_PhotoImageFormat87 *nextPtr;
 				/* Next in list of all photo image formats
 				 * currently known. Filled in by Tk, not by
 				 * image format handler. */

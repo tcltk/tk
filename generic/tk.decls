@@ -1070,10 +1070,7 @@ declare 273 {
 }
 # New in Tk8.7
 declare 274 {
-    Tcl_Obj *Tk_PhotoGetMetadata(Tk_PhotoHandle handle);
-}
-declare 275 {
-    void Tk_PhotoSetMetadata(Tk_PhotoHandle handle,Tcl_Obj *metadata);
+    void Tk_CreatePhotoImageFormat87(const Tk_PhotoImageFormat87 *formatPtr)
 }
 
 
