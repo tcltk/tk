@@ -1056,7 +1056,7 @@ MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
 
 MODULE_SCOPE const Tk_SmoothMethod tkBezierSmoothMethod;
 MODULE_SCOPE Tk_ImageType	tkBitmapImageType;
-MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtGIF;
+MODULE_SCOPE Tk_PhotoImageFormat87 tkImgFmtGIF;
 MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
