@@ -568,7 +568,7 @@ EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
 #endif /* AQUA */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 187 */
-EXTERN int		TkpAppCanDraw(Tk_Window tkwin);
+EXTERN int		TkpWillDrawWidget(Tk_Window tkwin);
 #endif /* AQUA */
 
 typedef struct TkIntStubs {
@@ -806,7 +806,7 @@ typedef struct TkIntStubs {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*reserved187)(void); /* Dummy entry for stubs table backwards compatibility */
-    int (*tkpAppCanDraw) (Tk_Window tkwin); /* 187 */
+    int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 187 */
 #endif /* AQUA */
 } TkIntStubs;
 
@@ -1187,8 +1187,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpRedrawWidget) /* 186 */
 #endif /* AQUA */
 #ifdef MAC_OSX_TK /* AQUA */
-#define TkpAppCanDraw \
-	(tkIntStubsPtr->tkpAppCanDraw) /* 187 */
+#define TkpWillDrawWidget \
+	(tkIntStubsPtr->tkpWillDrawWidget) /* 187 */
 #endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */

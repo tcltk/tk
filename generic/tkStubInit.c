@@ -513,7 +513,7 @@ static const TkIntStubs tkIntStubs = {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     0, /* 187 */ /* Dummy entry for stubs table backwards compatibility */
-    TkpAppCanDraw, /* 187 */
+    TkpWillDrawWidget, /* 187 */
 #endif /* AQUA */
 };
 
