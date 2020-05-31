@@ -22,7 +22,7 @@
 #include "tkUnixInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#define OK_TO_LOG (!TkpAppCanDraw(textPtr->tkwin))
+#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
 #endif
 
 #if !defined(MAC_OSX_TK)
@@ -4174,7 +4174,7 @@ DisplayText(
 				 * warnings. */
     Tcl_Interp *interp;
 
-    
+
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 	/*
 	 * The widget has been deleted.	 Don't do anything.

@@ -880,7 +880,7 @@ TheWorldHasChanged(
      * This is ignored on other platforms.
      */
 
-    if (TkpAppCanDraw(NULL)) {
+    if (!TkpWillDrawWidget(NULL)) {
 	return;
     }
 
