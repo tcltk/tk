@@ -994,7 +994,7 @@ InvalViewRect(
     static CGAffineTransform t;
     TKContentView *view = ref;
     NSRect dirtyRect;
-    
+
     if (!view) {
 	return paramErr;
     }
@@ -1005,8 +1005,7 @@ InvalViewRect(
 	break;
     case kHIShapeEnumerateRect:
 	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
-	[view setTkNeedsDisplay:YES];
-	[view setTkDirtyRect:NSUnionRect([view tkDirtyRect], dirtyRect)];
+	[view addTkDirtyRect:dirtyRect];
 	break;
     }
     return noErr;

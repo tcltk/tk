@@ -434,7 +434,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
- //(HIShapeRef) shape;
+- (void) addTkDirtyRect: (NSRect) rect;
+- (void) clearTkDirtyRect;
 - (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
 @end

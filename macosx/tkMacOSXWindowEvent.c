@@ -399,8 +399,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  *      tkwin NULL or pointing to a widget in the current focusView.
  *
  * Side effects:
- *	The tkwin parameter may be recorded to handle redrawing the widget
- *      later.
+ *	Currently none.  One day the tkwin parameter may be recorded to
+ *      handle redrawing the widget later.
  *
  *----------------------------------------------------------------------
  */
@@ -925,7 +925,7 @@ ConfigureRestrictProc(
  */
 
 static void
-RedisplayView( 
+RedisplayView(
     ClientData clientdata)
 {
     TKContentView *view = (TKContentView *) clientdata;
@@ -946,6 +946,18 @@ RedisplayView(
 }
 
 @implementation TKContentView(TKWindowEvent)
+
+- (void) addTkDirtyRect: (NSRect) rect
+{
+    _tkNeedsDisplay = YES;
+    _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
+}
+
+- (void) clearTkDirtyRect
+{
+    _tkNeedsDisplay = NO;
+    _tkDirtyRect = NSZeroRect;
+}
 
 - (void) drawRect: (NSRect) rect
 {
@@ -984,8 +996,7 @@ RedisplayView(
 	Tcl_DoWhenIdle(RedisplayView, self);
     }
 
-    [self setTkNeedsDisplay:NO];
-    [self setTkDirtyRect:NSZeroRect];
+    [self clearTkDirtyRect];
 
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
@@ -1079,7 +1090,7 @@ RedisplayView(
      * Generate Tk Expose events.  All of these events will share the same
      * serial number.
      */
-    
+
     updateBounds = NSRectToCGRect(rect);
     updateBounds.origin.y = ([self bounds].size.height - updateBounds.origin.y
 			     - updateBounds.size.height);

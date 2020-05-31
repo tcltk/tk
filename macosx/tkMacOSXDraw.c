@@ -1646,15 +1646,13 @@ TkMacOSXSetupDrawingContext(
 	if (![NSApp isDrawing] || view != [NSView focusView]) {
 	    NSRect dirtyRect = [view bounds];
 	    if (dc.clipRgn) {
-		CGRect clipRect;
 		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
 					.ty = dirtyRect.size.height};
-		HIShapeGetBounds(dc.clipRgn, &clipRect);
-		clipRect = CGRectApplyAffineTransform(clipRect, t);
-		dirtyRect = NSRectFromCGRect(clipRect);
+		HIShapeGetBounds(dc.clipRgn, &clipBounds);
+		clipBounds = CGRectApplyAffineTransform(clipBounds, t);
+		dirtyRect = NSRectFromCGRect(clipBounds);
 	    }
-	    [view setTkNeedsDisplay:YES];
-	    [view setTkDirtyRect:NSUnionRect([view tkDirtyRect], dirtyRect)];
+	    [view addTkDirtyRect:dirtyRect];
 	    canDraw = false;
 	    goto end;
 	}
