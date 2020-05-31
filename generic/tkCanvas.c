@@ -2577,9 +2577,6 @@ DisplayCanvas(
 #else
 	canvasPtr->drawableXOrigin = canvasPtr->xOrigin;
 	canvasPtr->drawableYOrigin = canvasPtr->yOrigin;
-#if 0
-        TkpAppCanDraw(tkwin);
-#endif
 	pixmap = Tk_WindowId(tkwin);
 	TkpClipDrawableToRect(Tk_Display(tkwin), pixmap,
 		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
