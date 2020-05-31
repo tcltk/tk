@@ -382,7 +382,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 /*
  *----------------------------------------------------------------------
  *
- * TkpAppCanDraw --
+ * TkpWillDrawWidget --
  *
  *      A widget display procedure can call this to determine whether it is
  *      being run inside of the drawRect method. If not, it may be desirable
@@ -406,7 +406,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  */
 
 int
-TkpAppCanDraw(Tk_Window tkwin) {
+TkpWillDrawWidget(Tk_Window tkwin) {
     int result;
     if (tkwin) {
 	TkWindow *winPtr = (TkWindow *)tkwin;
