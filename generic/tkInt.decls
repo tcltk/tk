@@ -646,7 +646,7 @@ declare 186 aqua {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
 declare 187 aqua {
-    int TkpAppCanDraw(Tk_Window tkwin)
+    int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
 

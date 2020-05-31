@@ -133,7 +133,7 @@
  * Other functions not used under Windows
  */
 
-#define TkpAppCanDraw(tkwin) 1
+#define TkpWillDrawWidget(tkwin) 1
 #define TkpRedrawWidget(tkwin)
 
 #endif /* _WINPORT */
