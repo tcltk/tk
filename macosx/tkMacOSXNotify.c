@@ -307,19 +307,20 @@ TkMacOSXNotifyExitHandler(
  *       is undocumented, namely that it sometimes blocks and calls drawRect
  *       for all views that need display before it returns.  We call it with
  *       deQueue=NO so that it will not change anything on the AppKit event
- *       queue, because we only want the side effect that it runs
- *       drawRect. This function is the only place where NSViews get the
- *       needsDisplay property set to YES.
+ *       queue, because we only want the side effect that it runs drawRect. The
+ *       only time when any NSViews have the needsDisplay property set to YES
+ *       is during execution of this function.
  *
- *       The reason for running this as an idle task is to try to arrange that
- *       all widgets will be fully configured before they are drawn.  Any idle
- *       tasks that might reconfigure them should be higher on the idle queue,
- *       so they should be run before the display procs are run by drawRect.
+ *       The reason for running this function as an idle task is to try to
+ *       arrange that all widgets will be fully configured before they are
+ *       drawn.  Any idle tasks that might reconfigure them should be higher on
+ *       the idle queue, so they should be run before the display procs are run
+ *       by drawRect.
  *
- *       If this is called directly with non-NULL clientData parameter then the
- *       int which it references will be set to the number of windows that need
- *       display, but the needsDisplay property of those windows will not be
- *       changed.
+ *       If this function is called directly with non-NULL clientData parameter
+ *       then the int which it references will be set to the number of windows
+ *       that need display, but the needsDisplay property of those windows will
+ *       not be changed.
  *
  * Results:
  *	None.
@@ -330,11 +331,11 @@ TkMacOSXNotifyExitHandler(
  *----------------------------------------------------------------------
  */
 
-static void
+void
 TkMacOSXDrawAllViews(
     ClientData clientData)
 {
-    int count = 0, *dirtyCount = (int *)clientData;
+       int count = 0, *dirtyCount = (int *)clientData;
 
     for (NSWindow *window in [NSApp windows]) {
 	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
@@ -342,22 +343,37 @@ TkMacOSXDrawAllViews(
 	    if ([view tkNeedsDisplay]) {
 		count++;
 		if (dirtyCount) {
-		    continue;
+		   continue;
 		}
 		[view setNeedsDisplayInRect:[view tkDirtyRect]];
+		[view setTkDirtyRect:NSZeroRect];
 	    }
 	} else {
 	    [window displayIfNeeded];
 	}
     }
     if (dirtyCount) {
-	*dirtyCount = count;
+    	*dirtyCount = count;
     }
-    
     [NSApp nextEventMatchingMask:NSAnyEventMask
 		       untilDate:[NSDate distantPast]
 			  inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			 dequeue:NO];
+    for (NSWindow *window in [NSApp windows]) {
+	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
+	    TKContentView *view = [window contentView];
+
+	    /*
+	     * If we did not run drawRect, we set needsDisplay back to NO.
+	     * Note that if drawRect did run it may have added to Tk's dirty
+	     * rect, due to attempts to draw outside of drawRect's dirty rect.
+	     */
+
+	    if ([view tkNeedsDisplay]) {
+		[view setNeedsDisplay: NO];
+	    }
+	}
+    }
 }
 
 /*
@@ -399,10 +415,11 @@ TkMacOSXEventsSetupProc(
 	[NSApp _resetAutoreleasePool];
 
  	/*
- 	 * Call this with dequeue=NO to see if there are any events.  If so,
- 	 * we set the block time to 0 and stop the heartbeat.  Tcl_DoOneEvent
- 	 * will call the check proc to collect the events and translate them
- 	 * into XEvents.  But also, drawRect may run.
+ 	 * Call this with dequeue=NO to see if there are any events.  If so, we
+ 	 * set the block time to 0 and stop the heartbeat.  Next Tcl_DoOneEvent
+ 	 * will call Tcl_WaitForEvent, which will poll instead of waiting since
+ 	 * the block time is 0.  Then it will call check proc to collect the
+ 	 * events and translate them into XEvents.
   	 */
 
 	NSEvent *currentEvent =
@@ -428,11 +445,7 @@ TkMacOSXEventsSetupProc(
 	    havePeriodicEvents = YES;
 	    [NSEvent startPeriodicEventsAfterDelay:0.0 withPeriod:0.1];
 	}
-
-	/*
-	 * Without this, new windows are sometimes not completely rendered.
-	 */
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
 	TkMacOSXDrawAllViews(NULL);
     }
 }
@@ -521,7 +534,6 @@ TkMacOSXEventsCheckProc(
 		    }
 		}
 	    } else {
-		
 		break;
 	    }
 	} while (1);
@@ -529,8 +541,8 @@ TkMacOSXEventsCheckProc(
 	/*
 	 * Now we can unlock the pool.
 	 */
-	[NSApp _unlockAutoreleasePool];
 
+	[NSApp _unlockAutoreleasePool];
 	if (eventsFound == 0) {
 
 	    /*
@@ -552,7 +564,7 @@ TkMacOSXEventsCheckProc(
 	    if (dirtyCount > 0) {
 		Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
 		Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
-	    }
+	    	}
 	}
     }
 }
