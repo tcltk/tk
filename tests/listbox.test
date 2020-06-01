@@ -2800,13 +2800,13 @@ test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
 test listbox-22.1 {UpdateHScrollbar} -setup {
     destroy .l
 } -body {
-    listbox .l -font $fixed -width 10 -xscrollcommand "record x"
     set log {}
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x"
     pack .l
     set timeout [after 500 {set log timeout}] 
     vwait log
     .l insert end "0000000000"
-    update
+    update idletasks
     .l insert end "00000000000000000000"
     vwait log
     set log

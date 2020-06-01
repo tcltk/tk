@@ -122,7 +122,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	     */
 
 	    while (Tcl_ServiceEvent(0)) {}
-	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
 	    /*
 	     * NSWindowDidDeminiaturizeNotification is received after
@@ -919,32 +919,6 @@ ConfigureRestrictProc(
     return (eventPtr->type==ConfigureNotify ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
 
-/*
- * If a window gets mapped inside the drawRect method, this will be run as an
- * idle task, after drawRect returns, to clean up the mess.
- */
-
-static void
-RedisplayView(
-    ClientData clientdata)
-{
-    TKContentView *view = (TKContentView *) clientdata;
-
-    /*
-     * Make sure that we are not trying to displaying a view that no longer
-     * exists. Must call [NSApp windows] because [NSApp orderedWindows] excludes
-     * floating/utility windows and other window panels.
-     */
-
-    for (NSWindow *w in [NSApp windows]) {
-	if ([w contentView] == view) {
-	    [view setTkNeedsDisplay:YES];
-	    [view setTkDirtyRect:[view bounds]];
-	    break;
-	}
-    }
-}
-
 @implementation TKContentView(TKWindowEvent)
 
 - (void) addTkDirtyRect: (NSRect) rect
@@ -983,20 +957,15 @@ RedisplayView(
     }
 
     [NSApp setIsDrawing: YES];
-
-#ifdef TK_MAC_DEBUG_DRAWING
-    fprintf(stderr, "drawRect: %s\n", NSStringFromRect(rect).UTF8String;
-#endif
-
+    [self setTkDirtyRect:NSZeroRect];
     [self generateExposeEvents:rect];
+    [self setTkNeedsDisplay: NO];
     [NSApp setIsDrawing: NO];
 
     if ([self needsRedisplay]) {
 	[self setNeedsRedisplay:NO];
-	Tcl_DoWhenIdle(RedisplayView, self);
+	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     }
-
-    [self clearTkDirtyRect];
 
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
@@ -1102,6 +1071,7 @@ RedisplayView(
 	/*
 	 * First process all of the Expose events.
 	 */
+    	while (Tcl_ServiceEvent(TCL_IDLE_EVENTS)) {};
 
     	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {};

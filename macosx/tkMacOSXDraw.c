@@ -1631,30 +1631,47 @@ TkMacOSXSetupDrawingContext(
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
 	}
-
-	/*
-	 * We can only draw into the view when the current CGContext is valid
-	 * and belongs to the view.  Validity can only be guaranteed inside of
-	 * a view's drawRect or setFrame methods.  The isDrawing attribute
-	 * tells us whether we are being called from one of those methods.
-	 *
-	 * If the CGContext is not valid then we mark our view as needing
-	 * display.  We could try to optimize by computing a smaller dirty rect
-	 * here.
-	 */
-
+	if (dc.clipRgn) {
+	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+				    .ty = [view bounds].size.height};
+	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
+	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
+	}
 	if (![NSApp isDrawing] || view != [NSView focusView]) {
-	    NSRect dirtyRect = [view bounds];
+
+	    /*
+	     * We can only draw into the view when the current CGContext is
+	     * valid and belongs to the view.  Validity can only be guaranteed
+	     * inside of a view's drawRect or setFrame methods.  The isDrawing
+	     * attribute tells us whether we are being called from one of those
+	     * methods.  If the CGContext is not valid then we mark our view as
+	     * needing display.
+	     */
+
 	    if (dc.clipRgn) {
-		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-					.ty = dirtyRect.size.height};
-		HIShapeGetBounds(dc.clipRgn, &clipBounds);
-		clipBounds = CGRectApplyAffineTransform(clipBounds, t);
-		dirtyRect = NSRectFromCGRect(clipBounds);
+		[view addTkDirtyRect:clipBounds];
+	    } else {
+		[view addTkDirtyRect:[view bounds]];
 	    }
-	    [view addTkDirtyRect:dirtyRect];
 	    canDraw = false;
 	    goto end;
+	} else if (dc.clipRgn) {
+
+	    /*
+	     * Drawing can also fail when we are being called from drawRect but
+	     * the clipping region set by drawRect does not contain the clipping
+	     * region of our drawing context.  See bug [2a61eca3a8].
+	     */
+
+	    CGRect currentClip = CGContextGetClipBoundingBox(
+				     [NSGraphicsContext currentContext].CGContext);
+	    if (!NSContainsRect(currentClip, clipBounds)) {
+		[view addTkDirtyRect:clipBounds];
+		// XXXX we should be able to skip drawing but sometimes the clipBounds
+		// are wrong.
+		//canDraw = false;
+		//goto end;		      
+	    }
 	}
 
 	dc.view = view;
@@ -1686,6 +1703,7 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
 	CGContextConcatCTM(dc.context, t);
 	if (dc.clipRgn) {
+
 #ifdef TK_MAC_DEBUG_DRAWING
 	    CGContextSaveGState(dc.context);
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
@@ -1693,6 +1711,7 @@ TkMacOSXSetupDrawingContext(
 	    CGContextEOFillPath(dc.context);
 	    CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
+
 	    CGRect r;
 
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
