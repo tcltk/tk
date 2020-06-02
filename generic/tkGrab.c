@@ -785,7 +785,7 @@ TkPointerEvent(
          * if such a window was set in HandleEventGenerate.
          */
 
-        DoWarpWrtWin(dispPtr);
+        TkDoWarpWrtWin(dispPtr);
     }
         
     if (!appGrabbed) {
@@ -824,7 +824,7 @@ TkPointerEvent(
          * if such a window was set in HandleEventGenerate.
          */
 
-        DoWarpWrtWin(dispPtr);
+        TkDoWarpWrtWin(dispPtr);
 	return 1;
     }
 
