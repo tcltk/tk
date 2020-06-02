@@ -322,6 +322,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+
+    /*
+     * To prevent zombie windows on systems with a TouchBar, set the key window
+     * to nil if the current key window is not visible.  This allows a closed
+     * Help or About window to be deallocated so it will not reappear as a
+     * zombie when the app is reactivated.
+     */
+
+    NSWindow *keywindow = [NSApp keyWindow];
+    if (keywindow && ![keywindow isVisible]) {
+	[NSApp _setKeyWindow:nil];
+	[NSApp _setMainWindow:nil];
+    }
+
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
@@ -380,26 +394,41 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 /*
  *----------------------------------------------------------------------
  *
- * TkpAppIsDrawing --
+ * TkpWillDrawWidget --
  *
  *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. This is needed for some tests,
- *      especially of the Text widget, which record data in a global Tcl
- *      variable and assume that display procedures will be run in a
- *      predictable sequence as Tcl idle tasks.
+ *      being run inside of the drawRect method. If not, it may be desirable
+ *      for the display procedure to simply clear the REDRAW_PENDING flag
+ *      and return.  The widget can be recorded in order to schedule a
+ *      redraw, via and Expose event, from within drawRect.
+ *
+ *      This is also needed for some tests, especially of the Text widget,
+ *      which record data in a global Tcl variable and assume that display
+ *      procedures will be run in a predictable sequence as Tcl idle tasks.
  *
  * Results:
- *	True only while running the drawRect method of a TKContentView;
+ *      True if called from the drawRect method of a TKContentView with
+ *      tkwin NULL or pointing to a widget in the current focusView.
  *
  * Side effects:
- *	None
+ *	The tkwin parameter may be recorded to handle redrawing the widget
+ *      later.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE Bool
-TkpAppIsDrawing(void) {
-    return [NSApp isDrawing];
+int
+TkpWillDrawWidget(Tk_Window tkwin) {
+    if (![NSApp isDrawing]) {
+	return 0;
+    }
+    if (tkwin) {
+	TkWindow *winPtr = (TkWindow *)tkwin;
+	NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
+	return (view == [NSView focusView]);
+    } else {
+	return 1;
+    }
 }
 
 /*

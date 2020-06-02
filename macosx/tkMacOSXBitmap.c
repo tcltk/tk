@@ -317,7 +317,6 @@ TkpGetNativeAppBitmap(
 	OSType iconType;
 	if (OSTypeFromString(name, &iconType) == TCL_OK) {
 	    NSString *iconUTI = OSTYPE_TO_UTI(iconType);
-	    printf("Found image for UTI %s\n", iconUTI.UTF8String);
 	    NSImage *iconImage = [[NSWorkspace sharedWorkspace]
 				     iconForFileType: iconUTI];
 	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));

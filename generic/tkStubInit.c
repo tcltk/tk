@@ -100,6 +100,12 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
+#define Tk_CanvasTagsParseProc \
+		(int (*) (void *, Tcl_Interp *,Tk_Window, const char *, char *, \
+		int offset))(void *)TkCanvasTagsParseProc
+#define Tk_CanvasTagsPrintProc \
+		(const char *(*) (void *,Tk_Window, char *, int, \
+		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
 
 #ifdef _WIN32
 
@@ -489,6 +495,26 @@ static const TkIntStubs tkIntStubs = {
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
     TkDebugPhotoStringMatchDef, /* 185 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 186 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 186 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpRedrawWidget, /* 186 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 187 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 187 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 187 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpWillDrawWidget, /* 187 */
+#endif /* AQUA */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {

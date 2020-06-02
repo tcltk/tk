@@ -23,7 +23,7 @@
 
 static const Tk_OptionSpec busyOptionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_BUSY_CURSOR, TCL_AUTO_LENGTH, offsetof(Busy, cursor),
+	DEF_BUSY_CURSOR, TCL_INDEX_NONE, offsetof(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };

@@ -429,14 +429,27 @@ bind Text <Control-h> {
 	%W see insert
     }
 }
-bind Text <Button-2> {
-    if {!$tk_strictMotif} {
-	tk::TextScanMark %W %x %y
+if {[tk windowingsystem] ne "aqua"} {
+    bind Text <Button-2> {
+        if {!$tk_strictMotif} {
+        tk::TextScanMark %W %x %y
+        }
     }
-}
-bind Text <B2-Motion> {
-    if {!$tk_strictMotif} {
-	tk::TextScanDrag %W %x %y
+    bind Text <B2-Motion> {
+        if {!$tk_strictMotif} {
+        tk::TextScanDrag %W %x %y
+        }
+    }
+} else {
+    bind Text <Button-3> {
+        if {!$tk_strictMotif} {
+        tk::TextScanMark %W %x %y
+        }
+    }
+    bind Text <B3-Motion> {
+        if {!$tk_strictMotif} {
+        tk::TextScanDrag %W %x %y
+        }
     }
 }
 set ::tk::Priv(prevPos) {}

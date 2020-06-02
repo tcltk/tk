@@ -462,14 +462,12 @@ switch -exact -- [tk windowingsystem] {
 	# Official bindings
 	# See http://support.apple.com/kb/HT1343
 	event add <<SelectAll>>		<Command-a>
-	#Attach function keys not otherwise assigned to this event so they no-op - workaround for bug 0e6930dfe7
-	event add <<SelectNone>>	<Option-Command-a> <F5> <F1> <F5> <F6> <F7> <F8> <F9> <F10> <F11> <F12>
-	event add <<Undo>>		<Command-z> <Command-Lock-Z>
-	event add <<Redo>>		<Shift-Command-z> <Shift-Command-Lock-z>
-	event add <<NextChar>>		<Right> <Control-f> <Control-Lock-F>
-	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-F> <Shift-Control-Lock-F>
-	event add <<PrevChar>>		<Left> <Control-b> <Control-Lock-B>
-	event add <<SelectPrevChar>>	<Shift-Left> <Shift-Control-B> <Shift-Control-Lock-B>
+	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
+	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
+	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
+	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-Key-F> <Shift-Control-Lock-Key-F>
+	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
+	event add <<SelectPrevChar>>	<Shift-Left> <Shift-Control-Key-B> <Shift-Control-Lock-Key-B>
 	event add <<NextWord>>		<Option-Right>
 	event add <<SelectNextWord>>	<Shift-Option-Right>
 	event add <<PrevWord>>		<Option-Left>

@@ -214,7 +214,7 @@ typedef struct TkCanvas {
 				 * when converting coordinates. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    int nextId;			/* Number to use as id for next item created
+    TkSizeT nextId;			/* Number to use as id for next item created
 				 * in widget. */
     Tk_PostscriptInfo psInfo;	/* Pointer to information used for generating
 				 * Postscript for the canvas. NULL means no
