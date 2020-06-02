@@ -6637,11 +6637,11 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     wm geometry .top +200+200
     update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    set pointerPos1 [winfo pointerxy .t]
+    set pointerPos1 [winfo pointerxy .top]
     wm geometry .top +600+600
     update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    set pointerPos2 [winfo pointerxy .t]
+    set pointerPos2 [winfo pointerxy .top]
     # from the first warped position to the second one, the mouse
     # pointer should have moved the same amount as the window moved
     set res 1
