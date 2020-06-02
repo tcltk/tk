@@ -960,7 +960,7 @@ DisplayCanvText(
      * anti-aliasing colors would blend together.
      */
 
-    if ((selFirstChar >= 0) && (textPtr->selTextGC != textPtr->gc)) {
+    if ((selFirstChar != TCL_INDEX_NONE) && (textPtr->selTextGC != textPtr->gc)) {
 	if (0 < selFirstChar) {
 	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
 		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
