@@ -6698,44 +6698,27 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -cleanup {
 } -result {ok ok ok ok}
 
-test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints {
-    testgrab
-} -setup {
-    proc waitForGrab {type grabWin} {
-    # process events while $grabWin is not grabbed ($type == "grabbed"),
-    # or while $grabWin is not released ($type == "released"), but don't
-    # spend more than 5 seconds doing this
-        set i 0
-        while {![testgrab $type $grabWin] && $i < 500} {
-            after 10
-            update
-            incr i
-        }
-    }
+test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     event generate {} <Motion> -warp 1 -x 50 -y 50
     toplevel .top
     grab release .top
-    waitForGrab released .top
     wm geometry .top 200x200+300+300
     label .top.l -height 5 -width 20 -highlightthickness 2 \
             -highlightbackground black -bg yellow -text "My label"
     pack .top.l -side bottom
     update
 } -body {
-    grab .top  ; # this will queue events
-    waitForGrab grabbed .top
+    grab .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
-    grab release .top  ; # this will queue events
-    waitForGrab released .top
+    grab release .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     foreach {x2 y2} [winfo pointerxy .top.l] {}
     expr {$x1==$x2 && $y1==$y2}
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
-    rename waitForGrab {}
 } -result {1}
 
 # cleanup
