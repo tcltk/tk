@@ -239,8 +239,6 @@ TkCloseDisplay(
 {
     TkClipCleanup(dispPtr);
 
-    TkpCancelWarp(dispPtr);
-
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
     }

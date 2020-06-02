@@ -4375,12 +4375,9 @@ HandleEventGenerate(
              * making this case sleep with grabs).
              */
 
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-                if (!dispPtr->warpWindow) {
-		    DoWarp(dispPtr);
-                }
-	    }
+            if (!dispPtr->warpWindow) {
+		DoWarp(dispPtr);
+            }
 	}
 
 	/*
@@ -4492,7 +4489,6 @@ DoWarp(
 
     TkpWarpPointer(dispPtr);
     XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
 /*
@@ -5258,34 +5254,6 @@ TkpGetBindingXEvent(
     BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
     return &bindPtr->curEvent->xev;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpCancelWarp --
- *
- *	This function cancels an outstanding pointer warp and
- *	is called during tear down of the display.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpCancelWarp(
-    TkDisplay *dispPtr)
-{
-    assert(dispPtr);
-
-    if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
-	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
-    }
 }
 
 /*
