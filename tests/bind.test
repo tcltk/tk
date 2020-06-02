@@ -6627,6 +6627,7 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
 
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
+    update
 } -body {
     # In order to avoid platform-dependent coordinate results due to
     # decorations and borders, this test warps the pointer twice 
