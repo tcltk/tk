@@ -4364,8 +4364,21 @@ HandleEventGenerate(
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
 
+            /*
+             * Warping with respect to a window will be done when Tk_handleEvent
+             * below will run the event handlers and in particular TkPointerEvent.
+             * This allows to make grabs and warping work together robustly, that
+             * is without depending on a precise sequence of events.
+             * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+             * is NULL) is run as an idle task because the event handlers are not
+             * designed to work without a window (and there is anyway no point in
+             * making this case sleep with grabs).
+             */
+
 	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
+                if (!dispPtr->warpWindow) {
+		    Tcl_DoWhenIdle(DoWarp, dispPtr);
+                }
 		dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	    }
 	}
@@ -4473,23 +4486,14 @@ DoWarp(
     assert(clientData);
 
     /*
-     * DoWarp was scheduled only if the window was mapped. It needs to be
-     * still mapped at the time the present idle callback is executed. Also
-     * one needs to guard against window destruction in the meantime.
-     * Finally, the case warpWindow == NULL is special in that it means
-     * the whole screen.
+     * A non-NULL warpWindow means warping with respect to this window.
+     * We can only be here if we're warping with respect to the whole screen.
      */
 
-    if (!dispPtr->warpWindow ||
-            (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None)) {
-        TkpWarpPointer(dispPtr);
-        XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    }
+    assert(!dispPtr->warpWindow);
 
-    if (dispPtr->warpWindow) {
-	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = NULL;
-    }
+    TkpWarpPointer(dispPtr);
+    XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
