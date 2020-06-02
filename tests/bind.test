@@ -6706,6 +6706,8 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
 
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
+    wm geometry .top +100+100
+    update
 } -body {
     # In order to avoid platform-dependent coordinate results due to
     # decorations and borders, this test warps the pointer twice
@@ -6785,6 +6787,137 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     set res
 } -cleanup {
 } -result {ok ok ok ok}
+
+set keyInfo {}
+set numericKeysym {}
+proc testKey {window event type mods} {
+    global keyInfo numericKeysym
+    set keyInfo {}
+    set numericKeysym {}
+    bind $window <KeyPress> {
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericKeysym %N
+    }
+    focus -force $window
+    update
+    event generate $window $event
+    if {$keyInfo == {}} {
+        vwait keyInfo
+    }
+    set save $keyInfo
+    set keyInfo {}
+    set injectcmd [list injectkeyevent $type $numericKeysym]
+    foreach {option} $mods {
+	lappend injectcmd $option
+    }
+    eval $injectcmd
+    if {$keyInfo == {}} {
+        vwait keyInfo
+    }
+    if {$save != $keyInfo} {
+	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
+    }
+    return pass
+}
+proc testKeyWithMods {window keysym type} {
+    set result [testKey $window "<$keysym>" $type {}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Shift-$keysym>" $type {-shift}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Option-$keysym>" $type {-option}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Shift-Option-$keysym>" $type {-shift -option}]
+    if {$result != {pass}} {
+	return $result
+    }
+    return pass
+}
+test bind-35.0 {Generated and real key events agree} -constraints {aqua} -body {
+    foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
+	set result [testKeyWithMods . $k press]
+	if {$result != "pass"} {
+	    return $result
+	}
+    }
+    return pass
+} -cleanup {
+} -result pass
+
+test bind-35.1 {Key events agree for entry widgets} -constraints {aqua} -setup {
+    toplevel .new
+    entry .new.e
+    pack .new.e
+} -body {
+    foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA Menu} {
+	set result [testKeyWithMods .new.e $k press]
+	if {$result != "pass"} {
+	    return $result
+	}
+    }
+    return pass
+} -cleanup {
+    destroy .new.e
+    destroy .new
+} -result pass
+
+test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
+    global keyInfo numericKeysym
+    bind . <KeyPress> {}
+    bind . <KeyPress> {
+	lappend keyInfo %K
+	set numericKeysym %N
+    }
+    set keyInfo {}
+    set numericKeysym {}
+    focus -force .
+    event generate . <F2>
+    injectkeyevent press $numericKeysym -function
+    vwait keyInfo
+    return $keyInfo
+} -cleanup {
+} -result {F2 F2}
+
+test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
+} -body {
+    global keyInfo numericalKeysym
+    set result {}
+    bind . <KeyPress> {
+    	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+    	set numericalKeysym [format "0x%x" %N]
+    }
+    foreach event {
+	{<Control_L> -control}
+	{<Control_R> -control}
+	{<Alt_L> -option}
+	{<Alt_R> -option}
+	{<Meta_L> -command}
+	{<Meta_R> -command}
+	{<Shift_L> -shift}
+	{<Shift_R> -shift}
+    } {
+	set keyInfo {}
+	event generate . [lindex $event 0]
+	if {$keyInfo == {}} {
+	    vwait keyInfo
+	}
+	set save $keyInfo
+	injectkeyevent flagschanged $numericKeysym [lindex $event 1]
+	if {$keyInfo == {}} {
+	    vwait keyInfo
+	}
+	if {$save != $keyInfo} {
+	    return "$save != $keyInfo"
+	}
+    }
+    return pass
+} -cleanup {
+} -result pass
 
 # cleanup
 cleanupTests

@@ -860,6 +860,7 @@ test event-8 {event generate with keysyms corresponding to
 } -result {OK}
 
 # cleanup
+update
 unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}

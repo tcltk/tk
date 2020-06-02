@@ -82,7 +82,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSApplicationDidBecomeActiveNotification, applicationActivate:);
-    observe(NSApplicationDidResignActiveNotification, applicationDeactivate:);
+    observe(NSApplicationWillResignActiveNotification, applicationDeactivate:);
     observe(NSApplicationDidUnhideNotification, applicationShowHide:);
     observe(NSApplicationDidHideNotification, applicationShowHide:);
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
@@ -632,46 +632,6 @@ TkMacOSXGetNamedSymbol(
 	(void) dlerror(); /* Clear dlfcn error state */
     }
     return addr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetStringObjFromCFString --
- *
- *	Get a string object from a CFString as efficiently as possible.
- *
- * Results:
- *	New string object or NULL if conversion failed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Tcl_Obj*
-TkMacOSXGetStringObjFromCFString(
-    CFStringRef str)
-{
-    Tcl_Obj *obj = NULL;
-    const char *c = CFStringGetCStringPtr(str, kCFStringEncodingUTF8);
-
-    if (c) {
-	obj = Tcl_NewStringObj(c, -1);
-    } else {
-	CFRange all = CFRangeMake(0, CFStringGetLength(str));
-	CFIndex len;
-
-	if (CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false, NULL,
-		0, &len) > 0 && len < INT_MAX) {
-	    obj = Tcl_NewObj();
-	    Tcl_SetObjLength(obj, len);
-	    CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false,
-		    (UInt8*) obj->bytes, len, NULL);
-	}
-    }
-    return obj;
 }
 
 /*
