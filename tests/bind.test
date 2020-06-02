@@ -6635,14 +6635,10 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     wm geometry .top +200+200
     update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     set pointerPos1 [winfo pointerxy .t]
     wm geometry .top +600+600
     update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     set pointerPos2 [winfo pointerxy .t]
     # from the first warped position to the second one, the mouse
     # pointer should have moved the same amount as the window moved
@@ -6736,14 +6732,12 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints
     grab .top  ; # this will queue events
     waitForGrab grabbed .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    update idletasks ; after 50
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
     update idletasks ; after 50
     grab release .top  ; # this will queue events
     waitForGrab released .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    update idletasks ; after 50
     foreach {x2 y2} [winfo pointerxy .top.l] {}
     expr {$x1==$x2 && $y1==$y2}
 } -cleanup {
