@@ -196,8 +196,6 @@ MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 MODULE_SCOPE void TkpRetainRegion(Region r);
 MODULE_SCOPE void TkpReleaseRegion(Region r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
-MODULE_SCOPE Bool TkpAppIsDrawing(void);
-MODULE_SCOPE void TkpDisplayWindow(Tk_Window tkwin);
 MODULE_SCOPE Bool TkTestLogDisplay(void);
 MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 

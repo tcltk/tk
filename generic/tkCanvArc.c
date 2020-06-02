@@ -88,9 +88,9 @@ typedef struct ArcItem {
 
 static int	StyleParseProc(ClientData clientData, Tcl_Interp *interp,
 		    Tk_Window tkwin, const char *value,
-		    char *widgRec, int offset);
+		    char *widgRec, TkSizeT offset);
 static const char * StylePrintProc(ClientData clientData, Tk_Window tkwin,
-		    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+		    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr);
 
 static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
@@ -99,7 +99,7 @@ static const Tk_CustomOption styleOption = {
     StyleParseProc, StylePrintProc, NULL
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
@@ -2202,7 +2202,7 @@ StyleParseProc(
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -2265,7 +2265,7 @@ StylePrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Ignored. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset,			/* Offset into item. */
+    TkSizeT offset,			/* Offset into item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */

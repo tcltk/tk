@@ -52,7 +52,7 @@ typedef struct TagSearch {
     int searchOver;		/* Non-zero means NextItem should always
 				 * return NULL. */
     int type;			/* Search type (see #defs below) */
-    int id;			/* Item id for searches by id */
+    TkSizeT id;			/* Item id for searches by id */
     const char *string;		/* Tag expression string */
     int stringIndex;		/* Current position in string scan */
     int stringLength;		/* Length of tag expression string */
@@ -223,14 +223,14 @@ static void		CanvasCmdDeletedProc(ClientData clientData);
 static void		CanvasDoEvent(TkCanvas *canvasPtr, XEvent *eventPtr);
 static void		CanvasEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		CanvasFetchSelection(ClientData clientData, int offset,
-			    char *buffer, int maxBytes);
+static TkSizeT	CanvasFetchSelection(ClientData clientData, TkSizeT offset,
+			    char *buffer, TkSizeT maxBytes);
 static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
 			    double coords[2]);
 static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
 static void		CanvasLostSelection(ClientData clientData);
 static void		CanvasSelectTo(TkCanvas *canvasPtr,
-			    Tk_Item *itemPtr, int index);
+			    Tk_Item *itemPtr, TkSizeT index);
 static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
@@ -467,12 +467,12 @@ ItemDisplay(
 	    canvasPtr->display, pixmap, screenX1, screenY1, width, height);
 }
 
-static inline int
+static int
 ItemIndex(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
     Tcl_Obj *objPtr,
-    int *indexPtr)
+    TkSizeT *indexPtr)
 {
     Tcl_Interp *interp = canvasPtr->interp;
 
@@ -732,8 +732,8 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.selBorderWidth = 0;
     canvasPtr->textInfo.selFgColorPtr = NULL;
     canvasPtr->textInfo.selItemPtr = NULL;
-    canvasPtr->textInfo.selectFirst = -1;
-    canvasPtr->textInfo.selectLast = -1;
+    canvasPtr->textInfo.selectFirst = TCL_INDEX_NONE;
+    canvasPtr->textInfo.selectLast = TCL_INDEX_NONE;
     canvasPtr->textInfo.anchorItemPtr = NULL;
     canvasPtr->textInfo.selectAnchor = 0;
     canvasPtr->textInfo.insertBorder = NULL;
@@ -1194,7 +1194,7 @@ CanvasWidgetCmd(
 	tmpObj = Tcl_NewListObj(2, objv+4);
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
-	    int index;
+	    TkSizeT index;
 	    int x1, x2, y1, y2;
 	    int dontRedraw1, dontRedraw2;
 
@@ -1306,8 +1306,7 @@ CanvasWidgetCmd(
 
 	typePtr = matchPtr;
 	itemPtr = (Tk_Item *)ckalloc(typePtr->itemSize);
-	itemPtr->id = canvasPtr->nextId;
-	canvasPtr->nextId++;
+	itemPtr->id = canvasPtr->nextId++;
 	itemPtr->tagPtr = itemPtr->staticTagSpace;
 	itemPtr->tagSpace = TK_TAG_SPACE;
 	itemPtr->numTags = 0;
@@ -1341,7 +1340,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DCHARS: {
-	int first, last;
+	TkSizeT first, last;
 	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
@@ -1457,7 +1456,7 @@ CanvasWidgetCmd(
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-	    for (i = itemPtr->numTags-1; i >= 0; i--) {
+	    for (i = (int)itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
 
                     /*
@@ -1531,7 +1530,7 @@ CanvasWidgetCmd(
 	    int i;
 	    Tcl_Obj *resultObj = Tcl_NewObj();
 
-	    for (i = 0; i < itemPtr->numTags; i++) {
+	    for (i = 0; i < (int)itemPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
 			Tcl_NewStringObj(itemPtr->tagPtr[i], -1));
 	    }
@@ -1539,7 +1538,7 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_ICURSOR: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId index");
@@ -1564,7 +1563,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INDEX: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId string");
@@ -1592,7 +1591,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INSERT: {
-	int beforeThis;
+	TkSizeT beforeThis;
 	int x1, x2, y1, y2;
 
 	if (objc != 5) {
@@ -1810,7 +1809,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_RCHARS: {
-	int first, last;
+	TkSizeT first, last;
 	int x1, x2, y1, y2;
 	int dontRedraw1, dontRedraw2;
 
@@ -1963,7 +1962,8 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_SELECT: {
-	int index, optionindex;
+	TkSizeT index;
+	int optionindex;
 	static const char *const optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
 	};
@@ -2012,8 +2012,8 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	    if (canvasPtr->textInfo.selItemPtr == itemPtr) {
-		if (index < (canvasPtr->textInfo.selectFirst
-			+ canvasPtr->textInfo.selectLast)/2) {
+		if (index + 1 <= ((canvasPtr->textInfo.selectFirst
+			+ canvasPtr->textInfo.selectLast)/2)) {
 		    canvasPtr->textInfo.selectAnchor =
 			    canvasPtr->textInfo.selectLast + 1;
 		} else {
@@ -4223,7 +4223,7 @@ TagSearchEvalExpr(
 		 * set result 1 if tag is found in item's tags
 		 */
 
-		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+		for (tagPtr = itemPtr->tagPtr, count = (int)itemPtr->numTags;
 			count > 0; tagPtr++, count--) {
 		    if (*tagPtr == uid) {
 			result = 1;
@@ -4243,7 +4243,7 @@ TagSearchEvalExpr(
 		 * set result 1 if tag is found in item's tags.
 		 */
 
-		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+		for (tagPtr = itemPtr->tagPtr, count = (int)itemPtr->numTags;
 			count > 0; tagPtr++, count--) {
 		    if (*tagPtr == uid) {
 			result = 1;
@@ -4409,7 +4409,7 @@ TagSearchFirst(
 	uid = searchPtr->expr->uid;
 	for (lastPtr = NULL, itemPtr = searchPtr->canvasPtr->firstItemPtr;
 		itemPtr != NULL; lastPtr=itemPtr, itemPtr=itemPtr->nextPtr) {
-	    for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+	    for (tagPtr = itemPtr->tagPtr, count = (int)itemPtr->numTags;
 		    count > 0; tagPtr++, count--) {
 		if (*tagPtr == uid) {
 		    searchPtr->lastPtr = lastPtr;
@@ -4511,7 +4511,7 @@ TagSearchNext(
 
 	uid = searchPtr->expr->uid;
 	for (; itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	    for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+	    for (tagPtr = itemPtr->tagPtr, count = (int)itemPtr->numTags;
 		    count > 0; tagPtr++, count--) {
 		if (*tagPtr == uid) {
 		    searchPtr->lastPtr = lastPtr;
@@ -4581,7 +4581,7 @@ DoItem(
 	return;
     }
 
-    for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+    for (tagPtr = itemPtr->tagPtr, count = (int)itemPtr->numTags;
 	    count > 0; tagPtr++, count--) {
 	if (tag == *tagPtr) {
 	    return;
@@ -5301,7 +5301,7 @@ PickCurrentItem(
 	 */
 
 	if ((itemPtr == canvasPtr->currentItemPtr) && !buttonDown) {
-	    for (i = itemPtr->numTags-1; i >= 0; i--) {
+	    for (i = (int)itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 		    /* then */ {
                     memmove((void *)(itemPtr->tagPtr + i),
@@ -5489,10 +5489,10 @@ CanvasDoEvent(
 	objectPtr = (void **)ckalloc(numObjects * sizeof(void *));
     }
     objectPtr[0] = (char *)searchUids->allUid;
-    for (i = itemPtr->numTags-1; i >= 0; i--) {
+    for (i = (int)itemPtr->numTags - 1; i >= 0; i--) {
 	objectPtr[i+1] = (char *)itemPtr->tagPtr[i];
     }
-    objectPtr[itemPtr->numTags+1] = itemPtr;
+    objectPtr[itemPtr->numTags + 1] = itemPtr;
 
     /*
      * Copy uids of matching expressions into object array
@@ -5628,10 +5628,10 @@ static void
 CanvasSelectTo(
     TkCanvas *canvasPtr,	/* Information about widget. */
     Tk_Item *itemPtr,		/* Item that is to hold selection. */
-    int index)			/* Index of element that is to become the
+    TkSizeT index)			/* Index of element that is to become the
 				 * "other" end of the selection. */
 {
-    int oldFirst, oldLast;
+    TkSizeT oldFirst, oldLast;
     Tk_Item *oldSelPtr;
 
     oldFirst = canvasPtr->textInfo.selectFirst;
@@ -5654,11 +5654,11 @@ CanvasSelectTo(
 	canvasPtr->textInfo.anchorItemPtr = itemPtr;
 	canvasPtr->textInfo.selectAnchor = index;
     }
-    if (canvasPtr->textInfo.selectAnchor <= index) {
+    if (canvasPtr->textInfo.selectAnchor + 1 <= index + 1) {
 	canvasPtr->textInfo.selectFirst = canvasPtr->textInfo.selectAnchor;
 	canvasPtr->textInfo.selectLast = index;
     } else {
-	canvasPtr->textInfo.selectFirst = index;
+	canvasPtr->textInfo.selectFirst = ((int)index < 0) ? TCL_INDEX_NONE : index;
 	canvasPtr->textInfo.selectLast = canvasPtr->textInfo.selectAnchor - 1;
     }
     if ((canvasPtr->textInfo.selectFirst != oldFirst)
@@ -5689,13 +5689,13 @@ CanvasSelectTo(
  *--------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 CanvasFetchSelection(
     ClientData clientData,	/* Information about canvas widget. */
-    int offset,			/* Offset within selection of first character
+    TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {

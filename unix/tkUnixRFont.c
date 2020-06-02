@@ -260,6 +260,23 @@ GetTkFontMetrics(
  *---------------------------------------------------------------------------
  */
 
+static void
+FinishedWithFont(
+    UnixFtFont *fontPtr);
+
+static int
+InitFontErrorProc(
+    ClientData clientData,
+    TCL_UNUSED(XErrorEvent *))
+{
+    int *errorFlagPtr = (int *)clientData;
+
+    if (errorFlagPtr != NULL) {
+	*errorFlagPtr = 1;
+    }
+    return 0;
+}
+
 static UnixFtFont *
 InitFont(
     Tk_Window tkwin,
@@ -270,7 +287,8 @@ InitFont(
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    int i, iWidth;
+    int i, iWidth, errorFlag;
+    Tk_ErrorHandler handler;
 
     if (!fontPtr) {
 	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
@@ -321,10 +339,25 @@ InitFont(
      * Fill in platform-specific fields of TkFont.
      */
 
+    errorFlag = 0;
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+		    -1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
     ftFont = GetFont(fontPtr, 0, 0.0);
+    if ((ftFont == NULL) || errorFlag) {
+	Tk_DeleteErrorHandler(handler);
+	FinishedWithFont(fontPtr);
+	ckfree(fontPtr);
+	return NULL;
+    }
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
     GetTkFontAttributes(ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
+    Tk_DeleteErrorHandler(handler);
+    if (errorFlag) {
+	FinishedWithFont(fontPtr);
+	ckfree(fontPtr);
+	return NULL;
+    }
 
     /*
      * Fontconfig can't report any information about the position or thickness
@@ -349,7 +382,16 @@ InitFont(
 	TkFont *fPtr = &fontPtr->font;
 
 	fPtr->underlinePos = fPtr->fm.descent / 2;
+	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+			-1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
+	errorFlag = 0;
 	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
+	Tk_DeleteErrorHandler(handler);
+	if (errorFlag) {
+	    FinishedWithFont(fontPtr);
+	    ckfree(fontPtr);
+	    return NULL;
+	}
 	fPtr->underlineHeight = iWidth / 3;
 	if (fPtr->underlineHeight == 0) {
 	    fPtr->underlineHeight = 1;
@@ -675,12 +717,15 @@ Tk_MeasureChars(
     FcChar32 c;
     XGlyphInfo extents;
     int clen, curX, newX, curByte, newByte, sawNonSpace;
-    int termByte = 0, termX = 0;
+    int termByte = 0, termX = 0, errorFlag = 0;
+    Tk_ErrorHandler handler;
 #if DEBUG_FONTSEL
     char string[256];
     int len = 0;
 #endif /* DEBUG_FONTSEL */
 
+    handler = Tk_CreateErrorHandler(fontPtr->display,
+	    -1, -1, -1, InitFontErrorProc, &errorFlag);
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
@@ -716,7 +761,12 @@ Tk_MeasureChars(
 #endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c, 0.0);
 
-	XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	if (!errorFlag) {
+	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	} else {
+	    extents.xOff = 0;
+	    errorFlag = 0;
+	}
 
 	newX = curX + extents.xOff;
 	newByte = curByte + clen;
@@ -745,6 +795,7 @@ Tk_MeasureChars(
 	curX = newX;
 	curByte = newByte;
     }
+    Tk_DeleteErrorHandler(handler);
 #if DEBUG_FONTSEL
     string[len] = '\0';
     printf("MeasureChars %s length %d bytes %d\n", string, curX, curByte);

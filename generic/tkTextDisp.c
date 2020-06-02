@@ -16,13 +16,17 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-#ifdef MAC_OSX_TK
+#ifdef _WIN32
+#include "tkWinInt.h"
+#elif defined(__CYGWIN__)
+#include "tkUnixInt.h"
+#elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#define OK_TO_LOG (!TkpAppIsDrawing())
-#define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
-#else
+#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
+#endif
+
+#if !defined(MAC_OSX_TK)
 #define OK_TO_LOG 1
-#define FORCE_DISPLAY(winPtr)
 #endif
 
 /*
@@ -1173,7 +1177,8 @@ LayoutDLine(
 				/* Pointer to last chunk in display lines with
 				 * numBytes > 0. Used to drop 0-sized chunks
 				 * from the end of the line. */
-    int byteOffset, ascent, descent, code, elide, elidesize;
+    TkSizeT byteOffset;
+    int ascent, descent, code, elide, elidesize;
     StyleValues *sValuePtr;
     TkTextElideInfo info;	/* Keep track of elide state. */
 
@@ -1213,7 +1218,7 @@ LayoutDLine(
     if (elide && indexPtr->byteIndex == 0) {
 	maxBytes = 0;
 	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
-	    if (segPtr->size > 0) {
+	    if (segPtr->size + 1 > 1) {
 		if (elide == 0) {
 		    /*
 		     * We toggled a tag and the elide state changed to
@@ -1334,7 +1339,7 @@ LayoutDLine(
   connectNextLogicalLine:
     byteOffset = curIndex.byteIndex;
     segPtr = curIndex.linePtr->segPtr;
-    while ((byteOffset > 0) && (byteOffset >= segPtr->size)) {
+    while ((byteOffset + 1 > 1) && (byteOffset + 1 >= segPtr->size + 1)) {
 	byteOffset -= segPtr->size;
 	segPtr = segPtr->nextPtr;
 
@@ -1374,7 +1379,7 @@ LayoutDLine(
 	if (elide && (lastChunkPtr != NULL)
 		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
 	    elidesize = segPtr->size - byteOffset;
-	    if (elidesize > 0) {
+	    if (segPtr->size + 1 > byteOffset + 1) {
 		curIndex.byteIndex += elidesize;
 		lastChunkPtr->numBytes += elidesize;
 		breakByteOffset = lastChunkPtr->breakIndex
@@ -3059,7 +3064,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH
+    if (dInfoPtr->metricEpoch == TCL_INDEX_NONE
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -3150,7 +3155,7 @@ GenerateWidgetViewSyncEvent(
      */
 
     if (!tkTextDebug) {
-	FORCE_DISPLAY(textPtr->tkwin);
+	TkpRedrawWidget(textPtr->tkwin);
     }
 
     if (NewSyncState != OldSyncState) {
@@ -3243,7 +3248,7 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == TCL_AUTO_LENGTH && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == TCL_INDEX_NONE && lineNum == endLine) {
 
 
 		/*
@@ -4170,18 +4175,6 @@ DisplayText(
 				 * warnings. */
     Tcl_Interp *interp;
 
-#ifdef MAC_OSX_TK
-    /*
-     * If drawing is disabled, all we need to do is
-     * clear the REDRAW_PENDING flag.
-     */
-    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
-	dInfoPtr->flags &= ~REDRAW_PENDING;
-    	return;
-     }
-#endif
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 	/*
@@ -4190,6 +4183,22 @@ DisplayText(
 
 	return;
     }
+
+#ifdef MAC_OSX_TK
+    /*
+     * If the toplevel is being resized it would be dangerous to try redrawing
+     * the widget.  But we can just clear the REDRAW_PENDING flag and return.
+     * This display proc will be called again after the widget has been
+     * reconfigured.
+     */
+
+    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
+    MacDrawable *macWin = winPtr->privatePtr;
+    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
+	dInfoPtr->flags &= ~REDRAW_PENDING;
+    	return;
+     }
+#endif
 
     interp = textPtr->interp;
     Tcl_Preserve(interp);
@@ -7603,11 +7612,11 @@ TkTextCharLayoutProc(
     TkTextIndex *indexPtr,	/* Index of first character to lay out
 				 * (corresponds to segPtr and offset). */
     TkTextSegment *segPtr,	/* Segment being layed out. */
-    int byteOffset,		/* Byte offset within segment of first
+    TkSizeT byteOffset,		/* Byte offset within segment of first
 				 * character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    int maxBytes,		/* Chunk must not include more than this many
+    TkSizeT maxBytes,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this display line yet. */
@@ -7620,7 +7629,8 @@ TkTextCharLayoutProc(
 				 * set by the caller. */
 {
     Tk_Font tkfont;
-    int nextX, bytesThatFit, count;
+    int nextX, count;
+    TkSizeT bytesThatFit;
     CharInfo *ciPtr;
     char *p;
     TkTextSegment *nextPtr;
@@ -7684,7 +7694,7 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    if (bytesThatFit < maxBytes) {
+    if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    int ch;
 	    int chLen = TkUtfToUniChar(p, &ch);
