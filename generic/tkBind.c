@@ -717,7 +717,7 @@ static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, EventMask *eventMaskPtr);
-static void		DoWarp(TkDisplay *dispPtr);
+static void		DoWarpWrtScreen(TkDisplay *dispPtr);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
@@ -4376,7 +4376,7 @@ HandleEventGenerate(
              */
 
             if (!dispPtr->warpWindow) {
-		DoWarp(dispPtr);
+		DoWarpWrtScreen(dispPtr);
             }
 	}
 
@@ -4461,7 +4461,7 @@ NameToWindow(
 /*
  *-------------------------------------------------------------------------
  *
- * DoWarp --
+ * DoWarpWrtScreen --
  *
  *	Perform warping of mouse pointer with respect to the whole screen.
  *
@@ -4475,7 +4475,7 @@ NameToWindow(
  */
 
 static void
-DoWarp(
+DoWarpWrtScreen(
     TkDisplay *dispPtr)
 {
     assert(dispPtr);
@@ -4489,6 +4489,52 @@ DoWarp(
 
     TkpWarpPointer(dispPtr);
     XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * DoWarpWrtWin --
+ *
+ *	Perform warping of mouse pointer with respect to a window.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Mouse pointer moves to a new location.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+void
+DoWarpWrtWin(
+    TkDisplay *dispPtr)
+{
+    assert(dispPtr);
+
+    /*
+     * A NULL warpWindow means warping with respect to the whole screen.
+     * We want to warp here only if we're warping with respect to a window.
+     */
+
+    if (dispPtr->warpWindow) {
+
+        /*
+         * Warping with respect to a window can only be done if the window is
+         * mapped. This was checked in HandleEvent. The window needs to be
+         * still mapped at the time the present code is executed. Also
+         * one needs to guard against window destruction in the meantime,
+         * which could have happened as a side effect of an event handler.
+         */
+
+        if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
+            TkpWarpPointer(dispPtr);
+            XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+        }
+        Tcl_Release(dispPtr->warpWindow);
+        dispPtr->warpWindow = NULL;
+    }
 }
 
 /*

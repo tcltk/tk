@@ -775,28 +775,7 @@ TkPointerEvent(
     }
 
     if ((eventPtr->type == MotionNotify) && !appGrabbed) {
-
-        /*
-         * A NULL warpWindow means warping with respect to the whole screen.
-         * We want to warp here only if we're warping with respect to a window.
-         */
-
-        if (dispPtr->warpWindow) {
-
-            /*
-             * Warping with respect to a window can only be done if the window is
-             * mapped. This was checked in HandleEvent. The windows needs to be
-             * still mapped at the time the present code is executed. Also
-             * one needs to guard against window destruction in the meantime.
-             */
-
-            if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
-                TkpWarpPointer(dispPtr);
-                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-            }
-	    Tcl_Release(dispPtr->warpWindow);
-	    dispPtr->warpWindow = NULL;
-        }
+        DoWarpWrtWin(dispPtr);
     }
         
     if (!appGrabbed) {
@@ -825,14 +804,7 @@ TkPointerEvent(
 	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);
 	    return 0;
 	}
-        if (dispPtr->warpWindow) {
-            if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
-                TkpWarpPointer(dispPtr);
-                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-            }
-	    Tcl_Release(dispPtr->warpWindow);
-	    dispPtr->warpWindow = NULL;
-        }
+        DoWarpWrtWin(dispPtr);
 	return 1;
     }
 
