@@ -279,10 +279,10 @@ typedef ClientData	SearchAddLineProc(int lineNum,
 typedef int		SearchMatchProc(int lineNum,
 			    struct SearchSpec *searchSpecPtr,
 			    ClientData clientData, Tcl_Obj *theLine,
-			    int matchOffset, int matchLength);
+			    TkSizeT matchOffset, TkSizeT matchLength);
 typedef int		SearchLineIndexProc(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, struct SearchSpec *searchSpecPtr,
-			    int *linePosPtr, int *offsetPosPtr);
+			    int *linePosPtr, TkSizeT *offsetPosPtr);
 
 typedef struct SearchSpec {
     int exact;			/* Whether search is exact or regexp. */
@@ -298,10 +298,10 @@ typedef struct SearchSpec {
     int all;			/* Whether all or the first match should be
 				 * reported. */
     int startLine;		/* First line to examine. */
-    int startOffset;		/* Index in first line to start at. */
+    TkSizeT startOffset1;		/* Index in first line to start at. */
     int stopLine;		/* Last line to examine, or -1 when we search
 				 * all available text. */
-    int stopOffset;		/* Index to stop at, provided stopLine is not
+    TkSizeT stopOffset1;		/* Index to stop at, provided stopLine is not
 				 * -1. */
     int numLines;		/* Total lines which are available. */
     int backwards;		/* Searching forwards or backwards. */
@@ -410,8 +410,8 @@ static void		TextPushUndoAction(TkText *textPtr,
 			    Tcl_Obj *undoString, int insert,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-static int		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
-			    TkTextLine *linePtr, int byteIndex);
+static TkSizeT		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
+			    TkTextLine *linePtr, TkSizeT byteIndex);
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static TkUndoProc	TextUndoRedoCallback;
@@ -4015,7 +4015,7 @@ TextSearchGetLineIndex(
     Tcl_Obj *objPtr,		/* Contains a textual index like "1.2" */
     SearchSpec *searchSpecPtr,	/* Contains other search parameters. */
     int *linePosPtr,		/* For returning the line number. */
-    int *offsetPosPtr)		/* For returning the text offset in the
+    TkSizeT *offsetPosPtr)		/* For returning the text offset in the
 				 * line. */
 {
     const TkTextIndex *indexPtr;
@@ -4075,35 +4075,36 @@ TextSearchGetLineIndex(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 TextSearchIndexInLine(
     const SearchSpec *searchSpecPtr,
 				/* Search parameters. */
     TkTextLine *linePtr,	/* The line we're looking at. */
-    int byteIndex)		/* Index into the line. */
+    TkSizeT byteIndex)		/* Index into the line. */
 {
     TkTextSegment *segPtr;
     TkTextIndex curIndex;
-    int index, leftToScan;
+    TkSizeT index;
+    int leftToScan;
     TkText *textPtr = (TkText *)searchSpecPtr->clientData;
 
     index = 0;
     curIndex.tree = textPtr->sharedTextPtr->tree;
     curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
     for (segPtr = linePtr->segPtr, leftToScan = byteIndex;
-	    leftToScan > 0;
+	    leftToScan + 1 > 1;
 	    curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
 	if ((segPtr->typePtr == &tkTextCharType) &&
 		(searchSpecPtr->searchElide
 		|| !TkTextIsElided(textPtr, &curIndex, NULL))) {
-	    if (leftToScan < (int)segPtr->size) {
+	    if (leftToScan + 1 < (int)segPtr->size + 1) {
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
 		} else {
 		    index += Tcl_NumUtfChars(segPtr->body.chars, leftToScan);
 		}
 	    } else if (searchSpecPtr->exact) {
-		index += (int)segPtr->size;
+		index += segPtr->size;
 	    } else {
 		index += Tcl_NumUtfChars(segPtr->body.chars, -1);
 	    }
@@ -4267,9 +4268,9 @@ TextSearchFoundMatch(
     Tcl_Obj *theLine,		/* Text from current line, only accessed for
 				 * exact searches, and is allowed to be NULL
 				 * for regexp searches. */
-    int matchOffset,		/* Offset of found item in utf-8 bytes for
+    TkSizeT matchOffset,		/* Offset of found item in utf-8 bytes for
 				 * exact search, Unicode chars for regexp. */
-    int matchLength)		/* Length also in bytes/chars as per search
+    TkSizeT matchLength)		/* Length also in bytes/chars as per search
 				 * type. */
 {
     TkSizeT numChars;
@@ -4287,7 +4288,7 @@ TextSearchFoundMatch(
 	 */
 
 	if (searchSpecPtr->backwards ^
-		(matchOffset >= searchSpecPtr->stopOffset)) {
+		(matchOffset + 1 >= searchSpecPtr->stopOffset1 + 1)) {
 	    return 0;
 	}
     }
@@ -4312,7 +4313,7 @@ TextSearchFoundMatch(
 
     if (searchSpecPtr->strictLimits && lineNum == searchSpecPtr->stopLine) {
 	if (searchSpecPtr->backwards ^
-		((matchOffset + numChars + 1) > (TkSizeT) searchSpecPtr->stopOffset + 1)) {
+		((matchOffset + numChars + 1) > searchSpecPtr->stopOffset1 + 1)) {
 	    return 0;
 	}
     }
@@ -5663,7 +5664,7 @@ SearchPerform(
 
     if (searchSpecPtr->lineIndexProc(interp, fromPtr, searchSpecPtr,
 	    &searchSpecPtr->startLine,
-	    &searchSpecPtr->startOffset) != TCL_OK) {
+	    &searchSpecPtr->startOffset1) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -5694,7 +5695,7 @@ SearchPerform(
 
 	if (searchSpecPtr->lineIndexProc(interp, toPtr, searchSpecPtr,
 		&searchSpecPtr->stopLine,
-		&searchSpecPtr->stopOffset) != TCL_OK) {
+		&searchSpecPtr->stopOffset1) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
@@ -5893,7 +5894,7 @@ SearchCore(
 	}
 
 	if (lineNum == searchSpecPtr->stopLine && searchSpecPtr->backwards) {
-	    firstOffset = searchSpecPtr->stopOffset;
+	    firstOffset = searchSpecPtr->stopOffset1;
 	} else {
 	    firstOffset = 0;
 	}
@@ -5927,8 +5928,8 @@ SearchCore(
 		 * Only use the last part of the line.
 		 */
 
-		if (searchSpecPtr->startOffset > firstOffset) {
-		    firstOffset = searchSpecPtr->startOffset;
+		if (searchSpecPtr->startOffset1 + 1 > (TkSizeT)firstOffset + 1) {
+		    firstOffset = searchSpecPtr->startOffset1;
 		}
 		if ((firstOffset >= lastOffset)
 		    && ((lastOffset != 0) || searchSpecPtr->exact)) {
@@ -5939,8 +5940,8 @@ SearchCore(
 		 * Use only the first part of the line.
 		 */
 
-		if (searchSpecPtr->startOffset < lastOffset) {
-		    lastOffset = searchSpecPtr->startOffset;
+		if (searchSpecPtr->startOffset1 + 1 < (TkSizeT)lastOffset + 1) {
+		    lastOffset = searchSpecPtr->startOffset1;
 		}
 	    }
 	}
