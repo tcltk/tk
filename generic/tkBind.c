@@ -717,7 +717,6 @@ static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, EventMask *eventMaskPtr);
-static void		DoWarpWrtScreen(TkDisplay *dispPtr);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
@@ -4370,13 +4369,12 @@ HandleEventGenerate(
              * This allows to make grabs and warping work together robustly, that
              * is without depending on a precise sequence of events.
              * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
-             * is NULL) is run as an idle task because the event handlers are not
-             * designed to work without a window (and there is anyway no point in
-             * making this case sleep with grabs).
+             * is NULL) is run directly here.
              */
 
             if (!dispPtr->warpWindow) {
-		DoWarpWrtScreen(dispPtr);
+                TkpWarpPointer(dispPtr);
+                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
             }
 	}
 
@@ -4456,39 +4454,6 @@ NameToWindow(
     assert(tkwin);
     *tkwinPtr = tkwin;
     return 1;
-}
-
-/*
- *-------------------------------------------------------------------------
- *
- * DoWarpWrtScreen --
- *
- *	Perform warping of mouse pointer with respect to the whole screen.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	Mouse pointer moves to a new location.
- *
- *-------------------------------------------------------------------------
- */
-
-static void
-DoWarpWrtScreen(
-    TkDisplay *dispPtr)
-{
-    assert(dispPtr);
-
-    /*
-     * A non-NULL warpWindow means warping with respect to this window.
-     * We can only be here if we're warping with respect to the whole screen.
-     */
-
-    assert(!dispPtr->warpWindow);
-
-    TkpWarpPointer(dispPtr);
-    XForceScreenSaver(dispPtr->display, ScreenSaverReset);
 }
 
 /*

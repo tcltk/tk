@@ -6136,9 +6136,9 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
     destroy .t.f
 } -result {{} {} {TestUserData >b<}}
 
-test bind-32.1 {-warp, window was destroyed before the idle callback DoWarpWrtScreen} -setup {
+test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -setup {
     # note: this test is now essentially useless
-    #       since DoWarpWrtScreen no longer is an idle callback
+    #       since DoWarp no longer exist, not even as an idle callback
     frame .t.f
     pack .t.f
     focus -force .t.f
