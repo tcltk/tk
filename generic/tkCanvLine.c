@@ -97,7 +97,7 @@ static int		LineCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		LineDeleteCoords(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last);
+			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		LineInsert(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		LineToArea(Tk_Canvas canvas,
@@ -1153,8 +1153,8 @@ static void
 LineDeleteCoords(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    int first,			/* Index of first character to delete. */
-    int last)			/* Index of last character to delete. */
+    TkSizeT first,			/* Index of first character to delete. */
+    TkSizeT last)			/* Index of last character to delete. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     int count, i, first1, last1;
@@ -1169,13 +1169,13 @@ LineDeleteCoords(
     first &= -2;
     last &= -2;
 
-    if (first < 0) {
+    if ((int)first < 0) {
 	first = 0;
     }
-    if (last >= length) {
+    if ((int)last >= length) {
 	last = length-2;
     }
-    if (first > last) {
+    if ((int)first > (int)last) {
 	return;
     }
     if (linePtr->firstArrowPtr != NULL) {
