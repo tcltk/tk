@@ -1312,7 +1312,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
+	(void)TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
     } else {
 	foregroundObj = es.foregroundObj;
     }
