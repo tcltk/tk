@@ -43,7 +43,7 @@ static void		EmbImageDisplayProc(TkText *textPtr,
 			    Drawable dst, int screenY);
 static int		EmbImageLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars,
+			    TkSizeT offset, int maxX, TkSizeT maxChars,
 			    int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
 static void		EmbImageProc(ClientData clientData, int x, int y,
@@ -83,17 +83,17 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, align),
+	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
 	0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, padY), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageString),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, TCL_AUTO_LENGTH, offsetof(TkTextEmbImage, imageName),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -533,11 +533,11 @@ EmbImageLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
     TkTextSegment *eiPtr,	/* Segment corresponding to indexPtr. */
-    int offset,			/* Offset within segPtr corresponding to
+    TkSizeT offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    int maxChars,		/* Chunk must not include more than this many
+    TkSizeT maxChars,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
@@ -631,7 +631,7 @@ EmbImageCheckProc(
     }
     if (eiPtr->size != 1) {
 	Tcl_Panic("EmbImageCheckProc: embedded image has size %d",
-		eiPtr->size);
+		(int)eiPtr->size);
     }
 }
 

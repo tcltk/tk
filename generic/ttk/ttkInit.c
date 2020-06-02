@@ -197,11 +197,11 @@ int TtkGetOptionValue(
 const Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
-	offsetof(WidgetCore, cursorObj), TCL_AUTO_LENGTH, TK_OPTION_NULL_OK,0,0 },
+	offsetof(WidgetCore, cursorObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
-	offsetof(WidgetCore,styleObj), TCL_AUTO_LENGTH, 0,0,STYLE_CHANGED},
+	offsetof(WidgetCore,styleObj), TCL_INDEX_NONE, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
-	offsetof(WidgetCore,classObj), TCL_AUTO_LENGTH, 0,0,READONLY_OPTION},
+	offsetof(WidgetCore,classObj), TCL_INDEX_NONE, 0,0,READONLY_OPTION},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

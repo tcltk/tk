@@ -196,7 +196,7 @@ typedef struct Tk_OptionSpec {
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
 				 * record. Use the offsetof macro to generate
-				 * values for this. TCL_AUTO_LENGTH means don't
+				 * values for this. TCL_INDEX_NONE means don't
 				 * store the Tcl_Obj in the record. */
     size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
@@ -204,7 +204,7 @@ typedef struct Tk_OptionSpec {
 				 * specified as an offset in bytes from the
 				 * start of the record. Use the offsetof
 				 * macro to generate values for it.
-				 * TCL_AUTO_LENGTH means don't store the
+				 * TCL_INDEX_NONE means don't store the
 				 * internal representation in the record. */
 #else
     int objOffset;
@@ -238,11 +238,19 @@ typedef struct Tk_OptionSpec {
  * option config code to handle a custom option.
  */
 
+#if TCL_MAJOR_VERSION > 8
+typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
+	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
+	size_t offset, char *saveInternalPtr, int flags);
+typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
+	Tk_Window tkwin, char *widgRec, size_t offset);
+#else
 typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
 	int offset, char *saveInternalPtr, int flags);
 typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset);
+#endif
 typedef void (Tk_CustomOptionRestoreProc) (ClientData clientData,
 	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr);
 typedef void (Tk_CustomOptionFreeProc) (ClientData clientData, Tk_Window tkwin,
@@ -346,10 +354,17 @@ typedef struct Tk_SavedOptions {
 
 #ifndef __NO_OLD_CONFIG
 
+#if TCL_MAJOR_VERSION > 8
+typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
+	Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
+	Tk_Window tkwin, char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
 	Tk_Window tkwin, const char *value, char *widgRec, int offset);
 typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+#endif
 
 typedef struct Tk_CustomOption {
     Tk_OptionParseProc *parseProc;
@@ -910,6 +925,10 @@ typedef struct Tk_FakeWin {
  *				window.
  * TK_WM_MANAGEABLE		1 marks a window as capable of being converted
  *				into a toplevel using [wm manage].
+ * TK_CAN_INPUT_TEXT            1 means that this window accepts text input.
+ *                              Used on macOS to indicate that key events can be
+ *                              processed with the NSTextInputClient protocol.
+ *                              Not currently accessible through the public API.
  */
 
 #define TK_MAPPED		1
@@ -923,6 +942,7 @@ typedef struct Tk_FakeWin {
 #define TK_EMBEDDED		0x100
 #define TK_CONTAINER		0x200
 #define TK_BOTH_HALVES		0x400
+
 #define TK_WRAPPER		0x1000
 #define TK_REPARENTED		0x2000
 #define TK_ANONYMOUS_WINDOW	0x4000
@@ -931,6 +951,7 @@ typedef struct Tk_FakeWin {
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
 #define TK_WM_MANAGEABLE	0x80000
+#define TK_CAN_INPUT_TEXT       0x100000
 
 /*
  *----------------------------------------------------------------------
@@ -962,8 +983,12 @@ typedef struct Tk_SmoothMethod {
 #define TK_TAG_SPACE 3
 
 typedef struct Tk_Item {
-    int id;			/* Unique identifier for this item (also
+#if TCL_MAJOR_VERSION > 8
+    size_t id;		/* Unique identifier for this item (also
 				 * serves as first tag for item). */
+#else
+    int id;
+#endif
     struct Tk_Item *nextPtr;	/* Next in display list of all items in this
 				 * canvas. Later items in list are drawn on
 				 * top of earlier ones. */
@@ -972,10 +997,14 @@ typedef struct Tk_Item {
     Tk_Uid *tagPtr;		/* Pointer to array of tags. Usually points to
 				 * staticTagSpace, but may point to malloc-ed
 				 * space if there are lots of tags. */
-    int tagSpace;		/* Total amount of tag space available at
+#if TCL_MAJOR_VERSION > 8
+    size_t tagSpace;		/* Total amount of tag space available at
 				 * tagPtr. */
-    int numTags;		/* Number of tag slots actually used at
+    size_t numTags;		/* Number of tag slots actually used at
 				 * *tagPtr. */
+#else
+    int tagSpace, numTags;
+#endif
     struct Tk_ItemType *typePtr;/* Table of procedures that implement this
 				 * type of item. */
     int x1, y1, x2, y2;		/* Bounding box for item, in integer canvas
@@ -1018,13 +1047,17 @@ typedef struct Tk_Item {
  * lines, circles, etc.) that can form part of a canvas widget.
  */
 
-#ifdef USE_OLD_CANVAS
+#if defined(USE_OLD_CANVAS) && TCL_MAJOR_VERSION < 9
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv, int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, char *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
 #else
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[]);
@@ -1033,6 +1066,17 @@ typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const argv[]);
+#if TCL_MAJOR_VERSION > 8
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t beforeThis, Tcl_Obj *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, size_t *indexPtr);
+#else
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, Tcl_Obj *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
+#endif
 #endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDeleteProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Display *display);
@@ -1052,26 +1096,21 @@ typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double scaleY);
 typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double deltaX, double deltaY);
-#ifdef USE_OLD_CANVAS
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
+#if TCL_MAJOR_VERSION > 8
+typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t index);
+typedef size_t	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t offset, char *buffer, size_t maxBytes);
+typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t first, size_t last);
 #else
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
-#endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
 typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
-#ifdef USE_OLD_CANVAS
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, char *string);
-#else
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, Tcl_Obj *string);
-#endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int first, int last);
+#endif
 
 #ifndef __NO_OLD_CONFIG
 
@@ -1165,17 +1204,25 @@ typedef struct Tk_CanvasTextInfo {
     Tk_Item *selItemPtr;	/* Pointer to selected item. NULL means
 				 * selection isn't in this canvas. Writable by
 				 * items. */
-    int selectFirst;		/* Character index of first selected
+#if TCL_MAJOR_VERSION > 8
+    size_t selectFirst;		/* Character index of first selected
 				 * character. Writable by items. */
-    int selectLast;		/* Character index of last selected character.
+    size_t selectLast;		/* Character index of last selected character.
 				 * Writable by items. */
+#else
+    int selectFirst, selectLast;
+#endif
     Tk_Item *anchorItemPtr;	/* Item corresponding to "selectAnchor": not
 				 * necessarily selItemPtr. Read-only to
 				 * items. */
-    int selectAnchor;		/* Character index of fixed end of selection
+#if TCL_MAJOR_VERSION > 8
+    size_t selectAnchor;		/* Character index of fixed end of selection
 				 * (i.e. "select to" operation will use this
 				 * as one end of the selection). Writable by
 				 * items. */
+#else
+    int selectAnchor;
+#endif
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. Read-only to items. */
     int insertWidth;		/* Total width of insertion cursor. Read-only
@@ -1573,8 +1620,13 @@ typedef int (Tk_GetSelProc) (ClientData clientData, Tcl_Interp *interp,
 typedef void (Tk_LostSelProc) (ClientData clientData);
 typedef Tk_RestrictAction (Tk_RestrictProc) (ClientData clientData,
 	XEvent *eventPtr);
+#if TCL_MAJOR_VERSION > 8
+typedef size_t (Tk_SelectionProc) (ClientData clientData, size_t offset,
+	char *buffer, size_t maxBytes);
+#else
 typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 	char *buffer, int maxBytes);
+#endif
 
 /*
  *----------------------------------------------------------------------

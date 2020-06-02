@@ -107,7 +107,7 @@ typedef struct TkSelRetrievalInfo {
 
 typedef struct TkClipboardBuffer {
     char *buffer;		/* Null terminated data buffer. */
-    long length;		/* Length of string in buffer. */
+    TkSizeT length;		/* Length of string in buffer. */
     struct TkClipboardBuffer *nextPtr;
 				/* Next in list of buffers. NULL means end of
 				 * list . */
