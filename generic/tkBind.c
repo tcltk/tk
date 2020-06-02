@@ -717,7 +717,7 @@ static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, EventMask *eventMaskPtr);
-static void		DoWarp(ClientData clientData);
+static void		DoWarp(TkDisplay *dispPtr);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
@@ -4376,10 +4376,10 @@ HandleEventGenerate(
              */
 
 	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-                if (!dispPtr->warpWindow) {
-		    Tcl_DoWhenIdle(DoWarp, dispPtr);
-                }
 		dispPtr->flags |= TK_DISPLAY_IN_WARP;
+                if (!dispPtr->warpWindow) {
+		    DoWarp(dispPtr);
+                }
 	    }
 	}
 
@@ -4466,24 +4466,22 @@ NameToWindow(
  *
  * DoWarp --
  *
- *	Perform Warping of X pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer with respect to the whole screen.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	X Pointer will move to a new location.
+ *	Mouse pointer moves to a new location.
  *
  *-------------------------------------------------------------------------
  */
 
 static void
 DoWarp(
-    ClientData clientData)
+    TkDisplay *dispPtr)
 {
-    TkDisplay *dispPtr = clientData;
-
-    assert(clientData);
+    assert(dispPtr);
 
     /*
      * A non-NULL warpWindow means warping with respect to this window.
@@ -5286,7 +5284,6 @@ TkpCancelWarp(
     assert(dispPtr);
 
     if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
-	Tcl_CancelIdleCall(DoWarp, dispPtr);
 	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
     }
 }

@@ -6137,6 +6137,8 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
 } -result {{} {} {TestUserData >b<}}
 
 test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -setup {
+    # note: this test is now essentially useless
+    #       since DoWarp no longer is an idle callback
     frame .t.f
     pack .t.f
     focus -force .t.f
@@ -6656,12 +6658,8 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
     # Contrary to bind-34.1, we're directly checking screen coordinates
     event generate {} <Motion> -x 20 -y 20 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     set res [winfo pointerxy .]
     event generate {} <Motion> -x 200 -y 200 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
 } -result {20 20 200 200}
@@ -6679,8 +6677,6 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6689,9 +6685,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
         }
     }
     event generate {} <Motion> -x 100 -y 100 -warp 1
-    update idletasks ; after 50
     event generate {} <Motion> -x -1 -y -1 -warp 1
-    update idletasks ; after 50
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6718,8 +6712,6 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints
         }
     }
     event generate {} <Motion> -warp 1 -x 50 -y 50
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     toplevel .top
     grab release .top
     waitForGrab released .top
@@ -6734,7 +6726,6 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
-    update idletasks ; after 50
     grab release .top  ; # this will queue events
     waitForGrab released .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
