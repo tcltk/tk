@@ -4459,7 +4459,7 @@ NameToWindow(
 /*
  *-------------------------------------------------------------------------
  *
- * DoWarpWrtWin --
+ * TkDoWarpWrtWin --
  *
  *	Perform warping of mouse pointer with respect to a window.
  *
@@ -4473,7 +4473,7 @@ NameToWindow(
  */
 
 void
-DoWarpWrtWin(
+TkDoWarpWrtWin(
     TkDisplay *dispPtr)
 {
     assert(dispPtr);
