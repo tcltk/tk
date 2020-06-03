@@ -930,7 +930,8 @@ ImgPhotoCmd(
     }
 
     case PHOTO_PUT: {
-	Tcl_Obj *format, *data;
+	Tcl_Obj *format, *data, *metadata;
+	int result;
 
 	/*
 	 * photo put command - first parse the options.
@@ -952,14 +953,28 @@ ImgPhotoCmd(
 	}
 
 	/*
+	 * Prepare a metadata dict.
+	 * If the object pointer points to NULL, there is no metadata dict on input.
+	 * The match and read calls may modify it and change it from NULL.
+	 * ToDo: think about ref counting and freeing it below
+	 */
+	if (options.metadata == NULL) {
+	    metadata = NULL;
+	} else {
+	    metadata = options.metadata;
+	    Tcl_IncrRefCount(metadata);
+	}
+
+	/*
 	 * See if there's a format that can read the data
 	 */
 
 	if (MatchStringFormat(interp, objv[2], options.format,
-		&(options.metadata), &imageFormat,
+		&metadata, &imageFormat,
 		&imageFormat87, &imageWidth, &imageHeight, &oldformat)
 		!= TCL_OK) {
-	    return TCL_ERROR;
+	    result = TCL_ERROR;
+	    goto putsCleanup;
 	}
 
 	if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
@@ -986,15 +1001,17 @@ ImgPhotoCmd(
 		    (Tk_PhotoHandle) masterPtr, options.toX, options.toY,
 		    options.toX2 - options.toX,
 		    options.toY2 - options.toY, 0, 0) != TCL_OK) {
-		return TCL_ERROR;
+		result = TCL_ERROR;
+		goto putsCleanup;
 	    }
 	} else {
 	    if (imageFormat87->stringReadProc(interp, data, format,
 		    (Tk_PhotoHandle) masterPtr, options.toX, options.toY,
 		    options.toX2 - options.toX,
 		    options.toY2 - options.toY, 0, 0,
-		    &(options.metadata)) != TCL_OK) {
-		return TCL_ERROR;
+		    &metadata) != TCL_OK) {
+                result = TCL_ERROR;
+                goto putsCleanup;
 	    }
 	}
 	/*
@@ -1004,11 +1021,15 @@ ImgPhotoCmd(
 	 * IMAGE_CHANGED bit.
 	 */
 	masterPtr->flags |= IMAGE_CHANGED;
-
-	return TCL_OK;
+	result = TCL_OK;
+putsCleanup:
+	if (metadata != NULL)
+	    Tcl_DecrRefCount(metadata);
+	return result;
     }
     case PHOTO_READ: {
-	Tcl_Obj *format;
+	Tcl_Obj *format, *metadata;
+	int result;
 
 	/*
 	 * photo read command - first parse the options specified.
@@ -1060,13 +1081,26 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 
+	/*
+	* Prepare a metadata dict.
+	* If the object pointer points to NULL, there is no metadata dict on input.
+	* The match and read calls may modify it and change it from NULL.
+	* ToDo: think about ref counting and freeing it below
+	*/
+	if (options.metadata == NULL) {
+	    metadata = NULL;
+	} else {
+	    metadata = options.metadata;
+	    Tcl_IncrRefCount(metadata);
+	}
+
 	if (MatchFileFormat(interp, chan,
 		Tcl_GetString(options.name), options.format,
-		&(options.metadata), &imageFormat,
+		&metadata, &imageFormat,
 		&imageFormat87, &imageWidth, &imageHeight, &oldformat)
 		!= TCL_OK) {
-	    Tcl_Close(NULL, chan);
-	    return TCL_ERROR;
+	    result = TCL_ERROR;
+	    goto readCleanup;
 	}
 
 	/*
@@ -1080,8 +1114,8 @@ ImgPhotoCmd(
 		    "coordinates for -from option extend outside source image",
 		    -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
-	    Tcl_Close(NULL, chan);
-	    return TCL_ERROR;
+	    result = TCL_ERROR;
+	    goto readCleanup;
 	}
 	if (!(options.options & OPT_FROM) || (options.fromX2 < 0)) {
 	    width = imageWidth - options.fromX;
@@ -1102,7 +1136,8 @@ ImgPhotoCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
-		return TCL_ERROR;
+		result = TCL_ERROR;
+		goto readCleanup;
 	    }
 	}
 
@@ -1125,8 +1160,11 @@ ImgPhotoCmd(
 		    Tcl_GetString(options.name),
 		    format, (Tk_PhotoHandle) masterPtr, options.toX,
 		    options.toY, width, height, options.fromX, options.fromY,
-		    &(options.metadata));
+		    &metadata);
 	}
+readCleanup:
+	if (metadata != NULL)
+	    Tcl_DecrRefCount(metadata);
 	if (chan != NULL) {
 	    Tcl_Close(NULL, chan);
 	}
@@ -2130,6 +2168,10 @@ ImgPhotoConfigureMaster(
 	masterPtr->flags |= IMAGE_CHANGED;
     }
 
+    /*
+     * ToDo: The case of a a dataString newly set to the empty string with a
+     * present metadata dict should also cause this.
+     */
     if ((masterPtr->fileString == NULL) && (masterPtr->dataString != NULL)
 	    && ((masterPtr->dataString != oldData)
 		    || (masterPtr->format != oldFormat))) {
@@ -2899,8 +2941,7 @@ MatchStringFormat(
 	    if ((format87Ptr->stringMatchProc != NULL)
 		    && (format87Ptr->stringReadProc != NULL)
 		    && format87Ptr->stringMatchProc(
-			    (Tcl_Obj *) Tcl_GetString(data),
-			    (Tcl_Obj *) formatString,
+                            data, formatObj,
 			    widthPtr, heightPtr, interp, metadataObjPtr)) {
 		break;
 	    }

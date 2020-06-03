@@ -410,6 +410,7 @@ FileReadGIF(
     unsigned char *trashBuffer = NULL;
     int bitPixel;
     Tcl_Obj *metadata;
+    int dictSize = 0;
     int gifLabel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
@@ -519,11 +520,21 @@ FileReadGIF(
      */
 
     /*
-     * Initialize the metadata dict
+     * Initialize the metadata dict as an unshared copy of the input metadata.
+     * We do not want to modify the metadataPtr in case of an error.
+     * So first get a local unshared copy, which is assigned on success.
+     */
+
+    metadata = *metadataPtr;
+    if (Tcl_IsShared(metadata)) {
+	metadata = Tcl_DuplicateObj(metadata);
+    }
+
+    /*
      * Start with a ref count of 1 to delete it in the error case with
      * Tcl_DecrRefCount().
      */
-    metadata = Tcl_NewDictObj();
+
     Tcl_IncrRefCount(metadata);
 
     /*
@@ -773,13 +784,18 @@ FileReadGIF(
     result = TCL_OK;
 
     /*
-     * Return the metadata object
-     * Increment the refcount again, as it is decremented below
+     * Merge the metadata object if there is data in the dict.
      */
-    if (*metadataPtr != NULL) {
-	Tcl_DecrRefCount(*metadataPtr);
+
+    if (TCL_OK != (result = Tcl_DictObjSize(interp,metadata, &dictSize))) {
+	goto error;
     }
-    *metadataPtr = metadata;
+    if (dictSize > 0) {
+	if (*metadataPtr != NULL) {
+	    Tcl_DecrRefCount(*metadataPtr);
+	}
+	*metadataPtr = metadata;
+    }
 
     /*
      * If a trash buffer has been allocated, free it now.
