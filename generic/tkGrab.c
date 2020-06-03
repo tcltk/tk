@@ -787,7 +787,7 @@ TkPointerEvent(
 
         TkDoWarpWrtWin(dispPtr);
     }
-        
+
     if (!appGrabbed) {
 	return 1;
     }
