@@ -1658,19 +1658,19 @@ TkMacOSXSetupDrawingContext(
 	} else if (dc.clipRgn) {
 
 	    /*
-	     * Drawing can also fail when we are being called from drawRect but
-	     * the clipping region set by drawRect does not contain the clipping
-	     * region of our drawing context.  See bug [2a61eca3a8].
+	     * Drawing will also fail if we are being called from drawRect but
+	     * the clipping rectangle set by drawRect does not contain the
+	     * clipping region of our drawing context.  See bug [2a61eca3a8].
+	     * If we can't draw all of the clipping region of the drawing
+	     * context then we draw whatever we can, but we also add a dirty
+	     * rectangle so the entire widget will get redrawn in the next
+	     * cycle.
 	     */
 
 	    CGRect currentClip = CGContextGetClipBoundingBox(
 				     [NSGraphicsContext currentContext].CGContext);
 	    if (!NSContainsRect(currentClip, clipBounds)) {
 		[view addTkDirtyRect:clipBounds];
-		// XXXX we should be able to skip drawing but sometimes the clipBounds
-		// are wrong.
-		//canDraw = false;
-		//goto end;		      
 	    }
 	}
 
@@ -1715,10 +1715,10 @@ TkMacOSXSetupDrawingContext(
 	    CGRect r;
 
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
-		    *HIShapeGetBounds(dc.clipRgn, &r),
-		    CGRectApplyAffineTransform(clipBounds, t))) {
-		ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-		CGContextEOClip(dc.context);
+		*HIShapeGetBounds(dc.clipRgn, &r),
+		CGRectApplyAffineTransform(clipBounds, t))) {
+	    	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    	CGContextEOClip(dc.context);
 	    }
 	}
 	if (gc) {

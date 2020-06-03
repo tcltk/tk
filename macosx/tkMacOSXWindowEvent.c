@@ -38,6 +38,8 @@ static void		DoWindowActivate(ClientData clientData);
 
 #pragma mark TKApplication(TKWindowEvent)
 
+extern NSString *NSWindowDidOrderOnScreenNotification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowWillOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOnScreenNotification;
@@ -208,6 +210,18 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     return (winPtr ? NO : YES);
 }
 
+- (void) windowBecameVisible: (NSNotification *) notification
+{
+    NSWindow *window = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+    if (winPtr) {
+	TKContentView *view = [window contentView];
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	[view setTkDirtyRect:[view bounds]];
+	TkMacOSXDrawAllViews(NULL);
+    }
+}
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 
 - (void) windowDragStart: (NSNotification *) notification
@@ -227,14 +241,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
+    printf("windowMapped\n");
     if (winPtr) {
 	//Tk_MapWindow((Tk_Window) winPtr);
     }
-}
-
-- (void) windowBecameVisible: (NSNotification *) notification
-{
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 }
 
 - (void) windowUnmapped: (NSNotification *) notification
@@ -263,6 +273,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+    observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
