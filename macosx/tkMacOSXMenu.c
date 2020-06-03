@@ -108,6 +108,65 @@ static void	MenuSelectEvent(TkMenu *menuPtr);
 static void	RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static int	ModifierCharWidth(Tk_Font tkfont);
 
+#pragma mark TkBackgroundLoop
+
+/*
+ * The function TkMacOSXEventsCheckProc (in tkMacOSXNotify.c) is the "check
+ * proc" for the macOS event source.  Its job is to remove NSEvents from the
+ * default event queue of the NSApplication.  It does this by calling the
+ * method [NSApp nextEventMatchingMask: untilDate: inMode: dequeue:]. As a
+ * rule, when the untilDate is set to the distant past this method returns
+ * immediately.  An exception to that rule is when the next event is the button
+ * press on a menu button.  In that case, the method starts running a nested
+ * event loop in the mode NSEventTrackingRunLoopMode which does not return
+ * until the menu has been dismissed.  In Tk 8.6.10 and earlier, this meant
+ * that the Tk event loop would block in its call to the check proc as long as
+ * the menu was posted.  For example, opening a menu during the Rube Goldberg
+ * demo would cause the animation to stop.  This was also the case for
+ * menubuttons.
+ * 
+ * The TKBackground object below works around this problem, and allows a Tk
+ * event loop to run while a menu is open.  It is a subclass of NSThread which
+ * inserts requests to call [NSApp _runBackgroundLoop] onto the queue
+ * associated with the NSEventTrackingRunLoopMode.  One of these threads gets
+ * started in the callback [NSApp menuBeginTracking] and cancelled in [NSApp
+ * menuEndTracking].
+ */
+
+@interface TKBackgroundLoop: NSThread
+@end
+
+@implementation TKBackgroundLoop
+- (void) main
+{
+    NSArray *modeArray = [NSArray arrayWithObjects: NSEventTrackingRunLoopMode,
+				  nil];
+    while(1) {
+	
+	/*
+	 * Queue a request to process Tk events during event tracking.
+	 */
+	
+	[NSApp performSelectorOnMainThread:@selector(_runBackgroundLoop) 
+				withObject:nil
+			     waitUntilDone:true 
+				     modes:modeArray];
+	if (self.cancelled) {
+	    [NSThread exit];
+	}
+	
+	/*
+	 * Allow the tracked events to be processed too.
+	 */
+
+	[NSThread sleepForTimeInterval:0.001];
+    }	
+}
+@end
+
+TKBackgroundLoop *backgroundLoop = nil;
+
+
 #pragma mark TKMenu
 
 /*
@@ -395,6 +454,12 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (backgroundLoop) {
+	[backgroundLoop cancel];
+	[backgroundLoop release];
+    }
+    backgroundLoop = [[TKBackgroundLoop alloc] init];
+    [backgroundLoop start];
     //TkMacOSXClearMenubarActive();
     //TkMacOSXPreprocessMenu();
 }
@@ -404,6 +469,11 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (backgroundLoop) {
+	[backgroundLoop cancel];
+	[backgroundLoop release];
+	backgroundLoop = nil;
+    }
     if (!inPostMenu) {
 	TkMacOSXClearMenubarActive();
     }
