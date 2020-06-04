@@ -1015,6 +1015,7 @@ ImgPhotoCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+		Tcl_Close(NULL, chan);
 		return TCL_ERROR;
 	    }
 	}
