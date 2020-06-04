@@ -746,6 +746,7 @@ ImgPhotoCmd(
 	 */
 
 	Tk_ImageStringWriteProc *stringWriteProc = NULL;
+	Tk_ImageStringWriteProc87 *stringWriteProc87 = NULL;
 
 	index = 1;
 	memset(&options, 0, sizeof(options));
@@ -818,6 +819,21 @@ ImgPhotoCmd(
 	    }
 	}
 	if (stringWriteProc == NULL) {
+	    oldformat = 0;
+	    for (imageFormat87 = tsdPtr->formatList87; imageFormat87 != NULL;
+                    imageFormat87 = imageFormat87->nextPtr) {
+                if ((strncasecmp(Tcl_GetString(options.format),
+                        imageFormat87->name,
+                        strlen(imageFormat87->name)) == 0)) {
+                    matched = 1;
+                    if (imageFormat87->stringWriteProc != NULL) {
+                        stringWriteProc87 = imageFormat87->stringWriteProc;
+                        break;
+                    }
+                }
+	    }
+	}
+	if (stringWriteProc == NULL && stringWriteProc87 == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                     "image string format \"%s\" is %s",
                     Tcl_GetString(options.format),
@@ -833,7 +849,10 @@ ImgPhotoCmd(
 
 	data = ImgGetPhoto(masterPtr, &block, &options);
 
-	if (oldformat) {
+	if (stringWriteProc == NULL) {
+	    result = (stringWriteProc87)(interp,
+		    options.format, &block, options.metadata);
+	} else if (oldformat) {
 	    Tcl_DString buffer;
 	    typedef int (*OldStringWriteProc)(Tcl_Interp *interp,
 		    Tcl_DString *dataPtr, const char *formatString,
@@ -956,7 +975,7 @@ ImgPhotoCmd(
 	 * Prepare a metadata dict.
 	 * If the object pointer points to NULL, there is no metadata dict on input.
 	 * The match and read calls may modify it and change it from NULL.
-	 * ToDo: think about ref counting and freeing it below
+	 * The refcount of options.metadata is >= 1
 	 */
 	if (options.metadata == NULL) {
 	    metadata = NULL;
