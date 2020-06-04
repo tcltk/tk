@@ -401,6 +401,7 @@ FileReadGIF(
     int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
     Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
+				/* may point to a NULL pointer */
 {
     int fileWidth, fileHeight, imageWidth, imageHeight;
     unsigned int nBytes;
@@ -526,8 +527,12 @@ FileReadGIF(
      */
 
     metadata = *metadataPtr;
-    if (Tcl_IsShared(metadata)) {
-	metadata = Tcl_DuplicateObj(metadata);
+    if (metadata == NULL) {
+	metadata = Tcl_NewDictObj();
+    } else {
+	if (Tcl_IsShared(metadata)) {
+	    metadata = Tcl_DuplicateObj(metadata);
+	}
     }
 
     /*
@@ -2137,7 +2142,7 @@ CommonWriteGIF(
 			blocklength = (unsigned char)length;
 			length = 0;
 		    }
-		    writeProc(handle, (char *) blocklength, 1);
+		    writeProc(handle, (char *) &blocklength, 1);
 		    writeProc(handle, (char *) comment, blocklength);
 		    comment += blocklength;
 		}
