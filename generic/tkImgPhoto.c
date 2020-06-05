@@ -335,6 +335,8 @@ Tk_CreatePhotoImageFormat87(
 				 * by caller. */
 {
     Tk_PhotoImageFormat87 *copyPtr;
+    char *name;
+
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -345,7 +347,7 @@ Tk_CreatePhotoImageFormat87(
     copyPtr = (Tk_PhotoImageFormat87 *)ckalloc(sizeof(Tk_PhotoImageFormat87));
     *copyPtr = *formatPtr;
     /* for compatibility with aMSN: make a copy of formatPtr->name */
-    char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
+    name = (char *)ckalloc(strlen(formatPtr->name) + 1);
     strcpy(name, formatPtr->name);
     copyPtr->name = name;
     copyPtr->nextPtr = tsdPtr->formatList87;
@@ -1155,8 +1157,8 @@ putsCleanup:
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
-		result = TCL_ERROR;
-		goto readCleanup;
+		Tcl_Close(NULL, chan);
+		return TCL_ERROR;
 	    }
 	}
 
@@ -2649,7 +2651,7 @@ MatchFileFormat(
 				 * here. */
     int *oldformat)		/* Returns 1 if the old image API is used. */
 {
-    int matched = 0, useoldformat = 0, use87format = 0;
+    int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
     Tk_PhotoImageFormat87 *format87Ptr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -2847,7 +2849,7 @@ MatchStringFormat(
 				 * here. */
     int *oldformat)		/* Returns 1 if the old image API is used. */
 {
-    int matched = 0, useoldformat = 0, use87format = 0;
+    int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr, *defaultFormatPtr = NULL;
     Tk_PhotoImageFormat87 *format87Ptr = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -4080,72 +4082,6 @@ Tk_PhotoSetSize(
     Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 	    masterPtr->width, masterPtr->height);
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoGetMetadata --
- *
- *	This function is called to obtain the metadata object of a photo
- *	image.
- *
- * Results:
- *	The image's metadata object pointer.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Tcl_Obj *
-Tk_PhotoGetMetadata(
-    Tk_PhotoHandle handle)	/* Handle for the image whose dimensions are
-				 * requested. */
-{
-    PhotoMaster *masterPtr = (PhotoMaster *) handle;
-
-    return masterPtr->metadata;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoSetMetadata --
- *
- *	This function is called to obtain to set the metadata object of a
- *	photo image.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_PhotoSetMetadata(
-    Tk_PhotoHandle handle,	/* Handle for the image whose dimensions are
-				 * requested. */
-    Tcl_Obj *metadata)
-{
-    PhotoMaster *masterPtr = (PhotoMaster *) handle;
-    /*
-     * Free current object if present
-     */
-    if(masterPtr->metadata != NULL) {
-	Tcl_DecrRefCount(masterPtr->metadata);
-    }
-    /*
-     * Increment ref count of new object to get it
-     */
-    if (metadata != NULL) {
-	Tcl_IncrRefCount(metadata);
-    }
-    masterPtr->metadata = metadata;
 }
 
 /*
