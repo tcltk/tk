@@ -878,9 +878,6 @@ EXTERN void		Tk_CreateOldImageType(const Tk_ImageType *typePtr);
 /* 273 */
 EXTERN void		Tk_CreateOldPhotoImageFormat(
 				const Tk_PhotoImageFormat *formatPtr);
-/* 274 */
-EXTERN void		Tk_CreatePhotoImageFormat87(
-				const Tk_PhotoImageFormat87 *formatPtr);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1167,7 +1164,6 @@ typedef struct TkStubs {
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
-    void (*tk_CreatePhotoImageFormat87) (const Tk_PhotoImageFormat87 *formatPtr); /* 274 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1728,8 +1724,6 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_CreateOldImageType) /* 272 */
 #define Tk_CreateOldPhotoImageFormat \
 	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
-#define Tk_CreatePhotoImageFormat87 \
-	(tkStubsPtr->tk_CreatePhotoImageFormat87) /* 274 */
 
 #endif /* defined(USE_TK_STUBS) */
 
@@ -1764,6 +1758,8 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_PhotoPutZoomedBlock_Panic
 #undef Tk_PhotoSetSize_Panic
 #endif /* TK_NO_DEPRECATED */
+
+#define Tk_CreatePhotoImageFormat87 ((void (*)(const Tk_PhotoImageFormat87 *formatPtr))(void *)Tk_CreatePhotoImageFormat)
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

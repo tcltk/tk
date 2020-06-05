@@ -1068,10 +1068,6 @@ declare 272 {
 declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
-# New in Tk8.7
-declare 274 {
-    void Tk_CreatePhotoImageFormat87(const Tk_PhotoImageFormat87 *formatPtr)
-}
 
 
 # Define the platform specific public Tk interface.  These functions are
