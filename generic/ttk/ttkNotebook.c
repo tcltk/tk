@@ -94,8 +94,8 @@ typedef struct
     Ttk_Manager *mgr;		/* Geometry manager */
     Tk_OptionTable tabOptionTable;	/* Tab options */
     Tk_OptionTable paneOptionTable;	/* Tab+pane options */
-    int currentIndex;		/* index of currently selected tab */
-    int activeIndex;		/* index of currently active tab */
+    TkSizeT currentIndex;		/* index of currently selected tab */
+    TkSizeT activeIndex;		/* index of currently active tab */
     Ttk_Layout tabLayout;	/* Sublayout for tabs */
 
     Ttk_Box clientArea;		/* Where to pack slave widgets */
@@ -272,7 +272,7 @@ static TkSizeT IdentifyTab(Notebook *nb, int x, int y)
  * ActivateTab --
  * 	Set the active tab index, redisplay if necessary.
  */
-static void ActivateTab(Notebook *nb, int index)
+static void ActivateTab(Notebook *nb, TkSizeT index)
 {
     if (index != nb->notebook.activeIndex) {
 	nb->notebook.activeIndex = index;
@@ -293,13 +293,13 @@ static Ttk_State TabState(Notebook *nb, TkSizeT index)
     Tab *tab = (Tab *)Ttk_SlaveData(nb->notebook.mgr, index);
     TkSizeT i = 0;
 
-    if ((int)index == nb->notebook.currentIndex) {
+    if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
 	state &= ~TTK_STATE_FOCUS;
     }
 
-    if ((int)index == nb->notebook.activeIndex) {
+    if (index == nb->notebook.activeIndex) {
 	state |= TTK_STATE_ACTIVE;
     }
     for (i = 0; i < Ttk_NumberSlaves(nb->notebook.mgr); ++i) {
@@ -589,8 +589,8 @@ static void NotebookPlaceSlave(Notebook *nb, TkSizeT slaveIndex)
 static void NotebookPlaceSlaves(void *recordPtr)
 {
     Notebook *nb = (Notebook *)recordPtr;
-    int currentIndex = nb->notebook.currentIndex;
-    if (currentIndex >= 0) {
+    TkSizeT currentIndex = nb->notebook.currentIndex;
+    if (currentIndex != TCL_INDEX_NONE) {
 	NotebookDoLayout(nb);
 	NotebookPlaceSlave(nb, currentIndex);
     }
@@ -700,11 +700,11 @@ static void TabRemoved(void *managerData, TkSizeT index)
     Notebook *nb = (Notebook *)managerData;
     Tab *tab = (Tab *)Ttk_SlaveData(nb->notebook.mgr, index);
 
-    if ((int)index == nb->notebook.currentIndex) {
+    if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     }
 
-    if ((int)index < nb->notebook.currentIndex) {
+    if (index + 1 < nb->notebook.currentIndex + 1) {
 	--nb->notebook.currentIndex;
     }
 
@@ -728,7 +728,7 @@ static int TabRequest(void *managerData, TkSizeT index, int width, int height)
  */
 static int AddTab(
     Tcl_Interp *interp, Notebook *nb,
-    int destIndex, Tk_Window slaveWindow,
+    TkSizeT destIndex, Tk_Window slaveWindow,
     int objc, Tcl_Obj *const objv[])
 {
     Tab *tab;
@@ -759,9 +759,9 @@ static int AddTab(
 
     /* Adjust indices and/or autoselect first tab:
      */
-    if (nb->notebook.currentIndex < 0) {
+    if (nb->notebook.currentIndex == TCL_INDEX_NONE) {
 	SelectTab(nb, destIndex);
-    } else if (nb->notebook.currentIndex >= destIndex) {
+    } else if (nb->notebook.currentIndex + 1 >= destIndex + 1) {
 	++nb->notebook.currentIndex;
     }
 
@@ -940,7 +940,7 @@ static int NotebookInsertCommand(
 {
     Notebook *nb = (Notebook *)recordPtr;
     TkSizeT current = nb->notebook.currentIndex;
-    TkSizeT nSlaves1 = Ttk_NumberSlaves(nb->notebook.mgr);
+    TkSizeT nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
     TkSizeT srcIndex, destIndex;
 
     if (objc < 4) {
@@ -985,14 +985,14 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (destIndex + 1 >= nSlaves1 + 1) {
-	destIndex  = nSlaves1 - 1;
+    if (destIndex + 1 >= nSlaves + 1) {
+	destIndex  = nSlaves - 1;
     }
     Ttk_ReorderSlave(nb->notebook.mgr, srcIndex, destIndex);
 
     /* Adjust internal indexes:
      */
-    nb->notebook.activeIndex = -1;
+    nb->notebook.activeIndex = TCL_INDEX_NONE;
     if (current == srcIndex) {
 	nb->notebook.currentIndex = destIndex;
     } else if (destIndex + 1 <= current + 1 && current + 1 < srcIndex + 1) {
@@ -1051,7 +1051,7 @@ static int NotebookHideCommand(
 
     tab = (Tab *)Ttk_SlaveData(nb->notebook.mgr, index);
     tab->state = TAB_STATE_HIDDEN;
-    if (index == (TkSizeT)nb->notebook.currentIndex) {
+    if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     }
 
@@ -1151,7 +1151,7 @@ static int NotebookSelectCommand(
     Notebook *nb = (Notebook *)recordPtr;
 
     if (objc == 2) {
-	if (nb->notebook.currentIndex >= 0) {
+	if (nb->notebook.currentIndex != TCL_INDEX_NONE) {
 	    Tk_Window pane = Ttk_SlaveWindow(
 		nb->notebook.mgr, nb->notebook.currentIndex);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(pane), -1));
@@ -1233,7 +1233,7 @@ static int NotebookTabCommand(
     /* If the current tab has become disabled or hidden,
      * select the next nondisabled, unhidden one:
      */
-    if (index == (TkSizeT)nb->notebook.currentIndex && tab->state != TAB_STATE_NORMAL) {
+    if (index == nb->notebook.currentIndex && tab->state != TAB_STATE_NORMAL) {
 	SelectNearestTab(nb);
     }
 
@@ -1273,8 +1273,8 @@ static void NotebookInitialize(Tcl_Interp *interp, void *recordPtr)
     nb->notebook.tabOptionTable = Tk_CreateOptionTable(interp,TabOptionSpecs);
     nb->notebook.paneOptionTable = Tk_CreateOptionTable(interp,PaneOptionSpecs);
 
-    nb->notebook.currentIndex = -1;
-    nb->notebook.activeIndex = -1;
+    nb->notebook.currentIndex = TCL_INDEX_NONE;
+    nb->notebook.activeIndex = TCL_INDEX_NONE;
     nb->notebook.tabLayout = 0;
 
     nb->notebook.clientArea = Ttk_MakeBox(0,0,1,1);
@@ -1359,8 +1359,8 @@ static void DisplayTab(Notebook *nb, int index, Drawable d)
 static void NotebookDisplay(void *clientData, Drawable d)
 {
     Notebook *nb = (Notebook *)clientData;
-    int nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
-    int index;
+    TkSizeT nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
+    TkSizeT index;
 
     /* Draw notebook background (base layout):
      */
@@ -1374,7 +1374,7 @@ static void NotebookDisplay(void *clientData, Drawable d)
 	    DisplayTab(nb, index, d);
 	}
     }
-    if (nb->notebook.currentIndex >= 0) {
+    if (nb->notebook.currentIndex != TCL_INDEX_NONE) {
 	DisplayTab(nb, nb->notebook.currentIndex, d);
     }
 }

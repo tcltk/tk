@@ -1047,13 +1047,17 @@ typedef struct Tk_Item {
  * lines, circles, etc.) that can form part of a canvas widget.
  */
 
-#ifdef USE_OLD_CANVAS
+#if defined(USE_OLD_CANVAS) && TCL_MAJOR_VERSION < 9
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv, int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, char *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
 #else
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[]);
@@ -1062,6 +1066,17 @@ typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const argv[]);
+#if TCL_MAJOR_VERSION > 8
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t beforeThis, Tcl_Obj *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, size_t *indexPtr);
+#else
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, Tcl_Obj *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
+#endif
 #endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDeleteProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Display *display);
@@ -1081,39 +1096,21 @@ typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double scaleY);
 typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double deltaX, double deltaY);
-#ifdef USE_OLD_CANVAS
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
-#elif TCL_MAJOR_VERSION > 8
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Obj *indexString, size_t *indexPtr);
-#else
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
-#endif /* USE_OLD_CANVAS */
 #if TCL_MAJOR_VERSION > 8
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    size_t index);
 typedef size_t	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    size_t offset, char *buffer, size_t maxBytes);
+typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t first, size_t last);
 #else
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
 typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
-#endif
-#ifdef USE_OLD_CANVAS
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, char *string);
-#elif TCL_MAJOR_VERSION > 8
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    size_t beforeThis, Tcl_Obj *string);
-#else
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, Tcl_Obj *string);
-#endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int first, int last);
+#endif
 
 #ifndef __NO_OLD_CONFIG
 

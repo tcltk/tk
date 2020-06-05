@@ -1312,7 +1312,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
+	(void)TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
     } else {
 	foregroundObj = es.foregroundObj;
     }
@@ -1756,7 +1756,7 @@ typedef struct {
     Tcl_Obj	*postCommandObj;
     Tcl_Obj	*valuesObj;
     Tcl_Obj	*heightObj;
-    int 	currentIndex;
+    TkSizeT	currentIndex;
 } ComboboxPart;
 
 typedef struct {
@@ -1786,7 +1786,7 @@ ComboboxInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Combobox *cb = (Combobox *)recordPtr;
 
-    cb->combobox.currentIndex = -1;
+    cb->combobox.currentIndex = TCL_INDEX_NONE;
     TtkTrackElementState(&cb->core);
     EntryInitialize(interp, recordPtr);
 }
@@ -1818,35 +1818,35 @@ static int ComboboxCurrentCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Combobox *cbPtr = (Combobox *)recordPtr;
-    int currentIndex = cbPtr->combobox.currentIndex;
+    TkSizeT currentIndex = cbPtr->combobox.currentIndex;
     const char *currentValue = cbPtr->entry.string;
     int nValues;
     Tcl_Obj **values;
 
-    Tcl_ListObjGetElements(interp,cbPtr->combobox.valuesObj,&nValues,&values);
+    Tcl_ListObjGetElements(interp, cbPtr->combobox.valuesObj, &nValues, &values);
 
     if (objc == 2) {
 	/* Check if currentIndex still valid:
 	 */
-	if (    currentIndex < 0
-	     || currentIndex >= nValues
+	if (    currentIndex == TCL_INDEX_NONE
+	     || currentIndex >= (TkSizeT)nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
 	{
 	    /* Not valid.  Check current value against each element in -values:
 	     */
-	    for (currentIndex = 0; currentIndex < nValues; ++currentIndex) {
+	    for (currentIndex = 0; currentIndex < (TkSizeT)nValues; ++currentIndex) {
 		if (!strcmp(currentValue,Tcl_GetString(values[currentIndex]))) {
 		    break;
 		}
 	    }
-	    if (currentIndex >= nValues) {
+	    if (currentIndex >= (TkSizeT)nValues) {
 		/* Not found */
-		currentIndex = -1;
+		currentIndex = TCL_INDEX_NONE;
 	    }
 	}
 	cbPtr->combobox.currentIndex = currentIndex;
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(currentIndex));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj((int)currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
 	TkSizeT idx;
@@ -1858,7 +1858,7 @@ static int ComboboxCurrentCommand(
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
 	        return TCL_ERROR;
 	    }
-	    currentIndex = (int)idx;
+	    currentIndex = idx;
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "Incorrect index %s", Tcl_GetString(objv[2])));

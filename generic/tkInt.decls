@@ -641,6 +641,14 @@ declare 185 {
             Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
+# Support for aqua's inability to draw outside [NSView drawRect:]
+declare 186 aqua {
+    void TkpRedrawWidget(Tk_Window tkwin)
+}
+declare 187 aqua {
+    int TkpWillDrawWidget(Tk_Window tkwin)
+}
+
 
 ##############################################################################
 
