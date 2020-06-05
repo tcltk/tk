@@ -217,7 +217,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	TKContentView *view = [window contentView];
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-	[view setTkDirtyRect:[view bounds]];
+	[view addTkDirtyRect:[view bounds]];
 	TkMacOSXDrawAllViews(NULL);
     }
 }
@@ -433,8 +433,7 @@ TkpWillDrawWidget(Tk_Window tkwin) {
 	    printf("TkpAppCanDraw: dirtyRect for %s is %s\n",
 		   Tk_PathName(tkwin),
 		   NSStringFromRect(dirtyRect).UTF8String);
-	    [view setTkNeedsDisplay:YES];
-	    [view setTkDirtyRect:dirtyRect];
+	    [view addTkDirtyRect:dirtyRect];
 	}
 #endif
     } else {
@@ -936,12 +935,14 @@ ConfigureRestrictProc(
 {
     _tkNeedsDisplay = YES;
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
+    [NSApp setNeedsToDraw:YES];
 }
 
 - (void) clearTkDirtyRect
 {
     _tkNeedsDisplay = NO;
     _tkDirtyRect = NSZeroRect;
+    [NSApp setNeedsToDraw:NO];
 }
 
 - (void) drawRect: (NSRect) rect
@@ -968,7 +969,7 @@ ConfigureRestrictProc(
     }
 
     [NSApp setIsDrawing: YES];
-    [self setTkDirtyRect:NSZeroRect];
+    [self clearTkDirtyRect];
     [self generateExposeEvents:rect];
     [self setTkNeedsDisplay: NO];
     [NSApp setIsDrawing: NO];
