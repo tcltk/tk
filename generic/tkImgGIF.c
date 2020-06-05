@@ -120,15 +120,14 @@ typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
 
 static int		FileMatchGIF(Tcl_Channel chan, const char *fileName,
 			    Tcl_Obj *format, int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp, Tcl_Obj **metadataPtr);
+			    Tcl_Interp *interp);
 static int		FileReadGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
 			    Tk_PhotoHandle imageHandle, int destX, int destY,
 			    int width, int height, int srcX, int srcY,
 			    Tcl_Obj **metadataPtr);
 static int		StringMatchGIF(Tcl_Obj *dataObj, Tcl_Obj *format,
-			    int *widthPtr, int *heightPtr, Tcl_Interp *interp,
-			    Tcl_Obj **metadataPtr);
+			    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
 static int		StringReadGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
@@ -142,14 +141,14 @@ static int		CommonWriteGIF(Tcl_Interp *interp, ClientData clientData,
 			    WriteBytesFunc *writeProc, Tcl_Obj *format,
 			    Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
 
-Tk_PhotoImageFormat87 tkImgFmtGIF = {
+Tk_PhotoImageFormat tkImgFmtGIF = {
     "gif",		/* name */
     FileMatchGIF,	/* fileMatchProc */
     StringMatchGIF,	/* stringMatchProc */
-    FileReadGIF,	/* fileReadProc */
-    StringReadGIF,	/* stringReadProc */
-    FileWriteGIF,	/* fileWriteProc */
-    StringWriteGIF,	/* stringWriteProc */
+    (Tk_ImageFileReadProc *)(void *)FileReadGIF,	/* fileReadProc */
+    (Tk_ImageStringReadProc *)(void *)StringReadGIF,	/* stringReadProc */
+    (Tk_ImageFileWriteProc *)(void *)FileWriteGIF,	/* fileWriteProc */
+    (Tk_ImageStringWriteProc *)(void *)StringWriteGIF,	/* stringWriteProc */
     NULL
 };
 
@@ -356,8 +355,7 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Interp *dummy,		/* not used */
-    Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
+    Tcl_Interp *dummy)		/* not used */
 {
     GIFImageConfig gifConf;
     (void)fileName;
@@ -892,8 +890,7 @@ StringMatchGIF(
     Tcl_Obj *format,		/* the image format object, or NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Interp *dummy,		/* not used */
-    Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
+    Tcl_Interp *dummy)		/* not used */
 {
     unsigned char *data, header[10];
     TkSizeT got, length;

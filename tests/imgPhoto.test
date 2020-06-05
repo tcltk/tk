@@ -576,7 +576,7 @@ test imgPhoto-4.31 {ImgPhotoCmd procedure: read option} -constraints {
     photo1 read $teapotPhotoFile -zoom 2
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {unrecognized option "-zoom": must be -format, -from, -shrink, -to, or -metadata}
+} -result {unrecognized option "-zoom": must be -format, -from, -metadata, -shrink, or -to}
 test imgPhoto-4.32 {ImgPhotoCmd procedure: read option} -setup {
     image create photo photo1
 } -body {
@@ -1093,13 +1093,13 @@ test imgPhoto-4.90 {ImgPhotoCmd put: existing but not allowed opt} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-    {unrecognized option "-from": must be -format, -to, or -metadata}
+    {unrecognized option "-from": must be -format, -metadata, or -to}
 test imgPhoto-4.91 {ImgPhotoCmd put: invalid option} -setup {
     image create photo photo1
 } -body {
     photo1 put {{0 1 2 3}} -bogus x
 } -returnCodes error -result \
-    {unrecognized option "-bogus": must be -format, -to, or -metadata}
+    {unrecognized option "-bogus": must be -format, -metadata, or -to}
 test imgPhoto-4.92 {ImgPhotocmd put: missing data} -setup {
     image create photo photo1
 } -body {
