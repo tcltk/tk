@@ -346,7 +346,6 @@ TkMacOSXDrawAllViews(
 		   continue;
 		}
 		[view setNeedsDisplayInRect:[view tkDirtyRect]];
-		[view setTkDirtyRect:NSZeroRect];
 	    }
 	} else {
 	    [window displayIfNeeded];
@@ -374,6 +373,7 @@ TkMacOSXDrawAllViews(
 	    }
 	}
     }
+    [NSApp setNeedsToDraw:NO];
 }
 
 /*
@@ -392,13 +392,14 @@ TkMacOSXDrawAllViews(
  *
  * Side effects:
  *
- *	If NSEvents are queued, then the maximum block time will be set to 0 to
- *	ensure that control returns immediately to Tcl.
+ *	If NSEvents are queued, or if there is any drawing that needs to be
+ *      done, then the maximum block time will be set to 0 to ensure that
+ *      Tcl_WaitForEvent returns immediately.
  *
  *----------------------------------------------------------------------
  */
 
-#define TICK 100
+#define TICK 200
 static Tcl_TimerToken ticker = NULL;
 
 static void
@@ -428,11 +429,13 @@ TkMacOSXEventsSetupProc(
 	[NSApp _resetAutoreleasePool];
 
  	/*
- 	 * Call this with dequeue=NO to see if there are any events.  If so, we
- 	 * set the block time to 0 and stop the heartbeat.  Next Tcl_DoOneEvent
- 	 * will call Tcl_WaitForEvent, which will poll instead of waiting since
- 	 * the block time is 0.  Then it will call check proc to collect the
+	 * After calling this setup proc, Tcl_DoOneEvent will call
+ 	 * Tcl_WaitForEvent.  Then it will call check proc to collect the
  	 * events and translate them into XEvents.
+	 *
+ 	 * If we have any events waiting or if there is any drawing to be done
+	 * we want Tcl_WaitForEvent to return immediately.  So we set the block
+	 * time to 0.  We also stop the heartbeat, since we won't need it.
   	 */
 
 	NSEvent *currentEvent =
@@ -440,21 +443,21 @@ TkMacOSXEventsSetupProc(
 			untilDate:[NSDate distantPast]
 			inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			dequeue:NO];
-	if (currentEvent && currentEvent.type > 0) {
-		Tcl_SetMaxBlockTime(&zeroBlockTime);
-		Tcl_DeleteTimerHandler(ticker);
-		ticker = NULL;
+	if ((currentEvent) || [NSApp needsToDraw] ) {
+	    Tcl_SetMaxBlockTime(&zeroBlockTime);
+	    Tcl_DeleteTimerHandler(ticker);
+	    ticker = NULL;
 	} else if (ticker == NULL) {
 
-    	     	/*
-    	     	 * When the user is not generating events we schedule a "heartbeat"
-    	     	 * TimerHandler to fire every 200 milliseconds.  The handler does
-		 * nothing, but when its timer fires TclWaitForEvent will return,
-		 * causing TkMacOSXCheckProc to be called.
-    	     	 */
+	    /*
+	     * When the user is not generating events we schedule a "heartbeat"
+	     * TimerHandler to fire every 200 milliseconds.  The handler does
+	     * nothing, but when its timer fires it causes Tcl_WaitForEvent to
+	     * return.  This helps avoid hangs when calling vwait.
+	     */
 
 	    ticker = Tcl_CreateTimerHandler(TICK, Heartbeat, NULL);
-    	}
+	}
     }
 }
 

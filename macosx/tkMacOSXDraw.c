@@ -176,7 +176,7 @@ TkMacOSXBitmapRepFromDrawableRect(
 	}
     } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
 	TKContentView *tkview = (TKContentView *)view;
- 
+
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
 	 */
@@ -199,8 +199,7 @@ TkMacOSXBitmapRepFromDrawableRect(
 	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
 	} else {
 	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    [tkview setTkNeedsDisplay:YES];
-	    [tkview setTkDirtyRect:[tkview bounds]];
+	    [tkview addTkDirtyRect:[tkview bounds]];
 	    return NULL;
 	}
     } else {

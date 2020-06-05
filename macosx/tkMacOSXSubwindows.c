@@ -170,8 +170,7 @@ XMapWindow(
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:NO];
-	    [view setTkNeedsDisplay:YES];
-	    [view setTkDirtyRect: [view bounds]];
+	    [view addTkDirtyRect: [view bounds]];
 	    if ([win canBecomeKeyWindow]) {
 		[win makeKeyAndOrderFront:NSApp];
 	    } else {
@@ -218,8 +217,7 @@ XMapWindow(
 	[[win contentView] setNeedsRedisplay:YES];
     } else {
 	TKContentView *view = [win contentView];
-	[view setTkNeedsDisplay:YES];
-	[view setTkDirtyRect:[view bounds]];
+	[view addTkDirtyRect:[view bounds]];
     }
 
     /*
@@ -337,8 +335,7 @@ XUnmapWindow(
 	[[win contentView] setNeedsRedisplay:YES];
     } else {
 	TKContentView *view = [win contentView];
-	[view setTkNeedsDisplay:YES];
-	[view setTkDirtyRect:[view bounds]];
+	[view addTkDirtyRect:[view bounds]];
     }
     return Success;
 }
