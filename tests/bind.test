@@ -6627,6 +6627,7 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
 
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
+    wm geometry .top +100+100
     update
 } -body {
     # In order to avoid platform-dependent coordinate results due to
