@@ -55,12 +55,12 @@ struct SubcommandOptions {
  * OPT_FORMAT:			Set if -format option allowed/specified.
  * OPT_FROM:			Set if -from option allowed/specified.
  * OPT_GRAYSCALE:		Set if -grayscale option allowed/specified.
+ * OPT_METADATA:		Set if -metadata option allowed/specified.
  * OPT_SHRINK:			Set if -shrink option allowed/specified.
  * OPT_SUBSAMPLE:		Set if -subsample option allowed/spec'd.
  * OPT_TO:			Set if -to option allowed/specified.
  * OPT_WITHALPHA:		Set if -withalpha option allowed/specified.
  * OPT_ZOOM:			Set if -zoom option allowed/specified.
- * OPT_METADATA:                Set if -metadata option allowed/specified.
  */
 
 #define OPT_ALPHA	1
@@ -69,12 +69,12 @@ struct SubcommandOptions {
 #define OPT_FORMAT	8
 #define OPT_FROM	0x10
 #define OPT_GRAYSCALE	0x20
-#define OPT_SHRINK	0x40
-#define OPT_SUBSAMPLE	0x80
-#define OPT_TO		0x100
-#define OPT_WITHALPHA	0x200
-#define OPT_ZOOM	0x400
-#define OPT_METADATA	0x800
+#define OPT_METADATA	0x40
+#define OPT_SHRINK	0x80
+#define OPT_SUBSAMPLE	0x100
+#define OPT_TO		0x200
+#define OPT_WITHALPHA	0x400
+#define OPT_ZOOM	0x800
 
 /*
  * List of option names. The order here must match the order of declarations
@@ -88,12 +88,12 @@ static const char *const optionNames[] = {
     "-format",
     "-from",
     "-grayscale",
+    "-metadata",
     "-shrink",
     "-subsample",
     "-to",
     "-withalpha",
     "-zoom",
-    "-metadata",
     NULL
 };
 
