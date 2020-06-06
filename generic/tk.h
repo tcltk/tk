@@ -1444,19 +1444,19 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 typedef struct Tk_PhotoImageFormat87 Tk_PhotoImageFormat87;
 typedef int (Tk_ImageFileMatchProc87) (Tcl_Interp *interp, Tcl_Channel chan,
 	const char *fileName, Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
-	int *heightPtr, int *closeChannelPtr, Tcl_DString *driverInternal);
+	int *heightPtr, int *closeChannelPtr, Tcl_DString *driverInternalPtr);
 typedef int (Tk_ImageStringMatchProc87) (Tcl_Interp *interp, Tcl_Obj *dataObj,
 	Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr, int *heightPtr,
-	Tcl_DString *driverInternal);
+	Tcl_DString *driverInternalPtr);
 typedef int (Tk_ImageFileReadProc87) (Tcl_Interp *interp, Tcl_Channel chan,
 	const char *fileName, Tcl_Obj *format, Tcl_Obj *metadataIn,
 	Tk_PhotoHandle imageHandle,
 	int destX, int destY, int width, int height, int srcX, int srcY,
-	Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
+	Tcl_Obj *metadataOut, Tcl_DString *driverInternalPtr);
 typedef int (Tk_ImageStringReadProc87) (Tcl_Interp *interp, Tcl_Obj *dataObj,
 	Tcl_Obj *format, Tcl_Obj *metadataIn, Tk_PhotoHandle imageHandle,
 	int destX, int destY, int width, int height, int srcX, int srcY,
-	Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
+	Tcl_Obj *metadataOut, Tcl_DString *driverInternalPtr);
 typedef int (Tk_ImageFileWriteProc87) (Tcl_Interp *interp, const char *fileName,
 	Tcl_Obj *format, Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
 typedef int (Tk_ImageStringWriteProc87) (Tcl_Interp *interp, Tcl_Obj *format,
