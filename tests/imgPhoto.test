@@ -2338,6 +2338,24 @@ test imgPhoto-23.10 {output data with comment} -setup {
     catch {image delete gif1}
 } -match glob -result {*ABCD*}
 
+test imgPhoto-23.11 {output data with XMP} -setup {
+    set data $::gifstart$::gifdata$::gifend
+    set XMPData\
+	    "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
+	    xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\">\
+	    <rdf:Description rdf:about=\"1\u2022\">\
+	    <xmp:Rating>3</xmp:Rating></rdf:Description></rdf:RDF>"
+} -body {
+    image create photo gif1 -data $data
+    set gifData [gif1 data -format gif -metadata [dict create\
+	    XMP $XMPData]]
+    image delete gif1
+    image create photo gif1 -data $gifData
+    expr {[gif1 cget -metadata] eq $XMPData}
+} -cleanup {
+    catch {image delete gif1}
+} -result {1}
+
 unset -nocomplain gifstart gifdata gifend
 
 
