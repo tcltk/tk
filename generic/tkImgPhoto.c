@@ -200,16 +200,21 @@ static char *		ImgGetPhoto(PhotoMaster *masterPtr,
 			    struct SubcommandOptions *optPtr);
 static int		MatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *formatString,
-			    Tcl_Obj **metadataObjPtr,
+			    Tcl_Obj *metadataInObj,
+			    Tcl_Obj *metadataOutObj,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    Tk_PhotoImageFormat87 **imageFormat87Ptr,
-			    int *widthPtr, int *heightPtr, int *oldformat);
+			    int *widthPtr, int *heightPtr, int *oldformat,
+			    int *closeChannelPtr,
+			    Tcl_DString *driverInternalPtr);
 static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
 			    Tcl_Obj *formatString,
-			    Tcl_Obj **metadataObjPtr,
+			    Tcl_Obj *metadataInObj,
+			    Tcl_Obj *metadataOutObj,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    Tk_PhotoImageFormat87 **imageFormat87Ptr,
-			    int *widthPtr, int *heightPtr, int *oldformat);
+			    int *widthPtr, int *heightPtr, int *oldformat,
+			    Tcl_DString *driverInternalPtr);
 static const char *	GetExtension(const char *path);
 
 /*
@@ -851,7 +856,7 @@ ImgPhotoCmd(
 
 	if (stringWriteProc == NULL) {
 	    result = (stringWriteProc87)(interp,
-		    options.format, &block, options.metadata);
+		    options.format, options.metadata, &block);
 	} else if (oldformat) {
 	    Tcl_DString buffer;
 	    typedef int (*OldStringWriteProc)(Tcl_Interp *interp,
@@ -949,9 +954,9 @@ ImgPhotoCmd(
     }
 
     case PHOTO_PUT: {
-	Tcl_Obj *format, *data, *metadata;
 	int result;
-
+	Tcl_Obj *format, *data;
+	Tcl_DString driverInternalDString;
 	/*
 	 * photo put command - first parse the options.
 	 */
@@ -970,30 +975,24 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "data ?-option value ...?");
 	    return TCL_ERROR;
 	}
-
+	
 	/*
-	 * Prepare a metadata dict.
-	 * If the object pointer points to NULL, there is no metadata dict on input.
-	 * The match and read calls may modify it and change it from NULL.
-	 * The refcount of options.metadata is >= 1
+	 * Prepare memory connection between format match and read function
 	 */
-	if (options.metadata == NULL) {
-	    metadata = NULL;
-	} else {
-	    metadata = options.metadata;
-	    Tcl_IncrRefCount(metadata);
-	}
+	
+	Tcl_DStringInit(&driverInternalDString);
 
 	/*
 	 * See if there's a format that can read the data
 	 */
 
 	if (MatchStringFormat(interp, objv[2], options.format,
-		&metadata, &imageFormat,
-		&imageFormat87, &imageWidth, &imageHeight, &oldformat)
+		options.metadata, NULL, &imageFormat,
+		&imageFormat87, &imageWidth, &imageHeight, &oldformat,
+		&driverInternalDString)
 		!= TCL_OK) {
 	    result = TCL_ERROR;
-	    goto putsCleanup;
+	    goto putCleanup;
 	}
 
 	if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
@@ -1021,18 +1020,21 @@ ImgPhotoCmd(
 		    options.toX2 - options.toX,
 		    options.toY2 - options.toY, 0, 0) != TCL_OK) {
 		result = TCL_ERROR;
-		goto putsCleanup;
+		goto putCleanup;
 	    }
 	} else {
 	    if (imageFormat87->stringReadProc(interp, data, format,
+		    options.metadata,
 		    (Tk_PhotoHandle) masterPtr, options.toX, options.toY,
 		    options.toX2 - options.toX,
 		    options.toY2 - options.toY, 0, 0,
-		    &metadata) != TCL_OK) {
-                result = TCL_ERROR;
-                goto putsCleanup;
+		    NULL, &driverInternalDString)
+		    != TCL_OK) {
+		result = TCL_ERROR;
+		goto putCleanup;
 	    }
 	}
+
 	/*
 	 * SB: is the next line really needed? The stringReadProc
 	 * writes image data with Tk_PhotoPutBlock(), which in turn
@@ -1040,15 +1042,18 @@ ImgPhotoCmd(
 	 * IMAGE_CHANGED bit.
 	 */
 	masterPtr->flags |= IMAGE_CHANGED;
+
 	result = TCL_OK;
-putsCleanup:
-	if (metadata != NULL)
-	    Tcl_DecrRefCount(metadata);
+putCleanup:
+	Tcl_DStringFree(&driverInternalDString);
 	return result;
+
     }
     case PHOTO_READ: {
-	Tcl_Obj *format, *metadata;
+	Tcl_Obj *format;
 	int result;
+	int closeChannel = 0;
+	Tcl_DString driverInternalDString;
 
 	/*
 	 * photo read command - first parse the options specified.
@@ -1101,22 +1106,16 @@ putsCleanup:
 	}
 
 	/*
-	* Prepare a metadata dict.
-	* If the object pointer points to NULL, there is no metadata dict on input.
-	* The match and read calls may modify it and change it from NULL.
-	* ToDo: think about ref counting and freeing it below
-	*/
-	if (options.metadata == NULL) {
-	    metadata = NULL;
-	} else {
-	    metadata = options.metadata;
-	    Tcl_IncrRefCount(metadata);
-	}
-
+	 * Prepare memory connection between format match and read function
+	 */
+	
+	Tcl_DStringInit(&driverInternalDString);
+	closeChannel = 0;
 	if (MatchFileFormat(interp, chan,
 		Tcl_GetString(options.name), options.format,
-		&metadata, &imageFormat,
-		&imageFormat87, &imageWidth, &imageHeight, &oldformat)
+		options.metadata, NULL, &imageFormat,
+		&imageFormat87, &imageWidth, &imageHeight, &oldformat,
+		&closeChannel, &driverInternalDString)
 		!= TCL_OK) {
 	    result = TCL_ERROR;
 	    goto readCleanup;
@@ -1177,13 +1176,12 @@ putsCleanup:
 	} else {
 	    result = imageFormat87->fileReadProc(interp, chan,
 		    Tcl_GetString(options.name),
-		    format, (Tk_PhotoHandle) masterPtr, options.toX,
-		    options.toY, width, height, options.fromX, options.fromY,
-		    &metadata);
+		    format, options.metadata, (Tk_PhotoHandle) masterPtr,
+		    options.toX, options.toY, width, height, options.fromX,
+		    options.fromY, NULL, &driverInternalDString);
 	}
 readCleanup:
-	if (metadata != NULL)
-	    Tcl_DecrRefCount(metadata);
+	Tcl_DStringFree(&driverInternalDString);
 	if (chan != NULL) {
 	    Tcl_Close(NULL, chan);
 	}
@@ -1564,8 +1562,8 @@ readCleanup:
 		    Tcl_GetString(options.name), format, &block);
 	} else {
 	    result = imageFormat87->fileWriteProc(interp,
-		    Tcl_GetString(options.name), format, &block,
-		    options.metadata);
+		    Tcl_GetString(options.name), format, options.metadata,
+		    &block);
 	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);
@@ -1944,7 +1942,8 @@ ImgPhotoConfigureMaster(
 {
     PhotoInstance *instancePtr;
     const char *oldFileString, *oldPaletteString;
-    Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL, *metadata = NULL;
+    Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL,
+	    *metadataIn = NULL, *metadataOut = NULL;
     Tcl_Obj *tempdata, *tempformat;
     TkSizeT length;
     int i, j, result, imageWidth, imageHeight, oldformat;
@@ -1953,6 +1952,8 @@ ImgPhotoConfigureMaster(
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormat87 *imageFormat87;
     const char **args;
+    Tcl_DString driverInternalDString;
+    int closeChannel;
 
     args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
@@ -1987,7 +1988,7 @@ ImgPhotoConfigureMaster(
 	    } else if ((args[j][1] == 'm') &&
 		!strncmp(args[j], "-metadata", length)) {
 		if (++i < objc) {
-		    metadata = objv[i];
+		    metadataIn = objv[i];
 		    j--;
 		} else {
 		    ckfree(args);
@@ -2000,6 +2001,12 @@ ImgPhotoConfigureMaster(
 	    }
 	}
     }
+
+    /*
+     * Prepare memory connection between format match and read function
+     */
+
+    Tcl_DStringInit(&driverInternalDString);
 
     /*
      * Save the current values for fileString and dataString, so we can tell
@@ -2078,29 +2085,30 @@ ImgPhotoConfigureMaster(
 	}
 	masterPtr->format = format;
     }
-    if (metadata) {
+    if (metadataIn) {
 	/*
 	 * make -metadata a dict and take it if keys in.
 	 * Otherwise set a metadata null pointer.
 	 */
 	int dictSize;
 
-	if (TCL_OK != Tcl_DictObjSize(interp,metadata, &dictSize)) {
+	if (TCL_OK != Tcl_DictObjSize(interp,metadataIn, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "value for \"-metadata\" not a dict", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 		    "UNRECOGNIZED_DATA", NULL);
 	    return TCL_ERROR;
 	}
+
 	if (dictSize > 0) {
-	    Tcl_IncrRefCount(metadata);
+	    Tcl_IncrRefCount(metadataIn);
 	} else {
-	    metadata = NULL;
+	    metadataIn = NULL;
 	}
 	if (masterPtr->metadata) {
 	    Tcl_DecrRefCount(masterPtr->metadata);
 	}
-	masterPtr->metadata = metadata;
+	masterPtr->metadata = metadataIn;
     }
     /*
      * Set the image to the user-requested size, if any, and make sure storage
@@ -2123,6 +2131,7 @@ ImgPhotoConfigureMaster(
     if ((masterPtr->fileString != NULL)
 	    && ((masterPtr->fileString != oldFileString)
 	    || (masterPtr->format != oldFormat))) {
+
 	/*
 	 * Prevent file system access in a safe interpreter.
 	 */
@@ -2141,6 +2150,8 @@ ImgPhotoConfigureMaster(
 	    goto errorExit;
 	}
 
+	closeChannel = 0;
+
 	/*
 	 * -translation binary also sets -encoding binary
 	 */
@@ -2148,9 +2159,10 @@ ImgPhotoConfigureMaster(
 	if ((Tcl_SetChannelOption(interp, chan,
 		"-translation", "binary") != TCL_OK) ||
 		(MatchFileFormat(interp, chan, masterPtr->fileString,
-			masterPtr->format, &(masterPtr->metadata),
+			masterPtr->format, masterPtr->metadata, NULL,
 			&imageFormat, &imageFormat87,
-			&imageWidth, &imageHeight, &oldformat) != TCL_OK)) {
+			&imageWidth, &imageHeight, &oldformat, &closeChannel,
+			&driverInternalDString) != TCL_OK)) {
 	    Tcl_Close(NULL, chan);
 	    goto errorExit;
 	}
@@ -2173,10 +2185,10 @@ ImgPhotoConfigureMaster(
 		    0, 0, imageWidth, imageHeight, 0, 0);
 	} else {
 	    result = imageFormat87->fileReadProc(interp, chan,
-		    masterPtr->fileString, tempformat,
+		    masterPtr->fileString, tempformat, masterPtr->metadata,
 		    (Tk_PhotoHandle) masterPtr,
 		    0, 0, imageWidth, imageHeight, 0, 0,
-		    &(masterPtr->metadata));
+		    metadataOut, &driverInternalDString);
 	}
 	Tcl_Close(NULL, chan);
 	if (result != TCL_OK) {
@@ -2196,9 +2208,9 @@ ImgPhotoConfigureMaster(
 		    || (masterPtr->format != oldFormat))) {
 
 	if (MatchStringFormat(interp, masterPtr->dataString,
-		masterPtr->format, &(masterPtr->metadata),
+		masterPtr->format, masterPtr->metadata, NULL,
 		&imageFormat, &imageFormat87, &imageWidth,
-		&imageHeight, &oldformat) != TCL_OK) {
+		&imageHeight, &oldformat, &driverInternalDString) != TCL_OK) {
 	    goto errorExit;
 	}
 	if (ImgPhotoSetSize(masterPtr, imageWidth, imageHeight) != TCL_OK) {
@@ -2222,9 +2234,18 @@ ImgPhotoConfigureMaster(
 		goto errorExit;
 	    }
 	} else {
+	    
+	    /*
+	     * Flag that we want the metadata result dict
+	     */
+
+	    metadataOut = Tcl_NewDictObj();
+	    Tcl_IncrRefCount(metadataOut);
+
 	    if (imageFormat87->stringReadProc(interp, tempdata, tempformat,
-		    (Tk_PhotoHandle) masterPtr, 0, 0, imageWidth, imageHeight,
-		    0, 0, &(masterPtr->metadata)) != TCL_OK) {
+		    masterPtr->metadata, (Tk_PhotoHandle) masterPtr, 0, 0,
+		    imageWidth, imageHeight, 0, 0, metadataOut,
+		    &driverInternalDString) != TCL_OK) {
 		goto errorExit;
 	    }
 	}
@@ -2233,6 +2254,48 @@ ImgPhotoConfigureMaster(
 	masterPtr->flags |= IMAGE_CHANGED;
     }
 
+    /*
+     * Merge driver returned metadata and master metadata
+     */
+    if (metadataOut != NULL) {
+	int dictSize;
+	if (TCL_OK != Tcl_DictObjSize(interp,metadataOut, &dictSize)) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "driver metadata not a dict", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		    "UNRECOGNIZED_DATA", NULL);
+	    goto errorExit;
+	}
+	if (dictSize > 0) {
+
+	    /*
+	     * We have driver return metadata
+	     */
+	    
+	    if (masterPtr->metadata == NULL) {
+		masterPtr->metadata = metadataOut;
+		metadataOut = NULL;
+	    } else {
+		Tcl_DictSearch search;
+		Tcl_Obj *key, *value;
+		int done;
+
+		if (Tcl_IsShared(masterPtr->metadata)) {
+		    masterPtr->metadata = Tcl_DuplicateObj(masterPtr->metadata);
+		    Tcl_IncrRefCount(masterPtr->metadata);
+		}
+
+		if (Tcl_DictObjFirst(interp, metadataOut, &search, &key, &value,
+			&done) != TCL_OK) {
+		    goto errorExit;
+		}
+		for (; !done ; Tcl_DictObjNext(&search, &key, &value, &done)) {
+		    Tcl_DictObjPut(interp, masterPtr->metadata, key, value);
+		}
+	    }
+	}
+    }
+    
     /*
      * Enforce a reasonable value for gamma.
      */
@@ -2265,11 +2328,15 @@ ImgPhotoConfigureMaster(
 	    masterPtr->height, masterPtr->width, masterPtr->height);
     masterPtr->flags &= ~IMAGE_CHANGED;
 
+    Tcl_DStringInit(&driverInternalDString);
     if (oldData != NULL) {
 	Tcl_DecrRefCount(oldData);
     }
     if (oldFormat != NULL) {
 	Tcl_DecrRefCount(oldFormat);
+    }
+    if (metadataOut != NULL) {
+	Tcl_DecrRefCount(metadataOut);
     }
 
     ToggleComplexAlphaIfNeeded(masterPtr);
@@ -2277,11 +2344,15 @@ ImgPhotoConfigureMaster(
     return TCL_OK;
 
   errorExit:
+    Tcl_DStringInit(&driverInternalDString);
     if (oldData != NULL) {
 	Tcl_DecrRefCount(oldData);
     }
     if (oldFormat != NULL) {
 	Tcl_DecrRefCount(oldFormat);
+    }
+    if (metadataOut != NULL) {
+	Tcl_DecrRefCount(metadataOut);
     }
     return TCL_ERROR;
 }
@@ -2635,7 +2706,8 @@ MatchFileFormat(
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *formatObj,		/* User-specified format string, or NULL. */
-    Tcl_Obj **metadataObjPtr,	/* User-specified metadata and return it */
+    Tcl_Obj *metadataInObj,	/* User-specified metadata, may be NULL */
+    Tcl_Obj *metadataOutObj,	/* metadata to return, may be NULL */
     Tk_PhotoImageFormat **imageFormatPtr,
 				/* A pointer to the photo image format record
 				 * is returned here. For format87, this is set
@@ -2647,7 +2719,10 @@ MatchFileFormat(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here. */
-    int *oldformat)		/* Returns 1 if the old image API is used. */
+    int *oldformat,		/* Returns 1 if the old image API is used. */
+    int *closeChannelPtr,    	/* Is set to 1 if channel can be closed */
+    Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
+				 * ReadFileFormat function */
 {
     int matched = 0, useoldformat = 0, use87format = 0;
     Tk_PhotoImageFormat *formatPtr;
@@ -2769,8 +2844,9 @@ MatchFileFormat(
 	if (format87Ptr->fileMatchProc != NULL) {
 	    (void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
 
-	    if (format87Ptr->fileMatchProc(chan, fileName, formatObj,
-		    widthPtr, heightPtr, interp, metadataObjPtr)) {
+	    if (format87Ptr->fileMatchProc(interp, chan, fileName, formatObj,
+		    metadataInObj, widthPtr, heightPtr, closeChannelPtr,
+		    driverInternalPtr)) {
 		if (*widthPtr < 1) {
 		    *widthPtr = 1;
 		}
@@ -2833,7 +2909,8 @@ MatchStringFormat(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *data,		/* Object containing the image data. */
     Tcl_Obj *formatObj,		/* User-specified format string, or NULL. */
-    Tcl_Obj **metadataObjPtr,	/* User-specified metadata and return it */
+    Tcl_Obj *metadataInObj,	/* User-specified metadata, may be NULL */
+    Tcl_Obj *metadataOutObj,	/* metadata output dict, may be NULL */
     Tk_PhotoImageFormat **imageFormatPtr,
 				/* A pointer to the photo image format record
 				 * is returned here. For format87, this is set
@@ -2845,7 +2922,9 @@ MatchStringFormat(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here. */
-    int *oldformat)		/* Returns 1 if the old image API is used. */
+    int *oldformat,		/* Returns 1 if the old image API is used. */
+    Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
+				 * ReadFileFormat function */
 {
     int matched = 0, useoldformat = 0, use87format = 0;
     Tk_PhotoImageFormat *formatPtr, *defaultFormatPtr = NULL;
@@ -2959,15 +3038,15 @@ MatchStringFormat(
 	    }
 	    if ((format87Ptr->stringMatchProc != NULL)
 		    && (format87Ptr->stringReadProc != NULL)
-		    && format87Ptr->stringMatchProc(
-                            data, formatObj,
-			    widthPtr, heightPtr, interp, metadataObjPtr)) {
+		    && format87Ptr->stringMatchProc(interp, data, formatObj,
+			    metadataInObj, widthPtr, heightPtr,
+			    driverInternalPtr)) {
 		break;
 	    }
 	}
     }
 
-    if (formatPtr == NULL && format87Ptr == 0) {
+    if (formatPtr == NULL && format87Ptr == NULL) {
 	/*
 	 * Try the default format as last resort (only if no -format option
 	 * was passed).
@@ -4080,72 +4159,6 @@ Tk_PhotoSetSize(
     Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 	    masterPtr->width, masterPtr->height);
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoGetMetadata --
- *
- *	This function is called to obtain the metadata object of a photo
- *	image.
- *
- * Results:
- *	The image's metadata object pointer.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Tcl_Obj *
-Tk_PhotoGetMetadata(
-    Tk_PhotoHandle handle)	/* Handle for the image whose dimensions are
-				 * requested. */
-{
-    PhotoMaster *masterPtr = (PhotoMaster *) handle;
-
-    return masterPtr->metadata;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoSetMetadata --
- *
- *	This function is called to obtain to set the metadata object of a
- *	photo image.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_PhotoSetMetadata(
-    Tk_PhotoHandle handle,	/* Handle for the image whose dimensions are
-				 * requested. */
-    Tcl_Obj *metadata)
-{
-    PhotoMaster *masterPtr = (PhotoMaster *) handle;
-    /*
-     * Free current object if present
-     */
-    if(masterPtr->metadata != NULL) {
-	Tcl_DecrRefCount(masterPtr->metadata);
-    }
-    /*
-     * Increment ref count of new object to get it
-     */
-    if (metadata != NULL) {
-	Tcl_IncrRefCount(metadata);
-    }
-    masterPtr->metadata = metadata;
 }
 
 /*

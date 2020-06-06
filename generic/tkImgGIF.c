@@ -118,29 +118,33 @@ typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
  * The format record for the GIF file format:
  */
 
-static int		FileMatchGIF(Tcl_Channel chan, const char *fileName,
-			    Tcl_Obj *format, int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp, Tcl_Obj **metadataPtr);
+static int		FileMatchGIF(Tcl_Interp *interp, Tcl_Channel chan,
+			    const char *fileName, Tcl_Obj *format,
+			    Tcl_Obj *metadataIn, int *widthPtr, int *heightPtr,
+			    int *closeChannelPtr, Tcl_DString *driverInternal);
 static int		FileReadGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
-			    Tk_PhotoHandle imageHandle, int destX, int destY,
-			    int width, int height, int srcX, int srcY,
-			    Tcl_Obj **metadataPtr);
-static int		StringMatchGIF(Tcl_Obj *dataObj, Tcl_Obj *format,
-			    int *widthPtr, int *heightPtr, Tcl_Interp *interp,
-			    Tcl_Obj **metadataPtr);
-static int		StringReadGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
-			    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+			    Tcl_Obj *metadataIn, Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY, Tcl_Obj **metadataPtr);
+			    int srcX, int srcY,
+			    Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
+static int		StringMatchGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
+			    Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
+			    int *heightPtr, Tcl_DString *driverInternal);
+static int		StringReadGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
+			    Tcl_Obj *format, Tcl_Obj *metadataIn,
+			    Tk_PhotoHandle imageHandle,
+			    int destX, int destY, int width, int height,
+			    int srcX, int srcY,
+			    Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
 static int		FileWriteGIF(Tcl_Interp *interp, const char *filename,
-			    Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr,
-			    Tcl_Obj *metadata);
+			    Tcl_Obj *format, Tcl_Obj *metadataIn,
+			    Tk_PhotoImageBlock *blockPtr);
 static int		StringWriteGIF(Tcl_Interp *interp, Tcl_Obj *format,
-			    Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
+			     Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
 static int		CommonWriteGIF(Tcl_Interp *interp, ClientData clientData,
 			    WriteBytesFunc *writeProc, Tcl_Obj *format,
-			    Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
+			    Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
 
 Tk_PhotoImageFormat87 tkImgFmtGIF = {
     "gif",		/* name */
@@ -172,7 +176,7 @@ static int		ReadOneByte(Tcl_Interp *interp,
 			    GIFImageConfig *gifConfPtr, Tcl_Channel chan);
 static int		DoExtension(GIFImageConfig *gifConfPtr,
 			    Tcl_Channel chan, int label, unsigned char *buffer,
-			    int *transparent, Tcl_Obj *metadata);
+			    int *transparent, Tcl_Obj *metadataOut);
 static int		GetCode(Tcl_Channel chan, int code_size, int flag,
 			    GIFImageConfig *gifConfPtr);
 static int		GetDataBlock(GIFImageConfig *gifConfPtr,
@@ -350,14 +354,16 @@ static void		FlushChar(GIFState_t *statePtr);
 
 static int
 FileMatchGIF(
+    Tcl_Interp *dummy,		/* not used */
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tcl_Obj *metadataIn,	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Interp *dummy,		/* not used */
-    Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
+    int *closeChannelPtr,	/* Return if the channel may be closed */
+    Tcl_DString *driverInternal)/* memory passed to FileReadGIF */
 {
     GIFImageConfig gifConf;
     (void)fileName;
@@ -393,6 +399,7 @@ FileReadGIF(
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tcl_Obj *metadataIn,	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -400,8 +407,8 @@ FileReadGIF(
 				 * written to. */
     int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
-    Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
-				/* may point to a NULL pointer */
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternal)/* memory passed from FileMatchGIF */
 {
     int fileWidth, fileHeight, imageWidth, imageHeight;
     unsigned int nBytes;
@@ -410,7 +417,6 @@ FileReadGIF(
     unsigned char buf[100];
     unsigned char *trashBuffer = NULL;
     int bitPixel;
-    Tcl_Obj *metadata;
     int dictSize = 0;
     int gifLabel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
@@ -521,28 +527,6 @@ FileReadGIF(
      */
 
     /*
-     * Initialize the metadata dict as an unshared copy of the input metadata.
-     * We do not want to modify the metadataPtr in case of an error.
-     * So first get a local unshared copy, which is assigned on success.
-     */
-
-    metadata = *metadataPtr;
-    if (metadata == NULL) {
-	metadata = Tcl_NewDictObj();
-    } else {
-	if (Tcl_IsShared(metadata)) {
-	    metadata = Tcl_DuplicateObj(metadata);
-	}
-    }
-
-    /*
-     * Start with a ref count of 1 to delete it in the error case with
-     * Tcl_DecrRefCount().
-     */
-
-    Tcl_IncrRefCount(metadata);
-
-    /*
      * Search for the frame from the GIF to display.
      */
 
@@ -567,7 +551,8 @@ FileReadGIF(
 		goto error;
 	    }
 	    if (DoExtension(gifConfPtr, chan, gifLabel,
-		    gifConfPtr->workingBuffer, &transparent, metadata) < 0) {
+		    gifConfPtr->workingBuffer, &transparent, metadataOut)
+		    < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
@@ -762,7 +747,8 @@ FileReadGIF(
 		goto error;
 	    }
 	    if (DoExtension(gifConfPtr, chan, gifLabel,
-		    gifConfPtr->workingBuffer, &transparent, metadata) < 0) {
+		    gifConfPtr->workingBuffer, &transparent, metadataOut)
+		    < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
@@ -788,20 +774,8 @@ FileReadGIF(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(tkImgFmtGIF.name, -1));
     result = TCL_OK;
 
-    /*
-     * Merge the metadata object if there is data in the dict.
-     */
-
-    if (TCL_OK != (result = Tcl_DictObjSize(interp,metadata, &dictSize))) {
-	goto error;
-    }
-    if (dictSize > 0) {
-	if (*metadataPtr != NULL) {
-	    Tcl_DecrRefCount(*metadataPtr);
-	}
-	*metadataPtr = metadata;
-    }
-
+error:
+    
     /*
      * If a trash buffer has been allocated, free it now.
      */
@@ -809,22 +783,6 @@ FileReadGIF(
     if (trashBuffer != NULL) {
 	ckfree(trashBuffer);
     }
-    return result;
-
-  error:
-    /*
-     * If a trash buffer has been allocated, free it now.
-     */
-
-    if (trashBuffer != NULL) {
-	ckfree(trashBuffer);
-    }
-
-    /*
-     * free the metadata object in case of error.
-     * Otherwise, it is not freed as the ref count was incremented above.
-     */
-    Tcl_DecrRefCount(metadata);
     return result;
 }
 
@@ -888,12 +846,13 @@ ReadOneByte(
 
 static int
 StringMatchGIF(
+    Tcl_Interp *dummy,		/* not used */
     Tcl_Obj *dataObj,		/* the object containing the image data */
     Tcl_Obj *format,		/* the image format object, or NULL */
+    Tcl_Obj *metadataIn,	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Interp *dummy,		/* not used */
-    Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
+    Tcl_DString *driverInternal)/* memory to pass to StringReadGIF */
 {
     unsigned char *data, header[10];
     TkSizeT got, length;
@@ -961,11 +920,13 @@ StringReadGIF(
     Tcl_Interp *interp,		/* interpreter for reporting errors in */
     Tcl_Obj *dataObj,		/* object containing the image */
     Tcl_Obj *format,		/* format object, or NULL */
+    Tcl_Obj *metadataIn,	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* the image to write this data into */
     int destX, int destY,	/* The rectangular region of the */
     int width, int height,	/* image to copy */
     int srcX, int srcY,
-    Tcl_Obj **metadataPtr)	/* metadata to investigate and to return */
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternal)/* memory passed from StringReadGIF */
 {
     MFile handle, *hdlPtr = &handle;
     TkSizeT length;
@@ -994,7 +955,9 @@ StringReadGIF(
      */
 
     return FileReadGIF(interp, (Tcl_Channel) hdlPtr, xferFormat, format,
-	    imageHandle, destX, destY, width, height, srcX, srcY, metadataPtr);
+	    metadataIn,
+	    imageHandle, destX, destY, width, height, srcX, srcY,
+	    metadataOut, driverInternal);
 }
 
 /*
@@ -1103,7 +1066,7 @@ DoExtension(
     int label,
     unsigned char *buf, /* defined as 280 byte working buffer */
     int *transparent,
-    Tcl_Obj *metadata)
+    Tcl_Obj *metadataOut)
 {
     int count;
     /* Prepare extension name
@@ -1139,7 +1102,8 @@ DoExtension(
 	    return -1;
 	}
 	/* Detect XMP extension */
-	if (0 == memcmp(buf,"XMP DataXMP",11)) {
+	if (NULL != metadataOut
+		&& 0 == memcmp(buf,"XMP DataXMP",11)) {
 	    /* XMP format does not use the block structure of GIF
 	     * The data is utf-8 which never contains 0's
 	     * A magic trailer of 258 bytes is added with the following data:
@@ -1180,7 +1144,7 @@ DoExtension(
 	    encoding = Tcl_GetEncoding(NULL, "utf-8");
 	    Tcl_DStringInit(&recodedDString);
 	    Tcl_ExternalToUtfDString(encoding, Tcl_DStringValue(&dataDString), length, &recodedDString);
-	    result = Tcl_DictObjPut(NULL, metadata,
+	    result = Tcl_DictObjPut(NULL, metadataOut,
 		    Tcl_NewStringObj("XMP",-1),
 		    Tcl_NewStringObj(Tcl_DStringValue(&recodedDString),
 			Tcl_DStringLength(&recodedDString)));
@@ -1208,7 +1172,8 @@ DoExtension(
 	break;
     }
     /* Add extension to dict */
-    if (extensionStreamName[0] != '\0' ) {
+    if (NULL != metadataOut
+	    && extensionStreamName[0] != '\0' ) {
 	Tcl_Obj *metadataData;
 	int length = 0;
 	for (;;) {
@@ -1218,8 +1183,9 @@ DoExtension(
 		return -1;
 	    case 0: /* end of data */
 		if (length > 0) {
-		    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
-			    Tcl_NewByteArrayObj((unsigned char *)extensionStreamName,
+		    if ( TCL_OK != Tcl_DictObjPut(NULL, metadataOut,
+			    Tcl_NewByteArrayObj(
+				(unsigned char *)extensionStreamName,
 			    strlen(extensionStreamName)), metadataData)) {
 			return -1;
 		    }
@@ -1906,8 +1872,8 @@ FileWriteGIF(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     const char *filename,
     Tcl_Obj *format,
-    Tk_PhotoImageBlock *blockPtr,
-    Tcl_Obj *metadata)
+    Tcl_Obj *metadata,
+    Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan = NULL;
     int result;
@@ -1922,7 +1888,8 @@ FileWriteGIF(
 	return TCL_ERROR;
     }
 
-    result = CommonWriteGIF(interp, chan, WriteToChannel, format, blockPtr, metadata);
+    result = CommonWriteGIF(interp, chan, WriteToChannel, format, metadata,
+	    blockPtr);
 
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
 	return TCL_ERROR;
@@ -1937,15 +1904,15 @@ StringWriteGIF(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors and
 				 * returning the GIF data. */
     Tcl_Obj *format,
-    Tk_PhotoImageBlock *blockPtr,
-    Tcl_Obj *metadata)
+    Tcl_Obj *metadata,
+    Tk_PhotoImageBlock *blockPtr)
 {
     int result;
     Tcl_Obj *objPtr = Tcl_NewObj();
 
     Tcl_IncrRefCount(objPtr);
     result = CommonWriteGIF(interp, objPtr, WriteToByteArray, format,
-	    blockPtr, metadata);
+	    metadata, blockPtr);
     if (result == TCL_OK) {
 	Tcl_SetObjResult(interp, objPtr);
     }
@@ -1985,8 +1952,8 @@ CommonWriteGIF(
     ClientData handle,
     WriteBytesFunc *writeProc,
     Tcl_Obj *format,
-    Tk_PhotoImageBlock *blockPtr,
-    Tcl_Obj *metadata)
+    Tcl_Obj *metadata,
+    Tk_PhotoImageBlock *blockPtr)
 {
     GifWriterState state;
     int resolution;

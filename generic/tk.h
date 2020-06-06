@@ -1441,26 +1441,29 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 
 /*
  * The following alternate definitions are used with the Tk8.7 file format
- * supporting a metadata dict
+ * supporting a metadata dict, internal dstring and close file flag
  */
 
 typedef struct Tk_PhotoImageFormat87 Tk_PhotoImageFormat87;
-typedef int (Tk_ImageFileMatchProc87) (Tcl_Channel chan, const char *fileName,
-	Tcl_Obj *format, int *widthPtr, int *heightPtr, Tcl_Interp *interp,
-	Tcl_Obj **metadataPtr);
-typedef int (Tk_ImageStringMatchProc87) (Tcl_Obj *dataObj, Tcl_Obj *format,
-	int *widthPtr, int *heightPtr, Tcl_Interp *interp, Tcl_Obj **metadataPtr);
+typedef int (Tk_ImageFileMatchProc87) (Tcl_Interp *interp, Tcl_Channel chan,
+	const char *fileName, Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
+	int *heightPtr, int *closeChannelPtr, Tcl_DString *driverInternal);
+typedef int (Tk_ImageStringMatchProc87) (Tcl_Interp *interp, Tcl_Obj *dataObj,
+	Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr, int *heightPtr,
+	Tcl_DString *driverInternal);
 typedef int (Tk_ImageFileReadProc87) (Tcl_Interp *interp, Tcl_Channel chan,
-	const char *fileName, Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+	const char *fileName, Tcl_Obj *format, Tcl_Obj *metadataIn,
+	Tk_PhotoHandle imageHandle,
 	int destX, int destY, int width, int height, int srcX, int srcY,
-	Tcl_Obj **metadataPtr);
+	Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
 typedef int (Tk_ImageStringReadProc87) (Tcl_Interp *interp, Tcl_Obj *dataObj,
-	Tcl_Obj *format, Tk_PhotoHandle imageHandle, int destX, int destY,
-	int width, int height, int srcX, int srcY, Tcl_Obj **metadataPtr);
+	Tcl_Obj *format, Tcl_Obj *metadataIn, Tk_PhotoHandle imageHandle,
+	int destX, int destY, int width, int height, int srcX, int srcY,
+	Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
 typedef int (Tk_ImageFileWriteProc87) (Tcl_Interp *interp, const char *fileName,
-	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
+	Tcl_Obj *format, Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
 typedef int (Tk_ImageStringWriteProc87) (Tcl_Interp *interp, Tcl_Obj *format,
-	Tk_PhotoImageBlock *blockPtr, Tcl_Obj *metadata);
+	Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
 
 
 /*
