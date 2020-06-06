@@ -6173,28 +6173,40 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDisplayWindow --
+ * TkpRedrawWidget --
  *
- *      Mark the contentView of this window as needing display so the window
- *      will be drawn by the window manager.  If this is called within the
- *      drawRect method, do nothing.
+ *      Mark the bounding rectangle of this widget as needing display so the
+ *      widget will be drawn by [NSView drawRect:].  If this is called within
+ *      the drawRect method, do nothing.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      The window's contentView is marked as needing display.
+ *      The widget's bounding rectangle is marked as dirty.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
-TkpDisplayWindow(Tk_Window tkwin) {
-    if (![NSApp isDrawing]) {
-    	TkWindow *winPtr = (TkWindow *) tkwin;
-    	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+void
+TkpRedrawWidget(Tk_Window tkwin) {
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    NSWindow *w;
+    Rect tkBounds;
+    NSRect bounds;
 
-    	[[w contentView] setNeedsDisplay: YES];
+    if ([NSApp isDrawing]) {
+	return;
+    }
+    w = TkMacOSXDrawableWindow(winPtr->window);
+    if (w) {
+	NSView *view = [w contentView];
+	TkMacOSXWinBounds(winPtr, &tkBounds);
+	bounds = NSMakeRect(tkBounds.left,
+			    [view bounds].size.height - tkBounds.bottom,
+			    tkBounds.right - tkBounds.left,
+			    tkBounds.bottom - tkBounds.top);
+	[view setNeedsDisplayInRect:bounds];
     }
 }
 

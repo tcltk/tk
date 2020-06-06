@@ -161,7 +161,7 @@ static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int argc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last);
+			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		TextInsert(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		TextToArea(Tk_Canvas canvas,
@@ -960,7 +960,7 @@ DisplayCanvText(
      * anti-aliasing colors would blend together.
      */
 
-    if ((selFirstChar >= 0) && (textPtr->selTextGC != textPtr->gc)) {
+    if ((selFirstChar != TCL_INDEX_NONE) && (textPtr->selTextGC != textPtr->gc)) {
 	if (0 < selFirstChar) {
 	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
 		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
@@ -1091,9 +1091,9 @@ static void
 TextDeleteChars(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    int first,			/* Character index of first character to
+    TkSizeT first,			/* Character index of first character to
 				 * delete. */
-    int last)			/* Character index of last character to delete
+    TkSizeT last)			/* Character index of last character to delete
 				 * (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1102,13 +1102,13 @@ TextDeleteChars(
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     text = textPtr->text;
-    if (first < 0) {
+    if ((int)first < 0) {
 	first = 0;
     }
-    if (last >= (int)textPtr->numChars) {
+    if (last + 1 >= textPtr->numChars + 1) {
 	last = textPtr->numChars - 1;
     }
-    if (first > last) {
+    if (first + 1 > last + 1) {
 	return;
     }
     charsRemoved = last + 1 - first;
@@ -1132,15 +1132,15 @@ TextDeleteChars(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 > (TkSizeT)first + 1) {
+	if (textInfoPtr->selectFirst + 1 > first + 1) {
 	    textInfoPtr->selectFirst -= charsRemoved;
 	    if ((int)textInfoPtr->selectFirst + 1 < (int)first + 1) {
 		textInfoPtr->selectFirst = first;
 	    }
 	}
-	if (textInfoPtr->selectLast + 1 >= (TkSizeT)first + 1) {
+	if (textInfoPtr->selectLast + 1 >= first + 1) {
 	    textInfoPtr->selectLast -= charsRemoved;
-	    if (textInfoPtr->selectLast + 1 < (TkSizeT)first) {
+	    if (textInfoPtr->selectLast + 1 < first) {
 		textInfoPtr->selectLast = first - 1;
 	    }
 	}
@@ -1148,14 +1148,14 @@ TextDeleteChars(
 	    textInfoPtr->selItemPtr = NULL;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 > (TkSizeT)first + 1)) {
+		&& (textInfoPtr->selectAnchor + 1 > first + 1)) {
 	    textInfoPtr->selectAnchor -= charsRemoved;
-	    if (textInfoPtr->selectAnchor + 1 < (TkSizeT)first + 1) {
+	    if (textInfoPtr->selectAnchor + 1 < first + 1) {
 		textInfoPtr->selectAnchor = first;
 	    }
 	}
     }
-    if (textPtr->insertPos + 1 > (TkSizeT)first + 1) {
+    if (textPtr->insertPos + 1 > first + 1) {
 	textPtr->insertPos -= charsRemoved;
 	if ((int)textPtr->insertPos + 1 < (int)first + 1) {
 	    textPtr->insertPos = first;
