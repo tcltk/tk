@@ -255,11 +255,10 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
+	
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
-    }
-    if (xEvent.xany.type == KeyPress) {
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;

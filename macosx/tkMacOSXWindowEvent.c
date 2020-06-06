@@ -42,7 +42,6 @@ extern NSString *NSWindowDidOrderOnScreenNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowWillOrderOnScreenNotification;
-extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 
@@ -216,9 +215,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
-	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
 	[view addTkDirtyRect:[view bounds]];
-	TkMacOSXDrawAllViews(NULL);
+	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
+	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
 
