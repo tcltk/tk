@@ -3324,7 +3324,7 @@ ListboxUpdateVScrollbar(
 
     /*
      * We must hold onto the interpreter from the listPtr because the data at
-     * listPtr might be freed as a result of the Tcl_VarEval.
+     * listPtr might be freed as a result of the Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3396,7 +3396,7 @@ ListboxUpdateHScrollbar(
 
     /*
      * We must hold onto the interpreter because the data referred to at
-     * listPtr might be freed as a result of the call to Tcl_VarEval.
+     * listPtr might be freed as a result of the call to Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
