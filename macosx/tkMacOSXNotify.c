@@ -460,6 +460,9 @@ TkMacOSXEventsSetupProc(
 	     */
 
 	    ticker = Tcl_CreateTimerHandler(TICK, Heartbeat, NULL);
+	    Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
+	    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
     }
 }
