@@ -5849,8 +5849,8 @@ CanvasUpdateScrollbars(
     Tcl_DString buf;
 
     /*
-     * Save all the relevant values from the canvasPtr, because it might be
-     * deleted as part of either of the two calls to Tcl_VarEval below.
+     * Preserve the relevant values from the canvasPtr, because it might be
+     * deleted as part of either of the two calls to Tcl_EvalEx below.
      */
 
     interp = canvasPtr->interp;
