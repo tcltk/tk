@@ -6707,6 +6707,11 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
             -highlightbackground black -bg yellow -text "My label"
     pack .top.l -side bottom
     update
+    # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
+    # and the label will not be finished after the above 'update'. The WM still
+    # needs some time before the window is fully ready. For me 50 ms is enough,
+    # but let's wait more (it depends on computer performance).
+    after 100 ; update
 } -body {
     grab .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
