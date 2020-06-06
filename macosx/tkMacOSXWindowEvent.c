@@ -39,9 +39,9 @@ static void		DoWindowActivate(ClientData clientData);
 #pragma mark TKApplication(TKWindowEvent)
 
 extern NSString *NSWindowDidOrderOnScreenNotification;
+extern NSString *NSWindowWillOrderOnScreenNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-extern NSString *NSWindowWillOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 
@@ -218,6 +218,15 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	[view addTkDirtyRect:[view bounds]];
 	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
 	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+    }
+}
+
+- (void) windowMapped: (NSNotification *) notification
+{
+    NSWindow *w = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+
+    if (winPtr) {
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
@@ -233,18 +242,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 {
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
     //BOOL start = [[notification name] isEqualToString:NSWindowWillStartLiveResizeNotification];
-}
-
-- (void) windowMapped: (NSNotification *) notification
-{
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
-    NSWindow *w = [notification object];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-    printf("windowMapped\n");
-    if (winPtr) {
-	//Tk_MapWindow((Tk_Window) winPtr);
-    }
 }
 
 - (void) windowUnmapped: (NSNotification *) notification
@@ -274,6 +271,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+    observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
+    observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
@@ -284,8 +283,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowWillMoveNotification, windowDragStart:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
-    observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
-    observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
     observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
 #endif
 #undef observe
