@@ -2285,6 +2285,7 @@ ImgPhotoConfigureMaster(
 		int done;
 
 		if (Tcl_IsShared(masterPtr->metadata)) {
+		    Tcl_DecrRefCount(masterPtr->metadata);
 		    masterPtr->metadata = Tcl_DuplicateObj(masterPtr->metadata);
 		    Tcl_IncrRefCount(masterPtr->metadata);
 		}

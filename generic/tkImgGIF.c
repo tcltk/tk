@@ -1872,7 +1872,7 @@ FileWriteGIF(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     const char *filename,
     Tcl_Obj *format,
-    Tcl_Obj *metadata,
+    Tcl_Obj *metadataIn,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan = NULL;
@@ -1888,7 +1888,7 @@ FileWriteGIF(
 	return TCL_ERROR;
     }
 
-    result = CommonWriteGIF(interp, chan, WriteToChannel, format, metadata,
+    result = CommonWriteGIF(interp, chan, WriteToChannel, format, metadataIn,
 	    blockPtr);
 
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
@@ -1897,14 +1897,12 @@ FileWriteGIF(
     return result;
 }
 
-/* New parameter "metadata" is appended at the end */
-
 static int
 StringWriteGIF(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors and
 				 * returning the GIF data. */
     Tcl_Obj *format,
-    Tcl_Obj *metadata,
+    Tcl_Obj *metadataIn,
     Tk_PhotoImageBlock *blockPtr)
 {
     int result;
@@ -1912,7 +1910,7 @@ StringWriteGIF(
 
     Tcl_IncrRefCount(objPtr);
     result = CommonWriteGIF(interp, objPtr, WriteToByteArray, format,
-	    metadata, blockPtr);
+	    metadataIn, blockPtr);
     if (result == TCL_OK) {
 	Tcl_SetObjResult(interp, objPtr);
     }
@@ -1952,7 +1950,7 @@ CommonWriteGIF(
     ClientData handle,
     WriteBytesFunc *writeProc,
     Tcl_Obj *format,
-    Tcl_Obj *metadata,
+    Tcl_Obj *metadataIn,
     Tk_PhotoImageBlock *blockPtr)
 {
     GifWriterState state;
@@ -2083,15 +2081,21 @@ CommonWriteGIF(
 
     c = 0;
     writeProc(handle, (char *) &c, 1);
-    /* Check for metadata comment block */
-    if (NULL != metadata) {
+    /*
+     * Check for metadata keys to add to file
+     */
+    if (NULL != metadataIn) {
 	Tcl_Obj *itemData;
-	if (TCL_ERROR == Tcl_DictObjGet(interp, metadata,
+	
+	/*
+	 * Check and code comment block
+	 */
+	
+	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataIn,
 		Tcl_NewStringObj("Comment",-1),
 		&itemData)) {
 	    return TCL_ERROR;
 	}
-	/* Check if there is a Comment key */
 	if (itemData != NULL) {
 	    int length;
 	    unsigned char *comment;
@@ -2101,22 +2105,69 @@ CommonWriteGIF(
 		writeProc(handle, (char *) "\x21\fe", 2);
 		/* write comment blocks */
 		for (;length > 0;) {
-		    unsigned char blocklength;
+		    int blockLength;
+		    unsigned char blockLengthChar;
 		    if (length > 255) {
 			length -=255;
-			blocklength = 255;
+			blockLength = 255;
 		    } else {
-			blocklength = (unsigned char)length;
+			blockLength = length;
 			length = 0;
 		    }
-		    writeProc(handle, (char *) &blocklength, 1);
-		    writeProc(handle, (char *) comment, blocklength);
-		    comment += blocklength;
+		    blockLengthChar = (unsigned char) blockLength;
+		    writeProc(handle, (char *) &blockLengthChar, 1);
+		    writeProc(handle, (char *) comment, blockLength);
+		    comment += blockLength;
 		}
 		/* Block terminator */
 		c = 0;
 		writeProc(handle, (char *) &c, 1);
 	    }
+	}
+	
+	/*
+	 * Check and code XMP block
+	 */
+	
+	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataIn,
+		Tcl_NewStringObj("XMP",-1),
+		&itemData)) {
+	    return TCL_ERROR;
+	}
+	if (itemData != NULL) {
+	    Tcl_Encoding encoding;
+	    Tcl_DString recodedDString;
+	    char * itemString;
+	    int itemLength;
+	    int trailerChar;
+	    
+	    /* write header */
+	    writeProc(handle, "\x21\xff\x0bXMP DataXMP", 14);
+
+	    /* write utf-8 coded data */
+	    encoding = Tcl_GetEncoding(NULL, "utf-8");
+	    Tcl_DStringInit(&recodedDString);
+	    itemString = Tcl_GetStringFromObj(itemData, &itemLength);
+	    Tcl_UtfToExternalDString(encoding, itemString, itemLength,
+		    &recodedDString);
+	    writeProc(handle, Tcl_DStringValue(&recodedDString),
+		    Tcl_DStringLength(&recodedDString));
+	    Tcl_DStringFree(&recodedDString);
+	    Tcl_FreeEncoding(encoding);
+
+	    /* XMP format does not use the block structure of GIF
+	     * The data is utf-8 which never contains 0's
+	     * A magic trailer of 258 bytes is added with the following data:
+	     * 0x01 0xff 0xfe ... 0x01 0x00 0x00
+	     */
+	    c = 1;
+	    writeProc(handle, (char *) &c, 1);
+	    for (trailerChar = 0xff; trailerChar >= 0; trailerChar--) {
+		c = (unsigned char)trailerChar;
+		writeProc(handle, (char *) &c, 1);
+	    }
+	    c = 0;
+	    writeProc(handle, (char *) &c, 1);
 	}
     }
     c = GIF_TERMINATOR;

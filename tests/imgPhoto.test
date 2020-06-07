@@ -2351,7 +2351,7 @@ test imgPhoto-23.11 {output data with XMP} -setup {
 	    XMP $XMPData]]
     image delete gif1
     image create photo gif1 -data $gifData
-    expr {[gif1 cget -metadata] eq $XMPData}
+    expr {[dict get [gif1 cget -metadata] XMP] eq $XMPData}
 } -cleanup {
     catch {image delete gif1}
 } -result {1}
