@@ -968,13 +968,11 @@ ConfigureRestrictProc(
     [NSApp setIsDrawing: YES];
     [self clearTkDirtyRect];
     [self generateExposeEvents:rect];
-    [self setTkNeedsDisplay: NO];
-    [NSApp setIsDrawing: NO];
-
     if ([self needsRedisplay]) {
 	[self setNeedsRedisplay:NO];
-	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+	[self addTkDirtyRect: [self bounds]];
     }
+    [NSApp setIsDrawing:NO];
 
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");

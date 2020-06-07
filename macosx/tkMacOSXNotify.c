@@ -368,7 +368,7 @@ TkMacOSXDrawAllViews(
 	     * rect, due to attempts to draw outside of drawRect's dirty rect.
 	     */
 
-	    if ([view tkNeedsDisplay]) {
+	    if ([view needsDisplay]) {
 		[view setNeedsDisplay: NO];
 	    }
 	}
@@ -412,6 +412,8 @@ Heartbeat(
     }
 }
 
+static const Tcl_Time zeroBlockTime = { 0, 0 };
+
 static void
 TkMacOSXEventsSetupProc(
     ClientData clientData,
@@ -424,7 +426,6 @@ TkMacOSXEventsSetupProc(
      */
 
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
-	static const Tcl_Time zeroBlockTime = { 0, 0 };
 
 	[NSApp _resetAutoreleasePool];
 
@@ -435,7 +436,7 @@ TkMacOSXEventsSetupProc(
 	 *
  	 * If we have any events waiting or if there is any drawing to be done
 	 * we want Tcl_WaitForEvent to return immediately.  So we set the block
-	 * time to 0.  We also stop the heartbeat, since we won't need it.
+	 * time to 0 and stop the heatbeat.
   	 */
 
 	NSEvent *currentEvent =
@@ -453,13 +454,11 @@ TkMacOSXEventsSetupProc(
 	     * When the user is not generating events we schedule a "heartbeat"
 	     * TimerHandler to fire every 200 milliseconds.  The handler does
 	     * nothing, but when its timer fires it causes Tcl_WaitForEvent to
-	     * return.  This helps avoid hangs when calling vwait.
+	     * return.  This helps avoid hangs when calling vwait during the
+	     * non-regression tests.
 	     */
 
 	    ticker = Tcl_CreateTimerHandler(TICK, Heartbeat, NULL);
-	    Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
-	    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
-	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
     }
 }
