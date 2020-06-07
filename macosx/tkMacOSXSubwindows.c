@@ -213,12 +213,11 @@ XMapWindow(
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
     }
 
-    if ([NSApp isDrawing]) {
-	[[win contentView] setNeedsRedisplay:YES];
-    } else {
+    if (![NSApp isDrawing]) {
 	TKContentView *view = [win contentView];
 	[view addTkDirtyRect:[view bounds]];
     }
+    [[win contentView] setNeedsRedisplay:YES];
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
@@ -331,12 +330,11 @@ XUnmapWindow(
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
     winPtr->flags &= ~TK_MAPPED;
-    if ([NSApp isDrawing]) {
-	[[win contentView] setNeedsRedisplay:YES];
-    } else {
+    if (![NSApp isDrawing]) {
 	TKContentView *view = [win contentView];
 	[view addTkDirtyRect:[view bounds]];
     }
+    [[win contentView] setNeedsRedisplay:YES];
     return Success;
 }
 
