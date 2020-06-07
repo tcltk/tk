@@ -879,8 +879,8 @@ EXTERN void		Tk_CreateOldImageType(const Tk_ImageType *typePtr);
 EXTERN void		Tk_CreateOldPhotoImageFormat(
 				const Tk_PhotoImageFormat *formatPtr);
 /* 274 */
-EXTERN void		Tk_CreatePhotoImageFormat87(
-				const Tk_PhotoImageFormat87 *formatPtr);
+EXTERN void		Tk_CreatePhotoImageFormatVersion3(
+				const Tk_PhotoImageFormatVersion3 *formatPtr);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1167,7 +1167,8 @@ typedef struct TkStubs {
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
-    void (*tk_CreatePhotoImageFormat87) (const Tk_PhotoImageFormat87 *formatPtr);  /* 274 */
+    void (*tk_CreatePhotoImageFormatVersion3) (
+	    const Tk_PhotoImageFormatVersion3 *formatPtr);  /* 274 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
