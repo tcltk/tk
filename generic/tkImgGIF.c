@@ -146,7 +146,7 @@ static int		CommonWriteGIF(Tcl_Interp *interp, ClientData clientData,
 			    WriteBytesFunc *writeProc, Tcl_Obj *format,
 			    Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
 
-Tk_PhotoImageFormat87 tkImgFmtGIF = {
+Tk_PhotoImageFormatVersion3 tkImgFmtGIF = {
     "gif",		/* name */
     FileMatchGIF,	/* fileMatchProc */
     StringMatchGIF,	/* stringMatchProc */

@@ -1070,7 +1070,8 @@ declare 273 {
 }
 # New in Tk8.7
 declare 274 {
-    void Tk_CreatePhotoImageFormat87(const Tk_PhotoImageFormat87 *formatPtr)
+    void Tk_CreatePhotoImageFormatVersion3(
+	    const Tk_PhotoImageFormatVersion3 *formatPtr)
 }
 
 
