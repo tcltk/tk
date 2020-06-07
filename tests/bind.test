@@ -6722,9 +6722,9 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     foreach {x2 y2} [winfo pointerxy .top.l] {}
     # success if the coords are the same with or without the grab, and if they
-    # are at least at (10,10) inside the window located at (300,300).
-    # ">=" instead of "==" to take WM-specific decorations into account.
-    expr {$x1==$x2 && $y1==$y2 && $x1>=310 && $y1>=310}
+    # are at (10,10) inside the label widget as requested by the warping
+    expr {$x1==$x2 && $y1==$y2 && $x1==[winfo rootx .top.l]+10 \
+                               && $y1==[winfo rooty .top.l]+10}
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
