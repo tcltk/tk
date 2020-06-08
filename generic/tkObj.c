@@ -50,7 +50,6 @@ typedef struct PixelRep {
 typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
-    const Tcl_ObjType *endTypePtr;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -112,12 +111,12 @@ typedef struct TclIntStubs {
 extern const struct TclIntStubs *tclIntStubsPtr;
 
 # undef Tcl_GetIntForIndex
-# define Tcl_GetIntForIndex(interp, obj, max, ptr) ((tclIntStubsPtr->tclGetIntForIndex == NULL)? \
-    ((int (*)(Tcl_Interp*,  Tcl_Obj *, int, int*))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[645]))((interp), (obj), (max), (ptr)): \
+# define Tcl_GetIntForIndex(interp, obj, max, flags, ptr) ((tclIntStubsPtr->tclGetIntForIndex == NULL)? \
+    ((int (*)(Tcl_Interp*,  Tcl_Obj *, int, int, int*))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[645]))((interp), (obj), (max), (flags), (ptr)): \
 	tclIntStubsPtr->tclGetIntForIndex((interp), (obj), (max), (ptr)))
 #elif TCL_MINOR_VERSION < 7
 extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
-# define Tcl_GetIntForIndex TclGetIntForIndex
+# define Tcl_GetIntForIndex(interp, obj, max, flags, ptr) TclGetIntForIndex(interp, obj, max, ptr)
 #endif
 #endif
 
@@ -184,11 +183,6 @@ GetTypeCache(void)
 	/* Smart initialization of doubleTypePtr/intTypePtr without
 	 * hash-table lookup or creating complete Tcl_Obj's */
 	Tcl_Obj obj;
-	obj.bytes = (char *)"end";
-	obj.length = 3;
-	obj.typePtr = NULL;
-	Tcl_GetIntForIndex(NULL, &obj, TCL_INDEX_NONE, (TkSizeT *)&obj.internalRep.doubleValue);
-	tsdPtr->endTypePtr = obj.typePtr;
 	obj.bytes = (char *)"0.0";
 	obj.length = 3;
 	obj.typePtr = NULL;
@@ -228,18 +222,7 @@ TkGetIntForIndex(
     int lastOK,
     TkSizeT *indexPtr)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr) != TCL_OK) {
-	return TCL_ERROR;
-    }
-    if (indexObj->typePtr == tsdPtr->endTypePtr) {
-	/* check for "end", but not "end-??" or "end+??" */
-	return (*indexPtr == (end + lastOK)) ? TCL_OK :  TCL_ERROR;
-    }
-    if (indexObj->typePtr != tsdPtr->intTypePtr) {
-	/* Neither do we accept "??-??" or "??+??" */
+    if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, TCL_INDEX_ERROR, indexPtr) != TCL_OK) {
 	return TCL_ERROR;
     }
 #if TCL_MAJOR_VERSION < 9
