@@ -70,6 +70,7 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoPutBlock_Panic 0
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
+#define Tk_CreateOldPhotoImageFormat 0
 #else
 static void
 doNothing(void)

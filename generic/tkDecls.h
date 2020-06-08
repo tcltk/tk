@@ -1757,6 +1757,7 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_PhotoPutBlock_Panic
 #undef Tk_PhotoPutZoomedBlock_Panic
 #undef Tk_PhotoSetSize_Panic
+#undef Tk_CreateOldPhotoImageFormat
 #endif /* TK_NO_DEPRECATED */
 
 #undef TCL_STORAGE_CLASS
