@@ -3339,7 +3339,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, 0);
+tkInit", -1, TCL_EVAL_GLOBAL);
     }
     if (code == TCL_OK) {
 	/*
