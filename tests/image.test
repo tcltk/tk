@@ -308,11 +308,13 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
 } -returnCodes error -result {image "myimage" doesn't exist}
 
 
-test image-6.1 {Tk_ImageCmd procedure, "types" option} -body {
+test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
+    testImageType
+} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
 test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
-    testImageType
+    testOldImageType
 } -body {
     lsort [image types]
 } -result {bitmap oldtest photo test}

@@ -24,6 +24,7 @@
 #endif
 #include "tkInt.h"
 
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 /*
  * The following data structure represents the master for a test image:
  */
@@ -84,7 +85,7 @@ static Tk_ImageType imageType = {
 static int              ImageObjCmd(ClientData dummy,
                             Tcl_Interp *interp, int objc,
             			    Tcl_Obj * const objv[]);
-
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -113,7 +114,9 @@ TkOldTestInit(
 
     if (!initialized) {
 	initialized = 1;
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	Tk_CreateImageType(&imageType);
+#endif
     }
     return TCL_OK;
 }
@@ -133,7 +136,7 @@ TkOldTestInit(
  *
  *----------------------------------------------------------------------
  */
-
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 static int
 ImageCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
@@ -400,6 +403,7 @@ ImageDelete(
     ckfree(timPtr->varName);
     ckfree(timPtr);
 }
+#endif
 
 /*
  * Local Variables:

@@ -139,9 +139,11 @@ typedef struct {
     Tk_PhotoImageFormat *formatList;
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     Tk_PhotoImageFormat *oldFormatList;
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/
+#endif
     Tk_PhotoImageFormatVersion3 *formatListVersion3;
 				/* Pointer to the first in the list of known
 				 * photo image formats in Version3 format.*/
@@ -243,11 +245,13 @@ PhotoFormatThreadExitProc(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     (void)dummy;
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     while (tsdPtr->oldFormatList != NULL) {
 	freePtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = tsdPtr->oldFormatList->nextPtr;
 	ckfree(freePtr);
     }
+#endif
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
@@ -282,6 +286,7 @@ PhotoFormatThreadExitProc(
  *----------------------------------------------------------------------
  */
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 void
 Tk_CreateOldPhotoImageFormat(
     const Tk_PhotoImageFormat *formatPtr)
@@ -302,6 +307,7 @@ Tk_CreateOldPhotoImageFormat(
     copyPtr->nextPtr = tsdPtr->oldFormatList;
     tsdPtr->oldFormatList = copyPtr;
 }
+#endif
 
 void
 Tk_CreatePhotoImageFormat(
@@ -320,10 +326,13 @@ Tk_CreatePhotoImageFormat(
     }
     copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     if (isupper((unsigned char) *formatPtr->name)) {
 	copyPtr->nextPtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = copyPtr;
-    } else {
+    } else
+#endif
+    {
 	/* for compatibility with aMSN: make a copy of formatPtr->name */
 	char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
 	strcpy(name, formatPtr->name);
@@ -340,6 +349,7 @@ Tk_CreatePhotoImageFormatVersion3(
 				 * by caller. */
 {
     Tk_PhotoImageFormatVersion3 *copyPtr;
+    char *name;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -351,7 +361,7 @@ Tk_CreatePhotoImageFormatVersion3(
 	    ckalloc(sizeof(Tk_PhotoImageFormatVersion3));
     *copyPtr = *formatPtr;
     /* for compatibility with aMSN: make a copy of formatPtr->name */
-    char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
+    name = (char *)ckalloc(strlen(formatPtr->name) + 1);
     strcpy(name, formatPtr->name);
     copyPtr->name = name;
     copyPtr->nextPtr = tsdPtr->formatListVersion3;
@@ -809,6 +819,7 @@ ImgPhotoCmd(
                 }
 	    }
 	}
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 	if (stringWriteProc == NULL) {
 	    oldformat = 1;
 	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
@@ -824,6 +835,7 @@ ImgPhotoCmd(
                 }
 	    }
 	}
+#endif
 	if (stringWriteProc == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -1494,6 +1506,7 @@ readCleanup:
 		}
 	    }
 	}
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 	if (imageFormat == NULL) {
 	    oldformat = 1;
 	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
@@ -1523,6 +1536,7 @@ readCleanup:
 		}
 	    }
 	}
+#endif
 	if (usedExt && !matched) {
 	    /*
 	     * If we didn't find one and we're using file extensions as the
@@ -2729,7 +2743,7 @@ MatchFileFormat(
     Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
 				 * ReadFileFormat function */
 {
-    int matched = 0, useoldformat = 0, useVersion3format = 0;
+    int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
     Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -2777,7 +2791,8 @@ MatchFileFormat(
 	    }
 	}
     }
-    if (formatPtr == NULL) {
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
+if (formatPtr == NULL) {
 	useoldformat = 1;
 	for (formatPtr = tsdPtr->oldFormatList; formatPtr != NULL;
 		formatPtr = formatPtr->nextPtr) {
@@ -2811,6 +2826,7 @@ MatchFileFormat(
 	    }
 	}
     }
+#endif
 
     /*
      * For old and not Version3 format, exit now with success
@@ -2933,7 +2949,7 @@ MatchStringFormat(
     Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
 				 * ReadFileFormat function */
 {
-    int matched = 0, useoldformat = 0, useVersion3format = 0;
+    int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr, *defaultFormatPtr = NULL;
     Tk_PhotoImageFormatVersion3 *formatVersion3Ptr = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -2994,6 +3010,7 @@ MatchStringFormat(
 	}
     }
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     if (formatPtr == NULL) {
 	useoldformat = 1;
 	for (formatPtr = tsdPtr->oldFormatList; formatPtr != NULL;
@@ -3023,6 +3040,7 @@ MatchStringFormat(
 	    }
 	}
     }
+#endif
 
     if (formatPtr == NULL) {
 	useoldformat = 0;
