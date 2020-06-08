@@ -1533,7 +1533,7 @@ test entry-3.79 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -4
+    .e xview 0
     .e index @0
 } -cleanup {
     destroy .e
@@ -2101,7 +2101,7 @@ test entry-8.2 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    .e delete -2 2
+    .e delete 0 2
     set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
@@ -2833,7 +2833,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -10
+    .e index 0
 } -cleanup {
     destroy .e
 } -result {0}
