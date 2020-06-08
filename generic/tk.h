@@ -1301,7 +1301,7 @@ typedef struct Tk_Outline {
  */
 
 typedef struct Tk_ImageType Tk_ImageType;
-#ifdef USE_OLD_IMAGE
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
 	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
 	ClientData *masterDataPtr);
