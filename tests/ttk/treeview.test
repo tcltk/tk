@@ -466,7 +466,7 @@ test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
     .tv selection add newnode.n1
     update
     set res
-} -result {1}
+} -result 1
 
 test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
     .tv selection set {}
@@ -560,7 +560,7 @@ test treeview-9.3 {scrolling on see command, requested item is closed} -setup {
     expr $after < $before
 } -cleanup {
     destroy .top
-} -result {1}
+} -result 1
 
 ### identify tests:
 #
