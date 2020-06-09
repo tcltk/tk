@@ -148,7 +148,7 @@ test spinbox-1.8.4 "-validate option: " -setup {
     set ::spinbox_test
 } -cleanup {
     destroy .sb
-} -result {50}
+} -result 50
 
 
 test spinbox-2.0 "current command -- unset should be 0" -constraints nyi -setup {

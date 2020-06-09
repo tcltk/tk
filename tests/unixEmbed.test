@@ -114,7 +114,7 @@ test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} -constraints {
     colorsFree .x
 } -cleanup {
 	deleteWindows
-} -result {0}
+} -result 0
 test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} -constraints {
 	unix nonPortable
 } -setup {
@@ -127,7 +127,7 @@ test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} -constraints {
     colorsFree .x
 } -cleanup {
 	deleteWindows
-} -result {1}
+} -result 1
 
 test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constraints {
 	unix testembed notAqua
