@@ -1135,6 +1135,11 @@ putCleanup:
 	    result = TCL_ERROR;
 	    goto readCleanup;
 	}
+	
+	if (closeChannel) {
+	    Tcl_Close(NULL, chan);
+	    chan = NULL;
+	}
 
 	/*
 	 * Check the values given for the -from option.
@@ -1961,7 +1966,7 @@ ImgPhotoConfigureMaster(
     PhotoInstance *instancePtr;
     const char *oldFileString, *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL,
-	    *metadataIn = NULL, *metadataOut = NULL;
+	    *metadataInObj = NULL, *metadataOutObj = NULL;
     Tcl_Obj *tempdata, *tempformat;
     TkSizeT length;
     int i, j, result, imageWidth, imageHeight, oldformat;
@@ -2006,7 +2011,7 @@ ImgPhotoConfigureMaster(
 	    } else if ((args[j][1] == 'm') &&
 		!strncmp(args[j], "-metadata", length)) {
 		if (++i < objc) {
-		    metadataIn = objv[i];
+		    metadataInObj = objv[i];
 		    j--;
 		} else {
 		    ckfree(args);
@@ -2103,14 +2108,14 @@ ImgPhotoConfigureMaster(
 	}
 	masterPtr->format = format;
     }
-    if (metadataIn) {
+    if (metadataInObj) {
 	/*
 	 * make -metadata a dict and take it if keys in.
 	 * Otherwise set a metadata null pointer.
 	 */
 	int dictSize;
 
-	if (TCL_OK != Tcl_DictObjSize(interp,metadataIn, &dictSize)) {
+	if (TCL_OK != Tcl_DictObjSize(interp,metadataInObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "value for \"-metadata\" not a dict", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -2119,14 +2124,14 @@ ImgPhotoConfigureMaster(
 	}
 
 	if (dictSize > 0) {
-	    Tcl_IncrRefCount(metadataIn);
+	    Tcl_IncrRefCount(metadataInObj);
 	} else {
-	    metadataIn = NULL;
+	    metadataInObj = NULL;
 	}
 	if (masterPtr->metadata) {
 	    Tcl_DecrRefCount(masterPtr->metadata);
 	}
-	masterPtr->metadata = metadataIn;
+	masterPtr->metadata = metadataInObj;
     }
     /*
      * Set the image to the user-requested size, if any, and make sure storage
@@ -2171,18 +2176,29 @@ ImgPhotoConfigureMaster(
 	closeChannel = 0;
 
 	/*
+	 * Flag that we want the metadata result dict
+	 */
+
+	metadataOutObj = Tcl_NewDictObj();
+	Tcl_IncrRefCount(metadataOutObj);
+
+	/*
 	 * -translation binary also sets -encoding binary
 	 */
 
 	if ((Tcl_SetChannelOption(interp, chan,
 		"-translation", "binary") != TCL_OK) ||
 		(MatchFileFormat(interp, chan, masterPtr->fileString,
-			masterPtr->format, masterPtr->metadata, NULL,
+			masterPtr->format, masterPtr->metadata, metadataOutObj,
 			&imageFormat, &imageFormatVersion3,
 			&imageWidth, &imageHeight, &oldformat, &closeChannel,
 			&driverInternalDString) != TCL_OK)) {
 	    Tcl_Close(NULL, chan);
 	    goto errorExit;
+	}
+	if (closeChannel) {
+	    Tcl_Close(NULL, chan);
+	    chan = NULL;
 	}
 	result = ImgPhotoSetSize(masterPtr, imageWidth, imageHeight);
 	if (result != TCL_OK) {
@@ -2206,9 +2222,11 @@ ImgPhotoConfigureMaster(
 		    masterPtr->fileString, tempformat, masterPtr->metadata,
 		    (Tk_PhotoHandle) masterPtr,
 		    0, 0, imageWidth, imageHeight, 0, 0,
-		    metadataOut, &driverInternalDString);
+		    metadataOutObj, &driverInternalDString);
 	}
-	Tcl_Close(NULL, chan);
+	if (chan != NULL) {
+	    Tcl_Close(NULL, chan);
+	}
 	if (result != TCL_OK) {
 	    goto errorExit;
 	}
@@ -2225,8 +2243,15 @@ ImgPhotoConfigureMaster(
 	    && ((masterPtr->dataString != oldData)
 		    || (masterPtr->format != oldFormat))) {
 
+	/*
+	 * Flag that we want the metadata result dict
+	 */
+
+	metadataOutObj = Tcl_NewDictObj();
+	Tcl_IncrRefCount(metadataOutObj);
+
 	if (MatchStringFormat(interp, masterPtr->dataString,
-		masterPtr->format, masterPtr->metadata, NULL,
+		masterPtr->format, masterPtr->metadata, metadataOutObj,
 		&imageFormat, &imageFormatVersion3, &imageWidth,
 		&imageHeight, &oldformat, &driverInternalDString) != TCL_OK) {
 	    goto errorExit;
@@ -2253,16 +2278,9 @@ ImgPhotoConfigureMaster(
 	    }
 	} else {
 	    
-	    /*
-	     * Flag that we want the metadata result dict
-	     */
-
-	    metadataOut = Tcl_NewDictObj();
-	    Tcl_IncrRefCount(metadataOut);
-
 	    if (imageFormatVersion3->stringReadProc(interp, tempdata, tempformat,
 		    masterPtr->metadata, (Tk_PhotoHandle) masterPtr, 0, 0,
-		    imageWidth, imageHeight, 0, 0, metadataOut,
+		    imageWidth, imageHeight, 0, 0, metadataOutObj,
 		    &driverInternalDString) != TCL_OK) {
 		goto errorExit;
 	    }
@@ -2275,9 +2293,9 @@ ImgPhotoConfigureMaster(
     /*
      * Merge driver returned metadata and master metadata
      */
-    if (metadataOut != NULL) {
+    if (metadataOutObj != NULL) {
 	int dictSize;
-	if (TCL_OK != Tcl_DictObjSize(interp,metadataOut, &dictSize)) {
+	if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "driver metadata not a dict", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -2291,8 +2309,8 @@ ImgPhotoConfigureMaster(
 	     */
 	    
 	    if (masterPtr->metadata == NULL) {
-		masterPtr->metadata = metadataOut;
-		metadataOut = NULL;
+		masterPtr->metadata = metadataOutObj;
+		metadataOutObj = NULL;
 	    } else {
 		Tcl_DictSearch search;
 		Tcl_Obj *key, *value;
@@ -2304,8 +2322,8 @@ ImgPhotoConfigureMaster(
 		    Tcl_IncrRefCount(masterPtr->metadata);
 		}
 
-		if (Tcl_DictObjFirst(interp, metadataOut, &search, &key, &value,
-			&done) != TCL_OK) {
+		if (Tcl_DictObjFirst(interp, metadataOutObj, &search, &key,
+			&value, &done) != TCL_OK) {
 		    goto errorExit;
 		}
 		for (; !done ; Tcl_DictObjNext(&search, &key, &value, &done)) {
@@ -2354,8 +2372,8 @@ ImgPhotoConfigureMaster(
     if (oldFormat != NULL) {
 	Tcl_DecrRefCount(oldFormat);
     }
-    if (metadataOut != NULL) {
-	Tcl_DecrRefCount(metadataOut);
+    if (metadataOutObj != NULL) {
+	Tcl_DecrRefCount(metadataOutObj);
     }
 
     ToggleComplexAlphaIfNeeded(masterPtr);
@@ -2370,8 +2388,8 @@ ImgPhotoConfigureMaster(
     if (oldFormat != NULL) {
 	Tcl_DecrRefCount(oldFormat);
     }
-    if (metadataOut != NULL) {
-	Tcl_DecrRefCount(metadataOut);
+    if (metadataOutObj != NULL) {
+	Tcl_DecrRefCount(metadataOutObj);
     }
     return TCL_ERROR;
 }
@@ -2829,7 +2847,7 @@ if (formatPtr == NULL) {
 #endif
 
     /*
-     * For old and not Version3 format, exit now with success
+     * For old and not version 3 format, exit now with success
      */
 
     if (formatPtr != NULL) {
@@ -2841,8 +2859,8 @@ if (formatPtr == NULL) {
     }
 
     /*
-     * Scan through the table of file format Version3 handlers to find one which
-     * can handle the image.
+     * Scan through the table of file format version 3 handlers to find one
+     * which can handle the image.
      */
 
     for (formatVersion3Ptr = tsdPtr->formatListVersion3;
@@ -2869,7 +2887,7 @@ if (formatPtr == NULL) {
 
 	    if (formatVersion3Ptr->fileMatchProc(interp, chan, fileName,
 		    formatObj, metadataInObj, widthPtr, heightPtr,
-		    closeChannelPtr, driverInternalPtr)) {
+		    metadataOutObj, closeChannelPtr, driverInternalPtr)) {
 		if (*widthPtr < 1) {
 		    *widthPtr = 1;
 		}
@@ -2879,8 +2897,27 @@ if (formatPtr == NULL) {
 		*imageFormatVersion3Ptr = formatVersion3Ptr;
 		*imageFormatPtr = NULL;
 		*oldformat = 0;
-		(void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
+		if (! *closeChannelPtr ) {
+		    (void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
+		}
 		return TCL_OK;
+	    }
+
+	    /*
+	     * Clear eventual set keys in the metadata object
+	     */
+
+	    if (metadataOutObj != NULL) {
+		int dictSize;
+		if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
+			|| dictSize > 0) {
+		    /*
+		     * Driver has modified the metadata dict, so clear it
+		     */
+		    Tcl_DecrRefCount(metadataOutObj);
+		    metadataOutObj = Tcl_NewDictObj();
+		    Tcl_IncrRefCount(metadataOutObj);
+		}
 	    }
 	}
     }
@@ -2946,7 +2983,8 @@ MatchStringFormat(
 				/* The dimensions of the image are returned
 				 * here. */
     int *oldformat,		/* Returns 1 if the old image API is used. */
-    Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
+    Tcl_DString *driverInternalPtr)
+				/* Memory to be passed to the corresponding
 				 * ReadFileFormat function */
 {
     int matched = 0, useoldformat = 0;
@@ -3067,8 +3105,25 @@ MatchStringFormat(
 		    && (formatVersion3Ptr->stringReadProc != NULL)
 		    && formatVersion3Ptr->stringMatchProc(interp, data,
 			    formatObj, metadataInObj, widthPtr, heightPtr,
-			    driverInternalPtr)) {
+			    metadataOutObj, driverInternalPtr)) {
 		break;
+	    }
+
+	    /*
+	     * Clear eventual set keys in the metadata object
+	     */
+
+	    if (metadataOutObj != NULL) {
+		int dictSize;
+		if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
+			|| dictSize > 0) {
+		    /*
+		     * Driver has modified the metadata dict, so clear it
+		     */
+		    Tcl_DecrRefCount(metadataOutObj);
+		    metadataOutObj = Tcl_NewDictObj();
+		    Tcl_IncrRefCount(metadataOutObj);
+		}
 	    }
 	}
     }

@@ -121,7 +121,8 @@ typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
 static int		FileMatchGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
 			    Tcl_Obj *metadataIn, int *widthPtr, int *heightPtr,
-			    int *closeChannelPtr, Tcl_DString *driverInternal);
+			    Tcl_Obj *metadataOut, int *closeChannelPtr,
+			    Tcl_DString *driverInternal);
 static int		FileReadGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
 			    Tcl_Obj *metadataIn, Tk_PhotoHandle imageHandle,
@@ -130,7 +131,8 @@ static int		FileReadGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
 static int		StringMatchGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
-			    int *heightPtr, Tcl_DString *driverInternal);
+			    int *heightPtr, Tcl_Obj *metadataOut,
+			    Tcl_DString *driverInternal);
 static int		StringReadGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    Tcl_Obj *format, Tcl_Obj *metadataIn,
 			    Tk_PhotoHandle imageHandle,
@@ -362,6 +364,7 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
     int *closeChannelPtr,	/* Return if the channel may be closed */
     Tcl_DString *driverInternal)/* memory passed to FileReadGIF */
 {
@@ -852,6 +855,7 @@ StringMatchGIF(
     Tcl_Obj *metadataIn,	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
     Tcl_DString *driverInternal)/* memory to pass to StringReadGIF */
 {
     unsigned char *data, header[10];
