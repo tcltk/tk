@@ -52,19 +52,28 @@ typedef struct {
     RastOpts ropts;
 } NSVGcache;
 
-static int		FileMatchSVG(Tcl_Channel chan, const char *fileName,
-			    Tcl_Obj *format, int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp);
+static int		FileMatchSVG(Tcl_Interp *interp, Tcl_Channel chan,
+			    const char *fileName, Tcl_Obj *formatObj,
+			    Tcl_Obj *metadataInObj, int *widthPtr,
+			    int *heightPtr, Tcl_Obj *metadataOutObj,
+			    int *closeChannelPtr,
+			    Tcl_DString *driverInternal);
 static int		FileReadSVG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
-			    Tk_PhotoHandle imageHandle, int destX, int destY,
-			    int width, int height, int srcX, int srcY);
-static int		StringMatchSVG(Tcl_Obj *dataObj, Tcl_Obj *format,
-			    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
-static int		StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
-			    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+			    Tcl_Obj *metadataIn, Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY);
+			    int srcX, int srcY,
+			    Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
+static int		StringMatchSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
+			    Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
+			    int *heightPtr, Tcl_Obj *metadataOutObj,
+			    Tcl_DString *driverInternal);
+static int		StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
+			    Tcl_Obj *format, Tcl_Obj *metadataIn,
+			    Tk_PhotoHandle imageHandle,
+			    int destX, int destY, int width, int height,
+			    int srcX, int srcY,
+			    Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
 static NSVGimage *	ParseSVGWithOptions(Tcl_Interp *interp,
 			    const char *input, TkSizeT length, Tcl_Obj *format,
 			    RastOpts *ropts);
@@ -87,7 +96,7 @@ static void		FreeCache(ClientData clientData, Tcl_Interp *interp);
  * The format record for the SVG nano file format:
  */
 
-Tk_PhotoImageFormat tkImgFmtSVGnano = {
+Tk_PhotoImageFormatVersion3 tkImgFmtSVGnano = {
     "svg",			/* name */
     FileMatchSVG,		/* fileMatchProc */
     StringMatchSVG,		/* stringMatchProc */
@@ -118,11 +127,18 @@ Tk_PhotoImageFormat tkImgFmtSVGnano = {
 
 static int
 FileMatchSVG(
-    Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *formatObj,
+    Tcl_Interp *interp,		/* interpreter pointer */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *formatObj,		/* User-specified format object, or NULL. */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
-    Tcl_Interp *interp)
+				/* The dimensions of the image are returned
+				 * here if the file is a valid raw GIF file. */
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
+    int *closeChannelPtr,	/* Return if the channel may be closed */
+    Tcl_DString *driverInternalPtr)
+				/* memory passed to FileReadGIF */
 {
     TkSizeT length;
     Tcl_Obj *dataObj = Tcl_NewObj();
@@ -175,14 +191,21 @@ FileMatchSVG(
 
 static int
 FileReadSVG(
-    Tcl_Interp *interp,
-    Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *formatObj,
-    Tk_PhotoHandle imageHandle,
-    int destX, int destY,
-    int width, int height,
-    int srcX, int srcY)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *formatObj,		/* User-specified format object, or NULL. */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in photo
+				 * image to be written to. */
+    int width, int height,	/* Dimensions of block of photo image to be
+				 * written to. */
+    int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
+				 * image being read. */
+    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternalPtr)
+				/* memory passed from FileMatchGIF */
 {
     TkSizeT length;
     const char *data;
@@ -232,10 +255,15 @@ FileReadSVG(
 
 static int
 StringMatchSVG(
-    Tcl_Obj *dataObj,
-    Tcl_Obj *formatObj,
-    int *widthPtr, int *heightPtr,
-    Tcl_Interp *interp)
+    Tcl_Interp *interp,		/* interpreter to report errors */
+    Tcl_Obj *dataObj,		/* the object containing the image data */
+    Tcl_Obj *formatObj,		/* the image format object, or NULL */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    int *widthPtr,		/* where to put the string width */
+    int *heightPtr,		/* where to put the string height */
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternalPtr)
+				/* memory to pass to StringReadGIF */
 {
     TkSizeT length;
     const char *data;
@@ -279,13 +307,17 @@ StringMatchSVG(
 
 static int
 StringReadSVG(
-    Tcl_Interp *interp,
-    Tcl_Obj *dataObj,
-    Tcl_Obj *formatObj,
-    Tk_PhotoHandle imageHandle,
-    int destX, int destY,
-    int width, int height,
-    int srcX, int srcY)
+    Tcl_Interp *interp,		/* interpreter for reporting errors in */
+    Tcl_Obj *dataObj,		/* object containing the image */
+    Tcl_Obj *formatObj,		/* format object, or NULL */
+    Tcl_Obj *metadataIn,	/* metadata input, may be NULL */
+    Tk_PhotoHandle imageHandle,	/* the image to write this data into */
+    int destX, int destY,	/* The rectangular region of the */
+    int width, int height,	/* image to copy */
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternalPtr)
+				/* memory passed from StringReadGIF */
 {
     TkSizeT length;
     const char *data;

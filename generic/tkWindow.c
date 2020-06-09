@@ -336,11 +336,11 @@ CreateTopLevelWindow(
 	 * Create built-in photo image formats.
 	 */
 
-        Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
+	Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
 	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtGIF);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
-	Tk_CreatePhotoImageFormat(&tkImgFmtSVGnano);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtSVGnano);
     }
 
     if ((parent != NULL) && (screenName != NULL) && (screenName[0] == '\0')) {
