@@ -691,7 +691,7 @@ test spinbox-1.59 {configuration option: "repeatdelay"} -setup {
     .e cget -repeatdelay
 } -cleanup {
     destroy .e
-} -result {500}
+} -result 500
 test spinbox-1.60 {configuration option: "repeatdelay" for spinbox} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
@@ -2360,7 +2360,7 @@ test spinbox-7.11 {InsertChars procedure} -constraints {
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result {70}
+} -result 70
 
 test spinbox-8.1 {DeleteChars procedure} -setup {
     unset -nocomplain contents
@@ -2733,7 +2733,7 @@ test spinbox-10.6 {SpinboxSetValue procedure, updating display position} -setup 
     .e index @0
 } -cleanup {
     destroy .e
-} -result {10}
+} -result 10
 test spinbox-10.7 {SpinboxSetValue procedure, updating insertion cursor} -setup {
     unset -nocomplain x
     spinbox .e -highlightthickness 2 -bd 2
@@ -2806,7 +2806,7 @@ test spinbox-13.1 {GetSpinboxIndex procedure} -setup {
     .e index end
 } -cleanup {
     destroy .e
-} -result {21}
+} -result 21
 test spinbox-13.2 {GetSpinboxIndex procedure} -body {
     spinbox .e
     .e index abogus
@@ -2852,7 +2852,7 @@ test spinbox-13.5 {GetSpinboxIndex procedure} -setup {
     .e index anchor
 } -cleanup {
     destroy .e
-} -result {15}
+} -result 15
 test spinbox-13.6 {GetSpinboxIndex procedure} -setup {
     spinbox .e
 } -body {
