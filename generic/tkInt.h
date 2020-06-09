@@ -923,6 +923,10 @@ typedef struct {
 #ifndef TCL_INDEX_NONE
 #   define TCL_INDEX_NONE (-1)
 #endif
+/* See TIP #577 */
+#ifndef TCL_INDEX_ERROR
+#   define TCL_INDEX_ERROR	0x100
+#endif
 
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble
