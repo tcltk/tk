@@ -199,15 +199,20 @@ static int		DecodePNG(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int destX, int destY);
 static int		EncodePNG(Tcl_Interp *interp,
 			    Tk_PhotoImageBlock *blockPtr, PNGImage *pngPtr);
-static int		FileMatchPNG(Tcl_Channel chan, const char *fileName,
-			    Tcl_Obj *fmtObj, int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp);
+static int		FileMatchPNG(Tcl_Interp *interp, Tcl_Channel chan,
+			    const char *fileName, Tcl_Obj *fmtObj,
+			    Tcl_Obj *metadataInObj, int *widthPtr,
+			    int *heightPtr, Tcl_Obj *metadataOut,
+			    int *closeChannelPtr, Tcl_DString *driverInternal);
 static int		FileReadPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
-			    Tk_PhotoHandle imageHandle, int destX, int destY,
-			    int width, int height, int srcX, int srcY);
+			    Tcl_Obj *metadataInObj, Tk_PhotoHandle imageHandle,
+			    int destX, int destY, int width, int height,
+			    int srcX, int srcY, Tcl_Obj *metadataOutPtr,
+			    Tcl_DString *driverInternal);
 static int		FileWritePNG(Tcl_Interp *interp, const char *filename,
-			    Tcl_Obj *fmtObj, Tk_PhotoImageBlock *blockPtr);
+			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
+			    Tk_PhotoImageBlock *blockPtr);
 static int		InitPNGImage(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tcl_Channel chan, Tcl_Obj *objPtr, int dir);
 static inline unsigned char Paeth(int a, int b, int c);
@@ -236,14 +241,20 @@ static int		ReadTRNS(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
 static int		SkipChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
-static int		StringMatchPNG(Tcl_Obj *dataObj, Tcl_Obj *fmtObj,
+static int		StringMatchPNG(Tcl_Interp *interp, Tcl_Obj *pObjData,
+			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
 			    int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp);
-static int		StringReadPNG(Tcl_Interp *interp, Tcl_Obj *dataObj,
-			    Tcl_Obj *fmtObj, Tk_PhotoHandle imageHandle,
+			    Tcl_Obj *metadataOutObj,
+			    Tcl_DString *driverInternal);
+static int		StringReadPNG(Tcl_Interp *interp, Tcl_Obj *pObjData,
+			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
+			    Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY);
+			    int srcX, int srcY, Tcl_Obj *metadataOutObj,
+			    Tcl_DString *driverInternal);
+
 static int		StringWritePNG(Tcl_Interp *interp, Tcl_Obj *fmtObj,
+			    Tcl_Obj *metadataInObj,
 			    Tk_PhotoImageBlock *blockPtr);
 static int		UnfilterLine(Tcl_Interp *interp, PNGImage *pngPtr);
 static inline int	WriteByte(Tcl_Interp *interp, PNGImage *pngPtr,
@@ -267,7 +278,7 @@ static inline int	WriteInt32(Tcl_Interp *interp, PNGImage *pngPtr,
  * The format record for the PNG file format:
  */
 
-Tk_PhotoImageFormat tkImgFmtPNG = {
+Tk_PhotoImageFormatVersion3 tkImgFmtPNG = {
     "png",			/* name */
     FileMatchPNG,		/* fileMatchProc */
     StringMatchPNG,		/* stringMatchProc */
@@ -2667,12 +2678,17 @@ DecodePNG(
 
 static int
 FileMatchPNG(
-    Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *fmtObj,
-    int *widthPtr,
-    int *heightPtr,
-    Tcl_Interp *interp)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *fmtObj,		/* User-specified format object, or NULL. */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    int *widthPtr, int *heightPtr,
+				/* The dimensions of the image are returned
+				 * here if the file is a valid raw GIF file. */
+    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
+    int *closeChannelPtr,	/* Return if the channel may be closed */
+    Tcl_DString *driverInternal)/* memory passed to FileReadGIF */
 {
     PNGImage png;
     int match = 0;
@@ -2713,17 +2729,20 @@ FileMatchPNG(
 
 static int
 FileReadPNG(
-    Tcl_Interp *interp,
-    Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *fmtObj,
-    Tk_PhotoHandle imageHandle,
-    int destX,
-    int destY,
-    int width,
-    int height,
-    int srcX,
-    int srcY)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *fmtObj,		/* User-specified format object, or NULL. */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in photo
+				 * image to be written to. */
+    int width, int height,	/* Dimensions of block of photo image to be
+				 * written to. */
+    int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
+				 * image being read. */
+    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternal)/* memory passed from FileMatchGIF */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -2763,11 +2782,14 @@ FileReadPNG(
 
 static int
 StringMatchPNG(
-    Tcl_Obj *pObjData,
-    Tcl_Obj *fmtObj,
-    int *widthPtr,
-    int *heightPtr,
-    Tcl_Interp *interp)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Obj *pObjData,		/* the object containing the image data */
+    Tcl_Obj *fmtObj,		/* the image format object, or NULL */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    int *widthPtr,		/* where to put the string width */
+    int *heightPtr,		/* where to put the string height */
+    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternal)/* memory to pass to StringReadGIF */
 {
     PNGImage png;
     int match = 0;
@@ -2807,16 +2829,16 @@ StringMatchPNG(
 
 static int
 StringReadPNG(
-    Tcl_Interp *interp,
-    Tcl_Obj *pObjData,
-    Tcl_Obj *fmtObj,
-    Tk_PhotoHandle imageHandle,
-    int destX,
-    int destY,
-    int width,
-    int height,
-    int srcX,
-    int srcY)
+    Tcl_Interp *interp,		/* interpreter for reporting errors in */
+    Tcl_Obj *pObjData,		/* object containing the image */
+    Tcl_Obj *fmtObj,		/* format object, or NULL */
+    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    Tk_PhotoHandle imageHandle,	/* the image to write this data into */
+    int destX, int destY,	/* The rectangular region of the */
+    int width, int height,	/* image to copy */
+    int srcX, int srcY,
+    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
+    Tcl_DString *driverInternal)/* memory passed from StringReadGIF */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -3466,6 +3488,7 @@ FileWritePNG(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *fmtObj,
+    Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
@@ -3537,6 +3560,7 @@ static int
 StringWritePNG(
     Tcl_Interp *interp,
     Tcl_Obj *fmtObj,
+    Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Obj *resultObj = Tcl_NewObj();
