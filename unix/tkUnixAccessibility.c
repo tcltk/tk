@@ -103,7 +103,7 @@ ATKbridge_Init (void)
   if (!libenv) {
     libenv = "/usr/lib:/lib";
   }
-  char *copy = (char *)malloc(strlen(libenv) + 1);
+  char *copy = (char *)ckalloc(strlen(libenv) + 1);
   if (copy == NULL) {
     return TCL_ERROR:
   }
@@ -113,7 +113,7 @@ ATKbridge_Init (void)
 	
   while (token !=NULL) {
 		
-    lib_path = (char *)malloc(strlen(token) + 1);
+    lib_path = (char *)ckalloc(strlen(token) + 1);
 		
     strcpy(lib_path, token);
     strcat(lib_path, gtk_path);
@@ -139,8 +139,8 @@ ATKbridge_Init (void)
     token = strtok(NULL, ":");
   }
 		
-  free(copy);
-  free(lib_path);
+  ckfree(copy);
+  ckfree(lib_path);
 		
   _atk_init ();
 		
