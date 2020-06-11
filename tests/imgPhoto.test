@@ -2148,7 +2148,7 @@ set gifdata "\x2c\x00\x00\x00\x00\x10\x00\x10\x00\x00"
 append gifdata "\x03\x21\x78\xba\xdc\x2d\x30\x42\x77\xa4\x15\xef\xda\xa5\xb5\xea\xd7\x07\x4a\xe2\x38\x55\xe6\x99\xaa\x6b\x69\x72\x2f\x33\x52\x1d\x65\x37\x09\x00"
 set gifend "\x3b"
 
-test imgPhoto-23.1 {GIF comment before image data} -setup {
+test imgPhoto-23.1 {GIF comment before image data (-data)} -setup {
     set data $::gifstart
     # Append a comment extension block with data "ABCD"
     append data "\x21\xfe\x04" "ABCD" "\x0"
@@ -2161,7 +2161,25 @@ test imgPhoto-23.1 {GIF comment before image data} -setup {
     catch {image delete gif1}
 } -result {Comment ABCD}
 
-test imgPhoto-23.2 {GIF comment after image data} -setup {
+test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {Comment ABCD}
+
+test imgPhoto-23.3 {GIF comment after image data (-data)} -setup {
     set data $::gifstart
     append data $::gifdata
     # Append a comment extension block with data "ABCD"
@@ -2175,7 +2193,26 @@ test imgPhoto-23.2 {GIF comment after image data} -setup {
     catch {image delete gif1}
 } -result {Comment ABCD}
 
-test imgPhoto-23.3 {Two GIF comment blocks} -setup {
+test imgPhoto-23.4 {GIF comment after image data (-file)} -setup {
+    set data $::gifstart
+    append data $::gifdata
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {Comment ABCD}
+
+test imgPhoto-23.5 {Two GIF comment blocks (-data)} -setup {
     set data $::gifstart
     # Append a comment extension block with data "1234"
     append data "\x21\xfe\x04" "1234" "\x0"
@@ -2191,7 +2228,28 @@ test imgPhoto-23.3 {Two GIF comment blocks} -setup {
     catch {image delete gif1}
 } -result {Comment ABCD}
 
-test imgPhoto-23.4 {XMP comment block before image} -setup {
+test imgPhoto-23.6 {Two GIF comment blocks (-file)} -setup {
+    set data $::gifstart
+    # Append a comment extension block with data "1234"
+    append data "\x21\xfe\x04" "1234" "\x0"
+    append data $::gifdata
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {Comment ABCD}
+
+test imgPhoto-23.7 {XMP comment block before image (-data)} -setup {
     set data $::gifstart
     # Append an XMP comment extension block (including a Unicode codepoint 2022
     set xmpdata "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
@@ -2217,7 +2275,38 @@ test imgPhoto-23.4 {XMP comment block before image} -setup {
     catch {image delete gif1}
 } -result {1}
 
-test imgPhoto-23.5 {XMP comment block after image} -setup {
+test imgPhoto-23.8 {XMP comment block before image (-file)} -setup {
+    set data $::gifstart
+    # Append an XMP comment extension block (including a Unicode codepoint 2022
+    set xmpdata "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
+	    xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\">\
+	    <rdf:Description rdf:about=\"1\u2022\">\
+	    <xmp:Rating>3</xmp:Rating></rdf:Description></rdf:RDF>"
+    append data "\x21\xff\x0B" "XMP DataXMP" [encoding convertto utf-8 $xmpdata]
+    # Special trailer of 1 ff fe ... 02 01 00 00
+    append data "\x01"
+    for {set i 0xff} {$i != -1} {incr i -1} {
+	append data [binary format c $i]
+    }
+    append data "\x00"
+
+    append data $::gifdata
+    # Trailer
+    append data $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    set d [dict get [gif1 cget -metadata] XMP]
+    expr {$d eq $xmpdata}
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {1}
+
+test imgPhoto-23.9 {XMP comment block after image (-data)} -setup {
     set data $::gifstart
     append data $::gifdata
 
@@ -2244,7 +2333,40 @@ test imgPhoto-23.5 {XMP comment block after image} -setup {
     catch {image delete gif1}
 } -result {1}
 
-test imgPhoto-23.6 {empty XMP comment block after image} -setup {
+test imgPhoto-23.10 {XMP comment block after image (-file)} -setup {
+    set data $::gifstart
+    append data $::gifdata
+
+    # Append an XMP comment extension block (including a Unicode codepoint 2022
+    set xmpdata "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
+	    xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\">\
+	    <rdf:Description rdf:about=\"1\u2022\">\
+	    <xmp:Rating>3</xmp:Rating></rdf:Description></rdf:RDF>"
+    append data "\x21\xff\x0B" "XMP DataXMP" [encoding convertto utf-8 $xmpdata]
+    # Special trailer of 1 ff fe ... 02 01 00 00
+    append data "\x01"
+    for {set i 0xff} {$i != -1} {incr i -1} {
+	append data [binary format c $i]
+    }
+    append data "\x00"
+
+    # Trailer
+    append data $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    set d [dict get [gif1 cget -metadata] XMP]
+    expr {$d eq $xmpdata}
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {1}
+
+test imgPhoto-23.11 {empty XMP comment block after image (-data)} -setup {
     set data $::gifstart
     append data $::gifdata
 
@@ -2264,7 +2386,35 @@ test imgPhoto-23.6 {empty XMP comment block after image} -setup {
     catch {image delete gif1}
 } -result {}
 
-test imgPhoto-23.7 {create: test if shared metadata object is not preserved} -setup {
+test imgPhoto-23.12 {empty XMP comment block after image (-file)} -setup {
+    set data $::gifstart
+    append data $::gifdata
+
+    append data "\x21\xff\x0B" "XMP DataXMP"
+    # Special trailer of 1 ff fe ... 02 01 00 00
+    append data "\x01"
+    for {set i 0xff} {$i != -1} {incr i -1} {
+	append data [binary format c $i]
+    }
+    append data "\x00"
+    # Trailer
+    append data $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    dict get [gif1 cget -metadata] XMP
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {}
+
+test imgPhoto-23.13 {create: test if shared metadata object is not preserved\
+	(-data)}\
+-setup {
     set data $::gifstart
     # Append a comment extension block with data "ABCD"
     append data "\x21\xfe\x04" "ABCD" "\x0"
@@ -2279,7 +2429,32 @@ test imgPhoto-23.7 {create: test if shared metadata object is not preserved} -se
     catch {image delete gif1}
 } -result {{A 1 Comment ABCD} {A 1} {A 1}}
 
-test imgPhoto-23.8 {configure: test if shared metadata object is not preserved} -setup {
+test imgPhoto-23.14 {create: test if shared metadata object is not preserved\
+	(-file)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    image create photo gif1 -file $path -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.15 {configure: test if shared metadata object is not\
+	preserved (empty image, -data)}\
+-setup {
     set data $::gifstart
     # Append a comment extension block with data "ABCD"
     append data "\x21\xfe\x04" "ABCD" "\x0"
@@ -2295,7 +2470,75 @@ test imgPhoto-23.8 {configure: test if shared metadata object is not preserved} 
     catch {image delete gif1}
 } -result {{A 1 Comment ABCD} {A 1} {A 1}}
 
-test imgPhoto-23.9 {configure: test if shared metadata object is not preserved} -setup {
+test imgPhoto-23.16 {configure: test if shared metadata object is not preserved\
+	(empty image, -file)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -file $path -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.17 {configure: test if shared metadata object is not preserved\
+	(metadata replace, -data}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data "$::gifstart$::gifdata$::gifend"
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -data $data -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.18 {configure: test if shared metadata object is not preserved\
+	(metadata replace, -file}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -data "$::gifstart$::gifdata$::gifend"
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -file $path -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.19 {configure: test if shared metadata object is not preserved\
+	(-data)}\
+-setup {
     set data $::gifstart$::gifdata$::gifend
 } -body {
     image create photo gif1 -data $data
@@ -2312,24 +2555,32 @@ test imgPhoto-23.9 {configure: test if shared metadata object is not preserved} 
     catch {image delete gif1}
 } -result {{A 1 Comment ABCD} {A 1} {A 1}}
 
-test imgPhoto-23.9 {configure: test if shared metadata object is not preserved} -setup {
-    set data $::gifstart$::gifdata$::gifend
-} -body {
-    image create photo gif1 -data $data
-    set metadataDict [dict create A 1]
-    set metadataDict2 $metadataDict
+test imgPhoto-23.20 {configure: test if shared metadata object is not preserved\
+	(-file)}\
+-setup {
     set data $::gifstart
     # Append a comment extension block with data "ABCD"
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifdata $::gifend
-    gif1 configure -data $data -format gif -metadata $metadataDict
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -data "$::gifstart$::gifdata$::gifend"
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -file $path -format gif -metadata $metadataDict
     list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
 } -cleanup {
     catch {image delete gif1}
+    file delete $path
 } -result {{A 1 Comment ABCD} {A 1} {A 1}}
 
-test imgPhoto-23.10 {output data with comment} -setup {
+test imgPhoto-23.21 {output data with comment (from -metadata argument)}\
+-setup {
     set data $::gifstart$::gifdata$::gifend
 } -body {
     image create photo gif1 -data $data
@@ -2338,7 +2589,49 @@ test imgPhoto-23.10 {output data with comment} -setup {
     catch {image delete gif1}
 } -match glob -result {*ABCD*}
 
-test imgPhoto-23.11 {output data with XMP} -setup {
+test imgPhoto-23.22 {output file with comment (from -metadata argument)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    image create photo gif1 -data $data
+    gif1 write $path -format gif -metadata [dict create Comment ABCD]
+    image delete gif1
+    image create photo gif1 -file $path
+    dict get [gif1 cget -metadata] Comment
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {ABCD}
+
+test imgPhoto-23.23 {output data with comment (from -metadata property)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 configure -metadata [dict create Comment ABCD]
+    set gifData [gif1 data -format gif]
+} -cleanup {
+    catch {image delete gif1}
+} -match glob -result {*ABCD*}
+
+test imgPhoto-23.24 {output file with comment (from -metadata property)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    image create photo gif1 -data $data
+    gif1 configure -metadata [dict create Comment ABCD]
+    gif1 write $path -format gif
+    image delete gif1
+    image create photo gif1 -file $path
+    dict get [gif1 cget -metadata] Comment
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {ABCD}
+
+test imgPhoto-23.25 {output data with XMP (-data)} -setup {
     set data $::gifstart$::gifdata$::gifend
     set XMPData\
 	    "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
@@ -2355,6 +2648,26 @@ test imgPhoto-23.11 {output data with XMP} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -result {1}
+
+test imgPhoto-23.24 {output data with XMP (-file)} -setup {
+    set data $::gifstart$::gifdata$::gifend
+    set XMPData\
+	    "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\
+	    xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\">\
+	    <rdf:Description rdf:about=\"1\u2022\">\
+	    <xmp:Rating>3</xmp:Rating></rdf:Description></rdf:RDF>"
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    image create photo gif1 -data $data
+    set gifData [gif1 write $path -format gif -metadata [dict create\
+	    XMP $XMPData]]
+    image delete gif1
+    image create photo gif1 -file $path
+    expr {[dict get [gif1 cget -metadata] XMP] eq $XMPData}
+} -cleanup {
+    catch {image delete gif1}
+} -result {1}
+
 
 unset -nocomplain gifstart gifdata gifend
 

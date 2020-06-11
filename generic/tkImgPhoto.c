@@ -756,6 +756,7 @@ ImgPhotoCmd(
     case PHOTO_DATA: {
         char *data = NULL;
         Tcl_Obj *freeObj = NULL;
+	Tcl_Obj *metadataIn;
 
 	/*
 	 * photo data command - first parse and check any options given.
@@ -768,6 +769,7 @@ ImgPhotoCmd(
 	memset(&options, 0, sizeof(options));
 	options.name = NULL;
 	options.format = NULL;
+	options.metadata = NULL;
 	options.fromX = 0;
 	options.fromY = 0;
 	if (ParseSubcommandOptions(&options, interp,
@@ -801,6 +803,16 @@ ImgPhotoCmd(
 	if (!(options.options & OPT_FORMAT)) {
             options.format = Tcl_NewStringObj("default", -1);
             freeObj = options.format;
+	}
+	
+	/*
+	 * Use argument metadata if specified, otherwise the master metadata
+	 */
+	
+	if (NULL != options.metadata) {
+	    metadataIn = options.metadata;
+	} else {
+	    metadataIn = masterPtr->metadata;
 	}
 
 	/*
@@ -871,7 +883,7 @@ ImgPhotoCmd(
 
 	if (stringWriteProc == NULL) {
 	    result = (stringWriteProcVersion3)(interp,
-		    options.format, options.metadata, &block);
+		    options.format, metadataIn, &block);
 	} else if (oldformat) {
 	    Tcl_DString buffer;
 	    typedef int (*OldStringWriteProc)(Tcl_Interp *interp,
@@ -1431,7 +1443,7 @@ readCleanup:
     case PHOTO_WRITE: {
 	char *data;
 	const char *fmtString;
-	Tcl_Obj *format;
+	Tcl_Obj *format, *metadataIn;
 	int usedExt;
 
 	/*
@@ -1490,6 +1502,17 @@ readCleanup:
 	} else {
 	    fmtString = Tcl_GetString(options.format);
 	    usedExt = 0;
+	}
+
+	
+	/*
+	 * Use argument metadata if specified, otherwise the master metadata
+	 */
+	
+	if (NULL != options.metadata) {
+	    metadataIn = options.metadata;
+	} else {
+	    metadataIn = masterPtr->metadata;
 	}
 
 	/*
@@ -1585,7 +1608,7 @@ readCleanup:
 		    Tcl_GetString(options.name), format, &block);
 	} else {
 	    result = imageFormatVersion3->fileWriteProc(interp,
-		    Tcl_GetString(options.name), format, options.metadata,
+		    Tcl_GetString(options.name), format, metadataIn,
 		    &block);
 	}
 	if (options.background) {
