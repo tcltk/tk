@@ -142,6 +142,9 @@ MODULE_SCOPE const int tkpWinBltModes[];
 
 #include "tkIntPlatDecls.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * Special proc needed as tsd accessor function between
  * tkWinX.c:GenerateXEvent and tkWinClipboard.c:UpdateClipboard
@@ -245,5 +248,9 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 #define GWLP_USERDATA		GWL_USERDATA
 #define GWLP_ID			GWL_ID
 #endif /* !GWLP_WNDPROC */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _TKWININT */
