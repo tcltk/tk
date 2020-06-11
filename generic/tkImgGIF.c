@@ -2109,7 +2109,7 @@ CommonWriteGIF(
 	    comment = Tcl_GetByteArrayFromObj(itemData, &length);
 	    if (length > 0) {
 		/* write comment header */
-		writeProc(handle, (char *) "\x21\fe", 2);
+		writeProc(handle, (char *) "\x21\xfe", 2);
 		/* write comment blocks */
 		for (;length > 0;) {
 		    int blockLength;
