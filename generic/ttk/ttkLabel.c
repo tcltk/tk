@@ -8,6 +8,7 @@
 
 #include "tkInt.h"
 #include "ttkTheme.h"
+#include "default.h"
 
 /*----------------------------------------------------------------------
  * +++ Text element.
@@ -53,8 +54,8 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
 	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TextElement,foregroundObj), "black" },
-    { "-underline", TK_OPTION_INT,
-	offsetof(TextElement,underlineObj), "-1"},
+    { "-underline", TK_OPTION_INDEX,
+	offsetof(TextElement,underlineObj), DEF_BUTTON_UNDERLINE},
     { "-width", TK_OPTION_INT,
 	offsetof(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
@@ -126,7 +127,7 @@ static void TextCleanup(TextElement *text)
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
-    int underline = -1;
+    TkSizeT underline = TCL_INDEX_NONE;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
@@ -170,8 +171,9 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
 	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
-    Tcl_GetIntFromObj(NULL, text->underlineObj, &underline);
-    if (underline >= 0) {
+    /* TODO: Handle end+/- syntax */
+    TkGetIntForIndex(text->underlineObj, INT_MAX - 1, TCL_INDEX_ERROR, &underline);
+    if ((underline != TCL_INDEX_NONE) && (underline < (TkSizeT)INT_MAX)) {
 	if (text->embossed) {
 	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
 		text->textLayout, b.x+1, b.y+1, underline);
@@ -463,8 +465,8 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
 	offsetof(LabelElement,text.fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(LabelElement,text.foregroundObj), "black" },
-    { "-underline", TK_OPTION_INT,
-	offsetof(LabelElement,text.underlineObj), "-1"},
+    { "-underline", TK_OPTION_INDEX,
+	offsetof(LabelElement,text.underlineObj), DEF_BUTTON_UNDERLINE},
     { "-width", TK_OPTION_INT,
 	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,

@@ -7,6 +7,7 @@
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
+#include "default.h"
 
 /* Bit fields for OptionSpec mask field:
  */
@@ -24,7 +25,7 @@ typedef struct
     Tcl_Obj *textObj;
     Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
-    Tcl_Obj *underlineObj;
+    Tcl_Obj *underlineObj1;
     Tcl_Obj *widthObj;
 
     Ttk_TraceHandle	*textVariableTrace;
@@ -65,8 +66,8 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable", "",
 	offsetof(Base,base.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", offsetof(Base,base.underlineObj), TCL_INDEX_NONE,
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	DEF_BUTTON_UNDERLINE, offsetof(Base,base.underlineObj1), TCL_INDEX_NONE,
 	0,0,0 },
     /* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
     {TK_OPTION_STRING, "-width", "width", "Width",
