@@ -6,6 +6,7 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
+#include "default.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -67,7 +68,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline", DEF_BUTTON_UNDERLINE,
 	offsetof(Tab,underlineObj), TCL_INDEX_NONE, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };

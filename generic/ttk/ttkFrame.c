@@ -8,6 +8,7 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
+#include "default.h"
 
 /* ======================================================================
  * +++ Frame widget:
@@ -257,8 +258,8 @@ static const Tk_OptionSpec LabelframeOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Labelframe,label.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", offsetof(Labelframe,label.underlineObj), TCL_INDEX_NONE,
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	DEF_BUTTON_UNDERLINE, offsetof(Labelframe,label.underlineObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
 	TCL_INDEX_NONE, offsetof(Labelframe,label.labelWidget),

@@ -27,6 +27,13 @@ matrix:
       compiler: gcc
       env:
         - BUILD_DIR=unix
+    - name: "Linux/GCC/Shared: NO_DEPRECATED"
+      os: linux
+      dist: bionic
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: bionic
@@ -113,6 +120,13 @@ matrix:
       compiler: clang
       env:
         - BUILD_DIR=unix
+    - name: "Linux/Clang/Shared: NO_DEPRECATED"
+      os: linux
+      dist: bionic
+      compiler: clang
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
     - name: "Linux/Clang/Shared/no-xft"
       os: linux
       dist: bionic
