@@ -222,15 +222,25 @@ TkGetIntForIndex(
     int lastOK,
     TkSizeT *indexPtr)
 {
+#ifdef TK_NO_DEPRECATED
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+#endif
+
     if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, TCL_INDEX_ERROR, indexPtr) != TCL_OK) {
 	return TCL_ERROR;
     }
-#if TCL_MAJOR_VERSION < 9
-    if ((*indexPtr < -1) || (end < -1)) {
+#ifdef TK_NO_DEPRECATED
+    if ((indexObj->typePtr == tsdPtr->intTypePtr) && (*indexPtr == TCL_INDEX_NONE)) {
 	return TCL_ERROR;
     }
 #endif
-    if ((*indexPtr + 1) > (end + 1)) {
+#if TCL_MAJOR_VERSION < 9
+    if ((*indexPtr < -1) || (end < TCL_INDEX_END)) {
+	return TCL_ERROR;
+    }
+#endif
+    if ((end + 1 >= 0) && (*indexPtr + 1) > (end + 1)) {
 	*indexPtr = end + 1;
     }
     return TCL_OK;

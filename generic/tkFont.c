@@ -2441,7 +2441,7 @@ Tk_UnderlineTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2468,7 +2468,7 @@ TkUnderlineAngledTextLayout(
 				 * which to draw (pixels). */
     double angle,
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 

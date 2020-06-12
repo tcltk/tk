@@ -262,7 +262,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->optionTable = optionTable;
     mbPtr->menuName = NULL;
     mbPtr->text = NULL;
-    mbPtr->underline = -1;
+    mbPtr->underline = INT_MIN;
     mbPtr->textVarName = NULL;
     mbPtr->bitmap = None;
     mbPtr->imageString = NULL;

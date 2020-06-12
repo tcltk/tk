@@ -687,7 +687,7 @@ ButtonCreate(
     butPtr->type = type;
     butPtr->optionTable = optionTable;
     butPtr->textPtr = NULL;
-    butPtr->underline = -1;
+    butPtr->underline = INT_MIN;
     butPtr->textVarNamePtr = NULL;
     butPtr->bitmap = None;
     butPtr->imagePtr = NULL;

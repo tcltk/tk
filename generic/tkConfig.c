@@ -638,20 +638,17 @@ DoObjConfig(
     case TK_OPTION_INDEX: {
 	TkSizeT newIndex;
 
-	/* TODO: don't bother handling "end" yet */
-	if (TkGetIntForIndex(valuePtr, INT_MAX - 1, 0, &newIndex) != TCL_OK) {
+	if (TkGetIntForIndex(valuePtr, (TkSizeT)TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
 			"\": must be integer?[+-]integer?, end?[+-]integer? or none", NULL);
 	    }
 	    return TCL_ERROR;
 	}
-    if (valuePtr->internalRep.wideValue < INT_MIN) {
+    if (newIndex == TCL_INDEX_NONE) {
 	newIndex = (TkSizeT)INT_MIN;
-    } else if (valuePtr->internalRep.wideValue > INT_MAX) {
-	newIndex = (TkSizeT)INT_MAX;
-    } else if (valuePtr->internalRep.wideValue < 0) {
-	newIndex = (TkSizeT)valuePtr->internalRep.wideValue;
+    } else if ((int)newIndex <= (int)TCL_INDEX_END) {
+	newIndex++;
     }
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
@@ -1911,14 +1908,22 @@ GetObjectForOption(
 	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
 	break;
     case TK_OPTION_INDEX:
-	if (*((int *) internalPtr) >= 0 && *((int *) internalPtr) < INT_MAX) {
-	    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
-	} else {
+	if (*((int *) internalPtr) == INT_MIN) {
 #if TCL_MAJOR_VERSION > 8 || defined(TK_NO_DEPRECATED)
 	    objPtr = Tcl_NewStringObj("none", -1);
 #else
 	    objPtr = Tcl_NewWideIntObj(-1);
 #endif
+	} else if (*((int *) internalPtr) == INT_MAX) {
+	    objPtr = Tcl_NewStringObj("end+1", -1);
+	} else if (*((int *) internalPtr) == -1) {
+	    objPtr = Tcl_NewStringObj("end", -1);
+	} else if (*((int *) internalPtr) < 0) {
+	    char buf[32];
+	    sprintf(buf, "end%d", *((int *) internalPtr));
+	    objPtr = Tcl_NewStringObj(buf, -1);
+	} else {
+	    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
 	}
 	break;
     case TK_OPTION_DOUBLE:

@@ -171,9 +171,8 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
 	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
-    /* TODO: Handle end+/- syntax */
-    TkGetIntForIndex(text->underlineObj, INT_MAX - 1, TCL_INDEX_ERROR, &underline);
-    if ((underline != TCL_INDEX_NONE) && (underline < (TkSizeT)INT_MAX)) {
+    TkGetIntForIndex(text->underlineObj, TCL_INDEX_END, TCL_INDEX_ERROR, &underline);
+    if (underline != TCL_INDEX_NONE) {
 	if (text->embossed) {
 	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
 		text->textLayout, b.x+1, b.y+1, underline);
