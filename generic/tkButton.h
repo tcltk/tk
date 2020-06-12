@@ -67,7 +67,7 @@ typedef struct {
     Tcl_Obj *textPtr;		/* Value of -text option: specifies text to
 				 * display in button. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline. < 0 means don't
+				 * of character to underline. INT_MIN means don't
 				 * underline anything. */
     Tcl_Obj *textVarNamePtr;	/* Value of -textvariable option: specifies
 				 * name of variable or NULL. If non-NULL,

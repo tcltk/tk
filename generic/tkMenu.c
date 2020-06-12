@@ -160,7 +160,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	DEF_MENU_ENTRY_STATE,
 	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
 	(ClientData) menuStateStrings, 0},
-    {TK_OPTION_INT, "-underline", NULL, NULL,
+    {TK_OPTION_INDEX, "-underline", NULL, NULL,
 	DEF_MENU_ENTRY_UNDERLINE, TCL_INDEX_NONE, offsetof(TkMenuEntry, underline), 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
@@ -2278,7 +2278,7 @@ MenuNewEntry(
     mePtr->menuPtr = menuPtr;
     mePtr->labelPtr = NULL;
     mePtr->labelLength = 0;
-    mePtr->underline = -1;
+    mePtr->underline = INT_MIN;
     mePtr->bitmapPtr = NULL;
     mePtr->imagePtr = NULL;
     mePtr->image = NULL;

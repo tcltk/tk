@@ -923,6 +923,9 @@ typedef struct {
 #ifndef TCL_INDEX_NONE
 #   define TCL_INDEX_NONE (-1)
 #endif
+#ifndef TCL_INDEX_END
+#   define TCL_INDEX_END ((TkSizeT)-2)
+#endif
 /* See TIP #577 */
 #ifndef TCL_INDEX_ERROR
 #   define TCL_INDEX_ERROR	0x100
