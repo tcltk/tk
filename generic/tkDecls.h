@@ -1729,10 +1729,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_CreateOldImageType) /* 272 */
 #define Tk_CreateOldPhotoImageFormat \
 	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
-#define Tk_PhotoGetMetadata \
-	(tkStubsPtr->tk_PhotoGetMetadata) /* 274 */
-#define Tk_PhotoSetMetadata \
-	(tkStubsPtr->tk_PhotoSetMetadata) /* 275 */
+#define Tk_CreatePhotoImageFormatVersion3 \
+	(tkStubsPtr->tk_CreatePhotoImageFormatVersion3) /* 274 */
 
 #endif /* defined(USE_TK_STUBS) */
 
