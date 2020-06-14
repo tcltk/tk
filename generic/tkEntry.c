@@ -3297,13 +3297,14 @@ EntryValidateChange(
     }
 
     /*
-     * If we're already validating, then we're hitting a loop condition Return
-     * and set validate to 0 to disallow further validations and prevent
-     * current validation from finishing
+     * If we're already validating, then we're hitting a loop condition. Set
+     * validate to none to disallow further validations, arrange for flags
+     * to prevent current validation from finishing, and return.
      */
 
     if (entryPtr->flags & VALIDATING) {
 	entryPtr->validate = VALIDATE_NONE;
+        entryPtr->flags |= VALIDATE_ABORT;
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
