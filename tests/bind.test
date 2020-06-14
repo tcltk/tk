@@ -36,12 +36,22 @@ proc unsetBindings {} {
 
 # move the mouse pointer away of the testing area
 # otherwise some spurious events may pollute the tests
-toplevel .top
-wm geometry .top 50x50-50-50
-update
-event generate .top <Button-1> -warp 1
-update
-destroy .top
+# also, this will procure a known grab state at startup
+# for tests mixing grabs and pointer warps
+proc pointerAway {} {
+    toplevel .top
+    wm geometry .top 50x50-50-50
+    update
+    # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
+    # will not be finished right after the above 'update'. The WM still
+    # needs some time before the window is fully ready. For me 50 ms is enough,
+    # but let's wait more (it depends on computer performance).
+    after 100 ; update
+    event generate .top <Button-1> -warp 1
+    update
+    destroy .top
+}
+pointerAway
 
 test bind-1.1 {bind command} -body {
     bind
@@ -6709,26 +6719,10 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -cleanup {
 } -result {ok ok ok ok}
 
-test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints {
-    testgrab
-} -setup {
-    proc waitForGrab {type grabWin} {
-    # process events while $grabWin is not grabbed ($type == "grabbed"),
-    # or while $grabWin is not released ($type == "released"), but don't
-    # spend more than 5 seconds doing this
-        set i 0
-        while {![testgrab $type $grabWin] && $i < 500} {
-            after 10
-            update
-            incr i
-        }
-    }
-    event generate {} <Motion> -warp 1 -x 50 -y 50
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
+test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
+    pointerAway
     toplevel .top
     grab release .top
-    waitForGrab released .top
     wm geometry .top 200x200+300+300
     label .top.l -height 5 -width 20 -highlightthickness 2 \
             -highlightbackground black -bg yellow -text "My label"
@@ -6741,14 +6735,16 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints
     after 100 ; update
 } -body {
     grab .top  ; # this will queue events
-    waitForGrab grabbed .top
+    after 50
+    update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     update idletasks ; after 50
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
     update idletasks ; after 50
     grab release .top  ; # this will queue events
-    waitForGrab released .top
+    after 50
+    update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     update idletasks ; after 50
     foreach {x2 y2} [winfo pointerxy .top.l] {}
@@ -6759,7 +6755,6 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -constraints
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
-    rename waitForGrab {}
 } -result {1}
 
 # cleanup
