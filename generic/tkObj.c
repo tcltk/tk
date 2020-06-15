@@ -227,6 +227,10 @@ TkGetIntForIndex(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #endif
 
+    if (indexObj == NULL) {
+	*indexPtr = TCL_INDEX_NONE;
+	return TCL_OK;
+    }
     if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, TCL_INDEX_ERROR, indexPtr) != TCL_OK) {
 	return TCL_ERROR;
     }

@@ -69,7 +69,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline", DEF_BUTTON_UNDERLINE,
-	offsetof(Tab,underlineObj), TCL_INDEX_NONE, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,underlineObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
