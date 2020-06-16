@@ -135,13 +135,27 @@ proc ttk::spinbox::Adjust {w v min max} {
 #	-from, -to, and -increment.
 #
 proc ttk::spinbox::Spin {w dir} {
+    variable State
+
     if {[$w instate disabled]} { return }
-    set nvalues [llength [set values [$w cget -values]]]
-    set value [$w get]
-    if {$nvalues} {
-	set current [lsearch -exact $values $value]
-	set index [Adjust $w [expr {$current + $dir}] 0 [expr {$nvalues - 1}]]
-	$w set [lindex $values $index]
+
+    if {![info exists State(values.length)]} {
+      set State(values.index) -1
+      set State(values.last) {}
+    }
+    set State(values) [$w cget -values]
+    set State(values.length) [llength $State(values)]
+
+    if {$State(values.length) > 0} {
+        set value [$w get]
+        set current $State(values.index)
+        if {$value ne $State(values.last)} {
+            set current [lsearch -exact $State(values) $value]
+        }
+        set State(values.index) [Adjust $w [expr {$current + $dir}] 0 \
+                [expr {$State(values.length) - 1}]]
+        set State(values.last) [lindex $State(values) $State(values.index)]
+        $w set $State(values.last)
     } else {
         if {[catch {
     	    set v [expr {[scan [$w get] %f] + $dir * [$w cget -increment]}]
