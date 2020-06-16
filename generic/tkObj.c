@@ -50,6 +50,9 @@ typedef struct PixelRep {
 typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
+#if TCL_MAJOR_VERSION < 9
+    const Tcl_ObjType *endTypePtr;
+#endif
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -183,6 +186,13 @@ GetTypeCache(void)
 	/* Smart initialization of doubleTypePtr/intTypePtr without
 	 * hash-table lookup or creating complete Tcl_Obj's */
 	Tcl_Obj obj;
+#if TCL_MAJOR_VERSION < 9
+	obj.bytes = (char *)"end";
+	obj.length = 3;
+	obj.typePtr = NULL;
+	Tcl_GetIntForIndex(NULL, &obj, TCL_INDEX_NONE, 0, (TkSizeT *)&obj.internalRep.doubleValue);
+	tsdPtr->endTypePtr = obj.typePtr;
+#endif
 	obj.bytes = (char *)"0.0";
 	obj.length = 3;
 	obj.typePtr = NULL;
@@ -222,7 +232,7 @@ TkGetIntForIndex(
     int lastOK,
     TkSizeT *indexPtr)
 {
-#ifdef TK_NO_DEPRECATED
+#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION < 9
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #endif
@@ -240,7 +250,9 @@ TkGetIntForIndex(
     }
 #endif
 #if TCL_MAJOR_VERSION < 9
-    if ((*indexPtr < -1) || (end < TCL_INDEX_END)) {
+    if ((indexObj->typePtr == tsdPtr->endTypePtr)
+	    && (indexObj->internalRep.wideValue == ((Tcl_WideInt)(((Tcl_WideUInt)-1) >> 1))-1)) {
+	/* 'end+2' and higher are illegal in Tk. */
 	return TCL_ERROR;
     }
 #endif
