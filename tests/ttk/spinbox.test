@@ -259,6 +259,7 @@ test spinbox-4.1 "Increment with duplicates in -values, wrap, initial value set"
     destroy .sb
     unset -nocomplain ::spinbox_test max
 } -result {three 4 5 two six one two three 4 5 one six two 5 4 three two one six}
+
 test spinbox-4.2 "Increment with duplicates in -values, no wrap" -setup {
     ttk::spinbox .sb -values {one two three 4 5 two six} -wrap false
     set max [expr {[llength [.sb cget -values]] + 2}]
