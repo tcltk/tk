@@ -2707,24 +2707,21 @@ Tk_CharBbox(
 				 * index, if non-NULL. */
 {
     TextLayout *layoutPtr = (TextLayout *) layout;
-    LayoutChunk *chunkPtr;
+    LayoutChunk *chunkPtr = layoutPtr->chunks;
     int i, x = 0, w;
     Tk_Font tkfont;
     TkFont *fontPtr;
     const char *end;
 
     if (index < 0) {
-	int len = 0;
 	for (i = 0; i < layoutPtr->numChunks; i++) {
-	    len += chunkPtr->numChars;
+	    index += (chunkPtr + i)->numChars;
 	}
-	index += len;
 	if (index < 0) {
 	    return 0;
 	}
     }
 
-    chunkPtr = layoutPtr->chunks;
     tkfont = layoutPtr->tkfont;
     fontPtr = (TkFont *) tkfont;
 

@@ -118,16 +118,17 @@ UnderlineParseProc(
     obj.bytes = (char *)value;
     obj.length = strlen(value);
     obj.typePtr = NULL;
-    code = TkGetIntForIndex(&obj, TCL_INDEX_END, TCL_INDEX_ERROR, &underline);
+    code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
     if (code == TCL_OK) {
 	if (underline == TCL_INDEX_NONE) {
 	    underline = INT_MIN;
-	} else if ((size_t)underline > ((size_t)TCL_INDEX_END)>>1) {
-	    underline++;
-	} else if (underline > INT_MAX) {
+	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
+		underline++;
+	} else if (underline >= INT_MAX) {
 	    underline = INT_MAX;
 	}
 	*underlinePtr = underline;
+
     } else {
 	Tcl_AppendResult(interp, "bad index \"", value,
 		"\": must be integer?[+-]integer?, end?[+-]integer? or none", NULL);

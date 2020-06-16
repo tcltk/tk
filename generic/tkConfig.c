@@ -638,7 +638,7 @@ DoObjConfig(
     case TK_OPTION_INDEX: {
 	TkSizeT newIndex;
 
-	if (TkGetIntForIndex(valuePtr, (TkSizeT)TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
+	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
 			"\": must be integer?[+-]integer?, end?[+-]integer? or none", NULL);
@@ -647,7 +647,7 @@ DoObjConfig(
 	}
     if (newIndex == TCL_INDEX_NONE) {
 	newIndex = (TkSizeT)INT_MIN;
-    } else if ((int)newIndex <= (int)TCL_INDEX_END) {
+    } else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
 	newIndex++;
     }
 	if (internalPtr != NULL) {
