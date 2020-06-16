@@ -220,6 +220,46 @@ test spinbox-3.0 "textarea should expand to fill widget" -setup {
     unset -nocomplain ::spinbox_test SBV
 } -result {textarea}
 
+test spinbox-4.0 "Increment with duplicates in -values" -setup {
+    ttk::spinbox .sb -values {one two three 4 5 two six} -wrap true
+    set max [expr {[llength [.sb cget -values]] + 2}]
+} -body {
+    set ::spinbox_test [.sb get]
+    for {set i 0} {$i < $max} {incr i} {
+        event generate .sb <<Increment>>
+        lappend ::spinbox_test [.sb get]
+    }
+    for {set i 0} {$i < $max} {incr i} {
+        event generate .sb <<Decrement>>
+        lappend ::spinbox_test [.sb get]
+    }
+    set ::spinbox_test
+} -cleanup {
+    destroy .sb
+    unset -nocomplain ::spinbox_test max
+} -result {one two three 4 5 two six one two one six two 5 4 three two one six}
+
+test spinbox-4.1 "Increment with duplicates in -values, initial value set" -setup {
+    ttk::spinbox .sb -values {one two three 4 5 two six} -wrap true
+    set max [expr {[llength [.sb cget -values]] + 2}]
+} -body {
+    .sb set three
+    set ::spinbox_test [.sb get]
+    for {set i 0} {$i < $max} {incr i} {
+        event generate .sb <<Increment>>
+        lappend ::spinbox_test [.sb get]
+    }
+    .sb set two
+    for {set i 0} {$i < $max} {incr i} {
+        event generate .sb <<Decrement>>
+        lappend ::spinbox_test [.sb get]
+    }
+    set ::spinbox_test
+} -cleanup {
+    destroy .sb
+    unset -nocomplain ::spinbox_test max
+} -result {three 4 5 two six one two three 4 5 one six two 5 4 three two one six}
+
 # nostomp: NB intentional difference between ttk::spinbox and tk::spinbox;
 # see also #1439266
 #
