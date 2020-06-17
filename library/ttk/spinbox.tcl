@@ -139,23 +139,23 @@ proc ttk::spinbox::Spin {w dir} {
 
     if {[$w instate disabled]} { return }
 
-    if {![info exists State(values.length)]} {
-      set State(values.index) -1
-      set State(values.last) {}
+    if {![info exists State($w.values.length)]} {
+      set State($w.values.index) -1
+      set State($w.values.last) {}
     }
-    set State(values) [$w cget -values]
-    set State(values.length) [llength $State(values)]
+    set State($w.values) [$w cget -values]
+    set State($w.values.length) [llength $State($w.values)]
 
-    if {$State(values.length) > 0} {
+    if {$State($w.values.length) > 0} {
         set value [$w get]
-        set current $State(values.index)
-        if {$value ne $State(values.last)} {
-            set current [lsearch -exact $State(values) $value]
+        set current $State($w.values.index)
+        if {$value ne $State($w.values.last)} {
+            set current [lsearch -exact $State($w.values) $value]
         }
-        set State(values.index) [Adjust $w [expr {$current + $dir}] 0 \
-                [expr {$State(values.length) - 1}]]
-        set State(values.last) [lindex $State(values) $State(values.index)]
-        $w set $State(values.last)
+        set State($w.values.index) [Adjust $w [expr {$current + $dir}] 0 \
+                [expr {$State($w.values.length) - 1}]]
+        set State($w.values.last) [lindex $State($w.values) $State($w.values.index)]
+        $w set $State($w.values.last)
     } else {
         if {[catch {
     	    set v [expr {[scan [$w get] %f] + $dir * [$w cget -increment]}]
