@@ -3293,6 +3293,9 @@ EntryValidateChange(
 
     if (entryPtr->validateCmd == NULL ||
 	entryPtr->validate == VALIDATE_NONE) {
+        if (entryPtr->flags & VALIDATING) {
+            entryPtr->flags |= VALIDATE_ABORT;
+        }
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
