@@ -1910,7 +1910,7 @@ GetObjectForOption(
     case TK_OPTION_INDEX:
 	if (*((int *) internalPtr) == INT_MIN) {
 #if TCL_MAJOR_VERSION > 8 || defined(TK_NO_DEPRECATED)
-	    objPtr = Tcl_NewStringObj("none", -1);
+	    objPtr = Tcl_NewObj();
 #else
 	    objPtr = Tcl_NewWideIntObj(-1);
 #endif

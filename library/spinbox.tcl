@@ -129,13 +129,17 @@ bind Spinbox <<NextLine>> {
 }
 
 bind Spinbox <<PrevChar>> {
-    ::tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
+    if {[%W index insert] != 0} {
+	::tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
+    }
 }
 bind Spinbox <<NextChar>> {
     ::tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
 }
 bind Spinbox <<SelectPrevChar>> {
-    ::tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
+    if {[%W index insert] != 0} {
+	::tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
+    }
     ::tk::EntrySeeInsert %W
 }
 bind Spinbox <<SelectNextChar>> {

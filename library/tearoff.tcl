@@ -135,7 +135,7 @@ proc ::tk::MenuDup {src dst type} {
     }
     eval $cmd
     set last [$src index last]
-    if {$last eq "none"} {
+    if {[string is none $last]} {
 	return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
@@ -153,7 +153,7 @@ proc ::tk::MenuDup {src dst type} {
 
     # Copy tags to x, replacing each substring of src with dst.
 
-    while {[set index [string first $src $tags]] != -1} {
+    while {![string is none [set index [string first $src $tags]]]} {
 	if {$index > 0} {
 	    append x [string range $tags 0 [expr {$index - 1}]]$dst
 	}
@@ -170,7 +170,7 @@ proc ::tk::MenuDup {src dst type} {
 
 	# Copy script to x, replacing each substring of event with dst.
 
-	while {[set index [string first $event $script]] != -1} {
+	while {![string is none [set index [string first $event $script]]]} {
 	    if {$index > 0} {
 		append x [string range $script 0 [expr {$index - 1}]]
 	    }
