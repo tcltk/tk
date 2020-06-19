@@ -94,7 +94,7 @@
 #if TCL_MAJOR_VERSION < 9 && !defined(TK_NO_DEPRECATED)
 #   define DEF_BUTTON_UNDERLINE		"-1"
 #else
-#   define DEF_BUTTON_UNDERLINE		"none"
+#   define DEF_BUTTON_UNDERLINE		NULL
 #endif
 #define DEF_BUTTON_VALUE		""
 #define DEF_BUTTON_WIDTH		"0"
@@ -274,7 +274,7 @@
 #define DEF_MENU_ENTRY_CHECK_VARIABLE	NULL
 #define DEF_MENU_ENTRY_RADIO_VARIABLE	"selectedButton"
 #define DEF_MENU_ENTRY_SELECT		NULL
-#define DEF_MENU_ENTRY_UNDERLINE	"-1"
+#define DEF_MENU_ENTRY_UNDERLINE	DEF_BUTTON_UNDERLINE
 
 /*
  * Defaults for menus overall:

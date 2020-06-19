@@ -13,10 +13,10 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include <tclInt.h>
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
-#include <tclInt.h>
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */
