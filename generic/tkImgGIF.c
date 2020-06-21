@@ -1060,7 +1060,7 @@ ReadColorMap(
 *       - Application extension
 *         - XMP data is stored in key "XMP"
 *         - any other under the key Application_<name><code>
-*         - Comment extension in key "Comment"
+*         - Comment extension in key "comment"
 *       Plain text extensions are currently ignored.
 *
 *----------------------------------------------------------------------
@@ -1096,7 +1096,7 @@ DoExtension(
 	}
 	break;
     case 0xfe:			/* Comment Extension */
-	strcpy(extensionStreamName,"Comment");
+	strcpy(extensionStreamName,"comment");
         /* copy the extension data below */
 	break;
     case 0xff:			/* Application Extension */
@@ -2099,7 +2099,7 @@ CommonWriteGIF(
 	 */
 	
 	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
-		Tcl_NewStringObj("Comment",-1),
+		Tcl_NewStringObj("comment",-1),
 		&itemData)) {
 	    return TCL_ERROR;
 	}
