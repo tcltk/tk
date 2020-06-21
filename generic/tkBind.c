@@ -2830,8 +2830,11 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
-                /* ignore modifier key events */
-                psEntry->keepIt = isModKeyOnly;
+                /* ignore modifier key events, and KeyRelease events if the current event
+                 * is of a different type (e.g. a Button event)
+                 */
+                psEntry->keepIt = isModKeyOnly || \
+                        ((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
 
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
