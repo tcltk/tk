@@ -6691,6 +6691,37 @@ test bind-33.19 {simulate use of the keyboard to trigger a pattern sequence with
 } -cleanup {
     destroy .t.f
 } -result {Esc_Key(2)_Control-c}
+test bind-33.20 {simulate use of the keyboard to trigger a pattern sequence with mixed Key and Button types - bug [16ef161925]} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Key-1><Button-1> { lappend x "1_Button1" }
+    event generate .t.f <Key-1>
+    event generate .t.f <KeyRelease-1>
+    event generate .t.f <Button-1>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {1_Button1}
+test bind-33.21 {simulate use of the keyboard to trigger a pattern sequence with mixed Key and Button types - bug [16ef161925]} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Key-1><Button-1> { lappend x "1_Button1" }
+    bind .t.f <Key-1><Button-1><Key-2> { lappend x "1_Button1_2" }
+    event generate .t.f <Key-1>
+    event generate .t.f <KeyRelease-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Key-2>
+    event generate .t.f <KeyRelease-2>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {1_Button1 1_Button1_2}
 
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
