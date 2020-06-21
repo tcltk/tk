@@ -201,8 +201,8 @@ substitutions you would make when binding to these events.
 Many contemporary mice support a mouse wheel, which is used
 for scrolling documents without using the scrollbars.  By rolling the
 wheel, the system will generate \fBMouseWheel\fR events that the
-application can use to scroll.  Like \fBKey\fR events the event is
-always routed to the window that currently has focus. When the event
+application can use to scroll.  The event is routed to the
+window currently under the mouse pointer. When the event
 is received you can use the \fB%D\fR substitution to get the
 \fIdelta\fR field for the event, which is a integer value describing how
 the mouse wheel has moved.  The smallest value for which the
