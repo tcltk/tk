@@ -175,6 +175,15 @@ typedef struct {
     Tcl_Obj *thisLineObj;	/* Current line of pixels to process. */
     int lineSize;		/* Number of bytes in a PNG line. */
     int phaseSize;		/* Number of bytes/line in current phase. */
+
+
+    /*
+     * Physical size: pHYS chunks.
+     */
+    
+    double DPI;
+    double aspect;
+
 } PNGImage;
 
 /*
@@ -355,6 +364,13 @@ InitPNGImage(
 	}
 	return TCL_ERROR;
     }
+    
+    /*
+     * Initialize physical size pHYS values
+     */
+    
+    pngPtr->DPI = -1;
+    pngPtr->aspect = -1;
 
     return TCL_OK;
 }
@@ -944,6 +960,7 @@ ReadChunkHeader(
 	case CHUNK_IDAT:
 	case CHUNK_IEND:
 	case CHUNK_IHDR:
+	case CHUNK_pHYs:
 	case CHUNK_PLTE:
 	case CHUNK_tRNS:
 	    break;
@@ -962,7 +979,6 @@ ReadChunkHeader(
 	case CHUNK_iTXt:
 	case CHUNK_oFFs:
 	case CHUNK_pCAL:
-	case CHUNK_pHYs:
 	case CHUNK_sBIT:
 	case CHUNK_sCAL:
 	case CHUNK_sPLT:
@@ -1651,6 +1667,84 @@ ReadTRNS(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadPHYS --
+ *
+ *	This function reads the PHYS (physical size) chunk data from
+ *	the PNG file and populates the fields in the PNGImage
+ *	structure.
+ *
+ * Results:
+ *	TCL_OK, or TCL_ERROR if an I/O error occurs or the PHYS chunk is
+ *	invalid.
+ *
+ * Side effects:
+ *	The access position in f advances.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ReadPHYS(
+    Tcl_Interp *interp,
+    PNGImage *pngPtr,
+    int chunkSz,
+    unsigned long crc)
+{
+    unsigned long PPUx, PPUy;
+    char unitSpecifier;
+
+    /*
+     * Check chunk size equal 9 bytes
+     */
+
+    if (chunkSz != 9) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"invalid physical chunk size", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PHYS", NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Read the chunk data
+     * 4 bytes: Pixels per unit, x axis
+     * 4 bytes: Pixels per unit, y axis
+     * 1 byte: unit specifier
+     */
+    
+    if (ReadInt32(interp, pngPtr, &PPUx, &crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    if (ReadInt32(interp, pngPtr, &PPUy, &crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    if (ReadData(interp, pngPtr, &unitSpecifier, 1, &crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    if (CheckCRC(interp, pngPtr, crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    
+    if ( PPUx > 2147483647 || PPUy > 2147483647
+	    || unitSpecifier > 1 ) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"invalid physical size value", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PHYS", NULL);
+	return TCL_ERROR;
+    }
+
+    if (PPUx > 0) {
+	pngPtr->aspect = ((double) PPUy) / ((double) PPUx);
+    }
+    if (1 == unitSpecifier) {
+	pngPtr->DPI = ((double) PPUx) * 0.0254;
+    }
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2426,6 +2520,29 @@ DecodePNG(
 	return TCL_ERROR;
     }
 
+    /*
+     * Physical header may be present here so try to parse it
+     */
+    
+    if (CHUNK_pHYs == chunkType) {
+	/*
+	 * Finish parsing the PHYS chunk.
+	 */
+
+	if (ReadPHYS(interp, pngPtr, chunkSz, crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Begin the next chunk.
+	 */
+
+	if (ReadChunkHeader(interp, pngPtr, &chunkSz, &chunkType,
+		&crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+    }
+
     if (CHUNK_PLTE == chunkType) {
 	/*
 	 * Finish parsing the PLTE chunk.
@@ -2463,6 +2580,29 @@ DecodePNG(
 	 */
 
 	if (ReadTRNS(interp, pngPtr, chunkSz, crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Begin the next chunk.
+	 */
+
+	if (ReadChunkHeader(interp, pngPtr, &chunkSz, &chunkType,
+		&crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+    }
+
+    /*
+     * Physical header may be present here so try to parse it
+     */
+    
+    if (CHUNK_pHYs == chunkType) {
+	/*
+	 * Finish parsing the PHYS chunk.
+	 */
+
+	if (ReadPHYS(interp, pngPtr, chunkSz, crc) == TCL_ERROR) {
 	    return TCL_ERROR;
 	}
 
@@ -2758,6 +2898,18 @@ FileReadPNG(
 	result = DecodePNG(interp, &png, fmtObj, imageHandle, destX, destY);
     }
 
+    if (TCL_OK == result && metadataOutObj != NULL && png.DPI != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("DPI",-1),
+		Tcl_NewDoubleObj(png.DPI));
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.aspect != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("aspect",-1),
+		Tcl_NewDoubleObj(png.aspect));
+    }
+
     CleanupPNGImage(&png);
     return result;
 }
@@ -2852,6 +3004,18 @@ StringReadPNG(
 
     if (TCL_OK == result) {
 	result = DecodePNG(interp, &png, fmtObj, imageHandle, destX, destY);
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.DPI != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("DPI",-1),
+		Tcl_NewDoubleObj(png.DPI));
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.aspect != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("aspect",-1),
+		Tcl_NewDoubleObj(png.aspect));
     }
 
     CleanupPNGImage(&png);
