@@ -41,9 +41,7 @@
 
 typedef struct {
     unsigned int structureVersion;
-    double scale;
-    int scaleToHeight;
-    int scaleToWidth;
+    float dpi;
     float width;				// Width of the image.
     float height;				// Height of the image.
     int shapeCount;
@@ -53,6 +51,18 @@ typedef struct {
     int gradientStopCount;
 } serializedHeader;
 
+/*
+ * Result of options parsing and first block in driver internal DString
+ */
+
+typedef struct {
+    double scale;
+    int scaleToHeight;
+    int scaleToWidth;
+    float dpi;
+    int svgBlobFollows;
+} optionsStruct;
+    
 /*
  * Serialized structures from NSCG
  * All pointers are replaced by array indexes
@@ -144,19 +154,19 @@ static int		StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    int destX, int destY, int width, int height,
 			    int srcX, int srcY,
 			    Tcl_Obj *metadataOut, Tcl_DString *driverInternal);
-static NSVGimage *	ParseSVGWithOptions(Tcl_Interp *interp,
-			    const char *input, TkSizeT length, Tcl_Obj *format,
-			    serializedHeader *serializedHeaderPtr);
+static int		ParseOptions(Tcl_Interp *interp, Tcl_Obj *formatObj,
+			    optionsStruct *optionsPtr);
+static NSVGimage *	ParseSVG(Tcl_Interp *interp, Tcl_Obj *dataObj, float dpi);
 static int		RasterizeSVG(Tcl_Interp *interp,
 			    Tk_PhotoHandle imageHandle,
-			    char *svgBlob,
-			    TkSizeT serializeDataLength,
+			    char *svgBlob, optionsStruct * optionsPtr,
 			    int destX, int destY, int width, int height,
 			    int srcX, int srcY);
 static double		GetScaleFromParameters(
 			    serializedHeader *serializedHeaderPtr,
-			    int *widthPtr, int *heightPtr);
-static void		SerializeNSVG(Tcl_DString *driverInternalPtr,
+			    optionsStruct * optionsPtr, int *widthPtr,
+			    int *heightPtr);
+static void		SerializeNSVGImage(Tcl_DString *driverInternalPtr,
 			    NSVGimage *nsvgImage);
 static void SerializePath(struct NSVGpath *pathPtr,
 			    serializedHeader *serializedHeaderPtr,
@@ -166,8 +176,8 @@ static struct NSVGpaintSerialized SerializePaint(struct NSVGpaint *paintPtr,
 			    serializedHeader *serializedHeaderPtr,
 			    Tcl_DString *gradientDStringPtr,
 			    Tcl_DString *gradientStopDStringPtr);
-static char * StringCheckMetadata(Tcl_Obj *dataObj,
-			    Tcl_Obj *metadataInObj, int *LengthPtr);
+static char * StringCheckMetadata(Tcl_Obj *dataObj, Tcl_Obj *metadataInObj,
+			    float dpi, int *LengthPtr);
 static int SaveSVGBLOBToMetadata(Tcl_Interp *interp, Tcl_Obj *metadataOutObj,
 			    Tcl_DString *driverInternalPtr);
 static void nsvgRasterizeSerialized(NSVGrasterizer* r, char *svgBlobPtr, float tx,
@@ -222,28 +232,58 @@ FileMatchSVG(
     Tcl_DString *driverInternalPtr)
 				/* memory passed to FileReadGIF */
 {
-    TkSizeT length;
-    Tcl_Obj *dataObj = Tcl_NewObj();
-    const char *data;
+    Tcl_Obj *dataObj;
     NSVGimage *nsvgImage;
     (void)fileName;
     serializedHeader *serializedHeaderPtr;
+    optionsStruct options;
 
+    /*
+     * Parse the options. Unfortunately, any error can not be returned.
+     */
+
+    if (TCL_OK != ParseOptions(interp, formatObj, &options) ) {
+	return 0;
+    }
+
+    /*
+     * Read the file data into a TCL object
+     */
+
+    dataObj = Tcl_NewObj();
     if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
 	/* in case of an error reading the file */
 	Tcl_DecrRefCount(dataObj);
 	return 0;
     }
-    Tcl_DStringSetLength(driverInternalPtr, sizeof(serializedHeader));
-    serializedHeaderPtr = (serializedHeader *)Tcl_DStringValue(driverInternalPtr);
-    data = TkGetStringFromObj(dataObj, &length);
-    nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
-	    serializedHeaderPtr);
+
+    /*
+     * Parse the SVG data
+     */
+
+    nsvgImage = ParseSVG(interp, dataObj, options.dpi);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
+
+	/*
+	 * On successful parse, save the data in the header structure
+	 */
+
+	Tcl_DStringSetLength(driverInternalPtr,
+		sizeof(optionsStruct)+sizeof(serializedHeader));
+	
+	options.svgBlobFollows = 1;
+	memcpy( Tcl_DStringValue(driverInternalPtr), &options,
+		sizeof(optionsStruct));
+	
+	serializedHeaderPtr = (serializedHeader *)
+		(Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct));
+    
 	serializedHeaderPtr->width = nsvgImage->width;
 	serializedHeaderPtr->height = nsvgImage->height;
-        GetScaleFromParameters(serializedHeaderPtr, widthPtr, heightPtr);
+	serializedHeaderPtr->dpi = options.dpi;
+        GetScaleFromParameters(serializedHeaderPtr, &options, widthPtr,
+		heightPtr);
         if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
 	    return 0;
@@ -253,17 +293,19 @@ FileMatchSVG(
 	 * Serialize the NSVGImage structure
 	 * As the DString is resized, serializedHeaderPtr may get invalid
 	 */
-	SerializeNSVG(driverInternalPtr, nsvgImage);
+
+	SerializeNSVGImage(driverInternalPtr, nsvgImage);
 	nsvgDelete(nsvgImage);
         return 1;
     }
     return 0;
+
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * SerializeNSVG --
+ * SerializeNSVGImage --
  *
  *	This function saves the NSVGimage structure into the DString.
  *
@@ -277,13 +319,15 @@ FileMatchSVG(
  *----------------------------------------------------------------------
  */
 
-static void SerializeNSVG(Tcl_DString *driverInternalPtr, NSVGimage *nsvgImage) {
+static void SerializeNSVGImage(Tcl_DString *driverInternalPtr,
+	NSVGimage *nsvgImage) {
     serializedHeader *serializedHeaderPtr;
     Tcl_DString  shapeDString, pathDString, ptsDString, gradientDString,
 	gradientStopDString;
     NSVGshape *shapePtr;
 
-    serializedHeaderPtr = (serializedHeader *)Tcl_DStringValue(driverInternalPtr);
+    serializedHeaderPtr = (serializedHeader *)
+	    (Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct));
     Tcl_DStringInit(&shapeDString);
     Tcl_DStringInit(&pathDString);
     Tcl_DStringInit(&ptsDString);
@@ -453,6 +497,14 @@ static struct NSVGpaintSerialized SerializePaint(struct NSVGpaint *paintPtr,
 
 	    (serializedHeaderPtr->gradientStopCount) += gradientPtr->nstops;
 	}
+	(serializedHeaderPtr->gradientStopCount) += gradientPtr->nstops;
+
+	paintSerialized.gradient = serializedHeaderPtr->gradientCount;
+	Tcl_DStringAppend(gradientDStringPtr,
+		(const char *) & gradientSerialized,
+		sizeof(NSVGgradientSerialized));
+	(serializedHeaderPtr->gradientCount) ++;
+
     } else {
 	
 	/*
@@ -576,12 +628,25 @@ FileReadSVG(
 				/* memory passed from FileMatchGIF */
 {
     int result;
+    optionsStruct * optionsPtr;
+    char * svgBlob;
     (void)fileName;
+    
+    
+    optionsPtr = (optionsStruct *) Tcl_DStringValue(driverInternalPtr);
+    svgBlob = Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct);
 
-    result = RasterizeSVG(interp, imageHandle,
-	    Tcl_DStringValue(driverInternalPtr),
-	    Tcl_DStringLength(driverInternalPtr), destX, destY, width, height,
-	    srcX, srcY);
+    /*
+     * Raster the parsed SVG from the SVGBLOB in the driver internal DString
+     */
+
+    result = RasterizeSVG(interp, imageHandle, svgBlob, optionsPtr, destX,
+	    destY, width, height, srcX, srcY);
+
+    /*
+     * On success, output the SVGBLOB as metadata
+     */
+
     if (result == TCL_OK) {
 	result =  SaveSVGBLOBToMetadata(interp, metadataOutObj,
 		driverInternalPtr);
@@ -621,23 +686,55 @@ StringMatchSVG(
 				/* memory to pass to StringReadGIF */
 {
     TkSizeT length;
-    const char *data;
     NSVGimage *nsvgImage;
     serializedHeader *serializedHeaderPtr;
     char * svgBlobPtr;
+    optionsStruct options;
 
-    data = TkGetStringFromObj(dataObj, &length);
-
+    /*
+     * Parse the options. Unfortunately, any error can not be returned.
+     */
+    
+    if (TCL_OK != ParseOptions(interp, formatObj, &options) ) {
+	return 0;
+    }
     
     /*
      * Check for the special data to indicate that the metadata should be used.
      * On special data, get the serialized header structure and check it.
      */
     
-    svgBlobPtr = StringCheckMetadata( dataObj, metadataInObj, &length);
+    svgBlobPtr = StringCheckMetadata( dataObj, metadataInObj, options.dpi,
+	    &length);
 
     if (NULL != svgBlobPtr) {
-	GetScaleFromParameters((serializedHeader *) svgBlobPtr, widthPtr,
+	serializedHeaderPtr = (serializedHeader *) svgBlobPtr;
+    } else {
+	Tcl_DStringSetLength(driverInternalPtr,
+		sizeof(optionsStruct)+sizeof(serializedHeader));
+	
+	options.svgBlobFollows = 1;
+	memcpy( Tcl_DStringValue(driverInternalPtr), &options,
+		sizeof(optionsStruct));
+	
+	serializedHeaderPtr = (serializedHeader *)
+		(Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct));
+    }
+
+    /*
+     * Use the metadata svg blob if present to return width and height
+     */
+    
+    if (NULL != svgBlobPtr) {
+	/*
+	 * Save the options struct in the driver internal DString
+	 */
+	options.svgBlobFollows = 0;
+	Tcl_DStringSetLength(driverInternalPtr, sizeof(optionsStruct));
+	memcpy(Tcl_DStringValue(driverInternalPtr), &options,
+		sizeof(optionsStruct));
+	
+	GetScaleFromParameters(serializedHeaderPtr, &options, widthPtr,
 		heightPtr);
 	return 1;
     }
@@ -646,15 +743,14 @@ StringMatchSVG(
      * Check the passed data object and serialize it on success.
      */
 
-    Tcl_DStringSetLength(driverInternalPtr, sizeof(serializedHeader));
-    serializedHeaderPtr = (serializedHeader *)Tcl_DStringValue(driverInternalPtr);
-    nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
-	    serializedHeaderPtr);
+    nsvgImage = ParseSVG(interp, dataObj, options.dpi);
 
     if (nsvgImage != NULL) {
 	serializedHeaderPtr->width = nsvgImage->width;
 	serializedHeaderPtr->height = nsvgImage->height;
-        GetScaleFromParameters(serializedHeaderPtr, widthPtr, heightPtr);
+	serializedHeaderPtr->dpi = options.dpi;
+        GetScaleFromParameters(serializedHeaderPtr, &options, widthPtr,
+		heightPtr);
         if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
 	    return 0;
@@ -665,7 +761,7 @@ StringMatchSVG(
 	 * As the DString is resized, serializedHeaderPtr may get invalid
 	 */
 
-	SerializeNSVG(driverInternalPtr, nsvgImage);
+	SerializeNSVGImage(driverInternalPtr, nsvgImage);
 	
 	nsvgDelete(nsvgImage);
         return 1;
@@ -692,6 +788,7 @@ StringMatchSVG(
 static char * StringCheckMetadata(
     Tcl_Obj *dataObj,		/* the object containing the image data */
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    float dpi,			/* options dpi must match svgblob */
     TkSizeT *lengthOutPtr)	/* output data length on success */
 {
     TkSizeT length;
@@ -725,7 +822,9 @@ static char * StringCheckMetadata(
 	return NULL;
     }
     serializedHeaderPtr = (serializedHeader *)svgBlobPtr;
-    if (serializedHeaderPtr->structureVersion != STRUCTURE_VERSION ) {
+    if (serializedHeaderPtr->structureVersion != STRUCTURE_VERSION
+	    || serializedHeaderPtr->dpi != dpi
+    ) {
 	return NULL;
     }
     *lengthOutPtr = length;
@@ -765,42 +864,40 @@ StringReadSVG(
 				/* memory passed from StringReadSVG */
 {
     int result;
-    TkSizeT serializedDataLength;
-    char * data;
     TkSizeT length;
     char * svgBlobPtr;
-
-    data = TkGetStringFromObj(dataObj, &length);
-
+    optionsStruct * optionsPtr;
+    Tcl_Obj *itemData;
     
-    /*
-     * Check for the special data to indicate that the metadata should be used.
-     * On special data, get the serialized header structure and use it.
-     */
-    
-    svgBlobPtr = StringCheckMetadata( dataObj, metadataInObj,
-	    &serializedDataLength);
+    optionsPtr = (optionsStruct *) Tcl_DStringValue(driverInternalPtr);
+    if (optionsPtr->svgBlobFollows) {
+	svgBlobPtr = Tcl_DStringValue(driverInternalPtr)+ sizeof(optionsStruct);
+    } else {
+	if (NULL == metadataInObj
+		|| TCL_ERROR == Tcl_DictObjGet(NULL, metadataInObj,
+		    Tcl_NewStringObj("SVGBLOB",-1), &itemData)
+		|| itemData == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "internal error: -metadata missing", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
+		    NULL);
+	    return TCL_ERROR;
+        }
 
-    if (NULL != svgBlobPtr) {
-	return RasterizeSVG(interp, imageHandle, svgBlobPtr,
-		serializedDataLength, destX, destY, width, height, srcX, srcY);
+	svgBlobPtr = Tcl_GetByteArrayFromObj(itemData, &length);
     }
 
-    /*
-     * Otherwise, the SVGBlob data is contained in the driver internal
-     * DString. Use that memory.
-     */
-    
     result = RasterizeSVG(interp, imageHandle,
-	    Tcl_DStringValue(driverInternalPtr),
-	    Tcl_DStringLength(driverInternalPtr), destX, destY, width, height,
-	    srcX, srcY);
+	    svgBlobPtr, optionsPtr, destX, destY, width, height, srcX, srcY);
     if (result != TCL_OK) {
 	return result;
     }
 
-    return SaveSVGBLOBToMetadata(interp, metadataOutObj,
-	    driverInternalPtr);
+    if (!optionsPtr->svgBlobFollows) {
+	return TCL_OK;
+    }
+    
+    return SaveSVGBLOBToMetadata(interp, metadataOutObj, driverInternalPtr);
 }
 
 /*
@@ -830,38 +927,36 @@ static int SaveSVGBLOBToMetadata(
     }
     return Tcl_DictObjPut(interp, metadataOutObj,
 	Tcl_NewStringObj("SVGBLOB",-1),
-	Tcl_NewByteArrayObj(Tcl_DStringValue(driverInternalPtr),
-		Tcl_DStringLength(driverInternalPtr)));
+	Tcl_NewByteArrayObj(
+		Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct),
+		Tcl_DStringLength(driverInternalPtr) - sizeof(optionsStruct)));
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * ParseSVGWithOptions --
+ * ParseOptions --
  *
- *	This function is called to parse the given input string as SVG.
+ *	Parse the options given in the -format parameter.
  *
  * Results:
- *	Return a newly create NSVGimage on success, and NULL otherwise.
+ *	A normal tcl result
  *
  * Side effects:
  *
  *----------------------------------------------------------------------
  */
 
-static NSVGimage *
-ParseSVGWithOptions(
+static int
+ParseOptions(
     Tcl_Interp *interp,
-    const char *input,
-    TkSizeT length,
     Tcl_Obj *formatObj,
-    serializedHeader *serializedHeaderPtr)
+    optionsStruct * optionsPtr)
 {
     Tcl_Obj **objv = NULL;
     int objc = 0;
-    double dpi = 96.0;
+    double dpi;
     char *inputCopy = NULL;
-    NSVGimage *nsvgImage;
     int parameterScaleSeen = 0;
     static const char *const fmtOptions[] = {
         "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
@@ -871,29 +966,16 @@ ParseSVGWithOptions(
     };
 
     /*
-     * The parser destroys the original input string,
-     * therefore first duplicate.
-     */
-
-    inputCopy = (char *)attemptckalloc(length+1);
-    if (inputCopy == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
-	goto error;
-    }
-    memcpy(inputCopy, input, length);
-    inputCopy[length] = '\0';
-
-    /*
      * Process elements of format specification as a list.
      */
 
-    serializedHeaderPtr->scale = 1.0;
-    serializedHeaderPtr->scaleToHeight = 0;
-    serializedHeaderPtr->scaleToWidth = 0;
+    optionsPtr->dpi = 96.0;
+    optionsPtr->scale = 1.0;
+    optionsPtr->scaleToHeight = 0;
+    optionsPtr->scaleToWidth = 0;
     if ((formatObj != NULL) &&
 	    Tcl_ListObjGetElements(interp, formatObj, &objc, &objv) != TCL_OK) {
-        goto error;
+        return TCL_ERROR;;
     }
     for (; objc > 0 ; objc--, objv++) {
 	int optIndex;
@@ -908,14 +990,12 @@ ParseSVGWithOptions(
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[0], fmtOptions,
 		sizeof(char *), "option", 0, &optIndex) == TCL_ERROR) {
-	    goto error;
+	    return TCL_ERROR;;
 	}
 
 	if (objc < 2) {
-	    ckfree(inputCopy);
-	    inputCopy = NULL;
 	    Tcl_WrongNumArgs(interp, 1, objv, "value");
-	    goto error;
+	    return TCL_ERROR;;
 	}
 
 	objc--;
@@ -933,7 +1013,7 @@ ParseSVGWithOptions(
 			"only one of -scale, -scaletoheight, -scaletowidth may be given", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
-		goto error;
+		return TCL_ERROR;;
 	    }
 	    parameterScaleSeen = 1;
 	    break;
@@ -947,73 +1027,114 @@ ParseSVGWithOptions(
 	switch ((enum fmtOptions) optIndex) {
 	case OPT_DPI:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0], &dpi) == TCL_ERROR) {
-	        goto error;
+	        return TCL_ERROR;;
 	    }
 	    if (dpi < 0.0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-dpi value must be positive", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_DPI",
 			NULL);
-		goto error;
+		return TCL_ERROR;;
 	    }
+	    optionsPtr->dpi = (float)dpi;
 	    break;
 	case OPT_SCALE:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0],
-		    &(serializedHeaderPtr->scale)) ==
+		    &(optionsPtr->scale)) ==
 		TCL_ERROR) {
-	        goto error;
+	        return TCL_ERROR;;
 	    }
-	    if (serializedHeaderPtr->scale <= 0.0) {
+	    if (optionsPtr->scale <= 0.0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scale value must be positive", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
-		goto error;
+		return TCL_ERROR;;
 	    }
 	    break;
 	case OPT_SCALE_TO_HEIGHT:
 	    if (Tcl_GetIntFromObj(interp, objv[0],
-		&(serializedHeaderPtr->scaleToHeight)) == TCL_ERROR) {
-	        goto error;
+		&(optionsPtr->scaleToHeight)) == TCL_ERROR) {
+	        return TCL_ERROR;;
 	    }
-	    if (serializedHeaderPtr->scaleToHeight <= 0) {
+	    if (optionsPtr->scaleToHeight <= 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scaletoheight value must be positive", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
-		goto error;
+		return TCL_ERROR;;
 	    }
 	    break;
 	case OPT_SCALE_TO_WIDTH:
 	    if (Tcl_GetIntFromObj(interp, objv[0],
-		    &(serializedHeaderPtr->scaleToWidth)) == TCL_ERROR) {
-	        goto error;
+		    &(optionsPtr->scaleToWidth)) == TCL_ERROR) {
+	        return TCL_ERROR;;
 	    }
-	    if (serializedHeaderPtr->scaleToWidth <= 0) {
+	    if (optionsPtr->scaleToWidth <= 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scaletowidth value must be positive", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
-		goto error;
+		return TCL_ERROR;;
 	    }
 	    break;
 	}
     }
 
-    nsvgImage = nsvgParse(inputCopy, "px", (float) dpi);
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ParseSVG --
+ *
+ *	This function is called to parse the given input string as SVG.
+ *
+ * Results:
+ *	Return a newly create NSVGimage on success, and NULL otherwise.
+ *
+ * Side effects:
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NSVGimage *
+ParseSVG(
+    Tcl_Interp *interp,
+    Tcl_Obj *dataObj,
+    float dpi)
+{
+    const char *input;
+    char *inputCopy = NULL;
+    NSVGimage *nsvgImage;
+    TkSizeT length;
+
+    /*
+     * The parser destroys the original input string,
+     * therefore first duplicate.
+     */
+
+    input = TkGetStringFromObj(dataObj, &length);
+    inputCopy = (char *)attemptckalloc(length+1);
+    if (inputCopy == NULL) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
+	return NULL;
+    }
+    memcpy(inputCopy, input, length);
+    inputCopy[length] = '\0';
+
+    nsvgImage = nsvgParse(inputCopy, "px", dpi);
     if (nsvgImage == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
-	goto error;
+        ckfree(inputCopy);
+	return NULL;
     }
     ckfree(inputCopy);
     return nsvgImage;
-
-error:
-    if (inputCopy != NULL) {
-        ckfree(inputCopy);
-    }
-    return NULL;
 }
 
 /*
@@ -1038,6 +1159,7 @@ error:
 static double
 GetScaleFromParameters(
     serializedHeader *serializedHeaderPtr,
+    optionsStruct * optionsPtr,
     int *widthPtr,
     int *heightPtr)
 {
@@ -1047,25 +1169,25 @@ GetScaleFromParameters(
     if ((serializedHeaderPtr->width == 0.0) || (serializedHeaderPtr->height == 0.0)) {
         width = height = 0;
         scale = 1.0;
-    } else if (serializedHeaderPtr->scaleToHeight > 0) {
+    } else if (optionsPtr->scaleToHeight > 0) {
 	/*
 	 * Fixed height
 	 */
-	height = serializedHeaderPtr->scaleToHeight;
+	height = optionsPtr->scaleToHeight;
 	scale = height / serializedHeaderPtr->height;
 	width = (int) ceil(serializedHeaderPtr->width * scale);
-    } else if (serializedHeaderPtr->scaleToWidth > 0) {
+    } else if (optionsPtr->scaleToWidth > 0) {
 	/*
 	 * Fixed width
 	 */
-	width = serializedHeaderPtr->scaleToWidth;
+	width = optionsPtr->scaleToWidth;
 	scale = width / serializedHeaderPtr->width;
 	height = (int) ceil(serializedHeaderPtr->height * scale);
     } else {
 	/*
 	 * Scale factor
 	 */
-	scale = serializedHeaderPtr->scale;
+	scale = optionsPtr->scale;
 	width = (int) ceil(serializedHeaderPtr->width * scale);
 	height = (int) ceil(serializedHeaderPtr->height * scale);
     }
@@ -1099,7 +1221,7 @@ RasterizeSVG(
     Tcl_Interp *interp,
     Tk_PhotoHandle imageHandle,
     char *svgBlobPtr,
-    TkSizeT serializedDataLength,
+    optionsStruct * optionsPtr,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY)
@@ -1112,7 +1234,7 @@ RasterizeSVG(
     (void)srcX;
     (void)srcY;
     
-    scale = GetScaleFromParameters((serializedHeader *) svgBlobPtr,
+    scale = GetScaleFromParameters((serializedHeader *) svgBlobPtr, optionsPtr,
 	    &w, &h);
 
     rast = nsvgCreateRasterizer();
