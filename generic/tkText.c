@@ -6787,7 +6787,7 @@ GetLineStartEnd(
     (void)dummy;
     (void)tkwin;
 
-    if ((internalOffset == TCL_INDEX_NONE) || (recordPtr == NULL)) {
+    if (linePtr == NULL) {
 	return Tcl_NewObj();
     }
     return Tcl_NewWideIntObj(1 + TkBTreeLinesTo(NULL, linePtr));
