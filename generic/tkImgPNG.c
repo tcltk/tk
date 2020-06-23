@@ -3557,7 +3557,7 @@ WriteExtraChunks(
 	    {
 		return TCL_ERROR;
 	    }
-	    PPUx = (unsigned long)round(DPIValue / 0.0254);
+	    PPUx = (unsigned long)floor(DPIValue / 0.0254+0.5);
 	    if (aspectObj == NULL) {
 		PPUy = PPUx;
 	    }
@@ -3576,9 +3576,9 @@ WriteExtraChunks(
 	    if (DPIObj == NULL) {
 		unitSpecifier = 0;
 		PPUx = 65536;
-		PPUy = (unsigned long)round(65536.0 * aspectValue);
+		PPUy = (unsigned long)floor(65536.0 * aspectValue+0.5);
 	    } else {
-		PPUy = (unsigned long)round(DPIValue * aspectValue / 0.0254);
+		PPUy = (unsigned long)floor(DPIValue * aspectValue / 0.0254+0.5);
 	    }
 	}
 	if (DPIObj != NULL || aspectObj != NULL) {

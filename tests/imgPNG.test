@@ -1141,9 +1141,9 @@ test imgPNG-4.2 {file image with metadata} -setup {
 test imgPNG-4.3 {data output with metadata} -setup {
     image create photo i1 -data $encoded(dpi100aspect2)
 } -body {
-    set data [i1 data -format png]
+    set imgData [i1 data -format png]
     image delete i1
-    image create photo i1 -data $data
+    image create photo i1 -data $imgData
     i1 cget -metadata
 } -cleanup {
     image delete i1

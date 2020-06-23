@@ -234,9 +234,10 @@ FileMatchSVG(
 {
     Tcl_Obj *dataObj;
     NSVGimage *nsvgImage;
-    (void)fileName;
     serializedHeader *serializedHeaderPtr;
     optionsStruct options;
+
+    (void)fileName;
 
     /*
      * Parse the options. Unfortunately, any error can not be returned.
