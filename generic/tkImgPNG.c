@@ -207,7 +207,8 @@ static int		DecodePNG(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tcl_Obj *fmtObj, Tk_PhotoHandle imageHandle,
 			    int destX, int destY);
 static int		EncodePNG(Tcl_Interp *interp,
-			    Tk_PhotoImageBlock *blockPtr, PNGImage *pngPtr);
+			    Tk_PhotoImageBlock *blockPtr, PNGImage *pngPtr,
+			    Tcl_Obj *metadataInObj);
 static int		FileMatchPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
 			    Tcl_Obj *metadataInObj, int *widthPtr,
@@ -275,7 +276,7 @@ static int		WriteData(Tcl_Interp *interp, PNGImage *pngPtr,
 			    const unsigned char *srcPtr, size_t srcSz,
 			    unsigned long *crcPtr);
 static int		WriteExtraChunks(Tcl_Interp *interp,
-			    PNGImage *pngPtr);
+			    PNGImage *pngPtr, Tcl_Obj *metadataInObj);
 static int		WriteIHDR(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tk_PhotoImageBlock *blockPtr);
 static int		WriteIDAT(Tcl_Interp *interp, PNGImage *pngPtr,
@@ -3104,6 +3105,34 @@ WriteByte(
 /*
  *----------------------------------------------------------------------
  *
+ * LongToInt32 --
+ *
+ *	This function transforms to a 32-bit integer value as
+ *	four bytes in network byte order.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Buffer will be modified.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static inline void
+LongToInt32(
+    unsigned long l,
+    unsigned char *pc)
+{
+    pc[0] = (unsigned char) ((l & 0xff000000) >> 24);
+    pc[1] = (unsigned char) ((l & 0x00ff0000) >> 16);
+    pc[2] = (unsigned char) ((l & 0x0000ff00) >> 8);
+    pc[3] = (unsigned char) ((l & 0x000000ff) >> 0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WriteInt32 --
  *
  *	This function writes a 32-bit integer value out to the PNG image as
@@ -3126,12 +3155,7 @@ WriteInt32(
     unsigned long *crcPtr)
 {
     unsigned char pc[4];
-
-    pc[0] = (unsigned char) ((l & 0xff000000) >> 24);
-    pc[1] = (unsigned char) ((l & 0x00ff0000) >> 16);
-    pc[2] = (unsigned char) ((l & 0x0000ff00) >> 8);
-    pc[3] = (unsigned char) ((l & 0x000000ff) >> 0);
-
+    LongToInt32(l,pc);
     return WriteData(interp, pngPtr, pc, 4, crcPtr);
 }
 
@@ -3450,7 +3474,8 @@ WriteIDAT(
 static int
 WriteExtraChunks(
     Tcl_Interp *interp,
-    PNGImage *pngPtr)
+    PNGImage *pngPtr,
+    Tcl_Obj *metadataInObj)
 {
     static const unsigned char sBIT_contents[] = {
 	8, 8, 8, 8
@@ -3501,7 +3526,80 @@ WriteExtraChunks(
 	return TCL_ERROR;
     }
     Tcl_DStringFree(&buf);
+    
+    /*
+     * Add a pHYs chunk if there is metadata for DPI and/or aspect
+     * aspect = PPUy / PPUx
+     * DPI = PPUx * 0.0254
+     * The physical chunc consists of:
+     * - Points per meter in x direction (32 bit)
+     * - Points per meter in x direction (32 bit)
+     * - Unit specifier: 0: no unit (only aspect), 1: Points per meter
+     */
+    
+    if (metadataInObj != NULL) {
+	
+	Tcl_Obj *aspectObj, *DPIObj;
+	double aspectValue=-1, DPIValue=-1;
+	unsigned long PPUx, PPUy;
+	char unitSpecifier;
+	
+	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
+		Tcl_NewStringObj("aspect",-1),
+		&aspectObj) ||
+	    TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
+		Tcl_NewStringObj("DPI",-1),
+		&DPIObj) ) {
+	    return TCL_ERROR;
+	}
+	if (DPIObj != NULL) {
+	    if (TCL_ERROR == Tcl_GetDoubleFromObj(interp, DPIObj, &DPIValue))
+	    {
+		return TCL_ERROR;
+	    }
+	    PPUx = (unsigned long)round(DPIValue / 0.0254);
+	    if (aspectObj == NULL) {
+		PPUy = PPUx;
+	    }
+	    unitSpecifier = 1;
+	}
+	if (aspectObj != NULL) {
+	    if (TCL_ERROR == Tcl_GetDoubleFromObj(interp, aspectObj,
+		    &aspectValue)) {
+		return TCL_ERROR;
+	    }
 
+	    /*
+	     * aspect = PPUy / PPUx
+	     */
+	    
+	    if (DPIObj == NULL) {
+		unitSpecifier = 0;
+		PPUx = 65536;
+		PPUy = (unsigned long)round(65536.0 * aspectValue);
+	    } else {
+		PPUy = (unsigned long)round(DPIValue * aspectValue / 0.0254);
+	    }
+	}
+	if (DPIObj != NULL || aspectObj != NULL) {
+	    unsigned char buffer[9];
+
+	    if ( PPUx > 2147483647 || PPUy > 2147483647 ) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"DPI or aspect out of range", -1));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PHYS", NULL);
+		return TCL_ERROR;
+	    }
+	    
+	    LongToInt32(PPUx, buffer);
+	    LongToInt32(PPUy, buffer+4);
+	    buffer[8] = unitSpecifier;
+	    if (WriteChunk(interp, pngPtr, CHUNK_pHYs, buffer, 9)
+		    != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	}
+    }
     return TCL_OK;
 }
 
@@ -3527,7 +3625,8 @@ static int
 EncodePNG(
     Tcl_Interp *interp,
     Tk_PhotoImageBlock *blockPtr,
-    PNGImage *pngPtr)
+    PNGImage *pngPtr,
+    Tcl_Obj *metadataInObj)
 {
     int greenOffset, blueOffset, alphaOffset;
 
@@ -3610,7 +3709,7 @@ EncodePNG(
      * other programs more than us.
      */
 
-    if (WriteExtraChunks(interp, pngPtr) == TCL_ERROR) {
+    if (WriteExtraChunks(interp, pngPtr, metadataInObj) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
@@ -3694,7 +3793,7 @@ FileWritePNG(
      * Write the raw PNG data out to the file.
      */
 
-    result = EncodePNG(interp, blockPtr, &png);
+    result = EncodePNG(interp, blockPtr, &png, metadataInObj);
 
   cleanup:
     Tcl_Close(interp, chan);
@@ -3746,7 +3845,7 @@ StringWritePNG(
      * back to the interpreter if successful.
      */
 
-    result = EncodePNG(interp, blockPtr, &png);
+    result = EncodePNG(interp, blockPtr, &png, metadataInObj);
 
     if (TCL_OK == result) {
 	Tcl_SetObjResult(interp, png.objDataPtr);

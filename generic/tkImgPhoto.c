@@ -2133,8 +2133,9 @@ ImgPhotoConfigureMaster(
     }
     if (metadataInObj) {
 	/*
-	 * make -metadata a dict and take it if keys in.
-	 * Otherwise set a metadata null pointer.
+	 * make -metadata a dict.
+	 * Take also empty metadatas as this may be a sign to replace
+	 * existing metadata.
 	 */
 	int dictSize;
 
@@ -2258,10 +2259,6 @@ ImgPhotoConfigureMaster(
 	masterPtr->flags |= IMAGE_CHANGED;
     }
 
-    /*
-     * ToDo: The case of a a dataString newly set to the empty string with a
-     * present metadata dict should also cause this.
-     */
     if ((masterPtr->fileString == NULL) && (masterPtr->dataString != NULL)
 	    && ((masterPtr->dataString != oldData)
 		    || (masterPtr->format != oldFormat))) {
