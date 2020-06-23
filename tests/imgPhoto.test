@@ -2159,7 +2159,7 @@ test imgPhoto-23.1 {GIF comment before image data (-data)} -setup {
     gif1 cget -metadata
 } -cleanup {
     catch {image delete gif1}
-} -result {Comment ABCD}
+} -result {comment ABCD}
 
 test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
     set data $::gifstart
@@ -2169,7 +2169,7 @@ test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
     append data $::gifdata $::gifend
     set path [file join [configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
-    puts $h $data
+    puts -nonewline $h $data
     close $h
 } -body {
     image create photo gif1 -file $path
@@ -2177,7 +2177,7 @@ test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {Comment ABCD}
+} -result {comment ABCD}
 
 test imgPhoto-23.3 {GIF comment after image data (-data)} -setup {
     set data $::gifstart
@@ -2191,7 +2191,7 @@ test imgPhoto-23.3 {GIF comment after image data (-data)} -setup {
     gif1 cget -metadata
 } -cleanup {
     catch {image delete gif1}
-} -result {Comment ABCD}
+} -result {comment ABCD}
 
 test imgPhoto-23.4 {GIF comment after image data (-file)} -setup {
     set data $::gifstart
@@ -2210,7 +2210,7 @@ test imgPhoto-23.4 {GIF comment after image data (-file)} -setup {
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {Comment ABCD}
+} -result {comment ABCD}
 
 test imgPhoto-23.5 {Two GIF comment blocks (-data)} -setup {
     set data $::gifstart
@@ -2226,7 +2226,7 @@ test imgPhoto-23.5 {Two GIF comment blocks (-data)} -setup {
     gif1 cget -metadata
 } -cleanup {
     catch {image delete gif1}
-} -result {Comment ABCD}
+} -result {comment ABCD}
 
 test imgPhoto-23.6 {Two GIF comment blocks (-file)} -setup {
     set data $::gifstart
@@ -2247,7 +2247,7 @@ test imgPhoto-23.6 {Two GIF comment blocks (-file)} -setup {
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {Comment ABCD}
+} -result {comment ABCD}
 
 test imgPhoto-23.7 {XMP comment block before image (-data)} -setup {
     set data $::gifstart
@@ -2427,7 +2427,7 @@ test imgPhoto-23.13 {create: test if shared metadata object is not preserved\
     list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
 } -cleanup {
     catch {image delete gif1}
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.14 {create: test if shared metadata object is not preserved\
 	(-file)}\
@@ -2450,7 +2450,7 @@ test imgPhoto-23.14 {create: test if shared metadata object is not preserved\
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.15 {configure: test if shared metadata object is not\
 	preserved (empty image, -data)}\
@@ -2468,7 +2468,7 @@ test imgPhoto-23.15 {configure: test if shared metadata object is not\
     list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
 } -cleanup {
     catch {image delete gif1}
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.16 {configure: test if shared metadata object is not preserved\
 	(empty image, -file)}\
@@ -2492,7 +2492,7 @@ test imgPhoto-23.16 {configure: test if shared metadata object is not preserved\
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.17 {configure: test if shared metadata object is not preserved\
 	(metadata replace, -data}\
@@ -2510,7 +2510,7 @@ test imgPhoto-23.17 {configure: test if shared metadata object is not preserved\
     list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
 } -cleanup {
     catch {image delete gif1}
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.18 {configure: test if shared metadata object is not preserved\
 	(metadata replace, -file}\
@@ -2534,7 +2534,7 @@ test imgPhoto-23.18 {configure: test if shared metadata object is not preserved\
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.19 {configure: test if shared metadata object is not preserved\
 	(-data)}\
@@ -2553,7 +2553,7 @@ test imgPhoto-23.19 {configure: test if shared metadata object is not preserved\
     list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
 } -cleanup {
     catch {image delete gif1}
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.20 {configure: test if shared metadata object is not preserved\
 	(-file)}\
@@ -2577,14 +2577,14 @@ test imgPhoto-23.20 {configure: test if shared metadata object is not preserved\
 } -cleanup {
     catch {image delete gif1}
     file delete $path
-} -result {{A 1 Comment ABCD} {A 1} {A 1}}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
 
 test imgPhoto-23.21 {output data with comment (from -metadata argument)}\
 -setup {
     set data $::gifstart$::gifdata$::gifend
 } -body {
     image create photo gif1 -data $data
-    set gifData [gif1 data -format gif -metadata [dict create Comment ABCD]]
+    set gifData [gif1 data -format gif -metadata [dict create comment ABCD]]
 } -cleanup {
     catch {image delete gif1}
 } -match glob -result {*ABCD*}
@@ -2595,10 +2595,10 @@ test imgPhoto-23.22 {output file with comment (from -metadata argument)}\
     set path [file join [configure -tmpdir] test.gif]
 } -body {
     image create photo gif1 -data $data
-    gif1 write $path -format gif -metadata [dict create Comment ABCD]
+    gif1 write $path -format gif -metadata [dict create comment ABCD]
     image delete gif1
     image create photo gif1 -file $path
-    dict get [gif1 cget -metadata] Comment
+    dict get [gif1 cget -metadata] comment
 } -cleanup {
     catch {image delete gif1}
     file delete $path
@@ -2609,7 +2609,7 @@ test imgPhoto-23.23 {output data with comment (from -metadata property)}\
     set data $::gifstart$::gifdata$::gifend
 } -body {
     image create photo gif1 -data $data
-    gif1 configure -metadata [dict create Comment ABCD]
+    gif1 configure -metadata [dict create comment ABCD]
     set gifData [gif1 data -format gif]
 } -cleanup {
     catch {image delete gif1}
@@ -2621,11 +2621,11 @@ test imgPhoto-23.24 {output file with comment (from -metadata property)}\
     set path [file join [configure -tmpdir] test.gif]
 } -body {
     image create photo gif1 -data $data
-    gif1 configure -metadata [dict create Comment ABCD]
+    gif1 configure -metadata [dict create comment ABCD]
     gif1 write $path -format gif
     image delete gif1
     image create photo gif1 -file $path
-    dict get [gif1 cget -metadata] Comment
+    dict get [gif1 cget -metadata] comment
 } -cleanup {
     catch {image delete gif1}
     file delete $path
@@ -2668,6 +2668,47 @@ test imgPhoto-23.24 {output data with XMP (-file)} -setup {
     catch {image delete gif1}
 } -result {1}
 
+test imgPhoto-23.25 {configure: empty metadata parameter overwrites image metadata} -setup {
+    image create photo gif1 -data $::gifstart$::gifdata$::gifend\
+	    -metadata {foo bar}
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    gif1 configure -data $data -metadata {}
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {comment ABCD}
+
+test imgPhoto-23.26 {write: empty metadata parameter overwrites image metadata} -setup {
+    image create photo gif1 -data $::gifstart$::gifdata$::gifend\
+	    -metadata {comment bar}
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    gif1 write $path -format gif -metadata {}
+    image delete gif1
+    image create photo gif1 -file $path
+    dict size [gif1 cget -metadata]
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {0}
+
+test imgPhoto-23.27 {data: empty metadata parameter overwrites image metadata} -setup {
+    image create photo gif1 -data $::gifstart$::gifdata$::gifend\
+	    -metadata {comment bar}
+} -body {
+    set data [gif1 data -format gif -metadata {}]
+    image delete gif1
+    image create photo gif1 -data $data
+    dict size [gif1 cget -metadata]
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {0}
 
 unset -nocomplain gifstart gifdata gifend
 
