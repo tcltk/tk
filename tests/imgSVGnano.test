@@ -23,34 +23,8 @@ namespace eval svgnano {
 <polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
 <polygon fill ="yellow" points="80,80 70,85 90,90"/>
 </svg>}
-
     set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w
 ">
-</svg>}
-
-    set data(gradient) {<svg
-   xmlns="http://www.w3.org/2000/svg"
-   height="10"
-   width="10">
-  <defs
-     id="defs7">
-    <linearGradient
-       gradientTransform="rotate(90)"
-       id="myGradient">
-      <stop
-         id="stop2"
-         stop-color="gold"
-         offset="5%" />
-      <stop
-         id="stop4"
-         stop-color="red"
-         offset="95%" />
-    </linearGradient>
-  </defs>
-  <rect
-     id=""
-     style="fill:url(#myGradient)"
-     x="0" y="0" width="10" height="10" rx="0" ry="0" />
 </svg>}
 
     tcltest::makeFile $data(plus) plus.svg
@@ -232,96 +206,6 @@ test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -s
     rename foo ""
     tcltest::removeFile tmpplus.svg
 } -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
-
-# rendering tests
-
-test imgSVGnano-5.0 {data gradient rendering} -setup {
-    catch {rename foo ""}
-    catch {rename gif ""}
-    image create photo gif\
-	    -data "R0lGODlhCgAKALMAANnZ2f/XAP/LAP+yAP+zAP+bAP+DAP9rAP9TAP9UAP88AP8kAP8MAP///////////yH5BAEAAAAALAAAAAAKAAoAAAQhMMhJhb14DMI7L2AoGmRpHmiqImyLJLAiz/Ri3zij73wEADs="\
-	    -format gif
-} -body {
-    image create photo foo -data $data(gradient)
-    set res ""
-    for {set y 0} {$y < [image height foo]} {incr y} {
-	for {set x 0} {$x < [image width foo]} {incr x} {
-	    lassign [foo get $x $y] r1 g1 b1
-	    lassign [gif get $x $y] r2 g2 b2
-	    if {$r1 != $r2 || $g1 != $g2 || $b1 != $b2} {
-		append res "pixel $x,$y unequal: $r1 $g1 $b1 != $r2 $g2 $b2\n"
-	    }
-	}
-    }
-    set res
-} -cleanup {
-    rename foo ""
-    rename gif ""
-} -result {}
-
-test imgSVGnano-5.1 {file gradient rendering} -setup {
-    catch {rename foo ""}
-    tcltest::makeFile $data(gradient) tmpgradient.svg
-    catch {rename gif ""}
-    image create photo gif\
-	    -data "R0lGODlhCgAKALMAANnZ2f/XAP/LAP+yAP+zAP+bAP+DAP9rAP9TAP9UAP88AP8kAP8MAP///////////yH5BAEAAAAALAAAAAAKAAoAAAQhMMhJhb14DMI7L2AoGmRpHmiqImyLJLAiz/Ri3zij73wEADs="\
-	    -format gif
-} -body {
-    image create photo foo -file [file join [tcltest::configure -tmpdir] tmpgradient.svg]
-    set res ""
-    for {set y 0} {$y < [image height foo]} {incr y} {
-	for {set x 0} {$x < [image width foo]} {incr x} {
-	    lassign [foo get $x $y] r1 g1 b1
-	    lassign [gif get $x $y] r2 g2 b2
-	    if {$r1 != $r2 || $g1 != $g2 || $b1 != $b2} {
-		append res "pixel $x,$y unequal: $r1 $g1 $b1 != $r2 $g2 $b2\n"
-	    }
-	}
-    }
-    set res
-} -cleanup {
-    rename foo ""
-    tcltest::removeFile tmpgradient.svg
-    rename gif ""
-} -result {}
-
-# metadata tests
-
-test imgSVGnano-6.0 {svgblob metadata creation} -setup {
-    catch {rename foo ""}
-    tcltest::makeFile $data(plus) tmpplus.svg
-} -body {
-    image create photo foo -file [file join [tcltest::configure -tmpdir] tmpplus.svg]
-	dict keys [foo cget -metadata]
-} -cleanup {
-    rename foo ""
-    tcltest::removeFile tmpplus.svg
-} -result {SVGBLOB}
-
-test imgSVGnano-6.1 {scale with svgblob metadata (data)} -setup {
-    catch {rename foo ""}
-} -body {
-    image create photo foo -data $data(plus)
-    foo configure -data "<svg data=\"metadata\" />" -format "svg"
-    foo configure -format "svg -scale 2"
-    lappend res [image width foo] [image height foo]
-} -cleanup {
-    rename foo ""
-    tcltest::removeFile tmpplus.svg
-} -result {200 200}
-
-test imgSVGnano-6.2 {scale with svgblob metadata} -setup {
-    catch {rename foo ""}
-    tcltest::makeFile $data(plus) tmpplus.svg
-} -body {
-    image create photo foo -file [file join [tcltest::configure -tmpdir] tmpplus.svg]
-	foo configure -file "" -data "<svg data=\"metadata\" />"
-    foo configure -format "svg -scale 2"
-    list [image width foo] [image height foo]
-} -cleanup {
-    rename foo ""
-    tcltest::removeFile tmpplus.svg
-} -result {200 200}
 
 };# end of namespace svgnano
 
