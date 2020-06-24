@@ -121,25 +121,21 @@ typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
 static int		FileMatchGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
 			    Tcl_Obj *metadataInObj, int *widthPtr,
-			    int *heightPtr, Tcl_Obj *metadataOutObj,
-			    Tcl_DString *driverInternal);
+			    int *heightPtr, Tcl_Obj *metadataOutObj);
 static int		FileReadGIF(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *format,
 			    Tcl_Obj *metadataInObj, Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY, Tcl_Obj *metadataOutObj,
-			    Tcl_DString *driverInternal);
+			    int srcX, int srcY, Tcl_Obj *metadataOutObj);
 static int		StringMatchGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    Tcl_Obj *format, Tcl_Obj *metadataInObj,
 			    int *widthPtr, int *heightPtr,
-			    Tcl_Obj *metadataOutObj,
-			    Tcl_DString *driverInternal);
+			    Tcl_Obj *metadataOutObj);
 static int		StringReadGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    Tcl_Obj *format, Tcl_Obj *metadataInObj,
 			    Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY, Tcl_Obj *metadataOutObj,
-			    Tcl_DString *driverInternal);
+			    int srcX, int srcY, Tcl_Obj *metadataOutObj);
 static int		FileWriteGIF(Tcl_Interp *interp, const char *filename,
 			    Tcl_Obj *format, Tcl_Obj *metadataInObj,
 			    Tk_PhotoImageBlock *blockPtr);
@@ -368,8 +364,7 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory passed to FileReadGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     GIFImageConfig gifConf;
     (void)fileName;
@@ -413,8 +408,7 @@ FileReadGIF(
 				 * written to. */
     int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory passed from FileMatchGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     int fileWidth, fileHeight, imageWidth, imageHeight;
     unsigned int nBytes;
@@ -858,8 +852,7 @@ StringMatchGIF(
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory to pass to StringReadGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     unsigned char *data, header[10];
     TkSizeT got, length;
@@ -932,8 +925,7 @@ StringReadGIF(
     int destX, int destY,	/* The rectangular region of the */
     int width, int height,	/* image to copy */
     int srcX, int srcY,
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory passed from StringReadGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     MFile handle, *hdlPtr = &handle;
     TkSizeT length;
@@ -963,7 +955,7 @@ StringReadGIF(
 
     return FileReadGIF(interp, (Tcl_Channel) hdlPtr, xferFormat, format,
 	    metadataInObj, imageHandle, destX, destY, width, height, srcX, srcY,
-	    metadataOutObj, driverInternal);
+	    metadataOutObj);
 }
 
 /*

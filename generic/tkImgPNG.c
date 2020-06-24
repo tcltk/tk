@@ -212,14 +212,12 @@ static int		EncodePNG(Tcl_Interp *interp,
 static int		FileMatchPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
 			    Tcl_Obj *metadataInObj, int *widthPtr,
-			    int *heightPtr, Tcl_Obj *metadataOut,
-			    Tcl_DString *driverInternal);
+			    int *heightPtr, Tcl_Obj *metadataOut);
 static int		FileReadPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
 			    Tcl_Obj *metadataInObj, Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY, Tcl_Obj *metadataOutPtr,
-			    Tcl_DString *driverInternal);
+			    int srcX, int srcY, Tcl_Obj *metadataOutPtr);
 static int		FileWritePNG(Tcl_Interp *interp, const char *filename,
 			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
 			    Tk_PhotoImageBlock *blockPtr);
@@ -254,14 +252,12 @@ static int		SkipChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 static int		StringMatchPNG(Tcl_Interp *interp, Tcl_Obj *pObjData,
 			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
 			    int *widthPtr, int *heightPtr,
-			    Tcl_Obj *metadataOutObj,
-			    Tcl_DString *driverInternal);
+			    Tcl_Obj *metadataOutObj);
 static int		StringReadPNG(Tcl_Interp *interp, Tcl_Obj *pObjData,
 			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
 			    Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY, Tcl_Obj *metadataOutObj,
-			    Tcl_DString *driverInternal);
+			    int srcX, int srcY, Tcl_Obj *metadataOutObj);
 
 static int		StringWritePNG(Tcl_Interp *interp, Tcl_Obj *fmtObj,
 			    Tcl_Obj *metadataInObj,
@@ -2827,8 +2823,7 @@ FileMatchPNG(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory passed to FileReadGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int match = 0;
@@ -2881,8 +2876,7 @@ FileReadPNG(
 				 * written to. */
     int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory passed from FileMatchGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -2940,8 +2934,7 @@ StringMatchPNG(
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory to pass to StringReadGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int match = 0;
@@ -2989,8 +2982,7 @@ StringReadPNG(
     int destX, int destY,	/* The rectangular region of the */
     int width, int height,	/* image to copy */
     int srcX, int srcY,
-    Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    Tcl_DString *driverInternal)/* memory passed from StringReadGIF */
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int result = TCL_ERROR;
