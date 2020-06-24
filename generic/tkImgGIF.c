@@ -1049,8 +1049,6 @@ ReadColorMap(
 *	The transparent color is set if present in current extensions
 *       The data of the following extensions are saved to the metadata dict:
 *       - Application extension
-*         - XMP data is stored in key "XMP"
-*         - any other under the key Application_<name><code>
 *         - Comment extension in key "comment"
 *       Plain text extensions are currently ignored.
 *
@@ -1068,9 +1066,9 @@ DoExtension(
 {
     int count;
     /* Prepare extension name
-     * Maximum string size: "Application_"(12) + App(8) + Code(3) + trailing zero
+     * Maximum string size: "comment" + Code(3) + trailing zero
      */
-    char extensionStreamName[24];
+    char extensionStreamName[8];
     extensionStreamName[0] = '\0';
 
     switch (label) {
@@ -1089,84 +1087,6 @@ DoExtension(
     case 0xfe:			/* Comment Extension */
 	strcpy(extensionStreamName,"comment");
         /* copy the extension data below */
-	break;
-    case 0xff:			/* Application Extension */
-	/* Length: 11
-	 * Application Identifier: 8 bytes
-	 * Application Authentication code: 3 Bytes
-	 */
-	count = GetDataBlock(gifConfPtr, chan, buf);
-	if (count != 11) {
-	    return -1;
-	}
-	/* Detect XMP extension */
-	if (NULL != metadataOutObj
-		&& 0 == memcmp(buf,"XMP DataXMP",11)) {
-	    /* XMP format does not use the block structure of GIF
-	     * The data is utf-8 which never contains 0's
-	     * A magic trailer of 258 bytes is added with the following data:
-	     * 0x01 0xff 0xfe ... 0x01 0x00 0x00
-	     */
-	    Tcl_Encoding encoding;
-	    Tcl_DString recodedDString;
-	    Tcl_DString dataDString;
-	    int length;
-	    int result;
-	    unsigned char lastbyte = 1;
-	    Tcl_DStringInit(&dataDString);
-
-	    for (;;) {
-		unsigned char byte;
-		if (1 != Fread(gifConfPtr, &byte, 1, 1, chan)) {
-		    /* read error */
-		    Tcl_DStringFree(&dataDString);
-		    return -1;
-		}
-		Tcl_DStringAppend(&dataDString,(char *)&byte,1);
-		/* check for end of xmp header */
-		if (byte == 0 && lastbyte == 0) {
-		    break;
-		}
-		lastbyte = byte;
-	    }
-
-	    /* check if trailer of 258 bytes is present */
-	    length = Tcl_DStringLength(&dataDString);
-	    if (length < 258) {
-		Tcl_DStringFree(&dataDString);
-		return -1;
-	    }
-	    /* Remove the trailer from the data */
-	    length -= 258;
-	    /* save the utf-8 data in the metadata dict key "XMP" */
-	    encoding = Tcl_GetEncoding(NULL, "utf-8");
-	    Tcl_DStringInit(&recodedDString);
-	    Tcl_ExternalToUtfDString(encoding, Tcl_DStringValue(&dataDString), length, &recodedDString);
-	    result = Tcl_DictObjPut(NULL, metadataOutObj,
-		    Tcl_NewStringObj("XMP",-1),
-		    Tcl_NewStringObj(Tcl_DStringValue(&recodedDString),
-			Tcl_DStringLength(&recodedDString)));
-	    Tcl_DStringFree(&recodedDString);
-	    Tcl_DStringFree(&dataDString);
-	    Tcl_FreeEncoding(encoding);
-	    if ( TCL_OK != result ) {
-		return -1;
-	    }
-	    return 0;
-	} else {
-	    /*
-	     * Other extension
-	     * Name the extension: Application_xxxxxxxxxxx
-	     *                     012345678901234567890123
-	     */
-	    /* Untested code commented out, no use case
-	     */
-	    /*
-	    strcpy(extensionStreamName,"Application_");
-	    memcpy(extensionStreamName+12,buf,11);
-	    extensionStreamName[23]='\0';
-	    */
-	}
 	break;
     }
     /* Add extension to dict */
@@ -2121,51 +2041,6 @@ CommonWriteGIF(
 		c = 0;
 		writeProc(handle, (char *) &c, 1);
 	    }
-	}
-	
-	/*
-	 * Check and code XMP block
-	 */
-	
-	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
-		Tcl_NewStringObj("XMP",-1),
-		&itemData)) {
-	    return TCL_ERROR;
-	}
-	if (itemData != NULL) {
-	    Tcl_Encoding encoding;
-	    Tcl_DString recodedDString;
-	    char * itemString;
-	    int itemLength;
-	    int trailerChar;
-	    
-	    /* write header */
-	    writeProc(handle, "\x21\xff\x0bXMP DataXMP", 14);
-
-	    /* write utf-8 coded data */
-	    encoding = Tcl_GetEncoding(NULL, "utf-8");
-	    Tcl_DStringInit(&recodedDString);
-	    itemString = Tcl_GetStringFromObj(itemData, &itemLength);
-	    Tcl_UtfToExternalDString(encoding, itemString, itemLength,
-		    &recodedDString);
-	    writeProc(handle, Tcl_DStringValue(&recodedDString),
-		    Tcl_DStringLength(&recodedDString));
-	    Tcl_DStringFree(&recodedDString);
-	    Tcl_FreeEncoding(encoding);
-
-	    /* XMP format does not use the block structure of GIF
-	     * The data is utf-8 which never contains 0's
-	     * A magic trailer of 258 bytes is added with the following data:
-	     * 0x01 0xff 0xfe ... 0x01 0x00 0x00
-	     */
-	    c = 1;
-	    writeProc(handle, (char *) &c, 1);
-	    for (trailerChar = 0xff; trailerChar >= 0; trailerChar--) {
-		c = (unsigned char)trailerChar;
-		writeProc(handle, (char *) &c, 1);
-	    }
-	    c = 0;
-	    writeProc(handle, (char *) &c, 1);
 	}
     }
     c = GIF_TERMINATOR;
