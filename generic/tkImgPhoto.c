@@ -207,7 +207,6 @@ static int		MatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
 			    int *widthPtr, int *heightPtr, int *oldformat,
-			    int *closeChannelPtr,
 			    Tcl_DString *driverInternalPtr);
 static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
 			    Tcl_Obj *formatString,
@@ -1079,7 +1078,6 @@ putCleanup:
     case PHOTO_READ: {
 	Tcl_Obj *format;
 	int result;
-	int closeChannel = 0;
 	Tcl_DString driverInternalDString;
 
 	/*
@@ -1137,22 +1135,16 @@ putCleanup:
 	 */
 	
 	Tcl_DStringInit(&driverInternalDString);
-	closeChannel = 0;
 	if (MatchFileFormat(interp, chan,
 		Tcl_GetString(options.name), options.format,
 		options.metadata, NULL, &imageFormat,
 		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat,
-		&closeChannel, &driverInternalDString)
+		&driverInternalDString)
 		!= TCL_OK) {
 	    result = TCL_ERROR;
 	    goto readCleanup;
 	}
 	
-	if (closeChannel) {
-	    Tcl_Close(NULL, chan);
-	    chan = NULL;
-	}
-
 	/*
 	 * Check the values given for the -from option.
 	 */
@@ -1999,7 +1991,6 @@ ImgPhotoConfigureMaster(
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
     const char **args;
     Tcl_DString driverInternalDString;
-    int closeChannel;
 
     args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
@@ -2197,8 +2188,6 @@ ImgPhotoConfigureMaster(
 	    goto errorExit;
 	}
 
-	closeChannel = 0;
-
 	/*
 	 * Flag that we want the metadata result dict
 	 */
@@ -2215,14 +2204,10 @@ ImgPhotoConfigureMaster(
 		(MatchFileFormat(interp, chan, masterPtr->fileString,
 			masterPtr->format, masterPtr->metadata, metadataOutObj,
 			&imageFormat, &imageFormatVersion3,
-			&imageWidth, &imageHeight, &oldformat, &closeChannel,
+			&imageWidth, &imageHeight, &oldformat,
 			&driverInternalDString) != TCL_OK)) {
 	    Tcl_Close(NULL, chan);
 	    goto errorExit;
-	}
-	if (closeChannel) {
-	    Tcl_Close(NULL, chan);
-	    chan = NULL;
 	}
 	result = ImgPhotoSetSize(masterPtr, imageWidth, imageHeight);
 	if (result != TCL_OK) {
@@ -2777,11 +2762,11 @@ MatchFileFormat(
 				/* The dimensions of the image are returned
 				 * here. */
     int *oldformat,		/* Returns 1 if the old image API is used. */
-    int *closeChannelPtr,    	/* Is set to 1 if channel can be closed */
     Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
 				 * ReadFileFormat function */
 {
-    int matched = 0, useoldformat = 0;
+    int matched = 0;
+    int useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
     Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -2907,7 +2892,7 @@ if (formatPtr == NULL) {
 
 	    if (formatVersion3Ptr->fileMatchProc(interp, chan, fileName,
 		    formatObj, metadataInObj, widthPtr, heightPtr,
-		    metadataOutObj, closeChannelPtr, driverInternalPtr)) {
+		    metadataOutObj, driverInternalPtr)) {
 		if (*widthPtr < 1) {
 		    *widthPtr = 1;
 		}
@@ -2917,9 +2902,7 @@ if (formatPtr == NULL) {
 		*imageFormatVersion3Ptr = formatVersion3Ptr;
 		*imageFormatPtr = NULL;
 		*oldformat = 0;
-		if (! *closeChannelPtr ) {
-		    (void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
-		}
+		(void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
 		return TCL_OK;
 	    }
 

@@ -1445,8 +1445,7 @@ typedef struct Tk_PhotoImageFormatVersion3 Tk_PhotoImageFormatVersion3;
 typedef int (Tk_ImageFileMatchProcVersion3) (Tcl_Interp *interp,
 	Tcl_Channel chan, const char *fileName, Tcl_Obj *format,
 	Tcl_Obj *metadataIn, int *widthPtr, int *heightPtr,
-	Tcl_Obj *metadataOut, int *closeChannelPtr,
-	Tcl_DString *driverInternalPtr);
+	Tcl_Obj *metadataOut, Tcl_DString *driverInternalPtr);
 typedef int (Tk_ImageStringMatchProcVersion3) (Tcl_Interp *interp,
 	Tcl_Obj *dataObj, Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
 	int *heightPtr, Tcl_Obj *metadataOut, Tcl_DString *driverInternalPtr);

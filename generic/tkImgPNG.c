@@ -213,7 +213,7 @@ static int		FileMatchPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
 			    Tcl_Obj *metadataInObj, int *widthPtr,
 			    int *heightPtr, Tcl_Obj *metadataOut,
-			    int *closeChannelPtr, Tcl_DString *driverInternal);
+			    Tcl_DString *driverInternal);
 static int		FileReadPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
 			    Tcl_Obj *metadataInObj, Tk_PhotoHandle imageHandle,
@@ -2828,7 +2828,6 @@ FileMatchPNG(
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
     Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-    int *closeChannelPtr,	/* Return if the channel may be closed */
     Tcl_DString *driverInternal)/* memory passed to FileReadGIF */
 {
     PNGImage png;
