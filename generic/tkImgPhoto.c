@@ -206,16 +206,14 @@ static int		MatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
 			    Tcl_Obj *metadataOutObj,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
-			    int *widthPtr, int *heightPtr, int *oldformat,
-			    Tcl_DString *driverInternalPtr);
+			    int *widthPtr, int *heightPtr, int *oldformat);
 static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
 			    Tcl_Obj *formatString,
 			    Tcl_Obj *metadataInObj,
 			    Tcl_Obj *metadataOutObj,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
-			    int *widthPtr, int *heightPtr, int *oldformat,
-			    Tcl_DString *driverInternalPtr);
+			    int *widthPtr, int *heightPtr, int *oldformat);
 static const char *	GetExtension(const char *path);
 
 /*
@@ -980,9 +978,8 @@ ImgPhotoCmd(
     }
 
     case PHOTO_PUT: {
-	int result;
 	Tcl_Obj *format, *data;
-	Tcl_DString driverInternalDString;
+
 	/*
 	 * photo put command - first parse the options.
 	 */
@@ -1001,12 +998,6 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "data ?-option value ...?");
 	    return TCL_ERROR;
 	}
-	
-	/*
-	 * Prepare memory connection between format match and read function
-	 */
-	
-	Tcl_DStringInit(&driverInternalDString);
 
 	/*
 	 * See if there's a format that can read the data
@@ -1014,11 +1005,9 @@ ImgPhotoCmd(
 
 	if (MatchStringFormat(interp, objv[2], options.format,
 		options.metadata, NULL, &imageFormat,
-		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat,
-		&driverInternalDString)
+		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat)
 		!= TCL_OK) {
-	    result = TCL_ERROR;
-	    goto putCleanup;
+	    return TCL_ERROR;
 	}
 
 	if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
@@ -1045,8 +1034,7 @@ ImgPhotoCmd(
 		    (Tk_PhotoHandle) masterPtr, options.toX, options.toY,
 		    options.toX2 - options.toX,
 		    options.toY2 - options.toY, 0, 0) != TCL_OK) {
-		result = TCL_ERROR;
-		goto putCleanup;
+		return TCL_ERROR;
 	    }
 	} else {
 	    if (imageFormatVersion3->stringReadProc(interp, data, format,
@@ -1054,10 +1042,9 @@ ImgPhotoCmd(
 		    (Tk_PhotoHandle) masterPtr, options.toX, options.toY,
 		    options.toX2 - options.toX,
 		    options.toY2 - options.toY, 0, 0,
-		    NULL, &driverInternalDString)
+		    NULL)
 		    != TCL_OK) {
-		result = TCL_ERROR;
-		goto putCleanup;
+		return TCL_ERROR;
 	    }
 	}
 
@@ -1069,16 +1056,11 @@ ImgPhotoCmd(
 	 */
 	masterPtr->flags |= IMAGE_CHANGED;
 
-	result = TCL_OK;
-putCleanup:
-	Tcl_DStringFree(&driverInternalDString);
-	return result;
-
+	return TCL_OK;
     }
     case PHOTO_READ: {
 	Tcl_Obj *format;
 	int result;
-	Tcl_DString driverInternalDString;
 
 	/*
 	 * photo read command - first parse the options specified.
@@ -1130,21 +1112,15 @@ putCleanup:
 	    return TCL_ERROR;
 	}
 
-	/*
-	 * Prepare memory connection between format match and read function
-	 */
-	
-	Tcl_DStringInit(&driverInternalDString);
 	if (MatchFileFormat(interp, chan,
 		Tcl_GetString(options.name), options.format,
 		options.metadata, NULL, &imageFormat,
-		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat,
-		&driverInternalDString)
+		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat)
 		!= TCL_OK) {
 	    result = TCL_ERROR;
 	    goto readCleanup;
 	}
-	
+
 	/*
 	 * Check the values given for the -from option.
 	 */
@@ -1202,10 +1178,9 @@ putCleanup:
 		    Tcl_GetString(options.name),
 		    format, options.metadata, (Tk_PhotoHandle) masterPtr,
 		    options.toX, options.toY, width, height, options.fromX,
-		    options.fromY, NULL, &driverInternalDString);
+		    options.fromY, NULL);
 	}
 readCleanup:
-	Tcl_DStringFree(&driverInternalDString);
 	if (chan != NULL) {
 	    Tcl_Close(NULL, chan);
 	}
@@ -1990,7 +1965,6 @@ ImgPhotoConfigureMaster(
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
     const char **args;
-    Tcl_DString driverInternalDString;
 
     args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
@@ -2038,12 +2012,6 @@ ImgPhotoConfigureMaster(
 	    }
 	}
     }
-
-    /*
-     * Prepare memory connection between format match and read function
-     */
-
-    Tcl_DStringInit(&driverInternalDString);
 
     /*
      * Save the current values for fileString and dataString, so we can tell
@@ -2204,8 +2172,7 @@ ImgPhotoConfigureMaster(
 		(MatchFileFormat(interp, chan, masterPtr->fileString,
 			masterPtr->format, masterPtr->metadata, metadataOutObj,
 			&imageFormat, &imageFormatVersion3,
-			&imageWidth, &imageHeight, &oldformat,
-			&driverInternalDString) != TCL_OK)) {
+			&imageWidth, &imageHeight, &oldformat) != TCL_OK)) {
 	    Tcl_Close(NULL, chan);
 	    goto errorExit;
 	}
@@ -2231,11 +2198,10 @@ ImgPhotoConfigureMaster(
 		    masterPtr->fileString, tempformat, masterPtr->metadata,
 		    (Tk_PhotoHandle) masterPtr,
 		    0, 0, imageWidth, imageHeight, 0, 0,
-		    metadataOutObj, &driverInternalDString);
+		    metadataOutObj);
 	}
-	if (chan != NULL) {
-	    Tcl_Close(NULL, chan);
-	}
+
+	Tcl_Close(NULL, chan);
 	if (result != TCL_OK) {
 	    goto errorExit;
 	}
@@ -2258,7 +2224,7 @@ ImgPhotoConfigureMaster(
 	if (MatchStringFormat(interp, masterPtr->dataString,
 		masterPtr->format, masterPtr->metadata, metadataOutObj,
 		&imageFormat, &imageFormatVersion3, &imageWidth,
-		&imageHeight, &oldformat, &driverInternalDString) != TCL_OK) {
+		&imageHeight, &oldformat) != TCL_OK) {
 	    goto errorExit;
 	}
 	if (ImgPhotoSetSize(masterPtr, imageWidth, imageHeight) != TCL_OK) {
@@ -2285,8 +2251,7 @@ ImgPhotoConfigureMaster(
 	    
 	    if (imageFormatVersion3->stringReadProc(interp, tempdata, tempformat,
 		    masterPtr->metadata, (Tk_PhotoHandle) masterPtr, 0, 0,
-		    imageWidth, imageHeight, 0, 0, metadataOutObj,
-		    &driverInternalDString) != TCL_OK) {
+		    imageWidth, imageHeight, 0, 0, metadataOutObj) != TCL_OK) {
 		goto errorExit;
 	    }
 	}
@@ -2337,7 +2302,7 @@ ImgPhotoConfigureMaster(
 	    }
 	}
     }
-    
+
     /*
      * Enforce a reasonable value for gamma.
      */
@@ -2370,7 +2335,6 @@ ImgPhotoConfigureMaster(
 	    masterPtr->height, masterPtr->width, masterPtr->height);
     masterPtr->flags &= ~IMAGE_CHANGED;
 
-    Tcl_DStringInit(&driverInternalDString);
     if (oldData != NULL) {
 	Tcl_DecrRefCount(oldData);
     }
@@ -2386,7 +2350,6 @@ ImgPhotoConfigureMaster(
     return TCL_OK;
 
   errorExit:
-    Tcl_DStringInit(&driverInternalDString);
     if (oldData != NULL) {
 	Tcl_DecrRefCount(oldData);
     }
@@ -2761,9 +2724,7 @@ MatchFileFormat(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here. */
-    int *oldformat,		/* Returns 1 if the old image API is used. */
-    Tcl_DString *driverInternalPtr)/* Memory to be passed to the corresponding
-				 * ReadFileFormat function */
+    int *oldformat)		/* Returns 1 if the old image API is used. */
 {
     int matched = 0;
     int useoldformat = 0;
@@ -2892,7 +2853,7 @@ if (formatPtr == NULL) {
 
 	    if (formatVersion3Ptr->fileMatchProc(interp, chan, fileName,
 		    formatObj, metadataInObj, widthPtr, heightPtr,
-		    metadataOutObj, driverInternalPtr)) {
+		    metadataOutObj)) {
 		if (*widthPtr < 1) {
 		    *widthPtr = 1;
 		}
@@ -2985,10 +2946,7 @@ MatchStringFormat(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here. */
-    int *oldformat,		/* Returns 1 if the old image API is used. */
-    Tcl_DString *driverInternalPtr)
-				/* Memory to be passed to the corresponding
-				 * ReadFileFormat function */
+    int *oldformat)		/* Returns 1 if the old image API is used. */
 {
     int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr, *defaultFormatPtr = NULL;
@@ -3108,7 +3066,7 @@ MatchStringFormat(
 		    && (formatVersion3Ptr->stringReadProc != NULL)
 		    && formatVersion3Ptr->stringMatchProc(interp, data,
 			    formatObj, metadataInObj, widthPtr, heightPtr,
-			    metadataOutObj, driverInternalPtr)) {
+			    metadataOutObj)) {
 		break;
 	    }
 
