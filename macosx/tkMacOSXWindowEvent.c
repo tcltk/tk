@@ -979,7 +979,7 @@ RedisplayView(
      */
 
     if ([NSApp isDrawing]) {
-	if ([NSApp macMinorVersion] > 13) {
+	if ([NSApp macOSVersion] > 101300) {
 	    TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	}
 	return;
