@@ -1717,7 +1717,7 @@ ReadPHYS(
     if (ReadInt32(interp, pngPtr, &PPUy, &crc) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    if (ReadData(interp, pngPtr, &unitSpecifier, 1, &crc) == TCL_ERROR) {
+    if (ReadData(interp, pngPtr, (unsigned char *)&unitSpecifier, 1, &crc) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
@@ -2817,18 +2817,16 @@ static int
 FileMatchPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
-    const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *fmtObj,		/* User-specified format object, or NULL. */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
+    TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int match = 0;
-    (void)fileName;
-    (void)fmtObj;
 
     InitPNGImage(NULL, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2866,25 +2864,20 @@ static int
 FileReadPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
-    const char *fileName,	/* The name of the image file. */
+	TCL_UNUSED(const char *),	/* The name of the image file. */
     Tcl_Obj *fmtObj,		/* User-specified format object, or NULL. */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
-    int width, int height,	/* Dimensions of block of photo image to be
+	TCL_UNUSED(int), TCL_UNUSED(int),	/* Dimensions of block of photo image to be
 				 * written to. */
-    int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
+	TCL_UNUSED(int), TCL_UNUSED(int),		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
     Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int result = TCL_ERROR;
-    (void)fileName;
-    (void)width;
-    (void)height;
-    (void)srcX;
-    (void)srcY;
 
     result = InitPNGImage(interp, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2930,15 +2923,14 @@ static int
 StringMatchPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *pObjData,		/* the object containing the image data */
-    Tcl_Obj *fmtObj,		/* the image format object, or NULL */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
+	TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int match = 0;
-    (void)fmtObj;
 
     InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2977,19 +2969,15 @@ StringReadPNG(
     Tcl_Interp *interp,		/* interpreter for reporting errors in */
     Tcl_Obj *pObjData,		/* object containing the image */
     Tcl_Obj *fmtObj,		/* format object, or NULL */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* the image to write this data into */
     int destX, int destY,	/* The rectangular region of the */
-    int width, int height,	/* image to copy */
-    int srcX, int srcY,
+	TCL_UNUSED(int), TCL_UNUSED(int),	/* image to copy */
+	TCL_UNUSED(int), TCL_UNUSED(int),
     Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int result = TCL_ERROR;
-    (void)width;
-    (void)height;
-    (void)srcX;
-    (void)srcY;
 
     result = InitPNGImage(interp, &png, NULL, pObjData,
 	    TCL_ZLIB_STREAM_INFLATE);
@@ -3532,7 +3520,7 @@ WriteExtraChunks(
 	
 	Tcl_Obj *aspectObj, *DPIObj;
 	double aspectValue=-1, DPIValue=-1;
-	unsigned long PPUx, PPUy;
+	unsigned long PPUx = 65536, PPUy = 65536;
 	char unitSpecifier;
 	
 	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
@@ -3741,14 +3729,13 @@ static int
 FileWritePNG(
     Tcl_Interp *interp,
     const char *filename,
-    Tcl_Obj *fmtObj,
+	TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
     PNGImage png;
     int result = TCL_ERROR;
-    (void)fmtObj;
 
     /*
      * Open a Tcl file channel where the image data will be stored. Tk ought
@@ -3813,14 +3800,13 @@ FileWritePNG(
 static int
 StringWritePNG(
     Tcl_Interp *interp,
-    Tcl_Obj *fmtObj,
+	TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Obj *resultObj = Tcl_NewObj();
     PNGImage png;
     int result = TCL_ERROR;
-    (void)fmtObj;
 
     /*
      * Initalize PNGImage instance for encoding.

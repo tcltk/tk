@@ -356,20 +356,17 @@ static void		FlushChar(GIFState_t *statePtr);
 
 static int
 FileMatchGIF(
-    Tcl_Interp *dummy,		/* not used */
+    TCL_UNUSED(Tcl_Interp *),		/* not used */
     Tcl_Channel chan,		/* The image file, open for reading. */
-    const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *format,		/* User-specified format object, or NULL. */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(const char *),	/* The name of the image file. */
+	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
+	TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     GIFImageConfig gifConf;
-    (void)fileName;
-    (void)format;
-    (void)dummy;
 
     memset(&gifConf, 0, sizeof(GIFImageConfig));
     return ReadGIFHeader(&gifConf, chan, widthPtr, heightPtr);
@@ -400,7 +397,7 @@ FileReadGIF(
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -417,7 +414,6 @@ FileReadGIF(
     unsigned char buf[100];
     unsigned char *trashBuffer = NULL;
     int bitPixel;
-    int dictSize = 0;
     int gifLabel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
@@ -846,19 +842,17 @@ ReadOneByte(
 
 static int
 StringMatchGIF(
-    Tcl_Interp *dummy,		/* not used */
+    TCL_UNUSED(Tcl_Interp *),		/* not used */
     Tcl_Obj *dataObj,		/* the object containing the image data */
-    Tcl_Obj *format,		/* the image format object, or NULL */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
+    TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     unsigned char *data, header[10];
     TkSizeT got, length;
     MFile handle;
-    (void)format;
-    (void)dummy;
 
     data = TkGetByteArrayFromObj(dataObj, &length);
 
@@ -1187,7 +1181,7 @@ ReadImage(
     Tcl_Channel chan,
     int len, int rows,
     unsigned char cmap[MAXCOLORMAPSIZE][4],
-    int srcX, int srcY,
+	TCL_UNUSED(int), TCL_UNUSED(int),
     int interlace,
     int transparent)
 {
@@ -1202,8 +1196,6 @@ ReadImage(
     unsigned char *top;
     int codeSize, clearCode, inCode, endCode, oldCode, maxCode;
     int code, firstCode, v;
-    (void)srcX;
-    (void)srcY;
 
     /*
      * Initialize the decoder
@@ -1867,7 +1859,7 @@ CommonWriteGIF(
     Tcl_Interp *interp,
     ClientData handle,
     WriteBytesFunc *writeProc,
-    Tcl_Obj *format,
+	TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
@@ -1876,7 +1868,6 @@ CommonWriteGIF(
     long width, height, x;
     unsigned char c;
     unsigned int top, left;
-    (void)format;
 
     top = 0;
     left = 0;
