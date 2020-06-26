@@ -165,7 +165,6 @@ static char scriptPath[PATH_MAX + 1] = "";
     majorVersion = systemVersion.majorVersion;
     minorVersion = systemVersion.minorVersion;
 #endif
-    printf("Major: %d; Minor: %d\n", majorVersion, minorVersion);
     [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
 
     /*
