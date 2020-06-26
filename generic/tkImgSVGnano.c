@@ -221,14 +221,14 @@ static int
 FileMatchSVG(
     Tcl_Interp *interp,		/* interpreter pointer */
     Tcl_Channel chan,		/* The image file, open for reading. */
-    const char *fileName,	/* The name of the image file. */
+	TCL_UNUSED(const char *),	/* The name of the image file. */
     Tcl_Obj *formatObj,		/* User-specified format object, or NULL. */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
-    int *closeChannelPtr,	/* Return if the channel may be closed */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
+	TCL_UNUSED(int *),	/* Return if the channel may be closed */
     Tcl_DString *driverInternalPtr)
 				/* memory passed to FileReadGIF */
 {
@@ -236,8 +236,6 @@ FileMatchSVG(
     NSVGimage *nsvgImage;
     serializedHeader *serializedHeaderPtr;
     optionsStruct options;
-
-    (void)fileName;
 
     /*
      * Parse the options. Unfortunately, any error can not be returned.
@@ -613,10 +611,10 @@ static void SerializePath(struct NSVGpath *pathPtr,
 static int
 FileReadSVG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
-    Tcl_Channel chan,		/* The image file, open for reading. */
-    const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *formatObj,		/* User-specified format object, or NULL. */
-    Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
+	TCL_UNUSED(Tcl_Channel),		/* The image file, open for reading. */
+	TCL_UNUSED(const char *),	/* The name of the image file. */
+	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -631,9 +629,7 @@ FileReadSVG(
     int result;
     optionsStruct * optionsPtr;
     char * svgBlob;
-    (void)fileName;
-    
-    
+
     optionsPtr = (optionsStruct *) Tcl_DStringValue(driverInternalPtr);
     svgBlob = Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct);
 
@@ -682,7 +678,7 @@ StringMatchSVG(
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Obj *metadataOut,	/* metadata return dict, may be NULL */
+	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
     Tcl_DString *driverInternalPtr)
 				/* memory to pass to StringReadGIF */
 {
@@ -818,8 +814,8 @@ static char * StringCheckMetadata(
     if (itemData == NULL) {
 	return NULL;
     }
-    svgBlobPtr = Tcl_GetByteArrayFromObj(itemData, &length);
-    if (length < sizeof(serializedHeader) ) {
+    svgBlobPtr = (char *)Tcl_GetByteArrayFromObj(itemData, &length);
+    if ((size_t)length < sizeof(serializedHeader) ) {
 	return NULL;
     }
     serializedHeaderPtr = (serializedHeader *)svgBlobPtr;
@@ -853,8 +849,8 @@ static char * StringCheckMetadata(
 static int
 StringReadSVG(
     Tcl_Interp *interp,		/* interpreter for reporting errors in */
-    Tcl_Obj *dataObj,		/* object containing the image */
-    Tcl_Obj *formatObj,		/* format object, or NULL */
+	TCL_UNUSED(Tcl_Obj *),		/* object containing the image */
+	TCL_UNUSED(Tcl_Obj *),		/* format object, or NULL */
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* the image to write this data into */
     int destX, int destY,	/* The rectangular region of the */
@@ -885,7 +881,7 @@ StringReadSVG(
 	    return TCL_ERROR;
         }
 
-	svgBlobPtr = Tcl_GetByteArrayFromObj(itemData, &length);
+	svgBlobPtr = (char *)Tcl_GetByteArrayFromObj(itemData, &length);
     }
 
     result = RasterizeSVG(interp, imageHandle,
@@ -929,7 +925,7 @@ static int SaveSVGBLOBToMetadata(
     return Tcl_DictObjPut(interp, metadataOutObj,
 	Tcl_NewStringObj("SVGBLOB",-1),
 	Tcl_NewByteArrayObj(
-		Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct),
+		(unsigned char *)Tcl_DStringValue(driverInternalPtr) + sizeof(optionsStruct),
 		Tcl_DStringLength(driverInternalPtr) - sizeof(optionsStruct)));
 }
 
@@ -957,7 +953,6 @@ ParseOptions(
     Tcl_Obj **objv = NULL;
     int objc = 0;
     double dpi;
-    char *inputCopy = NULL;
     int parameterScaleSeen = 0;
     static const char *const fmtOptions[] = {
         "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
@@ -1225,15 +1220,13 @@ RasterizeSVG(
     optionsStruct * optionsPtr,
     int destX, int destY,
     int width, int height,
-    int srcX, int srcY)
+    TCL_UNUSED(int), TCL_UNUSED(int))
 {
     int w, h, c;
     NSVGrasterizer *rast;
     unsigned char *imgData;
     Tk_PhotoImageBlock svgblock;
     double scale;
-    (void)srcX;
-    (void)srcY;
     
     scale = GetScaleFromParameters((serializedHeader *) svgBlobPtr, optionsPtr,
 	    &w, &h);
