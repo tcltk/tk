@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <AtkObject.h>
 
 /*
  * Get main Tcl interpreter. 
@@ -54,6 +55,7 @@ static int _bridge_initialized = 0;
  */
 static void (*_atk_init) (void);
 static void (*_atk_stop) (void);
+
 
 
 /*
@@ -145,6 +147,8 @@ ATKbridge_Init (void)
   _atk_init ();
 		
   _bridge_initialized = 1;
+
+  
   return TCL_OK;
 }
 	
@@ -179,7 +183,8 @@ ATKbridge_Stop (void)
  *
  * ATKbridge_Iterate --
  *
- *  Iterates the main context in a non-blocking way, so that the AT-SPI *  bridge can interact with the ATK bindings.
+ *  Iterates the main context in a non-blocking way, so that the AT-SPI 
+ *  bridge can interact with the ATK bindings.
  *
  * Results:
  *  Allows the AT-SPI bridge can interact with the ATK bindings.
@@ -200,6 +205,120 @@ ATKbridge_Iterate (void)
     return TCL_ERROR;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ATKRole_Register --
+ *
+ *  Maps the Tk role to Atk role.
+ *
+ * Results:
+ *  Maps the abstract Tk role to a platform-specific Atk role.
+ *
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+
+static AtkRole ATKRole_Register(char *name) {
+
+  AtkRole role = NULL;
+
+  switch (name) {
+    
+  case "TK_ROLE_CELL":
+    role = ATK_ROLE_CELL;
+    break;
+
+  case "TK_ROLE_CHECK_BOX":
+    role = ATK_ROLE_CHECK_BOX;
+    break;
+
+  case "TK_ROLE_CHECK_MENU_ITEM":
+    role = ATK_ROLE_CHECK_MENU_ITEM;
+    break;
+
+  case "TK_ROLE_COMBOBOX":
+    role = ATK_ROLE_COMBOBOX;
+    break;
+
+  case "TK_ROLE_ENTRY":
+    role = "ATK_ROLE_ENTRY";
+    break;
+
+  case "TK_ROLE_GROUPING":
+    role = ATK_ROLE_GROUPING;
+    break;
+
+  case "TK_ROLE_LABEL":
+    role = ATK_ROLE_LABEL;
+    break;
+
+  case  "TK_ROLE_MENU":
+    role = ATK_ROLE_MENU;
+    break;
+
+  case "TK_ROLE_MENUBAR":
+    role = ATK_ROLE_MENUBAR;
+    break;
+    
+  case "TK_ROLE_MENUITEM":
+    role = ATK_ROLE_MENUITEM;
+    break;
+    
+  case "TK_ROLE_OUTLINE":
+    role = ATK_ROLE_OUTLINE;
+    break;
+
+  case "TK_ROLE_OUTLINEITEM":
+    role = ATK_ROLE_OUTLINEITEM;
+    break;
+
+  case "TK_ROLE_PAGE_TAB":
+    role = ATK_ROLE_PAGE_TAB;
+    break;
+
+  case "TK_ROLE_PAGETABLIST":
+    role = ATK_ROLE_PAGETABLIST;
+    break;
+
+  case "TK_ROLE_PANE":
+    role = ATK_ROLE_PANE;
+    break;
+
+  case "TK_ROLE_PUSH_BUTTON":
+    role = ATK_ROLE_PUSH_BUTTON;
+    break;
+
+  case "TK_ROLE_RADIOBUTTON":
+    role = ATK_ROLE_RADIOBUTTON;
+    break;
+
+  case "TK_ROLE_ROWHEADER":
+    role = ATK_ROLE_ROWHEADER;
+    break;
+
+  case "TK_ROLE_SLIDER":
+    role = ATK_ROLE_SLIDER;
+    break;
+
+  case "TK_ROLE_SPINBUTTON":
+    role = ATK_ROLE_SPINBUTTON;
+    break;
+
+  default:
+    break;
+
+  }
+
+  return role;
+
+}
 
 /*
  *----------------------------------------------------------------------
