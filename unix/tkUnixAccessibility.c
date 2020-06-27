@@ -5,9 +5,8 @@
  *      on Unix-like systems based on the Gnome Accessibility Toolkit, 
  *      the standard accessibility library for X11 systems. 
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
  * Copyright (c) 2006, Marcus von Appen
- * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
