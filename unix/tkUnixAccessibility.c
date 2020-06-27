@@ -225,7 +225,7 @@ ATKbridge_Iterate (void)
 
 
 
-static AtkRole ATKRole_Register(char *name) {
+static AtkRole ATKRole_Register(Tk_Window tkwin, char *name) {
 
   AtkRole role = NULL;
 
@@ -343,5 +343,6 @@ ATKbridge_ExportFuncs (void)
   Tcl_CreateObjCommand(ip, "::tk::AccessibilityInit", ATKbridge_Init, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
   Tcl_CreateObjCommand(ip, "::tk::AccessibilityStop", ATKbridge_Stop,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
   Tcl_CreateObjCommand(ip, "::tk::AccessibilityLoop", ATKbridge_Iterate,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+    Tcl_CreateObjCommand(ip, "::tk::AccessibilitRoleRegister", ATKRole_Registe(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
 }
