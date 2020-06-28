@@ -62,7 +62,7 @@ test place-2.2 {ConfigureSlave procedure, -height option} -setup {
     place .t.f2 -in .t.f -height 40
     update
     winfo height .t.f2
-} -result {40}
+} -result 40
 test place-2.3 {ConfigureSlave procedure, -height option} -setup {
     place forget .t.f2
 } -body {
@@ -71,7 +71,7 @@ test place-2.3 {ConfigureSlave procedure, -height option} -setup {
     place .t.f2 -height {}
     update
     winfo height .t.f2
-} -result {60}
+} -result 60
 
 
 test place-3.1 {ConfigureSlave procedure, -relheight option} -body {
@@ -83,7 +83,7 @@ test place-3.2 {ConfigureSlave procedure, -relheight option} -setup {
     place .t.f2 -in .t.f -relheight .5
     update
     winfo height .t.f2
-} -result {40}
+} -result 40
 test place-3.3 {ConfigureSlave procedure, -relheight option} -setup {
     place forget .t.f2
 } -body {
@@ -92,7 +92,7 @@ test place-3.3 {ConfigureSlave procedure, -relheight option} -setup {
     place .t.f2 -relheight {}
     update
     winfo height .t.f2
-} -result {60}
+} -result 60
 
 
 test place-4.1 {ConfigureSlave procedure, bad -in options} -setup {
@@ -148,7 +148,7 @@ test place-5.2 {ConfigureSlave procedure, -relwidth option} -setup {
     place .t.f2 -in .t.f -relwidth .5
     update
     winfo width .t.f2
-} -result {75}
+} -result 75
 test place-5.3 {ConfigureSlave procedure, -relwidth option} -setup {
     place forget .t.f2
 } -body {
@@ -157,7 +157,7 @@ test place-5.3 {ConfigureSlave procedure, -relwidth option} -setup {
     place .t.f2 -relwidth {}
     update
     winfo width .t.f2
-} -result {30}
+} -result 30
 
 test place-6.1 {ConfigureSlave procedure, -width option} -body {
     place .t.f2 -width abcd
@@ -168,7 +168,7 @@ test place-6.2 {ConfigureSlave procedure, -width option} -setup {
     place .t.f2 -in .t.f -width 100
     update
     winfo width .t.f2
-} -result {100}
+} -result 100
 test place-6.3 {ConfigureSlave procedure, -width option} -setup {
     place forget .t.f2
 } -body {
@@ -177,7 +177,7 @@ test place-6.3 {ConfigureSlave procedure, -width option} -setup {
     place .t.f2 -width {}
     update
     winfo width .t.f2
-} -result {30}
+} -result 30
 
 
 test place-7.1 {ReconfigurePlacement procedure, computing position} -setup {

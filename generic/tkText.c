@@ -5084,7 +5084,7 @@ DumpSegment(
 	Tcl_DStringAppend(&buf, Tcl_GetString(command), -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -6787,7 +6787,7 @@ GetLineStartEnd(
     (void)dummy;
     (void)tkwin;
 
-    if ((internalOffset == TCL_INDEX_NONE) || (recordPtr == NULL)) {
+    if (linePtr == NULL) {
 	return Tcl_NewObj();
     }
     return Tcl_NewWideIntObj(1 + TkBTreeLinesTo(NULL, linePtr));

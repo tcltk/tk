@@ -362,15 +362,15 @@ static int
 FileMatchGIF(
     TCL_UNUSED(Tcl_Interp *),		/* not used */
     Tcl_Channel chan,		/* The image file, open for reading. */
-	TCL_UNUSED(const char *),	/* The name of the image file. */
-	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
     TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
-	TCL_UNUSED(int *),	/* Return if the channel may be closed */
-	TCL_UNUSED(Tcl_DString *))/* memory passed to FileReadGIF */
+    TCL_UNUSED(int *),	/* Return if the channel may be closed */
+    TCL_UNUSED(Tcl_DString *))/* memory passed to FileReadGIF */
 {
     GIFImageConfig gifConf;
 
@@ -403,7 +403,7 @@ FileReadGIF(
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -412,7 +412,7 @@ FileReadGIF(
     int srcX, int srcY,		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
     Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-	TCL_UNUSED(Tcl_DString *))/* memory passed from FileMatchGIF */
+    TCL_UNUSED(Tcl_DString *))/* memory passed from FileMatchGIF */
 {
     int fileWidth, fileHeight, imageWidth, imageHeight;
     unsigned int nBytes;
@@ -851,12 +851,12 @@ static int
 StringMatchGIF(
     TCL_UNUSED(Tcl_Interp *),		/* not used */
     Tcl_Obj *dataObj,		/* the object containing the image data */
-	TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
-	TCL_UNUSED(Tcl_DString *))/* memory to pass to StringReadGIF */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
+    TCL_UNUSED(Tcl_DString *))/* memory to pass to StringReadGIF */
 {
     unsigned char *data, header[10];
     TkSizeT got, length;
@@ -1270,7 +1270,8 @@ ReadImage(
     Tcl_Channel chan,
     int len, int rows,
     unsigned char cmap[MAXCOLORMAPSIZE][4],
-	TCL_UNUSED(int), TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
     int interlace,
     int transparent)
 {
@@ -1948,7 +1949,7 @@ CommonWriteGIF(
     Tcl_Interp *interp,
     ClientData handle,
     WriteBytesFunc *writeProc,
-    Tcl_Obj *format,
+    TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
@@ -1957,7 +1958,6 @@ CommonWriteGIF(
     long width, height, x;
     unsigned char c;
     unsigned int top, left;
-    (void)format;
 
     top = 0;
     left = 0;
