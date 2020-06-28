@@ -762,8 +762,8 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	fi
 	@EXTRA_INSTALL_BINARIES@
 	@echo "Installing pkg-config file to $(LIB_INSTALL_DIR)/pkgconfig/"
-	@$(INSTALL_DATA_DIR) $(LIB_INSTALL_DIR)/pkgconfig
-	@$(INSTALL_DATA) tk.pc $(LIB_INSTALL_DIR)/pkgconfig/tk.pc
+	@$(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/pkgconfig"
+	@$(INSTALL_DATA) tk.pc "$(LIB_INSTALL_DIR)/pkgconfig/tk.pc"
 
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
@@ -1206,7 +1206,7 @@ tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
 
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c tkConfig.sh
-	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
+	$(CC) -c $(CC_SWITCHES) \
 	    $(UNIX_DIR)/tkUnixInit.c
 
 tkUnixKey.o: $(UNIX_DIR)/tkUnixKey.c
@@ -1282,7 +1282,7 @@ tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXImage.c
 
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh
-	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
+	$(CC) -c $(CC_SWITCHES) \
 	    $(MAC_OSX_DIR)/tkMacOSXInit.c
 
 tkMacOSXKeyboard.o: $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
