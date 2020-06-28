@@ -393,14 +393,13 @@ ImgPhotoCreate(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
+    TCL_UNUSED(const Tk_ImageType *),/* Pointer to our type record (not used). */
     Tk_ImageMaster master,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
     PhotoMaster *masterPtr;
-    (void)typePtr;
 
     /*
      * Allocate and initialize the photo image master record.
@@ -3319,8 +3318,21 @@ Tk_PhotoPutBlock(
     if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(sourceBlock.height
-		* sourceBlock.pitch);
+	/*
+	 * Fix 5c51be6411: avoid reading
+	 *
+	 *	(sourceBlock.pitch - sourceBlock.width * sourceBlock.pixelSize)
+	 *
+	 * bytes past the end of masterPtr->pix32[] when
+	 *
+	 *	blockPtr->pixelPtr > (masterPtr->pix32 +
+	 *		4 * masterPtr->width * masterPtr->height -
+	 *		sourceBlock.height * sourceBlock.pitch)
+	 */
+	unsigned int cpyLen = (sourceBlock.height - 1) * sourceBlock.pitch +
+		sourceBlock.width * sourceBlock.pixelSize;
+
+	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(cpyLen);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3330,8 +3342,7 @@ Tk_PhotoPutBlock(
 	    return TCL_ERROR;
 	}
 	memToFree = sourceBlock.pixelPtr;
-	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
-	    * sourceBlock.pitch);
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, cpyLen);
     }
 
 
@@ -3753,8 +3764,21 @@ Tk_PhotoPutZoomedBlock(
     if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(sourceBlock.height
-		* sourceBlock.pitch);
+	/*
+	 * Fix 5c51be6411: avoid reading
+	 *
+	 *	(sourceBlock.pitch - sourceBlock.width * sourceBlock.pixelSize)
+	 *
+	 * bytes past the end of masterPtr->pix32[] when
+	 *
+	 *	blockPtr->pixelPtr > (masterPtr->pix32 +
+	 *		4 * masterPtr->width * masterPtr->height -
+	 *		sourceBlock.height * sourceBlock.pitch)
+	 */
+	unsigned int cpyLen = (sourceBlock.height - 1) * sourceBlock.pitch +
+		sourceBlock.width * sourceBlock.pixelSize;
+
+	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(cpyLen);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3764,8 +3788,7 @@ Tk_PhotoPutZoomedBlock(
 	    return TCL_ERROR;
 	}
 	memToFree = sourceBlock.pixelPtr;
-	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
-	    * sourceBlock.pitch);
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, cpyLen);
     }
 
     xEnd = x + width;
@@ -4548,15 +4571,13 @@ static int
 ImgPhotoPostscript(
     ClientData clientData,	/* Handle for the photo image. */
     Tcl_Interp *interp,		/* Interpreter. */
-    Tk_Window tkwin,		/* (unused) */
+    TCL_UNUSED(Tk_Window),		/* (unused) */
     Tk_PostscriptInfo psInfo,	/* Postscript info. */
     int x, int y,		/* First pixel to output. */
     int width, int height,	/* Width and height of area. */
-    int prepass)		/* (unused) */
+    TCL_UNUSED(int))		/* (unused) */
 {
     Tk_PhotoImageBlock block;
-    (void)tkwin;
-    (void)prepass;
 
     Tk_PhotoGetImage(clientData, &block);
     block.pixelPtr += y * block.pitch + x * block.pixelSize;

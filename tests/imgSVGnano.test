@@ -184,7 +184,7 @@ test imgSVGnano-3.7 {Option -scaletowidth} -body {
     image width foo
 } -cleanup {
     rename foo ""
-} -result {20}
+} -result 20
 
 test imgSVGnano-3.8 {Option -scaletoheight} -body {
     image create photo foo -format "svg -scaletoheight 20"\
@@ -192,7 +192,7 @@ test imgSVGnano-3.8 {Option -scaletoheight} -body {
     image height foo
 } -cleanup {
     rename foo ""
-} -result {20}
+} -result 20
 
 test imgSVGnano-3.10 {change from -scaletoheight to -scale} -body {
     set res {}

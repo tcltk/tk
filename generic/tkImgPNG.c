@@ -2821,15 +2821,15 @@ static int
 FileMatchPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
-	TCL_UNUSED(const char *),	/* The name of the image file. */
-	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
-	TCL_UNUSED(int *),	/* Return if the channel may be closed */
-	TCL_UNUSED(Tcl_DString *))/* memory passed to FileReadGIF */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
+    TCL_UNUSED(int *),	/* Return if the channel may be closed */
+    TCL_UNUSED(Tcl_DString *))/* memory passed to FileReadGIF */
 {
     PNGImage png;
     int match = 0;
@@ -2870,18 +2870,18 @@ static int
 FileReadPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
-	TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
     Tcl_Obj *fmtObj,		/* User-specified format object, or NULL. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
-	TCL_UNUSED(int), TCL_UNUSED(int),	/* Dimensions of block of photo image to be
-				 * written to. */
-	TCL_UNUSED(int), TCL_UNUSED(int),		/* Coordinates of top-left pixel to be used in
-				 * image being read. */
+    TCL_UNUSED(int),	/* Dimensions of block of photo image to be */
+    TCL_UNUSED(int),	/* written to. */
+    TCL_UNUSED(int),	/* Coordinates of top-left pixel to be used in */
+    TCL_UNUSED(int),	/* image being read. */
     Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-	TCL_UNUSED(Tcl_DString *))/* memory passed from FileMatchGIF */
+    TCL_UNUSED(Tcl_DString *))/* memory passed from FileMatchGIF */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -2930,12 +2930,12 @@ static int
 StringMatchPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *pObjData,		/* the object containing the image data */
-	TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
-	TCL_UNUSED(Tcl_DString *))/* memory to pass to StringReadGIF */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
+    TCL_UNUSED(Tcl_DString *))/* memory to pass to StringReadGIF */
 {
     PNGImage png;
     int match = 0;
@@ -2977,13 +2977,15 @@ StringReadPNG(
     Tcl_Interp *interp,		/* interpreter for reporting errors in */
     Tcl_Obj *pObjData,		/* object containing the image */
     Tcl_Obj *fmtObj,		/* format object, or NULL */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* the image to write this data into */
     int destX, int destY,	/* The rectangular region of the */
-	TCL_UNUSED(int), TCL_UNUSED(int),	/* image to copy */
-	TCL_UNUSED(int), TCL_UNUSED(int),
+    TCL_UNUSED(int),	/* image to copy */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
     Tcl_Obj *metadataOutObj,	/* metadata return dict, may be NULL */
-	TCL_UNUSED(Tcl_DString *))/* memory passed from StringReadGIF */
+    TCL_UNUSED(Tcl_DString *))/* memory passed from StringReadGIF */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -3738,7 +3740,7 @@ static int
 FileWritePNG(
     Tcl_Interp *interp,
     const char *filename,
-	TCL_UNUSED(Tcl_Obj *),
+    TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
@@ -3809,7 +3811,7 @@ FileWritePNG(
 static int
 StringWritePNG(
     Tcl_Interp *interp,
-	TCL_UNUSED(Tcl_Obj *),
+    TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {

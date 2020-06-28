@@ -221,14 +221,14 @@ static int
 FileMatchSVG(
     Tcl_Interp *interp,		/* interpreter pointer */
     Tcl_Channel chan,		/* The image file, open for reading. */
-	TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
     Tcl_Obj *formatObj,		/* User-specified format object, or NULL. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
-	TCL_UNUSED(int *),	/* Return if the channel may be closed */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
+    TCL_UNUSED(int *),	/* Return if the channel may be closed */
     Tcl_DString *driverInternalPtr)
 				/* memory passed to FileReadGIF */
 {
@@ -611,10 +611,10 @@ static void SerializePath(struct NSVGpath *pathPtr,
 static int
 FileReadSVG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
-	TCL_UNUSED(Tcl_Channel),		/* The image file, open for reading. */
-	TCL_UNUSED(const char *),	/* The name of the image file. */
-	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    TCL_UNUSED(Tcl_Channel),		/* The image file, open for reading. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -678,7 +678,7 @@ StringMatchSVG(
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-	TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata return dict, may be NULL */
     Tcl_DString *driverInternalPtr)
 				/* memory to pass to StringReadGIF */
 {
@@ -849,8 +849,8 @@ static char * StringCheckMetadata(
 static int
 StringReadSVG(
     Tcl_Interp *interp,		/* interpreter for reporting errors in */
-	TCL_UNUSED(Tcl_Obj *),		/* object containing the image */
-	TCL_UNUSED(Tcl_Obj *),		/* format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),		/* object containing the image */
+    TCL_UNUSED(Tcl_Obj *),		/* format object, or NULL */
     Tcl_Obj *metadataInObj,	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* the image to write this data into */
     int destX, int destY,	/* The rectangular region of the */
@@ -1220,7 +1220,8 @@ RasterizeSVG(
     optionsStruct * optionsPtr,
     int destX, int destY,
     int width, int height,
-    TCL_UNUSED(int), TCL_UNUSED(int))
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     int w, h, c;
     NSVGrasterizer *rast;
