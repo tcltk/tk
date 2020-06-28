@@ -358,13 +358,13 @@ static int
 FileMatchGIF(
     TCL_UNUSED(Tcl_Interp *),		/* not used */
     Tcl_Channel chan,		/* The image file, open for reading. */
-	TCL_UNUSED(const char *),	/* The name of the image file. */
-	TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-	TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
+    TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     GIFImageConfig gifConf;
 
@@ -844,7 +844,7 @@ static int
 StringMatchGIF(
     TCL_UNUSED(Tcl_Interp *),		/* not used */
     Tcl_Obj *dataObj,		/* the object containing the image data */
-	TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
@@ -1181,7 +1181,8 @@ ReadImage(
     Tcl_Channel chan,
     int len, int rows,
     unsigned char cmap[MAXCOLORMAPSIZE][4],
-	TCL_UNUSED(int), TCL_UNUSED(int),
+	TCL_UNUSED(int),
+	TCL_UNUSED(int),
     int interlace,
     int transparent)
 {
@@ -1859,7 +1860,7 @@ CommonWriteGIF(
     Tcl_Interp *interp,
     ClientData handle,
     WriteBytesFunc *writeProc,
-	TCL_UNUSED(Tcl_Obj *),
+    TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {

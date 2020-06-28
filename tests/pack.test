@@ -1639,7 +1639,7 @@ test pack-20.1 {<<NoManagedChild>> fires on last pack forget} -setup {
 } -cleanup {
     bind . <<NoManagedChild>> {}
     destroy .1
-} -result {1}
+} -result 1
 test pack-20.2 {<<NoManagedChild>> fires on last packed child destruction} -setup {
     global A
     unset -nocomplain A
@@ -1653,7 +1653,7 @@ test pack-20.2 {<<NoManagedChild>> fires on last packed child destruction} -setu
 } -cleanup {
     bind . <<NoManagedChild>> {}
     destroy .1
-} -result {1}
+} -result 1
 test pack-20.3 {<Configure> does not fire on last pack forget} -setup {
     global A
     unset -nocomplain A
@@ -1667,7 +1667,7 @@ test pack-20.3 {<Configure> does not fire on last pack forget} -setup {
 } -cleanup {
     bind . <Configure> {}
     destroy .1
-} -result {0}
+} -result 0
 test pack-20.4 {<<NoManagedChild>> does not fire on forelast pack forget} -setup {
     global A
     unset -nocomplain A
@@ -1682,7 +1682,7 @@ test pack-20.4 {<<NoManagedChild>> does not fire on forelast pack forget} -setup
 } -cleanup {
     bind . <<NoManagedChild>> {}
     destroy .1 .2
-} -result {0}
+} -result 0
 test pack-20.5 {<Configure> does not fire on last pack forget} -setup {
     global A
     unset -nocomplain A
@@ -1697,7 +1697,7 @@ test pack-20.5 {<Configure> does not fire on last pack forget} -setup {
 } -cleanup {
     bind . <Configure> {}
     destroy .1 .2
-} -result {1}
+} -result 1
 test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagation is off} -setup {
     global A
     unset -nocomplain A
@@ -1712,7 +1712,7 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
 } -cleanup {
     bind . <<NoManagedChild>> {}
     destroy .1
-} -result {0}
+} -result 0
 
 # cleanup
 cleanupTests
