@@ -28,7 +28,7 @@ test text-1.1 {configuration option: "autoseparators"} -setup {
     .t cget -autoseparators
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-1.1b {configuration option: "autoseparators", default} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -37,7 +37,7 @@ test text-1.1b {configuration option: "autoseparators", default} -setup {
     .t cget -autoseparators
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-1.2 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -75,7 +75,7 @@ test text-1.5 {configuration option: "bd"} -setup {
     .t cget -bd
 } -cleanup {
     destroy .t
-} -result {4}
+} -result 4
 test text-1.6 {configuration option: "bd"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -113,7 +113,7 @@ test text-1.9 {configuration option: "blockcursor"} -setup {
     .t cget -blockcursor
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.10 {configuration option: "blockcursor"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -132,7 +132,7 @@ test text-1.11 {configuration option: "borderwidth"} -setup {
     .t cget -borderwidth
 } -cleanup {
     destroy .t
-} -result {7}
+} -result 7
 test text-1.12 {configuration option: "borderwidth"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -170,7 +170,7 @@ test text-1.15 {configuration option: "exportselection"} -setup {
     .t cget -exportselection
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.16 {configuration option: "exportselection"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -246,7 +246,7 @@ test text-1.23 {configuration option: "height"} -setup {
     .t cget -height
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-1.24 {configuration option: "height"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -303,7 +303,7 @@ test text-1.29 {configuration option: "highlightthickness"} -setup {
     .t cget -highlightthickness
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.30 {configuration option: "highlightthickness"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -360,7 +360,7 @@ test text-1.35 {configuration option: "insertborderwidth"} -setup {
     .t cget -insertborderwidth
 } -cleanup {
     destroy .t
-} -result {45}
+} -result 45
 test text-1.36 {configuration option: "insertborderwidth"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -379,7 +379,7 @@ test text-1.37 {configuration option: "insertofftime"} -setup {
     .t cget -insertofftime
 } -cleanup {
     destroy .t
-} -result {100}
+} -result 100
 test text-1.38 {configuration option: "insertofftime"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -398,7 +398,7 @@ test text-1.39 {configuration option: "insertontime"} -setup {
     .t cget -insertontime
 } -cleanup {
     destroy .t
-} -result {47}
+} -result 47
 test text-1.40 {configuration option: "insertontime"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -417,7 +417,7 @@ test text-1.41 {configuration option: "insertwidth"} -setup {
     .t cget -insertwidth
 } -cleanup {
     destroy .t
-} -result {2}
+} -result 2
 test text-1.42 {configuration option: "insertwidth"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -436,7 +436,7 @@ test text-1.43 {configuration option: "maxundo"} -setup {
     .t cget -maxundo
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-1.43b {configuration option: "maxundo", default} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -445,7 +445,7 @@ test text-1.43b {configuration option: "maxundo", default} -setup {
     .t cget -maxundo
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.44 {configuration option: "maxundo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -464,7 +464,7 @@ test text-1.45 {configuration option: "padx"} -setup {
     .t cget -padx
 } -cleanup {
     destroy .t
-} -result {3}
+} -result 3
 test text-1.46 {configuration option: "padx"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -483,7 +483,7 @@ test text-1.47 {configuration option: "pady"} -setup {
     .t cget -pady
 } -cleanup {
     destroy .t
-} -result {82}
+} -result 82
 test text-1.48 {configuration option: "pady"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -540,7 +540,7 @@ test text-1.53 {configuration option: "selectborderwidth"} -setup {
     .t cget -selectborderwidth
 } -cleanup {
     destroy .t
-} -result {21}
+} -result 21
 test text-1.54 {configuration option: "selectborderwidth"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -578,7 +578,7 @@ test text-1.57 {configuration option: "spacing1"} -setup {
     .t cget -spacing1
 } -cleanup {
     destroy .t
-} -result {20}
+} -result 20
 test text-1.58 {configuration option: "spacing1"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -597,7 +597,7 @@ test text-1.59 {configuration option: "spacing1"} -setup {
     .t cget -spacing1
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.60 {configuration option: "spacing1"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -616,7 +616,7 @@ test text-1.61 {configuration option: "spacing2"} -setup {
     .t cget -spacing2
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-1.62 {configuration option: "spacing2"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -635,7 +635,7 @@ test text-1.63 {configuration option: "spacing2"} -setup {
     .t cget -spacing2
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.64 {configuration option: "spacing2"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -654,7 +654,7 @@ test text-1.65 {configuration option: "spacing3"} -setup {
     .t cget -spacing3
 } -cleanup {
     destroy .t
-} -result {20}
+} -result 20
 test text-1.66 {configuration option: "spacing3"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -673,7 +673,7 @@ test text-1.67 {configuration option: "spacing3"} -setup {
     .t cget -spacing3
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.68 {configuration option: "spacing3"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -749,7 +749,7 @@ test text-1.75 {configuration option: "undo"} -setup {
     .t cget -undo
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-1.75b {configuration option: "undo", default} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -758,7 +758,7 @@ test text-1.75b {configuration option: "undo", default} -setup {
     .t cget -undo
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-1.76 {configuration option: "undo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -777,7 +777,7 @@ test text-1.77 {configuration option: "width"} -setup {
     .t cget -width
 } -cleanup {
     destroy .t
-} -result {73}
+} -result 73
 test text-1.78 {configuration option: "width"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -1004,7 +1004,7 @@ test text-5.4 {TextWidgetCmd procedure, "cget" option} -setup {
     .t cget -bd
 } -cleanup {
     destroy .t
-} -result {17}
+} -result 17
 
 
 test text-6.1 {TextWidgetCmd procedure, "compare" option} -setup {
@@ -1198,7 +1198,7 @@ test text-7.3 {TextWidgetCmd procedure, "debug" option} -setup {
     .t deb
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-7.4 {TextWidgetCmd procedure, "debug" option} -setup {
     text .t
 } -body {
@@ -1206,7 +1206,7 @@ test text-7.4 {TextWidgetCmd procedure, "debug" option} -setup {
     .t debug
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 
 
 test text-8.1 {TextWidgetCmd procedure, "delete" option} -setup {
@@ -1458,7 +1458,7 @@ Line 7"
     string equal [.t get 1.0 end-1c] $prevtext
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-8.22 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
     set res {}
@@ -1521,7 +1521,7 @@ Line 7"
     string equal [.t get 1.0 end-1c] $prevtext
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-8.24 {TextWidgetCmd procedure, "replace" option with peers, undo} -setup {
     text .t
 } -body {
@@ -1548,7 +1548,7 @@ Line 7"
     string equal [.t get 1.0 end-1c] $prevtext
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-8.25 {TextWidgetCmd procedure, "replace" option with peers, undo} -setup {
     text .t
 } -body {
@@ -2117,7 +2117,7 @@ Line 7"
     .t count 5.3 5.5
 } -cleanup {
     destroy .t
-} -result {2}
+} -result 2
 test text-10.8 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2131,7 +2131,7 @@ Line 7"
     .t count 5.3 end
 } -cleanup {
     destroy .t
-} -result {29}
+} -result 29
 test text-10.9 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2145,7 +2145,7 @@ Line 7"
     .t count 5.2 5.7
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-10.10 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2159,7 +2159,7 @@ Line 7"
     .t count 5.2 5.3
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-10.11 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2173,7 +2173,7 @@ Line 7"
     .t count 5.2 5.4
 } -cleanup {
     destroy .t
-} -result {2}
+} -result 2
 test text-10.12 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2203,7 +2203,7 @@ Line 7"
     .t count -displayindices 2.0 3.0
 } -cleanup {
     destroy .t
-} -result {2}
+} -result 2
 test text-10.14 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2219,7 +2219,7 @@ Line 7"
     .t count -displayindices 2.2 3.0
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-10.15 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2236,7 +2236,7 @@ Line 7"
     .t count -displayindices 2.0 4.2
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-10.16 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2259,7 +2259,7 @@ Line 7"
     .t count -displayindices 2.0 3.0
 } -cleanup {
     destroy .t
-} -result {3}
+} -result 3
 test text-10.17 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2282,7 +2282,7 @@ Line 7"
     .t count -displayindices 2.2 3.0
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-10.18 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2307,7 +2307,7 @@ Line 7"
     .t count -displayindices a 3.0
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-10.19 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2331,7 +2331,7 @@ Line 7"
     .t count -displayindices 2.0 4.2
 } -cleanup {
     destroy .t
-} -result {6}
+} -result 6
 test text-10.20 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2355,7 +2355,7 @@ Line 7"
     .t count -displaychars 2.0 3.0
 } -cleanup {
     destroy .t
-} -result {2}
+} -result 2
 test text-10.21 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2379,7 +2379,7 @@ Line 7"
     .t count -displaychars 2.2 3.0
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-10.22 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2404,7 +2404,7 @@ Line 7"
     .t count -displaychars a 3.0
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-10.23 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2428,7 +2428,7 @@ Line 7"
     .t count -displaychars 2.0 4.2
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-10.24 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2503,7 +2503,7 @@ Line 7"
     .t count -indices 2.0 4.2
 } -cleanup {
     destroy .t
-} -result {21}
+} -result 21
 test text-10.27 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2528,7 +2528,7 @@ Line 7"
     .t count -chars 2.2 3.0
 } -cleanup {
     destroy .t
-} -result {10}
+} -result 10
 test text-10.28 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2553,7 +2553,7 @@ Line 7"
     .t count -chars a 3.0
 } -cleanup {
     destroy .t
-} -result {9}
+} -result 9
 test text-10.29 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2578,7 +2578,7 @@ Line 7"
     .t count -chars 2.0 4.2
 } -cleanup {
     destroy .t
-} -result {19}
+} -result 19
 test text-10.30 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2588,7 +2588,7 @@ test text-10.30 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 1.0 end
 } -cleanup {
     destroy .t
-} -result {3}
+} -result 3
 test text-10.31 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2618,7 +2618,7 @@ test text-10.33 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines end end
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-10.34 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2628,7 +2628,7 @@ test text-10.34 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 1.5 2.5
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-10.35 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2638,7 +2638,7 @@ test text-10.35 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 2.5 "2.5 lineend"
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-10.36 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2659,7 +2659,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -displaylines 1.0 end
 } -cleanup {
     destroy .t
-} -result {3}
+} -result 3
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .t -expand 1 -fill both
@@ -2706,7 +2706,7 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
     set res [.t count -displaylines 2.0 3.0]
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
     toplevel .mytop
     pack [text .mytop.t -font TkFixedFont -bd 0 -padx 0 -wrap char]
@@ -2783,7 +2783,7 @@ test text-11.2 {counting with tag priority eliding} -setup {
     .t count -displaychars 1.0 1.5
 } -cleanup {
     destroy .t
-} -result {5}
+} -result 5
 test text-11.3 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
@@ -2796,7 +2796,7 @@ test text-11.3 {counting with tag priority eliding} -setup {
     .t count -displaychars 1.0 1.5
 } -cleanup {
     destroy .t
-} -result {3}
+} -result 3
 test text-11.4 {counting with tag priority eliding}  -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
     set res {}
@@ -3426,7 +3426,7 @@ test text-14.14 {ConfigureText procedure} -body {
     selection get
 } -cleanup {
     destroy .t .t2
-} -result {1234}
+} -result 1234
 test text-14.15 {ConfigureText procedure} -body {
     text .t
     entry .t.e
@@ -3440,7 +3440,7 @@ test text-14.15 {ConfigureText procedure} -body {
     selection get
 } -cleanup {
     destroy .t2 .t
-} -result {1234}
+} -result 1234
 test text-14.16 {ConfigureText procedure} -body {
     text .t
     entry .t.e
@@ -3469,7 +3469,7 @@ test text-14.17 {ConfigureText procedure} -body {
     return $result
 } -cleanup {
     destroy .t .t2
-} -result {1234}
+} -result 1234
 test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3972,7 +3972,7 @@ test text-20.5 {TextFetchSelection procedure, long selections} -setup {
     expr {[selection get] eq "$x\n"}
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 
 
 test text-21.1 {TkTextLostSelection procedure} -constraints {x11} -setup {
@@ -6459,7 +6459,7 @@ test text-25.1 {text widget vs hidden commands} -body {
     destroy .t
     set x [list [winfo children .] [interp hidden]]
     expr {$x eq $y}
-} -result {1}
+} -result 1
 
 
 test text-26.1 {bug fix - 1642} -body {
@@ -6552,7 +6552,7 @@ test text-27.8 {TextEditCmd procedure, modified flag} -body {
     .t edit modified
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-27.9 {TextEditCmd procedure, reset modified flag} -body {
     text .t
     pack .t
@@ -6561,7 +6561,7 @@ test text-27.9 {TextEditCmd procedure, reset modified flag} -body {
     .t edit modified
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-27.10 {TextEditCmd procedure, set modified flag} -body {
     text .t
     pack .t
@@ -6569,7 +6569,7 @@ test text-27.10 {TextEditCmd procedure, set modified flag} -body {
     .t edit modified
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
@@ -6640,7 +6640,7 @@ test text-27.14a {<<Modified>> virtual event - propagation to peers} -body {
     set ::retval
 } -cleanup {
     destroy .t .tt
-} -result {4}
+} -result 4
 test text-27.15 {<<Selection>> virtual event on sel tagging} -body {
     set ::retval no_selection
     pack [text .t]
@@ -7081,7 +7081,7 @@ test text-29.4 {tabs - must be positive and must be increasing} -body {
     set result 1
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 
 
 test text-30.1 {repeated insert and scroll} -body {
@@ -7094,7 +7094,7 @@ test text-30.1 {repeated insert and scroll} -body {
     set result 1
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-30.2 {repeated insert and scroll} -body {
     pack [text .t]
     for {set i 0} {$i < 30} {incr i} {
@@ -7105,7 +7105,7 @@ test text-30.2 {repeated insert and scroll} -body {
     set result 1
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-30.3 {repeated insert and scroll} -body {
     pack [text .t]
     for {set i 0} {$i < 30} {incr i} {
@@ -7116,7 +7116,7 @@ test text-30.3 {repeated insert and scroll} -body {
     set result 1
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test text-30.4 {repeated insert and scroll} -body {
     pack [text .t]
     for {set i 0} {$i < 30} {incr i} {
@@ -7127,7 +7127,7 @@ test text-30.4 {repeated insert and scroll} -body {
     set result 1
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 
 
 test text-31.1 {peer widgets} -body {
@@ -7217,7 +7217,7 @@ test text-31.7 {peer widgets} -body {
     expr {$p1 eq $p2}
 } -cleanup {
     destroy .t .top
-} -result {1}
+} -result 1
 test text-31.8 {peer widgets} -body {
     toplevel .top
     pack [text .t]
@@ -7444,7 +7444,7 @@ test text-32.1 {line heights on creation} -setup {
     expr {$before eq $after}
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 
 test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     destroy .t .pt
@@ -7474,7 +7474,7 @@ test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     set res 1
 } -cleanup {
     destroy .pt
-} -result {1}
+} -result 1
 
 test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     destroy .t .pt
@@ -7568,7 +7568,7 @@ test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     set res 1
 } -cleanup {
     destroy .pt
-} -result {1}
+} -result 1
 
 test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     destroy .t .pt

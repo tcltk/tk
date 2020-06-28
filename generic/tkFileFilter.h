@@ -13,6 +13,10 @@
 #ifndef _TK_FILE_FILTER
 #define _TK_FILE_FILTER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define OSType long
 
 typedef struct GlobPattern {
@@ -74,5 +78,9 @@ MODULE_SCOPE void	TkInitFileFilters(FileFilterList *flistPtr);
 MODULE_SCOPE int	TkGetFileFilters(Tcl_Interp *interp,
     			    FileFilterList *flistPtr, Tcl_Obj *valuePtr,
 			    int isWindows);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* _TK_FILE_FILTER */

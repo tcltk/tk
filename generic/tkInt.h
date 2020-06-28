@@ -1111,6 +1111,10 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
 
 #include "tkIntDecls.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Themed widget set init function:
  */
@@ -1438,6 +1442,10 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #define TkplatformtestInit(x) TCL_OK
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _TKINT */

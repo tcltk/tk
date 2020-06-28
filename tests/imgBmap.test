@@ -366,7 +366,7 @@ test imageBmap-7.5 {ImgBmapCmd procedure, "cget" option} -body {
 } -returnCodes error -result {unknown option "-stupid"}
 test imageBmap-7.6 {ImgBmapCmd procedure} -body {
     llength [i1 configure]
-} -result {6}
+} -result 6
 test imageBmap-7.7 {ImgBmapCmd procedure} -body {
     i1 co -foreground #001122
     i1 configure -foreground

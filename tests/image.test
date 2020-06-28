@@ -50,7 +50,7 @@ test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
     expr {$second-$first}
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 
 test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     testImageType

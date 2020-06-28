@@ -105,7 +105,7 @@ enum {
 
 	if (eventType == NSLeftMouseDown &&
 	    ([eventWindow styleMask] & NSResizableWindowMask) &&
-	    [NSApp macMinorVersion] > 6) {
+	    [NSApp macOSVersion] > 100600) {
 	    NSRect frame = [eventWindow frame];
 	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
 		return theEvent;
