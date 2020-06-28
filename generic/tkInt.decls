@@ -538,7 +538,7 @@ declare 162 {
 	    int byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
-    int TkTextPrintIndex(const struct TkText *textPtr,
+    TkSizeT TkTextPrintIndex(const struct TkText *textPtr,
 	    const struct TkTextIndex *indexPtr, char *string)
 }
 declare 164 {
@@ -567,51 +567,51 @@ declare 168 {
 # Next group of functions exposed due to [Bug 2768945].
 declare 169 {
     int TkStateParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 170 {
     const char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 171 {
     int TkCanvasDashParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 172 {
     const char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 173 {
     int TkOffsetParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 174 {
     const char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 175 {
     int TkPixelParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 176 {
     const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 177 {
     int TkOrientParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 178 {
     const char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 179 {
     int TkSmoothParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 180 {
     const char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 
 # Angled text API, exposed for Emiliano Gavilán's RBC work.
@@ -639,6 +639,14 @@ declare 184 {
 declare 185 {
     int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
             Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
+}
+
+# Support for aqua's inability to draw outside [NSView drawRect:]
+declare 186 aqua {
+    void TkpRedrawWidget(Tk_Window tkwin)
+}
+declare 187 aqua {
+    int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
 

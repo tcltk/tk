@@ -14,6 +14,10 @@
 #ifndef _TKFONT
 #define _TKFONT
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * The following structure keeps track of the attributes of a font. It can be
  * used to keep track of either the desired attributes or the actual
@@ -221,5 +225,9 @@ MODULE_SCOPE TkFont *	TkpGetFontFromAttributes(TkFont *tkFontPtr,
 MODULE_SCOPE void	TkpGetFontFamilies(Tcl_Interp *interp,
 			    Tk_Window tkwin);
 MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* _TKFONT */

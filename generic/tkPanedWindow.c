@@ -225,10 +225,10 @@ static void		DestroyOptionTables(ClientData clientData,
 			    Tcl_Interp *interp);
 static int		SetSticky(ClientData clientData, Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj **value, char *recordPtr,
-			    int internalOffset, char *oldInternalPtr,
+			    TkSizeT internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetSticky(ClientData clientData, Tk_Window tkwin,
-			    char *recordPtr, int internalOffset);
+			    char *recordPtr, TkSizeT internalOffset);
 static void		RestoreSticky(ClientData clientData, Tk_Window tkwin,
 			    char *internalPtr, char *oldInternalPtr);
 static void		AdjustForSticky(int sticky, int cavityWidth,
@@ -236,7 +236,7 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int *slaveWidthPtr, int *slaveHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
-static void *	ComputeSlotAddress(void *recordPtr, size_t offset);
+static void *	ComputeSlotAddress(void *recordPtr, TkSizeT offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
 
@@ -2402,7 +2402,7 @@ GetSticky(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the
+    TkSizeT internalOffset)		/* Offset within *recordPtr containing the
 				 * sticky value. */
 {
     int sticky = *(int *)(recordPtr + internalOffset);
@@ -2456,7 +2456,7 @@ SetSticky(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
@@ -3035,9 +3035,9 @@ ObjectIsEmpty(
 static void *
 ComputeSlotAddress(
     void *recordPtr,	/* Pointer to the start of a record. */
-    size_t offset)		/* Offset of a slot within that record; may be -1. */
+    TkSizeT offset)		/* Offset of a slot within that record; may be TCL_INDEX_NONE. */
 {
-    if (offset != (size_t)-1) {
+    if (offset != TCL_INDEX_NONE) {
 	return (char *)recordPtr + offset;
     } else {
 	return NULL;

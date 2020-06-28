@@ -33,7 +33,7 @@
 
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
-# define OK_TO_LOG (!TkpAppIsDrawing())
+# define OK_TO_LOG 1
 /* Version 8.5 has forgotten to define this constant. */
 # ifndef TK_DO_NOT_DRAW
 #  define TK_DO_NOT_DRAW 0x80

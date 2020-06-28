@@ -80,6 +80,17 @@ void Ttk_DeleteTagTable(Ttk_TagTable tagTable)
     ckfree(tagTable);
 }
 
+void Ttk_DeleteTagFromTable(Ttk_TagTable tagTable, Ttk_Tag tag)
+{
+    Tcl_HashEntry *entryPtr;
+
+    entryPtr = Tcl_FindHashEntry(&tagTable->tags, tag->tagName);
+    if (entryPtr != NULL) {
+        DeleteTag(tagTable, tag);
+        Tcl_DeleteHashEntry(entryPtr);
+    }
+}
+
 Ttk_Tag Ttk_GetTag(Ttk_TagTable tagTable, const char *tagName)
 {
     int isNew = 0;
@@ -270,7 +281,7 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
 	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
-	int offset = optionSpec->objOffset;
+	TkSizeT offset = optionSpec->objOffset;
 	int prio = LOWEST_PRIORITY;
 
 	for (j = 0; j < tagSet->nTags; ++j) {
@@ -289,7 +300,7 @@ void Ttk_TagSetApplyStyle(
     const Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
 
     while (optionSpec->type != TK_OPTION_END) {
-	int offset = optionSpec->objOffset;
+	TkSizeT offset = optionSpec->objOffset;
 	const char *optionName = optionSpec->optionName;
 	Tcl_Obj *val = Ttk_StyleMap(style, optionName, state);
 	if (val) {
