@@ -72,7 +72,7 @@
 # define DEF_TEXT_INACTIVE_SELECT_BG_COLOR DEF_TEXT_INACTIVE_SELECT_COLOR
 #endif
 
-#if defined(MAC_OSX_TK)
+#if 0
 # define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
 #else
 # define FORCE_DISPLAY(winPtr)

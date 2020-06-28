@@ -192,7 +192,7 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, 0);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -576,7 +576,7 @@ TkCanvPostscriptCmd(
 	if (result != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (generating Postscript for item %d)",
-		    itemPtr->id));
+		    (int)itemPtr->id));
 	    goto cleanup;
 	}
 

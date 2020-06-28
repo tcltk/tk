@@ -79,7 +79,7 @@ test textTag-1.5 {tag configuration options} -body {
     .t tag cget x -borderwidth
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
-} -result {2}
+} -result 2
 test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
@@ -129,7 +129,7 @@ test textTag-1.14 {tag configuration options} -body {
     .t tag cget x -lmargin1
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
-} -result {10}
+} -result 10
 test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
@@ -140,7 +140,7 @@ test textTag-1.16 {tag configuration options} -body {
     .t tag cget x -lmargin2
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
-} -result {10}
+} -result 10
 test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
@@ -162,7 +162,7 @@ test textTag-1.18 {tag configuration options} -body {
     .t tag cget x -offset
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
-} -result {2}
+} -result 2
 test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
@@ -206,7 +206,7 @@ test textTag-1.24 {tag configuration options} -body {
     .t tag cget x -rmargin
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
-} -result {10}
+} -result 10
 test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
@@ -250,7 +250,7 @@ test textTag-1.26 {tag configuration options} -body {
     .t tag cget x -spacing1
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
-} -result {10}
+} -result 10
 test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
@@ -261,7 +261,7 @@ test textTag-1.28 {tag configuration options} -body {
     .t tag cget x -spacing2
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
-} -result {10}
+} -result 10
 test textTag-1.29 {configuration options} -body {
     .t tag configure x -spacing2 bad
 } -cleanup {
@@ -272,7 +272,7 @@ test textTag-1.30 {tag configuration options} -body {
     .t tag cget x -spacing3
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -result {10}
+} -result 10
 test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
@@ -419,7 +419,7 @@ test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     .tt tag add mytag 1.0 1.end
     destroy .ptt .tt
     set res 1
-} -result {1}
+} -result 1
 
 
 test textTag-3.1 {TkTextTagCmd - "bind" option} -body {

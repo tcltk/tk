@@ -281,7 +281,7 @@ test safePrimarySelection-1.6 {master interpreter, spinbox spun, no existing sel
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-1.7 {master interpreter, spinbox spun/selected/spun, no existing selection} -setup {
     catch {interp delete slave2}
@@ -293,7 +293,7 @@ test safePrimarySelection-1.7 {master interpreter, spinbox spun/selected/spun, n
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-1.8 {master interpreter, ttk::spinbox as entry, no existing selection} -setup {
     catch {interp delete slave2}
@@ -317,7 +317,7 @@ test safePrimarySelection-1.9 {master interpreter, ttk::spinbox spun, no existin
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-1.10 {master interpreter, ttk::spinbox spun/selected/spun, no existing selection} -setup {
     catch {interp delete slave2}
@@ -329,7 +329,7 @@ test safePrimarySelection-1.10 {master interpreter, ttk::spinbox spun/selected/s
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-2.1 {unsafe slave interpreter, text, no existing selection} -setup {
     catch {interp delete slave2}
@@ -431,7 +431,7 @@ test safePrimarySelection-2.6 {unsafe slave interpreter, spinbox spun, no existi
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-2.7 {unsafe slave interpreter, spinbox spun/selected/spun, no existing selection} -setup {
     catch {interp delete slave2}
@@ -448,7 +448,7 @@ test safePrimarySelection-2.7 {unsafe slave interpreter, spinbox spun/selected/s
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-2.8 {unsafe slave interpreter, ttk::spinbox as entry, no existing selection} -setup {
     catch {interp delete slave2}
@@ -482,7 +482,7 @@ test safePrimarySelection-2.9 {unsafe slave interpreter, ttk::spinbox spun, no e
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-2.10 {unsafe slave interpreter, ttk::spinbox spun/selected/spun, no existing selection} -setup {
     catch {interp delete slave2}
@@ -499,7 +499,7 @@ test safePrimarySelection-2.10 {unsafe slave interpreter, ttk::spinbox spun/sele
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-3.1 {IMPORTANT, safe slave interpreter, text, no existing selection} -setup {
     catch {interp delete slave2}
@@ -781,7 +781,7 @@ test safePrimarySelection-4.6 {master interpreter, spinbox spun, existing select
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-4.7 {master interpreter, spinbox spun/selected/spun, existing selection} -setup {
     catch {interp delete slave2}
@@ -793,7 +793,7 @@ test safePrimarySelection-4.7 {master interpreter, spinbox spun/selected/spun, e
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-4.8 {master interpreter, ttk::spinbox as entry, existing selection} -setup {
     catch {interp delete slave2}
@@ -817,7 +817,7 @@ test safePrimarySelection-4.9 {master interpreter, ttk::spinbox spun, existing s
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-4.10 {master interpreter, ttk::spinbox spun/selected/spun, existing selection} -setup {
     catch {interp delete slave2}
@@ -829,7 +829,7 @@ test safePrimarySelection-4.10 {master interpreter, ttk::spinbox spun/selected/s
 } -cleanup {
     destroy {*}[winfo children .]
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-5.1 {unsafe slave interpreter, text, existing selection} -setup {
     catch {interp delete slave2}
@@ -931,7 +931,7 @@ test safePrimarySelection-5.6 {unsafe slave interpreter, spinbox spun, existing 
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-5.7 {unsafe slave interpreter, spinbox spun/selected/spun, existing selection} -setup {
     catch {interp delete slave2}
@@ -948,7 +948,7 @@ test safePrimarySelection-5.7 {unsafe slave interpreter, spinbox spun/selected/s
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-5.8 {unsafe slave interpreter, ttk::spinbox as entry, existing selection} -setup {
     catch {interp delete slave2}
@@ -982,7 +982,7 @@ test safePrimarySelection-5.9 {unsafe slave interpreter, ttk::spinbox spun, exis
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {2}
+} -result 2
 
 test safePrimarySelection-5.10 {unsafe slave interpreter, ttk::spinbox spun/selected/spun, existing selection} -setup {
     catch {interp delete slave2}
@@ -999,7 +999,7 @@ test safePrimarySelection-5.10 {unsafe slave interpreter, ttk::spinbox spun/sele
     destroy {*}[winfo children .]
     unset int2
     ::_test_tmp::clearPrimarySelection
-} -result {3}
+} -result 3
 
 test safePrimarySelection-6.1 {IMPORTANT, safe slave interpreter, text, existing selection} -setup {
     catch {interp delete slave2}

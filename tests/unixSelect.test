@@ -121,7 +121,7 @@ test unixSelect-1.1 {TkSelGetSelection procedure: simple i18n text} -constraints
 } -cleanup {
     cleanupbg
     destroy .e
-} -result {4}
+} -result 4
 
 test unixSelect-1.2 {TkSelGetSelection procedure: simple i18n text, iso8859-1} -constraints {
     x11
@@ -331,7 +331,7 @@ test unixSelect-1.13 {TkSelGetSelection procedure: simple i18n text, utf-8} -con
 } -cleanup {
     destroy .e
     cleanupbg
-} -result {5}
+} -result 5
 
 test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} -constraints {
     x11

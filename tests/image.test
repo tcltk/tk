@@ -50,7 +50,7 @@ test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
     expr {$second-$first}
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 
 test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     testImageType
@@ -308,11 +308,13 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
 } -returnCodes error -result {image "myimage" doesn't exist}
 
 
-test image-6.1 {Tk_ImageCmd procedure, "types" option} -body {
+test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
+    testImageType
+} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
 test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
-    testImageType
+    testOldImageType
 } -body {
     lsort [image types]
 } -result {bitmap oldtest photo test}
