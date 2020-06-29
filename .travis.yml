@@ -200,6 +200,7 @@ matrix:
       env:
         - BUILD_DIR=unix
       script:
+        - touch ../doc/man.macros
         - make dist
 before_install:
   - |-
