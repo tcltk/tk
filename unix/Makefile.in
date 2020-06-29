@@ -1551,7 +1551,7 @@ $(TOP_DIR)/manifest.uuid:
 	printf "git." >$(TOP_DIR)/manifest.uuid
 	git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid
 
-dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid genstubs
+dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)/unix
 	cp -p $(TOP_DIR)/manifest.uuid $(DISTDIR)
