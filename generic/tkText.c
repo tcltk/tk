@@ -191,10 +191,10 @@ static const char *const hyphenRuleStrings[] = {
  */
 
 static int		SetLineStartEnd(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr,
+			    Tcl_Obj **value, char *recordPtr, TkSizeT internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetLineStartEnd(ClientData clientData, Tk_Window tkwin, char *recordPtr,
-			    int internalOffset);
+			    TkSizeT internalOffset);
 static void		RestoreLineStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
 
@@ -216,10 +216,10 @@ static const Tk_ObjCustomOption lineOption = {
  */
 
 static int		SetTextStartEnd(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr, int internalOffset, char *oldInternalPtr,
+			    Tcl_Obj **value, char *recordPtr, TkSizeT internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetTextStartEnd(ClientData clientData, Tk_Window tkwin, char *recordPtr,
-			    int internalOffset);
+			    TkSizeT internalOffset);
 static void		RestoreTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
 static void		FreeTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr);
@@ -494,8 +494,8 @@ static int		CreateWidget(TkSharedText *sharedTextPtr, Tk_Window tkwin, Tcl_Inter
 			    const TkText *parent, int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData, XEvent *eventPtr);
 static void		ProcessConfigureNotify(TkText *textPtr, bool updateLineGeometry);
-static int		TextFetchSelection(ClientData clientData, int offset, char *buffer,
-			    int maxBytes);
+static TkSizeT		TextFetchSelection(ClientData clientData, TkSizeT offset, char *buffer,
+			    TkSizeT maxBytes);
 static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
@@ -6000,12 +6000,12 @@ DeleteIndexRange(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-    int offset,			/* Offset within selection of first character to be returned. */
+    TkSizeT offset,			/* Offset within selection of first character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer, not including
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer, not including
     				 * terminating NULL character. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -6014,7 +6014,7 @@ TextFetchSelection(
     int numBytes;
 
     if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
-	return -1;
+	return TCL_INDEX_NONE;
     }
 
     /*
@@ -6039,7 +6039,7 @@ TextFetchSelection(
 	TkTextIndexSetupToEndOfText(&eof, textPtr, textPtr->sharedTextPtr->tree);
 	TkBTreeStartSearch(&textPtr->selIndex, &eof, textPtr->selTagPtr, searchPtr, SEARCH_NEXT_TAGON);
 	if (!TkBTreeNextTag(searchPtr)) {
-	    return offset == 0 ? -1 : 0;
+	    return offset == 0 ? TCL_INDEX_NONE : 0;
 	}
 	textPtr->selIndex = searchPtr->curIndex;
 
@@ -6073,7 +6073,7 @@ TextFetchSelection(
 	TextGetText(textPtr, &textPtr->selIndex, &searchPtr->curIndex, &textPtr->selIndex,
 		selTextPtr, maxBytes - GetByteLength(selTextPtr), true, false);
 
-	if (GetByteLength(selTextPtr) == (TkSizeT)maxBytes) {
+	if (GetByteLength(selTextPtr) == maxBytes) {
 	    break;
 	}
 
@@ -10353,7 +10353,7 @@ TkTextGenerateWidgetViewSyncEvent(
  * and cannot be inlined.
  */
 
-int
+TkSizeT
 TkTextPrintIndex(
     const TkText *textPtr,
     const TkTextIndex *indexPtr,/* Pointer to index. */
@@ -11514,7 +11514,7 @@ GetTextStartEnd(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the start object. */
+    TkSizeT internalOffset)		/* Offset within *recordPtr containing the start object. */
 {
     TkTextIndex index;
     char buf[TK_POS_CHARS] = { '\0' };
@@ -11576,7 +11576,7 @@ SetTextStartEnd(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
@@ -11691,7 +11691,7 @@ GetLineStartEnd(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,		/* Pointer to widget record. */
-    int internalOffset)		/* Offset within *recordPtr containing the line value. */
+    TkSizeT internalOffset)		/* Offset within *recordPtr containing the line value. */
 {
     TkText *textPtr;
     TkTextLine *linePtr = *(TkTextLine **)(recordPtr + internalOffset);
@@ -11733,7 +11733,7 @@ SetLineStartEnd(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    int internalOffset,		/* Offset within *recordPtr at which the
+    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
