@@ -131,7 +131,7 @@ GetLineBreakFunc(
     Tcl_Interp *interp,
     char const *lang)
 {
-#if TCL_UTF_MAX > 4 /* exclude non-standard encodings */
+#if 0 && TCL_UTF_MAX > 4 /* exclude non-standard encodings */
     /*
      * IMPORTANT NOTE:
      *
@@ -900,7 +900,7 @@ ComputeBreakLocations(
 	    brks[i + 1] = LINEBREAK_INSIDEACHAR;
 	    brks[i + 2] = LINEBREAK_INSIDEACHAR;
 	} else {
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 	    /*
 	     * NOTE: For any reason newer TCL versions will allow > 4 bytes. I cannot
 	     * understand this decision, this is not conform to UTF-8 standard.
