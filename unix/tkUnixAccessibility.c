@@ -422,6 +422,6 @@ ATKbridge_ExportFuncs (void)
   Tcl_CreateObjCommand(ip, "::tk::AccessibilityInit", ATKbridge_Init, (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
   Tcl_CreateObjCommand(ip, "::tk::AccessibilityStop", ATKbridge_Stop,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
   Tcl_CreateObjCommand(ip, "::tk::AccessibilityLoop", ATKbridge_Iterate,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand(ip, "::tk::AccessibilitRoleRegister", ATKRole_Registe(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+    Tcl_CreateObjCommand(ip, "::tk::AccessibilityRoleRegister", ATKRole_Register(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
 }
