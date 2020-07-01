@@ -1896,7 +1896,7 @@ TkTextMakeCharIndex(
 		    }
 		    charIndex -= 1;
 		    { /* local scope */
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 			/*
 			 * HACK: Support of pseudo UTF-8 strings. Needed because of this
 			 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
@@ -3152,7 +3152,7 @@ TkTextIndexForwChars(
 			    goto forwardCharDone;
 			}
 			{ /* local scope */
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 			    /*
 			     * HACK: Support of pseudo UTF-8 strings. Needed because of this
 			     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
@@ -3342,7 +3342,7 @@ TkTextIndexGetChar(
     s = segPtr->body.chars + byteOffset;
 
     { /* local scope */
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 	/*
 	 * HACK: Support of pseudo UTF-8 strings. Needed because of this
 	 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
@@ -3938,7 +3938,7 @@ StartEnd(
 			if (segPtr->typePtr == &tkTextCharType) {
 			    const char *s = segPtr->body.chars + offset;
 
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 			    /*
 			     * HACK: Support of pseudo UTF-8 strings. Needed because of this
 			     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
@@ -4007,7 +4007,7 @@ StartEnd(
 			    Tcl_UniChar ch;
 			    const char *p = segPtr->body.chars + offset;
 
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 			    /*
 			     * HACK: Support of pseudo UTF-8 strings. Needed because of this
 			     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
@@ -4026,7 +4026,7 @@ StartEnd(
 			    Tcl_UtfToUniChar(p, &ch);
 #endif
 
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 /*
  * At this place I like to state that the replacement of Tcl_UtfToUniChar
  * with TkUtfToUniChar has introduced an unreliable system, it's not a

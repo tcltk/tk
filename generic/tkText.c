@@ -1612,7 +1612,7 @@ TextWidgetObjCmd(
 		goto done;
 	    }
 	    if (!TkTextComputeBreakLocations(interp, "", 0, "en", buf)) {
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 # ifdef __unix__
 #  error "The use of external libraries with a proprietary pseudo UTF-8 encoding is safety-endagering and may result in invalid computationial results. This means: TCL_UTF_MAX > 4 cannot be supported here."
 #endif
@@ -4983,7 +4983,7 @@ ParseHyphens(
     const char *end,
     char *buffer)
 {
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 # error "The text widget is designed for UTF-8, this applies also to the legacy code. Undocumented pseudo UTF-8 strings cannot be processed with this function, because it relies on the UTF-8 specification."
 #endif
 
@@ -7236,7 +7236,7 @@ TkTextGetTabs(
 	 */
 
 	{ /* local scope */
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 	    /*
 	     * HACK: Support of pseudo UTF-8 strings. Needed because of this
 	     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
@@ -10931,7 +10931,7 @@ SearchCore(
 			int len;
 			const char *s = startOfLine + matchOffset;
 
-#if TCL_UTF_MAX > 4
+#if 0 && TCL_UTF_MAX > 4
 			/*
 			 * HACK: Support of pseudo UTF-8 strings. Needed because of this
 			 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
