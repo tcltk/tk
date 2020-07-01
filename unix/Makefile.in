@@ -1605,10 +1605,10 @@ $(TOP_DIR)/manifest.uuid:
 	printf "git." >$(TOP_DIR)/manifest.uuid
 	git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid
 
-dist:	$(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid genstubs
+dist:	$(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
 	rm -rf $(DISTDIR)
 	$(INSTALL_DATA_DIR) $(DISTDIR)/unix
-	$(DIST_INSTALL_DATA) $$(TOP_DIR)/manifest.uuid $(DISTDIR)
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/manifest.uuid $(DISTDIR)
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
