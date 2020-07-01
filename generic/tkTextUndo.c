@@ -138,7 +138,7 @@ Release(
 static void
 ResetCurrent(
     TkTextUndoStack stack,
-    bool force)
+    int force)
 {
     TkTextUndoMyAtom *current = stack->current;
 
@@ -215,14 +215,14 @@ SwapCurrent(
 }
 
 
-static bool
+static int
 ClearRedoStack(
     TkTextUndoStack stack)
 {
     MyUndoAtom *atom;
 
     if (stack->redoDepth == 0) {
-	return false;
+	return 0;
     }
 
     atom = stack->last ? stack->last->next : stack->root;
@@ -233,7 +233,7 @@ ClearRedoStack(
     stack->redoItems = 0;
     Release(stack, atom);
 
-    return true;
+    return 1;
 }
 
 
@@ -279,10 +279,10 @@ InsertCurrentAtom(
 		/*
 		 * We do not push this undo atom, so the content becomes irreversible.
 		 */
-		stack->irreversible = true;
+		stack->irreversible = 1;
 	    }
 	    FreeItems(stack, &stack->current->data);
-	    ResetCurrent(stack, false);
+	    ResetCurrent(stack, 0);
 	    return;
 	}
     }
@@ -322,7 +322,7 @@ InsertCurrentAtom(
 	stack->last = atom;
 	stack->undoSize -= atom->data.size;
 	stack->undoItems -= atom->data.arraySize;
-	stack->irreversible = true;
+	stack->irreversible = 1;
 	FreeItems(stack, &atom->data);
 	SwapCurrent(stack, atom);
 	stack->undoSize += atom->data.size;
@@ -360,16 +360,16 @@ InsertCurrentAtom(
     /*
      * Reset the buffer for next action.
      */
-    ResetCurrent(stack, false);
+    ResetCurrent(stack, 0);
 }
 
 
 static int
 ResetStack(
     TkTextUndoStack stack,
-    bool irreversible)
+    int irreversible)
 {
-    bool contentChanged;
+    int contentChanged;
 
     assert(stack);
 
@@ -381,7 +381,7 @@ ResetStack(
 
     if (contentChanged) {
 	Release(stack, stack->root);
-	ResetCurrent(stack, true);
+	ResetCurrent(stack, 1);
 	stack->root = NULL;
 	stack->last = NULL;
 	stack->undoDepth = 0;
@@ -391,7 +391,7 @@ ResetStack(
 	stack->undoSize = 0;
 	stack->redoSize = 0;
 	stack->irreversible = irreversible;
-	stack->pushSeparator = false;
+	stack->pushSeparator = 0;
 
 	if (stack->contentChangedProc) {
 	    stack->contentChangedProc(stack);
@@ -453,7 +453,7 @@ int
 TkTextUndoResetStack(
     TkTextUndoStack stack)
 {
-    return stack ? ResetStack(stack, false) : TCL_ERROR;
+    return stack ? ResetStack(stack, 0) : TCL_ERROR;
 }
 
 
@@ -488,8 +488,8 @@ TkTextUndoClearUndoStack(
 	stack->root = stack->last->next;
 	stack->last = NULL;
 	Release(stack, atom);
-	ResetCurrent(stack, true);
-	stack->irreversible = true;
+	ResetCurrent(stack, 1);
+	stack->irreversible = 1;
 
 	if (stack->contentChangedProc) {
 	    stack->contentChangedProc(stack);
@@ -585,7 +585,7 @@ TkTextUndoSetMaxStackDepth(
 		stack->root = root;
 
 		/* We have to delete undoes, so the content becomes irreversible. */
-		stack->irreversible = true;
+		stack->irreversible = 1;
 
 		Release(stack, atom);
 	    }
@@ -606,7 +606,7 @@ int
 TkTextUndoSetMaxStackSize(
     TkTextUndoStack stack,
     unsigned maxSize,
-    bool applyImmediately)
+    int applyImmediately)
 {
     assert(stack);
 
@@ -672,7 +672,7 @@ TkTextUndoSetMaxStackSize(
 		/*
 		 * We have to delete undoes, so the content becomes irreversible.
 		 */
-		stack->irreversible = true;
+		stack->irreversible = 1;
 		Release(stack, atom);
 	    }
 	}
@@ -690,7 +690,7 @@ TkTextUndoSetMaxStackSize(
 static void
 PushSeparator(
     TkTextUndoStack stack,
-    bool force)
+    int force)
 {
     assert(stack);
 
@@ -710,22 +710,22 @@ PushSeparator(
 	}
     }
 
-    stack->pushSeparator = false;
+    stack->pushSeparator = 0;
 }
 
 
 void
 TkTextUndoPushSeparator(
     TkTextUndoStack stack,
-    bool immediately)
+    int immediately)
 {
     assert(stack);
 
     if (immediately) {
-	PushSeparator(stack, true);
+	PushSeparator(stack, 1);
     } else {
 	/* Postpone pushing a separator until next item will be pushed. */
-	stack->pushSeparator = true;
+	stack->pushSeparator = 1;
     }
 }
 
@@ -742,7 +742,7 @@ TkTextUndoPushItem(
     assert(stack);
     assert(item);
 
-    PushSeparator(stack, false);
+    PushSeparator(stack, 0);
 
     if (stack->doingUndo && TkTextUndoRedoStackIsFull(stack)) {
 	if (stack->freeProc) {
@@ -754,7 +754,7 @@ TkTextUndoPushItem(
     atom = stack->current;
 
     if (!atom) {
-	ResetCurrent(stack, true);
+	ResetCurrent(stack, 1);
 	atom = stack->current;
     } else if (atom->data.arraySize == atom->capacity) {
 	atom->capacity *= 2;
@@ -787,10 +787,10 @@ TkTextUndoPushRedoItem(
     assert(stack);
     assert(!TkTextUndoIsPerformingUndoRedo(stack));
 
-    PushSeparator(stack, true);
-    stack->doingUndo = true;
+    PushSeparator(stack, 1);
+    stack->doingUndo = 1;
     rc = TkTextUndoPushItem(stack, item, size);
-    stack->doingUndo = false;
+    stack->doingUndo = 0;
 
     return rc;
 }
@@ -848,7 +848,7 @@ TkTextUndoDoUndo(
 	assert(stack->last);
 
 	stack->actual = atom = stack->last;
-	stack->doingUndo = true;
+	stack->doingUndo = 1;
 	stack->undoDepth -= 1;
 	stack->undoSize -= stack->actual->data.size;
 	stack->undoItems -= stack->actual->data.arraySize;
@@ -870,7 +870,7 @@ TkTextUndoDoUndo(
 	    InsertCurrentAtom(stack);
 	}
 
-	stack->doingUndo = false;
+	stack->doingUndo = 0;
 	rc = TCL_OK;
 
 	if (stack->contentChangedProc) {
@@ -901,7 +901,7 @@ TkTextUndoDoRedo(
 	MyUndoAtom *atom;
 
 	stack->actual = atom = stack->last ? stack->last->next : stack->root;
-	stack->doingRedo = true;
+	stack->doingRedo = 1;
 	stack->redoDepth -= 1;
 	stack->redoSize -= atom->data.size;
 	stack->redoItems -= atom->data.arraySize;
@@ -926,13 +926,13 @@ TkTextUndoDoRedo(
 		stack->root = atom->next;
 	    }
 	    Release(stack, atom);
-	    stack->irreversible = true;
+	    stack->irreversible = 1;
 	} else {
 	    FreeItems(stack, &atom->data);
 	    InsertCurrentAtom(stack);
 	}
 
-	stack->doingRedo = false;
+	stack->doingRedo = 0;
 	rc = TCL_OK;
 
 	if (stack->contentChangedProc) {
@@ -943,12 +943,12 @@ TkTextUndoDoRedo(
     return rc;
 }
 
-bool
+int
 TkTextUndoStackIsFull(
     const TkTextUndoStack stack)
 {
     if (!stack) {
-	return true;
+	return 1;
     }
     if (stack->doingUndo) {
 	return stack->maxRedoDepth >= 0 && (int) stack->redoDepth >= stack->maxRedoDepth;
@@ -1060,16 +1060,16 @@ extern unsigned TkTextUndoGetCurrentUndoSize(const TkTextUndoStack stack);
 extern unsigned TkTextUndoGetCurrentRedoSize(const TkTextUndoStack stack);
 extern unsigned TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack);
 extern unsigned TkTextUndoCountCurrentRedoItems(const TkTextUndoStack stack);
-extern bool TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
-extern bool TkTextUndoContentIsModified(const TkTextUndoStack stack);
-extern bool TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
-extern bool TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);
-extern bool TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
+extern int TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
+extern int TkTextUndoContentIsModified(const TkTextUndoStack stack);
+extern int TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
+extern int TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);
+extern int TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
 extern const TkTextUndoAtom *TkTextUndoCurrentUndoAtom(const TkTextUndoStack stack);
 extern const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack stack);
 extern const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
-extern bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
-extern bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
+extern int TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
+extern int TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
 #endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

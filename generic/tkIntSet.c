@@ -46,7 +46,7 @@ DEBUG_ALLOC(unsigned tkIntSetCountNew = 0);
 DEBUG_ALLOC(unsigned tkIntSetCountDestroy = 0);
 
 
-static bool IsPowerOf2(unsigned n) { return !(n & (n - 1)); }
+static int IsPowerOf2(unsigned n) { return !(n & (n - 1)); }
 
 
 static unsigned
@@ -69,20 +69,20 @@ NextPowerOf2(
 }
 
 
-bool
+int
 TkIntSetIsEqual__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2)
 {
     if (end1 - set1 != end2 - set2) {
-	return false;
+	return 0;
     }
     for ( ; set1 < end1; ++set1, ++set2) {
 	if (*set1 != *set2) {
-	    return false;
+	    return 0;
 	}
     }
-    return true;
+    return 1;
 }
 
 
@@ -138,7 +138,7 @@ TkIntSetNew()
     TkIntSet *set = (TkIntSet *)malloc(SET_SIZE(0));
     set->end = set->buf;
     set->refCount = 0;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     DEBUG_ALLOC(tkIntSetCountNew++);
     return set;
 }
@@ -156,7 +156,7 @@ TkIntSetFromBits(
     set = (TkIntSet *)malloc(SET_SIZE(NextPowerOf2(size)));
     set->end = set->buf + size;
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     for (i = TkBitFindFirst(bf); i != TK_BIT_NPOS; i = TkBitFindNext(bf, i)) {
@@ -194,7 +194,7 @@ TkIntSetCopy(
     newSet = (TkIntSet *)malloc(SET_SIZE(NextPowerOf2(size)));
     newSet->end = newSet->buf + size;
     newSet->refCount = 1;
-    newSet->isSetFlag = true;
+    newSet->isSetFlag = 1;
     memcpy(newSet->buf, set->buf, size*sizeof(TkIntSetType));
     DEBUG_ALLOC(tkIntSetCountNew++);
     return newSet;
@@ -264,7 +264,7 @@ TkIntSetJoin(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -340,7 +340,7 @@ TkIntSetJoinBits(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -427,7 +427,7 @@ TkIntSetJoin2(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -486,7 +486,7 @@ TkIntSetIntersect(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -547,7 +547,7 @@ TkIntSetIntersectBits(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -611,7 +611,7 @@ TkIntSetRemove(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -674,7 +674,7 @@ TkIntSetRemoveBits(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -721,7 +721,7 @@ TkIntSetComplementTo(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -788,7 +788,7 @@ TkIntSetComplementToBits(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -877,7 +877,7 @@ TkIntSetJoinComplementTo(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -994,7 +994,7 @@ TkIntSetJoinNonIntersection(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -1060,7 +1060,7 @@ TkIntSetJoin2ComplementToIntersection(
 	free(res1);
     }
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
@@ -1105,19 +1105,19 @@ TkIntSetJoinOfDifferences(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
 
-bool
+int
 TkIntSetDisjunctive__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2)
 {
     while (set1 != end1 && set2 != end2) {
 	if (*set1 == *set2) {
-	    return false;
+	    return 0;
 	}
 	if (*set1 < *set2) {
 	    ++set1;
@@ -1126,11 +1126,11 @@ TkIntSetDisjunctive__(
 	}
     }
 
-    return true;
+    return 1;
 }
 
 
-bool
+int
 TkIntSetContains__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2)
@@ -1138,16 +1138,16 @@ TkIntSetContains__(
     /*
      * a in set1, not in set2 -> skip
      * a in set1, and in set2 -> skip
-     * a in set2, not in set1 -> false
+     * a in set2, not in set1 -> 0
      */
 
     if (end1 - set1 < end2 - set2) {
-	return false;
+	return 0;
     }
 
     while (set1 != end1 && set2 != end2) {
 	if (*set2 < *set1) {
-	    return false;
+	    return 0;
 	} else if (*set1 == *set2) {
 	    ++set2;
 	}
@@ -1158,7 +1158,7 @@ TkIntSetContains__(
 }
 
 
-bool
+int
 TkIntSetIsContainedBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1174,15 +1174,15 @@ TkIntSetIsContainedBits(
     for (i = 0; i < setSize; ++i) {
 	TkIntSetType value = set->buf[i];
 	if (value >= bitSize || !TkBitTest(bf, value)) {
-	    return false;
+	    return 0;
 	}
     }
 
-    return true;
+    return 1;
 }
 
 
-bool
+int
 TkIntSetIntersectionIsEqual(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -1200,7 +1200,7 @@ TkIntSetIntersectionIsEqual(
     assert(TkIntSetMax(set2) < TkBitSize(del));
 
     if (set1 == set2) {
-	return true;
+	return 1;
     }
 
     s1 = set1->buf; e1 = set1->end;
@@ -1212,39 +1212,39 @@ TkIntSetIntersectionIsEqual(
 	    ++s2;
 	} else if (*s1 < *s2) {
 	    if (!TkBitTest(del, *s1)) {
-		return false;
+		return 0;
 	    }
 	    ++s1;
 	} else { /* if (*s2 < *s1) */
 	    if (!TkBitTest(del, *s2)) {
-		return false;
+		return 0;
 	    }
 	    ++s2;
 	}
     }
     for ( ; s1 != e1; ++s1) {
 	if (!TkBitTest(del, *s1)) {
-	    return false;
+	    return 0;
 	}
     }
     for ( ; s2 != e2; ++s2) {
 	if (!TkBitTest(del, *s2)) {
-	    return false;
+	    return 0;
 	}
     }
 
-    return true;
+    return 1;
 }
 
 
-bool
+int
 TkIntSetIntersectionIsEqualBits(
     const TkIntSet *set,
     const TkBitField *bf,
     const TkBitField *del)
 {
     TkBitField *cp = TkBitCopy(del, -1);
-    bool test;
+    int test;
 
     assert(set);
     assert(bf);
@@ -1276,7 +1276,7 @@ Add(
 	memcpy(newSet->buf + offs + 1, pos, (size - offs)*sizeof(TkIntSetType));
 	newSet->end = newSet->buf + size + 1;
 	newSet->refCount = 1;
-	newSet->isSetFlag = true;
+	newSet->isSetFlag = 1;
 	DEBUG_ALLOC(tkIntSetCountNew++);
 
 	if (--set->refCount == 0) {
@@ -1333,7 +1333,7 @@ Erase(
 	memcpy(newSet->buf + offs, pos + 1, (size - offs)*sizeof(TkIntSetType));
 	newSet->end = newSet->buf + size;
 	newSet->refCount = 1;
-	newSet->isSetFlag = true;
+	newSet->isSetFlag = 1;
 	DEBUG_ALLOC(tkIntSetCountNew++);
 
 	if (--set->refCount == 0) {
@@ -1427,7 +1427,7 @@ TkIntSetClear(
     newSet = (TkIntSet *)malloc(SET_SIZE(0));
     newSet->end = newSet->buf;
     newSet->refCount = 1;
-    newSet->isSetFlag = true;
+    newSet->isSetFlag = 1;
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (--set->refCount == 0) {
@@ -1439,7 +1439,7 @@ TkIntSetClear(
 }
 
 
-bool
+int
 TkIntSetIsEqualBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1452,7 +1452,7 @@ TkIntSetIsEqualBits(
     sizeSet = TkIntSetSize(set);
 
     if (sizeSet != TkBitCount(bf)) {
-	return false;
+	return 0;
     }
 
     sizeBf = TkBitSize(bf);
@@ -1461,15 +1461,15 @@ TkIntSetIsEqualBits(
 	TkIntSetType value = set->buf[i];
 
 	if (value >= sizeBf || !TkBitTest(bf, value)) {
-	    return false;
+	    return 0;
 	}
     }
 
-    return true;
+    return 1;
 }
 
 
-bool
+int
 TkIntSetContainsBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1499,7 +1499,7 @@ TkIntSetContainsBits(
 }
 
 
-bool
+int
 TkIntSetDisjunctiveBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1516,14 +1516,14 @@ TkIntSetDisjunctiveBits(
 	TkIntSetType value = set->buf[i];
 
 	if (value >= sizeBf) {
-	    return true;
+	    return 1;
 	}
 	if (TkBitTest(bf, value)) {
-	    return false;
+	    return 0;
 	}
     }
 
-    return true;
+    return 1;
 }
 
 
@@ -1639,12 +1639,12 @@ TkIntSetInnerJoinDifference(
     }
 
     set->refCount = 1;
-    set->isSetFlag = true;
+    set->isSetFlag = 1;
     return set;
 }
 
 
-bool
+int
 TkIntSetInnerJoinDifferenceIsEmpty(
     const TkIntSet *set,
     const TkIntSet *add,
@@ -1662,7 +1662,7 @@ TkIntSetInnerJoinDifferenceIsEmpty(
 
     if (add->buf == add->end) {
 	/* nil */
-	return true;
+	return 1;
     }
 
     if (add == set) {
@@ -1677,7 +1677,7 @@ TkIntSetInnerJoinDifferenceIsEmpty(
 
     while (setP != setEnd && addP < addEnd) {
 	if (*setP == *addP) {
-	    return false;
+	    return 0;
 	} else if (*setP < *addP) {
 	    ++setP;
 	} else {
@@ -1692,7 +1692,7 @@ TkIntSetInnerJoinDifferenceIsEmpty(
 
     while (addP != addEnd && subP != subEnd) {
 	if (*addP < *subP) {
-	    return false;
+	    return 0;
 	} else if (*addP == *subP) {
 	    ++addP;
 	}
@@ -1703,14 +1703,14 @@ TkIntSetInnerJoinDifferenceIsEmpty(
 }
 
 
-static bool
+static int
 DifferenceIsEmpty(
     const TkIntSetType *set, const TkIntSetType *setEnd,
     const TkIntSetType *sub, const TkIntSetType *subEnd)
 {
     while (set != setEnd && sub != subEnd) {
 	if (*set < *sub) {
-	    return false;
+	    return 0;
 	} else {
 	    if (*set == *sub) {
 		++set;
@@ -1723,7 +1723,7 @@ DifferenceIsEmpty(
 }
 
 
-bool
+int
 TkIntSetIsEqualToDifference(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -1753,7 +1753,7 @@ TkIntSetIsEqualToDifference(
 
     while (set1P != set1End && set2P != set2End) {
 	if (*set1P < *set2P) {
-	    return false;
+	    return 0;
 	}
 	for ( ; sub2P != sub2End && *sub2P < *set2P; ++sub2P) {
 	    /* empty loop body */
@@ -1763,12 +1763,12 @@ TkIntSetIsEqualToDifference(
 	}
 	if (*set1P == *set2P) {
 	    if (*set2P == *sub2P) {
-		return false;
+		return 0;
 	    }
 	    ++set1P;
 	} else {
 	    if (*set2P != *sub2P) {
-		return false;
+		return 0;
 	    }
 	}
 	++set2P;
@@ -1791,7 +1791,7 @@ TkIntSetIsEqualToDifference(
 }
 
 
-bool
+int
 TkIntSetIsEqualToInnerJoin(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -1807,7 +1807,7 @@ TkIntSetIsEqualToInnerJoin(
 
     if (set1 == set2) {
 	/* set1 == (set1 + (add2 & set1)) */
-	return true;
+	return 1;
     }
 
     set1P = set1->buf; set1End = set1->end;
@@ -1829,7 +1829,7 @@ TkIntSetIsEqualToInnerJoin(
 
     while (set1P != set1End && set2P != set2End && add2P != add2End) {
 	if (*set2P < *set1P) {
-	    return false;
+	    return 0;
 	} else if (*set1P == *set2P) {
 	    ++set1P;
 	    ++set2P;
@@ -1839,7 +1839,7 @@ TkIntSetIsEqualToInnerJoin(
 	} else if (*set2P < *add2P) {
 	    ++set2P;
 	} else {
-	    return false;
+	    return 0;
 	}
     }
 
@@ -1858,7 +1858,7 @@ TkIntSetIsEqualToInnerJoin(
 }
 
 
-static bool
+static int
 EqualToJoin(
     const TkIntSetType *src, const TkIntSetType *send,
     const TkIntSetType *set1, const TkIntSetType *end1,
@@ -1877,7 +1877,7 @@ EqualToJoin(
 	} else if (*src == *set2) {
 	    ++set2;
 	} else {
-	    return false;
+	    return 0;
 	}
 	if (++src == send) {
 	    return set1 == end1 && set2 == end2;
@@ -1893,7 +1893,7 @@ EqualToJoin(
 }
 
 
-bool
+int
 TkIntSetIsEqualToInnerJoinDifference(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -1908,7 +1908,7 @@ TkIntSetIsEqualToInnerJoinDifference(
     TkIntSetType *diffP, *diffEnd;
     unsigned inscSize;
     unsigned diffSize;
-    bool isEqual;
+    int isEqual;
 
     assert(set1);
     assert(set2);
@@ -1962,7 +1962,7 @@ TkIntSetIsEqualToInnerJoinDifference(
 }
 
 
-static bool
+static int
 InnerJoinDifferenceIsEqual(
     const TkIntSetType *set, const TkIntSetType *setEnd,
     const TkIntSetType *add, const TkIntSetType *addEnd,
@@ -1990,11 +1990,11 @@ InnerJoinDifferenceIsEqual(
 	    if (*set == *sub) {
 		while (*add < *set) {
 		    if (++add == addEnd) {
-			return true;
+			return 1;
 		    }
 		}
 		if (*add == *set) {
-		    return false;
+		    return 0;
 		}
 		++set;
 		++sub;
@@ -2006,11 +2006,11 @@ InnerJoinDifferenceIsEqual(
 	}
     }
 
-    return true;
+    return 1;
 }
 
 
-bool
+int
 TkIntSetInnerJoinDifferenceIsEqual(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -2023,7 +2023,7 @@ TkIntSetInnerJoinDifferenceIsEqual(
     const TkIntSetType *subP, *subEnd;
 
     if (add->buf == add->end) {
-	return true;
+	return 1;
     }
 
     set1P = set1->buf; set1End = set1->end;
@@ -2073,12 +2073,12 @@ TkIntSetInnerJoinDifferenceIsEqual(
 		}
 		if (*addP == *set1P) {
 		    if (*addP != *set2P) {
-			return false;
+			return 0;
 		    }
 		    ++set1P;
 		    ++set2P;
 		} else if (*addP == *set2P) {
-		    return false;
+		    return 0;
 		}
 		++addP;
 	    }
@@ -2086,7 +2086,7 @@ TkIntSetInnerJoinDifferenceIsEqual(
 	}
     }
 
-    return true;
+    return 1;
 }
 
 #endif /* TK_UNUSED_INTSET_FUNCTIONS */
@@ -2096,23 +2096,23 @@ TkIntSetInnerJoinDifferenceIsEqual(
 /* Additionally we need stand-alone object code. */
 extern unsigned TkIntSetByteSize(const TkIntSet *set);
 extern const unsigned char *TkIntSetData(const TkIntSet *set);
-extern bool TkIntSetIsEmpty(const TkIntSet *set);
+extern int TkIntSetIsEmpty(const TkIntSet *set);
 extern unsigned TkIntSetSize(const TkIntSet *set);
 extern unsigned TkIntSetMax(const TkIntSet *set);
 extern unsigned TkIntSetRefCount(const TkIntSet *set);
 extern void TkIntSetIncrRefCount(TkIntSet *set);
 extern unsigned TkIntSetDecrRefCount(TkIntSet *set);
 extern TkIntSetType TkIntSetAccess(const TkIntSet *set, unsigned index);
-extern bool TkIntSetTest(const TkIntSet *set, unsigned n);
-extern bool TkIntSetNone(const TkIntSet *set);
-extern bool TkIntSetAny(const TkIntSet *set);
-extern bool TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
-extern bool TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
-extern bool TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
-extern bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
+extern int TkIntSetTest(const TkIntSet *set, unsigned n);
+extern int TkIntSetNone(const TkIntSet *set);
+extern int TkIntSetAny(const TkIntSet *set);
+extern int TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
+extern int TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
+extern int TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
+extern int TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
 extern unsigned TkIntSetFindFirst(const TkIntSet *set);
 extern unsigned TkIntSetFindNext(const TkIntSet *set);
-extern TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add);
+extern TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, int add);
 #endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

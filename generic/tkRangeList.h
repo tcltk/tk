@@ -37,7 +37,7 @@ inline int TkRangeSpan(const TkRange *range);
 /*
  * Test whether given range contains the specified value.
  */
-inline bool TkRangeTest(const TkRange *range, int value);
+inline int TkRangeTest(const TkRange *range, int value);
 
 
 typedef struct TkRangeList {
@@ -139,22 +139,22 @@ inline const TkRange *TkRangeListNext(const TkRangeList *ranges, const TkRange *
 /*
  * Return whether this list is empty.
  */
-inline bool TkRangeListIsEmpty(const TkRangeList *ranges);
+inline int TkRangeListIsEmpty(const TkRangeList *ranges);
 
 /*
  * Return whether the given value is contained in this list.
  */
-inline bool TkRangeListContains(const TkRangeList *ranges, int value);
+inline int TkRangeListContains(const TkRangeList *ranges, int value);
 
 /*
  * Return whether the given range is contained in this list.
  */
-inline bool TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
+inline int TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
 
 /*
  * Return whether any value of the given range is contained in this list.
  */
-bool TkRangeListContainsAny(const TkRangeList *ranges, int low, int high);
+int TkRangeListContainsAny(const TkRangeList *ranges, int low, int high);
 
 /*
  * Add given range to this list. Adjacent entries (pairs) will be amalgamated

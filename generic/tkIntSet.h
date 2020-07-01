@@ -90,7 +90,7 @@ TkIntSet *TkIntSetJoin2ComplementToIntersection(TkIntSet *dst,
 TkIntSet *TkIntSetJoinOfDifferences(TkIntSet *dst, const TkIntSet *set1, const TkIntSet *set2)
     __warn_unused__;
 
-inline bool TkIntSetIsEmpty(const TkIntSet *set);
+inline int TkIntSetIsEmpty(const TkIntSet *set);
 inline unsigned TkIntSetSize(const TkIntSet *set);
 inline unsigned TkIntSetMax(const TkIntSet *set);
 
@@ -100,23 +100,23 @@ inline unsigned TkIntSetDecrRefCount(TkIntSet *set);
 
 inline TkIntSetType TkIntSetAccess(const TkIntSet *set, unsigned index);
 
-inline bool TkIntSetTest(const TkIntSet *set, unsigned n);
-inline bool TkIntSetNone(const TkIntSet *set);
-inline bool TkIntSetAny(const TkIntSet *set);
+inline int TkIntSetTest(const TkIntSet *set, unsigned n);
+inline int TkIntSetNone(const TkIntSet *set);
+inline int TkIntSetAny(const TkIntSet *set);
 
-inline bool TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
-inline bool TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
-inline bool TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
-inline bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
+inline int TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
+inline int TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
+inline int TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
+inline int TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
 
-bool TkIntSetIntersectionIsEqual(const TkIntSet *set1, const TkIntSet *set2,
+int TkIntSetIntersectionIsEqual(const TkIntSet *set1, const TkIntSet *set2,
     const struct TkBitField *del);
-bool TkIntSetIsEqualBits(const TkIntSet *set, const struct TkBitField *bf);
-bool TkIntSetContainsBits(const TkIntSet *set, const struct TkBitField *bf);
-bool TkIntSetDisjunctiveBits(const TkIntSet *set, const struct TkBitField *bf);
-bool TkIntSetIntersectionIsEqualBits(const TkIntSet *set, const struct TkBitField *bf,
+int TkIntSetIsEqualBits(const TkIntSet *set, const struct TkBitField *bf);
+int TkIntSetContainsBits(const TkIntSet *set, const struct TkBitField *bf);
+int TkIntSetDisjunctiveBits(const TkIntSet *set, const struct TkBitField *bf);
+int TkIntSetIntersectionIsEqualBits(const TkIntSet *set, const struct TkBitField *bf,
     const struct TkBitField *del);
-bool TkIntSetIsContainedBits(const TkIntSet *set, const struct TkBitField *bf);
+int TkIntSetIsContainedBits(const TkIntSet *set, const struct TkBitField *bf);
 
 inline unsigned TkIntSetFindFirst(const TkIntSet *set);
 inline unsigned TkIntSetFindNext(const TkIntSet *set);
@@ -127,7 +127,7 @@ TkIntSet *TkIntSetAdd(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetErase(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetTestAndSet(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetTestAndUnset(TkIntSet *set, unsigned n) __warn_unused__;
-inline TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add) __warn_unused__;
+inline TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, int add) __warn_unused__;
 TkIntSet *TkIntSetClear(TkIntSet *set) __warn_unused__;
 
 #ifndef NDEBUG
@@ -146,16 +146,16 @@ void TkIntSetPrint(const TkIntSet *set);
 TkIntSet *TkIntSetInnerJoinDifference(TkIntSet *dst, const TkIntSet *set, const TkIntSet *sub)
     __warn_unused__;
 /* ((set + (add - sub)) & add) == nil */
-bool TkIntSetInnerJoinDifferenceIsEmpty(const TkIntSet *set, const TkIntSet *add, const TkIntSet *sub);
+int TkIntSetInnerJoinDifferenceIsEmpty(const TkIntSet *set, const TkIntSet *add, const TkIntSet *sub);
 /* set1 == set2 - sub2 */
-bool TkIntSetIsEqualToDifference(const TkIntSet *set1, const TkIntSet *set2, const TkIntSet *sub2);
+int TkIntSetIsEqualToDifference(const TkIntSet *set1, const TkIntSet *set2, const TkIntSet *sub2);
 /* set1 == set2 + (add2 & set2) */
-bool TkIntSetIsEqualToInnerJoin(const TkIntSet *set1, const TkIntSet *set2, const TkIntSet *add2);
+int TkIntSetIsEqualToInnerJoin(const TkIntSet *set1, const TkIntSet *set2, const TkIntSet *add2);
 /* set1 == ((set2 + (add2 - sub2)) & add2) */
-bool TkIntSetIsEqualToInnerJoinDifference(const TkIntSet *set1, const TkIntSet *set2,
+int TkIntSetIsEqualToInnerJoinDifference(const TkIntSet *set1, const TkIntSet *set2,
     const TkIntSet *add2, const TkIntSet *sub2);
 /* ((set1 + (add - sub)) & add) == ((set2 + (add - sub)) & add) */
-bool TkIntSetInnerJoinDifferenceIsEqual(const TkIntSet *set1, const TkIntSet *set2,
+int TkIntSetInnerJoinDifferenceIsEqual(const TkIntSet *set1, const TkIntSet *set2,
     const TkIntSet *add, const TkIntSet *sub);
 
 #endif /* TK_UNUSED_INTSET_FUNCTIONS */

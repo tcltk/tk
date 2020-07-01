@@ -106,29 +106,29 @@ TkTextTagSet *TkTextTagSetJoin2ComplementToIntersection(TkTextTagSet *dst,
 TkTextTagSet *TkTextTagSetJoinOfDifferences(TkTextTagSet *dst, const TkTextTagSet *ts1,
     const TkTextTagSet *ts2) __warn_unused__;
 
-inline bool TkTextTagSetIsEmpty(const TkTextTagSet *ts);
-inline bool TkTextTagSetIsBitField(const TkTextTagSet *ts);
+inline int TkTextTagSetIsEmpty(const TkTextTagSet *ts);
+inline int TkTextTagSetIsBitField(const TkTextTagSet *ts);
 
 inline unsigned TkTextTagSetSize(const TkTextTagSet *ts);
 inline unsigned TkTextTagSetCount(const TkTextTagSet *ts);
 
-inline bool TkTextTagSetTest(const TkTextTagSet *ts, unsigned n);
-inline bool TkTextTagSetNone(const TkTextTagSet *ts);
-inline bool TkTextTagSetAny(const TkTextTagSet *ts);
+inline int TkTextTagSetTest(const TkTextTagSet *ts, unsigned n);
+inline int TkTextTagSetNone(const TkTextTagSet *ts);
+inline int TkTextTagSetAny(const TkTextTagSet *ts);
 
-inline bool TkTextTagSetIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-inline bool TkTextTagSetContains(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-inline bool TkTextTagSetDisjunctive(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-inline bool TkTextTagSetIntersects(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+inline int TkTextTagSetIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+inline int TkTextTagSetContains(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+inline int TkTextTagSetDisjunctive(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+inline int TkTextTagSetIntersects(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
 /* (ts1 & bf) == (ts2 & bf) */
-inline bool TkTextTagSetIntersectionIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
+inline int TkTextTagSetIntersectionIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
     const TkBitField *bf);
-inline bool TkTextTagBitContainsSet(const TkBitField *bf, const TkTextTagSet *ts);
+inline int TkTextTagBitContainsSet(const TkBitField *bf, const TkTextTagSet *ts);
 
-inline bool TkTextTagSetIsEqualBits(const TkTextTagSet *ts, const TkBitField *bf);
-inline bool TkTextTagSetContainsBits(const TkTextTagSet *ts, const TkBitField *bf);
-inline bool TkTextTagSetDisjunctiveBits(const TkTextTagSet *ts, const TkBitField *bf);
-inline bool TkTextTagSetIntersectsBits(const TkTextTagSet *ts, const TkBitField *bf);
+inline int TkTextTagSetIsEqualBits(const TkTextTagSet *ts, const TkBitField *bf);
+inline int TkTextTagSetContainsBits(const TkTextTagSet *ts, const TkBitField *bf);
+inline int TkTextTagSetDisjunctiveBits(const TkTextTagSet *ts, const TkBitField *bf);
+inline int TkTextTagSetIntersectsBits(const TkTextTagSet *ts, const TkBitField *bf);
 
 inline unsigned TkTextTagSetFindFirst(const TkTextTagSet *ts);
 inline unsigned TkTextTagSetFindNext(const TkTextTagSet *ts, unsigned prev);
@@ -136,7 +136,7 @@ unsigned TkTextTagSetFindFirstInIntersection(const TkTextTagSet *ts, const TkBit
 
 TkTextTagSet *TkTextTagSetAdd(TkTextTagSet *ts, unsigned n) __warn_unused__;
 TkTextTagSet *TkTextTagSetErase(TkTextTagSet *ts, unsigned n) __warn_unused__;
-inline TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, bool value)
+inline TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, int value)
     __warn_unused__;
 TkTextTagSet *TkTextTagSetTestAndSet(TkTextTagSet *ts, unsigned n) __warn_unused__;
 TkTextTagSet *TkTextTagSetTestAndUnset(TkTextTagSet *ts, unsigned n) __warn_unused__;
@@ -167,19 +167,19 @@ void TkTextTagSetPrint(const TkTextTagSet *set);
 TkTextTagSet *TkTextTagSetInnerJoinDifference(TkTextTagSet *dst,
     const TkTextTagSet *ts, const TkTextTagSet *sub) __warn_unused__;
 /* ((ts + (add - sub)) & add) == nil */
-bool TkTextTagSetInnerJoinDifferenceIsEmpty(const TkTextTagSet *ts,
+int TkTextTagSetInnerJoinDifferenceIsEmpty(const TkTextTagSet *ts,
     const TkTextTagSet *add, const TkTextTagSet *sub);
 /* ts1 == ts2 - sub2 */
-bool TkTextTagSetIsEqualToDifference(const TkTextTagSet *ts1,
+int TkTextTagSetIsEqualToDifference(const TkTextTagSet *ts1,
     const TkTextTagSet *ts2, const TkTextTagSet *sub2);
 /* ts1 == ts2 + (add2 & ts2) */
-bool TkTextTagSetIsEqualToInnerJoin(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
+int TkTextTagSetIsEqualToInnerJoin(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
     const TkTextTagSet *add2);
 /* ts1 == ((ts2 + (add2 - sub2)) & add2) */
-bool TkTextTagSetIsEqualToInnerJoinDifference(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
+int TkTextTagSetIsEqualToInnerJoinDifference(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
     const TkTextTagSet *add2, const TkTextTagSet *sub2);
 /* ((ts1 + (add - sub)) & add) == ((ts2 + (add - sub)) & add) */
-bool TkTextTagSetInnerJoinDifferenceIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
+int TkTextTagSetInnerJoinDifferenceIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
     const TkTextTagSet *add, const TkTextTagSet *sub);
 
 # endif /* TK_UNUSED_TAGSET_FUNCTIONS */

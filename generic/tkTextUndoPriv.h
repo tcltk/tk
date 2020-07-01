@@ -39,7 +39,7 @@ typedef struct TkTextUndoStack_ {
     TkTextUndoMyAtom *last;	/* Last added undo atom. */
     TkTextUndoMyAtom *iter;	/* Current atom in iteration loop. */
     TkTextUndoMyAtom *actual;	/* Current undo/redo atom in processing. */
-    bool irreversible;		/* Whether undo actions has been released due to limited depth/size. */
+    int irreversible;		/* Whether undo actions has been released due to limited depth/size. */
     unsigned maxUndoDepth;	/* Maximal depth of the undo stack. */
     int maxRedoDepth;		/* Maximal depth of the redo stack. */
     unsigned maxSize;		/* Maximal size of the stack. */
@@ -49,9 +49,9 @@ typedef struct TkTextUndoStack_ {
     unsigned redoItems;		/* Current number of items on redo stack. */
     unsigned undoSize;		/* Total size of undo items. */
     unsigned redoSize;		/* Total size of redo items. */
-    bool doingUndo;		/* Currently an undo action is performed? */
-    bool doingRedo;		/* Currently a redo action is performed? */
-    bool pushSeparator;		/* Push a separator before pushing a new item (iff true). */
+    int doingUndo;		/* Currently an undo action is performed? */
+    int doingRedo;		/* Currently a redo action is performed? */
+    int pushSeparator;		/* Push a separator before pushing a new item (iff true). */
 } TkTextUndoStack_;
 
 #endif /* _TKTEXTUNDOPRIV */
@@ -72,31 +72,31 @@ inline unsigned
 TkTextUndoGetMaxSize(const TkTextUndoStack stack)
 { assert(stack); return stack->maxSize; }
 
-inline bool
+inline int
 TkTextUndoContentIsModified(const TkTextUndoStack stack)
 { assert(stack); return stack->undoDepth > 0 || stack->irreversible; }
 
-inline bool
+inline int
 TkTextUndoContentIsIrreversible(const TkTextUndoStack stack)
 { assert(stack); return stack->irreversible; }
 
-inline bool
+inline int
 TkTextUndoIsPerformingUndo(const TkTextUndoStack stack)
 { assert(stack); return stack->doingUndo; }
 
-inline bool
+inline int
 TkTextUndoIsPerformingRedo(const TkTextUndoStack stack)
 { assert(stack); return stack->doingRedo; }
 
-inline bool
+inline int
 TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack)
 { assert(stack); return stack->doingUndo || stack->doingRedo; }
 
-inline bool
+inline int
 TkTextUndoUndoStackIsFull(const TkTextUndoStack stack)
 { return !stack || (stack->maxUndoDepth > 0 && stack->undoDepth >= stack->maxUndoDepth); }
 
-inline bool
+inline int
 TkTextUndoRedoStackIsFull(const TkTextUndoStack stack)
 { return !stack || (stack->maxRedoDepth >= 0 && (int) stack->redoDepth >= stack->maxRedoDepth); }
 
