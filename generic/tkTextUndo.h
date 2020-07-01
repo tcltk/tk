@@ -134,7 +134,7 @@ void TkTextUndoDestroyStack(TkTextUndoStack *stackPtr);
 int TkTextUndoSetMaxStackDepth(TkTextUndoStack stack,
     unsigned maxUndoDepth, int maxRedoDepth);
 int TkTextUndoSetMaxStackSize(TkTextUndoStack stack,
-    unsigned maxSize, bool applyImmediately);
+    unsigned maxSize, int applyImmediately);
 int TkTextUndoResetStack(TkTextUndoStack stack);
 int TkTextUndoClearStack(TkTextUndoStack stack);
 int TkTextUndoClearUndoStack(TkTextUndoStack stack);
@@ -174,11 +174,11 @@ inline unsigned TkTextUndoGetCurrentUndoSize(const TkTextUndoStack stack);
 inline unsigned TkTextUndoGetCurrentRedoSize(const TkTextUndoStack stack);
 inline unsigned TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack);
 inline unsigned TkTextUndoCountCurrentRedoItems(const TkTextUndoStack stack);
-inline bool TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
-inline bool TkTextUndoContentIsModified(const TkTextUndoStack stack);
-inline bool TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
-inline bool TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);
-inline bool TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
+inline int TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
+inline int TkTextUndoContentIsModified(const TkTextUndoStack stack);
+inline int TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
+inline int TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);
+inline int TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
 inline const TkTextUndoAtom *TkTextUndoCurrentUndoAtom(const TkTextUndoStack stack);
 inline const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack stack);
 inline const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
@@ -193,9 +193,9 @@ const TkTextUndoAtom *TkTextUndoFirstRedoAtom(TkTextUndoStack stack);
 const TkTextUndoAtom *TkTextUndoNextRedoAtom(TkTextUndoStack stack);
 
 /* For convenience these functions are allowing NULL for the stack argument. */
-inline bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
-inline bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
-bool TkTextUndoStackIsFull(const TkTextUndoStack stack);
+inline int TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
+inline int TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
+int TkTextUndoStackIsFull(const TkTextUndoStack stack);
 
 /*
  * Push the items. Pushing a separator will group items into compound edit
@@ -207,7 +207,7 @@ bool TkTextUndoStackIsFull(const TkTextUndoStack stack);
  */
 
 int TkTextUndoPushItem(TkTextUndoStack stack, TkTextUndoItem item, unsigned size);
-void TkTextUndoPushSeparator(TkTextUndoStack stack, bool immediately);
+void TkTextUndoPushSeparator(TkTextUndoStack stack, int immediately);
 
 /*
  * Normally redo items will be pushed while undo will be performed. The next function

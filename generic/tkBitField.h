@@ -87,20 +87,20 @@ void TkBitJoin2ComplementToIntersection(TkBitField *dst,
 /* dst := (dst - bf1) + (bf1 - bf2) */
 void TkBitJoinOfDifferences(TkBitField *dst, const TkBitField *bf1, const TkBitField *bf2);
 
-inline bool TkBitIsEmpty(const TkBitField *bf);
+inline int TkBitIsEmpty(const TkBitField *bf);
 inline size_t TkBitSize(const TkBitField *bf);
 size_t TkBitCount(const TkBitField *bf);
 
-inline bool TkBitTest(const TkBitField *bf, unsigned n);
-inline bool TkBitNone(const TkBitField *bf);
-bool TkBitAny(const TkBitField *bf);
-bool TkBitComplete(const TkBitField *bf);
+inline int TkBitTest(const TkBitField *bf, unsigned n);
+inline int TkBitNone(const TkBitField *bf);
+int TkBitAny(const TkBitField *bf);
+int TkBitComplete(const TkBitField *bf);
 
-bool TkBitIsEqual(const TkBitField *bf1, const TkBitField *bf2);
-bool TkBitContains(const TkBitField *bf1, const TkBitField *bf2);
-bool TkBitDisjunctive(const TkBitField *bf1, const TkBitField *bf2);
-inline bool TkBitIntersects(const TkBitField *bf1, const TkBitField *bf2);
-bool TkBitIntersectionIsEqual(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *del);
+int TkBitIsEqual(const TkBitField *bf1, const TkBitField *bf2);
+int TkBitContains(const TkBitField *bf1, const TkBitField *bf2);
+int TkBitDisjunctive(const TkBitField *bf1, const TkBitField *bf2);
+inline int TkBitIntersects(const TkBitField *bf1, const TkBitField *bf2);
+int TkBitIntersectionIsEqual(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *del);
 
 unsigned TkBitFindFirst(const TkBitField *bf);
 unsigned TkBitFindLast(const TkBitField *bf);
@@ -113,9 +113,9 @@ unsigned TkBitFindFirstInIntersection(const TkBitField *bf1, const TkBitField *b
 
 inline void TkBitSet(TkBitField *bf, unsigned n);
 inline void TkBitUnset(TkBitField *bf, unsigned n);
-inline void TkBitPut(TkBitField *bf, unsigned n, bool value);
-bool TkBitTestAndSet(TkBitField *bf, unsigned n);
-bool TkBitTestAndUnset(TkBitField *bf, unsigned n);
+inline void TkBitPut(TkBitField *bf, unsigned n, int value);
+int TkBitTestAndSet(TkBitField *bf, unsigned n);
+int TkBitTestAndUnset(TkBitField *bf, unsigned n);
 void TkBitFill(TkBitField *bf);
 void TkBitClear(TkBitField *bf);
 
@@ -141,16 +141,16 @@ void TkBitCheckAllocs();
 /* dst := (dst + (add - sub)) & add */
 void TkBitInnerJoinDifference(TkBitField *dst, const TkBitField *add, const TkBitField *sub);
 /* ((bf + (add - sub)) & add) == nil */
-bool TkBitInnerJoinDifferenceIsEmpty(const TkBitField *bf, const TkBitField *add, const TkBitField *sub);
+int TkBitInnerJoinDifferenceIsEmpty(const TkBitField *bf, const TkBitField *add, const TkBitField *sub);
 /* bf1 == bf2 - sub2 */
-bool TkBitIsEqualToDifference(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *sub2);
+int TkBitIsEqualToDifference(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *sub2);
 /* bf1 == ((bf2 + add2) & bf2) */
-bool TkBitIsEqualToInnerJoin(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *add2);
+int TkBitIsEqualToInnerJoin(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *add2);
 /* bf1 == ((bf2 + (add2 - sub2) & add) */
-bool TkBitIsEqualToInnerJoinDifference(const TkBitField *bf1, const TkBitField *bf2,
+int TkBitIsEqualToInnerJoinDifference(const TkBitField *bf1, const TkBitField *bf2,
     const TkBitField *add2, const TkBitField *sub2);
 /* ((bf1 + (add - sub)) & add) == ((bf2 + (add - sub)) & add) */
-bool TkBitInnerJoinDifferenceIsEqual(const TkBitField *bf1, const TkBitField *bf2,
+int TkBitInnerJoinDifferenceIsEqual(const TkBitField *bf1, const TkBitField *bf2,
     const TkBitField *add, const TkBitField *sub);
 
 #endif /* TK_UNUSED_BITFIELD_FUNCTIONS */

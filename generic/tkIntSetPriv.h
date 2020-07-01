@@ -17,13 +17,13 @@
 #ifndef _TKINTSETPRIV
 #define _TKINTSETPRIV
 
-MODULE_SCOPE bool TkIntSetContains__(
+MODULE_SCOPE int TkIntSetContains__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2);
-MODULE_SCOPE bool TkIntSetDisjunctive__(
+MODULE_SCOPE int TkIntSetDisjunctive__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2);
-MODULE_SCOPE bool TkIntSetIsEqual__(
+MODULE_SCOPE int TkIntSetIsEqual__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2);
 
@@ -63,7 +63,7 @@ TkIntSetByteSize(
 
 
 inline
-bool
+int
 TkIntSetIsEmpty(
     const TkIntSet *set)
 {
@@ -73,7 +73,7 @@ TkIntSetIsEmpty(
 
 
 inline
-bool
+int
 TkIntSetIsEqual(
     const TkIntSet *set1,
     const TkIntSet *set2)
@@ -86,7 +86,7 @@ TkIntSetIsEqual(
 
 
 inline
-bool
+int
 TkIntSetContains(
     const TkIntSet *set1,
     const TkIntSet *set2)
@@ -99,7 +99,7 @@ TkIntSetContains(
 
 
 inline
-bool
+int
 TkIntSetDisjunctive(
     const TkIntSet *set1,
     const TkIntSet *set2)
@@ -195,7 +195,7 @@ TkIntSetChange(
 
 
 inline
-bool
+int
 TkIntSetTest(
     const TkIntSet *set,
     unsigned n)
@@ -210,7 +210,7 @@ TkIntSetTest(
 
 
 inline
-bool
+int
 TkIntSetNone(
     const TkIntSet *set)
 {
@@ -220,7 +220,7 @@ TkIntSetNone(
 
 
 inline
-bool
+int
 TkIntSetAny(
     const TkIntSet *set)
 {
@@ -230,7 +230,7 @@ TkIntSetAny(
 
 
 inline
-bool
+int
 TkIntSetIntersects(
     const TkIntSet *set1,
     const TkIntSet *set2)
@@ -265,7 +265,7 @@ TkIntSet *
 TkIntSetAddOrErase(
     TkIntSet *set,
     unsigned n,
-    bool add)
+    int add)
 {
     assert(set);
     return add ? TkIntSetAdd(set, n) : TkIntSetErase(set, n);

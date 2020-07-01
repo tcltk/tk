@@ -114,7 +114,7 @@
 #endif
 
 /*
- * Standard integer/boolean support (C99).
+ * Standard integer support (C99).
  */
 
 #ifdef HAVE_STDINT_H
@@ -123,11 +123,6 @@
 /* work around for the support of ancient compilers */
 #   include "../compat/stdint.h"
 #endif
-#ifdef HAVE_STDBOOL_H
-#   include <stdbool.h>
-#else /* support of ancient compilers */
-#   include "../compat/stdbool.h"
-#endif /* HAVE_STDBOOL_H */
 
 
 /*
