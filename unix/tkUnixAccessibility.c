@@ -346,7 +346,15 @@ static AtkRole ATKRole_Register(Tk_Window tkwin, char *name) {
 static AtkState ATKState_Register(char *name) {
 
   
-  AtkRole state = NULL;
+  AtState state = NULL;
+  AtkStateSet *state_set;
+
+
+  /*  to do: implement AtkObject accessibile API to set accessible bit on Tk windows
+  atk_object_ref_state_set ()
+
+AtkStateSet *
+atk_object_ref_state_set (AtkObject *accessible);*/
 
   switch (name) {
 
@@ -394,6 +402,10 @@ static AtkState ATKState_Register(char *name) {
     break;
   }
 
+  if (state) {
+    //need to define state_set here specifically
+    atk_state_set_add_state (state_set, state);
+  }
   return state;
 }
 
