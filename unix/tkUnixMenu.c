@@ -11,7 +11,6 @@
 
 #include "tkUnixInt.h"
 #include "tkMenu.h"
-#include "default.h"
 
 /*
  * Constants used for menu drawing.
