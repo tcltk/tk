@@ -293,7 +293,7 @@ const KeysymInfo keysymTable[] = {
     {0x00d5, 0x00d5}, /* Otilde */
     {0x00d6, 0x00d6}, /* Odiaeresis */
     {0x00d7, 0x00d7}, /* multiply */
-    {0x00d8, 0x00d8}, /* Ooblique */
+    {0x00d8, 0x00d8}, /* Oslash */
     {0x00d9, 0x00d9}, /* Ugrave */
     {0x00da, 0x00da}, /* Uacute */
     {0x00db, 0x00db}, /* Ucircumflex */

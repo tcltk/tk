@@ -399,7 +399,7 @@ TkpComputeButtonGeometry(
 
     width += butPtr->inset*2;
     height += butPtr->inset*2;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	width += 12;
     }
     if (mbPtr->btnkind == kThemePushButton) {
@@ -1063,7 +1063,7 @@ TkMacOSXComputeButtonParams(
 	 * the button periodically.
 	 */
 
-        if (!mbPtr->defaultPulseHandler && ([NSApp macMinorVersion] <= 9)) {
+        if (!mbPtr->defaultPulseHandler && ([NSApp macOSVersion] <= 100900)) {
             mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
                     PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
         }

@@ -1909,11 +1909,7 @@ GetObjectForOption(
 	break;
     case TK_OPTION_INDEX:
 	if (*((int *) internalPtr) == INT_MIN) {
-#if TCL_MAJOR_VERSION > 8 || defined(TK_NO_DEPRECATED)
-	    objPtr = Tcl_NewObj();
-#else
 	    objPtr = Tcl_NewWideIntObj(-1);
-#endif
 	} else if (*((int *) internalPtr) == INT_MAX) {
 	    objPtr = Tcl_NewStringObj("end+1", -1);
 	} else if (*((int *) internalPtr) == -1) {
