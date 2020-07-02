@@ -152,11 +152,7 @@ UnderlinePrintProc(
     (void)tkwin;
 
     if (underline == INT_MIN) {
-#if TCL_MAJOR_VERSION > 9 || defined(TK_NON_DEPRECATED)
-	p = (char *)"none";
-#else
 	p = (char *)"-1";
-#endif
 	*freeProcPtr = TCL_STATIC;
 	return p;
     } else if (underline == INT_MAX) {
@@ -211,7 +207,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
 	"", offsetof(TextItem, text), 0, NULL},
-    {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, DEF_BUTTON_UNDERLINE,
+    {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, NULL,
 	offsetof(TextItem, underline), TK_CONFIG_NULL_OK, &underlineOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
 	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},

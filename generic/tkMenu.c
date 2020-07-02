@@ -161,7 +161,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
 	(ClientData) menuStateStrings, 0},
     {TK_OPTION_INDEX, "-underline", NULL, NULL,
-	DEF_MENU_ENTRY_UNDERLINE, TCL_INDEX_NONE, offsetof(TkMenuEntry, underline), TK_OPTION_NULL_OK, NULL, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkMenuEntry, underline), TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
