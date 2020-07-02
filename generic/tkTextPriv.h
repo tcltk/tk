@@ -43,7 +43,7 @@ struct TkTextMyBTree {
 };
 
 
-MODULE_SCOPE bool TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE int TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const char *string, unsigned lenOfString, TkTextIndex *indexPtr);
 
 #endif /* _TKTEXTPRIV */
@@ -69,7 +69,7 @@ MODULE_SCOPE bool TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPt
  */
 
 inline
-bool
+int
 TkTextIsMark(
     const TkTextSegment *segPtr)
 {
@@ -94,7 +94,7 @@ TkTextIsMark(
  */
 
 inline
-bool
+int
 TkTextIsSpecialMark(
     const TkTextSegment *segPtr)
 {
@@ -122,7 +122,7 @@ TkTextIsSpecialMark(
  */
 
 inline
-bool
+int
 TkTextIsPrivateMark(
     const TkTextSegment *segPtr)
 {
@@ -148,7 +148,7 @@ TkTextIsPrivateMark(
  */
 
 inline
-bool
+int
 TkTextIsNormalMark(
     const TkTextSegment *segPtr)
 {
@@ -174,7 +174,7 @@ TkTextIsNormalMark(
  */
 
 inline
-bool
+int
 TkTextIsStartEndMarker(
     const TkTextSegment *segPtr)
 {
@@ -201,7 +201,7 @@ TkTextIsStartEndMarker(
  */
 
 inline
-bool
+int
 TkTextIsStableMark(
     const TkTextSegment *segPtr)
 {
@@ -225,7 +225,7 @@ TkTextIsStableMark(
  */
 
 inline
-bool
+int
 TkTextIsSpecialOrPrivateMark(
     const TkTextSegment *segPtr)
 {
@@ -250,7 +250,7 @@ TkTextIsSpecialOrPrivateMark(
  */
 
 inline
-bool
+int
 TkTextIsNormalOrSpecialMark(
     const TkTextSegment *segPtr)
 {
@@ -276,7 +276,7 @@ TkTextIsNormalOrSpecialMark(
  */
 
 inline
-bool
+int
 TkTextIsDeadPeer(
     const TkText *textPtr)
 {
@@ -867,7 +867,7 @@ TkTextIndexGetSegment(
  */
 
 inline
-bool
+int
 TkTextGetIndexFromObj(
     Tcl_Interp *interp,		/* Use this for error reporting. */
     TkText *textPtr,		/* Information about text widget, can be NULL. */
@@ -928,7 +928,7 @@ TkTextIndexSave(
  */
 
 inline
-bool
+int
 TkTextIndexSameLines(
     const TkTextIndex *indexPtr1,	/* Pointer to index. */
     const TkTextIndex *indexPtr2)	/* Pointer to index. */

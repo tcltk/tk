@@ -210,12 +210,12 @@ typedef void (*TkTextUndoProc)(
     struct TkSharedText *sharedTextPtr,
     struct TkTextUndoInfo *undoInfo,
     struct TkTextUndoInfo *redoInfo,
-    bool isRedo);
+    int isRedo);
 
 typedef void (*TkTextDestroyUndoItemProc)(
     struct TkSharedText *sharedTextPtr,
     struct TkTextUndoToken *item,
-    bool reused);
+    int reused);
 
 typedef void (*TkTextGetUndoRangeProc)(
     const struct TkSharedText *sharedTextPtr,
@@ -345,7 +345,7 @@ typedef struct TkTextEmbWindowClient {
     Tcl_HashEntry *hPtr;	/* Pointer to hash table entry for mark
 				 * (in sharedTextPtr->windowTable). */
     unsigned chunkCount;	/* Number of display chunks that refer to this window. */
-    bool displayed;		/* Non-zero means that the window has been displayed on
+    int displayed;		/* Non-zero means that the window has been displayed on
     				 * the screen recently. */
     struct TkTextSegment *parent;
     struct TkTextEmbWindowClient *next;
@@ -501,14 +501,14 @@ typedef struct TkTextIndex {
 	TkTextLine *linePtr;	/* Pointer to line containing position of interest. */
 	TkTextSegment *segPtr;	/* Pointer to segment containing position
 				 * of interest (NULL means not yet computed). */
-	bool isCharSegment;	/* Whether 'segPtr' is a char segment (if not NULL). */
+	int isCharSegment;	/* Whether 'segPtr' is a char segment (if not NULL). */
 	int32_t byteIndex;	/* Index within line of desired character (0 means first one,
 				 * -1 means not yet computed). */
 	int32_t lineNo;		/* The line number of the line pointer. */
 	int32_t lineNoRel;	/* The line number of the line pointer in associated text widget. */
     } priv;
 
-    bool discardConsistencyCheck;
+    int discardConsistencyCheck;
 				/* This flag is for debugging only: in certain situations consistency
 				 * checks should not be done (for example when inserting or deleting
 				 * text). */
@@ -626,15 +626,15 @@ struct TkTextDispChunk {
     int32_t breakIndex;		/* Index within chunk of last acceptable position for a line
     				 * (break just before this byte index). <= 0 means don't break
 				 * during or immediately after this chunk. */
-    bool wrappedAtSpace;	/* This flag will be set when the a chunk has been wrapped while
+    int wrappedAtSpace;	/* This flag will be set when the a chunk has been wrapped while
     				 * gobbling a trailing space. */
-    bool endsWithSyllable;	/* This flag will be set when the corresponding sgement for
+    int endsWithSyllable;	/* This flag will be set when the corresponding sgement for
     				 * this chunk will be followed by a hyphen segment. */
-    bool skipFirstChar;		/* This flag will be set if the first byte has to be skipped due
+    int skipFirstChar;		/* This flag will be set if the first byte has to be skipped due
     				 * to a spelling change. */
-    bool endOfLineSymbol;	/* This flag will be set if this chunk contains (only) the end of
+    int endOfLineSymbol;	/* This flag will be set if this chunk contains (only) the end of
     				 * line symbol. */
-    bool integralPart;		/* This chunk contains the start of the integral part of a numeric. */
+    int integralPart;		/* This chunk contains the start of the integral part of a numeric. */
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 
@@ -685,7 +685,7 @@ typedef struct TkTextDispLine {
     				 * has been applied). */
     uint32_t byteCount;		/* Number of bytes accounted for by this display line, including a
     				 * trailing space or newline that isn't actually displayed. */
-    bool invisible;		/* Whether this display line is invisible (no chunk with width > 0). */
+    int invisible;		/* Whether this display line is invisible (no chunk with width > 0). */
     int32_t y;			/* Y-position at which line is supposed to be drawn (topmost pixel
     				 * of rectangular area occupied by line). */
     int32_t oldY;		/* Y-position at which line currently appears on display. This is
@@ -821,8 +821,8 @@ typedef struct TkTextTag {
     				 * number is less than 'TkBitSize(sharedTextPtr->usedTags)'.*/
     uint32_t tagEpoch;		/* Epoch of creation time. */
     uint32_t refCount;		/* Number of objects referring to us. */
-    bool isDisabled;		/* This tag is disabled? */
-    bool isSelTag;		/* This tag is the special "sel" tag? */
+    int isDisabled;		/* This tag is disabled? */
+    int isSelTag;		/* This tag is the special "sel" tag? */
 
     /*
      * Information for tag collection [TkBTreeGetTags, TextInspectCmd, TkTextPickCurrent].
@@ -843,7 +843,7 @@ typedef struct TkTextTag {
     				/* Holds the undo information of last tag add/remove operation. */
     TkTextUndoToken *recentChangePriorityToken;
     				/* Holds the undo information of last tag lower/raise operation. */
-    bool recentTagAddRemoveTokenIsNull;
+    int recentTagAddRemoveTokenIsNull;
     				/* 'recentTagAddRemoveToken' is null, this means the pointer still
 				 * is valid, but should not be saved onto undo stack. */
     uint32_t savedPriority; 	/* Contains the priority before recentChangePriorityToken will be set. */
@@ -955,9 +955,9 @@ typedef struct TkTextTag {
      * Derived values, and the container for all the options.
      */
 
-    bool affectsDisplay;	/* True means that this tag affects the way information is
+    int affectsDisplay;	/* True means that this tag affects the way information is
     				 * displayed on the screen (so need to redisplay if tag changes). */
-    bool affectsDisplayGeometry;/* True means that this tag affects the size with which
+    int affectsDisplayGeometry;/* True means that this tag affects the size with which
     				 * information is displayed on the screen (so need to recalculate
 				 * line dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
@@ -992,8 +992,8 @@ typedef struct TkTextSearch {
     const TkTextTag *tagPtr;	/* Tag to search for. */
     struct TkText *textPtr;	/* Where we are searching. */
     TkTextSearchMode mode;	/* Search mode. */
-    bool tagon;			/* We have to search for toggle on? */
-    bool endOfText;		/* Search is ending at end of text? */
+    int tagon;			/* We have to search for toggle on? */
+    int endOfText;		/* Search is ending at end of text? */
     int linesLeft;		/* Lines left to search (including curIndex and stopIndex).
     				 * When this becomes <= 0 the search is over. */
     int linesToEndOfText;	/* Add this to linesLeft when searching to end of text. */
@@ -1133,7 +1133,7 @@ typedef struct TkSharedText {
     unsigned numMotionEventBindings;
 				/* Number of tags with bindings to motion events. */
     unsigned numElisionTags;	/* Number of tags with elideString. */
-    bool allowUpdateLineMetrics;
+    int allowUpdateLineMetrics;
 				/* We don't allow line height computations before first Configure
 				 * event has been accepted. */
 
@@ -1141,14 +1141,14 @@ typedef struct TkSharedText {
      * Miscellaneous information.
      */
 
-    bool steadyMarks;		/* This option causes that any mark now simultaneous behaves like
+    int steadyMarks;		/* This option causes that any mark now simultaneous behaves like
     				 * an invisible character, this means that the relative order of
 				 * marks will not change. */
     unsigned imageCount;	/* Used for creating unique image names. */
     unsigned countEmbWindows;	/* Used for counting embedded windows. */
-    bool triggerWatchCmd;	/* Whether we should trigger the watch command for any peer. */
-    bool triggerAlways;		/* Whether we should always trigger the watch command for any peer. */
-    bool haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
+    int triggerWatchCmd;	/* Whether we should trigger the watch command for any peer. */
+    int triggerAlways;		/* Whether we should always trigger the watch command for any peer. */
+    int haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
     				 * been postponed in any peer. */
 
     /*
@@ -1170,7 +1170,7 @@ typedef struct TkSharedText {
 				 * this widget. Note that this table is used in display stuff, but
 				 * for technical reasons we have to keep this table in shared
 				 * resource, because it's a shared table. */
-    bool breakInfoTableIsInitialized;
+    int breakInfoTableIsInitialized;
     				/* Flag whether breakInfoTable is initialized. */
 
     /*
@@ -1185,19 +1185,19 @@ typedef struct TkSharedText {
     				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
-    bool undo;			/* Non-zero means the undo/redo behaviour is enabled. */
-    bool isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
-    bool isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
-    bool isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
+    int undo;			/* Non-zero means the undo/redo behaviour is enabled. */
+    int isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
+    int isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
+    int isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
     				 * 'true' can never change to 'false', except the widget will
 				 * be cleared, or the user is clearing. */
-    bool userHasSetModifiedFlag;/* Flag indicating if the user has set the 'modified' flag.
+    int userHasSetModifiedFlag;/* Flag indicating if the user has set the 'modified' flag.
     				 * Value 'true' is superseding the computed value, but value
 				 * 'false' is only clearing to the initial state of this flag. */
-    bool undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
-    bool pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
+    int undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
+    int pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
     				 * insert/delete item. */
-    bool undoTagging;		/* Global default value for TkTextTag::undo. */
+    int undoTagging;		/* Global default value for TkTextTag::undo. */
     unsigned undoLevel;		/* The undo level which corresponds to the unmodified state. */
     TkTextEditMode lastEditMode;/* Keeps track of what the last edit mode was. */
     int lastUndoTokenType;	/* Type of newest undo token on stack. */
@@ -1281,15 +1281,15 @@ typedef struct TkText {
     Tcl_Obj *newEndIndex;	/* New position for end marker. */
     int pixelReference;		/* Counter into the current tree reference index corresponding
     				 * to this widget. */
-    bool abortSelections;	/* Set to true whenever the text is modified in a way that interferes
+    int abortSelections;	/* Set to true whenever the text is modified in a way that interferes
     				 * with selection retrieval: used to abort incremental selection
 				 * retrievals. */
-    bool pendingAfterSync;	/* RunAfterSyncCmd is in event queue. */
-    bool pendingFireEvent;	/* FireWidgetViewSyncEvent is in event queue. */
-    bool sendSyncEvent;		/* Send <<WidgetViewSync>> event as soon as the line metric is
+    int pendingAfterSync;	/* RunAfterSyncCmd is in event queue. */
+    int pendingFireEvent;	/* FireWidgetViewSyncEvent is in event queue. */
+    int sendSyncEvent;		/* Send <<WidgetViewSync>> event as soon as the line metric is
     				 * up-to-date, even if we have no sync state change. */
-    bool prevSyncState;		/* Previous sync state of the line-height calculation. */
-    bool dontRepick;		/* Set to 'true' during scroll operation, but only when -responsiveness
+    int prevSyncState;		/* Previous sync state of the line-height calculation. */
+    int dontRepick;		/* Set to 'true' during scroll operation, but only when -responsiveness
     				 * is greater than zero. */
 
     /*
@@ -1357,7 +1357,7 @@ typedef struct TkText {
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
     				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
     int useHyphenSupport;	/* Indicating the hypenation support. */
-    bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
+    int hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
     int useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
     				 * internal algorithm will be used. */
@@ -1420,7 +1420,7 @@ typedef struct TkText {
      */
 
     Tcl_Obj *watchCmd;		/* The command prefix for the "watch" command. */
-    bool triggerAlways;		/* Whether we should trigger for any modification. */
+    int triggerAlways;		/* Whether we should trigger for any modification. */
     TkTextIndex insertIndex;	/* Saved position of insertion cursor. */
 
     /*
@@ -1441,7 +1441,7 @@ typedef struct TkText {
     				/* The index of the "current" mark, needed for postponing the
 				 * insertion of the "current" mark segment.
 				 */
-    bool haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
+    int haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
     				 * been postponed. */
     XEvent pickEvent;		/* The event from which the current character was chosen.
     				 * Must be saved so that we can repick after modifications
@@ -1469,14 +1469,14 @@ typedef struct TkText {
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
     unsigned refCount;		/* Number of objects referring to us. */
     int blockCursorType;	/* false = standard insertion cursor, true = block cursor. */
-    bool accelerateTagSearch;	/* Update B-Tree tag information for search? */
+    int accelerateTagSearch;	/* Update B-Tree tag information for search? */
     int responsiveness;		/* The delay in ms before repick the mouse position (behavior when
 				 * scrolling the widget). */
     unsigned uniqueIdCounter;	/* Used for the generation of unique mark names. */
     struct TkTextStringList *varBindingList;
     				/* Linked list of variables which should be unset when the widget
 				 * will be destroyed. */
-    bool sharedIsReleased;	/* Boolean value whether shared resource have been released. */
+    int sharedIsReleased;	/* Boolean value whether shared resource have been released. */
 
     /*
      * Copies of information from the shared section relating to the editor control mode:
@@ -1496,7 +1496,7 @@ typedef struct TkText {
     				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
-    bool undoTagging;		/* Global default value for TkTextTag::undo. */
+    int undoTagging;		/* Global default value for TkTextTag::undo. */
 
     /*
      * Support of sync command:
@@ -1555,10 +1555,10 @@ typedef enum {
  * of procedures that may be called to manipulate segments of that type.
  */
 
-typedef bool Tk_SegDeleteProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr, int flags);
-typedef bool Tk_SegReuseProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr);
+typedef int Tk_SegDeleteProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr, int flags);
+typedef int Tk_SegReuseProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr);
 typedef int Tk_SegLayoutProc(const struct TkTextIndex *indexPtr, TkTextSegment *segPtr,
-		    int offset, int maxX, int maxChars, bool noCharsYet, TkWrapMode wrapMode,
+		    int offset, int maxX, int maxChars, int noCharsYet, TkWrapMode wrapMode,
 		    TkTextSpaceMode spaceMode, struct TkTextDispChunk *chunkPtr);
 typedef void Tk_SegCheckProc(const struct TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 typedef Tcl_Obj *Tk_SegInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
@@ -1737,7 +1737,7 @@ MODULE_SCOPE const Tk_SegType tkTextProtectionMarkType;
  * Convenience constants for a better readability of TkTextFindDisplayLineStartEnd call:
  */
 
-enum { DISP_LINE_START = false, DISP_LINE_END = true };
+enum { DISP_LINE_START = 0, DISP_LINE_END = 1 };
 
 /*
  * Helper for guarded allocation/deallocation.
@@ -1757,13 +1757,13 @@ enum { DISP_LINE_START = false, DISP_LINE_END = true };
  * this operation is undoable.
  */
 
-typedef bool TkTextTagChangedProc(
+typedef int TkTextTagChangedProc(
     const TkSharedText *sharedTextPtr,
     TkText *textPtr,
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2,
     const TkTextTag *tagPtr,
-    bool affectsDisplayGeometry);
+    int affectsDisplayGeometry);
 
 /*
  * Callback function for TkTextPerformWatchCmd().
@@ -1796,16 +1796,16 @@ MODULE_SCOPE void	TkBTreeUpdatePixelHeights(const TkText *textPtr, TkTextLine *l
 			    int numLines, unsigned epoch);
 MODULE_SCOPE void	TkBTreeResetDisplayLineCounts(TkText *textPtr, TkTextLine *linePtr,
 			    unsigned numLines);
-MODULE_SCOPE bool	TkBTreeHaveElidedSegments(const TkSharedText *sharedTextPtr);
+MODULE_SCOPE int	TkBTreeHaveElidedSegments(const TkSharedText *sharedTextPtr);
 inline TkTextPixelInfo * TkBTreeLinePixelInfo(const TkText *textPtr, TkTextLine *linePtr);
-MODULE_SCOPE bool	TkBTreeCharTagged(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
+MODULE_SCOPE int	TkBTreeCharTagged(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
 MODULE_SCOPE void	TkBTreeCheck(TkTextBTree tree);
 MODULE_SCOPE TkTextBTree TkBTreeCreate(TkSharedText *sharedTextPtr, unsigned epoch);
 MODULE_SCOPE void	TkBTreeAddClient(TkTextBTree tree, TkText *textPtr, int defaultHeight);
 MODULE_SCOPE void	TkBTreeClientRangeChanged(TkText *textPtr, unsigned defaultHeight);
 MODULE_SCOPE void	TkBTreeRemoveClient(TkTextBTree tree, TkText *textPtr);
 MODULE_SCOPE void	TkBTreeDestroy(TkTextBTree tree);
-MODULE_SCOPE int	TkBTreeLoad(TkText *textPtr, Tcl_Obj *content, bool validOptions);
+MODULE_SCOPE int	TkBTreeLoad(TkText *textPtr, Tcl_Obj *content, int validOptions);
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkSharedText *sharedTextPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    int flags, TkTextUndoInfo *undoInfo);
@@ -1846,9 +1846,9 @@ MODULE_SCOPE void	TkBTreeUndoIndexToIndex(const TkSharedText *sharedTextPtr,
 			    const TkTextUndoIndex *srcPtr, TkTextIndex *dstPtr);
 MODULE_SCOPE Tcl_Obj *	TkBTreeUndoTagInspect(const TkSharedText *sharedTextPtr,
 			    const TkTextUndoToken *item);
-MODULE_SCOPE bool	TkBTreeJoinUndoInsert(TkTextUndoToken *token1, unsigned byteSize1,
+MODULE_SCOPE int	TkBTreeJoinUndoInsert(TkTextUndoToken *token1, unsigned byteSize1,
 			    TkTextUndoToken *token2, unsigned byteSize2);
-MODULE_SCOPE bool	TkBTreeJoinUndoDelete(TkTextUndoToken *token1, unsigned byteSize1,
+MODULE_SCOPE int	TkBTreeJoinUndoDelete(TkTextUndoToken *token1, unsigned byteSize1,
 			    TkTextUndoToken *token2, unsigned byteSize2);
 MODULE_SCOPE void	TkBTreeReInsertSegment(const TkSharedText *sharedTextPtr,
 			    const TkTextUndoIndex *indexPtr, TkTextSegment *segPtr);
@@ -1861,14 +1861,14 @@ inline TkTextLine *	TkBTreeGetStartLine(const TkText *textPtr);
 inline TkTextLine *	TkBTreeGetLastLine(const TkText *textPtr);
 inline TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
 inline TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
-MODULE_SCOPE bool	TkBTreeMoveForward(TkTextIndex *indexPtr, unsigned byteCount);
-MODULE_SCOPE bool	TkBTreeMoveBackward(TkTextIndex *indexPtr, unsigned byteCount);
-MODULE_SCOPE bool	TkBTreeNextTag(TkTextSearch *searchPtr);
-MODULE_SCOPE bool	TkBTreePrevTag(TkTextSearch *searchPtr);
+MODULE_SCOPE int	TkBTreeMoveForward(TkTextIndex *indexPtr, unsigned byteCount);
+MODULE_SCOPE int	TkBTreeMoveBackward(TkTextIndex *indexPtr, unsigned byteCount);
+MODULE_SCOPE int	TkBTreeNextTag(TkTextSearch *searchPtr);
+MODULE_SCOPE int	TkBTreePrevTag(TkTextSearch *searchPtr);
 MODULE_SCOPE TkTextSegment * TkBTreeFindNextTagged(const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, const struct TkBitField *discardTags);
 MODULE_SCOPE TkTextSegment * TkBTreeFindPrevTagged(const TkTextIndex *indexPtr1,
-			    const TkTextIndex *indexPtr2, bool discardSelection);
+			    const TkTextIndex *indexPtr2, int discardSelection);
 MODULE_SCOPE TkTextSegment * TkBTreeFindNextUntagged(const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, const struct TkBitField *discardTags);
 MODULE_SCOPE unsigned	TkBTreeNumPixels(const TkText *textPtr);
@@ -1884,13 +1884,13 @@ MODULE_SCOPE void	TkBTreeStartSearchBack(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr, const TkTextTag *tagPtr,
 			    TkTextSearch *searchPtr, TkTextSearchMode mode);
 MODULE_SCOPE void	TkBTreeLiftSearch(TkTextSearch *searchPtr);
-MODULE_SCOPE bool	TkBTreeTag(TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE int	TkBTreeTag(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
-			    TkTextTag *tagPtr, bool add, TkTextUndoInfo *undoInfo,
+			    TkTextTag *tagPtr, int add, TkTextUndoInfo *undoInfo,
 			    TkTextTagChangedProc changedProc);
 MODULE_SCOPE TkTextTag * TkBTreeClearTags(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
-			    TkTextUndoInfo *undoInfo, bool discardSelection,
+			    TkTextUndoInfo *undoInfo, int discardSelection,
 			    TkTextTagChangedProc changedProc);
 MODULE_SCOPE void	TkBTreeUpdateElideInfo(TkText *textPtr, TkTextTag *tagPtr);
 MODULE_SCOPE void	TkBTreeUnlinkSegment(const TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
@@ -1908,20 +1908,20 @@ MODULE_SCOPE void	TkTextPerformWatchCmd(TkSharedText *sharedTextPtr, TkText *tex
 			    const char *operation,
 			    TkTextWatchGetIndexProc index1Proc, ClientData index1ProcData,
 			    TkTextWatchGetIndexProc index2Proc, ClientData index2ProcData,
-			    const char *arg1, const char *arg2, const char *arg3, bool userFlag);
-MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
+			    const char *arg1, const char *arg2, const char *arg3, int userFlag);
+MODULE_SCOPE int	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 			    const char *index1, const char *index2, const char *arg1, const char *arg2,
-			    const char *arg3, bool userFlag);
+			    const char *arg3, int userFlag);
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
-MODULE_SCOPE bool	TkTextIndexBbox(TkText *textPtr,
-			    const TkTextIndex *indexPtr, bool extents, int *xPtr, int *yPtr,
+MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
+			    const TkTextIndex *indexPtr, int extents, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr, Tcl_UniChar *thisChar);
 MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int byteOffset, int maxX, int maxBytes, bool noCharsYet,
+			    int byteOffset, int maxX, int maxBytes, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
-MODULE_SCOPE bool	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
-			    bool extents, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr,
+MODULE_SCOPE int	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
+			    int extents, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr,
 			    int *basePtr);
 MODULE_SCOPE int	TkTextBindEvent(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
 			     TkSharedText *sharedTextPtr, Tk_BindingTable *bindingTablePtr,
@@ -1932,14 +1932,14 @@ MODULE_SCOPE void	TkTextTagFindEndOfRange(TkText *textPtr, const TkTextTag *tagP
 			    const TkTextIndex *currentPtr, TkTextIndex *resultPtr);
 MODULE_SCOPE TkTextTag * TkTextClearTags(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2,
-			    bool discardSelection);
+			    int discardSelection);
 MODULE_SCOPE void	TkTextClearSelection(TkSharedText *sharedTextPtr,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 MODULE_SCOPE void	TkTextUpdateTagDisplayFlags(TkTextTag *tagPtr);
-MODULE_SCOPE TkTextTag * TkTextCreateTag(TkText *textPtr, const char *tagName, bool *newTag);
+MODULE_SCOPE TkTextTag * TkTextCreateTag(TkText *textPtr, const char *tagName, int *newTag);
 MODULE_SCOPE TkTextTag * TkTextFindTag(const TkText *textPtr, const char *tagName);
 MODULE_SCOPE int	TkConfigureTag(Tcl_Interp *interp, TkText *textPtr, const char *tagName,
-			    bool redraw, int objc, Tcl_Obj *const objv[]);
+			    int redraw, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextEnableTag(TkSharedText *sharedTextPtr, TkTextTag *tagPtr);
 MODULE_SCOPE void	TkTextSortTags(unsigned numTags, TkTextTag **tagArrayPtr);
 MODULE_SCOPE void	TkTextFreeDInfo(TkText *textPtr);
@@ -1960,34 +1960,34 @@ MODULE_SCOPE void	TkTextReleaseUndoMarkTokens(TkSharedText *sharedTextPtr,
 			    TkTextMarkChange *changePtr);
 MODULE_SCOPE void	TkTextInspectUndoMarkItem(const TkSharedText *sharedTextPtr,
 			    const TkTextMarkChange *changePtr, Tcl_Obj* objPtr);
-MODULE_SCOPE bool	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE int	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
-			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
-MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr, bool undoable,
+			    const TkTextTag *tagPtr, int affectsDisplayGeometry);
+MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr, int undoable,
 			    Tcl_Obj *tagListPtr);
 MODULE_SCOPE void	TkTextFindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
-			    bool discardSelection);
-MODULE_SCOPE bool	TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr, Tcl_HashEntry *hPtr);
+			    int discardSelection);
+MODULE_SCOPE int	TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr, Tcl_HashEntry *hPtr);
 MODULE_SCOPE void	TkTextReleaseTag(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    Tcl_HashEntry *hPtr);
 MODULE_SCOPE void	TkTextFontHeightChanged(TkText *textPtr);
 MODULE_SCOPE int	TkTextTestRelation(Tcl_Interp *interp, int relation, const char *op);
 MODULE_SCOPE int	TkTextAttemptToModifyDisabledWidget(Tcl_Interp *interp);
 MODULE_SCOPE int	TkTextAttemptToModifyDeadWidget(Tcl_Interp *interp);
-MODULE_SCOPE bool	TkTextReleaseIfDestroyed(TkText *textPtr);
-MODULE_SCOPE bool	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
+MODULE_SCOPE int	TkTextReleaseIfDestroyed(TkText *textPtr);
+MODULE_SCOPE int	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
-inline bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
+inline int		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
 			    Tk_OptionTable optionTable, Tcl_DString *result, int flags);
-MODULE_SCOPE void	TkTextFindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, bool end);
+MODULE_SCOPE void	TkTextFindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, int end);
 MODULE_SCOPE unsigned	TkTextCountDisplayLines(TkText *textPtr, const TkTextIndex *indexFrom,
 			    const TkTextIndex *indexTo);
 MODULE_SCOPE void	TkTextFindDisplayIndex(TkText *textPtr, TkTextIndex *indexPtr,
 			    int displayLineOffset, int *xOffset);
-MODULE_SCOPE bool	TkTextIndexBackChars(const TkText *textPtr, const TkTextIndex *srcPtr,
+MODULE_SCOPE int	TkTextIndexBackChars(const TkText *textPtr, const TkTextIndex *srcPtr,
 			    int count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE Tcl_UniChar TkTextIndexGetChar(const TkTextIndex *indexPtr);
 MODULE_SCOPE unsigned	TkTextIndexCountBytes(const TkTextIndex *index1Ptr,
@@ -1995,13 +1995,13 @@ MODULE_SCOPE unsigned	TkTextIndexCountBytes(const TkTextIndex *index1Ptr,
 MODULE_SCOPE unsigned	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    TkTextCountType type);
-MODULE_SCOPE bool	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex *srcPtr,
+MODULE_SCOPE int	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex *srcPtr,
 			    int count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
+MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
 			    const char *lang, char *brks);
-MODULE_SCOPE bool	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
+MODULE_SCOPE int	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
 MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
 MODULE_SCOPE void	TkTextConfigureUndoStack(TkSharedText *sharedTextPtr, int maxUndoDepth,
@@ -2015,14 +2015,14 @@ MODULE_SCOPE void	TkTextUndoAddMoveSegmentItem(TkSharedText *sharedTextPtr,
 			    TkTextSegment *oldPos, TkTextSegment *newPos);
 MODULE_SCOPE TkTextIndex * TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex, TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextSegmentIsElided(const TkText *textPtr, const TkTextSegment *segPtr);
+MODULE_SCOPE int	TkTextSegmentIsElided(const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE void	TkTextDispAllocStatistic();
-MODULE_SCOPE bool	TkTextLineIsElided(const TkSharedText *sharedTextPtr, const TkTextLine *linePtr,
+MODULE_SCOPE int	TkTextLineIsElided(const TkSharedText *sharedTextPtr, const TkTextLine *linePtr,
 			    const TkText *textPtr);
-MODULE_SCOPE bool	TkTextIsElided(const TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextTestTag(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
-inline bool		TkTextIsDeadPeer(const TkText *textPtr);
-MODULE_SCOPE void	TkTextGenerateWidgetViewSyncEvent(TkText *textPtr, bool sendImmediately);
+MODULE_SCOPE int	TkTextIsElided(const TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextTestTag(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
+inline int		TkTextIsDeadPeer(const TkText *textPtr);
+MODULE_SCOPE void	TkTextGenerateWidgetViewSyncEvent(TkText *textPtr, int sendImmediately);
 MODULE_SCOPE void	TkTextRunAfterSyncCmd(TkText *textPtr);
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    TkTextLine *linePtr, unsigned lineCount, TkTextInvalidateAction action);
@@ -2030,33 +2030,33 @@ MODULE_SCOPE void	TkTextUpdateLineMetrics(TkText *textPtr, unsigned lineNum, uns
 MODULE_SCOPE int	TkTextMarkCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE TkTextSegment * TkTextFindMark(const TkText *textPtr, const char *name);
-MODULE_SCOPE TkTextSegment * TkTextFreeMarks(TkSharedText *sharedTextPtr, bool retainPrivateMarks);
-MODULE_SCOPE bool	TkTextMarkNameToIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
+MODULE_SCOPE TkTextSegment * TkTextFreeMarks(TkSharedText *sharedTextPtr, int retainPrivateMarks);
+MODULE_SCOPE int	TkTextMarkNameToIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextMarkSegToIndex(TkText *textPtr,
 			    TkTextSegment *markPtr, TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeStartEndMark(TkText *textPtr, Tk_SegType const *typePtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeMark(TkText *textPtr, const char *name);
 MODULE_SCOPE TkTextSegment * TkTextMakeNewMark(TkSharedText *sharedTextPtr, const char *name);
 MODULE_SCOPE void	TkTextUnsetMark(TkText *textPtr, TkTextSegment *markPtr);
-inline bool		TkTextIsMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
-inline bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsStableMark(const TkTextSegment *segPtr);
+inline int		TkTextIsMark(const TkTextSegment *segPtr);
+inline int		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
+inline int		TkTextIsSpecialMark(const TkTextSegment *segPtr);
+inline int		TkTextIsPrivateMark(const TkTextSegment *segPtr);
+inline int		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
+inline int		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
+inline int		TkTextIsNormalMark(const TkTextSegment *segPtr);
+inline int		TkTextIsStableMark(const TkTextSegment *segPtr);
 MODULE_SCOPE const char * TkTextMarkName(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 			    const TkTextSegment *markPtr);
 MODULE_SCOPE void	TkTextUpdateCurrentMark(TkSharedText *sharedTextPtr);
 MODULE_SCOPE void	TkTextSaveCursorIndex(TkText *textPtr);
-MODULE_SCOPE bool	TkTextTriggerWatchCursor(TkText *textPtr);
+MODULE_SCOPE int	TkTextTriggerWatchCursor(TkText *textPtr);
 MODULE_SCOPE void	TkTextInsertGetBBox(TkText *textPtr, int x, int y, int height, XRectangle *bbox);
-MODULE_SCOPE bool	TkTextDrawBlockCursor(TkText *textPtr);
-MODULE_SCOPE bool	TkTextGetCursorBbox(TkText *textPtr, int *x, int *y, int *w, int *h);
+MODULE_SCOPE int	TkTextDrawBlockCursor(TkText *textPtr);
+MODULE_SCOPE int	TkTextGetCursorBbox(TkText *textPtr, int *x, int *y, int *w, int *h);
 MODULE_SCOPE unsigned	TkTextGetCursorWidth(TkText *textPtr, int *x, int *offs);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
-MODULE_SCOPE bool	TkTextPendingSync(const TkText *textPtr);
+MODULE_SCOPE int	TkTextPendingSync(const TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
 MODULE_SCOPE union TkTextTagSet * TkTextGetTagSetFromChunk(const TkTextDispChunk *chunkPtr);
 MODULE_SCOPE int	TkTextGetXPixelFromChunk(const TkText *textPtr,
@@ -2072,12 +2072,12 @@ MODULE_SCOPE int	TkTextGetLastYPixel(const TkText *textPtr);
 MODULE_SCOPE unsigned	TkTextCountVisibleImages(const TkText *textPtr);
 MODULE_SCOPE unsigned	TkTextCountVisibleWindows(const TkText *textPtr);
 MODULE_SCOPE const TkTextDispChunk * TkTextPixelIndex(TkText *textPtr, int x, int y,
-			    TkTextIndex *indexPtr, bool *nearest);
+			    TkTextIndex *indexPtr, int *nearest);
 MODULE_SCOPE Tcl_Obj *	TkTextNewIndexObj(const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y, int width, int height);
-MODULE_SCOPE bool	TkTextRedrawTag(const TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE int	TkTextRedrawTag(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
-			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
+			    const TkTextTag *tagPtr, int affectsDisplayGeometry);
 MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);
 MODULE_SCOPE void	TkTextCheckLineMetricUpdate(const TkText *textPtr);
 MODULE_SCOPE void	TkTextCheckDisplayLineConsistency(const TkText *textPtr);
@@ -2090,11 +2090,11 @@ MODULE_SCOPE int	TkTextTagCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextImageCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-MODULE_SCOPE bool	TkTextImageIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextImageIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeImage(TkText *textPtr, Tcl_Obj *options);
 MODULE_SCOPE int	TkTextWindowCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-MODULE_SCOPE bool	TkTextWindowIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextWindowIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeWindow(TkText *textPtr, Tcl_Obj *options);
 MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
@@ -2103,7 +2103,7 @@ MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr, TkTextEmbWindowClient
 MODULE_SCOPE void	TkTextIndexSetPosition(TkTextIndex *indexPtr,
 			    int byteIndex, TkTextSegment *segPtr);
 MODULE_SCOPE int	TkTextSegToIndex(const TkTextSegment *segPtr);
-MODULE_SCOPE bool	TkTextIndexGetFromString(Tcl_Interp *interp, struct TkText *textPtr,
+MODULE_SCOPE int	TkTextIndexGetFromString(Tcl_Interp *interp, struct TkText *textPtr,
 			    const char *string, unsigned lengthOfString, struct TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexPrint(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 				const struct TkTextIndex *indexPtr, char *string);
@@ -2113,7 +2113,7 @@ MODULE_SCOPE void	TkTextIndexSetByteIndex2(TkTextIndex *indexPtr,
 inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, TkSizeT epoch);
 MODULE_SCOPE void	TkTextIndexSetSegment(TkTextIndex *indexPtr, TkTextSegment *segPtr);
 inline void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
-MODULE_SCOPE bool	TkTextIndexIsEmpty(const TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexIsEmpty(const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextIndexSetLine(TkTextIndex *indexPtr, TkTextLine *linePtr);
 MODULE_SCOPE void	TkTextIndexSetToStartOfLine(TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextIndexSetToStartOfLine2(TkTextIndex *indexPtr, TkTextLine *linePtr);
@@ -2124,7 +2124,7 @@ MODULE_SCOPE void	TkTextIndexSetupToStartOfText(TkTextIndex *indexPtr, TkText *t
 			    TkTextBTree tree);
 MODULE_SCOPE void	TkTextIndexSetupToEndOfText(TkTextIndex *indexPtr, TkText *textPtr,
 			    TkTextBTree tree);
-MODULE_SCOPE bool	TkTextIndexAddToByteIndex(TkTextIndex *indexPtr, int numBytes);
+MODULE_SCOPE int	TkTextIndexAddToByteIndex(TkTextIndex *indexPtr, int numBytes);
 inline TkTextLine *	TkTextIndexGetLine(const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexGetByteIndex(const TkTextIndex *indexPtr);
 MODULE_SCOPE unsigned	TkTextIndexGetLineNumber(const TkTextIndex *indexPtr, const TkText *textPtr);
@@ -2137,20 +2137,20 @@ MODULE_SCOPE void	TkTextIndexClear2(TkTextIndex *indexPtr, TkText *textPtr, TkTe
 inline void		TkTextIndexInvalidate(TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextIndexToByteIndex(TkTextIndex *indexPtr);
 inline void		TkTextIndexMakePersistent(TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexIsZero(const TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexIsStartOfLine(const TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexIsEndOfLine(const TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexIsStartOfText(const TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexIsEndOfText(const TkTextIndex *indexPtr);
-inline bool		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
-MODULE_SCOPE bool	TkTextIndexIsEqual(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
+MODULE_SCOPE int	TkTextIndexIsZero(const TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexIsStartOfLine(const TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexIsEndOfLine(const TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexIsStartOfText(const TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexIsEndOfText(const TkTextIndex *indexPtr);
+inline int		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
+MODULE_SCOPE int	TkTextIndexIsEqual(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 MODULE_SCOPE int	TkTextIndexCompare(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 inline void		TkTextIndexSave(TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexRebuild(TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexRebuild(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToStartRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
-MODULE_SCOPE bool	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
 
 /*
  * Debugging info macros:

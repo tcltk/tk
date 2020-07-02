@@ -36,14 +36,14 @@ static void		EmbImageBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int in
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPtr,
-			    bool undoable, int objc, Tcl_Obj *const objv[]);
-static bool		EmbImageDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr,
+			    int undoable, int objc, Tcl_Obj *const objv[]);
+static int		EmbImageDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr,
 			    int flags);
-static bool		EmbImageRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
+static int		EmbImageRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display, Drawable dst, int screenY);
 static int		EmbImageLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, bool noCharsYet, TkWrapMode wrapMode,
+			    int offset, int maxX, int maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 static void		EmbImageProc(ClientData clientData, int x, int y, int width, int height,
 			    int imageWidth, int imageHeight);
@@ -62,9 +62,9 @@ static const TkTextDispChunkProcs layoutImageProcs = {
  * We need some private undo/redo stuff.
  */
 
-static void UndoLinkSegmentPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
-static void RedoLinkSegmentPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
-static void UndoLinkSegmentDestroy(TkSharedText *, TkTextUndoToken *, bool);
+static void UndoLinkSegmentPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, int);
+static void RedoLinkSegmentPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, int);
+static void UndoLinkSegmentDestroy(TkSharedText *, TkTextUndoToken *, int);
 static void UndoLinkSegmentGetRange(const TkSharedText *, const TkTextUndoToken *,
 	TkTextIndex *, TkTextIndex *);
 static void RedoLinkSegmentGetRange(const TkSharedText *, const TkTextUndoToken *,
@@ -218,7 +218,7 @@ UndoLinkSegmentPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    bool isRedo)
+    int isRedo)
 {
     const UndoTokenLinkSegment *token = (const UndoTokenLinkSegment *) undoInfo->token;
     TkTextSegment *segPtr = token->segPtr;
@@ -246,7 +246,7 @@ static void
 UndoLinkSegmentDestroy(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *item,
-    bool reused)
+    int reused)
 {
     (void)sharedTextPtr;
 
@@ -295,7 +295,7 @@ RedoLinkSegmentPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    bool isRedo)
+    int isRedo)
 {
     RedoTokenLinkSegment *token = (RedoTokenLinkSegment *) undoInfo->token;
     TkTextIndex index;
@@ -343,7 +343,7 @@ RedoLinkSegmentGetRange(
  *--------------------------------------------------------------
  */
 
-static bool
+static int
 MatchTagsOption(
     const char *opt)
 {
@@ -357,7 +357,7 @@ MatchTagsOption(
 	}
     }
 
-    return true;
+    return 1;
 }
 
 int
@@ -406,7 +406,7 @@ TkTextImageCmd(
 	    return TCL_ERROR;
 	}
 	if (MatchTagsOption(Tcl_GetString(objv[4]))) {
-	    TkTextFindTags(interp, textPtr, eiPtr, true);
+	    TkTextFindTags(interp, textPtr, eiPtr, 1);
 	} else {
 	    Tcl_Obj *objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
 		    eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
@@ -450,7 +450,7 @@ TkTextImageCmd(
 		    Tcl_Obj *valuePtr;
 
 		    /* { argvName, dbName, dbClass, defValue, current value } */
-		    TkTextFindTags(interp, textPtr, eiPtr, true);
+		    TkTextFindTags(interp, textPtr, eiPtr, 1);
 		    valuePtr = Tcl_GetObjResult(interp);
 		    Tcl_ListObjReplace(NULL, objs[i], 4, 1, 1, &valuePtr);
 		}
@@ -459,7 +459,7 @@ TkTextImageCmd(
 	    return TCL_OK;
 	} else {
 	    int mask;
-	    int rc = EmbImageConfigure(textPtr, eiPtr, &mask, true, objc - 4, objv + 4);
+	    int rc = EmbImageConfigure(textPtr, eiPtr, &mask, 1, objc - 4, objv + 4);
 	    TextChanged(sharedTextPtr, &index, mask);
 	    return rc;
 	}
@@ -503,7 +503,7 @@ TkTextImageCmd(
 	     */
 
 	    TkBTreeLinkSegment(sharedTextPtr, eiPtr, &index);
-	    if (EmbImageConfigure(textPtr, eiPtr, &mask, false, objc - 4, objv + 4) != TCL_OK) {
+	    if (EmbImageConfigure(textPtr, eiPtr, &mask, 0, objc - 4, objv + 4) != TCL_OK) {
 		TkBTreeUnlinkSegment(sharedTextPtr, eiPtr);
 		EmbImageDeleteProc(sharedTextPtr, eiPtr, 0);
 		return TCL_ERROR;
@@ -617,7 +617,7 @@ TkTextMakeImage(
 
     eiPtr = MakeImage(textPtr);
 
-    if (EmbImageConfigure(textPtr, eiPtr, NULL, false, objc, objv) == TCL_OK) {
+    if (EmbImageConfigure(textPtr, eiPtr, NULL, 0, objc, objv) == TCL_OK) {
 	Tcl_ResetResult(textPtr->interp);
     } else {
 	EmbImageDeleteProc(textPtr->sharedTextPtr, eiPtr, 0);
@@ -691,7 +691,7 @@ EmbImageConfigure(
     TkTextSegment *eiPtr,	/* Embedded image to be configured. */
     int *maskPtr,		/* Return the bit-wise OR of the typeMask fields of affected options,
     				 * can be NULL. */
-    bool undoable,		/* Replacement of tags is undoable? */
+    int undoable,		/* Replacement of tags is undoable? */
     int objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of strings describing configuration options. */
 {
@@ -862,7 +862,7 @@ ReleaseImage(
  *--------------------------------------------------------------
  */
 
-static bool
+static int
 EmbImageDeleteProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *eiPtr,	/* Segment being deleted. */
@@ -889,7 +889,7 @@ EmbImageDeleteProc(
 	eiPtr->refCount -= 1;
     }
 
-    return true;
+    return 1;
 }
 
 /*
@@ -910,7 +910,7 @@ EmbImageDeleteProc(
  *--------------------------------------------------------------
  */
 
-static bool
+static int
 EmbImageRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *eiPtr)	/* Segment to reuse. */
@@ -928,7 +928,7 @@ EmbImageRestoreProc(
 	Tcl_SetHashValue(img->hPtr, eiPtr);
     }
 
-    return true;
+    return 1;
 }
 
 /*
@@ -955,7 +955,7 @@ EmbImageLayoutProc(
     int offset,			/* Offset within segPtr corresponding to indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this position or higher. */
     int maxChars,		/* Chunk must not include more than this many characters. */
-    bool noCharsYet,		/* 'true' means no characters have been assigned to this line yet. */
+    int noCharsYet,		/* 'true' means no characters have been assigned to this line yet. */
     TkWrapMode wrapMode,	/* Wrap mode to use for line:
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_WORD. */
     TkTextSpaceMode spaceMode,	/* Not used. */
@@ -1192,7 +1192,7 @@ EmbImageBboxProc(
  *--------------------------------------------------------------
  */
 
-bool
+int
 TkTextImageIndex(
     TkText *textPtr,		/* Text widget containing image. */
     const char *name,		/* Name of image. */
@@ -1204,12 +1204,12 @@ TkTextImageIndex(
     assert(textPtr);
 
     if (!(hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name))) {
-	return false;
+	return 0;
     }
     eiPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     TkTextIndexClear(indexPtr, textPtr);
     TkTextIndexSetSegment(indexPtr, eiPtr);
-    return true;
+    return 1;
 }
 
 /*
@@ -1277,7 +1277,7 @@ EmbImageProc(
 	    }
 
 	    TkTextPerformWatchCmd(sharedTextPtr, NULL, "image", GetIndexForWatch, eiPtr, NULL, NULL,
-		    img->name, w, h, false);
+		    img->name, w, h, 0);
 	}
     }
 }

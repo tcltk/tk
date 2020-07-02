@@ -101,7 +101,7 @@ LoadLibUnibreak(
     VoidP Funcs[sizeof(Symbols)/sizeof(Symbols[0])];
     Tcl_LoadHandle handle;
     Tcl_Obj *pathPtr = Tcl_NewStringObj("libunibreak.so.1", -1);
-    bool rc;
+    int rc;
 
     Tcl_IncrRefCount(pathPtr);
     rc = LoadFile(interp, pathPtr, &handle, Symbols, Funcs);
@@ -169,7 +169,7 @@ GetLineBreakFunc(
 #endif /* TCL_UTF_MAX > 4 */
 #ifdef __UNIX__
     if (lang) {
-	static bool loaded = false;
+	static int loaded = 0;
 
 	if (!loaded) {
 	    LoadLibUnibreak(interp);
@@ -206,7 +206,7 @@ GetLineBreakFunc(
  *----------------------------------------------------------------------
  */
 
-bool
+int
 TkTextComputeBreakLocations(
     Tcl_Interp *interp,
     const char *text,	/* must be nul-terminated */
@@ -253,7 +253,7 @@ TkTextComputeBreakLocations(
 		    const char *r = text + i;
 		    const char *p, *q, *s;
 		    Tcl_UniChar uc;
-		    bool allow = false;
+		    int allow = 0;
 
 		    q = Tcl_UtfPrev(r, text);
 		    if (q != r) {
@@ -268,7 +268,7 @@ TkTextComputeBreakLocations(
 				    if (Tcl_UniCharIsAlpha(uc)) {
 					Tcl_UtfToUniChar(s, &uc);
 					if (Tcl_UniCharIsAlpha(uc)) {
-					    allow = true;
+					    allow = 1;
 					}
 				    }
 				}

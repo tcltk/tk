@@ -408,24 +408,24 @@ struct SearchSpec;	/* Forward declaration. */
 
 typedef ClientData	SearchAddLineProc(int lineNum, struct SearchSpec *searchSpecPtr,
 			    Tcl_Obj *theLine, int *lenPtr, int *extraLinesPtr);
-typedef bool		SearchMatchProc(int lineNum, struct SearchSpec *searchSpecPtr,
+typedef int		SearchMatchProc(int lineNum, struct SearchSpec *searchSpecPtr,
 			    ClientData clientData, Tcl_Obj *theLine, int matchOffset, int matchLength);
 typedef int		SearchLineIndexProc(Tcl_Interp *interp, Tcl_Obj *objPtr,
 			    struct SearchSpec *searchSpecPtr, int *linePosPtr, int *offsetPosPtr);
 
 typedef struct SearchSpec {
     TkText *textPtr;		/* Information about widget. */
-    bool exact;			/* Whether search is exact or regexp. */
-    bool noCase;		/* Case-insenstivive? */
-    bool noLineStop;		/* If not set, a regexp search will use the TCL_REG_NLSTOP flag. */
-    bool overlap;		/* If set, results from multiple searches (-all) are allowed to
+    int exact;			/* Whether search is exact or regexp. */
+    int noCase;		/* Case-insenstivive? */
+    int noLineStop;		/* If not set, a regexp search will use the TCL_REG_NLSTOP flag. */
+    int overlap;		/* If set, results from multiple searches (-all) are allowed to
     				 * overlap each other. */
-    bool strictLimits;		/* If set, matches must be completely inside the from,to range.
+    int strictLimits;		/* If set, matches must be completely inside the from,to range.
     				 * Otherwise the limits only apply to the start of each match. */
-    bool all;			/* Whether all or the first match should be reported. */
-    bool backwards;		/* Searching forwards or backwards. */
-    bool searchElide;		/* Search in hidden text as well. */
-    bool searchHyphens;		/* Search in soft hyhens as well. */
+    int all;			/* Whether all or the first match should be reported. */
+    int backwards;		/* Searching forwards or backwards. */
+    int searchElide;		/* Search in hidden text as well. */
+    int searchHyphens;		/* Search in soft hyhens as well. */
     int startLine;		/* First line to examine. */
     int startOffset;		/* Index in first line to start at. */
     int stopLine;		/* Last line to examine, or -1 when we search all available text. */
@@ -467,7 +467,7 @@ typedef struct TkTextStringList {
  * Boolean variable indicating whether or not special debugging code should be executed.
  */
 
-int tkTextDebug = false;
+int tkTextDebug = 0;
 
 typedef const TkTextUndoAtom * (*InspectUndoStackProc)(TkTextUndoStack stack);
 
@@ -475,36 +475,36 @@ typedef const TkTextUndoAtom * (*InspectUndoStackProc)(TkTextUndoStack stack);
  * Forward declarations for functions defined later in this file:
  */
 
-static bool		DeleteIndexRange(TkSharedText *sharedTextPtr, TkText *textPtr,
+static int		DeleteIndexRange(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2, int flags,
-			    bool viewUpdate, bool triggerWatchDelete, bool triggerWatchInsert,
-			    bool userFlag, bool final);
+			    int viewUpdate, int triggerWatchDelete, int triggerWatchInsert,
+			    int userFlag, int final);
 static int		CountIndices(const TkText *textPtr, const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, TkTextCountType type);
 static void		DestroyText(TkText *textPtr);
-static void		ClearText(TkText *textPtr, bool clearTags);
+static void		ClearText(TkText *textPtr, int clearTags);
 static void		FireWidgetViewSyncEvent(ClientData clientData);
 static void		FreeEmbeddedWindows(TkText *textPtr);
 static void		InsertChars(TkText *textPtr, TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
-			    char const *string, unsigned length, bool viewUpdate,
-			    TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr, bool parseHyphens);
+			    char const *string, unsigned length, int viewUpdate,
+			    TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr, int parseHyphens);
 static void		TextBlinkProc(ClientData clientData);
 static void		TextCmdDeletedProc(ClientData clientData);
 static int		CreateWidget(TkSharedText *sharedTextPtr, Tk_Window tkwin, Tcl_Interp *interp,
 			    const TkText *parent, int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData, XEvent *eventPtr);
-static void		ProcessConfigureNotify(TkText *textPtr, bool updateLineGeometry);
+static void		ProcessConfigureNotify(TkText *textPtr, int updateLineGeometry);
 static TkSizeT		TextFetchSelection(ClientData clientData, TkSizeT offset, char *buffer,
 			    TkSizeT maxBytes);
 static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
-			    bool viewUpdate, bool triggerWatchDelete, bool triggerWatchInsert,
-			    bool userFlag, bool parseHyphens);
+			    int viewUpdate, int triggerWatchDelete, int triggerWatchInsert,
+			    int userFlag, int parseHyphens);
 static int		TextReplaceCmd(TkText *textPtr, Tcl_Interp *interp,
 			    const TkTextIndex *indexFromPtr, const TkTextIndex *indexToPtr,
-			    int objc, Tcl_Obj *const objv[], bool viewUpdate, bool triggerWatch,
-			    bool userFlag, bool parseHyphens);
+			    int objc, Tcl_Obj *const objv[], int viewUpdate, int triggerWatch,
+			    int userFlag, int parseHyphens);
 static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
@@ -520,10 +520,10 @@ static int		TextDumpCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextInspectCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-static bool		DumpLine(Tcl_Interp *interp, TkText *textPtr,
+static int		DumpLine(Tcl_Interp *interp, TkText *textPtr,
 			    int what, TkTextLine *linePtr, int start, int end,
 			    int lineno, Tcl_Obj *command, TkTextTag **prevTagPtr);
-static bool		DumpSegment(TkText *textPtr, Tcl_Interp *interp, const char *key,
+static int		DumpSegment(TkText *textPtr, Tcl_Interp *interp, const char *key,
 			    const char *value, Tcl_Obj *command, const TkTextIndex *index, int what);
 static void		InspectUndoStack(const TkSharedText *sharedTextPtr,
 			    InspectUndoStackProc firstAtomProc, InspectUndoStackProc nextAtomProc,
@@ -531,10 +531,10 @@ static void		InspectUndoStack(const TkSharedText *sharedTextPtr,
 static void		InspectRetainedUndoItems(const TkSharedText *sharedTextPtr, Tcl_Obj *objPtr);
 static Tcl_Obj *	TextGetText(TkText *textPtr, const TkTextIndex *index1,
 			    const TkTextIndex *index2, TkTextIndex *lastIndexPtr, Tcl_Obj *resultPtr,
-			    unsigned maxBytes, bool visibleOnly, bool includeHyphens);
+			    unsigned maxBytes, int visibleOnly, int includeHyphens);
 static void		GenerateEvent(TkSharedText *sharedTextPtr, const char *type);
 static void		RunAfterSyncCmd(ClientData clientData);
-static void		UpdateModifiedFlag(TkSharedText *sharedTextPtr, bool flag);
+static void		UpdateModifiedFlag(TkSharedText *sharedTextPtr, int flag);
 static Tcl_Obj *	MakeEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *arrayPtr);
 static Tcl_Obj *	GetEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *option);
 static unsigned		TextSearchIndexInLine(const SearchSpec *searchSpecPtr, TkTextLine *linePtr,
@@ -543,16 +543,16 @@ static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextWatchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-static bool		TriggerWatchEdit(TkText *textPtr, bool userFlag, const char *operation,
+static int		TriggerWatchEdit(TkText *textPtr, int userFlag, const char *operation,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2,
-			    const char *info, bool final);
+			    const char *info, int final);
 static void		TriggerUndoStackEvent(TkSharedText *sharedTextPtr);
 static void		PushRetainedUndoTokens(TkSharedText *sharedTextPtr);
-static void		PushUndoSeparatorIfNeeded(TkSharedText *sharedTextPtr, bool autoSeparators,
+static void		PushUndoSeparatorIfNeeded(TkSharedText *sharedTextPtr, int autoSeparators,
 			    TkTextEditMode currentEditMode);
-static bool		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
-static bool		IsClean(const TkSharedText *sharedTextPtr, const TkText *textPtr,
-			    bool discardSelection);
+static int		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
+static int		IsClean(const TkSharedText *sharedTextPtr, const TkText *textPtr,
+			    int discardSelection);
 static TkTextUndoPerformProc TextUndoRedoCallback;
 static TkTextUndoFreeProc TextUndoFreeCallback;
 static TkTextUndoStackContentChangedProc TextUndoStackContentChangedCallback;
@@ -719,19 +719,19 @@ AllocStatistic()
  */
 
 static void WarnAboutDeprecatedStartLineOption() {
-    static bool printWarning = true;
+    static int printWarning = 1;
     if (printWarning) {
 	fprintf(stderr, "tk::text: Option \"-startline\" is deprecated, "
 		"please use option \"-startindex\".\n");
-	printWarning = false;
+	printWarning = 0;
     }
 }
 static void WarnAboutDeprecatedEndLineOption() {
-    static bool printWarning = true;
+    static int printWarning = 1;
     if (printWarning) {
 	fprintf(stderr, "tk::text: Option \"-endline\" is deprecated, "
 		"please use option \"-endindex\".\n");
-	printWarning = false;
+	printWarning = 0;
     }
 }
 
@@ -1040,8 +1040,8 @@ CreateWidget(
 	sharedTextPtr->tagLookup = (TkTextTag **)malloc(TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *));
 	sharedTextPtr->emptyTagInfoPtr = TkTextTagSetResize(NULL, 0);
 	sharedTextPtr->maxRedoDepth = -1;
-	sharedTextPtr->autoSeparators = true;
-	sharedTextPtr->undoTagging = true;
+	sharedTextPtr->autoSeparators = 1;
+	sharedTextPtr->undoTagging = 1;
 	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 	sharedTextPtr->lastUndoTokenType = -1;
 	sharedTextPtr->startMarker = TkTextMakeStartEndMark(NULL, &tkTextLeftMarkType);
@@ -1166,7 +1166,7 @@ CreateWidget(
     TkTextCreateDInfo(textPtr);
     TkTextIndexSetupToStartOfText(&startIndex, textPtr, sharedTextPtr->tree);
     TkTextSetYView(textPtr, &startIndex, 0);
-    textPtr->exportSelection = true;
+    textPtr->exportSelection = 1;
     textPtr->pickEvent.type = LeaveNotify;
     textPtr->steadyMarks = sharedTextPtr->steadyMarks;
     textPtr->undo = sharedTextPtr->undo;
@@ -1248,7 +1248,7 @@ UpdateLineMetrics(
     unsigned endLine)		/* Go no further than this line. */
 {
     if (!textPtr->sharedTextPtr->allowUpdateLineMetrics) {
-	ProcessConfigureNotify(textPtr, true);
+	ProcessConfigureNotify(textPtr, 1);
     }
     TkTextUpdateLineMetrics(textPtr, startLine, endLine);
 }
@@ -1284,10 +1284,10 @@ TkTextAttemptToModifyDisabledWidget(
     Tcl_Interp *dummy)
 {
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
-    static bool showWarning = true;
+    static int showWarning = 1;
     if (showWarning) {
 	fprintf(stderr, "tk::text: Attempt to modify a disabled widget is deprecated.\n");
-	showWarning = false;
+	showWarning = 0;
     }
     return TCL_OK;
 #else /* if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET */
@@ -1319,10 +1319,10 @@ TkTextAttemptToModifyDeadWidget(
     Tcl_Interp *dummy)
 {
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
-    static bool showWarning = true;
+    static int showWarning = 1;
     if (showWarning) {
 	fprintf(stderr, "tk::text: Attempt to modify a dead widget is deprecated.\n");
-	showWarning = false;
+	showWarning = 0;
     }
     return TCL_OK;
 #else /* if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET */
@@ -1350,7 +1350,7 @@ TkTextAttemptToModifyDeadWidget(
  *--------------------------------------------------------------
  */
 
-static bool
+static int
 TestIfTriggerUserMod(
     TkSharedText *sharedTextPtr,
     Tcl_Obj *indexObjPtr)
@@ -1358,7 +1358,7 @@ TestIfTriggerUserMod(
     return sharedTextPtr->triggerWatchCmd && strcmp(Tcl_GetString(indexObjPtr), "insert") == 0;
 }
 
-static bool
+static int
 TestIfPerformingUndoRedo(
     Tcl_Interp *interp,
     const TkSharedText *sharedTextPtr,
@@ -1374,12 +1374,12 @@ TestIfPerformingUndoRedo(
 	if (result) {
 	    *result = TCL_ERROR;
 	}
-	return true;
+	return 1;
     }
-    return false;
+    return 0;
 }
 
-static bool
+static int
 TestIfDisabled(
     Tcl_Interp *interp,
     const TkText *textPtr,
@@ -1388,13 +1388,13 @@ TestIfDisabled(
     assert(result);
 
     if (textPtr->state != TK_TEXT_STATE_DISABLED) {
-	return false;
+	return 0;
     }
     *result = TkTextAttemptToModifyDisabledWidget(interp);
-    return true;
+    return 1;
 }
 
-static bool
+static int
 TestIfDead(
     Tcl_Interp *interp,
     const TkText *textPtr,
@@ -1403,10 +1403,10 @@ TestIfDead(
     assert(result);
 
     if (!TkTextIsDeadPeer(textPtr)) {
-	return false;
+	return 0;
     }
     *result = TkTextAttemptToModifyDeadWidget(interp);
-    return true;
+    return 1;
 }
 
 static Tcl_Obj *
@@ -1434,31 +1434,31 @@ AppendScript(
 }
 
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
-static bool
+static int
 MatchOpt(
     const char *opt,
     const char *pattern,
     unsigned minMatchLen)
 {
     if (strncmp(opt, pattern, minMatchLen) != 0) {
-	return false;
+	return 0;
     }
     opt += minMatchLen;
     pattern += minMatchLen;
-    while (true) {
+    while (1) {
 	if (*opt == '\0') {
-	    return true;
+	    return 1;
 	}
 	if (*pattern == '\0') {
-	    return false;
+	    return 0;
 	}
 	if (*opt != *pattern) {
-	    return false;
+	    return 0;
 	}
 	opt += 1;
 	pattern += 1;
     }
-    return false; /* never reached */
+    return 0; /* never reached */
 }
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
@@ -1473,7 +1473,7 @@ TextWidgetObjCmd(
     TkSharedText *sharedTextPtr;
     int result = TCL_OK;
     int commandIndex = -1;
-    bool oldUndoStackEvent;
+    int oldUndoStackEvent;
 
     static const char *const optionStrings[] = {
 	"tk_bindvar", "tk_textInsert", "tk_textReplace",
@@ -1512,7 +1512,7 @@ TextWidgetObjCmd(
     textPtr->refCount += 1;
     sharedTextPtr = textPtr->sharedTextPtr;
     oldUndoStackEvent = sharedTextPtr->undoStackEvent;
-    sharedTextPtr->undoStackEvent = false;
+    sharedTextPtr->undoStackEvent = 0;
 
     /*
      * Clear saved insert cursor position.
@@ -1559,14 +1559,14 @@ TextWidgetObjCmd(
     }
     case TEXT_BBOX: {
 	int x, y, width, height, argc = 2;
-	bool extents = false;
+	int extents = 0;
 	TkTextIndex index;
 
 	if (objc == 4) {
 	    const char* option = Tcl_GetString(objv[2]);
 
 	    if (strcmp(option, "-extents") == 0) {
-		extents = true;
+		extents = 1;
 		argc += 1;
 	    } else if (*option == '-') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -extents", option));
@@ -1698,7 +1698,7 @@ TextWidgetObjCmd(
 	if (TestIfPerformingUndoRedo(interp, sharedTextPtr, &result)) {
 	    goto done;
 	}
-	ClearText(textPtr, true);
+	ClearText(textPtr, 1);
 	TkTextRelayoutWindow(textPtr, TK_TEXT_LINE_GEOMETRY);
 	TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
 	break;
@@ -1742,7 +1742,7 @@ TextWidgetObjCmd(
     case TEXT_COUNT: {
 	TkTextIndex indexFrom, indexTo;
 	Tcl_Obj *objPtr = NULL;
-	bool update = false;
+	int update = 0;
 	int i, found = 0;
 
 	if (objc < 4) {
@@ -1808,7 +1808,7 @@ TextWidgetObjCmd(
 				    indexPtr2 = &indexFrom;
 				}
 				if (!sharedTextPtr->allowUpdateLineMetrics) {
-				    ProcessConfigureNotify(textPtr, true);
+				    ProcessConfigureNotify(textPtr, 1);
 				}
 				value = TkTextCountDisplayLines(textPtr, indexPtr1, indexPtr2);
 				if (compare > 0) {
@@ -1849,7 +1849,7 @@ TextWidgetObjCmd(
 		break;
 	    case 'u':
 		if (strncmp("-update", option, length) == 0) {
-		    update = true;
+		    update = 1;
 		    continue;
 		}
 		break;
@@ -1946,7 +1946,7 @@ TextWidgetObjCmd(
 	break;
     case TEXT_DELETE: {
 	int i, flags = 0;
-	bool ok = true;
+	int ok = 1;
 
 	for (i = 2; i < objc - 1; i++) {
 	    const char *option = Tcl_GetString(objv[i]);
@@ -1988,8 +1988,8 @@ TextWidgetObjCmd(
 	     */
 
 	    TkTextIndex index1, index2, *index2Ptr;
-	    bool triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
-	    bool triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
+	    int triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
+	    int triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 	    if (triggerWatch) {
 		TkTextSaveCursorIndex(textPtr);
@@ -2011,8 +2011,8 @@ TextWidgetObjCmd(
 	    } else {
 		index2Ptr = NULL;
 	    }
-	    ok = DeleteIndexRange(NULL, textPtr, &index1, index2Ptr, flags, true,
-		    triggerWatch, triggerWatch, triggerUserMod, true);
+	    ok = DeleteIndexRange(NULL, textPtr, &index1, index2Ptr, flags, 1,
+		    triggerWatch, triggerWatch, triggerUserMod, 1);
 	} else {
 	    /*
 	     * Multi-index pair case requires that we prevalidate the
@@ -2107,8 +2107,8 @@ TextWidgetObjCmd(
 
 	    for (i = 0; i < objc && ok; i += 2) {
 		if (useIdx[i]) {
-		    bool triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[i]);
-		    bool triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
+		    int triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[i]);
+		    int triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 		    if (triggerWatch) {
 			TkTextSaveCursorIndex(textPtr);
@@ -2120,7 +2120,7 @@ TextWidgetObjCmd(
 		     */
 
 		    ok = DeleteIndexRange(NULL, textPtr, &indices[i], &indices[i + 1],
-			    flags, true, triggerWatch, triggerWatch, triggerUserMod, i == lastUsed);
+			    flags, 1, triggerWatch, triggerWatch, triggerUserMod, i == lastUsed);
 		}
 	    }
 	    free(indices);
@@ -2134,14 +2134,14 @@ TextWidgetObjCmd(
     }
     case TEXT_DLINEINFO: {
 	int x, y, width, height, base, argc = 2;
-	bool extents = false;
+	int extents = 0;
 	TkTextIndex index;
 
 	if (objc == 4) {
 	    const char* option = Tcl_GetString(objv[2]);
 
 	    if (strcmp(option, "-extents") == 0) {
-		extents = true;
+		extents = 1;
 		argc += 1;
 	    } else if (*option == '-') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -extents", option));
@@ -2180,8 +2180,8 @@ TextWidgetObjCmd(
     case TEXT_GET: {
 	Tcl_Obj *objPtr;
 	int i, found;
-	bool includeHyphens;
-	bool visibleOnly;
+	int includeHyphens;
+	int visibleOnly;
 	unsigned countOptions;
 	const char *option;
 
@@ -2193,13 +2193,13 @@ TextWidgetObjCmd(
 
 	objPtr = NULL;
 	found = 0;
-	includeHyphens = true;
-	visibleOnly = false;
+	includeHyphens = 1;
+	visibleOnly = 0;
 	countOptions = 0;
 	i = 2;
 
 	while (objc > i + 1 && (option = Tcl_GetString(objv[i]))[0] == '-') {
-	    bool badOption = false;
+	    int badOption = 0;
 
 	    i += 1;
 
@@ -2207,7 +2207,7 @@ TextWidgetObjCmd(
 	    	if (option[2] == '\0') {
 		    break;
 		}
-		badOption = true;
+		badOption = 1;
 	    } else if (++countOptions > 1) {
 		i -= 1;
 		break;
@@ -2215,27 +2215,27 @@ TextWidgetObjCmd(
 		switch (option[1]) {
 		case 'c':
 		    if (strcmp("-chars", option) != 0) {
-			badOption = true;
+			badOption = 1;
 		    }
 		    break;
 		case 't':
 		    if (strcmp("-text", option) != 0) {
-			badOption = true;
+			badOption = 1;
 		    }
-		    includeHyphens = false;
+		    includeHyphens = 0;
 		    break;
 		case 'd':
 		    if (strcmp("-displaychars", option) == 0) {
-			visibleOnly = true;
+			visibleOnly = 1;
 		    } else if (strcmp("-displaytext", option) == 0) {
-			visibleOnly = true;
-			includeHyphens = false;
+			visibleOnly = 1;
+			includeHyphens = 0;
 		    } else {
-			badOption = true;
+			badOption = 1;
 		    }
 		    break;
 		default:
-		    badOption = true;
+		    badOption = 1;
 		    break;
 		}
 	    }
@@ -2326,7 +2326,7 @@ TextWidgetObjCmd(
     case TEXT_INSERT:
     case TEXT_TK_TEXTINSERT: {
 	TkTextIndex index;
-	bool triggerUserMod, triggerWatch;
+	int triggerUserMod, triggerWatch;
 
 	if (objc < 4) {
 	    const char *args = (commandIndex == TEXT_TK_TEXTINSERT) ?
@@ -2352,7 +2352,7 @@ TextWidgetObjCmd(
 	if (triggerWatch) {
 	    TkTextSaveCursorIndex(textPtr);
 	}
-	result = TextInsertCmd(textPtr, interp, objc - 3, objv + 3, &index, true, triggerWatch,
+	result = TextInsertCmd(textPtr, interp, objc - 3, objv + 3, &index, 1, triggerWatch,
 		triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTINSERT);
 	break;
     }
@@ -2360,7 +2360,7 @@ TextWidgetObjCmd(
 	result = TextInspectCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_ISCLEAN: {
-	bool discardSelection = false;
+	int discardSelection = 0;
 	const TkText *myTextPtr = textPtr;
 	int i;
 
@@ -2370,7 +2370,7 @@ TextWidgetObjCmd(
 	    if (strcmp(opt, "-overall") == 0) {
 		myTextPtr = NULL;
 	    } else if (strcmp(opt, "-discardselection") == 0) {
-		discardSelection = true;
+		discardSelection = 1;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -overall", opt));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
@@ -2386,14 +2386,14 @@ TextWidgetObjCmd(
     	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkTextIsDeadPeer(textPtr)));
 	break;
     case TEXT_ISEMPTY: {
-	bool overall = false;
+	int overall = 0;
 	int i;
 
 	for (i = 2; i < objc; ++i) {
 	    char const * opt = Tcl_GetString(objv[i]);
 
 	    if (strcmp(opt, "-overall") == 0) {
-		overall = true;
+		overall = 1;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -overall", opt));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
@@ -2424,7 +2424,7 @@ TextWidgetObjCmd(
     }
     case TEXT_LOAD: {
 	Tcl_Obj *contentObjPtr;
-	bool validOptions = false;
+	int validOptions = 0;
 
 	if (objc != 3 && objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "textcontent");
@@ -2441,7 +2441,7 @@ TextWidgetObjCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    validOptions = true;
+	    validOptions = 1;
 	    contentObjPtr = objv[3];
 	} else {
 	    contentObjPtr = objv[2];
@@ -2449,10 +2449,10 @@ TextWidgetObjCmd(
 	if (TestIfPerformingUndoRedo(interp, sharedTextPtr, &result)) {
 	    goto done;
 	}
-	ClearText(textPtr, false);
+	ClearText(textPtr, 0);
 	TkTextRelayoutWindow(textPtr, TK_TEXT_LINE_GEOMETRY);
 	if ((result = TkBTreeLoad(textPtr, contentObjPtr, validOptions)) != TCL_OK) {
-	    ClearText(textPtr, false);
+	    ClearText(textPtr, 0);
 	}
 	break;
     }
@@ -2469,7 +2469,7 @@ TextWidgetObjCmd(
             goto done;
         }
 	if (!sharedTextPtr->allowUpdateLineMetrics) {
-	    ProcessConfigureNotify(textPtr, true);
+	    ProcessConfigureNotify(textPtr, 1);
 	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkTextPendingSync(textPtr)));
         break;
@@ -2477,7 +2477,7 @@ TextWidgetObjCmd(
     case TEXT_REPLACE:
     case TEXT_TK_TEXTREPLACE: {
 	TkTextIndex indexFrom, indexTo, index;
-	bool triggerUserMod, triggerWatch;
+	int triggerUserMod, triggerWatch;
 
 	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index1 index2 chars ?tagList chars tagList ...?");
@@ -2549,7 +2549,7 @@ TextWidgetObjCmd(
 		deleteInsertOffset = insertLength;
 	    }
 
-	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, false,
+	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, 0,
 		    triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTREPLACE);
 	    if (textPtr->flags & DESTROYED) {
 		return result;
@@ -2566,7 +2566,7 @@ TextWidgetObjCmd(
 		textPtr->insertIndex = index;
 	    }
 	} else {
-	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, false,
+	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, 0,
 		    triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTREPLACE);
 	    if (textPtr->flags & DESTROYED) {
 		return result;
@@ -2593,12 +2593,12 @@ TextWidgetObjCmd(
 	result = TkTextSeeCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_SYNC: {
-	bool wrongNumberOfArgs = false;
+	int wrongNumberOfArgs = 0;
 
 	if (objc == 3 || objc == 4) {
 	    const char *option = Tcl_GetString(objv[2]);
 	    if (*option != '-') {
-		wrongNumberOfArgs = true;
+		wrongNumberOfArgs = 1;
 	    } else if (strncmp(option, "-command", objv[2]->length) != 0) {
 		Tcl_AppendResult(interp, "wrong option \"", option,
 			"\": should be \"-command\"", NULL);
@@ -2606,7 +2606,7 @@ TextWidgetObjCmd(
 		goto done;
 	    }
 	} else if (objc != 2) {
-	    wrongNumberOfArgs = true;
+	    wrongNumberOfArgs = 1;
 	}
 	if (wrongNumberOfArgs) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-command ?command??");
@@ -2614,7 +2614,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (!sharedTextPtr->allowUpdateLineMetrics) {
-	    ProcessConfigureNotify(textPtr, true);
+	    ProcessConfigureNotify(textPtr, 1);
 	}
 	if (objc == 3) {
 	    if (textPtr->afterSyncCmd) {
@@ -2623,11 +2623,11 @@ TextWidgetObjCmd(
 	} else if (objc == 4) {
 	    Tcl_Obj *cmd = objv[3];
 	    const char *script = Tcl_GetString(cmd);
-	    bool append = false;
+	    int append = 0;
 
 	    if (*script == '+') {
 		script += 1;
-		append = true;
+		append = 1;
 	    }
 
 	    if (!textPtr->afterSyncCmd) {
@@ -2639,7 +2639,7 @@ TextWidgetObjCmd(
 		if (!append && *script == '\0') {
 		    if (textPtr->pendingAfterSync) {
 			Tcl_CancelIdleCall(RunAfterSyncCmd, (ClientData) textPtr);
-			textPtr->pendingAfterSync = false;
+			textPtr->pendingAfterSync = 0;
 		    }
 		    cmd = NULL;
 		} else {
@@ -2652,20 +2652,20 @@ TextWidgetObjCmd(
 		textPtr->afterSyncCmd = cmd;
 	    }
 	    if (!textPtr->pendingAfterSync) {
-		textPtr->pendingAfterSync = true;
+		textPtr->pendingAfterSync = 1;
 		if (!TkTextPendingSync(textPtr)) {
 		    Tcl_DoWhenIdle(RunAfterSyncCmd, (ClientData) textPtr);
 		}
 	    }
 	} else {
-	    textPtr->sendSyncEvent = true;
+	    textPtr->sendSyncEvent = 1;
 
 	    if (!TkTextPendingSync(textPtr)) {
 		/*
 		 * There is nothing to sync, so fire the <<WidgetViewSync>> event,
 		 * because nobody else will do this when no update is pending.
 		 */
-		TkTextGenerateWidgetViewSyncEvent(textPtr, false);
+		TkTextGenerateWidgetViewSyncEvent(textPtr, 0);
 	    } else {
 		UpdateLineMetrics(textPtr, 0, TkBTreeNumLines(sharedTextPtr->tree, textPtr));
 	    }
@@ -2698,7 +2698,7 @@ TextWidgetObjCmd(
 
   done:
     if (--textPtr->refCount == 0) {
-	bool sharedIsReleased = textPtr->sharedIsReleased;
+	int sharedIsReleased = textPtr->sharedIsReleased;
 
 	assert(textPtr->flags & MEM_RELEASED);
 	free(textPtr);
@@ -2732,7 +2732,7 @@ TextWidgetObjCmd(
  *	if it contains exact two single newline characters.
  *
  * Results:
- *	Returns true if the widget is empty, and false otherwise.
+ *	Returns 1 if the widget is empty, and false otherwise.
  *
  * Side effects:
  *	None.
@@ -2740,7 +2740,7 @@ TextWidgetObjCmd(
  *--------------------------------------------------------------
  */
 
-static bool
+static int
 DoesNotContainTextSegments(
     const TkTextSegment *segPtr1,
     const TkTextSegment *segPtr2)
@@ -2751,10 +2751,10 @@ DoesNotContainTextSegments(
 	}
     }
 
-    return true;
+    return 1;
 }
 
-static bool
+static int
 IsEmpty(
     const TkSharedText *sharedTextPtr,
     const TkText *textPtr)		/* Can be NULL. */
@@ -2765,7 +2765,7 @@ IsEmpty(
     assert(sharedTextPtr);
 
     if (TkBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
-	return false;
+	return 0;
     }
 
     if (textPtr) {
@@ -2797,7 +2797,7 @@ IsEmpty(
  *--------------------------------------------------------------
  */
 
-static bool
+static int
 ContainsAnySegment(
     const TkTextSegment *segPtr1,
     const TkTextSegment *segPtr2)
@@ -2808,14 +2808,14 @@ ContainsAnySegment(
 	}
     }
 
-    return false;
+    return 0;
 }
 
-static bool
+static int
 IsClean(
     const TkSharedText *sharedTextPtr,
     const TkText *textPtr,		/* Can be NULL. */
-    bool discardSelection)
+    int discardSelection)
 {
     const TkTextTagSet *tagInfoPtr;
     const TkTextSegment *startMarker;
@@ -2825,7 +2825,7 @@ IsClean(
     assert(sharedTextPtr);
 
     if (TkBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
-	return false;
+	return 0;
     }
 
     if (textPtr) {
@@ -2837,14 +2837,14 @@ IsClean(
     }
 
     if (ContainsAnySegment(startMarker, endMarker)) {
-	return false;
+	return 0;
     }
 
     endLine = endMarker->sectionPtr->linePtr;
 
     if (!textPtr && ContainsAnySegment(endLine->segPtr, NULL)) {
 	/* This widget contains any mark on very last line. */
-	return false;
+	return 0;
     }
 
     tagInfoPtr = endLine->prevPtr->lastPtr->tagInfoPtr;
@@ -2955,18 +2955,18 @@ TextWatchCmd(
 	TkText *tPtr;
 
 	if (textPtr->watchCmd) {
-	    textPtr->triggerAlways = false;
+	    textPtr->triggerAlways = 0;
 	    textPtr->watchCmd = NULL;
 	}
 
-	sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
-	sharedTextPtr->triggerAlways = false;
+	sharedTextPtr->triggerWatchCmd = 0; /* do not trigger recursively */
+	sharedTextPtr->triggerAlways = 0;
 
 	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	    if (tPtr->watchCmd) {
-		sharedTextPtr->triggerWatchCmd = true;
+		sharedTextPtr->triggerWatchCmd = 1;
 		if (tPtr->triggerAlways) {
-		    sharedTextPtr->triggerAlways = true;
+		    sharedTextPtr->triggerAlways = 1;
 		}
 	    }
 	}
@@ -2982,8 +2982,8 @@ TextWatchCmd(
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "WATCH_OPTION", NULL);
 		return TCL_ERROR;
 	    }
-	    textPtr->triggerAlways = true;
-	    textPtr->sharedTextPtr->triggerAlways = true;
+	    textPtr->triggerAlways = 1;
+	    textPtr->sharedTextPtr->triggerAlways = 1;
 	    argnum = 3;
 	}
 
@@ -3000,18 +3000,18 @@ TextWatchCmd(
 	} else if (argnum == 2) {
 	    TkText *tPtr;
 
-	    textPtr->triggerAlways = false;
-	    textPtr->sharedTextPtr->triggerAlways = false;
+	    textPtr->triggerAlways = 0;
+	    textPtr->sharedTextPtr->triggerAlways = 0;
 
 	    for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 		if (tPtr->triggerAlways) {
 		    assert(tPtr->watchCmd);
-		    sharedTextPtr->triggerWatchCmd = true;
+		    sharedTextPtr->triggerWatchCmd = 1;
 		}
 	    }
 	}
 
-	textPtr->sharedTextPtr->triggerWatchCmd = true;
+	textPtr->sharedTextPtr->triggerWatchCmd = 1;
 	Tcl_IncrRefCount(textPtr->watchCmd = cmd);
     }
 
@@ -3105,7 +3105,7 @@ TextPeerCmd(
 static void
 PushUndoSeparatorIfNeeded(
     TkSharedText *sharedTextPtr,
-    bool autoSeparators,
+    int autoSeparators,
     TkTextEditMode currentEditMode)
 {
     assert(sharedTextPtr->undoStack);
@@ -3113,8 +3113,8 @@ PushUndoSeparatorIfNeeded(
     if (sharedTextPtr->pushSeparator
 	    || (autoSeparators && sharedTextPtr->lastEditMode != currentEditMode)) {
 	PushRetainedUndoTokens(sharedTextPtr);
-	TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
-	sharedTextPtr->pushSeparator = false;
+	TkTextUndoPushSeparator(sharedTextPtr->undoStack, 1);
+	sharedTextPtr->pushSeparator = 0;
 	sharedTextPtr->lastUndoTokenType = -1;
     }
 }
@@ -3150,16 +3150,16 @@ TextReplaceCmd(
 				/* Index to which to replace. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
-    bool viewUpdate,		/* Update vertical view if set. */
-    bool triggerWatch,		/* Should we trigger the watch command? */
-    bool userFlag,		/* Trigger due to user modification? */
-    bool parseHyphens)		/* Should we parse hyphens (tk_textReplace)? */
+    int viewUpdate,		/* Update vertical view if set. */
+    int triggerWatch,		/* Should we trigger the watch command? */
+    int userFlag,		/* Trigger due to user modification? */
+    int parseHyphens)		/* Should we parse hyphens (tk_textReplace)? */
 {
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     int origAutoSep = sharedTextPtr->autoSeparators;
     int result = TCL_OK;
     TkTextIndex indexTmp;
-    bool notDestroyed;
+    int notDestroyed;
 
     assert(!TkTextIsDeadPeer(textPtr));
 
@@ -3174,7 +3174,7 @@ TextReplaceCmd(
      */
 
     if (sharedTextPtr->undoStack) {
-	sharedTextPtr->autoSeparators = false;
+	sharedTextPtr->autoSeparators = 0;
 	PushUndoSeparatorIfNeeded(sharedTextPtr, origAutoSep, TK_TEXT_EDIT_REPLACE);
     }
 
@@ -3183,12 +3183,12 @@ TextReplaceCmd(
     TkTextIndexSave(&indexTmp);
 
     notDestroyed = DeleteIndexRange(NULL, textPtr, indexFromPtr, indexToPtr,
-	    0, viewUpdate, triggerWatch, false, userFlag, true);
+	    0, viewUpdate, triggerWatch, 0, userFlag, 1);
 
     if (notDestroyed) {
 	TkTextIndexRebuild(&indexTmp);
 	result = TextInsertCmd(textPtr, interp, objc - 4, objv + 4, &indexTmp,
-		viewUpdate, false, triggerWatch, userFlag, parseHyphens);
+		viewUpdate, 0, triggerWatch, userFlag, parseHyphens);
     }
 
     if (sharedTextPtr->undoStack) {
@@ -3327,17 +3327,17 @@ ClearRetainedUndoTokens(
 static void
 ClearText(
     TkText *textPtr,		/* Clean up this text widget. */
-    bool clearTags)		/* Also clear all tags? */
+    int clearTags)		/* Also clear all tags? */
 {
     TkTextSegment *retainedMarks;
     TkTextIndex startIndex;
     TkText *tPtr;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkSizeT oldEpoch = TkBTreeEpoch(sharedTextPtr->tree);
-    bool steadyMarks = textPtr->sharedTextPtr->steadyMarks;
-    bool debug = tkBTreeDebug;
+    int steadyMarks = textPtr->sharedTextPtr->steadyMarks;
+    int debug = tkBTreeDebug;
 
-    tkBTreeDebug = false; /* debugging is not wanted here */
+    tkBTreeDebug = 0; /* debugging is not wanted here */
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	/*
@@ -3359,8 +3359,8 @@ ClearText(
 	FreeEmbeddedWindows(tPtr);
 	TkTextFreeDInfo(tPtr);
 	textPtr->dInfoPtr = NULL;
-	textPtr->dontRepick = false;
-	tPtr->abortSelections = true;
+	textPtr->dontRepick = 0;
+	tPtr->abortSelections = 1;
 	textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
 	tPtr->refCount -= 1;
 	tPtr->startLine = NULL;
@@ -3388,7 +3388,7 @@ ClearText(
     sharedTextPtr->startMarker->nextPtr = sharedTextPtr->startMarker->prevPtr = NULL;
     sharedTextPtr->endMarker->nextPtr = sharedTextPtr->endMarker->prevPtr = NULL;
     TkBTreeDestroy(sharedTextPtr->tree);
-    retainedMarks = TkTextFreeMarks(sharedTextPtr, true);
+    retainedMarks = TkTextFreeMarks(sharedTextPtr, 1);
     Tcl_DeleteHashTable(&sharedTextPtr->imageTable);
     Tcl_DeleteHashTable(&sharedTextPtr->windowTable);
 
@@ -3417,13 +3417,13 @@ ClearText(
     TkBitClear(sharedTextPtr->affectGeometryTags);
     TkBitClear(sharedTextPtr->affectGeometryNonSelTags);
     TkBitClear(sharedTextPtr->affectLineHeightTags);
-    sharedTextPtr->isAltered = false;
-    sharedTextPtr->isModified = false;
-    sharedTextPtr->isIrreversible = false;
-    sharedTextPtr->userHasSetModifiedFlag = false;
-    sharedTextPtr->haveToSetCurrentMark = false;
+    sharedTextPtr->isAltered = 0;
+    sharedTextPtr->isModified = 0;
+    sharedTextPtr->isIrreversible = 0;
+    sharedTextPtr->userHasSetModifiedFlag = 0;
+    sharedTextPtr->haveToSetCurrentMark = 0;
     sharedTextPtr->undoLevel = 0;
-    sharedTextPtr->pushSeparator = false;
+    sharedTextPtr->pushSeparator = 0;
     sharedTextPtr->imageCount = 0;
     sharedTextPtr->tree = TkBTreeCreate(sharedTextPtr, oldEpoch + 1);
     sharedTextPtr->insertDeleteUndoTokenCount = 0;
@@ -3446,13 +3446,13 @@ ClearText(
 	TkTextSetYView(tPtr, &startIndex, 0);
 	sharedTextPtr->tagLookup[tPtr->selTagPtr->index] = tPtr->selTagPtr;
 	TkBitSet(sharedTextPtr->usedTags, tPtr->selTagPtr->index);
-	tPtr->haveToSetCurrentMark = false;
+	tPtr->haveToSetCurrentMark = 0;
 	TkBTreeLinkSegment(sharedTextPtr, tPtr->insertMarkPtr, &startIndex);
 	TkBTreeLinkSegment(sharedTextPtr, tPtr->currentMarkPtr, &startIndex);
 	tPtr->currentMarkIndex = startIndex;
     }
 
-    sharedTextPtr->steadyMarks = false;
+    sharedTextPtr->steadyMarks = 0;
     while (retainedMarks) {
 	TkTextSegment *nextPtr = retainedMarks->nextPtr;
 	TkTextIndexSetupToStartOfText(&startIndex, NULL, sharedTextPtr->tree);
@@ -3466,7 +3466,7 @@ ClearText(
     sharedTextPtr->lastUndoTokenType = -1;
 
     if (debug) {
-	tkBTreeDebug = true;
+	tkBTreeDebug = 1;
 	TkBTreeCheck(sharedTextPtr->tree);
     }
 }
@@ -3500,9 +3500,9 @@ DestroyText(
 {
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextStringList *listPtr;
-    bool debug = tkBTreeDebug;
+    int debug = tkBTreeDebug;
 
-    tkBTreeDebug = false; /* debugging is not wanted here */
+    tkBTreeDebug = 0; /* debugging is not wanted here */
 
     /*
      * Firstly, remove pending idle commands, and free the array.
@@ -3510,11 +3510,11 @@ DestroyText(
 
     if (textPtr->pendingAfterSync) {
 	Tcl_CancelIdleCall(RunAfterSyncCmd, (ClientData) textPtr);
-	textPtr->pendingAfterSync = false;
+	textPtr->pendingAfterSync = 0;
     }
     if (textPtr->pendingFireEvent) {
 	Tcl_CancelIdleCall(FireWidgetViewSyncEvent, (ClientData) textPtr);
-	textPtr->pendingFireEvent = false;
+	textPtr->pendingFireEvent = 0;
     }
     if (textPtr->afterSyncCmd) {
 	Tcl_GuardedDecrRefCount(textPtr->afterSyncCmd);
@@ -3531,7 +3531,7 @@ DestroyText(
 
     TkTextFreeDInfo(textPtr);
     textPtr->dInfoPtr = NULL;
-    textPtr->undo = false;
+    textPtr->undo = 0;
 
     /*
      * Always clean up the widget-specific tags first. Common tags (i.e. most)
@@ -3656,7 +3656,7 @@ DestroyText(
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
 	TkTextFreeAllTags(textPtr);
 	Tcl_DeleteHashTable(&sharedTextPtr->tagTable);
-	TkTextFreeMarks(sharedTextPtr, false);
+	TkTextFreeMarks(sharedTextPtr, 0);
 	TkBitDestroy(&sharedTextPtr->usedTags);
 	TkBitDestroy(&sharedTextPtr->elisionTags);
 	TkBitDestroy(&sharedTextPtr->selectionTags);
@@ -3681,7 +3681,7 @@ DestroyText(
 	free(sharedTextPtr);
 	DEBUG_ALLOC(tkTextCountDestroyShared++);
 
-	textPtr->sharedIsReleased = true;
+	textPtr->sharedIsReleased = 1;
 	textPtr->refCount -= 1;
 
 #if TK_CHECK_ALLOCS
@@ -3742,7 +3742,7 @@ DestroyText(
  *----------------------------------------------------------------------
  */
 
-bool
+int
 TkTextDecrRefCountAndTestIfDestroyed(
     TkText *textPtr)
 {
@@ -3751,7 +3751,7 @@ TkTextDecrRefCountAndTestIfDestroyed(
 	assert(textPtr->flags & MEM_RELEASED);
 	free(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
-	return true;
+	return 1;
     }
     return !!(textPtr->flags & DESTROYED);
 }
@@ -3774,20 +3774,20 @@ TkTextDecrRefCountAndTestIfDestroyed(
  *----------------------------------------------------------------------
  */
 
-bool
+int
 TkTextReleaseIfDestroyed(
     TkText *textPtr)
 {
     if (!(textPtr->flags & DESTROYED)) {
 	assert(textPtr->refCount > 0);
-	return false;
+	return 0;
     }
     if (--textPtr->refCount == 0) {
 	assert(textPtr->flags & MEM_RELEASED);
 	free(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
     }
-    return true;
+    return 1;
 }
 
 /*
@@ -3808,7 +3808,7 @@ TkTextReleaseIfDestroyed(
  *----------------------------------------------------------------------
  */
 
-bool
+int
 TkTextTestLangCode(
     Tcl_Interp *interp,
     Tcl_Obj *langCodePtr)
@@ -3825,9 +3825,9 @@ TkTextTestLangCode(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad lang \"%s\": "
 		"must have the form of an ISO 639-1 language code, or empty", lang));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "LANG", NULL);
-	return false;
+	return 0;
     }
-    return true;
+    return 1;
 }
 
 /*
@@ -3849,16 +3849,16 @@ TkTextTestLangCode(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 IsNumberOrEmpty(
     const char *str)
 {
     for ( ; *str; ++str) {
 	if (!isdigit(UCHAR(*str))) {
-	    return false;
+	    return 0;
 	}
     }
-    return true;
+    return 1;
 }
 
 int
@@ -3874,15 +3874,15 @@ TkConfigureText(
     TkSizeT currentEpoch;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextBTree tree = sharedTextPtr->tree;
-    bool copyDownFlags = false;
-    bool oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
-    bool oldTextDebug = tkTextDebug;
-    bool didHyphenate = textPtr->hyphenate;
-    bool oldUndoTagging = textPtr->undoTagging;
+    int copyDownFlags = 0;
+    int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
+    int oldTextDebug = tkTextDebug;
+    int didHyphenate = textPtr->hyphenate;
+    int oldUndoTagging = textPtr->undoTagging;
     int oldHyphenRules = textPtr->hyphenRules;
     int mask = 0;
 
-    tkTextDebug = false; /* debugging is not useful here */
+    tkTextDebug = 0; /* debugging is not useful here */
 
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
 
@@ -4053,7 +4053,7 @@ TkConfigureText(
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
     if (sharedTextPtr->steadyMarks != textPtr->steadyMarks) {
-	if (!IsClean(sharedTextPtr, NULL, true)) {
+	if (!IsClean(sharedTextPtr, NULL, 1)) {
 	    ErrorNotAllowed(interp, "setting this option is possible only if the widget "
 		    "is overall clean");
 	    goto error;
@@ -4070,7 +4070,7 @@ TkConfigureText(
 
     if (oldUndoTagging != textPtr->undoTagging) {
 	sharedTextPtr->undoTagging = textPtr->undoTagging;
-	copyDownFlags = true;
+	copyDownFlags = 1;
     }
 
     /* This flag cannot alter if we have peers. */
@@ -4078,7 +4078,7 @@ TkConfigureText(
 
     if (sharedTextPtr->autoSeparators != textPtr->autoSeparators) {
 	sharedTextPtr->autoSeparators = textPtr->autoSeparators;
-	copyDownFlags = true;
+	copyDownFlags = 1;
     }
 
     if (textPtr->undo != sharedTextPtr->undo) {
@@ -4088,7 +4088,7 @@ TkConfigureText(
 
 	assert(sharedTextPtr->undo == !!sharedTextPtr->undoStack);
 	sharedTextPtr->undo = textPtr->undo;
-	copyDownFlags = true;
+	copyDownFlags = 1;
 
 	if (sharedTextPtr->undo) {
 	    sharedTextPtr->undoStack = TkTextUndoCreateStack(
@@ -4100,9 +4100,9 @@ TkConfigureText(
 		    TextUndoStackContentChangedCallback);
 	    TkTextUndoSetContext(sharedTextPtr->undoStack, sharedTextPtr);
 	    sharedTextPtr->undoLevel = 0;
-	    sharedTextPtr->pushSeparator = false;
-	    sharedTextPtr->isIrreversible = false;
-	    sharedTextPtr->isAltered = false;
+	    sharedTextPtr->pushSeparator = 0;
+	    sharedTextPtr->isIrreversible = 0;
+	    sharedTextPtr->isAltered = 0;
 	} else {
 	    sharedTextPtr->isIrreversible = TkTextUndoContentIsModified(sharedTextPtr->undoStack);
 	    ClearRetainedUndoTokens(sharedTextPtr);
@@ -4121,12 +4121,12 @@ TkConfigureText(
 	if (sharedTextPtr->undoStack) {
 	    TkTextUndoSetMaxStackDepth(sharedTextPtr->undoStack,
 		    textPtr->maxUndoDepth, textPtr->maxRedoDepth);
-	    TkTextUndoSetMaxStackSize(sharedTextPtr->undoStack, textPtr->maxUndoSize, false);
+	    TkTextUndoSetMaxStackSize(sharedTextPtr->undoStack, textPtr->maxUndoSize, 0);
 	}
 	sharedTextPtr->maxUndoDepth = textPtr->maxUndoDepth;
 	sharedTextPtr->maxRedoDepth = textPtr->maxRedoDepth;
 	sharedTextPtr->maxUndoSize = textPtr->maxUndoSize;
-	copyDownFlags = true;
+	copyDownFlags = 1;
     }
 
     if (copyDownFlags) {
@@ -4293,7 +4293,7 @@ TkConfigureText(
 	if (TkTextIndexCompare(&current, &start) < 0 || TkTextIndexCompare(&end, &current) < 0) {
 	    TkTextSearch search;
 	    TkTextIndex first, last;
-	    bool selChanged = false;
+	    int selChanged = 0;
 
 	    TkTextSetYView(textPtr, &start, 0);
 
@@ -4306,13 +4306,13 @@ TkConfigureText(
 	    TkTextMakeByteIndex(tree, NULL, 0, 0, &first);
 	    TkBTreeStartSearch(&first, &start, textPtr->selTagPtr, &search, SEARCH_NEXT_TAGON);
 	    if (TkBTreeNextTag(&search)) {
-		selChanged = true;
+		selChanged = 1;
 	    } else {
 		TkTextMakeByteIndex(tree, NULL, TkBTreeNumLines(tree, NULL), 0, &last);
 		TkBTreeStartSearchBack(&end, &last, textPtr->selTagPtr,
 			&search, SEARCH_EITHER_TAGON_TAGOFF);
 		if (TkBTreePrevTag(&search)) {
-		    selChanged = true;
+		    selChanged = 1;
 		}
 	    }
 	    if (selChanged) {
@@ -4322,7 +4322,7 @@ TkConfigureText(
 		 */
 
 		TkTextSelectionEvent(textPtr);
-		textPtr->abortSelections = true;
+		textPtr->abortSelections = 1;
 	    }
 	}
 
@@ -4388,7 +4388,7 @@ TkConfigureText(
     textPtr->textConfigAttrs = textPtr->selAttrs;
     textPtr->selAttrs = textPtr->selTagPtr->attrs;
     TkTextUpdateTagDisplayFlags(textPtr->selTagPtr);
-    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, false);
+    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 0);
 
     /*
      * Claim the selection if we've suddenly started exporting it and there
@@ -4633,7 +4633,7 @@ TextWorldChanged(
 static void
 ProcessConfigureNotify(
     TkText *textPtr,
-    bool updateLineGeometry)
+    int updateLineGeometry)
 {
     int mask = updateLineGeometry ? TK_TEXT_LINE_GEOMETRY : 0;
 
@@ -4644,8 +4644,8 @@ ProcessConfigureNotify(
      */
 
     if (!textPtr->sharedTextPtr->allowUpdateLineMetrics) {
-	textPtr->sharedTextPtr->allowUpdateLineMetrics = true;
-	updateLineGeometry = true;
+	textPtr->sharedTextPtr->allowUpdateLineMetrics = 1;
+	updateLineGeometry = 1;
 	TkTextEventuallyRepick(textPtr);
     }
 
@@ -4666,7 +4666,7 @@ ProcessDestroyNotify(
 {
     if (textPtr->setGrid) {
 	Tk_UnsetGrid(textPtr->tkwin);
-	textPtr->setGrid = false;
+	textPtr->setGrid = 0;
     }
     if (!(textPtr->flags & OPTIONS_FREED)) {
 	/* Restore the original attributes. */
@@ -4717,7 +4717,7 @@ ProcessFocusInOut(
 	}
 	if (textPtr->selAttrs.inactiveBorder != textPtr->selAttrs.border
 		|| textPtr->selAttrs.inactiveFgColor != textPtr->selAttrs.fgColor) {
-	    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, false);
+	    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 0);
 	}
 	if (textPtr->highlightWidth > 0) {
 	    TkTextRedrawRegion(textPtr, 0, 0, textPtr->highlightWidth, textPtr->highlightWidth);
@@ -4760,7 +4760,7 @@ TextEventProc(
 	     * probably we have rejected all ConfigureNotify events before
 	     * first Expose arrives.
 	     */
-	    ProcessConfigureNotify(textPtr, true);
+	    ProcessConfigureNotify(textPtr, 1);
 	}
 	switch (eventPtr->type) {
 	case Expose:
@@ -4810,7 +4810,7 @@ TextCmdDeletedProc(
     if (!(textPtr->flags & DESTROYED)) {
 	if (textPtr->setGrid) {
 	    Tk_UnsetGrid(textPtr->tkwin);
-	    textPtr->setGrid = false;
+	    textPtr->setGrid = 0;
 	}
 	textPtr->flags |= DESTROYED;
 	Tk_DestroyWindow(tkwin);
@@ -4832,7 +4832,7 @@ TextCmdDeletedProc(
  *	The characters in "stringPtr" get added to the text just before the
  *	character indicated by "indexPtr".
  *
- *	If 'viewUpdate' is true, we may adjust the window contents'
+ *	If 'viewUpdate' is 1, we may adjust the window contents'
  *	y-position, and scrollbar setting.
  *
  *----------------------------------------------------------------------
@@ -4932,7 +4932,7 @@ SetNewTopPosition(
     TkSharedText *sharedTextPtr,	/* Shared portion of peer widgets. */
     TkText *textPtr,			/* Current peer widget, can be NULL. */
     const TkTextPosition *positions,	/* New top positions. */
-    bool viewUpdate)			/* Update the view of current widget if set. */
+    int viewUpdate)			/* Update the view of current widget if set. */
 {
     TkText *tPtr;
 
@@ -5125,10 +5125,10 @@ InsertChars(
     TkTextIndex *index2Ptr,	/* Out: Index at the end of the inserted text. */
     char const *string,		/* Null-terminated string containing new information to add to text. */
     unsigned length,		/* Length of string content. */
-    bool viewUpdate,		/* Update the view if set. */
+    int viewUpdate,		/* Update the view if set. */
     TkTextTagSet *tagInfoPtr,	/* Add these tags to the inserted text, can be NULL. */
     TkTextTag *hyphenTagPtr,	/* Associate this tag with soft hyphens, can be NULL. */
-    bool parseHyphens)		/* Should we parse hyphens (tk_textInsert)? */
+    int parseHyphens)		/* Should we parse hyphens (tk_textInsert)? */
 {
     TkSharedText *sharedTextPtr;
     TkText *tPtr;
@@ -5189,8 +5189,8 @@ InsertChars(
 
     if (undoInfoPtr) {
 	const TkTextUndoSubAtom *subAtom;
-	bool triggerStackEvent = false;
-	bool pushToken;
+	int triggerStackEvent = 0;
+	int pushToken;
 
 	assert(undoInfo.byteSize == 0);
 
@@ -5215,13 +5215,13 @@ InsertChars(
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
 	if (triggerStackEvent) {
-	    sharedTextPtr->undoStackEvent = true; /* TkBTreeJoinUndoInsert didn't trigger */
+	    sharedTextPtr->undoStackEvent = 1; /* TkBTreeJoinUndoInsert didn't trigger */
 	}
     }
 
     *index2Ptr = *index1Ptr;
     *index1Ptr = startIndex;
-    UpdateModifiedFlag(sharedTextPtr, true);
+    UpdateModifiedFlag(sharedTextPtr, 1);
     TkTextUpdateAlteredFlag(sharedTextPtr);
     SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
 
@@ -5238,7 +5238,7 @@ InsertChars(
         if (TkBTreeCharTagged(index1Ptr, tPtr->selTagPtr)) {
             TkTextSelectionEvent(tPtr);
         }
-	tPtr->abortSelections = true;
+	tPtr->abortSelections = 1;
     }
 
     if (parseHyphens && text != textBuf) {
@@ -5269,8 +5269,8 @@ static void
 TriggerWatchUndoRedo(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *token,
-    bool isRedo,
-    bool isFinal,
+    int isRedo,
+    int isFinal,
     TkText **peers,
     int numPeers)
 {
@@ -5283,7 +5283,7 @@ TriggerWatchUndoRedo(
     assert(token->undoType->rangeProc);
     assert(token->undoType->commandProc);
 
-    sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
+    sharedTextPtr->triggerWatchCmd = 0; /* do not trigger recursively */
     token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
     Tcl_IncrRefCount(cmdPtr = token->undoType->commandProc(sharedTextPtr, token));
     snprintf(buf, sizeof(buf), "%s", isFinal ? "yes" : "no");
@@ -5297,12 +5297,12 @@ TriggerWatchUndoRedo(
 
 	    TkTextPrintIndex(tPtr, &index1, idx[0]);
 	    TkTextPrintIndex(tPtr, &index2, idx[1]);
-	    TkTextTriggerWatchCmd(tPtr, info, idx[0], idx[1], Tcl_GetString(cmdPtr), buf, NULL, false);
+	    TkTextTriggerWatchCmd(tPtr, info, idx[0], idx[1], Tcl_GetString(cmdPtr), buf, NULL, 0);
 	}
     }
 
     Tcl_GuardedDecrRefCount(cmdPtr);
-    sharedTextPtr->triggerWatchCmd = true;
+    sharedTextPtr->triggerWatchCmd = 1;
 }
 
 void
@@ -5316,7 +5316,7 @@ TextUndoRedoCallback(
     TkTextUndoInfo *redoInfoPtr;
     TkTextPosition *textPosition = NULL;
     TkTextPosition textPosBuf[PIXEL_CLIENTS];
-    bool eventuallyRepick = false;
+    int eventuallyRepick = 0;
     TkText *peerArr[20];
     TkText **peers = peerArr;
     TkText *tPtr;
@@ -5344,9 +5344,9 @@ TextUndoRedoCallback(
 	TkTextIndex index1, index2;
 	const TkTextUndoSubAtom *subAtom = atom->array + i;
 	TkTextUndoToken *token = (TkTextUndoToken *)subAtom->item;
-	bool isDelete = token->undoType->action == TK_TEXT_UNDO_INSERT
+	int isDelete = token->undoType->action == TK_TEXT_UNDO_INSERT
 		|| token->undoType->action == TK_TEXT_REDO_DELETE;
-	bool isInsert = token->undoType->action == TK_TEXT_UNDO_DELETE
+	int isInsert = token->undoType->action == TK_TEXT_UNDO_DELETE
 		|| token->undoType->action == TK_TEXT_REDO_INSERT;
 
 	if (isInsert || isDelete) {
@@ -5375,13 +5375,13 @@ TextUndoRedoCallback(
 	    for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 		if (!tPtr->abortSelections) {
 		    if (isInsert) {
-			tPtr->abortSelections = true;
+			tPtr->abortSelections = 1;
 		    } else {
 			if (range->startIndex.lineIndex < range->endIndex.lineIndex
 				&& TkBTreeTag(sharedTextPtr, NULL, &index1, &index2,
-					tPtr->selTagPtr, false, NULL, TkTextRedrawTag)) {
+					tPtr->selTagPtr, 0, NULL, TkTextRedrawTag)) {
 			    TkTextSelectionEvent(tPtr);
-			    tPtr->abortSelections = true;
+			    tPtr->abortSelections = 1;
 			}
 		    }
 		}
@@ -5400,7 +5400,7 @@ TextUndoRedoCallback(
 	token->undoType->undoProc(sharedTextPtr, &undoInfo, redoInfoPtr, atom->redo);
 
 	if (token->undoType->action == TK_TEXT_UNDO_TAG) {
-	    eventuallyRepick = true;
+	    eventuallyRepick = 1;
 	}
 	if (redoInfoPtr) {
 	    if (redoInfo.token == token) {
@@ -5417,7 +5417,7 @@ TextUndoRedoCallback(
 		}
 		if (token->undoType->destroyProc) {
 		    /* We need a balanced call of perform/destroy. */
-		    token->undoType->destroyProc(sharedTextPtr, (TkTextUndoToken *)subAtom->item, true);
+		    token->undoType->destroyProc(sharedTextPtr, (TkTextUndoToken *)subAtom->item, 1);
 		}
 		/*
 		 * Do not free this item.
@@ -5443,11 +5443,11 @@ TextUndoRedoCallback(
 
     sharedTextPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
     sharedTextPtr->lastUndoTokenType = -1;
-    UpdateModifiedFlag(sharedTextPtr, false);
+    UpdateModifiedFlag(sharedTextPtr, 0);
     TkTextUpdateAlteredFlag(sharedTextPtr);
 
     if (textPosition) {
-	SetNewTopPosition(sharedTextPtr, NULL, textPosition, true);
+	SetNewTopPosition(sharedTextPtr, NULL, textPosition, 1);
 	if (textPosition != textPosBuf) {
 	    free(textPosition);
 	}
@@ -5497,7 +5497,7 @@ static void
 TextUndoStackContentChangedCallback(
     const TkTextUndoStack stack)
 {
-    ((TkSharedText *) TkTextUndoGetContext(stack))->undoStackEvent = true;
+    ((TkSharedText *) TkTextUndoGetContext(stack))->undoStackEvent = 1;
 }
 
 /*
@@ -5523,7 +5523,7 @@ TriggerUndoStackEvent(
     TkText *textPtr;
 
     assert(sharedTextPtr->undoStackEvent);
-    sharedTextPtr->undoStackEvent = false;
+    sharedTextPtr->undoStackEvent = 0;
 
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	if (!(textPtr->flags & DESTROYED)) {
@@ -5570,7 +5570,7 @@ TextUndoFreeCallback(
 	    sharedTextPtr->insertDeleteUndoTokenCount -= 1;
 	}
 	if (token->undoType->destroyProc) {
-	    token->undoType->destroyProc((TkSharedText *)TkTextUndoGetContext(stack), (TkTextUndoToken *)subAtom->item, false);
+	    token->undoType->destroyProc((TkSharedText *)TkTextUndoGetContext(stack), (TkTextUndoToken *)subAtom->item, 0);
 	}
 	free(subAtom->item);
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
@@ -5730,10 +5730,10 @@ TkTextGetUndeletableNewline(
  *	Characters and other entities (windows, images) get deleted from the
  *	text.
  *
- *	If 'viewUpdate' is true, we may adjust the window contents'
+ *	If 'viewUpdate' is 1, we may adjust the window contents'
  *	y-position, and scrollbar setting.
  *
- *	If 'viewUpdate' is true, true we can guarantee that textPtr->topIndex
+ *	If 'viewUpdate' is 1, true we can guarantee that textPtr->topIndex
  *	points to a valid TkTextLine after this function returns. However, if
  *	'viewUpdate' is false, then there is no such guarantee (since
  *	topIndex.linePtr can be garbage). The caller is expected to take
@@ -5743,7 +5743,7 @@ TkTextGetUndeletableNewline(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 DeleteOnLastLine(
     TkSharedText *sharedTextPtr,
     const TkTextLine *lastLinePtr,
@@ -5758,16 +5758,16 @@ DeleteOnLastLine(
 
 	while (segPtr->size == 0) {
 	    if ((flags & DELETE_MARKS) && TkTextIsNormalMark(segPtr)) {
-		return true;
+		return 1;
 	    }
 	    segPtr = segPtr->nextPtr;
 	}
     }
 
-    return false;
+    return 0;
 }
 
-static bool
+static int
 DeleteEndMarker(
     const TkTextIndex *indexPtr,
     int flags)
@@ -5779,7 +5779,7 @@ DeleteEndMarker(
 	    && TkTextIsNormalMark(segPtr);
 }
 
-static bool
+static int
 DeleteIndexRange(
     TkSharedText *sharedTextPtr,/* Shared portion of peer widgets. */
     TkText *textPtr,		/* Overall information about text widget. */
@@ -5791,11 +5791,11 @@ DeleteIndexRange(
 				 * to delete. NULL means just delete the one character given by
 				 * indexPtr1. */
     int flags,			/* Flags controlling the deletion. */
-    bool viewUpdate,		/* Update vertical view if set. */
-    bool triggerWatchDelete,	/* Should we trigger the watch command for deletion? */
-    bool triggerWatchInsert,	/* Should we trigger the watch command for insertion? */
-    bool userFlag,		/* Trigger user modification? */
-    bool final)			/* This is the final call in a sequence of ranges. */
+    int viewUpdate,		/* Update vertical view if set. */
+    int triggerWatchDelete,	/* Should we trigger the watch command for deletion? */
+    int triggerWatchInsert,	/* Should we trigger the watch command for insertion? */
+    int userFlag,		/* Trigger user modification? */
+    int final)			/* This is the final call in a sequence of ranges. */
 {
     TkTextIndex index1, index2, index3;
     TkTextPosition *textPosition;
@@ -5813,7 +5813,7 @@ DeleteIndexRange(
     }
 
     if (TkTextIndexIsEndOfText(indexPtr1)) {
-	return true; /* nothing to delete */
+	return 1; /* nothing to delete */
     }
 
     /*
@@ -5822,12 +5822,12 @@ DeleteIndexRange(
 
     if (indexPtr2) {
 	if (TkTextIndexCompare(indexPtr1, indexPtr2) >= 0) {
-	    return true; /* there is nothing to delete */
+	    return 1; /* there is nothing to delete */
 	}
 	index1 = *indexPtr1;
 	index2 = *indexPtr2;
     } else if (!TkTextIndexForwChars(textPtr, indexPtr1, 1, &index2, COUNT_INDICES)) {
-	return true;
+	return 1;
     } else {
 	index1 = *indexPtr1;
     }
@@ -5851,12 +5851,12 @@ DeleteIndexRange(
 		if (lastLinePtr->prevPtr->lastPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
 		    /* we have to delete tags on previous newline, that's all */
 		    TkTextClearSelection(sharedTextPtr, &index1, &index3);
-		    TkTextClearTags(sharedTextPtr, textPtr, &index1, &index3, false);
+		    TkTextClearTags(sharedTextPtr, textPtr, &index1, &index3, 0);
 		} else {
 		    assert(TkTextTagSetIsEmpty(lastLinePtr->prevPtr->lastPtr->tagInfoPtr));
 		}
 	    }
-	    return true; /* nothing to do */
+	    return 1; /* nothing to do */
 	}
 
 	if (lastLinePtr->prevPtr->lastPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
@@ -5879,10 +5879,10 @@ DeleteIndexRange(
      */
 
     if (triggerWatchDelete) {
-	Tcl_Obj *delObj = TextGetText(textPtr, &index1, &index2, NULL, NULL, UINT_MAX, false, true);
+	Tcl_Obj *delObj = TextGetText(textPtr, &index1, &index2, NULL, NULL, UINT_MAX, 0, 1);
 	char const *deleted = Tcl_GetString(delObj);
-	bool unchanged;
-	bool rc;
+	int unchanged;
+	int rc;
 
 	TkTextIndexSave(&index1);
 	TkTextIndexSave(&index2);
@@ -5891,11 +5891,11 @@ DeleteIndexRange(
 	Tcl_GuardedDecrRefCount(delObj);
 	unchanged = TkTextIndexRebuild(&index1) && TkTextIndexRebuild(&index2);
 
-	if (!rc) { return false; } /* the receiver has destroyed this widget */
+	if (!rc) { return 0; } /* the receiver has destroyed this widget */
 
 	if (!unchanged && TkTextIndexCompare(&index1, &index2) >= 0) {
 	    /* This can only happen if the receiver of the trigger command did any modification. */
-	    return true;
+	    return 1;
 	}
     }
 
@@ -5946,10 +5946,10 @@ DeleteIndexRange(
 		    ((TkTextUndoTokenRange *) undoInfo.token)->startIndex;
 	    sharedTextPtr->prevUndoEndIndex = ((TkTextUndoTokenRange *) undoInfo.token)->endIndex;
 	    /* stack has changed anyway, but TkBTreeJoinUndoDelete didn't trigger */
-	    sharedTextPtr->undoStackEvent = true;
+	    sharedTextPtr->undoStackEvent = 1;
 	} else {
 	    assert(undoInfo.token->undoType->destroyProc);
-	    undoInfo.token->undoType->destroyProc(sharedTextPtr, undoInfo.token, false);
+	    undoInfo.token->undoType->destroyProc(sharedTextPtr, undoInfo.token, 0);
 	    free(undoInfo.token);
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
@@ -5957,7 +5957,7 @@ DeleteIndexRange(
 	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
     }
 
-    UpdateModifiedFlag(sharedTextPtr, true);
+    UpdateModifiedFlag(sharedTextPtr, 1);
     TkTextUpdateAlteredFlag(sharedTextPtr);
     SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
 
@@ -5972,11 +5972,11 @@ DeleteIndexRange(
 
     if (triggerWatchInsert) {
 	if (!TriggerWatchEdit(textPtr, userFlag, "insert", indexPtr1, indexPtr1, NULL, final)) {
-	    return false; /* widget has been destroyed */
+	    return 0; /* widget has been destroyed */
 	}
     }
 
-    return true;
+    return 1;
 }
 
 /*
@@ -6026,7 +6026,7 @@ TextFetchSelection(
 
     if (offset == 0) {
 	TkTextIndexSetupToStartOfText(&textPtr->selIndex, textPtr, textPtr->sharedTextPtr->tree);
-	textPtr->abortSelections = false;
+	textPtr->abortSelections = 0;
     } else if (textPtr->abortSelections) {
 	return 0;
     }
@@ -6069,9 +6069,9 @@ TextFetchSelection(
 
     Tcl_IncrRefCount(selTextPtr = Tcl_NewObj());
 
-    while (true) {
+    while (1) {
 	TextGetText(textPtr, &textPtr->selIndex, &searchPtr->curIndex, &textPtr->selIndex,
-		selTextPtr, maxBytes - GetByteLength(selTextPtr), true, false);
+		selTextPtr, maxBytes - GetByteLength(selTextPtr), 1, 0);
 
 	if (GetByteLength(selTextPtr) == maxBytes) {
 	    break;
@@ -6172,7 +6172,7 @@ TkTextLostSelection(
 	TkTextIndexSetupToStartOfText(&start, textPtr, textPtr->sharedTextPtr->tree);
 	TkTextIndexSetupToEndOfText(&end, textPtr, textPtr->sharedTextPtr->tree);
 	TkBTreeTag(textPtr->sharedTextPtr, textPtr, &start, &end, textPtr->selTagPtr,
-		false, NULL, TkTextRedrawTag);
+		0, NULL, TkTextRedrawTag);
     }
 
     /*
@@ -6277,11 +6277,11 @@ TextInsertCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     const TkTextIndex *indexPtr,/* Index at which to insert. */
-    bool viewUpdate,		/* Update the view if set. */
-    bool triggerWatchDelete,	/* Should we trigger the watch command for deletion? */
-    bool triggerWatchInsert,	/* Should we trigger the watch command for insertion? */
-    bool userFlag,		/* Trigger user modification? */
-    bool parseHyphens)		/* Should we parse hyphens? (tk_textInsert) */
+    int viewUpdate,		/* Update the view if set. */
+    int triggerWatchDelete,	/* Should we trigger the watch command for deletion? */
+    int triggerWatchInsert,	/* Should we trigger the watch command for insertion? */
+    int userFlag,		/* Trigger user modification? */
+    int parseHyphens)		/* Should we parse hyphens? (tk_textInsert) */
 {
     TkTextIndex index1, index2;
     TkSharedText *sharedTextPtr;
@@ -6327,7 +6327,7 @@ TextInsertCmd(
 	char const *string = Tcl_GetString(stringPtr);
 	unsigned length = GetByteLength(stringPtr);
 	int k = j + 2;
-	bool final;
+	int final;
 
 	while (k < objc && GetByteLength(objv[k]) == 0) {
 	    k += 2;
@@ -6447,18 +6447,18 @@ TextSearchCmd(
      */
 
     searchSpec.textPtr = textPtr;
-    searchSpec.exact = true;
-    searchSpec.noCase = false;
-    searchSpec.all = false;
-    searchSpec.backwards = false;
+    searchSpec.exact = 1;
+    searchSpec.noCase = 0;
+    searchSpec.all = 0;
+    searchSpec.backwards = 0;
     searchSpec.varPtr = NULL;
     searchSpec.countPtr = NULL;
     searchSpec.resPtr = NULL;
-    searchSpec.searchElide = false;
-    searchSpec.searchHyphens = true;
-    searchSpec.noLineStop = false;
-    searchSpec.overlap = false;
-    searchSpec.strictLimits = false;
+    searchSpec.searchElide = 0;
+    searchSpec.searchHyphens = 1;
+    searchSpec.noLineStop = 0;
+    searchSpec.overlap = 0;
+    searchSpec.strictLimits = 0;
     searchSpec.numLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     searchSpec.clientData = textPtr;
     searchSpec.addLineProc = &TextSearchAddNextLine;
@@ -6493,10 +6493,10 @@ TextSearchCmd(
 	    i += 1;
 	    goto endOfSwitchProcessing;
 	case TK_TEXT_SEARCH_ALL:
-	    searchSpec.all = true;
+	    searchSpec.all = 1;
 	    break;
 	case TK_TEXT_SEARCH_BACK:
-	    searchSpec.backwards = true;
+	    searchSpec.backwards = 1;
 	    break;
 	case TK_TEXT_SEARCH_COUNT:
 	    if (i >= objc - 1) {
@@ -6514,32 +6514,32 @@ TextSearchCmd(
 	    searchSpec.varPtr = objv[i];
 	    break;
 	case TK_TEXT_SEARCH_DISCARDHYPHENS:
-	    searchSpec.searchHyphens = false;
+	    searchSpec.searchHyphens = 0;
 	    break;
 	case TK_TEXT_SEARCH_ELIDE:
 	case TK_TEXT_SEARCH_HIDDEN:
-	    searchSpec.searchElide = true;
+	    searchSpec.searchElide = 1;
 	    break;
 	case TK_TEXT_SEARCH_EXACT:
-	    searchSpec.exact = true;
+	    searchSpec.exact = 1;
 	    break;
 	case TK_TEXT_SEARCH_FWD:
-	    searchSpec.backwards = false;
+	    searchSpec.backwards = 0;
 	    break;
 	case TK_TEXT_SEARCH_NOCASE:
-	    searchSpec.noCase = true;
+	    searchSpec.noCase = 1;
 	    break;
 	case TK_TEXT_SEARCH_NOLINESTOP:
-	    searchSpec.noLineStop = true;
+	    searchSpec.noLineStop = 1;
 	    break;
 	case TK_TEXT_SEARCH_OVERLAP:
-	    searchSpec.overlap = true;
+	    searchSpec.overlap = 1;
 	    break;
 	case TK_TEXT_SEARCH_STRICTLIMITS:
-	    searchSpec.strictLimits = true;
+	    searchSpec.strictLimits = 1;
 	    break;
 	case TK_TEXT_SEARCH_REGEXP:
-	    searchSpec.exact = false;
+	    searchSpec.exact = 0;
 	    break;
 	default:
 	    assert(!"unexpected switch fallthrough");
@@ -6715,7 +6715,7 @@ TextSearchIndexInLine(
     unsigned index = 0;
     TkText *textPtr = (TkText *)searchSpecPtr->clientData;
     TkTextLine *startLinePtr = textPtr->startMarker->sectionPtr->linePtr;
-    bool isCharSeg;
+    int isCharSeg;
 
     index = 0;
     segPtr = (startLinePtr == linePtr) ? textPtr->startMarker : linePtr->segPtr;
@@ -6792,7 +6792,7 @@ TextSearchAddNextLine(
     TkText *textPtr = (TkText *)searchSpecPtr->clientData;
     TkTextLine *startLinePtr = textPtr->startMarker->sectionPtr->linePtr;
     TkTextLine *endLinePtr = textPtr->endMarker->sectionPtr->linePtr;
-    bool nothingYet = true;
+    int nothingYet = 1;
 
     /*
      * Extract the text from the line.
@@ -6804,7 +6804,7 @@ TextSearchAddNextLine(
     thisLinePtr = linePtr;
 
     while (thisLinePtr) {
-	bool elideWraps = false;
+	int elideWraps = 0;
 
 	segPtr = (startLinePtr == thisLinePtr) ? textPtr->startMarker : thisLinePtr->segPtr;
 	lastPtr = (endLinePtr == thisLinePtr) ? textPtr->endMarker : NULL;
@@ -6828,14 +6828,14 @@ TextSearchAddNextLine(
 		     */
 
 		    if (!segPtr->nextPtr && !nothingYet) {
-			elideWraps = true;
+			elideWraps = 1;
 		    }
 		} else if (segPtr->typePtr == &tkTextCharType) {
 		    Tcl_AppendToObj(theLine, segPtr->body.chars, segPtr->size);
-		    nothingYet = false;
+		    nothingYet = 0;
 		} else {
 		    Tcl_AppendToObj(theLine, "\xc2\xad", 2); /* U+00AD */
-		    nothingYet = false;
+		    nothingYet = 0;
 		}
 	    }
 	}
@@ -6892,7 +6892,7 @@ TextSearchAddNextLine(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 TextSearchFoundMatch(
     int lineNum,		/* Line on which match was found. */
     SearchSpec *searchSpecPtr,	/* Search parameters. */
@@ -6920,7 +6920,7 @@ TextSearchFoundMatch(
 	 */
 
 	if (searchSpecPtr->backwards ^ (matchOffset >= searchSpecPtr->stopOffset)) {
-	    return false;
+	    return 0;
 	}
     }
 
@@ -6942,7 +6942,7 @@ TextSearchFoundMatch(
 
     if (searchSpecPtr->strictLimits && lineNum == searchSpecPtr->stopLine) {
 	if (searchSpecPtr->backwards ^ (matchOffset + numChars > searchSpecPtr->stopOffset)) {
-	    return false;
+	    return 0;
 	}
     }
 
@@ -6968,7 +6968,7 @@ TextSearchFoundMatch(
      */
 
     leftToScan = matchOffset;
-    while (true) {
+    while (1) {
 	/*
 	 * Note that we allow leftToScan to be zero because we want to skip
 	 * over any preceding non-textual items.
@@ -7055,7 +7055,7 @@ TextSearchFoundMatch(
      */
 
     for (leftToScan += matchLength; leftToScan > 0; segPtr = segPtr->nextPtr) {
-	bool isCharSeg;
+	int isCharSeg;
 
 	if (!segPtr) {
 	    /*
@@ -7103,7 +7103,7 @@ TextSearchFoundMatch(
 	}
     }
 
-    return true;
+    return 1;
 }
 
 /*
@@ -7637,7 +7637,7 @@ TextDumpCmd(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 DumpLine(
     Tcl_Interp *interp,
     TkText *textPtr,
@@ -7657,9 +7657,9 @@ DumpLine(
     int offset = 0;
     int currentSize = 0;
     int bufSize = 0;
-    bool textChanged = false;
+    int textChanged = 0;
     char *buffer = NULL;
-    bool eol;
+    int eol;
 
     sharedTextPtr = textPtr->sharedTextPtr;
 
@@ -7858,7 +7858,7 @@ DumpLine(
 	 */
 
 	*prevTagPtr = NULL;
-	textChanged = true;
+	textChanged = 1;
 
 	if (eol || (textPtr->flags & DESTROYED)) {
 	    break;
@@ -8109,7 +8109,7 @@ TextChecksumCmd(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 DumpSegment(
     TkText *textPtr,
     Tcl_Interp *interp,
@@ -8131,7 +8131,7 @@ DumpSegment(
     if (!command) {
 	Tcl_ListObjAppendList(NULL, Tcl_GetObjResult(interp), tuple);
 	Tcl_GuardedDecrRefCount(tuple);
-	return true;
+	return 1;
     } else {
 	TkSizeT oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 	Tcl_DString buf;
@@ -8170,7 +8170,7 @@ DumpSegment(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 MatchColors(
     const char *name,
     int len,
@@ -8186,10 +8186,10 @@ MatchColors(
     case 13: return strncasecmp(name, hexColor, 13) == 0;
     }
 
-    return false;
+    return 0;
 }
 
-static bool
+static int
 TestIfEqual(
     const char *opt1,
     int opt1Len,
@@ -8205,14 +8205,14 @@ TestIfEqual(
 	return MatchColors(opt2, opt2Len, "#000000000000", "black");
     }
     if (opt1Len != opt2Len) {
-	return false;
+	return 0;
     }
     for (i = 0; i < opt1Len; ++i) {
 	if (opt1[i] != opt2[i]) {
-	    return false;
+	    return 0;
 	}
     }
-    return true;
+    return 1;
 }
 
 #if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
@@ -8300,7 +8300,7 @@ GetFontAttrs(
 
 #endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 
-static bool
+static int
 IsPossibleColorOption(
     const char *s)
 {
@@ -8593,7 +8593,7 @@ TextInspectCmd(
     unsigned tagArrSize;
     unsigned epoch;
     unsigned what;
-    bool closeSubList;
+    int closeSubList;
     int result;
     int flags;
 
@@ -8609,7 +8609,7 @@ TextInspectCmd(
     epoch = sharedTextPtr->inspectEpoch;
     tagPtr = textPtr->selTagPtr; /* any non-null value */
     nextPtr = textPtr->startMarker;
-    closeSubList = false;
+    closeSubList = 0;
     prevTagPtr = NULL;
     prevPtr = NULL;
     tagArrSize = 128;
@@ -8683,7 +8683,7 @@ TextInspectCmd(
 	unsigned group = segPtr->typePtr->group;
 	const char *value = NULL;
 	const char *type = NULL;
-	bool printTags = false;
+	int printTags = 0;
 
 	nextPtr = segPtr->nextPtr;
 
@@ -8814,7 +8814,7 @@ TextInspectCmd(
 	    }
 
 	    prevTagPtr = NULL;
-	    closeSubList = false;
+	    closeSubList = 0;
 	    Tcl_DStringEndSublist(str);
 	}
 
@@ -8824,7 +8824,7 @@ TextInspectCmd(
 	    if (value) {
 		Tcl_DStringAppendElement(str, value);
 	    }
-	    closeSubList = true;
+	    closeSubList = 1;
 
 	    if (printTags) {
 		unsigned numTags = 0;
@@ -9003,7 +9003,7 @@ TextEditCmd(
 {
     int index;
     int setModified;
-    bool oldModified;
+    int oldModified;
     TkSharedText *sharedTextPtr;
     static const char *const editOptionStrings[] = {
 	"altered",
@@ -9044,11 +9044,11 @@ TextEditCmd(
 	break;
 #if SUPPORT_DEPRECATED_CANUNDO_REDO
     case EDIT_CANREDO: {
-	static bool warnDeprecated = true;
-	bool canRedo = false;
+	static int warnDeprecated = 1;
+	int canRedo = 0;
 
 	if (warnDeprecated) {
-	    warnDeprecated = false;
+	    warnDeprecated = 0;
 	    fprintf(stderr, "tk::text: Command \"edit canredo\" is deprecated, "
 		    "please use \"edit info\".\n");
 	}
@@ -9063,11 +9063,11 @@ TextEditCmd(
 	break;
     }
     case EDIT_CANUNDO: {
-	static bool warnDeprecated = true;
-	bool canUndo = false;
+	static int warnDeprecated = 1;
+	int canUndo = 0;
 
 	if (warnDeprecated) {
-	    warnDeprecated = false;
+	    warnDeprecated = 0;
 	    fprintf(stderr, "tk::text: Command \"edit canundo\" is deprecated, "
 		    "please use \"edit info\".\n");
 	}
@@ -9178,7 +9178,7 @@ TextEditCmd(
 	 * However, degree of modified-ness doesn't matter. [Bug 1799782]
 	 */
 
-	assert(setModified == true || setModified == false);
+	assert(setModified == 1 || setModified == 0);
 
 	if (oldModified != setModified) {
 	    GenerateEvent(textPtr->sharedTextPtr, "Modified");
@@ -9252,9 +9252,9 @@ TextEditCmd(
 
 		TkTextUndoClearStack(sharedTextPtr->undoStack);
 		sharedTextPtr->undoLevel = 0;
-		sharedTextPtr->pushSeparator = false;
-		sharedTextPtr->isAltered = false;
-		sharedTextPtr->isIrreversible = false;
+		sharedTextPtr->pushSeparator = 0;
+		sharedTextPtr->isAltered = 0;
+		sharedTextPtr->isIrreversible = 0;
 		TkTextUpdateAlteredFlag(sharedTextPtr);
 	    }
 	    return TCL_OK;
@@ -9277,9 +9277,9 @@ TextEditCmd(
 		if (stack[0] == 'u') {
 		    TkTextUndoClearUndoStack(sharedTextPtr->undoStack);
 		    sharedTextPtr->undoLevel = 0;
-		    sharedTextPtr->pushSeparator = false;
-		    sharedTextPtr->isAltered = false;
-		    sharedTextPtr->isIrreversible = false;
+		    sharedTextPtr->pushSeparator = 0;
+		    sharedTextPtr->isAltered = 0;
+		    sharedTextPtr->isIrreversible = 0;
 		    TkTextUpdateAlteredFlag(sharedTextPtr);
 		} else {
 		    TkTextUndoClearRedoStack(sharedTextPtr->undoStack);
@@ -9289,7 +9289,7 @@ TextEditCmd(
 	}
 	break;
     case EDIT_SEPARATOR: {
-	bool immediately = false;
+	int immediately = 0;
 
 	if (objc == 4) {
 	    if (strcmp(Tcl_GetString(objv[3]), "-immediately")) {
@@ -9298,13 +9298,13 @@ TextEditCmd(
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
 		return TCL_ERROR;
 	    }
-	    immediately = true;
+	    immediately = 1;
 	} else if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
 	if (sharedTextPtr->undoStack) {
-	    sharedTextPtr->pushSeparator = true;
+	    sharedTextPtr->pushSeparator = 1;
 	    if (immediately) {
 		/* last two args are meaningless here */
 		PushUndoSeparatorIfNeeded(sharedTextPtr, sharedTextPtr->autoSeparators,
@@ -9588,8 +9588,8 @@ TextGetText(
     TkTextIndex *lastIndexPtr,	/* Position before last character of the result, can be NULL. */
     Tcl_Obj *resultPtr,		/* Append text to this object, can be NULL. */
     unsigned maxBytes,		/* Maximal number of bytes. */
-    bool visibleOnly,		/* If true, then only return non-elided characters. */
-    bool includeHyphens)	/* If true, then also include soft hyphens. */
+    int visibleOnly,		/* If true, then only return non-elided characters. */
+    int includeHyphens)	/* If true, then also include soft hyphens. */
 {
     TkTextSegment *segPtr, *lastPtr;
     TkTextIndex index;
@@ -9731,15 +9731,15 @@ AppendTags(
     Tcl_DStringEndSublist(buf);
 }
 
-static bool
+static int
 TriggerWatchEdit(
     TkText *textPtr,			/* Information about text widget. */
-    bool userFlag,			/* Trigger due to user modification? */
+    int userFlag,			/* Trigger due to user modification? */
     const char *operation,		/* The triggering operation. */
     const TkTextIndex *indexPtr1,	/* Start index for deletion / insert. */
     const TkTextIndex *indexPtr2,	/* End index after insert / before deletion. */
     const char *string,			/* Deleted/inserted chars. */
-    bool final)				/* Flag indicating whether this is a final part. */
+    int final)				/* Flag indicating whether this is a final part. */
 {
     TkSharedText *sharedTextPtr;
     TkText *peerArr[20];
@@ -9747,14 +9747,14 @@ TriggerWatchEdit(
     TkText *tPtr;
     unsigned i, n = 0;
     unsigned numPeers;
-    bool rc = true;
+    int rc = 1;
 
     assert(textPtr->sharedTextPtr->triggerWatchCmd);
     assert(!indexPtr1 == !indexPtr2);
     assert(strcmp(operation, "insert") == 0 || strcmp(operation, "delete") == 0);
 
     sharedTextPtr = textPtr->sharedTextPtr;
-    sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
+    sharedTextPtr->triggerWatchCmd = 0; /* do not trigger recursively */
     numPeers = sharedTextPtr->numPeers;
 
     if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
@@ -9842,7 +9842,7 @@ TriggerWatchEdit(
 		    if (!TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1],
 				arg, NULL, NULL, userFlag)
 			    && tPtr == textPtr) {
-			rc = false; /* this widget has been destroyed */
+			rc = 0; /* this widget has been destroyed */
 		    }
 
 		    Tcl_DStringFree(&buf);
@@ -9850,7 +9850,7 @@ TriggerWatchEdit(
 	    } else {
 		if (!TkTextTriggerWatchCmd(textPtr, operation, NULL, NULL, NULL, NULL, NULL, userFlag)
 			&& tPtr == textPtr) {
-		    rc = false; /* this widget has been destroyed */
+		    rc = 0; /* this widget has been destroyed */
 		}
 	    }
 	}
@@ -9864,7 +9864,7 @@ TriggerWatchEdit(
 	free(peers);
     }
     if (numPeers > 0) { /* otherwise sharedTextPtr is not valid anymore */
-	sharedTextPtr->triggerWatchCmd = true;
+	sharedTextPtr->triggerWatchCmd = 1;
     }
 
     return rc;
@@ -9899,7 +9899,7 @@ TkTextPerformWatchCmd(
     const char *arg1,			/* 3rd argument for watch command, can be NULL. */
     const char *arg2,			/* 3rd argument for watch command, can be NULL. */
     const char *arg3,			/* 3rd argument for watch command, can be NULL. */
-    bool userFlag)			/* 4rd argument for watch command. */
+    int userFlag)			/* 4rd argument for watch command. */
 {
     TkText *peerArr[20];
     TkText **peers = peerArr;
@@ -9913,7 +9913,7 @@ TkTextPerformWatchCmd(
     assert(operation);
     assert(!index2Proc || index1Proc);
 
-    sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
+    sharedTextPtr->triggerWatchCmd = 0; /* do not trigger recursively */
 
     if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
 	peers = (TkText **)malloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
@@ -9947,11 +9947,11 @@ TkTextPerformWatchCmd(
 		}
 	    }
 
-	    TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1], arg1, arg2, arg3, false);
+	    TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1], arg1, arg2, arg3, 0);
 	}
     }
 
-    sharedTextPtr->triggerWatchCmd = true;
+    sharedTextPtr->triggerWatchCmd = 1;
 
     for (i = 0; i < numPeers; ++i) {
 	TkTextDecrRefCountAndTestIfDestroyed(peers[i]);
@@ -9979,7 +9979,7 @@ TkTextPerformWatchCmd(
  *----------------------------------------------------------------------
  */
 
-bool
+int
 TkTextTriggerWatchCmd(
     TkText *textPtr,		/* Information about text widget. */
     const char *operation,	/* The trigger operation. */
@@ -9988,7 +9988,7 @@ TkTextTriggerWatchCmd(
     const char *arg1,		/* 3rd argument for watch command, can be NULL. */
     const char *arg2,		/* 3rd argument for watch command, can be NULL. */
     const char *arg3,		/* 3rd argument for watch command, can be NULL. */
-    bool userFlag)		/* 4rd argument for watch command. */
+    int userFlag)		/* 4rd argument for watch command. */
 {
     Tcl_DString cmd;
 
@@ -10072,15 +10072,15 @@ GenerateEvent(
 static void
 UpdateModifiedFlag(
     TkSharedText *sharedTextPtr,
-    bool flag)
+    int flag)
 {
-    bool oldModifiedFlag = sharedTextPtr->isModified;
+    int oldModifiedFlag = sharedTextPtr->isModified;
 
     if (flag) {
-	sharedTextPtr->isModified = true;
+	sharedTextPtr->isModified = 1;
     } else if (sharedTextPtr->undoStack && !sharedTextPtr->userHasSetModifiedFlag) {
 	if (sharedTextPtr->insertDeleteUndoTokenCount > 0) {
-	    sharedTextPtr->isModified = true;
+	    sharedTextPtr->isModified = 1;
 	} else {
 	    unsigned undoDepth = TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack);
 	    sharedTextPtr->isModified = (undoDepth > 0 && undoDepth == sharedTextPtr->undoLevel);
@@ -10088,7 +10088,7 @@ UpdateModifiedFlag(
     }
 
     if (oldModifiedFlag != sharedTextPtr->isModified) {
-	sharedTextPtr->userHasSetModifiedFlag = false;
+	sharedTextPtr->userHasSetModifiedFlag = 0;
 	GenerateEvent(sharedTextPtr, "Modified");
     }
 }
@@ -10113,12 +10113,12 @@ void
 TkTextUpdateAlteredFlag(
     TkSharedText *sharedTextPtr)/* Information about text widget. */
 {
-    bool oldIsAlteredFlag = sharedTextPtr->isAltered;
-    bool oldIsIrreversibleFlag = sharedTextPtr->isIrreversible;
+    int oldIsAlteredFlag = sharedTextPtr->isAltered;
+    int oldIsIrreversibleFlag = sharedTextPtr->isIrreversible;
 
     if (sharedTextPtr->undoStack) {
 	if (TkTextUndoContentIsIrreversible(sharedTextPtr->undoStack)) {
-	    sharedTextPtr->isIrreversible = true;
+	    sharedTextPtr->isIrreversible = 1;
 	}
 	if (!sharedTextPtr->isIrreversible) {
 	    sharedTextPtr->isAltered = sharedTextPtr->undoTagListCount > 0
@@ -10126,10 +10126,10 @@ TkTextUpdateAlteredFlag(
 		    || TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack) > 0;
 	}
     } else {
-	sharedTextPtr->isIrreversible = true;
+	sharedTextPtr->isIrreversible = 1;
     }
     if (sharedTextPtr->isIrreversible) {
-	sharedTextPtr->isAltered = true;
+	sharedTextPtr->isAltered = 1;
     }
     if (oldIsAlteredFlag != sharedTextPtr->isAltered) {
 	GenerateEvent(sharedTextPtr, "Altered");
@@ -10161,12 +10161,12 @@ TkTextRunAfterSyncCmd(
     TkText *textPtr)	/* Information about text widget. */
 {
     int code;
-    bool error = false;
+    int error = 0;
     Tcl_Obj *afterSyncCmd;
 
     assert(!TkTextPendingSync(textPtr));
 
-    textPtr->pendingAfterSync = false;
+    textPtr->pendingAfterSync = 0;
     afterSyncCmd = textPtr->afterSyncCmd;
 
     if (!afterSyncCmd) {
@@ -10186,7 +10186,7 @@ TkTextRunAfterSyncCmd(
 	if (code == TCL_ERROR && !error) {
 	    Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
 	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
-	    error = true;
+	    error = 1;
 	}
     }
     Tcl_GuardedDecrRefCount(afterSyncCmd);
@@ -10256,9 +10256,9 @@ FireWidgetViewSyncEvent(
 {
     TkText *textPtr = (TkText *) clientData;
     Tcl_Interp *interp;
-    bool syncState;
+    int syncState;
 
-    textPtr->pendingFireEvent = false;
+    textPtr->pendingFireEvent = 0;
 
     if (textPtr->flags & DESTROYED) {
 	return;
@@ -10271,7 +10271,7 @@ FireWidgetViewSyncEvent(
 	 * The user is waiting for sync state 'true', so we must send it.
 	 */
 
-	textPtr->prevSyncState = false;
+	textPtr->prevSyncState = 0;
     }
 
     if (textPtr->prevSyncState == syncState) {
@@ -10293,7 +10293,7 @@ FireWidgetViewSyncEvent(
     }
 
     if (syncState) {
-	textPtr->sendSyncEvent = false;
+	textPtr->sendSyncEvent = 0;
     }
     textPtr->prevSyncState = syncState;
 
@@ -10318,10 +10318,10 @@ FireWidgetViewSyncEvent(
 void
 TkTextGenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
-    bool sendImmediately)
+    int sendImmediately)
 {
     if (!textPtr->pendingFireEvent) {
-	textPtr->pendingFireEvent = true;
+	textPtr->pendingFireEvent = 1;
 	if (sendImmediately) {
 	    FireWidgetViewSyncEvent((ClientData) textPtr);
 	} else {
@@ -11564,7 +11564,7 @@ static int
 ObjectIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
-    return objPtr ? GetByteLength(objPtr) == 0 : true;
+    return objPtr ? GetByteLength(objPtr) == 0 : 1;
 }
 
 static int
@@ -12124,17 +12124,17 @@ extern TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
 extern TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
 extern unsigned		TkBTreeCountLines(const TkTextBTree tree, const TkTextLine *linePtr1,
 			    const TkTextLine *linePtr2);
-extern bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
+extern int		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
-extern bool		TkTextIsDeadPeer(const TkText *textPtr);
-extern bool		TkTextIsMark(const TkTextSegment *segPtr);
-extern bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
-extern bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
-extern bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
-extern bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
-extern bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
-extern bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
-extern bool		TkTextIsStableMark(const TkTextSegment *segPtr);
+extern int		TkTextIsDeadPeer(const TkText *textPtr);
+extern int		TkTextIsMark(const TkTextSegment *segPtr);
+extern int		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
+extern int		TkTextIsSpecialMark(const TkTextSegment *segPtr);
+extern int		TkTextIsPrivateMark(const TkTextSegment *segPtr);
+extern int		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
+extern int		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
+extern int		TkTextIsNormalMark(const TkTextSegment *segPtr);
+extern int		TkTextIsStableMark(const TkTextSegment *segPtr);
 extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
 extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
 extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, TkSizeT epoch);
@@ -12145,7 +12145,7 @@ extern void		TkTextIndexMakePersistent(TkTextIndex *indexPtr);
 extern TkTextLine *	TkTextIndexGetLine(const TkTextIndex *indexPtr);
 extern TkTextSegment *	TkTextIndexGetSegment(const TkTextIndex *indexPtr);
 extern TkSharedText *	TkTextIndexGetShared(const TkTextIndex *indexPtr);
-extern bool		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
+extern int		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 extern void		TkTextIndexSave(TkTextIndex *indexPtr);
 # if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 && TCL_UTF_MAX <= 4
 extern int		TkUtfToUniChar(const char *src, int *chPtr);
