@@ -316,7 +316,7 @@ TkpDisplayScrollbar(
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationInverted);
-    } else if ([NSApp macMinorVersion] <= 8) {
+    } else if ([NSApp macOSVersion] <= 100800) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
@@ -377,7 +377,7 @@ TkpComputeScrollbarGeometry(
 	scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;
     } else {
 	scrollPtr->arrowLength = 0;

@@ -844,7 +844,7 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	if (index == TCL_INDEX_NONE) {
-	    Tcl_SetObjResult(interp, Tcl_NewObj());
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	}
