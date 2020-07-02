@@ -8,7 +8,6 @@
 
 #include "tkInt.h"
 #include "ttkTheme.h"
-#include "default.h"
 
 /*----------------------------------------------------------------------
  * +++ Text element.
@@ -470,7 +469,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(LabelElement,text.foregroundObj), "black" },
     { "-underline", TK_OPTION_INDEX,
-	offsetof(LabelElement,text.underlineObj), NULL},
+	offsetof(LabelElement,text.underlineObj), "-1"},
     { "-width", TK_OPTION_INT,
 	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,

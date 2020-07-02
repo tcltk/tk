@@ -13,7 +13,6 @@
 
 #include "tkInt.h"
 #include "tkMenubutton.h"
-#include "default.h"
 
 /*
  * The structure below defines menubutton class behavior by means of
