@@ -130,7 +130,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set maxLine 45
     foreach line [split $err \n] {
 	if { [string length $line] > $maxLine } {
-	    append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
+	    append displayedErr "[string range $line 0 $maxLine-3]..."
 	    break
 	}
 	if { $lines > 4 } {

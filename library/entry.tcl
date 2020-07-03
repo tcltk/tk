@@ -119,21 +119,18 @@ bind Entry <Control-Button-1> {
 }
 
 bind Entry <<PrevChar>> {
-    if {[%W index insert] != 0} {
-	tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
-    }
+
+    tk::EntrySetCursor %W [%W index insert]-1
 }
 bind Entry <<NextChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
+    tk::EntrySetCursor %W [%W index insert]+1
 }
 bind Entry <<SelectPrevChar>> {
-    if {[%W index insert] != 0} {
-	tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
-    }
+    tk::EntryKeySelect %W [%W index insert]-1
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert] + 1}]
+    tk::EntryKeySelect %W [%W index insert]+1
     tk::EntrySeeInsert %W
 }
 bind Entry <<PrevWord>> {
@@ -395,10 +392,10 @@ proc ::tk::EntryMouseSelect {w x} {
 	word {
 	    if {$cur < $anchor} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+		set after [tcl_wordBreakAfter [$w get] $anchor-1]
 	    } elseif {$cur > $anchor} {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+		set after [tcl_wordBreakAfter [$w get] $cur-1]
 	    } else {
 		if {[$w index @$Priv(pressX)] < $anchor} {
 		      incr anchor -1
@@ -524,7 +521,7 @@ proc ::tk::EntryBackspace w {
     } else {
 	set x [$w index insert]
 	if {$x > 0} {
-	    $w delete [expr {$x - 1}]
+	    $w delete $x-1
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -579,12 +576,12 @@ proc ::tk::EntryTranspose w {
     if {$i < [$w index end]} {
 	incr i
     }
-    if {$first < 2} {
+    if {$i < 2} {
 	return
     }
-    set first [expr {$i-2}]
+    set first $i-2
     set data [$w get]
-    set new [string index $data [expr {$i-1}]][string index $data $first]
+    set new [string index $data $i-1][string index $data $first]
     $w delete $first $i
     $w insert insert $new
     EntrySeeInsert $w
@@ -681,19 +678,10 @@ proc ::tk::EntryScanDrag {w x} {
 
 proc ::tk::EntryGetSelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]
     }
     return $entryString
 }
-
-
-
-
-
-
-
-
-

@@ -179,7 +179,7 @@ bind TEntry <<TkAccentBackspace>> {
 #
 proc ttk::entry::EntrySelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]
