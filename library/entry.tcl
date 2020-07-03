@@ -518,9 +518,9 @@ proc ::tk::EntryBackspace w {
     if {[$w selection present]} {
 	$w delete sel.first sel.last
     } else {
-	set x [expr {[$w index insert] - 1}]
-	if {$x >= 0} {
-	    $w delete $x
+	set x [$w index insert]
+	if {$x > 0} {
+	    $w delete [expr {$x - 1}]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -575,10 +575,10 @@ proc ::tk::EntryTranspose w {
     if {$i < [$w index end]} {
 	incr i
     }
-    set first [expr {$i-2}]
-    if {$first < 0} {
+    if {$first < 2} {
 	return
     }
+    set first [expr {$i-2}]
     set data [$w get]
     set new [string index $data [expr {$i-1}]][string index $data $first]
     $w delete $first $i
