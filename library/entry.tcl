@@ -575,7 +575,7 @@ proc ::tk::EntryTranspose w {
     if {$i < [$w index end]} {
 	incr i
     }
-    if {$first < 2} {
+    if {$i < 2} {
 	return
     }
     set first [expr {$i-2}]
