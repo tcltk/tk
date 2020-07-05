@@ -155,9 +155,9 @@ proc ::tk::MenuDup {src dst type} {
 
     while {[set index [string first $src $tags]] != -1} {
 	if {$index > 0} {
-	    append x [string range $tags 0 [expr {$index - 1}]]$dst
+	    append x [string range $tags 0 $index-1]$dst
 	}
-	set tags [string range $tags [expr {$index + $srcLen}] end]
+	set tags [string range $tags $index+$srcLen end]
     }
     append x $tags
 
@@ -172,10 +172,10 @@ proc ::tk::MenuDup {src dst type} {
 
 	while {[set index [string first $event $script]] != -1} {
 	    if {$index > 0} {
-		append x [string range $script 0 [expr {$index - 1}]]
+		append x [string range $script 0 $index-1]
 	    }
 	    append x $dst
-	    set script [string range $script [expr {$index + $eventLen}] end]
+	    set script [string range $script $index+$eventLen end]
 	}
 	append x $script
 
