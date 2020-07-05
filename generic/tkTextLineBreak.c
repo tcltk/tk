@@ -47,7 +47,7 @@ static ComputeBreakLocationsFunc libLinebreakFunc = ComputeBreakLocations;
  * GetLineBreakFunc --
  *
  *	Return the appropriate line break function. If argument 'lang'
- *	is NULL, then our own line break alorithm will be used (fast,
+ *	is NULL, then our own line break algorithm will be used (fast,
  *	but a bit simple). If 'lang' is not NULL, then this function
  *	tries to load the library "libunibreak" (currently only UNIX).
  *	If the load succeeds, then set_linebreaks_utf8 will be returned,
@@ -76,13 +76,7 @@ LoadFile(
     char const **symbols,
     void **funcs)
 {
-    /* Keep backward compatibility to 8.5 */
-# if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
-    return Tcl_FSLoadFile(interp, pathPtr, symbols[0], symbols[1],
-	    (void *) &funcs[0], (void *) &funcs[1], handle, NULL);
-# else
     return Tcl_LoadFile(interp, pathPtr, symbols, TCL_LOAD_GLOBAL, funcs, handle);
-# endif
 }
 
 static void

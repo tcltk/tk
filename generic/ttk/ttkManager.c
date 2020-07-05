@@ -448,13 +448,11 @@ int Ttk_GetSlaveIndexFromObj(
 {
     const char *string = Tcl_GetString(objPtr);
     TkSizeT slaveIndex = 0;
-    TkSizeT idx;
     Tk_Window tkwin;
 
     /* Try interpreting as an integer first:
      */
-    if (TkGetIntForIndex(objPtr, mgr->nSlaves - 1, 1, &idx) == TCL_OK) {
-	slaveIndex = idx;
+    if (TkGetIntForIndex(objPtr, mgr->nSlaves - 1, 1, &slaveIndex) == TCL_OK) {
 	if ((size_t)slaveIndex > (size_t)mgr->nSlaves) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Slave index %d out of bounds", (int)slaveIndex));

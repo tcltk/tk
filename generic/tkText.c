@@ -759,48 +759,6 @@ Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
 }
 
 /*
- * Wee need a helper for sending virtual events, because in newer Tk version
- * the footprint of TkSendVirtualEvent has changed. (Note that this source has
- * backports for 8.5, and older versions of 8.6).
- */
-
-static void
-SendVirtualEvent(
-    Tk_Window tkwin,
-    char const *eventName,
-    Tcl_Obj *detail)
-{
-#if TK_MAJOR_VERSION > 8 \
-	|| (TK_MAJOR_VERSION == 8 \
-	    && (TK_MINOR_VERSION > 6 || (TK_MINOR_VERSION == 6 && TK_RELEASE_SERIAL >= 6)))
-    /* new footprint since 8.6.6 */
-    TkSendVirtualEvent(tkwin, eventName, detail);
-#else
-# if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 6
-    if (!detail) {
-	/* new function since 8.6.0, and valid until 8.6.5 */
-	TkSendVirtualEvent(tkwin, eventName);
-	return;
-    }
-# endif
-    {
-	/* backport to 8.5 */
-	union { XEvent general; XVirtualEvent virtual; } event;
-
-	memset(&event, 0, sizeof(event));
-	event.general.xany.type = VirtualEvent;
-	event.general.xany.serial = NextRequest(Tk_Display(tkwin));
-	event.general.xany.send_event = False;
-	event.general.xany.window = Tk_WindowId(tkwin);
-	event.general.xany.display = Tk_Display(tkwin);
-	event.virtual.name = Tk_GetUid(eventName);
-	event.virtual.user_data = detail;
-	Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
-    }
-#endif
-}
-
-/*
  *--------------------------------------------------------------
  *
  * GetByteLength --
@@ -5528,7 +5486,7 @@ TriggerUndoStackEvent(
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	if (!(textPtr->flags & DESTROYED)) {
 	    Tk_MakeWindowExist(textPtr->tkwin);
-	    SendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
+	    TkSendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
 	}
     }
 }
@@ -6128,7 +6086,7 @@ TkTextSelectionEvent(
      *     event generate $textWidget <<Selection>>
      */
 
-    SendVirtualEvent(textPtr->tkwin, "Selection", NULL);
+    TkSendVirtualEvent(textPtr->tkwin, "Selection", NULL);
 }
 
 /*
@@ -10049,7 +10007,7 @@ GenerateEvent(
 
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	Tk_MakeWindowExist(textPtr->tkwin);
-	SendVirtualEvent(textPtr->tkwin, type, NULL);
+	TkSendVirtualEvent(textPtr->tkwin, type, NULL);
     }
 }
 
@@ -10311,7 +10269,7 @@ FireWidgetViewSyncEvent(
 	FORCE_DISPLAY(textPtr->tkwin);
     }
 
-    SendVirtualEvent(textPtr->tkwin, "WidgetViewSync", Tcl_NewBooleanObj(syncState));
+    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync", Tcl_NewBooleanObj(syncState));
     Tcl_Release((ClientData) interp);
 }
 

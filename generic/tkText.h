@@ -76,11 +76,6 @@ struct TkBitField;
 struct TkTextUndoToken;
 union TkTextTagSet;
 
-/* We need a backport to version 8.5 */
-#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
-typedef struct TkTextBTree_ *TkTextBTree;
-#endif
-
 /*
  * The data structure below defines the pixel information for a single line of text.
  */
@@ -2164,69 +2159,6 @@ MODULE_SCOPE int	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
 
 #define TK_TEXT_DEBUG(expr)	{ if (tkTextDebug) { expr; } }
 
-/*
- * Backport definitions for Tk 8.6/8.5.
- */
-
-#if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
-
-# if TCL_UTF_MAX > 4
-#  define TkUtfToUniChar Tcl_UtfToUniChar
-# else /* if TCL_UTF_MAX <= 4 */
-inline int TkUtfToUniChar(const char *src, int *chPtr);
-# endif /* TCL_UTF_MAX > 4 */
-
-#endif /* end of backport for 8.6/8.5 */
-
-/*
- * Backport definitions for Tk 8.5. Tk 8.6/8.7 under Mac OS X has event loop
- * issues, so backporting is important.
- */
-
-#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
-
-#ifndef CLANG_ASSERT
-# define CLANG_ASSERT(expr) assert(expr)
-#endif
-
-#ifndef DEF_TEXT_INSERT_UNFOCUSSED
-# define DEF_TEXT_INSERT_UNFOCUSSED "none"
-#endif
-
-MODULE_SCOPE struct TkTextSegment * TkTextSetMark(struct TkText *textPtr, const char *name,
-			    struct TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkBTreeNumLines(TkTextBTree tree, const struct TkText *textPtr);
-MODULE_SCOPE int	TkTextGetIndex(Tcl_Interp *interp, struct TkText *textPtr,
-			    const char *string, struct TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextIndexBackBytes(const struct TkText *textPtr,
-			    const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr);
-MODULE_SCOPE int	TkTextIndexForwBytes(const struct TkText *textPtr,
-			    const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr);
-MODULE_SCOPE struct TkTextIndex *TkTextMakeByteIndex(TkTextBTree tree, const struct TkText *textPtr,
-			    int lineIndex, int byteIndex, struct TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextPrintIndex(const struct TkText *textPtr,
-			    const struct TkTextIndex *indexPtr, char *string);
-MODULE_SCOPE int	TkTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE void	TkTextChanged(struct TkSharedText *sharedTextPtr, struct TkText *textPtr,
-			    const struct TkTextIndex *index1Ptr, const struct TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkBTreeNumLines(TkTextBTree tree, const struct TkText *textPtr);
-MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextDispChunk *chunkPtr,
-			    int x, int y, int height, int baseline, Display *display, Drawable dst,
-			    int screenY);
-
-# define TkNewWindowObj(tkwin) Tcl_NewStringObj(Tk_PathName(tkwin), -1)
-# define Tcl_BackgroundException(interp, code) Tcl_BackgroundError(interp)
-
-/*
- * Windows needs this.
- */
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
-
-#endif /* TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5 */
-
 #ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
