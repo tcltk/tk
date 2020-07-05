@@ -3358,7 +3358,7 @@ test entry-19.19 {entry widget validation} -setup {
     list [.e cget -validate] [.e get] $::vVals
 } -cleanup {
     destroy .e
-} -result {none mydata {.e -1 -1 nextdata nextdata {} all forced}}
+} -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
 
 ## This leaves validate alone because we trigger validation through the
 ## textvar (a write trace), and the write during validation triggers
