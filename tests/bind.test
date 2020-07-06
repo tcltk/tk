@@ -36,12 +36,22 @@ proc unsetBindings {} {
 
 # move the mouse pointer away of the testing area
 # otherwise some spurious events may pollute the tests
-toplevel .top
-wm geometry .top 50x50-50-50
-update
-event generate .top <Button-1> -warp 1
-update
-destroy .top
+# also, this will procure a known grab state at startup
+# for tests mixing grabs and pointer warps
+proc pointerAway {} {
+    toplevel .top
+    wm geometry .top 50x50-50-50
+    update
+    # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
+    # will not be finished right after the above 'update'. The WM still
+    # needs some time before the window is fully ready. For me 50 ms is enough,
+    # but let's wait more (it depends on computer performance).
+    after 100 ; update
+    event generate .top <Button-1> -warp 1
+    update
+    destroy .top
+}
+pointerAway
 
 test bind-1.1 {bind command} -body {
     bind
@@ -6737,13 +6747,13 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     event generate .top <Motion> -x 20 -y 20 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
-    set pointerPos1 [winfo pointerxy .t]
+    set pointerPos1 [winfo pointerxy .top]
     wm geometry .top +600+600
     update
     event generate .top <Motion> -x 20 -y 20 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
-    set pointerPos2 [winfo pointerxy .t]
+    set pointerPos2 [winfo pointerxy .top]
     # from the first warped position to the second one, the mouse
     # pointer should have moved the same amount as the window moved
     set res 1
@@ -6937,6 +6947,44 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
     return pass
 } -cleanup {
 } -result pass
+
+test bind-36.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
+    pointerAway
+    toplevel .top
+    grab release .top
+    wm geometry .top 200x200+300+300
+    label .top.l -height 5 -width 20 -highlightthickness 2 \
+            -highlightbackground black -bg yellow -text "My label"
+    pack .top.l -side bottom
+    update
+    # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
+    # and the label will not be finished after the above 'update'. The WM still
+    # needs some time before the window is fully ready. For me 50 ms is enough,
+    # but let's wait more (it depends on computer performance).
+    after 100 ; update
+} -body {
+    grab .top  ; # this will queue events
+    after 50
+    update
+    event generate .top.l <Motion> -warp 1 -x 10 -y 10
+    update idletasks ; after 50
+    foreach {x1 y1} [winfo pointerxy .top.l] {}
+    event generate {} <Motion> -warp 1 -x 50 -y 50
+    update idletasks ; after 50
+    grab release .top  ; # this will queue events
+    after 50
+    update
+    event generate .top.l <Motion> -warp 1 -x 10 -y 10
+    update idletasks ; after 50
+    foreach {x2 y2} [winfo pointerxy .top.l] {}
+    # success if the coords are the same with or without the grab, and if they
+    # are at (10,10) inside the label widget as requested by the warping
+    expr {$x1==$x2 && $y1==$y2 && $x1==[winfo rootx .top.l]+10 \
+                               && $y1==[winfo rooty .top.l]+10}
+} -cleanup {
+    destroy .top
+    unset x1 y1 x2 y2
+} -result {1}
 
 # cleanup
 cleanupTests
