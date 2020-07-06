@@ -738,7 +738,6 @@ static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, EventMask *eventMaskPtr);
-static void		DoWarp(ClientData clientData);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
@@ -4402,17 +4401,6 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * Now we have constructed the event, inject it into the event handling
-	 * code.
-	 */
-
-	if (synch) {
-	    Tk_HandleEvent(&event.general);
-	} else {
-	    Tk_QueueWindowEvent(&event.general, pos);
-	}
-
-	/*
 	 * We only allow warping if the window is mapped.
 	 */
 
@@ -4420,11 +4408,6 @@ HandleEventGenerate(
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
-
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-	    }
 
 	    if (warpWindow != dispPtr->warpWindow) {
 		if (warpWindow) {
@@ -4438,6 +4421,31 @@ HandleEventGenerate(
 	    dispPtr->warpMainwin = mainWin;
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
+
+            /*
+             * Warping with respect to a window will be done when Tk_handleEvent
+             * below will run the event handlers and in particular TkPointerEvent.
+             * This allows to make grabs and warping work together robustly, that
+             * is without depending on a precise sequence of events.
+             * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+             * is NULL) is run directly here.
+             */
+
+            if (!dispPtr->warpWindow) {
+                TkpWarpPointer(dispPtr);
+                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+            }
+	}
+
+	/*
+	 * Now we have constructed the event, inject it into the event handling
+	 * code.
+	 */
+
+	if (synch) {
+	    Tk_HandleEvent(&event.general);
+	} else {
+	    Tk_QueueWindowEvent(&event.general, pos);
 	}
     }
 
@@ -4510,46 +4518,47 @@ NameToWindow(
 /*
  *-------------------------------------------------------------------------
  *
- * DoWarp --
+ * TkDoWarpWrtWin --
  *
- *	Perform Warping of X pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer with respect to a window.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	X Pointer will move to a new location.
+ *	Mouse pointer moves to a new location.
  *
  *-------------------------------------------------------------------------
  */
 
-static void
-DoWarp(
-    ClientData clientData)
+void
+TkDoWarpWrtWin(
+    TkDisplay *dispPtr)
 {
-    TkDisplay *dispPtr = (TkDisplay *)clientData;
-
-    assert(clientData);
+    assert(dispPtr);
 
     /*
-     * DoWarp was scheduled only if the window was mapped. It needs to be
-     * still mapped at the time the present idle callback is executed. Also
-     * one needs to guard against window destruction in the meantime.
-     * Finally, the case warpWindow == NULL is special in that it means
-     * the whole screen.
+     * A NULL warpWindow means warping with respect to the whole screen.
+     * We want to warp here only if we're warping with respect to a window.
      */
 
-    if (!dispPtr->warpWindow ||
-            (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None)) {
-        TkpWarpPointer(dispPtr);
-        XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    }
-
     if (dispPtr->warpWindow) {
-	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = NULL;
+
+        /*
+         * Warping with respect to a window can only be done if the window is
+         * mapped. This was checked in HandleEvent. The window needs to be
+         * still mapped at the time the present code is executed. Also
+         * one needs to guard against window destruction in the meantime,
+         * which could have happened as a side effect of an event handler.
+         */
+
+        if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
+            TkpWarpPointer(dispPtr);
+            XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+        }
+        Tcl_Release(dispPtr->warpWindow);
+        dispPtr->warpWindow = NULL;
     }
-    dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
 /*
@@ -5315,35 +5324,6 @@ TkpGetBindingXEvent(
     BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
     return &bindPtr->curEvent->xev;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpCancelWarp --
- *
- *	This function cancels an outstanding pointer warp and
- *	is called during tear down of the display.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpCancelWarp(
-    TkDisplay *dispPtr)
-{
-    assert(dispPtr);
-
-    if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
-	Tcl_CancelIdleCall(DoWarp, dispPtr);
-	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
-    }
 }
 
 /*
