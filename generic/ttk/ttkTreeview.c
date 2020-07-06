@@ -2109,7 +2109,7 @@ static int TreeviewIndexCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int index = 0;
+    TkSizeT index = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -2125,7 +2125,7 @@ static int TreeviewIndexCommand(
 	item = item->prev;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
