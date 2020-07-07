@@ -23,6 +23,11 @@
 TkMainInfo *info = TkGetMainInfoList();
 Tcl_Interp *ip = info->interp;
 
+/*
+ * Get main Atk object.
+ */
+AtkObject *accessible;
+
 
 /*
  * atk-bridge interfaces, which take care of initializing the bridging
@@ -147,6 +152,20 @@ ATKbridge_Init (void)
 		
   _bridge_initialized = 1;
 
+     gpointer data;
+
+    g_type_init ();
+
+    /* Bind the AtkUtilClass interfaces. */
+    data = g_type_class_ref (ATK_TYPE_UTIL);
+    atkutilclass_init (data);
+    g_type_class_unref (data);
+    
+    /* Bind the AtkObjectClass interfaces. */
+    data = g_type_class_ref (ATK_TYPE_OBJECT);
+    atkobjectclass_init (data);
+    g_type_class_unref (data);
+
   
   return TCL_OK;
 }
@@ -224,9 +243,14 @@ ATKbridge_Iterate (void)
 
 
 
-static AtkRole ATKRole_Register(Tk_Window tkwin, char *name) {
+static AtkRole ATKRole_Register(char *window, char *name) {
 
   AtkRole role = NULL;
+
+  Tk_Window tkwin;
+  tkwin = Tk_MainWindow(ip);
+  TkWindow *winPtr;
+  winPtr = (TkWindow *) Tk_NametoWindow(ip, window, tkwin);
 
   switch (name) {
     
