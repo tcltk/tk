@@ -320,6 +320,14 @@ TkpGetKeySym(
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
     /*
+     * X11 keycodes always lie in the inclusive range [8,255].
+     */
+
+    if (eventPtr->xkey.keycode > 0xff) {
+        return NoSymbol;
+    }
+
+    /*
      * Refresh the mapping information if it's stale. This must happen before
      * we do any input method processing. [Bug 3599312]
      */
@@ -366,19 +374,9 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
-
-    if (eventPtr->xkey.keycode > 0xff) {
         
-        /*
-         * X11 keycodes always lie in the inclusive range [8,255].
-         */
-
-        sym = NoSymbol;
-        return sym;
-    } else {
-        sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
-	        index);
-    }
+    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
+            index);
 
     /*
      * Special handling: if the key was shifted because of Lock, but lock is
