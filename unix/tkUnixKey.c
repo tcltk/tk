@@ -374,9 +374,9 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
-        
+
     sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
-            index);
+	    index);
 
     /*
      * Special handling: if the key was shifted because of Lock, but lock is
