@@ -3385,7 +3385,7 @@ test entry-19.19 {entry widget validation} -setup {
     list [.e cget -validate] [.e get] $::vVals
 } -cleanup {
     destroy .e
-} -result {none mydata {.e -1 -1 nextdata nextdata {} all forced}}
+} -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
 
 ## This leaves validate alone because we trigger validation through the
 ## textvar (a write trace), and the write during validation triggers
@@ -3411,6 +3411,26 @@ test entry-19.20 {entry widget validation} -setup {
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
+
+## This leaves validate alone because we trigger validation through the
+## textvar (a write trace), and the write during validation triggers
+## nothing (by definition of avoiding loops on var traces).  This is
+## one of those "dangerous" conditions where the user will have a
+## different value in the entry widget shown as is in the textvar.
+test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
+    unset -nocomplain ::e ::vVals
+} -body {
+    entry .e -validate key \
+        -validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+        -textvariable ::e
+    pack .e
+    set ::e origdata
+    .e insert 0 A
+    list [.e cget -validate] [.e get] $::e $::vVals
+} -cleanup {
+    destroy .e
+} -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
+
 ##
 ## End validation tests
 ##
