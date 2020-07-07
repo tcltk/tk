@@ -4388,17 +4388,6 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * Now we have constructed the event, inject it into the event handling
-	 * code.
-	 */
-
-	if (synch) {
-	    Tk_HandleEvent(&event.general);
-	} else {
-	    Tk_QueueWindowEvent(&event.general, pos);
-	}
-
-	/*
 	 * We only allow warping if the window is mapped.
 	 */
 
@@ -4406,11 +4395,6 @@ HandleEventGenerate(
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
-
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-	    }
 
 	    if (warpWindow != dispPtr->warpWindow) {
 		if (warpWindow) {
@@ -4424,6 +4408,22 @@ HandleEventGenerate(
 	    dispPtr->warpMainwin = mainWin;
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
+
+	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
+		Tcl_DoWhenIdle(DoWarp, dispPtr);
+		dispPtr->flags |= TK_DISPLAY_IN_WARP;
+	    }
+	}
+
+	/*
+	 * Now we have constructed the event, inject it into the event handling
+	 * code.
+	 */
+
+	if (synch) {
+	    Tk_HandleEvent(&event.general);
+	} else {
+	    Tk_QueueWindowEvent(&event.general, pos);
 	}
     }
 
