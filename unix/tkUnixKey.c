@@ -367,8 +367,18 @@ TkpGetKeySym(
 	index += 1;
     }
 
-    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
-	    index);
+    if (eventPtr->xkey.keycode > 0xff) {
+        
+        /*
+         * X11 keycodes always lie in the inclusive range [8,255].
+         */
+
+        sym = NoSymbol;
+        return sym;
+    } else {
+        sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
+	        index);
+    }
 
     /*
      * Special handling: if the key was shifted because of Lock, but lock is
