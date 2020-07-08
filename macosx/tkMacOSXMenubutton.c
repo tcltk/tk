@@ -364,7 +364,7 @@ TkpComputeMenuButtonGeometry(butPtr)
  *
  * DrawMenuButtonImageAndText --
  *
- *        Draws the image and text associated witha button or label.
+ *        Draws the image and text associated with a button or label.
  *
  * Results:
  *        None.

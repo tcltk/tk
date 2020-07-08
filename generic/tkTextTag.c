@@ -1440,7 +1440,7 @@ ChangeTagPriority(
 
 void
 TkTextBindProc(
-    ClientData clientData,	/* Pointer to canvas structure. */
+    ClientData clientData,	/* Pointer to text widget structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkText *textPtr = (TkText *)clientData;

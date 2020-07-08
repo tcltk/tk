@@ -507,7 +507,7 @@ XQueryPointer(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -545,7 +545,7 @@ TkGenerateButtonEventForXPointer(
  *	True if event(s) are generated, false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -597,7 +597,7 @@ TkGenerateButtonEvent(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
