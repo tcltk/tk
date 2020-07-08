@@ -771,7 +771,7 @@ TkMacOSXGetModalSession(void)
  *	This enables correct placement of the popups used for character
  *      selection by the NSTextInputClient.  It gets called by text entry
  *      widgets whenever the cursor is drawn.  It does nothing if the widget's
- *      NSWindow is not the current KeyWindow.  Otherwise it udpates the
+ *      NSWindow is not the current KeyWindow.  Otherwise it updates the
  *      display's caret structure and records the caret geometry in static
  *      variables for use by the NSTextInputClient implementation.  Any
  *      widget passed to this function will be marked as being able to input

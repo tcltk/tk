@@ -1367,7 +1367,7 @@ LayoutDLine(
 	 * expectations in the rest of the code, but we are able to skip
 	 * elided portions of the line quickly.
 	 *
-	 * If current chunk is elided and last chunk was too, coalese.
+	 * If current chunk is elided and last chunk was too, coalesce.
 	 *
 	 * This also means that each logical line which is entirely elided
 	 * still gets laid out into a DLine, but with zero height. This isn't
@@ -5275,7 +5275,7 @@ TkTextRelayoutWindow(
 
     /*
      * Invalidate cached scrollbar positions, so that scrollbars sliders will
-     * be udpated.
+     * be updated.
      */
 
     dInfoPtr->xScrollFirst = dInfoPtr->xScrollLast = -1;
