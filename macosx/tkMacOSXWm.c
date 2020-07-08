@@ -4052,7 +4052,7 @@ TopLevelEventProc(
 	    TkMacOSXDbgMsg("TopLevelEventProc: %s deleted", winPtr->pathName);
 	}
     } else if (eventPtr->type == ReparentNotify) {
-	Tcl_Panic("recieved unwanted reparent event");
+	Tcl_Panic("received unwanted reparent event");
     }
 }
 

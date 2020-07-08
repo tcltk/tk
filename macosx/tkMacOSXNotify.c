@@ -302,7 +302,7 @@ TkMacOSXNotifyExitHandler(
  * TkMacOSXEventsSetupProc --
  *
  *	This procedure implements the setup part of the MacOSX event source. It
- *	is invoked by Tcl_DoOneEvent before calling TkMacOSXEventsProc to
+ *	is invoked by Tcl_DoOneEvent before calling TkMacOSXEventsCheckProc to
  *	process all queued NSEvents.  In our case, all we need to do is to set
  *	the Tcl MaxBlockTime to 0 before starting the loop to process all
  *	queued NSEvents.
