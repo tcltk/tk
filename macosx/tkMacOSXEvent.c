@@ -134,7 +134,7 @@ TkMacOSXFlushWindows(void)
     if (Tk_GetNumMainWindows() == 0) {
 	return;
     }
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)){}
     for (NSWindow *w in [NSApp orderedWindows]) {
 	[w display];
     }

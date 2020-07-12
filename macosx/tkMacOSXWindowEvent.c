@@ -1078,7 +1078,7 @@ ConfigureRestrictProc(
 	/*
 	 * First process all of the Expose events.
 	 */
-    	while (Tcl_ServiceEvent(TCL_IDLE_EVENTS)) {};
+    	while (Tcl_ServiceEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {};
 
     	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {};
@@ -1097,7 +1097,7 @@ ConfigureRestrictProc(
 	 * that were created when the expose events were processed.
 	 */
 
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {}
     }
 }
 

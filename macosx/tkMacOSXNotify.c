@@ -530,9 +530,7 @@ TkMacOSXEventsCheckProc(
 		 * Generate Xevents.
 		 */
 
-		int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
-		Tcl_SetServiceMode(oldServiceMode);
 		if (processedEvent) {
 		    eventsFound++;
 
