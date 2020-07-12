@@ -344,7 +344,7 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         set S(size) $F(-size)
         set S(strike) $F(-overstrike)
         set S(under) $F(-underline)
-        set S(style) "Regular"
+        set S(style) [::msgcat::mc "Regular"]
         if {$F(-weight) eq "bold" && $F(-slant) eq "italic"} {
             set S(style) [::msgcat::mc "Bold Italic"]
         } elseif {$F(-weight) eq "bold"} {
