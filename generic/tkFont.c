@@ -2298,7 +2298,7 @@ Tk_DrawTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     int firstChar,		/* The index of the first character to draw
-				 * from the given text item. 0 specfies the
+				 * from the given text item. 0 specifies the
 				 * beginning. */
     int lastChar)		/* The index just after the last character to
 				 * draw from the given text item. A number < 0
@@ -2369,7 +2369,7 @@ TkDrawAngledTextLayout(
 				 * which to draw (pixels). */
     double angle,
     int firstChar,		/* The index of the first character to draw
-				 * from the given text item. 0 specfies the
+				 * from the given text item. 0 specifies the
 				 * beginning. */
     int lastChar)		/* The index just after the last character to
 				 * draw from the given text item. A number < 0

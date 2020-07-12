@@ -1363,7 +1363,10 @@ TkDrawAngledChars(
  *	Draw a string of characters on the screen like Tk_DrawChars(), but
  *	with access to all the characters on the line for context. On Windows
  *	this context isn't consulted, so we just call Tk_DrawChars().
- *
+  *
+ *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
+ *            function is unused (and possibly unfinished). See [7655f65ae7].
+*
  * Results:
  *	None.
  *
