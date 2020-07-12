@@ -2306,7 +2306,7 @@ Tk_DrawTextLayout(
 				 * means to draw all characters. */
 {
 #if 0
-    /* Use TkDrawAngledTextLayout() implementation */
+    /* Use TkDrawAngledTextLayout() implementation - testing purposes at this point */
     TkDrawAngledTextLayout(display, drawable, gc, layout, x, y, 0.0, firstChar, lastChar);
 #else
     TextLayout *layoutPtr = (TextLayout *) layout;
