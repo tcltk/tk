@@ -1049,9 +1049,7 @@ EmbedGeometryRequest(
      */
 
     Tk_GeometryRequest((Tk_Window) winPtr, width, height);
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {
-	/* Empty loop body. */
-    }
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {}
     if ((winPtr->changes.width != width)
 	    || (winPtr->changes.height != height)) {
 	EmbedSendConfigure(containerPtr);
