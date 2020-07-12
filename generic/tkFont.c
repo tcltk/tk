@@ -13,6 +13,9 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
+#if defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"    /* Defines TK_DRAW_IN_CONTEXT */
+#endif
 
 /*
  * The following structure is used to keep track of all the fonts that exist
