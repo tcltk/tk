@@ -510,7 +510,7 @@ static void GenericElementSize(
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
 	result = elementData->procs->GetThemePartSize(
 	    elementData->hTheme,
-	    elementData->hDC,
+	    NULL,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
 	    NULL /*RECT *prc*/,

@@ -186,9 +186,6 @@ TkpDisplayButton(
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
 
-    if (butPtr->flags & BUTTON_DELETED) {
-	return;
-    }
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -400,7 +397,7 @@ TkpComputeButtonGeometry(
 
     width += butPtr->inset*2;
     height += butPtr->inset*2;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	width += 12;
     }
     if (mbPtr->btnkind == kThemePushButton) {
@@ -1048,7 +1045,14 @@ TkMacOSXComputeButtonParams(
 	if (drawinfo->state != kThemeStatePressed) {
 	    drawinfo->adornment |= kThemeAdornmentDefault;
 	}
-        if (!mbPtr->defaultPulseHandler) {
+
+	/*
+	 * Older macOS systems (10.9 and earlier) use an animation to
+	 * indicate the active button.  This is simulated by redrawing
+	 * the button periodically.
+	 */
+
+        if (!mbPtr->defaultPulseHandler && ([NSApp macOSVersion] <= 100900)) {
             mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
                     PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
         }
@@ -1178,6 +1182,13 @@ PulseDefaultButtonProc(ClientData clientData)
     MacButton *mbPtr = clientData;
 
     TkpDisplayButton(clientData);
+    /*
+     * Fix 40ada90762: any idle calls to TkpDisplayButton need to be canceled
+     * in case the button is destroyed and has its data freed before the idle
+     * event is handled (DestroyButton only cancels calls when REDRAW_PENDING
+     * is set, which is not the case after calling TkpDisplayButton directly).
+     */
+    Tcl_CancelIdleCall(TkpDisplayButton, clientData);
     mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
             PULSE_TIMER_MSECS, PulseDefaultButtonProc, clientData);
 }

@@ -550,6 +550,14 @@ EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, int numBytes, double x,
 				double y, double angle);
+#ifdef MAC_OSX_TK /* AQUA */
+/* 185 */
+EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
+#endif /* AQUA */
+#ifdef MAC_OSX_TK /* AQUA */
+/* 186 */
+EXTERN int		TkpWillDrawWidget(Tk_Window tkwin);
+#endif /* AQUA */
 
 typedef struct TkIntStubs {
     int magic;
@@ -767,6 +775,26 @@ typedef struct TkIntStubs {
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    void (*reserved185)(void);
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    void (*reserved185)(void);
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    void (*reserved185)(void); /* Dummy entry for stubs table backwards compatibility */
+    void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    void (*reserved186)(void);
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    void (*reserved186)(void);
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    void (*reserved186)(void); /* Dummy entry for stubs table backwards compatibility */
+    int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
+#endif /* AQUA */
 } TkIntStubs;
 
 extern const TkIntStubs *tkIntStubsPtr;
@@ -1139,6 +1167,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectAngledTextLayout) /* 183 */
 #define TkDrawAngledChars \
 	(tkIntStubsPtr->tkDrawAngledChars) /* 184 */
+#ifdef MAC_OSX_TK /* AQUA */
+#define TkpRedrawWidget \
+	(tkIntStubsPtr->tkpRedrawWidget) /* 185 */
+#endif /* AQUA */
+#ifdef MAC_OSX_TK /* AQUA */
+#define TkpWillDrawWidget \
+	(tkIntStubsPtr->tkpWillDrawWidget) /* 186 */
+#endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */
 

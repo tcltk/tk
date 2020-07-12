@@ -5556,8 +5556,8 @@ CanvasUpdateScrollbars(
     Tcl_DString buf;
 
     /*
-     * Save all the relevant values from the canvasPtr, because it might be
-     * deleted as part of either of the two calls to Tcl_VarEval below.
+     * Preserve the relevant values from the canvasPtr, because it might be
+     * deleted as part of either of the two calls to Tcl_EvalEx below.
      */
 
     interp = canvasPtr->interp;
@@ -5588,7 +5588,7 @@ CanvasUpdateScrollbars(
 	Tcl_DStringAppend(&buf, xScrollCmd, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
@@ -5606,7 +5606,7 @@ CanvasUpdateScrollbars(
 	Tcl_DStringAppend(&buf, yScrollCmd, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {

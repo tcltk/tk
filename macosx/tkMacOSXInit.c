@@ -32,7 +32,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
-@synthesize macMinorVersion = _macMinorVersion;
+@synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
 @end
 
@@ -154,15 +154,18 @@ static char scriptPath[PATH_MAX + 1] = "";
     /*
      * Record the OS version we are running on.
      */
-    int minorVersion;
+
+    int minorVersion, majorVersion;
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
+    majorVersion = 10;
 #else
     NSOperatingSystemVersion systemVersion;
     systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+    majorVersion = systemVersion.majorVersion;
     minorVersion = systemVersion.minorVersion;
 #endif
-    [NSApp setMacMinorVersion: minorVersion];
+    [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
 
     /*
      * We are not drawing right now.
@@ -262,13 +265,14 @@ TkMacOSXMinorVersion(
 		     int objc,
 		     Tcl_Obj *const objv[])
 {
-    static char minor[16] = "";
-    if (minor[0] == '\0') {
-	snprintf(minor, 16, "%d", [NSApp macMinorVersion]);
+    static char version[16] = "";
+    if (version[0] == '\0') {
+	snprintf(version, 16, "%d", [NSApp macOSVersion]);
     }
-    Tcl_SetResult(ip, minor, NULL);
+    Tcl_SetResult(ip, version, NULL);
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -433,12 +437,6 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
-
-	/*
-	 * Add the system image type for named NSImages.
-	 */
-	
-	TkMacOSXNSImage_Init(interp);
     }
 
     if (tkLibPath[0] != '\0') {
@@ -456,8 +454,8 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,
 			 NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::macOSMinorVersion",
-	    TkMacOSXMinorVersion, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
+           TkMacOSXMinorVersion, NULL, NULL);
     return TCL_OK;
 }
 
@@ -660,46 +658,6 @@ TkMacOSXGetNamedSymbol(
 	(void) dlerror(); /* Clear dlfcn error state */
     }
     return addr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetStringObjFromCFString --
- *
- *	Get a string object from a CFString as efficiently as possible.
- *
- * Results:
- *	New string object or NULL if conversion failed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Tcl_Obj*
-TkMacOSXGetStringObjFromCFString(
-    CFStringRef str)
-{
-    Tcl_Obj *obj = NULL;
-    const char *c = CFStringGetCStringPtr(str, kCFStringEncodingUTF8);
-
-    if (c) {
-	obj = Tcl_NewStringObj(c, -1);
-    } else {
-	CFRange all = CFRangeMake(0, CFStringGetLength(str));
-	CFIndex len;
-
-	if (CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false, NULL,
-		0, &len) > 0 && len < INT_MAX) {
-	    obj = Tcl_NewObj();
-	    Tcl_SetObjLength(obj, len);
-	    CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false,
-		    (UInt8*) obj->bytes, len, NULL);
-	}
-    }
-    return obj;
 }
 
 /*
