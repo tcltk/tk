@@ -692,7 +692,7 @@ typedef struct TkWindow {
     Visual *visual;		/* Visual to use for window. If not default,
 				 * MUST be set before X window is created. */
     int depth;			/* Number of bits/pixel. */
-    Window window;		/* X's id for window. NULL means window hasn't
+    Window window;		/* X's id for window. None means window hasn't
 				 * actually been created yet, or it's been
 				 * deleted. */
     struct TkWindow *childList;	/* First in list of child windows, or NULL if

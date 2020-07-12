@@ -119,7 +119,7 @@ DebuggerObjCmd(
  */
 MODULE_SCOPE Bool
 TkTestLogDisplay(void) {
-    if ([NSApp macMinorVersion] >= 14) {
+    if ([NSApp macOSVersion] >= 101400) {
 	return [NSApp isDrawing];
     } else {
 	return ![NSApp isDrawing];
