@@ -308,7 +308,7 @@ SetCGColorComponents(
 	 * windowBackGroundColor.
 	 */
 
-	if ([NSApp macMinorVersion] < 14) {
+	if ([NSApp macOSVersion] < 101400) {
 	    for (int i=0; i<3; i++) {
 		rgba[i] = windowBackground[i];
 	    }
@@ -335,7 +335,7 @@ SetCGColorComponents(
 	    color = [[NSColor selectedTextColor] colorUsingColorSpace:sRGB];
 	    break;
 	case 2:
-	    if ([NSApp macMinorVersion] > 9) {
+	    if ([NSApp macOSVersion] > 100900) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
 		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
@@ -351,7 +351,7 @@ SetCGColorComponents(
 			colorUsingColorSpace:sRGB];
 	    break;
 	case 5:
-	    if ([NSApp macMinorVersion] > 6) {
+	    if ([NSApp macOSVersion] > 100600) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
@@ -378,7 +378,7 @@ SetCGColorComponents(
 	    }
 	    break;
 	case 9:
-	    if ([NSApp macMinorVersion] >= 10) {
+	    if ([NSApp macOSVersion] >= 101000) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 		color = [[NSColor linkColor] colorUsingColorSpace:sRGB];
 #endif
@@ -387,7 +387,7 @@ SetCGColorComponents(
 	    }
 	    break;
 	default:
-	    if ([NSApp macMinorVersion] >= 10) {
+	    if ([NSApp macOSVersion] >= 101000) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
@@ -442,7 +442,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
 
-    if ([NSApp macMinorVersion] >= 14) {
+    if ([NSApp macOSVersion] >= 101400) {
         TkWindow *winPtr = (TkWindow*) tkwin;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
@@ -506,7 +506,7 @@ TkSetMacColor(
  * Results:
  *	None resp. retained CGColorRef for CopyCachedColor()
  *
- * Side effects:M
+ * Side effects:
  *	None.
  *
  *----------------------------------------------------------------------

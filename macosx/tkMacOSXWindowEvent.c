@@ -444,7 +444,7 @@ TkpWillDrawWidget(Tk_Window tkwin) {
  *
  * GenerateUpdates --
  *
- *	Given an update rectangle and a Tk window, this function geneates
+ *	Given an update rectangle and a Tk window, this function generates
  *	an X Expose event for the window if it meets the update region. The
  *	function will then recursively have each damaged window generate Expose
  *	events for its child windows.
@@ -453,7 +453,7 @@ TkpWillDrawWidget(Tk_Window tkwin) {
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -473,7 +473,7 @@ GenerateUpdates(
     }
 
     /*
-     * Compute the bounding box of the area that the damage occured in.
+     * Compute the bounding box of the area that the damage occurred in.
      */
 
     damageBounds = CGRectIntersection(bounds, *updateBounds);
@@ -536,7 +536,7 @@ GenerateUpdates(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -564,7 +564,7 @@ GenerateActivateEvents(
  *	None.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -588,7 +588,7 @@ DoWindowActivate(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -746,7 +746,7 @@ TkGenWMConfigureEvent(
 
     /*
      * Now set up the changes structure. Under X we wait for the
-     * ConfigureNotify to set these values. On the Mac we know imediatly that
+     * ConfigureNotify to set these values. On the Mac we know immediately that
      * this is what we want - so we just set them. However, we need to make
      * sure the windows clipping region is marked invalid so the change is
      * visible to the subwindow.
@@ -959,7 +959,7 @@ ConfigureRestrictProc(
      */
 
     if ([NSApp isDrawing]) {
-	if ([NSApp macMinorVersion] > 13) {
+	if ([NSApp macOSVersion] > 101300) {
 	    TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	}
 	return;

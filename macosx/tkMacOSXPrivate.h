@@ -343,13 +343,13 @@ VISIBILITY_HIDDEN
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
-    int _macMinorVersion;
+    int _macOSVersion;  /* 10000 * major + 100*minor */
     Bool _isDrawing;
     Bool _needsToDraw;
 #endif
 }
 @property int poolLock;
-@property int macMinorVersion;
+@property int macOSVersion;
 @property Bool isDrawing;
 @property Bool needsToDraw;
 
