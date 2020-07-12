@@ -13,9 +13,7 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#if defined(MAC_OSX_TK)
-#include "tkMacOSXInt.h"
-#endif
+
 /*
  * The following structure is used to keep track of all the fonts that exist
  * in the current application. It must be stored in the TkMainInfo for the
@@ -874,18 +872,18 @@ TheWorldHasChanged(
     ClientData clientData)	/* Info about application's fonts. */
 {
     TkFontInfo *fiPtr = clientData;
-#if defined(MAC_OSX_TK)
 
     /*
      * On macOS it is catastrophic to recompute all widgets while the
      * [NSView drawRect] method is drawing. The best that we can do in
      * that situation is to abort the recomputation and hope for the best.
+     * This is ignored on other platforms.
      */
 
-    if (TkpAppIsDrawing()) {
+    if (!TkpWillDrawWidget(NULL)) {
 	return;
     }
-#endif
+
     fiPtr->updatePending = 0;
     RecomputeWidgets(fiPtr->mainPtr->winPtr);
 }
@@ -2021,7 +2019,7 @@ Tk_ComputeTextLayout(
 
     curX = 0;
 
-    end = Tcl_UtfAtIndex(string, numChars);
+    end = TkUtfAtIndex(string, numChars);
     special = string;
 
     flags &= TK_IGNORE_TABS | TK_IGNORE_NEWLINES;
@@ -2325,14 +2323,14 @@ Tk_DrawTextLayout(
 		firstChar = 0;
 		firstByte = chunkPtr->start;
 	    } else {
-		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
+		firstByte = TkUtfAtIndex(chunkPtr->start, firstChar);
 		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
 			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
-	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
 	    Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont, firstByte,
 		    lastByte - firstByte, x+chunkPtr->x+drawX, y+chunkPtr->y);
 	}
@@ -2387,14 +2385,14 @@ TkDrawAngledTextLayout(
 		firstChar = 0;
 		firstByte = chunkPtr->start;
 	    } else {
-		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
+		firstByte = TkUtfAtIndex(chunkPtr->start, firstChar);
 		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
 			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
-	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
 	    dx = cosA * (chunkPtr->x + drawX) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x + drawX) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
@@ -2736,15 +2734,15 @@ Tk_CharBbox(
 		goto check;
 	    }
 	} else if (index < chunkPtr->numChars) {
-	    end = Tcl_UtfAtIndex(chunkPtr->start, index);
+	    end = TkUtfAtIndex(chunkPtr->start, index);
 	    if (xPtr != NULL) {
 		Tk_MeasureChars(tkfont, chunkPtr->start,
 			end - chunkPtr->start, -1, 0, &x);
 		x += chunkPtr->x;
 	    }
 	    if (widthPtr != NULL) {
-		Tk_MeasureChars(tkfont, end, Tcl_UtfNext(end) - end,
-			-1, 0, &w);
+		int ch;
+		Tk_MeasureChars(tkfont, end, TkUtfToUniChar(end, &ch), -1, 0, &w);
 	    }
 	    goto check;
 	}

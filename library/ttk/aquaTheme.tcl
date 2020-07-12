@@ -157,7 +157,7 @@ namespace eval ttk::theme::aqua {
 	    }
 
 	# Enable animation for ttk::progressbar widget on older systems:
-	if { [::tk::mac::macOSMinorVersion] < 11 } {
+	if { [::tk::mac::macOSVersion] < 101100 } {
 	    ttk::style configure TProgressbar -period 100 -maxphase 255
 	}
 

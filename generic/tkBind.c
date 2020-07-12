@@ -59,7 +59,9 @@
 
 /*
  * In old implementation (the one that used an event ring), <Double-1> and <1><1> were
- * equivalent sequences. However it is logical to give <Double-1> higher precedence.
+ * equivalent sequences. However it is logical to give <Double-1> higher precedence
+ * since it is more specific. Indeed <Double-1> includes time and space requirements,
+ * which is not the case for <1><1>.
  * This can be achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
  */
 
@@ -567,7 +569,7 @@ static int eventArrayIndex[TK_LASTEVENT];
 
 #define HAS_XKEY_HEAD (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)
 
-/* 
+/*
  * The xcrossing struct puts the state field in a different location, but the other
  * events above agree on where state is located.
  */
@@ -846,6 +848,20 @@ CountSpecialized(
     return sndCount - fstCount;
 }
 
+int
+IsKeyEventType(
+    unsigned eventType)
+{
+    return eventType == KeyPress || eventType == KeyRelease;
+}
+
+int
+IsButtonEventType(
+    unsigned eventType)
+{
+    return eventType == ButtonPress || eventType == ButtonRelease;
+}
+
 static int
 MatchEventNearby(
     const XEvent *lhs,	/* previous button event */
@@ -853,7 +869,7 @@ MatchEventNearby(
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == ButtonPress || lhs->type == ButtonRelease);
+    assert(IsButtonEventType(lhs->type));
     assert(lhs->type == rhs->type);
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
@@ -865,16 +881,16 @@ MatchEventNearby(
 
 static int
 MatchEventRepeat(
-    const XEvent *lhs,	/* previous key event */
-    const XEvent *rhs)	/* current key event */
+    const XKeyEvent *lhs,	/* previous key event */
+    const XKeyEvent *rhs)	/* current key event */
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == KeyPress || lhs->type == KeyRelease);
+    assert(IsKeyEventType(lhs->type));
     assert(lhs->type == rhs->type);
 
-    /* assert: lhs->xkey.time <= rhs->xkey.time */
-    return TestNearbyTime(rhs->xkey.time, lhs->xkey.time);
+    /* assert: lhs->time <= rhs->time */
+    return lhs->keycode == rhs->keycode && TestNearbyTime(lhs->time, rhs->time);
 }
 
 static void
@@ -2199,7 +2215,7 @@ Tk_BindEvent(
      * Ignore the event completely if it is an Enter, Leave, FocusIn, or
      * FocusOut event with detail NotifyInferior. The reason for ignoring
      * these events is that we don't want transitions between a window and its
-     * children to visible to bindings on the parent: this would cause
+     * children to be visible to bindings on the parent: this would cause
      * problems for mega-widgets, since the internal structure of a
      * mega-widget isn't supposed to be visible to people watching the parent.
      *
@@ -2283,7 +2299,7 @@ Tk_BindEvent(
 	switch (eventPtr->type) {
 	case KeyPress:
 	case KeyRelease:
-	    if (MatchEventRepeat(&curEvent->xev, eventPtr)) {
+	    if (MatchEventRepeat(&curEvent->xev.xkey, &eventPtr->xkey)) {
 		if (curEvent->xev.xkey.keycode == eventPtr->xkey.keycode) {
 		    ++curEvent->countDetailed;
 		} else {
@@ -2507,13 +2523,13 @@ Tk_BindEvent(
 		switch (patPtr->eventType) {
 		case ButtonPress:
 		case ButtonRelease:
-		    if (curEvent->xev.type == KeyPress || curEvent->xev.type == KeyRelease) {
+		    if (IsKeyEventType(curEvent->xev.type)) {
 			RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 		    }
 		    break;
 		case KeyPress:
 		case KeyRelease:
-		    if (curEvent->xev.type == ButtonPress || curEvent->xev.type == ButtonRelease) {
+		    if (IsButtonEventType(curEvent->xev.type)) {
 			RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 		    }
 		    break;
@@ -2772,6 +2788,7 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     ModMask bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
+    int i, isModKeyOnly = 0;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2785,6 +2802,26 @@ MatchPatterns(
     bestPtr = NULL;
     bestPhysPtr = NULL;
     window = curEvent->xev.xany.window;
+
+    /*
+     * Modifier key events interlaced between patterns parts of a
+     * sequence shall not prevent a sequence from ultimately
+     * matching. Example: when trying to trigger <a><Control-c>
+     * from the keyboard, the sequence of events actually seen is
+     * <a> then <Control_L> (possibly repeating if the key is hold
+     * down), and finally <Control-c>. At the time <Control_L> is
+     * seen, we shall keep the <a><Control-c> pattern sequence in
+     * the promotion list, otherwise it is impossible to trigger
+     * it from the keyboard. See bug [16ef161925].
+     */
+    if (IsKeyEventType(curEvent->xev.type)) {
+        for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+            if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
+                isModKeyOnly = 1;
+                break;
+            }
+        }
+    }
 
     for (psEntry = PSList_First(psList); psEntry; psEntry = PSList_Next(psEntry)) {
 	if (patIndex == 0 || psEntry->window == window) {
@@ -2800,6 +2837,12 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
+                /* ignore modifier key events, and KeyRelease events if the current event
+                 * is of a different type (e.g. a Button event)
+                 */
+                psEntry->keepIt = isModKeyOnly || \
+                        ((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
+
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
 				|| curEvent->xev.xcreatewindow.parent == window)
@@ -2814,8 +2857,9 @@ MatchPatterns(
 		    ModMask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = 1; /* remove it from promotion list */
+                    psEntry->keepIt = 0; /* don't keep matching patterns */
 
-		    if ((modMask & ~curModMask) == 0) {
+		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
 
 			if (patIndex < PSModMaskArr_Size(psEntry->lastModMaskArr)) {
@@ -2931,13 +2975,13 @@ ExpandPercents(
     evPtr = &eventPtr->xev;
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
-#define SET_NUMBER(value)   { number = value;			     \
-    snprintf(numStorage, sizeof(numStorage), "%ld", number);	     \
+#define SET_NUMBER(value)   { number = (value);			     \
+    snprintf(numStorage, sizeof(numStorage), "%" TCL_LL_MODIFIER "d", number);	     \
     string = numStorage;					     \
     }
 
-#define SET_UNUMBER(value)  { unumber = value;				\
-	snprintf(numStorage, sizeof(numStorage), "%lu", unumber);	\
+#define SET_UNUMBER(value)  { unumber = (value);				\
+	snprintf(numStorage, sizeof(numStorage), "%" TCL_LL_MODIFIER "u", unumber);	\
 	string = numStorage;						\
     }
 
@@ -3004,7 +3048,7 @@ ExpandPercents(
 	    break;
 	case 'f':
 	    if (flags & CROSSING) {
-		SET_UNUMBER(evPtr->xcrossing.focus);
+		SET_NUMBER(evPtr->xcrossing.focus != 0);
 	    }
 	    break;
 	case 'h':
@@ -3046,13 +3090,13 @@ ExpandPercents(
 	    break;
 	case 'o':
 	    if (flags & CREATE) {
-		SET_UNUMBER(evPtr->xcreatewindow.override_redirect);
+		SET_NUMBER(evPtr->xcreatewindow.override_redirect != 0);
 	    } else if (flags & MAP) {
-		SET_UNUMBER(evPtr->xmap.override_redirect);
+		SET_NUMBER(evPtr->xmap.override_redirect != 0);
 	    } else if (flags & REPARENT) {
-		SET_UNUMBER(evPtr->xreparent.override_redirect);
+		SET_NUMBER(evPtr->xreparent.override_redirect != 0);
 	    } else if (flags & CONFIG) {
-		SET_UNUMBER(evPtr->xconfigure.override_redirect);
+		SET_NUMBER(evPtr->xconfigure.override_redirect != 0);
 	    }
 	    break;
 	case 'p':
@@ -3105,8 +3149,6 @@ ExpandPercents(
 		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & REPARENT) {
 		SET_NUMBER(evPtr->xreparent.x);
-	    } else if (flags & CREATE) {
-		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & CONFIGREQ) {
 		SET_NUMBER(evPtr->xconfigurerequest.x);
 	    }
@@ -3120,8 +3162,6 @@ ExpandPercents(
 		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & REPARENT) {
 		SET_NUMBER(evPtr->xreparent.y);
-	    } else if (flags & CREATE) {
-		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & CONFIGREQ) {
 		SET_NUMBER(evPtr->xconfigurerequest.y);
 	    }
@@ -3143,11 +3183,11 @@ ExpandPercents(
 	    break;
 	case 'D':
 	    if (flags & WHEEL) {
-		SET_NUMBER(evPtr->xwheel.delta);
+		SET_NUMBER((int)evPtr->xbutton.button); /* mis-use button field for this */
 	    }
 	    break;
 	case 'E':
-	    SET_UNUMBER(evPtr->xany.send_event);
+	    SET_NUMBER(evPtr->xany.send_event != 0);
 	    break;
 	case 'K':
 	    if (flags & KEY) {
@@ -3222,7 +3262,7 @@ ExpandPercents(
     }
 
 #undef SET_NUMBER
-#undef SET_UNUMBER   
+#undef SET_UNUMBER
 
     Tcl_DStringFree(&buf);
 }
@@ -3466,7 +3506,7 @@ DeleteVirtualEventTable(
  *	already defined, the new definition augments those that already exist.
  *
  * Results:
- *	The return value is TCL_ERROR if an error occured while creating the
+ *	The return value is TCL_ERROR if an error occurred while creating the
  *	virtual binding. In this case, an error message will be left in the
  *	interp's result. If all went well then the return value is TCL_OK.
  *
@@ -4026,7 +4066,7 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & WHEEL) {
-		event.general.xwheel.delta = number;
+		event.general.xbutton.button = (unsigned)number; /* mis-use button field for this */
 	    } else {
 		badOpt = 1;
 	    }
@@ -4348,17 +4388,6 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * Now we have constructed the event, inject it into the event handling
-	 * code.
-	 */
-
-	if (synch) {
-	    Tk_HandleEvent(&event.general);
-	} else {
-	    Tk_QueueWindowEvent(&event.general, pos);
-	}
-
-	/*
 	 * We only allow warping if the window is mapped.
 	 */
 
@@ -4366,11 +4395,6 @@ HandleEventGenerate(
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
-
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-	    }
 
 	    if (warpWindow != dispPtr->warpWindow) {
 		if (warpWindow) {
@@ -4384,6 +4408,22 @@ HandleEventGenerate(
 	    dispPtr->warpMainwin = mainWin;
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
+
+	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
+		Tcl_DoWhenIdle(DoWarp, dispPtr);
+		dispPtr->flags |= TK_DISPLAY_IN_WARP;
+	    }
+	}
+
+	/*
+	 * Now we have constructed the event, inject it into the event handling
+	 * code.
+	 */
+
+	if (synch) {
+	    Tk_HandleEvent(&event.general);
+	} else {
+	    Tk_QueueWindowEvent(&event.general, pos);
 	}
     }
 

@@ -201,14 +201,27 @@ substitutions you would make when binding to these events.
 Many contemporary mice support a mouse wheel, which is used
 for scrolling documents without using the scrollbars.  By rolling the
 wheel, the system will generate \fBMouseWheel\fR events that the
-application can use to scroll.  Like \fBKey\fR events the event is
-always routed to the window that currently has focus. When the event
+application can use to scroll.  The event is routed to the
+window currently under the mouse pointer. When the event
 is received you can use the \fB%D\fR substitution to get the
-\fIdelta\fR field for the event, which is a integer value describing how
+\fIdelta\fR field for the event, which is an integer value describing how
 the mouse wheel has moved.  The smallest value for which the
-system will report is defined by the OS. The sign of the
+system will report is defined by the OS.  The sign of the
 value determines which direction your widget should scroll.  Positive
 values should scroll up and negative values should scroll down.
+.RS
+.PP
+Horizontal scrolling uses \fBShift-MouseWheel\fR events, with positive
+\fB%D\fR \fIdelta\fR substitution indicating left scrolling and negative
+right scrolling.
+Only Windows and macOS Aqua typically fire \fBMouseWheel\fR and
+\fBShift-MouseWheel\fR events.  On
+X11 vertical scrolling is rather supported through \fBButton-4\fR and
+\fBButton-5\fR events, and horizontal scrolling through \fBShift-Button-4\fR
+and \fBShift-Button-5\fR events.  Horizontal scrolling events may fire from
+many different hardware units such as tilt wheels or touchpads.  Horizontal
+scrolling can also be emulated by holding Shift and scrolling vertically.
+.RE
 .IP "\fBKeyPress\fR, \fBKeyRelease\fR" 5
 The \fBKeyPress\fR and \fBKeyRelease\fR events are generated
 whenever a key is pressed or released.  \fBKeyPress\fR and \fBKeyRelease\fR

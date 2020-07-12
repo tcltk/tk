@@ -4052,7 +4052,7 @@ TopLevelEventProc(
 	    TkMacOSXDbgMsg("TopLevelEventProc: %s deleted", winPtr->pathName);
 	}
     } else if (eventPtr->type == ReparentNotify) {
-	Tcl_Panic("recieved unwanted reparent event");
+	Tcl_Panic("received unwanted reparent event");
     }
 }
 
@@ -5585,7 +5585,7 @@ TkUnsupported1ObjCmd(
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
     case TKMWS_TABID:
-	if ([NSApp macMinorVersion] < 12) {
+	if ([NSApp macOSVersion] < 101200) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
                 "Tabbing identifiers did not exist until OSX 10.12.", -1));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "TABBINGID", NULL);
@@ -5597,7 +5597,7 @@ TkUnsupported1ObjCmd(
 	}
 	return WmWinTabbingId(interp, winPtr, objc, objv);
     case TKMWS_APPEARANCE:
-	if ([NSApp macMinorVersion] < 9) {
+	if ([NSApp macOSVersion] < 100900) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
                 "Window appearances did not exist until OSX 10.9.", -1));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
@@ -5607,7 +5607,7 @@ TkUnsupported1ObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
 	    return TCL_ERROR;
 	}
-	if (objc == 4 && [NSApp macMinorVersion] < 14) {
+	if (objc == 4 && [NSApp macOSVersion] < 101400) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Window appearances cannot be changed before OSX 10.14.",
 		    -1));
@@ -6174,28 +6174,40 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDisplayWindow --
+ * TkpRedrawWidget --
  *
- *      Mark the contentView of this window as needing display so the window
- *      will be drawn by the window manager.  If this is called within the
- *      drawRect method, do nothing.
+ *      Mark the bounding rectangle of this widget as needing display so the
+ *      widget will be drawn by [NSView drawRect:].  If this is called within
+ *      the drawRect method, do nothing.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      The window's contentView is marked as needing display.
+ *      The widget's bounding rectangle is marked as dirty.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
-TkpDisplayWindow(Tk_Window tkwin) {
-    if (![NSApp isDrawing]) {
-    	TkWindow *winPtr = (TkWindow *) tkwin;
-    	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+void
+TkpRedrawWidget(Tk_Window tkwin) {
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    NSWindow *w;
+    Rect tkBounds;
+    NSRect bounds;
 
-    	[[w contentView] setNeedsDisplay: YES];
+    if ([NSApp isDrawing]) {
+	return;
+    }
+    w = TkMacOSXDrawableWindow(winPtr->window);
+    if (w) {
+	NSView *view = [w contentView];
+	TkMacOSXWinBounds(winPtr, &tkBounds);
+	bounds = NSMakeRect(tkBounds.left,
+			    [view bounds].size.height - tkBounds.bottom,
+			    tkBounds.right - tkBounds.left,
+			    tkBounds.bottom - tkBounds.top);
+	[view setNeedsDisplayInRect:bounds];
     }
 }
 
@@ -6874,7 +6886,7 @@ ApplyWindowAttributeFlagChanges(
 		     * window. To work around this we make the max size equal
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
-		    if ([NSApp macMinorVersion] > 10) {
+		    if ([NSApp macOSVersion] > 101000) {
 			[macWindow setMaxFullScreenContentSize:screenSize];
 		    }
 		}
@@ -6958,7 +6970,7 @@ ApplyMasterOverrideChanges(
 	    wmPtr->attributes = macClassAttrs[kSimpleWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
-	if ([NSApp macMinorVersion] == 6) {
+	if ([NSApp macOSVersion] == 100600) {
 	    styleMask = 0;
 	} else {
 	    styleMask &= ~NSTitledWindowMask;
@@ -6971,7 +6983,7 @@ ApplyMasterOverrideChanges(
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
-	if ([NSApp macMinorVersion] == 6) {
+	if ([NSApp macOSVersion] == 100600) {
 	    styleMask = NSTitledWindowMask         |
 		        NSClosableWindowMask       |
 		        NSMiniaturizableWindowMask |

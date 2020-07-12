@@ -62,15 +62,13 @@
  *
  * When the keyboard focus is on a Tk widget which provides text input, there
  * are some X11 KeyPress events which cause text to be inserted.  We will call
- * these "printable" events.  On macOS the text which should be inserted is
- * contained in the xkeys.trans_chars field of a key XEvent as a
- * null-terminated unicode string encoded with a special Tcl encoding.  The
- * value of the trans_chars string in an Xevent depends on more than the three
- * items above.  It may also depend on the sequence of keypresses that preceded
- * the one being reported by the XEvent.  For example, on macOS an <Alt-e>
- * event does not cause text to be inserted but a following <a> event causes an
- * accented 'a' to be inserted.  The events in such a composition sequence,
- * other than the final one, are known as "dead-key" events.
+ * these "printable" events. The UCS-32 character stored in the keycode field
+ * of an XKeyEvent depends on more than the three items above.  It may also
+ * depend on the sequence of keypresses that preceded the one being reported by
+ * the XKeyEvent.  For example, on macOS an <Alt-e> event does not cause text
+ * to be inserted but a following <a> event causes an accented 'a' to be
+ * inserted.  The events in such a composition sequence, other than the final
+ * one, are known as "dead-key" events.
  *
  * MacOS packages the information described above in a different way.  Every
  * meaningful effect from a key action *other than changing the state of
@@ -488,11 +486,18 @@ TkpGetString(
 				 * result. */
 {
     (void) winPtr; /*unused*/
-    int ch;
+    MacKeycode macKC;
+    char utfChars[8];
+    int length = 0;
+
+    macKC.uint = eventPtr->xkey.keycode;
+    if (IS_PRINTABLE(macKC.v.keychar)) {
+	length = TkUniCharToUtf(macKC.v.keychar, utfChars);
+    }
+    utfChars[length] = 0;
 
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
-	    TkUtfToUniChar(eventPtr->xkey.trans_chars, &ch));
+    return Tcl_DStringAppend(dsPtr, utfChars, length);
 }
 
 /*
@@ -623,7 +628,7 @@ XKeysymToKeycode(
 
     hPtr = Tcl_FindHashEntry(&keysym2keycode, INT2PTR(keysym));
     if (hPtr != NULL) {
-	return (unsigned int) Tcl_GetHashValue(hPtr);
+	return (KeyCode) Tcl_GetHashValue(hPtr);
     }
 
     /*
@@ -640,15 +645,18 @@ XKeysymToKeycode(
      * xvirtual field if the key exists on the current keyboard.
      */
 
-    hPtr = Tcl_FindHashEntry(&keysym2unichar, INT2PTR(keysym));
+    hPtr = (Tcl_HashEntry *) Tcl_FindHashEntry(&keysym2unichar,
+					       INT2PTR(keysym));
     if (hPtr != NULL) {
-	macKC.x.keychar = (unsigned int) Tcl_GetHashValue(hPtr);
+	unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	macKC.x.keychar = (unsigned int) data;
 	hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.x.keychar));
 	if (hPtr != NULL) {
-	    macKC.x.xvirtual = (unsigned int) Tcl_GetHashValue(hPtr);
+	    unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	    macKC.x.xvirtual = (unsigned int) data;
 	}
     }
-    return macKC.uint;
+    return (KeyCode) macKC.uint;
 }
 
 /*
@@ -667,7 +675,7 @@ XKeysymToKeycode(
  *	Modifies the XEvent. Sets the xkey.keycode to a keycode value formatted
  *	by XKeysymToKeycode and updates the shift and option flags in
  *	xkey.state if either of those modifiers is required to generate the
- *	keysym. Also fills in xkey.trans_chars for printable events.
+ *	keysym.
  *
  *----------------------------------------------------------------------
  */
@@ -718,11 +726,6 @@ TkpSetKeycodeAndState(
 	}
 	eventPtr->xkey.keycode = macKC.uint;
 	eventPtr->xkey.state |= INDEX2STATE(macKC.v.o_s);
-	if (IS_PRINTABLE(macKC.v.keychar)) {
-	    int length = TkUniCharToUtf(macKC.v.keychar,
-					eventPtr->xkey.trans_chars);
-	    eventPtr->xkey.trans_chars[length] = 0;
-	}
     }
 }
 
@@ -935,9 +938,11 @@ TkMacOSXAddVirtual(
 	InitHashTables();
     }
 
-    hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.v.keychar));
+    hPtr = (Tcl_HashEntry *) Tcl_FindHashEntry(&unichar2xvirtual,
+					       INT2PTR(macKC.v.keychar));
     if (hPtr != NULL) {
-	macKC.x.xvirtual = (unsigned int) Tcl_GetHashValue(hPtr);
+	unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	macKC.x.xvirtual = (unsigned int) data;
     } else {
 	macKC.v.virtual = NO_VIRTUAL;
     }
