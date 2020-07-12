@@ -4198,7 +4198,7 @@ test textDisp-33.2 {one line longer than fits in the widget} {
     .tt debug 1
     set tk_textHeightCalc ""
     .tt insert 1.0 [string repeat "more wrap + " 1]
-    after 100 ; update idletasks
+    update idletasks
     # Nothing should have been recalculated.
     set tk_textHeightCalc
 } {}
