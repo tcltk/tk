@@ -12,15 +12,16 @@ namespace eval ::tk::fontchooser {
     variable S
 
     set S(W) .__tk__fontchooser
-    set S(fonts) [lsort -dictionary [font families]]
+    set S(fonts) [lsort -dictionary -unique [font families]]
     set S(styles) [list \
-                       [::msgcat::mc "Regular"] \
-                       [::msgcat::mc "Italic"] \
-                       [::msgcat::mc "Bold"] \
-                       [::msgcat::mc "Bold Italic"] \
-                      ]
+	[::msgcat::mc "Regular"] \
+	[::msgcat::mc "Italic"] \
+	[::msgcat::mc "Bold"] \
+	[::msgcat::mc "Bold Italic"] \
+    ]
 
     set S(sizes) {8 9 10 11 12 14 16 18 20 22 24 26 28 36 48 72}
+    set S(sizes,lcase) $S(sizes)
     set S(strike) 0
     set S(under) 0
     set S(first) 1
@@ -29,17 +30,27 @@ namespace eval ::tk::fontchooser {
     set S(-title) [::msgcat::mc "Font"]
     set S(-command) ""
     set S(-font) TkDefaultFont
+
+    set windowName __tk__fontchooser
+    if {$S(-parent) eq "."} {
+        set S(W) .$windowName
+    } else {
+        set S(W) $S(-parent).$windowName
+    }
 }
 
-proc ::tk::fontchooser::Setup {} {
+proc ::tk::fontchooser::Canonical {} {
     variable S
 
     # Canonical versions of font families, styles, etc. for easier searching
     set S(fonts,lcase) {}
-    foreach font $S(fonts) { lappend S(fonts,lcase) [string tolower $font]}
+    foreach font $S(fonts) {lappend S(fonts,lcase) [string tolower $font]}
     set S(styles,lcase) {}
-    foreach style $S(styles) { lappend S(styles,lcase) [string tolower $style]}
-    set S(sizes,lcase) $S(sizes)
+    foreach style $S(styles) {lappend S(styles,lcase) [string tolower $style]}
+}
+
+proc ::tk::fontchooser::Setup {} {
+    Canonical
 
     ::ttk::style layout FontchooserFrame {
         Entry.field -sticky news -border true -children {
@@ -60,14 +71,23 @@ proc ::tk::fontchooser::Setup {} {
 
 proc ::tk::fontchooser::Show {} {
     variable S
+
+    set S(styles) [list \
+         [::msgcat::mc "Regular"] \
+         [::msgcat::mc "Italic"] \
+         [::msgcat::mc "Bold"] \
+         [::msgcat::mc "Bold Italic"] \
+    ]
+    set S(sampletext) [::msgcat::mc "AaBbYyZz01"]
+    set S(-title) [::msgcat::mc "Font"]
+    set S(fonts) [lsort -dictionary -unique [font families]]
+    Canonical
+
     if {![winfo exists $S(W)]} {
         Create
         wm transient $S(W) [winfo toplevel $S(-parent)]
         tk::PlaceWindow $S(W) widget $S(-parent)
     }
-    set S(fonts) [lsort -dictionary [font families]]
-    set S(fonts,lcase) {}
-    foreach font $S(fonts) { lappend S(fonts,lcase) [string tolower $font]}
     wm deiconify $S(W)
 }
 
@@ -130,12 +150,6 @@ proc ::tk::fontchooser::Configure {args} {
 
 proc ::tk::fontchooser::Create {} {
     variable S
-    set windowName __tk__fontchooser
-    if {$S(-parent) eq "."} {
-        set S(W) .$windowName
-    } else {
-        set S(W) $S(-parent).$windowName
-    }
 
     # Now build the dialog
     if {![winfo exists $S(W)]} {
@@ -145,10 +159,13 @@ proc ::tk::fontchooser::Create {} {
         wm title $S(W) $S(-title)
         wm transient $S(W) [winfo toplevel $S(-parent)]
 
+        set scaling [tk scaling]
+        set sizeWidth [expr {int([string length [::msgcat::mc "&Size:"]] * $scaling)}]
+
         set outer [::ttk::frame $S(W).outer -padding {10 10}]
         ::tk::AmpWidget ::ttk::label $S(W).font -text [::msgcat::mc "&Font:"]
         ::tk::AmpWidget ::ttk::label $S(W).style -text [::msgcat::mc "Font st&yle:"]
-        ::tk::AmpWidget ::ttk::label $S(W).size -text [::msgcat::mc "&Size:"]
+        ::tk::AmpWidget ::ttk::label $S(W).size -text [::msgcat::mc "&Size:"] -width $sizeWidth
         ttk::entry $S(W).efont -width 18 \
             -textvariable [namespace which -variable S](font)
         ttk::entry $S(W).estyle -width 10 \
@@ -199,7 +216,7 @@ proc ::tk::fontchooser::Create {} {
         set minsize(sizes) \
             [expr {[font measure TkDefaultFont "-99"] + $scroll_width}]
         set min [expr {$minsize(gap) * 4}]
-        foreach {what width} [array get minsize] { incr min $width }
+        foreach {what width} [array get minsize] {incr min $width}
         wm minsize $S(W) $min 260
 
         bind $S(W) <Return> [namespace code [list Done 1]]
@@ -329,11 +346,11 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         set S(under) $F(-underline)
         set S(style) "Regular"
         if {$F(-weight) eq "bold" && $F(-slant) eq "italic"} {
-            set S(style) "Bold Italic"
+            set S(style) [::msgcat::mc "Bold Italic"]
         } elseif {$F(-weight) eq "bold"} {
-            set S(style) "Bold"
+            set S(style) [::msgcat::mc "Bold"]
         } elseif {$F(-slant) eq "italic"} {
-            set S(style) "Italic"
+            set S(style) [::msgcat::mc "Italic"]
         }
 
         set S(first) 0
@@ -396,8 +413,9 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
         }
         $S(W).l${var}s see $n
     }
-    if {!$bad} { Update }
+    if {!$bad} {Update}
     $S(W).ok configure -state $nstate
+    $S(W).apply configure -state $nstate
 }
 
 # ::tk::fontchooser::Update --
@@ -408,11 +426,11 @@ proc ::tk::fontchooser::Update {} {
     variable S
 
     set S(result) [list $S(font) $S(size)]
-    if {$S(style) eq "Bold"} { lappend S(result) bold }
-    if {$S(style) eq "Italic"} { lappend S(result) italic }
-    if {$S(style) eq "Bold Italic"} { lappend S(result) bold italic}
-    if {$S(strike)} { lappend S(result) overstrike}
-    if {$S(under)} { lappend S(result) underline}
+    if {$S(style) eq [::msgcat::mc "Bold"]} {lappend S(result) bold}
+    if {$S(style) eq [::msgcat::mc "Italic"]} {lappend S(result) italic}
+    if {$S(style) eq [::msgcat::mc "Bold Italic"]} {lappend S(result) bold italic}
+    if {$S(strike)} {lappend S(result) overstrike}
+    if {$S(under)} {lappend S(result) underline}
 
     $S(sample) configure -font $S(result)
 }
