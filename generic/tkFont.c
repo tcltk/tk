@@ -2339,8 +2339,9 @@ Tk_DrawTextLayout(
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
 #if TK_DRAW_IN_CONTEXT
 	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
-		    chunkPtr->start, chunkPtr->numBytes, firstChar,
-		    numDisplayChars - firstChar, x+chunkPtr->x, y+chunkPtr->y);
+		    chunkPtr->start, chunkPtr->numBytes,
+		    firstByte - chunkPtr->start, lastByte - firstByte,
+		    x+chunkPtr->x, y+chunkPtr->y);
 #else /* !TK_DRAW_IN_CONTEXT */
 	    Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont, firstByte,
 		    lastByte - firstByte, x+chunkPtr->x+drawX, y+chunkPtr->y);
@@ -2412,12 +2413,12 @@ TkDrawAngledTextLayout(
 	    if (angle == 0.0) {
 		TkpDrawCharsInContext(display, drawable, gc,
 			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
-			firstChar, numDisplayChars - firstChar,
+			firstByte - chunkPtr->start, lastByte - firstByte,
 			(int)(x + dx), (int)(y + dy));
 	    } else {
 		TkpDrawAngledCharsInContext(display, drawable, gc,
 			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
-			firstChar, numDisplayChars - firstChar,
+			firstByte - chunkPtr->start, lastByte - firstByte,
 			x+dx, y+dy, angle);
 	    }
 #else /* !TK_DRAW_IN_CONTEXT */
