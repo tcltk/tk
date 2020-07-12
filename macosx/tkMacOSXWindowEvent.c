@@ -315,6 +315,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+
+    /*
+     * To prevent zombie windows on systems with a TouchBar, set the key window
+     * to nil if the current key window is not visible.  This allows a closed
+     * Help or About window to be deallocated so it will not reappear as a
+     * zombie when the app is reactivated.
+     */
+
+    NSWindow *keywindow = [NSApp keyWindow];
+    if (keywindow && ![keywindow isVisible]) {
+	[NSApp _setKeyWindow:nil];
+	[NSApp _setMainWindow:nil];
+    }
+
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
@@ -368,26 +382,41 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 /*
  *----------------------------------------------------------------------
  *
- * TkpAppIsDrawing --
+ * TkpWillDrawWidget --
  *
  *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. This is needed for some tests,
- *      especially of the Text widget, which record data in a global Tcl
- *      variable and assume that display procedures will be run in a
- *      predictable sequence as Tcl idle tasks.
+ *      being run inside of the drawRect method. If not, it may be desirable
+ *      for the display procedure to simply clear the REDRAW_PENDING flag
+ *      and return.  The widget can be recorded in order to schedule a
+ *      redraw, via and Expose event, from within drawRect.
+ *
+ *      This is also needed for some tests, especially of the Text widget,
+ *      which record data in a global Tcl variable and assume that display
+ *      procedures will be run in a predictable sequence as Tcl idle tasks.
  *
  * Results:
- *	True only while running the drawRect method of a TKContentView;
+ *      True if called from the drawRect method of a TKContentView with
+ *      tkwin NULL or pointing to a widget in the current focusView.
  *
  * Side effects:
- *	None
+ *	The tkwin parameter may be recorded to handle redrawing the widget
+ *      later.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE Bool
-TkpAppIsDrawing(void) {
-    return [NSApp isDrawing];
+int
+TkpWillDrawWidget(Tk_Window tkwin) {
+    if (![NSApp isDrawing]) {
+	return 0;
+    }
+    if (tkwin) {
+	TkWindow *winPtr = (TkWindow *)tkwin;
+	NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
+	return (view == [NSView focusView]);
+    } else {
+	return 1;
+    }
 }
 
 /*
@@ -395,16 +424,16 @@ TkpAppIsDrawing(void) {
  *
  * GenerateUpdates --
  *
- *	Given a Macintosh update region and a Tk window this function geneates
+ *	Given a Macintosh update region and a Tk window this function generates
  *	an X Expose event for the window if it meets the update region. The
- *	function will then recursivly have each damaged window generate Expose
+ *	function will then recursively have each damaged window generate Expose
  *	events for its child windows.
  *
  * Results:
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -429,7 +458,7 @@ GenerateUpdates(
     }
 
     /*
-     * Compute the bounding box of the area that the damage occured in.
+     * Compute the bounding box of the area that the damage occurred in.
      */
 
     boundsRgn = HIShapeCreateWithRect(&bounds);
@@ -503,7 +532,7 @@ GenerateUpdates(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -531,7 +560,7 @@ GenerateActivateEvents(
  *	None.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -555,7 +584,7 @@ DoWindowActivate(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -713,7 +742,7 @@ TkGenWMConfigureEvent(
 
     /*
      * Now set up the changes structure. Under X we wait for the
-     * ConfigureNotify to set these values. On the Mac we know imediatly that
+     * ConfigureNotify to set these values. On the Mac we know immediately that
      * this is what we want - so we just set them. However, we need to make
      * sure the windows clipping region is marked invalid so the change is
      * visible to the subwindow.
@@ -905,7 +934,7 @@ RedisplayView(
     NSView *view = (NSView *) clientdata;
 
     /*
-     * Make sure that we are not trying to displaying a view that no longer
+     * Make sure that we are not trying to display a view that no longer
      * exists. Must call [NSApp windows] because [NSApp orderedWindows] excludes
      * floating/utility windows and other window panels.
      */
@@ -937,7 +966,7 @@ RedisplayView(
      */
 
     if ([NSApp isDrawing]) {
-	if ([NSApp macMinorVersion] > 13) {
+	if ([NSApp macOSVersion] > 101300) {
 	    TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	}
 	return;

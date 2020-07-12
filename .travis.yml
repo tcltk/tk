@@ -114,49 +114,71 @@ matrix:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Xcode 11.4/Shared"
+    - name: "macOS/Clang/Xcode 11.5/Shared"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 11.4/Static"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: &mactest
+        - make binaries libraries tktest
+    - name: "macOS/Clang/Xcode 11.5/Static"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 11.4/Debug"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CFLAGS=-I/usr/local/opt/tcl-tk/include"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: *mactest
+    - name: "macOS/Clang/Xcode 11.5/Debug"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 11.4/Shared/XQuartz"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CFLAGS=-I/usr/local/opt/tcl-tk/include"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: *mactest
+    - name: "macOS/Clang/Xcode 11.5/Shared/XQuartz"
       os: osx
-      osx_image: xcode11.4
+      osx_image: xcode11.5
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: *mactest
 # Older MacOS versions
-    - name: "macOS/Xcode 11/Shared"
+    - name: "macOS/Clang/Xcode 11/Shared"
       os: osx
       osx_image: xcode11
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 10/Shared"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: *mactest
+    - name: "macOS/Clang/Xcode 10/Shared"
       os: osx
       osx_image: xcode10.3
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 9/Shared"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: *mactest
+    - name: "macOS/Clang/Xcode 9/Shared"
       os: osx
       osx_image: xcode9.4
       env:
         - BUILD_DIR=unix
-        - CFGOPT="--prefix=/usr/local/opt/tcl-tk --with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CC=clang CFLAGS=-I/usr/local/opt/tcl-tk/include"
+        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.13"
+      install:
+        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
+      script: *mactest
 # Test on Windows with MSVC native
 #   - name: "Windows/MSVC/Shared"
 #     os: windows
@@ -170,6 +192,16 @@ matrix:
 #     install: []
 #     script:
 #       - cmd.exe //C vcvarsall.bat x64 '&&' nmake '-f' makefile.vc all tktest
+# "make dist" only
+    - name: "Linux: make dist"
+      os: linux
+      dist: bionic
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script:
+        - touch ../doc/man.macros
+        - make dist
 before_install:
   - |-
       case $TRAVIS_OS_NAME in
@@ -179,11 +211,13 @@ before_install:
       esac
   - cd ${BUILD_DIR}
 install:
-  - ./configure ${CFGOPT} --prefix=$HOME || (cat config.log && exit 1)
+  - mkdir "$HOME/install dir"
+  - ./configure ${CFGOPT} "--prefix=$HOME/install dir" || (cat config.log && exit 1)
 before_script:
   - export ERROR_ON_FAILURES=1
 script:
   - make binaries libraries tktest
+  - make install
 cache:
   directories:
   - $HOME/AppData/Local/Temp/chocolatey

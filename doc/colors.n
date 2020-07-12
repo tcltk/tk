@@ -944,6 +944,7 @@ systemControlAccentColor
 systemControlTextColor
 systemDisabledControlTextColor
 systemLabelColor  
+systemLinkColor
 systemSelectedTextBackgroundColor  
 systemSelectedTextColor
 systemTextBackgroundColor

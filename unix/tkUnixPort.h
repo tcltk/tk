@@ -167,6 +167,8 @@
 
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
+#define TkpWillDrawWidget(tkwin) 1
+#define TkpRedrawWidget(tkwin)
 #define TkSelUpdateClipboard(a,b) {}
 #ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}

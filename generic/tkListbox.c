@@ -3318,7 +3318,7 @@ ListboxUpdateVScrollbar(
 
     /*
      * We must hold onto the interpreter from the listPtr because the data at
-     * listPtr might be freed as a result of the Tcl_VarEval.
+     * listPtr might be freed as a result of the Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3329,7 +3329,7 @@ ListboxUpdateVScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
@@ -3390,7 +3390,7 @@ ListboxUpdateHScrollbar(
 
     /*
      * We must hold onto the interpreter because the data referred to at
-     * listPtr might be freed as a result of the call to Tcl_VarEval.
+     * listPtr might be freed as a result of the call to Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3401,7 +3401,7 @@ ListboxUpdateHScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,

@@ -141,12 +141,47 @@ void DebugPrintQueue(void)
  */
 - (void) sendEvent: (NSEvent *) theEvent
 {
+
+    /*
+     * Workaround for an Apple bug.  When an accented character is selected
+     * from an NSTextInputClient popup character viewer with the mouse, Apple
+     * sends an event of type NSAppKitDefined and subtype 21. If that event is
+     * sent up the responder chain it causes Apple to print a warning to the
+     * console log and, extremely obnoxiously, also to stderr, which says
+     * "Window move completed without beginning."  Apparently they are sending
+     * the "move completed" event without having sent the "move began" event of
+     * subtype 20, and then announcing their error on our stderr.  Also, of
+     * course, no movement is occurring.  The popup is not movable and is just
+     * being closed.  The bug has been reported to Apple.  If they ever fix it,
+     * this block should be removed.
+     */
+
+    if ([theEvent type] == NSAppKitDefined) {
+	static Bool aWindowIsMoving = NO;
+	switch([theEvent subtype]) {
+	case 20:
+	    aWindowIsMoving = YES;
+	    break;
+	case 21:
+	    if (aWindowIsMoving) {
+		aWindowIsMoving = NO;
+		break;
+	    } else {
+		// printf("Bug!!!!\n");
+		return;
+	    }
+	default:
+	    break;
+	}
+    }
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
+
 #ifdef TK_MAC_DEBUG_EVENTS
     fprintf(stderr, "Sending event of type %d\n", (int)[theEvent type]);
     DebugPrintQueue();
 #endif
+
 }
 @end
 
@@ -267,7 +302,7 @@ TkMacOSXNotifyExitHandler(
  * TkMacOSXEventsSetupProc --
  *
  *	This procedure implements the setup part of the MacOSX event source. It
- *	is invoked by Tcl_DoOneEvent before calling TkMacOSXEventsProc to
+ *	is invoked by Tcl_DoOneEvent before calling TkMacOSXEventsCheckProc to
  *	process all queued NSEvents.  In our case, all we need to do is to set
  *	the Tcl MaxBlockTime to 0 before starting the loop to process all
  *	queued NSEvents.
