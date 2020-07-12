@@ -511,6 +511,7 @@ GetEntryText(
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
+	int ch;
 
 	/*
 	 * We have to construct the string with an ampersand preceeding the
@@ -527,7 +528,7 @@ GetEntryText(
 	    if (*p == '&') {
 		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
-	    next = Tcl_UtfNext(p);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	}
 	if (mePtr->accelLength > 0) {
@@ -536,7 +537,7 @@ GetEntryText(
 		if (*p == '&') {
 		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
-		next = Tcl_UtfNext(p);
+		next = p + TkUtfToUniChar(p, &ch);
 		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
 	}
@@ -2134,10 +2135,11 @@ DrawMenuUnderline(
 	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
+	    int ch;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
-	    start = Tcl_UtfAtIndex(label, mePtr->underline);
-	    end = Tcl_UtfNext(start);
+	    start = TkUtfAtIndex(label, mePtr->underline);
+	    end = start + TkUtfToUniChar(start, &ch);
 	    Tk_UnderlineChars(menuPtr->display, d,
 		    gc, tkfont, label, x + mePtr->indicatorSpace,
 		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,
@@ -2229,17 +2231,16 @@ TkWinMenuKeyObjCmd(
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
 	    scanCode = MapVirtualKeyW(virtualKey, 0);
 	    if (0 != scanCode) {
-		XKeyEvent xkey = eventPtr->xkey;
+		TkKeyEvent xkey;
+		memcpy(&xkey, eventPtr, sizeof(xkey));
 		CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey,
 			(int) ((scanCode << 16) | (1 << 29)));
-		if (xkey.nbytes > 0) {
-		    for (i = 0; i < xkey.nbytes; i++) {
-			CallWindowProcW(DefWindowProcW,
-				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
-				xkey.trans_chars[i],
-				(int) ((scanCode << 16) | (1 << 29)));
-		    }
+		for (i = 0; i < xkey.nbytes; i++) {
+		    CallWindowProcW(DefWindowProcW,
+			    Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
+			    xkey.trans_chars[i],
+			    (int) ((scanCode << 16) | (1 << 29)));
 		}
 	    }
 	}

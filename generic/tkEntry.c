@@ -2064,7 +2064,7 @@ InsertChars(
     char *newStr;
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
+    byteIndex = TkUtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
 	return TCL_OK;
@@ -2088,6 +2088,8 @@ InsertChars(
     entryPtr->string = newStr;
 
     /*
+     * ??? Is this construction still needed with Tcl_NumUtfChars ???
+     *
      * The following construction is used because inserting improperly formed
      * UTF-8 sequences between other improperly formed UTF-8 sequences could
      * result in actually forming valid UTF-8 sequences; the number of
@@ -2168,8 +2170,8 @@ DeleteChars(
     }
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
-    byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
+    byteIndex = TkUtfAtIndex(string, index) - string;
+    byteCount = TkUtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
     newStr = ckalloc(newByteCount);
@@ -2830,8 +2832,8 @@ EntryFetchSelection(
 	return -1;
     }
     string = entryPtr->displayString;
-    selStart = Tcl_UtfAtIndex(string, entryPtr->selectFirst);
-    selEnd = Tcl_UtfAtIndex(selStart,
+    selStart = TkUtfAtIndex(string, entryPtr->selectFirst);
+    selEnd = TkUtfAtIndex(selStart,
 	    entryPtr->selectLast - entryPtr->selectFirst);
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
@@ -3020,7 +3022,7 @@ EntryUpdateScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (code != TCL_OK) {
 	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
@@ -3281,7 +3283,7 @@ EntryValidate(
  *
  * Results:
  *	TCL_OK if the validatecommand accepts the new string, TCL_ERROR if any
- *	problems occured with validatecommand.
+ *	problems occurred with validatecommand.
  *
  * Side effects:
  *	The insertion/deletion may be aborted, and the validatecommand might
@@ -3306,17 +3308,21 @@ EntryValidateChange(
 
     if (entryPtr->validateCmd == NULL ||
 	entryPtr->validate == VALIDATE_NONE) {
+        if (entryPtr->flags & VALIDATING) {
+            entryPtr->flags |= VALIDATE_ABORT;
+        }
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
     /*
-     * If we're already validating, then we're hitting a loop condition Return
-     * and set validate to 0 to disallow further validations and prevent
-     * current validation from finishing
+     * If we're already validating, then we're hitting a loop condition. Set
+     * validate to none to disallow further validations, arrange for flags
+     * to prevent current validation from finishing, and return.
      */
 
     if (entryPtr->flags & VALIDATING) {
 	entryPtr->validate = VALIDATE_NONE;
+        entryPtr->flags |= VALIDATE_ABORT;
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
@@ -3338,7 +3344,7 @@ EntryValidateChange(
     /*
      * If e->validate has become VALIDATE_NONE during the validation, or we
      * now have VALIDATE_VAR set (from EntrySetValue) and didn't before, it
-     * means that a loop condition almost occured. Do not allow this
+     * means that a loop condition almost occurred. Do not allow this
      * validation result to finish.
      */
 

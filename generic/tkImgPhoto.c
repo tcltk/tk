@@ -1106,6 +1106,7 @@ ImgPhotoCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+		Tcl_Close(NULL, chan);
 		return TCL_ERROR;
 	    }
 	}
@@ -2771,8 +2772,21 @@ Tk_PhotoPutBlock(
     if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
-		* sourceBlock.pitch);
+	/*
+	 * Fix 5c51be6411: avoid reading
+	 *
+	 *	(sourceBlock.pitch - sourceBlock.width * sourceBlock.pixelSize)
+	 *
+	 * bytes past the end of masterPtr->pix32[] when
+	 *
+	 *	blockPtr->pixelPtr > (masterPtr->pix32 +
+	 *		4 * masterPtr->width * masterPtr->height -
+	 *		sourceBlock.height * sourceBlock.pitch)
+	 */
+	unsigned int cpyLen = (sourceBlock.height - 1) * sourceBlock.pitch +
+		sourceBlock.width * sourceBlock.pixelSize;
+
+	sourceBlock.pixelPtr = attemptckalloc(cpyLen);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2782,8 +2796,7 @@ Tk_PhotoPutBlock(
 	    return TCL_ERROR;
 	}
 	memToFree = sourceBlock.pixelPtr;
-	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
-	    * sourceBlock.pitch);
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, cpyLen);
     }
 
 
@@ -3205,8 +3218,21 @@ Tk_PhotoPutZoomedBlock(
     if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
-		* sourceBlock.pitch);
+	/*
+	 * Fix 5c51be6411: avoid reading
+	 *
+	 *	(sourceBlock.pitch - sourceBlock.width * sourceBlock.pixelSize)
+	 *
+	 * bytes past the end of masterPtr->pix32[] when
+	 *
+	 *	blockPtr->pixelPtr > (masterPtr->pix32 +
+	 *		4 * masterPtr->width * masterPtr->height -
+	 *		sourceBlock.height * sourceBlock.pitch)
+	 */
+	unsigned int cpyLen = (sourceBlock.height - 1) * sourceBlock.pitch +
+		sourceBlock.width * sourceBlock.pixelSize;
+
+	sourceBlock.pixelPtr = attemptckalloc(cpyLen);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3216,8 +3242,7 @@ Tk_PhotoPutZoomedBlock(
 	    return TCL_ERROR;
 	}
 	memToFree = sourceBlock.pixelPtr;
-	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
-	    * sourceBlock.pitch);
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, cpyLen);
     }
 
     xEnd = x + width;

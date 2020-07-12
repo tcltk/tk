@@ -213,10 +213,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
     /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
     { "SecondaryLabelColor",		    ttkBackground, 14 },					    /* 183 */
+    { "LinkColor",			    semantic, 9 },						    /* 184 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 183
+#define MAX_PIXELCODE 184
 
 /*
  *----------------------------------------------------------------------
@@ -279,11 +280,6 @@ SetCGColorComponents(
     OSStatus err = noErr;
     NSColor *bgColor, *color = nil;
     CGFloat rgba[4] = {0, 0, 0, 1};
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
-    NSInteger colorVariant;
-    static CGFloat graphiteAccentRGBA[4] =
-	{152.0 / 255, 152.0 / 255, 152.0 / 255, 1.0};
-#endif
 
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
@@ -312,7 +308,7 @@ SetCGColorComponents(
 	 * windowBackGroundColor.
 	 */
 
-	if ([NSApp macMinorVersion] < 14) {
+	if ([NSApp macOSVersion] < 101400) {
 	    for (int i=0; i<3; i++) {
 		rgba[i] = windowBackground[i];
 	    }
@@ -339,7 +335,7 @@ SetCGColorComponents(
 	    color = [[NSColor selectedTextColor] colorUsingColorSpace:sRGB];
 	    break;
 	case 2:
-	    if ([NSApp macMinorVersion] > 9) {
+	    if ([NSApp macOSVersion] > 100900) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
 		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
@@ -355,7 +351,7 @@ SetCGColorComponents(
 			colorUsingColorSpace:sRGB];
 	    break;
 	case 5:
-	    if ([NSApp macMinorVersion] > 6) {
+	    if ([NSApp macOSVersion] > 100600) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
@@ -371,18 +367,27 @@ SetCGColorComponents(
 	case 8:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	    if (@available(macOS 14, *)) {
-#else
-	    if (false) {
-#endif
 		color = [[NSColor controlAccentColor] colorUsingColorSpace:sRGB];
+#else
+	    if(false) {
+#endif
 	    } else {
 		color = [[NSColor
 			    colorForControlTint:[NSColor currentControlTint]]
 			        colorUsingColorSpace: sRGB];
 	    }
 	    break;
+	case 9:
+	    if ([NSApp macOSVersion] >= 101000) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+		color = [[NSColor linkColor] colorUsingColorSpace:sRGB];
+#endif
+	    } else {
+		color = [[NSColor blueColor] colorUsingColorSpace:sRGB];
+	    }
+	    break;
 	default:
-	    if ([NSApp macMinorVersion] >= 10) {
+	    if ([NSApp macOSVersion] >= 101000) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
@@ -437,7 +442,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
 
-    if ([NSApp macMinorVersion] >= 14) {
+    if ([NSApp macOSVersion] >= 101400) {
         TkWindow *winPtr = (TkWindow*) tkwin;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
@@ -501,7 +506,7 @@ TkSetMacColor(
  * Results:
  *	None resp. retained CGColorRef for CopyCachedColor()
  *
- * Side effects:M
+ * Side effects:
  *	None.
  *
  *----------------------------------------------------------------------
