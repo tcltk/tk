@@ -59,6 +59,16 @@
 #   endif
 #endif
 
+#if defined(_WIN32) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+# if TCL_UTF_MAX > 3
+#   define Tcl_WCharToUtfDString(a,b,c) Tcl_WinTCharToUtf((TCHAR *)(a),(b)*sizeof(WCHAR),c)
+#   define Tcl_UtfToWCharDString(a,b,c) (WCHAR *)Tcl_WinUtfToTChar(a,b,c)
+# else
+#   define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
+#   define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
+# endif
+#endif
+
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
@@ -682,7 +692,7 @@ typedef struct TkWindow {
     Visual *visual;		/* Visual to use for window. If not default,
 				 * MUST be set before X window is created. */
     int depth;			/* Number of bits/pixel. */
-    Window window;		/* X's id for window. NULL means window hasn't
+    Window window;		/* X's id for window. None means window hasn't
 				 * actually been created yet, or it's been
 				 * deleted. */
     struct TkWindow *childList;	/* First in list of child windows, or NULL if
@@ -842,6 +852,11 @@ typedef struct TkWindow {
 
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
+#ifdef _WIN32
+    char trans_chars[XMaxTransChars];
+                            /* translated characters */
+    unsigned char nbytes;
+#elif !defined(MAC_OSC_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
@@ -851,6 +866,7 @@ typedef struct {
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
+#endif
 } TkKeyEvent;
 
 /*
@@ -1221,6 +1237,10 @@ MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int x, int y);
+MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int maxLength, int flags,
@@ -1274,9 +1294,13 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #if TCL_UTF_MAX > 4
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf
+#   define TkUtfPrev Tcl_UtfPrev
+#   define TkUtfAtIndex Tcl_UtfAtIndex
 #else
     MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE int TkUniCharToUtf(int, char *);
+    MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
+    MODULE_SCOPE const char *TkUtfAtIndex(const char *src, int index);
 #endif
 
 /*

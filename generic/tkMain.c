@@ -14,21 +14,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/**
- * On Windows, this file needs to be compiled twice, once with
- * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
- * can be implemented, sharing the same source code.
- */
-#if defined(TK_ASCII_MAIN)
-#   ifdef UNICODE
-#	undef UNICODE
-#	undef _UNICODE
-#   else
-#	define UNICODE
-#	define _UNICODE
-#   endif
-#endif
-
 #include "tkInt.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -78,12 +63,6 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #include "tkMacOSXInt.h"
 #endif
 
-/*
- * Further on, in UNICODE mode we just use Tcl_NewUnicodeObj, otherwise
- * NewNativeObj is needed (which provides proper conversion from native
- * encoding to UTF-8).
- */
-
 static inline Tcl_Obj *
 NewNativeObj(
     TCHAR *string)
@@ -91,8 +70,9 @@ NewNativeObj(
     Tcl_Obj *obj;
     Tcl_DString ds;
 
-#ifdef UNICODE
-    Tcl_WinTCharToUtf(string, -1, &ds);
+#if defined(_WIN32) && defined(UNICODE)
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
     Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
 #endif
@@ -422,17 +402,18 @@ Tk_MainEx(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
     int mask)			/* Not used. */
 {
     char *cmd;
-    int code, count;
-    InteractiveState *isPtr = clientData;
+    int code;
+    int count;
+    InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
+    (void)mask;
 
     count = Tcl_Gets(chan, &isPtr->line);
 

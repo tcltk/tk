@@ -38,7 +38,7 @@ static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
  *
  * XDestroyWindow --
  *
- *	Dealocates the given X Window.
+ *	Deallocates the given X Window.
  *
  * Results:
  *	The window id is returned.
@@ -698,16 +698,10 @@ XConfigureWindow(
 
     if (value_mask & CWStackMode) {
 	NSView *view = TkMacOSXDrawableView(macWin);
-	Rect bounds;
-	NSRect r;
 
 	if (view) {
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
-	    TkMacOSXWinBounds(winPtr, &bounds);
-	    r = NSMakeRect(bounds.left,
-		    [view bounds].size.height - bounds.bottom,
-		    bounds.right - bounds.left, bounds.bottom - bounds.top);
-	    [view setNeedsDisplayInRect:r];
+	    TkpRedrawWidget((Tk_Window) winPtr);
 	}
     }
 
@@ -826,7 +820,7 @@ TkMacOSXUpdateClipRgn(
 
 	    /*
 	     * Clip away the area of any windows that may obscure this window.
-	     * For a non-toplevel window, first, clip to the parents visible
+	     * For a non-toplevel window, first, clip to the parent's visible
 	     * clip region. Second, clip away any siblings that are higher in
 	     * the stacking order. For an embedded toplevel, just clip to the
 	     * container's visible clip region. Remember, we only allow one
@@ -1281,7 +1275,7 @@ TkMacOSXInvalClipRgns(
  *
  * TkMacOSXWinBounds --
  *
- *	Given a Tk window this function determines the windows bounds in
+ *	Given a Tk window this function determines the window's bounds in
  *	relation to the Macintosh window's coordinate system. This is also the
  *	same coordinate system as the Tk toplevel window in which this window
  *	is contained.
@@ -1313,7 +1307,7 @@ TkMacOSXWinBounds(
  *
  * TkMacOSXWinCGBounds --
  *
- *	Given a Tk window this function determines the windows bounds in
+ *	Given a Tk window this function determines the window's bounds in
  *	relation to the Macintosh window's coordinate system. This is also the
  *	same coordinate system as the Tk toplevel window in which this window
  *	is contained.

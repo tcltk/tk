@@ -6692,7 +6692,8 @@ test text-27.15d {<<Selection>> virtual event on <Delete> with cursor inside sel
     update
     set ::retval no_<<Selection>>_event_fired
     .t mark set insert 1.15
-    focus .t
+    update idletasks
+    focus -force .t
     event generate .t <Delete>
     update
     set ::retval

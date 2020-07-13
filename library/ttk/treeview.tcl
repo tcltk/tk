@@ -102,7 +102,11 @@ proc ttk::treeview::Keynav {w dir} {
 #	Sets cursor, active element ...
 #
 proc ttk::treeview::Motion {w x y} {
-    set cursor {}
+    variable State
+
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor hresize]
+
+    set cursor $State(userConfCursor)
     set activeHeading {}
 
     switch -- [$w identify region $x $y] {
@@ -261,9 +265,9 @@ proc ttk::treeview::SelectOp {w item op} {
 
 ## -selectmode none:
 #
-proc ttk::treeview::select.choose.none {w item} { $w focus $item }
-proc ttk::treeview::select.toggle.none {w item} { $w focus $item }
-proc ttk::treeview::select.extend.none {w item} { $w focus $item }
+proc ttk::treeview::select.choose.none {w item} { $w focus $item; $w see $item }
+proc ttk::treeview::select.toggle.none {w item} { $w focus $item; $w see $item }
+proc ttk::treeview::select.extend.none {w item} { $w focus $item; $w see $item }
 
 ## -selectmode browse:
 #

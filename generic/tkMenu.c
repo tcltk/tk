@@ -1019,7 +1019,7 @@ TkInvokeMenu(
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "tk::TearOffMenu ", -1);
 	Tcl_DStringAppend(&ds, Tk_PathName(menuPtr->tkwin), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&ds);
     } else if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    && (mePtr->namePtr != NULL)) {
@@ -2144,7 +2144,7 @@ TkGetMenuIndex(
     }
 
     if (isdigit(UCHAR(string[0]))) {
-	if (Tcl_GetInt(interp, string, &i) == TCL_OK) {
+	if (Tcl_GetIntFromObj(interp, objPtr, &i) == TCL_OK) {
 	    if (i >= menuPtr->numEntries) {
 		if (lastOK) {
 		    i = menuPtr->numEntries;
