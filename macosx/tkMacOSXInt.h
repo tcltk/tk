@@ -180,7 +180,7 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 #define TK_MACOSX_HANDLE_EVENT_IMMEDIATELY 1024
 
 /*
- * Defines for tkTextDisp.c
+ * Defines for tkTextDisp.c and tkFont.c
  */
 
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
