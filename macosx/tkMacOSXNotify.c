@@ -261,7 +261,6 @@ Tk_MacOSXSetupTkNotifier(void)
 	    Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
 		    TkMacOSXEventsCheckProc, NULL);
 	    TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
-	    Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	    TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
 	    TclMacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
 	}
