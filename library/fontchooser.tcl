@@ -280,7 +280,7 @@ proc ::tk::fontchooser::Create {} {
 # Arguments:
 #       ok              true if user pressed OK
 #
-proc ::tk::::fontchooser::Done {ok} {
+proc ::tk::fontchooser::Done {ok} {
     variable S
 
     if {! $ok} {
