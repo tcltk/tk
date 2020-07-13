@@ -246,9 +246,9 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    register TkScrollbar *scrollPtr = clientData;
+    TkScrollbar *scrollPtr = clientData;
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
-    register Tk_Window tkwin = scrollPtr->tkwin;
+    Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkMacOSXDrawingContext dc;
 
@@ -316,7 +316,7 @@ TkpDisplayScrollbar(
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationInverted);
-    } else if ([NSApp macMinorVersion] <= 8) {
+    } else if ([NSApp macOSVersion] <= 100800) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
@@ -354,7 +354,7 @@ TkpDisplayScrollbar(
 
 extern void
 TkpComputeScrollbarGeometry(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 				/* Scrollbar whose geometry may have
 				 * changed. */
 {
@@ -377,7 +377,7 @@ TkpComputeScrollbarGeometry(
 	scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;
     } else {
 	scrollPtr->arrowLength = 0;
@@ -484,7 +484,7 @@ TkpDestroyScrollbar(
 
 void
 TkpConfigureScrollbar(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 {
     /* empty */
 }
@@ -509,7 +509,7 @@ TkpConfigureScrollbar(
 
 int
 TkpScrollbarPosition(
-    register TkScrollbar *scrollPtr,
+    TkScrollbar *scrollPtr,
 				/* Scrollbar widget record. */
     int x, int y)		/* Coordinates within scrollPtr's window. */
 {
@@ -519,7 +519,7 @@ TkpScrollbarPosition(
      */
 
     int length, width, tmp;
-    register const int inset = scrollPtr->inset;
+    const int inset = scrollPtr->inset;
 
     if (scrollPtr->vertical) {
 	length = Tk_Height(scrollPtr->tkwin);

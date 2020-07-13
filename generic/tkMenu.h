@@ -13,10 +13,6 @@
 #ifndef _TKMENU
 #define _TKMENU
 
-#ifndef _TK
-#include "tk.h"
-#endif
-
 #ifndef _TKINT
 #include "tkInt.h"
 #endif

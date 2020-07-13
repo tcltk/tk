@@ -30,7 +30,7 @@ SOFTWARE.
 /*
  * TTY Functions, cleverly chosen to map to ascii, for convenience of
  * programming, but could have been arbitrary (at the cost of lookup
- * tables in client code.
+ * tables in client code).
  */
 
 #define XK_BackSpace		0xFF08	/* back space, back char */

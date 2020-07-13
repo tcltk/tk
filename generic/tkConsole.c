@@ -44,6 +44,7 @@ typedef struct ChannelData {
  */
 
 static int	ConsoleClose(ClientData instanceData, Tcl_Interp *interp);
+static int	Console2Close(ClientData instanceData, Tcl_Interp *interp, int flags);
 static void	ConsoleDeleteProc(ClientData clientData);
 static void	ConsoleEventProc(ClientData clientData, XEvent *eventPtr);
 static int	ConsoleHandle(ClientData instanceData, int direction,
@@ -66,7 +67,7 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
 
 static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
-    TCL_CHANNEL_VERSION_4,	/* v4 channel */
+    TCL_CHANNEL_VERSION_5,	/* v4 channel */
     ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
@@ -75,7 +76,7 @@ static const Tcl_ChannelType consoleChannelType = {
     NULL,			/* Get option proc. */
     ConsoleWatch,		/* Watch for events on console. */
     ConsoleHandle,		/* Get a handle from the device. */
-    NULL,			/* close2proc. */
+    Console2Close,			/* close2proc. */
     NULL,			/* Always non-blocking.*/
     NULL,			/* flush proc. */
     NULL,			/* handler proc. */
@@ -573,7 +574,7 @@ ConsoleInput(
 /*
  *----------------------------------------------------------------------
  *
- * ConsoleClose --
+ * ConsoleClose/Console2Close --
  *
  *	Closes the IO channel.
  *
@@ -606,6 +607,18 @@ ConsoleClose(
     }
     ckfree(data);
     return 0;
+}
+
+static int
+Console2Close(
+    ClientData instanceData,	/* Unused. */
+    Tcl_Interp *interp,		/* Unused. */
+    int flags)
+{
+    if ((flags&(TCL_CLOSE_READ|TCL_CLOSE_WRITE))==0) {
+	return ConsoleClose(instanceData, interp);
+    }
+    return EINVAL;
 }
 
 /*

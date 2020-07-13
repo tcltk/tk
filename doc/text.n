@@ -2025,10 +2025,11 @@ integer. This command used to be used for scrolling, but now it is obsolete.
 .SH BINDINGS
 .PP
 Tk automatically creates class bindings for texts that give them the following
-default behavior. In the descriptions below,
+default behavior.
+In the descriptions below,
 .QW word
-is dependent on the value of the \fBtcl_wordchars\fR variable. See
-\fBtclvars\fR(n).
+is dependent on the value of
+the \fBtcl_wordchars\fR variable.  See \fBtclvars\fR(n).
 .IP [1]
 Clicking mouse button 1 positions the insertion cursor just before the
 character underneath the mouse cursor, sets the input focus to this widget,
@@ -2057,10 +2058,11 @@ insertion cursor without affecting the selection.
 If any normal printing characters are typed, they are inserted at the point of
 the insertion cursor.
 .IP [7]
-The view in the widget can be adjusted by dragging with mouse button 2. If
-mouse button 2 is clicked without moving the mouse, the selection is copied
-into the text at the position of the mouse cursor. The Insert key also inserts
-the selection, but at the position of the insertion cursor.
+The view in the widget can be adjusted by dragging with the middle mouse
+button (button 2, or button 3 in TkAqua). If the middle mouse button is
+clicked without moving the mouse, the selection is copied into the text at the
+position of the mouse cursor. The Insert key also inserts the selection,
+but at the position of the insertion cursor.
 .IP [8]
 If the mouse is dragged out of the widget while button 1 is pressed, the entry
 will automatically scroll to make more text visible (if there is more text

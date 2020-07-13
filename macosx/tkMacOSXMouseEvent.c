@@ -55,6 +55,7 @@ enum {
     TkWindow *winPtr = NULL, *grabWinPtr;
     Tk_Window tkwin;
     NSPoint local, global;
+    NSInteger button = -1;
 #if 0
     NSTrackingArea *trackingArea = nil;
     NSInteger eventNumber, clickCount, buttonNumber;
@@ -65,18 +66,19 @@ enum {
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
     switch (eventType) {
-    case NSMouseEntered:
-    case NSMouseExited:
-    case NSCursorUpdate:
     case NSLeftMouseDown:
-    case NSLeftMouseUp:
     case NSRightMouseDown:
-    case NSRightMouseUp:
     case NSOtherMouseDown:
-    case NSOtherMouseUp:
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+	button = [theEvent buttonNumber] + Button1;
+    case NSMouseEntered:
+    case NSMouseExited:
+    case NSCursorUpdate:
+    case NSLeftMouseUp:
+    case NSRightMouseUp:
+    case NSOtherMouseUp:
     case NSMouseMoved:
     case NSTabletPoint:
     case NSTabletProximity:
@@ -94,6 +96,21 @@ enum {
 
     if (eventWindow) {
 	local = [theEvent locationInWindow];
+
+	/*
+	 * Do not send ButtonPress XEvents for MouseDown NSEvents that start a
+	 * resize.  (The MouseUp will be handled during LiveResize.)  See
+	 * ticket [d72abe6b54].
+	 */
+
+	if (eventType == NSLeftMouseDown &&
+	    ([eventWindow styleMask] & NSResizableWindowMask) &&
+	    [NSApp macOSVersion] > 100600) {
+	    NSRect frame = [eventWindow frame];
+	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
+		return theEvent;
+	    }
+	}
 	global = [eventWindow tkConvertPointToScreen: local];
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
@@ -211,26 +228,8 @@ enum {
      */
 
     unsigned int state = 0;
-    int button = [theEvent buttonNumber] + Button1;
-    EventRef eventRef = (EventRef)[theEvent eventRef];
-    UInt32 buttons;
-    OSStatus err = GetEventParameter(eventRef, kEventParamMouseChord,
-	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
-
-    if (err == noErr) {
-	state |= (buttons & 0x1F) * Button1Mask;
-    } else if (button <= Button5) {
-	switch (eventType) {
-	case NSLeftMouseDown:
-	case NSRightMouseDown:
-	case NSLeftMouseDragged:
-	case NSRightMouseDragged:
-	case NSOtherMouseDown:
-	    state |= TkGetButtonMask(button);
-	    break;
-	default:
-	    break;
-	}
+    if (button > 0) {
+	state |= TkGetButtonMask(button);
     }
 
     NSUInteger modifiers = [theEvent modifierFlags];
@@ -503,7 +502,7 @@ XQueryPointer(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -541,7 +540,7 @@ TkGenerateButtonEventForXPointer(
  *	True if event(s) are generated, false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -593,7 +592,7 @@ TkGenerateButtonEvent(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -641,46 +640,18 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
-    NSPoint loc;
-    int wNum;
 
     if (dispPtr->warpWindow) {
 	int x, y;
-	TkWindow *winPtr = (TkWindow *) dispPtr->warpWindow;
-	TkWindow *topPtr = winPtr->privatePtr->toplevel->winPtr;
-	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-	wNum = [w windowNumber];
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
-	loc.x = dispPtr->warpX;
-	loc.y = Tk_Height(topPtr) - dispPtr->warpY;
     } else {
-	wNum = 0;
-	pt.x = loc.x = dispPtr->warpX;
+	pt.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
-	loc.y = TkMacOSXZeroScreenHeight() - pt.y;
     }
 
-    /*
-     * Generate an NSEvent of type NSMouseMoved.
-     *
-     * It is not clear why this is necessary.  For example, calling
-     *     event generate $w <Motion> -warp 1 -x $X -y $Y
-     * will cause two <Motion> events to be added to the Tcl queue.
-     */
-
     CGWarpMouseCursorPosition(pt);
-    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved
-	location:loc
-	modifierFlags:0
-	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
-	context:nil
-	eventNumber:0
-	clickCount:1
-	pressure:0.0];
-    [NSApp postEvent:warpEvent atStart:NO];
 }
 
 /*

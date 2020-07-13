@@ -1451,9 +1451,22 @@ CanvasWidgetCmd(
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
-		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
+
+                    /*
+                     * Don't shuffle the tags sequence: memmove the tags.
+                     */
+
+                    memmove((void *)(itemPtr->tagPtr + i),
+                            itemPtr->tagPtr + i + 1,
+                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
-		}
+
+                    /*
+                     * There must be no break here: all tags with the same name must
+                     * be deleted.
+                     */
+
+ 		}
 	    }
 	}
 	break;
@@ -4975,7 +4988,9 @@ PickCurrentItem(
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 #endif /* USE_OLD_TAG_SEARCH */
 		    /* then */ {
-		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
+                    memmove((void *)(itemPtr->tagPtr + i),
+                            itemPtr->tagPtr + i + 1,
+                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
 		    break;
 		}
@@ -5541,8 +5556,8 @@ CanvasUpdateScrollbars(
     Tcl_DString buf;
 
     /*
-     * Save all the relevant values from the canvasPtr, because it might be
-     * deleted as part of either of the two calls to Tcl_VarEval below.
+     * Preserve the relevant values from the canvasPtr, because it might be
+     * deleted as part of either of the two calls to Tcl_EvalEx below.
      */
 
     interp = canvasPtr->interp;
@@ -5573,7 +5588,7 @@ CanvasUpdateScrollbars(
 	Tcl_DStringAppend(&buf, xScrollCmd, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
@@ -5591,7 +5606,7 @@ CanvasUpdateScrollbars(
 	Tcl_DStringAppend(&buf, yScrollCmd, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {

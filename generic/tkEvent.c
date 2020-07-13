@@ -73,7 +73,7 @@ typedef struct TkWindowEvent {
  * Array of event masks corresponding to each X event:
  */
 
-static const unsigned long realEventMasks[MappingNotify+1] = {
+static const unsigned long eventMasks[TK_LASTEVENT] = {
     0,
     0,
     KeyPressMask,			/* KeyPress */
@@ -111,10 +111,7 @@ static const unsigned long realEventMasks[MappingNotify+1] = {
     0,					/* SelectionNotify */
     ColormapChangeMask,			/* ColormapNotify */
     0,					/* ClientMessage */
-    0					/* Mapping Notify */
-};
-
-static const unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
+    0,					/* Mapping Notify */
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */
@@ -452,18 +449,8 @@ GetEventMaskFromXEvent(
 {
     unsigned long mask;
 
-    /*
-     * Get the event mask from the correct table. Note that there are two
-     * tables here because that means we no longer need this code to rely on
-     * the exact value of VirtualEvent, which has caused us problems in the
-     * past when X11 changed the value of LASTEvent. [Bug ???]
-     */
-
-    if (eventPtr->xany.type <= MappingNotify) {
-	mask = realEventMasks[eventPtr->xany.type];
-    } else if (eventPtr->xany.type >= VirtualEvent
-	    && eventPtr->xany.type<TK_LASTEVENT) {
-	mask = virtualEventMasks[eventPtr->xany.type - VirtualEvent];
+    if (eventPtr->xany.type <TK_LASTEVENT) {
+	mask = eventMasks[eventPtr->xany.type];
     } else {
 	mask = 0;
     }
@@ -1643,6 +1630,47 @@ TkQueueEventForAllChildren(
 /*
  *----------------------------------------------------------------------
  *
+ * TkGenerateActivateEvents --
+ *
+ *	This function is called by the Mac and Windows window manager routines
+ *	when a toplevel window is activated or deactivated.
+ *	Activate/Deactivate events will be sent to every subwindow of the
+ *	toplevel followed by a FocusIn/FocusOut message.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Generates X events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkGenerateActivateEvents(
+    TkWindow *winPtr,		/* Toplevel to activate. */
+    int active)			/* Non-zero if the window is being activated,
+				 * else 0.*/
+{
+    XEvent event;
+
+    /*
+     * Generate Activate and Deactivate events. This event is sent to every
+     * subwindow in a toplevel window.
+     */
+
+    event.xany.serial = NextRequest(winPtr->display);
+    event.xany.send_event = False;
+    event.xany.display = winPtr->display;
+    event.xany.window = winPtr->window;
+
+    event.xany.type = active ? ActivateNotify : DeactivateNotify;
+    TkQueueEventForAllChildren(winPtr, &event);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WindowEventProc --
  *
  *	This function is called by Tcl_DoOneEvent when a window event reaches
@@ -1723,13 +1751,15 @@ CleanUpTkEvent(
     switch (eventPtr->type) {
     case KeyPress:
     case KeyRelease: {
-	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 	if (kePtr->charValuePtr != NULL) {
 	    ckfree(kePtr->charValuePtr);
 	    kePtr->charValuePtr = NULL;
 	    kePtr->charValueLen = 0;
 	}
+#endif
 	break;
     }
 

@@ -603,7 +603,7 @@ TkSetFocusWin(
 
     if (displayFocusPtr->focusOnMapPtr != NULL) {
 	Tk_DeleteEventHandler((Tk_Window) displayFocusPtr->focusOnMapPtr,
-		StructureNotifyMask, FocusMapProc,
+		VisibilityChangeMask, FocusMapProc,
 		displayFocusPtr->focusOnMapPtr);
 	displayFocusPtr->focusOnMapPtr = NULL;
     }
