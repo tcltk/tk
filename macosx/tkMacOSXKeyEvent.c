@@ -330,7 +330,7 @@ static NSUInteger textInputModifiers;
 
     if (repRange.location == 0) {
 	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
     /*
@@ -439,12 +439,12 @@ static NSUInteger textInputModifiers;
      * Use our insertText method to display the marked text.
      */
 
-    TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     processingCompose = YES;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
-    TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
 - (BOOL)hasMarkedText
@@ -513,7 +513,7 @@ static NSUInteger textInputModifiers;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
 
@@ -588,7 +588,7 @@ static NSUInteger textInputModifiers;
 	privateWorkingText = nil;
 	processingCompose = NO;
 	if (composeWin) {
-	    TkSendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
+	    Tk_SendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
 	}
     }
 }

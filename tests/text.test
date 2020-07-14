@@ -3122,7 +3122,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
-test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+test text-11a.51 {<<WidgetViewSync>> calls Tk_SendVirtualEvent(),
                   NOT Tk_HandleEvent().
                   Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
     destroy .top.t .top

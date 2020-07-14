@@ -3164,8 +3164,8 @@ GenerateWidgetViewSyncEvent(
 	} else {
 	    textPtr->dInfoPtr->flags |= OUT_OF_SYNC;
 	}
-        TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
-                           Tcl_NewBooleanObj(NewSyncState));
+	Tk_SendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+		Tcl_NewBooleanObj(NewSyncState));
     }
 }
 

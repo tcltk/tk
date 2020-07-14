@@ -358,7 +358,7 @@ Tk_PackObjCmd(
 
 	infoObj = Tcl_NewObj();
 	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
-		TkNewWindowObj(slavePtr->masterPtr->tkwin));
+		Tk_NewWindowObj(slavePtr->masterPtr->tkwin));
 	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-anchor", -1),
 		Tcl_NewStringObj(Tk_NameOfAnchor(slavePtr->anchor), -1));
 	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-expand", -1),
@@ -462,7 +462,7 @@ Tk_PackObjCmd(
 	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 		slavePtr = slavePtr->nextPtr) {
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj(slavePtr->tkwin));
+		    Tk_NewWindowObj(slavePtr->tkwin));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	break;
@@ -1382,7 +1382,7 @@ Unlink(
     if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
 	TkFreeGeometryMaster(masterPtr->tkwin, "pack");
 	masterPtr->flags &= ~ALLOCED_MASTER;
-	TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
+	Tk_SendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
     }
 
 }
