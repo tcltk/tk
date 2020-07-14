@@ -214,10 +214,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
     { "SecondaryLabelColor",		    ttkBackground, 14 },					    /* 183 */
     { "LinkColor",			    semantic, 9 },						    /* 184 */
+    { "PlaceholderTextColor",		    semantic, 10 },						    /* 185 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 184
+#define MAX_PIXELCODE 185
 
 /*
  *----------------------------------------------------------------------
@@ -384,6 +385,15 @@ SetCGColorComponents(
 #endif
 	    } else {
 		color = [[NSColor blueColor] colorUsingColorSpace:sRGB];
+	    }
+	    break;
+	case 10:
+	    if ([NSApp macOSVersion] >= 101000) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+		color = [[NSColor placeholderTextColor] colorUsingColorSpace:sRGB];
+#endif
+	    } else {
+		color = [[NSColor grayColor] colorUsingColorSpace:sRGB];
 	    }
 	    break;
 	default:
