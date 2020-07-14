@@ -978,7 +978,7 @@ systemAppWorkspace	systemInfoBackground
 systemBackground	systemInfoText
 systemButtonFace	systemMenu
 systemButtonHighlight	systemMenuText
-systemButtonShadow	systemPlaceholderTextColor
+systemButtonShadow	systemPlaceholderText
 systemButtonText	systemScrollbar
 systemCaptionText	systemWindow
 systemDisabledText	systemWindowFrame

@@ -29,7 +29,8 @@ namespace eval ttk::theme::winnative {
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
 
 	ttk::style configure TEntry \
-	    -padding 2 -selectborderwidth 0 -insertwidth 1
+	    -padding 2 -selectborderwidth 0 -insertwidth 1 \
+            -placeholderforeground SystemPlaceholderText
 	ttk::style map TEntry \
 	    -fieldbackground \
 	    	[list readonly SystemButtonFace disabled SystemButtonFace] \
@@ -37,7 +38,8 @@ namespace eval ttk::theme::winnative {
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding 2 \
+	    -placeholderforeground SystemPlaceholderText
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -55,7 +57,8 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-        ttk::style configure TSpinbox -padding {2 0 16 0}
+        ttk::style configure TSpinbox -padding {2 0 16 0} \
+	    -placeholderforeground SystemPlaceholderText
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 

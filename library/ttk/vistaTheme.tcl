@@ -58,7 +58,8 @@ namespace eval ttk::theme::vista {
 	ttk::style configure Toolbutton -padding {4 4}
 
         # Combobox
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding 2 \
+	    -placeholderforeground SystemPlaceholderText
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.background vsapi \
@@ -97,7 +98,8 @@ namespace eval ttk::theme::vista {
 	    ;
 
         # Entry
-        ttk::style configure TEntry -padding {1 1 1 1} ;# Needs lookup
+        ttk::style configure TEntry -padding {1 1 1 1} \
+            -placeholderforeground SystemPlaceholderText
         ttk::style element create Entry.field vsapi \
             EDIT 6 {disabled 4 focus 3 hover 2 {} 1} -padding {2 2 2 2}
         ttk::style element create Entry.background vsapi \
@@ -117,7 +119,8 @@ namespace eval ttk::theme::vista {
 	    ;
 
         # Spinbox
-        ttk::style configure TSpinbox -padding 0
+        ttk::style configure TSpinbox -padding 0 \
+	    -placeholderforeground SystemPlaceholderText
         ttk::style element create Spinbox.field vsapi \
             EDIT 9 {disabled 4 focus 3 hover 2 {} 1} -padding {1 1 1 2}
         ttk::style element create Spinbox.background vsapi \

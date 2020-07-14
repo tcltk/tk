@@ -158,7 +158,7 @@
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
 #define DEF_ENTRY_PLACEHOLDER		""
-#define DEF_ENTRY_PLACEHOLDERFG		"SystemPlaceHolderTextColor"
+#define DEF_ENTRY_PLACEHOLDERFG		"SystemPlaceHolderText"
 #define DEF_ENTRY_READONLY_BG_COLOR	"SystemButtonFace"
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
