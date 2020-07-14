@@ -31,12 +31,14 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
 
 	# OR: -padding {3 3 3 6}, which some apps seem to use.
-	ttk::style configure TEntry -padding {2 2 2 4}
+	ttk::style configure TEntry -padding {2 2 2 4} \
+            -placeholderforeground SystemPlaceholderText
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding 2 \
+	    -placeholderforeground SystemPlaceholderText
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -47,7 +49,8 @@ namespace eval ttk::theme::xpnative {
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
 
-	ttk::style configure TSpinbox -padding {2 0 14 0}
+	ttk::style configure TSpinbox -padding {2 0 14 0} \
+	    -placeholderforeground SystemPlaceholderText
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \

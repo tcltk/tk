@@ -58,7 +58,7 @@ static const SystemColorEntry sysColors[] = {
     {"InfoText",		COLOR_INFOTEXT},
     {"Menu",			COLOR_MENU},
     {"MenuText",		COLOR_MENUTEXT},
-    {"PlaceHolderTextColor",	COLOR_GRAYTEXT},
+    {"PlaceHolderText",		COLOR_GRAYTEXT},
     {"Scrollbar",		COLOR_SCROLLBAR},
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},
