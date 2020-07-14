@@ -229,7 +229,7 @@ enum {
 
     unsigned int state = 0;
     if (button > 0) {
-	state |= TkGetButtonMask(button);
+	state |= Tk_GetButtonMask(button);
     }
 
     NSUInteger modifiers = [theEvent modifierFlags];

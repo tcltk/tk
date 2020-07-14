@@ -1322,6 +1322,11 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    Tk_AlwaysShowSelection, /* 274 */
+    Tk_GetButtonMask, /* 275 */
+    Tk_GetDoublePixelsFromObj, /* 276 */
+    Tk_NewWindowObj, /* 277 */
+    Tk_SendVirtualEvent, /* 278 */
 };
 
 /* !END!: Do not edit above this line. */

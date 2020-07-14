@@ -2617,7 +2617,7 @@ WmIconwindowCmd(
     }
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -3565,7 +3565,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) masterPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) masterPtr));
 	}
 	return TCL_OK;
     }

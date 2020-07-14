@@ -799,7 +799,7 @@ Tk_CanvasObjCmd(
 	goto error;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(canvasPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(canvasPtr->tkwin));
     return TCL_OK;
 
   error:
@@ -5082,7 +5082,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
-    unsigned long mask;
+    unsigned mask;
 
     Tcl_Preserve(canvasPtr);
 
@@ -5095,7 +5095,7 @@ CanvasBindProc(
     switch (eventPtr->type) {
     case ButtonPress:
     case ButtonRelease:
-	mask = TkGetButtonMask(eventPtr->xbutton.button);
+	mask = Tk_GetButtonMask(eventPtr->xbutton.button);
 
 	/*
 	 * For button press events, repick the current item using the button
