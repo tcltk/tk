@@ -34,7 +34,6 @@ static int		GenerateUpdates(
 			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
-static void		DoWindowActivate(ClientData clientData);
 
 #pragma mark TKApplication(TKWindowEvent)
 
@@ -414,7 +413,7 @@ TkpWillDrawWidget(Tk_Window tkwin) {
 						    winPtr->privatePtr);
 	result = ([NSApp isDrawing] && view == [NSView focusView]);
 #if 0
-	printf("TkAppCanDraw: %s %d  %d \n", Tk_PathName(tkwin),
+	printf("TkpWillDrawWidget: %s %d  %d \n", Tk_PathName(tkwin),
 	       [NSApp isDrawing], (view == [NSView focusView]));
 	if (!result) {
 	    NSRect dirtyRect;
@@ -543,29 +542,6 @@ GenerateActivateEvents(
 	TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
     }
     return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DoWindowActivate --
- *
- *	Idle handler that calls GenerateActivateEvents().
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue.
- *
- *----------------------------------------------------------------------
- */
-
-void
-DoWindowActivate(
-    ClientData clientData)
-{
-    GenerateActivateEvents(clientData, 1);
 }
 
 /*
@@ -1068,12 +1044,12 @@ ConfigureRestrictProc(
 	serial = LastKnownRequestProcessed(Tk_Display(winPtr));
 
 	/*
-	 * First process all of the Expose events.
+	 * Use the ExposeRestrictProc to process only the expose events.  This
+	 * will create idle drawing tasks, which we handle before we return.
 	 */
-    	while (Tcl_ServiceEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {};
 
     	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
-    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {};
+    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
@@ -1085,8 +1061,8 @@ ConfigureRestrictProc(
 	 * effect.)
 	 *
 	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
-	 * So we can do the drawing now by processing all of the idle events
-	 * that were created when the expose events were processed.
+	 * So to run any display procs which were scheduled by the expose
+	 * events we process all idle events before returning.
 	 */
 
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}

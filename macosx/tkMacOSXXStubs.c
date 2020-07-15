@@ -752,7 +752,18 @@ XSync(
     Display *display,
     Bool discard)
 {
-    TkMacOSXFlushWindows();
+    /*
+     *  The main use of XSync is by the update command, which alternates
+     *  between running an event loop to process all events without waiting and
+     *  calling XSync on all displays until no events are left.  There is
+     *  nothing for the mac to do with respect to syncing its one display but
+     *  it can (and, during regression testing, frequently does) happen that
+     *  timer events fire during the event loop. Processing those here seems
+     *  to make the update command work in a way that is more consistent with
+     *  its behavior on other platforms.
+     */
+
+    while (Tcl_DoOneEvent(TCL_TIMER_EVENTS|TCL_DONT_WAIT)){}
     display->request++;
     return 0;
 }
@@ -945,7 +956,7 @@ XSynchronize(
     Display *display,
     Bool onoff)
 {
-	display->request++;
+    display->request++;
     return NULL;
 }
 

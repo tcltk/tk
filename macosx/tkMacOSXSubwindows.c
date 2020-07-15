@@ -136,6 +136,9 @@ XMapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
+    if (!window) {
+	return BadWindow;
+    }
     MacDrawable *macWin = (MacDrawable *) window;
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXDrawableWindow(window);
