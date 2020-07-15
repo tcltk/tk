@@ -1636,7 +1636,7 @@ TkMacOSXSetupDrawingContext(
 	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
 	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
 	}
-	if (![NSApp isDrawing] || view != [NSView focusView]) {
+	if (![NSApp isDrawing]) {
 
 	    /*
 	     * We can only draw into the view when the current CGContext is
