@@ -220,7 +220,6 @@ XMapWindow(
 	TKContentView *view = [win contentView];
 	[view addTkDirtyRect:[view bounds]];
     }
-    [[win contentView] setNeedsRedisplay:YES];
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
@@ -337,7 +336,6 @@ XUnmapWindow(
 	TKContentView *view = [win contentView];
 	[view addTkDirtyRect:[view bounds]];
     }
-    [[win contentView] setNeedsRedisplay:YES];
     return Success;
 }
 

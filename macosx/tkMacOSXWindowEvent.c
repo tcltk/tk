@@ -936,10 +936,6 @@ ConfigureRestrictProc(
     [NSApp setIsDrawing: YES];
     [self clearTkDirtyRect];
     [self generateExposeEvents:rect];
-    if ([self needsRedisplay]) {
-	[self setNeedsRedisplay:NO];
-	[self addTkDirtyRect: [self bounds]];
-    }
     [NSApp setIsDrawing:NO];
 
 #ifdef TK_MAC_DEBUG_DRAWING
