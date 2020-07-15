@@ -58,7 +58,7 @@
 # 64-bit compiler, if your SDK has it.
 #
 # Examples:
-# Assumign Tcl sources lie in ../../tcl
+# Assuming Tcl sources lie in ../../tcl
 #       c:\tcl_src\win\>nmake -f makefile.vc release
 # If Tcl sources are not in ../../tcl, use the TCLDIR macro to specify dir
 #       c:\tcl_src\win\>nmake -f makefile.vc release TCLDIR=c:\src\tcl
@@ -66,7 +66,7 @@
 #       c:\tcl_src\win\>nmake -f makefile.vc test
 # Install Tk in location specified by INSTALLDIR macro
 #       c:\tcl_src\win\>nmake -f makefile.vc install INSTALLDIR=c:\progra~1\tcl
-# Build release with PDF files
+# Build release with PDB files
 #       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=pdbs
 # Build debug version
 #       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=symbols

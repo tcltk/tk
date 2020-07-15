@@ -637,14 +637,11 @@ typedef struct TkDisplay {
  *	Whether to use input methods for this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
- *  TK_DISPLAY_IN_WARP:			(default off)
- *	Indicates that we are in a pointer warp
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
-#define TK_DISPLAY_IN_WARP			(1 << 4)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -787,7 +784,7 @@ typedef struct TkWindow {
     Visual *visual;		/* Visual to use for window. If not default,
 				 * MUST be set before X window is created. */
     int depth;			/* Number of bits/pixel. */
-    Window window;		/* X's id for window. NULL means window hasn't
+    Window window;		/* X's id for window. None means window hasn't
 				 * actually been created yet, or it's been
 				 * deleted. */
     struct TkWindow *childList;	/* First in list of child windows, or NULL if
@@ -1095,7 +1092,7 @@ typedef struct TkpClipMask {
 		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
+MODULE_SCOPE unsigned TkGetButtonMask(unsigned);
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
@@ -1385,6 +1382,10 @@ MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int x, int y);
+MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int maxLength, int flags,
@@ -1419,8 +1420,8 @@ MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
 			    Tcl_Interp *interp);
+MODULE_SCOPE void	TkDoWarpWrtWin(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
-MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);

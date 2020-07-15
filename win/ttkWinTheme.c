@@ -7,7 +7,7 @@
 
 #include <tkWinInt.h>
 
-#ifndef DFCS_HOT	/* Windows 98/Me, Windows 200/XP only */
+#ifndef DFCS_HOT	/* Windows 98/Me, Windows 2000/XP only */
 #define DFCS_HOT 0
 #endif
 

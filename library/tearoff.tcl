@@ -39,7 +39,7 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 	    # Shift by height of tearoff entry minus height of window titlebar
 	    catch {incr y [expr {[$w yposition 1] - 16}]}
 	    # Avoid the native menu bar which sits on top of everything.
-	    if {$y < 22} { set y 22 }
+	    if {$y < 22} {set y 22}
 	}
     }
 

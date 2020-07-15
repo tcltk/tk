@@ -1689,7 +1689,7 @@ enum FontchooserOption {
  *	None.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
