@@ -506,7 +506,7 @@ TkSetMacColor(
  * Results:
  *	None resp. retained CGColorRef for CopyCachedColor()
  *
- * Side effects:M
+ * Side effects:
  *	None.
  *
  *----------------------------------------------------------------------
