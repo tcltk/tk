@@ -124,28 +124,6 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 #   undef SETFLAGS
 }
 
-/* TtkSendVirtualEvent --
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $tgtWindow <<$eventName>>"
- *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
- * 	so this routine does not reenter the interpreter.
- */
-void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
-{
-    union {XEvent general; XVirtualEvent virt;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(tgtWin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(tgtWin);
-    event.general.xany.display = Tk_Display(tgtWin);
-    event.virt.name = Tk_GetUid(eventName);
-
-    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
-}
-
 /* TtkEnumerateOptions, TtkGetOptionValue --
  *	Common factors for data accessor commands.
  */
