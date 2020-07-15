@@ -1069,7 +1069,7 @@ declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
-# TIP #???
+# TIP#580
 declare 274 {
     int Tk_AlwaysShowSelection(Tk_Window tkwin)
 }
@@ -1084,7 +1084,7 @@ declare 277 {
     Tcl_Obj *Tk_NewWindowObj(Tk_Window tkwin)
 }
 declare 278 {
-    void Tk_SendVirtualEvent(Tk_Window tgtWin, const char *eventName,
+    void Tk_SendVirtualEvent(Tk_Window tkwin, const char *eventName,
 	    Tcl_Obj *detail)
 }
 
