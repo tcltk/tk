@@ -1031,7 +1031,7 @@ typedef struct TkpClipMask {
 		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
+MODULE_SCOPE unsigned TkGetButtonMask(unsigned);
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
