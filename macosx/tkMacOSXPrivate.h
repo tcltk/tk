@@ -422,11 +422,9 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    Bool _needsRedisplay;
     Bool _tkNeedsDisplay;
     NSRect _tkDirtyRect;
 }
-@property Bool needsRedisplay;
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
 @end

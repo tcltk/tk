@@ -1642,13 +1642,13 @@ TkMacOSXSetupDrawingContext(
 	     * We can only draw into the view when the current CGContext is
 	     * valid and belongs to the view.  Validity can only be guaranteed
 	     * inside of a view's drawRect or setFrame methods.  The isDrawing
-	     * attribute tells us whether we are being called from one of those
-	     * methods.  If the CGContext is not valid then we mark our view as
-	     * needing display.
+	     * attribute tells us whether we are being called from drawRect.
+	     * If the CGContext is not valid then we mark our view as needing
+	     * display.
 	     */
 
 	    if (dc.clipRgn) {
-		[view addTkDirtyRect:clipBounds];
+		[view addTkDirtyRect:NSRectFromCGRect(clipBounds)];
 	    } else {
 		[view addTkDirtyRect:[view bounds]];
 	    }

@@ -268,14 +268,6 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 
--(id)init {
-    self = [super init];
-    if (self) {
-        _needsRedisplay = NO;
-    }
-    return self;
-}
-
 /*
  * Implementation of the NSTextInputClient protocol.
  */
@@ -551,7 +543,6 @@ static NSUInteger textInputModifiers;
 }
 /* End of NSTextInputClient implementation. */
 
-@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
