@@ -180,7 +180,6 @@ TkpOpenDisplay(
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
-/*    OpenIM(dispPtr); */
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
 	    InstantiateIMCallback, (XPointer) dispPtr);
 #endif
