@@ -1978,7 +1978,7 @@ static void EntryElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    *paddingPtr = Ttk_MakePadding(9, 8, 7, 9);
+    *paddingPtr = Ttk_MakePadding(7, 6, 7, 5);
 }
 
 static void EntryElementDraw(
@@ -1993,8 +1993,7 @@ static void EntryElementDraw(
     ThemeFrameParams *params = clientData;
     HIThemeFrameKind kind = params ? params->kind :
 	kHIThemeFrameTextFieldSquare;
-    Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
-    CGRect bounds = BoxToRect(d, inner);
+    CGRect bounds = BoxToRect(d, b);
     CGColorRef background;
     Tk_3DBorder backgroundPtr = NULL;
     static const char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
@@ -2038,7 +2037,7 @@ static void EntryElementDraw(
 	if (backgroundPtr != NULL) {
 	    XFillRectangle(Tk_Display(tkwin), d,
 		Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-		inner.x, inner.y, inner.width, inner.height);
+		b.x, b.y, b.width, b.height);
 	}
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
@@ -2084,7 +2083,7 @@ static Ttk_ElementSpec EntryElementSpec = {
  */
 
 // OS dependent ???
-static Ttk_Padding ComboboxPadding = {6, 8, 20, 8};
+static Ttk_Padding ComboboxPadding = {7, 5, 24, 5};
 
 static void ComboboxElementSize(
     void *clientData,
@@ -2118,7 +2117,7 @@ static void ComboboxElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macOSVersion] > 100800) {
-	bounds = CGRectInset(bounds, 2, 2);
+	bounds = CGRectInset(bounds, -1, -1);
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	bounds.origin.y += 1;
@@ -2164,12 +2163,13 @@ static void SpinButtonReBounds(
     CGRect *bounds)
 {
     if (TkMacOSXInDarkMode(tkwin)) {
-	bounds->origin.x -= 5;
+	bounds->origin.x -= 2;
 	bounds->origin.y += 1;
 	bounds->size.height -= 0.5;
     } else {
-	bounds->origin.x -= 6;
-	bounds->size.width += 2;
+	bounds->origin.x -= 3;
+	bounds->size.width += 1;
+	bounds->size.width += 1;
     }
 }
 
