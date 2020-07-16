@@ -245,6 +245,38 @@ static char scriptPath[PATH_MAX + 1] = "";
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXMinorVersion --
+ *
+ *	Tcl command which returns the minor version number of the currently
+ *	running operating system.
+ *
+ * Results:
+ *	Returns the minor version number.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+TkMacOSXMinorVersion(
+		     ClientData cd,
+		     Tcl_Interp *ip,
+		     int objc,
+		     Tcl_Obj *const objv[])
+{
+    static char version[16] = "";
+    if (version[0] == '\0') {
+	snprintf(version, 16, "%d", [NSApp macOSVersion]);
+    }
+    Tcl_SetResult(ip, version, NULL);
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpInit --
  *
  *	Performs Mac-specific interpreter initialization related to the
@@ -420,7 +452,10 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,
+			 NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
+           TkMacOSXMinorVersion, NULL, NULL);
     return TCL_OK;
 }
 

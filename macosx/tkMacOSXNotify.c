@@ -183,6 +183,12 @@ void DebugPrintQueue(void)
 #endif
 
 }
+
+- (void) _runBackgroundLoop
+{
+    while(Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)){};
+    TkMacOSXDrawAllViews(NULL);
+}
 @end
 
 #pragma mark -
@@ -201,15 +207,13 @@ void DebugPrintQueue(void)
  *----------------------------------------------------------------------
  */
 
-NSString *
+static NSString *
 GetRunLoopMode(NSModalSession modalSession)
 {
     NSString *runLoopMode = nil;
 
     if (modalSession) {
 	runLoopMode = NSModalPanelRunLoopMode;
-    } else if (TkMacOSXGetCapture()) {
-	runLoopMode = NSEventTrackingRunLoopMode;
     }
     if (!runLoopMode) {
 	runLoopMode = [[NSRunLoop currentRunLoop] currentMode];
