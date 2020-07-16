@@ -216,8 +216,8 @@ XMapWindow(
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
     }
 
-    if (![NSApp isDrawing]) {
-	TKContentView *view = [win contentView];
+    TKContentView *view = [win contentView];
+    if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
     }
 
@@ -332,8 +332,8 @@ XUnmapWindow(
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
     winPtr->flags &= ~TK_MAPPED;
-    if (![NSApp isDrawing]) {
-	TKContentView *view = [win contentView];
+    TKContentView *view = [win contentView];
+    if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
     }
     return Success;
