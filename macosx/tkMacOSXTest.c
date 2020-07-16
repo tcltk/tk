@@ -14,6 +14,8 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
+
 
 /*
  * Forward declarations of procedures defined later in this file:
@@ -108,7 +110,8 @@ DebuggerObjCmd(
  *      first call will usually not occur inside of drawRect.
  *
  * Results:
- *      On OSX 10.14 and later, returns true if and only if called from
+ *      On OSX 10.14 and later, returns true if and only if the NSView of the
+ *      drawable is the current focusView, which can only be the case when
  *      within [NSView drawRect].  On earlier systems returns false if
  *      and only if called from with [NSView drawRect].
  *
@@ -118,9 +121,28 @@ DebuggerObjCmd(
  *----------------------------------------------------------------------
  */
 MODULE_SCOPE Bool
-TkTestLogDisplay(void) {
-    if ([NSApp macOSVersion] >= 101400) {
-	return [NSApp isDrawing];
+TkTestLogDisplay(
+    Drawable drawable)
+{
+    MacDrawable *macWin = (MacDrawable *) drawable;
+    NSWindow *win = nil;
+    if (macWin->toplevel && macWin->toplevel->winPtr &&
+	macWin->toplevel->winPtr->wmInfoPtr &&
+	macWin->toplevel->winPtr->wmInfoPtr->window) {
+	win = macWin->toplevel->winPtr->wmInfoPtr->window;
+    } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
+	       macWin->winPtr->wmInfoPtr->window) {
+	win = macWin->winPtr->wmInfoPtr->window;
+    }/*
+    else if (macWin->toplevel && (macWin->toplevel->flags & TK_EMBEDDED)) {
+	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
+	if (contWinPtr) {
+	    win = TkMacOSXDrawableWindow((Drawable) contWinPtr->privatePtr);
+	}
+	}*/
+    if (win && [NSApp macOSVersion] >= 101400) {
+	TKContentView *view = [win contentView];
+	return (view == [NSView focusView]);
     } else {
 	return ![NSApp isDrawing];
     }
