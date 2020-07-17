@@ -1766,34 +1766,56 @@ DisplayEntry(
 	}
     }
 
-    /*
-     * Draw the text in two pieces: first the unselected portion, then the
-     * selected portion on top of it.
-     */
+    if ((entryPtr->numChars == 0) && (entryPtr->placeholderChars != 0)) {
 
-    if ((entryPtr->numChars != 0) || (entryPtr->placeholderChars == 0)) {
-        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
-	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-	    entryPtr->leftIndex, entryPtr->numChars);
-    } else {
-	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
+        /*
+         * Draw the placeholder text.
+         */
+
+        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
 	    entryPtr->placeholderLayout, entryPtr->placeholderX, entryPtr->layoutY,
 	    entryPtr->placeholderLeftIndex, entryPtr->placeholderChars);
-    }
 
-    if (showSelection && (entryPtr->state != STATE_DISABLED)
-	    && (entryPtr->selTextGC != entryPtr->textGC)
-	    && (entryPtr->selectFirst + 1 < entryPtr->selectLast + 1)) {
-	int selFirst;
+    } else {
 
-	if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
-	    selFirst = entryPtr->leftIndex;
-	} else {
-	    selFirst = entryPtr->selectFirst;
-	}
-	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
-		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-		selFirst, entryPtr->selectLast);
+        if (showSelection && (entryPtr->state != STATE_DISABLED)
+	        && (entryPtr->selTextGC != entryPtr->textGC)
+	        && (entryPtr->selectFirst + 1 < entryPtr->selectLast + 1)) {
+
+	    /*
+	     * Draw the selected and unselected portions separately.
+	     */
+
+	    int selFirst;
+
+	    if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
+	        selFirst = entryPtr->leftIndex;
+	    } else {
+	        selFirst = entryPtr->selectFirst;
+	    }
+	    if (entryPtr->leftIndex < selFirst) {
+	        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		        entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		        entryPtr->leftIndex, selFirst);
+	    }
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    selFirst, entryPtr->selectLast);
+	    if (entryPtr->selectLast < entryPtr->numChars) {
+	        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		        entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		        entryPtr->selectLast, entryPtr->numChars);
+	    }
+        } else {
+
+            /*
+             * Draw the entire visible text
+             */
+
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    entryPtr->leftIndex, entryPtr->numChars);
+        }
     }
 
     if (entryPtr->type == TK_SPINBOX) {

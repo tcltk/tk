@@ -1533,7 +1533,7 @@ test entry-3.79 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview none
+    .e xview -1
     .e index @0
 } -cleanup {
     destroy .e
@@ -2833,7 +2833,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index none
+    .e index -1
 } -cleanup {
     destroy .e
 } -result 0

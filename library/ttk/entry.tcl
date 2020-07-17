@@ -228,9 +228,7 @@ proc ttk::entry::Cut {w} {
 proc ttk::entry::ClosestGap {w x} {
     set pos [$w index @$x]
     set bbox [$w bbox $pos]
-    if {[string is none $pos]} {
-	set pos 0
-    } elif {$x - [lindex $bbox 0] > [lindex $bbox 2]/2} {
+    if {$x - [lindex $bbox 0] > [lindex $bbox 2]/2} {
 	incr pos
     }
     return $pos
@@ -241,7 +239,7 @@ proc ttk::entry::ClosestGap {w x} {
 proc ttk::entry::See {w {index insert}} {
     set c [$w index $index]
     # @@@ OR: check [$w index left] / [$w index right]
-    if {[string is none $c] || $c < [$w index @0] || $c >= [$w index @[winfo width $w]]} {
+    if {$c < [$w index @0] || $c >= [$w index @[winfo width $w]]} {
 	$w xview $c
     }
 }
@@ -260,7 +258,7 @@ proc ttk::entry::NextWord {w start} {
     if {$pos >= 0 && $State(startNext)} {
 	set pos [tcl_startOfNextWord [$w get] $pos]
     }
-    if {[string is none $pos]} {
+    if {$pos < 0} {
 	return end
     }
     return $pos
@@ -270,7 +268,7 @@ proc ttk::entry::NextWord {w start} {
 #
 proc ttk::entry::PrevWord {w start} {
     set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
-    if {[string is none $pos]} {
+    if {$pos < 0} {
 	return 0
     }
     return $pos

@@ -2804,7 +2804,7 @@ GetListboxIndex(
   badIndex:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad listbox index \"%s\": must be active, anchor, end, @x,y,"
-	    " or a number", Tcl_GetString(indexObj)));
+	    " or an index", Tcl_GetString(indexObj)));
     Tcl_SetErrorCode(interp, "TK", "VALUE", "LISTBOX_INDEX", NULL);
     return TCL_ERROR;
 }
