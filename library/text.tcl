@@ -1176,7 +1176,7 @@ proc ::tk::TextNextPos {w start op} {
     while {[$w compare $cur < end]} {
 	set text $text[$w get -displaychars $cur "$cur lineend + 1c"]
 	set pos [$op $text 0]
-	if {![string is none $pos]} {
+	if {$pos >= 0} {
 	    return [$w index "$start + $pos display chars"]
 	}
 	set cur [$w index "$cur lineend +1c"]
@@ -1199,7 +1199,7 @@ proc ::tk::TextPrevPos {w start op} {
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
 	set pos [$op $text end]
-	if {![string is none $pos]} {
+	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
 	set cur [$w index "$cur linestart - 1c"]

@@ -436,16 +436,16 @@ TkpWillDrawWidget(Tk_Window tkwin) {
  *
  * GenerateUpdates --
  *
- *	Given a Macintosh update region and a Tk window this function geneates
+ *	Given a Macintosh update region and a Tk window this function generates
  *	an X Expose event for the window if it meets the update region. The
- *	function will then recursivly have each damaged window generate Expose
+ *	function will then recursively have each damaged window generate Expose
  *	events for its child windows.
  *
  * Results:
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -470,7 +470,7 @@ GenerateUpdates(
     }
 
     /*
-     * Compute the bounding box of the area that the damage occured in.
+     * Compute the bounding box of the area that the damage occurred in.
      */
 
     boundsRgn = HIShapeCreateWithRect(&bounds);
@@ -544,7 +544,7 @@ GenerateUpdates(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -572,7 +572,7 @@ GenerateActivateEvents(
  *	None.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -596,7 +596,7 @@ DoWindowActivate(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -754,7 +754,7 @@ TkGenWMConfigureEvent(
 
     /*
      * Now set up the changes structure. Under X we wait for the
-     * ConfigureNotify to set these values. On the Mac we know imediatly that
+     * ConfigureNotify to set these values. On the Mac we know immediately that
      * this is what we want - so we just set them. However, we need to make
      * sure the windows clipping region is marked invalid so the change is
      * visible to the subwindow.
@@ -946,7 +946,7 @@ RedisplayView(
     NSView *view = (NSView *) clientdata;
 
     /*
-     * Make sure that we are not trying to displaying a view that no longer
+     * Make sure that we are not trying to display a view that no longer
      * exists. Must call [NSApp windows] because [NSApp orderedWindows] excludes
      * floating/utility windows and other window panels.
      */

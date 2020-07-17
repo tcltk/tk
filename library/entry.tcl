@@ -58,7 +58,7 @@ bind Entry <<Paste>> {
 }
 bind Entry <<Clear>> {
     # ignore if there is no selection
-    catch { %W delete sel.first sel.last }
+    catch {%W delete sel.first sel.last}
 }
 bind Entry <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
@@ -119,18 +119,17 @@ bind Entry <Control-Button-1> {
 }
 
 bind Entry <<PrevChar>> {
-
-    tk::EntrySetCursor %W [%W index insert]-1
+    tk::EntrySetCursor %W [expr {[%W index insert]-1}]
 }
 bind Entry <<NextChar>> {
-    tk::EntrySetCursor %W [%W index insert]+1
+    tk::EntrySetCursor %W [expr {[%W index insert]+1}]
 }
 bind Entry <<SelectPrevChar>> {
-    tk::EntryKeySelect %W [%W index insert]-1
+    tk::EntryKeySelect %W [expr {[%W index insert]-1}]
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextChar>> {
-    tk::EntryKeySelect %W [%W index insert]+1
+    tk::EntryKeySelect %W [expr {[%W index insert]+1}]
     tk::EntrySeeInsert %W
 }
 bind Entry <<PrevWord>> {
@@ -279,7 +278,7 @@ bind Entry <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Entry <<TkEndIMEMarkedText>> {
-    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+    if {[catch {dict get $::tk::Priv(IMETextMark) "%W"} mark]} {
 	bell
     } else {
 	%W selection range $mark insert
@@ -521,7 +520,7 @@ proc ::tk::EntryBackspace w {
     } else {
 	set x [$w index insert]
 	if {$x > 0} {
-	    $w delete $x-1
+	    $w delete [expr {$x-1}]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -579,7 +578,7 @@ proc ::tk::EntryTranspose w {
     if {$i < 2} {
 	return
     }
-    set first $i-2
+    set first [expr {$i-2}]
     set data [$w get]
     set new [string index $data $i-1][string index $data $first]
     $w delete $first $i
@@ -600,10 +599,10 @@ proc ::tk::EntryTranspose w {
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
-	if {![string is none $pos]} {
+	if {$pos >= 0} {
 	    set pos [tcl_startOfNextWord [$w get] $pos]
 	}
-	if {[string is none $pos]} {
+	if {$pos < 0} {
 	    return end
 	}
 	return $pos
@@ -611,7 +610,7 @@ if {[tk windowingsystem] eq "win32"}  {
 } else {
     proc ::tk::EntryNextWord {w start} {
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
-	if {[string is none $pos]} {
+	if {$pos < 0} {
 	    return end
 	}
 	return $pos
@@ -629,7 +628,7 @@ if {[tk windowingsystem] eq "win32"}  {
 
 proc ::tk::EntryPreviousWord {w start} {
     set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
-    if {[string is none $pos]} {
+    if {$pos < 0} {
 	return 0
     }
     return $pos
@@ -661,7 +660,7 @@ proc ::tk::EntryScanMark {w x} {
 proc ::tk::EntryScanDrag {w x} {
     # Make sure these exist, as some weird situations can trigger the
     # motion binding without the initial press.  [Bug #220269]
-    if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
+    if {![info exists ::tk::Priv(x)]} {set ::tk::Priv(x) $x}
     # allow for a delta
     if {abs($x-$::tk::Priv(x)) > 2} {
 	set ::tk::Priv(mouseMoved) 1

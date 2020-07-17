@@ -1871,7 +1871,7 @@ test spinbox-3.79 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview none
+    .e xview -1
     .e index @0
 } -cleanup {
     destroy .e
@@ -3115,7 +3115,7 @@ test spinbox-13.23 {GetSpinboxIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index none
+    .e index -1
 } -cleanup {
     destroy .e
 } -result 0

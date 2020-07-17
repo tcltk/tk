@@ -641,7 +641,7 @@ DoObjConfig(
 	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
-			"\": must be integer?[+-]integer?, end?[+-]integer? or none", NULL);
+			"\": must be integer?[+-]integer? or end?[+-]integer?", NULL);
 	    }
 	    return TCL_ERROR;
 	}

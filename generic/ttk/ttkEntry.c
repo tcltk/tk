@@ -1317,21 +1317,42 @@ static void EntryDisplay(void *clientData, Drawable d)
 	foregroundObj = es.foregroundObj;
     }
     gc = EntryGetGC(entryPtr, foregroundObj, clipRegion);
-    Tk_DrawTextLayout(
-	Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
-	entryPtr->entry.layoutX, entryPtr->entry.layoutY,
-	leftIndex, rightIndex);
-    XSetClipMask(Tk_Display(tkwin), gc, None);
-    Tk_FreeGC(Tk_Display(tkwin), gc);
-
-    /* Overwrite the selected portion (if any) in the -selectforeground color:
-     */
     if (showSelection) {
+
+        /* Draw the selected and unselected portions separately.
+	 */
+	if (leftIndex < selFirst) {
+	    Tk_DrawTextLayout(
+		Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
+		entryPtr->entry.layoutX, entryPtr->entry.layoutY,
+		leftIndex, selFirst);
+	}
+	if (selLast < rightIndex) {
+	    Tk_DrawTextLayout(
+		Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
+		entryPtr->entry.layoutX, entryPtr->entry.layoutY,
+		selLast, rightIndex);
+	}
+	XSetClipMask(Tk_Display(tkwin), gc, None);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+
+	/* Draw the selected portion in the -selectforeground color:
+	 */
 	gc = EntryGetGC(entryPtr, es.selForegroundObj, clipRegion);
 	Tk_DrawTextLayout(
 	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
 	    selFirst, selLast);
+	XSetClipMask(Tk_Display(tkwin), gc, None);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    } else {
+
+        /* Draw the entire visible text
+         */
+	Tk_DrawTextLayout(
+	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
+	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
+	    leftIndex, rightIndex);
 	XSetClipMask(Tk_Display(tkwin), gc, None);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }

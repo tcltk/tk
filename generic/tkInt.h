@@ -723,7 +723,7 @@ typedef struct TkWindow {
     Visual *visual;		/* Visual to use for window. If not default,
 				 * MUST be set before X window is created. */
     int depth;			/* Number of bits/pixel. */
-    Window window;		/* X's id for window. NULL means window hasn't
+    Window window;		/* X's id for window. None means window hasn't
 				 * actually been created yet, or it's been
 				 * deleted. */
     struct TkWindow *childList;	/* First in list of child windows, or NULL if
@@ -1038,7 +1038,7 @@ typedef struct TkpClipMask {
 		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
+MODULE_SCOPE unsigned TkGetButtonMask(unsigned);
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
@@ -1324,6 +1324,10 @@ MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int x, int y);
+MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int maxLength, int flags,
