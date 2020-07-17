@@ -100,17 +100,23 @@ geometry manager: given an initial cavity,
 each element is allocated a parcel.
 Valid options are:
 .TP
+\fB\-children { \fIsublayout... \fB}\fR
+Specifies a list of elements to place inside the element.
+.TP
+\fB\-expand\fR \fIboolean\fR
+Specifies whether the allocated parcel is the entire cavity.
+Defaults to 0.
+.TP
 \fB\-side \fIside\fR
 Specifies which side of the cavity to place the element;
 one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
-If omitted, the element occupies the entire cavity.
+If omitted, the allocated parcel is the entire cavity (therefore the
+same as \fB\-expand\fR 1).
 .TP
 \fB\-sticky\fR \fB[\fInswe\fB]\fR
 Specifies where the element is placed inside its allocated parcel.
-.TP
-\fB\-children { \fIsublayout... \fB}\fR
-Specifies a list of elements to place inside the element.
-.\" Also: -border, -unit, -expand: may go away.
+Default is \fBnswe\fR.
+.\" Also: -border, -unit: may go away.
 .PP
 For example:
 .CS
