@@ -2168,7 +2168,7 @@ static void SpinButtonReBounds(
 	bounds->size.height -= 0.5;
     } else {
 	bounds->origin.x -= 3;
-	bounds->size.width += 1;
+	bounds->origin.y += 1;
 	bounds->size.width += 1;
     }
 }
