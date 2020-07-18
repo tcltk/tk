@@ -3320,8 +3320,7 @@ TTK_LAYOUT("Item",
     TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
-	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH))))
+	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
 TTK_LAYOUT("Cell",
     TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
