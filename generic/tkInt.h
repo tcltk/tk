@@ -966,7 +966,7 @@ typedef struct TkpClipMask {
 	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
 
 
-MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
+MODULE_SCOPE unsigned TkGetButtonMask(unsigned);
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
@@ -1237,6 +1237,10 @@ MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int x, int y);
+MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int maxLength, int flags,

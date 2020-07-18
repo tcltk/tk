@@ -522,13 +522,13 @@ RefreshKeyboardMappingIfNeeded(
  *----------------------------------------------------------------------
  */
 
-static const unsigned long buttonMasks[] = {
+static const unsigned buttonMasks[] = {
     0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
 };
 
-unsigned long
+unsigned
 TkGetButtonMask(
-    unsigned int button)
+    unsigned button)
 {
     return (button > Button5) ? 0 : buttonMasks[button];
 }
