@@ -136,6 +136,9 @@ XMapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
+    if (!window) {
+	return BadWindow;
+    }
     MacDrawable *macWin = (MacDrawable *) window;
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXDrawableWindow(window);
@@ -157,6 +160,7 @@ XMapWindow(
     winPtr->flags |= TK_MAPPED;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
+	    TKContentView *view = [win contentView];
 
 	    /*
 	     * We want to activate Tk when a toplevel is mapped but we must not
@@ -169,7 +173,7 @@ XMapWindow(
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:NO];
-	    [[win contentView] setNeedsDisplay:YES];
+	    [view addTkDirtyRect: [view bounds]];
 	    if ([win canBecomeKeyWindow]) {
 		[win makeKeyAndOrderFront:NSApp];
 	    } else {
@@ -212,10 +216,9 @@ XMapWindow(
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
     }
 
-    if ([NSApp isDrawing]) {
-	[[win contentView] setNeedsRedisplay:YES];
-    } else {
-	[[win contentView] setNeedsDisplay:YES];
+    TKContentView *view = [win contentView];
+    if (view != [NSView focusView]) {
+	[view addTkDirtyRect:[view bounds]];
     }
 
     /*
@@ -329,10 +332,9 @@ XUnmapWindow(
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
     winPtr->flags &= ~TK_MAPPED;
-    if ([NSApp isDrawing]) {
-	[[win contentView] setNeedsRedisplay:YES];
-    } else {
-	[[win contentView] setNeedsDisplay:YES];
+    TKContentView *view = [win contentView];
+    if (view != [NSView focusView]) {
+	[view addTkDirtyRect:[view bounds]];
     }
     return Success;
 }
@@ -986,7 +988,8 @@ InvalViewRect(
     void *ref)
 {
     static CGAffineTransform t;
-    NSView *view = ref;
+    TKContentView *view = ref;
+    NSRect dirtyRect;
 
     if (!view) {
 	return paramErr;
@@ -997,8 +1000,8 @@ InvalViewRect(
 		NSHeight([view bounds]));
 	break;
     case kHIShapeEnumerateRect:
-	[view setNeedsDisplayInRect:NSRectFromCGRect(
-		CGRectApplyAffineTransform(*rect, t))];
+	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
+	[view addTkDirtyRect:dirtyRect];
 	break;
     }
     return noErr;
@@ -1284,7 +1287,7 @@ TkMacOSXInvalClipRgns(
  *	None.
  *
  * Side effects:
- *	None.
+ *	Fills in a Rect.
  *
  *----------------------------------------------------------------------
  */
@@ -1308,15 +1311,14 @@ TkMacOSXWinBounds(
  * TkMacOSXWinCGBounds --
  *
  *	Given a Tk window this function determines the window's bounds in
- *	relation to the Macintosh window's coordinate system. This is also the
- *	same coordinate system as the Tk toplevel window in which this window
- *	is contained.
+ *	the coordinate system of the Tk toplevel window in which this window
+ *	is contained.  This fills in a CGRect struct.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Fill in a CGRect.
  *
  *----------------------------------------------------------------------
  */
@@ -1330,6 +1332,39 @@ TkMacOSXWinCGBounds(
     bounds->origin.y = winPtr->privatePtr->yOff;
     bounds->size.width = winPtr->changes.width;
     bounds->size.height = winPtr->changes.height;
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXWinNSBounds --
+ *
+ *	Given a Tk window this function determines the window's bounds in
+ *	the coordinate system of the TKContentView in which this Tk window
+ *	is contained, which has the origin at the lower left corner.  This
+ *      fills in an NSRect struct and requires the TKContentView as a
+ *      parameter
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Fills in an NSRect.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXWinNSBounds(
+    TkWindow *winPtr,
+    NSView *view,
+    NSRect *bounds)
+{
+    bounds->size.width = winPtr->changes.width;
+    bounds->size.height = winPtr->changes.height;
+    bounds->origin.x = winPtr->privatePtr->xOff;
+    bounds->origin.y = ([view bounds].size.height -
+		       bounds->size.height -
+		       winPtr->privatePtr->yOff);
 }
 
 /*
