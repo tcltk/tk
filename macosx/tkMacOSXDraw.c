@@ -175,7 +175,9 @@ TkMacOSXBitmapRepFromDrawableRect(
 	if (cg_image) {
 	    CGImageRelease(cg_image);
 	}
-    } else if ((view = TkMacOSXDrawableView(mac_drawable)) != NULL) {
+    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
+	TKContentView *tkview = (TKContentView *)view;
+
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
 	 */
@@ -198,7 +200,7 @@ TkMacOSXBitmapRepFromDrawableRect(
 	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
 	} else {
 	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    [view setNeedsDisplay:YES];
+	    [tkview addTkDirtyRect:[tkview bounds]];
 	    return NULL;
 	}
     } else {
@@ -1608,47 +1610,53 @@ TkMacOSXSetupDrawingContext(
     if (dc.context) {
 	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
     } else if (win) {
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
 
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
 	}
+	if (dc.clipRgn) {
+	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+				    .ty = [view bounds].size.height};
+	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
+	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
+	}
+	if (view != [NSView focusView]) {
 
-	/*
-	 * We can only draw into the view when the current CGContext is valid
-	 * and belongs to the view.  Validity can only be guaranteed inside of
-	 * a view's drawRect or setFrame methods.  The isDrawing attribute
-	 * tells us whether we are being called from one of those methods.
-	 *
-	 * If the CGContext is not valid then we mark our view as needing
-	 * display in the bounding rectangle of the clipping region and
-	 * return failure.  That rectangle should get drawn in a later call
-	 * to drawRect.
-	 *
-	 * As an exception to the above, if mouse buttons are pressed at the
-	 * moment when we fail to obtain a valid context we schedule the entire
-	 * view for a redraw rather than just the clipping region.  The purpose
-	 * of this is to make sure that scrollbars get updated correctly.
-	 */
+	    /*
+	     * We can only draw into the view when the current CGContext is
+	     * valid and belongs to the view.  Validity can only be guaranteed
+	     * inside of a view's drawRect or setFrame methods.  The isDrawing
+	     * attribute tells us whether we are being called from drawRect.
+	     * If the CGContext is not valid then we mark our view as needing
+	     * display.
+	     */
 
-	if (![NSApp isDrawing] || view != [NSView focusView]) {
-	    NSRect bounds = [view bounds];
-	    NSRect dirtyNS = bounds;
-	    if ([NSEvent pressedMouseButtons]) {
-		[view setNeedsDisplay:YES];
+	    if (dc.clipRgn) {
+		[view addTkDirtyRect:NSRectFromCGRect(clipBounds)];
 	    } else {
-		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-					.ty = dirtyNS.size.height};
-		if (dc.clipRgn) {
-		    CGRect dirtyCG = NSRectToCGRect(dirtyNS);
-		    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
-		    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
-		}
-		[view setNeedsDisplayInRect:dirtyNS];
+		[view addTkDirtyRect:[view bounds]];
 	    }
 	    canDraw = false;
 	    goto end;
+	} else if (dc.clipRgn) {
+
+	    /*
+	     * Drawing will also fail if we are being called from drawRect but
+	     * the clipping rectangle set by drawRect does not contain the
+	     * clipping region of our drawing context.  See bug [2a61eca3a8].
+	     * If we can't draw all of the clipping region of the drawing
+	     * context then we draw whatever we can, but we also add a dirty
+	     * rectangle so the entire widget will get redrawn in the next
+	     * cycle.
+	     */
+
+	    CGRect currentClip = CGContextGetClipBoundingBox(
+				     [NSGraphicsContext currentContext].CGContext);
+	    if (!NSContainsRect(currentClip, clipBounds)) {
+		[view addTkDirtyRect:clipBounds];
+	    }
 	}
 
 	dc.view = view;
@@ -1680,6 +1688,7 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
 	CGContextConcatCTM(dc.context, t);
 	if (dc.clipRgn) {
+
 #ifdef TK_MAC_DEBUG_DRAWING
 	    CGContextSaveGState(dc.context);
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
@@ -1687,13 +1696,14 @@ TkMacOSXSetupDrawingContext(
 	    CGContextEOFillPath(dc.context);
 	    CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
+
 	    CGRect r;
 
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
-		    *HIShapeGetBounds(dc.clipRgn, &r),
-		    CGRectApplyAffineTransform(clipBounds, t))) {
-		ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-		CGContextEOClip(dc.context);
+		*HIShapeGetBounds(dc.clipRgn, &r),
+		CGRectApplyAffineTransform(clipBounds, t))) {
+	    	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    	CGContextEOClip(dc.context);
 	    }
 	}
 	if (gc) {

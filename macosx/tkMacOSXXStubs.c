@@ -1084,7 +1084,7 @@ XSynchronize(
     Display *display,
     TCL_UNUSED(Bool))
 {
-	display->request++;
+    display->request++;
     return NULL;
 }
 
