@@ -2666,7 +2666,7 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
+    set timeout [after 500 {lappend log timeout1}]
     vwait log
     lappend x "0000000000"
     update
@@ -2684,7 +2684,7 @@ test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setu
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
+    set timeout [after 500 {lappend log timeout2}]
     vwait log
     lappend x "0000000000"
     update
@@ -2695,7 +2695,7 @@ test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setu
     set log
 } -cleanup {
     destroy .l
-    after cancel timeout
+    after cancel $timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5} {x 0 1}]
 test listbox-21.11 {ListboxListVarProc, bad list} -setup {
     destroy .l
@@ -2764,7 +2764,7 @@ test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
     update
     set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
+    set timeout [after 500 {lappend log timeout3}]
     vwait log
     update
     lappend x a b c d e f
@@ -2801,19 +2801,19 @@ test listbox-22.1 {UpdateHScrollbar} -setup {
     destroy .l
 } -body {
     listbox .l -font $fixed -width 10 -xscrollcommand "record x"
-    set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
-    vwait log
+    update idletasks
+    set log {}
+    set timeout [after 500 {lappend log timeout4}]
     .l insert end "0000000000"
-    update
+    vwait log
     .l insert end "00000000000000000000"
     vwait log
     set log
 } -cleanup {
     destroy .l
     after cancel $timeout
-} -result [list {x 0 1} {x 0 1} {x 0 0.5}]
+} -result [list {x 0 1} {x 0 0.5}]
 
 
 # ConfigureListboxItem
@@ -3221,8 +3221,3 @@ option clear
 # cleanup
 cleanupTests
 return
-
-
-
-
-

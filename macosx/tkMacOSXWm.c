@@ -3806,10 +3806,6 @@ WmWithdrawCmd(
 
     TkpWmSetState(winPtr, WithdrawnState);
 
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win orderOut:NSApp];
-    [win setExcludedFromWindowsMenu:YES];
-
     /*
      * If this window has a transient, the transient must also be withdrawn.
      */
@@ -6200,13 +6196,14 @@ TkpRedrawWidget(Tk_Window tkwin) {
     }
     w = TkMacOSXDrawableWindow(winPtr->window);
     if (w) {
-	NSView *view = [w contentView];
+	TKContentView *view = [w contentView];
 	TkMacOSXWinBounds(winPtr, &tkBounds);
 	bounds = NSMakeRect(tkBounds.left,
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view setNeedsDisplayInRect:bounds];
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:bounds];
     }
 }
 
@@ -6411,6 +6408,7 @@ TkpWmSetState(
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
+
 	/*
 	 * The window always gets unmapped. If we can show the icon version of
 	 * the window we also collapse it.
@@ -6423,9 +6421,13 @@ TkpWmSetState(
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == NormalState || state == ZoomState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-	if (macWin && ([macWin styleMask] & NSMiniaturizableWindowMask) &&
-		[macWin isMiniaturized]) {
-	    [macWin deminiaturize:NSApp];
+	if (macWin && ([macWin styleMask] & NSMiniaturizableWindowMask)) {
+	    if ([macWin isMiniaturized]) {
+		[macWin deminiaturize:NSApp];
+	    }
+	    else {
+		[macWin orderFront:nil];
+	    }
 	}
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn :
 		inZoomOut);

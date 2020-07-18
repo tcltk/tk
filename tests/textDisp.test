@@ -4204,12 +4204,14 @@ test textDisp-33.2 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
     .tt debug 1
+    update idletasks
     set tk_textHeightCalc ""
+    set timer [after 700 lappend tk_textHeightCalc "Timed out"]
     .tt insert 1.0 [string repeat "more wrap + " 1]
-    after 100 ; update idletasks
-    # Nothing should have been recalculated.
+    vwait tk_textHeightCalc
+    after cancel timer
     set tk_textHeightCalc
-} {}
+} {1.0}
 test textDisp-33.3 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]

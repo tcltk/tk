@@ -727,12 +727,6 @@ test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
 	image delete foo
 } -result {75 150 105 165}
 
-if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
-    # Aqua >= 10.14 will redraw the entire image.
-    set result_10_1 {{foo display 0 0 30 15}}
-} else {
-    set result_10_1 {{foo display 2 4 6 8}}
-}
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
     update
@@ -750,7 +744,7 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
 } -cleanup {
     .c delete all
     image delete foo
-} -result $result_10_1
+} -result {{foo display 2 4 6 8}} 
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
