@@ -437,6 +437,12 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+
+	/*
+	 * Add the nsimage type.
+	 */
+	
+	TkMacOSXNSImage_Init(interp);
     }
 
     if (tkLibPath[0] != '\0') {
