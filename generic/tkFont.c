@@ -13,6 +13,9 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
+#if defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"    /* Defines TK_DRAW_IN_CONTEXT */
+#endif
 
 /*
  * The following structure is used to keep track of all the fonts that exist
@@ -880,7 +883,7 @@ TheWorldHasChanged(
      * This is ignored on other platforms.
      */
 
-    if (!TkpWillDrawWidget(NULL)) {
+    if (TkpWillDrawWidget(NULL)) {
 	return;
     }
 
@@ -2296,12 +2299,16 @@ Tk_DrawTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     int firstChar,		/* The index of the first character to draw
-				 * from the given text item. 0 specfies the
+				 * from the given text item. 0 specifies the
 				 * beginning. */
     int lastChar)		/* The index just after the last character to
 				 * draw from the given text item. A number < 0
 				 * means to draw all characters. */
 {
+#if 0
+    /* Use TkDrawAngledTextLayout() implementation - testing purposes at this point */
+    TkDrawAngledTextLayout(display, drawable, gc, layout, x, y, 0.0, firstChar, lastChar);
+#else
     TextLayout *layoutPtr = (TextLayout *) layout;
     int i, numDisplayChars, drawX;
     const char *firstByte, *lastByte;
@@ -2331,8 +2338,15 @@ Tk_DrawTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
+#if TK_DRAW_IN_CONTEXT
+	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
+		    chunkPtr->start, chunkPtr->numBytes,
+		    firstByte - chunkPtr->start, lastByte - firstByte,
+		    x+chunkPtr->x, y+chunkPtr->y);
+#else /* !TK_DRAW_IN_CONTEXT */
 	    Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont, firstByte,
 		    lastByte - firstByte, x+chunkPtr->x+drawX, y+chunkPtr->y);
+#endif /* TK_DRAW_IN_CONTEXT */
 	}
 	firstChar -= chunkPtr->numChars;
 	lastChar -= chunkPtr->numChars;
@@ -2341,6 +2355,7 @@ Tk_DrawTextLayout(
 	}
 	chunkPtr++;
     }
+#endif /* Use TkDrawAngledTextLayout() implementation */
 }
 
 void
@@ -2355,7 +2370,7 @@ TkDrawAngledTextLayout(
 				 * which to draw (pixels). */
     double angle,
     int firstChar,		/* The index of the first character to draw
-				 * from the given text item. 0 specfies the
+				 * from the given text item. 0 specifies the
 				 * beginning. */
     int lastChar)		/* The index just after the last character to
 				 * draw from the given text item. A number < 0
@@ -2393,6 +2408,21 @@ TkDrawAngledTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
+#if TK_DRAW_IN_CONTEXT
+	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
+	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
+	    if (angle == 0.0) {
+		TkpDrawCharsInContext(display, drawable, gc,
+			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
+			firstByte - chunkPtr->start, lastByte - firstByte,
+			(int)(x + dx), (int)(y + dy));
+	    } else {
+		TkpDrawAngledCharsInContext(display, drawable, gc,
+			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
+			firstByte - chunkPtr->start, lastByte - firstByte,
+			x+dx, y+dy, angle);
+	    }
+#else /* !TK_DRAW_IN_CONTEXT */
 	    dx = cosA * (chunkPtr->x + drawX) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x + drawX) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
@@ -2403,6 +2433,7 @@ TkDrawAngledTextLayout(
 		TkDrawAngledChars(display, drawable, gc, layoutPtr->tkfont,
 			firstByte, lastByte - firstByte, x+dx, y+dy, angle);
 	    }
+#endif /* TK_DRAW_IN_CONTEXT */
 	}
 	firstChar -= chunkPtr->numChars;
 	lastChar -= chunkPtr->numChars;
