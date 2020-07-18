@@ -102,6 +102,9 @@ Then the parcel actually used by the element is adjusted within
 the allocated parcel.
 Valid options are:
 .TP
+\fB\-border\fR \fIboolean\fR
+Specifies whether the element is drawn after its children. Defaults to 0.
+.TP
 \fB\-children { \fIsublayout...\fB }\fR
 Specifies a list of elements to place inside the element.
 .TP
@@ -123,7 +126,10 @@ as \fB\-expand\fR 1).
 Specifies the actual parcel position and size inside the allocated parcel.
 If specified as an empty string then the actual parcel is centered in
 the allocated parcel. Default is \fBnswe\fR. 
-.\" Also: -border, -unit: may go away.
+.TP
+\fB\-unit\fR \fIboolean\fR
+Specifies whether the element propagates its state to its children.
+Defaults to 0.
 .PP
 For example:
 .CS
