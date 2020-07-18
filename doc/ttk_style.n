@@ -98,24 +98,31 @@ by one or more options specifying how to arrange the element.
 The layout mechanism uses a simplified version of the \fBpack\fR
 geometry manager: given an initial cavity,
 each element is allocated a parcel.
+Then the parcel actually used by the element is adjusted within
+the allocated parcel.
 Valid options are:
 .TP
-\fB\-children { \fIsublayout... \fB}\fR
+\fB\-children { \fIsublayout...\fB }\fR
 Specifies a list of elements to place inside the element.
 .TP
 \fB\-expand\fR \fIboolean\fR
-Specifies whether the allocated parcel is the entire cavity.
+Specifies whether the allocated parcel is the entire cavity. If so,
+simultaneous specification of \fB\-side\fR is ignored.
 Defaults to 0.
 .TP
 \fB\-side \fIside\fR
 Specifies which side of the cavity to place the element;
 one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
-If omitted, the allocated parcel is the entire cavity (therefore the
-same as \fB\-expand\fR 1).
+For instance, \fB\-side top\fR allocates the parcel along the top of
+the cavity having width and height respectively the width of the cavity
+and the height of the element.
+If omitted, the allocated parcel is the entire cavity (same result
+as \fB\-expand\fR 1).
 .TP
 \fB\-sticky\fR \fB[\fInswe\fB]\fR
-Specifies where the element is placed inside its allocated parcel.
-Default is \fBnswe\fR.
+Specifies the actual parcel position and size inside the allocated parcel.
+If specified as an empty string then the actual parcel is centered in
+the allocated parcel. Default is \fBnswe\fR. 
 .\" Also: -border, -unit: may go away.
 .PP
 For example:
