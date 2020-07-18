@@ -3049,20 +3049,20 @@ TTK_LAYOUT("TCombobox",
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-    TTK_GROUP("Notebook.padding", TTK_EXPAND | TTK_FILL_BOTH,
-    TTK_NODE("Notebook.label", TTK_EXPAND | TTK_FILL_BOTH))))
+    TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
+    TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
 
 /* Spinbox -- buttons 2px to the right of the field. */
 TTK_LAYOUT("TSpinbox",
     TTK_GROUP("Spinbox.buttons", TTK_PACK_RIGHT,
     TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP | TTK_STICK_E)
     TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM | TTK_STICK_E))
-    TTK_GROUP("Spinbox.field", TTK_EXPAND | TTK_FILL_X,
-    TTK_NODE("Spinbox.textarea", TTK_EXPAND | TTK_FILL_X)))
+    TTK_GROUP("Spinbox.field", TTK_FILL_X,
+    TTK_NODE("Spinbox.textarea", TTK_FILL_X)))
 
 /* Progress bars -- track only */
 TTK_LAYOUT("TProgressbar",
-    TTK_NODE("Progressbar.track", TTK_EXPAND | TTK_FILL_BOTH))
+    TTK_NODE("Progressbar.track", TTK_FILL_BOTH))
 
 /* Treeview -- no border. */
 TTK_LAYOUT("Treeview",
@@ -3087,13 +3087,13 @@ TTK_LAYOUT("Item",
 
 TTK_LAYOUT("Vertical.TScrollbar",
     TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
-    TTK_NODE("Vertical.Scrollbar.thumb", TTK_EXPAND | TTK_FILL_BOTH)
+    TTK_NODE("Vertical.Scrollbar.thumb", TTK_FILL_BOTH)
     TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
     TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_BOTTOM)))
 
 TTK_LAYOUT("Horizontal.TScrollbar",
     TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
-    TTK_NODE("Horizontal.Scrollbar.thumb", TTK_EXPAND | TTK_FILL_BOTH)
+    TTK_NODE("Horizontal.Scrollbar.thumb", TTK_FILL_BOTH)
     TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
     TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_RIGHT)))
 
