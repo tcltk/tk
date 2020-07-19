@@ -77,6 +77,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	set menuPad 5
 	set buttonPad 1
 	set bevelPad 4
+	set flushPad 4
 	set mh [winfo reqheight $menu]
 	set bh [expr {[winfo height $mb]} + $buttonPad]
 	set bbh [expr {[winfo height $mb]} + $bevelPad]

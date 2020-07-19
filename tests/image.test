@@ -317,7 +317,7 @@ test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
     testOldImageType
 } -body {
     lsort [image types]
-} -result {bitmap oldtest photo test}
+} -result {bitmap nsimage oldtest photo test}
 
 
 test image-7.1 {Tk_ImageCmd procedure, "width" option} -body {

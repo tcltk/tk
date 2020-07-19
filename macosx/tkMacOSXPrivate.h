@@ -304,9 +304,9 @@ MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
 MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
+MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
@@ -340,6 +340,7 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
+    NSThread *_backgoundLoop;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
@@ -377,6 +378,7 @@ VISIBILITY_HIDDEN
 @interface NSApplication(TKNotify)
 /* We need to declare this hidden method. */
 - (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
+- (void) _runBackgroundLoop;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
