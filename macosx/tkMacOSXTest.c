@@ -29,6 +29,8 @@ static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
+static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const objv[]);
 
 
 /*
@@ -61,7 +63,7 @@ TkplatformtestInit(
 #endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-
+    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -94,6 +96,39 @@ DebuggerObjCmd(
     return TCL_OK;
 }
 #endif
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuBarHeightObjCmd --
+ *
+ *	This procedure calls [NSMenu menuBarHeight] and returns the result
+ *      as an integer.  Windows can never be placed to overlap the MenuBar,
+ *      so tests need to be aware of its size.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+MenuBarHeightObjCmd(
+    ClientData clientData,		/* Not used. */
+    Tcl_Interp *interp,			/* Not used. */
+    int objc,				/* Not used. */
+    Tcl_Obj *const objv[])		/* Not used. */
+{
+    static int height = 0;
+    if (height == 0) {
+	height = (int) [[NSApp mainMenu] menuBarHeight];
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(height));
+    return TCL_OK;
+}
 
 /*
  *----------------------------------------------------------------------
