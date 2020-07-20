@@ -1749,6 +1749,7 @@ TkMacOSXSetupDrawingContext(
 		int num = 0;
 		char *p = &gc->dashes;
 		CGFloat dashOffset = gc->dash_offset;
+		dashOffset -= (gc->line_width % 2) ? 0.5 : 0.0;
 		CGFloat lengths[10];
 
 		while (p[num] != '\0' && num < 10) {
