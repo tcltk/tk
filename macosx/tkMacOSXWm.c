@@ -1807,7 +1807,6 @@ WmDeiconifyCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
-
     if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't deiconify %s: it is an icon for %s",
@@ -6422,16 +6421,9 @@ TkpWmSetState(
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == NormalState || state == ZoomState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-	if (macWin && ([macWin styleMask] & NSMiniaturizableWindowMask)) {
-	    if ([macWin isMiniaturized]) {
-		[macWin deminiaturize:NSApp];
-	    }
-	    else {
-		[macWin orderFront:nil];
-	    }
-	}
-	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn :
-		inZoomOut);
+	[macWin deminiaturize:NSApp];
+	[macWin orderFront:NSApp];
+	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
 }
 
