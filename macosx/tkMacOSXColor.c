@@ -273,8 +273,13 @@ GetEntryFromPixelCode(
  * appears to be harmless and stops the compiler warnings. 
  */
 
+
 @interface NSColor(TkColor)
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101100
 @property(class, strong, readonly) NSColor *linkColor;
+#else
+@property(strong, readonly) NSColor *linkColor;
+#endif
 @end
 
 static NSColorSpace* sRGB = NULL;
@@ -389,8 +394,8 @@ SetCGColorComponents(
 	    }
 	    break;
 	case 9:
-	    if ([NSApp macOSVersion] >= 101000) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+	    if ([NSApp macOSVersion] >= 101100) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
 		color = [[NSColor linkColor] colorUsingColorSpace:sRGB];
 #endif
 	    } else {
