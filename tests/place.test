@@ -264,34 +264,35 @@ test place-8.1 {MasterStructureProc, mapping and unmapping slaves} -setup {
     place forget .t.f
 } -body {
     place .t.f2 -relx 1.0 -rely 1.0 -anchor sw
-    update
+    update idletasks
     set result [winfo ismapped .t.f2]
     wm iconify .t
-    update
+    update idletasks
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
-    update
+    update idletasks
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    update
+    update idletasks
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
 test place-8.2 {MasterStructureProc, mapping and unmapping slaves} -setup {
     place forget .t.f2
     place forget .t.f
+    update idletasks
 } -body {
     place .t.f -x 0 -y 0 -width 200 -height 100
     place .t.f2 -in .t.f -relx 1.0 -rely 1.0 -anchor sw -width 50 -height 20
-    update
+    update idletasks
     set result [winfo ismapped .t.f2]
     wm iconify .t
-    update
+    update idletasks
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
-    update
+    update idletasks
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    update
+    update idletasks
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 42 32 0 1}
 destroy .t

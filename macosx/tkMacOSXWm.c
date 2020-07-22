@@ -6870,7 +6870,6 @@ ApplyWindowAttributeFlagChanges(
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			    NSWindowCollectionBehaviorFullScreenAuxiliary);
 		} else {
-		    NSSize screenSize = [[macWindow screen] frame].size;
 		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
 		    /*
@@ -6881,7 +6880,10 @@ ApplyWindowAttributeFlagChanges(
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
 		    if ([NSApp macOSVersion] > 101000) {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED > 101000)
+			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
+#endif
 		    }
 		}
 	    }
