@@ -17,7 +17,7 @@
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] CGContext]
 #else
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] graphicsPort]
@@ -1666,8 +1666,7 @@ TkMacOSXSetupDrawingContext(
 	     * cycle.
 	     */
 
-	    CGRect currentClip = CGContextGetClipBoundingBox(
-				     [NSGraphicsContext currentContext].CGContext);
+	    CGRect currentClip = CGContextGetClipBoundingBox(GET_CGCONTEXT);
 	    if (!NSContainsRect(currentClip, clipBounds)) {
 		[view addTkDirtyRect:clipBounds];
 	    }
