@@ -13,11 +13,7 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-if {[tk windowingsystem] eq "aqua"} {
-    set fixedFont {"Courier" -12}
-} else {
-    set fixedFont {"Courier New" -12}
-}    
+set fixedFont {"Courier" -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
