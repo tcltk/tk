@@ -2663,19 +2663,18 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     destroy .l
 } -body {
     catch {unset x}
-    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     set log {}
+    update idletasks
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     pack .l
-    set timeout [after 500 {lappend log timeout1}]
-    vwait log
+    update idletasks
     lappend x "0000000000"
-    update
+    update idletasks
     lappend x "00000000000000000000"
-    update
+    update idletasks
     set log
 } -cleanup {
     destroy .l
-    after cancel $timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5}]
 test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
