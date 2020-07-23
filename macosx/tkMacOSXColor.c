@@ -274,9 +274,15 @@ GetEntryFromPixelCode(
  */
 
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+@interface NSColor(TkColor)
+@property(class, strong, readonly) NSColor *linkColor;
+@end
+#else
 @interface NSColor(TkColor)
 @property(strong, readonly) NSColor *linkColor;
 @end
+#endif
 
 static NSColorSpace* sRGB = NULL;
 static CGFloat windowBackground[4] =
