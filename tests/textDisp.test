@@ -4175,6 +4175,7 @@ test textDisp-32.3 "NULL undisplayProc problems: #1791052" -setup {
 
 test textDisp-33.0 {one line longer than fits in the widget} {
     pack [text .tt -wrap char]
+    updateText
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt see 1.0
@@ -4183,6 +4184,7 @@ test textDisp-33.0 {one line longer than fits in the widget} {
 test textDisp-33.1 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
+    updateText
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt yview "1.0 +1 displaylines"
@@ -4196,12 +4198,12 @@ test textDisp-33.2 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
     .tt debug 1
-    update idletasks
+    updateText
     set tk_textHeightCalc ""
-    set timer [after 700 lappend tk_textHeightCalc "Timed out"]
+    set timer [after 200 lappend tk_textHeightCalc "Timed out"]
     .tt insert 1.0 [string repeat "more wrap + " 1]
     vwait tk_textHeightCalc
-    after cancel timer
+    after cancel $timer
     set tk_textHeightCalc
 } {1.0}
 test textDisp-33.3 {one line longer than fits in the widget} {
