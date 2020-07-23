@@ -292,6 +292,7 @@ test unixWm-8.4 {icon windows} unix {
     destroy .icon
     toplevel .t -width 100 -height 30
     wm geom .t +0+0
+    update idletasks
     set result [wm iconwindow .t]
     toplevel .icon -width 50 -height 50 -bg red
     wm iconwindow .t .icon
@@ -301,7 +302,7 @@ test unixWm-8.4 {icon windows} unix {
     update
     lappend result [winfo ismapped .t] [winfo ismapped .icon]
     wm iconify .t
-    update
+    update idletasks
     lappend result [winfo ismapped .t] [winfo ismapped .icon]
 } {.icon icon {} withdrawn 1 0 0 0}
 test unixWm-8.5 {icon windows} unix {
@@ -854,9 +855,9 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
-    update
+    update idletasks
     wm iconify .t2
-    update
+    update idletasks
     set result [winfo ismapped .t2]
     destroy .t2
     set result
@@ -865,10 +866,10 @@ test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
-    update
+    update idletasks
     set result [winfo ismapped .t2]
     wm iconify .t2
-    update
+    update idletasks
     lappend result [winfo ismapped .t2]
     destroy .t2
     set result
@@ -1977,9 +1978,10 @@ test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     frame .t.f -width 150 -height 150 -bd 2 -relief raised
     place .t.f -x 25 -y 25
     tkwait visibility .t.f
+    update idletasks
     set result [list [winfo containing 100 100]]
     place forget .t.f
-    update
+    update idletasks
     lappend result [winfo containing 100 100]
 } {.t.f .t}
 deleteWindows

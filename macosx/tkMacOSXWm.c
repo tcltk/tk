@@ -6425,6 +6425,11 @@ TkpWmSetState(
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+    /*
+     * Make sure windows are updated after the state change.
+     */
+
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 }
 
 /*
