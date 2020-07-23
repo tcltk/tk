@@ -2662,11 +2662,10 @@ test listbox-21.8 {ListboxListVarProc, test selection after listvar mod} -setup 
 test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
-    catch {unset x}
-    set log {}
-    update idletasks
+    set x {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     pack .l
+    set log {}
     update idletasks
     lappend x "0000000000"
     update idletasks
@@ -2675,7 +2674,7 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     set log
 } -cleanup {
     destroy .l
-} -result [list {x 0 1} {x 0 1} {x 0 0.5}]
+} -result [list {x 0 1} {x 0 0.5}]
 test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
