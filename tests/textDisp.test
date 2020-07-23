@@ -3961,12 +3961,12 @@ test textDisp-31.3 {line update index shifting} {
     .t insert 1.0 "abc\n"
     .t insert 1.0 "abc\n"
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    update idletasks ; after 100 ; update idletasks
     lappend res [.t count -ypixels 1.0 end]
     .t.f configure -height 100
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    update idletasks ; after 100 ; update idletasks
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
@@ -4014,12 +4014,12 @@ test textDisp-31.6 {line update index shifting} {
     .t insert 1.0 "abc\n"
     .t insert 1.0 "abc\n"
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    update idletasks ; after 100 ; update idletasks
     lappend res [.t count -ypixels 1.0 end]
     textest configure -height 100
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    update idletasks ; after 100 ; update idletasks
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
@@ -4036,11 +4036,11 @@ test textDisp-31.7 {line update index shifting, elided} {
     .t tag configure elide -elide 1
     .t tag add elide 1.3 2.1
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    update idletasks ; after 100 ; update idletasks
     lappend res [.t count -ypixels 1.0 end]
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    update idletasks ; after 100 ; update idletasks
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {$fixedHeight * 1}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 2}] [expr {$fixedHeight * 1}] [expr {$fixedHeight * 1}]]
