@@ -206,7 +206,6 @@ XMapWindow(
 	event.xmap.event = window;
 	event.xmap.override_redirect = winPtr->atts.override_redirect;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     } else {
 
 	/*
@@ -317,7 +316,6 @@ XUnmapWindow(
 	event.xunmap.event = window;
 	event.xunmap.from_configure = false;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     } else {
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
