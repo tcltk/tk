@@ -275,11 +275,7 @@ GetEntryFromPixelCode(
 
 
 @interface NSColor(TkColor)
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 101100
-@property(class, strong, readonly) NSColor *linkColor;
-#else
 @property(strong, readonly) NSColor *linkColor;
-#endif
 @end
 
 static NSColorSpace* sRGB = NULL;
