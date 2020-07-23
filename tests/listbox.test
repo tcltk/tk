@@ -2665,8 +2665,8 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     set x {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     pack .l
-    set log {}
     update idletasks
+    set log {}
     lappend x "0000000000"
     update idletasks
     lappend x "00000000000000000000"
