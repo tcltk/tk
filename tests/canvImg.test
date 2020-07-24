@@ -778,13 +778,7 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	.c delete all
 	image delete foo
 } -result {30 75 70 125}
-if {[tk windowingsystem] == "aqua"} {
-#     # For this test only the 20x40 upper left corner of foo2 needs
-#     # to be redrawn, but Aqua redraws the entire image.
-    set result_11_3 {{foo2 display 0 0 80 60}}
- } else {
-   set result_11_3 {{foo2 display 0 0 20 40}} 
-}
+
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 	testImageType 
 } -setup {
@@ -806,7 +800,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 } -cleanup {
     .c delete all
     image delete foo2
-} -result $result_11_3
+} -result {{foo2 display 0 0 80 60}}
 
 # cleanup
 imageFinish
