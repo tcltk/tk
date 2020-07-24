@@ -1727,18 +1727,14 @@ DisplayEntry(
 	}
     }
 
-    /*
-     * Draw the text in two pieces: first the unselected portion, then the
-     * selected portion on top of it.
-     */
-
-    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
-	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-	    entryPtr->leftIndex, entryPtr->numChars);
-
     if (showSelection && (entryPtr->state != STATE_DISABLED)
 	    && (entryPtr->selTextGC != entryPtr->textGC)
 	    && (entryPtr->selectFirst < entryPtr->selectLast)) {
+
+	/*
+	 * Draw the selected and unselected portions separately.
+	 */
+
 	int selFirst;
 
 	if (entryPtr->selectFirst < entryPtr->leftIndex) {
@@ -1746,9 +1742,28 @@ DisplayEntry(
 	} else {
 	    selFirst = entryPtr->selectFirst;
 	}
+	if (entryPtr->leftIndex < selFirst) {
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    entryPtr->leftIndex, selFirst);
+	}
 	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
 		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 		selFirst, entryPtr->selectLast);
+	if (entryPtr->selectLast < entryPtr->numChars) {
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    entryPtr->selectLast, entryPtr->numChars);
+	}
+    } else {
+
+        /*
+         * Draw the entire visible text
+         */
+
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		entryPtr->leftIndex, entryPtr->numChars);
     }
 
     if (entryPtr->type == TK_SPINBOX) {
@@ -3268,7 +3283,7 @@ EntryValidate(
  *
  * Results:
  *	TCL_OK if the validatecommand accepts the new string, TCL_ERROR if any
- *	problems occured with validatecommand.
+ *	problems occurred with validatecommand.
  *
  * Side effects:
  *	The insertion/deletion may be aborted, and the validatecommand might
@@ -3329,7 +3344,7 @@ EntryValidateChange(
     /*
      * If e->validate has become VALIDATE_NONE during the validation, or we
      * now have VALIDATE_VAR set (from EntrySetValue) and didn't before, it
-     * means that a loop condition almost occured. Do not allow this
+     * means that a loop condition almost occurred. Do not allow this
      * validation result to finish.
      */
 

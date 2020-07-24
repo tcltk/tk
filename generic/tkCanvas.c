@@ -4759,8 +4759,8 @@ CanvasBindProc(
     ClientData clientData,	/* Pointer to canvas structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
-    TkCanvas *canvasPtr = clientData;
-    unsigned long mask;
+    TkCanvas *canvasPtr = (TkCanvas *)clientData;
+    unsigned mask;
 
     Tcl_Preserve(canvasPtr);
 
