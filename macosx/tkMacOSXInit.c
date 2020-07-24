@@ -34,6 +34,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
+@synthesize needsToDraw = _needsToDraw;
 @end
 
 /*
