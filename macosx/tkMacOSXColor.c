@@ -273,16 +273,15 @@ GetEntryFromPixelCode(
  * appears to be harmless and stops the compiler warnings. 
  */
 
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
 @interface NSColor(TkColor)
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
 @property(class, strong, readonly) NSColor *linkColor;
-@end
-#else
-@interface NSColor(TkColor)
+#elif MAC_OS_X_VERSION_MAX_ALLOWED > 1080
 @property(strong, readonly) NSColor *linkColor;
-@end
+#else
+@property(assign, readonly) NSColor *linkColor;
 #endif
+@end
 
 static NSColorSpace* sRGB = NULL;
 static CGFloat windowBackground[4] =
