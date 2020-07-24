@@ -258,6 +258,14 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
+if {[tk windowingsystem] == "win32"} {
+    proc placeUpdate {} {
+	update
+    }
+} else {
+    proc placeUpdate {} {
+    }
+}
 
 test place-8.1 {MasterStructureProc, mapping and unmapping slaves} -setup {
     place forget .t.f2
@@ -267,13 +275,12 @@ test place-8.1 {MasterStructureProc, mapping and unmapping slaves} -setup {
     update idletasks
     set result [winfo ismapped .t.f2]
     wm iconify .t
-    update idletasks
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
     update idletasks
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    update idletasks
+    placeUpdate
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
 test place-8.2 {MasterStructureProc, mapping and unmapping slaves} -setup {
@@ -286,13 +293,12 @@ test place-8.2 {MasterStructureProc, mapping and unmapping slaves} -setup {
     update idletasks
     set result [winfo ismapped .t.f2]
     wm iconify .t
-    update idletasks
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
     update idletasks
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    update idletasks
+    placeUpdate
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 42 32 0 1}
 destroy .t
