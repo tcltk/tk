@@ -205,7 +205,15 @@ XMapWindow(
 	event.xmap.type = MapNotify;
 	event.xmap.event = window;
 	event.xmap.override_redirect = winPtr->atts.override_redirect;
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+	/*
+	 * To update the mapped status of packed or placed subwindows
+	 * we handle this event immediately and then process the idle
+	 * events that it generates.
+	 */
+	
+	Tk_HandleEvent(&event);
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 
 	/*
@@ -315,7 +323,15 @@ XUnmapWindow(
 	event.xunmap.window = window;
 	event.xunmap.event = window;
 	event.xunmap.from_configure = false;
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+	/*
+	 * To update the mapped status of packed or placed subwindows
+	 * we handle this event immediately and then process the idle
+	 * events that it generates.
+	 */
+	
+	Tk_HandleEvent(&event);
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
