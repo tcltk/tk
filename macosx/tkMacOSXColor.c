@@ -267,6 +267,22 @@ GetEntryFromPixelCode(
  *----------------------------------------------------------------------
  */
 
+/*
+ * Apple claims that linkColor is available in 10.10 but the declaration
+ * does not appear in NSColor.h until later.  Declaring it in a category
+ * appears to be harmless and stops the compiler warnings. 
+ */
+
+@interface NSColor(TkColor)
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
+@property(class, strong, readonly) NSColor *linkColor;
+#elif MAC_OS_X_VERSION_MAX_ALLOWED > 1080
+@property(strong, readonly) NSColor *linkColor;
+#else
+@property(assign, readonly) NSColor *linkColor;
+#endif
+@end
+
 static NSColorSpace* sRGB = NULL;
 static CGFloat windowBackground[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
@@ -336,6 +352,7 @@ SetCGColorComponents(
 	    break;
 	case 2:
 	    if ([NSApp macOSVersion] > 100900) {
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
 		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
@@ -378,8 +395,8 @@ SetCGColorComponents(
 	    }
 	    break;
 	case 9:
-	    if ([NSApp macOSVersion] >= 101000) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+	    if ([NSApp macOSVersion] >= 101100) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
 		color = [[NSColor linkColor] colorUsingColorSpace:sRGB];
 #endif
 	    } else {
