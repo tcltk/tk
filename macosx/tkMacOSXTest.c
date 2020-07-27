@@ -136,19 +136,12 @@ MenuBarHeightObjCmd(
  * TkTestLogDisplay --
  *
  *      The test image display procedure calls this to determine whether it
- *      should write a log message recording that it has being run.  On OSX
- *      10.14 and later, only calls to the display procedure which occur inside
- *      of the drawRect method should be logged, since those are the only ones
- *      which actually draw anything.  On earlier systems the opposite is true.
- *      The calls from within the drawRect method are redundant, since the
- *      first time the display procedure is run it will do the drawing and that
- *      first call will usually not occur inside of drawRect.
+ *      should write a log message recording that it has being run.
  *
  * Results:
- *      On OSX 10.14 and later, returns true if and only if the NSView of the
- *      drawable is the current focusView, which can only be the case when
- *      within [NSView drawRect].  On earlier systems returns false if
- *      and only if called from with [NSView drawRect].
+ *      Returns true if and only if the NSView of the drawable is the
+ *      current focusView, which on 10.14 and newer systems can only be the
+ *      case when within [NSView drawRect].
  *
  * Side effects:
  *	None
@@ -168,18 +161,11 @@ TkTestLogDisplay(
     } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
 	       macWin->winPtr->wmInfoPtr->window) {
 	win = macWin->winPtr->wmInfoPtr->window;
-    }/*
-    else if (macWin->toplevel && (macWin->toplevel->flags & TK_EMBEDDED)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
-	if (contWinPtr) {
-	    win = TkMacOSXDrawableWindow((Drawable) contWinPtr->privatePtr);
-	}
-	}*/
-    if (win && [NSApp macOSVersion] >= 101400) {
-	TKContentView *view = [win contentView];
-	return (view == [NSView focusView]);
+    }
+    if (win) {
+	return ([win contentView] == [NSView focusView]);
     } else {
-	return ![NSApp isDrawing];
+	return True;
     }
 }
 

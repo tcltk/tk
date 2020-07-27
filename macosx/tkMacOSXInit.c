@@ -41,6 +41,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
+@synthesize needsToDraw = _needsToDraw;
 @end
 
 /*
