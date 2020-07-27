@@ -33,7 +33,9 @@ proc stdWindow {} {
 #
 
 proc raiseDelay {} {
-    after 100; update
+    after 100;
+    update
+    update idletasks
 }
 
 # How to carry out a small delay while processing events
@@ -808,10 +810,10 @@ test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
 test wm-iconify-3.1 {iconify behavior} -body {
     toplevel .t2
     wm geom .t2 -0+0
-    update
+    update idletasks
     set result [winfo ismapped .t2]
     wm iconify .t2
-    update
+    update idletasks
     lappend result [winfo ismapped .t2]
 } -cleanup {
     destroy .t2
@@ -1738,11 +1740,11 @@ test wm-transient-4.2 {already mapped transient toplevel
     toplevel .master
     raiseDelay
     wm iconify .master
-    update
+    update idletasks
     toplevel .subject
-    update
+    update idletasks
     wm transient .subject .master
-    update
+    update idletasks
     list [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
@@ -1753,13 +1755,13 @@ test wm-transient-4.3 {iconify/deiconify on the master
 } -body {
     toplevel .master
     toplevel .subject
-    update
+    update idletasks
     wm transient .subject .master
     wm iconify .master
-    update
+    update idletasks
     lappend results [wm state .subject] [winfo ismapped .subject]
     wm deiconify .master
-    update
+    update idletasks
     lappend results [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
