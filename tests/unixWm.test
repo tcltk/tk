@@ -19,16 +19,6 @@ proc sleep ms {
     vwait x
 }
 
-# The macOS window manager shows an animation when a window is deiconified.
-# Tests which check the geometry of a window after deiconifying it should
-# wait for the animation to finish.
-
- proc animationDelay {} {
-    if {[tk windowingsystem] == "aqua"} {
-    sleep 250
-    }
- }
-
 # Procedure to set up a collection of top-level windows
 
 proc makeToplevels {} {
@@ -98,11 +88,11 @@ set i 1
 foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
     test unixWm-3.$i {moving window while iconified} unix {
 	wm iconify .t
-	sleep 200
+	update idletasks
 	wm geom .t $geom
-	update
+	update idletasks
 	wm deiconify .t
-	animationDelay
+	update idletasks
 	scan [wm geom .t] %dx%d%1s%d%1s%d width height xsign x ysign y
 	format "%s%d%s%d" $xsign [eval expr $x$xsign$xerr] $ysign \
 		[eval expr $y$ysign$yerr]
@@ -114,11 +104,11 @@ set i 1
 foreach geom "+20+80 +100+40 +0+$Y0" {
     test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
-	sleep 200
+	update idletasks
 	wm geom .t $geom
-	update
+	update idletasks
 	wm deiconify .t
-	animationDelay
+	update idletasks
 	wm geom .t
     } 100x150$geom
     incr i
@@ -302,6 +292,7 @@ test unixWm-8.4 {icon windows} unix {
     destroy .icon
     toplevel .t -width 100 -height 30
     wm geom .t +0+0
+    update idletasks
     set result [wm iconwindow .t]
     toplevel .icon -width 50 -height 50 -bg red
     wm iconwindow .t .icon
@@ -311,7 +302,7 @@ test unixWm-8.4 {icon windows} unix {
     update
     lappend result [winfo ismapped .t] [winfo ismapped .icon]
     wm iconify .t
-    update
+    update idletasks
     lappend result [winfo ismapped .t] [winfo ismapped .icon]
 } {.icon icon {} withdrawn 1 0 0 0}
 test unixWm-8.5 {icon windows} unix {
@@ -349,7 +340,6 @@ test unixWm-8.8 {icon windows} unix {
     wm geom .t +0+0
     tkwait visibility .t	;# Needed to keep tvtwm happy.
     wm iconwindow .t .icon
-    sleep 500
     lappend result [winfo ismapped .t] [winfo ismapped .icon]
 } {1 1 0}
 test unixWm-8.9 {icon windows} {unix nonPortable} {
@@ -421,12 +411,10 @@ test unixWm-9.3 {TkWmMapWindow procedure, iconic windows} unix {
     toplevel .t -width 100 -height 300 -bg blue
     wm geom .t +0+0
     wm iconify .t
-    sleep 500
     winfo ismapped .t
 } {0}
 test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     destroy .t
-    sleep 500
     toplevel .t -width 100 -height 50 -bg blue
     tkwait visibility .t
     wm iconwindow . .t
@@ -867,9 +855,9 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
-    update
+    update idletasks
     wm iconify .t2
-    update
+    update idletasks
     set result [winfo ismapped .t2]
     destroy .t2
     set result
@@ -878,10 +866,10 @@ test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
-    update
+    update idletasks
     set result [winfo ismapped .t2]
     wm iconify .t2
-    update
+    update idletasks
     lappend result [winfo ismapped .t2]
     destroy .t2
     set result
@@ -1385,12 +1373,13 @@ test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already 
 test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} unix {
     destroy .t
     toplevel .t -width 400 -height 150
-    wm geometry .t +0+0
     tkwait visibility .t
+    wm geometry .t +0+0
+    update idletasks
     set result {}
     lappend result [winfo width .t] [winfo height .t]
     .t configure -width 200 -height 300
-    sleep 500
+    update idletasks
     lappend result [winfo width .t] [winfo height .t]
 } {400 150 200 300}
 test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} {
@@ -1454,11 +1443,11 @@ test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} unix {
     bind .t <Unmap> {set x "unmapped"}
     set x {no event}
     wm iconify .t
-    animationDelay
+    update idletasks
     lappend result $x [winfo ismapped .t]
     set x {no event}
     wm deiconify .t
-    animationDelay
+    update idletasks
     lappend result $x [winfo ismapped .t]
 } {unmapped 0 mapped 1}
 
@@ -1971,7 +1960,6 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     destroy .t
     destroy .t2
-    sleep 500		;# Give window manager time to catch up.
     toplevel .t -width 200 -height 200 -bg green
     wm geometry .t +0+0
     tkwait visibility .t
@@ -1980,7 +1968,7 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     tkwait visibility .t2
     set result [list [winfo containing 100 100]]
     wm iconify .t2
-    animationDelay
+    update idletasks
     lappend result [winfo containing 100 100]
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
@@ -1990,9 +1978,10 @@ test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     frame .t.f -width 150 -height 150 -bd 2 -relief raised
     place .t.f -x 25 -y 25
     tkwait visibility .t.f
+    update idletasks
     set result [list [winfo containing 100 100]]
     place forget .t.f
-    update
+    update idletasks
     lappend result [winfo containing 100 100]
 } {.t.f .t}
 deleteWindows
@@ -2022,7 +2011,6 @@ test unixWm-51.3 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
     set result [winfo containing [winfo rootx .raise1] \
 	    [winfo rooty .raise1]]
     destroy .raise2
-    sleep 500
     list $result [winfo containing [winfo rootx .raise1] \
 	    [winfo rooty .raise1]]
 } {.raise2 .raise1}
@@ -2033,7 +2021,6 @@ test unixWm-51.4 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
     lower .raise3 .raise1
     set result [winfo containing 100 100]
     destroy .raise1
-    sleep 500
     lappend result [winfo containing 100 100]
 } {.raise1 .raise3}
 test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable} {
@@ -2048,7 +2035,6 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
     set result [winfo containing [winfo rootx .raise1] \
 	    [winfo rooty .raise1]]
     destroy .raise1
-    sleep 500
     list $result [winfo containing [winfo rootx .raise2] \
 	    [winfo rooty .raise2]]
 } {.raise1 .raise3}
@@ -2071,11 +2057,9 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} unix
 	wm geometry $w +0+0
     }
     raise .t .t2
-    sleep 2000
     update
     set result [list [winfo containing 100 100]]
     lower .t3
-    sleep 2000
     lappend result [winfo containing 100 100]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {

@@ -17,8 +17,18 @@ if {[tk windowingsystem] == "aqua"} {
     proc updateText {} {
 	update idletasks
     }
+    proc delay {} {
+	update idletasks
+	after 100
+	update idletasks
+    }
 } else {
     proc updateText {} {
+	update
+    }
+    proc delay {} {
+	update
+	after 100
 	update
     }
 }
@@ -3961,12 +3971,12 @@ test textDisp-31.3 {line update index shifting} {
     .t insert 1.0 "abc\n"
     .t insert 1.0 "abc\n"
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     .t.f configure -height 100
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
@@ -4014,12 +4024,12 @@ test textDisp-31.6 {line update index shifting} {
     .t insert 1.0 "abc\n"
     .t insert 1.0 "abc\n"
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     textest configure -height 100
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
@@ -4036,11 +4046,11 @@ test textDisp-31.7 {line update index shifting, elided} {
     .t tag configure elide -elide 1
     .t tag add elide 1.3 2.1
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {$fixedHeight * 1}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 2}] [expr {$fixedHeight * 1}] [expr {$fixedHeight * 1}]]
@@ -4175,6 +4185,7 @@ test textDisp-32.3 "NULL undisplayProc problems: #1791052" -setup {
 
 test textDisp-33.0 {one line longer than fits in the widget} {
     pack [text .tt -wrap char]
+    updateText
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt see 1.0
@@ -4183,6 +4194,7 @@ test textDisp-33.0 {one line longer than fits in the widget} {
 test textDisp-33.1 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
+    updateText
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt yview "1.0 +1 displaylines"
@@ -4196,12 +4208,12 @@ test textDisp-33.2 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
     .tt debug 1
-    update idletasks
+    updateText
     set tk_textHeightCalc ""
-    set timer [after 700 lappend tk_textHeightCalc "Timed out"]
+    set timer [after 200 lappend tk_textHeightCalc "Timed out"]
     .tt insert 1.0 [string repeat "more wrap + " 1]
     vwait tk_textHeightCalc
-    after cancel timer
+    after cancel $timer
     set tk_textHeightCalc
 } {1.0}
 test textDisp-33.3 {one line longer than fits in the widget} {
