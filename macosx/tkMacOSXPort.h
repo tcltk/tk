@@ -163,7 +163,8 @@
 /*
  * Used by xcolor.c
  */
-
+MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
+					    unsigned long blue);
 #define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red, p->green, p->blue))
 
 #endif /* _TKMACPORT */
