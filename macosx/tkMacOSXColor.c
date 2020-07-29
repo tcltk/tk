@@ -102,7 +102,8 @@ GetEntryFromPixel(
     SystemColorMapEntry *entry)
 {
     MacPixel p;
-    unsigned int index = 0;  //FIX ME
+ // Should make sure this is the rgbColor index, even if the data gets shuffled.
+    unsigned int index = 0;
 
     p.ulong = pixel;
     if (p.pixel.colortype != rgbColor) {
@@ -326,7 +327,6 @@ TkSetMacColor(
     OSStatus err = -1;
     SystemColorMapEntry entry;
 
-    //    if (GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
     if (GetEntryFromPixel(pixel, &entry)) {
 	err = ChkErr(SetCGColorComponents, entry, pixel, color);
     }
@@ -513,9 +513,6 @@ TkMacOSXSetColorInContext(
     CGRect rect;
     HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
 
-    // if (code < FIRST_SEMANTIC_COLOR) {
-    // 	cgColor = CopyCachedColor(gc, pixel);
-    // }
     if (!cgColor && GetEntryFromPixel(pixel, &entry)) {
 	switch (entry.type) {
 	case HIBrush:
