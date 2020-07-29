@@ -146,18 +146,18 @@ unsigned long TkMacOSXClearPixel(
  *
  * Results:
 
- *	Returns false if the code is out of bounds.
+ *	A pointer to a SystemColorMapEntry, or NULL if the pixel value is
+ *	invalid.
  *
  * Side effects:
- *	None.
+ *	None
  *
  *----------------------------------------------------------------------
  */
 
-static bool
+SystemColorMapEntry*
 GetEntryFromPixel(
-    unsigned long pixel,
-    SystemColorMapEntry *entry)
+    unsigned long pixel)
 {
     MacPixel p;
  // Should make sure this is the rgbColor index, even if the data gets shuffled.
@@ -168,10 +168,9 @@ GetEntryFromPixel(
 	index = p.pixel.value;
     }
     if (index < systemColorMapSize) {
-	*entry = *systemColorIndex[index];
-	return true;
+	return systemColorIndex[index];
     } else {
-	return false;
+	return NULL;
     }
 }
 
@@ -185,8 +184,13 @@ GetEntryFromPixel(
  *      the color is of type rgbColor.  In that case the normalized XColor RGB
  *      values are copied into the CGColorRef.
  *
+ *      In 64 bit macOS systems there are no HITheme functions which convert
+ *      HIText or HIBackground colors to CGColors.  (GetThemeTextColor was
+ *      removed, and it was never possible with backgrounds.)  If we get one of
+ *      these we return black.
+ *
  * Results:
- *	OSStatus
+ *	True if the function succeeds, false otherwise.
  *
  * Side effects:
  *	None.
@@ -194,70 +198,28 @@ GetEntryFromPixel(
  *----------------------------------------------------------------------
  */
 
-/*
- * Definitions to prevent compiler warnings about nonexistent properties of NSColor.
- */
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
- #define LABEL_COLOR labelColor
-#else
- #define LABEL_COLOR textColor
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
- #define LINK_COLOR linkColor
-#else
- #define LINK_COLOR blueColor
-#endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
  #define CONTROL_ACCENT_COLOR controlAccentColor
 #else
  #define CONTROL_ACCENT_COLOR colorForControlTint:[NSColor currentControlTint]
 #endif
 
-/*
- * Apple claims that linkColor is available in 10.10 but the declaration
- * does not appear in NSColor.h until later.  Declaring it in a category
- * appears to be harmless and stops the compiler warnings. 
- */
-
-@interface NSColor(TkColor)
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
-@property(class, strong, readonly) NSColor *linkColor;
-#elif MAC_OS_X_VERSION_MAX_ALLOWED > 1080
-@property(strong, readonly) NSColor *linkColor;
-#else
-@property(assign, readonly) NSColor *linkColor;
-#endif
-@end
-
 static NSColorSpace* sRGB = NULL;
 static CGFloat windowBackground[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
-static OSStatus
-SetCGColorComponents(
-    SystemColorMapEntry entry,
+static void
+GetRGBA(
+    SystemColorMapEntry *entry,
     unsigned long pixel,
-    CGColorRef *c)
+    CGFloat *rgba)
 {
-    OSStatus err = noErr;
     NSColor *bgColor, *color = nil;
-    CGFloat rgba[4] = {0, 0, 0, 1};
-    static Bool initialized = 0;
+
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
     }
-
-    /*
-     * This function is called before our autorelease pool is set up,
-     * so it needs its own pool.
-     */
-
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    switch (entry.type) {
-    case HIBrush:
-	err = ChkErr(HIThemeBrushCreateCGColor, entry.value, c);
-	return err;
+    switch (entry->type) {
     case rgbColor:
 	rgba[0] = ((pixel >> 16) & 0xff) / 255.0;
 	rgba[1] = ((pixel >>  8) & 0xff) / 255.0;
@@ -280,36 +242,48 @@ SetCGColorComponents(
 	}
 	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
 	    for (int i=0; i<3; i++) {
-		rgba[i] += entry.value*8.0 / 255.0;
+		rgba[i] += entry->value*8.0 / 255.0;
 	    }
 	} else {
 	    for (int i=0; i<3; i++) {
-		rgba[i] -= entry.value*8.0 / 255.0;
+		rgba[i] -= entry->value*8.0 / 255.0;
 	    }
 	}
 	break;
     case semantic:
-	color = [[NSColor valueForKey:entry.selector] colorUsingColorSpace:sRGB];	
+	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];	
 	[color getComponents: rgba];
 	break;
     case clearColor:
-	rgba[3]	= 0.0;
-	break;
-
-    /*
-     * There are no HITheme functions which convert Text or background colors
-     * to CGColors.  (GetThemeTextColor has been removed, and it was never
-     * possible with backgrounds.)  If we get one of these we return black.
-     */
-
-    case HIText:
-    case HIBackground:
+	rgba[3] = 0;
     default:
 	break;
     }
+}
+	       
+static Bool
+SetCGColorComponents(
+    SystemColorMapEntry *entry,
+    unsigned long pixel,
+    CGColorRef *c)
+{
+    CGFloat rgba[4] = {0, 0, 0, 1};
+
+    /*
+     * This function is called before our autorelease pool is set up,
+     * so it needs its own pool.
+     */
+
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+
+    if (entry->type == HIBrush) {
+     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+     	return err == noErr;
+    }
+    GetRGBA(entry, pixel, rgba);
     *c = CGColorCreate(sRGB.CGColorSpace, rgba);
     [pool drain];
-    return err;
+    return true;
 }
 
 /*
@@ -359,14 +333,13 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
  *
  * TkSetMacColor --
  *
- *	Sets the components of a CGColorRef from an XColor pixel value.
- *      XXXX The high order byte of the pixel value is used as an index into
- *      the system color table, and then SetCGColorComponents is called
- *      with the table entry and the pixel value.
+ *	Sets the components of a CGColorRef from an XColor pixel value.  The
+ *      pixel value is used to look up the color in the system color table, and
+ *      then SetCGColorComponents is called with the table entry and the pixel
+ *      value.
  *
  * Results:
- *      Returns false if the high order byte is not a valid index, true
- *	otherwise.
+ *      Returns false if the color is not found, true otherwise.
  *
  * Side effects:
  *	The variable macColor is set to a new CGColorRef, the caller is
@@ -381,13 +354,13 @@ TkSetMacColor(
     void *macColor)			/* CGColorRef to modify. */
 {
     CGColorRef *color = (CGColorRef*)macColor;
-    OSStatus err = -1;
-    SystemColorMapEntry entry;
+    SystemColorMapEntry *entry = GetEntryFromPixel(pixel);
 
-    if (GetEntryFromPixel(pixel, &entry)) {
-	err = ChkErr(SetCGColorComponents, entry, pixel, color);
+    if (entry) {
+	return SetCGColorComponents(entry, pixel, color);
+    } else {
+	return false;
     }
-    return (err == noErr);
 }
 
 /*
@@ -566,33 +539,32 @@ TkMacOSXSetColorInContext(
 {
     OSStatus err = noErr;
     CGColorRef cgColor = nil;
-    SystemColorMapEntry entry;
+    SystemColorMapEntry *entry = GetEntryFromPixel(pixel);
     CGRect rect;
     HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
 
-    if (!cgColor && GetEntryFromPixel(pixel, &entry)) {
-	switch (entry.type) {
+    if (entry) {
+	switch (entry->type) {
 	case HIBrush:
-	    err = ChkErr(HIThemeSetFill, entry.value, NULL, context,
+	    err = ChkErr(HIThemeSetFill, entry->value, NULL, context,
 		    kHIThemeOrientationNormal);
 	    if (err == noErr) {
-		err = ChkErr(HIThemeSetStroke, entry.value, NULL, context,
+		err = ChkErr(HIThemeSetStroke, entry->value, NULL, context,
 			kHIThemeOrientationNormal);
 	    }
 	    break;
 	case HIText:
-	    err = ChkErr(HIThemeSetTextFill, entry.value, NULL, context,
+	    err = ChkErr(HIThemeSetTextFill, entry->value, NULL, context,
 		    kHIThemeOrientationNormal);
 	    break;
 	case HIBackground:
-	    info.kind = entry.value;
+	    info.kind = entry->value;
 	    rect = CGContextGetClipBoundingBox(context);
 	    err = ChkErr(HIThemeApplyBackground, &rect, &info,
 		    context, kHIThemeOrientationNormal);
 	    break;
 	default:
-	    err = ChkErr(SetCGColorComponents, entry, pixel, &cgColor);
-	    if (err == noErr) {
+	    if (SetCGColorComponents(entry, pixel, &cgColor)){
 		SetCachedColor(gc, pixel, cgColor);
 	    }
 	    break;
@@ -608,6 +580,31 @@ TkMacOSXSetColorInContext(
     }
 }
 
+
+/* 
+ * Recompute the red, green and blue values of an XColor from its pixel value.
+ * To do this we need to know which window the color is being used in, so we
+ * can figure out if that window is in dark mode or not.  And we will probably
+ * need to involve drawRect somehow since the correct color values are only
+ * available when a valid graphics context is available.
+ */
+
+MODULE_SCOPE
+void TkMacOSXUpdateXColor(
+    XColor *color,
+    Tk_Window tkwin)
+{
+    MacPixel p;
+    CGFloat rgba[4] = {0, 0, 0, 1};
+    SystemColorMapEntry *entry = GetEntryFromPixel(color->pixel);
+
+    p.ulong = color->pixel;
+    if (p.pixel.colortype == semantic || p.pixel.colortype == ttkBackground) {
+	printf("Updating %s in window %s for %s Mode\n",
+	       entry->name, Tk_PathName(tkwin),
+	       TkMacOSXInDarkMode(tkwin) ? "Dark" : "Light");
+    }
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -655,11 +652,9 @@ TkpGetColor(
 	hPtr = Tcl_FindHashEntry(&systemColorMap, name + 6);
 	if (hPtr != NULL) {
 	    entry = (SystemColorMapEntry *)Tcl_GetHashValue(hPtr);
-	    OSStatus err;
 	    CGColorRef c;
-	    unsigned char pixelCode = entry->index;
-	    err = ChkErr(SetCGColorComponents, *entry, 0, &c);
-	    if (err == noErr) {
+	    unsigned int pixelCode = entry->index;
+	    if (SetCGColorComponents(entry, 0, &c)) {
 		MacPixel p;
 
 		const size_t n = CGColorGetNumberOfComponents(c);
