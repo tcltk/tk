@@ -16,217 +16,78 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkColor.h"
+#include "tkMacOSXColor.h"
 
-/*
- * The colorType specifies how the color value should be interpreted.  For the
- * unique rgbColor entry, the RGB values are generated from the pixel value of
- * an XColor.  The ttkBackground and semantic types are dynamic, meaning
- * that they change when dark mode is enabled on OSX 10.13 and later.
- */
+static Tcl_HashTable systemColorMap;
+static int systemColorMapSize;
+SystemColorMapEntry **systemColorIndex;
 
-enum colorType {
-    clearColor,    /* There should be only one of these. */
-    rgbColor,      /* There should be only one of these. */
-    appearance,    /* There should be only one of these. */
-    HIBrush,       /* The value is a HITheme brush color table index. */
-    HIText,        /* The value is a HITheme text color table index. */
-    HIBackground,  /* The value is a HITheme background color table index. */
-    ttkBackground, /* The value can be used as a parameter.*/
-    semantic, /* The value can be used as a parameter.*/
-};
+void initColorTable()
+{
+    Tcl_InitHashTable(&systemColorMap, TCL_STRING_KEYS);
+    SystemColorMapEntry *entry;
+    Tcl_HashSearch search;
+    Tcl_HashEntry *hPtr;
+    int newPtr = 0, index = 0;
+    for (entry = systemColorMapData; entry->name != NULL; entry++) {
+	hPtr = Tcl_CreateHashEntry(&systemColorMap, entry->name, &newPtr);
+	if (entry->type == semantic) {
+	    NSString *selector = [[NSString alloc]
+				   initWithCString:entry->macName
+					  encoding:NSUTF8StringEncoding];
+	    if (![NSColor respondsToSelector: NSSelectorFromString(selector)]) {
+		continue;
+	    }
+	    [selector retain];
+	    entry->selector = selector;
+	}
+	if (!newPtr) {
+	    index--;
+	}
+	entry->index = index++;
+	Tcl_SetHashValue(hPtr, entry);
+    }
+    systemColorMapSize = index;
+    systemColorIndex = ckalloc(systemColorMapSize * sizeof(SystemColorMapEntry*));
+    for (hPtr = Tcl_FirstHashEntry(&systemColorMap, &search); hPtr != NULL;
+	 hPtr = Tcl_NextHashEntry(&search)) {
+	entry = (SystemColorMapEntry *) Tcl_GetHashValue(hPtr);
+	systemColorIndex[entry->index] = entry;
+    }
+}
 
-/*
+MODULE_SCOPE
+unsigned long TkMacOSXRGBPixel(
+    unsigned int red,
+    unsigned int green,
+    unsigned int blue)
+{
+    MacPixel p;
+    p.pixel.value = (red >> 8) << 16 | (green >> 8) << 8 | (blue >> 8);
+    p.pixel.colortype = rgbColor;
+    return p.ulong;
+}
 
- */
+MODULE_SCOPE
+unsigned long TkMacOSXClearPixel(
+    void)
+{
+    MacPixel p;
+    p.pixel.value = 0;
+    p.pixel.colortype = clearColor;
+    return p.ulong;
+}
 
-struct SystemColorMapEntry {
-    const char *name;
-    enum colorType type;
-    long value;
-};  /* unsigned char pixelCode; */
-
-/*
- * Array of system color definitions: the array index is required to equal the
- * color's (pixelCode - MIN_PIXELCODE), i.e. the array order needs to be kept
- * in sync with the public pixel code values in tkMacOSXPort.h !
- */
-
-#define MIN_PIXELCODE  30
-static const struct SystemColorMapEntry systemColorMap[] = {
-    { "Transparent",			    clearColor,   0 },						    /*  30: TRANSPARENT_PIXEL */
-    { "Highlight",			    HIBrush,      kThemeBrushPrimaryHighlightColor },		    /*  31 */
-    { "HighlightSecondary",		    HIBrush,      kThemeBrushSecondaryHighlightColor },		    /*  32 */
-    { "HighlightText",			    HIBrush,      kThemeBrushBlack },				    /*  33 */
-    { "HighlightAlternate",		    HIBrush,      kThemeBrushAlternatePrimaryHighlightColor },	    /*  34 */
-    { "ButtonText",			    HIText,       kThemeTextColorPushButtonActive },	       	    /*  35 */
-    { "PrimaryHighlightColor",		    HIBrush,      kThemeBrushPrimaryHighlightColor },		    /*  36 */
-    { "ButtonFace",			    HIBrush,      kThemeBrushButtonFaceActive },	       	    /*  37 */
-    { "SecondaryHighlightColor",	    HIBrush,      kThemeBrushSecondaryHighlightColor },		    /*  38 */
-    { "ButtonFrame",			    HIBrush,      kThemeBrushButtonFrameActive },	       	    /*  39 */
-    { "AlternatePrimaryHighlightColor",	    HIBrush,      kThemeBrushAlternatePrimaryHighlightColor },	    /*  40 */
-    { "WindowBody",			    HIBrush,      kThemeBrushDocumentWindowBackground },       	    /*  41 */
-    { "SheetBackground",		    HIBrush,      kThemeBrushSheetBackground },			    /*  42 */
-    { "MenuActive",			    HIBrush,      kThemeBrushMenuBackgroundSelected },		    /*  43 */
-    { "Black",				    HIBrush,      kThemeBrushBlack },				    /*  44 */
-    { "MenuActiveText",			    HIText,       kThemeTextColorMenuItemSelected },	       	    /*  45 */
-    { "White",				    HIBrush,      kThemeBrushWhite },				    /*  46 */
-    { "Menu",				    HIBrush,      kThemeBrushMenuBackground },			    /*  47 */
-    { "DialogBackgroundActive",		    HIBrush,      kThemeBrushDialogBackgroundActive },		    /*  48 */
-    { "MenuDisabled",			    HIText,       kThemeTextColorMenuItemDisabled },	       	    /*  49 */
-    { "DialogBackgroundInactive",	    HIBrush,      kThemeBrushDialogBackgroundInactive },       	    /*  50 */
-    { "MenuText",			    HIText,       kThemeTextColorMenuItemActive },	       	    /*  51 */
-    { "AppearanceColor",		    appearance,   0 },						    /*  52: APPEARANCE_PIXEL */
-    { "AlertBackgroundActive",		    HIBrush,      kThemeBrushAlertBackgroundActive },		    /*  53 */
-    { "AlertBackgroundInactive",	    HIBrush,      kThemeBrushAlertBackgroundInactive },		    /*  54 */
-    { "ModelessDialogBackgroundActive",	    HIBrush,      kThemeBrushModelessDialogBackgroundActive },	    /*  55 */
-    { "ModelessDialogBackgroundInactive",   HIBrush,      kThemeBrushModelessDialogBackgroundInactive },    /*  56 */
-    { "UtilityWindowBackgroundActive",	    HIBrush,      kThemeBrushUtilityWindowBackgroundActive },	    /*  57 */
-    { "UtilityWindowBackgroundInactive",    HIBrush,      kThemeBrushUtilityWindowBackgroundInactive },	    /*  58 */
-    { "ListViewSortColumnBackground",	    HIBrush,      kThemeBrushListViewSortColumnBackground },	    /*  59 */
-    { "ListViewBackground",		    HIBrush,      kThemeBrushListViewBackground },	       	    /*  60 */
-    { "IconLabelBackground",		    HIBrush,      kThemeBrushIconLabelBackground },    		    /*  61 */
-    { "ListViewSeparator",		    HIBrush,      kThemeBrushListViewSeparator },      		    /*  62 */
-    { "ChasingArrows",			    HIBrush,      kThemeBrushChasingArrows },			    /*  63 */
-    { "DragHilite",			    HIBrush,      kThemeBrushDragHilite },	       		    /*  64 */
-    { "DocumentWindowBackground",	    HIBrush,      kThemeBrushDocumentWindowBackground },       	    /*  65 */
-    { "FinderWindowBackground",		    HIBrush,      kThemeBrushFinderWindowBackground },		    /*  66 */
-    { "ScrollBarDelimiterActive",	    HIBrush,      kThemeBrushScrollBarDelimiterActive },       	    /*  67 */
-    { "ScrollBarDelimiterInactive",	    HIBrush,      kThemeBrushScrollBarDelimiterInactive },     	    /*  68 */
-    { "FocusHighlight",			    HIBrush,      kThemeBrushFocusHighlight },			    /*  69 */
-    { "PopupArrowActive",		    HIBrush,      kThemeBrushPopupArrowActive },	       	    /*  70 */
-    { "PopupArrowPressed",		    HIBrush,      kThemeBrushPopupArrowPressed },	       	    /*  71 */
-    { "PopupArrowInactive",		    HIBrush,      kThemeBrushPopupArrowInactive },	       	    /*  72 */
-    { "AppleGuideCoachmark",		    HIBrush,      kThemeBrushAppleGuideCoachmark },	       	    /*  73 */
-    { "IconLabelBackgroundSelected",	    HIBrush,      kThemeBrushIconLabelBackgroundSelected },    	    /*  74 */
-    { "StaticAreaFill",			    HIBrush,      kThemeBrushStaticAreaFill },			    /*  75 */
-    { "ActiveAreaFill",			    HIBrush,      kThemeBrushActiveAreaFill },			    /*  76 */
-    { "ButtonFrameActive",		    HIBrush,      kThemeBrushButtonFrameActive },		    /*  77 */
-    { "ButtonFrameInactive",		    HIBrush,      kThemeBrushButtonFrameInactive },	       	    /*  78 */
-    { "ButtonFaceActive",		    HIBrush,      kThemeBrushButtonFaceActive },       		    /*  79 */
-    { "ButtonFaceInactive",		    HIBrush,      kThemeBrushButtonFaceInactive },	       	    /*  80 */
-    { "ButtonFacePressed",		    HIBrush,      kThemeBrushButtonFacePressed },	       	    /*  81 */
-    { "ButtonActiveDarkShadow",		    HIBrush,      kThemeBrushButtonActiveDarkShadow },		    /*  82 */
-    { "ButtonActiveDarkHighlight",	    HIBrush,      kThemeBrushButtonActiveDarkHighlight },	    /*  83 */
-    { "ButtonActiveLightShadow",	    HIBrush,      kThemeBrushButtonActiveLightShadow },		    /*  84 */
-    { "ButtonActiveLightHighlight",	    HIBrush,      kThemeBrushButtonActiveLightHighlight },	    /*  85 */
-    { "ButtonInactiveDarkShadow",	    HIBrush,      kThemeBrushButtonInactiveDarkShadow },	    /*  86 */
-    { "ButtonInactiveDarkHighlight",	    HIBrush,      kThemeBrushButtonInactiveDarkHighlight },	    /*  87 */
-    { "ButtonInactiveLightShadow",	    HIBrush,      kThemeBrushButtonInactiveLightShadow },	    /*  88 */
-    { "ButtonInactiveLightHighlight",	    HIBrush,      kThemeBrushButtonInactiveLightHighlight },	    /*  89 */
-    { "ButtonPressedDarkShadow",	    HIBrush,      kThemeBrushButtonPressedDarkShadow },		    /*  90 */
-    { "ButtonPressedDarkHighlight",	    HIBrush,      kThemeBrushButtonPressedDarkHighlight },	    /*  91 */
-    { "ButtonPressedLightShadow",	    HIBrush,      kThemeBrushButtonPressedLightShadow },	    /*  92 */
-    { "ButtonPressedLightHighlight",	    HIBrush,      kThemeBrushButtonPressedLightHighlight },	    /*  93 */
-    { "BevelActiveLight",		    HIBrush,      kThemeBrushBevelActiveLight },		    /*  94 */
-    { "BevelActiveDark",		    HIBrush,      kThemeBrushBevelActiveDark },			    /*  95 */
-    { "BevelInactiveLight",		    HIBrush,      kThemeBrushBevelInactiveLight },		    /*  96 */
-    { "BevelInactiveDark",		    HIBrush,      kThemeBrushBevelInactiveDark },		    /*  97 */
-    { "NotificationWindowBackground",	    HIBrush,      kThemeBrushNotificationWindowBackground },	    /*  98 */
-    { "MovableModalBackground",		    HIBrush,      kThemeBrushMovableModalBackground },		    /*  99 */
-    { "SheetBackgroundOpaque",		    HIBrush,      kThemeBrushSheetBackgroundOpaque },		    /* 100 */
-    { "DrawerBackground",		    HIBrush,      kThemeBrushDrawerBackground },		    /* 101 */
-    { "ToolbarBackground",		    HIBrush,      kThemeBrushToolbarBackground },		    /* 102 */
-    { "SheetBackgroundTransparent",	    HIBrush,      kThemeBrushSheetBackgroundTransparent },	    /* 103 */
-    { "MenuBackground",			    HIBrush,      kThemeBrushMenuBackground },			    /* 104 */
-    { "Pixel",				    rgbColor,     0 },						    /* 105: PIXEL_MAGIC */
-    { "MenuBackgroundSelected",		    HIBrush,      kThemeBrushMenuBackgroundSelected },		    /* 106 */
-    { "ListViewOddRowBackground",	    HIBrush,      kThemeBrushListViewOddRowBackground },	    /* 107 */
-    { "ListViewEvenRowBackground",	    HIBrush,      kThemeBrushListViewEvenRowBackground },	    /* 108 */
-    { "ListViewColumnDivider",		    HIBrush,      kThemeBrushListViewColumnDivider },		    /* 109 */
-    { "BlackText",			    HIText,       kThemeTextColorBlack },			    /* 110 */
-    { "DialogActiveText",		    HIText,       kThemeTextColorDialogActive },		    /* 111 */
-    { "DialogInactiveText",		    HIText,       kThemeTextColorDialogInactive },		    /* 112 */
-    { "AlertActiveText",		    HIText,       kThemeTextColorAlertActive },			    /* 113 */
-    { "AlertInactiveText",		    HIText,       kThemeTextColorAlertInactive },		    /* 114 */
-    { "ModelessDialogActiveText",	    HIText,       kThemeTextColorModelessDialogActive },	    /* 115 */
-    { "ModelessDialogInactiveText",	    HIText,       kThemeTextColorModelessDialogInactive },	    /* 116 */
-    { "WindowHeaderActiveText",		    HIText,       kThemeTextColorWindowHeaderActive },		    /* 117 */
-    { "WindowHeaderInactiveText",	    HIText,       kThemeTextColorWindowHeaderInactive },	    /* 118 */
-    { "PlacardActiveText",		    HIText,       kThemeTextColorPlacardActive },		    /* 119 */
-    { "PlacardInactiveText",		    HIText,       kThemeTextColorPlacardInactive },		    /* 120 */
-    { "PlacardPressedText",		    HIText,       kThemeTextColorPlacardPressed },		    /* 121 */
-    { "PushButtonActiveText",		    HIText,       kThemeTextColorPushButtonActive },		    /* 122 */
-    { "PushButtonInactiveText",		    HIText,       kThemeTextColorPushButtonInactive },		    /* 123 */
-    { "PushButtonPressedText",		    HIText,       kThemeTextColorPushButtonPressed },		    /* 124 */
-    { "BevelButtonActiveText",		    HIText,       kThemeTextColorBevelButtonActive },		    /* 125 */
-    { "BevelButtonInactiveText",	    HIText,       kThemeTextColorBevelButtonInactive },		    /* 126 */
-    { "BevelButtonPressedText",		    HIText,       kThemeTextColorBevelButtonPressed },		    /* 127 */
-    { "PopupButtonActiveText",		    HIText,       kThemeTextColorPopupButtonActive },		    /* 128 */
-    { "PopupButtonInactiveText",	    HIText,       kThemeTextColorPopupButtonInactive },		    /* 129 */
-    { "PopupButtonPressedText",		    HIText,       kThemeTextColorPopupButtonPressed },		    /* 130 */
-    { "IconLabelText",			    HIText,       kThemeTextColorIconLabel },			    /* 131 */
-    { "ListViewText",			    HIText,       kThemeTextColorListView },			    /* 132 */
-    { "DocumentWindowTitleActiveText",	    HIText,       kThemeTextColorDocumentWindowTitleActive },	    /* 133 */
-    { "DocumentWindowTitleInactiveText",    HIText,       kThemeTextColorDocumentWindowTitleInactive },	    /* 134 */
-    { "MovableModalWindowTitleActiveText",  HIText,       kThemeTextColorMovableModalWindowTitleActive },   /* 135 */
-    { "MovableModalWindowTitleInactiveText",HIText,       kThemeTextColorMovableModalWindowTitleInactive }, /* 136 */
-    { "UtilityWindowTitleActiveText",	    HIText,       kThemeTextColorUtilityWindowTitleActive },	    /* 137 */
-    { "UtilityWindowTitleInactiveText",	    HIText,       kThemeTextColorUtilityWindowTitleInactive },	    /* 138 */
-    { "PopupWindowTitleActiveText",	    HIText,       kThemeTextColorPopupWindowTitleActive },	    /* 139 */
-    { "PopupWindowTitleInactiveText",	    HIText,       kThemeTextColorPopupWindowTitleInactive },	    /* 140 */
-    { "RootMenuActiveText",		    HIText,       kThemeTextColorRootMenuActive },		    /* 141 */
-    { "RootMenuSelectedText",		    HIText,       kThemeTextColorRootMenuSelected },		    /* 142 */
-    { "RootMenuDisabledText",		    HIText,       kThemeTextColorRootMenuDisabled },		    /* 143 */
-    { "MenuItemActiveText",		    HIText,       kThemeTextColorMenuItemActive },		    /* 144 */
-    { "MenuItemSelectedText",		    HIText,       kThemeTextColorMenuItemSelected },		    /* 145 */
-    { "MenuItemDisabledText",		    HIText,       kThemeTextColorMenuItemDisabled },		    /* 146 */
-    { "PopupLabelActiveText",		    HIText,       kThemeTextColorPopupLabelActive },		    /* 147 */
-    { "PopupLabelInactiveText",		    HIText,       kThemeTextColorPopupLabelInactive },		    /* 148 */
-    { "TabFrontActiveText",		    HIText,       kThemeTextColorTabFrontActive },		    /* 149 */
-    { "TabNonFrontActiveText",		    HIText,       kThemeTextColorTabNonFrontActive },		    /* 150 */
-    { "TabNonFrontPressedText",		    HIText,       kThemeTextColorTabNonFrontPressed },		    /* 151 */
-    { "TabFrontInactiveText",		    HIText,       kThemeTextColorTabFrontInactive },		    /* 152 */
-    { "TabNonFrontInactiveText",	    HIText,       kThemeTextColorTabNonFrontInactive },		    /* 153 */
-    { "IconLabelSelectedText",		    HIText,       kThemeTextColorIconLabelSelected },		    /* 154 */
-    { "BevelButtonStickyActiveText",	    HIText,       kThemeTextColorBevelButtonStickyActive },	    /* 155 */
-    { "BevelButtonStickyInactiveText",	    HIText,       kThemeTextColorBevelButtonStickyInactive },	    /* 156 */
-    { "NotificationText",		    HIText,       kThemeTextColorNotification },		    /* 157 */
-    { "SystemDetailText",		    HIText,       kThemeTextColorSystemDetail },		    /* 158 */
-    { "WhiteText",			    HIText,       kThemeTextColorWhite },			    /* 159 */
-    { "TabPaneBackground",		    HIBackground, kThemeBackgroundTabPane },			    /* 160 */
-    { "PlacardBackground",		    HIBackground, kThemeBackgroundPlacard },			    /* 161 */
-    { "WindowHeaderBackground",		    HIBackground, kThemeBackgroundWindowHeader },		    /* 162 */
-    { "ListViewWindowHeaderBackground",	    HIBackground, kThemeBackgroundListViewWindowHeader },	    /* 163 */
-    { "SecondaryGroupBoxBackground",	    HIBackground, kThemeBackgroundSecondaryGroupBox },		    /* 164 */
-    { "MetalBackground",		    HIBackground, kThemeBackgroundMetal },			    /* 165 */
-
-    /*
-     * Colors based on "semantic" NSColors.
-     */
-
-    { "WindowBackgroundColor",		    ttkBackground, 0 },	    					    /* 166 */
-    { "WindowBackgroundColor1",		    ttkBackground, 1 },						    /* 167 */
-    { "WindowBackgroundColor2",		    ttkBackground, 2 },						    /* 168 */
-    { "WindowBackgroundColor3",		    ttkBackground, 3 },						    /* 169 */
-    { "WindowBackgroundColor4",		    ttkBackground, 4 },						    /* 170 */
-    { "WindowBackgroundColor5",		    ttkBackground, 5 },						    /* 171 */
-    { "WindowBackgroundColor6",		    ttkBackground, 6 },						    /* 172 */
-    { "WindowBackgroundColor7",		    ttkBackground, 7 },						    /* 173 */
-    { "TextColor",			    semantic, 0 },						    /* 174 */
-    { "SelectedTextColor",		    semantic, 1 },						    /* 175 */
-    { "LabelColor",			    semantic, 2 },						    /* 176 */
-    { "ControlTextColor",      		    semantic, 3 },						    /* 177 */
-    { "DisabledControlTextColor",	    semantic, 4 },						    /* 178 */
-    { "SelectedTabTextColor",		    semantic, 5 },						    /* 179 */
-    { "TextBackgroundColor",		    semantic, 6 },						    /* 180 */
-    { "SelectedTextBackgroundColor",	    semantic, 7 },						    /* 181 */
-    { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
-    /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
-    { "SecondaryLabelColor",		    ttkBackground, 14 },					    /* 183 */
-    { "LinkColor",			    semantic, 9 },						    /* 184 */
-    { NULL,				    0, 0 }
-};
-#define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 184
 
 /*
  *----------------------------------------------------------------------
  *
- * GetEntryFromPixelCode --
+ * GetEntryFromPixel --
  *
  *	Extract a SystemColorMapEntry from the table.
  *
  * Results:
+
  *	Returns false if the code is out of bounds.
  *
  * Side effects:
@@ -236,12 +97,19 @@ static const struct SystemColorMapEntry systemColorMap[] = {
  */
 
 static bool
-GetEntryFromPixelCode(
-    unsigned char code,
-    struct SystemColorMapEntry *entry)
+GetEntryFromPixel(
+    unsigned long pixel,
+    SystemColorMapEntry *entry)
 {
-    if (code >= MIN_PIXELCODE && code <= MAX_PIXELCODE) {
-	*entry = systemColorMap[code - MIN_PIXELCODE];
+    MacPixel p;
+    unsigned int index = 0;  //FIX ME
+
+    p.ulong = pixel;
+    if (p.pixel.colortype != rgbColor) {
+	index = p.pixel.value;
+    }
+    if (index < systemColorMapSize) {
+	*entry = *systemColorIndex[index];
 	return true;
     } else {
 	return false;
@@ -268,6 +136,26 @@ GetEntryFromPixelCode(
  */
 
 /*
+ * Definitions to prevent compiler warnings about nonexistent properties of NSColor.
+ */
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+ #define LABEL_COLOR labelColor
+#else
+ #define LABEL_COLOR textColor
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+ #define LINK_COLOR linkColor
+#else
+ #define LINK_COLOR blueColor
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+ #define CONTROL_ACCENT_COLOR controlAccentColor
+#else
+ #define CONTROL_ACCENT_COLOR colorForControlTint:[NSColor currentControlTint]
+#endif
+
+/*
  * Apple claims that linkColor is available in 10.10 but the declaration
  * does not appear in NSColor.h until later.  Declaring it in a category
  * appears to be harmless and stops the compiler warnings. 
@@ -289,14 +177,15 @@ static CGFloat windowBackground[4] =
 
 static OSStatus
 SetCGColorComponents(
-    struct SystemColorMapEntry entry,
+    SystemColorMapEntry entry,
     unsigned long pixel,
     CGColorRef *c)
 {
     OSStatus err = noErr;
     NSColor *bgColor, *color = nil;
     CGFloat rgba[4] = {0, 0, 0, 1};
-
+    static Bool initialized = 0;
+    NSString *selector;
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
     }
@@ -307,7 +196,6 @@ SetCGColorComponents(
      */
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
-
     switch (entry.type) {
     case HIBrush:
 	err = ChkErr(HIThemeBrushCreateCGColor, entry.value, c);
@@ -343,76 +231,7 @@ SetCGColorComponents(
 	}
 	break;
     case semantic:
-	switch (entry.value) {
-	case 0:
-	    color = [[NSColor textColor] colorUsingColorSpace:sRGB];
-	    break;
-	case 1:
-	    color = [[NSColor selectedTextColor] colorUsingColorSpace:sRGB];
-	    break;
-	case 2:
-	    if ([NSApp macOSVersion] > 100900) {
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
-		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
-#endif
-	    } else {
-		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
-	    }
-	    break;
-	case 3:
-	    color = [[NSColor controlTextColor] colorUsingColorSpace:sRGB];
-	    break;
-	case 4:
-	    color = [[NSColor disabledControlTextColor]
-			colorUsingColorSpace:sRGB];
-	    break;
-	case 5:
-	    if ([NSApp macOSVersion] > 100600) {
-		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
-	    } else {
-		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
-	    }
-	    break;
-	case 6:
-	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:sRGB];
-	    break;
-	case 7:
-	    color = [[NSColor selectedTextBackgroundColor]
-			colorUsingColorSpace:sRGB];
-	    break;
-	case 8:
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	    if (@available(macOS 14, *)) {
-		color = [[NSColor controlAccentColor] colorUsingColorSpace:sRGB];
-#else
-	    if(false) {
-#endif
-	    } else {
-		color = [[NSColor
-			    colorForControlTint:[NSColor currentControlTint]]
-			        colorUsingColorSpace: sRGB];
-	    }
-	    break;
-	case 9:
-	    if ([NSApp macOSVersion] >= 101100) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
-		color = [[NSColor linkColor] colorUsingColorSpace:sRGB];
-#endif
-	    } else {
-		color = [[NSColor blueColor] colorUsingColorSpace:sRGB];
-	    }
-	    break;
-	default:
-	    if ([NSApp macOSVersion] >= 101000) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
-		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
-#endif
-	    } else {
-		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
-	    }
-	    break;
-	}
+	color = [[NSColor valueForKey:entry.selector] colorUsingColorSpace:sRGB];	
 	[color getComponents: rgba];
 	break;
     case clearColor:
@@ -483,7 +302,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
  * TkSetMacColor --
  *
  *	Sets the components of a CGColorRef from an XColor pixel value.
- *      The high order byte of the pixel value is used as an index into
+ *      XXXX The high order byte of the pixel value is used as an index into
  *      the system color table, and then SetCGColorComponents is called
  *      with the table entry and the pixel value.
  *
@@ -505,9 +324,10 @@ TkSetMacColor(
 {
     CGColorRef *color = (CGColorRef*)macColor;
     OSStatus err = -1;
-    struct SystemColorMapEntry entry;
+    SystemColorMapEntry entry;
 
-    if (GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
+    //    if (GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
+    if (GetEntryFromPixel(pixel, &entry)) {
 	err = ChkErr(SetCGColorComponents, entry, pixel, color);
     }
     return (err == noErr);
@@ -689,15 +509,14 @@ TkMacOSXSetColorInContext(
 {
     OSStatus err = noErr;
     CGColorRef cgColor = nil;
-    struct SystemColorMapEntry entry;
+    SystemColorMapEntry entry;
     CGRect rect;
-    int code = (pixel >> 24) & 0xff;
     HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
 
-    if (code < FIRST_SEMANTIC_COLOR) {
-	cgColor = CopyCachedColor(gc, pixel);
-    }
-    if (!cgColor && GetEntryFromPixelCode(code, &entry)) {
+    // if (code < FIRST_SEMANTIC_COLOR) {
+    // 	cgColor = CopyCachedColor(gc, pixel);
+    // }
+    if (!cgColor && GetEntryFromPixel(pixel, &entry)) {
 	switch (entry.type) {
 	case HIBrush:
 	    err = ChkErr(HIThemeSetFill, entry.value, NULL, context,
@@ -763,6 +582,13 @@ TkpGetColor(
     Colormap colormap = tkwin!= None ? Tk_Colormap(tkwin) : None;
     TkColor *tkColPtr;
     XColor color;
+    static Bool initialized = NO;
+    static NSColorSpace* sRGB = NULL;
+    if (!initialized) {
+	initialized = YES;
+	sRGB = [NSColorSpace sRGBColorSpace];
+	initColorTable();
+    }
 
     /*
      * Check to see if this is a system color. Otherwise, XParseColor
@@ -770,20 +596,18 @@ TkpGetColor(
      */
 
     if (strncasecmp(name, "system", 6) == 0) {
-	Tcl_Obj *strPtr = Tcl_NewStringObj(name+6, -1);
-	int idx, result;
-
-	result = Tcl_GetIndexFromObjStruct(NULL, strPtr, systemColorMap,
-		sizeof(struct SystemColorMapEntry), NULL, TCL_EXACT, &idx);
-	Tcl_DecrRefCount(strPtr);
-	if (result == TCL_OK) {
+	Tcl_HashEntry *hPtr = NULL;
+	SystemColorMapEntry *entry;
+	hPtr = Tcl_FindHashEntry(&systemColorMap, name + 6);
+	if (hPtr != NULL) {
+	    entry = (SystemColorMapEntry *)Tcl_GetHashValue(hPtr);
 	    OSStatus err;
 	    CGColorRef c;
-	    unsigned char pixelCode = idx + MIN_PIXELCODE;
-	    struct SystemColorMapEntry entry = systemColorMap[idx];
-
-	    err = ChkErr(SetCGColorComponents, entry, 0, &c);
+	    unsigned char pixelCode = entry->index;
+	    err = ChkErr(SetCGColorComponents, *entry, 0, &c);
 	    if (err == noErr) {
+		MacPixel p;
+
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
 
@@ -799,10 +623,9 @@ TkpGetColor(
 		default:
 		    Tcl_Panic("CGColor with %d components", (int) n);
 		}
-		color.pixel = ((((((pixelCode << 8)
-			| ((color.red   >> 8) & 0xff)) << 8)
-			| ((color.green >> 8) & 0xff)) << 8)
-			| ((color.blue  >> 8) & 0xff));
+		p.pixel.value = pixelCode;
+		p.pixel.colortype = entry->type;
+		color.pixel = p.ulong;
 		CGColorRelease(c);
 		goto validXColor;
 	    }
@@ -854,7 +677,7 @@ TkpGetColorByValue(
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
     tkColPtr->color.blue = colorPtr->blue;
-    tkColPtr->color.pixel = TkpGetPixel(&tkColPtr->color);
+    tkColPtr->color.pixel = TkpGetPixel(colorPtr);
     return tkColPtr;
 }
 

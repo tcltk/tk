@@ -161,27 +161,9 @@
 #define TK_NO_DOUBLE_BUFFERING 1
 
 /*
- * Magic pixel code values for system colors.
- *
- * NOTE: values must be kept in sync with indices into the
- *	 systemColorMap array in tkMacOSXColor.c !
+ * Used by xcolor.c
  */
 
-#define TRANSPARENT_PIXEL		30
-#define APPEARANCE_PIXEL		52
-#define PIXEL_MAGIC ((unsigned char) 0x69)
-
-/*
- * The following macro returns the pixel value that corresponds to the
- * 16-bit RGB values in the given XColor structure.
- * The format is: (PIXEL_MAGIC <<< 24) | (R << 16) | (G << 8) | B
- * where each of R, G and B is the high order byte of a 16-bit component.
- */
-
-#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
-
+#define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red, p->green, p->blue))
 
 #endif /* _TKMACPORT */
