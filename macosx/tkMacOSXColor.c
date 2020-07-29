@@ -25,28 +25,44 @@ SystemColorMapEntry **systemColorIndex;
 void initColorTable()
 {
     Tcl_InitHashTable(&systemColorMap, TCL_STRING_KEYS);
-    SystemColorMapEntry *entry;
+    SystemColorMapEntry *entry, *oldEntry;
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
-    int newPtr = 0, index = 0;
+    int newPtr, index = 0;
+
+    /*
+     * Build a hash table for looking up a color by its name.
+     */
+    
     for (entry = systemColorMapData; entry->name != NULL; entry++) {
 	hPtr = Tcl_CreateHashEntry(&systemColorMap, entry->name, &newPtr);
 	if (entry->type == semantic) {
 	    NSString *selector = [[NSString alloc]
 				   initWithCString:entry->macName
 					  encoding:NSUTF8StringEncoding];
+	    /*
+	     * Ignore this entry if NSColor does not recognize it.
+	     */
+	    
 	    if (![NSColor respondsToSelector: NSSelectorFromString(selector)]) {
 		continue;
 	    }
 	    [selector retain];
 	    entry->selector = selector;
 	}
-	if (!newPtr) {
-	    index--;
+	if (newPtr == 0) {
+	    oldEntry = (SystemColorMapEntry *) Tcl_GetHashValue(hPtr);
+	    entry->index = oldEntry->index;
+	} else {
+	    entry->index = index++;
 	}
-	entry->index = index++;
 	Tcl_SetHashValue(hPtr, entry);
     }
+    
+    /*
+     * Build an array for looking up a color by its index.
+     */
+    
     systemColorMapSize = index;
     systemColorIndex = ckalloc(systemColorMapSize * sizeof(SystemColorMapEntry*));
     for (hPtr = Tcl_FirstHashEntry(&systemColorMap, &search); hPtr != NULL;
@@ -56,18 +72,60 @@ void initColorTable()
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXRGBPixel --
+ *
+ *	Return an unsigned long value suitable for use in the pixel
+ *	field of an XColor with the specified red, green and blue
+ *	intensities.  The inputs are cast as unsigned longs but are
+ *      expected to have values representable by an unsigned short
+ *      as used in the XColor struct.  These values are divided by
+ *      256 tp generate a 24-bit RGB pixel value.
+ *
+ *      This is called by the TkpGetPixel macro, used in xcolor.c.
+ *
+ * Results:
+ *	An unsigned long that can be used as the pixel field of an XColor.
+ *
+ * Side effects:
+ *	None.
+ *----------------------------------------------------------------------
+ */
 MODULE_SCOPE
-unsigned long TkMacOSXRGBPixel(
-    unsigned int red,
-    unsigned int green,
-    unsigned int blue)
+unsigned long
+TkMacOSXRGBPixel(
+    unsigned long red,
+    unsigned long green,
+    unsigned long blue)
 {
     MacPixel p;
-    p.pixel.value = (red >> 8) << 16 | (green >> 8) << 8 | (blue >> 8);
     p.pixel.colortype = rgbColor;
+    p.pixel.value = (((red >> 8) & 0xff) << 16)  |
+	            (((green >> 8) & 0xff) << 8) |
+	            ((blue >> 8) & 0xff);
     return p.ulong;
 }
-
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXClearPixel --
+ *
+ *	Return the unsigned long value that appears in the pixel
+ *	field of the XColor for systemTransparentColor.
+ *
+ *      This is used in tkMacOSXImage.c.
+ *
+ * Results:
+ *	The unsigned long that appears in the pixel field of the XColor
+ *      for systemTransparentPixel.
+ *
+ * Side effects:
+ *	None.
+ *----------------------------------------------------------------------
+ */
 MODULE_SCOPE
 unsigned long TkMacOSXClearPixel(
     void)
@@ -186,7 +244,6 @@ SetCGColorComponents(
     NSColor *bgColor, *color = nil;
     CGFloat rgba[4] = {0, 0, 0, 1};
     static Bool initialized = 0;
-    NSString *selector;
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
     }
