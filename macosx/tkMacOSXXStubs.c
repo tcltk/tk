@@ -250,8 +250,8 @@ TkpOpenDisplay(
      */
     screen->root	= ROOT_ID;
     screen->display	= display;
-    screen->black_pixel = 0x00000000 | PIXEL_MAGIC << 24;
-    screen->white_pixel = 0x00FFFFFF | PIXEL_MAGIC << 24;
+    screen->black_pixel = 0x00000000;
+    screen->white_pixel = 0x00FFFFFF;
     screen->ext_data	= (XExtData *) &maxBounds;
 
     screen->root_visual = ckalloc(sizeof(Visual));
