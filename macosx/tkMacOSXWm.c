@@ -1807,7 +1807,6 @@ WmDeiconifyCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
-
     if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't deiconify %s: it is an icon for %s",
@@ -6422,17 +6421,15 @@ TkpWmSetState(
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == NormalState || state == ZoomState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-	if (macWin && ([macWin styleMask] & NSMiniaturizableWindowMask)) {
-	    if ([macWin isMiniaturized]) {
-		[macWin deminiaturize:NSApp];
-	    }
-	    else {
-		[macWin orderFront:nil];
-	    }
-	}
-	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn :
-		inZoomOut);
+	[macWin deminiaturize:NSApp];
+	[macWin orderFront:NSApp];
+	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+    /*
+     * Make sure windows are updated after the state change.
+     */
+
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 }
 
 /*
@@ -6878,7 +6875,6 @@ ApplyWindowAttributeFlagChanges(
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			    NSWindowCollectionBehaviorFullScreenAuxiliary);
 		} else {
-		    NSSize screenSize = [[macWindow screen] frame].size;
 		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
 		    /*
@@ -6889,7 +6885,10 @@ ApplyWindowAttributeFlagChanges(
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
 		    if ([NSApp macOSVersion] > 101000) {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED > 101000)
+			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
+#endif
 		    }
 		}
 	    }

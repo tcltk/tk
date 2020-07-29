@@ -12,6 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # For xscrollcommand
+set scrollInfo {}
 proc scroll args {
         global scrollInfo
         set scrollInfo $args
@@ -2013,9 +2014,10 @@ test spinbox-5.7 {ConfigureSpinbox procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    set timeout [after 500 {set $scrollInfo "timeout"}]
-    vwait scrollInfo
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e configure -width 5
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2204,8 +2206,9 @@ test spinbox-7.1 {InsertChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 2 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2221,8 +2224,9 @@ test spinbox-7.2 {InsertChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 500 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2355,8 +2359,9 @@ test spinbox-8.1 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 2 4
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2371,8 +2376,9 @@ test spinbox-8.2 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete -2 2
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2387,8 +2393,9 @@ test spinbox-8.3 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 3 1000
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -3173,9 +3180,10 @@ test spinbox-16.2 {SpinboxVisibleRange procedure} -body {
 test spinbox-17.1 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 0 end
     .e insert 0 123
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3186,8 +3194,9 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
     .e insert 0 0123456789abcdef
+    update idletasks
+    set timeout [after 500 {set $scrollInfo {-1000000 -1000000}}]
     .e xview 3
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3197,23 +3206,26 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
 test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcdefghijklmnopqrs
-    .e xview 6
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    .e xview 
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
     after cancel $timeout
-} -result {0.315789 0.842105}
+} -result {0.000000 0.526316}
 test spinbox-17.4 {SpinboxUpdateScrollbar procedure} -setup {
     proc bgerror msg {
 	global x
 	set x $msg
 }
 } -body {
-    spinbox .e -width 5 -xscrollcommand thisisnotacommand
+    spinbox .e -width 5
     pack .e
+    update idletasks
+    .e configure -xscrollcommand thisisnotacommand
     vwait x
     list $x $errorInfo
 } -cleanup {

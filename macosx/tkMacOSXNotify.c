@@ -156,6 +156,7 @@ void DebugPrintQueue(void)
      * this block should be removed.
      */
 
+# if MAC_OSX_VERSION_MAX_ALLOWED >= 101500
     if ([theEvent type] == NSAppKitDefined) {
 	static Bool aWindowIsMoving = NO;
 	switch([theEvent subtype]) {
@@ -174,6 +175,7 @@ void DebugPrintQueue(void)
 	    break;
 	}
     }
+#endif
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
 
