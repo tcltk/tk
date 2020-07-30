@@ -18,14 +18,14 @@
 #include "tkColor.h"
 #include "tkMacOSXColor.h"
 
-static Tcl_HashTable systemColorMap;
-static int systemColorMapSize;
-SystemColorMapEntry **systemColorIndex;
+static Tcl_HashTable systemColors;
+static int numSystemColors;
+SystemColorDatum **systemColorIndex;
 
 void initColorTable()
 {
-    Tcl_InitHashTable(&systemColorMap, TCL_STRING_KEYS);
-    SystemColorMapEntry *entry, *oldEntry;
+    Tcl_InitHashTable(&systemColors, TCL_STRING_KEYS);
+    SystemColorDatum *entry, *oldEntry;
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
@@ -34,8 +34,8 @@ void initColorTable()
      * Build a hash table for looking up a color by its name.
      */
     
-    for (entry = systemColorMapData; entry->name != NULL; entry++) {
-	hPtr = Tcl_CreateHashEntry(&systemColorMap, entry->name, &newPtr);
+    for (entry = systemColorData; entry->name != NULL; entry++) {
+	hPtr = Tcl_CreateHashEntry(&systemColors, entry->name, &newPtr);
 	if (entry->type == semantic) {
 	    NSString *selector = [[NSString alloc]
 				   initWithCString:entry->macName
@@ -51,7 +51,7 @@ void initColorTable()
 	    entry->selector = selector;
 	}
 	if (newPtr == 0) {
-	    oldEntry = (SystemColorMapEntry *) Tcl_GetHashValue(hPtr);
+	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
 	} else {
 	    entry->index = index++;
@@ -63,11 +63,11 @@ void initColorTable()
      * Build an array for looking up a color by its index.
      */
     
-    systemColorMapSize = index;
-    systemColorIndex = ckalloc(systemColorMapSize * sizeof(SystemColorMapEntry*));
-    for (hPtr = Tcl_FirstHashEntry(&systemColorMap, &search); hPtr != NULL;
+    numSystemColors = index;
+    systemColorIndex = ckalloc(numSystemColors * sizeof(SystemColorDatum*));
+    for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
-	entry = (SystemColorMapEntry *) Tcl_GetHashValue(hPtr);
+	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	systemColorIndex[entry->index] = entry;
     }
 }
@@ -142,11 +142,11 @@ unsigned long TkMacOSXClearPixel(
  *
  * GetEntryFromPixel --
  *
- *	Extract a SystemColorMapEntry from the table.
+ *	Extract a SystemColorDatum from the table.
  *
  * Results:
 
- *	A pointer to a SystemColorMapEntry, or NULL if the pixel value is
+ *	A pointer to a SystemColorDatum, or NULL if the pixel value is
  *	invalid.
  *
  * Side effects:
@@ -155,7 +155,7 @@ unsigned long TkMacOSXClearPixel(
  *----------------------------------------------------------------------
  */
 
-SystemColorMapEntry*
+SystemColorDatum*
 GetEntryFromPixel(
     unsigned long pixel)
 {
@@ -167,7 +167,7 @@ GetEntryFromPixel(
     if (p.pixel.colortype != rgbColor) {
 	index = p.pixel.value;
     }
-    if (index < systemColorMapSize) {
+    if (index < numSystemColors) {
 	return systemColorIndex[index];
     } else {
 	return NULL;
@@ -210,7 +210,7 @@ static CGFloat windowBackground[4] =
 
 static void
 GetRGBA(
-    SystemColorMapEntry *entry,
+    SystemColorDatum *entry,
     unsigned long pixel,
     CGFloat *rgba)
 {
@@ -263,7 +263,7 @@ GetRGBA(
 	       
 static Bool
 SetCGColorComponents(
-    SystemColorMapEntry *entry,
+    SystemColorDatum *entry,
     unsigned long pixel,
     CGColorRef *c)
 {
@@ -354,7 +354,7 @@ TkSetMacColor(
     void *macColor)			/* CGColorRef to modify. */
 {
     CGColorRef *color = (CGColorRef*)macColor;
-    SystemColorMapEntry *entry = GetEntryFromPixel(pixel);
+    SystemColorDatum *entry = GetEntryFromPixel(pixel);
 
     if (entry) {
 	return SetCGColorComponents(entry, pixel, color);
@@ -539,7 +539,7 @@ TkMacOSXSetColorInContext(
 {
     OSStatus err = noErr;
     CGColorRef cgColor = nil;
-    SystemColorMapEntry *entry = GetEntryFromPixel(pixel);
+    SystemColorDatum *entry = GetEntryFromPixel(pixel);
     CGRect rect;
     HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
 
@@ -595,8 +595,7 @@ void TkMacOSXUpdateXColor(
     Tk_Window tkwin)
 {
     MacPixel p;
-    CGFloat rgba[4] = {0, 0, 0, 1};
-    SystemColorMapEntry *entry = GetEntryFromPixel(color->pixel);
+    SystemColorDatum *entry = GetEntryFromPixel(color->pixel);
 
     p.ulong = color->pixel;
     if (p.pixel.colortype == semantic || p.pixel.colortype == ttkBackground) {
@@ -610,15 +609,18 @@ void TkMacOSXUpdateXColor(
  *
  * TkpGetColor --
  *
- *	Allocate a new TkColor for the color with the given name.
+ *	Create a new TkColor for the color with the given name. The colormap
+ *      field is set to 1 if passed a window with a LightAqua appearance or 2
+ *      if passed a window with a DarkAqua appearance.  These will be managed
+ *      separately in the per-display table of TkColors maintained by Tk.  This
+ *      function is called by Tk_Color.
  *
  * Results:
  *	Returns a newly allocated TkColor, or NULL on failure.
  *
  * Side effects:
- *	May invalidate the colormap cache associated with tkwin upon
- *	allocating a new colormap entry. Allocates a new TkColor
- *	structure.
+ *       
+ *	Allocates memory for the TkColor structure.
  *
  *----------------------------------------------------------------------
  */
@@ -630,7 +632,7 @@ TkpGetColor(
 				 * suitable for passing to XParseColor). */
 {
     Display *display = tkwin != None ? Tk_Display(tkwin) : NULL;
-    Colormap colormap = tkwin!= None ? Tk_Colormap(tkwin) : None;
+    Colormap colormap = tkwin!= None ? 1 + TkMacOSXInDarkMode(tkwin) : None;
     TkColor *tkColPtr;
     XColor color;
     static Bool initialized = NO;
@@ -648,10 +650,10 @@ TkpGetColor(
 
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_HashEntry *hPtr = NULL;
-	SystemColorMapEntry *entry;
-	hPtr = Tcl_FindHashEntry(&systemColorMap, name + 6);
+	SystemColorDatum *entry;
+	hPtr = Tcl_FindHashEntry(&systemColors, name + 6);
 	if (hPtr != NULL) {
-	    entry = (SystemColorMapEntry *)Tcl_GetHashValue(hPtr);
+	    entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
 	    CGColorRef c;
 	    unsigned int pixelCode = entry->index;
 	    if (SetCGColorComponents(entry, 0, &c)) {
