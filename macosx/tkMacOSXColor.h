@@ -66,9 +66,9 @@ typedef struct {
     char *macName;
     NSString *selector;  /* Filled in if used. */
     int index;           /* Filled in when the hash table is constructed. */
-} SystemColorMapEntry;
+} SystemColorDatum;
 
-static SystemColorMapEntry systemColorMapData[] = {
+static SystemColorDatum systemColorData[] = {
 {"Pixel",				rgbColor, 0 },     /* This must be first. */
 {"Transparent",				clearColor,   0 },
 
