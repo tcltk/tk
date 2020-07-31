@@ -24,8 +24,10 @@ static int rgbColorIndex;
 static int controlAccentIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
-static NSAppearance *darkAqua;
 static NSAppearance *lightAqua;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+static NSAppearance *darkAqua;
+#endif
 static NSColorSpace* sRGB = NULL;
 static CGFloat windowBackground[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
