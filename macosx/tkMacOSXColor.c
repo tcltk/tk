@@ -37,7 +37,9 @@ void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+#endif
     lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
     /*
@@ -722,6 +724,7 @@ TkpGetColor(
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
 		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		switch(colormap) {
 		case lightColormap:
 		    [NSAppearance setCurrentAppearance:lightAqua];
@@ -732,6 +735,7 @@ TkpGetColor(
 		default:
 		    break;
 		}
+#endif
 		GetRGBA(entry, p.ulong, rgba);
 		[NSAppearance setCurrentAppearance:savedAppearance];
 		color.red   = rgba[0] * 65535.0;
