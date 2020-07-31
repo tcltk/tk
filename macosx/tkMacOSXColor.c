@@ -21,9 +21,14 @@
 static Tcl_HashTable systemColors;
 static int numSystemColors;
 static int rgbColorIndex;
+static int controlAccentIndex;
+static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 static NSAppearance *darkAqua;
 static NSAppearance *lightAqua;
+static NSColorSpace* sRGB = NULL;
+static CGFloat windowBackground[4] =
+    {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 void initColorTable()
 {
@@ -47,7 +52,11 @@ void initColorTable()
 					  encoding:NSUTF8StringEncoding];
 	    SEL colorSelector = NSSelectorFromString(colorName);
 	    if (![NSColor respondsToSelector:colorSelector]) {
-		continue;
+		if ([colorName isEqualToString:@"controlAccentColor"]) {
+		    useFakeAccentColor = YES;
+		} else {
+		    continue;
+		}
 	    }
 	    entry->selector = [colorName retain];
 	}
@@ -74,12 +83,15 @@ void initColorTable()
     }
 
     /*
-     * Remember the index of the rgbColor entry,
+     * Remember the indexes of some special entries.
      */
     
     hPtr = Tcl_FindHashEntry(&systemColors, "Pixel");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     rgbColorIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    controlAccentIndex = entry->index;
 }
 
 /*
@@ -155,7 +167,6 @@ unsigned long TkMacOSXClearPixel(
  *	Extract a SystemColorDatum from the table.
  *
  * Results:
-
  *	A pointer to a SystemColorDatum, or NULL if the pixel value is
  *	invalid.
  *
@@ -183,39 +194,26 @@ GetEntryFromPixel(
     }
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
- * SetCGColorComponents --
+ * GetRGB --
  *
- *	Set the components of a CGColorRef from an XColor pixel value and a
- *      system color map entry.  The pixel value is only used in the case where
- *      the color is of type rgbColor.  In that case the normalized XColor RGB
- *      values are copied into the CGColorRef.
- *
- *      In 64 bit macOS systems there are no HITheme functions which convert
- *      HIText or HIBackground colors to CGColors.  (GetThemeTextColor was
- *      removed, and it was never possible with backgrounds.)  If we get one of
- *      these we return black.
+ *	Given a SystemColorDatum and a pointer to an array of 4 CGFloats, store
+ *      the associated RGBA color values in the array.  In the case of the
+ *      RGBColor datum, the unsigned long pixel value containing the RGB values
+ *      must also be provided as the pixel parameter.  Otherwise the pixel
+ *      parameter is ignored.
  *
  * Results:
- *	True if the function succeeds, false otherwise.
+ *	None
  *
  * Side effects:
- *	None.
+ *	The array rgba is filled in.
  *
  *----------------------------------------------------------------------
  */
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
- #define CONTROL_ACCENT_COLOR controlAccentColor
-#else
- #define CONTROL_ACCENT_COLOR colorForControlTint:[NSColor currentControlTint]
-#endif
-
-static NSColorSpace* sRGB = NULL;
-static CGFloat windowBackground[4] =
-    {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 static void
 GetRGBA(
@@ -242,7 +240,7 @@ GetRGBA(
 	 */
 
 	if ([NSApp macOSVersion] < 101400) {
-	    for (int i=0; i<3; i++) {
+	    for (int i = 0; i < 3; i++) {
 		rgba[i] = windowBackground[i];
 	    }
 	} else {
@@ -260,15 +258,65 @@ GetRGBA(
 	}
 	break;
     case semantic:
-        color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
+	if (entry->index == controlAccentIndex && useFakeAccentColor) {
+	    color = [NSColor colorForControlTint: [NSColor currentControlTint]];
+	} else {
+	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
+	}
 	[color getComponents: rgba];
 	break;
     case clearColor:
 	rgba[3] = 0;
+    case HIText:
+#ifdef __LP64__
+	color = [[NSColor textColor] colorUsingColorSpace:sRGB];
+	[color getComponents: rgba];
+#else
+	{
+	    RGBColor rgb;
+	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32, 
+                    true, &rgb);
+	    if (err == noErr) {
+		rgba[0] = (CGFLoat) rgb.red / 65535;
+		rgba[1] = (CGFLoat) rgb.green / 65535;
+		rgba[2] = (CGFLoat) rgb.blue / 65535;
+	    }
+	}
+#endif
+	break;
+    case HIBackground:
+	color = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
+	[color getComponents: rgba];
+	break;
     default:
 	break;
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetCGColorComponents --
+ *
+ *	Set the components of a CGColorRef from an XColor pixel value and a
+ *      system color map entry.  The pixel value is only used in the case where
+ *      the color is of type rgbColor.  In that case the normalized XColor RGB
+ *      values are copied into the CGColorRef.
+ *
+ *      In 64 bit macOS systems there are no HITheme functions which convert
+ *      HIText or HIBackground colors to CGColors.  (GetThemeTextColor was
+ *      removed, and it was never possible with backgrounds.)  On 64-bit systems
+ *      we replace all HIText colors by systemTextColor and all HIBackground
+ *      colors by systemWindowBackgroundColor.
+ *
+ * Results:
+ *	True if the function succeeds, false otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 	       
 static Bool
 SetCGColorComponents(
@@ -685,10 +733,10 @@ TkpGetColor(
 		    break;
 		}
 		GetRGBA(entry, p.ulong, rgba);
+		[NSAppearance setCurrentAppearance:savedAppearance];
 		color.red   = rgba[0] * 65535.0;
 		color.green = rgba[1] * 65535.0;
 		color.blue  = rgba[2] * 65535.0;
-		[NSAppearance setCurrentAppearance:savedAppearance];
 		goto validXColor;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
@@ -709,7 +757,6 @@ TkpGetColor(
 		CGColorRelease(c);
 		goto validXColor;
 	    }
-	    CGColorRelease(c);
 	}
     }
     if (TkParseColor(display, colormap, name, &color) == 0) {
