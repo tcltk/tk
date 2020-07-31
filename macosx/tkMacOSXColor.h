@@ -55,6 +55,17 @@ typedef union MacPixel_t {
 } MacPixel;
 
 /*
+ * We maintain two colormaps, one for the LightAqua appearance and one for the
+ * DarkAqua appearance.
+ */
+
+enum macColormap {
+    noColormap,
+    lightColormap,
+    darkColormap,
+};
+    
+/*
  * In TkMacOSXColor.c a Tk hash table is constructed from the static data
  * below to map system color names to CGColors.
  */ 
@@ -62,16 +73,16 @@ typedef union MacPixel_t {
 typedef struct {
     const char *name;
     enum colorType type;
-    long value;
+    int value;
     char *macName;
-    NSString *selector;  /* Filled in if used. */
-    int index;           /* Filled in when the hash table is constructed. */
+    /* Fields below are filled in after or during construction of the hash table. */
+    int index;
+    NSString *selector;
 } SystemColorDatum;
 
 static SystemColorDatum systemColorData[] = {
-{"Pixel",				rgbColor, 0 },     /* This must be first. */
+{"Pixel",				rgbColor, 0 },
 {"Transparent",				clearColor,   0 },
-
 
 {"Highlight",				HIBrush,  kThemeBrushPrimaryHighlightColor },
 {"HighlightSecondary",		    	HIBrush,  kThemeBrushSecondaryHighlightColor },
@@ -145,9 +156,8 @@ static SystemColorDatum systemColorData[] = {
 {"ListViewEvenRowBackground",		HIBrush,  kThemeBrushListViewEvenRowBackground },
 {"ListViewColumnDivider",		HIBrush,  kThemeBrushListViewColumnDivider },
 
-
-{"ButtonText",				HIText,   kThemeTextColorPushButtonActive },	       
-{"MenuActiveText",			HIText,   kThemeTextColorMenuItemSelected },	       
+{"ButtonText",				HIText,   kThemeTextColorPushButtonActive },	      
+{"MenuActiveText",			HIText,   kThemeTextColorMenuItemSelected },	      
 {"MenuDisabled",			HIText,   kThemeTextColorMenuItemDisabled },	   
 {"MenuText",				HIText,   kThemeTextColorMenuItemActive },	   
 {"BlackText",				HIText,   kThemeTextColorBlack },
@@ -248,3 +258,11 @@ static SystemColorDatum systemColorData[] = {
 };
 
 #endif
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

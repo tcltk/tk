@@ -20,7 +20,10 @@
 
 static Tcl_HashTable systemColors;
 static int numSystemColors;
-SystemColorDatum **systemColorIndex;
+static int rgbColorIndex;
+static SystemColorDatum **systemColorIndex;
+static NSAppearance *darkAqua;
+static NSAppearance *lightAqua;
 
 void initColorTable()
 {
@@ -29,6 +32,8 @@ void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+    darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
     /*
      * Build a hash table for looking up a color by its name.
@@ -37,22 +42,19 @@ void initColorTable()
     for (entry = systemColorData; entry->name != NULL; entry++) {
 	hPtr = Tcl_CreateHashEntry(&systemColors, entry->name, &newPtr);
 	if (entry->type == semantic) {
-	    NSString *selector = [[NSString alloc]
+	    NSString *colorName = [[NSString alloc]
 				   initWithCString:entry->macName
 					  encoding:NSUTF8StringEncoding];
-	    /*
-	     * Ignore this entry if NSColor does not recognize it.
-	     */
-	    
-	    if (![NSColor respondsToSelector: NSSelectorFromString(selector)]) {
+	    SEL colorSelector = NSSelectorFromString(colorName);
+	    if (![NSColor respondsToSelector:colorSelector]) {
 		continue;
 	    }
-	    [selector retain];
-	    entry->selector = selector;
+	    entry->selector = [colorName retain];
 	}
 	if (newPtr == 0) {
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
+	    [oldEntry->selector release];
 	} else {
 	    entry->index = index++;
 	}
@@ -62,7 +64,7 @@ void initColorTable()
     /*
      * Build an array for looking up a color by its index.
      */
-    
+
     numSystemColors = index;
     systemColorIndex = ckalloc(numSystemColors * sizeof(SystemColorDatum*));
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
@@ -70,6 +72,14 @@ void initColorTable()
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	systemColorIndex[entry->index] = entry;
     }
+
+    /*
+     * Remember the index of the rgbColor entry,
+     */
+    
+    hPtr = Tcl_FindHashEntry(&systemColors, "Pixel");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    rgbColorIndex = entry->index;
 }
 
 /*
@@ -160,8 +170,7 @@ GetEntryFromPixel(
     unsigned long pixel)
 {
     MacPixel p;
- // Should make sure this is the rgbColor index, even if the data gets shuffled.
-    unsigned int index = 0;
+    unsigned int index = rgbColorIndex;
 
     p.ulong = pixel;
     if (p.pixel.colortype != rgbColor) {
@@ -214,7 +223,7 @@ GetRGBA(
     unsigned long pixel,
     CGFloat *rgba)
 {
-    NSColor *bgColor, *color = nil;
+    NSColor *bgColor, *color;
 
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
@@ -251,7 +260,7 @@ GetRGBA(
 	}
 	break;
     case semantic:
-	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];	
+        color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	[color getComponents: rgba];
 	break;
     case clearColor:
@@ -308,7 +317,6 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
     int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
 
     if ([NSApp macOSVersion] >= 101400) {
         TkWindow *winPtr = (TkWindow*) tkwin;
@@ -317,10 +325,9 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = [view.effectiveAppearance.name isEqualToString:darkAqua];
+	    result = (view.effectiveAppearance.name == NSAppearanceNameDarkAqua); 
 	} else {
-	    result = [[NSAppearance currentAppearance].name
-			 isEqualToString:darkAqua];
+	    result = ([NSAppearance currentAppearance].name == NSAppearanceNameDarkAqua);
 	}
     }
 #endif
@@ -631,34 +638,59 @@ TkpGetColor(
     Tk_Uid name)		/* Name of color to be allocated (in form
 				 * suitable for passing to XParseColor). */
 {
-    Display *display = tkwin != None ? Tk_Display(tkwin) : NULL;
-    Colormap colormap = tkwin!= None ? 1 + TkMacOSXInDarkMode(tkwin) : None;
+    Display *display = NULL;
+    Colormap colormap = noColormap;
     TkColor *tkColPtr;
     XColor color;
     static Bool initialized = NO;
     static NSColorSpace* sRGB = NULL;
+
     if (!initialized) {
 	initialized = YES;
 	sRGB = [NSColorSpace sRGBColorSpace];
 	initColorTable();
     }
 
+    if (tkwin) {
+	display = Tk_Display(tkwin);
+	colormap = TkMacOSXInDarkMode(tkwin) ? darkColormap : lightColormap;
+    }
+
     /*
-     * Check to see if this is a system color. Otherwise, XParseColor
-     * will do all the work.
+     * Check to see if this is a system color. If not, just call XParseColor.
      */
 
     if (strncasecmp(name, "system", 6) == 0) {
-	Tcl_HashEntry *hPtr = NULL;
-	SystemColorDatum *entry;
-	hPtr = Tcl_FindHashEntry(&systemColors, name + 6);
-	if (hPtr != NULL) {
-	    entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
-	    CGColorRef c;
-	    unsigned int pixelCode = entry->index;
-	    if (SetCGColorComponents(entry, 0, &c)) {
-		MacPixel p;
+	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&systemColors, name + 6);
+	MacPixel p;
 
+	if (hPtr != NULL) {
+	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
+	    CGColorRef c;
+
+	    p.pixel.colortype = entry->type;
+	    p.pixel.value = entry->index;
+	    color.pixel = p.ulong;
+	    if (entry->type == semantic) {
+		CGFloat rgba[4];
+		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+		switch(colormap) {
+		case lightColormap:
+		    [NSAppearance setCurrentAppearance:lightAqua];
+		    break;
+		case darkColormap:
+		    [NSAppearance setCurrentAppearance:darkAqua];
+		    break;
+		default:
+		    break;
+		}
+		GetRGBA(entry, p.ulong, rgba);
+		color.red   = rgba[0] * 65535.0;
+		color.green = rgba[1] * 65535.0;
+		color.blue  = rgba[2] * 65535.0;
+		[NSAppearance setCurrentAppearance:savedAppearance];
+		goto validXColor;
+	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
 
@@ -674,16 +706,12 @@ TkpGetColor(
 		default:
 		    Tcl_Panic("CGColor with %d components", (int) n);
 		}
-		p.pixel.value = pixelCode;
-		p.pixel.colortype = entry->type;
-		color.pixel = p.ulong;
 		CGColorRelease(c);
 		goto validXColor;
 	    }
 	    CGColorRelease(c);
 	}
     }
-
     if (TkParseColor(display, colormap, name, &color) == 0) {
 	return NULL;
     }
@@ -691,7 +719,6 @@ TkpGetColor(
 validXColor:
     tkColPtr = ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
-
     return tkColPtr;
 }
 
