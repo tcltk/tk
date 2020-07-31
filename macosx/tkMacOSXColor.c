@@ -1,5 +1,5 @@
 /*
- * tkMacOSXColor.c --
+ * TkMacOSXColor.c --
  *
  *	This file maintains a database of color values for the Tk
  *	toolkit, in order to avoid round-trips to the server to
@@ -59,6 +59,8 @@ void initColorTable()
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
 		} else {
+		    /* Uncomment to print all unsupported colors:              */
+		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
 		    continue;
 		}
 	    }
@@ -83,6 +85,9 @@ void initColorTable()
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+	if (entry == NULL) {
+	    Tcl_Panic("Unsupported semantic color with no supported backup!");
+	}
 	systemColorIndex[entry->index] = entry;
     }
 
@@ -639,30 +644,6 @@ TkMacOSXSetColorInContext(
     }
 }
 
-
-/* 
- * Recompute the red, green and blue values of an XColor from its pixel value.
- * To do this we need to know which window the color is being used in, so we
- * can figure out if that window is in dark mode or not.  And we will probably
- * need to involve drawRect somehow since the correct color values are only
- * available when a valid graphics context is available.
- */
-
-MODULE_SCOPE
-void TkMacOSXUpdateXColor(
-    XColor *color,
-    Tk_Window tkwin)
-{
-    MacPixel p;
-    SystemColorDatum *entry = GetEntryFromPixel(color->pixel);
-
-    p.ulong = color->pixel;
-    if (p.pixel.colortype == semantic || p.pixel.colortype == ttkBackground) {
-	printf("Updating %s in window %s for %s Mode\n",
-	       entry->name, Tk_PathName(tkwin),
-	       TkMacOSXInDarkMode(tkwin) ? "Dark" : "Light");
-    }
-}
 /*
  *----------------------------------------------------------------------
  *

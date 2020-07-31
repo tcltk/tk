@@ -80,6 +80,13 @@ typedef struct {
     NSString *selector;
 } SystemColorDatum;
 
+/*
+ * WARNING: Semantic colors which are not supported on all systems must be
+ * preceded by a backup color with the same name which *is* supported.  Systems
+ * which do support the color will replace the backup value when the table is
+ * constructed.  Failing to ensure this will result in a Tcl_Panic abort.
+ */
+
 static SystemColorDatum systemColorData[] = {
 {"Pixel",				rgbColor, 0 },
 {"Transparent",				clearColor,   0 },
@@ -237,6 +244,7 @@ static SystemColorDatum systemColorData[] = {
 
 {"TextColor",			    semantic, 0, "textColor" },
 {"SelectedTextColor",		    semantic, 0, "selectedTextColor" },
+{"LabelColor",			    semantic, 0, "textColor"},
 {"LabelColor",			    semantic, 0, "labelColor"},
 {"ControlTextColor",      	    semantic, 0, "controlTextColor" },
 {"DisabledControlTextColor",	    semantic, 0, "disabledControlTextColor" },
