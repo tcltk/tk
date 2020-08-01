@@ -43,6 +43,7 @@ static int cgAntiAliasLimit = 0;
 
 static int useThemedToplevel = 0;
 static int useThemedFrame = 0;
+static unsigned long transparentColor;
 
 /*
  * Prototypes for functions used only in this file.
@@ -99,6 +100,7 @@ TkMacOSXInitCGDrawing(
 		(char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
+	transparentColor = TkMacOSXClearPixel();
     }
     return TCL_OK;
 }
@@ -545,7 +547,7 @@ TkMacOSXGetNSImageWithBitmap(
 
     unsigned long origBackground = gc->background;
 
-    gc->background = TRANSPARENT_PIXEL << 24;
+    gc->background = transparentColor;
     XSetClipOrigin(display, gc, 0, 0);
     XCopyPlane(display, bitmap, pixmap, gc, 0, 0, width, height, 0, 0, 1);
     gc->background = origBackground;
@@ -664,17 +666,18 @@ TkMacOSXDrawCGImage(
 	dstBounds = CGRectOffset(dstBounds, macDraw->xOff, macDraw->yOff);
 	if (CGImageIsMask(image)) {
 	    if (macDraw->flags & TK_IS_BW_PIXMAP) {
+
 		/*
 		 * Set fill color to black; background comes from the context,
 		 * or is transparent.
 		 */
 
-		if (imageBackground != TRANSPARENT_PIXEL << 24) {
+		if (imageBackground != transparentColor) {
 		    CGContextClearRect(context, dstBounds);
 		}
 		CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
 	    } else {
-		if (imageBackground != TRANSPARENT_PIXEL << 24) {
+		if (imageBackground != transparentColor) {
 		    TkMacOSXSetColorInContext(gc, imageBackground, context);
 		    CGContextFillRect(context, dstBounds);
 		}

@@ -1748,7 +1748,23 @@ Tk_WinfoObjCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+#ifdef TK_HAS_DYNAMIC_COLORS
+
+	/*
+	 * Make sure that the TkColor used for the winfo rgb command is
+	 * destroyed when we are through with it, so we do not get stale RGB
+	 * values next time.
+	 */
+	
+	{
+	    Colormap temp = Tk_Colormap(tkwin);
+	    Tk_Colormap(tkwin) = TK_DYNAMIC_COLORMAP;
+	    colorPtr = Tk_GetColor(interp, tkwin, Tcl_GetString(objv[3]));
+	    Tk_Colormap(tkwin) = temp;
+	}
+#else
 	colorPtr = Tk_GetColor(interp, tkwin, Tcl_GetString(objv[3]));
+#endif
 	if (colorPtr == NULL) {
 	    return TCL_ERROR;
 	}
