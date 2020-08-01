@@ -1137,13 +1137,6 @@ ConfigureRestrictProc(
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
-- (BOOL) isOpaque
-{
-    NSWindow *w = [self window];
-    return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
-		  ![w isOpaque]) ? NO : YES);
-}
-
 /*
  * On Catalina this is never called and drawRect clips to the rect that
  * is passed to it by AppKit.

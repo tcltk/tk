@@ -360,7 +360,7 @@ ImageGetPixel(
 	    break;
 	}
     }
-    return (PIXEL_MAGIC << 24) | (r << 16) | (g << 8) | b;
+    return TkMacOSXRGBPixel(r, g, b);
 }
 
 /*
