@@ -106,6 +106,8 @@ typedef NSInteger NSModalResponse;
 #define graphicsContextWithGraphicsPort graphicsContextWithCGContext
 #endif
 
-
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000
+#define NSWindowStyleMaskTexturedBackground 0
 #endif
 
+#endif
