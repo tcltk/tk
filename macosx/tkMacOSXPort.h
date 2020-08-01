@@ -159,10 +159,13 @@
  */
 
 #define TK_NO_DOUBLE_BUFFERING 1
+#define TK_HAS_DYNAMIC_COLORS 1
+#define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
  * Used by xcolor.c
  */
+
 MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
 					    unsigned long blue);
 #define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red, p->green, p->blue))
