@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkImgPhoto.h"
 #include "tkInt.h"
 
 /*
@@ -209,12 +210,12 @@ Tk_ImageObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
-	"create", "delete", "height", "inuse", "names", "type", "types",
-	"width", NULL
+	"create", "delete", "height", "inuse", "metadata", 
+        "names", "type", "types", "width", NULL
     };
     enum options {
-	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
-	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
+	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_METADATA,
+        IMAGE_NAMES, IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
     int i, isNew, firstOption, index;
@@ -443,6 +444,129 @@ Tk_ImageObjCmd(
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	break;
+
+    case IMAGE_METADATA: {
+        int w = 0;
+        int h = 0;
+        Tcl_Channel chan;
+        Tcl_Obj *metadataOutObj;
+        Tk_PhotoImageFormat *imageFormat;
+        Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
+        int oldformat;
+        Tcl_DictSearch search;
+        Tcl_Obj *key, *value;
+        int done;
+        char * xbmData;
+        const char * fmt = "Unknown";
+        int x_hot, y_hot;
+        int foundImage = 0;
+        const char * option;
+        TkSizeT length;
+        Tcl_Obj *dataObj = NULL;
+        const char *fileName = NULL;
+
+	if (objc < 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-file name? ?-data string?");
+	    return TCL_ERROR;
+	}
+        option = TkGetStringFromObj(objv[2], &length);
+	if (length <= 1 || option[0] != '-') {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-file name? ?-data string?");
+	    return TCL_ERROR;
+        }
+        if (length > 1) {
+            if (option[1] == 'f' && (strncmp(option, "-file", length) == 0)) {
+                fileName = Tcl_GetString(objv[3]);
+            } else if (option[1] == 'd' && (strcmp(option, "-data") == 0)) {
+                dataObj = objv[3];
+            }
+        }
+        if (dataObj == NULL && fileName == NULL) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-file name? ?-data string?");
+	    return TCL_ERROR;
+        }
+
+        metadataOutObj = Tcl_NewDictObj();
+	Tcl_IncrRefCount(metadataOutObj);
+
+        if (fileName != NULL) {
+            xbmData = TkGetBitmapData(interp, NULL, fileName, &w, &h, &x_hot, &y_hot);
+        } else {
+            xbmData = TkGetBitmapData(interp, Tcl_GetString(dataObj), NULL, &w, &h, &x_hot, &y_hot);
+        }
+        if (xbmData != NULL) {
+            foundImage = 1;
+            fmt = "xbm"; 
+        }
+
+        if (!foundImage) {
+            if (fileName != NULL) {
+                chan = Tcl_OpenFileChannel(interp, fileName, "r", 0);
+                if (chan == NULL) {
+                    return TCL_ERROR;
+                }
+                if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") != TCL_OK) {
+                    Tcl_Close(NULL, chan);
+                    return TCL_ERROR;
+                }
+                if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary") != TCL_OK) {
+                    Tcl_Close(NULL, chan);
+                    return TCL_ERROR;
+                }
+                if (TkImgPhotoMatchFileFormat(
+                        interp, chan, fileName, NULL, NULL, metadataOutObj,
+                        &imageFormat, &imageFormatVersion3,
+                        &w, &h, &oldformat) == TCL_OK) {
+                    foundImage = 1;
+                }
+                Tcl_Close(NULL, chan);
+            } else {
+                if (TkImgMatchStringFormat(
+                        interp, dataObj, NULL, NULL, metadataOutObj,
+                        &imageFormat, &imageFormatVersion3,
+                        &w, &h, &oldformat) == TCL_OK) {
+                    foundImage = 1;
+                }
+            }
+            if (foundImage) {
+                if (imageFormat) {
+                    fmt = imageFormat->name;
+                }
+                if (imageFormatVersion3) {
+                    fmt = imageFormatVersion3->name;
+                }
+            }
+        }
+
+        if( ! foundImage) {
+            if (fileName != NULL) {
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "couldn't recognize data in image file \"%s\"",
+                    fileName));
+            } else {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"couldn't recognize data in image string", -1));
+            }
+            Tcl_SetErrorCode(interp, "TK", "IMAGE", "UNRECOGNIZED_DATA", NULL);
+            return TCL_ERROR;
+        }
+
+	resultObj = Tcl_NewDictObj();
+        Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("format", -1), Tcl_NewStringObj(fmt, -1));
+        Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("width",  -1), Tcl_NewWideIntObj(w));
+        Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("height", -1), Tcl_NewWideIntObj(h));
+
+        if (Tcl_DictObjFirst(interp, metadataOutObj, &search, &key, &value, &done) != TCL_OK) {
+            return TCL_ERROR;
+        }
+        for (; !done ; Tcl_DictObjNext(&search, &key, &value, &done)) {
+            Tcl_DictObjPut(interp, resultObj, key, value);
+        }
+        Tcl_DictObjDone(&search); 
+	Tcl_DecrRefCount(metadataOutObj);
+	Tcl_SetObjResult(interp, resultObj);
+	break;
+    }
 
     case IMAGE_HEIGHT:
     case IMAGE_INUSE:
