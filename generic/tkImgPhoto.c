@@ -200,20 +200,6 @@ static int		ImgPhotoSetSize(PhotoMaster *masterPtr, int width,
 static char *		ImgGetPhoto(PhotoMaster *masterPtr,
 			    Tk_PhotoImageBlock *blockPtr,
 			    struct SubcommandOptions *optPtr);
-static int		MatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
-			    const char *fileName, Tcl_Obj *formatString,
-			    Tcl_Obj *metadataInObj,
-			    Tcl_Obj *metadataOutObj,
-			    Tk_PhotoImageFormat **imageFormatPtr,
-			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
-			    int *widthPtr, int *heightPtr, int *oldformat);
-static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
-			    Tcl_Obj *formatString,
-			    Tcl_Obj *metadataInObj,
-			    Tcl_Obj *metadataOutObj,
-			    Tk_PhotoImageFormat **imageFormatPtr,
-			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
-			    int *widthPtr, int *heightPtr, int *oldformat);
 static const char *	GetExtension(const char *path);
 
 /*
@@ -1001,7 +987,7 @@ ImgPhotoCmd(
 	 * See if there's a format that can read the data
 	 */
 
-	if (MatchStringFormat(interp, objv[2], options.format,
+	if (TkImgMatchStringFormat(interp, objv[2], options.format,
 		options.metadata, NULL, &imageFormat,
 		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat)
 		!= TCL_OK) {
@@ -1110,7 +1096,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 
-	if (MatchFileFormat(interp, chan,
+	if (TkImgPhotoMatchFileFormat(interp, chan,
 		Tcl_GetString(options.name), options.format,
 		options.metadata, NULL, &imageFormat,
 		&imageFormatVersion3, &imageWidth, &imageHeight, &oldformat)
@@ -2167,7 +2153,7 @@ ImgPhotoConfigureMaster(
 
 	if ((Tcl_SetChannelOption(interp, chan,
 		"-translation", "binary") != TCL_OK) ||
-		(MatchFileFormat(interp, chan, masterPtr->fileString,
+		(TkImgPhotoMatchFileFormat(interp, chan, masterPtr->fileString,
 			masterPtr->format, masterPtr->metadata, metadataOutObj,
 			&imageFormat, &imageFormatVersion3,
 			&imageWidth, &imageHeight, &oldformat) != TCL_OK)) {
@@ -2219,7 +2205,7 @@ ImgPhotoConfigureMaster(
 	metadataOutObj = Tcl_NewDictObj();
 	Tcl_IncrRefCount(metadataOutObj);
 
-	if (MatchStringFormat(interp, masterPtr->dataString,
+	if (TkImgMatchStringFormat(interp, masterPtr->dataString,
 		masterPtr->format, masterPtr->metadata, metadataOutObj,
 		&imageFormat, &imageFormatVersion3, &imageWidth,
 		&imageHeight, &oldformat) != TCL_OK) {
@@ -2684,7 +2670,7 @@ ImgPhotoSetSize(
 /*
  *----------------------------------------------------------------------
  *
- * MatchFileFormat --
+ * TkImgPhotoMatchFileFormat --
  *
  *	This function is called to find a photo image file format handler
  *	which can parse the image data in the given file. If a user-specified
@@ -2703,8 +2689,8 @@ ImgPhotoSetSize(
  *----------------------------------------------------------------------
  */
 
-static int
-MatchFileFormat(
+int
+TkImgPhotoMatchFileFormat(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
@@ -2907,7 +2893,7 @@ if (formatPtr == NULL) {
 /*
  *----------------------------------------------------------------------
  *
- * MatchStringFormat --
+ * TkImgMatchStringFormat --
  *
  *	This function is called to find a photo image file format handler
  *	which can parse the image data in the given string. If a
@@ -2926,8 +2912,8 @@ if (formatPtr == NULL) {
  *----------------------------------------------------------------------
  */
 
-static int
-MatchStringFormat(
+int
+TkImgMatchStringFormat(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *data,		/* Object containing the image data. */
     Tcl_Obj *formatObj,		/* User-specified format string, or NULL. */
