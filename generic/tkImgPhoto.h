@@ -265,6 +265,21 @@ MODULE_SCOPE void	TkImgPhotoDisplay(ClientData clientData,
 MODULE_SCOPE void	TkImgPhotoFree(ClientData clientData,
 			    Display *display);
 MODULE_SCOPE void	TkImgResetDither(PhotoInstance *instancePtr);
+
+MODULE_SCOPE int	TkImgPhotoMatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
+			    const char *fileName, Tcl_Obj *formatString,
+			    Tcl_Obj *metadataInObj,
+			    Tcl_Obj *metadataOutObj,
+			    Tk_PhotoImageFormat **imageFormatPtr,
+			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
+			    int *widthPtr, int *heightPtr, int *oldformat);
+MODULE_SCOPE int	TkImgMatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
+			    Tcl_Obj *formatString,
+			    Tcl_Obj *metadataInObj,
+			    Tcl_Obj *metadataOutObj,
+			    Tk_PhotoImageFormat **imageFormatPtr,
+			    Tk_PhotoImageFormatVersion3 **imageFormatVersion3Ptr,
+			    int *widthPtr, int *heightPtr, int *oldformat);
 
 /*
  * Local Variables:
