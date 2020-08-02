@@ -9,6 +9,7 @@
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -47,7 +48,7 @@ void initColorTable()
     /*
      * Build a hash table for looking up a color by its name.
      */
-    
+
     for (entry = systemColorData; entry->name != NULL; entry++) {
 	hPtr = Tcl_CreateHashEntry(&systemColors, entry->name, &newPtr);
 	if (entry->type == semantic) {
@@ -75,7 +76,7 @@ void initColorTable()
 	}
 	Tcl_SetHashValue(hPtr, entry);
     }
-    
+
     /*
      * Build an array for looking up a color by its index.
      */
@@ -94,7 +95,7 @@ void initColorTable()
     /*
      * Remember the indexes of some special entries.
      */
-    
+
     hPtr = Tcl_FindHashEntry(&systemColors, "Pixel");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     rgbColorIndex = entry->index;
@@ -113,7 +114,7 @@ void initColorTable()
  *	intensities.  The inputs are cast as unsigned longs but are
  *      expected to have values representable by an unsigned short
  *      as used in the XColor struct.  These values are divided by
- *      256 tp generate a 24-bit RGB pixel value.
+ *      256 to generate a 24-bit RGB pixel value.
  *
  *      This is called by the TkpGetPixel macro, used in xcolor.c.
  *
@@ -173,7 +174,8 @@ unsigned long TkMacOSXClearPixel(
  *
  * GetEntryFromPixel --
  *
- *	Extract a SystemColorDatum from the table.
+ *	Look up a SystemColorDatum which describes the XColor with
+ *      the specified value as its pixel field.
  *
  * Results:
  *	A pointer to a SystemColorDatum, or NULL if the pixel value is
@@ -285,7 +287,7 @@ GetRGBA(
 #else
 	{
 	    RGBColor rgb;
-	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32, 
+	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32,
                     true, &rgb);
 	    if (err == noErr) {
 		rgba[0] = (CGFLoat) rgb.red / 65535;
@@ -310,9 +312,10 @@ GetRGBA(
  * SetCGColorComponents --
  *
  *	Set the components of a CGColorRef from an XColor pixel value and a
- *      system color map entry.  The pixel value is only used in the case where
+ *      SystemColorDatum.  The pixel value is only used in the case where
  *      the color is of type rgbColor.  In that case the normalized XColor RGB
- *      values are copied into the CGColorRef.
+ *      values are copied into the CGColorRef.  Otherwise the components are
+ *      computed from the SystemColorDatum.
  *
  *      In 64 bit macOS systems there are no HITheme functions which convert
  *      HIText or HIBackground colors to CGColors.  (GetThemeTextColor was
@@ -328,7 +331,7 @@ GetRGBA(
  *
  *----------------------------------------------------------------------
  */
-	       
+
 static Bool
 SetCGColorComponents(
     SystemColorDatum *entry,
@@ -384,7 +387,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = (view.effectiveAppearance.name == NSAppearanceNameDarkAqua); 
+	    result = (view.effectiveAppearance.name == NSAppearanceNameDarkAqua);
 	} else {
 	    result = ([NSAppearance currentAppearance].name == NSAppearanceNameDarkAqua);
 	}
@@ -547,9 +550,10 @@ TkMacOSXCreateCGColor(
  * TkMacOSXGetNSColor --
  *
  *	Creates an autoreleased NSColor from a X style pixel value.
+ *      The return value is nil if the pixel value is invalid.
  *
  * Results:
- *	Returns nil if not a real pixel, NSColor* otherwise.
+ *	A possibly nil pointer to an NSColor.
  *
  * Side effects:
  *	None
@@ -583,10 +587,9 @@ TkMacOSXGetNSColor(
  *
  * TkMacOSXSetColorInContext --
  *
- *	Sets fill and stroke color in the given CG context from an X
- *	pixel value, or if the pixel code indicates a system color,
- *	sets the corresponding brush, textColor or background via
- *	HITheme APIs if available or Appearance mgr APIs.
+ *	Sets the fill and stroke colors in the given CGContext to the CGColor
+ *	which corresponds to the XColor having the specified value for its pixel
+ *	field.
  *
  * Results:
  *	None.
@@ -651,17 +654,19 @@ TkMacOSXSetColorInContext(
  *
  * TkpGetColor --
  *
- *	Create a new TkColor for the color with the given name. The colormap
- *      field is set to 1 if passed a window with a LightAqua appearance or 2
- *      if passed a window with a DarkAqua appearance.  These will be managed
- *      separately in the per-display table of TkColors maintained by Tk.  This
- *      function is called by Tk_Color.
+ *	Create a new TkColor for the color with the given name, for use in the
+ *      specified window. The colormap field is set to lightColormap if the
+ *      window has a LightAqua appearance, or darkColormap if the window has a
+ *      DarkAqua appearance.  TkColors with different colormaps are managed
+ *      separately in the per-display table of TkColors maintained by Tk.
+ *
+ *      This function is called by Tk_GetColor.
  *
  * Results:
  *	Returns a newly allocated TkColor, or NULL on failure.
  *
  * Side effects:
- *       
+ *
  *	Allocates memory for the TkColor structure.
  *
  *----------------------------------------------------------------------
@@ -708,7 +713,7 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance; 
+		NSAppearance *windowAppearance;
 		if (TkMacOSXInDarkMode(tkwin)) {
 		    windowAppearance = darkAqua;
 		    colormap = darkColormap;
@@ -721,7 +726,7 @@ TkpGetColor(
 		[NSAppearance setCurrentAppearance:savedAppearance];
 #else
 		GetRGBA(entry, p.ulong, rgba);
-#endif		
+#endif
 		color.red   = rgba[0] * 65535.0;
 		color.green = rgba[1] * 65535.0;
 		color.blue  = rgba[2] * 65535.0;
@@ -763,19 +768,19 @@ validXColor:
  *
  * TkpGetColorByValue --
  *
- *	Given a desired set of red-green-blue intensities for a color,
- *	locate a pixel value to use to draw that color in a given
- *	window.
+ *	Given an pointer to an XColor, construct a TkColor whose red, green and
+ *	blue intensities match those of the XColor as closely as possible.  For
+ *	the Macintosh, this means that the colortype bitfield of the pixel
+ *	value will be RGBColor and that the color intensities stored in its
+ *	24-bit value bitfield are computed from the 16-bit red green and blue
+ *	values in the XColor by dividing by 256.
  *
  * Results:
- *	The return value is a pointer to an TkColor structure that
- *	indicates the closest red, blue, and green intensities available
- *	to those specified in colorPtr, and also specifies a pixel
- *	value to use to draw in that color.
+ *	A pointer to a newly allocated TkColor structure.
  *
  * Side effects:
  *	May invalidate the colormap cache for the specified window.
- *	Allocates a new TkColor structure.
+ *	Allocates memory for a TkColor structure.
  *
  *----------------------------------------------------------------------
  */
@@ -830,10 +835,11 @@ XCreateColormap(
     Visual *visual,		/* Not used. */
     int alloc)			/* Not used. */
 {
-    static Colormap index = 1;
+    static Colormap index = 16;
 
     /*
-     * Just return a new value each time.
+     * Just return a new value each time, large enough that it will not
+     * conflict with any value of the macColormap enum.
      */
     return index++;
 }
@@ -855,9 +861,8 @@ XFreeColors(
     unsigned long planes)	/* Number of pixel planes. */
 {
     /*
-     * The Macintosh version of Tk uses TrueColor. Nothing
-     * needs to be done to release colors as there really is
-     * no colormap in the Tk sense.
+     * Nothing needs to be done to release colors as there really is no
+     * colormap in the Tk sense.
      */
     return Success;
 }
