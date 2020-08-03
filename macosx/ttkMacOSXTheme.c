@@ -32,7 +32,25 @@
 #include "tkMacOSXPrivate.h"
 #include "ttk/ttkTheme.h"
 #include "ttkMacOSXTheme.h"
+#include "tkColor.h"
 #include <math.h>
+
+static NSColor *controlAccentColor(void) {
+    static int accentPixel = -1;
+    if (accentPixel == -1) {
+	TkColor *temp = TkpGetColor(None, "systemControlAccentColor");
+	accentPixel = temp->color.pixel;
+	ckfree(temp);
+    }
+    return [TkMacOSXGetNSColor(NULL, accentPixel) retain];
+}
+
+/*
+ * Padding values which depend on the OS version.  These are initialized
+ * in AquaTheme_Init.
+ */
+
+static Ttk_Padding entryElementPadding;
 
 /*----------------------------------------------------------------------
  * +++ ComputeButtonDrawInfo --
@@ -152,26 +170,6 @@ CGColorFromGray(
 #define CGPathCreateWithRoundedRect(w, x, y, z) nil
 
 #endif
-
-/*
- * Apple introduced the "semantic color" named controlAccentColor in OSX 10.14.
- * Prior to that release there was a system preferences setting for the system
- * "tint" which could be used to produce the accent color (blue or graphite
- * only).
- */
-
-static NSColor *controlAccentColor(void)
-{
-    NSColor *color = nil;
-    if ([NSApp macOSVersion] > 101400) {
-	if (@available(macOS 10.14, *)) {
-	    color = [NSColor controlAccentColor];
-	}
-    } else {
-	color = [NSColor colorForControlTint:[NSColor currentControlTint]];
-    }
-    return color;
-}
 
 /*----------------------------------------------------------------------
  * +++ Utilities.
@@ -449,9 +447,9 @@ static void DrawFocusRing(
 {
     CGColorRef highlightColor;
     CGFloat highlight[4] = {1.0, 1.0, 1.0, 0.2};
-    NSColor *accent = controlAccentColor();
-    CGColorRef focusColor = CGCOLOR([accent colorWithAlphaComponent:0.6]);
+    CGColorRef focusColor;
 
+    focusColor = CGCOLOR([controlAccentColor() colorWithAlphaComponent:0.6]);
     FillRoundedRectangle(context, bounds, design->radius, focusColor);
     bounds = CGRectInset(bounds, 3, 3);
     highlightColor = CGColorFromRGBA(highlight);
@@ -1978,7 +1976,7 @@ static void EntryElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    *paddingPtr = Ttk_MakePadding(7, 6, 7, 5);
+    *paddingPtr = entryElementPadding;
 }
 
 static void EntryElementDraw(
@@ -3378,6 +3376,12 @@ static int AquaTheme_Init(
 
     if (!themePtr) {
 	return TCL_ERROR;
+    }
+
+    if ([NSApp macOSVersion] < 101500) {
+	entryElementPadding = Ttk_MakePadding(7, 6, 7, 5);
+    } else {
+	entryElementPadding = Ttk_MakePadding(7, 5, 7, 6);
     }
 
     /*
