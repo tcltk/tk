@@ -168,6 +168,6 @@
 
 MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
 					    unsigned long blue);
-#define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red, p->green, p->blue))
+#define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
 
 #endif /* _TKMACPORT */
