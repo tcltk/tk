@@ -300,7 +300,11 @@ DestroyImage(
  *	Get a single pixel from an image.
  *
  * Results:
- *	Returns the 32 bit pixel value.
+ *      The XColor structure contains an unsigned long field named pixel which
+ *      identifies the color.  This function returns the unsigned long that
+ *      would be used as the pixel value of an XColor that has the same red
+ *      green and blue components as the XImage pixel at the specified
+ *      location.
  *
  * Side effects:
  *	None.
@@ -317,8 +321,8 @@ ImageGetPixel(
     unsigned char r = 0, g = 0, b = 0;
 
     /*
-     * Compute 8 bit red green and blue values, which are multiplied by 256 and
-     * ed as inputs to TkMacOSXRGBPixel.
+     * Compute 8 bit red green and blue values, which are passed as inputs to
+     * TkMacOSXRGBPixel to produce the pixel value.
      */
 
     if (image && image->data) {
