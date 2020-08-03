@@ -1755,7 +1755,7 @@ Tk_WinfoObjCmd(
 	 * destroyed when we are through with it, so we do not get stale RGB
 	 * values next time.
 	 */
-	
+
 	{
 	    Colormap temp = Tk_Colormap(tkwin);
 	    Tk_Colormap(tkwin) = TK_DYNAMIC_COLORMAP;

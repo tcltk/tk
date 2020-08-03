@@ -211,7 +211,7 @@ XMapWindow(
 	 * we handle this event immediately and then process the idle
 	 * events that it generates.
 	 */
-	
+
 	Tk_HandleEvent(&event);
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
@@ -329,7 +329,7 @@ XUnmapWindow(
 	 * we handle this event immediately and then process the idle
 	 * events that it generates.
 	 */
-	
+
 	Tk_HandleEvent(&event);
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {

@@ -6,7 +6,7 @@
  * colors in a GC are unsigned longs.  These are meant to be used as indexes
  * into a table of XColors, where an XColor is declared in Xlib.h as:
  * typedef struct {
- *       unsigned long pixel; 
+ *       unsigned long pixel;
  *       unsigned short red, green, blue;
  *       char flags;
  *       char pad;
@@ -48,7 +48,7 @@ typedef struct xpixel_t {
     unsigned value: 24;     /* Either RGB or an index into systemColorMap. */
     unsigned colortype: 8;
 } xpixel;
-    
+
 typedef union MacPixel_t {
     unsigned long ulong;
     xpixel pixel;
@@ -64,11 +64,11 @@ enum macColormap {
     lightColormap,
     darkColormap,
 };
-    
+
 /*
  * In TkMacOSXColor.c a Tk hash table is constructed from the static data
  * below to map system color names to CGColors.
- */ 
+ */
 
 typedef struct {
     const char *name;
@@ -96,15 +96,15 @@ static SystemColorDatum systemColorData[] = {
 {"HighlightText",			HIBrush,  kThemeBrushBlack },
 {"HighlightAlternate",			HIBrush,  kThemeBrushAlternatePrimaryHighlightColor },
 {"PrimaryHighlightColor",		HIBrush,  kThemeBrushPrimaryHighlightColor },
-{"ButtonFace",				HIBrush,  kThemeBrushButtonFaceActive },	       
+{"ButtonFace",				HIBrush,  kThemeBrushButtonFaceActive },
 {"SecondaryHighlightColor",		HIBrush,  kThemeBrushSecondaryHighlightColor },
-{"ButtonFrame",				HIBrush,  kThemeBrushButtonFrameActive },	       
+{"ButtonFrame",				HIBrush,  kThemeBrushButtonFrameActive },
 {"AlternatePrimaryHighlightColor",      HIBrush,  kThemeBrushAlternatePrimaryHighlightColor },
-{"WindowBody",				HIBrush,  kThemeBrushDocumentWindowBackground },       
+{"WindowBody",				HIBrush,  kThemeBrushDocumentWindowBackground },
 {"SheetBackground",			HIBrush,  kThemeBrushSheetBackground },
 {"MenuActive",				HIBrush,  kThemeBrushMenuBackgroundSelected },
 {"Menu",				HIBrush,  kThemeBrushMenuBackground },
-{"DialogBackgroundInactive",		HIBrush,  kThemeBrushDialogBackgroundInactive },   
+{"DialogBackgroundInactive",		HIBrush,  kThemeBrushDialogBackgroundInactive },
 {"DialogBackgroundActive",		HIBrush,  kThemeBrushDialogBackgroundActive },
 {"AlertBackgroundActive",		HIBrush,  kThemeBrushAlertBackgroundActive },
 {"AlertBackgroundInactive",		HIBrush,  kThemeBrushAlertBackgroundInactive },
@@ -113,28 +113,28 @@ static SystemColorDatum systemColorData[] = {
 {"UtilityWindowBackgroundActive",	HIBrush,  kThemeBrushUtilityWindowBackgroundActive },
 {"UtilityWindowBackgroundInactive",	HIBrush,  kThemeBrushUtilityWindowBackgroundInactive },
 {"ListViewSortColumnBackground",	HIBrush,  kThemeBrushListViewSortColumnBackground },
-{"ListViewBackground",			HIBrush,  kThemeBrushListViewBackground },	   
+{"ListViewBackground",			HIBrush,  kThemeBrushListViewBackground },
 {"IconLabelBackground",			HIBrush,  kThemeBrushIconLabelBackground },
-{"ListViewSeparator",			HIBrush,  kThemeBrushListViewSeparator },  
+{"ListViewSeparator",			HIBrush,  kThemeBrushListViewSeparator },
 {"ChasingArrows",			HIBrush,  kThemeBrushChasingArrows },
-{"DragHilite",				HIBrush,  kThemeBrushDragHilite },	   
-{"DocumentWindowBackground",		HIBrush,  kThemeBrushDocumentWindowBackground },   
+{"DragHilite",				HIBrush,  kThemeBrushDragHilite },
+{"DocumentWindowBackground",		HIBrush,  kThemeBrushDocumentWindowBackground },
 {"FinderWindowBackground",		HIBrush,  kThemeBrushFinderWindowBackground },
-{"ScrollBarDelimiterActive",		HIBrush,  kThemeBrushScrollBarDelimiterActive },   
-{"ScrollBarDelimiterInactive",		HIBrush,  kThemeBrushScrollBarDelimiterInactive }, 
+{"ScrollBarDelimiterActive",		HIBrush,  kThemeBrushScrollBarDelimiterActive },
+{"ScrollBarDelimiterInactive",		HIBrush,  kThemeBrushScrollBarDelimiterInactive },
 {"FocusHighlight",			HIBrush,  kThemeBrushFocusHighlight },
-{"PopupArrowActive",			HIBrush,  kThemeBrushPopupArrowActive },	   
-{"PopupArrowPressed",			HIBrush,  kThemeBrushPopupArrowPressed },	   
-{"PopupArrowInactive",			HIBrush,  kThemeBrushPopupArrowInactive },	   
-{"AppleGuideCoachmark",			HIBrush,  kThemeBrushAppleGuideCoachmark },	   
+{"PopupArrowActive",			HIBrush,  kThemeBrushPopupArrowActive },
+{"PopupArrowPressed",			HIBrush,  kThemeBrushPopupArrowPressed },
+{"PopupArrowInactive",			HIBrush,  kThemeBrushPopupArrowInactive },
+{"AppleGuideCoachmark",			HIBrush,  kThemeBrushAppleGuideCoachmark },
 {"IconLabelBackgroundSelected",		HIBrush,  kThemeBrushIconLabelBackgroundSelected },
 {"StaticAreaFill",			HIBrush,  kThemeBrushStaticAreaFill },
 {"ActiveAreaFill",			HIBrush,  kThemeBrushActiveAreaFill },
 {"ButtonFrameActive",			HIBrush,  kThemeBrushButtonFrameActive },
-{"ButtonFrameInactive",			HIBrush,  kThemeBrushButtonFrameInactive },	   
-{"ButtonFaceActive",			HIBrush,  kThemeBrushButtonFaceActive },   
-{"ButtonFaceInactive",			HIBrush,  kThemeBrushButtonFaceInactive },	   
-{"ButtonFacePressed",			HIBrush,  kThemeBrushButtonFacePressed },	   
+{"ButtonFrameInactive",			HIBrush,  kThemeBrushButtonFrameInactive },
+{"ButtonFaceActive",			HIBrush,  kThemeBrushButtonFaceActive },
+{"ButtonFaceInactive",			HIBrush,  kThemeBrushButtonFaceInactive },
+{"ButtonFacePressed",			HIBrush,  kThemeBrushButtonFacePressed },
 {"ButtonActiveDarkShadow",		HIBrush,  kThemeBrushButtonActiveDarkShadow },
 {"ButtonActiveDarkHighlight",		HIBrush,  kThemeBrushButtonActiveDarkHighlight },
 {"ButtonActiveLightShadow",		HIBrush,  kThemeBrushButtonActiveLightShadow },
@@ -163,10 +163,10 @@ static SystemColorDatum systemColorData[] = {
 {"ListViewEvenRowBackground",		HIBrush,  kThemeBrushListViewEvenRowBackground },
 {"ListViewColumnDivider",		HIBrush,  kThemeBrushListViewColumnDivider },
 
-{"ButtonText",				HIText,   kThemeTextColorPushButtonActive },	      
-{"MenuActiveText",			HIText,   kThemeTextColorMenuItemSelected },	      
-{"MenuDisabled",			HIText,   kThemeTextColorMenuItemDisabled },	   
-{"MenuText",				HIText,   kThemeTextColorMenuItemActive },	   
+{"ButtonText",				HIText,   kThemeTextColorPushButtonActive },
+{"MenuActiveText",			HIText,   kThemeTextColorMenuItemSelected },
+{"MenuDisabled",			HIText,   kThemeTextColorMenuItemDisabled },
+{"MenuText",				HIText,   kThemeTextColorMenuItemActive },
 {"BlackText",				HIText,   kThemeTextColorBlack },
 {"DialogActiveText",			HIText,   kThemeTextColorDialogActive },
 {"DialogInactiveText",			HIText,   kThemeTextColorDialogInactive },
@@ -192,8 +192,8 @@ static SystemColorDatum systemColorData[] = {
 {"ListViewText",			HIText,   kThemeTextColorListView },
 {"DocumentWindowTitleActiveText",	HIText,   kThemeTextColorDocumentWindowTitleActive },
 {"DocumentWindowTitleInactiveText",	HIText,   kThemeTextColorDocumentWindowTitleInactive },
-{"MovableModalWindowTitleActiveText",  	HIText,   kThemeTextColorMovableModalWindowTitleActive },   
-{"MovableModalWindowTitleInactiveText",	HIText,   kThemeTextColorMovableModalWindowTitleInactive }, 
+{"MovableModalWindowTitleActiveText",  	HIText,   kThemeTextColorMovableModalWindowTitleActive },
+{"MovableModalWindowTitleInactiveText",	HIText,   kThemeTextColorMovableModalWindowTitleInactive },
 {"UtilityWindowTitleActiveText",	HIText,   kThemeTextColorUtilityWindowTitleActive },
 {"UtilityWindowTitleInactiveText",	HIText,   kThemeTextColorUtilityWindowTitleInactive },
 {"PopupWindowTitleActiveText",		HIText,   kThemeTextColorPopupWindowTitleActive },
@@ -231,7 +231,7 @@ static SystemColorDatum systemColorData[] = {
      * Dynamic Colors
      */
 
-{"WindowBackgroundColor",	    ttkBackground, 0 },	    
+{"WindowBackgroundColor",	    ttkBackground, 0 },
 {"WindowBackgroundColor1",	    ttkBackground, 1 },
 {"WindowBackgroundColor2",	    ttkBackground, 2 },
 {"WindowBackgroundColor3",	    ttkBackground, 3 },
