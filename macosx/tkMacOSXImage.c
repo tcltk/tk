@@ -314,7 +314,7 @@ ImageGetPixel(
     int x,
     int y)
 {
-    unsigned short r = 0, g = 0, b = 0;
+    unsigned char r = 0, g = 0, b = 0;
 
     /*
      * Compute 8 bit red green and blue values, which are multiplied by 256 and
@@ -364,7 +364,7 @@ ImageGetPixel(
 	}
     }
 
-    return TkMacOSXRGBPixel(r<<8, g<<8, b<<8);
+    return TkMacOSXRGBPixel(r, g, b);
 }
 
 /*
