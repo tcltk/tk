@@ -1592,7 +1592,7 @@ ImageDisplay(
          * Drawing is not possible on the first call to DisplayImage.
 	 * Save the message, but do not log it until the actual display.
 	 */
-	
+
 	if (instPtr->displayFailed == False) {
 	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
 		    instPtr->masterPtr->imageName, imageX, imageY, width, height);
