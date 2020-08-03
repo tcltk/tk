@@ -176,6 +176,7 @@ void DebugPrintQueue(void)
 	}
     }
 #endif
+
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
 
@@ -184,6 +185,13 @@ void DebugPrintQueue(void)
     DebugPrintQueue();
 #endif
 
+}
+
+- (void) _runBackgroundLoop
+{
+    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)){
+	TkMacOSXDrawAllViews(NULL);
+    }
 }
 @end
 
@@ -203,15 +211,13 @@ void DebugPrintQueue(void)
  *----------------------------------------------------------------------
  */
 
-NSString *
+static NSString *
 GetRunLoopMode(NSModalSession modalSession)
 {
     NSString *runLoopMode = nil;
 
     if (modalSession) {
 	runLoopMode = NSModalPanelRunLoopMode;
-    } else if (TkMacOSXGetCapture()) {
-	runLoopMode = NSEventTrackingRunLoopMode;
     }
     if (!runLoopMode) {
 	runLoopMode = [[NSRunLoop currentRunLoop] currentMode];
