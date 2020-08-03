@@ -176,6 +176,7 @@ void DebugPrintQueue(void)
 	}
     }
 #endif
+
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
 
@@ -188,7 +189,9 @@ void DebugPrintQueue(void)
 
 - (void) _runBackgroundLoop
 {
-    while(Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)){};
+    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)){
+	TkMacOSXDrawAllViews(NULL);
+    }
 }
 @end
 

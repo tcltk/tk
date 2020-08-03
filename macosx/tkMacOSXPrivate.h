@@ -342,6 +342,7 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
+
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
@@ -349,6 +350,7 @@ VISIBILITY_HIDDEN
     Bool _isDrawing;
     Bool _needsToDraw;
 #endif
+
 }
 @property int poolLock;
 @property int macOSVersion;
