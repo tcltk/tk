@@ -112,11 +112,10 @@ void initColorTable()
  *	Return an unsigned long value suitable for use in the pixel
  *	field of an XColor with the specified red, green and blue
  *	intensities.  The inputs are cast as unsigned longs but are
- *      expected to have values representable by an unsigned short
- *      as used in the XColor struct.  These values are divided by
- *      256 to generate a 24-bit RGB pixel value.
+ *      expected to have values representable by an unsigned char.
  *
- *      This is called by the TkpGetPixel macro, used in xcolor.c.
+ *      This is called in the TkpGetPixel macro, used in xcolor.c,
+ *      and in ImageGetPixel.
  *
  * Results:
  *	An unsigned long that can be used as the pixel field of an XColor.
@@ -134,9 +133,9 @@ TkMacOSXRGBPixel(
 {
     MacPixel p;
     p.pixel.colortype = rgbColor;
-    p.pixel.value = (((red >> 8) & 0xff) << 16)  |
-	            (((green >> 8) & 0xff) << 8) |
-	            ((blue >> 8) & 0xff);
+    p.pixel.value = ((red & 0xff) << 16)  |
+	            ((green & 0xff) << 8) |
+	            (blue & 0xff);
     return p.ulong;
 }
 
