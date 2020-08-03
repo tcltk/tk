@@ -314,7 +314,12 @@ ImageGetPixel(
     int x,
     int y)
 {
-    unsigned char r = 0, g = 0, b = 0;
+    unsigned short r = 0, g = 0, b = 0;
+
+    /*
+     * Compute 8 bit red green and blue values, which are multiplied by 256 and
+     * ed as inputs to TkMacOSXRGBPixel.
+     */
 
     if (image && image->data) {
 	unsigned char *srcPtr = ((unsigned char*) image->data)
@@ -322,7 +327,7 @@ ImageGetPixel(
 		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
 
 	switch (image->bits_per_pixel) {
-	case 32:
+	case 32: /* 8 bits per channel */
 	    r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
 	    g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
 	    b = (*((unsigned int*) srcPtr)      ) & 0xff;
@@ -332,12 +337,12 @@ ImageGetPixel(
 		r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
 	    }*/
 	    break;
-	case 16:
+	case 16: /* 5 bits per channel */
 	    r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
 	    g = (*((unsigned short*) srcPtr) >> 2) & 0xf8;
 	    b = (*((unsigned short*) srcPtr) << 3) & 0xf8;
 	    break;
-	case 8:
+	case 8: /* 2 bits per channel */
 	    r = (*srcPtr << 2) & 0xc0;
 	    g = (*srcPtr << 4) & 0xc0;
 	    b = (*srcPtr << 6) & 0xc0;
@@ -345,7 +350,7 @@ ImageGetPixel(
 	    g |= g >> 2 | g >> 4 | g >> 6;
 	    b |= b >> 2 | b >> 4 | b >> 6;
 	    break;
-	case 4: {
+	case 4: { /* 1 bit per channel */
 	    unsigned char c = (x % 2) ? *srcPtr : (*srcPtr >> 4);
 
 	    r = (c & 0x04) ? 0xff : 0;
@@ -353,12 +358,13 @@ ImageGetPixel(
 	    b = (c & 0x01) ? 0xff : 0;
 	    break;
 	}
-	case 1:
+	case 1: /* Black-white bitmap. */
 	    r = g = b = ((*srcPtr) & (0x80 >> (x % 8))) ? 0xff : 0;
 	    break;
 	}
     }
-    return TkMacOSXRGBPixel(r, g, b);
+
+    return TkMacOSXRGBPixel(r<<8, g<<8, b<<8);
 }
 
 /*
