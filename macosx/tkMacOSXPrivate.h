@@ -150,7 +150,7 @@ typedef union MacKeycode_t {
   keycode_v v;
   keycode_x x;
 } MacKeycode;
-    
+
 /*
  * Macros used in tkMacOSXKeyboard.c and tkMacOSXKeyEvent.c.
  * Note that 0x7f is del and 0xF8FF is the Apple Logo character.
