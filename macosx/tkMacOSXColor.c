@@ -40,9 +40,12 @@ void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-    lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    if (@available(macOS 10.14, *)) {
+	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+        lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    }
 #endif
 
     /*
@@ -378,21 +381,19 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
     int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-
-    if ([NSApp macOSVersion] >= 101400) {
+    if (@available(macOS 10.14, *)) {
         TkWindow *winPtr = (TkWindow*) tkwin;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = (view.effectiveAppearance.name == NSAppearanceNameDarkAqua);
+	    result = (view.effectiveAppearance == darkAqua);
 	} else {
-	    result = ([NSAppearance currentAppearance].name == NSAppearanceNameDarkAqua);
+	    result = ([NSAppearance currentAppearance] == darkAqua);
 	}
     }
 #endif
-
     return result;
 }
 
