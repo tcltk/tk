@@ -854,7 +854,7 @@ systemPrimaryHighlightColor
 systemScrollBarDelimiterActive
 systemScrollBarDelimiterInactive
 systemSecondaryHighlightColor
-systemSelectedTabTextColor    
+systemSelectedTabTextColor
 systemSheetBackground
 systemSheetBackgroundOpaque
 systemSheetBackgroundTransparent
