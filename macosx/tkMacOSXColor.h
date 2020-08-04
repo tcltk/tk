@@ -38,14 +38,12 @@ enum colorType {
     rgbColor,      /* The 24 bit value is an rgb color. */
     clearColor,    /* The unique rgba color with all channels 0. */
     HIBrush,       /* A HITheme brush color.*/
-    HIText,        /* A HITheme text color. */
-    HIBackground,  /* A HITheme background color. */
     ttkBackground, /* A background color which indicates nesting level.*/
     semantic,      /* A semantic NSColor.*/
 };
 
 typedef struct xpixel_t {
-    unsigned value: 24;     /* Either RGB or an index into systemColorMap. */
+    unsigned value: 24;     /* Either RGB or an index into systemColorData. */
     unsigned colortype: 8;
 } xpixel;
 
@@ -163,70 +161,6 @@ static SystemColorDatum systemColorData[] = {
 {"ListViewEvenRowBackground",		HIBrush,  kThemeBrushListViewEvenRowBackground, NULL, 0, NULL },
 {"ListViewColumnDivider",		HIBrush,  kThemeBrushListViewColumnDivider, NULL, 0, NULL },
 
-{"ButtonText",				HIText,   kThemeTextColorPushButtonActive, NULL, 0, NULL },
-{"MenuActiveText",			HIText,   kThemeTextColorMenuItemSelected, NULL, 0, NULL },
-{"MenuDisabled",			HIText,   kThemeTextColorMenuItemDisabled, NULL, 0, NULL },
-{"MenuText",				HIText,   kThemeTextColorMenuItemActive, NULL, 0, NULL },
-{"BlackText",				HIText,   kThemeTextColorBlack, NULL, 0, NULL },
-{"DialogActiveText",			HIText,   kThemeTextColorDialogActive, NULL, 0, NULL },
-{"DialogInactiveText",			HIText,   kThemeTextColorDialogInactive, NULL, 0, NULL },
-{"AlertActiveText",			HIText,   kThemeTextColorAlertActive, NULL, 0, NULL },
-{"AlertInactiveText",			HIText,   kThemeTextColorAlertInactive, NULL, 0, NULL },
-{"ModelessDialogActiveText",		HIText,   kThemeTextColorModelessDialogActive, NULL, 0, NULL },
-{"ModelessDialogInactiveText",		HIText,   kThemeTextColorModelessDialogInactive, NULL, 0, NULL },
-{"WindowHeaderActiveText",		HIText,   kThemeTextColorWindowHeaderActive, NULL, 0, NULL },
-{"WindowHeaderInactiveText",		HIText,   kThemeTextColorWindowHeaderInactive, NULL, 0, NULL },
-{"PlacardActiveText",			HIText,   kThemeTextColorPlacardActive, NULL, 0, NULL },
-{"PlacardInactiveText",			HIText,   kThemeTextColorPlacardInactive, NULL, 0, NULL },
-{"PlacardPressedText",			HIText,   kThemeTextColorPlacardPressed, NULL, 0, NULL },
-{"PushButtonActiveText",		HIText,   kThemeTextColorPushButtonActive, NULL, 0, NULL },
-{"PushButtonInactiveText",		HIText,   kThemeTextColorPushButtonInactive, NULL, 0, NULL },
-{"PushButtonPressedText",		HIText,   kThemeTextColorPushButtonPressed, NULL, 0, NULL },
-{"BevelButtonActiveText",		HIText,   kThemeTextColorBevelButtonActive, NULL, 0, NULL },
-{"BevelButtonInactiveText",		HIText,   kThemeTextColorBevelButtonInactive, NULL, 0, NULL },
-{"BevelButtonPressedText",		HIText,   kThemeTextColorBevelButtonPressed, NULL, 0, NULL },
-{"PopupButtonActiveText",		HIText,   kThemeTextColorPopupButtonActive, NULL, 0, NULL },
-{"PopupButtonInactiveText",		HIText,   kThemeTextColorPopupButtonInactive, NULL, 0, NULL },
-{"PopupButtonPressedText",		HIText,   kThemeTextColorPopupButtonPressed, NULL, 0, NULL },
-{"IconLabelText",			HIText,   kThemeTextColorIconLabel, NULL, 0, NULL },
-{"ListViewText",			HIText,   kThemeTextColorListView, NULL, 0, NULL },
-{"DocumentWindowTitleActiveText",	HIText,   kThemeTextColorDocumentWindowTitleActive, NULL, 0, NULL },
-{"DocumentWindowTitleInactiveText",	HIText,   kThemeTextColorDocumentWindowTitleInactive, NULL, 0, NULL },
-{"MovableModalWindowTitleActiveText",  	HIText,   kThemeTextColorMovableModalWindowTitleActive, NULL, 0, NULL },
-{"MovableModalWindowTitleInactiveText",	HIText,   kThemeTextColorMovableModalWindowTitleInactive, NULL, 0, NULL },
-{"UtilityWindowTitleActiveText",	HIText,   kThemeTextColorUtilityWindowTitleActive, NULL, 0, NULL },
-{"UtilityWindowTitleInactiveText",	HIText,   kThemeTextColorUtilityWindowTitleInactive, NULL, 0, NULL },
-{"PopupWindowTitleActiveText",		HIText,   kThemeTextColorPopupWindowTitleActive, NULL, 0, NULL },
-{"PopupWindowTitleInactiveText",	HIText,   kThemeTextColorPopupWindowTitleInactive, NULL, 0, NULL },
-{"RootMenuActiveText",			HIText,   kThemeTextColorRootMenuActive, NULL, 0, NULL },
-{"RootMenuSelectedText",		HIText,   kThemeTextColorRootMenuSelected, NULL, 0, NULL },
-{"RootMenuDisabledText",		HIText,   kThemeTextColorRootMenuDisabled, NULL, 0, NULL },
-{"MenuItemActiveText",			HIText,   kThemeTextColorMenuItemActive, NULL, 0, NULL },
-{"MenuItemSelectedText",		HIText,   kThemeTextColorMenuItemSelected, NULL, 0, NULL },
-{"MenuItemDisabledText",		HIText,   kThemeTextColorMenuItemDisabled, NULL, 0, NULL },
-{"PopupLabelActiveText",		HIText,   kThemeTextColorPopupLabelActive, NULL, 0, NULL },
-{"PopupLabelInactiveText",		HIText,   kThemeTextColorPopupLabelInactive, NULL, 0, NULL },
-{"TabFrontActiveText",			HIText,   kThemeTextColorTabFrontActive, NULL, 0, NULL },
-{"TabNonFrontActiveText",		HIText,   kThemeTextColorTabNonFrontActive, NULL, 0, NULL },
-{"TabNonFrontPressedText",		HIText,   kThemeTextColorTabNonFrontPressed, NULL, 0, NULL },
-{"TabFrontInactiveText",		HIText,   kThemeTextColorTabFrontInactive, NULL, 0, NULL },
-{"TabNonFrontInactiveText",		HIText,   kThemeTextColorTabNonFrontInactive, NULL, 0, NULL },
-{"IconLabelSelectedText",		HIText,   kThemeTextColorIconLabelSelected, NULL, 0, NULL },
-{"BevelButtonStickyActiveText",		HIText,   kThemeTextColorBevelButtonStickyActive, NULL, 0, NULL },
-{"BevelButtonStickyInactiveText",	HIText,   kThemeTextColorBevelButtonStickyInactive, NULL, 0, NULL },
-{"NotificationText",			HIText,   kThemeTextColorNotification, NULL, 0, NULL },
-{"SystemDetailText",			HIText,   kThemeTextColorSystemDetail, NULL, 0, NULL },
-{"PlacardBackground",			HIBackground, kThemeBackgroundPlacard, NULL, 0, NULL },
-{"WindowHeaderBackground",		HIBackground, kThemeBackgroundWindowHeader, NULL, 0, NULL },
-{"ListViewWindowHeaderBackground",	HIBackground, kThemeBackgroundListViewWindowHeader, NULL, 0, NULL },
-{"MetalBackground",			HIBackground, kThemeBackgroundMetal, NULL, 0, NULL },
-
-{"SecondaryGroupBoxBackground",		HIBackground, kThemeBackgroundSecondaryGroupBox, NULL, 0, NULL },
-{"TabPaneBackground",			HIBackground, kThemeBackgroundTabPane, NULL, 0, NULL },
-{"WhiteText",				HIText,   kThemeTextColorWhite, NULL, 0, NULL },
-{"Black",				HIBrush,  kThemeBrushBlack, NULL, 0, NULL },
-{"White",				HIBrush,  kThemeBrushWhite, NULL, 0, NULL },
-
     /*
      * Dynamic Colors
      */
@@ -255,6 +189,7 @@ static SystemColorDatum systemColorData[] = {
 #endif
 {"TextBackgroundColor",		    semantic, 0, "textBackgroundColor", 0, NULL },
 {"SelectedTextBackgroundColor",	    semantic, 0, "selectedTextBackgroundColor", 0, NULL },
+{"SelectedMenuItemTextColor",       semantic, 0, "selectedMenuItemTextColor", 0, NULL },
 {"ControlAccentColor",		    semantic, 0, "controlAccentColor", 0, NULL },
 {"LinkColor",			    semantic, 0, "blueColor", 0, NULL },
 {"LinkColor",			    semantic, 0, "linkColor", 0, NULL },

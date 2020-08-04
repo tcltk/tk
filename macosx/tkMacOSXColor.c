@@ -40,9 +40,12 @@ void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-    lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    if (@available(macOS 10.14, *)) {
+	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+        lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    }
 #endif
 
     /*
@@ -279,27 +282,6 @@ GetRGBA(
 	break;
     case clearColor:
 	rgba[3] = 0;
-    case HIText:
-#ifdef __LP64__
-	color = [[NSColor textColor] colorUsingColorSpace:sRGB];
-	[color getComponents: rgba];
-#else
-	{
-	    RGBColor rgb;
-	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32,
-                    true, &rgb);
-	    if (err == noErr) {
-		rgba[0] = (CGFLoat) rgb.red / 65535;
-		rgba[1] = (CGFLoat) rgb.green / 65535;
-		rgba[2] = (CGFLoat) rgb.blue / 65535;
-	    }
-	}
-#endif
-	break;
-    case HIBackground:
-	color = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
-	[color getComponents: rgba];
-	break;
     default:
 	break;
     }
@@ -315,12 +297,6 @@ GetRGBA(
  *      the color is of type rgbColor.  In that case the normalized XColor RGB
  *      values are copied into the CGColorRef.  Otherwise the components are
  *      computed from the SystemColorDatum.
- *
- *      In 64 bit macOS systems there are no HITheme functions which convert
- *      HIText or HIBackground colors to CGColors.  (GetThemeTextColor was
- *      removed, and it was never possible with backgrounds.)  On 64-bit systems
- *      we replace all HIText colors by systemTextColor and all HIBackground
- *      colors by systemWindowBackgroundColor.
  *
  * Results:
  *	True if the function succeeds, false otherwise.
@@ -378,21 +354,19 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
     int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-
-    if ([NSApp macOSVersion] >= 101400) {
+    if (@available(macOS 10.14, *)) {
         TkWindow *winPtr = (TkWindow*) tkwin;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = (view.effectiveAppearance.name == NSAppearanceNameDarkAqua);
+	    result = (view.effectiveAppearance == darkAqua);
 	} else {
-	    result = ([NSAppearance currentAppearance].name == NSAppearanceNameDarkAqua);
+	    result = ([NSAppearance currentAppearance] == darkAqua);
 	}
     }
 #endif
-
     return result;
 }
 
@@ -608,8 +582,6 @@ TkMacOSXSetColorInContext(
     OSStatus err = noErr;
     CGColorRef cgColor = nil;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
-    CGRect rect;
-    HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
 
     if (entry) {
 	switch (entry->type) {
@@ -620,16 +592,6 @@ TkMacOSXSetColorInContext(
 		err = ChkErr(HIThemeSetStroke, entry->value, NULL, context,
 			kHIThemeOrientationNormal);
 	    }
-	    break;
-	case HIText:
-	    err = ChkErr(HIThemeSetTextFill, entry->value, NULL, context,
-		    kHIThemeOrientationNormal);
-	    break;
-	case HIBackground:
-	    info.kind = entry->value;
-	    rect = CGContextGetClipBoundingBox(context);
-	    err = ChkErr(HIThemeApplyBackground, &rect, &info,
-		    context, kHIThemeOrientationNormal);
 	    break;
 	default:
 	    if (SetCGColorComponents(entry, pixel, &cgColor)){
