@@ -310,6 +310,7 @@ MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
+MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 
 #pragma mark Private Objective-C Classes
 
