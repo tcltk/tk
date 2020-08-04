@@ -59,6 +59,21 @@
 #   endif
 #endif
 
+#ifndef JOIN
+#  define JOIN(a,b) JOIN1(a,b)
+#  define JOIN1(a,b) a##b
+#endif
+
+#ifndef TCL_UNUSED
+#   if defined(__cplusplus)
+#	define TCL_UNUSED(T) T
+#   elif defined(__GNUC__) && (__GNUC__ > 2)
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__) __attribute__((unused))
+#   else
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__)
+#   endif
+#endif
+
 #if defined(_WIN32) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
 # if TCL_UTF_MAX > 3
 #   define Tcl_WCharToUtfDString(a,b,c) Tcl_WinTCharToUtf((TCHAR *)(a),(b)*sizeof(WCHAR),c)
@@ -1041,6 +1056,10 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
 
 #include "tkIntDecls.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Themed widget set init function:
  */
@@ -1322,6 +1341,10 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #define TkplatformtestInit(x) TCL_OK
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _TKINT */

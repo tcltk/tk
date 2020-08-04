@@ -40,9 +40,12 @@ void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-    lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    if (@available(macOS 10.14, *)) {
+	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+        lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    }
 #endif
 
     /*
@@ -191,7 +194,7 @@ GetEntryFromPixel(
     unsigned long pixel)
 {
     MacPixel p;
-    unsigned int index = rgbColorIndex;
+    int index = rgbColorIndex;
 
     p.ulong = pixel;
     if (p.pixel.colortype != rgbColor) {
@@ -378,21 +381,19 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
     int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-
-    if ([NSApp macOSVersion] >= 101400) {
+    if (@available(macOS 10.14, *)) {
         TkWindow *winPtr = (TkWindow*) tkwin;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = (view.effectiveAppearance.name == NSAppearanceNameDarkAqua);
+	    result = (view.effectiveAppearance == darkAqua);
 	} else {
-	    result = ([NSAppearance currentAppearance].name == NSAppearanceNameDarkAqua);
+	    result = ([NSAppearance currentAppearance] == darkAqua);
 	}
     }
 #endif
-
     return result;
 }
 
@@ -756,7 +757,7 @@ TkpGetColor(
     }
 
 validXColor:
-    tkColPtr = ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->colormap = colormap;
     tkColPtr->color = color;
     return tkColPtr;
@@ -786,11 +787,11 @@ validXColor:
 
 TkColor *
 TkpGetColorByValue(
-    Tk_Window tkwin,		/* Window in which color will be used. */
+    TCL_UNUSED(Tk_Window),		/* Window in which color will be used. */
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
@@ -819,7 +820,7 @@ TkpGetColorByValue(
 Status
 XAllocColor(
     Display *display,		/* Display. */
-    Colormap map,		/* Not used. */
+    TCL_UNUSED(Colormap),		/* Not used. */
     XColor *colorPtr)		/* XColor struct to modify. */
 {
     display->request++;
@@ -829,10 +830,10 @@ XAllocColor(
 
 Colormap
 XCreateColormap(
-    Display *display,		/* Display. */
-    Window window,		/* X window. */
-    Visual *visual,		/* Not used. */
-    int alloc)			/* Not used. */
+    TCL_UNUSED(Display *),		/* Display. */
+    TCL_UNUSED(Window),		/* X window. */
+    TCL_UNUSED(Visual *),		/* Not used. */
+    TCL_UNUSED(int))			/* Not used. */
 {
     static Colormap index = 16;
 
@@ -845,19 +846,19 @@ XCreateColormap(
 
 int
 XFreeColormap(
-    Display* display,		/* Display. */
-    Colormap colormap)		/* Colormap. */
+    TCL_UNUSED(Display *),		/* Display. */
+    TCL_UNUSED(Colormap))		/* Colormap. */
 {
     return Success;
 }
 
 int
 XFreeColors(
-    Display* display,		/* Display. */
-    Colormap colormap,		/* Colormap. */
-    unsigned long* pixels,	/* Array of pixels. */
-    int npixels,		/* Number of pixels. */
-    unsigned long planes)	/* Number of pixel planes. */
+    TCL_UNUSED(Display *),		/* Display. */
+    TCL_UNUSED(Colormap),		/* Colormap. */
+    TCL_UNUSED(unsigned long *),	/* Array of pixels. */
+    TCL_UNUSED(int),		/* Number of pixels. */
+    TCL_UNUSED(unsigned long))	/* Number of pixel planes. */
 {
     /*
      * Nothing needs to be done to release colors as there really is no
