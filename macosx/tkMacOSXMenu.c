@@ -123,7 +123,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
  * the menu was posted.  For example, opening a menu during the Rube Goldberg
  * demo would cause the animation to stop.  This was also the case for
  * menubuttons.
- * 
+ *
  * The TKBackground object below works around this problem, and allows a Tk
  * event loop to run while a menu is open.  It is a subclass of NSThread which
  * inserts requests to call [NSApp _runBackgroundLoop] onto the queue
@@ -141,25 +141,25 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     NSArray *modeArray = [NSArray arrayWithObjects: NSEventTrackingRunLoopMode,
 				  nil];
     while(1) {
-	
+
 	/*
 	 * Queue a request to process Tk events during event tracking.
 	 */
-	
-	[NSApp performSelectorOnMainThread:@selector(_runBackgroundLoop) 
+
+	[NSApp performSelectorOnMainThread:@selector(_runBackgroundLoop)
 				withObject:nil
-			     waitUntilDone:true 
+			     waitUntilDone:true
 				     modes:modeArray];
 	if (self.cancelled) {
 	    [NSThread exit];
 	}
-	
+
 	/*
 	 * Allow the tracked events to be processed too.
 	 */
 
 	[NSThread sleepForTimeInterval:0.001];
-    }	
+    }
 }
 @end
 
@@ -697,7 +697,7 @@ TkpConfigureMenuEntry(
 			mePtr->fontPtr : mePtr->menuPtr->fontPtr);
     static unsigned long defaultBg, defaultFg;
     static int initialized = 0;
-    
+
     if (!initialized) {
 	TkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
 	defaultBg = tkColPtr->color.pixel;
@@ -706,7 +706,7 @@ TkpConfigureMenuEntry(
 	defaultFg = tkColPtr->color.pixel;
 	ckfree(tkColPtr);
     }
-    
+
     if (mePtr->image) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	image = TkMacOSXGetNSImageWithTkImage(mePtr->menuPtr->display,

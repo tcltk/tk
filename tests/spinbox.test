@@ -3239,7 +3239,7 @@ test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
     update idletasks
     set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcdefghijklmnopqrs
-    .e xview 
+    .e xview
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
