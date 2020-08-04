@@ -748,12 +748,11 @@ validXColor:
 
 TkColor *
 TkpGetColorByValue(
-    Tk_Window tkwin,		/* Window in which color will be used. */
+    TCL_UNUSED(Tk_Window),		/* Window in which color will be used. */
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
     TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
-    (void)tkwin;
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
@@ -782,11 +781,9 @@ TkpGetColorByValue(
 Status
 XAllocColor(
     Display *display,		/* Display. */
-    Colormap map,		/* Not used. */
+    TCL_UNUSED(Colormap),		/* Not used. */
     XColor *colorPtr)		/* XColor struct to modify. */
 {
-    (void)map;
-
     display->request++;
     colorPtr->pixel = TkpGetPixel(colorPtr);
     return 1;
@@ -794,16 +791,12 @@ XAllocColor(
 
 Colormap
 XCreateColormap(
-    Display *display,		/* Display. */
-    Window window,		/* X window. */
-    Visual *visual,		/* Not used. */
-    int alloc)			/* Not used. */
+    TCL_UNUSED(Display *),		/* Display. */
+    TCL_UNUSED(Window),		/* X window. */
+    TCL_UNUSED(Visual *),		/* Not used. */
+    TCL_UNUSED(int))			/* Not used. */
 {
     static Colormap index = 16;
-    (void)display;
-    (void)window;
-    (void)visual;
-    (void)alloc;
 
     /*
      * Just return a new value each time, large enough that it will not
@@ -814,29 +807,20 @@ XCreateColormap(
 
 int
 XFreeColormap(
-    Display* display,		/* Display. */
-    Colormap colormap)		/* Colormap. */
+    TCL_UNUSED(Display *),		/* Display. */
+    TCL_UNUSED(Colormap))		/* Colormap. */
 {
-    (void)display;
-    (void)colormap;
-
     return Success;
 }
 
 int
 XFreeColors(
-    Display* display,		/* Display. */
-    Colormap colormap,		/* Colormap. */
-    unsigned long* pixels,	/* Array of pixels. */
-    int npixels,		/* Number of pixels. */
-    unsigned long planes)	/* Number of pixel planes. */
+    TCL_UNUSED(Display *),		/* Display. */
+    TCL_UNUSED(Colormap),		/* Colormap. */
+    TCL_UNUSED(unsigned long *),	/* Array of pixels. */
+    TCL_UNUSED(int),		/* Number of pixels. */
+    TCL_UNUSED(unsigned long))	/* Number of pixel planes. */
 {
-    (void)display;
-    (void)colormap;
-    (void)pixels;
-    (void)npixels;
-    (void)planes;
-
     /*
      * Nothing needs to be done to release colors as there really is no
      * colormap in the Tk sense.
