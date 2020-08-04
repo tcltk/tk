@@ -743,7 +743,7 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
 } -cleanup {
     .c delete all
     image delete foo
-} -result {{foo display 2 4 6 8}} 
+} -result {{foo display 2 4 6 8}}
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
