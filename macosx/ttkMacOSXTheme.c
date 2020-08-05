@@ -3378,7 +3378,7 @@ static int AquaTheme_Init(
 	return TCL_ERROR;
     }
 
-    if ([NSApp macOSVersion] < 101500) {
+    if ([NSApp macOSVersion] < 101400) {
 	entryElementPadding = Ttk_MakePadding(7, 6, 7, 5);
     } else {
 	entryElementPadding = Ttk_MakePadding(7, 5, 7, 6);
