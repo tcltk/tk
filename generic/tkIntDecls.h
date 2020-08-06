@@ -1164,7 +1164,6 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #undef TkpCmapStressed_
-#undef TkpSync_
 #undef TkUnixContainerId_
 #undef TkUnixDoOneXEvent_
 #undef TkUnixSetMenubar_

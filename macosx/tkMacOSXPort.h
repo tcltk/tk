@@ -114,10 +114,8 @@
  * The following functions are not used on the Mac, so we stub them out.
  */
 
-#define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
-#define TkpSync(display)
 
 /*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.
