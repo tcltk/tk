@@ -1786,7 +1786,7 @@ DisplayEntry(
 	     * Draw the selected and unselected portions separately.
 	     */
 
-	    int selFirst;
+	    TkSizeT selFirst;
 
 	    if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
 	        selFirst = entryPtr->leftIndex;
