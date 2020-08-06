@@ -1875,30 +1875,6 @@ TkMacOSXGetClipRgn(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetUpClippingRgn --
- *
- *	Set up the clipping region so that drawing only occurs on the specified
- *	X subwindow.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetUpClippingRgn(
-    Drawable drawable)		/* Drawable to update. */
-{
-    (void)drawable;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width

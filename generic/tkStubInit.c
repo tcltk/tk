@@ -43,6 +43,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -71,6 +72,13 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
 #define Tk_CreateOldPhotoImageFormat 0
+#ifdef MAC_OSX_TK
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+#endif
 #else
 static void
 doNothing(void)

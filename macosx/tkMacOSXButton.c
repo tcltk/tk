@@ -194,13 +194,6 @@ TkpDisplayButton(
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
-    /*
-     * Set up clipping region. Make sure the we are using the port
-     * for this button, or we will set the wrong window's clip.
-     */
-
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
-
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
 	macButtonPtr->useTkText = 0;
     } else {
