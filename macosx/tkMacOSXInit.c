@@ -118,6 +118,12 @@ static char scriptPath[PATH_MAX + 1] = "";
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     /*
+     * Run initialization routines that depend on the OS version.
+     */
+
+    Ttk_MacOSXInit();
+
+    /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
      * The call to activateIgnoringOtherApps was moved here to avoid this.
@@ -432,17 +438,12 @@ TkpInit(
 	}
 
 	/*
-	 * Initialize the NSServices object here. Apple's docs say to do this
-	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
-	 * initialized until this function call.
+	 * Now we can run initialization routines which require that both the
+	 * NSApplication and the Tcl interpreter have been created and
+	 * initialized.
 	 */
 
 	TkMacOSXServices_Init(interp);
-
-	/*
-	 * Add the nsimage type.
-	 */
-	
 	TkMacOSXNSImage_Init(interp);
     }
 

@@ -310,6 +310,8 @@ MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
+MODULE_SCOPE void       Ttk_MacOSXInit(void);
+
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 
 #pragma mark Private Objective-C Classes
