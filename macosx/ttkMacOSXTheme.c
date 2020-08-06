@@ -250,7 +250,7 @@ static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
  */
 
 static void GetBackgroundColor(
-    CGContextRef context,
+    TCL_UNUSED(CGContextRef),
     Tk_Window tkwin,
     int contrast,
     CGFloat *rgba)
@@ -1039,7 +1039,7 @@ static void DrawDarkTab(
 static void DrawDarkSeparator(
     CGRect bounds,
     CGContextRef context,
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
     static CGFloat fill[4] = {1.0, 1.0, 1.0, 0.3};
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
@@ -1165,7 +1165,7 @@ static void DrawDarkFrame(
 static void DrawDarkListHeader(
     CGRect bounds,
     CGContextRef context,
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     int state)
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];

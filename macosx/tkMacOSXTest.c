@@ -26,11 +26,11 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 
 
 /*
@@ -117,10 +117,10 @@ DebuggerObjCmd(
 
 static int
 MenuBarHeightObjCmd(
-    ClientData clientData,		/* Not used. */
+    TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
-    int objc,				/* Not used. */
-    Tcl_Obj *const objv[])		/* Not used. */
+    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
 {
     static int height = 0;
     if (height == 0) {
@@ -188,10 +188,9 @@ TkTestLogDisplay(
  *----------------------------------------------------------------------
  */
 
-        /* ARGSUSED */
 static int
 PressButtonObjCmd(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -267,7 +266,7 @@ PressButtonObjCmd(
 
 static int
 InjectKeyEventObjCmd(
-    ClientData clientData,
+    TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])

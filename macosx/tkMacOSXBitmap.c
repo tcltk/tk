@@ -44,7 +44,7 @@ static BuiltInIcon builtInIcons[] = {
     {"stop",		kAlertStopIcon},
     {"note",		kAlertNoteIcon},
     {"caution",		kAlertCautionIcon},
-    {NULL}
+    {NULL,			0}
 };
 
 #define builtInIconSize 32
@@ -100,7 +100,7 @@ TkpDefineNativeBitmaps(void)
 	name = Tk_GetUid(builtInPtr->name);
 	predefHashPtr = Tcl_CreateHashEntry(tablePtr, name, &isNew);
 	if (isNew) {
-	    TkPredefBitmap *predefPtr = ckalloc(sizeof(TkPredefBitmap));
+	    TkPredefBitmap *predefPtr = (TkPredefBitmap *)ckalloc(sizeof(TkPredefBitmap));
 
 	    predefPtr->source = UINT2PTR(builtInPtr->iconType);
 	    predefPtr->width = builtInIconSize;
@@ -343,7 +343,7 @@ TkpGetNativeAppBitmap(
 
 int
 TkMacOSXIconBitmapObjCmd(
-    ClientData clientData,	/* Unused. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -398,7 +398,7 @@ TkMacOSXIconBitmapObjCmd(
 	}
     }
 #endif
-    ib.value = ckalloc(len + 1);
+    ib.value = (char *)ckalloc(len + 1);
     strcpy(ib.value, value);
     if (!iconBitmapTable.buckets) {
 	Tcl_InitHashTable(&iconBitmapTable, TCL_STRING_KEYS);
@@ -408,7 +408,7 @@ TkMacOSXIconBitmapObjCmd(
 	iconBitmap = Tcl_GetHashValue(hPtr);
 	ckfree(iconBitmap->value);
     } else {
-	iconBitmap = ckalloc(sizeof(IconBitmap));
+	iconBitmap = (IconBitmap *)ckalloc(sizeof(IconBitmap));
 	Tcl_SetHashValue(hPtr, iconBitmap);
     }
     *iconBitmap = ib;

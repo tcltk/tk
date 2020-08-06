@@ -51,7 +51,7 @@ static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
 
 int
 XDestroyWindow(
-    Display *display,		/* Display. */
+    TCL_UNUSED(Display *),		/* Display. */
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
@@ -633,7 +633,6 @@ XRaiseWindow(
     return Success;
 }
 
-#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -650,7 +649,7 @@ XRaiseWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XLowerWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -661,12 +660,12 @@ XLowerWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
-        /*
+	/*
 	 * TODO: this should generate damage
 	 */
     }
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -691,7 +690,7 @@ XConfigureWindow(
     Display *display,		/* Display. */
     Window w,			/* Window. */
     unsigned int value_mask,
-    XWindowChanges *values)
+    TCL_UNUSED(XWindowChanges *))
 {
     MacDrawable *macWin = (MacDrawable *) w;
     TkWindow *winPtr = macWin->winPtr;
@@ -999,7 +998,7 @@ TkMacOSXVisableClipRgn(
 static OSStatus
 InvalViewRect(
     int msg,
-    HIShapeRef rgn,
+    TCL_UNUSED(HIShapeRef),
     const CGRect *rect,
     void *ref)
 {
@@ -1134,7 +1133,7 @@ TkMacOSXDrawable(
 
 void *
 TkMacOSXGetDrawablePort(
-    Drawable drawable)
+    TCL_UNUSED(Drawable))
 {
     return NULL;
 }
@@ -1462,7 +1461,7 @@ UpdateOffsets(
 Pixmap
 Tk_GetPixmap(
     Display *display,	/* Display for new pixmap (can be null). */
-    Drawable d,		/* Drawable where pixmap will be used (ignored). */
+    TCL_UNUSED(Drawable),		/* Drawable where pixmap will be used (ignored). */
     int width,		/* Dimensions of pixmap. */
     int height,
     int depth)		/* Bits per pixel for pixmap. */
@@ -1472,7 +1471,7 @@ Tk_GetPixmap(
     if (display != NULL) {
 	display->request++;
     }
-    macPix = ckalloc(sizeof(MacDrawable));
+    macPix = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
     macPix->xOff = 0;
     macPix->yOff = 0;
