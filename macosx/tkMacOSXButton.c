@@ -719,7 +719,7 @@ TkpDestroyButton(
 static void
 TkMacOSXDrawButton(
     MacButton *mbPtr,    /* Mac button. */
-    GC gc,               /* The GC we are drawing into - needed for
+    TCL_UNUSED(GC),      /* The GC we are drawing into - needed for
                           * the bevel button */
     Pixmap pixmap)       /* The pixmap we are drawing into - needed
                           * for the bevel button */
@@ -730,7 +730,6 @@ TkMacOSXDrawButton(
     TkMacOSXDrawingContext dc;
     DrawParams *dpPtr = &mbPtr->drawParams;
     int useNewerHITools = 1;
-    (void)gc;
 
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
@@ -806,19 +805,16 @@ TkMacOSXDrawButton(
 
 static void
 ButtonBackgroundDrawCB(
-    const HIRect *btnbounds,
+    TCL_UNUSED(const HIRect *),
     MacButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     MacButton *mbPtr = (MacButton *) ptr;
     TkButton *butPtr = (TkButton *) mbPtr;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     int usehlborder = 0;
-    (void)btnbounds;
-    (void)depth;
-    (void)isColorDev;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
@@ -861,20 +857,15 @@ ButtonBackgroundDrawCB(
  */
 static void
 ButtonContentDrawCB (
-    const HIRect * btnbounds,
-    ThemeButtonKind kind,
-    const HIThemeButtonDrawInfo *drawinfo,
+    TCL_UNUSED(const HIRect *),
+    TCL_UNUSED(ThemeButtonKind),
+    TCL_UNUSED(const HIThemeButtonDrawInfo *),
     MacButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkButton *butPtr = (TkButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;
-    (void)btnbounds;
-    (void)kind;
-    (void)drawinfo;
-    (void)depth;
-    (void)isColorDev;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
