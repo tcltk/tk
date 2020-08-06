@@ -30,6 +30,8 @@
 extern "C" {
 #endif
 
+#undef TkSetPixmapColormap
+
 /*
  * Exported function declarations:
  */
