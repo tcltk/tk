@@ -76,7 +76,7 @@ TkScale *
 TkpCreateScale(
     Tk_Window tkwin)
 {
-    MacScale *macScalePtr = ckalloc(sizeof(MacScale));
+    MacScale *macScalePtr = (MacScale *)ckalloc(sizeof(MacScale));
 
     macScalePtr->scaleHandle = NULL;
     if (scaleActionProc == NULL) {
@@ -219,7 +219,6 @@ TkpDisplayScale(
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
     windowRef = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
     portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     /*
      * Create Macintosh control.
@@ -416,7 +415,6 @@ MacScaleEventProc(
 
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(macScalePtr->info.tkwin));
     portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(macScalePtr->info.tkwin));
 
     TkMacOSXWinBounds((TkWindow *) macScalePtr->info.tkwin, &bounds);
     where.h = eventPtr->xbutton.x + bounds.left;
