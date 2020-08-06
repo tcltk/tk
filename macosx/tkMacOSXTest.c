@@ -26,9 +26,9 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const *objv);
 
@@ -190,7 +190,7 @@ TkTestLogDisplay(
 
 static int
 PressButtonObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -202,7 +202,6 @@ PressButtonObjCmd(
     NSArray *screens = [NSScreen screens];
     CGFloat ScreenHeight = 0;
     enum {X=1, Y};
-    (void)dummy;
 
     if (screens && [screens count]) {
 	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
@@ -267,7 +266,7 @@ PressButtonObjCmd(
 
 static int
 InjectKeyEventObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -284,7 +283,6 @@ InjectKeyEventObjCmd(
     NSEvent *keyEvent;
     NSUInteger type;
     MacKeycode macKC;
-    (void)dummy;
 
     if (objc < 3) {
     wrongArgs:
