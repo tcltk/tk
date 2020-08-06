@@ -98,19 +98,20 @@ TkpGetString(
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
     int len;
-    char buf[4];
+    char buf[6];
     (void)winPtr;
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
-	if (keyEv->nbytes > 0) {
+	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
+	if (ev->nbytes > 0) {
 	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
-		    keyEv->trans_chars, keyEv->nbytes, dsPtr);
+		    ev->trans_chars, ev->nbytes, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
 
 	/*
-	 * Special case for WM_UNICHAR and win2000 multi-lingal IME input
+	 * Special case for WM_UNICHAR and win2000 multilingual IME input
 	 */
 
 	len = TkUniCharToUtf(keyEv->keycode, buf);

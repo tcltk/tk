@@ -239,8 +239,6 @@ TkCloseDisplay(
 {
     TkClipCleanup(dispPtr);
 
-    TkpCancelWarp(dispPtr);
-
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
     }
@@ -2961,7 +2959,7 @@ Tk_SafeInit(
      * Current risks:
      *
      * - No CPU time limit, no memory allocation limits, no color limits.
-     *   CPU time limits can be imposed by an unsafe master interpreter.
+     *   CPU time limits can be imposed by an unsafe parent interpreter.
      *
      * The actual code called is the same as Tk_Init but Tcl_IsSafe() is
      * checked at several places to differentiate the two initialisations.
@@ -3081,24 +3079,24 @@ Initialize(
     if (Tcl_IsSafe(interp)) {
 	/*
 	 * Get the clearance to start Tk and the "argv" parameters from the
-	 * master.
+	 * parent.
 	 */
 
 	/*
-	 * Step 1 : find the master and construct the interp name (could be a
+	 * Step 1 : find the parent and construct the interp name (could be a
 	 * function if new APIs were ok). We could also construct the path
 	 * while walking, but there is no API to get the name of an interp
 	 * either.
 	 */
 
-	Tcl_Interp *master = interp;
+	Tcl_Interp *parent = interp;
 
-	while (Tcl_IsSafe(master)) {
-	    master = Tcl_GetMaster(master);
-	    if (master == NULL) {
+	while (Tcl_IsSafe(parent)) {
+	    parent = Tcl_GetMaster(parent);
+	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"no controlling master interpreter", -1));
-		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
+			"no controlling parent interpreter", -1));
+		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_PARENT", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -3107,35 +3105,35 @@ Initialize(
 	 * Construct the name (rewalk...)
 	 */
 
-	code = Tcl_GetInterpPath(master, interp);
+	code = Tcl_GetInterpPath(parent, interp);
 	if (code != TCL_OK) {
 	    Tcl_Panic("Tcl_GetInterpPath broken!");
 	}
 
 	/*
-	 * Build the command to eval in trusted master.
+	 * Build the command to eval in trusted parent.
 	 */
 
 	cmd = Tcl_NewListObj(2, NULL);
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(parent));
 
 	/*
-	 * Step 2 : Eval in the master. The argument is the *reversed* interp
-	 * path of the slave.
+	 * Step 2 : Eval in the parent. The argument is the *reversed* interp
+	 * path of the child.
 	 */
 
 	Tcl_IncrRefCount(cmd);
-	code = Tcl_EvalObjEx(master, cmd, 0);
+	code = Tcl_EvalObjEx(parent, cmd, 0);
 	Tcl_DecrRefCount(cmd);
-	Tcl_TransferResult(master, code, interp);
+	Tcl_TransferResult(parent, code, interp);
 	if (code != TCL_OK) {
 	    return code;
 	}
 
 	/*
-	 * Use the master's result as argv. Note: We don't use the Obj
+	 * Use the parent's result as argv. Note: We don't use the Obj
 	 * interfaces to avoid dealing with cross interp refcounting and
 	 * changing the code below.
 	 */
@@ -3339,7 +3337,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, 0);
+tkInit", -1, TCL_EVAL_GLOBAL);
     }
     if (code == TCL_OK) {
 	/*

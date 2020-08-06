@@ -31,9 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define LOG_DISPLAY TkTestLogDisplay()
+#define LOG_DISPLAY(drawable) TkTestLogDisplay(drawable)
 #else
-#define LOG_DISPLAY 1
+#define LOG_DISPLAY(drawable) 1
 #endif
 
 #ifdef __UNIX__
@@ -78,6 +78,8 @@ typedef struct TImageInstance {
     TImageMaster *masterPtr;	/* Pointer to master for image. */
     XColor *fg;			/* Foreground color for drawing in image. */
     GC gc;			/* Graphics context for drawing in image. */
+    Bool displayFailed;         /* macOS display attempted out of drawRect. */
+    char buffer[200 + TCL_INTEGER_SPACE * 6]; /* message to log on display. */
 } TImageInstance;
 
 /*
@@ -186,19 +188,10 @@ static int		TestmetricsObjCmd(ClientData dummy,
 static int		TestobjconfigObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
-static int		CustomOptionSet(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr,
-			    int internalOffset, char *saveInternalPtr,
-			    int flags);
-static Tcl_Obj *	CustomOptionGet(ClientData clientData,
-			    Tk_Window tkwin, char *recordPtr,
-			    int internalOffset);
-static void		CustomOptionRestore(ClientData clientData,
-			    Tk_Window tkwin, char *internalPtr,
-			    char *saveInternalPtr);
-static void		CustomOptionFree(ClientData clientData,
-			    Tk_Window tkwin, char *internalPtr);
+static Tk_CustomOptionSetProc CustomOptionSet;
+static Tk_CustomOptionGetProc CustomOptionGet;
+static Tk_CustomOptionRestoreProc CustomOptionRestore;
+static Tk_CustomOptionFreeProc CustomOptionFree;
 static int		TestpropObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -567,9 +560,9 @@ TestobjconfigObjCmd(
     } ExtensionWidgetRecord;
     static const Tk_OptionSpec baseSpecs[] = {
 	{TK_OPTION_STRING, "-one", "one", "One", "one",
-		offsetof(ExtensionWidgetRecord, base1ObjPtr), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(ExtensionWidgetRecord, base1ObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
 	{TK_OPTION_STRING, "-two", "two", "Two", "two",
-		offsetof(ExtensionWidgetRecord, base2ObjPtr), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(ExtensionWidgetRecord, base2ObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
 	{TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
     };
 
@@ -611,50 +604,50 @@ TestobjconfigObjCmd(
 	};
 	static const Tk_OptionSpec typesSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		offsetof(TypesRecord, booleanPtr), TCL_AUTO_LENGTH, 0, 0, 0x1},
+		offsetof(TypesRecord, booleanPtr), TCL_INDEX_NONE, 0, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "7",
-		offsetof(TypesRecord, integerPtr), TCL_AUTO_LENGTH, 0, 0, 0x2},
+		offsetof(TypesRecord, integerPtr), TCL_INDEX_NONE, 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
-		offsetof(TypesRecord, doublePtr), TCL_AUTO_LENGTH, 0, 0, 0x4},
+		offsetof(TypesRecord, doublePtr), TCL_INDEX_NONE, 0, 0, 0x4},
 	    {TK_OPTION_STRING, "-string", "string", "String",
-		"foo", offsetof(TypesRecord, stringPtr), TCL_AUTO_LENGTH,
+		"foo", offsetof(TypesRecord, stringPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x8},
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable",
-		"one", offsetof(TypesRecord, stringTablePtr), TCL_AUTO_LENGTH,
+		"one", offsetof(TypesRecord, stringTablePtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, stringTable, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
-		"red", offsetof(TypesRecord, colorPtr), TCL_AUTO_LENGTH,
+		"red", offsetof(TypesRecord, colorPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, "black", 0x20},
 	    {TK_OPTION_FONT, "-font", "font", "Font", "Helvetica 12",
-		offsetof(TypesRecord, fontPtr), TCL_AUTO_LENGTH,
+		offsetof(TypesRecord, fontPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x40},
 	    {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap", "gray50",
-		offsetof(TypesRecord, bitmapPtr), TCL_AUTO_LENGTH,
+		offsetof(TypesRecord, bitmapPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x80},
 	    {TK_OPTION_BORDER, "-border", "border", "Border",
-		"blue", offsetof(TypesRecord, borderPtr), TCL_AUTO_LENGTH,
+		"blue", offsetof(TypesRecord, borderPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, "white", 0x100},
 	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", "raised",
-		offsetof(TypesRecord, reliefPtr), TCL_AUTO_LENGTH,
+		offsetof(TypesRecord, reliefPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x200},
 	    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", "xterm",
-		offsetof(TypesRecord, cursorPtr), TCL_AUTO_LENGTH,
+		offsetof(TypesRecord, cursorPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x400},
 	    {TK_OPTION_JUSTIFY, "-justify", NULL, NULL, "left",
-		offsetof(TypesRecord, justifyPtr), TCL_AUTO_LENGTH,
+		offsetof(TypesRecord, justifyPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x800},
 	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", NULL,
-		offsetof(TypesRecord, anchorPtr), TCL_AUTO_LENGTH,
+		offsetof(TypesRecord, anchorPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x1000},
 	    {TK_OPTION_PIXELS, "-pixel", "pixel", "Pixel",
-		"1", offsetof(TypesRecord, pixelPtr), TCL_AUTO_LENGTH,
+		"1", offsetof(TypesRecord, pixelPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x2000},
 	    {TK_OPTION_CUSTOM, "-custom", NULL, NULL,
-		"", offsetof(TypesRecord, customPtr), TCL_AUTO_LENGTH,
+		"", offsetof(TypesRecord, customPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
 	    {TK_OPTION_SYNONYM, "-synonym", NULL, NULL,
-		NULL, 0, TCL_AUTO_LENGTH, 0, "-color", 0x8000},
+		NULL, 0, TCL_INDEX_NONE, 0, "-color", 0x8000},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
@@ -756,15 +749,15 @@ TestobjconfigObjCmd(
 	ExtensionWidgetRecord *recordPtr;
 	static const Tk_OptionSpec extensionSpecs[] = {
 	    {TK_OPTION_STRING, "-three", "three", "Three", "three",
-		offsetof(ExtensionWidgetRecord, extension3ObjPtr), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(ExtensionWidgetRecord, extension3ObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_STRING, "-four", "four", "Four", "four",
-		offsetof(ExtensionWidgetRecord, extension4ObjPtr), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(ExtensionWidgetRecord, extension4ObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_STRING, "-two", "two", "Two", "two and a half",
-		offsetof(ExtensionWidgetRecord, base2ObjPtr), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(ExtensionWidgetRecord, base2ObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_STRING,
 		"-oneAgain", "oneAgain", "OneAgain", "one again",
-		offsetof(ExtensionWidgetRecord, extension5ObjPtr), TCL_AUTO_LENGTH, 0, NULL, 0},
-	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_AUTO_LENGTH, 0,
+		offsetof(ExtensionWidgetRecord, extension5ObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 		(ClientData) baseSpecs, 0}
 	};
 	Tk_Window tkwin;
@@ -886,53 +879,53 @@ TestobjconfigObjCmd(
 	};
 	static const Tk_OptionSpec internalSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, boolean), 0, 0, 0x1},
+		TCL_INDEX_NONE, offsetof(InternalRecord, boolean), 0, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "148962237",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, integer), 0, 0, 0x2},
+		TCL_INDEX_NONE, offsetof(InternalRecord, integer), 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, doubleValue), 0, 0, 0x4},
+		TCL_INDEX_NONE, offsetof(InternalRecord, doubleValue), 0, 0, 0x4},
 	    {TK_OPTION_STRING, "-string", "string", "String", "foo",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, string),
+		TCL_INDEX_NONE, offsetof(InternalRecord, string),
 		TK_CONFIG_NULL_OK, 0, 0x8},
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable", "one",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, index),
+		TCL_INDEX_NONE, offsetof(InternalRecord, index),
 		TK_CONFIG_NULL_OK, internalStringTable, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color", "red",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, colorPtr),
+		TCL_INDEX_NONE, offsetof(InternalRecord, colorPtr),
 		TK_CONFIG_NULL_OK, "black", 0x20},
 	    {TK_OPTION_FONT, "-font", "font", "Font", "Helvetica 12",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, tkfont),
+		TCL_INDEX_NONE, offsetof(InternalRecord, tkfont),
 		TK_CONFIG_NULL_OK, 0, 0x40},
 	    {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap", "gray50",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, bitmap),
+		TCL_INDEX_NONE, offsetof(InternalRecord, bitmap),
 		TK_CONFIG_NULL_OK, 0, 0x80},
 	    {TK_OPTION_BORDER, "-border", "border", "Border", "blue",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, border),
+		TCL_INDEX_NONE, offsetof(InternalRecord, border),
 		TK_CONFIG_NULL_OK, "white", 0x100},
 	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", "raised",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, relief),
+		TCL_INDEX_NONE, offsetof(InternalRecord, relief),
 		TK_CONFIG_NULL_OK, 0, 0x200},
 	    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", "xterm",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, cursor),
+		TCL_INDEX_NONE, offsetof(InternalRecord, cursor),
 		TK_CONFIG_NULL_OK, 0, 0x400},
 	    {TK_OPTION_JUSTIFY, "-justify", NULL, NULL, "left",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, justify),
+		TCL_INDEX_NONE, offsetof(InternalRecord, justify),
 		TK_CONFIG_NULL_OK, 0, 0x800},
 	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", NULL,
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, anchor),
+		TCL_INDEX_NONE, offsetof(InternalRecord, anchor),
 		TK_CONFIG_NULL_OK, 0, 0x1000},
 	    {TK_OPTION_PIXELS, "-pixel", "pixel", "Pixel", "1",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, pixels),
+		TCL_INDEX_NONE, offsetof(InternalRecord, pixels),
 		TK_CONFIG_NULL_OK, 0, 0x2000},
 	    {TK_OPTION_WINDOW, "-window", "window", "Window", NULL,
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, tkwin),
+		TCL_INDEX_NONE, offsetof(InternalRecord, tkwin),
 		TK_CONFIG_NULL_OK, 0, 0},
 	    {TK_OPTION_CUSTOM, "-custom", NULL, NULL, "",
-		TCL_AUTO_LENGTH, offsetof(InternalRecord, custom),
+		TCL_INDEX_NONE, offsetof(InternalRecord, custom),
 		TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
 	    {TK_OPTION_SYNONYM, "-synonym", NULL, NULL,
-		NULL, TCL_AUTO_LENGTH, TCL_AUTO_LENGTH, 0, "-color", 0x8000},
+		NULL, TCL_INDEX_NONE, TCL_INDEX_NONE, 0, "-color", 0x8000},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
@@ -1003,15 +996,15 @@ TestobjconfigObjCmd(
 	FiveRecord *recordPtr;
 	static const Tk_OptionSpec smallSpecs[] = {
 	    {TK_OPTION_INT, "-one", "one", "One", "1",
-		offsetof(FiveRecord, one), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(FiveRecord, one), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_INT, "-two", "two", "Two", "2",
-		offsetof(FiveRecord, two), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(FiveRecord, two), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_INT, "-three", "three", "Three", "3",
-		offsetof(FiveRecord, three), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(FiveRecord, three), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_INT, "-four", "four", "Four", "4",
-		offsetof(FiveRecord, four), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(FiveRecord, four), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_STRING, "-five", NULL, NULL, NULL,
-		offsetof(FiveRecord, five), TCL_AUTO_LENGTH, 0, NULL, 0},
+		offsetof(FiveRecord, five), TCL_INDEX_NONE, 0, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 
@@ -1088,7 +1081,7 @@ TestobjconfigObjCmd(
 	SlaveRecord *recordPtr;
 	static const Tk_OptionSpec slaveSpecs[] = {
 	    {TK_OPTION_WINDOW, "-window", "window", "Window", ".bar",
-		offsetof(SlaveRecord, windowPtr), TCL_AUTO_LENGTH, TK_CONFIG_NULL_OK, NULL, 0},
+		offsetof(SlaveRecord, windowPtr), TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_Window tkwin = Tk_CreateWindowFromPath(interp,
@@ -1535,6 +1528,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
+    instPtr->displayFailed = False;
     return instPtr;
 }
 
@@ -1569,41 +1563,50 @@ ImageDisplay(
 				 * imageX and imageY. */
 {
     TImageInstance *instPtr = (TImageInstance *)clientData;
-    char buffer[200 + TCL_INTEGER_SPACE * 6];
 
     /*
      * The purpose of the test image type is to track the calls to an image
-     * display proc and record the parameters passed in each call.  On macOS
-     * a display proc must be run inside of the drawRect method of an NSView
-     * in order for the graphics operations to have any effect.  To deal with
+     * display proc and record the parameters passed in each call.  On macOS a
+     * display proc must be run inside of the drawRect method of an NSView in
+     * order for the graphics operations to have any effect.  To deal with
      * this, whenever a display proc is called outside of any drawRect method
-     * it schedules a redraw of the NSView by calling [view setNeedsDisplay:YES].
-     * This will trigger a later call to the view's drawRect method which will
-     * run the display proc a second time.
+     * it schedules a redraw of the NSView.
      *
-     * This complicates testing, since it can result in more calls to the display
-     * proc than are expected by the test.  It can also result in an inconsistent
-     * number of calls unless the test waits until the call to drawRect actually
-     * occurs before validating its results.
-     *
-     * In an attempt to work around this, this display proc only logs those
-     * calls which occur within a drawRect method.  This means that tests must
-     * be written so as to ensure that the drawRect method is run before
-     * results are validated.  In practice it usually suffices to run update
-     * idletasks (to run the display proc the first time) followed by update
-     * (to run the display proc in drawRect).
-     *
-     * This also has the consequence that the image changed command will log
-     * different results on Aqua than on other systems, because when the image
-     * is redisplayed in the drawRect method the entire image will be drawn,
-     * not just the changed portion.  Tests must account for this.
+     * In an attempt to work around this, each image instance maintains it own
+     * copy of the log message which gets written on the first call to the
+     * display proc.  This usually means that the message created on macOS is
+     * the same as that created on other platforms.  However it is possible
+     * for the messages to differ for other reasons, namely differences in
+     * how damage regions are computed.
      */
 
-    if (LOG_DISPLAY) {
-	sprintf(buffer, "%s display %d %d %d %d",
-		instPtr->masterPtr->imageName, imageX, imageY, width, height);
+    if (LOG_DISPLAY(drawable)) {
+	if (instPtr->displayFailed == False) {
+
+	    /*
+	     * Drawing is possible on the first call to DisplayImage.
+	     * Log the message.
+	     */
+
+	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
+	}
 	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName,
-		    NULL, buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+		    NULL, instPtr->buffer,
+		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+	instPtr->displayFailed = False;
+    } else {
+
+	/*
+         * Drawing is not possible on the first call to DisplayImage.
+	 * Save the message, but do not log it until the actual display.
+	 */
+
+	if (instPtr->displayFailed == False) {
+	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+		    instPtr->masterPtr->imageName, imageX, imageY, width, height);
+	}
+	instPtr->displayFailed = True;
     }
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;
@@ -2047,8 +2050,7 @@ TestwrapperObjCmd(
  *		CustomOptionSet		Sets option value to new setting.
  *		CustomOptionGet		Creates a new Tcl_Obj.
  *		CustomOptionRestore	Resets option value to original value.
- *		CustomOptionFree	Free storage for internal rep of
- *					option.
+ *		CustomOptionFree	Free storage for internal rep of option.
  *
  *----------------------------------------------------------------------
  */
@@ -2060,7 +2062,7 @@ CustomOptionSet(
     Tk_Window tkwin,
     Tcl_Obj **value,
     char *recordPtr,
-    int internalOffset,
+    TkSizeT internalOffset,
     char *saveInternalPtr,
     int flags)
 {
@@ -2071,7 +2073,7 @@ CustomOptionSet(
 
     objEmpty = 0;
 
-    if (internalOffset != -1) {
+    if (internalOffset != TCL_INDEX_NONE) {
 	internalPtr = recordPtr + internalOffset;
     } else {
 	internalPtr = NULL;
@@ -2121,7 +2123,7 @@ CustomOptionGet(
     ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,
-    int internalOffset)
+    TkSizeT internalOffset)
 {
     (void)dummy;
     (void)tkwin;

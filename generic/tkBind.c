@@ -59,7 +59,9 @@
 
 /*
  * In old implementation (the one that used an event ring), <Double-1> and <1><1> were
- * equivalent sequences. However it is logical to give <Double-1> higher precedence.
+ * equivalent sequences. However it is logical to give <Double-1> higher precedence
+ * since it is more specific. Indeed <Double-1> includes time and space requirements,
+ * which is not the case for <1><1>.
  * This is achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
  */
 
@@ -135,17 +137,10 @@ typedef struct {
     			 * this count considers the detail (keySym or button). */
 } Event;
 
-/*
- * We need a structure providing a list of pattern sequences.
- */
-
-typedef unsigned EventMask;
-typedef unsigned long ModMask;
-
 struct PatSeq; /* forward declaration */
 
 /* We need this array for bookkeeping the last matching modifier mask per pattern. */
-TK_ARRAY_DEFINE(PSModMaskArr, ModMask);
+TK_ARRAY_DEFINE(PSModMaskArr, unsigned);
 
 typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
@@ -201,7 +196,7 @@ typedef struct Tk_BindingTable_ {
     				/* Containing the most recent event for every event type. */
     PromArr *promArr;		/* Contains the promoted pattern sequences. */
     Event *curEvent;		/* Pointing to most recent event. */
-    ModMask curModMask;		/* Containing the current modifier mask. */
+    unsigned curModMask;		/* Containing the current modifier mask. */
     LookupTables lookupTables;	/* Containing hash tables for fast lookup. */
     Tcl_HashTable objectTable;	/* Used to map from an object to a list of patterns associated with
     				 * that object. Keys are ClientData, values are (PatSeq *). */
@@ -263,7 +258,7 @@ typedef struct {
 typedef struct {
     unsigned eventType;		/* Type of X event, e.g. ButtonPress. */
     unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
-    ModMask modMask;		/* Mask of modifiers that must be present (zero means no modifiers
+    unsigned modMask;		/* Mask of modifiers that must be present (zero means no modifiers
     				 * are required). */
     Info info;			/* Additional information that must match event. Normally this is zero,
     				 * meaning no additional information must match. For KeyPress and
@@ -344,14 +339,6 @@ typedef struct PatSeq {
 #define NEARBY_MS	500
 
 /*
- * Needed as "no-number" constant for integers. The value of this constant is
- * outside of integer range (type "int"). (Unfortunatly current version of
- * Tcl/Tk does not provide C99 integer support.)
- */
-
-#define NO_NUMBER (((Tcl_WideInt) (~ (unsigned) 0)) + 1)
-
-/*
  * The following structure is used in the nameTable of a virtual event table
  * to associate a virtual event with all the physical events that can trigger
  * it.
@@ -422,7 +409,7 @@ static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
 
 typedef struct {
     const char *name;	/* Name of modifier. */
-    ModMask mask;	/* Button/modifier mask value, such as Button1Mask. */
+    unsigned mask;	/* Button/modifier mask value, such as Button1Mask. */
     unsigned flags;	/* Various flags; see below for definitions. */
 } ModInfo;
 
@@ -569,13 +556,32 @@ static int eventArrayIndex[TK_LASTEVENT];
 #define COLORMAP		(1<<16)
 #define VIRTUAL			(1<<17)
 #define ACTIVATE		(1<<18)
-#define	MAPREQ			(1<<19)
-#define	CONFIGREQ		(1<<20)
-#define	RESIZEREQ		(1<<21)
-#define CIRCREQ			(1<<22)
+#define WHEEL			(1<<19)
+#define	MAPREQ			(1<<20)
+#define	CONFIGREQ		(1<<21)
+#define	RESIZEREQ		(1<<22)
+#define CIRCREQ			(1<<23)
 
-#define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
-#define KEY_BUTTON_MOTION_CROSSING	(KEY|BUTTON|MOTION|VIRTUAL|CROSSING)
+/*
+ * These structs agree with xkey for the fields type, serial, send_event, display,
+ * window, root, subwindow, time, x, y, x_root, and y_root.  So when accessing
+ * these fields we may pretend that we are using a struct xkey.
+ */
+
+#define HAS_XKEY_HEAD (KEY|BUTTON|MOTION|VIRTUAL|CROSSING|WHEEL)
+
+/*
+ * The xcrossing struct puts the state field in a different location, but the other
+ * events above agree on where state is located.
+ */
+
+#define HAS_XKEY_HEAD_AND_STATE (KEY|BUTTON|MOTION|VIRTUAL|WHEEL)
+
+/*
+ * Event types which support -warp.
+ */
+
+#define CAN_WARP (KEY|BUTTON|MOTION|WHEEL)
 
 static const int flagArray[TK_LASTEVENT] = {
    /* Not used */		0,
@@ -616,7 +622,7 @@ static const int flagArray[TK_LASTEVENT] = {
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,
    /* Deactivate */		ACTIVATE,
-   /* MouseWheel */		KEY
+   /* MouseWheel */		WHEEL
 };
 
 /*
@@ -708,7 +714,7 @@ static void		ExpandPercents(TkWindow *winPtr, const char *before, Event *eventPt
 			    unsigned scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp, LookupTables *lookupTables,
 			    ClientData object, const char *eventString, int create,
-			    int allowVirtual, EventMask *maskPtr);
+			    int allowVirtual, unsigned *maskPtr);
 static void		GetAllVirtualEvents(Tcl_Interp *interp, VirtualEventTable *vetPtr);
 static const char *	GetField(const char *p, char *copy, unsigned size);
 static Tcl_Obj *	GetPatternObj(const PatSeq *psPtr);
@@ -724,8 +730,7 @@ static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSLi
 static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
-			    TkPattern *patPtr, EventMask *eventMaskPtr);
-static void		DoWarp(ClientData clientData);
+			    TkPattern *patPtr, unsigned *eventMaskPtr);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
@@ -756,8 +761,8 @@ static int TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_
 
 static int
 IsSubsetOf(
-    ModMask lhsMask,	/* this is a subset */
-    ModMask rhsMask)	/* of this bit field? */
+    unsigned lhsMask,	/* this is a subset */
+    unsigned rhsMask)	/* of this bit field? */
 {
     return (lhsMask & rhsMask) == lhsMask;
 }
@@ -843,6 +848,20 @@ CountSpecialized(
     return sndCount - fstCount;
 }
 
+int
+IsKeyEventType(
+    unsigned eventType)
+{
+    return eventType == KeyPress || eventType == KeyRelease;
+}
+
+int
+IsButtonEventType(
+    unsigned eventType)
+{
+    return eventType == ButtonPress || eventType == ButtonRelease;
+}
+
 static int
 MatchEventNearby(
     const XEvent *lhs,	/* previous button event */
@@ -850,7 +869,7 @@ MatchEventNearby(
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == ButtonPress || lhs->type == ButtonRelease);
+    assert(IsButtonEventType(lhs->type));
     assert(lhs->type == rhs->type);
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
@@ -862,16 +881,16 @@ MatchEventNearby(
 
 static int
 MatchEventRepeat(
-    const XEvent *lhs,	/* previous key event */
-    const XEvent *rhs)	/* current key event */
+    const XKeyEvent *lhs,	/* previous key event */
+    const XKeyEvent *rhs)	/* current key event */
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == KeyPress || lhs->type == KeyRelease);
+    assert(IsKeyEventType(lhs->type));
     assert(lhs->type == rhs->type);
 
-    /* assert: lhs->xkey.time <= rhs->xkey.time */
-    return TestNearbyTime(rhs->xkey.time, lhs->xkey.time);
+    /* assert: lhs->time <= rhs->time */
+    return lhs->keycode == rhs->keycode && TestNearbyTime(lhs->time, rhs->time);
 }
 
 static void
@@ -950,13 +969,13 @@ ResolveModifiers(
 
     if (dispPtr->metaModMask) {
 	if (modMask & META_MASK) {
-	    modMask &= ~(ModMask)META_MASK;
+	    modMask &= ~META_MASK;
 	    modMask |= dispPtr->metaModMask;
 	}
     }
     if (dispPtr->altModMask) {
 	if (modMask & ALT_MASK) {
-	    modMask &= ~(ModMask)ALT_MASK;
+	    modMask &= ~ALT_MASK;
 	    modMask |= dispPtr->altModMask;
 	}
     }
@@ -966,7 +985,7 @@ ResolveModifiers(
 
 static int
 ButtonNumberFromState(
-    ModMask state)
+    unsigned state)
 {
     if (!(state & ALL_BUTTONS)) { return 0; }
     if (state & Button1Mask) { return 1; }
@@ -1247,10 +1266,6 @@ TkBindInit(
 
     /* ensure that our matching algorithm is working (when testing detail) */
     assert(sizeof(Detail) == sizeof(Tk_Uid));
-
-    /* test that constant NO_NUMBER is indeed out of integer range */
-    assert(sizeof(NO_NUMBER) > sizeof(int));
-    assert(((int) NO_NUMBER) == 0 && NO_NUMBER != 0);
 
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
@@ -1625,7 +1640,7 @@ Tk_CreateBinding(
 				 * existing binding will always be replaced. */
 {
     PatSeq *psPtr;
-    EventMask eventMask;
+    unsigned eventMask;
     char *oldStr;
     char *newStr;
 
@@ -2192,7 +2207,7 @@ Tk_BindEvent(
 	return;
     }
 
-    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
+    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 	bindPtr->curModMask = eventPtr->xkey.state;
     } else if (flags & CROSSING) {
 	bindPtr->curModMask = eventPtr->xcrossing.state;
@@ -2206,7 +2221,7 @@ Tk_BindEvent(
      * Ignore the event completely if it is an Enter, Leave, FocusIn, or
      * FocusOut event with detail NotifyInferior. The reason for ignoring
      * these events is that we don't want transitions between a window and its
-     * children to visible to bindings on the parent: this would cause
+     * children to be visible to bindings on the parent: this would cause
      * problems for mega-widgets, since the internal structure of a
      * mega-widget isn't supposed to be visible to people watching the parent.
      *
@@ -2290,7 +2305,7 @@ Tk_BindEvent(
 	switch (eventPtr->type) {
 	case KeyPress:
 	case KeyRelease:
-	    if (MatchEventRepeat(&curEvent->xev, eventPtr)) {
+	    if (MatchEventRepeat(&curEvent->xev.xkey, &eventPtr->xkey)) {
 		if (curEvent->xev.xkey.keycode == eventPtr->xkey.keycode) {
 		    ++curEvent->countDetailed;
 		} else {
@@ -2514,13 +2529,13 @@ Tk_BindEvent(
 		switch (patPtr->eventType) {
 		case ButtonPress:
 		case ButtonRelease:
-		    if (curEvent->xev.type == KeyPress || curEvent->xev.type == KeyRelease) {
+		    if (IsKeyEventType(curEvent->xev.type)) {
 			RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 		    }
 		    break;
 		case KeyPress:
 		case KeyRelease:
-		    if (curEvent->xev.type == ButtonPress || curEvent->xev.type == ButtonRelease) {
+		    if (IsButtonEventType(curEvent->xev.type)) {
 			RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 		    }
 		    break;
@@ -2718,8 +2733,8 @@ static int
 CompareModMasks(
     const PSModMaskArr *fstModMaskArr,
     const PSModMaskArr *sndModMaskArr,
-    ModMask fstModMask,
-    ModMask sndModMask)
+    unsigned fstModMask,
+    unsigned sndModMask)
 {
     int fstCount = 0;
     int sndCount = 0;
@@ -2743,8 +2758,8 @@ CompareModMasks(
 	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
 
 	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
-	    ModMask fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
-	    ModMask sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+	    unsigned fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    unsigned sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
 
 	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
 	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
@@ -2777,8 +2792,9 @@ MatchPatterns(
     PSEntry *psEntry;
     PatSeq *bestPtr;
     PatSeq *bestPhysPtr;
-    ModMask bestModMask;
+    unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
+    int i, isModKeyOnly = 0;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2792,6 +2808,26 @@ MatchPatterns(
     bestPtr = NULL;
     bestPhysPtr = NULL;
     window = curEvent->xev.xany.window;
+
+    /*
+     * Modifier key events interlaced between patterns parts of a
+     * sequence shall not prevent a sequence from ultimately
+     * matching. Example: when trying to trigger <a><Control-c>
+     * from the keyboard, the sequence of events actually seen is
+     * <a> then <Control_L> (possibly repeating if the key is hold
+     * down), and finally <Control-c>. At the time <Control_L> is
+     * seen, we shall keep the <a><Control-c> pattern sequence in
+     * the promotion list, otherwise it is impossible to trigger
+     * it from the keyboard. See bug [16ef161925].
+     */
+    if (IsKeyEventType(curEvent->xev.type)) {
+        for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+            if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
+                isModKeyOnly = 1;
+                break;
+            }
+        }
+    }
 
     for (psEntry = PSList_First(psList); psEntry; psEntry = PSList_Next(psEntry)) {
 	if (patIndex == 0 || psEntry->window == window) {
@@ -2807,6 +2843,12 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
+                /* ignore modifier key events, and KeyRelease events if the current event
+                 * is of a different type (e.g. a Button event)
+                 */
+                psEntry->keepIt = isModKeyOnly || \
+                        ((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
+
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
 				|| curEvent->xev.xcreatewindow.parent == window)
@@ -2817,12 +2859,13 @@ MatchPatterns(
 		     * cannot be done in ParseEventDescription, otherwise this function would
 		     * be the better place.
 		     */
-		    ModMask modMask = ResolveModifiers(dispPtr, patPtr->modMask);
-		    ModMask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
+		    unsigned modMask = ResolveModifiers(dispPtr, patPtr->modMask);
+		    unsigned curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = 1; /* remove it from promotion list */
+                    psEntry->keepIt = 0; /* don't keep matching patterns */
 
-		    if ((modMask & ~curModMask) == 0) {
+		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
 
 			if (patIndex < PSModMaskArr_Size(psEntry->lastModMaskArr)) {
@@ -2938,10 +2981,21 @@ ExpandPercents(
     evPtr = &eventPtr->xev;
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
+#define SET_NUMBER(value)   { number = (value);			     \
+    snprintf(numStorage, sizeof(numStorage), "%" TCL_LL_MODIFIER "d", number);	     \
+    string = numStorage;					     \
+    }
+
+#define SET_UNUMBER(value)  { unumber = (value);				\
+	snprintf(numStorage, sizeof(numStorage), "%" TCL_LL_MODIFIER "u", unumber);	\
+	string = numStorage;						\
+    }
+
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
-	Tcl_WideInt number;
+	Tcl_WideInt number;     /* signed */
+	Tcl_WideUInt unumber;   /* unsigned */
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -2962,12 +3016,10 @@ ExpandPercents(
 	 * There's a percent sequence here. Process it.
 	 */
 
-	number = NO_NUMBER;
 	string = "??";
-
 	switch (before[1]) {
 	case '#':
-	    number = evPtr->xany.serial;
+	    SET_UNUMBER(evPtr->xany.serial);
 	    break;
 	case 'a':
 	    if (flags & CONFIG) {
@@ -2977,12 +3029,12 @@ ExpandPercents(
 	    break;
 	case 'b':
 	    if (flags & BUTTON) {
-		number = evPtr->xbutton.button;
+		SET_UNUMBER(evPtr->xbutton.button);
 	    }
 	    break;
 	case 'c':
 	    if (flags & EXPOSE) {
-		number = evPtr->xexpose.count;
+		SET_NUMBER(evPtr->xexpose.count);
 	    }
 	    break;
 	case 'd':
@@ -3002,20 +3054,20 @@ ExpandPercents(
 	    break;
 	case 'f':
 	    if (flags & CROSSING) {
-		number = evPtr->xcrossing.focus;
+		SET_NUMBER(evPtr->xcrossing.focus != 0);
 	    }
 	    break;
 	case 'h':
 	    if (flags & EXPOSE) {
-		number = evPtr->xexpose.height;
+		SET_NUMBER(evPtr->xexpose.height);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.height;
+		SET_NUMBER(evPtr->xconfigure.height);
 	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.height;
+		SET_NUMBER(evPtr->xcreatewindow.height);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.height;
+		SET_NUMBER(evPtr->xconfigurerequest.height);
 	    } else if (flags & RESIZEREQ) {
-		number = evPtr->xresizerequest.height;
+		SET_NUMBER(evPtr->xresizerequest.height);
 	    }
 	    break;
 	case 'i':
@@ -3031,8 +3083,8 @@ ExpandPercents(
 	    string = numStorage;
 	    break;
 	case 'k':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
-		number = evPtr->xkey.keycode;
+	    if (flags & KEY) {
+		SET_UNUMBER(evPtr->xkey.keycode);
 	    }
 	    break;
 	case 'm':
@@ -3044,13 +3096,13 @@ ExpandPercents(
 	    break;
 	case 'o':
 	    if (flags & CREATE) {
-		number = evPtr->xcreatewindow.override_redirect;
+		SET_NUMBER(evPtr->xcreatewindow.override_redirect != 0);
 	    } else if (flags & MAP) {
-		number = evPtr->xmap.override_redirect;
+		SET_NUMBER(evPtr->xmap.override_redirect != 0);
 	    } else if (flags & REPARENT) {
-		number = evPtr->xreparent.override_redirect;
+		SET_NUMBER(evPtr->xreparent.override_redirect != 0);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.override_redirect;
+		SET_NUMBER(evPtr->xconfigure.override_redirect != 0);
 	    }
 	    break;
 	case 'p':
@@ -3061,10 +3113,10 @@ ExpandPercents(
 	    }
 	    break;
 	case 's':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = evPtr->xkey.state;
+	    if (flags & HAS_XKEY_HEAD_AND_STATE) {
+		SET_UNUMBER(evPtr->xkey.state);
 	    } else if (flags & CROSSING) {
-		number = evPtr->xcrossing.state;
+		SET_UNUMBER(evPtr->xcrossing.state);
 	    } else if (flags & PROP) {
 		string = TkFindStateString(propNotify, evPtr->xproperty.state);
 	    } else if (flags & VISIBILITY) {
@@ -3072,92 +3124,79 @@ ExpandPercents(
 	    }
 	    break;
 	case 't':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = (int) evPtr->xkey.time;
-	    } else if (flags & CROSSING) {
-		number = (int) evPtr->xcrossing.time;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_UNUMBER(evPtr->xkey.time);
 	    } else if (flags & PROP) {
-		number = (int) evPtr->xproperty.time;
+		SET_UNUMBER(evPtr->xproperty.time);
 	    }
 	    break;
 	case 'v':
-	    number = evPtr->xconfigurerequest.value_mask;
+	    SET_UNUMBER(evPtr->xconfigurerequest.value_mask);
 	    break;
 	case 'w':
 	    if (flags & EXPOSE) {
-		number = evPtr->xexpose.width;
+		SET_NUMBER(evPtr->xexpose.width);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.width;
+		SET_NUMBER(evPtr->xconfigure.width);
 	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.width;
+		SET_NUMBER(evPtr->xcreatewindow.width);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.width;
+		SET_NUMBER(evPtr->xconfigurerequest.width);
 	    } else if (flags & RESIZEREQ) {
-		number = evPtr->xresizerequest.width;
+		SET_NUMBER(evPtr->xresizerequest.width);
 	    }
 	    break;
 	case 'x':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = evPtr->xkey.x;
-	    } else if (flags & CROSSING) {
-		number = evPtr->xcrossing.x;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.x);
 	    } else if (flags & EXPOSE) {
-		number = evPtr->xexpose.x;
+		SET_NUMBER(evPtr->xexpose.x);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
-		number = evPtr->xcreatewindow.x;
+		SET_NUMBER(evPtr->xcreatewindow.x);
 	    } else if (flags & REPARENT) {
-		number = evPtr->xreparent.x;
-	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.x;
+		SET_NUMBER(evPtr->xreparent.x);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.x;
+		SET_NUMBER(evPtr->xconfigurerequest.x);
 	    }
 	    break;
 	case 'y':
-	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-		number = evPtr->xkey.y;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.y);
 	    } else if (flags & EXPOSE) {
-		number = evPtr->xexpose.y;
+		SET_NUMBER(evPtr->xexpose.y);
 	    } else if (flags & (CREATE|CONFIG|GRAVITY)) {
-		number = evPtr->xcreatewindow.y;
+		SET_NUMBER(evPtr->xcreatewindow.y);
 	    } else if (flags & REPARENT) {
-		number = evPtr->xreparent.y;
-	    } else if (flags & CROSSING) {
-		number = evPtr->xcrossing.y;
-	    } else if (flags & CREATE) {
-		number = evPtr->xcreatewindow.y;
+		SET_NUMBER(evPtr->xreparent.y);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.y;
+		SET_NUMBER(evPtr->xconfigurerequest.y);
 	    }
 	    break;
 	case 'A':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
+	    if (flags & KEY) {
 		Tcl_DStringFree(&buf);
 		string = TkpGetString(winPtr, evPtr, &buf);
 	    }
 	    break;
 	case 'B':
 	    if (flags & CREATE) {
-		number = evPtr->xcreatewindow.border_width;
+		SET_NUMBER(evPtr->xcreatewindow.border_width);
 	    } else if (flags & CONFIGREQ) {
-		number = evPtr->xconfigurerequest.border_width;
+		SET_NUMBER(evPtr->xconfigurerequest.border_width);
 	    } else if (flags & CONFIG) {
-		number = evPtr->xconfigure.border_width;
+		SET_NUMBER(evPtr->xconfigure.border_width);
 	    }
 	    break;
 	case 'D':
-	    /*
-	     * This is used only by the MouseWheel event.
-	     */
-	    if ((flags & KEY) && evPtr->type == MouseWheelEvent) {
-		number = evPtr->xkey.keycode;
+	    if (flags & WHEEL) {
+		SET_NUMBER((int)evPtr->xbutton.button); /* mis-use button field for this */
 	    }
 	    break;
 	case 'E':
-	    number = (int) evPtr->xany.send_event;
+	    SET_NUMBER(evPtr->xany.send_event != 0);
 	    break;
 	case 'K':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
+	    if (flags & KEY) {
 		const char *name = TkKeysymToString(eventPtr->detail.info);
 		if (name) {
 		    string = name;
@@ -3165,11 +3204,11 @@ ExpandPercents(
 	    }
 	    break;
 	case 'M':
-	    number = scriptCount;
+	    SET_UNUMBER(scriptCount);
 	    break;
 	case 'N':
-	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
-		number = (int) eventPtr->detail.info;
+	    if (flags & KEY) {
+		SET_UNUMBER(eventPtr->detail.info);
 	    }
 	    break;
 	case 'P':
@@ -3178,19 +3217,19 @@ ExpandPercents(
 	    }
 	    break;
 	case 'R':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.root);
 		string = numStorage;
 	    }
 	    break;
 	case 'S':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		TkpPrintWindowId(numStorage, evPtr->xkey.subwindow);
 		string = numStorage;
 	    }
 	    break;
 	case 'T':
-	    number = evPtr->type;
+	    SET_NUMBER(evPtr->type);
 	    break;
 	case 'W': {
 	    Tk_Window tkwin = Tk_IdToWindow(evPtr->xany.display, evPtr->xany.window);
@@ -3200,13 +3239,13 @@ ExpandPercents(
 	    break;
 	}
 	case 'X':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		number = evPtr->xkey.x_root;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.x_root);
 	    }
 	    break;
 	case 'Y':
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		number = evPtr->xkey.y_root;
+	    if (flags & HAS_XKEY_HEAD) {
+		SET_NUMBER(evPtr->xkey.y_root);
 	    }
 	    break;
 	default:
@@ -3214,11 +3253,6 @@ ExpandPercents(
 	    numStorage[1] = '\0';
 	    string = numStorage;
 	    break;
-	}
-
-	if (number != NO_NUMBER) {
-	    snprintf(numStorage, sizeof(numStorage), "%d", (int) number);
-	    string = numStorage;
 	}
 	{   /* local scope */
 	    int cvtFlags;
@@ -3232,6 +3266,9 @@ ExpandPercents(
 	    before += 2;
 	}
     }
+
+#undef SET_NUMBER
+#undef SET_UNUMBER
 
     Tcl_DStringFree(&buf);
 }
@@ -3475,7 +3512,7 @@ DeleteVirtualEventTable(
  *	already defined, the new definition augments those that already exist.
  *
  * Results:
- *	The return value is TCL_ERROR if an error occured while creating the
+ *	The return value is TCL_ERROR if an error occurred while creating the
  *	virtual binding. In this case, an error message will be left in the
  *	interp's result. If all went well then the return value is TCL_OK.
  *
@@ -3819,7 +3856,7 @@ HandleEventGenerate(
     Tk_Window tkwin;
     Tk_Window tkwin2;
     TkWindow *mainPtr;
-    EventMask eventMask;
+    unsigned eventMask;
     Tcl_Obj *userDataObj;
     int synch;
     int warp;
@@ -3905,9 +3942,9 @@ HandleEventGenerate(
 	Tk_DestroyWindow(tkwin);
 	return TCL_OK;
     }
-    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
+    if (flags & HAS_XKEY_HEAD_AND_STATE) {
 	event.general.xkey.state = pat.modMask;
-	if ((flags & KEY) && event.general.xany.type != MouseWheelEvent) {
+	if (flags & KEY) {
 	    TkpSetKeycodeAndState(tkwin, pat.info, &event.general);
 	} else if (flags & BUTTON) {
 	    event.general.xbutton.button = pat.info;
@@ -3919,7 +3956,7 @@ HandleEventGenerate(
 	event.general.xcreatewindow.window = event.general.xany.window;
     }
 
-    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+    if (flags & HAS_XKEY_HEAD) {
 	event.general.xkey.x_root = -1;
 	event.general.xkey.y_root = -1;
     }
@@ -3967,7 +4004,7 @@ HandleEventGenerate(
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &warp) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (!(flags & KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (!(flags & CAN_WARP)) {
 		badOpt = 1;
 	    }
 	    break;
@@ -4034,8 +4071,8 @@ HandleEventGenerate(
 	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if ((flags & KEY) && event.general.xkey.type == MouseWheelEvent) {
-		event.general.xkey.keycode = number;
+	    if (flags & WHEEL) {
+		event.general.xbutton.button = (unsigned)number; /* mis-use button field for this */
 	    } else {
 		badOpt = 1;
 	    }
@@ -4079,7 +4116,7 @@ HandleEventGenerate(
 	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if ((flags & KEY) && event.general.xkey.type != MouseWheelEvent) {
+	    if (flags & KEY) {
 		event.general.xkey.keycode = number;
 	    } else {
 		badOpt = 1;
@@ -4103,7 +4140,7 @@ HandleEventGenerate(
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, NULL);
 		return TCL_ERROR;
 	    }
-	    if (!(flags & KEY) || (event.general.xkey.type == MouseWheelEvent)) {
+	    if (!(flags & KEY)) {
 		badOpt = 1;
 	    }
 	    break;
@@ -4150,7 +4187,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.root = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4160,7 +4197,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.x_root = number;
 	    } else {
 		badOpt = 1;
@@ -4170,7 +4207,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.y_root = number;
 	    } else {
 		badOpt = 1;
@@ -4209,11 +4246,11 @@ HandleEventGenerate(
 	    event.general.xany.serial = number;
 	    break;
 	case EVENT_STATE:
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
+		if (flags & HAS_XKEY_HEAD_AND_STATE) {
 		    event.general.xkey.state = number;
 		} else {
 		    event.general.xcrossing.state = number;
@@ -4231,7 +4268,7 @@ HandleEventGenerate(
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.subwindow = Tk_WindowId(tkwin2);
 	    } else {
 		badOpt = 1;
@@ -4245,7 +4282,7 @@ HandleEventGenerate(
 	    } else if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.time = number;
 	    } else if (flags & PROP) {
 		event.general.xproperty.time = number;
@@ -4280,7 +4317,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.x = number;
 
 		/*
@@ -4307,7 +4344,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
+	    if (flags & HAS_XKEY_HEAD) {
 		event.general.xkey.y = number;
 
 		/*
@@ -4357,17 +4394,6 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * Now we have constructed the event, inject it into the event handling
-	 * code.
-	 */
-
-	if (synch) {
-	    Tk_HandleEvent(&event.general);
-	} else {
-	    Tk_QueueWindowEvent(&event.general, pos);
-	}
-
-	/*
 	 * We only allow warping if the window is mapped.
 	 */
 
@@ -4375,11 +4401,6 @@ HandleEventGenerate(
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
-
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-	    }
 
 	    if (warpWindow != dispPtr->warpWindow) {
 		if (warpWindow) {
@@ -4393,6 +4414,31 @@ HandleEventGenerate(
 	    dispPtr->warpMainwin = mainWin;
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
+
+            /*
+             * Warping with respect to a window will be done when Tk_handleEvent
+             * below will run the event handlers and in particular TkPointerEvent.
+             * This allows to make grabs and warping work together robustly, that
+             * is without depending on a precise sequence of events.
+             * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+             * is NULL) is run directly here.
+             */
+
+            if (!dispPtr->warpWindow) {
+                TkpWarpPointer(dispPtr);
+                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+            }
+	}
+
+	/*
+	 * Now we have constructed the event, inject it into the event handling
+	 * code.
+	 */
+
+	if (synch) {
+	    Tk_HandleEvent(&event.general);
+	} else {
+	    Tk_QueueWindowEvent(&event.general, pos);
 	}
     }
 
@@ -4465,46 +4511,47 @@ NameToWindow(
 /*
  *-------------------------------------------------------------------------
  *
- * DoWarp --
+ * TkDoWarpWrtWin --
  *
- *	Perform Warping of X pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer with respect to a window.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	X Pointer will move to a new location.
+ *	Mouse pointer moves to a new location.
  *
  *-------------------------------------------------------------------------
  */
 
-static void
-DoWarp(
-    ClientData clientData)
+void
+TkDoWarpWrtWin(
+    TkDisplay *dispPtr)
 {
-    TkDisplay *dispPtr = (TkDisplay *)clientData;
-
-    assert(clientData);
+    assert(dispPtr);
 
     /*
-     * DoWarp was scheduled only if the window was mapped. It needs to be
-     * still mapped at the time the present idle callback is executed. Also
-     * one needs to guard against window destruction in the meantime.
-     * Finally, the case warpWindow == NULL is special in that it means
-     * the whole screen.
+     * A NULL warpWindow means warping with respect to the whole screen.
+     * We want to warp here only if we're warping with respect to a window.
      */
 
-    if (!dispPtr->warpWindow ||
-            (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None)) {
-        TkpWarpPointer(dispPtr);
-        XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    }
-
     if (dispPtr->warpWindow) {
-	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = NULL;
+
+        /*
+         * Warping with respect to a window can only be done if the window is
+         * mapped. This was checked in HandleEvent. The window needs to be
+         * still mapped at the time the present code is executed. Also
+         * one needs to guard against window destruction in the meantime,
+         * which could have happened as a side effect of an event handler.
+         */
+
+        if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
+            TkpWarpPointer(dispPtr);
+            XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+        }
+        Tcl_Release(dispPtr->warpWindow);
+        dispPtr->warpWindow = NULL;
     }
-    dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
 /*
@@ -4591,7 +4638,7 @@ FindSequence(
     				 * 1 means create. */
     int allowVirtual,		/* 0 means that virtual events are not allowed in the sequence.
     				 * 1 otherwise. */
-    EventMask *maskPtr)		/* *maskPtr is filled in with the event types on which this
+    unsigned *maskPtr)		/* *maskPtr is filled in with the event types on which this
     				 * pattern sequence depends. */
 {
     unsigned patsBufSize = 1;
@@ -4605,8 +4652,8 @@ FindSequence(
     int isNew;
     unsigned count;
     unsigned maxCount = 0;
-    EventMask eventMask = 0;
-    ModMask modMask = 0;
+    unsigned eventMask = 0;
+    unsigned modMask = 0;
     PatternTableKey key;
 
     assert(lookupTables);
@@ -4780,10 +4827,10 @@ ParseEventDescription(
     const char **eventStringPtr,/* On input, holds a pointer to start of event string. On exit,
     				 * gets pointer to rest of string after parsed event. */
     TkPattern *patPtr,		/* Filled with the pattern parsed from the event string. */
-    EventMask *eventMaskPtr)	/* Filled with event mask of matched event. */
+    unsigned *eventMaskPtr)	/* Filled with event mask of matched event. */
 {
     const char *p;
-    EventMask eventMask = 0;
+    unsigned eventMask = 0;
     unsigned count = 1;
 
     assert(eventStringPtr);
@@ -5096,7 +5143,7 @@ GetPatternObj(
 	    assert(patPtr->name);
 	    Tcl_AppendPrintfToObj(patternObj, "<<%s>>", patPtr->name);
 	} else {
-	    ModMask modMask;
+	    unsigned modMask;
 	    const ModInfo *modPtr;
 
 	    /*
@@ -5149,7 +5196,7 @@ GetPatternObj(
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
-		    ModMask mask = patPtr->modMask;
+		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
 			int button = ButtonNumberFromState(mask);
 			Tcl_AppendPrintfToObj(patternObj, "-%d", button);
@@ -5270,35 +5317,6 @@ TkpGetBindingXEvent(
     BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
     return &bindPtr->curEvent->xev;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpCancelWarp --
- *
- *	This function cancels an outstanding pointer warp and
- *	is called during tear down of the display.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpCancelWarp(
-    TkDisplay *dispPtr)
-{
-    assert(dispPtr);
-
-    if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
-	Tcl_CancelIdleCall(DoWarp, dispPtr);
-	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
-    }
 }
 
 /*

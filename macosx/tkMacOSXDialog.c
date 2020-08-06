@@ -214,7 +214,8 @@ getFileURL(
 }
 
 - (void) tkFilePanelDidEnd: (NSSavePanel *) panel
-	returnCode: (NSInteger) returnCode contextInfo: (void *) contextInfo
+		returnCode: (NSModalResponse) returnCode
+	       contextInfo: (void *) contextInfo
 {
     FilePanelCallbackInfo *callbackInfo = contextInfo;
 
@@ -347,15 +348,16 @@ static NSInteger showOpenSavePanel(
 {
     NSInteger modalReturnCode;
 
-    if (parent && ![parent attachedSheet] && [NSApp macMinorVersion] < 15) {
+    if (parent && ![parent attachedSheet]) {
 	[panel beginSheetModalForWindow:parent
-	       completionHandler:^(NSInteger returnCode) {
+	       completionHandler:^(NSModalResponse returnCode) {
 	    [NSApp tkFilePanelDidEnd:panel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ];
 	    }];
+
 	modalReturnCode = callbackInfo->cmdObj ? modalOther :
-	    [NSApp runModalForWindow:panel];
+	    [panel runModal];
     } else {
 	modalReturnCode = [panel runModal];
 	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
@@ -658,8 +660,6 @@ Tk_GetOpenFileObjCmd(
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
 
-    [openpanel setDelegate:NSApp];
-
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
 		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
@@ -729,7 +729,7 @@ Tk_GetOpenFileObjCmd(
 	 * panel.  Prepend the title to the message in this case.
 	 */
 
-	if ([NSApp macMinorVersion] > 10) {
+	if ([NSApp macOSVersion] > 101000) {
 	    if (message) {
 		NSString *fullmessage =
 		    [[NSString alloc] initWithFormat:@"%@\n%@", title, message];
@@ -931,8 +931,6 @@ Tk_GetSaveFileObjCmd(
     savepanel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
-
-    [savepanel setDelegate:NSApp];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
@@ -1174,8 +1172,6 @@ Tk_ChooseDirectoryObjCmd(
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
-
-    [panel setDelegate:NSApp];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
@@ -1693,7 +1689,7 @@ enum FontchooserOption {
  *	None.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue.
+ *	Additional events may be placed on the Tk event queue.
  *
  *----------------------------------------------------------------------
  */

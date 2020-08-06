@@ -120,4 +120,11 @@
 #define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 
+/*
+ * Other functions not used under Windows
+ */
+
+#define TkpWillDrawWidget(tkwin) 0
+#define TkpRedrawWidget(tkwin)
+
 #endif /* _WINPORT */

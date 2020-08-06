@@ -142,7 +142,7 @@ static const Tk_OptionSpec *TTKGetOptionSpec(
 
     /* Make sure widget option has a Tcl_Obj* entry:
      */
-    if (optionSpec->objOffset == TCL_AUTO_LENGTH) {
+    if (optionSpec->objOffset == TCL_INDEX_NONE) {
 	return 0;
     }
 
@@ -517,9 +517,6 @@ static void ThemeChangedProc(ClientData clientData)
 	Tcl_BackgroundException(pkgPtr->interp, code);
     }
     pkgPtr->themeChangePending = 0;
-#ifdef MAC_OSX_TK
-    XSync(NULL, False);
-#endif
 }
 
 /*

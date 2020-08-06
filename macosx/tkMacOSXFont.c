@@ -93,148 +93,92 @@ static void		InitFont(NSFont *nsFont,
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name,
 			    TkFontAttributes *faPtr);
-static void		DrawCharsInContext(Display *display, Drawable drawable,
-			    GC gc, Tk_Font tkfont, const char *source,
-			    int numBytes, int rangeStart, int rangeLength,
-			    int x, int y, double angle);
 
 #pragma mark -
 #pragma mark Font Helpers:
 
 /*
- *---------------------------------------------------------------------------
- *
- * TkUtfToNSString --
- *
- * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
- * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
- * encoding requires 4 bytes.
- *
- * As a workaround, these versions of Tcl encode non-BMP characters as a string
- * of length 6 in which the high and low UTF-16 surrogates have been encoded
- * using the UTF-8 algorithm.  The UTF-8 encoding does not allow encoding
- * surrogates, so these 6-byte strings are not valid UTF-8, and hence Apple's
- * NString class will refuse to instantiate an NSString from the 6-byte
- * encoding.  This function allows creating an NSString from a C-string which
- * has been encoded using this scheme.
- *
- * Results:
- *	An NSString, which may be nil.
- *
- * Side effects:
- *	None.
- *---------------------------------------------------------------------------
+ * To avoid an extra copy, a TKNSString object wraps a Tcl_DString with an
+ * NSString that uses the DString's buffer as its character buffer.  It can be
+ * constructed from a Tcl_DString and it has a DString property that handles
+ * converting from an NSString to a Tcl_DString.
  */
 
-MODULE_SCOPE NSString*
-TkUtfToNSString(
-   const char *source,
-   size_t numBytes)
-{
-    NSString *string;
-    Tcl_DString ds;
+@implementation TKNSString
 
-    Tcl_DStringInit(&ds);
-    Tcl_UtfToChar16DString(source, numBytes, &ds);
-    string = [[NSString alloc] initWithCharacters:(const unichar *)Tcl_DStringValue(&ds)
-	    length:(Tcl_DStringLength(&ds)>>1)];
-    Tcl_DStringFree(&ds);
-    return string;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkUtfAtIndex --
- *
- *  Write a sequence of bytes up to length 6 which is an encoding of a UTF-16
- *  character in an NSString.  Also record the unicode code point of the character.
- *  this may be a non-BMP character constructed by reading two surrogates from
- *  the NSString.
- *
- * Results:
- *	Returns the number of bytes written.
- *
- * Side effects:
- *	Bytes are written to the char array referenced by the pointer uni and
- *      the unicode code point is written to the integer referenced by the
- *      pointer code.
- *
- */
-
-MODULE_SCOPE int
-TkUtfAtIndex(
-    NSString *string,
-    int index,
-    char *uni,
-    unsigned int *code)
+- (instancetype)initWithTclUtfBytes:(const void *)bytes
+		       length:(NSUInteger)len
 {
-    char *ptr = uni;
-    UniChar uniChar = [string characterAtIndex: index];
-    if (CFStringIsSurrogateHighCharacter(uniChar)) {
-	UniChar lowChar = [string characterAtIndex: ++index];
-	*code = CFStringGetLongCharacterForSurrogatePair(
-	    uniChar, lowChar);
-	ptr += Tcl_UniCharToUtf(uniChar, ptr);
-        ptr += Tcl_UniCharToUtf(lowChar, ptr);
-	return ptr - uni;
-    } else {
-	*code = (int) uniChar;
-	[[string substringWithRange: NSMakeRange(index, 1)]
-     	        getCString: uni
-		 maxLength: XMaxTransChars
-		  encoding: NSUTF8StringEncoding];
-	return strlen(uni);
+    self = [self init];
+    if (self) {
+	Tcl_DStringInit(&_ds);
+	Tcl_UtfToChar16DString(bytes, len, &_ds);
+	_string = [[NSString alloc]
+	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
+			       length:Tcl_DStringLength(&_ds)>>1
+			 freeWhenDone:NO];
+	self.UTF8String = _string.UTF8String;
     }
+    return self;
 }
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkNSStringToUtf --
- *
- * Encodes the unicode string represented by an NSString object with the
- * internal encoding that Tcl uses when TCL_UTF_MAX = 3.  This encoding
- * is similar to UTF-8 except that non-BMP characters are encoded as two
- * successive 3-byte sequences which are constructed from UTF-16 surrogates
- * by applying the UTF-8 algorithm.  Even though the UTF-8 encoding does not
- * allow encoding surrogates, the algorithm does produce a well-defined
- * 3-byte sequence.
- *
- * Results:
- *	Returns a pointer to a null-terminated byte array which encodes the
- *	NSString.
- *
- * Side effects:
- *      Memory is allocated to hold the byte array, which must be freed with
- *      ckalloc.  If the pointer numBytes is not NULL the number of non-null
- *      bytes written to the array is stored in the integer it references.
- */
 
-MODULE_SCOPE char*
-TkNSStringToUtf(
-   NSString *string,
-   int *numBytes)
+- (instancetype)initWithString:(NSString *)aString
 {
-    unsigned int code;
-    size_t i;
-    char *ptr, *bytes = (char *)ckalloc(6*[string length] + 1);
+    self = [self init];
+    if (self) {
+	_string = [[NSString alloc] initWithString:aString];
+	self.UTF8String = _string.UTF8String;
+    }
+    return self;
+}
 
-    ptr = bytes;
-    if (ptr) {
-	for (i = 0; i < [string length]; i++) {
-	    ptr += TkUtfAtIndex(string, i, ptr, &code);
-	    if (code > 0xffff){
-		i++;
-	    }
+- (void)dealloc
+{
+    Tcl_DStringFree(&_ds);
+    [_string release];
+    [super dealloc];
+}
+
+- (NSUInteger)length
+{
+    return _string.length;
+}
+
+- (unichar)characterAtIndex:(NSUInteger)index
+{
+    return [_string characterAtIndex:index];
+}
+
+# ifndef __clang__
+@synthesize DString = _ds;
+#endif
+
+- (Tcl_DString)DString
+{
+    if ( _ds.string == NULL) {
+
+	/*
+	 * The DString has not been initialized. Construct it from
+	 * our string's unicode characters.
+	 */
+	char *p;
+	NSUInteger index;
+
+	Tcl_DStringInit(&_ds);
+	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
+	p = Tcl_DStringValue(&_ds);
+	for (index = 0; index < [_string length]; index++) {
+	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
 	}
-	*ptr = '\0';
+	Tcl_DStringSetLength(&_ds, p - Tcl_DStringValue(&_ds));
     }
-    if (numBytes) {
-	*numBytes = ptr - bytes;
-    }
-    return bytes;
+    return _ds;
 }
+
+#ifndef __clang__
+@synthesize UTF8String = _UTF8String;
+#endif
+@end
 
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
 	((faPtr)->weight == TK_FW_BOLD ? NSBoldFontMask : NSUnboldFontMask) | \
@@ -982,7 +926,7 @@ TkpMeasureCharsInContext(
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
-    string = TkUtfToNSString((const char *)source, numBytes);
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
 	length = 0;
 	fit = rangeLength;
@@ -1118,7 +1062,7 @@ done:
  *	Draw a string of characters on the screen.
  *
  *	With ATSUI we need the line context to do this right, so we have the
- *	actual implementation in TkpDrawCharsInContext().
+ *	actual implementation in TkpDrawAngledCharsInContext().
  *
  * Results:
  *	None.
@@ -1147,7 +1091,7 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    0, numBytes, x, y, 0.0);
 }
 
@@ -1170,7 +1114,7 @@ TkDrawAngledChars(
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    0, numBytes, x, y, angle);
 }
 
@@ -1216,12 +1160,12 @@ TkpDrawCharsInContext(
 				 * drawing. */
 {
     (void)display;
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    rangeStart, rangeLength, x, y, 0.0);
 }
 
-static void
-DrawCharsInContext(
+void
+TkpDrawAngledCharsInContext(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
@@ -1237,33 +1181,33 @@ DrawCharsInContext(
     int numBytes,		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
-    int x, int y,		/* Coordinates at which to place origin of the
+    double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
-    double angle)
+    double angle)		/* What angle to put text at, in degrees. */
 {
     const MacFont *fontPtr = (const MacFont *) tkfont;
     NSString *string;
     NSMutableDictionary *attributes;
     NSAttributedString *attributedString;
     CTTypesetterRef typesetter;
-    CFIndex start, len;
-    CTLineRef line;
+    CFIndex start, length;
+    CTLineRef line, full=nil;
     MacDrawable *macWin = (MacDrawable *) drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
     CGColorRef fg;
     NSFont *nsFont;
     CGAffineTransform t;
-    int h;
+    CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
     (void)display;
 
-    if (rangeStart < 0 || rangeLength <= 0 ||
-	    rangeStart + rangeLength > numBytes ||
-	    !TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
+    if (rangeStart < 0 || rangeLength <= 0  ||
+	rangeStart + rangeLength > numBytes ||
+	!TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
-    string = TkUtfToNSString((const char *)source, numBytes);
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
 	return;
     }
@@ -1281,29 +1225,36 @@ DrawCharsInContext(
 	    attributes:attributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    x += macWin->xOff;
-    y += macWin->yOff;
-    h = drawingContext.portBounds.size.height;
-    y = h - y;
-    t = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, h);
+    textX += (CGFloat) macWin->xOff;
+    textY += (CGFloat) macWin->yOff;
+    height = drawingContext.portBounds.size.height;
+    textY = height - textY;
+    t = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
     if (angle != 0.0) {
-	t = CGAffineTransformTranslate(CGAffineTransformRotate(
-		CGAffineTransformTranslate(t, x, y), angle*PI/180.0), -x, -y);
+	t = CGAffineTransformTranslate(
+             CGAffineTransformRotate(
+                 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
+             -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    CGContextSetTextPosition(context, x, y);
     start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source, rangeStart + rangeLength);
+    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
+    line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
-	CGRect clipRect = CGRectInfinite, startBounds;
 
-	line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start));
-	startBounds = CTLineGetImageBounds(line, context);
-	CFRelease(line);
-	clipRect.origin.x = startBounds.origin.x + startBounds.size.width;
-	CGContextClipToRect(context, clipRect);
+	/*
+	 * We are only drawing part of the string.  To compute the x coordinate
+	 * of the part we are drawing we subtract its typographical length from
+	 * the typographical length of the full string.  This accounts for the
+	 * kerning after the initial part of the string.
+	 */
+
+	full = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start + length));
+	width = CTLineGetTypographicBounds(full, NULL, NULL, NULL);
+	CFRelease(full);
+	textX += (width - CTLineGetTypographicBounds(line, NULL, NULL, NULL));
     }
-    line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, len));
+    CGContextSetTextPosition(context, textX, textY);
     CTLineDraw(line, context);
     CFRelease(line);
     CFRelease(typesetter);

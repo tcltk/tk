@@ -526,14 +526,14 @@ RefreshKeyboardMappingIfNeeded(
  *----------------------------------------------------------------------
  */
 
-static const unsigned long buttonMasks[] = {
+static const unsigned buttonMasks[] = {
     0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask,
     Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
-unsigned long
+unsigned
 TkGetButtonMask(
-    unsigned int button)
+    unsigned button)
 {
     return (button > Button9) ? 0 : buttonMasks[button];
 }
@@ -1747,13 +1747,15 @@ CleanUpTkEvent(
     switch (eventPtr->type) {
     case KeyPress:
     case KeyRelease: {
-	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 	if (kePtr->charValuePtr != NULL) {
 	    ckfree(kePtr->charValuePtr);
 	    kePtr->charValuePtr = NULL;
 	    kePtr->charValueLen = 0;
 	}
+#endif
 	break;
     }
 

@@ -37,7 +37,7 @@ namespace eval tk {
 
 	namespace eval bg {
 	    # Manage a background process.
-	    # Replace with slave interp or thread?
+	    # Replace with child interp or thread?
 	    namespace import ::tcltest::interpreter
 	    namespace import ::tk::test::loadTkCommand
 	    namespace export setup cleanup do

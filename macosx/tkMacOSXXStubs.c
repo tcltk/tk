@@ -225,7 +225,7 @@ TkpOpenDisplay(
 
 Display *
 XkbOpenDisplay(
-    TCL_UNUSED(char *),
+    TCL_UNUSED(const char *),
 	int *ev_rtrn,
 	int *err_rtrn,
 	int *major_rtrn,
@@ -256,8 +256,8 @@ XkbOpenDisplay(
      */
     screen->root	= ROOT_ID;
     screen->display	= display;
-    screen->black_pixel = 0x00000000 | PIXEL_MAGIC << 24;
-    screen->white_pixel = 0x00FFFFFF | PIXEL_MAGIC << 24;
+    screen->black_pixel = 0x00000000;
+    screen->white_pixel = 0x00FFFFFF;
     screen->ext_data	= (XExtData *) &maxBounds;
 
     screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
@@ -1084,7 +1084,7 @@ XSynchronize(
     Display *display,
     TCL_UNUSED(Bool))
 {
-	display->request++;
+    display->request++;
     return NULL;
 }
 

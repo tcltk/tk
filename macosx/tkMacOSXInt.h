@@ -180,7 +180,7 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 #define TK_MACOSX_HANDLE_EVENT_IMMEDIATELY 1024
 
 /*
- * Defines for tkTextDisp.c
+ * Defines for tkTextDisp.c and tkFont.c
  */
 
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
@@ -196,9 +196,7 @@ MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 MODULE_SCOPE void TkpRetainRegion(Region r);
 MODULE_SCOPE void TkpReleaseRegion(Region r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
-MODULE_SCOPE Bool TkpAppIsDrawing(void);
-MODULE_SCOPE void TkpDisplayWindow(Tk_Window tkwin);
-MODULE_SCOPE Bool TkTestLogDisplay(void);
+MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
 MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 
 /*

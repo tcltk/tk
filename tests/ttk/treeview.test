@@ -466,7 +466,7 @@ test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
     .tv selection add newnode.n1
     update
     set res
-} -result {1}
+} -result 1
 
 test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
     .tv selection set {}
@@ -507,6 +507,60 @@ test treeview-9.1 "scrolling" -setup {
 } -cleanup {
     destroy .tree
 } -result {I006}
+
+test treeview-9.2 {scrolling on see command - bug [14188104c3]} -setup {
+    toplevel .top
+    ttk::treeview .top.tree -show {} -height 10 -columns {label} \
+            -yscrollcommand [list .top.vs set]
+    ttk::scrollbar .top.vs -command {.top.tree yview}
+    grid .top.tree -row 0 -column 0 -sticky ns
+    grid .top.vs -row 0 -column 1 -sticky ns
+    update
+    proc setrows {n} {
+        .top.tree delete [.top.tree children {}]
+        for {set i 1} {$i <= $n} {incr i} {
+            .top.tree insert {} end -id row$i \
+                    -values [list [format "Row %2.2d" $i]]
+        }
+        .top.tree see row1
+        update idletasks
+    }
+} -body {
+    setrows 10
+    set res [.top.vs get]
+    setrows 20
+    lappend res [expr [lindex [.top.vs get] 1] < 1]
+} -cleanup {
+    destroy .top
+} -result {0.0 1.0 1}
+
+test treeview-9.3 {scrolling on see command, requested item is closed} -setup {
+    toplevel .top
+    ttk::treeview .top.tree -show tree -height 10 -columns {label} \
+            -yscrollcommand [list .top.vs set]
+    ttk::scrollbar .top.vs -command {.top.tree yview}
+    grid .top.tree -row 0 -column 0 -sticky ns
+    grid .top.vs -row 0 -column 1 -sticky ns
+
+    .top.tree insert {} end -id a -text a
+    .top.tree insert a  end -id b -text b
+    .top.tree insert b  end -id c -text c
+    .top.tree insert c  end -id d -text d
+    .top.tree insert d  end -id e -text e
+    for {set i 6} {$i <= 15} {incr i} {
+        .top.tree insert {} end -id row$i \
+                -values [list [format "Row %2.2d" $i]]
+    }
+    update
+} -body {
+    set before [lindex [.top.vs get] 1]
+    .top.tree see e
+    update idletasks
+    set after [lindex [.top.vs get] 1]
+    expr $after < $before
+} -cleanup {
+    destroy .top
+} -result 1
 
 ### identify tests:
 #

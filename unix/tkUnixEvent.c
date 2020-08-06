@@ -13,7 +13,9 @@
 #include "tkUnixInt.h"
 #include <signal.h>
 #undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
+#define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
 #include <X11/XKBlib.h>
+#undef XkbOpenDisplay
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -154,10 +156,8 @@ TkpOpenDisplay(
     **                that the server supports it.  The XkbOpenDisplay call
     **                will perform this check and return NULL if the extension
     **                is not supported.
-    **
-    ** Work around un-const-ified Xkb headers using (char *) cast.
     */
-    display = XkbOpenDisplay((char *)displayNameStr, &event, &error, &major,
+    display = XkbOpenDisplay(displayNameStr, &event, &error, &major,
 	    &minor, &reason);
 
     if (display == NULL) {

@@ -19,6 +19,10 @@
 #define NSFullScreenWindowMask (1 << 14)
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+typedef NSInteger NSModalResponse;
+#endif
+
 /*
  * Let's raise a glass for the project manager who improves our lives by
  * generating deprecation warnings about pointless changes of the names
@@ -102,6 +106,8 @@
 #define graphicsContextWithGraphicsPort graphicsContextWithCGContext
 #endif
 
-
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000
+#define NSWindowStyleMaskTexturedBackground 0
 #endif
 
+#endif
