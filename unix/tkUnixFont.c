@@ -1373,6 +1373,9 @@ Tk_DrawChars(
  *	with access to all the characters on the line for context. On X11 this
  *	context isn't consulted, so we just call Tk_DrawChars().
  *
+ *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
+ *            function is unused (and possibly unfinished). See [7655f65ae7].
+ *
  * Results:
  *	None.
  *
@@ -1408,6 +1411,38 @@ TkpDrawCharsInContext(
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
 	    rangeLength, x+widthUntilStart, y);
+}
+
+void
+TkpDrawAngledCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that is
+				 * passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    int widthUntilStart;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    (void) numBytes; /*unused*/
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
 }
 
 /*
@@ -3063,29 +3098,31 @@ GetImageOfText(
     Pixmap bitmap;
     GC bitmapGC;
     XGCValues values;
-    XImage *image;
+    XImage *image = NULL;
 
     (void) Tk_MeasureChars(tkfont, source, numBytes, -1, 0, &width);
     height = fontPtr->fm.ascent + fontPtr->fm.descent;
 
-    bitmap = Tk_GetPixmap(display, drawable, width, height, 1);
-    values.graphics_exposures = False;
-    values.foreground = BlackPixel(display, DefaultScreen(display));
-    bitmapGC = XCreateGC(display, bitmap, GCGraphicsExposures|GCForeground,
-	    &values);
-    XFillRectangle(display, bitmap, bitmapGC, 0, 0, width, height);
+    if ((width > 0) && (height > 0)) {
+	bitmap = Tk_GetPixmap(display, drawable, width, height, 1);
+	values.graphics_exposures = False;
+	values.foreground = BlackPixel(display, DefaultScreen(display));
+	bitmapGC = XCreateGC(display, bitmap, GCGraphicsExposures|GCForeground,
+		&values);
+	XFillRectangle(display, bitmap, bitmapGC, 0, 0, width, height);
 
-    values.font = Tk_FontId(tkfont);
-    values.foreground = WhitePixel(display, DefaultScreen(display));
-    values.background = BlackPixel(display, DefaultScreen(display));
-    XChangeGC(display, bitmapGC, GCFont|GCForeground|GCBackground, &values);
-    Tk_DrawChars(display, bitmap, bitmapGC, tkfont, source, numBytes, 0,
-	    fontPtr->fm.ascent);
-    XFreeGC(display, bitmapGC);
+	values.font = Tk_FontId(tkfont);
+	values.foreground = WhitePixel(display, DefaultScreen(display));
+	values.background = BlackPixel(display, DefaultScreen(display));
+	XChangeGC(display, bitmapGC, GCFont|GCForeground|GCBackground, &values);
+	Tk_DrawChars(display, bitmap, bitmapGC, tkfont, source, numBytes, 0,
+		fontPtr->fm.ascent);
+	XFreeGC(display, bitmapGC);
 
-    image = XGetImage(display, bitmap, 0, 0, width, height, AllPlanes,
-	    ZPixmap);
-    Tk_FreePixmap(display, bitmap);
+	image = XGetImage(display, bitmap, 0, 0, width, height, AllPlanes,
+		ZPixmap);
+	Tk_FreePixmap(display, bitmap);
+    }
 
     *realWidthPtr = width;
     *realHeightPtr = height;
@@ -3100,21 +3137,23 @@ InitDestImage(
     int height,
     Pixmap *bitmapPtr)
 {
-    Pixmap bitmap;
-    XImage *image;
+    Pixmap bitmap = None;
+    XImage *image = NULL;
     GC bitmapGC;
     XGCValues values;
 
-    bitmap = Tk_GetPixmap(display, drawable, width, height, 1);
-    values.graphics_exposures = False;
-    values.foreground = BlackPixel(display, DefaultScreen(display));
-    bitmapGC = XCreateGC(display, bitmap, GCGraphicsExposures|GCForeground,
-	    &values);
-    XFillRectangle(display, bitmap, bitmapGC, 0, 0, width, height);
-    XFreeGC(display, bitmapGC);
+    if ((width > 0) && (height > 0)) {
+	bitmap = Tk_GetPixmap(display, drawable, width, height, 1);
+	values.graphics_exposures = False;
+	values.foreground = BlackPixel(display, DefaultScreen(display));
+	bitmapGC = XCreateGC(display, bitmap, GCGraphicsExposures|GCForeground,
+		&values);
+	XFillRectangle(display, bitmap, bitmapGC, 0, 0, width, height);
+	XFreeGC(display, bitmapGC);
 
-    image = XGetImage(display, bitmap, 0, 0, width, height, AllPlanes,
-	    ZPixmap);
+	image = XGetImage(display, bitmap, 0, 0, width, height, AllPlanes,
+		ZPixmap);
+    }
     *bitmapPtr = bitmap;
     return image;
 }

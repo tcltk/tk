@@ -79,10 +79,10 @@ static const Tk_OptionSpec PanedOptionSpecs[] = {
 	offsetof(Paned,paned.orientObj), offsetof(Paned,paned.orient),
 	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
     {TK_OPTION_INT, "-width", "width", "Width", "0",
-	TCL_AUTO_LENGTH, offsetof(Paned,paned.width),
+	TCL_INDEX_NONE, offsetof(Paned,paned.width),
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-height", "height", "Height", "0",
-	TCL_AUTO_LENGTH, offsetof(Paned,paned.height),
+	TCL_INDEX_NONE, offsetof(Paned,paned.height),
 	0,0,GEOMETRY_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -100,8 +100,8 @@ typedef struct {
 
 static const Tk_OptionSpec PaneOptionSpecs[] = {
     {TK_OPTION_INT, "-weight", "weight", "Weight", "0",
-	TCL_AUTO_LENGTH, offsetof(Pane,weight), 0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_END, 0,0,0, NULL, TCL_AUTO_LENGTH,TCL_AUTO_LENGTH, 0,0,0}
+	TCL_INDEX_NONE, offsetof(Pane,weight), 0,0,GEOMETRY_CHANGED },
+    {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
 
 /* CreatePane --
@@ -647,8 +647,8 @@ static int PanedInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
-    int srcIndex, destIndex;
+    TkSizeT nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
+    TkSizeT srcIndex, destIndex;
     Tk_Window slaveWindow;
 
     if (objc < 4) {
@@ -663,17 +663,17 @@ static int PanedInsertCommand(
     }
 
     if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		interp,pw->paned.mgr,objv[2],&destIndex))
+		interp,pw->paned.mgr, objv[2], &destIndex))
     {
 	return TCL_ERROR;
     }
 
     srcIndex = Ttk_SlaveIndex(pw->paned.mgr, slaveWindow);
-    if (srcIndex < 0) { /* New slave: */
+    if (srcIndex == TCL_INDEX_NONE) { /* New slave: */
 	return AddPane(interp, pw, destIndex, slaveWindow, objc-4, objv+4);
     } /* else -- move existing slave: */
 
-    if (destIndex >= nSlaves)
+    if (destIndex + 1 >= nSlaves + 1)
 	destIndex  = nSlaves - 1;
     Ttk_ReorderSlave(pw->paned.mgr, srcIndex, destIndex);
 
@@ -681,7 +681,7 @@ static int PanedInsertCommand(
 	ConfigurePane(interp, pw,
 		(Pane *)Ttk_SlaveData(pw->paned.mgr, destIndex),
 		Ttk_SlaveWindow(pw->paned.mgr, destIndex),
-		objc-4,objv+4);
+		objc-4, objv+4);
 }
 
 /* $pw forget $pane
@@ -690,7 +690,7 @@ static int PanedForgetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int paneIndex;
+    TkSizeT paneIndex;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2,objv, "pane");
@@ -701,7 +701,7 @@ static int PanedForgetCommand(
 		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex >= (int)Ttk_NumberSlaves(pw->paned.mgr)) {
+    } else if (paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
     Ttk_ForgetSlave(pw->paned.mgr, paneIndex);
@@ -770,7 +770,7 @@ static int PanedPaneCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int paneIndex;
+    TkSizeT paneIndex;
     Tk_Window slaveWindow;
     Pane *pane;
 
@@ -780,10 +780,10 @@ static int PanedPaneCommand(
     }
 
     if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		    interp,pw->paned.mgr,objv[2],&paneIndex))
+		    interp,pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex >= (int)Ttk_NumberSlaves(pw->paned.mgr)) {
+    } else if (paneIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr) + 1) {
 	paneIndex = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     }
 
@@ -846,7 +846,7 @@ static int PanedSashposCommand(
     if (Tcl_GetIntFromObj(interp, objv[2], &sashIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (sashIndex < 0 || (TkSizeT)(sashIndex + 1) >= Ttk_NumberSlaves(pw->paned.mgr)) {
+    if (sashIndex < 0 || (TkSizeT)sashIndex + 1 >= Ttk_NumberSlaves(pw->paned.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "sash index %d out of range", sashIndex));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);

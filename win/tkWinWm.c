@@ -2037,7 +2037,7 @@ UpdateWrapper(
 	 * Pick the decorative frame style. Override redirect windows get
 	 * created as undecorated popups if they have no transient parent,
 	 * otherwise they are children. This allows splash screens to operate
-	 * as an independent window, while having dropdows (like for a
+	 * as an independent window, while having dropdowns (like for a
 	 * combobox) not grab focus away from their parent. Transient windows
 	 * get a modal dialog frame. Neither override, nor transient windows
 	 * appear in the Windows taskbar. Note that a transient window does
@@ -8125,7 +8125,7 @@ WmProc(
 	if (message == WM_SETFOCUS) {
 	    SetFocus(child);
 	    result = 0;
-	} else if (!Tk_TranslateWinEvent(child, message, wParam, lParam,
+	} else if (!TkTranslateWinEvent(child, message, wParam, lParam,
 		&result)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}

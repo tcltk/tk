@@ -270,7 +270,7 @@ static void GetBackgroundColor(
 	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
 	}
     } else {
-	if ([NSApp macMinorVersion] > 13) {
+	if ([NSApp macOSVersion] > 101300) {
 	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	    NSColor *windowColor = [[NSColor windowBackgroundColor]
 		colorUsingColorSpace: deviceRGB];
@@ -1412,7 +1412,7 @@ static void ButtonElementDraw(
     } else if (info.kind == kThemePushButton &&
 	       (state & TTK_STATE_PRESSED)) {
 	bounds.size.height += 2;
-	if ([NSApp macMinorVersion] > 8) {
+	if ([NSApp macOSVersion] > 100800) {
 	    GradientFillRoundedRectangle(dc.context, bounds, 4,
 					 pressedPushButtonGradient, 2);
 	}
@@ -1606,7 +1606,7 @@ static void PaneElementDraw(
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	DrawGroupBox(bounds, dc.context, tkwin);
     } else {
 	HIThemeTabPaneDrawInfo info = {
@@ -1665,7 +1665,7 @@ static void GroupElementDraw(
     CGRect bounds = BoxToRect(d, b);
 
     BEGIN_DRAWING(d)
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	DrawGroupBox(bounds, dc.context, tkwin);
     } else {
 	const HIThemeGroupBoxDrawInfo info = {
@@ -1788,7 +1788,7 @@ static void EntryElementDraw(
 	}
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
-	    if ([NSApp macMinorVersion] > 8) {
+	    if ([NSApp macOSVersion] > 100800) {
 		background = [NSColor textBackgroundColor];
 		CGContextSetFillColorWithColor(dc.context, CGCOLOR(background));
 	    } else {
@@ -1866,7 +1866,7 @@ static void ComboboxElementDraw(
     if (TkMacOSXInDarkMode(tkwin)) {
 	bounds.size.height += 1;
 	DrawDarkButton(bounds, info.kind, state, dc.context);
-    } else if ([NSApp macMinorVersion] > 8) {
+    } else if ([NSApp macOSVersion] > 100800) {
 	if ((state & TTK_STATE_BACKGROUND) &&
 	    !(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
@@ -2313,12 +2313,12 @@ static void TroughElementSize(
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	*minHeight = thickness;
-	if ([NSApp macMinorVersion] > 7) {
+	if ([NSApp macOSVersion] > 100700) {
 	    *paddingPtr = Ttk_MakePadding(4, 4, 4, 3);
 	}
     } else {
 	*minWidth = thickness;
-	if ([NSApp macMinorVersion] > 7) {
+	if ([NSApp macOSVersion] > 100700) {
 	    *paddingPtr = Ttk_MakePadding(4, 4, 3, 4);
 	}
     }
@@ -2363,7 +2363,7 @@ static void TroughElementDraw(
 	components: rgba
 	count: 4];
     BEGIN_DRAWING(d)
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	CGContextSetFillColorWithColor(dc.context, CGCOLOR(troughColor));
     } else {
 	ChkErr(HIThemeSetFill, kThemeBrushDocumentWindowBackground, NULL,
@@ -2426,7 +2426,7 @@ static void ThumbElementDraw(
      * draw the thumb directly.
      */
 
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	CGRect thumbBounds = BoxToRect(d, b);
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *thumbColor;
@@ -2486,7 +2486,7 @@ static void ThumbElementDraw(
 	visibleSize = (thumbSize / trackSize) * factor;
 	info.max = factor - visibleSize;
 	info.trackInfo.scrollbar.viewsize = visibleSize;
-	if ([NSApp macMinorVersion] < 8 ||
+	if ([NSApp macOSVersion] < 100800 ||
 	    orientation == TTK_ORIENT_HORIZONTAL) {
 	    info.value = factor * fraction;
 	} else {
@@ -2524,7 +2524,7 @@ static void ArrowElementSize(
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *))
 {
-    if ([NSApp macMinorVersion] < 8) {
+    if ([NSApp macOSVersion] < 100800) {
 	*minHeight = *minWidth = 14;
     } else {
 	*minHeight = *minWidth = -1;
@@ -2708,7 +2708,7 @@ static void FillElementDraw(
 {
     CGRect bounds = BoxToRect(d, b);
 
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *bgColor;
 	CGFloat fill[4];
@@ -2880,7 +2880,7 @@ static void TreeAreaElementSize (
      * widget expects the heading to be the same height as a row.
      */
 
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	paddingPtr->top = 4;
     }
 }
@@ -2900,7 +2900,7 @@ static void TreeHeaderElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 	*minHeight = 24;
     } else {
 	ButtonElementSize(clientData, elementRecord, tkwin, minWidth,
@@ -2927,7 +2927,7 @@ static void TreeHeaderElementDraw(
     };
 
     BEGIN_DRAWING(d)
-    if ([NSApp macMinorVersion] > 8) {
+    if ([NSApp macOSVersion] > 100800) {
 
         /*
          * Compensate for the padding added in TreeHeaderElementSize, so

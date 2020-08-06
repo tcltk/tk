@@ -188,9 +188,6 @@ TkpDisplayButton(
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
 
-    if (butPtr->flags & BUTTON_DELETED) {
-	return;
-    }
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -334,39 +331,40 @@ TkpComputeButtonGeometry(
 	haveText = 1;
     }
 
-    if (haveImage && haveText) { /* Image and Text */
-	switch ((enum compound) butPtr->compound) {
-	case COMPOUND_TOP:
-	case COMPOUND_BOTTOM:
-	    /*
-	     * Image is above or below text.
-	     */
+    if (haveImage) {
+	if (haveText) { /* Image and Text */
+	    switch ((enum compound) butPtr->compound) {
+	    case COMPOUND_TOP:
+	    case COMPOUND_BOTTOM:
+		/*
+		* Image is above or below text.
+		*/
 
-	    height += txtHeight + butPtr->padY;
-	    width = (width > txtWidth ? width : txtWidth);
-	    break;
-	case COMPOUND_LEFT:
-	case COMPOUND_RIGHT:
-	    /*
-	     * Image is left or right of text.
-	     */
+		height += txtHeight + butPtr->padY;
+		width = (width > txtWidth ? width : txtWidth);
+		break;
+	    case COMPOUND_LEFT:
+	    case COMPOUND_RIGHT:
+		/*
+		* Image is left or right of text.
+		*/
 
-	    width += txtWidth + 2*butPtr->padX;
-	    height = (height > txtHeight ? height : txtHeight);
-	    break;
-	case COMPOUND_CENTER:
-	    /*
-	     * Image and text are superimposed.
-	     */
+		width += txtWidth + 2*butPtr->padX;
+		height = (height > txtHeight ? height : txtHeight);
+		break;
+	    case COMPOUND_CENTER:
+		/*
+		* Image and text are superimposed.
+		*/
 
-	    width = (width > txtWidth ? width : txtWidth);
-	    height = (height > txtHeight ? height : txtHeight);
-	    break;
-	default:
-	    break;
+		width = (width > txtWidth ? width : txtWidth);
+		height = (height > txtHeight ? height : txtHeight);
+		break;
+	    default:
+		break;
+	    }
 	}
-	width += butPtr->indicatorSpace;
-    } else if (haveImage) { /* Image only */
+	/* Image with or without text */
 	width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
 	height = butPtr->height > 0 ? butPtr->height : height;
 	if (butPtr->type == TYPE_BUTTON) {
@@ -401,7 +399,7 @@ TkpComputeButtonGeometry(
 
     width += butPtr->inset*2;
     height += butPtr->inset*2;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	width += 12;
     }
     if (mbPtr->btnkind == kThemePushButton) {
@@ -483,7 +481,7 @@ DrawButtonImageAndText(
     }
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
-    if (haveImage && haveText) { /* Image and Text */
+    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) { /* Image and Text */
         int x, y;
 
         switch ((enum compound) butPtr->compound) {
@@ -1058,7 +1056,14 @@ TkMacOSXComputeButtonParams(
 	if (drawinfo->state != kThemeStatePressed) {
 	    drawinfo->adornment |= kThemeAdornmentDefault;
 	}
-        if (!mbPtr->defaultPulseHandler) {
+
+	/*
+	 * Older macOS systems (10.9 and earlier) use an animation to
+	 * indicate the active button.  This is simulated by redrawing
+	 * the button periodically.
+	 */
+
+        if (!mbPtr->defaultPulseHandler && ([NSApp macOSVersion] <= 100900)) {
             mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
                     PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
         }
@@ -1188,6 +1193,13 @@ PulseDefaultButtonProc(ClientData clientData)
     MacButton *mbPtr = clientData;
 
     TkpDisplayButton(clientData);
+    /*
+     * Fix 40ada90762: any idle calls to TkpDisplayButton need to be canceled
+     * in case the button is destroyed and has its data freed before the idle
+     * event is handled (DestroyButton only cancels calls when REDRAW_PENDING
+     * is set, which is not the case after calling TkpDisplayButton directly).
+     */
+    Tcl_CancelIdleCall(TkpDisplayButton, clientData);
     mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
             PULSE_TIMER_MSECS, PulseDefaultButtonProc, clientData);
 }

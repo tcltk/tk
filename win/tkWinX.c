@@ -94,7 +94,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(XKeyEvent *xkey, UINT type);
+static void 		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -326,6 +326,7 @@ TkWinXCleanup(
  *	The return value is one of:
  *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
  *	    TK_THEME_WIN_XP		XP not in classic mode
+ *	    TK_THEME_WIN_VISTA	Vista or higher
  *
  *----------------------------------------------------------------------
  */
@@ -339,13 +340,16 @@ TkWinGetPlatformTheme(void)
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	GetVersionExW(&os);
 
+	if (os.dwPlatformId != VER_PLATFORM_WIN32_NT) {
+	    Tcl_Panic("Windows NT is the only supported platform");
+	}
+
 	/*
-	 * Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC. The
+	 * Set tkWinTheme to be TK_THEME_WIN_(CLASSIC|XP|VISTA). The
 	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
 	 * windows classic theme was selected.
 	 */
-
-	if ((os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	if ((os.dwMajorVersion == 5) && (os.dwMinorVersion == 1)) {
 	    HKEY hKey;
 	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
 	    LPCWSTR szCurrent = L"Current";
@@ -365,6 +369,8 @@ TkWinGetPlatformTheme(void)
 		    tkWinTheme = TK_THEME_WIN_XP;
 		}
 	    }
+	} else if (os.dwMajorVersion > 5) {
+	    tkWinTheme = TK_THEME_WIN_VISTA;
 	} else {
 	    tkWinTheme = TK_THEME_WIN_CLASSIC;
 	}
@@ -559,7 +565,7 @@ TkpOpenDisplay(
 
 Display *
 XkbOpenDisplay(
-	char *name,
+	const char *name,
 	int *ev_rtrn,
 	int *err_rtrn,
 	int *major_rtrn,
@@ -802,7 +808,7 @@ TkWinChildProc(
 	    result = 1;
 	} else {
 	    /* If the event was translated, we must return 0 */
-            if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+            if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
                 result = 0;
 	    } else {
 	        result = 1;
@@ -811,7 +817,7 @@ TkWinChildProc(
 	break;
 
     default:
-	if (!Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
@@ -828,7 +834,7 @@ TkWinChildProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_TranslateWinEvent --
+ * TkTranslateWinEvent --
  *
  *	This function is called by widget window functions to handle the
  *	translation from Win32 events to Tk events.
@@ -841,10 +847,9 @@ TkWinChildProc(
  *
  *----------------------------------------------------------------------
  */
-unsigned int message, size_t wParam, ptrdiff_t lParam, ptrdiff_t *result)
 
 int
-Tk_TranslateWinEvent(
+TkTranslateWinEvent(
     void *hwnd,
     unsigned int message,
     size_t wParam,
@@ -913,7 +918,7 @@ Tk_TranslateWinEvent(
     case WM_RBUTTONUP:
     case WM_XBUTTONUP:
     case WM_MOUSEMOVE:
-	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
+	TkWinPointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
     case WM_SYSKEYDOWN:
@@ -976,7 +981,7 @@ GenerateXEvent(
     WPARAM wParam,
     LPARAM lParam)
 {
-    XEvent event;
+    union {XEvent x; TkKeyEvent key;} event;
     TkWindow *winPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1002,33 +1007,33 @@ GenerateXEvent(
 	return;
     }
 
-    memset(&event, 0, sizeof(XEvent));
-    event.xany.serial = winPtr->display->request++;
-    event.xany.send_event = False;
-    event.xany.display = winPtr->display;
-    event.xany.window = winPtr->window;
+    memset(&event.x, 0, sizeof(XEvent));
+    event.x.xany.serial = winPtr->display->request++;
+    event.x.xany.send_event = False;
+    event.x.xany.display = winPtr->display;
+    event.x.xany.window = winPtr->window;
 
     switch (message) {
     case WM_PAINT: {
 	PAINTSTRUCT ps;
 
-	event.type = Expose;
+	event.x.type = Expose;
 	BeginPaint(hwnd, &ps);
-	event.xexpose.x = ps.rcPaint.left;
-	event.xexpose.y = ps.rcPaint.top;
-	event.xexpose.width = ps.rcPaint.right - ps.rcPaint.left;
-	event.xexpose.height = ps.rcPaint.bottom - ps.rcPaint.top;
+	event.x.xexpose.x = ps.rcPaint.left;
+	event.x.xexpose.y = ps.rcPaint.top;
+	event.x.xexpose.width = ps.rcPaint.right - ps.rcPaint.left;
+	event.x.xexpose.height = ps.rcPaint.bottom - ps.rcPaint.top;
 	EndPaint(hwnd, &ps);
-	event.xexpose.count = 0;
+	event.x.xexpose.count = 0;
 	break;
     }
 
     case WM_CLOSE:
-	event.type = ClientMessage;
-	event.xclient.message_type =
+	event.x.type = ClientMessage;
+	event.x.xclient.message_type =
 		Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
-	event.xclient.format = 32;
-	event.xclient.data.l[0] =
+	event.x.xclient.format = 32;
+	event.x.xclient.data.l[0] =
 		Tk_InternAtom((Tk_Window) winPtr, "WM_DELETE_WINDOW");
 	break;
 
@@ -1064,10 +1069,10 @@ GenerateXEvent(
 	    return;
 	}
 
-	event.xany.window = winPtr->window;
-	event.type = (message == WM_SETFOCUS) ? FocusIn : FocusOut;
-	event.xfocus.mode = NotifyNormal;
-	event.xfocus.detail = NotifyNonlinear;
+	event.x.xany.window = winPtr->window;
+	event.x.type = (message == WM_SETFOCUS) ? FocusIn : FocusOut;
+	event.x.xfocus.mode = NotifyNormal;
+	event.x.xfocus.detail = NotifyNonlinear;
 
 	/*
 	 * Destroy the caret if we own it. If we are moving to another Tk
@@ -1089,10 +1094,10 @@ GenerateXEvent(
 
 	    return;
 	}
-	event.type = SelectionClear;
-	event.xselectionclear.selection =
+	event.x.type = SelectionClear;
+	event.x.xselectionclear.selection =
 		Tk_InternAtom((Tk_Window)winPtr, "CLIPBOARD");
-	event.xselectionclear.time = TkpGetMS();
+	event.x.xselectionclear.time = TkpGetMS();
 	break;
 
     case WM_MOUSEWHEEL:
@@ -1121,15 +1126,15 @@ GenerateXEvent(
 	 * Set up the common event fields.
 	 */
 
-	event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
-	event.xbutton.subwindow = None;
-	event.xbutton.x = clientPoint.x;
-	event.xbutton.y = clientPoint.y;
-	event.xbutton.x_root = root.point.x;
-	event.xbutton.y_root = root.point.y;
-	event.xbutton.state = state;
-	event.xbutton.time = time;
-	event.xbutton.same_screen = True;
+	event.x.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
+	event.x.xbutton.subwindow = None;
+	event.x.xbutton.x = clientPoint.x;
+	event.x.xbutton.y = clientPoint.y;
+	event.x.xbutton.x_root = root.point.x;
+	event.x.xbutton.y_root = root.point.y;
+	event.x.xbutton.state = state;
+	event.x.xbutton.time = time;
+	event.x.xbutton.same_screen = True;
 
 	/*
 	 * Now set up event specific fields.
@@ -1161,10 +1166,10 @@ GenerateXEvent(
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    event.type = MouseWheelEvent;
-	    event.xany.send_event = -1;
-	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    event.x.type = MouseWheelEvent;
+	    event.x.xany.send_event = -1;
+	    event.key.nbytes = 0;
+	    event.x.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
 	    tsdPtr->vWheelAcc = tsdPtr->vWheelAcc % WHEEL_DELTA;
 	    break;
 	}
@@ -1193,11 +1198,11 @@ GenerateXEvent(
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    event.type = MouseWheelEvent;
-	    event.xany.send_event = -1;
-	    event.xkey.nbytes = 0;
-	    event.xkey.state |= ShiftMask;
-	    event.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    event.x.type = MouseWheelEvent;
+	    event.x.xany.send_event = -1;
+	    event.key.nbytes = 0;
+	    event.x.xkey.state |= ShiftMask;
+	    event.x.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
 	    tsdPtr->hWheelAcc = tsdPtr->hWheelAcc % WHEEL_DELTA;
 	    break;
 	}
@@ -1211,10 +1216,10 @@ GenerateXEvent(
 	     * MBCS characters that came from the TranslateMessage call.
 	     */
 
-	    event.type = KeyPress;
-	    event.xany.send_event = -1;
-	    event.xkey.keycode = wParam;
-	    GetTranslatedKey(&event.xkey, (message == WM_KEYDOWN) ? WM_CHAR :
+	    event.x.type = KeyPress;
+	    event.x.xany.send_event = -1;
+	    event.x.xkey.keycode = wParam;
+	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
 	            WM_SYSCHAR);
 	    break;
 
@@ -1226,9 +1231,9 @@ GenerateXEvent(
 	     * WM_CHAR messages which will follow.
 	     */
 
-	    event.type = KeyRelease;
-	    event.xkey.keycode = wParam;
-	    event.xkey.nbytes = 0;
+	    event.x.type = KeyRelease;
+	    event.x.xkey.keycode = wParam;
+	    event.key.nbytes = 0;
 	    break;
 
 	case WM_CHAR:
@@ -1262,9 +1267,9 @@ GenerateXEvent(
 	     *    character.
 	     */
 
-	    event.type = KeyPress;
-	    event.xany.send_event = -1;
-	    event.xkey.keycode = 0;
+	    event.x.type = KeyPress;
+	    event.x.xany.send_event = -1;
+	    event.x.xkey.keycode = 0;
 	    if ((int)wParam & 0xff00) {
 		int ch1 = wParam & 0xffff;
 
@@ -1277,12 +1282,12 @@ GenerateXEvent(
 			    (ch1 & 0x3ff) | 0x10000;
 		    tsdPtr->surrogateBuffer = 0;
 		}
-		event.xany.send_event = -3;
-		event.xkey.nbytes = 0;
-		event.xkey.keycode = ch1;
+		event.x.xany.send_event = -3;
+		event.key.nbytes = 0;
+		event.x.xkey.keycode = ch1;
 	    } else {
-		event.xkey.nbytes = 1;
-		event.xkey.trans_chars[0] = (char) wParam;
+		event.key.nbytes = 1;
+		event.key.trans_chars[0] = (char) wParam;
 
 		if (IsDBCSLeadByte((BYTE) wParam)) {
 		    MSG msg;
@@ -1291,22 +1296,22 @@ GenerateXEvent(
 		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
 			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
-			event.xkey.nbytes = 2;
-			event.xkey.trans_chars[1] = (char) msg.wParam;
+			event.key.nbytes = 2;
+			event.key.trans_chars[1] = (char) msg.wParam;
 		   }
 		}
 	    }
-	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	    event.type = KeyRelease;
+	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
+	    event.x.type = KeyRelease;
 	    break;
 
 	case WM_UNICHAR: {
-	    event.type = KeyPress;
-	    event.xany.send_event = -3;
-	    event.xkey.keycode = wParam;
-	    event.xkey.nbytes = 0;
-	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	    event.type = KeyRelease;
+	    event.x.type = KeyPress;
+	    event.x.xany.send_event = -3;
+	    event.x.xkey.keycode = wParam;
+	    event.key.nbytes = 0;
+	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
+	    event.x.type = KeyRelease;
 	    break;
 	}
 
@@ -1327,7 +1332,7 @@ GenerateXEvent(
      * Post the translated event to the main Tk event queue.
      */
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 }
 
 /*
@@ -1429,7 +1434,7 @@ GetState(
 
 static void
 GetTranslatedKey(
-    XKeyEvent *xkey,
+    TkKeyEvent *xkey,
     UINT type)
 {
     MSG msg;
@@ -1452,7 +1457,7 @@ GetTranslatedKey(
 	 */
 
 	if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
-	    xkey->state = 0;
+	    xkey->keyEvent.state = 0;
 	}
 	xkey->trans_chars[xkey->nbytes++] = (char) msg.wParam;
 
@@ -1511,7 +1516,11 @@ UpdateInputLanguage(
 	return;
     }
 
-    sprintf(codepage, "cp%d", charsetInfo.ciACP);
+    if (charsetInfo.ciACP == CP_UTF8) {
+	strcpy(codepage, "utf-8");
+    } else {
+	sprintf(codepage, "cp%d", charsetInfo.ciACP);
+    }
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
 	/*

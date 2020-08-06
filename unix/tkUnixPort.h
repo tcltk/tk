@@ -106,22 +106,19 @@
 #   define NBBY 8
 #endif
 
-#ifdef __CYGWIN__
-#   include "tkIntXlibDecls.h"
-#   define UINT unsigned int
-#   define HWND void *
-#   define HDC void *
-#   define HINSTANCE void *
-#   define COLORREF void *
-#   define HMENU void *
-#   define TkWinDCState void
-#   define HPALETTE void *
-#   define WNDPROC void *
-#   define WPARAM void *
-#   define LPARAM void *
-#   define LRESULT void *
-
-#endif /* !__CYGWIN__ */
+#include "tkIntXlibDecls.h"
+#define UINT unsigned int
+#define HWND void *
+#define HDC void *
+#define HINSTANCE void *
+#define COLORREF void *
+#define HMENU void *
+#define TkWinDCState void
+#define HPALETTE void *
+#define WNDPROC void *
+#define WPARAM void *
+#define LPARAM void *
+#define LRESULT void *
 
 /*
  * Supply macros for seek offsets, if they're not already provided by
@@ -152,6 +149,8 @@
 
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
+#define TkpWillDrawWidget(tkwin) 0
+#define TkpRedrawWidget(tkwin)
 #define TkSelUpdateClipboard(a,b) {}
 #ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}

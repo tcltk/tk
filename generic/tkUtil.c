@@ -51,7 +51,7 @@ TkStateParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     int flags = PTR2INT(clientData);
@@ -128,7 +128,7 @@ TkStatePrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset,			/* Offset into item. */
+    TkSizeT offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -174,7 +174,7 @@ TkOrientParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -230,7 +230,7 @@ TkOrientPrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset,			/* Offset into item. */
+    TkSizeT offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -262,7 +262,7 @@ TkOffsetParseProc(
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-    int offset)			/* Offset of tile in record */
+    TkSizeT offset)			/* Offset of tile in record */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
     Tk_TSOffset tsoffset;
@@ -412,7 +412,7 @@ TkOffsetPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-    int offset,			/* Offset of tile in record */
+    TkSizeT offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
@@ -479,7 +479,7 @@ TkPixelParseProc(
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-    int offset)			/* Offset of tile in record */
+    TkSizeT offset)			/* Offset of tile in record */
 {
     double *doublePtr = (double *) (widgRec + offset);
     int result;
@@ -513,7 +513,7 @@ TkPixelPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-    int offset,			/* Offset of tile in record */
+    TkSizeT offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
@@ -1242,8 +1242,9 @@ TkUtfToUniChar(
  *
  * TkUniCharToUtf --
  *
- *	Almost the same as Tcl_UniCharToUtf but producing 4-byte UTF-8
- *	sequences even when TCL_UTF_MAX==3. So, up to 4 bytes might be produced.
+ *	Almost the same as Tcl_UniCharToUtf but producing 2 x 3-byte UTF-8
+ *	sequences for out-of-bmp characters when TCL_UTF_MAX==3.
+ *	So, up to 6 bytes might be produced.
  *
  * Results:
  *	*buf is filled with the UTF-8 string, and the return value is the
@@ -1257,18 +1258,51 @@ TkUtfToUniChar(
 
 size_t TkUniCharToUtf(int ch, char *buf)
 {
-    if (((unsigned)(ch - 0x10000) <= 0xFFFFF)) {
-	/* Spit out a 4-byte UTF-8 character */
-	*buf++ = (char) ((ch >> 18) | 0xF0);
-	*buf++ = (char) (((ch >> 12) | 0x80) & 0xBF);
-	*buf++ = (char) (((ch >> 6) | 0x80) & 0xBF);
-	*buf = (char) ((ch | 0x80) & 0xBF);
-	return 4;
-    } else {
-	return Tcl_UniCharToUtf(ch, buf);
+    if ((sizeof(Tcl_UniChar) == 2) && (((unsigned)(ch - 0x10000) <= 0xFFFFF))) {
+	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
+	 * version and/or TCL_UTF_MAX build value */
+	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
+	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
     }
+    return Tcl_UniCharToUtf(ch, buf);
 }
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfPrev --
+ *
+ *	Almost the same as Tcl_UtfPrev.
+ *	This function is capable of jumping over a upper/lower surrogate pair.
+ *	So, might jump back up to 6 bytes.
+ *
+ * Results:
+ *	pointer to the first byte of the current UTF-8 character. A surrogate
+ *	pair is also handled as being a single entity.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
 
+const char *
+TkUtfPrev(
+    const char *src,	/* The UTF-8 string. */
+    const char *start)		/* Start position of string */
+{
+    const char *p = Tcl_UtfPrev(src, start);
+    const char *first = Tcl_UtfPrev(p, start);
+    int ch;
+
+#if TCL_UTF_MAX == 3
+    if ((src - start > 3) && ((src[-1] & 0xC0) == 0x80) && ((src[-2] & 0xC0) == 0x80)
+	    && ((src[-3] & 0xC0) == 0x80) && (UCHAR(src[-4]) >= 0xF0)) {
+	return src - 4;
+    }
+#endif
+
+    return (first + TkUtfToUniChar(first, &ch) >= src) ? first : p ;
+}
 
 #endif
 
