@@ -3369,6 +3369,24 @@ TTK_END_LAYOUT_TABLE
  * +++ Initialization --
  */
 
+/*----------------------------------------------------------------------
+ * +++ Ttk_MacOSXInit --
+ *
+ *    Initialize variables which depend on [NSApp macOSVersion].  Called from
+ *    [NSApp applicationDidFinishLaunching.]
+ */
+
+MODULE_SCOPE
+void Ttk_MacOSXInit(
+    void)
+{
+    if ([NSApp macOSVersion] < 101400) {
+	entryElementPadding = Ttk_MakePadding(7, 6, 7, 5);
+    } else {
+	entryElementPadding = Ttk_MakePadding(7, 5, 7, 6);
+    }
+}
+
 static int AquaTheme_Init(
     Tcl_Interp *interp)
 {
@@ -3376,12 +3394,6 @@ static int AquaTheme_Init(
 
     if (!themePtr) {
 	return TCL_ERROR;
-    }
-
-    if ([NSApp macOSVersion] < 101400) {
-	entryElementPadding = Ttk_MakePadding(7, 6, 7, 5);
-    } else {
-	entryElementPadding = Ttk_MakePadding(7, 5, 7, 6);
     }
 
     /*
