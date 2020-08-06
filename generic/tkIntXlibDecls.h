@@ -743,7 +743,8 @@ EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
 /* Slot 128 is reserved */
-/* Slot 129 is reserved */
+/* 129 */
+EXTERN int		XLowerWindow(Display *d, Window w);
 /* Slot 130 is reserved */
 /* Slot 131 is reserved */
 /* Slot 132 is reserved */
@@ -1074,7 +1075,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved126)(void);
     void (*reserved127)(void);
     void (*reserved128)(void);
-    void (*reserved129)(void);
+    int (*xLowerWindow) (Display *d, Window w); /* 129 */
     void (*reserved130)(void);
     void (*reserved131)(void);
     void (*reserved132)(void);
@@ -1636,7 +1637,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
 /* Slot 128 is reserved */
-/* Slot 129 is reserved */
+#define XLowerWindow \
+	(tkIntXlibStubsPtr->xLowerWindow) /* 129 */
 /* Slot 130 is reserved */
 /* Slot 131 is reserved */
 /* Slot 132 is reserved */

@@ -962,7 +962,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 126 */
     0, /* 127 */
     0, /* 128 */
-    0, /* 129 */
+    XLowerWindow, /* 129 */
     0, /* 130 */
     0, /* 131 */
     0, /* 132 */

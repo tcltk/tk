@@ -1844,6 +1844,9 @@ declare 112 aqua {
 declare 114 aqua {
     VisualID XVisualIDFromVisual(Visual *visual)
 }
+declare 129 aqua {
+    int XLowerWindow(Display *d, Window w)
+}
 declare 137 aqua {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 	    int sx, int sy, int dx, int dy,
