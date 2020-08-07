@@ -47,7 +47,7 @@ static NSColor *controlAccentColor(void) {
 
 /*
  * Padding values which depend on the OS version.  These are initialized
- * in AquaTheme_Init.
+ * in Ttk_MacOSXInit.
  */
 
 static Ttk_Padding entryElementPadding;
@@ -3373,7 +3373,7 @@ TTK_END_LAYOUT_TABLE
  * +++ Ttk_MacOSXInit --
  *
  *    Initialize variables which depend on [NSApp macOSVersion].  Called from
- *    [NSApp applicationDidFinishLaunching.]
+ *    [NSApp applicationDidFinishLaunching].
  */
 
 MODULE_SCOPE
