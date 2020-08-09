@@ -1,0 +1,128 @@
+/*
+ * tkWinIco.h --
+ *
+ *	This file contains declarations for icon-manipulation routines
+ *      in Windows. 
+ *
+ * Copyright (c) 1995-1996 Microsoft Corp.
+ * Copyright (c) 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
+ *
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ */
+
+/*
+ * This structure represents the contents of a icon, in terms of its image.
+ * The HICON is an internal Windows format. Most of these icon-specific
+ * structures originated with the Winico extension. We stripped out unused
+ * parts of that code, and integrated the code more naturally with Tcl.
+ */
+
+typedef struct {
+    UINT Width, Height, Colors;	/* Width, Height and bpp */
+    LPBYTE lpBits;		/* Ptr to DIB bits */
+    DWORD dwNumBytes;		/* How many bytes? */
+    LPBITMAPINFO lpbi;		/* Ptr to header */
+    LPBYTE lpXOR;		/* Ptr to XOR image bits */
+    LPBYTE lpAND;		/* Ptr to AND image bits */
+    HICON hIcon;		/* DAS ICON */
+} ICONIMAGE, *LPICONIMAGE;
+
+/*
+ * This structure is how we represent a block of the above items. We will
+ * reallocate these structures according to how many images they need to
+ * contain.
+ */
+
+typedef struct {
+    int nNumImages;		/* How many images? */
+    ICONIMAGE IconImages[1];	/* Image entries */
+} BlockOfIconImages, *BlockOfIconImagesPtr;
+
+/*
+ * These two structures are used to read in icons from an 'icon directory'
+ * (i.e. the contents of a .icr file, say). We only use these structures
+ * temporarily, since we copy the information we want into a
+ * BlockOfIconImages.
+ */
+
+typedef struct {
+    BYTE bWidth;		/* Width of the image */
+    BYTE bHeight;		/* Height of the image (times 2) */
+    BYTE bColorCount;		/* Number of colors in image (0 if >=8bpp) */
+    BYTE bReserved;		/* Reserved */
+    WORD wPlanes;		/* Color Planes */
+    WORD wBitCount;		/* Bits per pixel */
+    DWORD dwBytesInRes;		/* How many bytes in this resource? */
+    DWORD dwImageOffset;	/* Where in the file is this image */
+} ICONDIRENTRY, *LPICONDIRENTRY;
+
+typedef struct {
+    WORD idReserved;		/* Reserved */
+    WORD idType;		/* Resource type (1 for icons) */
+    WORD idCount;		/* How many images? */
+    ICONDIRENTRY idEntries[1];	/* The entries for each image */
+} ICONDIR, *LPICONDIR;
+
+/*
+ * A pointer to one of these strucutures is associated with each toplevel.
+ * This allows us to free up all memory associated with icon resources when a
+ * window is deleted or if the window's icon is changed. They are simply
+ * reference counted according to:
+ *
+ * (1) How many WmInfo structures point to this object
+ * (2) Whether the ThreadSpecificData defined in this file contains a pointer
+ *     to this object.
+ *
+ * The former count is for windows whose icons are individually set, and the
+ * latter is for the global default icon choice.
+ *
+ * Icons loaded from .icr/.icr use the iconBlock field, icons loaded from
+ * .exe/.dll use the hIcon field.
+ */
+
+typedef struct WinIconInstance {
+    size_t refCount;	/* Number of instances that share this data
+				 * structure. */
+    BlockOfIconImagesPtr iconBlock;
+				/* Pointer to icon resource data for image */
+} WinIconInstance;
+
+typedef struct WinIconInstance *WinIconPtr;
+
+
+/*
+ * Used in BytesPerLine
+ */
+
+#define WIDTHBYTES(bits)	((((bits) + 31)>>5)<<2)
+
+
+/*
+ * The following are implemented in tkWinIco.c and also used in tkWinWm.c and tkWinSysTray.c.
+ */
+
+static		        BlockOfIconImagesPtr ReadIconOrCursorFromFile(Tcl_Interp                            *interp, Tcl_Obj* fileName, BOOL isIcon);
+static WinIconPtr	ReadIconFromFile(Tcl_Interp *interp,
+			    Tcl_Obj *fileName);
+static WinIconPtr	GetIconFromPixmap(Display *dsPtr, Pixmap pixmap);
+static int      	ReadICOHeader(Tcl_Channel channel);
+static BOOL		AdjustIconImagePointers(LPICONIMAGE lpImage);
+static HICON		MakeIconOrCursorFromResource(LPICONIMAGE lpIcon,
+			    BOOL isIcon);
+static HICON		GetIcon(WinIconPtr titlebaricon, int icon_size);
+static int		WinSetIcon(Tcl_Interp *interp,
+			    WinIconPtr titlebaricon, Tk_Window tkw);
+static void		FreeIconBlock(BlockOfIconImagesPtr lpIR);
+static void		DecrIconRefCount(WinIconPtr titlebaricon);
+static HICON            MakeIconOrCursorFromResource(LPICONIMAGE lpIcon,
+						     BOOL isIcon);
+static BOOL             AdjustIconImagePointers( LPICONIMAGE lpImage);
+static DWORD            BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
+static LPSTR            FindDIBBits(LPSTR lpbi);
+static WORD             PaletteSize(LPSTR lpbi);
+static WORD             DIBNumColors(LPSTR lpbi);
+static int              ReadICOHeader(Tcl_Channel channel);
+static HICON            GetIcon( WinIconPtr titlebaricon, int icon_size);
+
+
