@@ -1057,7 +1057,7 @@ GetTearoffEntryGeometry(
     int *widthPtr,		/* The resulting width */
     int *heightPtr)		/* The resulting height */
 {
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
 	*widthPtr = 0;
     } else {
@@ -1281,7 +1281,7 @@ DrawTearoffEntry(
     int segmentWidth, maxX;
     Tk_3DBorder border;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	return;
     }
 
@@ -1373,16 +1373,16 @@ SetHelpMenu(
 	    cascadeEntryPtr != NULL;
 	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if ((cascadeEntryPtr->menuPtr->menuType == MENUBAR)
-		&& (cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin != NULL)
-		&& (menuPtr->masterMenuPtr->tkwin != NULL)) {
-	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
+		&& (cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin != NULL)
+		&& (menuPtr->mainMenuPtr->tkwin != NULL)) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
 	    char *helpMenuName = ckalloc(strlen(Tk_PathName(
-		    masterMenuPtr->tkwin)) + strlen(".help") + 1);
+		    mainMenuPtr->tkwin)) + strlen(".help") + 1);
 
-	    strcpy(helpMenuName, Tk_PathName(masterMenuPtr->tkwin));
+	    strcpy(helpMenuName, Tk_PathName(mainMenuPtr->tkwin));
 	    strcat(helpMenuName, ".help");
 	    if (strcmp(helpMenuName,
-		    Tk_PathName(menuPtr->masterMenuPtr->tkwin)) == 0) {
+		    Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
 		cascadeEntryPtr->entryFlags |= ENTRY_HELP_MENU;
 	    } else {
 		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU;

@@ -1135,7 +1135,7 @@ const TkStubs tkStubs = {
     Tk_GetFontMetrics, /* 95 */
     Tk_GetGC, /* 96 */
     Tk_GetImage, /* 97 */
-    Tk_GetImageMasterData, /* 98 */
+    Tk_GetImageModelData, /* 98 */
     Tk_GetItemTypes, /* 99 */
     Tk_GetJoinStyle, /* 100 */
     Tk_GetJustify, /* 101 */

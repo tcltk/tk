@@ -6948,7 +6948,7 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 } -cleanup {
 } -result pass
 
-test bind-36.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
+test bind-36.1 {pointer warp with grab on container, bug [e3888d5820]} -setup {
     pointerAway
     toplevel .top
     grab release .top

@@ -627,8 +627,8 @@ proc ::tk::FindAltKeyTarget {path char} {
 	    [string index [$path cget -text] [$path cget -underline]]]} {
 	return $path
     }
-    set subwins [concat [grid slaves $path] [pack slaves $path] \
-	    [place slaves $path]]
+    set subwins [concat [grid content $path] [pack content $path] \
+	    [place content $path]]
     if {$class eq "Canvas"} {
 	foreach item [$path find all] {
 	    if {[$path type $item] eq "window"} {

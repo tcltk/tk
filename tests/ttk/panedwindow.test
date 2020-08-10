@@ -262,7 +262,7 @@ test paned-propagation-1 "Initial request size" -body {
     list [winfo reqwidth .pw] [winfo reqheight .pw]
 } -result [list 100 105]
 
-test paned-propagation-2 "Slave change before map" -body {
+test paned-propagation-2 "Content change before map" -body {
     .pw.f1 configure -width 200 -height 100
     propagate-geometry
     list [winfo reqwidth .pw] [winfo reqheight .pw]
@@ -274,13 +274,13 @@ test paned-propagation-3 "Map window" -body {
     list [winfo width .pw] [winfo height .pw] [.pw sashpos 0]
 } -result [list 200 155 100]
 
-test paned-propagation-4 "Slave change after map, off-axis" -body {
+test paned-propagation-4 "Content change after map, off-axis" -body {
     .pw.f1 configure -width 100 ;# should be granted
     propagate-geometry
     list [winfo reqwidth .pw] [winfo reqheight .pw] [.pw sashpos 0]
 } -result [list 100 155 100]
 
-test paned-propagation-5 "Slave change after map, on-axis" -body {
+test paned-propagation-5 "Content change after map, on-axis" -body {
     .pw.f1 configure -height 50 ;# should be denied
     propagate-geometry
     list [winfo reqwidth .pw] [winfo reqheight .pw] [.pw sashpos 0]
