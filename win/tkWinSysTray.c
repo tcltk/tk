@@ -21,28 +21,18 @@
  */
 
 
-#define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <shellapi.h>
 
 #include <tk.h>
 #include <tkPlatDecls.h>
 
+#include "tkWinIco.h"
+
 #define GETHINSTANCE Tk_GetHINSTANCE()
 static int isWin32s=-1;
 #define ISWIN32S  isWin32s
-
-#if defined(_MSC_VER)
-#    define EXPORT(a,b) __declspec(dllexport) a b
-#    define DllEntryPoint DllMain
-#    define snprintf _snprintf
-#else
-#    if defined(__BORLANDC__)
-#        define EXPORT(a,b) a _export b
-#    else
-#        define EXPORT(a,b) a b
-#    endif
-#endif
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -57,61 +47,7 @@ static int isWin32s=-1;
 #define CONST84
 #endif
 
-typedef struct {
-    UINT         Width, Height, Colors; /* Width, Height and bpp */
-    LPBYTE       lpBits;                /* ptr to DIB bits */
-    DWORD        dwNumBytes;            /* how many bytes? */
-    LPBITMAPINFO lpbi;                  /* ptr to header */
-    LPBYTE       lpXOR;                 /* ptr to XOR image bits */
-    LPBYTE       lpAND;                 /* ptr to AND image bits */
-    HICON        hIcon;                 /* DAS ICON */
-} LPICONIMAGE, *LPICONIMAGE;
 
-typedef struct {
-    BOOL         bHasChanged;                     /* Has image changed? */
-    TCHAR        szOriginalICOFileName[MAX_PATH]; /* Original name */
-    TCHAR        szOriginalDLLFileName[MAX_PATH]; /* Original name */
-    int          nNumImages;                      /* How many images? */
-    LPICONIMAGE    LPICONIMAGEs[1];                   /* Image entries */
-} ICONRESOURCE, *LPICONRESOURCE;
-
-
-/* 
- * These next two structs represent how the icon information is stored
- * in an ICO file. The following two structs are for the use of this 
- * program in  manipulating icons. They are more closely tied to the 
- * operation of this program than the structures listed above. One of the 
- * main differences is that they provide a pointer to the DIB 
- * information of the masks. 
- */
-
-typedef struct {
-    BYTE         bWidth;               /* Width of the image */
-    BYTE         bHeight;              /* Height of the image (times 2) */
-    BYTE         bColorCount;          /* Number of colors (0 if >=8bpp) */
-    BYTE         bReserved;            /* Reserved */
-    WORD         wPlanes;              /* Color Planes */
-    WORD         wBitCount;            /* Bits per pixel */
-    DWORD        dwBytesInRes;         /* how many bytes in this resource? */
-    DWORD        dwImageOffset;        /* where in the file is this image */
-} ICONDIRENTRY, *LPICONDIRENTRY;
-
-typedef struct {
-    WORD         idReserved;           /* Reserved */
-    WORD         idType;               /* resource type (1 for icons) */
-    WORD         idCount;              /* how many images? */
-    ICONDIRENTRY idEntries[1];         /* the entries for each image */
-} ICONDIR, *LPICONDIR;
-
-/* How wide, in bytes, would this many bits be, DWORD aligned? */
-#define WIDTHBYTES(bits)      ((((bits) + 31)>>5)<<2)
-
-/* Function prototypes */
-static LPSTR FindDIBBits (LPSTR lpbi);
-static WORD  DIBNumColors (LPSTR lpbi);
-static WORD  PaletteSize (LPSTR lpbi);
-static DWORD BytesPerLine( LPBITMAPINFOHEADER lpBMIH );
- 
 static BOOL AdjustLPICONIMAGEPointers( LPLPICONIMAGE lpImage );
 
 typedef struct IcoInfo {
