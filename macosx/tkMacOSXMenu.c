@@ -1100,8 +1100,8 @@ TkpSetMainMenubar(
 
 	if (winPtr->wmInfoPtr &&
 		winPtr->wmInfoPtr->menuPtr &&
-		winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
-	    menubar = winPtr->wmInfoPtr->menuPtr->masterMenuPtr->tkwin;
+		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+	    menubar = winPtr->wmInfoPtr->menuPtr->mainMenuPtr->tkwin;
 	}
 
 	/*
@@ -1155,25 +1155,25 @@ static void
 CheckForSpecialMenu(
     TkMenu *menuPtr)		/* The menu we are checking */
 {
-    if (!menuPtr->masterMenuPtr->tkwin) {
+    if (!menuPtr->mainMenuPtr->tkwin) {
 	return;
     }
     for (TkMenuEntry *cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
 	    cascadeEntryPtr;
 	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if (cascadeEntryPtr->menuPtr->menuType == MENUBAR
-		&& cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin) {
-	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
+		&& cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
 	    int i = 0;
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, Tk_PathName(masterMenuPtr->tkwin), -1);
+	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), -1);
 	    while (specialMenus[i].name) {
 		Tcl_DStringAppend(&ds, specialMenus[i].name,
 			specialMenus[i].len);
 		if (strcmp(Tcl_DStringValue(&ds),
-			Tk_PathName(menuPtr->masterMenuPtr->tkwin)) == 0) {
+			Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
 		    cascadeEntryPtr->entryFlags |= specialMenus[i].flag;
 		} else {
 		    cascadeEntryPtr->entryFlags &= ~specialMenus[i].flag;
@@ -1332,7 +1332,7 @@ TkpComputeStandardMenuGeometry(
      * Do nothing if this menu is a clone.
      */
 
-    if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
+    if (menuPtr->tkwin == NULL || menuPtr->mainMenuPtr != menuPtr) {
 	return;
     }
 

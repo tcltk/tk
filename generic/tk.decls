@@ -403,7 +403,7 @@ declare 97 {
 	    Tk_ImageChangedProc *changeProc, ClientData clientData)
 }
 declare 98 {
-    ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
+    ClientData Tk_GetImageModelData(Tcl_Interp *interp,
 	    const char *name, CONST86 Tk_ImageType **typePtrPtr)
 }
 declare 99 {
@@ -472,7 +472,7 @@ declare 116 {
     Tk_Window Tk_IdToWindow(Display *display, Window window)
 }
 declare 117 {
-    void Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
+    void Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 	    int width, int height, int imageWidth, int imageHeight)
 }
 declare 118 {
@@ -486,8 +486,8 @@ declare 120 {
 	    int width, int height)
 }
 declare 121 {
-    void Tk_MaintainGeometry(Tk_Window slave,
-	    Tk_Window master, int x, int y, int width, int height)
+    void Tk_MaintainGeometry(Tk_Window window,
+	    Tk_Window container, int x, int y, int width, int height)
 }
 declare 122 {
     Tk_Window Tk_MainWindow(Tcl_Interp *interp)
@@ -539,7 +539,7 @@ declare 136 {
     CONST84_RETURN char *Tk_NameOfFont(Tk_Font font)
 }
 declare 137 {
-    CONST84_RETURN char *Tk_NameOfImage(Tk_ImageMaster imageMaster)
+    CONST84_RETURN char *Tk_NameOfImage(Tk_ImageModel imageModel)
 }
 declare 138 {
     CONST84_RETURN char *Tk_NameOfJoinStyle(int join)
@@ -692,7 +692,7 @@ declare 180 {
     void Tk_Ungrab(Tk_Window tkwin)
 }
 declare 181 {
-    void Tk_UnmaintainGeometry(Tk_Window slave, Tk_Window master)
+    void Tk_UnmaintainGeometry(Tk_Window tkwin, Tk_Window container)
 }
 declare 182 {
     void Tk_UnmapWindow(Tk_Window tkwin)

@@ -84,6 +84,11 @@
 # endif
 #endif
 
+
+#ifndef Tcl_GetParent
+#   define Tcl_GetParent Tcl_GetMaster
+#endif
+
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
@@ -353,12 +358,12 @@ typedef struct TkDisplay {
      */
 
     Tcl_HashTable maintainHashTable;
-				/* Hash table that maps from a master's
-				 * Tk_Window token to a list of slaves managed
-				 * by that master. */
+				/* Hash table that maps from a container's
+				 * Tk_Window token to a list of content windows managed
+				 * by that container. */
     int geomInit;
 
-#define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+#define TkGetGeomContainer(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
     ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
 
     /*
@@ -436,9 +441,9 @@ typedef struct TkDisplay {
      */
 
     int placeInit;		/* 0 means tables below need initializing. */
-    Tcl_HashTable masterTable;	/* Maps from Tk_Window toke to the Master
+    Tcl_HashTable containerTable;	/* Maps from Tk_Window token to the Container
 				 * structure for the window, if it exists. */
-    Tcl_HashTable slaveTable;	/* Maps from Tk_Window toke to the Slave
+    Tcl_HashTable contentTable;	/* Maps from Tk_Window token to the Content
 				 * structure for the window, if it exists. */
 
     /*
@@ -660,7 +665,7 @@ typedef struct TkMainInfo {
 				/* Top level of option hierarchy for this main
 				 * window. NULL means uninitialized. Managed
 				 * by tkOption.c. */
-    Tcl_HashTable imageTable;	/* Maps from image names to Tk_ImageMaster
+    Tcl_HashTable imageTable;	/* Maps from image names to Tk_ImageModel
 				 * structures. Managed by tkImage.c. */
     int strictMotif;		/* This is linked to the tk_strictMotif global
 				 * variable. */
@@ -1215,9 +1220,9 @@ MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    double *doublePtr);
-MODULE_SCOPE int	TkSetGeometryMaster(Tcl_Interp *interp,
+MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *master);
-MODULE_SCOPE void	TkFreeGeometryMaster(Tk_Window tkwin,
+MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *master);
 
 MODULE_SCOPE void	TkEventInit(void);

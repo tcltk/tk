@@ -384,7 +384,7 @@ typedef struct CleanupStruct {
 } Cleanup;
 
 /*------------------------------------------------------------------------
- * +++ Master style package data structure.
+ * +++ Main style package data structure.
  */
 typedef struct
 {
@@ -583,7 +583,7 @@ void Ttk_SetThemeEnabledProc(
 
 static Ttk_Theme LookupTheme(
     Tcl_Interp *interp,		/* where to leave error messages */
-    StylePackageData *pkgPtr,	/* style package master record */
+    StylePackageData *pkgPtr,	/* style package container record */
     const char *name)		/* theme name */
 {
     Tcl_HashEntry *entryPtr;
@@ -1171,7 +1171,7 @@ static Tcl_Obj* HashTableToDict(Tcl_HashTable *ht)
  */
 static int
 StyleMapCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* Main StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1448,7 +1448,7 @@ static int StyleThemeNamesCmd(
  */
 static int
 StyleThemeSettingsCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* Main StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1606,7 +1606,7 @@ static int StyleLayoutCmd(
  */
 static int
 StyleThemeUseCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* Main StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1663,7 +1663,7 @@ static const Ttk_Ensemble StyleEnsemble[] = {
 
 static int
 StyleObjCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* Main StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */

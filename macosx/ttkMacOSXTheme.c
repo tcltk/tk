@@ -242,8 +242,8 @@ static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
  * GetBackgroundColor --
  *
  *      Fills the array rgba with the color coordinates for a background color.
- *      Start with the background color of a window's geometry master, or the
- *      standard ttk window background if there is no master. If the contrast
+ *      Start with the background color of a window's geometry container, or the
+ *      standard ttk window background if there is no container. If the contrast
  *      parameter is nonzero, modify this color to be darker, for the aqua
  *      appearance, or lighter for the DarkAqua appearance.  This is primarily
  *      used by the Fill and Background elements.
@@ -256,17 +256,17 @@ static void GetBackgroundColor(
     CGFloat *rgba)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+    TkWindow *containerPtr = (TkWindow *) TkGetGeomContainer(tkwin);
 
-    while (masterPtr && masterPtr->privatePtr) {
-	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
+    while (containerPtr && containerPtr->privatePtr) {
+	if (containerPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	masterPtr = (TkWindow *) TkGetGeomMaster(masterPtr);
+	containerPtr = (TkWindow *) TkGetGeomContainer(containerPtr);
     }
-    if (masterPtr && masterPtr->privatePtr) {
+    if (containerPtr && containerPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
-	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
+	    rgba[i] = containerPtr->privatePtr->fillRGBA[i];
 	}
     } else {
 	if ([NSApp macOSVersion] > 101300) {

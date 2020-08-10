@@ -1597,7 +1597,7 @@ test wm-title-2.1 {setting and reading values} -setup {
 test wm-transient-1.1 {usage} -returnCodes error -body {
     catch {destroy .t} ; toplevel .t
     wm transient .t 1 2
-} -result {wrong # args: should be "wm transient window ?master?"}
+} -result {wrong # args: should be "wm transient window ?window?"}
 test wm-transient-1.2 {usage} -returnCodes error -body {
     catch {destroy .t} ; toplevel .t
     wm transient .t foo
@@ -1608,9 +1608,9 @@ test wm-transient-1.3 {usage} -returnCodes error -body {
 } -result {bad window path name "foo"}
 deleteWindows
 test wm-transient-1.4 {usage} -returnCodes error -body {
-    toplevel .master
+    toplevel .main
     toplevel .subject
-    wm transient .subject .master
+    wm transient .subject .main
     wm iconify .subject
 } -cleanup {
     deleteWindows
@@ -1632,13 +1632,13 @@ test wm-transient-1.6 {usage} -returnCodes error -body {
     wm transient .dummy .icon
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a master: it is an icon for .top}
+} -result {can't make ".icon" a container: it is an icon for .top}
 test wm-transient-1.7 {usage} -returnCodes error -body {
-    toplevel .master
-    wm transient .master .master
+    toplevel .main
+    wm transient .main .main
 } -cleanup {
     deleteWindows
-} -result {setting ".master" as master creates a transient/master cycle}
+} -result {setting ".main" as container creates a transient/container cycle}
 test wm-transient-1.8 {usage} -returnCodes error -body {
     toplevel .t1
     toplevel .t2
@@ -1648,75 +1648,75 @@ test wm-transient-1.8 {usage} -returnCodes error -body {
     wm transient .t1 .t3
 } -cleanup {
     deleteWindows
-} -result {setting ".t3" as master creates a transient/master cycle}
+} -result {setting ".t3" as container creates a transient/container cycle}
 test wm-transient-1.9 {usage} -returnCodes error -body {
-    toplevel .master
-    frame .master.f
-    wm transient .master .master.f
+    toplevel .main
+    frame .main.f
+    wm transient .main .main.f
 } -cleanup {
     deleteWindows
-} -result {setting ".master" as master creates a transient/master cycle}
+} -result {setting ".main" as container creates a transient/container cycle}
 
-test wm-transient-2.1 {basic get/set of master} -setup {
+test wm-transient-2.1 {basic get/set of window} -setup {
     set results [list]
 } -body {
-    toplevel .master
+    toplevel .main
     toplevel .subject
     lappend results [wm transient .subject]
-    wm transient .subject .master
+    wm transient .subject .main
     lappend results [wm transient .subject]
     wm transient .subject {}
     lappend results [wm transient .subject]
 } -cleanup {
     deleteWindows
-} -result {{} .master {}}
-test wm-transient-2.2 {first toplevel parent of non-toplevel master is used} -body {
-    toplevel .master
-    frame .master.f
+} -result {{} .main {}}
+test wm-transient-2.2 {first toplevel parent of non-toplevel window is used} -body {
+    toplevel .main
+    frame .main.f
     toplevel .subject
-    wm transient .subject .master.f
+    wm transient .subject .main.f
     wm transient .subject
 } -cleanup {
     deleteWindows
-} -result {.master}
+} -result {.main}
 
 test wm-transient-3.1 {transient toplevel is withdrawn
-        when mapped if master is withdrawn} -body {
-    toplevel .master
-    wm withdraw .master
+        when mapped if window is withdrawn} -body {
+    toplevel .main
+    wm withdraw .main
     update
     toplevel .subject
-    wm transient .subject .master
+    wm transient .subject .main
     update
     list [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-3.2 {already mapped transient toplevel
-        takes on withdrawn state of master} -body {
-    toplevel .master
-    wm withdraw .master
+        takes on withdrawn state of container window} -body {
+    toplevel .main
+    wm withdraw .main
     update
     toplevel .subject
     update
-    wm transient .subject .master
+    wm transient .subject .main
     update
     list [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
 } -result {withdrawn 0}
-test wm-transient-3.3 {withdraw/deiconify on the master
+test wm-transient-3.3 {withdraw/deiconify on the window
         also does a withdraw/deiconify on the transient} -setup {
     set results [list]
 } -body {
-    toplevel .master
+    toplevel .main
     toplevel .subject
     update
-    wm transient .subject .master
-    wm withdraw .master
+    wm transient .subject .main
+    wm withdraw .main
     update
     lappend results [wm state .subject] [winfo ismapped .subject]
-    wm deiconify .master
+    wm deiconify .main
     update
     lappend results [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
@@ -1724,43 +1724,43 @@ test wm-transient-3.3 {withdraw/deiconify on the master
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-4.1 {transient toplevel is withdrawn
-        when mapped if master is iconic} -body {
-    toplevel .master
-    wm iconify .master
+        when mapped if window is iconic} -body {
+    toplevel .main
+    wm iconify .main
     update
     toplevel .subject
-    wm transient .subject .master
+    wm transient .subject .main
     update
     list [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.2 {already mapped transient toplevel
-        is withdrawn if master is iconic} -body {
-    toplevel .master
+        is withdrawn if container window is iconic} -body {
+    toplevel .main
     raiseDelay
-    wm iconify .master
+    wm iconify .main
     update idletasks
     toplevel .subject
     update idletasks
-    wm transient .subject .master
+    wm transient .subject .main
     update idletasks
     list [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
 } -result {withdrawn 0}
-test wm-transient-4.3 {iconify/deiconify on the master
+test wm-transient-4.3 {iconify/deiconify on the window
         does a withdraw/deiconify on the transient} -setup {
     set results [list]
 } -body {
-    toplevel .master
+    toplevel .main
     toplevel .subject
     update idletasks
-    wm transient .subject .master
-    wm iconify .master
+    wm transient .subject .main
+    wm iconify .main
     update idletasks
     lappend results [wm state .subject] [winfo ismapped .subject]
-    wm deiconify .master
+    wm deiconify .main
     update idletasks
     lappend results [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
@@ -1771,53 +1771,53 @@ test wm-transient-5.1 {an error during transient command should not
         cause the map/unmap binding to be deleted} -setup {
     set results [list]
 } -body {
-    toplevel .master
+    toplevel .main
     toplevel .subject
     update
-    wm transient .subject .master
+    wm transient .subject .main
     # Expect a bad window path error here
     lappend results [catch {wm transient .subject .bad}]
-    wm withdraw .master
+    wm withdraw .main
     update
     lappend results [wm state .subject]
-    wm deiconify .master
+    wm deiconify .main
     update
     lappend results [wm state .subject]
 } -cleanup {
     deleteWindows
 } -result {1 withdrawn normal}
-test wm-transient-5.2 {remove transient property when master
-        is destroyed} -body {
-    toplevel .master
+test wm-transient-5.2 {remove transient property when container
+        window is destroyed} -body {
+    toplevel .main
     toplevel .subject
-    wm transient .subject .master
+    wm transient .subject .main
     update
-    destroy .master
+    destroy .main
     update
     wm transient .subject
 } -cleanup {
     deleteWindows
 } -result {}
 test wm-transient-5.3 {remove transient property from window
-        that had never been mapped when master is destroyed} -body {
-    toplevel .master
+        that had never been mapped when container is destroyed} -body {
+    toplevel .main
     toplevel .subject
-    wm transient .subject .master
-    destroy .master
+    wm transient .subject .main
+    destroy .main
     wm transient .subject
 } -cleanup {
     deleteWindows
 } -result {}
 
 test wm-transient-6.1 {a withdrawn transient does not track
-        state changes in the master} -body {
-    toplevel .master
+        state changes in the container} -body {
+    toplevel .main
     toplevel .subject
     update
-    wm transient .subject .master
+    wm transient .subject .main
     wm withdraw .subject
-    wm withdraw .master
-    wm deiconify .master
+    wm withdraw .main
+    wm deiconify .main
     # idle handler should not map the transient
     update
     wm state .subject
@@ -1825,24 +1825,24 @@ test wm-transient-6.1 {a withdrawn transient does not track
     deleteWindows
 } -result {withdrawn}
 test wm-transient-6.2 {a withdrawn transient does not track
-        state changes in the master} -setup {
+        state changes in the container} -setup {
     set results [list]
 } -body {
-    toplevel .master
+    toplevel .main
     toplevel .subject
     update
-    wm transient .subject .master
+    wm transient .subject .main
     wm withdraw .subject
-    wm withdraw .master
-    wm deiconify .master
+    wm withdraw .main
+    wm deiconify .main
     # idle handler should not map the transient
     update
     lappend results [wm state .subject]
     wm deiconify .subject
     lappend results [wm state .subject]
-    wm withdraw .master
+    wm withdraw .main
     lappend results [wm state .subject]
-    wm deiconify .master
+    wm deiconify .main
     # idle handler should map transient
     update
     lappend results [wm state .subject]
@@ -1850,15 +1850,15 @@ test wm-transient-6.2 {a withdrawn transient does not track
     deleteWindows
 } -result {withdrawn normal withdrawn normal}
 test wm-transient-6.3 {a withdrawn transient does not track
-        state changes in the master} -body {
-    toplevel .master
+        state changes in the container} -body {
+    toplevel .main
     toplevel .subject
     update
     # withdraw before making window a transient
     wm withdraw .subject
-    wm transient .subject .master
-    wm withdraw .master
-    wm deiconify .master
+    wm transient .subject .main
+    wm withdraw .main
+    wm deiconify .main
     # idle handler should not map the transient
     update
     wm state .subject
@@ -1866,7 +1866,7 @@ test wm-transient-6.3 {a withdrawn transient does not track
     deleteWindows
 } -result {withdrawn}
 
-# wm-transient-7.*: See SF Tk Bug #592201 "wm transient fails with two masters"
+# wm-transient-7.*: See SF Tk Bug #592201 "wm transient fails with two container windows"
 # wm-transient-7.3 through 7.5 all caused panics on Unix in Tk 8.4b1.
 # 7.1 and 7.2 added to catch (potential) future errors.
 #
@@ -1880,7 +1880,7 @@ test wm-transient-7.1 {Destroying transient} -body {
 } -cleanup {
     deleteWindows
 }
-test wm-transient-7.2 {Destroying master} -body {
+test wm-transient-7.2 {Destroying container window} -body {
     toplevel .t
     toplevel .transient
     wm transient .transient .t
@@ -1889,7 +1889,7 @@ test wm-transient-7.2 {Destroying master} -body {
 } -cleanup {
     deleteWindows
 } -result {}
-test wm-transient-7.3 {Reassign transient, destroy old master} -body {
+test wm-transient-7.3 {Reassign transient, destroy old window} -body {
     toplevel .t1
     toplevel .t2
     toplevel .transient
@@ -1901,7 +1901,7 @@ test wm-transient-7.3 {Reassign transient, destroy old master} -body {
 } -cleanup {
     deleteWindows
 }
-test wm-transient-7.4 {Reassign transient, destroy new master} -body {
+test wm-transient-7.4 {Reassign transient, destroy new window} -body {
     toplevel .t1
     toplevel .t2
     toplevel .transient
@@ -1930,8 +1930,8 @@ test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
     deleteWindows
     set result {}
 } -body {
-    # Verifies that transients stay on top of their masters, even if they were
-    # made transients when those masters were withdrawn.
+    # Verifies that transients stay on top of their container windows, even if they were
+    # made transients when those container windows were withdrawn.
     toplevel .t1; wm withdraw  .t1;     update
     toplevel .t2; wm transient .t2 .t1; update
     lappend result [winfo ismapped .t1] [winfo ismapped .t2]
