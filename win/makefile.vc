@@ -167,6 +167,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinDraw.obj \
 	$(TMP_DIR)\tkWinEmbed.obj \
 	$(TMP_DIR)\tkWinFont.obj \
+	$(TMP_DIR)\tkWinIco.obj \
 	$(TMP_DIR)\tkWinImage.obj \
 	$(TMP_DIR)\tkWinInit.obj \
 	$(TMP_DIR)\tkWinKey.obj \
@@ -177,6 +178,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinScrlbr.obj \
 	$(TMP_DIR)\tkWinSend.obj \
 	$(TMP_DIR)\tkWinSendCom.obj \
+	$(TMP_DIR)\tkWinSysTray.obj \
 	$(TMP_DIR)\tkWinWindow.obj \
 	$(TMP_DIR)\tkWinWm.obj \
 	$(TMP_DIR)\tkWinX.obj \
