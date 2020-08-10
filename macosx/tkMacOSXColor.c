@@ -211,7 +211,7 @@ GetEntryFromPixel(
 /*
  *----------------------------------------------------------------------
  *
- * GetRGB --
+ * GetRGBA --
  *
  *	Given a SystemColorDatum and a pointer to an array of 4 CGFloats, store
  *      the associated RGBA color values in the array.  In the case of the
