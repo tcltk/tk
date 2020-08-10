@@ -1078,10 +1078,19 @@ ConfigureRestrictProc(
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
-
+    static NSAppearanceName lastAppearanceName = nil;
+    NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
     if (!winPtr) {
 	return;
     }
+    if (!lastAppearanceName) {
+	lastAppearanceName = effectiveAppearanceName;
+	return;
+    }
+    if (lastAppearanceName == effectiveAppearanceName) {
+	return;
+    }
+    lastAppearanceName = effectiveAppearanceName;
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -1095,10 +1104,12 @@ ConfigureRestrictProc(
     		  &event.x_root, &event.y_root, &x, &y, &event.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
-    if (TkMacOSXInDarkMode(tkwin)) {
+    if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
 	event.name = Tk_GetUid("DarkAqua");
-    } else {
+    } else if (effectiveAppearanceName == NSAppearanceNameAqua) {
         event.name = Tk_GetUid("LightAqua");
+    } else {
+	return;
     }
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
