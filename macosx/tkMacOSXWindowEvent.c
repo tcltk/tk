@@ -1080,16 +1080,23 @@ ConfigureRestrictProc(
     Tk_Window tkwin = (Tk_Window) winPtr;
     static NSAppearanceName lastAppearanceName = nil;
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
+    Tk_Uid eventName = NULL;
     if (!winPtr) {
 	return;
     }
     if (!lastAppearanceName) {
 	lastAppearanceName = effectiveAppearanceName;
-	return;
     }
     if (lastAppearanceName == effectiveAppearanceName) {
+	eventName = Tk_GetUid("NewAccentColor");
+    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
+	eventName = Tk_GetUid("DarkAqua");
+    } else if (effectiveAppearanceName == NSAppearanceNameAqua) {
+        eventName = Tk_GetUid("LightAqua");
+    } else {
 	return;
     }
+
     lastAppearanceName = effectiveAppearanceName;
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
@@ -1104,13 +1111,7 @@ ConfigureRestrictProc(
     		  &event.x_root, &event.y_root, &x, &y, &event.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
-    if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	event.name = Tk_GetUid("DarkAqua");
-    } else if (effectiveAppearanceName == NSAppearanceNameAqua) {
-        event.name = Tk_GetUid("LightAqua");
-    } else {
-	return;
-    }
+    event.name = eventName;
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
