@@ -762,9 +762,16 @@ EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 /* Slot 141 is reserved */
 /* Slot 142 is reserved */
 /* Slot 143 is reserved */
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
-/* Slot 146 is reserved */
+/* 144 */
+EXTERN void		XDestroyIC(XIC xic);
+/* 145 */
+EXTERN Cursor		XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
+				XColor *x1, XColor *x2, unsigned int ui1,
+				unsigned int ui2);
+/* 146 */
+EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
+				unsigned int ui1, unsigned int ui2,
+				XColor _Xconst *x1, XColor _Xconst *x2);
 /* Slot 147 is reserved */
 /* Slot 148 is reserved */
 /* Slot 149 is reserved */
@@ -1090,9 +1097,9 @@ typedef struct TkIntXlibStubs {
     void (*reserved141)(void);
     void (*reserved142)(void);
     void (*reserved143)(void);
-    void (*reserved144)(void);
-    void (*reserved145)(void);
-    void (*reserved146)(void);
+    void (*xDestroyIC) (XIC xic); /* 144 */
+    Cursor (*xCreatePixmapCursor) (Display *d, Pixmap p1, Pixmap p2, XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2); /* 145 */
+    Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 146 */
     void (*reserved147)(void);
     void (*reserved148)(void);
     void (*reserved149)(void);
@@ -1654,9 +1661,12 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 141 is reserved */
 /* Slot 142 is reserved */
 /* Slot 143 is reserved */
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
-/* Slot 146 is reserved */
+#define XDestroyIC \
+	(tkIntXlibStubsPtr->xDestroyIC) /* 144 */
+#define XCreatePixmapCursor \
+	(tkIntXlibStubsPtr->xCreatePixmapCursor) /* 145 */
+#define XCreateGlyphCursor \
+	(tkIntXlibStubsPtr->xCreateGlyphCursor) /* 146 */
 /* Slot 147 is reserved */
 /* Slot 148 is reserved */
 /* Slot 149 is reserved */
