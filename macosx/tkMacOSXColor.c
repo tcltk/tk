@@ -682,6 +682,7 @@ TkpGetColor(
     TkColor *tkColPtr;
     XColor color;
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
+    NSView *view = nil;
     static Bool initialized = NO;
     static NSColorSpace* sRGB = NULL;
 
@@ -692,6 +693,8 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
+	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
+	view = TkMacOSXDrawableView(macWin);
     }
 
     /*
@@ -713,12 +716,13 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance;
-		if (TkMacOSXInDarkMode(tkwin)) {
-		    windowAppearance = darkAqua;
+		NSAppearance *windowAppearance = savedAppearance;
+		if (view) {
+		    windowAppearance = [view effectiveAppearance];
+		}
+		if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 		    colormap = darkColormap;
 		} else {
-		    windowAppearance = lightAqua;
 		    colormap = lightColormap;
 		}
 		[NSAppearance setCurrentAppearance:windowAppearance];
