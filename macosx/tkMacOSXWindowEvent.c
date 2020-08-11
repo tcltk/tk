@@ -207,6 +207,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
+	[view viewDidChangeEffectiveAppearance];
 	[view addTkDirtyRect:[view bounds]];
 	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
 	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
@@ -1085,7 +1086,8 @@ ConfigureRestrictProc(
 	return;
     }
     if (!lastAppearanceName) {
-	lastAppearanceName = effectiveAppearanceName;
+	lastAppearanceName = [[NSAppearance currentAppearance] name];
+	return;
     }
     if (lastAppearanceName == effectiveAppearanceName) {
 	eventName = Tk_GetUid("NewAccentColor");
