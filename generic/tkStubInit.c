@@ -977,9 +977,9 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 141 */
     0, /* 142 */
     0, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
-    0, /* 146 */
+    XDestroyIC, /* 144 */
+    XCreatePixmapCursor, /* 145 */
+    XCreateGlyphCursor, /* 146 */
     0, /* 147 */
     0, /* 148 */
     0, /* 149 */
