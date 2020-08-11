@@ -548,53 +548,7 @@ FindDIBBits( LPSTR lpbi )
 }
 
 
-/*
- * Calculates the number of entries in the color table.
- */
 
-static WORD 
-DIBNumColors( LPSTR lpbi )
-{
-    WORD wBitCount;
-    DWORD dwClrUsed;
-
-    dwClrUsed = ((LPBITMAPINFOHEADER) lpbi)->biClrUsed;
-
-    if (dwClrUsed)
-        return (WORD) dwClrUsed;
-
-    wBitCount = ((LPBITMAPINFOHEADER) lpbi)->biBitCount;
-
-    switch (wBitCount)
-    {
-        case 1: return 2;
-        case 4: return 16;
-        case 8:        return 256;
-        default:return 0;
-    }
-}
-
-
-/*
- *  Calculates the number of bytes in the color table.
- */
-
-static WORD 
-PaletteSize( LPSTR lpbi )
-{
-    return ((WORD)( DIBNumColors( lpbi ) * sizeof( RGBQUAD )) );
-}
-
-
-/*
-Calculates the number of bytes in one scan line.
-*/
-
-static DWORD 
-BytesPerLine( LPBITMAPINFOHEADER lpBMIH )
-{
-    return WIDTHBYTES(lpBMIH->biWidth * lpBMIH->biPlanes * lpBMIH->biBitCount);
-}
 
 static BOOL
 NotifyA (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt) 
