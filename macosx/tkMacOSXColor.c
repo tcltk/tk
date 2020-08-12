@@ -312,7 +312,8 @@ GetRGBA(
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101500
-	    color = [NSColor colorForControlTint: [NSColor currentControlTint]];
+	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
+			      colorUsingColorSpace:sRGB];
 #endif
 	} else {
 	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
