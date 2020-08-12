@@ -40,6 +40,8 @@ void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+    NSColorList *systemColorList = [NSColorList colorListNamed:@"System"];
+    NSString *key;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
@@ -50,6 +52,7 @@ void initColorTable()
 
     /*
      * Build a hash table for looking up a color by its name.
+     * First add all of the static entries from tkMacOSXColor.h
      */
 
     for (entry = systemColorData; entry->name != NULL; entry++) {
@@ -70,6 +73,32 @@ void initColorTable()
 	    }
 	    entry->selector = [colorName retain];
 	}
+	if (newPtr == 0) {
+	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+	    entry->index = oldEntry->index;
+	    [oldEntry->selector release];
+	} else {
+	    entry->index = index++;
+	}
+	Tcl_SetHashValue(hPtr, entry);
+    }
+
+    /*
+     * Add all of the colors in the System ColorList.
+     */
+ 
+    for (key in [systemColorList allKeys]) {
+	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+	char *name;
+	entry = ckalloc(sizeof(SystemColorDatum));
+	bzero(entry, sizeof(SystemColorDatum));
+	name = ckalloc(length + 1);
+	strcpy(name, key.UTF8String);
+	name[0] = toupper(name[0]);
+	entry->type=semantic;
+	entry->name = name;
+	entry->selector = [key retain];
+	hPtr = Tcl_CreateHashEntry(&systemColors, entry->name, &newPtr);
 	if (newPtr == 0) {
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
@@ -211,7 +240,7 @@ GetEntryFromPixel(
 /*
  *----------------------------------------------------------------------
  *
- * GetRGB --
+ * GetRGBA --
  *
  *	Given a SystemColorDatum and a pointer to an array of 4 CGFloats, store
  *      the associated RGBA color values in the array.  In the case of the
