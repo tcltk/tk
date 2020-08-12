@@ -1067,54 +1067,40 @@ ConfigureRestrictProc(
 }
 
 /*
- * This method is called when a user changes between light and dark mode. The
- * implementation here generates a Tk virtual event which can be bound to a
- * function that redraws the window in an appropriate style.
+ * This method is called when a user changes between light and dark mode or
+ * changes the accent color. The implementation here generates a Tk virtual
+ * event which can be bound to a function that redraws the window in an
+ * appropriate style.
  */
 
 - (void) viewDidChangeEffectiveAppearance
 {
-    XVirtualEvent event;
-    int x, y;
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
-    static NSAppearanceName lastAppearanceName = nil;
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
-    Tk_Uid eventName = NULL;
     if (!winPtr) {
 	return;
     }
     if (!lastAppearanceName) {
 	lastAppearanceName = [[NSAppearance currentAppearance] name];
+	TKLog(@"Initialized lastAppearance for %sto %@",
+	      Tk_PathName(tkwin), lastAppearanceName);
 	return;
     }
     if (lastAppearanceName == effectiveAppearanceName) {
-	eventName = Tk_GetUid("NewAccentColor");
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	eventName = Tk_GetUid("DarkAqua");
+	TKLog(@"Sending <<NewAccentColor>> to %s", Tk_PathName(tkwin));
+	TkSendVirtualEvent(tkwin, "NewAccentColor", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameAqua) {
-        eventName = Tk_GetUid("LightAqua");
+	TKLog(@"Sending <<LightAqua>> to %s", Tk_PathName(tkwin));
+	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
+    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
+	TKLog(@"Sending <<DarkAqua>> to %s", Tk_PathName(tkwin));
+	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
     } else {
 	return;
     }
-
     lastAppearanceName = effectiveAppearanceName;
-    bzero(&event, sizeof(XVirtualEvent));
-    event.type = VirtualEvent;
-    event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    event.send_event = false;
-    event.display = Tk_Display(tkwin);
-    event.event = Tk_WindowId(tkwin);
-    event.root = XRootWindow(Tk_Display(tkwin), 0);
-    event.subwindow = None;
-    event.time = TkpGetMS();
-    XQueryPointer(NULL, winPtr->window, NULL, NULL,
-    		  &event.x_root, &event.y_root, &x, &y, &event.state);
-    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
-    event.same_screen = true;
-    event.name = eventName;
-    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
 /*
