@@ -338,13 +338,13 @@ Tk_GridObjCmd(
     Tk_Window tkwin = clientData;
     static const char *const optionStrings[] = {
 	"anchor", "bbox", "columnconfigure", "configure",
-	"forget", "info", "location", "propagate", "remove",
-	"rowconfigure", "size",	"slaves", NULL
+	"content", "forget", "info", "location", "propagate",
+	"remove", "rowconfigure", "size",	"slaves", NULL
     };
     enum options {
 	GRID_ANCHOR, GRID_BBOX, GRID_COLUMNCONFIGURE, GRID_CONFIGURE,
-	GRID_FORGET, GRID_INFO, GRID_LOCATION, GRID_PROPAGATE, GRID_REMOVE,
-	GRID_ROWCONFIGURE, GRID_SIZE, GRID_SLAVES
+	GRID_CONTENT, GRID_FORGET, GRID_INFO, GRID_LOCATION, GRID_PROPAGATE,
+	GRID_REMOVE, GRID_ROWCONFIGURE, GRID_SIZE, GRID_SLAVES
     };
     int index;
 
@@ -384,6 +384,7 @@ Tk_GridObjCmd(
 	return GridPropagateCommand(tkwin, interp, objc, objv);
     case GRID_SIZE:
 	return GridSizeCommand(tkwin, interp, objc, objv);
+    case GRID_CONTENT:
     case GRID_SLAVES:
 	return GridSlavesCommand(tkwin, interp, objc, objv);
 

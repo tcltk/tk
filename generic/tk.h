@@ -137,6 +137,7 @@ typedef struct Tk_3DBorder_ *Tk_3DBorder;
 typedef struct Tk_Style_ *Tk_Style;
 typedef struct Tk_StyleEngine_ *Tk_StyleEngine;
 typedef struct Tk_StyledElement_ *Tk_StyledElement;
+#define Tk_ImageModel Tk_ImageMaster
 
 /*
  * Additional types exported to clients.
