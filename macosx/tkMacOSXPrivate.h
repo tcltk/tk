@@ -431,6 +431,7 @@ VISIBILITY_HIDDEN
     NSString *privateWorkingText;
     Bool _tkNeedsDisplay;
     NSRect _tkDirtyRect;
+    NSAppearanceName lastAppearanceName;
 }
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
