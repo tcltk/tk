@@ -248,6 +248,8 @@ static SystemColorDatum systemColorData[] = {
 {"SelectedTabTextColor",	    semantic, 0, "blackColor", 0, NULL },
 #endif
 /* Semantic colors that we simulate on older systems which don't supoort them. */
+{"ControlAccentColor",		    semantic, 0, "controlAccentColor", 0, NULL },
+{"LabelColor",                      semantic, 0, "blackColor", 0, NULL },
 {"LinkColor",			    semantic, 0, "blueColor", 0, NULL },
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },

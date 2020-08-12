@@ -35,6 +35,7 @@ static CGFloat windowBackground[4] =
 
 void initColorTable()
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     Tcl_InitHashTable(&systemColors, TCL_STRING_KEYS);
     SystemColorDatum *entry, *oldEntry;
     Tcl_HashSearch search;
@@ -86,7 +87,7 @@ void initColorTable()
     /*
      * Add all of the colors in the System ColorList.
      */
- 
+
     for (key in [systemColorList allKeys]) {
 	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
@@ -95,6 +96,14 @@ void initColorTable()
 	name = ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = toupper(name[0]);
+        if (!strcmp(name, "WindowBackgroundColor")) {
+
+	    /*
+	     * Avoid black windows on old systems.
+	     */
+
+	    continue;
+	}
 	entry->type=semantic;
 	entry->name = name;
 	entry->selector = [key retain];
@@ -134,6 +143,7 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     controlAccentIndex = entry->index;
+    [pool drain];
 }
 
 /*
