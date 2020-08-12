@@ -1689,7 +1689,7 @@ GetTearoffEntryGeometry(
     (void)mePtr;
     (void)tkfont;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
     } else {
 	*heightPtr = fmPtr->linespace;
@@ -2597,7 +2597,7 @@ DrawTearoffEntry(
     (void)tkfont;
     (void)fmPtr;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	return;
     }
 
