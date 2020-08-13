@@ -17,7 +17,7 @@
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] CGContext]
 #else
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] graphicsPort]
@@ -43,6 +43,7 @@ static int cgAntiAliasLimit = 0;
 
 static int useThemedToplevel = 0;
 static int useThemedFrame = 0;
+static unsigned long transparentColor;
 
 /*
  * Prototypes for functions used only in this file.
@@ -69,11 +70,10 @@ static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 MODULE_SCOPE int
 TkMacOSXInitCGDrawing(
     Tcl_Interp *interp,
-    int enable,
+    TCL_UNUSED(int),
     int limit)
 {
     static Boolean initialized = FALSE;
-    (void)enable;
 
     if (!initialized) {
 	initialized = TRUE;
@@ -100,6 +100,7 @@ TkMacOSXInitCGDrawing(
 		(char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
+	transparentColor = TkMacOSXClearPixel();
     }
     return TCL_OK;
 }
@@ -175,7 +176,9 @@ TkMacOSXBitmapRepFromDrawableRect(
 	if (cg_image) {
 	    CGImageRelease(cg_image);
 	}
-    } else if ((view = TkMacOSXDrawableView(mac_drawable)) != NULL) {
+    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
+	TKContentView *tkview = (TKContentView *)view;
+
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
 	 */
@@ -198,7 +201,7 @@ TkMacOSXBitmapRepFromDrawableRect(
 	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
 	} else {
 	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    [view setNeedsDisplay:YES];
+	    [tkview addTkDirtyRect:[tkview bounds]];
 	    return NULL;
 	}
     } else {
@@ -544,7 +547,7 @@ TkMacOSXGetNSImageWithBitmap(
 
     unsigned long origBackground = gc->background;
 
-    gc->background = TRANSPARENT_PIXEL << 24;
+    gc->background = transparentColor;
     XSetClipOrigin(display, gc, 0, 0);
     XCopyPlane(display, bitmap, pixmap, gc, 0, 0, width, height, 0, 0, 1);
     gc->background = origBackground;
@@ -663,17 +666,18 @@ TkMacOSXDrawCGImage(
 	dstBounds = CGRectOffset(dstBounds, macDraw->xOff, macDraw->yOff);
 	if (CGImageIsMask(image)) {
 	    if (macDraw->flags & TK_IS_BW_PIXMAP) {
+
 		/*
 		 * Set fill color to black; background comes from the context,
 		 * or is transparent.
 		 */
 
-		if (imageBackground != TRANSPARENT_PIXEL << 24) {
+		if (imageBackground != transparentColor) {
 		    CGContextClearRect(context, dstBounds);
 		}
 		CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
 	    } else {
-		if (imageBackground != TRANSPARENT_PIXEL << 24) {
+		if (imageBackground != transparentColor) {
 		    TkMacOSXSetColorInContext(gc, imageBackground, context);
 		    CGContextFillRect(context, dstBounds);
 		}
@@ -861,13 +865,12 @@ XFillPolygon(
     GC gc,			/* Use this GC. */
     XPoint *points,		/* Array of points. */
     int npoints,		/* Number of points. */
-    int shape,			/* Shape to draw. */
+    TCL_UNUSED(int),	/* Shape to draw. */
     int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     TkMacOSXDrawingContext dc;
     int i;
-    (void)shape;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
@@ -1440,7 +1443,7 @@ XFillArcs(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
+    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1453,7 +1456,6 @@ TkScrollWindow(
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
-    (void)gc;
 
     if (view) {
   	/*
@@ -1537,12 +1539,9 @@ TkScrollWindow(
 
 void
 TkMacOSXSetUpGraphicsPort(
-    GC gc,			/* GC to apply to current port. */
-    void *destPort)
+    TCL_UNUSED(GC),			/* GC to apply to current port. */
+    TCL_UNUSED(void *))
 {
-    (void)gc;
-    (void)destPort;
-
     Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
 }
 
@@ -1569,7 +1568,7 @@ Bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
-    int useCG,			/* advisory only ! */
+    TCL_UNUSED(int),
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
@@ -1577,7 +1576,6 @@ TkMacOSXSetupDrawingContext(
     NSWindow *win = NULL;
     TkMacOSXDrawingContext dc = {};
     CGRect clipBounds;
-    (void)useCG;
 
     /*
      * If the drawable is not a pixmap and it has an associated NSWindow then
@@ -1608,47 +1606,52 @@ TkMacOSXSetupDrawingContext(
     if (dc.context) {
 	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
     } else if (win) {
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
 
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
 	}
+	if (dc.clipRgn) {
+	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+				    .ty = [view bounds].size.height};
+	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
+	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
+	}
+	if (view != [NSView focusView]) {
 
-	/*
-	 * We can only draw into the view when the current CGContext is valid
-	 * and belongs to the view.  Validity can only be guaranteed inside of
-	 * a view's drawRect or setFrame methods.  The isDrawing attribute
-	 * tells us whether we are being called from one of those methods.
-	 *
-	 * If the CGContext is not valid then we mark our view as needing
-	 * display in the bounding rectangle of the clipping region and
-	 * return failure.  That rectangle should get drawn in a later call
-	 * to drawRect.
-	 *
-	 * As an exception to the above, if mouse buttons are pressed at the
-	 * moment when we fail to obtain a valid context we schedule the entire
-	 * view for a redraw rather than just the clipping region.  The purpose
-	 * of this is to make sure that scrollbars get updated correctly.
-	 */
+	    /*
+	     * We can only draw into the view when the current CGContext is
+	     * valid and belongs to the view.  Validity can only be guaranteed
+	     * inside of a view's drawRect or setFrame methods.  The isDrawing
+	     * attribute tells us whether we are being called from drawRect.
+	     * If the CGContext is not valid then we mark our view as needing
+	     * display.
+	     */
 
-	if (![NSApp isDrawing] || view != [NSView focusView]) {
-	    NSRect bounds = [view bounds];
-	    NSRect dirtyNS = bounds;
-	    if ([NSEvent pressedMouseButtons]) {
-		[view setNeedsDisplay:YES];
+	    if (dc.clipRgn) {
+		[view addTkDirtyRect:NSRectFromCGRect(clipBounds)];
 	    } else {
-		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-					.ty = dirtyNS.size.height};
-		if (dc.clipRgn) {
-		    CGRect dirtyCG = NSRectToCGRect(dirtyNS);
-		    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
-		    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
-		}
-		[view setNeedsDisplayInRect:dirtyNS];
+		[view addTkDirtyRect:[view bounds]];
 	    }
 	    canDraw = false;
 	    goto end;
+	} else if (dc.clipRgn) {
+
+	    /*
+	     * Drawing will also fail if we are being called from drawRect but
+	     * the clipping rectangle set by drawRect does not contain the
+	     * clipping region of our drawing context.  See bug [2a61eca3a8].
+	     * If we can't draw all of the clipping region of the drawing
+	     * context then we draw whatever we can, but we also add a dirty
+	     * rectangle so the entire widget will get redrawn in the next
+	     * cycle.
+	     */
+
+	    CGRect currentClip = CGContextGetClipBoundingBox(GET_CGCONTEXT);
+	    if (!NSContainsRect(currentClip, clipBounds)) {
+		[view addTkDirtyRect:clipBounds];
+	    }
 	}
 
 	dc.view = view;
@@ -1680,6 +1683,7 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
 	CGContextConcatCTM(dc.context, t);
 	if (dc.clipRgn) {
+
 #ifdef TK_MAC_DEBUG_DRAWING
 	    CGContextSaveGState(dc.context);
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
@@ -1687,13 +1691,14 @@ TkMacOSXSetupDrawingContext(
 	    CGContextEOFillPath(dc.context);
 	    CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
+
 	    CGRect r;
 
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
-		    *HIShapeGetBounds(dc.clipRgn, &r),
-		    CGRectApplyAffineTransform(clipBounds, t))) {
-		ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-		CGContextEOClip(dc.context);
+		*HIShapeGetBounds(dc.clipRgn, &r),
+		CGRectApplyAffineTransform(clipBounds, t))) {
+	    	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    	CGContextEOClip(dc.context);
 	    }
 	}
 	if (gc) {
@@ -1739,6 +1744,7 @@ TkMacOSXSetupDrawingContext(
 		int num = 0;
 		char *p = &gc->dashes;
 		CGFloat dashOffset = gc->dash_offset;
+		dashOffset -= (gc->line_width % 2) ? 0.5 : 0.0;
 		CGFloat lengths[10];
 
 		while (p[num] != '\0' && num < 10) {
@@ -1862,30 +1868,6 @@ TkMacOSXGetClipRgn(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetUpClippingRgn --
- *
- *	Set up the clipping region so that drawing only occurs on the specified
- *	X subwindow.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetUpClippingRgn(
-    Drawable drawable)		/* Drawable to update. */
-{
-    (void)drawable;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
@@ -1902,13 +1884,12 @@ TkMacOSXSetUpClippingRgn(
 
 void
 TkpClipDrawableToRect(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     int x, int y,
     int width, int height)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
-    (void)display;
 
     if (macDraw->drawRgn) {
 	CFRelease(macDraw->drawRgn);
@@ -1994,12 +1975,9 @@ ClipToGC(
 
 void *
 TkMacOSXMakeStippleMap(
-    Drawable drawable,		/* Window to apply stipple. */
-    Drawable stipple)		/* The stipple pattern. */
+    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
+    TCL_UNUSED(Drawable))	/* The stipple pattern. */
 {
-    (void)drawable;
-    (void)stipple;
-
     return NULL;
 }
 

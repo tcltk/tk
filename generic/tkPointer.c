@@ -224,8 +224,9 @@ Tk_UpdatePointer(
     TkWindow *targetWinPtr;
     XPoint pos;
     XEvent event;
-    int changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
-    int type, b, mask;
+    unsigned changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
+    int type, b;
+    unsigned mask;
 
     pos.x = x;
     pos.y = y;
