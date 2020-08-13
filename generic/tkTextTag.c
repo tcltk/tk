@@ -2895,7 +2895,7 @@ TkTextBindProc(
     } else if (eventPtr->type == ButtonRelease) {
 	unsigned long mask;
 
-	mask = TkGetButtonMask(eventPtr->xbutton.button);
+	mask = Tk_GetButtonMask(eventPtr->xbutton.button);
 	if ((eventPtr->xbutton.state & ALL_BUTTONS) == mask) {
 	    textPtr->flags &= ~BUTTON_DOWN;
 	    repick = 1;

@@ -486,7 +486,7 @@ static void PanedEventProc(ClientData clientData, XEvent *eventPtr)
     if (   eventPtr->type == LeaveNotify
 	&& eventPtr->xcrossing.detail == NotifyInferior)
     {
-	TtkSendVirtualEvent(corePtr->tkwin, "EnteredChild");
+	Tk_SendVirtualEvent(corePtr->tkwin, "EnteredChild", NULL);
     }
 }
 

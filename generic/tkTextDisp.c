@@ -33,20 +33,8 @@
 
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
-# define OK_TO_LOG 1
-/* Version 8.5 has forgotten to define this constant. */
-# ifndef TK_DO_NOT_DRAW
-#  define TK_DO_NOT_DRAW 0x80
-# endif
-# ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
-#  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "1"
-# endif
-#else /* for portability to 8.5/6 */
-# define OK_TO_LOG 1
-# ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
-#  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "0"
-# endif
 #endif
+#define OK_TO_LOG 1
 
 #include <stdlib.h>
 #include <assert.h>
@@ -2112,8 +2100,10 @@ MakeStyle(
 			/*
 			 * Don't show inactive selection in readonly widgets.
 			 */
-			&& (textPtr->state == TK_TEXT_STATE_NORMAL
-			    || *DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED == '0')))) {
+#ifndef MAC_OSX_TK
+			&& (textPtr->state == TK_TEXT_STATE_NORMAL)
+#endif
+		))) {
 	    borderPrio = FillStyle(tagPtr, &styleValues, haveFocus, containsSelection);
 
 	    if (borderPrio == -1) {

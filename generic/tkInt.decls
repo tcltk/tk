@@ -635,18 +635,18 @@ declare 184 {
 	    double y, double angle)
 }
 
-# Debugging / testing functions for photo images
-declare 185 {
-    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
-            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
-}
-
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 186 aqua {
+declare 185 aqua {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 187 aqua {
+declare 186 aqua {
     int TkpWillDrawWidget(Tk_Window tkwin)
+}
+
+# Debugging / testing functions for photo images
+declare 187 {
+    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
+            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
 

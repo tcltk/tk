@@ -58,20 +58,6 @@
 # define DEBUG(expr) expr
 #endif
 
-/*
- * Support of tk8.6/8.5.
- */
-#ifndef DEF_TEXT_INACTIVE_SELECT_FG_COLOR
-# if defined(MAC_OSX_TK)
-#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "systemDialogActiveText"
-# elif defined(_WIN32)
-#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR NULL
-# else /* X11 */
-#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR BLACK
-# endif
-# define DEF_TEXT_INACTIVE_SELECT_BG_COLOR DEF_TEXT_INACTIVE_SELECT_COLOR
-#endif
-
 #if 0
 # define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
 #else
@@ -1178,7 +1164,7 @@ CreateWidget(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(textPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(textPtr->tkwin));
     return TCL_OK;
 }
 
@@ -3033,7 +3019,7 @@ TextPeerCmd(
 	peersObj = Tcl_NewObj();
 	while (tPtr) {
 	    if (tPtr != textPtr) {
-		Tcl_ListObjAppendElement(NULL, peersObj, TkNewWindowObj(tPtr->tkwin));
+		Tcl_ListObjAppendElement(NULL, peersObj, Tk_NewWindowObj(tPtr->tkwin));
 	    }
 	    tPtr = tPtr->next;
 	}
@@ -5486,7 +5472,7 @@ TriggerUndoStackEvent(
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	if (!(textPtr->flags & DESTROYED)) {
 	    Tk_MakeWindowExist(textPtr->tkwin);
-	    TkSendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
+	    Tk_SendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
 	}
     }
 }
@@ -6086,7 +6072,7 @@ TkTextSelectionEvent(
      *     event generate $textWidget <<Selection>>
      */
 
-    TkSendVirtualEvent(textPtr->tkwin, "Selection", NULL);
+    Tk_SendVirtualEvent(textPtr->tkwin, "Selection", NULL);
 }
 
 /*
@@ -6114,7 +6100,7 @@ TkTextLostSelection(
 {
     TkText *textPtr = (TkText *)clientData;
 
-    if (TkpAlwaysShowSelection(textPtr->tkwin)) {
+    if (Tk_AlwaysShowSelection(textPtr->tkwin)) {
 	TkTextIndex start, end;
 
 	if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
@@ -10007,7 +9993,7 @@ GenerateEvent(
 
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	Tk_MakeWindowExist(textPtr->tkwin);
-	TkSendVirtualEvent(textPtr->tkwin, type, NULL);
+	Tk_SendVirtualEvent(textPtr->tkwin, type, NULL);
     }
 }
 
@@ -10269,7 +10255,7 @@ FireWidgetViewSyncEvent(
 	FORCE_DISPLAY(textPtr->tkwin);
     }
 
-    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync", Tcl_NewBooleanObj(syncState));
+    Tk_SendVirtualEvent(textPtr->tkwin, "WidgetViewSync", Tcl_NewBooleanObj(syncState));
     Tcl_Release((ClientData) interp);
 }
 
