@@ -739,7 +739,7 @@ GridInfoCommand(
 
     infoObj = Tcl_NewObj();
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
-	    TkNewWindowObj(slavePtr->masterPtr->tkwin));
+	    Tk_NewWindowObj(slavePtr->masterPtr->tkwin));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-column", -1),
 	    Tcl_NewWideIntObj(slavePtr->column));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-row", -1),
@@ -1400,7 +1400,7 @@ GridSlavesCommand(
 		slavePtr->row+slavePtr->numRows-1 < row)) {
 	    continue;
 	}
-	Tcl_ListObjAppendElement(interp,res, TkNewWindowObj(slavePtr->tkwin));
+	Tcl_ListObjAppendElement(interp,res, Tk_NewWindowObj(slavePtr->tkwin));
     }
     Tcl_SetObjResult(interp, res);
     return TCL_OK;
@@ -2786,7 +2786,7 @@ Unlink(
     if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
 	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
 	masterPtr->flags &= ~ALLOCED_MASTER;
-	TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
+	Tk_SendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
     }
 }
 
@@ -3529,7 +3529,7 @@ ConfigureSlaves(
     if (masterPtr->slavePtr == NULL && masterPtr->flags & ALLOCED_MASTER) {
 	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
 	masterPtr->flags &= ~ALLOCED_MASTER;
-	TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
+	Tk_SendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
     }
 
     return TCL_OK;

@@ -3488,7 +3488,7 @@ Macintosh, the menubar is displayed accross the top of the main monitor,
 just like with other applications. Under Windows and Unix, the menu is
 attached to the toplevel window. Also, changed some semantics.
 Tearoff menus will now reflect changes to the menu it was
-torn off from, and are deleted when the master menu is
+torn off from, and are deleted when the main menu is
 deleted. Tearoffs also reflect more look-and-feel of the
 platforms they are running on. (SRP)
 

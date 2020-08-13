@@ -3441,7 +3441,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
-test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+test text-11a.51 {<<WidgetViewSync>> calls Tk_SendVirtualEvent(),
                   NOT Tk_HandleEvent().
                   Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
     destroy .top.t .top
@@ -3804,7 +3804,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # to the appropriate size.
 # On macOS, however, there is no way to make the window overlap the menubar.
 if {[tk windowingsystem] == "aqua"} {
-    set minY 23
+    set minY [expr [menubarheight] + 1]
 } else {
     set minY 0
 }
@@ -7409,13 +7409,13 @@ test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
 
 test text-29.1 {tabs - must be positive and must be increasing} -body {
     pack [text .t -wrap none]
-    .t configure -tabs {0}
+    .t configure -tabs 0
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {tab stop "0" is not at a positive distance}
 test text-29.2 {tabs - must be positive and must be increasing} -body {
     pack [text .t -wrap none]
-    .t configure -tabs {-5}
+    .t configure -tabs -5
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {tab stop "-5" is not at a positive distance}
@@ -7991,7 +7991,7 @@ test text-33.7 {peer widget -start, -end} -body {
     return $res
 } -cleanup {
     destroy .t
-} -returnCodes {2} -result {}
+} -returnCodes 2 -result {}
 test text-33.8 {peer widget -start, -end} -body {
     text .t
     set str ""

@@ -357,7 +357,7 @@ Tk_ScaleObjCmd(
 
     scalePtr->flags &= ~INVOKE_COMMAND;
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(scalePtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(scalePtr->tkwin));
     return TCL_OK;
 }
 

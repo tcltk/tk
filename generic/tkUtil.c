@@ -1157,7 +1157,7 @@ TkMakeEnsemble(
 /*
  *----------------------------------------------------------------------
  *
- * TkSendVirtualEvent --
+ * Tk_SendVirtualEvent --
  *
  * 	Send a virtual event notification to the specified target window.
  * 	Equivalent to:
@@ -1170,7 +1170,7 @@ TkMakeEnsemble(
  */
 
 void
-TkSendVirtualEvent(
+Tk_SendVirtualEvent(
     Tk_Window target,
     const char *eventName,
     Tcl_Obj *detail)

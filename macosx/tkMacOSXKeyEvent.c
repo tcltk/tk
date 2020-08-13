@@ -255,11 +255,10 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
+
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
-    }
-    if (xEvent.xany.type == KeyPress) {
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;
@@ -268,14 +267,8 @@ static NSUInteger textInputModifiers;
 
 
 @implementation TKContentView
-
--(id)init {
-    self = [super init];
-    if (self) {
-        _needsRedisplay = NO;
-    }
-    return self;
-}
+@synthesize tkDirtyRect = _tkDirtyRect;
+@synthesize tkNeedsDisplay = _tkNeedsDisplay;;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -330,7 +323,7 @@ static NSUInteger textInputModifiers;
 
     if (repRange.location == 0) {
 	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
     /*
@@ -439,12 +432,12 @@ static NSUInteger textInputModifiers;
      * Use our insertText method to display the marked text.
      */
 
-    TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     processingCompose = YES;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
-    TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
 - (BOOL)hasMarkedText
@@ -513,7 +506,7 @@ static NSUInteger textInputModifiers;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
 
@@ -562,7 +555,6 @@ static NSUInteger textInputModifiers;
 }
 /* End of NSTextInputClient implementation. */
 
-@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
@@ -588,7 +580,7 @@ static NSUInteger textInputModifiers;
 	privateWorkingText = nil;
 	processingCompose = NO;
 	if (composeWin) {
-	    TkSendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
+	    Tk_SendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
 	}
     }
 }

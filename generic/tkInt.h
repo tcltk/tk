@@ -1092,8 +1092,6 @@ typedef struct TkpClipMask {
 		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE unsigned TkGetButtonMask(unsigned);
-
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
  * be properly registered with Tcl:
@@ -1324,9 +1322,6 @@ MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 
-MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
-			    Tk_Window tkwin, Tcl_Obj *objPtr,
-			    double *doublePtr);
 MODULE_SCOPE int	TkSetGeometryMaster(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *master);
 MODULE_SCOPE void	TkFreeGeometryMaster(Tk_Window tkwin,
@@ -1372,7 +1367,6 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
-MODULE_SCOPE int	TkpAlwaysShowSelection(Tk_Window tkwin);
 #ifdef MAC_OSX_TK
 MODULE_SCOPE int	TkpDrawingIsDisabled(Tk_Window tkwin);
 #else
@@ -1399,7 +1393,6 @@ MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
 			    Tk_3DBorder border, int highlightWidth,
 			    int borderWidth, int relief);
-MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
@@ -1409,8 +1402,6 @@ MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv, int flags);
-MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin,
-			    const char *eventName, Tcl_Obj *detail);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    ClientData clientData, const TkEnsemble *map);

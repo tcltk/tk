@@ -1671,7 +1671,7 @@ WmColormapwindowsCmd(
 		break;
 	    }
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj((Tk_Window) wmPtr->cmapList[i]));
+		    Tk_NewWindowObj((Tk_Window) wmPtr->cmapList[i]));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
@@ -1806,7 +1806,6 @@ WmDeiconifyCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
-
     if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't deiconify %s: it is an icon for %s",
@@ -2690,7 +2689,7 @@ WmIconwindowCmd(
 
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -3336,7 +3335,7 @@ WmStackorderCmd(
 	    resultObj = Tcl_NewObj();
 	    for (windowPtr = windows; *windowPtr ; windowPtr++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj((Tk_Window) *windowPtr));
+		    Tk_NewWindowObj((Tk_Window) *windowPtr));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
 	    ckfree(windows);
@@ -3805,10 +3804,6 @@ WmWithdrawCmd(
     }
 
     TkpWmSetState(winPtr, WithdrawnState);
-
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win orderOut:NSApp];
-    [win setExcludedFromWindowsMenu:YES];
 
     /*
      * If this window has a transient, the transient must also be withdrawn.
@@ -6200,13 +6195,14 @@ TkpRedrawWidget(Tk_Window tkwin) {
     }
     w = TkMacOSXDrawableWindow(winPtr->window);
     if (w) {
-	NSView *view = [w contentView];
+	TKContentView *view = [w contentView];
 	TkMacOSXWinBounds(winPtr, &tkBounds);
 	bounds = NSMakeRect(tkBounds.left,
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view setNeedsDisplayInRect:bounds];
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:bounds];
     }
 }
 
@@ -6411,6 +6407,7 @@ TkpWmSetState(
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
+
 	/*
 	 * The window always gets unmapped. If we can show the icon version of
 	 * the window we also collapse it.
@@ -6423,13 +6420,15 @@ TkpWmSetState(
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == NormalState || state == ZoomState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-	if (macWin && ([macWin styleMask] & NSMiniaturizableWindowMask) &&
-		[macWin isMiniaturized]) {
-	    [macWin deminiaturize:NSApp];
-	}
-	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn :
-		inZoomOut);
+	[macWin deminiaturize:NSApp];
+	[macWin orderFront:NSApp];
+	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+    /*
+     * Make sure windows are updated after the state change.
+     */
+
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 }
 
 /*
@@ -6875,7 +6874,6 @@ ApplyWindowAttributeFlagChanges(
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			    NSWindowCollectionBehaviorFullScreenAuxiliary);
 		} else {
-		    NSSize screenSize = [[macWindow screen] frame].size;
 		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
 		    /*
@@ -6886,7 +6884,10 @@ ApplyWindowAttributeFlagChanges(
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
 		    if ([NSApp macOSVersion] > 101000) {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED > 101000)
+			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
+#endif
 		    }
 		}
 	    }
