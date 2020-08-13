@@ -953,7 +953,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 117 */
     0, /* 118 */
     0, /* 119 */
-    0, /* 120 */
+    XOffsetRegion, /* 120 */
     0, /* 121 */
     0, /* 122 */
     0, /* 123 */
@@ -990,7 +990,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 154 */
     0, /* 155 */
     0, /* 156 */
-    0, /* 157 */
+    XkbKeycodeToKeysym, /* 157 */
     TkUnusedStubEntry, /* 158 */
 #endif /* AQUA */
 };
