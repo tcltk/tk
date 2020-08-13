@@ -418,23 +418,24 @@ SetCGColorComponents(
 MODULE_SCOPE Bool
 TkMacOSXInDarkMode(Tk_Window tkwin)
 {
-    int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
         TkWindow *winPtr = (TkWindow*) tkwin;
+	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = (view.effectiveAppearance == darkAqua);
+	    name = [[view effectiveAppearance] name];
 	} else {
-	    result = ([NSAppearance currentAppearance] == darkAqua);
+	    name = [[NSAppearance currentAppearance] name];
 	}
+	return (name == NSAppearanceNameDarkAqua);
     }
 #endif
-    return result;
+    return false;
 }
 
 /*
