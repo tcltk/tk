@@ -436,7 +436,7 @@ TkMacOSXSetWithNativeRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXOffsetRegion --
+ * XOffsetRegion --
  *
  *	Offsets region by given distances.
  *
@@ -449,13 +449,14 @@ TkMacOSXSetWithNativeRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkMacOSXOffsetRegion(
-    TkRegion r,
-    short dx,
-    short dy)
+int
+XOffsetRegion(
+    void *r,
+    int dx,
+    int dy)
 {
     ChkErr(HIShapeOffset, (HIMutableShapeRef) r, dx, dy);
+    return Success;
 }
 
 /*

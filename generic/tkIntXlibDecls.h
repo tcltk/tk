@@ -734,7 +734,8 @@ EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* Slot 120 is reserved */
+/* 120 */
+EXTERN int		XOffsetRegion(void *rgn, int dx, int dy);
 /* Slot 121 is reserved */
 /* Slot 122 is reserved */
 /* Slot 123 is reserved */
@@ -782,7 +783,9 @@ EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
 /* Slot 154 is reserved */
 /* Slot 155 is reserved */
 /* Slot 156 is reserved */
-/* Slot 157 is reserved */
+/* 157 */
+EXTERN KeySym		XkbKeycodeToKeysym(Display *d, unsigned int k, int g,
+				int i);
 /* 158 */
 EXTERN void		TkUnusedStubEntry(void);
 #endif /* AQUA */
@@ -1073,7 +1076,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved117)(void);
     void (*reserved118)(void);
     void (*reserved119)(void);
-    void (*reserved120)(void);
+    int (*xOffsetRegion) (void *rgn, int dx, int dy); /* 120 */
     void (*reserved121)(void);
     void (*reserved122)(void);
     void (*reserved123)(void);
@@ -1110,7 +1113,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved154)(void);
     void (*reserved155)(void);
     void (*reserved156)(void);
-    void (*reserved157)(void);
+    KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
     void (*tkUnusedStubEntry) (void); /* 158 */
 #endif /* AQUA */
 } TkIntXlibStubs;
@@ -1635,7 +1638,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* Slot 120 is reserved */
+#define XOffsetRegion \
+	(tkIntXlibStubsPtr->xOffsetRegion) /* 120 */
 /* Slot 121 is reserved */
 /* Slot 122 is reserved */
 /* Slot 123 is reserved */
@@ -1677,7 +1681,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 154 is reserved */
 /* Slot 155 is reserved */
 /* Slot 156 is reserved */
-/* Slot 157 is reserved */
+#define XkbKeycodeToKeysym \
+	(tkIntXlibStubsPtr->xkbKeycodeToKeysym) /* 157 */
 #define TkUnusedStubEntry \
 	(tkIntXlibStubsPtr->tkUnusedStubEntry) /* 158 */
 #endif /* AQUA */
