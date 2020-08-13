@@ -70,11 +70,10 @@ static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 MODULE_SCOPE int
 TkMacOSXInitCGDrawing(
     Tcl_Interp *interp,
-    int enable,
+    TCL_UNUSED(int),
     int limit)
 {
     static Boolean initialized = FALSE;
-    (void)enable;
 
     if (!initialized) {
 	initialized = TRUE;
@@ -866,13 +865,12 @@ XFillPolygon(
     GC gc,			/* Use this GC. */
     XPoint *points,		/* Array of points. */
     int npoints,		/* Number of points. */
-    int shape,			/* Shape to draw. */
+    TCL_UNUSED(int),	/* Shape to draw. */
     int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     TkMacOSXDrawingContext dc;
     int i;
-    (void)shape;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
@@ -1445,7 +1443,7 @@ XFillArcs(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
+    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1458,7 +1456,6 @@ TkScrollWindow(
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
-    (void)gc;
 
     if (view) {
   	/*
@@ -1542,12 +1539,9 @@ TkScrollWindow(
 
 void
 TkMacOSXSetUpGraphicsPort(
-    GC gc,			/* GC to apply to current port. */
-    void *destPort)
+    TCL_UNUSED(GC),			/* GC to apply to current port. */
+    TCL_UNUSED(void *))
 {
-    (void)gc;
-    (void)destPort;
-
     Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
 }
 
@@ -1574,7 +1568,7 @@ Bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
-    int useCG,			/* advisory only ! */
+    TCL_UNUSED(int),
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
@@ -1582,7 +1576,6 @@ TkMacOSXSetupDrawingContext(
     NSWindow *win = NULL;
     TkMacOSXDrawingContext dc = {};
     CGRect clipBounds;
-    (void)useCG;
 
     /*
      * If the drawable is not a pixmap and it has an associated NSWindow then
@@ -1891,13 +1884,12 @@ TkMacOSXGetClipRgn(
 
 void
 TkpClipDrawableToRect(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     int x, int y,
     int width, int height)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
-    (void)display;
 
     if (macDraw->drawRgn) {
 	CFRelease(macDraw->drawRgn);
@@ -1983,12 +1975,9 @@ ClipToGC(
 
 void *
 TkMacOSXMakeStippleMap(
-    Drawable drawable,		/* Window to apply stipple. */
-    Drawable stipple)		/* The stipple pattern. */
+    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
+    TCL_UNUSED(Drawable))	/* The stipple pattern. */
 {
-    (void)drawable;
-    (void)stipple;
-
     return NULL;
 }
 
