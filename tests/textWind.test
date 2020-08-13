@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-set fixedFont {"Courier New" -12}
+set fixedFont {"Courier" -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
@@ -751,15 +751,17 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t.f
     proc bgerror args {
         global msg
-	lappend msg $args
+        if {$msg == ""} {
+	    lappend msg $args
+	}
     }
 } -body {
     .t insert 1.0 "Some sample text"
+    set msg {}
     .t window create 1.5 -create {
         frame .t.f
         frame .t.f.f -width 10 -height 20 -bg $color
     }
-    set msg {}
     update idletasks
     lappend msg [winfo exists .t.f.f]
 } -cleanup {
