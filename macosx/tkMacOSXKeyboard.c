@@ -154,6 +154,8 @@ static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#else
+    (void)notification;
 #endif
     keyboardChanged = YES;
     UpdateKeymaps();
@@ -489,13 +491,12 @@ XKeycodeToKeysym(
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: Needed to get
+    TCL_UNUSED(TkWindow *),	/* Window where event occurred: Needed to get
 				 * input context. */
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
 				 * result. */
 {
-    (void) winPtr; /*unused*/
     MacKeycode macKC;
     char utfChars[8];
     int length = 0;
@@ -588,19 +589,15 @@ XFreeModifiermap(
 
 char *
 XKeysymToString(
-    KeySym keysym)
+    TCL_UNUSED(KeySym))
 {
-    (void)keysym;
-
     return NULL;
 }
 
 KeySym
 XStringToKeysym(
-    const char* string)
+    TCL_UNUSED(const char *))
 {
-    (void)string;
-
     return NoSymbol;
 }
 
