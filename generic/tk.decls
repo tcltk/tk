@@ -1087,6 +1087,9 @@ declare 278 {
     void Tk_SendVirtualEvent(Tk_Window tkwin, const char *eventName,
 	    Tcl_Obj *detail)
 }
+declare 279 {
+    Tcl_Obj *Tk_FontGetDescription(Tk_Font tkfont)
+}
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
