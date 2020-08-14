@@ -32,7 +32,7 @@ test textImage-1.1 {basic argument checking} -setup {
     .t image
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be ".t image option ?arg arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".t image option ?arg ...?"}
 
 test textImage-1.2 {basic argument checking} -setup {
     destroy .t
@@ -77,7 +77,7 @@ test textImage-1.6 {configure argument checking} -setup {
     .t image configure
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be ".t image configure index ?option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t image configure index ?-option value ...?"}
 
 test textImage-1.7 {configure argument checking} -setup {
     destroy .t
@@ -104,7 +104,7 @@ test textImage-1.9 {create argument checking} -setup {
     .t image create
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be ".t image create index ?option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t image create index ?-option value ...?"}
 
 test textImage-1.10 {create argument checking} -setup {
     destroy .t

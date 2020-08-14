@@ -38,7 +38,7 @@ wm deiconify .
 
 test textMark-1.1 {TkTextMarkCmd - missing option} -returnCodes error -body {
     .t mark
-} -result {wrong # args: should be ".t mark option ?arg arg ...?"}
+} -result {wrong # args: should be ".t mark option ?arg ...?"}
 test textMark-1.2 {TkTextMarkCmd - bogus option} -returnCodes error -body {
     .t mark gorp
 } -match glob -result {bad mark option "gorp": must be *}
@@ -141,7 +141,7 @@ test textMark-4.3 {TkTextMarkCmd - "unset" option} -body {
 
 test textMark-5.1 {TkTextMarkCmd - miscellaneous} -returnCodes error -body {
     .t mark
-} -result {wrong # args: should be ".t mark option ?arg arg ...?"}
+} -result {wrong # args: should be ".t mark option ?arg ...?"}
 test textMark-5.2 {TkTextMarkCmd - miscellaneous} -returnCodes error -body {
     .t mark foo
 } -result {bad mark option "foo": must be compare, exists, generate, gravity, names, next, previous, set, or unset}

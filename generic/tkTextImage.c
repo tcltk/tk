@@ -381,7 +381,7 @@ TkTextImageCmd(
     };
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings, "option", 0, &idx) != TCL_OK) {
@@ -418,7 +418,7 @@ TkTextImageCmd(
 	return TCL_OK;
     case CMD_CONF:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
+	    Tcl_WrongNumArgs(interp, 3, objv, "index ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
@@ -472,7 +472,7 @@ TkTextImageCmd(
 	     */
 
 	    if (objc < 4) {
-		Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
+		Tcl_WrongNumArgs(interp, 3, objv, "index ?-option value ...?");
 		return TCL_ERROR;
 	    }
 	    if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {

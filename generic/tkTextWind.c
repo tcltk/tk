@@ -413,7 +413,7 @@ TkTextWindowCmd(
     assert(textPtr);
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], windOptionStrings,
@@ -470,7 +470,7 @@ TkTextWindowCmd(
 	TkTextSegment *ewPtr;
 
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
+	    Tcl_WrongNumArgs(interp, 3, objv, "index ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
@@ -542,7 +542,7 @@ TkTextWindowCmd(
 	 */
 
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
+	    Tcl_WrongNumArgs(interp, 3, objv, "index ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
