@@ -126,7 +126,7 @@ MenuBarHeightObjCmd(
     if (height == 0) {
 	height = (int) [[NSApp mainMenu] menuBarHeight];
     }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(height));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
     return TCL_OK;
 }
 

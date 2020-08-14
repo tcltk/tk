@@ -1335,6 +1335,7 @@ const TkStubs tkStubs = {
     Tk_GetDoublePixelsFromObj, /* 276 */
     Tk_NewWindowObj, /* 277 */
     Tk_SendVirtualEvent, /* 278 */
+    Tk_FontGetDescription, /* 279 */
 };
 
 /* !END!: Do not edit above this line. */
