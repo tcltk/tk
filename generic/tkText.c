@@ -1865,9 +1865,9 @@ TextWidgetObjCmd(
 
     badOption:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad option \"%s\": must be -chars, -displaychars, -displayhyphens, -displayindices, "
-		"-displaylines, -displaytext, -hyphens, -indices, -lines, -text, -update, -xpixels, "
-		"or -ypixels", Tcl_GetString(objv[i])));
+		"bad option \"%s\": must be -chars, -displaychars, -displayhyphens, "
+		"-displayindices, -displaylines, -displaytext, -hyphens, -indices, "
+		"-lines, -text, -update, -xpixels, or -ypixels", Tcl_GetString(objv[i])));
 	Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
 	result = TCL_ERROR;
 	goto done;
@@ -8159,91 +8159,6 @@ TestIfEqual(
     return 1;
 }
 
-#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-
-static Tcl_Obj *
-GetFontAttrs(
-    TkText *textPtr,
-    int argc,
-    Tcl_Obj **args)
-{
-    Tcl_Interp *interp = textPtr->interp;
-    Tcl_Obj *objPtr = NULL;
-
-    if (Tk_FontObjCmd(textPtr->tkwin, interp, argc, args) == TCL_OK) {
-	Tcl_Obj *result = Tcl_GetObjResult(interp);
-	Tcl_Obj *family = NULL;
-	Tcl_Obj *size = NULL;
-	Tcl_Obj *slant = NULL;
-	Tcl_Obj *weight = NULL;
-	Tcl_Obj *underline = NULL;
-	Tcl_Obj *overstrike = NULL;
-	Tcl_Obj **objv;
-	int objc, i;
-
-	if (Tcl_ListObjGetElements(interp, result, &objc, &objv) == TCL_OK) {
-	    for (i = 0; i < objc - 1; ++i) {
-		if (Tcl_GetString(objv[i])[0] == '-') {
-		    switch (Tcl_GetString(objv[i])[1]) {
-		    case 'f': /* -family     */
-		    	family = objv[i + 1];
-			break;
-		    case 'o': /* -overstrike */
-		    	overstrike = objv[i + 1];
-			break;
-		    case 's':
-		    	switch (Tcl_GetString(objv[i])[2]) {
-			case 'i': /* -size   */
-			    size = objv[i + 1];
-			    break;
-			case 'l': /* -slant  */
-			    slant = objv[i + 1];
-			    break;
-			}
-			break;
-		    case 'u': /* -underline  */
-		    	underline = objv[i + 1];
-			break;
-		    case 'w': /* -weight     */
-		    	weight = objv[i + 1];
-			break;
-		    }
-		}
-	    }
-	}
-
-	if (family && size) {
-	    Tcl_DString str;
-	    int boolean;
-
-	    Tcl_DStringInit(&str);
-	    Tcl_DStringAppendElement(&str, Tcl_GetString(family));
-	    Tcl_DStringAppendElement(&str, Tcl_GetString(size));
-	    if (weight && strcmp(Tcl_GetString(weight), "normal") != 0) {
-		Tcl_DStringAppendElement(&str, Tcl_GetString(weight));
-	    }
-	    if (slant && strcmp(Tcl_GetString(slant), "roman") != 0) {
-		Tcl_DStringAppendElement(&str, Tcl_GetString(slant));
-	    }
-	    if (underline && Tcl_GetBooleanFromObj(NULL, underline, &boolean) == TCL_OK && boolean) {
-		Tcl_DStringAppendElement(&str, "underline");
-	    }
-	    if (overstrike && Tcl_GetBooleanFromObj(NULL, overstrike, &boolean) == TCL_OK && boolean) {
-		Tcl_DStringAppendElement(&str, "overstrike");
-	    }
-
-	    objPtr = Tcl_NewStringObj(Tcl_DStringValue(&str), Tcl_DStringLength(&str));
-	    Tcl_DStringFree(&str);
-	}
-
-	Tcl_ResetResult(interp);
-    }
-
-    return objPtr;
-}
-
-#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
-
 static int
 IsPossibleColorOption(
     const char *s)
@@ -8270,22 +8185,12 @@ TkTextInspectOptions(
     Tcl_DStringSetLength(result, 0);
 
     if ((objPtr = Tk_GetOptionInfo(interp, (char *) recordPtr, optionTable, NULL, textPtr->tkwin))) {
-#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-	Tcl_Obj *font = NULL;   /* shut up compiler */
-	Tcl_Obj *actual = NULL; /* shut up compiler */
-#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 	Tcl_Obj **objv;
 	int objc = 0;
 	int i;
 
 	Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
 
-#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-	if (!(flags & INSPECT_DONT_RESOLVE_FONTS)) {
-	    Tcl_IncrRefCount(font = Tcl_NewStringObj("font", -1));
-	    Tcl_IncrRefCount(actual = Tcl_NewStringObj("actual", -1));
-	}
-#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 
 	for (i = 0; i < objc; ++i) {
 	    Tcl_Obj **argv;
@@ -8376,29 +8281,12 @@ TkTextInspectOptions(
 		    if (len < 7
 			    || strncmp(s, "Tk", 2) != 0
 			    || strncmp(s + len - 4, "Font", 4) != 0) {
-#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-			Tcl_Obj *args[3];
-			Tcl_Obj *result;
-
-			/*
-			 * Try to resolve the font name to the actual font attributes.
-			 */
-
-			args[0] = font;
-			args[1] = actual;
-			args[2] = valObj;
-
-			if ((result = GetFontAttrs(textPtr, 3, args))) {
-			    myValObj = result;
-			}
-#else /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 			Tk_Font tkfont = Tk_AllocFontFromObj(interp, textPtr->tkwin, valObj);
 
 			if (tkfont) {
-			    Tcl_IncrRefCount(myValObj = TkFontGetDescription(tkfont));
+			    Tcl_IncrRefCount(myValObj = Tk_FontGetDescription(tkfont));
 			    Tk_FreeFont(tkfont);
 			}
-#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 		    }
 		} else if ((flags & (INSPECT_DONT_RESOLVE_COLORS|INSPECT_INCLUDE_SYSTEM_COLORS)) !=
 			    (INSPECT_DONT_RESOLVE_COLORS|INSPECT_INCLUDE_SYSTEM_COLORS)
@@ -8444,12 +8332,6 @@ TkTextInspectOptions(
 	    }
 	}
 
-#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-	if (!(flags & INSPECT_DONT_RESOLVE_FONTS)) {
-	    Tcl_GuardedDecrRefCount(actual);
-	    Tcl_GuardedDecrRefCount(font);
-	}
-#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
     }
 }
 

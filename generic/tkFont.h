@@ -200,7 +200,6 @@ typedef struct TkXLFDAttributes {
 
 MODULE_SCOPE int	TkFontParseXLFD(const char *string,
 			    TkFontAttributes *faPtr, TkXLFDAttributes *xaPtr);
-MODULE_SCOPE Tcl_Obj *	TkFontGetDescription(Tk_Font tkfont);
 MODULE_SCOPE const char *const * TkFontGetAliasList(const char *faceName);
 MODULE_SCOPE const char *const *const * TkFontGetFallbacks(void);
 MODULE_SCOPE double	TkFontGetPixels(Tk_Window tkwin, double size);

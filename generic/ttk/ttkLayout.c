@@ -36,10 +36,10 @@ Ttk_NewBoxObj(Ttk_Box box)
 {
     Tcl_Obj *result[4];
 
-    result[0] = Tcl_NewIntObj(box.x);
-    result[1] = Tcl_NewIntObj(box.y);
-    result[2] = Tcl_NewIntObj(box.width);
-    result[3] = Tcl_NewIntObj(box.height);
+    result[0] = Tcl_NewWideIntObj(box.x);
+    result[1] = Tcl_NewWideIntObj(box.y);
+    result[2] = Tcl_NewWideIntObj(box.width);
+    result[3] = Tcl_NewWideIntObj(box.height);
 
     return Tcl_NewListObj(4, result);
 }

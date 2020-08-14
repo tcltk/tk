@@ -3577,7 +3577,7 @@ GetAttributeInfoObj(
 /*
  *---------------------------------------------------------------------------
  *
- * TkFontGetDescription --
+ * Tk_FontGetDescription --
  *
  *	Return information about the font description as a Tcl list. One
  *	possible result is "{{DejaVu Sans} -16 bold underline}".
@@ -3592,61 +3592,35 @@ GetAttributeInfoObj(
  */
 
 Tcl_Obj *
-TkFontGetDescription(
+Tk_FontGetDescription(
     Tk_Font tkfont)		/* Font whose description is desired. */
 {
     const TkFontAttributes *faPtr = GetFontAttributes(tkfont);
     Tcl_Obj *resultPtr = Tcl_NewObj();
     const char *str;
-    int i;
 
-    for (i = 0; i < FONT_NUMFIELDS; i++) {
-	Tcl_Obj *valuePtr = NULL;
-	switch (i) {
-	case FONT_FAMILY:
-	    str = faPtr->family;
-	    valuePtr = Tcl_NewStringObj(str, str ? -1 : 0);
-	    break;
-
-	case FONT_SIZE:
-	    if (faPtr->size >= 0.0) {
-		valuePtr = Tcl_NewIntObj((int)(faPtr->size + 0.5));
-	    } else {
-		valuePtr = Tcl_NewIntObj(-(int)(-faPtr->size + 0.5));
-	    }
-	    break;
-
-	case FONT_WEIGHT:
-	    if (faPtr->weight != TK_FW_NORMAL) {
-		str = TkFindStateString(weightMap, faPtr->weight);
-		valuePtr = Tcl_NewStringObj(str, -1);
-	    }
-	    break;
-
-	case FONT_SLANT:
-	    if (faPtr->slant != TK_FS_ROMAN) {
-		str = TkFindStateString(slantMap, faPtr->slant);
-		valuePtr = Tcl_NewStringObj(str, -1);
-	    }
-	    break;
-
-	case FONT_UNDERLINE:
-	    if (faPtr->underline) {
-		str = TkFindStateString(underlineMap, faPtr->underline);
-		valuePtr = Tcl_NewStringObj(str, -1);
-	    }
-	    break;
-
-	case FONT_OVERSTRIKE:
-	    if (faPtr->overstrike) {
-		str = TkFindStateString(overstrikeMap, faPtr->overstrike);
-		valuePtr = Tcl_NewStringObj(str, -1);
-	    }
-	    break;
-	}
-	if (valuePtr) {
-	    Tcl_ListObjAppendElement(NULL, resultPtr, valuePtr);
-	}
+    str = faPtr->family;
+    Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, str ? -1 : 0));
+    if (faPtr->size >= 0.0) {
+    	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewWideIntObj((int)(faPtr->size + 0.5)));
+    } else {
+    	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewWideIntObj(-(int)(-faPtr->size + 0.5)));
+    }
+    if (faPtr->weight != TK_FW_NORMAL) {
+	str = TkFindStateString(weightMap, faPtr->weight);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    if (faPtr->slant != TK_FS_ROMAN) {
+	str = TkFindStateString(slantMap, faPtr->slant);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    if (faPtr->underline) {
+	str = TkFindStateString(underlineMap, faPtr->underline);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    if (faPtr->overstrike) {
+	str = TkFindStateString(overstrikeMap, faPtr->overstrike);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
     }
     return resultPtr;
 }

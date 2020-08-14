@@ -137,7 +137,7 @@ static void AnimateProgressProc(ClientData clientData)
 	if (pb->progress.maxPhase)
 	    phase %= pb->progress.maxPhase;
 	Tcl_DecrRefCount(pb->progress.phaseObj);
-	pb->progress.phaseObj = Tcl_NewIntObj(phase);
+	pb->progress.phaseObj = Tcl_NewWideIntObj(phase);
 	Tcl_IncrRefCount(pb->progress.phaseObj);
 
 	/*

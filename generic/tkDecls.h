@@ -891,6 +891,8 @@ EXTERN Tcl_Obj *	Tk_NewWindowObj(Tk_Window tkwin);
 /* 278 */
 EXTERN void		Tk_SendVirtualEvent(Tk_Window tkwin,
 				const char *eventName, Tcl_Obj *detail);
+/* 279 */
+EXTERN Tcl_Obj *	Tk_FontGetDescription(Tk_Font tkfont);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1182,6 +1184,7 @@ typedef struct TkStubs {
     int (*tk_GetDoublePixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 276 */
     Tcl_Obj * (*tk_NewWindowObj) (Tk_Window tkwin); /* 277 */
     void (*tk_SendVirtualEvent) (Tk_Window tkwin, const char *eventName, Tcl_Obj *detail); /* 278 */
+    Tcl_Obj * (*tk_FontGetDescription) (Tk_Font tkfont); /* 279 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1752,6 +1755,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_NewWindowObj) /* 277 */
 #define Tk_SendVirtualEvent \
 	(tkStubsPtr->tk_SendVirtualEvent) /* 278 */
+#define Tk_FontGetDescription \
+	(tkStubsPtr->tk_FontGetDescription) /* 279 */
 
 #endif /* defined(USE_TK_STUBS) */
 
