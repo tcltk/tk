@@ -809,7 +809,7 @@ Tk_BusyObjCmd(
     };
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "options ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "options ?arg ...?");
 	return TCL_ERROR;
     }
 

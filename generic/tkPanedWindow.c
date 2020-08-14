@@ -552,7 +552,7 @@ PanedWindowWidgetObjCmd(
     Slave *slavePtr;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 

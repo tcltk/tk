@@ -90,7 +90,7 @@ This command may be used to invoke various operations
 on the image.
 It has the following general form:
 .CS
-\fIimageName option \fR?\fIarg arg ...\fR?
+\fIimageName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
