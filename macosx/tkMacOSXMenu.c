@@ -138,6 +138,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @implementation TKBackgroundLoop
 - (void) main
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSArray *modeArray = [NSArray arrayWithObjects: NSEventTrackingRunLoopMode,
 				  nil];
     while(1) {
@@ -150,7 +151,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 				withObject:nil
 			     waitUntilDone:true
 				     modes:modeArray];
-	if (self.cancelled) {
+	if ([self isCancelled]) {
 	    [NSThread exit];
 	}
 
@@ -160,6 +161,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	[NSThread sleepForTimeInterval:0.001];
     }
+    [pool drain];
 }
 @end
 

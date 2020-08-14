@@ -690,7 +690,7 @@ PanedWindowWidgetObjCmd(
     case PW_PANECONFIGURE:
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "pane ?option? ?value option value ...?");
+		    "pane ?-option? ?value -option value ...?");
 	    result = TCL_ERROR;
 	    break;
 	}
