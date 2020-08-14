@@ -52,7 +52,7 @@ test textMark-1.4 {TkTextMarkCmd - "gravity" option} -body {
 } -result {right 1.4}
 test textMark-1.5 {TkTextMarkCmd - "gravity" option} -body {
     .t mark set x 1.3
-    .t mark g x left
+    .t mark gr x left
     .t insert 1.3 x
     list [.t mark gravity x] [.t index x]
 } -result {left 1.3}
