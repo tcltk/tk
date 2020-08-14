@@ -1101,7 +1101,10 @@ static char *accentNames[] = {
     NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
 			        componentsSeparatedByString: @" "]
 			        objectAtIndex:3];
-    static char *defaultColor = "Blue";
+    static char *defaultColor = NULL;
+    if (!defaultColor) {
+	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
+    }
     accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
     highlightName = highlight ? highlight.UTF8String: defaultColor;
 
