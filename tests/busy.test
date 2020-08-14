@@ -21,7 +21,7 @@ test busy-1.1 {Tk_BusyObjCmd} -returnCodes error -body {
 
 test busy-2.1 {tk busy hold} -returnCodes error -body {
     tk busy hold
-} -result {wrong # args: should be "tk busy hold window ?option value ...?"}
+} -result {wrong # args: should be "tk busy hold window ?-option value ...?"}
 test busy-2.2 {tk busy hold root window} -body {
     set res [tk busy hold .]
     update
@@ -182,7 +182,7 @@ test busy-3.7 {tk busy cget unix} -setup {
 
 test busy-4.1 {tk busy configure no window} -returnCodes error -body {
     tk busy configure
-} -result {wrong # args: should be "tk busy configure window ?option? ?value ...?"}
+} -result {wrong # args: should be "tk busy configure window ?-option? ?value ...?"}
 
 test busy-4.2 {tk busy configure invalid window} -body {
     tk busy configure .f

@@ -2377,7 +2377,7 @@ static int TreeviewItemCommand(
     TreeItem *item;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item ?option ?value??...");
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?-option ?value??...");
 	return TCL_ERROR;
     }
     if (!(item = FindItem(interp, tv, objv[2]))) {
