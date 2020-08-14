@@ -423,6 +423,9 @@ static void FillBorder(
     colors[3] = colors[7] = colors[11] = colors[15] = 1.0;
     CGGradientRef gradient = CGGradientCreateWithColorComponents(
 	 sRGB.CGColorSpace, colors, locations, 4);
+    if (!gradient) {
+	return;
+    }
     CGContextSaveGState(context);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
@@ -430,7 +433,7 @@ static void FillBorder(
     CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0.0);
     CGContextRestoreGState(context);
     CFRelease(path);
-    CFRelease(gradient);
+	CFRelease(gradient);
 }
 
 /*----------------------------------------------------------------------
