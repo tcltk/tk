@@ -2125,7 +2125,7 @@ static int TreeviewIndexCommand(
 	item = item->prev;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
     return TCL_OK;
 }
 
