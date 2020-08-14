@@ -1101,8 +1101,9 @@ static char *accentNames[] = {
     NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
 			        componentsSeparatedByString: @" "]
 			        objectAtIndex:3];
-    accentName = accent ? accentNames[1 + accent.intValue] : "Null";
-    highlightName = highlight ? highlight.UTF8String: "Null";
+    static char *defaultColor = "Blue";
+    accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
+    highlightName = highlight ? highlight.UTF8String: defaultColor;
 
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
