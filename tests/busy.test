@@ -17,7 +17,7 @@ namespace import -force tcltest::test
 
 test busy-1.1 {Tk_BusyObjCmd} -returnCodes error -body {
     tk busy
-} -result {wrong # args: should be "tk busy options ?arg arg ...?"}
+} -result {wrong # args: should be "tk busy options ?arg ...?"}
 
 test busy-2.1 {tk busy hold} -returnCodes error -body {
     tk busy hold

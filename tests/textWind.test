@@ -141,7 +141,7 @@ test textWind-1.6 {basic tests of options} -setup {
 .t insert end "This is the first line"
 test textWind-2.1 {TkTextWindowCmd procedure} -body {
     .t window
-} -returnCodes error -result {wrong # args: should be ".t window option ?arg arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".t window option ?arg ...?"}
 test textWind-2.2 {TkTextWindowCmd procedure, "cget" option} -body {
     .t window cget
 } -returnCodes error -result {wrong # args: should be ".t window cget index option"}
@@ -174,7 +174,7 @@ test textWind-2.7 {TkTextWindowCmd procedure, "cget" option} -setup {
 } -returnCodes ok -result 2
 test textWind-2.8 {TkTextWindowCmd procedure} -body {
     .t window co
-} -returnCodes error -result {wrong # args: should be ".t window configure index ?option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t window configure index ?-option value ...?"}
 test textWind-2.9 {TkTextWindowCmd procedure} -body {
     .t window configure gorp
 } -returnCodes error -result {bad text index "gorp"}
@@ -235,7 +235,7 @@ test textWind-2.14 {TkTextWindowCmd procedure} -setup {
     .t delete 1.0 end
 } -body {
     .t window create
-} -returnCodes error -result {wrong # args: should be ".t window create index ?option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t window create index ?-option value ...?"}
 test textWind-2.15 {TkTextWindowCmd procedure} -setup {
     .t delete 1.0 end
 } -body {

@@ -320,7 +320,7 @@ TkTextTagCmd(
     TkSharedText *sharedTextPtr;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], tagOptionStrings, sizeof(char *),
@@ -487,7 +487,7 @@ TkTextTagCmd(
     }
     case TAG_CONFIGURE:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?option? ?value? ?option value ...?");
+	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	return TkConfigureTag(interp, textPtr, Tcl_GetString(objv[3]), 1, objc - 4, objv + 4);
