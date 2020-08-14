@@ -897,6 +897,11 @@ ConfigureRestrictProc(
 
 @implementation TKContentView(TKWindowEvent)
 
+- (void) userDefaultsChanged: (NSNotification *) notification
+{
+    [self viewDidChangeEffectiveAppearance];
+}
+
 - (void) addTkDirtyRect: (NSRect) rect
 {
     _tkNeedsDisplay = YES;
@@ -1089,8 +1094,7 @@ static char *accentNames[] = {
 
 - (void) viewDidChangeEffectiveAppearance
 {
-    NSWindow *w = [self window];
-    Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow(w);
+    Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow([self window]);
     if (!tkwin) {
 	return;
     }
@@ -1102,8 +1106,20 @@ static char *accentNames[] = {
 			        componentsSeparatedByString: @" "]
 			        objectAtIndex:3];
     static char *defaultColor = NULL;
+
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
+
+	/*
+	 * AppKit calls this method when the user changes the Accent Color
+	 * but not when the user changes the Highlight Color.  So we register
+	 * to receive KVO notifications for Highlight Color as well.
+	 */
+
+	[preferences addObserver:self
+		      forKeyPath:@"AppleHighlightColor"
+			 options:NSKeyValueObservingOptionNew
+			 context:NULL];
     }
     accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
     highlightName = highlight ? highlight.UTF8String: defaultColor;
@@ -1117,6 +1133,17 @@ static char *accentNames[] = {
 	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
 	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
+    }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+		      ofObject:(id)object
+			change:(NSDictionary *)change
+		       context:(void *)context
+{
+    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+    if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
+	[self viewDidChangeEffectiveAppearance];
     }
 }
 
