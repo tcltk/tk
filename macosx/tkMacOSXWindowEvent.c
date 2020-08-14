@@ -1095,16 +1095,19 @@ static char *accentNames[] = {
 	return;
     }
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
+    const char *accentName, *highlightName;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
-    NSInteger accent = 1 + [preferences integerForKey:@"AppleAccentColor"];
-    char *accentName = accentNames[accent];
+    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
     NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
 			        componentsSeparatedByString: @" "]
 			        objectAtIndex:3];
+    accentName = accent ? accentNames[1 + accent.intValue] : "Null";
+    highlightName = highlight ? highlight.UTF8String: "Null";
+
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
 	     effectiveAppearanceName.UTF8String, accentName,
-	     highlight.UTF8String);
+	     highlightName);
     TkSendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
 	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
