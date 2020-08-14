@@ -92,7 +92,7 @@ the same as the path name of the panedwindow's window.  This command
 may be used to invoke various operations on the widget.  It has the
 following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as
 the panedwindow widget's path name.  \fIOption\fR and the \fIarg\fRs
