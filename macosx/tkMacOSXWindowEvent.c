@@ -1067,40 +1067,50 @@ ConfigureRestrictProc(
 }
 
 /*
- * This method is called when a user changes between light and dark mode or
- * changes the accent color. The implementation here generates a Tk virtual
- * event which can be bound to a function that redraws the window in an
- * appropriate style.
+ * In macOS 10.14 and later his method is called when a user changes between
+ * light and dark mode or changes the accent color. The implementation
+ * generates two virtual events.  The first is either <<LightAqua>> or
+ * <<DarkAqua>>, depending on the view's current effective appearance.  The
+ * second is <<AppearnceChanged>> and has a data string describing the
+ * effective appearance of the view and the current accent and highlight
+ * colors.
  */
+
+static char *accentNames[] = {
+    "Graphite",
+    "Red",
+    "Orange",
+    "Yellow",
+    "Green",
+    "Blue",
+    "Purple",
+    "Pink",
+};
 
 - (void) viewDidChangeEffectiveAppearance
 {
     NSWindow *w = [self window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow(w);
+    if (!tkwin) {
+	return;
+    }
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
-    if (!winPtr) {
-	return;
-    }
-    if (!lastAppearanceName) {
-	lastAppearanceName = [[NSAppearance currentAppearance] name];
-	TKLog(@"Initialized lastAppearance for %sto %@",
-	      Tk_PathName(tkwin), lastAppearanceName);
-	return;
-    }
-    if (lastAppearanceName == effectiveAppearanceName) {
-	TKLog(@"Sending <<NewAccentColor>> to %s", Tk_PathName(tkwin));
-	TkSendVirtualEvent(tkwin, "NewAccentColor", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	TKLog(@"Sending <<LightAqua>> to %s", Tk_PathName(tkwin));
+    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+    NSInteger accent = 1 + [preferences integerForKey:@"AppleAccentColor"];
+    char *accentName = accentNames[accent];
+    NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
+			        componentsSeparatedByString: @" "]
+			        objectAtIndex:3];
+    char data[256];
+    snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
+	     effectiveAppearanceName.UTF8String, accentName,
+	     highlight.UTF8String);
+    TkSendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
+    if (effectiveAppearanceName == NSAppearanceNameAqua) {
 	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	TKLog(@"Sending <<DarkAqua>> to %s", Tk_PathName(tkwin));
 	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
-    } else {
-	return;
     }
-    lastAppearanceName = effectiveAppearanceName;
 }
 
 /*
