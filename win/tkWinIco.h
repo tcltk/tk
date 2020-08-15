@@ -83,5 +83,13 @@ static WORD             PaletteSize(LPSTR lpbi);
 static WORD             DIBNumColors(LPSTR lpbi);
 static int              ReadICOHeader(Tcl_Channel channel);
 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
+
 
 
