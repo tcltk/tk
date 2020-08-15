@@ -70,7 +70,7 @@ static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 MODULE_SCOPE int
 TkMacOSXInitCGDrawing(
     Tcl_Interp *interp,
-    int enable,
+    TCL_UNUSED(int),
     int limit)
 {
     static Boolean initialized = FALSE;
@@ -604,7 +604,7 @@ TkMacOSXGetCGContextForDrawable(
 	bytesPerRow = ((size_t)
 		macDraw->size.width * bitsPerPixel + 127) >> 3 & ~15;
 	len = macDraw->size.height * bytesPerRow;
-	data = ckalloc(len);
+	data = (char *)ckalloc(len);
 	bzero(data, len);
 	macDraw->context = CGBitmapContextCreate(data, macDraw->size.width,
 		macDraw->size.height, bitsPerComponent, bytesPerRow,
@@ -865,7 +865,7 @@ XFillPolygon(
     GC gc,			/* Use this GC. */
     XPoint *points,		/* Array of points. */
     int npoints,		/* Number of points. */
-    int shape,			/* Shape to draw. */
+    TCL_UNUSED(int),	/* Shape to draw. */
     int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
@@ -976,7 +976,7 @@ XDrawRectangle(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangles(
     Display *display,
     Drawable drawable,
@@ -990,8 +990,8 @@ XDrawRectangles(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1009,6 +1009,7 @@ XDrawRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 #endif
 
@@ -1360,7 +1361,7 @@ XFillArc(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArcs(
     Display *display,
     Drawable d,
@@ -1375,7 +1376,7 @@ XFillArcs(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1423,6 +1424,7 @@ XFillArcs(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 #endif
 
@@ -1464,7 +1466,7 @@ XMaxRequestSize(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
+    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1560,8 +1562,8 @@ TkScrollWindow(
 
 void
 TkMacOSXSetUpGraphicsPort(
-    GC gc,			/* GC to apply to current port. */
-    void *destPort)
+    TCL_UNUSED(GC),			/* GC to apply to current port. */
+    TCL_UNUSED(void *))
 {
     Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
 }
@@ -1589,7 +1591,7 @@ Bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
-    int useCG,			/* advisory only ! */
+    TCL_UNUSED(int),
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
@@ -1928,7 +1930,7 @@ TkMacOSXSetUpClippingRgn(
 
 void
 TkpClipDrawableToRect(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     int x, int y,
     int width, int height)
@@ -1986,7 +1988,7 @@ ClipToGC(
 	int yOffset = ((MacDrawable *) d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;
 
-	TkMacOSXOffsetRegion(gcClip, xOffset, yOffset);
+	XOffsetRegion(gcClip, xOffset, yOffset);
 	gcClipRgn = TkMacOSXGetNativeRegion(gcClip);
 	if (clipRgn) {
 	    *clipRgnPtr = HIShapeCreateIntersection(gcClipRgn, clipRgn);
@@ -1995,7 +1997,7 @@ ClipToGC(
 	    *clipRgnPtr = HIShapeCreateCopy(gcClipRgn);
 	}
 	CFRelease(gcClipRgn);
-	TkMacOSXOffsetRegion(gcClip, -xOffset, -yOffset);
+	XOffsetRegion(gcClip, -xOffset, -yOffset);
     }
 }
 
@@ -2019,8 +2021,8 @@ ClipToGC(
 
 void *
 TkMacOSXMakeStippleMap(
-    Drawable drawable,		/* Window to apply stipple. */
-    Drawable stipple)		/* The stipple pattern. */
+    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
+    TCL_UNUSED(Drawable))	/* The stipple pattern. */
 {
     return NULL;
 }

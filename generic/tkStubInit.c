@@ -953,7 +953,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 117 */
     0, /* 118 */
     0, /* 119 */
-    0, /* 120 */
+    XOffsetRegion, /* 120 */
     0, /* 121 */
     0, /* 122 */
     0, /* 123 */
@@ -962,7 +962,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 126 */
     0, /* 127 */
     0, /* 128 */
-    0, /* 129 */
+    XLowerWindow, /* 129 */
     0, /* 130 */
     0, /* 131 */
     0, /* 132 */
@@ -977,9 +977,9 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 141 */
     0, /* 142 */
     0, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
-    0, /* 146 */
+    XDestroyIC, /* 144 */
+    XCreatePixmapCursor, /* 145 */
+    XCreateGlyphCursor, /* 146 */
     0, /* 147 */
     0, /* 148 */
     0, /* 149 */
@@ -990,7 +990,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 154 */
     0, /* 155 */
     0, /* 156 */
-    0, /* 157 */
+    XkbKeycodeToKeysym, /* 157 */
     TkUnusedStubEntry, /* 158 */
 #endif /* AQUA */
 };

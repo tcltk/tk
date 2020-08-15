@@ -28,6 +28,13 @@ static char tkLibPath[PATH_MAX + 1] = "";
 
 static char scriptPath[PATH_MAX + 1] = "";
 
+/*
+ * Forward declarations...
+ */
+
+static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
+			    int objc, Tcl_Obj *const objv[]);
+
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
@@ -86,6 +93,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
+    (void)aNotification;
 
     /*
      * Initialize notifications.
@@ -117,6 +125,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+
     /*
      * Run initialization routines that depend on the OS version.
      */
@@ -252,7 +261,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXMinorVersion --
+ * TkMacOSXVersion --
  *
  *	Tcl command which returns the minor version number of the currently
  *	running operating system.
@@ -266,11 +275,11 @@ static char scriptPath[PATH_MAX + 1] = "";
  *----------------------------------------------------------------------
  */
 static int
-TkMacOSXMinorVersion(
-		     ClientData cd,
-		     Tcl_Interp *ip,
-		     int objc,
-		     Tcl_Obj *const objv[])
+TkMacOSVersionObjCmd(
+    ClientData cd,
+    Tcl_Interp *ip,
+    int objc,
+    Tcl_Obj *const objv[])
 {
     static char version[16] = "";
     if (version[0] == '\0') {
@@ -460,10 +469,10 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPathCmd,
 			 NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
-           TkMacOSXMinorVersion, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion", TkMacOSVersionObjCmd,
+			 NULL, NULL);
     return TCL_OK;
 }
 
@@ -503,11 +512,11 @@ TkpGetAppName(
     }
     Tcl_DStringAppend(namePtr, name, -1);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetAppPath --
+ * TkMacOSXGetAppPathCmd --
  *
  *	Returns the path of the Wish application bundle.
  *
@@ -519,42 +528,39 @@ TkpGetAppName(
  *
  *----------------------------------------------------------------------
  */
-int TkMacOSXGetAppPath(
-		       ClientData cd,
-		       Tcl_Interp *ip,
-		       int objc,
-		       Tcl_Obj *const objv[])
+
+static int
+TkMacOSXGetAppPathCmd(
+    TCL_UNUSED(ClientData),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
 
-  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
 
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
 
-  /*
-   * Convert the URL reference into a string reference.
-   */
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
 
-  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
 
-  /*
-   * Get the system encoding method.
-   */
-
-  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
-
-  /*
-   * Convert the string reference into a C string.
-   */
-
-  char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
-
-  Tcl_SetResult(ip, path, NULL);
-
-  CFRelease(mainBundleURL);
-  CFRelease(appPath);
-  return TCL_OK;
-
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
+    return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -621,7 +627,7 @@ TkMacOSXDefaultStartupScript(void)
 	    CFURLRef scriptFldrURL;
 	    char startupScript[PATH_MAX + 1];
 
-	    if (CFURLGetFileSystemRepresentation (appMainURL, true,
+	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
 		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
@@ -658,10 +664,11 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    const char* module,
-    const char* symbol)
+    TCL_UNUSED(const char *),
+    const char *symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
+
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */
     }

@@ -1844,10 +1844,31 @@ declare 112 aqua {
 declare 114 aqua {
     VisualID XVisualIDFromVisual(Visual *visual)
 }
+declare 120 macosx {
+    int XOffsetRegion(void *rgn, int dx, int dy)
+}
+declare 129 aqua {
+    int XLowerWindow(Display *d, Window w)
+}
 declare 137 aqua {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
+}
+declare 144 aqua {
+    void XDestroyIC(XIC xic)
+}
+declare 145 aqua {
+    Cursor XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
+	    XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2)
+}
+declare 146 aqua {
+    Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
+	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
+	    XColor _Xconst *x2)
+}
+declare 157 macosx {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
 }
 declare 158 aqua {
     void TkUnusedStubEntry(void)

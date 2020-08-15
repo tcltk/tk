@@ -306,7 +306,7 @@ RGBACOLOR windowBackground[4] = RGBA256(235.0, 235.0, 235.0, 1.0);
  */
 
 static void GetBackgroundColorRGBA(
-    CGContextRef context,
+    TCL_UNUSED(CGContextRef),
     Tk_Window tkwin,
     int contrast,
     CGFloat *rgba)
@@ -1451,7 +1451,7 @@ DrawTab(
 static void DrawDarkSeparator(
     CGRect bounds,
     CGContextRef context,
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
     CGColorRef sepColor = CGColorFromGray(darkSeparator);
 

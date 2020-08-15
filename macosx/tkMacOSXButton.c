@@ -95,6 +95,8 @@ static void	PulseDefaultButtonProc(ClientData clientData);
 const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
+    NULL,
+	NULL
 };
 
 static int bCount;
@@ -143,7 +145,7 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    MacButton *macButtonPtr = ckalloc(sizeof(MacButton));
+    MacButton *macButtonPtr = (MacButton *)ckalloc(sizeof(MacButton));
 
     Tk_CreateEventHandler(tkwin, ActivateMask,
 	    ButtonEventProc, macButtonPtr);
@@ -191,13 +193,6 @@ TkpDisplayButton(
 	return;
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
-
-    /*
-     * Set up clipping region. Make sure the we are using the port
-     * for this button, or we will set the wrong window's clip.
-     */
-
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
 	macButtonPtr->useTkText = 0;
@@ -724,7 +719,7 @@ TkpDestroyButton(
 static void
 TkMacOSXDrawButton(
     MacButton *mbPtr,    /* Mac button. */
-    GC gc,               /* The GC we are drawing into - needed for
+    TCL_UNUSED(GC),      /* The GC we are drawing into - needed for
                           * the bevel button */
     Pixmap pixmap)       /* The pixmap we are drawing into - needed
                           * for the bevel button */
@@ -810,10 +805,10 @@ TkMacOSXDrawButton(
 
 static void
 ButtonBackgroundDrawCB(
-    const HIRect *btnbounds,
+    TCL_UNUSED(const HIRect *),
     MacButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     MacButton *mbPtr = (MacButton *) ptr;
     TkButton *butPtr = (TkButton *) mbPtr;
@@ -862,12 +857,12 @@ ButtonBackgroundDrawCB(
  */
 static void
 ButtonContentDrawCB (
-    const HIRect * btnbounds,
-    ThemeButtonKind kind,
-    const HIThemeButtonDrawInfo *drawinfo,
+    TCL_UNUSED(const HIRect *),
+    TCL_UNUSED(ThemeButtonKind),
+    TCL_UNUSED(const HIThemeButtonDrawInfo *),
     MacButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkButton *butPtr = (TkButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;
