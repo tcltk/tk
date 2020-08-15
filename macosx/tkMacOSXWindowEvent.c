@@ -1069,7 +1069,7 @@ ConfigureRestrictProc(
 }
 
 /*
- * In macOS 10.14 and later his method is called when a user changes between
+ * In macOS 10.14 and later this method is called when a user changes between
  * light and dark mode or changes the accent color. The implementation
  * generates two virtual events.  The first is either <<LightAqua>> or
  * <<DarkAqua>>, depending on the view's current effective appearance.  The
