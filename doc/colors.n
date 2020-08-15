@@ -961,8 +961,6 @@ systemWindowBackgroundColor7
 .DE
 .RE
 .TP
-
-
 \fBWindows\fR
 .
 On Windows, the following additional system colors are available
