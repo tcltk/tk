@@ -126,7 +126,12 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
-    (void)notification;
+
+    /*
+     * Run initialization routines that depend on the OS version.
+     */
+
+    Ttk_MacOSXInit();
 
     /*
      * It is not safe to force activation of the NSApp until this method is
