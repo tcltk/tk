@@ -16,9 +16,8 @@
  * Based extensively on the winico extension and sample code from Microsoft. 
  * Some of the code was adapted into tkWinWM.c to implement the "wm iconphoto" 
  * command (TIP 159). Here we are removing obsolete parts of the winico extension, 
- * and implementing the Shell_Notification API to add balloon notifications.  
+ * and implementing the Shell_Notification API to add balloon/system notifications.  
  */
-
 
 
 #include <windows.h>
@@ -551,32 +550,52 @@ FindDIBBits( LPSTR lpbi )
 
 
 static BOOL
-NotifyA (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt) 
+NotifyA (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt,  char* msgtitle, char* msginfo) 
 {
     NOTIFYICONDATAA ni;
     Tcl_DString dst;
+    Tcl_DString infodst;
+    Tcl_DString titledst;
     CHAR* str;
+    CHAR* info;
+    CHAR* title;
 
     ni.cbSize = sizeof(NOTIFYICONDATAA);
     ni.hWnd = CreateTaskbarHandlerWindow();
     ni.uID = icoPtr->id;
-    ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+    ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE | NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = (HICON)hIcon;
 
+    /* Tooltip text for system tray icon.*/
     str = (CHAR*)Tcl_UtfToExternalDString(NULL, txt, -1, &dst);
     strncpy(ni.szTip, str, 63);
     ni.szTip[63] = 0;
     Tcl_DStringFree(&dst);
+    /* Balloon notification for system tray icon. */
+     if (msgtitle != NULL) {
+      info = (CHAR*)Tcl_UtfToExternalDString(NULL, msgtitle, -1, &titledst);
+      strncpy(ni.szInfoTitle, msgtitle, Tcl_DStringLength(&titledst) + 1);
+      Tcl_DStringFree(&titledst);
+    }
+    if (msginfo != NULL) {
+      info = (CHAR*)Tcl_UtfToExternalDString(NULL, msginfo, -1, &infodst);
+      strncpy(ni.szInfo, msginfo, Tcl_DStringLength(&infodst) + 1);
+      Tcl_DStringFree(&infodst);
+    }
     return notify_funcA(oper, &ni);
 }
-
+
 static BOOL
-NotifyW (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt) 
+NotifyW (IcoInfo* icoPtr, int oper, HICON hIcon,  char* txt,  char* msgtitle, char* msginfo) 
 {
     NOTIFYICONDATAW ni;
     Tcl_DString dst;
+    Tcl_DString infodst;
+    Tcl_DString titledst;
     WCHAR* str;
+    WCHAR* info;
+    WCHAR* title;
     Tcl_Encoding Encoding;
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
@@ -588,46 +607,26 @@ NotifyW (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt)
 
     Encoding = Tcl_GetEncoding(NULL, "unicode");
     str = (WCHAR*)Tcl_UtfToExternalDString(Encoding, txt, -1, &dst);
-    Tcl_FreeEncoding(Encoding);
     wcsncpy(ni.szTip, str, 63);
     ni.szTip[63] = 0;
     Tcl_DStringFree(&dst);
+      /* Balloon notification for system tray icon. */
+     if (msgtitle != NULL) {
+      info = (WCHAR*)Tcl_UtfToExternalDString(Encoding, msgtitle, -1, &titledst);
+      wcsncpy(ni.szInfoTitle, msgtitle, Tcl_DStringLength(&titledst) + 1);
+      Tcl_DStringFree(&titledst);
+    }
+    if (msginfo != NULL) {
+      info = (WCHAR*)Tcl_UtfToExternalDString(Encoding, msginfo, -1, &infodst);
+      wcsncpy(ni.szInfo, msginfo, Tcl_DStringLength(&infodst) + 1);
+      Tcl_DStringFree(&infodst);
+    }
+    Tcl_FreeEncoding(Encoding);
     return notify_funcW(oper, &ni);
 }
 
-
-static BOOL DisplayNotification(IcoInfo* icoPtr, int oper, HICON hIcon, char* txt, char* info, *char title)
-{
-	/* TODO: Add your control notification handler code here */
-	NOTIFYICONDATA NID;
-	memset(&NID, 0, sizeof(NID));
-	/* on main function: */
-	NID.cbSize = sizeof(NID);
-	NID.hIcon = this->m_hIcon;
-	
-	NID.hWnd = this->m_hWnd;
-	NID.uID = WM_USER + 2;
-	StrCpyW(NID.szTip, L"System Tray Icon: Hello World");
-	/* in a timer: */
-	
-	NID.uFlags = NID.uFlags | NIF_ICON | NIF_INFO | NIF_TIP ;
-
-	StrCpyW(NID.szInfoTitle, L"This is balloon title");
-	StrCpyW(NID.szInfo, L"This is balloon Information detailed");
-
-	NID.uTimeout = 5000;
-	NID.dwInfoFlags = NID.dwInfoFlags | NIIF_INFO;
-	
-	/* NID.dwInfoFlags = NID.dwInfoFlags | NIIF_USER; */
-	/* NID.hBalloonIcon = this->m_hIcon; */
-
-	BOOL res = Shell_NotifyIcon(NIM_MODIFY, &NID);
-	if( res == FALSE )
-		MessageBoxA(NULL, "False", "", MB_OK);
-}
-
 static int 
-TaskbarOperation (IcoInfo *icoPtr, int oper, HICON hIcon, char *txt) 
+TaskbarOperation (IcoInfo *icoPtr, int oper, HICON hIcon, char *txt,  char* msginfo, char* msgtitle) 
 {
     int result;
     
@@ -654,10 +653,10 @@ TaskbarOperation (IcoInfo *icoPtr, int oper, HICON hIcon, char *txt)
     }
 
     if (notify_funcW != NULL) {
-        result = NotifyW(icoPtr, oper, hIcon, txt) 
-            || NotifyA(icoPtr, oper, hIcon, txt);
+      result = NotifyW(icoPtr, oper, hIcon, txt, msgtitle, msginfo) 
+        || NotifyA(icoPtr, oper, hIcon, txt, msgtitle, msginfo);
     } else {
-        result = NotifyA(icoPtr, oper, hIcon, txt);
+      result = NotifyA(icoPtr, oper, hIcon, txt, msgtitle, msginfo);
     }
 
     Tcl_SetObjResult(icoPtr->interp, Tcl_NewIntObj(result));
@@ -705,7 +704,7 @@ NewIcon (Tcl_Interp *interp, HICON hIcon,
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
     return icoPtr;
 }
-
+
 static void 
 FreeIcoPtr(Tcl_Interp *interp, IcoInfo *icoPtr)
 {
@@ -929,7 +928,7 @@ TaskbarEval(IcoInfo* icoPtr,WPARAM wParam,LPARAM lParam) {
         int result;
         HWND hwnd = NULL;
         
-        /* See http/ /:support.microsoft.com/kb/q135788 */
+        /* See http//:support.microsoft.com/kb/q135788 */
         if (fixup) {
             if (icoPtr->hwndFocus != NULL && IsWindow(icoPtr->hwndFocus)) {
                 hwnd = icoPtr->hwndFocus;
