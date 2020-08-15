@@ -734,7 +734,8 @@ EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* Slot 120 is reserved */
+/* 120 */
+EXTERN int		XOffsetRegion(void *rgn, int dx, int dy);
 /* Slot 121 is reserved */
 /* Slot 122 is reserved */
 /* Slot 123 is reserved */
@@ -743,7 +744,8 @@ EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
 /* Slot 128 is reserved */
-/* Slot 129 is reserved */
+/* 129 */
+EXTERN int		XLowerWindow(Display *d, Window w);
 /* Slot 130 is reserved */
 /* Slot 131 is reserved */
 /* Slot 132 is reserved */
@@ -761,9 +763,16 @@ EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 /* Slot 141 is reserved */
 /* Slot 142 is reserved */
 /* Slot 143 is reserved */
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
-/* Slot 146 is reserved */
+/* 144 */
+EXTERN void		XDestroyIC(XIC xic);
+/* 145 */
+EXTERN Cursor		XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
+				XColor *x1, XColor *x2, unsigned int ui1,
+				unsigned int ui2);
+/* 146 */
+EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
+				unsigned int ui1, unsigned int ui2,
+				XColor _Xconst *x1, XColor _Xconst *x2);
 /* Slot 147 is reserved */
 /* Slot 148 is reserved */
 /* Slot 149 is reserved */
@@ -774,7 +783,9 @@ EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 /* Slot 154 is reserved */
 /* Slot 155 is reserved */
 /* Slot 156 is reserved */
-/* Slot 157 is reserved */
+/* 157 */
+EXTERN KeySym		XkbKeycodeToKeysym(Display *d, unsigned int k, int g,
+				int i);
 /* 158 */
 EXTERN void		TkUnusedStubEntry(void);
 #endif /* AQUA */
@@ -1065,7 +1076,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved117)(void);
     void (*reserved118)(void);
     void (*reserved119)(void);
-    void (*reserved120)(void);
+    int (*xOffsetRegion) (void *rgn, int dx, int dy); /* 120 */
     void (*reserved121)(void);
     void (*reserved122)(void);
     void (*reserved123)(void);
@@ -1074,7 +1085,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved126)(void);
     void (*reserved127)(void);
     void (*reserved128)(void);
-    void (*reserved129)(void);
+    int (*xLowerWindow) (Display *d, Window w); /* 129 */
     void (*reserved130)(void);
     void (*reserved131)(void);
     void (*reserved132)(void);
@@ -1089,9 +1100,9 @@ typedef struct TkIntXlibStubs {
     void (*reserved141)(void);
     void (*reserved142)(void);
     void (*reserved143)(void);
-    void (*reserved144)(void);
-    void (*reserved145)(void);
-    void (*reserved146)(void);
+    void (*xDestroyIC) (XIC xic); /* 144 */
+    Cursor (*xCreatePixmapCursor) (Display *d, Pixmap p1, Pixmap p2, XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2); /* 145 */
+    Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 146 */
     void (*reserved147)(void);
     void (*reserved148)(void);
     void (*reserved149)(void);
@@ -1102,7 +1113,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved154)(void);
     void (*reserved155)(void);
     void (*reserved156)(void);
-    void (*reserved157)(void);
+    KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
     void (*tkUnusedStubEntry) (void); /* 158 */
 #endif /* AQUA */
 } TkIntXlibStubs;
@@ -1627,7 +1638,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* Slot 120 is reserved */
+#define XOffsetRegion \
+	(tkIntXlibStubsPtr->xOffsetRegion) /* 120 */
 /* Slot 121 is reserved */
 /* Slot 122 is reserved */
 /* Slot 123 is reserved */
@@ -1636,7 +1648,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
 /* Slot 128 is reserved */
-/* Slot 129 is reserved */
+#define XLowerWindow \
+	(tkIntXlibStubsPtr->xLowerWindow) /* 129 */
 /* Slot 130 is reserved */
 /* Slot 131 is reserved */
 /* Slot 132 is reserved */
@@ -1652,9 +1665,12 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 141 is reserved */
 /* Slot 142 is reserved */
 /* Slot 143 is reserved */
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
-/* Slot 146 is reserved */
+#define XDestroyIC \
+	(tkIntXlibStubsPtr->xDestroyIC) /* 144 */
+#define XCreatePixmapCursor \
+	(tkIntXlibStubsPtr->xCreatePixmapCursor) /* 145 */
+#define XCreateGlyphCursor \
+	(tkIntXlibStubsPtr->xCreateGlyphCursor) /* 146 */
 /* Slot 147 is reserved */
 /* Slot 148 is reserved */
 /* Slot 149 is reserved */
@@ -1665,7 +1681,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 154 is reserved */
 /* Slot 155 is reserved */
 /* Slot 156 is reserved */
-/* Slot 157 is reserved */
+#define XkbKeycodeToKeysym \
+	(tkIntXlibStubsPtr->xkbKeycodeToKeysym) /* 157 */
 #define TkUnusedStubEntry \
 	(tkIntXlibStubsPtr->tkUnusedStubEntry) /* 158 */
 #endif /* AQUA */

@@ -35,11 +35,14 @@ static CGFloat windowBackground[4] =
 
 void initColorTable()
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     Tcl_InitHashTable(&systemColors, TCL_STRING_KEYS);
     SystemColorDatum *entry, *oldEntry;
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr, index = 0;
+    NSColorList *systemColorList = [NSColorList colorListNamed:@"System"];
+    NSString *key;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
@@ -50,6 +53,7 @@ void initColorTable()
 
     /*
      * Build a hash table for looking up a color by its name.
+     * First add all of the static entries from tkMacOSXColor.h
      */
 
     for (entry = systemColorData; entry->name != NULL; entry++) {
@@ -70,6 +74,40 @@ void initColorTable()
 	    }
 	    entry->selector = [colorName retain];
 	}
+	if (newPtr == 0) {
+	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+	    entry->index = oldEntry->index;
+	    [oldEntry->selector release];
+	} else {
+	    entry->index = index++;
+	}
+	Tcl_SetHashValue(hPtr, entry);
+    }
+
+    /*
+     * Add all of the colors in the System ColorList.
+     */
+
+    for (key in [systemColorList allKeys]) {
+	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+	char *name;
+	entry = ckalloc(sizeof(SystemColorDatum));
+	bzero(entry, sizeof(SystemColorDatum));
+	name = ckalloc(length + 1);
+	strcpy(name, key.UTF8String);
+	name[0] = toupper(name[0]);
+        if (!strcmp(name, "WindowBackgroundColor")) {
+
+	    /*
+	     * Avoid black windows on old systems.
+	     */
+
+	    continue;
+	}
+	entry->type=semantic;
+	entry->name = name;
+	entry->selector = [key retain];
+	hPtr = Tcl_CreateHashEntry(&systemColors, entry->name, &newPtr);
 	if (newPtr == 0) {
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
@@ -105,6 +143,7 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     controlAccentIndex = entry->index;
+    [pool drain];
 }
 
 /*
@@ -211,7 +250,7 @@ GetEntryFromPixel(
 /*
  *----------------------------------------------------------------------
  *
- * GetRGB --
+ * GetRGBA --
  *
  *	Given a SystemColorDatum and a pointer to an array of 4 CGFloats, store
  *      the associated RGBA color values in the array.  In the case of the
@@ -273,7 +312,8 @@ GetRGBA(
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101500
-	    color = [NSColor colorForControlTint: [NSColor currentControlTint]];
+	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
+			      colorUsingColorSpace:sRGB];
 #endif
 	} else {
 	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
@@ -378,23 +418,24 @@ SetCGColorComponents(
 MODULE_SCOPE Bool
 TkMacOSXInDarkMode(Tk_Window tkwin)
 {
-    int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
         TkWindow *winPtr = (TkWindow*) tkwin;
+	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
 	    view = TkMacOSXDrawableView(winPtr->privatePtr);
 	}
 	if (view) {
-	    result = (view.effectiveAppearance == darkAqua);
+	    name = [[view effectiveAppearance] name];
 	} else {
-	    result = ([NSAppearance currentAppearance] == darkAqua);
+	    name = [[NSAppearance currentAppearance] name];
 	}
+	return (name == NSAppearanceNameDarkAqua);
     }
 #endif
-    return result;
+    return false;
 }
 
 /*
@@ -682,6 +723,7 @@ TkpGetColor(
     TkColor *tkColPtr;
     XColor color;
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
+    NSView *view = nil;
     static Bool initialized = NO;
     static NSColorSpace* sRGB = NULL;
 
@@ -692,6 +734,8 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
+	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
+	view = TkMacOSXDrawableView(macWin);
     }
 
     /*
@@ -713,12 +757,13 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance;
-		if (TkMacOSXInDarkMode(tkwin)) {
-		    windowAppearance = darkAqua;
+		NSAppearance *windowAppearance = savedAppearance;
+		if (view) {
+		    windowAppearance = [view effectiveAppearance];
+		}
+		if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 		    colormap = darkColormap;
 		} else {
-		    windowAppearance = lightAqua;
 		    colormap = lightColormap;
 		}
 		[NSAppearance setCurrentAppearance:windowAppearance];
