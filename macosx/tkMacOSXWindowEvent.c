@@ -207,7 +207,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	[view viewDidChangeEffectiveAppearance];
+#endif
 	[view addTkDirtyRect:[view bounds]];
 	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
 	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
@@ -1076,6 +1078,8 @@ ConfigureRestrictProc(
  * colors.
  */
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+
 static char *accentNames[] = {
     "Graphite",
     "Red",
@@ -1089,8 +1093,6 @@ static char *accentNames[] = {
 
 - (void) viewDidChangeEffectiveAppearance
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-
     Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow([self window]);
     if (!tkwin) {
 	return;
@@ -1131,9 +1133,9 @@ static char *accentNames[] = {
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
 	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
+}
 
 #endif
-}
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
 		      ofObject:(id)object
