@@ -310,6 +310,7 @@ MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
+MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 
 #pragma mark Private Objective-C Classes
 
@@ -341,13 +342,17 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
+
 #ifdef __i386__
+
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
     int _macOSVersion;  /* 10000 * major + 100*minor */
     Bool _isDrawing;
     Bool _needsToDraw;
+
 #endif
+
 }
 @property int poolLock;
 @property int macOSVersion;

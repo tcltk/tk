@@ -26,9 +26,11 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
+static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const *objv);
 
 
 /*
@@ -61,7 +63,7 @@ TkplatformtestInit(
 #endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-
+    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -98,22 +100,48 @@ DebuggerObjCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * MenuBarHeightObjCmd --
+ *
+ *	This procedure calls [NSMenu menuBarHeight] and returns the result
+ *      as an integer.  Windows can never be placed to overlap the MenuBar,
+ *      so tests need to be aware of its size.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+MenuBarHeightObjCmd(
+    TCL_UNUSED(void *),		/* Not used. */
+    Tcl_Interp *interp,			/* Not used. */
+    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
+{
+    static int height = 0;
+    if (height == 0) {
+	height = (int) [[NSApp mainMenu] menuBarHeight];
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTestLogDisplay --
  *
  *      The test image display procedure calls this to determine whether it
- *      should write a log message recording that it has being run.  On OSX
- *      10.14 and later, only calls to the display procedure which occur inside
- *      of the drawRect method should be logged, since those are the only ones
- *      which actually draw anything.  On earlier systems the opposite is true.
- *      The calls from within the drawRect method are redundant, since the
- *      first time the display procedure is run it will do the drawing and that
- *      first call will usually not occur inside of drawRect.
+ *      should write a log message recording that it has being run.
  *
  * Results:
- *      On OSX 10.14 and later, returns true if and only if the NSView of the
- *      drawable is the current focusView, which can only be the case when
- *      within [NSView drawRect].  On earlier systems returns false if
- *      and only if called from with [NSView drawRect].
+ *      Returns true if and only if the NSView of the drawable is the
+ *      current focusView, which on 10.14 and newer systems can only be the
+ *      case when within [NSView drawRect].
  *
  * Side effects:
  *	None
@@ -133,18 +161,11 @@ TkTestLogDisplay(
     } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
 	       macWin->winPtr->wmInfoPtr->window) {
 	win = macWin->winPtr->wmInfoPtr->window;
-    }/*
-    else if (macWin->toplevel && (macWin->toplevel->flags & TK_EMBEDDED)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
-	if (contWinPtr) {
-	    win = TkMacOSXDrawableWindow((Drawable) contWinPtr->privatePtr);
-	}
-	}*/
-    if (win && [NSApp macOSVersion] >= 101400) {
-	TKContentView *view = [win contentView];
-	return (view == [NSView focusView]);
+    }
+    if (win) {
+	return ([win contentView] == [NSView focusView]);
     } else {
-	return ![NSApp isDrawing];
+	return True;
     }
 }
 
@@ -169,7 +190,7 @@ TkTestLogDisplay(
 
 static int
 PressButtonObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -181,7 +202,6 @@ PressButtonObjCmd(
     NSArray *screens = [NSScreen screens];
     CGFloat ScreenHeight = 0;
     enum {X=1, Y};
-    (void)dummy;
 
     if (screens && [screens count]) {
 	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
@@ -246,7 +266,7 @@ PressButtonObjCmd(
 
 static int
 InjectKeyEventObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -263,7 +283,6 @@ InjectKeyEventObjCmd(
     NSEvent *keyEvent;
     NSUInteger type;
     MacKeycode macKC;
-    (void)dummy;
 
     if (objc < 3) {
     wrongArgs:

@@ -81,7 +81,7 @@ static void FreeClipMask(GC gc) {
 	    TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
 	}
 #endif
-	ckfree((char *) gc->clip_mask);
+	ckfree((char *)gc->clip_mask);
 	gc->clip_mask = None;
     }
 }
@@ -847,7 +847,7 @@ XCreateGlyphCursor(
     (void)foreground_color;
     (void)background_color;
 
-    return 1;
+    return (Cursor) NULL;
 }
 
 XFontSet
@@ -970,8 +970,7 @@ XSetIMValues(
 
     return NULL;
 }
-
-
+
 /*
  * Local Variables:
  * mode: c

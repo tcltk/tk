@@ -1,4 +1,3 @@
-sudo: required
 language: c
 addons:
   apt:
@@ -17,8 +16,7 @@ addons:
       - tcl-tk
     casks:
       - xquartz
-    update: true
-matrix:
+jobs:
   include:
 # Testing on Linux with various compilers
     - name: "Linux/GCC/Shared"

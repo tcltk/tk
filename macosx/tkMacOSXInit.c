@@ -32,7 +32,9 @@ static char scriptPath[PATH_MAX + 1] = "";
  * Forward declarations...
  */
 
-static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
+static int		TkMacOSXGetAppPathObjCmd(ClientData cd, Tcl_Interp *ip,
+			    int objc, Tcl_Obj *const objv[]);
+static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
 
 #pragma mark TKApplication(TKInit)
@@ -255,38 +257,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXMinorVersion --
- *
- *	Tcl command which returns the minor version number of the currently
- *	running operating system.
- *
- * Results:
- *	Returns the minor version number.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-static int
-TkMacOSXMinorVersion(
-		     ClientData cd,
-		     Tcl_Interp *ip,
-		     int objc,
-		     Tcl_Obj *const objv[])
-{
-    static char version[16] = "";
-    if (version[0] == '\0') {
-	snprintf(version, 16, "%d", [NSApp macOSVersion]);
-    }
-    Tcl_SetResult(ip, version, NULL);
-    return TCL_OK;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpInit --
  *
  *	Performs Mac-specific interpreter initialization related to the
@@ -469,9 +439,9 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
-	    TkMacOSXGetAppPathCmd, NULL, NULL);
+	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
-           TkMacOSXMinorVersion, NULL, NULL);
+           TkMacOSVersionObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -515,7 +485,7 @@ TkpGetAppName(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetAppPathCmd --
+ * TkMacOSXGetAppPathObjCmd --
  *
  *	Returns the path of the Wish application bundle.
  *
@@ -529,7 +499,7 @@ TkpGetAppName(
  */
 
 static int
-TkMacOSXGetAppPathCmd(
+TkMacOSXGetAppPathObjCmd(
     ClientData dummy,
     Tcl_Interp *interp,
     int objc,
@@ -559,6 +529,43 @@ TkMacOSXGetAppPathCmd(
 
     CFRelease(mainBundleURL);
     CFRelease(appPath);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSVersionObjCmd --
+ *
+ *	Tcl command which returns an integer encoding the major and minor
+ *	version numbers of the currently running operating system in the
+ *	form 10000*majorVersion + 100*minorVersion.
+ *
+ * Results:
+ *	Returns the OS version.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSVersionObjCmd(
+    TCL_UNUSED(void *), /* ClientData */
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    static char version[16] = "";
+    if (objc > 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    if (version[0] == '\0') {
+	snprintf(version, 16, "%d", [NSApp macOSVersion]);
+    }
+    Tcl_SetResult(interp, version, NULL);
     return TCL_OK;
 }
 
