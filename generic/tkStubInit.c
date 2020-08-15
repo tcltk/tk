@@ -43,6 +43,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -71,6 +72,13 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
 #define Tk_CreateOldPhotoImageFormat 0
+#ifdef MAC_OSX_TK
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+#endif
 #else
 static void
 doNothing(void)
@@ -495,7 +503,16 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-    TkDebugPhotoStringMatchDef, /* 185 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 185 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 185 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpRedrawWidget, /* 185 */
+#endif /* AQUA */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 186 */
 #endif /* X11 */
@@ -504,18 +521,9 @@ static const TkIntStubs tkIntStubs = {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
-    TkpRedrawWidget, /* 186 */
+    TkpWillDrawWidget, /* 186 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 187 */
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    0, /* 187 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 187 */ /* Dummy entry for stubs table backwards compatibility */
-    TkpWillDrawWidget, /* 187 */
-#endif /* AQUA */
+    TkDebugPhotoStringMatchDef, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {

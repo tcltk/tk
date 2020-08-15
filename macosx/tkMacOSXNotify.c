@@ -156,6 +156,7 @@ void DebugPrintQueue(void)
      * this block should be removed.
      */
 
+# if MAC_OSX_VERSION_MAX_ALLOWED >= 101500
     if ([theEvent type] == NSAppKitDefined) {
 	static Bool aWindowIsMoving = NO;
 	switch([theEvent subtype]) {
@@ -174,6 +175,8 @@ void DebugPrintQueue(void)
 	    break;
 	}
     }
+#endif
+
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
 
@@ -186,7 +189,9 @@ void DebugPrintQueue(void)
 
 - (void) _runBackgroundLoop
 {
-    while(Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)){};
+    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)){
+	TkMacOSXDrawAllViews(NULL);
+    }
 }
 @end
 

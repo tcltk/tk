@@ -51,11 +51,10 @@ static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
 
 int
 XDestroyWindow(
-    Display *display,		/* Display. */
+    TCL_UNUSED(Display *),		/* Display. */
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
-    (void)display;
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -206,7 +205,15 @@ XMapWindow(
 	event.xmap.type = MapNotify;
 	event.xmap.event = window;
 	event.xmap.override_redirect = winPtr->atts.override_redirect;
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+	/*
+	 * To update the mapped status of packed or placed subwindows
+	 * we handle this event immediately and then process the idle
+	 * events that it generates.
+	 */
+
+	Tk_HandleEvent(&event);
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 
 	/*
@@ -316,7 +323,15 @@ XUnmapWindow(
 	event.xunmap.window = window;
 	event.xunmap.event = window;
 	event.xunmap.from_configure = false;
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+	/*
+	 * To update the mapped status of packed or placed subwindows
+	 * we handle this event immediately and then process the idle
+	 * events that it generates.
+	 */
+
+	Tk_HandleEvent(&event);
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
@@ -675,11 +690,10 @@ XConfigureWindow(
     Display *display,		/* Display. */
     Window w,			/* Window. */
     unsigned int value_mask,
-    XWindowChanges *values)
+    TCL_UNUSED(XWindowChanges *))
 {
     MacDrawable *macWin = (MacDrawable *) w;
     TkWindow *winPtr = macWin->winPtr;
-    (void)values;
 
     display->request++;
 
@@ -984,14 +998,13 @@ TkMacOSXVisableClipRgn(
 static OSStatus
 InvalViewRect(
     int msg,
-    HIShapeRef rgn,
+    TCL_UNUSED(HIShapeRef),
     const CGRect *rect,
     void *ref)
 {
     static CGAffineTransform t;
     TKContentView *view = ref;
     NSRect dirtyRect;
-    (void)rgn;
 
     if (!view) {
 	return paramErr;
@@ -1120,10 +1133,8 @@ TkMacOSXDrawable(
 
 void *
 TkMacOSXGetDrawablePort(
-    Drawable drawable)
+    TCL_UNUSED(Drawable))
 {
-    (void)drawable;
-
     return NULL;
 }
 
@@ -1450,13 +1461,12 @@ UpdateOffsets(
 Pixmap
 Tk_GetPixmap(
     Display *display,	/* Display for new pixmap (can be null). */
-    Drawable d,		/* Drawable where pixmap will be used (ignored). */
+    TCL_UNUSED(Drawable),		/* Drawable where pixmap will be used (ignored). */
     int width,		/* Dimensions of pixmap. */
     int height,
     int depth)		/* Bits per pixel for pixmap. */
 {
     MacDrawable *macPix;
-    (void)d;
 
     if (display != NULL) {
 	display->request++;

@@ -14,7 +14,7 @@ grab \- Confine pointer and keyboard events to a window sub-tree
 .SH SYNOPSIS
 \fBgrab \fR?\fB\-global\fR? \fIwindow\fR
 .sp
-\fBgrab \fIoption \fR?\fIarg arg \fR...?
+\fBgrab \fIoption \fR?\fIarg \fR...?
 .BE
 .SH DESCRIPTION
 .PP
