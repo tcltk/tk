@@ -1135,8 +1135,6 @@ static char *accentNames[] = {
     }
 }
 
-#endif
-
 - (void)observeValueForKeyPath:(NSString *)keyPath
 		      ofObject:(id)object
 			change:(NSDictionary *)change
@@ -1147,6 +1145,8 @@ static char *accentNames[] = {
 	[self viewDidChangeEffectiveAppearance];
     }
 }
+
+#endif
 
 /*
  * This is no-op on 10.7 and up because Apple has removed this widget, but we
