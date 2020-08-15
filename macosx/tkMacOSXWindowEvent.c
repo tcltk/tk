@@ -1067,54 +1067,83 @@ ConfigureRestrictProc(
 }
 
 /*
- * This method is called when a user changes between light and dark mode. The
- * implementation here generates a Tk virtual event which can be bound to a
- * function that redraws the window in an appropriate style.
+ * In macOS 10.14 and later his method is called when a user changes between
+ * light and dark mode or changes the accent color. The implementation
+ * generates two virtual events.  The first is either <<LightAqua>> or
+ * <<DarkAqua>>, depending on the view's current effective appearance.  The
+ * second is <<AppearnceChanged>> and has a data string describing the
+ * effective appearance of the view and the current accent and highlight
+ * colors.
  */
+
+static char *accentNames[] = {
+    "Graphite",
+    "Red",
+    "Orange",
+    "Yellow",
+    "Green",
+    "Blue",
+    "Purple",
+    "Pink",
+};
 
 - (void) viewDidChangeEffectiveAppearance
 {
-    XVirtualEvent event;
-    int x, y;
-    NSWindow *w = [self window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-    Tk_Window tkwin = (Tk_Window) winPtr;
-    static NSAppearanceName lastAppearanceName = nil;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+
+    Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow([self window]);
+    if (!tkwin) {
+	return;
+    }
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
-    Tk_Uid eventName = NULL;
-    if (!winPtr) {
-	return;
+    const char *accentName, *highlightName;
+    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
+    NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
+			        componentsSeparatedByString: @" "]
+			        objectAtIndex:3];
+    static char *defaultColor = NULL;
+
+    if (!defaultColor) {
+	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
+
+	/*
+	 * AppKit calls this method when the user changes the Accent Color
+	 * but not when the user changes the Highlight Color.  So we register
+	 * to receive KVO notifications for Highlight Color as well.
+	 */
+
+	[preferences addObserver:self
+		      forKeyPath:@"AppleHighlightColor"
+			 options:NSKeyValueObservingOptionNew
+			 context:NULL];
     }
-    if (!lastAppearanceName) {
-	lastAppearanceName = [[NSAppearance currentAppearance] name];
-	return;
-    }
-    if (lastAppearanceName == effectiveAppearanceName) {
-	eventName = Tk_GetUid("NewAccentColor");
+    accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
+    highlightName = highlight ? highlight.UTF8String: defaultColor;
+
+    char data[256];
+    snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
+	     effectiveAppearanceName.UTF8String, accentName,
+	     highlightName);
+    TkSendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
+    if (effectiveAppearanceName == NSAppearanceNameAqua) {
+	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	eventName = Tk_GetUid("DarkAqua");
-    } else if (effectiveAppearanceName == NSAppearanceNameAqua) {
-        eventName = Tk_GetUid("LightAqua");
-    } else {
-	return;
+	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
 
-    lastAppearanceName = effectiveAppearanceName;
-    bzero(&event, sizeof(XVirtualEvent));
-    event.type = VirtualEvent;
-    event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    event.send_event = false;
-    event.display = Tk_Display(tkwin);
-    event.event = Tk_WindowId(tkwin);
-    event.root = XRootWindow(Tk_Display(tkwin), 0);
-    event.subwindow = None;
-    event.time = TkpGetMS();
-    XQueryPointer(NULL, winPtr->window, NULL, NULL,
-    		  &event.x_root, &event.y_root, &x, &y, &event.state);
-    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
-    event.same_screen = true;
-    event.name = eventName;
-    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+#endif
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+		      ofObject:(id)object
+			change:(NSDictionary *)change
+		       context:(void *)context
+{
+    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+    if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
+	[self viewDidChangeEffectiveAppearance];
+    }
 }
 
 /*
