@@ -112,9 +112,9 @@ jobs:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Xcode 11.5/Shared/XQuartz"
+    - name: "macOS/Clang/Xcode 11.6/Shared/XQuartz"
       os: osx
-      osx_image: xcode11.5
+      osx_image: xcode11.6
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -130,7 +130,17 @@ jobs:
 #       - cd ${BUILD_DIR}
 #     install: []
 #     script:
-#       - cmd.exe //C vcvarsall.bat x64 '&&' nmake '-f' makefile.vc all tcltest
+#       - cmd.exe //C vcvarsall.bat x64 '&&' nmake '-f' makefile.vc all tktest
+# "make dist" only
+    - name: "Linux: make dist"
+      os: linux
+      dist: bionic
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script:
+        - touch ../doc/man.macros
+        - make dist
 before_install:
   - |-
       case $TRAVIS_OS_NAME in
@@ -145,6 +155,7 @@ before_script:
   - export ERROR_ON_FAILURES=1
 script:
   - make binaries libraries tktest
+  - make install
 cache:
   directories:
   - $HOME/AppData/Local/Temp/chocolatey
