@@ -615,11 +615,6 @@ ConfigureScale(
 	    }
 	}
 
-	/*
-	 * Several options need special processing, such as parsing the
-	 * orientation and creating GCs.
-	 */
-
 	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
 		scalePtr->fromValue);
 	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
