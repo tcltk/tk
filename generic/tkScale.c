@@ -615,8 +615,11 @@ ConfigureScale(
 	    }
 	}
 
-	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
-		scalePtr->fromValue);
+        /*
+         * The fromValue shall not be rounded to the resolution, but the
+         * toValue and tickInterval do.
+         */
+
 	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
 	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);
