@@ -56,6 +56,8 @@ typedef struct IcoInfo {
     LPICONRESOURCE lpIR;   /* IconresourcePtr if type==ICO_FILE */
     int iconpos;           /* hIcon is the nth Icon*/
     char* taskbar_txt;     /* malloced text to display in the taskbar*/
+    char* taskbar_title;   /* title of balloon notification in taskbar */
+    char* taskbar_info;    /* text in body of balloon notification */
     Tcl_Interp* interp;    /* interp which created the icon*/
     char* taskbar_command; /* command to eval if events in the taskbar arrive*/
     int taskbar_flags;     /* taskbar related flags*/
@@ -690,6 +692,8 @@ NewIcon (Tcl_Interp *interp, HICON hIcon,
     n = _snprintf(buffer, sizeof(buffer)-1, "ico#%d", icoPtr->id); buffer[n] = 0;
     icoPtr->taskbar_txt = ckalloc((int)strlen(buffer)+1);
     strcpy(icoPtr->taskbar_txt, buffer);
+    icoPtr->taskbar_info=NULL;
+    icoPtr->taskbar_title=NULL;
     icoPtr->interp  = interp;
     icoPtr->taskbar_command= NULL;
     icoPtr->taskbar_flags = 0;
@@ -1341,66 +1345,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp *interp,
         }
         Tcl_AppendResult(interp,icoPtr->taskbar_txt,(char*)NULL);
         return TCL_OK;
-    } else if ((strncmp(argv[1], "setwindow", length) == 0)  && (length >= 2)) {
-        HWND h;
-        INT_PTR result = 0;
-        int iconsize=ICON_BIG;
-        int iconpos;
-        if (argc < 4) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " <windowid> <id> ?big/small? ?pos?\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if (NameOrHandle(interp,(char*)argv[2],&h)==TCL_ERROR) return TCL_ERROR;
-        if (( icoPtr = GetIcoPtr(interp, (char*)argv[3])) == NULL ) return TCL_ERROR;
-        if(argc>4){
-            if(!strcmp(argv[4],"small")) { iconsize=ICON_SMALL;}
-            else if(!strcmp(argv[4],"big")) {iconsize=ICON_BIG;}
-            else {
-                Tcl_AppendResult(interp,"wrong # args: should be \"",
-                    argv[0]," setwindow ",argv[2]," ",argv[3]," ?big/small? ?pos?\"", (char *) NULL);
-                return TCL_ERROR;
-            }
-        }
-        if(argc>5 && icoPtr->itype==ICO_FILE){
-            if(Tcl_GetInt(interp,argv[5],&iconpos)==TCL_ERROR) { return TCL_ERROR; }
-            if(iconpos<0 ||  iconpos >= icoPtr->lpIR->nNumImages ) {
-                Tcl_AppendResult(interp,"wrong position",(char*)NULL);
-                return TCL_ERROR;
-            }
-        } else {
-            iconpos=icoPtr->iconpos;
-        }
-        if(icoPtr->itype==ICO_FILE){
-            hIcon=icoPtr->lpIR->LPICONIMAGEs[iconpos].hIcon;
-        } else {
-            hIcon=icoPtr->hIcon;
-        }
-        if (!ISWIN32S){
-            result = SendMessage(h, WM_SETICON, iconsize, (LPARAM)hIcon);
-        } else {
-            if (iconsize==ICON_BIG){
-#ifdef GCLP_HICON
-                result = SetClassLongPtr(h, GCLP_HICON, (LONG_PTR)hIcon);
-#else
-		result = SetClassLong(h, GCL_HICON, (LONG)hIcon);
-#endif
-            } else {
-                /*don't permit small icons,bcause they remove the big ones*/
-#ifdef GCLP_HICON
-                result = GetClassLongPtr(h, GCLP_HICON);
-#else
-		result = GetClassLong(h, GCL_HICON);
-#endif
-            }
-        }
-#if 10 * TCL_MAJOR_VERSION + TCL_MINOR_VERSION < 84
-#errror unexpected
-        Tcl_SetObjResult(interp, Tcl_NewIntObj((int)result));
-#else
-        Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
-#endif
-        return TCL_OK;
+        //add bits here for balloon title and info
     } else if ((strncmp(argv[1], "taskbar", length) == 0)  && (length >= 2)) {
         /* TkWindow * tkwin=NULL; */
         char* callback=NULL;
@@ -1509,7 +1454,7 @@ DoInit (Tcl_Interp* interp)
     GetVersionEx(&info);
     isWin32s = (info.dwPlatformId == VER_PLATFORM_WIN32s);
     
-    Tcl_CreateCommand(interp, "winico", WinIcoCmd, (ClientData)interp,
+    Tcl_CreateCommand(interp, "_winico", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
     
     return Tcl_PkgProvide (interp, PACKAGE_NAME , PACKAGE_VERSION);
