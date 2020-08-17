@@ -14329,7 +14329,7 @@ CharChunkMeasureChars(
 	charsLen = Tcl_DStringLength(baseChars);
 	start += ciPtr->baseOffset;
 	if (end == -1) {
-	    assert(ciPtr->numBytes >= chunkPtr->wrappedAtSpace);
+	    assert(ciPtr->numBytes >= (TkSizeT)chunkPtr->wrappedAtSpace);
 	    end = ciPtr->baseOffset + ciPtr->numBytes - chunkPtr->wrappedAtSpace;
 	} else {
 	    end += ciPtr->baseOffset;
@@ -14898,7 +14898,7 @@ DrawChars(
     ciPtr = (const CharInfo *)chunkPtr->clientData;
     numBytes = ciPtr->numBytes;
 
-    assert(offsetBytes >= ciPtr->baseOffset);
+    assert((TkSizeT)offsetBytes >= ciPtr->baseOffset);
 
     if (numBytes > offsetBytes) {
 	const TextStyle *stylePtr = chunkPtr->stylePtr;
