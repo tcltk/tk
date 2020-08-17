@@ -209,6 +209,11 @@ jobs:
     - name: "macOS/Clang/Xcode 10/Shared"
       os: osx
       osx_image: xcode10.3
+      addons:
+        homebrew:
+          packages:
+            - tcl-tk
+          update: true
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
@@ -218,6 +223,11 @@ jobs:
     - name: "macOS/Clang/Xcode 9/Shared"
       os: osx
       osx_image: xcode9.4
+      addons:
+        homebrew:
+          packages:
+            - tcl-tk
+          update: true
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.13"
