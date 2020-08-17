@@ -1093,7 +1093,7 @@ ConfigureRestrictProc(
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 
-static char *accentNames[] = {
+static const char *const accentNames[] = {
     "Graphite",
     "Red",
     "Orange",
@@ -1101,7 +1101,7 @@ static char *accentNames[] = {
     "Green",
     "Blue",
     "Purple",
-    "Pink",
+    "Pink"
 };
 
 - (void) viewDidChangeEffectiveAppearance
@@ -1117,7 +1117,7 @@ static char *accentNames[] = {
     NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
 			        componentsSeparatedByString: @" "]
 			        objectAtIndex:3];
-    static char *defaultColor = NULL;
+    static const char *defaultColor = NULL;
 
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
