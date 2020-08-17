@@ -1080,7 +1080,7 @@ ConfigureRestrictProc(
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 
-static const char *accentNames[] = {
+static const char *const accentNames[] = {
     "Graphite",
     "Red",
     "Orange",
