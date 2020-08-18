@@ -1823,6 +1823,11 @@ declare 90 aqua {
 declare 91 aqua {
     int XSync(Display *display, Bool discard)
 }
+declare 92 aqua {
+    int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
+       int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+}
+
 declare 107 aqua {
     int XFlush(Display *display)
 }
