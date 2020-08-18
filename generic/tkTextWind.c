@@ -187,7 +187,7 @@ TextChanged(
 {
     assert(indexPtr->textPtr);
 
-    TkTextChanged(NULL, indexPtr->textPtr, indexPtr, indexPtr);
+    TkrTextChanged(NULL, indexPtr->textPtr, indexPtr, indexPtr);
 
     /*
      * TODO: It's probably not true that all window configuration can change
@@ -776,7 +776,7 @@ TriggerWatchCmd(
 
 	TkTextIndexClear(&index, textPtr);
 	TkTextIndexSetSegment(&index, ewPtr);
-	TkTextPrintIndex(textPtr, &index, buf);
+	TkrTextPrintIndex(textPtr, &index, buf);
 	TkTextTriggerWatchCmd(textPtr, "window", buf, buf, Tk_PathName(tkwin), arg1, arg2, 0);
     }
 }

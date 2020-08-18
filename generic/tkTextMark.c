@@ -67,7 +67,7 @@ static void		ReactivateMark(TkSharedText *sharedTextPtr, TkTextSegment *markPtr)
 
 static const TkTextDispChunkProcs layoutInsertProcs = {
     TEXT_DISP_CURSOR,		/* type */
-    TkTextInsertDisplayProc,	/* displayProc */
+    TkrTextInsertDisplayProc,	/* displayProc */
     InsertUndisplayProc,	/* undisplayProc */
     NULL,	                /* measureProc */
     NULL,		        /* bboxProc */
@@ -1494,9 +1494,9 @@ TriggerWatchCursor(
     if (TkTextIndexIsEmpty(oldCursorIndexPtr)) {
 	idx[0][0] = '\0';
     } else {
-	TkTextPrintIndex(textPtr, oldCursorIndexPtr, idx[0]);
+	TkrTextPrintIndex(textPtr, oldCursorIndexPtr, idx[0]);
     }
-    TkTextPrintIndex(textPtr, newCursorIndexPtr, idx[1]);
+    TkrTextPrintIndex(textPtr, newCursorIndexPtr, idx[1]);
     if (textPtr->insertMarkPtr->typePtr == &tkTextLeftMarkType) {
 	index = *newCursorIndexPtr;
     } else {
@@ -1643,7 +1643,7 @@ TkTextPushUndoMarkTokens(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextSetMark -- SetMark --
+ * TkrTextSetMark -- SetMark --
  *
  *	Set a mark to a particular position, creating a new mark if one
  *	doesn't already exist.
@@ -1807,7 +1807,7 @@ SetMark(
 		     * lacks on an efficient redraw functionality especially designed
 		     * for cursor updates.
 		     */
-		    TkTextChanged(NULL, textPtr, &oldIndex, &index2);
+		    TkrTextChanged(NULL, textPtr, &oldIndex, &index2);
 		}
 	    }
 	} else if (markPtr == textPtr->currentMarkPtr) {
@@ -1897,7 +1897,7 @@ SetMark(
 	     * with a cursor. This would speed up cursor movement.
 	     */
 
-	    TkTextChanged(NULL, textPtr, indexPtr, &index2);
+	    TkrTextChanged(NULL, textPtr, indexPtr, &index2);
 
 	    /*
 	     * Finally trigger the "watch" command for the "insert" cursor,
@@ -1914,7 +1914,7 @@ SetMark(
 }
 
 TkTextSegment *
-TkTextSetMark(
+TkrTextSetMark(
     TkText *textPtr,		/* Text widget in which to create mark. */
     const char *name,		/* Name of mark to set. */
     TkTextIndex *indexPtr)	/* Where to set mark. */
@@ -2723,7 +2723,7 @@ TkTextGetCursorWidth(
 /*
  *--------------------------------------------------------------
  *
- * TkTextInsertDisplayProc --
+ * TkrTextInsertDisplayProc --
  *
  *	This function is called to display the insertion cursor.
  *
@@ -2737,7 +2737,7 @@ TkTextGetCursorWidth(
  */
 
 void
-TkTextInsertDisplayProc(
+TkrTextInsertDisplayProc(
     TkText *textPtr,		/* The current text widget. */
     TkTextDispChunk *chunkPtr,	/* Chunk that is to be drawn. */
     int x,			/* X-position in dst at which to draw this chunk (may differ

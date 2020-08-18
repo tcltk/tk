@@ -475,18 +475,18 @@ static const TkIntStubs tkIntStubs = {
     TkDeleteThreadExitHandler, /* 154 */
     0, /* 155 */
     TkpTestembedCmd, /* 156 */
-    TkpTesttextCmd, /* 157 */
+    TkrTesttextCmd, /* 157 */
     TkSelGetSelection, /* 158 */
-    TkTextGetIndex, /* 159 */
-    TkTextIndexBackBytes, /* 160 */
-    TkTextIndexForwBytes, /* 161 */
-    TkTextMakeByteIndex, /* 162 */
-    TkTextPrintIndex, /* 163 */
-    TkTextSetMark, /* 164 */
-    TkTextXviewCmd, /* 165 */
-    TkTextChanged, /* 166 */
-    TkBTreeNumLines, /* 167 */
-    TkTextInsertDisplayProc, /* 168 */
+    TkrTextGetIndex, /* 159 */
+    TkrTextIndexBackBytes, /* 160 */
+    TkrTextIndexForwBytes, /* 161 */
+    TkrTextMakeByteIndex, /* 162 */
+    TkrTextPrintIndex, /* 163 */
+    TkrTextSetMark, /* 164 */
+    TkrTextXviewCmd, /* 165 */
+    TkrTextChanged, /* 166 */
+    TkrBTreeNumLines, /* 167 */
+    TkrTextInsertDisplayProc, /* 168 */
     TkStateParseProc, /* 169 */
     TkStatePrintProc, /* 170 */
     TkCanvasDashParseProc, /* 171 */

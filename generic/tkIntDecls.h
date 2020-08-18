@@ -438,50 +438,50 @@ EXTERN int		TkpTestembedCmd(ClientData clientData,
 				Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[]);
 /* 157 */
-EXTERN int		TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp,
+EXTERN int		TkrTesttextCmd(ClientData dummy, Tcl_Interp *interp,
 				int objc, Tcl_Obj *const objv[]);
 /* 158 */
 EXTERN int		TkSelGetSelection(Tcl_Interp *interp,
 				Tk_Window tkwin, Atom selection, Atom target,
 				Tk_GetSelProc *proc, ClientData clientData);
 /* 159 */
-EXTERN int		TkTextGetIndex(Tcl_Interp *interp,
+EXTERN int		TkrTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
 				struct TkTextIndex *indexPtr);
 /* 160 */
-EXTERN int		TkTextIndexBackBytes(const struct TkText *textPtr,
+EXTERN int		TkrTextIndexBackBytes(const struct TkText *textPtr,
 				const struct TkTextIndex *srcPtr, int count,
 				struct TkTextIndex *dstPtr);
 /* 161 */
-EXTERN int		TkTextIndexForwBytes(const struct TkText *textPtr,
+EXTERN int		TkrTextIndexForwBytes(const struct TkText *textPtr,
 				const struct TkTextIndex *srcPtr, int count,
 				struct TkTextIndex *dstPtr);
 /* 162 */
-EXTERN struct TkTextIndex * TkTextMakeByteIndex(TkTextBTree tree,
+EXTERN struct TkTextIndex * TkrTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
 				int byteIndex, struct TkTextIndex *indexPtr);
 /* 163 */
-EXTERN TkSizeT		TkTextPrintIndex(const struct TkText *textPtr,
+EXTERN TkSizeT		TkrTextPrintIndex(const struct TkText *textPtr,
 				const struct TkTextIndex *indexPtr,
 				char *string);
 /* 164 */
-EXTERN struct TkTextSegment * TkTextSetMark(struct TkText *textPtr,
+EXTERN struct TkTextSegment * TkrTextSetMark(struct TkText *textPtr,
 				const char *name,
 				struct TkTextIndex *indexPtr);
 /* 165 */
-EXTERN int		TkTextXviewCmd(struct TkText *textPtr,
+EXTERN int		TkrTextXviewCmd(struct TkText *textPtr,
 				Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[]);
 /* 166 */
-EXTERN void		TkTextChanged(struct TkSharedText *sharedTextPtr,
+EXTERN void		TkrTextChanged(struct TkSharedText *sharedTextPtr,
 				struct TkText *textPtr,
 				const struct TkTextIndex *index1Ptr,
 				const struct TkTextIndex *index2Ptr);
 /* 167 */
-EXTERN int		TkBTreeNumLines(TkTextBTree tree,
+EXTERN int		TkrBTreeNumLines(TkTextBTree tree,
 				const struct TkText *textPtr);
 /* 168 */
-EXTERN void		TkTextInsertDisplayProc(struct TkText *textPtr,
+EXTERN void		TkrTextInsertDisplayProc(struct TkText *textPtr,
 				struct TkTextDispChunk *chunkPtr, int x,
 				int y, int height, int baseline,
 				Display *display, Drawable dst, int screenY);
@@ -759,18 +759,18 @@ typedef struct TkIntStubs {
     void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 154 */
     void (*reserved155)(void);
     int (*tkpTestembedCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 156 */
-    int (*tkpTesttextCmd) (ClientData dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
+    int (*tkrTesttextCmd) (ClientData dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, ClientData clientData); /* 158 */
-    int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
-    int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
-    int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 161 */
-    struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, int byteIndex, struct TkTextIndex *indexPtr); /* 162 */
-    TkSizeT (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
-    struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
-    int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 165 */
-    void (*tkTextChanged) (struct TkSharedText *sharedTextPtr, struct TkText *textPtr, const struct TkTextIndex *index1Ptr, const struct TkTextIndex *index2Ptr); /* 166 */
-    int (*tkBTreeNumLines) (TkTextBTree tree, const struct TkText *textPtr); /* 167 */
-    void (*tkTextInsertDisplayProc) (struct TkText *textPtr, struct TkTextDispChunk *chunkPtr, int x, int y, int height, int baseline, Display *display, Drawable dst, int screenY); /* 168 */
+    int (*tkrTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
+    int (*tkrTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
+    int (*tkrTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 161 */
+    struct TkTextIndex * (*tkrTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, int byteIndex, struct TkTextIndex *indexPtr); /* 162 */
+    TkSizeT (*tkrTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
+    struct TkTextSegment * (*tkrTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
+    int (*tkrTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 165 */
+    void (*tkrTextChanged) (struct TkSharedText *sharedTextPtr, struct TkText *textPtr, const struct TkTextIndex *index1Ptr, const struct TkTextIndex *index2Ptr); /* 166 */
+    int (*tkrBTreeNumLines) (TkTextBTree tree, const struct TkText *textPtr); /* 167 */
+    void (*tkrTextInsertDisplayProc) (struct TkText *textPtr, struct TkTextDispChunk *chunkPtr, int x, int y, int height, int baseline, Display *display, Drawable dst, int screenY); /* 168 */
     int (*tkStateParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 169 */
     const char * (*tkStatePrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 170 */
     int (*tkCanvasDashParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 171 */
@@ -1124,30 +1124,30 @@ extern const TkIntStubs *tkIntStubsPtr;
 /* Slot 155 is reserved */
 #define TkpTestembedCmd \
 	(tkIntStubsPtr->tkpTestembedCmd) /* 156 */
-#define TkpTesttextCmd \
-	(tkIntStubsPtr->tkpTesttextCmd) /* 157 */
+#define TkrTesttextCmd \
+	(tkIntStubsPtr->tkrTesttextCmd) /* 157 */
 #define TkSelGetSelection \
 	(tkIntStubsPtr->tkSelGetSelection) /* 158 */
-#define TkTextGetIndex \
-	(tkIntStubsPtr->tkTextGetIndex) /* 159 */
-#define TkTextIndexBackBytes \
-	(tkIntStubsPtr->tkTextIndexBackBytes) /* 160 */
-#define TkTextIndexForwBytes \
-	(tkIntStubsPtr->tkTextIndexForwBytes) /* 161 */
-#define TkTextMakeByteIndex \
-	(tkIntStubsPtr->tkTextMakeByteIndex) /* 162 */
-#define TkTextPrintIndex \
-	(tkIntStubsPtr->tkTextPrintIndex) /* 163 */
-#define TkTextSetMark \
-	(tkIntStubsPtr->tkTextSetMark) /* 164 */
-#define TkTextXviewCmd \
-	(tkIntStubsPtr->tkTextXviewCmd) /* 165 */
-#define TkTextChanged \
-	(tkIntStubsPtr->tkTextChanged) /* 166 */
-#define TkBTreeNumLines \
-	(tkIntStubsPtr->tkBTreeNumLines) /* 167 */
-#define TkTextInsertDisplayProc \
-	(tkIntStubsPtr->tkTextInsertDisplayProc) /* 168 */
+#define TkrTextGetIndex \
+	(tkIntStubsPtr->tkrTextGetIndex) /* 159 */
+#define TkrTextIndexBackBytes \
+	(tkIntStubsPtr->tkrTextIndexBackBytes) /* 160 */
+#define TkrTextIndexForwBytes \
+	(tkIntStubsPtr->tkrTextIndexForwBytes) /* 161 */
+#define TkrTextMakeByteIndex \
+	(tkIntStubsPtr->tkrTextMakeByteIndex) /* 162 */
+#define TkrTextPrintIndex \
+	(tkIntStubsPtr->tkrTextPrintIndex) /* 163 */
+#define TkrTextSetMark \
+	(tkIntStubsPtr->tkrTextSetMark) /* 164 */
+#define TkrTextXviewCmd \
+	(tkIntStubsPtr->tkrTextXviewCmd) /* 165 */
+#define TkrTextChanged \
+	(tkIntStubsPtr->tkrTextChanged) /* 166 */
+#define TkrBTreeNumLines \
+	(tkIntStubsPtr->tkrBTreeNumLines) /* 167 */
+#define TkrTextInsertDisplayProc \
+	(tkIntStubsPtr->tkrTextInsertDisplayProc) /* 168 */
 #define TkStateParseProc \
 	(tkIntStubsPtr->tkStateParseProc) /* 169 */
 #define TkStatePrintProc \

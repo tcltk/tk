@@ -1558,8 +1558,8 @@ UndoDeletePerform(
 
 	TkTextIndexClear2(&index1, NULL, sharedTextPtr->tree);
 	TkTextIndexSetSegment(&index1, surrogatePtr);
-	TkTextIndexForwBytes(NULL, &index1, surrogatePtr->size - 1, &index1);
-	TkTextIndexForwBytes(NULL, &index1, 1, &index2);
+	TkrTextIndexForwBytes(NULL, &index1, surrogatePtr->size - 1, &index1);
+	TkrTextIndexForwBytes(NULL, &index1, 1, &index2);
 	DeleteIndexRange(sharedTextPtr, &index1, &index2, 0, NULL, NULL);
     }
 }
@@ -1785,7 +1785,7 @@ UndoTagPerform(
 	for (len = token->lengths; *len; ++len) {
 	    int length = *len;
 
-	    TkTextIndexForwBytes(NULL, &nextIndex, ABS(length), &nextIndex);
+	    TkrTextIndexForwBytes(NULL, &nextIndex, ABS(length), &nextIndex);
 
 	    if (length > 0) {
 		TkBTreeTag(sharedTextPtr, NULL, &index1, &nextIndex, tagPtr, add, NULL,
@@ -2186,7 +2186,7 @@ GetLastLine(
 /*
  *----------------------------------------------------------------------
  *
- * TkBTreeNumLines --
+ * TkrBTreeNumLines --
  *
  *	This function returns a count of the number of lines of text
  *	present in a given B-tree.
@@ -2203,7 +2203,7 @@ GetLastLine(
  */
 
 int
-TkBTreeNumLines(
+TkrBTreeNumLines(
     TkTextBTree tree,		/* Information about tree. */
     const TkText *textPtr)	/* Relative to this client of the B-tree. */
 {
@@ -9798,8 +9798,8 @@ TkBTreeTag(
 	}
 	TkTextIndexSetSegment(&index1, data.firstSegPtr);
 	TkTextIndexSetSegment(&index2, data.lastSegPtr);
-	TkTextIndexForwBytes(textPtr, &index1, data.firstOffset, &index1);
-	TkTextIndexBackBytes(textPtr, &index2, data.lastOffset, &index2);
+	TkrTextIndexForwBytes(textPtr, &index1, data.firstOffset, &index1);
+	TkrTextIndexBackBytes(textPtr, &index2, data.lastOffset, &index2);
 	assert(TkTextIndexCompare(&index1, &index2) < 0);
 
 	if (data.sizeOfLengths > 0) {
@@ -11389,7 +11389,7 @@ TkBTreeStartSearch(
     indexPtr1 = &searchPtr->curIndex;
     lineNo = TkTextIndexGetLineNumber(indexPtr2, indexPtr1->textPtr);
     searchPtr->linesLeft = lineNo - TkTextIndexGetLineNumber(indexPtr1, indexPtr1->textPtr) + 1;
-    nlines = TkBTreeNumLines(indexPtr1->tree, indexPtr1->textPtr);
+    nlines = TkrBTreeNumLines(indexPtr1->tree, indexPtr1->textPtr);
     searchPtr->linesToEndOfText = nlines - lineNo + 1;
 }
 

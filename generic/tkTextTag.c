@@ -550,7 +550,7 @@ TkTextTagCmd(
 
 	    TkTextIndexClear(&index, textPtr);
 	    TkTextIndexSetSegment(&index, segPtr);
-	    TkTextPrintIndex(textPtr, &index, buf);
+	    TkrTextPrintIndex(textPtr, &index, buf);
 	    Tcl_AppendElement(interp, buf);
 	}
 	break;
@@ -583,7 +583,7 @@ TkTextTagCmd(
 
 	    TkTextIndexClear(&index, textPtr);
 	    TkTextIndexSetSegment(&index, segPtr);
-	    TkTextPrintIndex(textPtr, &index, buf);
+	    TkrTextPrintIndex(textPtr, &index, buf);
 	    Tcl_AppendElement(interp, buf);
 	}
 	break;
@@ -609,11 +609,11 @@ TkTextTagCmd(
 	    TkTextIndexForwChars(textPtr, &index, 1, &index, COUNT_INDICES);
 
 	    TkTextTagFindStartOfRange(textPtr, tagPtr, &index, &result);
-	    TkTextPrintIndex(textPtr, &result, buf);
+	    TkrTextPrintIndex(textPtr, &result, buf);
 	    Tcl_AppendElement(interp, buf);
 
 	    TkTextTagFindEndOfRange(textPtr, tagPtr, &index, &result);
-	    TkTextPrintIndex(textPtr, &result, buf);
+	    TkrTextPrintIndex(textPtr, &result, buf);
 	    Tcl_AppendElement(interp, buf);
 	}
 	break;
@@ -701,12 +701,12 @@ TkTextTagCmd(
 		assert(TkTextIndexCompare(&tSearch.curIndex, &index2) < 0);
 	    }
 	    resultObj = Tcl_NewObj();
-	    TkTextPrintIndex(textPtr, &tSearch.curIndex, position);
+	    TkrTextPrintIndex(textPtr, &tSearch.curIndex, position);
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position, -1));
 	    TkBTreeLiftSearch(&tSearch); /* we need tagoff even if outside of the range */
 	    TkBTreeNextTag(&tSearch);    /* cannot fail */
 	    assert(tSearch.segPtr);      /* proof last assumption */
-	    TkTextPrintIndex(textPtr, &tSearch.curIndex, position);
+	    TkrTextPrintIndex(textPtr, &tSearch.curIndex, position);
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position, -1));
 	    Tcl_SetObjResult(interp, resultObj);
 	}
@@ -747,14 +747,14 @@ TkTextTagCmd(
 		 * We've found tagon. Now search forward for tagoff.
 		 */
 
-		TkTextPrintIndex(textPtr, &index1, position1);
+		TkrTextPrintIndex(textPtr, &index1, position1);
 		TkTextIndexSetupToEndOfText(&end, textPtr, sharedTextPtr->tree);
 		TkTextIndexForwChars(textPtr, &index1, 1, &index1, COUNT_INDICES);
 		TkBTreeStartSearch(&index1, &end, tagPtr, &tSearch, SEARCH_EITHER_TAGON_TAGOFF);
 		TkBTreeNextTag(&tSearch); /* cannot fail */
 		assert(tSearch.segPtr);   /* proof last assumption */
 		assert(!tSearch.tagon);   /* must be tagoff */
-		TkTextPrintIndex(textPtr, &tSearch.curIndex, position2);
+		TkrTextPrintIndex(textPtr, &tSearch.curIndex, position2);
 	    } else {
 		/*
 		 * We've found tagoff. Now search backwards for tagon.
@@ -764,8 +764,8 @@ TkTextTagCmd(
 		    return TCL_OK;
 		}
 		assert(TkTextIndexCompare(&tSearch.curIndex, &index2) >= 0);
-		TkTextPrintIndex(textPtr, &tSearch.curIndex, position1);
-		TkTextPrintIndex(textPtr, &index1, position2);
+		TkrTextPrintIndex(textPtr, &tSearch.curIndex, position1);
+		TkrTextPrintIndex(textPtr, &index1, position2);
 	    }
 	    resultObj = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position1, -1));
@@ -1541,7 +1541,7 @@ TkTextReplaceTags(
     Tcl_ListObjGetElements(NULL, tagListPtr, &objn, &objs);
     TkTextIndexClear(&index[0], textPtr);
     TkTextIndexSetSegment(&index[0], segPtr);
-    TkTextIndexForwBytes(textPtr, &index[0], 1, &index[1]);
+    TkrTextIndexForwBytes(textPtr, &index[0], 1, &index[1]);
     TkTextTagSetIncrRefCount(oldTagInfoPtr = segPtr->tagInfoPtr);
 
     if (objn > (int) (sizeof(tagArrBuf)/sizeof(tagArrBuf[0]))) {
