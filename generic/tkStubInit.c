@@ -925,7 +925,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
     XSync, /* 91 */
-    0, /* 92 */
+    XSetClipRectangles, /* 92 */
     0, /* 93 */
     0, /* 94 */
     0, /* 95 */
