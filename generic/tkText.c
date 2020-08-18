@@ -1127,8 +1127,8 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
-    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
-    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
+    textPtr->insertMarkPtr = TkrTextSetMark(textPtr, "insert", &startIndex);
+    textPtr->currentMarkPtr = TkrTextSetMark(textPtr, "current", &startIndex);
     textPtr->currentMarkIndex = startIndex;
 
     sharedTextPtr->numPeers += 1;
@@ -2611,7 +2611,7 @@ TextWidgetObjCmd(
 		 */
 		TkTextGenerateWidgetViewSyncEvent(textPtr, 0);
 	    } else {
-		UpdateLineMetrics(textPtr, 0, TkBTreeNumLines(sharedTextPtr->tree, textPtr));
+		UpdateLineMetrics(textPtr, 0, TkrBTreeNumLines(sharedTextPtr->tree, textPtr));
 	    }
 	}
 	break;
@@ -2633,7 +2633,7 @@ TextWidgetObjCmd(
 	result = TkTextWindowCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_XVIEW:
-	result = TkTextXviewCmd(textPtr, interp, objc, objv);
+	result = TkrTextXviewCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_YVIEW:
 	result = TkTextYviewCmd(textPtr, interp, objc, objv);
@@ -2660,7 +2660,7 @@ TextWidgetObjCmd(
     sharedTextPtr->undoStackEvent = oldUndoStackEvent;
 
     if (textPtr && textPtr->syncTime == 0) {
-	UpdateLineMetrics(textPtr, 0, TkBTreeNumLines(sharedTextPtr->tree, textPtr));
+	UpdateLineMetrics(textPtr, 0, TkrBTreeNumLines(sharedTextPtr->tree, textPtr));
 	TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
     }
 
@@ -2708,7 +2708,7 @@ IsEmpty(
 
     assert(sharedTextPtr);
 
-    if (TkBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
+    if (TkrBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
 	return 0;
     }
 
@@ -2768,7 +2768,7 @@ IsClean(
 
     assert(sharedTextPtr);
 
-    if (TkBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
+    if (TkrBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
 	return 0;
     }
 
@@ -4232,7 +4232,7 @@ TkConfigureText(
 	 */
 
 	TkBTreeClientRangeChanged(textPtr, MAX(0, textPtr->lineHeight));
-	TkTextMakeByteIndex(tree, NULL, TkTextIndexGetLineNumber(&textPtr->topIndex, NULL), 0, &current);
+	TkrTextMakeByteIndex(tree, NULL, TkTextIndexGetLineNumber(&textPtr->topIndex, NULL), 0, &current);
 
 	if (TkTextIndexCompare(&current, &start) < 0 || TkTextIndexCompare(&end, &current) < 0) {
 	    TkTextSearch search;
@@ -4247,12 +4247,12 @@ TkConfigureText(
 	     * current start,end.
 	     */
 
-	    TkTextMakeByteIndex(tree, NULL, 0, 0, &first);
+	    TkrTextMakeByteIndex(tree, NULL, 0, 0, &first);
 	    TkBTreeStartSearch(&first, &start, textPtr->selTagPtr, &search, SEARCH_NEXT_TAGON);
 	    if (TkBTreeNextTag(&search)) {
 		selChanged = 1;
 	    } else {
-		TkTextMakeByteIndex(tree, NULL, TkBTreeNumLines(tree, NULL), 0, &last);
+		TkrTextMakeByteIndex(tree, NULL, TkrBTreeNumLines(tree, NULL), 0, &last);
 		TkBTreeStartSearchBack(&end, &last, textPtr->selTagPtr,
 			&search, SEARCH_EITHER_TAGON_TAGOFF);
 		if (TkBTreePrevTag(&search)) {
@@ -4287,9 +4287,9 @@ TkConfigureText(
 
 	TkTextMarkNameToIndex(textPtr, "current", &current);
 	if (TkTextIndexCompare(&current, &start) < 0) {
-	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &start);
+	    textPtr->currentMarkPtr = TkrTextSetMark(textPtr, "current", &start);
 	} else if (TkTextIndexCompare(&current, &end) > 0) {
-	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &end);
+	    textPtr->currentMarkPtr = TkrTextSetMark(textPtr, "current", &end);
 	}
     } else {
 	currentEpoch = TkBTreeEpoch(tree);
@@ -4374,7 +4374,7 @@ TkConfigureText(
     TextWorldChanged(textPtr, mask);
 
     if (textPtr->syncTime == 0 && (mask & TK_TEXT_SYNCHRONIZE)) {
-	UpdateLineMetrics(textPtr, 0, TkBTreeNumLines(sharedTextPtr->tree, textPtr));
+	UpdateLineMetrics(textPtr, 0, TkrBTreeNumLines(sharedTextPtr->tree, textPtr));
     }
 
     /*
@@ -4401,9 +4401,9 @@ TkConfigureText(
 	end.textPtr = textPtr;
 
 	if (TkTextIndexCompare(&current, &start) < 0) {
-	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &start);
+	    textPtr->insertMarkPtr = TkrTextSetMark(textPtr, "insert", &start);
 	} else if (TkTextIndexCompare(&current, &end) >= 0) {
-	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &end);
+	    textPtr->insertMarkPtr = TkrTextSetMark(textPtr, "insert", &end);
 	}
     }
 
@@ -4657,7 +4657,7 @@ ProcessFocusInOut(
 	    }
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(textPtr, &index, 1, &index2, COUNT_INDICES);
-	    TkTextChanged(NULL, textPtr, &index, &index2);
+	    TkrTextChanged(NULL, textPtr, &index, &index2);
 	}
 	if (textPtr->selAttrs.inactiveBorder != textPtr->selAttrs.border
 		|| textPtr->selAttrs.inactiveFgColor != textPtr->selAttrs.fgColor) {
@@ -4888,8 +4888,8 @@ SetNewTopPosition(
 		continue;
 	    }
 
-	    TkTextMakeByteIndex(sharedTextPtr->tree, NULL, positions->lineIndex, 0, &index);
-	    TkTextIndexForwBytes(tPtr, &index, positions->byteIndex, &index);
+	    TkrTextMakeByteIndex(sharedTextPtr->tree, NULL, positions->lineIndex, 0, &index);
+	    TkrTextIndexForwBytes(tPtr, &index, positions->byteIndex, &index);
 
 	    if (tPtr == textPtr) {
 		/*
@@ -5114,7 +5114,7 @@ InsertChars(
     InitPosition(sharedTextPtr, textPosition);
     FindNewTopPosition(sharedTextPtr, textPosition, index1Ptr, NULL, length);
 
-    TkTextChanged(sharedTextPtr, NULL, index1Ptr, index1Ptr);
+    TkrTextChanged(sharedTextPtr, NULL, index1Ptr, index1Ptr);
     undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
     startIndex = *index1Ptr;
     TkTextIndexToByteIndex(&startIndex); /* we need the byte position after insertion */
@@ -5239,8 +5239,8 @@ TriggerWatchUndoRedo(
 	    char idx[2][TK_POS_CHARS];
 	    const char *info = isRedo ? "redo" : "undo";
 
-	    TkTextPrintIndex(tPtr, &index1, idx[0]);
-	    TkTextPrintIndex(tPtr, &index2, idx[1]);
+	    TkrTextPrintIndex(tPtr, &index1, idx[0]);
+	    TkrTextPrintIndex(tPtr, &index2, idx[1]);
 	    TkTextTriggerWatchCmd(tPtr, info, idx[0], idx[1], Tcl_GetString(cmdPtr), buf, NULL, 0);
 	}
     }
@@ -5309,11 +5309,11 @@ TextUndoRedoCallback(
 	    }
 	    if (isInsert) {
 		TkBTreeUndoIndexToIndex(sharedTextPtr, &range->startIndex, &index1);
-		TkTextChanged(sharedTextPtr, NULL, &index1, &index1);
+		TkrTextChanged(sharedTextPtr, NULL, &index1, &index1);
 		FindNewTopPosition(sharedTextPtr, textPosition, &index1, NULL, subAtom->size);
 	    } else {
 		token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
-		TkTextChanged(sharedTextPtr, NULL, &index1, &index2);
+		TkrTextChanged(sharedTextPtr, NULL, &index1, &index2);
 		FindNewTopPosition(sharedTextPtr, textPosition, &index1, &index2, 0);
 	    }
 	    for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
@@ -5788,7 +5788,7 @@ DeleteIndexRange(
 	 * last line, then decrement the end of range.
 	 */
 
-	TkTextIndexBackBytes(textPtr, &index2, 1, &index2);
+	TkrTextIndexBackBytes(textPtr, &index2, 1, &index2);
 
 	if (TkTextIndexIsEqual(&index1, &index2)) {
 	    if (lastLinePtr->prevPtr) {
@@ -5853,7 +5853,7 @@ DeleteIndexRange(
      * first character will be, then do the deletion, then reset the view.
      */
 
-    TkTextChanged(sharedTextPtr, NULL, &index1, &index2);
+    TkrTextChanged(sharedTextPtr, NULL, &index1, &index2);
 
     if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
 	textPosition = (TkTextPosition *)malloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
@@ -6403,7 +6403,7 @@ TextSearchCmd(
     searchSpec.noLineStop = 0;
     searchSpec.overlap = 0;
     searchSpec.strictLimits = 0;
-    searchSpec.numLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    searchSpec.numLines = TkrBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     searchSpec.clientData = textPtr;
     searchSpec.addLineProc = &TextSearchAddNextLine;
     searchSpec.foundMatchProc = &TextSearchFoundMatch;
@@ -6973,7 +6973,7 @@ TextSearchFoundMatch(
      */
 
     if (searchSpecPtr->exact) {
-	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineNum, matchOffset, &foundIndex);
+	TkrTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineNum, matchOffset, &foundIndex);
     } else {
 	TkTextMakeCharIndex(textPtr->sharedTextPtr->tree, textPtr, lineNum, matchOffset, &foundIndex);
     }
@@ -7477,7 +7477,7 @@ TextDumpCmd(
     textPtr->sharedTextPtr->inspectEpoch += 1;
     lineno = TkBTreeLinesTo(tree, textPtr, TkTextIndexGetLine(&index1), NULL);
     prevByteIndex = index1;
-    if (TkTextIndexBackBytes(textPtr, &index1, 1, &prevByteIndex) == 0) {
+    if (TkrTextIndexBackBytes(textPtr, &index1, 1, &prevByteIndex) == 0) {
 	unsigned epoch = textPtr->sharedTextPtr->inspectEpoch + 1;
 	tagPtr = TkBTreeGetTags(&prevByteIndex, TK_TEXT_SORT_NONE, NULL);
 	for (tPtr = tagPtr; tPtr; tPtr = tPtr->nextPtr) { tPtr->epoch = epoch; }
@@ -7676,7 +7676,7 @@ DumpLine(
 
 		    for (tPtr = *prevTagPtr; tPtr; tPtr = tPtr->succPtr) {
 			if (tPtr->flag == epoch) { /* should be closed? */
-			    TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno, offset, &index);
+			    TkrTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno, offset, &index);
 			    if (!DumpSegment(textPtr, interp, "tagoff",
 				    tPtr->name, command, &index, what)) {
 				goto textChanged;
@@ -7694,7 +7694,7 @@ DumpLine(
 
 		for (tPtr = tagPtr; tPtr; tPtr = tPtr->nextPtr) {
 		    if (tPtr->flag != epoch) {
-			TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno, offset, &index);
+			TkrTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno, offset, &index);
 			if (!DumpSegment(textPtr, interp, "tagon", tPtr->name, command, &index, what)) {
 			    goto textChanged;
 			}
@@ -7736,13 +7736,13 @@ DumpLine(
 			memcpy(buffer, segPtr->body.chars + first, length);
 			buffer[length] = '\0';
 
-			TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno,
+			TkrTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno,
 				offset + first, &index);
 			if (!DumpSegment(textPtr, interp, "text", buffer, command, &index, what)) {
 			    goto textChanged;
 			}
 		    } else {
-			TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno,
+			TkrTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno,
 				offset + first, &index);
 			if (!DumpSegment(textPtr, interp, "text",
 				segPtr->body.chars + first, command, &index, what)) {
@@ -7779,7 +7779,7 @@ DumpLine(
 			break;
 		    }
 		    if (value) {
-			TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno, offset, &index);
+			TkrTextMakeByteIndex(sharedTextPtr->tree, textPtr, lineno, offset, &index);
 			if (!DumpSegment(textPtr, interp, segPtr->typePtr->name, value, command,
 				&index, what)) {
 			    goto textChanged;
@@ -8067,7 +8067,7 @@ DumpSegment(
     Tcl_Obj *values[3], *tuple;
     (void)what;
 
-    TkTextPrintIndex(textPtr, index, buffer);
+    TkrTextPrintIndex(textPtr, index, buffer);
     values[0] = Tcl_NewStringObj(key, -1);
     values[1] = Tcl_NewStringObj(value, -1);
     values[2] = Tcl_NewStringObj(buffer, -1);
@@ -9287,9 +9287,9 @@ MakeEditInfoValue(
     case INFO_TOTALBYTESIZE:
 	return Tcl_NewIntObj(TkBTreeSize(sharedTextPtr->tree, NULL));
     case INFO_LINES:
-	return Tcl_NewIntObj(TkBTreeNumLines(sharedTextPtr->tree, textPtr));
+	return Tcl_NewIntObj(TkrBTreeNumLines(sharedTextPtr->tree, textPtr));
     case INFO_TOTALLINES:
-	return Tcl_NewIntObj(TkBTreeNumLines(sharedTextPtr->tree, NULL));
+	return Tcl_NewIntObj(TkrBTreeNumLines(sharedTextPtr->tree, NULL));
     case INFO_IMAGES:
 	return Tcl_NewIntObj(sharedTextPtr->numImages);
     case INFO_WINDOWS:
@@ -9641,8 +9641,8 @@ TriggerWatchEdit(
 		    char idx[2][TK_POS_CHARS];
 		    char const *arg;
 
-		    TkTextPrintIndex(tPtr, &index[0], idx[0]);
-		    TkTextPrintIndex(tPtr, &index[1], idx[1]);
+		    TkrTextPrintIndex(tPtr, &index[0], idx[0]);
+		    TkrTextPrintIndex(tPtr, &index[1], idx[1]);
 
 		    Tcl_DStringInit(&buf);
 		    Tcl_DStringAppendElement(&buf, string);
@@ -9763,11 +9763,11 @@ TkTextPerformWatchCmd(
 
 	    if (index1Proc) {
 		index1Proc(tPtr, &index[0], index1ProcData);
-		TkTextPrintIndex(tPtr, &index[0], idx[0]);
+		TkrTextPrintIndex(tPtr, &index[0], idx[0]);
 
 		if (index2Proc) {
 		    index2Proc(tPtr, &index[1], index2ProcData);
-		    TkTextPrintIndex(tPtr, &index[1], idx[1]);
+		    TkrTextPrintIndex(tPtr, &index[1], idx[1]);
 		} else {
 		    memcpy(idx[1], idx[0], TK_POS_CHARS);
 		}
@@ -10159,7 +10159,7 @@ TkTextGenerateWidgetViewSyncEvent(
 /*
  *---------------------------------------------------------------------------
  *
- * TkTextPrintIndex --
+ * TkrTextPrintIndex --
  *
  *	This function generates a string description of an index, suitable for
  *	reading in again later.
@@ -10180,7 +10180,7 @@ TkTextGenerateWidgetViewSyncEvent(
  */
 
 TkSizeT
-TkTextPrintIndex(
+TkrTextPrintIndex(
     const TkText *textPtr,
     const TkTextIndex *indexPtr,/* Pointer to index. */
     char *string)		/* Place to store the position. Must have at least TK_POS_CHARS
@@ -11625,7 +11625,7 @@ RestoreLineStartEnd(
 /*
  *----------------------------------------------------------------------
  *
- * TkpTesttextCmd --
+ * TkrTesttextCmd --
  *
  *	This function implements the "testtext" command. It provides a set of
  *	functions for testing text widgets and the associated functions in
@@ -11643,7 +11643,7 @@ RestoreLineStartEnd(
 #if TK_MAJOR_VERSION > 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION > 5)
 
 int
-TkpTesttextCmd(
+TkrTesttextCmd(
     ClientData dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -11674,7 +11674,7 @@ TkpTesttextCmd(
 	lineIndex = atoi(Tcl_GetString(objv[3])) - 1;
 	byteIndex = atoi(Tcl_GetString(objv[4]));
 
-	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, byteIndex, &index);
+	TkrTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, byteIndex, &index);
     } else if (strncmp(Tcl_GetString(objv[2]), "forwbytes", len) == 0) {
 	if (objc != 5) {
 	    return TCL_ERROR;
@@ -11683,7 +11683,7 @@ TkpTesttextCmd(
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(Tcl_GetString(objv[4]));
-	TkTextIndexForwBytes(textPtr, &index, byteOffset, &index);
+	TkrTextIndexForwBytes(textPtr, &index, byteOffset, &index);
     } else if (strncmp(Tcl_GetString(objv[2]), "backbytes", len) == 0) {
 	if (objc != 5) {
 	    return TCL_ERROR;
@@ -11692,7 +11692,7 @@ TkpTesttextCmd(
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(Tcl_GetString(objv[4]));
-	TkTextIndexBackBytes(textPtr, &index, byteOffset, &index);
+	TkrTextIndexBackBytes(textPtr, &index, byteOffset, &index);
     } else {
 	return TCL_ERROR;
     }
@@ -11703,11 +11703,11 @@ TkpTesttextCmd(
 
     watchCmd = textPtr->watchCmd;
     textPtr->watchCmd = NULL;
-    insIndex = index; /* because TkTextSetMark may modify position */
-    TkTextSetMark(textPtr, "insert", &insIndex);
+    insIndex = index; /* because TkrTextSetMark may modify position */
+    TkrTextSetMark(textPtr, "insert", &insIndex);
     textPtr->watchCmd = watchCmd;
 
-    TkTextPrintIndex(textPtr, &index, buf);
+    TkrTextPrintIndex(textPtr, &index, buf);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %d", buf, TkTextIndexGetByteIndex(&index)));
     return TCL_OK;
 }
@@ -11715,7 +11715,7 @@ TkpTesttextCmd(
 #else /* backport to Tk 8.5 */
 
 int
-TkpTesttextCmd(
+TkrTesttextCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
@@ -11749,31 +11749,31 @@ TkpTesttextCmd(
 	lineIndex = atoi(argv[3]) - 1;
 	byteIndex = atoi(argv[4]);
 
-	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, byteIndex, &index);
+	TkrTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, byteIndex, &index);
     } else if (strncmp(argv[2], "forwbytes", len) == 0) {
 	if (argc != 5) {
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkrTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(argv[4]);
-	TkTextIndexForwBytes(textPtr, &index, byteOffset, &index);
+	TkrTextIndexForwBytes(textPtr, &index, byteOffset, &index);
     } else if (strncmp(argv[2], "backbytes", len) == 0) {
 	if (argc != 5) {
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkrTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(argv[4]);
-	TkTextIndexBackBytes(textPtr, &index, byteOffset, &index);
+	TkrTextIndexBackBytes(textPtr, &index, byteOffset, &index);
     } else {
 	return TCL_ERROR;
     }
 
-    TkTextSetMark(textPtr, "insert", &index);
-    TkTextPrintIndex(textPtr, &index, buf);
+    TkrTextSetMark(textPtr, "insert", &index);
+    TkrTextPrintIndex(textPtr, &index, buf);
     offs = strlen(buf);
     snprintf(buf + offs, sizeof(buf) - offs, " %d", TkTextIndexGetByteIndex(&index));
     Tcl_AppendResult(interp, buf, NULL);

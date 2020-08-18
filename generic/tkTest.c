@@ -273,7 +273,7 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
+    Tcl_CreateObjCommand(interp, "testtext", TkrTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testphotostringmatch",
             TestPhotoStringMatchCmd, (ClientData) Tk_MainWindow(interp),

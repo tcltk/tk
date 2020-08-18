@@ -910,11 +910,11 @@ TkTextIndexRebuild(
     }
 
     if (indexPtr->priv.lineNo >= 0) {
-	lineNo = MIN(TkBTreeNumLines(indexPtr->tree, NULL), indexPtr->priv.lineNo);
+	lineNo = MIN(TkrBTreeNumLines(indexPtr->tree, NULL), indexPtr->priv.lineNo);
 	linePtr = TkBTreeFindLine(indexPtr->tree, NULL, lineNo);
 	indexPtr->priv.lineNo = lineNo;
     } else {
-	lineNo = MIN(TkBTreeNumLines(indexPtr->tree, indexPtr->textPtr), indexPtr->priv.lineNoRel);
+	lineNo = MIN(TkrBTreeNumLines(indexPtr->tree, indexPtr->textPtr), indexPtr->priv.lineNoRel);
 	linePtr = TkBTreeFindLine(indexPtr->tree, indexPtr->textPtr, lineNo);
 	indexPtr->priv.lineNoRel = lineNo;
     }
@@ -1634,14 +1634,14 @@ TkTextNewIndexObj(
 
     assert(indexPtr->textPtr);
 
-    len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
+    len = TkrTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
     return Tcl_NewStringObj(buffer, len);
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * TkTextMakeByteIndex --
+ * TkrTextMakeByteIndex --
  *
  *	Given a line index and a byte index, look things up in the B-tree and
  *	fill in a TkTextIndex structure.
@@ -1659,7 +1659,7 @@ TkTextNewIndexObj(
  */
 
 TkTextIndex *
-TkTextMakeByteIndex(
+TkrTextMakeByteIndex(
     TkTextBTree tree,		/* Tree that lineIndex and byteIndex refer TkTextBTree tree, to. */
     const TkText *textPtr,	/* Client that lineIndex and byteIndex refer to, can be NULL. */
     int lineIndex,		/* Index of desired line (0 means first line of text). */
@@ -2142,7 +2142,7 @@ MODULE_SCOPE int TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr
 			    const char *string, unsigned lenOfString, TkTextIndex *indexPtr);
 
 int
-TkTextGetIndex(
+TkrTextGetIndex(
     Tcl_Interp *interp,		/* Use this for error reporting. */
     TkText *textPtr,		/* Information about text widget. */
     const char *string,		/* Textual description of position. */
@@ -2924,7 +2924,7 @@ ForwBack(
 
 	    lineIndex = TkBTreeLinesTo(indexPtr->tree, textPtr, indexPtr->priv.linePtr, NULL);
 	    if (*string == '+') {
-		newLineIndex = MIN(TkBTreeNumLines(indexPtr->tree, textPtr), lineIndex + count);
+		newLineIndex = MIN(TkrBTreeNumLines(indexPtr->tree, textPtr), lineIndex + count);
 	    } else {
 		newLineIndex = MAX(0, lineIndex - count);
 	    }
@@ -2952,7 +2952,7 @@ ForwBack(
 /*
  *---------------------------------------------------------------------------
  *
- * TkTextIndexForwBytes --
+ * TkrTextIndexForwBytes --
  *
  *	Given an index for a text widget, this function creates a new index
  *	that points "byteCount" bytes ahead of the source index.
@@ -2972,7 +2972,7 @@ ForwBack(
  */
 
 int
-TkTextIndexForwBytes(
+TkrTextIndexForwBytes(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
     int byteCount,		/* How many bytes forward to move. May be negative. */
@@ -2989,7 +2989,7 @@ TkTextIndexForwBytes(
     }
 
     if (byteCount < 0) {
-	TkTextIndexBackBytes(textPtr, srcPtr, -byteCount, dstPtr);
+	TkrTextIndexBackBytes(textPtr, srcPtr, -byteCount, dstPtr);
 	return 0;
     }
 
@@ -3516,7 +3516,7 @@ TkTextIndexCount(
 /*
  *---------------------------------------------------------------------------
  *
- * TkTextIndexBackBytes --
+ * TkrTextIndexBackBytes --
  *
  *	Given an index for a text widget, this function creates a new index
  *	that points "count" bytes earlier than the source index.
@@ -3541,7 +3541,7 @@ TkTextIndexCount(
  */
 
 int
-TkTextIndexBackBytes(
+TkrTextIndexBackBytes(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
     int byteCount,		/* How many bytes backward to move. May be negative. */
@@ -3558,7 +3558,7 @@ TkTextIndexBackBytes(
     }
 
     if (byteCount < 0) {
-	return TkTextIndexForwBytes(textPtr, srcPtr, -byteCount, dstPtr);
+	return TkrTextIndexForwBytes(textPtr, srcPtr, -byteCount, dstPtr);
     }
 
     if (dstPtr != srcPtr) {

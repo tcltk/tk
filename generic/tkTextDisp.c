@@ -1089,7 +1089,7 @@ LogTextHeightCalc(
      * height was recalculated. The test suite uses this information.
      */
 
-    TkTextPrintIndex(textPtr, indexPtr, string);
+    TkrTextPrintIndex(textPtr, indexPtr, string);
     LOG("tk_textHeightCalc", string);
 }
 
@@ -1107,7 +1107,7 @@ LogTextRelayout(
      * were re-layed out. The test suite uses this information.
      */
 
-    TkTextPrintIndex(textPtr, indexPtr, string);
+    TkrTextPrintIndex(textPtr, indexPtr, string);
     LOG("tk_textRelayout", string);
 }
 
@@ -1119,7 +1119,7 @@ LogTextInvalidateLine(
     char buffer[4*TCL_INTEGER_SPACE + 3];
     const TkRangeList *ranges = textPtr->dInfoPtr->lineMetricUpdateRanges;
     unsigned totalCount = TkRangeListCount(ranges) - count;
-    unsigned totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    unsigned totalLines = TkrBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     int lineNum = TkRangeListIsEmpty(ranges) ? -1 : TkRangeListLow(ranges);
 
     assert(tkTextDebug);
@@ -1902,7 +1902,7 @@ TkTextResetDInfo(
 
     TkTextIndexSetupToStartOfText(&index1, textPtr, sharedTextPtr->tree);
     TkTextIndexSetupToEndOfText(&index2, textPtr, sharedTextPtr->tree);
-    TkTextChanged(sharedTextPtr, NULL, &index1, &index2);
+    TkrTextChanged(sharedTextPtr, NULL, &index1, &index2);
 
     lineNo1 = TkBTreeLinesTo(sharedTextPtr->tree, textPtr, TkTextIndexGetLine(&index1), NULL);
     lineNo2 = TkBTreeLinesTo(sharedTextPtr->tree, textPtr, TkTextIndexGetLine(&index2), NULL);
@@ -3964,7 +3964,7 @@ LayoutLogicalLine(
 		    LayoutFinalizeChunk(data);
 		    return 0;
 		}
-		TkTextIndexForwBytes(data->textPtr, &data->index,
+		TkrTextIndexForwBytes(data->textPtr, &data->index,
 			data->chunkPtr->numBytes, &data->index);
 		byteIndex += data->chunkPtr->numBytes;
 		break;
@@ -3996,7 +3996,7 @@ LayoutLogicalLine(
 		    while (segPtr->body.chars[byteOffset] == ' ') {
 			byteOffset += 1;
 		    }
-		    TkTextIndexForwBytes(data->textPtr, &index, byteOffset - offset, &data->index);
+		    TkrTextIndexForwBytes(data->textPtr, &index, byteOffset - offset, &data->index);
 		    LayoutSkipBytes(data, dlPtr, &index, &data->index);
 		    byteIndex = TkTextIndexGetByteIndex(&data->index);
 		}
@@ -4215,7 +4215,7 @@ LayoutBreakLine(
 		    LayoutUndisplay(data, prevChunkPtr);
 		    data->chunkPtr = prevChunkPtr;
 		    LayoutMakeCharInfo(data, segPtr, prevChunkPtr->segByteOffset, numBytes);
-		    TkTextIndexForwBytes(data->textPtr, &index, prevChunkPtr->byteOffset, &index);
+		    TkrTextIndexForwBytes(data->textPtr, &index, prevChunkPtr->byteOffset, &index);
 		    segPtr->typePtr->layoutProc(&index, segPtr, prevChunkPtr->segByteOffset,
 			    data->maxX, numBytes, 0, data->wrapMode, data->textPtr->spaceMode,
 			    prevChunkPtr);
@@ -4315,7 +4315,7 @@ LayoutBreakLine(
 
 	    LayoutUndisplay(data, chunkPtr);
 	    data->chunkPtr = chunkPtr;
-	    TkTextIndexForwBytes(data->textPtr, &index, chunkPtr->byteOffset, &index);
+	    TkrTextIndexForwBytes(data->textPtr, &index, chunkPtr->byteOffset, &index);
 	    segPtr = TkTextIndexGetContentSegment(&index, NULL);
 	    LayoutMakeCharInfo(data, segPtr, chunkPtr->segByteOffset, data->breakChunkPtr->breakIndex);
 	    segPtr->typePtr->layoutProc(&index, segPtr, chunkPtr->segByteOffset, data->maxX,
@@ -5082,7 +5082,7 @@ ComputeDisplayLineInfo(
 	    entry->height = pixelInfo->height;
 	    entry->pixels = pixelInfo->height;
 	    byteOffset = (entry + 1)->byteOffset - startByteOffset;
-	    TkTextIndexForwBytes(textPtr, &info->index, byteOffset, &info->index);
+	    TkrTextIndexForwBytes(textPtr, &info->index, byteOffset, &info->index);
 	    return logicalLinePtr;
 	}
 
@@ -5102,7 +5102,7 @@ ComputeDisplayLineInfo(
 		info->pixels = (last - 1)->pixels;
 		info->isComplete = (dInfoPtr->lineMetricUpdateEpoch == pixelInfo->epoch);
 		byteOffset = last->byteOffset - startByteOffset;
-		TkTextIndexForwBytes(textPtr, &info->index, byteOffset, &info->index);
+		TkrTextIndexForwBytes(textPtr, &info->index, byteOffset, &info->index);
 		return logicalLinePtr;
 	    }
 
@@ -5141,7 +5141,7 @@ ComputeDisplayLineInfo(
 	    dlPtr = LayoutDLine(&info->index, info->displayLineNo);
 	}
 	InsertDLine(textPtr, info, dlPtr, viewHeight);
-	TkTextIndexForwBytes(textPtr, &info->index, dlPtr->byteCount, &info->index);
+	TkrTextIndexForwBytes(textPtr, &info->index, dlPtr->byteCount, &info->index);
 	if (dInfoPtr->lineMetricUpdateEpoch == pixelInfo->epoch || byteOffset < dlPtr->byteCount) {
 	    info->byteOffset = byteOffset;
 	    info->nextByteOffset = dlPtr->byteCount - byteOffset;
@@ -5240,7 +5240,7 @@ ComputeMissingMetric(
     viewHeight = Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth;
     /* we need some overhead, because the widget may show lines only partially */
     viewHeight += textPtr->dInfoPtr->dLinePtr ? textPtr->dInfoPtr->dLinePtr->height : 20;
-    TkTextIndexForwBytes(textPtr, &info->index,
+    TkrTextIndexForwBytes(textPtr, &info->index,
 	    byteOffset - info->entry[additionalLines - 1].byteOffset, &index);
 
     switch (thresholdType) {
@@ -5255,7 +5255,7 @@ ComputeMissingMetric(
 	byteOffset += dlPtr->byteCount;
 	info->numDispLines += 1;
 	additionalLines -= 1;
-	TkTextIndexForwBytes(textPtr, &info->index, dlPtr->byteCount, &info->index);
+	TkrTextIndexForwBytes(textPtr, &info->index, dlPtr->byteCount, &info->index);
 	InsertDLine(textPtr, info, dlPtr, viewHeight);
 
 	if (IsStartOfNotMergedLine(&info->index)) {
@@ -5456,7 +5456,7 @@ UpdateDisplayInfo(
 	displayLineNo = 0;
     } else {
 	ComputeDisplayLineInfo(textPtr, &index, &info);
-	TkTextIndexBackBytes(textPtr, &index, info.byteOffset, &index);
+	TkrTextIndexBackBytes(textPtr, &index, info.byteOffset, &index);
 	displayLineNo = info.displayLineNo;
 
 	if (info.lastDLinePtr) {
@@ -5625,7 +5625,7 @@ UpdateDisplayInfo(
 
 	dlPtr->y = y;
 	y += dlPtr->height;
-	TkTextIndexForwBytes(textPtr, &index, dlPtr->byteCount, &index);
+	TkrTextIndexForwBytes(textPtr, &index, dlPtr->byteCount, &index);
 	linePtr = TkTextIndexGetLine(&index);
 
 	if (linePtr->logicalLine && TkTextIndexIsStartOfLine(&index)) {
@@ -5705,7 +5705,7 @@ UpdateDisplayInfo(
 		firstLinePtr = TkBTreeGetStartLine(textPtr)->prevPtr;
 		index = topLine ? topLine->index : textPtr->topIndex;
 		savedDLine = prevSavedDLine;
-		if (TkTextIndexBackBytes(textPtr, &index, 1, &index) == 1) {
+		if (TkrTextIndexBackBytes(textPtr, &index, 1, &index) == 1) {
 		    firstLinePtr = linePtr = NULL; /* we are already at start of text */
 		} else {
 		    linePtr = TkTextIndexGetLine(&index);
@@ -5731,7 +5731,7 @@ UpdateDisplayInfo(
 			    }
 			} else {
 			    TkTextIndexSetToStartOfLine2(&index, linePtr);
-			    TkTextIndexForwBytes(textPtr, &index, info.entry->byteOffset, &index);
+			    TkrTextIndexForwBytes(textPtr, &index, info.entry->byteOffset, &index);
 			    if (savedDLine && TkTextIndexIsEqual(&index, &savedDLine->index)) {
 				dlPtr = savedDLine;
 				savedDLine = savedDLine->prevPtr;
@@ -6512,7 +6512,7 @@ DisplayDLine(
 		XFillRectangle(display, pm, bgGC, 0, 0, cWidth, height);
 		chunkPtr = dlPtr->cursorChunkPtr;
 
-		/* we are using a (pointer) hack in TkTextInsertDisplayProc */
+		/* we are using a (pointer) hack in TkrTextInsertDisplayProc */
 		chunkPtr->layoutProcs->displayProc(textPtr, (TkTextDispChunk *)MarkPointer(chunkPtr),
 			cxMin, yBase, height, baseline, display, pm, screenY);
 
@@ -7105,7 +7105,7 @@ UpdateLineMetrics(
 	int lineNum = range->low;
 	int high = range->high;
 
-	assert(lineNum < TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr));
+	assert(lineNum < TkrBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr));
 
 	linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, textPtr, lineNum);
 	logicalLinePtr = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
@@ -7214,7 +7214,7 @@ TkTextUpdateLineMetrics(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     const TkRange *range;
-    unsigned totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    unsigned totalLines = TkrBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     int fullUpdateRequested = (lineNum == 0 && endLine == totalLines);
 
     assert(lineNum <= endLine);
@@ -7373,7 +7373,7 @@ TextInvalidateLineMetrics(
 				 * or simple). */
 {
     TkRangeList *ranges = textPtr->dInfoPtr->lineMetricUpdateRanges;
-    unsigned totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    unsigned totalLines = TkrBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     unsigned epoch = textPtr->dInfoPtr->lineMetricUpdateEpoch;
     int isMonospaced = UseMonospacedLineHeights(textPtr);
     unsigned lineNum = 0; /* suppress compiler warning */
@@ -7595,7 +7595,7 @@ TextInvalidateLineMetrics(
 
     if (textPtr->syncTime == 0) {
 #if 0 /* TODO: is it required to update 'lastLineNo' at this place? */
-	textPtr->dInfoPtr->lastLineNo = TkBTreeNumLines(textPtr->sharedTextPtr->tree, NULL);
+	textPtr->dInfoPtr->lastLineNo = TkrBTreeNumLines(textPtr->sharedTextPtr->tree, NULL);
 #endif
     } else {
 	StartAsyncLineCalculation(textPtr);
@@ -7725,7 +7725,7 @@ TkTextFindDisplayIndex(
 	    DLine *dlPtr = info.lastDLinePtr;
 	    TkTextIndex index = *indexPtr;
 
-	    TkTextIndexBackBytes(textPtr, &index, info.byteOffset, &index);
+	    TkrTextIndexBackBytes(textPtr, &index, info.byteOffset, &index);
 
 	    if (!dlPtr) {
 		dlPtr = FindCachedDLine(textPtr, indexPtr);
@@ -7786,7 +7786,7 @@ TkTextFindDisplayIndex(
 	    removedLines = 1;
 	}
 
-	TkTextIndexBackBytes(textPtr, indexPtr, info.byteOffset, indexPtr);
+	TkrTextIndexBackBytes(textPtr, indexPtr, info.byteOffset, indexPtr);
 
 	if (displayLineOffset > 0) {
 	    ComputeMissingMetric(textPtr, &info, THRESHOLD_LINE_OFFSET, displayLineOffset);
@@ -7803,7 +7803,7 @@ TkTextFindDisplayIndex(
 		last = info.entry + info.numDispLines;
 		byteOffset = last->byteOffset;
 		displayLineOffset -= info.numDispLines;
-		TkTextIndexForwBytes(textPtr, indexPtr, byteOffset, indexPtr);
+		TkrTextIndexForwBytes(textPtr, indexPtr, byteOffset, indexPtr);
 		linePtr = TkTextIndexGetLine(indexPtr);
 		if (linePtr == lastLinePtr) {
 		    break;
@@ -7876,7 +7876,7 @@ TkTextFindDisplayIndex(
     DEBUG(indexPtr->discardConsistencyCheck = 1);
     TkTextIndexSetByteIndex2(indexPtr, linePtr, 0);
     DEBUG(indexPtr->discardConsistencyCheck = 0);
-    TkTextIndexForwBytes(textPtr, indexPtr, byteOffset, indexPtr);
+    TkrTextIndexForwBytes(textPtr, indexPtr, byteOffset, indexPtr);
 }
 
 /*
@@ -8013,7 +8013,7 @@ FindDisplayLineStartEnd(
 
     ComputeDisplayLineInfo(textPtr, indexPtr, &info);
     byteCount = end ? -(info.nextByteOffset - 1) : info.byteOffset;
-    TkTextIndexBackBytes(textPtr, indexPtr, byteCount, indexPtr);
+    TkrTextIndexBackBytes(textPtr, indexPtr, byteCount, indexPtr);
 
     if (end) {
 	int offset;
@@ -8034,7 +8034,7 @@ FindDisplayLineStartEnd(
 	    p -= 1;
 	    skipBack += 1;
 	}
-	TkTextIndexBackBytes(textPtr, indexPtr, skipBack, indexPtr);
+	TkrTextIndexBackBytes(textPtr, indexPtr, skipBack, indexPtr);
     }
 
     /*
@@ -8459,7 +8459,7 @@ UpdateOneLine(
 	bytes = dispLineInfo->entry[dispLineInfo->numDispLines].byteOffset;
 	bytes -= dispLineInfo->entry[0].byteOffset;
 	TkTextIndexSetToStartOfLine2(indexPtr, logicalLinePtr);
-	TkTextIndexForwBytes(textPtr, indexPtr, bytes, indexPtr);
+	TkrTextIndexForwBytes(textPtr, indexPtr, bytes, indexPtr);
 	linePtr = TkTextIndexGetLine(indexPtr);
 	assert(!linePtr->logicalLine || !TkTextIndexIsStartOfLine(indexPtr));
     } else if (!linePtr->logicalLine || !TkTextIndexIsStartOfLine(indexPtr)) {
@@ -8504,7 +8504,7 @@ UpdateOneLine(
 	 */
 
         height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes);
-	atEnd = TkTextIndexForwBytes(textPtr, indexPtr, bytes, indexPtr) == 1
+	atEnd = TkrTextIndexForwBytes(textPtr, indexPtr, bytes, indexPtr) == 1
 		|| TkTextIndexIsEndOfText(indexPtr);
 
 	assert(bytes > 0);
@@ -8918,7 +8918,7 @@ DisplayText(
 		if (tkTextDebug) {
 		    char string[TK_POS_CHARS];
 
-		    TkTextPrintIndex(textPtr, &dlPtr->index, string);
+		    TkrTextPrintIndex(textPtr, &dlPtr->index, string);
 		    LOG("tk_textRedraw", string);
 		}
 		DisplayDLine(textPtr, dlPtr, dlPtr->prevPtr, pixmap);
@@ -9002,7 +9002,7 @@ DisplayText(
 		    if (tkTextDebug) {
 			char string[TK_POS_CHARS];
 
-			TkTextPrintIndex(textPtr, &dlPtr->index, string);
+			TkrTextPrintIndex(textPtr, &dlPtr->index, string);
 			LOG("tk_textEmbWinDisplay", string);
 		    }
 		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x,
@@ -9224,7 +9224,7 @@ TextInvalidateRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextChanged --
+ * TkrTextChanged --
  *
  *	This function is invoked when info in a text widget is about to be
  *	modified in a way that changes how it is displayed (e.g. characters
@@ -9316,7 +9316,7 @@ TextChanged(
 		/*
 		 * At least one display line is supposed to change. This makes the
 		 * redisplay OK in case the display line we expect to get here was
-		 * unlinked by a previous call to TkTextChanged and the text widget
+		 * unlinked by a previous call to TkrTextChanged and the text widget
 		 * did not update before reaching this point. This happens for
 		 * instance when moving the cursor up one line.
 		 * Note that lastPtr != NULL here, otherwise we would have returned
@@ -9360,7 +9360,7 @@ TextChanged(
 }
 
 void
-TkTextChanged(
+TkrTextChanged(
     TkSharedText *sharedTextPtr,	/* Shared widget section, or NULL. */
     TkText *textPtr,			/* Widget record for text widget, or NULL. */
     const TkTextIndex *index1Ptr,	/* Index of first character to redisplay. */
@@ -9465,7 +9465,7 @@ TextRedrawTag(
     /*
      * Schedule a redisplay and layout recalculation if they aren't already
      * pending. This has to be done before calling FreeDLines, for the reason
-     * given in TkTextChanged.
+     * given in TkrTextChanged.
      */
 
     DisplayTextWhenIdle(textPtr);
@@ -9709,7 +9709,7 @@ TkTextRelayoutWindow(
     }
 
     /*
-     * Schedule the window redisplay. See TkTextChanged for the reason why
+     * Schedule the window redisplay. See TkrTextChanged for the reason why
      * this has to be done before any calls to FreeDLines.
      */
 
@@ -10056,7 +10056,7 @@ TkTextSetYView(
 	ComputeDisplayLineInfo(textPtr, indexPtr, &info);
 	if (!info.dLinePtr) {
 	    tmpIndex = *indexPtr;
-	    TkTextIndexBackBytes(textPtr, &tmpIndex, info.byteOffset, &tmpIndex);
+	    TkrTextIndexBackBytes(textPtr, &tmpIndex, info.byteOffset, &tmpIndex);
 	    dlPtr = info.dLinePtr = info.lastDLinePtr = LayoutDLine(&tmpIndex, info.displayLineNo);
 	    SaveDisplayLines(textPtr, &info, 1);
 	}
@@ -10259,7 +10259,7 @@ AlreadyAtBottom(
     }
 
     index = dlPtr->index;
-    TkTextIndexForwBytes(textPtr, &index, dlPtr->byteCount, &index);
+    TkrTextIndexForwBytes(textPtr, &index, dlPtr->byteCount, &index);
     return TkTextIndexIsEndOfText(&index);
 }
 
@@ -10374,7 +10374,7 @@ MeasureDown(
     assert(linePtr != lastLinePtr);
 
     TkTextIndexSetToStartOfLine2(srcPtr, linePtr);
-    TkTextIndexForwBytes(textPtr, srcPtr, byteOffset, srcPtr);
+    TkrTextIndexForwBytes(textPtr, srcPtr, byteOffset, srcPtr);
 
     return 1;
 }
@@ -10495,7 +10495,7 @@ MeasureUp(
     }
 
     TkTextIndexSetToStartOfLine2(dstPtr, linePtr);
-    TkTextIndexForwBytes(textPtr, dstPtr, byteOffset, dstPtr);
+    TkrTextIndexForwBytes(textPtr, dstPtr, byteOffset, dstPtr);
     return 1;
 }
 /*
@@ -10717,7 +10717,7 @@ TkTextSeeCmd(
 /*
  *--------------------------------------------------------------
  *
- * TkTextXviewCmd --
+ * TkrTextXviewCmd --
  *
  *	This function is invoked to process the "xview" option for the widget
  *	command for text widgets. See the user documentation for details on
@@ -10733,7 +10733,7 @@ TkTextSeeCmd(
  */
 
 int
-TkTextXviewCmd(
+TkrTextXviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -10934,7 +10934,7 @@ ScrollUp(
     }
 
     TkTextIndexSetToStartOfLine2(&textPtr->topIndex, linePtr);
-    TkTextIndexForwBytes(textPtr, &textPtr->topIndex, byteOffset, &textPtr->topIndex);
+    TkrTextIndexForwBytes(textPtr, &textPtr->topIndex, byteOffset, &textPtr->topIndex);
 
     return 1;
 }
@@ -11010,7 +11010,7 @@ ScrollDown(
     }
 
     TkTextIndexSetToStartOfLine2(&textPtr->topIndex, linePtr);
-    TkTextIndexForwBytes(textPtr, &textPtr->topIndex, byteOffset, &textPtr->topIndex);
+    TkrTextIndexForwBytes(textPtr, &textPtr->topIndex, byteOffset, &textPtr->topIndex);
     return 1;
 }
 
@@ -11170,7 +11170,7 @@ TkTextYviewCmd(
 	int lineNum;
 
 	if (Tcl_GetIntFromObj(interp, objv[2 + pickPlace], &lineNum) == TCL_OK) {
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineNum, 0, &index);
+	    TkrTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineNum, 0, &index);
 	    TkTextSetYView(textPtr, &index, 0);
 	} else {
 	    /*
@@ -11749,7 +11749,7 @@ FindCachedDLine(
 		&& TkTextIndexCompare(indexPtr, &dlPtr->index) >= 0) {
 	    TkTextIndex index = dlPtr->index;
 
-	    TkTextIndexForwBytes(textPtr, &index, dlPtr->byteCount, &index);
+	    TkrTextIndexForwBytes(textPtr, &index, dlPtr->byteCount, &index);
 	    if (TkTextIndexCompare(indexPtr, &index) < 0) {
 		DEBUG(stats.numHits++);
 		return dlPtr;
@@ -11816,7 +11816,7 @@ FindDLine(
              * is on the last display line showing the last logical line.
              */
             index2 = lastDlPtr->index;
-            TkTextIndexForwBytes(textPtr, &index2, lastDlPtr->byteCount, &index2);
+            TkrTextIndexForwBytes(textPtr, &index2, lastDlPtr->byteCount, &index2);
             if (TkTextIndexCompare(&index2, indexPtr) > 0) {
                 /*
                  * The desired index is on the last display line, hence return this display line.
@@ -11843,7 +11843,7 @@ FindDLine(
              */
 
 	    TkTextIndex index;
-            TkTextIndexForwBytes(textPtr, &lastDlPtr->index, lastDlPtr->byteCount, &index);
+            TkrTextIndexForwBytes(textPtr, &lastDlPtr->index, lastDlPtr->byteCount, &index);
             if (TkTextIndexCompare(&index, indexPtr) > 0) {
                 /*
                  * Confirmed: lastDlPtr->index <= indexPtr < dlPtr->index
@@ -12151,7 +12151,7 @@ TkTextPixelIndex(
 		dInfoPtr->currChunkPtr = NULL;
 		*indexPtr = dlPtr->index;
 		assert(dlPtr->byteCount > 0);
-		TkTextIndexForwBytes(textPtr, indexPtr, dlPtr->byteCount - 1, indexPtr);
+		TkrTextIndexForwBytes(textPtr, indexPtr, dlPtr->byteCount - 1, indexPtr);
 		return NULL;
 	    }
 	}
@@ -12304,7 +12304,7 @@ DLineChunkOfX(
 	chunkPtr = chunkPtr->nextPtr;
     }
 
-    TkTextIndexForwBytes(textPtr, indexPtr, countBytes, indexPtr);
+    TkrTextIndexForwBytes(textPtr, indexPtr, countBytes, indexPtr);
     return chunkPtr;
 }
 
@@ -12360,7 +12360,7 @@ TkTextIndexOfX(
 	    TkTextIndex index = *indexPtr;
 
 	    /* we need display line start */
-	    TkTextIndexBackBytes(textPtr, &index, info.byteOffset, &index);
+	    TkrTextIndexBackBytes(textPtr, &index, info.byteOffset, &index);
 	    dlPtr = LayoutDLine(&index, info.displayLineNo);
 	} else if ((info.lastDLinePtr = info.lastDLinePtr->prevPtr)) {
 	    dlPtr->prevPtr = info.lastDLinePtr->nextPtr = NULL;
@@ -14179,7 +14179,7 @@ CheckLineMetricConsistency(
 
 		    TkTextIndexClear(&index, (TkText *) textPtr);
 		    TkTextIndexSetToStartOfLine2(&index, (TkTextLine *) logicalLinePtr);
-		    TkTextIndexForwBytes(textPtr, &index, entry->byteOffset, &index);
+		    TkrTextIndexForwBytes(textPtr, &index, entry->byteOffset, &index);
 		    dlPtr = FindDLine((TkText *) textPtr, textPtr->dInfoPtr->dLinePtr, &index);
 		    assert(dlPtr);
 
@@ -14241,7 +14241,7 @@ TkTextCheckLineMetricUpdate(
 
     ranges = textPtr->dInfoPtr->lineMetricUpdateRanges;
     tree = textPtr->sharedTextPtr->tree;
-    total = TkBTreeNumLines(tree, textPtr);
+    total = TkrBTreeNumLines(tree, textPtr);
 
     if (!TkRangeListIsEmpty(ranges) && TkRangeListHigh(ranges) >= total) {
 	Tcl_Panic("TkTextCheckLineMetricUpdate: line %d is out of range (max=%d)\n",

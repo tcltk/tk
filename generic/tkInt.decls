@@ -510,7 +510,7 @@ declare 156 {
 	    Tcl_Obj *const objv[])
 }
 declare 157 {
-    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
+    int TkrTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 declare 158 {
@@ -519,47 +519,47 @@ declare 158 {
 	    ClientData clientData)
 }
 declare 159 {
-    int TkTextGetIndex(Tcl_Interp *interp, struct TkText *textPtr,
+    int TkrTextGetIndex(Tcl_Interp *interp, struct TkText *textPtr,
 	    const char *string, struct TkTextIndex *indexPtr)
 }
 declare 160 {
-    int TkTextIndexBackBytes(const struct TkText *textPtr,
+    int TkrTextIndexBackBytes(const struct TkText *textPtr,
 	    const struct TkTextIndex *srcPtr, int count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 161 {
-    int TkTextIndexForwBytes(const struct TkText *textPtr,
+    int TkrTextIndexForwBytes(const struct TkText *textPtr,
 	    const struct TkTextIndex *srcPtr, int count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 162 {
-    struct TkTextIndex *TkTextMakeByteIndex(TkTextBTree tree,
+    struct TkTextIndex *TkrTextMakeByteIndex(TkTextBTree tree,
 	    const struct TkText *textPtr, int lineIndex,
 	    int byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
-    TkSizeT TkTextPrintIndex(const struct TkText *textPtr,
+    TkSizeT TkrTextPrintIndex(const struct TkText *textPtr,
 	    const struct TkTextIndex *indexPtr, char *string)
 }
 declare 164 {
-    struct TkTextSegment *TkTextSetMark(struct TkText *textPtr,
+    struct TkTextSegment *TkrTextSetMark(struct TkText *textPtr,
 	    const char *name, struct TkTextIndex *indexPtr)
 }
 declare 165 {
-    int TkTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp,
+    int TkrTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp,
 	    int objc, Tcl_Obj *const objv[])
 }
 declare 166 {
-    void TkTextChanged(struct TkSharedText *sharedTextPtr,
+    void TkrTextChanged(struct TkSharedText *sharedTextPtr,
 	    struct TkText *textPtr, const struct TkTextIndex *index1Ptr,
 	    const struct TkTextIndex *index2Ptr)
 }
 declare 167 {
-    int	TkBTreeNumLines(TkTextBTree tree,
+    int	TkrBTreeNumLines(TkTextBTree tree,
 	    const struct TkText *textPtr)
 }
 declare 168 {
-    void TkTextInsertDisplayProc(struct TkText *textPtr,
+    void TkrTextInsertDisplayProc(struct TkText *textPtr,
 	    struct TkTextDispChunk *chunkPtr, int x, int y,
 	    int height, int baseline, Display *display,
 	    Drawable dst, int screenY)

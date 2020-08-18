@@ -162,7 +162,7 @@ TextChanged(
     TkTextIndex *indexPtr,
     int mask)
 {
-    TkTextChanged(sharedTextPtr, NULL, indexPtr, indexPtr);
+    TkrTextChanged(sharedTextPtr, NULL, indexPtr, indexPtr);
 
     if (mask & TK_TEXT_LINE_GEOMETRY) {
 	TkTextInvalidateLineMetrics(sharedTextPtr, NULL,
