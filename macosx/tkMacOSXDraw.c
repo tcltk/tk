@@ -1605,10 +1605,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	NSWindow *win = TkMacOSXDrawableWindow(d);
-	if (win) {
-	    view = (TKContentView *)[win contentView];
-	}
+	view = (TKContentView *) TkMacOSXDrawableView(macDraw);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
@@ -1637,9 +1634,6 @@ TkMacOSXSetupDrawingContext(
     } else {
 	NSRect drawingBounds, currentBounds;
 
-	if (!view) {
-	    Tcl_Panic("TkMacOSXSetupDrawingContext(): no context to draw into !");
-	}
 	dc.portBounds = NSRectToCGRect([view bounds]);
 	dc.context = GET_CGCONTEXT;
 	dc.view = view;
