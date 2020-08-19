@@ -218,7 +218,6 @@ MODULE_SCOPE long tkMacOSXMacOSXVersion;
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
 MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
 			    HIShapeRef rgn);
-MODULE_SCOPE void	TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
 MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
 MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
 			    const CGRect *inRect);
@@ -557,9 +556,7 @@ VISIBILITY_HIDDEN
 @end
 
 #endif /* _TKMACPRIV */
-
-int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
-
+
 /*
  * Local Variables:
  * mode: objc

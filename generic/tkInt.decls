@@ -1844,6 +1844,9 @@ declare 112 aqua {
 declare 114 aqua {
     VisualID XVisualIDFromVisual(Visual *visual)
 }
+declare 120 macosx {
+    int XOffsetRegion(void *rgn, int dx, int dy)
+}
 declare 129 aqua {
     int XLowerWindow(Display *d, Window w)
 }
@@ -1863,6 +1866,9 @@ declare 146 aqua {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
 	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
 	    XColor _Xconst *x2)
+}
+declare 157 macosx {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
 }
 declare 158 aqua {
     void TkUnusedStubEntry(void)
