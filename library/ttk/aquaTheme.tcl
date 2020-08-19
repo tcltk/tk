@@ -38,8 +38,7 @@ namespace eval ttk::theme::aqua {
 	# Entry
 	ttk::style configure TEntry \
 	    -foreground systemTextColor \
-	    -background systemTextBackgroundColor \
-	    -placeholderforeground systemPlaceholderTextColor
+	    -background systemTextBackgroundColor
 	ttk::style map TEntry \
 	    -foreground {
 		disabled systemDisabledControlTextColor
@@ -71,8 +70,7 @@ namespace eval ttk::theme::aqua {
 	# Combobox:
 	ttk::style configure TCombobox \
 	    -foreground systemTextColor \
-	    -background systemTransparent \
-	    -placeholderforeground systemPlaceholderTextColor
+	    -background systemTransparent
 	ttk::style map TCombobox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
@@ -89,8 +87,7 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemTextColor \
 	    -background systemTextBackgroundColor \
 	    -selectforeground systemSelectedTextColor \
-	    -selectbackground systemSelectedTextBackgroundColor \
-	    -placeholderforeground systemPlaceholderTextColor
+	    -selectbackground systemSelectedTextBackgroundColor
 	ttk::style map TSpinbox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
