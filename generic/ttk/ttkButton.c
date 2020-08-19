@@ -858,7 +858,7 @@ TTK_BEGIN_LAYOUT(MenubuttonLayout)
     TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
 	TTK_GROUP("Menubutton.focus", TTK_FILL_BOTH,
 	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
+	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
 	        TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 
