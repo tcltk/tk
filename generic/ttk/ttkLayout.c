@@ -810,6 +810,7 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 	APPENDSTR("-sticky");
 	APPENDOBJ(Ttk_NewStickyObj(flags & _TTK_MASK_STICK));
 
+	/* @@@ Check again: are these necessary? Can't see any effect! */
 	if (flags & TTK_BORDER)	{ APPENDSTR("-border"); APPENDSTR("1"); }
 	if (flags & TTK_UNIT) 	{ APPENDSTR("-unit"); APPENDSTR("1"); }
 
