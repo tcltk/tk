@@ -86,7 +86,7 @@ ttk::\fBstyle layout\fR Horizontal.TScrollbar {
     Scrollbar.trough \-children {
 	Scrollbar.leftarrow \-side left \-sticky w
 	Scrollbar.rightarrow \-side right \-sticky e
-	Scrollbar.thumb \-side left \-expand true \-sticky ew
+	Scrollbar.thumb \-sticky ew
     }
 }
 .CE
