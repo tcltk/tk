@@ -181,13 +181,6 @@ TkpDisplayMenuButton(
     TkMacOSXComputeMenuButtonDrawParams(butPtr, dpPtr);
 
     /*
-     * Set up clipping region.  Make sure the we are using the port for this
-     * button, or we will set the wrong window's clip.
-     */
-
-    TkMacOSXSetUpClippingRgn(pixmap);
-
-    /*
      * Draw the native portion of the buttons.
      */
 

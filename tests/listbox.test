@@ -587,7 +587,7 @@ test listbox-3.36 {ListboxWidgetCmd procedure, "delete" option} -setup {
 } -body {
     listbox .l2
     .l2 insert 0 el0 el1 el2 el3 el4 el5 el6 el7
-    .l2 delete 0 2
+    .l2 delete -1 2
     .l2 get 0 end
 } -cleanup {
     destroy .l2
@@ -597,7 +597,7 @@ test listbox-3.37 {ListboxWidgetCmd procedure, "delete" option} -setup {
 } -body {
     listbox .l2
     .l2 insert 0 el0 el1 el2 el3 el4 el5 el6 el7
-    .l2 delete 0 -1
+    .l2 delete -1 -1
     .l2 get 0 end
 } -cleanup {
     destroy .l2
@@ -2662,41 +2662,37 @@ test listbox-21.8 {ListboxListVarProc, test selection after listvar mod} -setup 
 test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
-    catch {unset x}
+    set x {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
-    set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
-    vwait log
+    update idletasks
+    set log {}
     lappend x "0000000000"
-    update
+    update idletasks
     lappend x "00000000000000000000"
-    update
+    update idletasks
     set log
 } -cleanup {
     destroy .l
-    after cancel $timeout
-} -result [list {x 0 1} {x 0 1} {x 0 0.5}]
+} -result [list {x 0 1} {x 0 0.5}]
 test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
     catch {unset x}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
-    set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
-    vwait log
+    update idletasks
+    set log {}
     lappend x "0000000000"
-    update
+    update idletasks
     lappend x "00000000000000000000"
-    update
+    update idletasks
     set x [list "0000000000"]
-    update
+    update idletasks
     set log
 } -cleanup {
     destroy .l
-    after cancel timeout
-} -result [list {x 0 1} {x 0 1} {x 0 0.5} {x 0 1}]
+} -result [list {x 0 1} {x 0 0.5} {x 0 1}]
 test listbox-21.11 {ListboxListVarProc, bad list} -setup {
     destroy .l
 } -body {
@@ -2764,7 +2760,7 @@ test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
     update
     set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
+    set timeout [after 500 {lappend log timeout3}]
     vwait log
     update
     lappend x a b c d e f
@@ -2801,19 +2797,19 @@ test listbox-22.1 {UpdateHScrollbar} -setup {
     destroy .l
 } -body {
     listbox .l -font $fixed -width 10 -xscrollcommand "record x"
-    set log {}
     pack .l
-    set timeout [after 500 {set log timeout}]
-    vwait log
+    update idletasks
+    set log {}
+    set timeout [after 500 {lappend log timeout4}]
     .l insert end "0000000000"
-    update
+    vwait log
     .l insert end "00000000000000000000"
     vwait log
     set log
 } -cleanup {
     destroy .l
     after cancel $timeout
-} -result [list {x 0 1} {x 0 1} {x 0 0.5}]
+} -result [list {x 0 1} {x 0 0.5}]
 
 
 # ConfigureListboxItem
@@ -3221,8 +3217,3 @@ option clear
 # cleanup
 cleanupTests
 return
-
-
-
-
-

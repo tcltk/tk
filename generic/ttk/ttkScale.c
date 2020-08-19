@@ -376,8 +376,8 @@ ScaleCoordsCommand(
     if (r == TCL_OK) {
 	Tcl_Obj *point[2];
 	XPoint pt = ValueToPoint(scalePtr, value);
-	point[0] = Tcl_NewIntObj(pt.x);
-	point[1] = Tcl_NewIntObj(pt.y);
+	point[0] = Tcl_NewWideIntObj(pt.x);
+	point[1] = Tcl_NewWideIntObj(pt.y);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, point));
     }
     return r;

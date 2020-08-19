@@ -202,7 +202,7 @@ test safe-4.2 {testing loadTk -use} -setup {
     destroy $w
 } -result {}
 
-test safe-5.1 {loading Tk in safe interps without master's clearance} -body {
+test safe-5.1 {loading Tk in safe interps without parent's clearance} -body {
     set i [safe::interpCreate]
     interp eval $i {load {} Tk}
 } -cleanup {

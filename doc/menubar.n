@@ -14,7 +14,7 @@ tk_menuBar, tk_bindForTraversal \- Obsolete support for menu bars
 .SH SYNOPSIS
 \fBtk_menuBar \fIframe \fR?\fImenu menu ...\fR?
 .sp
-\fBtk_bindForTraversal \fIarg arg ... \fR
+\fBtk_bindForTraversal \fIarg ... \fR
 .BE
 .SH DESCRIPTION
 .PP

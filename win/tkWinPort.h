@@ -95,11 +95,15 @@
  * See ticket [916c1095438eae56]: GetVersionExW triggers warnings
  */
 #if defined(_MSC_VER)
+#   pragma warning(disable:4146)
 #   pragma warning(disable:4267)
 #   pragma warning(disable:4244)
 #   pragma warning(disable:4311)
 #   pragma warning(disable:4312)
 #   pragma warning(disable:4996)
+#if !defined(_WIN64)
+#   pragma warning(disable:4305)
+#endif
 #endif
 
 /*
@@ -133,7 +137,7 @@
  * Other functions not used under Windows
  */
 
-#define TkpWillDrawWidget(tkwin) 1
+#define TkpWillDrawWidget(tkwin) 0
 #define TkpRedrawWidget(tkwin)
 
 #endif /* _WINPORT */

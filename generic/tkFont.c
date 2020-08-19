@@ -556,7 +556,7 @@ Tk_FontObjCmd(
 
 	if (objc < 3 || n < objc) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "font ?-displayof window? ?option? ?--? ?char?");
+		    "font ?-displayof window? ?-option? ?--? ?char?");
 	    return TCL_ERROR;
 	}
 
@@ -753,7 +753,7 @@ Tk_FontObjCmd(
 	}
 	if ((objc < 3) || ((objc - skip) > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "font ?-displayof window? ?option?");
+		    "font ?-displayof window? ?-option?");
 	    return TCL_ERROR;
 	}
 	tkfont = Tk_AllocFontFromObj(interp, tkwin, objv[2]);
@@ -884,7 +884,7 @@ TheWorldHasChanged(
      * This is ignored on other platforms.
      */
 
-    if (!TkpWillDrawWidget(NULL)) {
+    if (TkpWillDrawWidget(NULL)) {
 	return;
     }
 
