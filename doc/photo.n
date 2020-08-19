@@ -28,7 +28,7 @@ photo \- Full-color images
 \fIimageName \fBput \fIdata\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBread \fIfilename\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBredither\fR
-\fIimageName \fBtransparency \fIsubcommand \fR?\fIarg arg ...\fR?
+\fIimageName \fBtransparency \fIsubcommand \fR?\fIarg ...\fR?
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
 .fi
 .BE
@@ -128,7 +128,7 @@ This command may be used to invoke various operations
 on the image.
 It has the following general form:
 .CS
-\fIimageName option \fR?\fIarg arg ...\fR?
+\fIimageName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.
@@ -394,7 +394,7 @@ not noticeable, but if it is a problem, this command can be used to
 recalculate the dithered image in each window where the image is
 displayed.
 .TP
-\fIimageName \fBtransparency \fIsubcommand \fR?\fIarg arg ...\fR?
+\fIimageName \fBtransparency \fIsubcommand \fR?\fIarg ...\fR?
 .
 Allows examination and manipulation of the transparency information in
 the photo image.  Several subcommands are available:

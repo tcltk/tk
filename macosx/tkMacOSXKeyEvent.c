@@ -255,11 +255,10 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
+
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
-    }
-    if (xEvent.xany.type == KeyPress) {
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;
@@ -268,14 +267,8 @@ static NSUInteger textInputModifiers;
 
 
 @implementation TKContentView
-
--(id)init {
-    self = [super init];
-    if (self) {
-        _needsRedisplay = NO;
-    }
-    return self;
-}
+@synthesize tkDirtyRect = _tkDirtyRect;
+@synthesize tkNeedsDisplay = _tkNeedsDisplay;;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -562,7 +555,6 @@ static NSUInteger textInputModifiers;
 }
 /* End of NSTextInputClient implementation. */
 
-@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 

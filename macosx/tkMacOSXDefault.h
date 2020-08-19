@@ -45,7 +45,7 @@
 #define INACTIVE_SELECT_BG	"systemSelectedTextBackgroundColor"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
-#define DISABLED		"#a3a3a3"
+#define DISABLED		"systemDisabledControlTextColor"
 
 /*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
@@ -309,24 +309,24 @@
  * Defaults for menus overall:
  */
 
-#define DEF_MENU_ACTIVE_BG_COLOR	"systemMenuActive"
-#define DEF_MENU_ACTIVE_BG_MONO		BLACK
+#define DEF_MENU_ACTIVE_BG_COLOR	NORMAL_BG /*ignored*/
+#define DEF_MENU_ACTIVE_BG_MONO		NORMAL_BG /*ignored*/
 #define DEF_MENU_ACTIVE_BORDER_WIDTH	"0"
-#define DEF_MENU_ACTIVE_FG_COLOR	"systemMenuActiveText"
-#define DEF_MENU_ACTIVE_FG_MONO		WHITE
+#define DEF_MENU_ACTIVE_FG_COLOR	NORMAL_FG
+#define DEF_MENU_ACTIVE_FG_MONO		NORMAL_FG
 #define DEF_MENU_ACTIVE_RELIEF		"flat"
-#define DEF_MENU_BG_COLOR		"systemMenu"
-#define DEF_MENU_BG_MONO		WHITE
+#define DEF_MENU_BG_COLOR		NORMAL_BG /*ignored*/
+#define DEF_MENU_BG_MONO		NORMAL_BG /*ignored*/
 #define DEF_MENU_BORDER_WIDTH		"0"
 #define DEF_MENU_CURSOR			"arrow"
-#define DEF_MENU_DISABLED_FG_COLOR	"systemMenuDisabled"
-#define DEF_MENU_DISABLED_FG_MONO	""
+#define DEF_MENU_DISABLED_FG_COLOR	DISABLED
+#define DEF_MENU_DISABLED_FG_MONO	DISABLED
 #define DEF_MENU_FONT			"menu" /* special: see tkMacOSXMenu.c */
-#define DEF_MENU_FG			"systemMenuText"
+#define DEF_MENU_FG			NORMAL_FG
 #define DEF_MENU_POST_COMMAND		""
 #define DEF_MENU_RELIEF			"flat"
-#define DEF_MENU_SELECT_COLOR		"systemMenuActive"
-#define DEF_MENU_SELECT_MONO		BLACK
+#define DEF_MENU_SELECT_COLOR		"systemSelectedMenuItemTextColor"
+#define DEF_MENU_SELECT_MONO		"systemSelectedMenuItemTextColor"
 #define DEF_MENU_TAKE_FOCUS		"0"
 #define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		NULL
@@ -338,12 +338,12 @@
  */
 
 #define DEF_MENUBUTTON_ANCHOR		"w"
-#define DEF_MENUBUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
-#define DEF_MENUBUTTON_ACTIVE_BG_MONO	WHITE
-#define DEF_MENUBUTTON_ACTIVE_FG_COLOR	ACTIVE_FG
-#define DEF_MENUBUTTON_ACTIVE_FG_MONO	BLACK
-#define DEF_MENUBUTTON_BG_COLOR		NORMAL_BG
-#define DEF_MENUBUTTON_BG_MONO		WHITE
+#define DEF_MENUBUTTON_ACTIVE_BG_COLOR	NORMAL_BG /*ignored*/
+#define DEF_MENUBUTTON_ACTIVE_BG_MONO	NORMAL_BG /*ignored*/
+#define DEF_MENUBUTTON_ACTIVE_FG_COLOR	"systemTextColor"
+#define DEF_MENUBUTTON_ACTIVE_FG_MONO	"systemTextColor"
+#define DEF_MENUBUTTON_BG_COLOR		NORMAL_BG /*ignored*/
+#define DEF_MENUBUTTON_BG_MONO		NORMAL_BG /*ignored*/
 #define DEF_MENUBUTTON_BITMAP		""
 #define DEF_MENUBUTTON_BORDER_WIDTH	"0"
 #define DEF_MENUBUTTON_CURSOR		""
@@ -355,7 +355,7 @@
 #define DEF_MENUBUTTON_HEIGHT		"0"
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR DEF_MENUBUTTON_BG_COLOR
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_MONO  DEF_MENUBUTTON_BG_MONO
-#define DEF_MENUBUTTON_HIGHLIGHT	BLACK
+#define DEF_MENUBUTTON_HIGHLIGHT	NORMAL_BG
 #define DEF_MENUBUTTON_HIGHLIGHT_WIDTH	"0"
 #define DEF_MENUBUTTON_IMAGE		NULL
 #define DEF_MENUBUTTON_INDICATOR	"1"

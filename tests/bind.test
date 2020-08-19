@@ -7037,7 +7037,7 @@ test bind-36.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
-} -result {1}
+} -result 1
 
 # cleanup
 cleanupTests

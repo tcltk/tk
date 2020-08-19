@@ -31,9 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define LOG_DISPLAY TkTestLogDisplay()
+#define LOG_DISPLAY(drawable) TkTestLogDisplay(drawable)
 #else
-#define LOG_DISPLAY 1
+#define LOG_DISPLAY(drawable) 1
 #endif
 
 #ifdef __UNIX__
@@ -78,6 +78,8 @@ typedef struct TImageInstance {
     TImageMaster *masterPtr;	/* Pointer to master for image. */
     XColor *fg;			/* Foreground color for drawing in image. */
     GC gc;			/* Graphics context for drawing in image. */
+    Bool displayFailed;         /* macOS display attempted out of drawRect. */
+    char buffer[200 + TCL_INTEGER_SPACE * 6]; /* message to log on display. */
 } TImageInstance;
 
 /*
@@ -1164,7 +1166,7 @@ TrivialConfigObjCmd(
     Tk_SavedOptions saved;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -1526,6 +1528,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
+    instPtr->displayFailed = False;
     return instPtr;
 }
 
@@ -1560,41 +1563,50 @@ ImageDisplay(
 				 * imageX and imageY. */
 {
     TImageInstance *instPtr = (TImageInstance *)clientData;
-    char buffer[200 + TCL_INTEGER_SPACE * 6];
 
     /*
      * The purpose of the test image type is to track the calls to an image
-     * display proc and record the parameters passed in each call.  On macOS
-     * a display proc must be run inside of the drawRect method of an NSView
-     * in order for the graphics operations to have any effect.  To deal with
+     * display proc and record the parameters passed in each call.  On macOS a
+     * display proc must be run inside of the drawRect method of an NSView in
+     * order for the graphics operations to have any effect.  To deal with
      * this, whenever a display proc is called outside of any drawRect method
-     * it schedules a redraw of the NSView by calling [view setNeedsDisplay:YES].
-     * This will trigger a later call to the view's drawRect method which will
-     * run the display proc a second time.
+     * it schedules a redraw of the NSView.
      *
-     * This complicates testing, since it can result in more calls to the display
-     * proc than are expected by the test.  It can also result in an inconsistent
-     * number of calls unless the test waits until the call to drawRect actually
-     * occurs before validating its results.
-     *
-     * In an attempt to work around this, this display proc only logs those
-     * calls which occur within a drawRect method.  This means that tests must
-     * be written so as to ensure that the drawRect method is run before
-     * results are validated.  In practice it usually suffices to run update
-     * idletasks (to run the display proc the first time) followed by update
-     * (to run the display proc in drawRect).
-     *
-     * This also has the consequence that the image changed command will log
-     * different results on Aqua than on other systems, because when the image
-     * is redisplayed in the drawRect method the entire image will be drawn,
-     * not just the changed portion.  Tests must account for this.
+     * In an attempt to work around this, each image instance maintains it own
+     * copy of the log message which gets written on the first call to the
+     * display proc.  This usually means that the message created on macOS is
+     * the same as that created on other platforms.  However it is possible
+     * for the messages to differ for other reasons, namely differences in
+     * how damage regions are computed.
      */
 
-    if (LOG_DISPLAY) {
-	sprintf(buffer, "%s display %d %d %d %d",
-		instPtr->masterPtr->imageName, imageX, imageY, width, height);
+    if (LOG_DISPLAY(drawable)) {
+	if (instPtr->displayFailed == False) {
+
+	    /*
+	     * Drawing is possible on the first call to DisplayImage.
+	     * Log the message.
+	     */
+
+	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
+	}
 	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName,
-		    NULL, buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+		    NULL, instPtr->buffer,
+		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+	instPtr->displayFailed = False;
+    } else {
+
+	/*
+         * Drawing is not possible on the first call to DisplayImage.
+	 * Save the message, but do not log it until the actual display.
+	 */
+
+	if (instPtr->displayFailed == False) {
+	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+		    instPtr->masterPtr->imageName, imageX, imageY, width, height);
+	}
+	instPtr->displayFailed = True;
     }
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;

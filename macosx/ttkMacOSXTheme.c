@@ -250,14 +250,13 @@ static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
  */
 
 static void GetBackgroundColor(
-    CGContextRef context,
+    TCL_UNUSED(CGContextRef),
     Tk_Window tkwin,
     int contrast,
     CGFloat *rgba)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
-    (void)context;
 
     while (masterPtr && masterPtr->privatePtr) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
@@ -1040,14 +1039,13 @@ static void DrawDarkTab(
 static void DrawDarkSeparator(
     CGRect bounds,
     CGContextRef context,
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
     static CGFloat fill[4] = {1.0, 1.0, 1.0, 0.3};
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *fillColor = [NSColor colorWithColorSpace: deviceRGB
 	components: fill
 	count:4];
-    (void)tkwin;
 
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
     CGContextFillRect(context, bounds);
@@ -1167,12 +1165,11 @@ static void DrawDarkFrame(
 static void DrawDarkListHeader(
     CGRect bounds,
     CGContextRef context,
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     int state)
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
-    (void)tkwin;
 
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;

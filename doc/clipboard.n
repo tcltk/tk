@@ -12,7 +12,7 @@
 .SH NAME
 clipboard \- Manipulate Tk clipboard
 .SH SYNOPSIS
-\fBclipboard \fIoption\fR ?\fIarg arg ...\fR?
+\fBclipboard \fIoption\fR ?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP

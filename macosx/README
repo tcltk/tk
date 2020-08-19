@@ -662,15 +662,35 @@ source and destination rectangles for the scrolling.  The embedded
 windows are redrawn within the DisplayText function by some
 conditional code which is only used for macOS.
 
-6.0 Virtual events on 10.14
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+6.0 Virtual events on macOS 10.14 and later
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-10.14 supports system appearance changes, and has added a "Dark Mode"
-that casts all window frames and menus as black. Tk 8.6.9 has added two
-virtual events, <<LightAqua>> and <<DarkAqua>>, to allow you to update
-your Tk app's appearance when the system appearance changes. Just bind
-your appearance-updating code to these virtual events and you will see
-it triggered when the system appearance toggles between dark and light.
+The 10.14 release added support for system appearance changes,
+including a "Dark Mode" that renders all window frames and menus in
+dark colors. Tk 8.6.11 provides three virtual events <<LightAqua>>,
+<<DarkAqua>> and <<AppearanceChanged>>, to allow you to update your Tk
+app's appearance when the system appearance changes.  These events are
+generated in [NSView effectiveAppearanceChanged], which is called by
+the Apple window manager when the General Preferences is changed
+either by switching between Light Mode and Dark Mode or by changing
+the Accent Color or Highlight Color.
+
+The <<AppearanceChanged>> virtual event has a data string which can be
+accessed with the %d substitution.  The format of the data string is
+that it consists of 6 words:
+  "Appearance XXXX Accent YYYY Highlight ZZZZ"
+For example, the following code will print the current appearance
+name, accent color and highlight color when the <<AppearanceChanged>>
+virtual event fires:
+
+bind . <<AppearanceChanged>> {
+    array set data [split %d]
+    puts "  Appearance: $data(Appearance)"
+    puts "  Accent: $data(Accent)"
+    puts "  Highlight: $data(Highlight)\n"
+}
+
+
 
 7.0 Mac Services
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
