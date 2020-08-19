@@ -241,27 +241,14 @@ static SystemColorDatum systemColorData[] = {
 {"WindowBackgroundColor7",	    ttkBackground, 7, NULL, 0, NULL },
 /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
 {"SecondaryLabelColor",		    ttkBackground, 14, NULL, 0, NULL },
-
-{"TextColor",			    semantic, 0, "textColor", 0, NULL },
-{"SelectedTextColor",		    semantic, 0, "selectedTextColor", 0, NULL },
-{"LabelColor",			    semantic, 0, "textColor", 0, NULL },
-{"LabelColor",			    semantic, 0, "labelColor", 0, NULL },
-{"ControlTextColor",      	    semantic, 0, "controlTextColor", 0, NULL },
-{"DisabledControlTextColor",	    semantic, 0, "disabledControlTextColor", 0, NULL },
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1060
-{"SelectedTabTextColor",	    semantic, 0, "whiteColor", 0, NULL },
-#else
-{"SelectedTabTextColor",	    semantic, 0, "blackColor", 0, NULL },
-#endif
-{"TextBackgroundColor",		    semantic, 0, "textBackgroundColor", 0, NULL },
-{"SelectedTextBackgroundColor",	    semantic, 0, "selectedTextBackgroundColor", 0, NULL },
+/* Color to use for notebook tab labels -- depends on OS version. */
+{"SelectedTabTextColor",	    semantic, 0, "textColor", 0, NULL },
+/* Semantic colors that we simulate on older systems which don't supoort them. */
 {"ControlAccentColor",		    semantic, 0, "controlAccentColor", 0, NULL },
+{"LabelColor",                      semantic, 0, "blackColor", 0, NULL },
 {"LinkColor",			    semantic, 0, "blueColor", 0, NULL },
-{"LinkColor",			    semantic, 0, "linkColor", 0, NULL },
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
-{"PlaceholderTextColor",	    semantic, 0, "placeholderTextColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
-{"SeparatorColor",		    semantic, 0, "separatorColor", 0, NULL },
 {NULL,				    0, 0, NULL, 0, NULL }
 };
 
