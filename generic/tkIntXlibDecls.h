@@ -699,10 +699,7 @@ EXTERN Status		XQueryTree(Display *d, Window w1, Window *w2,
 				Window *w3, Window **w4, unsigned int *ui);
 /* 91 */
 EXTERN int		XSync(Display *display, Bool discard);
-/* 92 */
-EXTERN int		XSetClipRectangles(Display *display, GC gc,
-				int clip_x_origin, int clip_y_origin,
-				XRectangle rectangles[], int n, int ordering);
+/* Slot 92 is reserved */
 /* Slot 93 is reserved */
 /* Slot 94 is reserved */
 /* Slot 95 is reserved */
@@ -716,7 +713,10 @@ EXTERN int		XSetClipRectangles(Display *display, GC gc,
 /* Slot 103 is reserved */
 /* Slot 104 is reserved */
 /* Slot 105 is reserved */
-/* Slot 106 is reserved */
+/* 106 */
+EXTERN int		XSetClipRectangles(Display *display, GC gc,
+				int clip_x_origin, int clip_y_origin,
+				XRectangle rectangles[], int n, int ordering);
 /* 107 */
 EXTERN int		XFlush(Display *display);
 /* 108 */
@@ -1051,7 +1051,7 @@ typedef struct TkIntXlibStubs {
     int (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
     int (*xSync) (Display *display, Bool discard); /* 91 */
-    int (*xSetClipRectangles) (Display *display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 92 */
+    void (*reserved92)(void);
     void (*reserved93)(void);
     void (*reserved94)(void);
     void (*reserved95)(void);
@@ -1065,7 +1065,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved103)(void);
     void (*reserved104)(void);
     void (*reserved105)(void);
-    void (*reserved106)(void);
+    int (*xSetClipRectangles) (Display *display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 106 */
     int (*xFlush) (Display *display); /* 107 */
     int (*xGrabServer) (Display *display); /* 108 */
     int (*xUngrabServer) (Display *display); /* 109 */
@@ -1606,8 +1606,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
 #define XSync \
 	(tkIntXlibStubsPtr->xSync) /* 91 */
-#define XSetClipRectangles \
-	(tkIntXlibStubsPtr->xSetClipRectangles) /* 92 */
+/* Slot 92 is reserved */
 /* Slot 93 is reserved */
 /* Slot 94 is reserved */
 /* Slot 95 is reserved */
@@ -1621,7 +1620,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 103 is reserved */
 /* Slot 104 is reserved */
 /* Slot 105 is reserved */
-/* Slot 106 is reserved */
+#define XSetClipRectangles \
+	(tkIntXlibStubsPtr->xSetClipRectangles) /* 106 */
 #define XFlush \
 	(tkIntXlibStubsPtr->xFlush) /* 107 */
 #define XGrabServer \
