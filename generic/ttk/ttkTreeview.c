@@ -1639,7 +1639,7 @@ static TreeItem *IdentifyItem(Treeview *tv, int y)
     if (row >= tv->tree.titleRows) {
 	row += tv->tree.yscroll.first;
     }
-    for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
+    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	nextRow = item->rowPos + item->height;
 	if (item->rowPos <= row && row < nextRow) break;
     }
@@ -2459,7 +2459,7 @@ static int TreeviewChildrenCommand(
 
 	/* Sanity-check:
 	 */
-	for (i=0; newChildren[i]; ++i) {
+	for (i = 0; newChildren[i]; ++i) {
 	    if (!AncestryCheck(interp, tv, newChildren[i], item)) {
 		ckfree(newChildren);
 		return TCL_ERROR;
@@ -2477,7 +2477,7 @@ static int TreeviewChildrenCommand(
 
 	/* Detach new children from their current locations:
 	 */
-	for (i=0; newChildren[i]; ++i) {
+	for (i = 0; newChildren[i]; ++i) {
 	    DetachItem(newChildren[i]);
 	}
 
@@ -2486,7 +2486,7 @@ static int TreeviewChildrenCommand(
 	 * though it probably should be...
 	 */
 	child = 0;
-	for (i=0; newChildren[i]; ++i) {
+	for (i = 0; newChildren[i]; ++i) {
 	    if (newChildren[i]->parent) {
 		/* This is a duplicate element which has already been
 		 * inserted.  Ignore it.
@@ -2650,7 +2650,7 @@ static int TreeviewBBoxCommand(
     if (!item) {
 	return TCL_ERROR;
     }
-    if (objc >=4 && (column = FindColumn(interp,tv,objv[3])) == NULL) {
+    if (objc >= 4 && (column = FindColumn(interp,tv,objv[3])) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -2978,7 +2978,7 @@ static int TreeviewSetCommand(
 	 */
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
 	Tcl_Obj *value;
-	for (columnNumber=0; columnNumber<tv->tree.nColumns; ++columnNumber) {
+	for (columnNumber = 0; columnNumber<tv->tree.nColumns; ++columnNumber) {
 	    Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &value);
 	    if (value) {
 		Tcl_ListObjAppendElement(NULL, result,
@@ -3193,7 +3193,7 @@ static int TreeviewDeleteCommand(
 
     /* Sanity-check:
      */
-    for (i=0; items[i]; ++i) {
+    for (i = 0; items[i]; ++i) {
 	if (items[i] == tv->tree.root) {
 	    ckfree(items);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3206,7 +3206,7 @@ static int TreeviewDeleteCommand(
     /* Remove items from hash table.
      */
     delq = 0;
-    for (i=0; items[i]; ++i) {
+    for (i = 0; items[i]; ++i) {
         if (items[i]->state & TTK_STATE_SELECTED || items[i]->selObj != NULL) {
             selItemDeleted = 1;
         }
@@ -3500,22 +3500,22 @@ static int TreeviewSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
-	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
+	    for (item = tv->tree.root; item; item = NextPreorder(item)) {
 		item->state &= ~TTK_STATE_SELECTED;
 	    }
 	    /*FALLTHRU*/
 	case SELECTION_ADD:
-	    for (i=0; items[i]; ++i) {
+	    for (i = 0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
 	    }
 	    break;
 	case SELECTION_REMOVE:
-	    for (i=0; items[i]; ++i) {
+	    for (i = 0; items[i]; ++i) {
 		items[i]->state &= ~TTK_STATE_SELECTED;
 	    }
 	    break;
 	case SELECTION_TOGGLE:
-	    for (i=0; items[i]; ++i) {
+	    for (i = 0; items[i]; ++i) {
 		items[i]->state ^= TTK_STATE_SELECTED;
 	    }
 	    break;
@@ -3601,7 +3601,7 @@ static int CellSelectionRange(
 
     /* Handle if itemTo is before itemFrom
      */
-    for (item = cellFrom.item; item; item=NextPreorder(item)) {
+    for (item = cellFrom.item; item; item = NextPreorder(item)) {
 	if (item == cellTo.item) {
 	    break;
 	}
@@ -3614,7 +3614,7 @@ static int CellSelectionRange(
     
     /* Go through all items in this rectangle.
      */
-    for (item = cellFrom.item; item; item=NextPreorder(item)) {
+    for (item = cellFrom.item; item; item = NextPreorder(item)) {
 	if (item->selObj != NULL) {
 	    item->selObj = unshareObj(item->selObj);
 
@@ -3662,7 +3662,7 @@ static int TreeviewCellSelectionCommand(
 
     if (objc == 2) {
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
-	for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
+	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	    if (item->selObj != NULL) {
 		int elemc;
 		Tcl_Obj **elemv;
@@ -4014,7 +4014,7 @@ static int TreeviewTagAddCommand(
 	return TCL_ERROR;
     }
 
-    for (i=0; items[i]; ++i) {
+    for (i = 0; items[i]; ++i) {
 	AddTag(items[i], tag);
     }
     ckfree(items);
@@ -4132,7 +4132,7 @@ static int TreeviewTagRemoveCommand(
 	if (!items) {
 	    return TCL_ERROR;
 	}
-	for (i=0; items[i]; ++i) {
+	for (i = 0; items[i]; ++i) {
 	    RemoveTag(items[i], tag);
 	}
 	ckfree(items);
@@ -4188,7 +4188,7 @@ static int TreeviewCtagRemoveCommand(
 	TreeItem *item = tv->tree.root;
 	while (item) {
             RemoveTagFromCellsAtItem(item, tag);
-	    item=NextPreorder(item);
+	    item = NextPreorder(item);
 	}
     }
 
