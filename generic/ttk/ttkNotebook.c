@@ -67,7 +67,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
-    {TK_OPTION_INDEX, "-underline", "underline", "Underline", "-1",
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline", NULL,
 	offsetof(Tab,underlineObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
@@ -1079,7 +1079,7 @@ static int NotebookIdentifyCommand(
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+    if (Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
 	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
 	|| (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
 		sizeof(char *), "option", 0, &what) != TCL_OK)
@@ -1135,7 +1135,7 @@ static int NotebookIndexCommand(
     }
 
     status = FindTabIndex(interp, nb, objv[2], &index);
-    if (status == TCL_OK) {
+	if (status == TCL_OK) {
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	if (index != TCL_INDEX_NONE)
 #endif

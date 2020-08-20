@@ -600,9 +600,9 @@ EntryValidateChange(
     VMODE vmode = entryPtr->entry.validate;
     int code, change_ok;
 
-    if (   (entryPtr->entry.validateCmd == NULL)
+    if ((entryPtr->entry.validateCmd == NULL)
 	|| (entryPtr->core.flags & VALIDATING)
-	|| !EntryNeedsValidation(vmode, reason) )
+	|| !EntryNeedsValidation(vmode, reason))
     {
 	return TCL_OK;
     }
@@ -1650,7 +1650,7 @@ static int EntrySelectionRangeCommand(
 	Tcl_WrongNumArgs(interp, 3, objv, "start end");
 	return TCL_ERROR;
     }
-    if (    EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
+    if (EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
          || EntryIndex(interp, entryPtr, objv[4], &end) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -1849,7 +1849,7 @@ static int ComboboxCurrentCommand(
     if (objc == 2) {
 	/* Check if currentIndex still valid:
 	 */
-	if (    currentIndex == TCL_INDEX_NONE
+	if (currentIndex == TCL_INDEX_NONE
 	     || currentIndex >= (TkSizeT)nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
@@ -2109,7 +2109,7 @@ TTK_END_LAYOUT
 TTK_BEGIN_LAYOUT(ComboboxLayout)
     TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
-	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH|TTK_PACK_LEFT|TTK_EXPAND,
+	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 

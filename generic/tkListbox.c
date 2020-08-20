@@ -842,7 +842,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	result = TCL_OK;
 	break;
 
