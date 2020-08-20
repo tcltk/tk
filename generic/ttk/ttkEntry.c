@@ -1711,7 +1711,7 @@ static int EntryValidateCommand(
     if (code == TCL_ERROR)
 	return code;
 
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(code == TCL_OK));
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(code == TCL_OK));
     return TCL_OK;
 }
 
