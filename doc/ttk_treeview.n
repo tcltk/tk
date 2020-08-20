@@ -441,7 +441,7 @@ See \fBTAG OPTIONS\fR for the list of available options.
 .TP
 \fIpathName \fBtag delete \fItagName\fR
 Deletes all tag information for the \fItagName\fR argument. The
-command removes the tag from all items in the widget and also deletes any
+command removes the tag from all items and cells in the widget and also deletes any
 other information associated with the tag, such as bindings and display
 information. The command returns an empty string.
 .TP
