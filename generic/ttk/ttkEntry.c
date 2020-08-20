@@ -600,9 +600,9 @@ EntryValidateChange(
     VMODE vmode = entryPtr->entry.validate;
     int code, change_ok;
 
-    if (   (entryPtr->entry.validateCmd == NULL)
+    if ((entryPtr->entry.validateCmd == NULL)
 	|| (entryPtr->core.flags & VALIDATING)
-	|| !EntryNeedsValidation(vmode, reason) )
+	|| !EntryNeedsValidation(vmode, reason))
     {
 	return TCL_OK;
     }
@@ -1393,7 +1393,7 @@ EntryIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
-    	if (idx + 1 > entryPtr->entry.numChars + 1) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > entryPtr->entry.numChars)) {
     	    idx = entryPtr->entry.numChars;
     	}
     	*indexPtr = idx;
@@ -1577,7 +1577,7 @@ EntryIndexCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
@@ -1650,7 +1650,7 @@ static int EntrySelectionRangeCommand(
 	Tcl_WrongNumArgs(interp, 3, objv, "start end");
 	return TCL_ERROR;
     }
-    if (    EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
+    if (EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
          || EntryIndex(interp, entryPtr, objv[4], &end) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -1849,7 +1849,7 @@ static int ComboboxCurrentCommand(
     if (objc == 2) {
 	/* Check if currentIndex still valid:
 	 */
-	if (    currentIndex == TCL_INDEX_NONE
+	if (currentIndex == TCL_INDEX_NONE
 	     || currentIndex >= (TkSizeT)nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
@@ -1867,7 +1867,7 @@ static int ComboboxCurrentCommand(
 	    }
 	}
 	cbPtr->combobox.currentIndex = currentIndex;
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj((int)currentIndex));
+	Tcl_SetObjResult(interp, TkNewIndexObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
 	TkSizeT idx;
