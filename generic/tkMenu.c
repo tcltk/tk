@@ -843,6 +843,11 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
+	if (index == TCL_INDEX_NONE) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
+	} else
+#endif
 	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
