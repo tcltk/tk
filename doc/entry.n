@@ -190,7 +190,7 @@ The \fBentry\fR command creates a new Tcl command whose
 name is \fIpathName\fR.  This command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName subcommand \fR?\fIarg arg ...\fR?
+\fIpathName subcommand \fR?\fIarg ...\fR?
 .CE
 \fISubcommand\fR and the \fIarg\fRs
 determine the exact behavior of the command.

@@ -20,12 +20,10 @@
 
 static int
 ServicesEventProc(
-    Tcl_Event *event,
-    int flags)
+    TCL_UNUSED(Tcl_Event *),
+    TCL_UNUSED(int))
 {
     TkMainInfo *info = TkGetMainInfoList();
-    (void)event;
-    (void)flags;
 
     Tcl_GlobalEval(info->interp, "::tk::mac::PerformService");
     return 1;
@@ -143,9 +141,8 @@ ServicesEventProc(
 
 int
 TkMacOSXServices_Init(
-    Tcl_Interp *dummy)
+    TCL_UNUSED(Tcl_Interp *))
 {
-    (void)dummy;
     /*
      * Initialize an instance of TkService and register it with the NSApp.
      */

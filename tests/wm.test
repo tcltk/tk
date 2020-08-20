@@ -33,7 +33,9 @@ proc stdWindow {} {
 #
 
 proc raiseDelay {} {
-    after 100; update
+    after 100;
+    update
+    update idletasks
 }
 
 # How to carry out a small delay while processing events
@@ -808,10 +810,10 @@ test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
 test wm-iconify-3.1 {iconify behavior} -body {
     toplevel .t2
     wm geom .t2 -0+0
-    update
+    update idletasks
     set result [winfo ismapped .t2]
     wm iconify .t2
-    update
+    update idletasks
     lappend result [winfo ismapped .t2]
 } -cleanup {
     destroy .t2
@@ -1484,14 +1486,14 @@ test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update
     raise .t
     wm stackorder . isbelow .t
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update
     raise .
@@ -1499,7 +1501,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     wm stackorder .t isa .
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update
     raise .
@@ -1507,7 +1509,7 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
     wm stackorder .t isb .
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
@@ -1738,11 +1740,11 @@ test wm-transient-4.2 {already mapped transient toplevel
     toplevel .master
     raiseDelay
     wm iconify .master
-    update
+    update idletasks
     toplevel .subject
-    update
+    update idletasks
     wm transient .subject .master
-    update
+    update idletasks
     list [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
@@ -1753,13 +1755,13 @@ test wm-transient-4.3 {iconify/deiconify on the master
 } -body {
     toplevel .master
     toplevel .subject
-    update
+    update idletasks
     wm transient .subject .master
     wm iconify .master
-    update
+    update idletasks
     lappend results [wm state .subject] [winfo ismapped .subject]
     wm deiconify .master
-    update
+    update idletasks
     lappend results [wm state .subject] [winfo ismapped .subject]
 } -cleanup {
     deleteWindows
@@ -2277,7 +2279,7 @@ test wm-forget-1.1 "bug #2009788: forget toplevel can cause crash" -body {
     winfo exists .parent.child
 } -cleanup {
     deleteWindows
-}  -result {1}
+}  -result 1
 test wm-forget-1.2 "bug #2009788: forget toplevel can cause crash" -body {
     toplevel .parent
     update
@@ -2286,7 +2288,7 @@ test wm-forget-1.2 "bug #2009788: forget toplevel can cause crash" -body {
     winfo exists .parent.child
 } -cleanup {
     deleteWindows
-}  -result {1}
+}  -result 1
 test wm-forget-1.3 "bug #2009788: forget toplevel can cause crash" -body {
     toplevel .parent
     toplevel .parent.child
@@ -2295,7 +2297,7 @@ test wm-forget-1.3 "bug #2009788: forget toplevel can cause crash" -body {
     winfo exists .parent.child
 } -cleanup {
     deleteWindows
-}  -result {1}
+}  -result 1
 test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
     toplevel .parent
     toplevel .parent.child
@@ -2310,6 +2312,11 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
 test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     catch {destroy .l .f.b .f}
     set res {}
+    if {[tk windowingsystem] == "aqua"} {
+	proc doUpdate {} {update idletasks}
+    } else {
+	proc doUpdate {} {update}
+    }
 } -body {
     label .l -text "Top Dot"
     frame .f
@@ -2317,16 +2324,15 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     pack .l -side top
     pack .f.b
     pack .f -side bottom
-    update
     set res [winfo manager .f]
     pack forget .f
-    update
+    doUpdate
     lappend res [winfo manager .f]
     wm manage .f
-    update
+    doUpdate
     lappend res [winfo manager .f]
     wm forget .f
-    update
+    doUpdate
     lappend res [winfo manager .f]
 } -cleanup {
     destroy .l .f.b .f

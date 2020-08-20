@@ -389,12 +389,12 @@ test grid-7.2 {propagate} -body {
     grid propagate .
 } -cleanup {
     grid_reset 7.2
-} -result {1}
+} -result 1
 test grid-7.3 {propagate} -body {
     grid propagate . 0;grid propagate .
 } -cleanup {
     grid_reset 7.3
-} -result {0}
+} -result 0
 test grid-7.4 {propagate} -body {
     grid propagate .x
 } -cleanup {
@@ -596,7 +596,7 @@ test grid-10.5 {column/row configure} -body {
     grid columnconfigure . 265 -weight
 } -cleanup {
     grid_reset 10.5
-} -result {0}
+} -result 0
 test grid-10.6 {column/row configure} -body {
     grid columnconfigure . 0
 } -cleanup {
@@ -622,7 +622,7 @@ test grid-10.10 {column/row configure} -body {
     grid columnconfigure . 0 -minsize
 } -cleanup {
     grid_reset 10.10
-} -result {10}
+} -result 10
 test grid-10.11 {column/row configure} -body {
     grid columnconfigure . 0 -weight bad
 } -cleanup {
@@ -638,7 +638,7 @@ test grid-10.13 {column/row configure} -body {
     grid columnconfigure . 0 -weight
 } -cleanup {
     grid_reset 10.13
-} -result {3}
+} -result 3
 test grid-10.14 {column/row configure} -body {
     grid columnconfigure . 0 -pad foo
 } -cleanup {
@@ -654,7 +654,7 @@ test grid-10.16 {column/row configure} -body {
     grid columnconfigure . 0 -pad
 } -cleanup {
     grid_reset 10.16
-} -result {3}
+} -result 3
 test grid-10.17 {column/row configure} -body {
     frame .f
     set a ""
@@ -2039,7 +2039,7 @@ test grid-23 {grid configure -in leaked from previous master - bug
     pack forget .f
     update
     winfo ismapped .t ; # must return 1
-} {1}
+} 1
 grid_reset 23
 
 test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -setup {
@@ -2055,7 +2055,7 @@ test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -setup {
 } -cleanup {
     bind . <<NoManagedChild>> {}
     grid_reset 24.1
-} -result {1}
+} -result 1
 test grid-24.2 {<<NoManagedChild>> fires on last grid remove} -setup {
     global A
     unset -nocomplain A
@@ -2069,7 +2069,7 @@ test grid-24.2 {<<NoManagedChild>> fires on last grid remove} -setup {
 } -cleanup {
     bind . <<NoManagedChild>> {}
     grid_reset 24.2
-} -result {1}
+} -result 1
 test grid-24.3 {<<NoManagedChild>> fires on last gridded child destruction} -setup {
     global A
     unset -nocomplain A
@@ -2083,7 +2083,7 @@ test grid-24.3 {<<NoManagedChild>> fires on last gridded child destruction} -set
 } -cleanup {
     bind . <<NoManagedChild>> {}
     grid_reset 24.3
-} -result {1}
+} -result 1
 test grid-24.4 {<Configure> does not fire on last grid forget} -setup {
     global A
     unset -nocomplain A
@@ -2097,7 +2097,7 @@ test grid-24.4 {<Configure> does not fire on last grid forget} -setup {
 } -cleanup {
     bind . <Configure> {}
     grid_reset 24.4
-} -result {0}
+} -result 0
 test grid-24.5 {<Configure> fires on forelast grid forget} -setup {
     global A
     unset -nocomplain A
@@ -2112,7 +2112,7 @@ test grid-24.5 {<Configure> fires on forelast grid forget} -setup {
 } -cleanup {
     bind . <Configure> {}
     grid_reset 24.5
-} -result {1}
+} -result 1
 test grid-24.6 {<<NoManagedChild>> does not fire on forelast grid forget} -setup {
     global A
     unset -nocomplain A
@@ -2127,7 +2127,7 @@ test grid-24.6 {<<NoManagedChild>> does not fire on forelast grid forget} -setup
 } -cleanup {
     bind . <<NoManagedChild>> {}
     grid_reset 24.6
-} -result {0}
+} -result 0
 test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -setup {
     global A
     unset -nocomplain A
@@ -2140,7 +2140,7 @@ test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -setup {
     grid anchor . nw
     bind . <<NoManagedChild>> {}
     grid_reset 24.7
-} -result {0}
+} -result 0
 test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagation is off} -setup {
     global A
     unset -nocomplain A
@@ -2155,7 +2155,7 @@ test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagat
 } -cleanup {
     bind . <<NoManagedChild>> {}
     grid_reset 24.8
-} -result {0}
+} -result 0
 
 # cleanup
 cleanupTests

@@ -43,6 +43,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -70,6 +71,14 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoPutBlock_Panic 0
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
+#define Tk_CreateOldPhotoImageFormat 0
+#ifdef MAC_OSX_TK
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+#endif
 #else
 static void
 doNothing(void)
@@ -100,6 +109,12 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
+#define Tk_CanvasTagsParseProc \
+		(int (*) (void *, Tcl_Interp *,Tk_Window, const char *, char *, \
+		int offset))(void *)TkCanvasTagsParseProc
+#define Tk_CanvasTagsPrintProc \
+		(const char *(*) (void *,Tk_Window, char *, int, \
+		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
 
 #ifdef _WIN32
 
@@ -488,7 +503,27 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-    TkDebugPhotoStringMatchDef, /* 185 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 185 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 185 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpRedrawWidget, /* 185 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 186 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 186 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpWillDrawWidget, /* 186 */
+#endif /* AQUA */
+    TkDebugPhotoStringMatchDef, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {

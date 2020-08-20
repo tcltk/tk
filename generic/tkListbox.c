@@ -409,8 +409,8 @@ static void		ListboxComputeGeometry(Listbox *listPtr,
 			    int fontChanged, int maxIsStale, int updateGrid);
 static void		ListboxEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		ListboxFetchSelection(ClientData clientData,
-			    int offset, char *buffer, int maxBytes);
+static TkSizeT	ListboxFetchSelection(ClientData clientData,
+			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
 static void		ListboxLostSelection(ClientData clientData);
 static void		GenerateListboxSelectEvent(Listbox *listPtr);
 static void		EventuallyRedrawRange(Listbox *listPtr,
@@ -842,7 +842,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	result = TCL_OK;
 	break;
 
@@ -2742,7 +2742,7 @@ GetListboxIndex(
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
-    	if (idx + 1 > (TkSizeT)listPtr->nElements + 1) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > (TkSizeT)listPtr->nElements)) {
     	    idx = listPtr->nElements;
     	}
     	*indexPtr = (int)idx;
@@ -3112,13 +3112,13 @@ ListboxSelect(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 ListboxFetchSelection(
     ClientData clientData,	/* Information about listbox widget. */
-    int offset,			/* Offset within selection of first byte to be
+    TkSizeT offset,			/* Offset within selection of first byte to be
 				 * returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -3163,12 +3163,12 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    if (length <= (TkSizeT)offset) {
+    if (length <= offset) {
 	count = 0;
     } else {
 	count = length - offset;
-	if (count > maxBytes) {
-	    count = maxBytes;
+	if (count > (int)maxBytes) {
+	    count = (int)maxBytes;
 	}
 	memcpy(buffer, Tcl_DStringValue(&selection) + offset, count);
     }
@@ -3324,7 +3324,7 @@ ListboxUpdateVScrollbar(
 
     /*
      * We must hold onto the interpreter from the listPtr because the data at
-     * listPtr might be freed as a result of the Tcl_VarEval.
+     * listPtr might be freed as a result of the Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3335,7 +3335,7 @@ ListboxUpdateVScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
@@ -3396,7 +3396,7 @@ ListboxUpdateHScrollbar(
 
     /*
      * We must hold onto the interpreter because the data referred to at
-     * listPtr might be freed as a result of the call to Tcl_VarEval.
+     * listPtr might be freed as a result of the call to Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3407,7 +3407,7 @@ ListboxUpdateHScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,

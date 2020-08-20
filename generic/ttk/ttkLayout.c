@@ -36,10 +36,10 @@ Ttk_NewBoxObj(Ttk_Box box)
 {
     Tcl_Obj *result[4];
 
-    result[0] = Tcl_NewIntObj(box.x);
-    result[1] = Tcl_NewIntObj(box.y);
-    result[2] = Tcl_NewIntObj(box.width);
-    result[3] = Tcl_NewIntObj(box.height);
+    result[0] = Tcl_NewWideIntObj(box.x);
+    result[1] = Tcl_NewWideIntObj(box.y);
+    result[2] = Tcl_NewWideIntObj(box.width);
+    result[3] = Tcl_NewWideIntObj(box.height);
 
     return Tcl_NewListObj(4, result);
 }
@@ -809,7 +809,7 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 	APPENDSTR("-sticky");
 	APPENDOBJ(Ttk_NewStickyObj(flags & _TTK_MASK_STICK));
 
-	/* @@@ Check again: are these necessary? */
+	/* @@@ Check again: are these necessary? Can't see any effect! */
 	if (flags & TTK_BORDER)	{ APPENDSTR("-border"); APPENDSTR("1"); }
 	if (flags & TTK_UNIT) 	{ APPENDSTR("-unit"); APPENDSTR("1"); }
 
