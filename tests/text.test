@@ -2648,7 +2648,7 @@ test text-10.36 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 2.7 "1.0 lineend"
 } -cleanup {
     destroy .t
-} -result {-1}
+} -result -1
 test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {

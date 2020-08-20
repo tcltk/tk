@@ -2150,10 +2150,16 @@ GetMenuIndex(
 	goto success;
     }
 
+    if (string[0] == 0) {
+	*indexPtr = TCL_INDEX_NONE;
+	goto success;
+    }
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
 	*indexPtr = TCL_INDEX_NONE;
 	goto success;
     }
+#endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
