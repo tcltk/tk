@@ -94,6 +94,10 @@ evaluate \fIscript\fR, then restore the previous theme.
 Typically \fIscript\fR simply defines styles and elements,
 though arbitrary Tcl code may appear.
 .TP
+\fBttk::style theme styles\fR ?\fIthemeName\fR?
+Returns a list of all styles in \fIthemeName\fR. If \fIthemeName\fR
+is omitted, the current theme is used.
+.TP
 \fBttk::style theme use\fR ?\fIthemeName\fR?
 Without an argument the result is the name of the current theme.
 Otherwise this command sets the current theme to \fIthemeName\fR,
