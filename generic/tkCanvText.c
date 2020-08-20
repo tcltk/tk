@@ -147,12 +147,16 @@ UnderlinePrintProc(
 				 * for return string. */
 {
     int underline = *(int *)(widgRec + offset);
-	char *p = (char *)ckalloc(32);
+    char *p;
     (void)dummy;
     (void)tkwin;
 
     if (underline == INT_MIN) {
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	p = (char *)"-1";
+#else
+	p = (char *)"";
+#endif
 	*freeProcPtr = TCL_STATIC;
 	return p;
     } else if (underline == INT_MAX) {
@@ -164,6 +168,7 @@ UnderlinePrintProc(
 	*freeProcPtr = TCL_STATIC;
 	return p;
     }
+    p = (char *)ckalloc(32);
     if (underline < 0) {
 	sprintf(p, "end%d", underline);
     } else {
