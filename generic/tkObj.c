@@ -233,9 +233,6 @@ TkGetIntForIndex(
 	}
 	return TCL_ERROR;
     }
-    if (Tcl_GetString(indexObj)[0] == '-') {
-    	return TCL_ERROR;
-    }
     if ((end + 1 >= 0) && (*indexPtr + 1) > (end + 1)) {
 	*indexPtr = end + 1;
     }
