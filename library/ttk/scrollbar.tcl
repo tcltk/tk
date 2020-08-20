@@ -67,6 +67,7 @@ proc ttk::scrollbar::Press {w x y} {
 	*rightarrow {
 	    ttk::Repeatedly Scroll $w  1 units
 	}
+        *grip -
 	*thumb {
 	    set State(first) [lindex [$w get] 0]
 	}
@@ -89,7 +90,7 @@ proc ttk::scrollbar::Press {w x y} {
 proc ttk::scrollbar::Drag {w x y} {
     variable State
     if {![info exists State(first)]} {
-    	# Initial buttonpress was not on the thumb, 
+    	# Initial buttonpress was not on the thumb,
 	# or something screwy has happened.  In either case, ignore:
 	return;
     }
@@ -112,6 +113,7 @@ proc ttk::scrollbar::Jump {w x y} {
     variable State
 
     switch -glob -- [$w identify $x $y] {
+        *grip -
 	*thumb -
 	*trough {
 	    set State(first) [$w fraction $x $y]
