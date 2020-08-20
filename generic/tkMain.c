@@ -32,6 +32,9 @@ static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
  * to strcmp here.
  */
 #ifdef _WIN32
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
@@ -41,7 +44,10 @@ typedef struct TclIntPlatStubs {
     void (*dummy[16]) (void); /* dummy entries 0-15, not used */
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
-const TclIntPlatStubs *tclIntPlatStubsPtr;
+extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#ifdef __cplusplus
+}
+#endif
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char

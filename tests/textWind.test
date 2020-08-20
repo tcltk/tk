@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-set fixedFont {"Courier New" -12}
+set fixedFont {"Courier" -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
@@ -171,7 +171,7 @@ test textWind-2.7 {TkTextWindowCmd procedure, "cget" option} -setup {
     .t window cget .f -pady
 } -cleanup {
     destroy .f
-} -returnCodes ok -result {2}
+} -returnCodes ok -result 2
 test textWind-2.8 {TkTextWindowCmd procedure} -body {
     .t window co
 } -returnCodes error -result {wrong # args: should be ".t window configure index ?-option value ...?"}
@@ -751,15 +751,17 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t.f
     proc bgerror args {
         global msg
-	lappend msg $args
+        if {$msg == ""} {
+	    lappend msg $args
+	}
     }
 } -body {
     .t insert 1.0 "Some sample text"
+    set msg {}
     .t window create 1.5 -create {
         frame .t.f
         frame .t.f.f -width 10 -height 20 -bg $color
     }
-    set msg {}
     update idletasks
     lappend msg [winfo exists .t.f.f]
 } -cleanup {
@@ -1405,7 +1407,7 @@ test textWind-17.1 {peer widgets and embedded windows} -setup {
     update ; update
     destroy .t .tt
     winfo exists .f
-} -result {0}
+} -result 0
 
 test textWind-17.2 {peer widgets and embedded windows} -setup {
     destroy .t .f .tt

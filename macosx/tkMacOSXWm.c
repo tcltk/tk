@@ -1806,7 +1806,6 @@ WmDeiconifyCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
-
     if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't deiconify %s: it is an icon for %s",
@@ -3806,10 +3805,6 @@ WmWithdrawCmd(
 
     TkpWmSetState(winPtr, WithdrawnState);
 
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win orderOut:NSApp];
-    [win setExcludedFromWindowsMenu:YES];
-
     /*
      * If this window has a transient, the transient must also be withdrawn.
      */
@@ -4053,7 +4048,7 @@ TopLevelEventProc(
 	    TkMacOSXDbgMsg("TopLevelEventProc: %s deleted", winPtr->pathName);
 	}
     } else if (eventPtr->type == ReparentNotify) {
-	Tcl_Panic("recieved unwanted reparent event");
+	Tcl_Panic("received unwanted reparent event");
     }
 }
 
@@ -5584,7 +5579,7 @@ TkUnsupported1ObjCmd(
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
     case TKMWS_TABID:
-	if ([NSApp macMinorVersion] < 12) {
+	if ([NSApp macOSVersion] < 101200) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
                 "Tabbing identifiers did not exist until OSX 10.12.", -1));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "TABBINGID", NULL);
@@ -5596,7 +5591,7 @@ TkUnsupported1ObjCmd(
 	}
 	return WmWinTabbingId(interp, winPtr, objc, objv);
     case TKMWS_APPEARANCE:
-	if ([NSApp macMinorVersion] < 9) {
+	if ([NSApp macOSVersion] < 100900) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
                 "Window appearances did not exist until OSX 10.9.", -1));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
@@ -5606,7 +5601,7 @@ TkUnsupported1ObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
 	    return TCL_ERROR;
 	}
-	if (objc == 4 && [NSApp macMinorVersion] < 14) {
+	if (objc == 4 && [NSApp macOSVersion] < 101400) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Window appearances cannot be changed before OSX 10.14.",
 		    -1));
@@ -6173,28 +6168,41 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDisplayWindow --
+ * TkpRedrawWidget --
  *
- *      Mark the contentView of this window as needing display so the window
- *      will be drawn by the window manager.  If this is called within the
- *      drawRect method, do nothing.
+ *      Mark the bounding rectangle of this widget as needing display so the
+ *      widget will be drawn by [NSView drawRect:].  If this is called within
+ *      the drawRect method, do nothing.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      The window's contentView is marked as needing display.
+ *      The widget's bounding rectangle is marked as dirty.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
-TkpDisplayWindow(Tk_Window tkwin) {
-    if (![NSApp isDrawing]) {
-    	TkWindow *winPtr = (TkWindow *) tkwin;
-    	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+void
+TkpRedrawWidget(Tk_Window tkwin) {
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    NSWindow *w;
+    Rect tkBounds;
+    NSRect bounds;
 
-    	[[w contentView] setNeedsDisplay: YES];
+    if ([NSApp isDrawing]) {
+	return;
+    }
+    w = TkMacOSXDrawableWindow(winPtr->window);
+    if (w) {
+	TKContentView *view = [w contentView];
+	TkMacOSXWinBounds(winPtr, &tkBounds);
+	bounds = NSMakeRect(tkBounds.left,
+			    [view bounds].size.height - tkBounds.bottom,
+			    tkBounds.right - tkBounds.left,
+			    tkBounds.bottom - tkBounds.top);
+	[view setTkNeedsDisplay:YES];
+	[view setTkDirtyRect:bounds];
     }
 }
 
@@ -6399,6 +6407,7 @@ TkpWmSetState(
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
+
 	/*
 	 * The window always gets unmapped. If we can show the icon version of
 	 * the window we also collapse it.
@@ -6411,13 +6420,15 @@ TkpWmSetState(
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == NormalState || state == ZoomState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-	if (macWin && ([macWin styleMask] & NSMiniaturizableWindowMask) &&
-		[macWin isMiniaturized]) {
-	    [macWin deminiaturize:NSApp];
-	}
-	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn :
-		inZoomOut);
+	[macWin deminiaturize:NSApp];
+	[macWin orderFront:NSApp];
+	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+    /*
+     * Make sure windows are updated after the state change.
+     */
+
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 }
 
 /*
@@ -6863,7 +6874,6 @@ ApplyWindowAttributeFlagChanges(
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			    NSWindowCollectionBehaviorFullScreenAuxiliary);
 		} else {
-		    NSSize screenSize = [[macWindow screen] frame].size;
 		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
 		    /*
@@ -6873,8 +6883,11 @@ ApplyWindowAttributeFlagChanges(
 		     * window. To work around this we make the max size equal
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
-		    if ([NSApp macMinorVersion] > 10) {
+		    if ([NSApp macOSVersion] > 101000) {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED > 101000)
+			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
+#endif
 		    }
 		}
 	    }
@@ -6957,7 +6970,7 @@ ApplyMasterOverrideChanges(
 	    wmPtr->attributes = macClassAttrs[kSimpleWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
-	if ([NSApp macMinorVersion] == 6) {
+	if ([NSApp macOSVersion] == 100600) {
 	    styleMask = 0;
 	} else {
 	    styleMask &= ~NSTitledWindowMask;
@@ -6970,7 +6983,7 @@ ApplyMasterOverrideChanges(
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
-	if ([NSApp macMinorVersion] == 6) {
+	if ([NSApp macOSVersion] == 100600) {
 	    styleMask = NSTitledWindowMask         |
 		        NSClosableWindowMask       |
 		        NSMiniaturizableWindowMask |

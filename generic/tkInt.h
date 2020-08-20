@@ -576,14 +576,11 @@ typedef struct TkDisplay {
  *	Whether to use input methods for this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
- *  TK_DISPLAY_IN_WARP:			(default off)
- *	Indicates that we are in a pointer warp
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
-#define TK_DISPLAY_IN_WARP			(1 << 4)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -726,7 +723,7 @@ typedef struct TkWindow {
     Visual *visual;		/* Visual to use for window. If not default,
 				 * MUST be set before X window is created. */
     int depth;			/* Number of bits/pixel. */
-    Window window;		/* X's id for window. NULL means window hasn't
+    Window window;		/* X's id for window. None means window hasn't
 				 * actually been created yet, or it's been
 				 * deleted. */
     struct TkWindow *childList;	/* First in list of child windows, or NULL if
@@ -1034,7 +1031,7 @@ typedef struct TkpClipMask {
 		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
+MODULE_SCOPE unsigned TkGetButtonMask(unsigned);
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
@@ -1110,6 +1107,10 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
  */
 
 #include "tkIntDecls.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Themed widget set init function:
@@ -1283,6 +1284,15 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
+#if TCL_MAJOR_VERSION > 8
+MODULE_SCOPE int TkCanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
+    Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
+#define TkCanvasTagsParseProc Tk_CanvasTagsParseProc
+#define TkCanvasTagsPrintProc Tk_CanvasTagsPrintProc
+#endif
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
@@ -1307,6 +1317,10 @@ MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int x, int y);
+MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int maxLength, int flags,
@@ -1341,8 +1355,8 @@ MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
 			    Tcl_Interp *interp);
+MODULE_SCOPE void	TkDoWarpWrtWin(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
-MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
@@ -1351,6 +1365,7 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
+#define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
@@ -1390,8 +1405,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
 #if TCL_UTF_MAX > 4
-#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
-#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
+#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
+#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
 #   define TkUtfPrev Tcl_UtfPrev
 #else
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
@@ -1429,6 +1444,10 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #define TkplatformtestInit(x) TCL_OK
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _TKINT */

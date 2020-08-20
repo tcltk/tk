@@ -502,7 +502,7 @@ test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
     set res
 } -cleanup {
     bind .tv <<TreeviewSelect>> {}
-} -result {1}
+} -result 1
 
 test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
     .tv selection set {}
@@ -602,7 +602,7 @@ test treeview-9.3 {scrolling on see command, requested item is closed} -setup {
     expr $after < $before
 } -cleanup {
     destroy .top
-} -result {1}
+} -result 1
 
 test treeview-10.0 "See command" -setup {
     # Setup common for all 10.* tests

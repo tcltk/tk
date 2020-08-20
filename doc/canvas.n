@@ -348,13 +348,13 @@ name is \fIpathName\fR. This
 command may be used to invoke various
 operations on the widget. It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.
 The following widget commands are possible for canvas widgets:
 .TP
-\fIpathName \fBaddtag \fItag searchSpec \fR?\fIarg arg ...\fR?
+\fIpathName \fBaddtag \fItag searchSpec \fR?\fIarg ...\fR?
 .
 For each item that meets the constraints specified by
 \fIsearchSpec\fR and the \fIarg\fRs, add
@@ -602,7 +602,7 @@ the item is unaffected by the command.
 If \fItagToDelete\fR is omitted then it defaults to \fItagOrId\fR.
 This command returns an empty string.
 .TP
-\fIpathName \fBfind \fIsearchCommand \fR?\fIarg arg ...\fR?
+\fIpathName \fBfind \fIsearchCommand \fR?\fIarg ...\fR?
 .
 This command returns a list consisting of all the items that
 meet the constraints specified by \fIsearchCommand\fR and
@@ -1160,7 +1160,7 @@ of the \fBxScrollIncrement\fR option, if it is greater than zero,
 or in units of one-tenth the window's width otherwise.
 .RE
 .TP
-\fIpathName \fByview \fI?args\fR?
+\fIpathName \fByview ?\fIargs\fR?
 .
 This command is used to query and change the vertical position of the
 information displayed in the canvas's window.
