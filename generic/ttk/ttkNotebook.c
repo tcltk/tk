@@ -1079,7 +1079,7 @@ static int NotebookIdentifyCommand(
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+    if (Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
 	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
 	|| (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
 		sizeof(char *), "option", 0, &what) != TCL_OK)
@@ -1108,9 +1108,8 @@ static int NotebookIdentifyCommand(
 	    }
 	    break;
 	case IDENTIFY_TAB:
-	    if (tabIndex != TCL_INDEX_NONE) {
-		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(tabIndex));
-	    }
+	    if (tabIndex != TCL_INDEX_NONE)
+	    Tcl_SetObjResult(interp, TkNewIndexObj(tabIndex));
 	    break;
     }
     return TCL_OK;
@@ -1134,8 +1133,9 @@ static int NotebookIndexCommand(
     }
 
     status = FindTabIndex(interp, nb, objv[2], &index);
-    if (status == TCL_OK && index != TCL_INDEX_NONE) {
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	if (status == TCL_OK) {
+	if (index != TCL_INDEX_NONE)
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
     }
 
     return status;
