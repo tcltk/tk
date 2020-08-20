@@ -404,6 +404,11 @@ See also \fBCOLUMN IDENTIFIERS\fR.
 Modify or query the widget state; see \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBtag \fIargs...\fR
+Manages tags. Tags can be set on items as well as on cells.
+The set of tags is shared between items and cells. However item tagging is
+independent from cell tagging (for instance adding a tag on an item does
+not also add this tag on the cells in that row).
+The following subcommands are supported:
 .RS
 .TP
 \fIpathName \fBtag add \fItag items\fR
@@ -426,6 +431,25 @@ No other event types are supported.
 .PP
 The binding \fIscript\fR undergoes \fB%\fR-substitutions before
 evaluation; see \fBbind(n)\fR for details.
+.RE
+.TP
+\fIpathName \fBtag cell \fIsubcmd...\fR
+.RS
+.TP
+\fIpathName \fBtag cell add \fItag cells\fR
+Adds the specified \fItag\fR to each of the listed \fIcells\fR.
+If \fItag\fR is already present for a particular cell,
+then the tag list for that cell is unchanged.
+.TP
+\fIpathName \fBtag cell has \fItagName\fR ?\fIcell\fR?
+If \fIcell\fR is specified, returns 1 or 0
+depending on whether the specified cell has the named tag.
+Otherwise, returns a list of all cells which have
+the specified tag.
+.TP
+\fIpathName \fBtag cell remove \fItag\fR ?\fIcells\fR?
+Removes the specified \fItag\fR from each of the listed \fIcells\fR.
+If \fIcells\fR is omitted, removes \fItag\fR from each cell in the tree.
 .RE
 .TP
 \fIpathName \fBtag configure \fItagName\fR ?\fIoption\fR? ?\fIvalue option value...\fR?
@@ -459,21 +483,6 @@ Removes the specified \fItag\fR from each of the listed \fIitems\fR.
 If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
-.TP
-\fIpathName \fBtag cell has \fItagName\fR ?\fIcell\fR?
-If \fIcell\fR is specified, returns 1 or 0
-depending on whether the specified cell has the named tag.
-Otherwise, returns a list of all cells which have
-the specified tag.
-.TP
-\fIpathName \fBtag cell add \fItag cells\fR
-Adds the specified \fItag\fR to each of the listed \fIcells\fR.
-If \fItag\fR is already present for a particular cell,
-then the tag list for that cell is unchanged.
-.TP
-\fIpathName \fBtag cell remove \fItag\fR ?\fIcells\fR?
-Removes the specified \fItag\fR from each of the listed \fIcells\fR.
-If \fIcells\fR is omitted, removes \fItag\fR from each cell in the tree.
 .RE
 .PP
 The treeview widget also supports the following generic \fBttk::widget\fR
