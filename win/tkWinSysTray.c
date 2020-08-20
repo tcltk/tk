@@ -550,7 +550,7 @@ FindDIBBits( LPSTR lpbi )
 
 
 
-
+
 static BOOL
 NotifyA (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt,  char* msgtitle, char* msginfo) 
 {
@@ -732,6 +732,12 @@ FreeIcoPtr(Tcl_Interp *interp, IcoInfo *icoPtr)
     if(icoPtr->taskbar_txt!=NULL) {
         ckfree((char *) icoPtr->taskbar_txt);
     }
+       if(icoPtr->taskbar_title!=NULL) {
+        ckfree((char *) icoPtr->taskbar_title);
+    }
+          if(icoPtr->taskbar_info!=NULL) {
+        ckfree((char *) icoPtr->taskbar_info);
+    }
     if(icoPtr->taskbar_command!=NULL) {
         ckfree((char *) icoPtr->taskbar_command);
     }
@@ -761,7 +767,7 @@ static IcoInfo* GetIcoPtr(Tcl_Interp* interp,char* string){
         "\" doesn't exist", (char *) NULL);
     return NULL;
 }
-
+
 static int
 GetInt(long theint, char *buffer, size_t len)
 {
@@ -769,7 +775,7 @@ GetInt(long theint, char *buffer, size_t len)
     buffer[len-1] = 0;
     return (int)strlen(buffer);
 }
-
+
 static int
 GetIntDec(long theint, char *buffer, size_t len)
 {
@@ -777,7 +783,7 @@ GetIntDec(long theint, char *buffer, size_t len)
     buffer[len-1] = 0;
     return (int)strlen(buffer);
 }
-
+
 static char* 
 TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
     WPARAM wParam, LPARAM lParam, char *before, char *after, int *aftersize)
@@ -901,7 +907,7 @@ TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
     *dst=0;
     return after;
 }
-
+
 static void 
 TaskbarEval(IcoInfo* icoPtr,WPARAM wParam,LPARAM lParam) {
     char* msgstring = "none";
@@ -1009,7 +1015,7 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return 0L;
 }
-
+
 /*
  * Registers the handler window class
  */
@@ -1030,7 +1036,7 @@ RegisterHandlerClass(HINSTANCE hInstance)
     wndclass.lpszClassName = HANDLER_CLASS;
     return RegisterClass(&wndclass);
 }
-
+
 /*
  *Creates a hidden window to handle taskbar messages
  */
@@ -1079,7 +1085,7 @@ StandardIcon(CONST84 char* arg){
         return IDI_WINLOGO;
     return NULL;
 }
-
+
 /*
  * Tries to get a valid window handle from a Tk-pathname for a toplevel.
  */
@@ -1138,305 +1144,177 @@ WinIcoDestroy (ClientData clientData)
         FreeIcoPtr(interp,icoPtr);
     }
 }
-
+
 static int 
 WinIcoCmd(ClientData clientData, Tcl_Interp *interp,
-    int argc, CONST84 char *argv[])
+          int argc, CONST84 char *argv[])
 {
-    size_t length;
-    HICON hIcon;
-    int i;
-    IcoInfo* icoPtr;
-    if (argc < 2) {
-        Tcl_AppendResult(interp, "wrong # args: should be \"",
-            argv[0], " option ?arg arg ...?\"", (char *) NULL);
-        return TCL_ERROR;
-    }
+  size_t length;
+  HICON hIcon;
+  int i;
+  IcoInfo* icoPtr;
+  if (argc < 2) {
+    Tcl_AppendResult(interp, "wrong # args: should be \"",
+                     argv[0], " option ?arg arg ...?\"", (char *) NULL);
+    return TCL_ERROR;
+  }
     
-    length = strlen(argv[1]);
-    if (strncmp(argv[1],"load",length) == 0 && (length >= 2)) {
-        int number;
-        char* arg;
-        HINSTANCE hinst=GETHINSTANCE;
-        if(argc<3) {
-            Tcl_AppendResult(interp,"wrong # args,must be:",
-                argv[0]," load <resourcename/number> ?dllname?",(char*)NULL);
-            return TCL_ERROR;
-        }
-        if (argc > 3) {
-            hinst = LoadLibrary(argv[3]);
-            if(hinst==NULL) {
-                Tcl_AppendResult(interp,"couldn't load dll ",argv[3],(char*)NULL);
-                return TCL_ERROR;
-            }
-        }
-        if(Tcl_GetInt(interp,argv[2],&number)==TCL_OK){
-            if(number>32511){
-                hinst=NULL;
-                if((hIcon=LoadIcon(hinst,MAKEINTRESOURCE(number)))!=NULL){
-                    NewIcon(interp,hIcon,ICO_LOAD,NULL,0);
-                    return TCL_OK;
-                }
-            }
-        }
-        Tcl_ResetResult(interp);
-        arg = StandardIcon(argv[2]);
-        if(arg == NULL) {
-            arg = (char*)argv[2];
-        } else {
-            hinst = NULL;
-        }
-        if((hIcon=LoadIcon(hinst,arg))!=NULL){
-            NewIcon(interp,hIcon,ICO_LOAD,NULL,0);
-            return TCL_OK;
-        }
-        Tcl_AppendResult(interp,"Could not find a resource for \"",
-            argv[2],"\"",(char*)NULL);
-        return TCL_ERROR;
-    } else if ((strncmp(argv[1], "createfrom", length) == 0) && (length >= 2)) {
-        LPICONRESOURCE lpIR = NULL;
-        int pos = 0;
-        if(argc<3) {
-            Tcl_AppendResult(interp,"wrong # args,must be:",
-                argv[0]," createfrom <icofilename> ",(char*)NULL);
-            return TCL_ERROR;
-        }
-        lpIR=ReadIconFromICOFile(interp,argv[2]);
-        if(lpIR==NULL){
-            Tcl_AppendResult(interp,"reading of ",argv[2]," failed!",(char*)NULL);
-            return TCL_ERROR;
-        }
-        hIcon=NULL;
-        for( i = 0; i < lpIR->nNumImages; i++ ) {
-            /*take the first or a 32x32 16 color icon*/
-            if(i==0 ||
-                (lpIR->LPICONIMAGEs[i].Height==32 && lpIR->LPICONIMAGEs[i].Width==32
-                    && lpIR->LPICONIMAGEs[i].Colors==4)){
-                hIcon=lpIR->LPICONIMAGEs[i].hIcon;
-                pos=i;
-            }
-        }
-        if(hIcon==NULL){
-            FreeIconResource(lpIR);
-            Tcl_AppendResult(interp,"Could not find an icon in ",argv[2],(char*)NULL);
-            return TCL_ERROR;
-        }
-        NewIcon(interp,hIcon,ICO_FILE,lpIR,pos);
-    } else if ((strncmp(argv[1], "info", length) == 0) && (length >= 2)) {
-        Tcl_DString dstr;
-        if (argc == 2) {
-            char buffer[30];
-
-            for (icoPtr = firstIcoPtr; icoPtr != NULL;
-                 icoPtr = icoPtr->nextPtr) {
-                sprintf(buffer, "ico#%d", icoPtr->id);
-                Tcl_AppendElement(interp, buffer);
-            }
-            return TCL_OK;
-        }
-        if (argc != 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " info ?id?\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if (( icoPtr = GetIcoPtr(interp, (char*)argv[2])) == NULL ) return TCL_ERROR;
-        if (icoPtr->itype==ICO_LOAD){
-            char buffer[200];
-            sprintf(buffer,
-                "{-pos 0  -width 32 -height 32 -geometry 32x32 -bpp 4 -hicon 0x%x -ptr 0x0}",
-                (INT_PTR)icoPtr->hIcon);
-            Tcl_AppendResult(interp,buffer,(char*)NULL);
-        } else {
-            Tcl_DStringInit(&dstr);
-            for( i = 0; i < icoPtr->lpIR->nNumImages; i++ ) {
-                char buffer[255];
-                Tcl_DStringStartSublist(&dstr);
-                Tcl_DStringAppendElement(&dstr,"-pos");
-                sprintf(buffer,"%d",i);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringAppendElement(&dstr,"-width");
-                sprintf(buffer,"%d",icoPtr->lpIR->LPICONIMAGEs[i].Width);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringAppendElement(&dstr,"-height");
-                sprintf(buffer,"%d",icoPtr->lpIR->LPICONIMAGEs[i].Height);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringAppendElement(&dstr,"-geometry");
-                sprintf(buffer,"%dx%d",
-		    icoPtr->lpIR->LPICONIMAGEs[i].Width,
-		    icoPtr->lpIR->LPICONIMAGEs[i].Height);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringAppendElement(&dstr,"-bpp");
-                sprintf(buffer,"%d",icoPtr->lpIR->LPICONIMAGEs[i].Colors);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringAppendElement(&dstr,"-hicon");
-                sprintf(buffer,"0x%x", (INT_PTR)icoPtr->lpIR->LPICONIMAGEs[i].hIcon);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringAppendElement(&dstr,"-ptr");
-                sprintf(buffer,"0x%x",(INT_PTR)icoPtr->lpIR);
-                Tcl_DStringAppendElement(&dstr,buffer);
-                Tcl_DStringEndSublist(&dstr);
-            }
-            Tcl_DStringResult(interp,&dstr);
-        }
-        return TCL_OK;
-    } else if ((strncmp(argv[1], "delete", length) == 0)
-        && (length >= 2)) {
-        if (argc != 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " delete ?id?\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        icoPtr = GetIcoPtr(interp, (char*)argv[2]);
-        if (icoPtr == NULL) {
-            Tcl_ResetResult(interp);
-            return TCL_OK;
-        }
-        FreeIcoPtr(interp,icoPtr);
-        return TCL_OK;
-    } else if ((strncmp(argv[1], "hicon", length) == 0)
-        && (length >= 2)) {
-        char buf[TCL_INTEGER_SPACE + 3];
-        int n;
-        if (argc != 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " hicon <id> \"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if (( icoPtr = GetIcoPtr(interp, (char*)argv[2])) == NULL ) return TCL_ERROR;
-        n = _snprintf(buf, sizeof(buf) - 1, "0x%x", icoPtr->hIcon); buf[n] = 0;
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
-        return TCL_OK;
-    } else if ((strncmp(argv[1], "pos", length) == 0) && (length >= 2)) {
-        if (argc < 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " pos <id> ?newpos?\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if(( icoPtr = GetIcoPtr(interp, (char*)argv[2])) == NULL ) return TCL_ERROR;
-        if(argc==3 || icoPtr->itype==ICO_LOAD ){
-            Tcl_SetObjResult(interp, Tcl_NewIntObj(icoPtr->iconpos));
-        } else {
-            int newpos;
-            if(Tcl_GetInt(interp,argv[3],&newpos)==TCL_ERROR) {
-                return TCL_ERROR;
-            }
-            if(newpos<0 ||  newpos >= icoPtr->lpIR->nNumImages ) {
-                Tcl_AppendResult(interp,"wrong new position",(char*)NULL);
-                return TCL_ERROR;
-            }
-            icoPtr->iconpos = newpos;
-            icoPtr->hIcon = icoPtr->lpIR->LPICONIMAGEs[newpos].hIcon;
-        }
-        return TCL_OK;
-    } else if ((strncmp(argv[1], "text", length) == 0) && (length >= 2)) {
-        if (argc < 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " text <id> ?newtext?\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if(( icoPtr = GetIcoPtr(interp, (char*)argv[2])) == NULL ) return TCL_ERROR;
-        if(argc>3){
-            char* newtxt=(char*)argv[3];
-            if(icoPtr->taskbar_txt!=NULL){
-                ckfree(icoPtr->taskbar_txt);
-            }
-            icoPtr->taskbar_txt=ckalloc((int)strlen(newtxt)+1);
-            strcpy(icoPtr->taskbar_txt,newtxt);
-        }
-        Tcl_AppendResult(interp,icoPtr->taskbar_txt,(char*)NULL);
-        return TCL_OK;
-        //add bits here for balloon title and info
-    } else if ((strncmp(argv[1], "taskbar", length) == 0)  && (length >= 2)) {
-        /* TkWindow * tkwin=NULL; */
-        char* callback=NULL;
-        /* char* windowname=NULL; */
-        int oper;
-        char ** args;
-        int c;
-        int length;
-        int count;
-        int newpos;
-        char* txt;
-        if (argc < 4) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " taskbar <add/delete/modify> <id> ?-callback <callback>? \"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if (strcmp(argv[2],"add")==0) {
-            oper = NIM_ADD;
-        } else if(strncmp(argv[2],"del",3)==0 ) {
-            oper = NIM_DELETE;
-        } else if(strncmp(argv[2],"mod",3)==0 ) {
-            oper = NIM_MODIFY;
-        } else {
-            Tcl_AppendResult(interp,"bad argument ",argv[2], "should be add,delete or modify",(char*)NULL);
-            return TCL_ERROR;
-        }
-        if ((icoPtr = GetIcoPtr(interp, (char *)argv[3])) == NULL )
-	    return TCL_ERROR;
-        hIcon = icoPtr->hIcon;
-        txt = icoPtr->taskbar_txt;
-        if (argc > 4) {
-            for (count = argc-4, args = (char**)argv+4; count > 1; count -= 2, args += 2) {
-                if (args[0][0] != '-')
-                    goto wrongargs2;
-                c = args[0][1];
-                length = (int)strlen(args[0]);
-                if ((c == '-') && (length == 2)) {
-                    break;
-                }
-                if ((c == 'c') && (strncmp(args[0], "-callback", length) == 0)) {
-                    callback = args[1];
-                } else if ((c == 'p') && (strncmp(args[0], "-pos", length) == 0)) {
-                    if (Tcl_GetInt(interp,args[1],&newpos)==TCL_ERROR) {
-                        return TCL_ERROR;
-                    }
-                    if (icoPtr->itype==ICO_FILE) {
-                        if (newpos < 0 ||  newpos >= icoPtr->lpIR->nNumImages ) {
-                            Tcl_AppendResult(interp, "wrong position ", args[1], (char*)NULL);
-                            return TCL_ERROR;
-                        }
-			icoPtr->iconpos = newpos;
-                        hIcon = icoPtr->lpIR->LPICONIMAGEs[newpos].hIcon;
-                    }
-                } else if ((c == 't') && (strncmp(args[0], "-text", length) == 0)) {
-                    txt = args[1];
-                } else {
-                    goto wrongargs2;
-                }
-            }
-            if(count==1)
-                goto wrongargs2;
-        }
-        if(callback!=NULL ) {
-            /*
-              if (tkwin==NULL) {
-              Tcl_AppendResult(interp,"you can't set a callback without a tkwin");
-              return TCL_ERROR;
-              }
-            */
-            if (icoPtr->taskbar_command!=NULL) {
-                ckfree((char*)icoPtr->taskbar_command);
-            }
-            icoPtr->taskbar_command=ckalloc((int)strlen(callback)+1);
-            strcpy(icoPtr->taskbar_command,callback);
-        }
-        return TaskbarOperation(icoPtr, oper, hIcon, txt);
-    wrongargs2:
-        Tcl_AppendResult(interp, "unknown option \"", args[0],"\",valid are:",
-            "-callback <tcl-callback> -pos <iconposition> -text <tooltiptext>", (char *) NULL);
-        return TCL_ERROR;
-    } else {
-        Tcl_AppendResult(interp, "bad argument \"", argv[1],
-            "\": must be load, createfrom, info, hicon, pos, setwindow, text, taskbar",
-            (char *) NULL);
-        return TCL_ERROR;
+  length = strlen(argv[1]);
+  if ((strncmp(argv[1], "createfrom", length) == 0) && (length >= 2)) {
+    LPICONRESOURCE lpIR = NULL;
+    int pos = 0;
+    if(argc<3) {
+      Tcl_AppendResult(interp,"wrong # args,must be:",
+                       argv[0]," createfrom <icofilename> ",(char*)NULL);
+      return TCL_ERROR;
     }
+    lpIR=ReadIconFromICOFile(interp,argv[2]);
+    if(lpIR==NULL){
+      Tcl_AppendResult(interp,"reading of ",argv[2]," failed!",(char*)NULL);
+      return TCL_ERROR;
+    }
+    hIcon=NULL;
+    for( i = 0; i < lpIR->nNumImages; i++ ) {
+      /*take the first or a 32x32 16 color icon*/
+      if(i==0 ||
+         (lpIR->LPICONIMAGEs[i].Height==32 && lpIR->LPICONIMAGEs[i].Width==32
+          && lpIR->LPICONIMAGEs[i].Colors==4)){
+        hIcon=lpIR->LPICONIMAGEs[i].hIcon;
+        pos=i;
+      }
+    }
+    if(hIcon==NULL){
+      FreeIconResource(lpIR);
+      Tcl_AppendResult(interp,"Could not find an icon in ",argv[2],(char*)NULL);
+      return TCL_ERROR;
+    }
+    NewIcon(interp,hIcon,ICO_FILE,lpIR,pos);
+  } else if ((strncmp(argv[1], "delete", length) == 0)
+             && (length >= 2)) {
+    if (argc != 3) {
+      Tcl_AppendResult(interp, "wrong # args: should be \"",
+                       argv[0], " delete ?id?\"", (char *) NULL);
+      return TCL_ERROR;
+    }
+    icoPtr = GetIcoPtr(interp, (char*)argv[2]);
+    if (icoPtr == NULL) {
+      Tcl_ResetResult(interp);
+      return TCL_OK;
+    }
+    FreeIcoPtr(interp,icoPtr);
     return TCL_OK;
+  }  else if ((strncmp(argv[1], "text", length) == 0) && (length >= 2)) {
+    if (argc < 3) {
+      Tcl_AppendResult(interp, "wrong # args: should be \"",
+                       argv[0], " text <id> ?newtext?\"", (char *) NULL);
+      return TCL_ERROR;
+    }
+    if(( icoPtr = GetIcoPtr(interp, (char*)argv[2])) == NULL ) return TCL_ERROR;
+    if(argc>3){
+      char* newtxt=(char*)argv[3];
+      if(icoPtr->taskbar_txt!=NULL){
+        ckfree(icoPtr->taskbar_txt);
+      }
+      icoPtr->taskbar_txt=ckalloc((int)strlen(newtxt)+1);
+      strcpy(icoPtr->taskbar_txt,newtxt);
+    }
+    Tcl_AppendResult(interp,icoPtr->taskbar_txt,(char*)NULL);
+    return TCL_OK;
+  }  else if ((strncmp(argv[1], "balloon", length) == 0) && (length >= 2)) {
+    if (argc < 4) {
+      Tcl_AppendResult(interp, "wrong # args: should be \"",
+                       argv[0], " notify <id> ?title? ?info?\"", (char *) NULL);
+      return TCL_ERROR;
+    }
+    if(( icoPtr = GetIcoPtr(interp, (char*)argv[2])) == NULL ) return TCL_ERROR;
+    if(argc>3){
+      char* newtitle=(char*)argv[3];
+      if(icoPtr->taskbar_title!=NULL){
+        ckfree(icoPtr->taskbar_title);
+      }
+      icoPtr->taskbar_title=ckalloc((int)strlen(newtitle)+1);
+      strcpy(icoPtr->taskbar_title,newtitle);
+      char* newinfo=(char*)argv[4];
+      if(icoPtr->taskbar_info!=NULL){
+        ckfree(icoPtr->taskbar_info);
+      }
+      icoPtr->taskbar_info=ckalloc((int)strlen(newinfo)+1);
+      strcpy(icoPtr->taskbar_info,newinfo);			
+    }
+    Tcl_AppendResult(interp,icoPtr->taskbar_title,(char*)NULL);
+    Tcl_AppendResult(interp,icoPtr->taskbar_info,(char*)NULL);
+    return TCL_OK;
+  } else if ((strncmp(argv[1], "taskbar", length) == 0)  && (length >= 2)) {
+    char* callback=NULL;
+    int oper;
+    char ** args;
+    int c;
+    int length;
+    int count;
+    int newpos;
+    char* txt;
+    if (argc < 4) {
+      Tcl_AppendResult(interp, "wrong # args: should be \"",
+                       argv[0], " taskbar <add/delete/modify> <id> ?-callback <callback>? \"", (char *) NULL);
+      return TCL_ERROR;
+    }
+    if (strcmp(argv[2],"add")==0) {
+      oper = NIM_ADD;
+    } else if(strncmp(argv[2],"del",3)==0 ) {
+      oper = NIM_DELETE;
+    } else if(strncmp(argv[2],"mod",3)==0 ) {
+      oper = NIM_MODIFY;
+    } else {
+      Tcl_AppendResult(interp,"bad argument ",argv[2], "should be add,delete or modify",(char*)NULL);
+      return TCL_ERROR;
+    }
+    if ((icoPtr = GetIcoPtr(interp, (char *)argv[3])) == NULL )
+      return TCL_ERROR;
+    hIcon = icoPtr->hIcon;
+    txt = icoPtr->taskbar_txt;
+    if (argc > 4) {
+      for (count = argc-4, args = (char**)argv+4; count > 1; count -= 2, args += 2) {
+        if (args[0][0] != '-')
+          goto wrongargs2;
+        c = args[0][1];
+        length = (int)strlen(args[0]);
+        if ((c == '-') && (length == 2)) {
+          break;
+        }
+        if ((c == 'c') && (strncmp(args[0], "-callback", length) == 0)) {
+          callback = args[1];
+        } else if ((c == 't') && (strncmp(args[0], "-text", length) == 0)) {
+          txt = args[1];
+        } else {
+          goto wrongargs2;
+        }
+      }
+      if(count==1)
+        goto wrongargs2;
+    }
+    if(callback!=NULL ) {
+      if (icoPtr->taskbar_command!=NULL) {
+        ckfree((char*)icoPtr->taskbar_command);
+      }
+      icoPtr->taskbar_command=ckalloc((int)strlen(callback)+1);
+      strcpy(icoPtr->taskbar_command,callback);
+    }
+    return TaskbarOperation(icoPtr, oper, hIcon, txt);
+  wrongargs2:
+    Tcl_AppendResult(interp, "unknown option \"", args[0],"\",valid are:",
+                     "-callback <tcl-callback>  -text <tooltiptext>", (char *) NULL);
+    return TCL_ERROR;
+  } else {
+    Tcl_AppendResult(interp, "bad argument \"", argv[1],
+                     "\": must be  createfrom, info, hicon, pos, text, taskbar",
+                     (char *) NULL);
+    return TCL_ERROR;
+  }
+  return TCL_OK;
 }
-
+
 static int 
-DoInit (Tcl_Interp* interp) 
+WinIcoInit (Tcl_Interp* interp) 
 {
     OSVERSIONINFO info;
 #ifdef USE_TCL_STUBS
@@ -1456,38 +1334,9 @@ DoInit (Tcl_Interp* interp)
     
     Tcl_CreateCommand(interp, "_winico", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
-    
-    return Tcl_PkgProvide (interp, PACKAGE_NAME , PACKAGE_VERSION);
+ 
 }
-
-EXPORT(int,Winico_Init)(Tcl_Interp* interp) 
-{
-    return DoInit(interp);
-}
-
-EXPORT(int,Winico_SafeInit)(Tcl_Interp* interp) 
-{
-    return DoInit(interp);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DllEntryPoint --
- *
- *        This wrapper function is used by Windows to invoke the
- *        initialization code for the DLL.  If we are compiling
- *        with Visual C++, this routine will be renamed to DllMain.
- *        routine.
- *
- *----------------------------------------------------------------------
- */
 
-BOOL APIENTRY
-DllEntryPoint(HINSTANCE hInst,DWORD reason,LPVOID  reserved)
-{
-    return TRUE;
-}
 
 /*
  * Local variables:
