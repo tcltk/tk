@@ -99,8 +99,9 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
 
-/* Forward declaration */
+/* Forward declarations */
 static void RemoveTag(TreeItem *, Ttk_Tag);
+static void RemoveTagFromCellsAtItem(TreeItem *, Ttk_Tag);
 
 /* + NewItem --
  * 	Allocate a new, uninitialized, unlinked item
@@ -3859,8 +3860,9 @@ static int TreeviewTagDeleteCommand(
     }
 
     tag = Ttk_GetTagFromObj(tagTable, objv[3]);
-    /* remove the tag from all items */
+    /* remove the tag from all cells and items */
     while (item) {
+        RemoveTagFromCellsAtItem(item, tag);
 	RemoveTag(item, tag);
 	item = NextPreorder(item);
     }
@@ -4097,6 +4099,19 @@ static void RemoveTag(TreeItem *item, Ttk_Tag tag)
     }
 }
 
+/* Remove tag from all cells at row 'item'
+ */
+static void RemoveTagFromCellsAtItem(TreeItem *item, Ttk_Tag tag)
+{
+    int i;
+
+    for (i = 0; i < item->nTagSets; i++) {
+        if (item->cellTagSets[i] != NULL) {
+            Ttk_TagSetRemove(item->cellTagSets[i], tag);
+        }
+    }
+}
+
 static int TreeviewTagRemoveCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
@@ -4172,11 +4187,7 @@ static int TreeviewCtagRemoveCommand(
     } else {
 	TreeItem *item = tv->tree.root;
 	while (item) {
-	    for (i = 0; i < item->nTagSets; i++) {
-		if (item->cellTagSets[i] != NULL) {
-		    Ttk_TagSetRemove(item->cellTagSets[i], tag);
-		}
-	    }
+            RemoveTagFromCellsAtItem(item, tag);
 	    item=NextPreorder(item);
 	}
     }
