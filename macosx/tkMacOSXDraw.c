@@ -1596,17 +1596,20 @@ TkMacOSXSetupDrawingContext(
 {
     MacDrawable *macDraw = (MacDrawable *) d;
     Bool canDraw = true;
-    NSWindow *win = NULL;
+    TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
-    CGRect clipBounds;
 
     /*
-     * If the drawable is not a pixmap and it has an associated NSWindow then
-     * we know we are drawing to a window.
+     * If the drawable is not a pixmap and it has an associated
+     * TKContentView then we know we are drawing to a window.
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	win = TkMacOSXDrawableWindow(d);
+	view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+	if (!view) {
+	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
+		    "no NSView to draw into !");
+	}
     }
 
     /*
@@ -1627,65 +1630,51 @@ TkMacOSXSetupDrawingContext(
 
     dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (dc.context) {
-	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
-    } else if (win) {
-	TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
+	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
+    } else {
+	NSRect drawingBounds, currentBounds;
 
-	if (!view) {
-	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
-		    "no NSView to draw into !");
-	}
+	dc.portBounds = NSRectToCGRect([view bounds]);
+	dc.context = GET_CGCONTEXT;
+	dc.view = view;
 	if (dc.clipRgn) {
+	    CGRect clipBounds;
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
 				    .ty = [view bounds].size.height};
 	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
 	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
+	    drawingBounds = NSRectFromCGRect(clipBounds);
+	} else {
+	    drawingBounds = [view bounds];
 	}
+
+	/*
+	 * We can only draw into the view when the current CGContext is valid
+	 * and belongs to the view.  Validity can only be guaranteed inside of
+	 * a view's drawRect or setFrame methods.  The isDrawing attribute
+	 * tells us whether we are being called from drawRect.  If the
+	 * CGContext is not valid then we mark our view as needing display.
+	 */
+
 	if (view != [NSView focusView]) {
-
-	    /*
-	     * We can only draw into the view when the current CGContext is
-	     * valid and belongs to the view.  Validity can only be guaranteed
-	     * inside of a view's drawRect or setFrame methods.  The isDrawing
-	     * attribute tells us whether we are being called from drawRect.
-	     * If the CGContext is not valid then we mark our view as needing
-	     * display.
-	     */
-
-	    if (dc.clipRgn) {
-		[view addTkDirtyRect:NSRectFromCGRect(clipBounds)];
-	    } else {
-		[view addTkDirtyRect:[view bounds]];
-	    }
+	    [view addTkDirtyRect:drawingBounds];
 	    canDraw = false;
 	    goto end;
-	} else if (dc.clipRgn) {
-
-	    /*
-	     * Drawing will also fail if we are being called from drawRect but
-	     * the clipping rectangle set by drawRect does not contain the
-	     * clipping region of our drawing context.  See bug [2a61eca3a8].
-	     * If we can't draw all of the clipping region of the drawing
-	     * context then we draw whatever we can, but we also add a dirty
-	     * rectangle so the entire widget will get redrawn in the next
-	     * cycle.
-	     */
-
-	    CGRect currentClip = CGContextGetClipBoundingBox(GET_CGCONTEXT);
-	    if (!NSContainsRect(currentClip, clipBounds)) {
-		[view addTkDirtyRect:clipBounds];
-	    }
 	}
 
-	dc.view = view;
-	dc.context = GET_CGCONTEXT;
-	dc.portBounds = NSRectToCGRect([view bounds]);
-	if (dc.clipRgn) {
-	    clipBounds = CGContextGetClipBoundingBox(dc.context);
+	/*
+	 * Drawing will also fail if we are being called from drawRect but the
+	 * clipping rectangle set by drawRect does not contain the clipping
+	 * region of our drawing context.  See bug [2a61eca3a8].  If we can't
+	 * draw all of the clipping region of the drawing context then we draw
+	 * whatever we can, but we also add a dirty rectangle so the entire
+	 * widget will get redrawn in the next cycle.
+	 */
+
+	currentBounds = CGContextGetClipBoundingBox(dc.context);
+	if (!NSContainsRect(currentBounds, drawingBounds)) {
+	    [view addTkDirtyRect:drawingBounds];
 	}
-    } else {
-	Tcl_Panic("TkMacOSXSetupDrawingContext(): "
-		"no context to draw into !");
     }
 
     /*
@@ -1715,11 +1704,12 @@ TkMacOSXSetupDrawingContext(
 	    CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
 
+	    CGRect b = CGRectApplyAffineTransform(
+		CGContextGetClipBoundingBox(dc.context), t);
 	    CGRect r;
 
-	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
-		*HIShapeGetBounds(dc.clipRgn, &r),
-		CGRectApplyAffineTransform(clipBounds, t))) {
+	    if (!HIShapeIsRectangular(dc.clipRgn) ||
+		!CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
 	    	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
 	    	CGContextEOClip(dc.context);
 	    }
@@ -1740,7 +1730,7 @@ TkMacOSXSetupDrawingContext(
 	    double w = gc->line_width;
 
 	    TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
-	    if (win) {
+	    if (view) {
 		CGContextSetPatternPhase(dc.context, CGSizeMake(
 			dc.portBounds.size.width, dc.portBounds.size.height));
 	    }
