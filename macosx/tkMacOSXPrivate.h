@@ -262,7 +262,7 @@ MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef cont
 			    unsigned long imageBackground, CGRect imageBounds,
 			    CGRect srcBounds, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
-			    int useCG, TkMacOSXDrawingContext *dcPtr);
+			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
