@@ -558,7 +558,7 @@ XPutImage(
     MacDrawable *macDraw = (MacDrawable *) drawable;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
