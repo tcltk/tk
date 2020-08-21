@@ -744,7 +744,7 @@ TkMacOSXDrawButton(
 
         ButtonBackgroundDrawCB(&cntrRect, mbPtr, 32, true);
 
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
@@ -777,7 +777,7 @@ TkMacOSXDrawButton(
         ButtonContentDrawCB(&contHIRec, mbPtr->btnkind, &mbPtr->drawinfo,
 		(MacButton *) mbPtr, 32, true);
     } else {
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
