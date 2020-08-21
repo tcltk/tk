@@ -560,7 +560,7 @@ TkMacOSXDrawMenuButton(
         static HIThemeButtonDrawInfo hiinfo;
 
         MenuButtonBackgroundDrawCB(mbPtr, 32, true);
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
@@ -591,7 +591,7 @@ TkMacOSXDrawMenuButton(
         MenuButtonContentDrawCB(mbPtr->btnkind, &mbPtr->drawinfo,
 		mbPtr, 32, true);
     } else {
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 	TkMacOSXRestoreDrawingContext(&dc);
