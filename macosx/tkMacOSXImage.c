@@ -545,7 +545,6 @@ CreateCGImageFromDrawableRect(
 	    CGImageRelease(cg_image);
 	}
     } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
-	TKContentView *tkview = (TKContentView *)view;
 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
@@ -559,8 +558,7 @@ CreateCGImageFromDrawableRect(
 	/*
 	 * Attempt to copy from the view to a bitmapImageRep.  If the view does
 	 * not have a valid CGContext, doing this will silently corrupt memory
-	 * and make a big mess. So, in that case, we mark the view as needing
-	 * display and return NULL.
+	 * and make a big mess. So, in that case, we just return NULL.
 	 */
 
 	if (view == [NSView focusView]) {
@@ -570,7 +568,6 @@ CreateCGImageFromDrawableRect(
 	    CFRelease(bitmapRep);
 	} else {
 	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    [tkview addTkDirtyRect:[tkview bounds]];
 	    result = NULL;
 	}
     } else {
@@ -663,7 +660,7 @@ XGetImage(
 	if (cgImage) {
 	    bitmapRep = [NSBitmapImageRep alloc];
 	    [bitmapRep initWithCGImage:cgImage];
-	    [cgImage release];
+	    CFRelease(cgImage);
 	} else {
 	    TkMacOSXDbgMsg("XGetImage: Failed to construct CGImage");
 	    return NULL;
@@ -750,7 +747,6 @@ XCopyArea(
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *srcDraw = (MacDrawable *) src;
-    NSBitmapImageRep *bitmapRep = NULL;
     CGImageRef img = NULL;
     CGRect bounds, srcRect, dstRect;
 
