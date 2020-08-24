@@ -686,8 +686,8 @@ TTK_LAYOUT("TButton",
 TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
-	TTK_GROUP("Combobox.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_GROUP("Combobox.focus", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
+	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Combobox.focus", TTK_FILL_BOTH,
 		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
 
 TTK_END_LAYOUT_TABLE

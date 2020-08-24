@@ -53,10 +53,6 @@ static TkpClipMask *AllocClipMask(GC gc) {
     if (clip_mask == NULL) {
 	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
-#ifdef MAC_OSX_TK
-    } else if (clip_mask->type == TKP_CLIP_REGION) {
-	TkpReleaseRegion(clip_mask->value.region);
-#endif
     }
     return clip_mask;
 }
@@ -79,11 +75,6 @@ static TkpClipMask *AllocClipMask(GC gc) {
 
 static void FreeClipMask(GC gc) {
     if (gc->clip_mask != None) {
-#ifdef MAC_OSX_TK
-	if (((TkpClipMask*) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	    TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
-	}
-#endif
 	ckfree((char *)gc->clip_mask);
 	gc->clip_mask = None;
     }
@@ -499,9 +490,6 @@ TkSetRegion(
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
-#ifdef MAC_OSX_TK
-	TkpRetainRegion(r);
-#endif
     }
     return Success;
 }

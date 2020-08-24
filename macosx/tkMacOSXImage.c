@@ -560,7 +560,7 @@ XPutImage(
     MacDrawable *macDraw = (MacDrawable *) drawable;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1135,7 +1135,7 @@ TkNSImageDisplay(
     NSImage *image = TkMacOSXInDarkMode(tkwin) ? masterPtr->darkModeImage :
 	masterPtr->image;
 
-    if (TkMacOSXSetupDrawingContext(drawable, NULL, 1, &dc)) {
+    if (TkMacOSXSetupDrawingContext(drawable, NULL, &dc)) {
 	if (dc.context) {
 	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
 	    NSGraphicsContext.currentContext = [NSGraphicsContext

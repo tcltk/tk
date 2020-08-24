@@ -23,6 +23,7 @@ static Tcl_HashTable systemColors;
 static int numSystemColors;
 static int rgbColorIndex;
 static int controlAccentIndex;
+static int selectedTabTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -66,7 +67,7 @@ void initColorTable()
 	    if (![NSColor respondsToSelector:colorSelector]) {
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
-		} else {
+		} else if (![colorName isEqualToString:@"selectedTabTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
 		    continue;
@@ -143,6 +144,9 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     controlAccentIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "SelectedTabTextColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    selectedTabTextIndex = entry->index;
     [pool drain];
 }
 
@@ -314,10 +318,19 @@ GetRGBA(
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101500
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
+	    [color getComponents: rgba];
 #endif
-	} else {
-	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
+	    break;
 	}
+	if (entry->index == selectedTabTextIndex) {
+	    int OSVersion = [NSApp macOSVersion];
+	    if (OSVersion > 100600 && OSVersion < 110000) {
+		color = [NSColor whiteColor];
+		[color getComponents: rgba];
+		break;
+	    }
+	}
+	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	[color getComponents: rgba];
 	break;
     case clearColor:
@@ -756,19 +769,23 @@ TkpGetColor(
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance = savedAppearance;
-		if (view) {
-		    windowAppearance = [view effectiveAppearance];
-		}
-		if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
-		    colormap = darkColormap;
+		if (@available(macOS 10.14, *)) {
+		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+		    NSAppearance *windowAppearance = savedAppearance;
+		    if (view) {
+			windowAppearance = [view effectiveAppearance];
+		    }
+		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
+			colormap = darkColormap;
+		    } else {
+			colormap = lightColormap;
+		    }
+		    [NSAppearance setCurrentAppearance:windowAppearance];
+		    GetRGBA(entry, p.ulong, rgba);
+		    [NSAppearance setCurrentAppearance:savedAppearance];
 		} else {
-		    colormap = lightColormap;
+		    GetRGBA(entry, p.ulong, rgba);
 		}
-		[NSAppearance setCurrentAppearance:windowAppearance];
-		GetRGBA(entry, p.ulong, rgba);
-		[NSAppearance setCurrentAppearance:savedAppearance];
 #else
 		GetRGBA(entry, p.ulong, rgba);
 #endif
