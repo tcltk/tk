@@ -865,7 +865,7 @@ Tk_BusyObjCmd(
 
     case BUSY_CONFIGURE:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-option? ?value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
