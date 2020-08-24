@@ -1702,7 +1702,7 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
      offsetof(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
      offsetof(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
-    {0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void EntryElementSize(
@@ -2062,7 +2062,7 @@ static Ttk_ElementOptionSpec TrackElementOptions[] = {
     {"-to", TK_OPTION_DOUBLE, offsetof(TrackElement, toObj), NULL},
     {"-value", TK_OPTION_DOUBLE, offsetof(TrackElement, valueObj), NULL},
     {"-orient", TK_OPTION_STRING, offsetof(TrackElement, orientObj), NULL},
-    {0, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TrackElementSize(
     void *clientData,
@@ -2202,7 +2202,7 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
      offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
      offsetof(PbarElement, modeObj), "determinate"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void PbarElementSize(
     TCL_UNUSED(void *),
@@ -2292,7 +2292,7 @@ typedef struct
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
      offsetof(ScrollbarElement, orientObj), "horizontal"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TroughElementSize(
     TCL_UNUSED(void *),
@@ -2810,7 +2810,7 @@ typedef struct {
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
      offsetof(FieldElement, backgroundObj), "white"},
-    {NULL, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void FieldElementDraw(
