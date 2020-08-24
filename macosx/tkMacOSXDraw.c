@@ -250,7 +250,7 @@ XCopyArea(
 	return BadDrawable;
     }
 
-    if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(dst, gc, &dc)) {
 	TkMacOSXDbgMsg("Failed to setup drawing context.");
 	return BadDrawable;
     }
@@ -332,7 +332,7 @@ XCopyPlane(
 	Tcl_Panic("Unexpected plane specified for XCopyPlane");
     }
     if (srcDraw->flags & TK_IS_PIXMAP) {
-	if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(dst, gc, &dc)) {
 	    return BadDrawable;
 	}
 
@@ -753,7 +753,7 @@ XDrawLines(
     }
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -821,7 +821,7 @@ XDrawSegments(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -873,7 +873,7 @@ XFillPolygon(
     int i;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -935,7 +935,7 @@ XDrawRectangle(
     }
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -978,18 +978,18 @@ XDrawRectangle(
 int
 XDrawRectangles(
     Display *display,
-    Drawable drawable,
+    Drawable d,
     GC gc,
     XRectangle *rectArr,
     int nRects)
 {
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *) d;
     TkMacOSXDrawingContext dc;
     XRectangle * rectPtr;
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1041,7 +1041,7 @@ XFillRectangles(
     int i;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1094,7 +1094,7 @@ TkMacOSXDrawSolidBorder(
     TkMacOSXDrawingContext dc;
     CGRect outerRect, innerRect;
 
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return;
     }
     if (dc.context) {
@@ -1146,7 +1146,7 @@ XDrawArc(
     }
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1216,7 +1216,7 @@ XDrawArcs(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1297,7 +1297,7 @@ XFillArc(
     }
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1370,7 +1370,7 @@ XFillArcs(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
@@ -1551,15 +1551,17 @@ TkMacOSXSetUpGraphicsPort(
  *
  * TkMacOSXSetUpDrawingContext --
  *
- *	Set up a drawing context for the given drawable and GC.
+ *	Set up a drawing context for the given drawable from an X GC.
  *
  * Results:
- *	Boolean indicating whether it is ok to draw; if false, drawing context
- *	was not setup, so do not attempt to draw and do not call
+ *	Boolean indicating whether it is ok to draw; if false, the drawing
+ *	context was not setup, so do not attempt to draw and do not call
  *	TkMacOSXRestoreDrawingContext().
  *
  * Side effects:
- *	None.
+ *	May modify or create the drawable's graphics context.  May expand the
+ *      drawable's dirty rectangle.  When the result is true The dcPtr
+ *      parameter is set to reference the new or updated drawing context.
  *
  *----------------------------------------------------------------------
  */
@@ -1568,26 +1570,28 @@ Bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
-    TCL_UNUSED(int),
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
     Bool canDraw = true;
-    NSWindow *win = NULL;
+    TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
-    CGRect clipBounds;
 
     /*
-     * If the drawable is not a pixmap and it has an associated NSWindow then
-     * we know we are drawing to a window.
+     * If the drawable is not a pixmap, get the associated NSView.
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	win = TkMacOSXDrawableWindow(d);
+	view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+	if (!view) {
+	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
+		    "no NSView to draw into !");
+	}
     }
 
     /*
-     * Check that we have a non-empty clipping region.
+     * Intersect the drawable's clipping region with the region stored in the
+     * X GC.  If the resulting region is empty, don't do any drawing.
      */
 
     dc.clipRgn = TkMacOSXGetClipRgn(d);
@@ -1598,173 +1602,158 @@ TkMacOSXSetupDrawingContext(
     }
 
     /*
-     * If we already have a CGContext, use it.  Otherwise, if we are drawing to
-     * a window then we can get one from the window.
+     * If the drawable already has a CGContext, use it.  Otherwise, we must be
+     * drawing to a window and we use the current context of its ContentView.
      */
 
     dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (dc.context) {
-	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
-    } else if (win) {
-	TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
-
-	if (!view) {
-	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
-		    "no NSView to draw into !");
-	}
-	if (dc.clipRgn) {
-	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-				    .ty = [view bounds].size.height};
-	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
-	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
-	}
-	if (view != [NSView focusView]) {
-
-	    /*
-	     * We can only draw into the view when the current CGContext is
-	     * valid and belongs to the view.  Validity can only be guaranteed
-	     * inside of a view's drawRect or setFrame methods.  The isDrawing
-	     * attribute tells us whether we are being called from drawRect.
-	     * If the CGContext is not valid then we mark our view as needing
-	     * display.
-	     */
-
-	    if (dc.clipRgn) {
-		[view addTkDirtyRect:NSRectFromCGRect(clipBounds)];
-	    } else {
-		[view addTkDirtyRect:[view bounds]];
-	    }
-	    canDraw = false;
-	    goto end;
-	} else if (dc.clipRgn) {
-
-	    /*
-	     * Drawing will also fail if we are being called from drawRect but
-	     * the clipping rectangle set by drawRect does not contain the
-	     * clipping region of our drawing context.  See bug [2a61eca3a8].
-	     * If we can't draw all of the clipping region of the drawing
-	     * context then we draw whatever we can, but we also add a dirty
-	     * rectangle so the entire widget will get redrawn in the next
-	     * cycle.
-	     */
-
-	    CGRect currentClip = CGContextGetClipBoundingBox(GET_CGCONTEXT);
-	    if (!NSContainsRect(currentClip, clipBounds)) {
-		[view addTkDirtyRect:clipBounds];
-	    }
-	}
+	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
+    } else {
+	NSRect drawingBounds, currentBounds;
 
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
 	dc.portBounds = NSRectToCGRect([view bounds]);
 	if (dc.clipRgn) {
-	    clipBounds = CGContextGetClipBoundingBox(dc.context);
+	    CGRect clipBounds;
+	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+				    .ty = [view bounds].size.height};
+	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
+	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
+	    drawingBounds = NSRectFromCGRect(clipBounds);
+	} else {
+	    drawingBounds = [view bounds];
 	}
-    } else {
-	Tcl_Panic("TkMacOSXSetupDrawingContext(): "
-		"no context to draw into !");
+
+	/*
+	 * We can only draw into the NSView which is the current focusView.
+	 * When the current [NSView focusView] is nil, the CGContext for
+	 * [NSGraphicsContext currentContext] is nil.  Otherwise the current
+	 * CGContext draws into the current focusView.  An NSView is guaranteed
+	 * to be the focusView when its drawRect or setFrame methods are
+	 * running.  Prior to OSX 10.14 it was also possible to call the
+	 * lockFocus method to force an NSView to become the current focusView.
+	 * But that method was deprecated in 10.14 and so is no longer used by
+	 * Tk.  Instead, if the view is not the current focusView then we add
+	 * the drawing bounds to its dirty rectangle and return false.  The
+	 * part of the view inside the drawing bounds will get redrawn during
+	 * the next call to its drawRect method.
+	 */
+
+	if (view != [NSView focusView]) {
+	    [view addTkDirtyRect:drawingBounds];
+	    canDraw = false;
+	    goto end;
+	}
+
+	/*
+	 * Drawing will also fail when the view is the current focusView but
+	 * the clipping rectangle set by drawRect does not contain the clipping
+	 * region of our drawing context.  (See bug [2a61eca3a8].)  If part of
+	 * the drawing bounds will be clipped then we draw whatever we can, but
+	 * we also add the drawing bounds to the view's dirty rectangle so it
+	 * will get redrawn in the next call to its drawRect method.
+	 */
+
+	currentBounds = CGContextGetClipBoundingBox(dc.context);
+	if (!NSContainsRect(currentBounds, drawingBounds)) {
+	    [view addTkDirtyRect:drawingBounds];
+	}
     }
 
     /*
-     * Configure the drawing context.
+     * Finish configuring the drawing context.
      */
 
-    if (dc.context) {
-	CGAffineTransform t = {
-	    .a = 1, .b = 0,
-	    .c = 0, .d = -1,
-	    .tx = 0,
-	    .ty = dc.portBounds.size.height
-	};
+    CGAffineTransform t = {
+	.a = 1, .b = 0,
+	.c = 0, .d = -1,
+	.tx = 0,
+	.ty = dc.portBounds.size.height
+    };
 
-	dc.portBounds.origin.x += macDraw->xOff;
-	dc.portBounds.origin.y += macDraw->yOff;
-	CGContextSaveGState(dc.context);
-	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-	CGContextConcatCTM(dc.context, t);
-	if (dc.clipRgn) {
+    dc.portBounds.origin.x += macDraw->xOff;
+    dc.portBounds.origin.y += macDraw->yOff;
+    CGContextSaveGState(dc.context);
+    CGContextSetTextDrawingMode(dc.context, kCGTextFill);
+    CGContextConcatCTM(dc.context, t);
+    if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
-	    CGContextSaveGState(dc.context);
-	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
-	    CGContextEOFillPath(dc.context);
-	    CGContextRestoreGState(dc.context);
+	CGContextSaveGState(dc.context);
+	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
+	CGContextEOFillPath(dc.context);
+	CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
 
-	    CGRect r;
-
-	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
-		*HIShapeGetBounds(dc.clipRgn, &r),
-		CGRectApplyAffineTransform(clipBounds, t))) {
-	    	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	    	CGContextEOClip(dc.context);
-	    }
+	CGRect r;
+	CGRect b = CGRectApplyAffineTransform(
+	    CGContextGetClipBoundingBox(dc.context), t);
+	if (!HIShapeIsRectangular(dc.clipRgn) ||
+	    !CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
+	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    CGContextEOClip(dc.context);
 	}
-	if (gc) {
-	    static const CGLineCap cgCap[] = {
-		[CapNotLast] = kCGLineCapButt,
-		[CapButt] = kCGLineCapButt,
-		[CapRound] = kCGLineCapRound,
-		[CapProjecting] = kCGLineCapSquare,
-	    };
-	    static const CGLineJoin cgJoin[] = {
-		[JoinMiter] = kCGLineJoinMiter,
-		[JoinRound] = kCGLineJoinRound,
-		[JoinBevel] = kCGLineJoinBevel,
-	    };
-	    bool shouldAntialias;
-	    double w = gc->line_width;
+    }
+    if (gc) {
+	static const CGLineCap cgCap[] = {
+	    [CapNotLast] = kCGLineCapButt,
+	    [CapButt] = kCGLineCapButt,
+	    [CapRound] = kCGLineCapRound,
+	    [CapProjecting] = kCGLineCapSquare,
+	};
+	static const CGLineJoin cgJoin[] = {
+	    [JoinMiter] = kCGLineJoinMiter,
+	    [JoinRound] = kCGLineJoinRound,
+	    [JoinBevel] = kCGLineJoinBevel,
+	};
+	bool shouldAntialias = !notAA(gc->line_width);
+	double w = gc->line_width;
 
-	    TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
-	    if (win) {
-		CGContextSetPatternPhase(dc.context, CGSizeMake(
-			dc.portBounds.size.width, dc.portBounds.size.height));
-	    }
-	    if (gc->function != GXcopy) {
-		TkMacOSXDbgMsg("Logical functions other than GXcopy are "
-			"not supported for CG drawing!");
-	    }
+	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
+	if (view) {
+	    CGContextSetPatternPhase(dc.context, CGSizeMake(
+	        dc.portBounds.size.width, dc.portBounds.size.height));
+	}
+	if (gc->function != GXcopy) {
+	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
+			   "not supported for CG drawing!");
+	}
+	if (!shouldAntialias) {
 
 	    /*
-	     * When should we antialias?
+	     * Make non-antialiased CG drawing look more like X11.
 	     */
 
-	    shouldAntialias = !notAA(gc->line_width);
-	    if (!shouldAntialias) {
-		/*
-		 * Make non-antialiased CG drawing look more like X11.
-		 */
+	    w -= (gc->line_width ? NON_AA_CG_OFFSET : 0);
+	}
+	CGContextSetShouldAntialias(dc.context, shouldAntialias);
+	CGContextSetLineWidth(dc.context, w);
+	if (gc->line_style != LineSolid) {
+	    int num = 0;
+	    char *p = &gc->dashes;
+	    CGFloat dashOffset = gc->dash_offset;
+	    dashOffset -= (gc->line_width % 2) ? 0.5 : 0.0;
+	    CGFloat lengths[10];
 
-		w -= (gc->line_width ? NON_AA_CG_OFFSET : 0);
+	    while (p[num] != '\0' && num < 10) {
+		lengths[num] = p[num];
+		num++;
 	    }
-	    CGContextSetShouldAntialias(dc.context, shouldAntialias);
-	    CGContextSetLineWidth(dc.context, w);
-	    if (gc->line_style != LineSolid) {
-		int num = 0;
-		char *p = &gc->dashes;
-		CGFloat dashOffset = gc->dash_offset;
-		dashOffset -= (gc->line_width % 2) ? 0.5 : 0.0;
-		CGFloat lengths[10];
-
-		while (p[num] != '\0' && num < 10) {
-		    lengths[num] = p[num];
-		    num++;
-		}
-		CGContextSetLineDash(dc.context, dashOffset, lengths, num);
-	    }
-	    if ((unsigned) gc->cap_style < sizeof(cgCap)/sizeof(CGLineCap)) {
-		CGContextSetLineCap(dc.context,
-			cgCap[(unsigned) gc->cap_style]);
-	    }
-	    if ((unsigned)gc->join_style < sizeof(cgJoin)/sizeof(CGLineJoin)) {
-		CGContextSetLineJoin(dc.context,
-			cgJoin[(unsigned) gc->join_style]);
-	    }
+	    CGContextSetLineDash(dc.context, dashOffset, lengths, num);
+	}
+	if ((unsigned) gc->cap_style < sizeof(cgCap)/sizeof(CGLineCap)) {
+	    CGContextSetLineCap(dc.context, cgCap[(unsigned) gc->cap_style]);
+	}
+	if ((unsigned)gc->join_style < sizeof(cgJoin)/sizeof(CGLineJoin)) {
+	    CGContextSetLineJoin(dc.context, cgJoin[(unsigned) gc->join_style]);
 	}
     }
 
 end:
+
 #ifdef TK_MAC_DEBUG_DRAWING
     if (!canDraw && win != NULL) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
@@ -1775,6 +1764,7 @@ end:
 	}
     }
 #endif
+
     if (!canDraw && dc.clipRgn) {
 	CFRelease(dc.clipRgn);
 	dc.clipRgn = NULL;

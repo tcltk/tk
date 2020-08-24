@@ -2738,7 +2738,7 @@ Tk_CharBbox(
 				 * index, if non-NULL. */
 {
     TextLayout *layoutPtr = (TextLayout *) layout;
-    LayoutChunk *chunkPtr;
+    LayoutChunk *chunkPtr = layoutPtr->chunks;
     int i, x = 0, w;
     Tk_Font tkfont;
     TkFont *fontPtr;
@@ -2748,7 +2748,6 @@ Tk_CharBbox(
 	return 0;
     }
 
-    chunkPtr = layoutPtr->chunks;
     tkfont = layoutPtr->tkfont;
     fontPtr = (TkFont *) tkfont;
 

@@ -958,7 +958,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XIconifyWindow, /* 103 */
     XWithdrawWindow, /* 104 */
     XListHosts, /* 105 */
-    0, /* 106 */
+    XSetClipRectangles, /* 106 */
     XFlush, /* 107 */
     XGrabServer, /* 108 */
     XUngrabServer, /* 109 */

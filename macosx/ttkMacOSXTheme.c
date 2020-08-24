@@ -39,7 +39,7 @@
 
 #define BEGIN_DRAWING(d) {	   \
 	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, 1, &dc)) {return;}
+	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
 #define END_DRAWING \
     TkMacOSXRestoreDrawingContext(&dc);}
 
@@ -1174,10 +1174,10 @@ static void DrawDarkListHeader(
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint top[2] = {{x, y}, {x + w, y}};
-    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGPoint separator[2] = {{x + w, y + 3}, {x + w, y + h - 3}};
 
+    CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
+    CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
     stroke = [NSColor colorWithColorSpace: deviceRGB
@@ -1702,7 +1702,7 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
      offsetof(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
      offsetof(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
-    {0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void EntryElementSize(
@@ -2062,7 +2062,7 @@ static Ttk_ElementOptionSpec TrackElementOptions[] = {
     {"-to", TK_OPTION_DOUBLE, offsetof(TrackElement, toObj), NULL},
     {"-value", TK_OPTION_DOUBLE, offsetof(TrackElement, valueObj), NULL},
     {"-orient", TK_OPTION_STRING, offsetof(TrackElement, orientObj), NULL},
-    {0, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TrackElementSize(
     void *clientData,
@@ -2202,7 +2202,7 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
      offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
      offsetof(PbarElement, modeObj), "determinate"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void PbarElementSize(
     TCL_UNUSED(void *),
@@ -2292,7 +2292,7 @@ typedef struct
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
      offsetof(ScrollbarElement, orientObj), "horizontal"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TroughElementSize(
     TCL_UNUSED(void *),
@@ -2810,7 +2810,7 @@ typedef struct {
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
      offsetof(FieldElement, backgroundObj), "white"},
-    {NULL, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void FieldElementDraw(
@@ -3050,20 +3050,20 @@ TTK_LAYOUT("TCombobox",
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-    TTK_GROUP("Notebook.padding", TTK_EXPAND | TTK_FILL_BOTH,
-    TTK_NODE("Notebook.label", TTK_EXPAND | TTK_FILL_BOTH))))
+    TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
+    TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
 
 /* Spinbox -- buttons 2px to the right of the field. */
 TTK_LAYOUT("TSpinbox",
     TTK_GROUP("Spinbox.buttons", TTK_PACK_RIGHT,
     TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP | TTK_STICK_E)
     TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM | TTK_STICK_E))
-    TTK_GROUP("Spinbox.field", TTK_EXPAND | TTK_FILL_X,
-    TTK_NODE("Spinbox.textarea", TTK_EXPAND | TTK_FILL_X)))
+    TTK_GROUP("Spinbox.field", TTK_FILL_X,
+    TTK_NODE("Spinbox.textarea", TTK_FILL_X)))
 
 /* Progress bars -- track only */
 TTK_LAYOUT("TProgressbar",
-    TTK_NODE("Progressbar.track", TTK_EXPAND | TTK_FILL_BOTH))
+    TTK_NODE("Progressbar.track", TTK_FILL_BOTH))
 
 /* Treeview -- no border. */
 TTK_LAYOUT("Treeview",
@@ -3088,15 +3088,13 @@ TTK_LAYOUT("Item",
 
 TTK_LAYOUT("Vertical.TScrollbar",
     TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
-    TTK_NODE("Vertical.Scrollbar.thumb",
-    TTK_PACK_TOP | TTK_EXPAND | TTK_FILL_BOTH)
+    TTK_NODE("Vertical.Scrollbar.thumb", TTK_FILL_BOTH)
     TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
     TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_BOTTOM)))
 
 TTK_LAYOUT("Horizontal.TScrollbar",
     TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
-    TTK_NODE("Horizontal.Scrollbar.thumb",
-    TTK_PACK_LEFT | TTK_EXPAND | TTK_FILL_BOTH)
+    TTK_NODE("Horizontal.Scrollbar.thumb", TTK_FILL_BOTH)
     TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
     TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_RIGHT)))
 

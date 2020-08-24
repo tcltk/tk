@@ -1931,6 +1931,10 @@ declare 104 macosx {
 declare 105 macosx {
     XHostAddress *XListHosts(Display *d, int *i, Bool *b)
 }
+declare 106 macosx {
+    int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
+       int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+}
 declare 107 macosx {
     int XFlush(Display *display)
 }

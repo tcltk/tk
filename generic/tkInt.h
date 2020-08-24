@@ -1356,6 +1356,7 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
+#define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
