@@ -17,7 +17,7 @@
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] CGContext]
 #else
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] graphicsPort]
