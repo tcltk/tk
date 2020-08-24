@@ -714,7 +714,7 @@ test spinbox-1.61 {configuration option: "repeatinterval"} -setup {
     .e cget -repeatinterval
 } -cleanup {
     destroy .e
-} -result {-500}
+} -result -500
 test spinbox-1.62 {configuration option: "repeatinterval" for spinbox} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken

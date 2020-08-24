@@ -229,7 +229,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = openDocumentProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
 }
 
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
@@ -248,7 +248,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = printDocProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
 }
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
@@ -309,7 +309,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                 AEInfo->interp = _eventInterp;
                 AEInfo->procedure = scriptFileProc;
                 AEInfo->replyEvent = nil;
-                Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+                Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
             }
         }
     } else if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
@@ -334,10 +334,10 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 		AEInfo->procedure = scriptTextProc;
                 if (Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
                     AEInfo->replyEvent = replyEvent;
-                    ProcessAppleEvent((ClientData)AEInfo);
+                    ProcessAppleEvent(AEInfo);
                 } else {
                     AEInfo->replyEvent = nil;
-                    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+                    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
                 }
 	    }
 	}
@@ -360,7 +360,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = launchURLProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
 }
 
 @end

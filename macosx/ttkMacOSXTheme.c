@@ -1963,7 +1963,7 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
      Tk_Offset(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
      Tk_Offset(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
-    {0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void EntryElementSize(
@@ -2308,11 +2308,11 @@ typedef struct {
 } TrackElement;
 
 static Ttk_ElementOptionSpec TrackElementOptions[] = {
-    {"-from", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, fromObj), 0},
-    {"-to", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, toObj), 0},
-    {"-value", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, valueObj), 0},
-    {"-orient", TK_OPTION_STRING, Tk_Offset(TrackElement, orientObj), 0},
-    {0, 0, 0, 0}
+    {"-from", TK_OPTION_DOUBLE, offsetof(TrackElement, fromObj), NULL},
+    {"-to", TK_OPTION_DOUBLE, offsetof(TrackElement, toObj), NULL},
+    {"-value", TK_OPTION_DOUBLE, offsetof(TrackElement, valueObj), NULL},
+    {"-orient", TK_OPTION_STRING, offsetof(TrackElement, orientObj), NULL},
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TrackElementSize(
     void *clientData,
@@ -2446,7 +2446,7 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
      Tk_Offset(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
      Tk_Offset(PbarElement, modeObj), "determinate"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void PbarElementSize(
     TCL_UNUSED(void *),        /* clientData */
@@ -2530,7 +2530,7 @@ typedef struct
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
      Tk_Offset(ScrollbarElement, orientObj), "horizontal"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TroughElementSize(
     TCL_UNUSED(void *),    /* clientData */
@@ -3026,7 +3026,7 @@ typedef struct {
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
      Tk_Offset(FieldElement, backgroundObj), "white"},
-    {NULL, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void FieldElementDraw(
@@ -3300,16 +3300,16 @@ TTK_LAYOUT("HelpButton",
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-    TTK_GROUP("Notebook.padding", TTK_EXPAND | TTK_FILL_BOTH,
-    TTK_NODE("Notebook.label", TTK_EXPAND | TTK_FILL_BOTH))))
+    TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
+    TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
 
 /* Spinbox -- buttons 2px to the right of the field. */
 TTK_LAYOUT("TSpinbox",
     TTK_GROUP("Spinbox.buttons", TTK_PACK_RIGHT,
     TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP | TTK_STICK_E)
     TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM | TTK_STICK_E))
-    TTK_GROUP("Spinbox.field", TTK_EXPAND | TTK_FILL_X,
-    TTK_NODE("Spinbox.textarea", TTK_EXPAND | TTK_FILL_X)))
+    TTK_GROUP("Spinbox.field", TTK_FILL_X,
+    TTK_NODE("Spinbox.textarea", TTK_FILL_X)))
 
 TTK_LAYOUT("TEntry",
     TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
@@ -3324,7 +3324,7 @@ TTK_LAYOUT("Searchbox",
 
 /* Progress bars -- track only */
 TTK_LAYOUT("TProgressbar",
-    TTK_NODE("Progressbar.track", TTK_EXPAND | TTK_FILL_BOTH))
+    TTK_NODE("Progressbar.track", TTK_FILL_BOTH))
 
 /* Treeview -- no border. */
 TTK_LAYOUT("Treeview",
@@ -3349,15 +3349,13 @@ TTK_LAYOUT("Item",
 
 TTK_LAYOUT("Vertical.TScrollbar",
     TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
-    TTK_NODE("Vertical.Scrollbar.thumb",
-    TTK_PACK_TOP | TTK_EXPAND | TTK_FILL_BOTH)
+    TTK_NODE("Vertical.Scrollbar.thumb", TTK_FILL_BOTH)
     TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
     TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_BOTTOM)))
 
 TTK_LAYOUT("Horizontal.TScrollbar",
     TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
-    TTK_NODE("Horizontal.Scrollbar.thumb",
-    TTK_PACK_LEFT | TTK_EXPAND | TTK_FILL_BOTH)
+    TTK_NODE("Horizontal.Scrollbar.thumb", TTK_FILL_BOTH)
     TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
     TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_RIGHT)))
 

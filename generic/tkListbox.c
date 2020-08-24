@@ -842,7 +842,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	result = TCL_OK;
 	break;
 
@@ -906,7 +906,7 @@ ListboxWidgetObjCmd(
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "index ?-option? ?value? ?-option value ...?");
+		    "index ?-option value ...?");
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -2742,7 +2742,7 @@ GetListboxIndex(
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
-    	if (idx + 1 > (TkSizeT)listPtr->nElements + 1) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > (TkSizeT)listPtr->nElements)) {
     	    idx = listPtr->nElements;
     	}
     	*indexPtr = (int)idx;
