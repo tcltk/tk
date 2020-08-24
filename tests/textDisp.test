@@ -2499,8 +2499,6 @@ test textDisp-18.8 {GetXView procedure} {
 catch {rename bgerror {}}
 catch {rename bogus {}}
 .t configure -xscrollcommand {} -yscrollcommand scroll
-
-.t configure -xscrollcommand {} -yscrollcommand scroll
 test textDisp-19.1 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3005,7 +3003,7 @@ set res [.tt.u count -displaylines 3.10 2.173]
 destroy .tt
 unset message
 set res
-} {-1}
+} -1
 
 .t delete 1.0 end
 .t insert end "Line 1"
