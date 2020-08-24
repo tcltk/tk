@@ -1174,10 +1174,10 @@ static void DrawDarkListHeader(
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint top[2] = {{x, y}, {x + w, y}};
-    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGPoint separator[2] = {{x + w, y + 3}, {x + w, y + h - 3}};
 
+    CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
+    CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
     stroke = [NSColor colorWithColorSpace: deviceRGB
