@@ -12,6 +12,16 @@
  */
 
 #include "tkMacOSXPrivate.h"
+static void RetainRegion(TkRegion r);
+static void ReleaseRegion(TkRegion r);
+
+#ifdef DEBUG
+static int totalRegions = 0;
+static int totalRegionRetainCount = 0;
+#define DebugLog(msg, ...) fprintf(stderr, (msg), ##__VA_ARGS__)
+#else
+#define DebugLog(msg, ...)
+#endif
 
 
 /*
@@ -34,7 +44,10 @@
 Region
 XCreateRegion(void)
 {
-    return (Region) HIShapeCreateMutable();
+    Region region = (Region) HIShapeCreateMutable();
+    DebugLog("Created region: total regions = %d\n", ++totalRegions);
+    RetainRegion(region);
+    return region;
 }
 
 /*
@@ -59,7 +72,8 @@ XDestroyRegion(
     Region r)
 {
     if (r) {
-	CFRelease(r);
+	DebugLog("Destroyed region: total regions = %d\n", --totalRegions);
+	ReleaseRegion(r);
     }
     return Success;
 }
@@ -320,7 +334,7 @@ TkpBuildRegionFromAlphaData(
 /*
  *----------------------------------------------------------------------
  *
- * TkpRetainRegion --
+ * RetainRegion --
  *
  *	Increases reference count of region.
  *
@@ -333,17 +347,18 @@ TkpBuildRegionFromAlphaData(
  *----------------------------------------------------------------------
  */
 
-void
-TkpRetainRegion(
+static void
+RetainRegion(
     Region r)
 {
     CFRetain(r);
+    DebugLog("Retained region: total count is %d\n", ++totalRegionRetainCount);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkpReleaseRegion --
+ * ReleaseRegion --
  *
  *	Decreases reference count of region.
  *
@@ -356,11 +371,12 @@ TkpRetainRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkpReleaseRegion(
+static void
+ReleaseRegion(
     Region r)
 {
     CFRelease(r);
+    DebugLog("Released region: total count is %d\n", --totalRegionRetainCount);
 }
 
 /*

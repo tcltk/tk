@@ -15,7 +15,7 @@
 
 #define BEGIN_DRAWING(d) {	   \
 	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, 1, &dc)) {return;}
+	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
 #define END_DRAWING \
     TkMacOSXRestoreDrawingContext(&dc);}
 

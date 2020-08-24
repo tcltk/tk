@@ -261,10 +261,10 @@ static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, TkSizeT index)
     mgr->slaves[index] = slave;
 
     Tk_ManageGeometry(slave->slaveWindow,
-	&mgr->managerSpec->tkGeomMgr, (ClientData)mgr);
+	&mgr->managerSpec->tkGeomMgr, mgr);
 
     Tk_CreateEventHandler(slave->slaveWindow,
-	SlaveEventMask, SlaveEventHandler, (ClientData)slave);
+	SlaveEventMask, SlaveEventHandler, slave);
 
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }

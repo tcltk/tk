@@ -59,7 +59,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
 	cm->owner = 0;
 	cm->onTime = DEF_CURSOR_ON_TIME;
 	cm->offTime = DEF_CURSOR_OFF_TIME;
-	Tcl_SetAssocData(interp,cm_key,CursorManagerDeleteProc,(ClientData)cm);
+	Tcl_SetAssocData(interp, cm_key, CursorManagerDeleteProc, cm);
     }
     return cm;
 }

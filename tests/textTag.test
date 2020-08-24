@@ -488,7 +488,7 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} -body {
 
 test textTag-5.1 {TkTextTagCmd - "configure" option} -body {
     .t tag configure
-} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option? ?value? ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option value ...?"}
 test textTag-5.2 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -foo
 } -returnCodes error -result {unknown option "-foo"}

@@ -155,7 +155,7 @@ TkpDrawEntryBorderAndFocus(
     bounds.origin.y = macDraw->yOff + MAC_OSX_FOCUS_WIDTH;
     bounds.size.width = Tk_Width(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     bounds.size.height = Tk_Height(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
-    if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, NULL, &dc)) {
 
 	/*
 	 * No graphics context is available.  If the widget is a Spinbox, we
@@ -265,7 +265,7 @@ TkpDrawSpinboxButtons(
     rects[0].height = Tk_Height(tkwin);
     XFillRectangles(Tk_Display(tkwin), d, bgGC, rects, 1);
 
-    if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, NULL, &dc)) {
 	return 0;
     }
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
