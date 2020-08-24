@@ -27,6 +27,7 @@
 #include <tkPlatDecls.h>
 
 #include "tkWinIco.h"
+#include "tkWinInt.h"
 
 #define GETHINSTANCE Tk_GetHINSTANCE()
 static int isWin32s=-1;
