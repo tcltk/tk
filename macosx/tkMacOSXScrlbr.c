@@ -263,7 +263,7 @@ TkpDisplayScrollbar(
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
-	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
+	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, &dc)) {
 	return;
     }
 

@@ -718,7 +718,7 @@ test listbox-3.60 {ListboxWidgetCmd procedure, "index" option} -body {
 } -result 2
 test listbox-3.61 {ListboxWidgetCmd procedure, "index" option} -body {
     .l index -1
-} -result {-1}
+} -result -1
 test listbox-3.62 {ListboxWidgetCmd procedure, "index" option} -body {
     .l index end
 } -result 18
@@ -2132,7 +2132,7 @@ test listbox-10.19 {GetListboxIndex procedure} -setup {
     .l index -1
 } -cleanup {
     destroy .l
-} -result  -1
+} -result -1
 test listbox-10.20 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {
