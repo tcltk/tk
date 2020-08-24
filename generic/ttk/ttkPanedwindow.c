@@ -77,13 +77,13 @@ typedef struct {
 static const Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	offsetof(Paned,paned.orientObj), offsetof(Paned,paned.orient),
-	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, READONLY_OPTION|STYLE_CHANGED },
     {TK_OPTION_INT, "-width", "width", "Width", "0",
-	TCL_INDEX_NONE, offsetof(Paned,paned.width),
-	0,0,GEOMETRY_CHANGED },
+	TCL_INDEX_NONE, offsetof(Paned, paned.width),
+	0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-height", "height", "Height", "0",
-	TCL_INDEX_NONE, offsetof(Paned,paned.height),
-	0,0,GEOMETRY_CHANGED },
+	TCL_INDEX_NONE, offsetof(Paned, paned.height),
+	0, 0, GEOMETRY_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)

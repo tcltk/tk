@@ -2332,7 +2332,7 @@ Line 7"
     .t count 5.7 5.3
 } -cleanup {
     destroy .t
-} -result {-4}
+} -result -4
 test text-10.7 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2827,7 +2827,7 @@ test text-10.31 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines end 1.0
 } -cleanup {
     destroy .t
-} -result {-3}
+} -result -3
 test text-10.32 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2935,7 +2935,7 @@ test text-10.40 {TextWidgetCmd procedure, "count" option} -setup {
     set res [.t count -displaylines 2.0 3.0]
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test text-10.41 {TextWidgetCmd procedure, "count" option} -setup {
     toplevel .mytop
     pack [text .mytop.t -font TkFixedFont -bd 0 -padx 0 -wrap char]

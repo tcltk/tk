@@ -34,12 +34,12 @@ typedef struct
 static const Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	offsetof(Scrollbar,scrollbar.commandObj), TCL_INDEX_NONE, 0,0,0},
+	offsetof(Scrollbar, scrollbar.commandObj), TCL_INDEX_NONE, 0, 0, 0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	offsetof(Scrollbar,scrollbar.orientObj),
-	offsetof(Scrollbar,scrollbar.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	offsetof(Scrollbar, scrollbar.orientObj),
+	offsetof(Scrollbar, scrollbar.orient),
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
