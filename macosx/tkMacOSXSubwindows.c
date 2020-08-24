@@ -874,7 +874,7 @@ TkMacOSXUpdateClipRgn(
 		    visRgn = TkMacOSXGetNativeRegion(r);
 		    ChkErr(HIShapeIntersect, visRgn, rgn, rgn);
 		    CFRelease(visRgn);
-		    TkpReleaseRegion(r);
+		    TkDestroyRegion(r);
 		}
 
 		/*
