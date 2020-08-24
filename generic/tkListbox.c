@@ -906,7 +906,7 @@ ListboxWidgetObjCmd(
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "index ?-option? ?value? ?-option value ...?");
+		    "index ?-option value ...?");
 	    result = TCL_ERROR;
 	    break;
 	}
