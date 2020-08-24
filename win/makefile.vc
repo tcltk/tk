@@ -553,16 +553,16 @@ $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
-	$(cc32) $(appcflags_nostubs) -Fo$@ $?
+	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
 
 $(TMP_DIR)\tkOldTest.obj: $(GENERICDIR)\tkOldTest.c
-	$(cc32) $(appcflags_nostubs) -Fo$@ $?
+	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
 
 $(TMP_DIR)\tkWinTest.obj: $(WIN_DIR)\tkWinTest.c
-	$(cc32) $(appcflags_nostubs) -Fo$@ $?
+	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
 
 $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
-	$(cc32) $(appcflags_nostubs) -Fo$@ $?
+	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
 
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DUNICODE /D_UNICODE \

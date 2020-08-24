@@ -2146,6 +2146,39 @@ MODULE_SCOPE int	TkTextIndexRestrictToStartRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
+MODULE_SCOPE int		TkrTesttextCmd(ClientData dummy, Tcl_Interp *interp,
+				int objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE int		TkrTextGetIndex(Tcl_Interp *interp,
+				struct TkText *textPtr, const char *string,
+				struct TkTextIndex *indexPtr);
+MODULE_SCOPE int		TkrTextIndexBackBytes(const struct TkText *textPtr,
+				const struct TkTextIndex *srcPtr, int count,
+				struct TkTextIndex *dstPtr);
+MODULE_SCOPE int		TkrTextIndexForwBytes(const struct TkText *textPtr,
+				const struct TkTextIndex *srcPtr, int count,
+				struct TkTextIndex *dstPtr);
+MODULE_SCOPE struct TkTextIndex * TkrTextMakeByteIndex(TkTextBTree tree,
+				const struct TkText *textPtr, int lineIndex,
+				int byteIndex, struct TkTextIndex *indexPtr);
+MODULE_SCOPE TkSizeT		TkrTextPrintIndex(const struct TkText *textPtr,
+				const struct TkTextIndex *indexPtr,
+				char *string);
+MODULE_SCOPE struct TkTextSegment * TkrTextSetMark(struct TkText *textPtr,
+				const char *name,
+				struct TkTextIndex *indexPtr);
+MODULE_SCOPE int		TkrTextXviewCmd(struct TkText *textPtr,
+				Tcl_Interp *interp, int objc,
+				Tcl_Obj *const objv[]);
+MODULE_SCOPE void		TkrTextChanged(struct TkSharedText *sharedTextPtr,
+				struct TkText *textPtr,
+				const struct TkTextIndex *index1Ptr,
+				const struct TkTextIndex *index2Ptr);
+MODULE_SCOPE int		TkrBTreeNumLines(TkTextBTree tree,
+				const struct TkText *textPtr);
+MODULE_SCOPE void		TkrTextInsertDisplayProc(struct TkText *textPtr,
+				struct TkTextDispChunk *chunkPtr, int x,
+				int y, int height, int baseline,
+				Display *display, Drawable dst, int screenY);
 
 /*
  * Debugging info macros:
