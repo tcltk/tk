@@ -711,7 +711,7 @@ TkpConfigureMenuEntry(
 
     if (mePtr->image) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
-	image = TkMacOSXGetNSImageWithTkImage(mePtr->menuPtr->display,
+	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != None) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
@@ -719,7 +719,7 @@ TkpConfigureMenuEntry(
 
 	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, &imageWidth,
 		&imageHeight);
-	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
+	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
 	if (gc->foreground == defaultFg) {
 	    [image setTemplate:YES];
