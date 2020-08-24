@@ -730,19 +730,23 @@ TkpGetColor(
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance = savedAppearance;
-		if (view) {
-		    windowAppearance = [view effectiveAppearance];
-		}
-		if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
-		    colormap = darkColormap;
+		if (@available(macOS 10.14, *)) {
+		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+		    NSAppearance *windowAppearance = savedAppearance;
+		    if (view) {
+			windowAppearance = [view effectiveAppearance];
+		    }
+		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
+			colormap = darkColormap;
+		    } else {
+			colormap = lightColormap;
+		    }
+		    [NSAppearance setCurrentAppearance:windowAppearance];
+		    GetRGBA(entry, p.ulong, rgba);
+		    [NSAppearance setCurrentAppearance:savedAppearance];
 		} else {
-		    colormap = lightColormap;
+		    GetRGBA(entry, p.ulong, rgba);
 		}
-		[NSAppearance setCurrentAppearance:windowAppearance];
-		GetRGBA(entry, p.ulong, rgba);
-		[NSAppearance setCurrentAppearance:savedAppearance];
 #else
 		GetRGBA(entry, p.ulong, rgba);
 #endif
