@@ -248,21 +248,21 @@ test textMark-7.9 {MarkFindNext - mark set in a text widget and retrieved from a
     .t mark set mymark 1.0
     lsort [list [.pt mark next 1.0] [.pt mark next mymark] [.pt mark next current]]
 } -result {current insert mymark}
-test textMark-7.9 {MarkFindNext - discard special marks} -setup {
+test textMark-7.10 {MarkFindNext - discard special marks} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set current 1.0
     .t mark set insert 3.0
     .t mark next -discardspecial begin
 } -result {}
-test textMark-7.10 {MarkFindNext - match pattern} -setup {
+test textMark-7.11 {MarkFindNext - match pattern} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set current 1.0
     .t mark set insert 3.0
     .t mark next begin ins*
 } -result {insert}
-test textMark-7.11 {MarkFindNext - match pattern - discard special marks} -setup {
+test textMark-7.12 {MarkFindNext - match pattern - discard special marks} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set current 1.0
@@ -326,21 +326,21 @@ test textMark-8.9 {MarkFindPrev - mark set in a text widget and retrieved from a
     .t mark set mymark 1.0
     lsort [list [.pt mark prev end] [.pt mark prev current] [.pt mark prev insert]]
 } -result {current insert mymark}
-test textMark-8.9 {MarkFindPrev - discard special marks} -setup {
+test textMark-8.10 {MarkFindPrev - discard special marks} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set insert 3.0
     .t mark set current end
     .t mark prev -discardspecial end
 } -result {}
-test textMark-8.10 {MarkFindPrev - match pattern} -setup {
+test textMark-8.11 {MarkFindPrev - match pattern} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set insert 3.0
     .t mark set current 2.0
     .t mark prev end ins*
 } -result {insert}
-test textMark-8.11 {MarkFindPrev - match pattern - discard special marks} -setup {
+test textMark-8.12 {MarkFindPrev - match pattern - discard special marks} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set insert 3.0
