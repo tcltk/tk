@@ -117,7 +117,7 @@ extern const struct TclIntStubs *tclIntStubsPtr;
 	tclIntStubsPtr->tclGetIntForIndex((interp), (obj), (max), (ptr)))
 #elif TCL_MINOR_VERSION < 7
 extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
-# define Tcl_GetIntForIndex TclGetIntForIndex
+# define Tcl_GetIntForIndex(interp, obj, max, ptr) TclGetIntForIndex(interp, obj, max, ptr)
 #endif
 #endif
 

@@ -845,9 +845,8 @@ MenuWidgetObjCmd(
 	}
 	if (index == TCL_INDEX_NONE) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
-	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
-	}
+	} else
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
     case MENU_INSERT:

@@ -60,7 +60,7 @@ test dialog-2.3 {tk_dialog operation} -body {
     return $res
 } -cleanup {
     destroy .b
-} -result {-1}
+} -result -1
 
 cleanupTests
 return
