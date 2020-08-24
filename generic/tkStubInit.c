@@ -29,6 +29,7 @@
 /* TODO: These ought to come in some other way */
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
+#include "tkText.h"
 
 MODULE_SCOPE const TkStubs tkStubs;
 
@@ -43,6 +44,18 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#define TkpTesttextCmd TkrTesttextCmd
+#define TkTextGetIndex TkrTextGetIndex
+#define TkTextIndexBackBytes TkrTextIndexBackBytes
+#define TkTextIndexForwBytes TkrTextIndexForwBytes
+#define TkTextMakeByteIndex TkrTextMakeByteIndex
+#define TkTextPrintIndex TkrTextPrintIndex
+#define TkTextSetMark TkrTextSetMark
+#define TkTextXviewCmd TkrTextXviewCmd
+#define TkTextChanged TkrTextChanged
+#define TkBTreeNumLines TkrBTreeNumLines
+#define TkTextInsertDisplayProc TkrTextInsertDisplayProc
+
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
@@ -475,18 +488,18 @@ static const TkIntStubs tkIntStubs = {
     TkDeleteThreadExitHandler, /* 154 */
     0, /* 155 */
     TkpTestembedCmd, /* 156 */
-    TkrTesttextCmd, /* 157 */
+    TkpTesttextCmd, /* 157 */
     TkSelGetSelection, /* 158 */
-    TkrTextGetIndex, /* 159 */
-    TkrTextIndexBackBytes, /* 160 */
-    TkrTextIndexForwBytes, /* 161 */
-    TkrTextMakeByteIndex, /* 162 */
-    TkrTextPrintIndex, /* 163 */
-    TkrTextSetMark, /* 164 */
-    TkrTextXviewCmd, /* 165 */
-    TkrTextChanged, /* 166 */
-    TkrBTreeNumLines, /* 167 */
-    TkrTextInsertDisplayProc, /* 168 */
+    TkTextGetIndex, /* 159 */
+    TkTextIndexBackBytes, /* 160 */
+    TkTextIndexForwBytes, /* 161 */
+    TkTextMakeByteIndex, /* 162 */
+    TkTextPrintIndex, /* 163 */
+    TkTextSetMark, /* 164 */
+    TkTextXviewCmd, /* 165 */
+    TkTextChanged, /* 166 */
+    TkBTreeNumLines, /* 167 */
+    TkTextInsertDisplayProc, /* 168 */
     TkStateParseProc, /* 169 */
     TkStatePrintProc, /* 170 */
     TkCanvasDashParseProc, /* 171 */

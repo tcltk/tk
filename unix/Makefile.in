@@ -1097,7 +1097,7 @@ tkScrollbar.o: $(GENERIC_DIR)/tkScrollbar.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkScrollbar.c
 
 tkSquare.o: $(GENERIC_DIR)/tkSquare.c
-	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkSquare.c
+	$(CC) -c $(CC_SWITCHES) -DUSE_TK_STUBS $(GENERIC_DIR)/tkSquare.c
 
 tkCanvas.o: $(GENERIC_DIR)/tkCanvas.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkCanvas.c
@@ -1163,7 +1163,7 @@ tkImgPhInstance.o: $(GENERIC_DIR)/tkImgPhInstance.c $(GENERIC_DIR)/tkImgPhoto.h
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhInstance.c
 
 tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
-	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkOldTest.c
+	$(CC) -c $(CC_SWITCHES) -DUSE_TK_STUBS $(GENERIC_DIR)/tkOldTest.c
 
 tkRangeList.o: $(GENERIC_DIR)/tkRangeList.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkRangeList.c
@@ -1172,7 +1172,7 @@ tkIntSet.o: $(GENERIC_DIR)/tkIntSet.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIntSet.c
 
 tkTest.o: $(GENERIC_DIR)/tkTest.c
-	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkTest.c
+	$(CC) -c $(CC_SWITCHES) -DUSE_TK_STUBS $(GENERIC_DIR)/tkTest.c
 
 tkText.o: $(GENERIC_DIR)/tkText.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkText.c
