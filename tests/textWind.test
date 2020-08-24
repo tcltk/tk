@@ -860,7 +860,7 @@ test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 125 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth-1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
@@ -875,7 +875,7 @@ test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 126 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -891,15 +891,15 @@ test textWind-10.12 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 127 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list $padx [expr {$pady+$fixedHeight}] 127 20] \
-    [list [expr {$padx+127}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
+    [list $padx [expr {$pady+$fixedHeight}] [expr {($tWidth-12)*$fixedWidth+1}] 20] \
+    [list [expr {$padx+($tWidth-12)*$fixedWidth+1}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
 
 test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
     .t delete 1.0 end
@@ -907,7 +907,7 @@ test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width 130 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -923,7 +923,7 @@ test textWind-10.14 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width 130 -height 220 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 220 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
