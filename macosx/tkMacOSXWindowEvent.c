@@ -211,7 +211,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	TKContentView *view = [window contentView];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	[view viewDidChangeEffectiveAppearance];
+	if (@available(macOS 10.14, *)) {
+	    [view viewDidChangeEffectiveAppearance];
+	}
 #endif
 	[view addTkDirtyRect:[view bounds]];
 	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
@@ -1155,7 +1157,9 @@ static const char *const accentNames[] = {
 {
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
-	[self viewDidChangeEffectiveAppearance];
+	if (@available(macOS 10.14, *)) {
+	    [self viewDidChangeEffectiveAppearance];
+	}
     }
 }
 
