@@ -341,7 +341,7 @@ test scrollbar-3.49 {ScrollbarWidgetCmd procedure, "identify" option} {
 test scrollbar-3.50.1 {ScrollbarWidgetCmd procedure, "identify" option} notAqua {
     .s identify 5 5
 } {arrow1}
-test scrollbar-3.50.1 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
+test scrollbar-3.50.2 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
     # macOS scrollbars have no arrows nowadays
     .s identify 5 5
 } {trough1}
