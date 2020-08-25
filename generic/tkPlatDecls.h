@@ -63,8 +63,7 @@ EXTERN void		Tk_MacOSXSetEmbedHandler(
 				Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc);
 /* 1 */
 EXTERN void		Tk_MacOSXTurnOffMenus(void);
-/* 2 */
-EXTERN void		Tk_MacOSXTkOwnsCursor(int tkOwnsIt);
+/* Slot 2 is reserved */
 /* 3 */
 EXTERN void		TkMacOSXInitMenus(Tcl_Interp *interp);
 /* 4 */
@@ -91,8 +90,7 @@ EXTERN void		Tk_MacOSXSetEmbedHandler_(
 				Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc);
 /* 12 */
 EXTERN void		Tk_MacOSXTurnOffMenus_(void);
-/* 13 */
-EXTERN void		Tk_MacOSXTkOwnsCursor_(int tkOwnsIt);
+/* Slot 13 is reserved */
 /* 14 */
 EXTERN void		TkMacOSXInitMenus_(Tcl_Interp *interp);
 /* 15 */
@@ -117,7 +115,7 @@ typedef struct TkPlatStubs {
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tk_MacOSXSetEmbedHandler) (Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacOSXEmbedGetClipProc *getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc); /* 0 */
     void (*tk_MacOSXTurnOffMenus) (void); /* 1 */
-    void (*tk_MacOSXTkOwnsCursor) (int tkOwnsIt); /* 2 */
+    void (*reserved2)(void);
     void (*tkMacOSXInitMenus) (Tcl_Interp *interp); /* 3 */
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
@@ -128,7 +126,7 @@ typedef struct TkPlatStubs {
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
     void (*tk_MacOSXSetEmbedHandler_) (Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacOSXEmbedGetClipProc *getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc); /* 11 */
     void (*tk_MacOSXTurnOffMenus_) (void); /* 12 */
-    void (*tk_MacOSXTkOwnsCursor_) (int tkOwnsIt); /* 13 */
+    void (*reserved13)(void);
     void (*tkMacOSXInitMenus_) (Tcl_Interp *interp); /* 14 */
     void (*tkMacOSXInitAppleEvents_) (Tcl_Interp *interp); /* 15 */
     void (*tkGenWMConfigureEvent_) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
@@ -166,8 +164,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler) /* 0 */
 #define Tk_MacOSXTurnOffMenus \
 	(tkPlatStubsPtr->tk_MacOSXTurnOffMenus) /* 1 */
-#define Tk_MacOSXTkOwnsCursor \
-	(tkPlatStubsPtr->tk_MacOSXTkOwnsCursor) /* 2 */
+/* Slot 2 is reserved */
 #define TkMacOSXInitMenus \
 	(tkPlatStubsPtr->tkMacOSXInitMenus) /* 3 */
 #define TkMacOSXInitAppleEvents \
@@ -188,8 +185,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler_) /* 11 */
 #define Tk_MacOSXTurnOffMenus_ \
 	(tkPlatStubsPtr->tk_MacOSXTurnOffMenus_) /* 12 */
-#define Tk_MacOSXTkOwnsCursor_ \
-	(tkPlatStubsPtr->tk_MacOSXTkOwnsCursor_) /* 13 */
+/* Slot 13 is reserved */
 #define TkMacOSXInitMenus_ \
 	(tkPlatStubsPtr->tkMacOSXInitMenus_) /* 14 */
 #define TkMacOSXInitAppleEvents_ \

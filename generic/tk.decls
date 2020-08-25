@@ -1111,9 +1111,10 @@ declare 0 aqua {
 declare 1 aqua {
     void Tk_MacOSXTurnOffMenus(void)
 }
-declare 2 aqua {
-    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
-}
+# Does not exist anymore.
+#declare 2 aqua {
+#    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
+#}
 declare 3 aqua {
     void TkMacOSXInitMenus(Tcl_Interp *interp)
 }
@@ -1150,9 +1151,10 @@ declare 11 aqua {
 declare 12 aqua {
     void Tk_MacOSXTurnOffMenus_(void)
 }
-declare 13 aqua {
-    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
-}
+# Does not exist anymore
+#declare 13 aqua {
+#    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
+#}
 declare 14 aqua {
     void TkMacOSXInitMenus_(Tcl_Interp *interp)
 }
