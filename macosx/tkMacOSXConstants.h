@@ -109,10 +109,10 @@ typedef NSInteger NSModalResponse;
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
-#define TkMacOSXNSContext(context) [NSGraphicsContext \
-	    graphicsContextWithGraphicsPort:context flipped:NO]
+#define GET_NSCONTEXT(context, flip) [NSGraphicsContext		\
+	    graphicsContextWithGraphicsPort:context flipped:flip]
 #else
-#define TkMacOSXNSContext(context) [NSGraphicsContext \
+#define GET_NSCONTEXT(context, flip) [NSGraphicsContext		\
 	    graphicsContextWithCGContext:context flipped:NO]
 #endif
 

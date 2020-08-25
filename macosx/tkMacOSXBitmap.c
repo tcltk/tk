@@ -142,7 +142,7 @@ PixmapFromImage(
 				    .tx = 0, .ty = size.height};
 	    CGContextConcatCTM(dc.context, t);
 	    [NSGraphicsContext saveGraphicsState];
-	    [NSGraphicsContext setCurrentContext:TkMacOSXNSContext(dc.context)];
+	    [NSGraphicsContext setCurrentContext:GET_NSCONTEXT(dc.context, NO)];
 	    [image drawAtPoint:NSZeroPoint fromRect:NSZeroRect
 		operation:NSCompositeCopy fraction:1.0];
 	    [NSGraphicsContext restoreGraphicsState];
