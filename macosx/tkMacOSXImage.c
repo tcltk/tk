@@ -1127,8 +1127,7 @@ TkNSImageDisplay(
     if (TkMacOSXSetupDrawingContext(drawable, NULL, &dc)) {
 	if (dc.context) {
 	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
-	    NSGraphicsContext.currentContext = [NSGraphicsContext
-		graphicsContextWithCGContext:dc.context flipped: YES];
+	    NSGraphicsContext.currentContext = GET_NSCONTEXT(dc.context, YES);
 	    [image drawInRect:dstRect
 		     fromRect:srcRect
 		    operation:NSCompositeSourceOver
