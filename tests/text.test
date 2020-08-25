@@ -8215,9 +8215,9 @@ test text-38.1 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break}}\
-    {{text 1} {break} {text 2} {break}}\
-    {{break}}}
+} -result {{{break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{break {}}}}
 test text-38.2 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
@@ -8233,9 +8233,9 @@ test text-38.2 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1} {break} {break}}\
-    {{text 1} {break} {text 2} {break}}\
-    {{text 1} {break} {break}}}
+} -result {{{text 1 {}} {break {n1}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {break {}}}}
 test text-38.3 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
@@ -8251,9 +8251,9 @@ test text-38.3 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1} {break}}\
-    {{text 1} {break} {text 2} {break}}\
-    {{text 1} {break}}}
+} -result {{{text 1 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{text 1 {}} {break {}}}}
 test text-38.4 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
@@ -8269,9 +8269,9 @@ test text-38.4 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1} {break} {text 2} {break}}\
-    {{break}}\
-    {{text 1} {break} {text 2} {break}}}
+} -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
 test text-38.5 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
@@ -8287,9 +8287,9 @@ test text-38.5 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break}}\
-    {{text 1} {break} {text 2} {break} {break}}\
-    {{break}}}
+} -result {{{break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{break {}}}}
 test text-38.6 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
@@ -8305,9 +8305,9 @@ test text-38.6 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1} {break} {break}}\
-    {{text 1} {break} {text 2} {break} {break}}\
-    {{text 1} {break} {break}}}
+} -result {{{text 1 {}} {break {n1}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{text 1 {}} {break {n1}} {break {}}}}
 test text-38.7 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
@@ -8323,9 +8323,9 @@ test text-38.7 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1} {break}}\
-    {{text 1} {break} {text 2} {break} {break}}\
-    {{text 1} {break}}}
+} -result {{{text 1 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{text 1 {}} {break {}}}}
 test text-38.8 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
@@ -8341,9 +8341,9 @@ test text-38.8 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1} {break} {text 2} {break}}\
-    {{text 1} {break} {text 2} {break} {break}}\
-    {{text 1} {break} {text 2} {break}}}
+} -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
 test text-38.9 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t tag add n begin
@@ -8360,9 +8360,9 @@ test text-38.9 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break}}\
-    {{break}}\
-    {{break}}}
+} -result {{{break {}}}\
+    {{break {n}}}\
+    {{break {}}}}
 test text-38.10 {deletion - clean widget} -setup {
     text .t -undo on
     set res {}
@@ -8378,8 +8378,8 @@ test text-38.10 {deletion - clean widget} -setup {
 } -cleanup {
    destroy .t
    unset res
-} -result {{{break}}\
-    {{break}}}
+} -result {{{break {}}}\
+    {{break {}}}}
 test text-38.11 {deletion - test optimization} -setup {
     text .t -undo on
     .t tag add n begin
@@ -8407,9 +8407,9 @@ test text-38.12 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break}}\
-    {{text 1} {break}}\
-    {{break}}}
+} -result {{{break {}}}\
+    {{text 1 {n}} {break {n}}}\
+    {{break {}}}}
 test text-38.13 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t tag add n begin
@@ -8427,9 +8427,9 @@ test text-38.13 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break}}\
-    {{text 1} {break}}\
-    {{break}}}
+} -result {{{break {}}}\
+    {{text 1 {}} {break {n}}}\
+    {{break {}}}}
 
 # non-regression regarding miscellaneous bugs, especially crashes and failed assertions
 
