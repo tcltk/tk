@@ -19,9 +19,7 @@
  */
 
 #include "tkImgPhoto.h"
-#ifdef MAC_OSX_TK
-#define TKPUTIMAGE_CAN_BLEND
-#endif
+#include "tkPort.h"
 
 /*
  * Declaration for internal Xlib function used here:
@@ -415,9 +413,6 @@ TkImgPhotoGet(
  *	slower, so it's only used for 15bpp+.
  *
  *	Note that Win32 pre-defines those operations that we really need.
- *
- *	Note that on MacOS, if the background comes from a Retina display
- *	then it will be twice as wide and twice as high as the photoimage.
  *
  *----------------------------------------------------------------------
  */

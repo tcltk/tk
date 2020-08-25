@@ -2581,7 +2581,7 @@ WmIconphotoCmd(
 
     Tk_SizeOfImage(tk_icon, &width, &height);
     if (width != 0 && height != 0) {
-	newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon,
+	newIcon = TkMacOSXGetNSImageFromTkImage(winPtr->display, tk_icon,
 						width, height);
     }
     Tk_FreeImage(tk_icon);

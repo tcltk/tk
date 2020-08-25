@@ -21,7 +21,7 @@ jobs:
 # Testing on Linux with various compilers
     - name: "Linux/GCC/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -34,21 +34,21 @@ jobs:
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
     - name: "Linux/GCC/Static"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-shared"
     - name: "Linux/GCC/Debug"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -77,7 +77,7 @@ jobs:
 # Older versions of GCC...
     - name: "Linux/GCC 7/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc-7
       addons:
         apt:
@@ -114,7 +114,7 @@ jobs:
 # Clang
     - name: "Linux/Clang/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
@@ -127,21 +127,21 @@ jobs:
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
     - name: "Linux/Clang/Shared/no-xft"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
     - name: "Linux/Clang/Static"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - CFGOPT="--disable-shared"
         - BUILD_DIR=unix
     - name: "Linux/Clang/Debug"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
@@ -250,7 +250,7 @@ jobs:
 # "make dist" only
     - name: "Linux: make dist"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
