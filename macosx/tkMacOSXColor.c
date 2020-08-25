@@ -315,7 +315,7 @@ GetRGBA(
 	break;
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101500
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
 	    [color getComponents: rgba];
