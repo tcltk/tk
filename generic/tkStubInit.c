@@ -572,7 +572,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXButtonKeyState, /* 8 */
     TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
-    TkMacOSXInstallCursor, /* 11 */
+    0, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
@@ -1009,7 +1009,7 @@ static const TkPlatStubs tkPlatStubs = {
 #ifdef MAC_OSX_TK /* AQUA */
     Tk_MacOSXSetEmbedHandler, /* 0 */
     Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
+    0, /* 2 */
     TkMacOSXInitMenus, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
     TkGenWMConfigureEvent, /* 5 */
@@ -1020,7 +1020,7 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_MacOSXIsAppInFront, /* 10 */
     Tk_MacOSXSetEmbedHandler_, /* 11 */
     Tk_MacOSXTurnOffMenus_, /* 12 */
-    Tk_MacOSXTkOwnsCursor_, /* 13 */
+    0, /* 13 */
     TkMacOSXInitMenus_, /* 14 */
     TkMacOSXInitAppleEvents_, /* 15 */
     TkGenWMConfigureEvent_, /* 16 */

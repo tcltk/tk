@@ -170,8 +170,7 @@ EXTERN unsigned int	TkMacOSXButtonKeyState(void);
 EXTERN void		TkMacOSXClearMenubarActive(void);
 /* 10 */
 EXTERN int		TkMacOSXDispatchMenuEvent(int menuID, int index);
-/* 11 */
-EXTERN void		TkMacOSXInstallCursor(int resizeOverride);
+/* Slot 11 is reserved */
 /* 12 */
 EXTERN void		TkMacOSXHandleTearoffMenu(void);
 /* Slot 13 is reserved */
@@ -405,7 +404,7 @@ typedef struct TkIntPlatStubs {
     unsigned int (*tkMacOSXButtonKeyState) (void); /* 8 */
     void (*tkMacOSXClearMenubarActive) (void); /* 9 */
     int (*tkMacOSXDispatchMenuEvent) (int menuID, int index); /* 10 */
-    void (*tkMacOSXInstallCursor) (int resizeOverride); /* 11 */
+    void (*reserved11)(void);
     void (*tkMacOSXHandleTearoffMenu) (void); /* 12 */
     void (*reserved13)(void);
     int (*tkMacOSXDoHLEvent) (void *theEvent); /* 14 */
@@ -631,8 +630,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 9 */
 #define TkMacOSXDispatchMenuEvent \
 	(tkIntPlatStubsPtr->tkMacOSXDispatchMenuEvent) /* 10 */
-#define TkMacOSXInstallCursor \
-	(tkIntPlatStubsPtr->tkMacOSXInstallCursor) /* 11 */
+/* Slot 11 is reserved */
 #define TkMacOSXHandleTearoffMenu \
 	(tkIntPlatStubsPtr->tkMacOSXHandleTearoffMenu) /* 12 */
 /* Slot 13 is reserved */
