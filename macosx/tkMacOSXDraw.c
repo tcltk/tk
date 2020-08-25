@@ -1,13 +1,13 @@
 /*
  * tkMacOSXDraw.c --
  *
- *	This file contains functions that perform drawing to Xlib windows. Most
- *	of the functions simply emulate Xlib functions.
+ *	This file contains functions that draw to windows. Many of thees
+ *	functions emulate Xlib functions.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009 Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2014 Marc Culler.
+ * Copyright (c) 2014-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -17,7 +17,7 @@
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] CGContext]
 #else
 #define GET_CGCONTEXT [[NSGraphicsContext currentContext] graphicsPort]
@@ -50,6 +50,8 @@ static unsigned long transparentColor;
  */
 
 static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
+static NSImage *CreateNSImageFromPixmap(Pixmap pixmap, int width, int height);
+
 
 /*
  *----------------------------------------------------------------------
@@ -108,384 +110,7 @@ TkMacOSXInitCGDrawing(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXBitmapRepFromDrawableRect
- *
- *	Extract bitmap data from a MacOSX drawable as an NSBitmapImageRep.
- *
- *      This is only used by XGetImage, which is never called.  And this
- *      implementation does not work correctly.  Originally it relied on
- *      [NSBitmapImageRep initWithFocusedViewRect:view_rect] which was
- *      deprecated by Apple in OSX 10.14 and also required the use of other
- *      deprecated functions such as [NSView lockFocus]. Apple's suggested
- *      replacement is [NSView cacheDisplayInRect: toBitmapImageRep:] and that
- *      is what is being used here.  However, that method only works when the
- *      view has a valid CGContext, and a view is only guaranteed to have a
- *      valid context during a call to [NSView drawRect]. To further complicate
- *      matters, cacheDisplayInRect calls [NSView drawRect]. Essentially it is
- *      asking the view to draw a subrectangle of itself into a special
- *      graphics context which is linked to the BitmapImageRep. But our
- *      implementation of [NSView drawRect] does not allow recursive calls. If
- *      called recursively it returns immediately without doing any drawing.
- *      So the bottom line is that this function either returns a NULL pointer
- *      or a black image. To make it useful would require a significant amount
- *      of rewriting of the drawRect method. Perhaps the next release of OSX
- *      will include some more helpful ways of doing this.
- *
- * Results:
- *	Returns an NSBitmapRep representing the image of the given rectangle of
- *      the given drawable. This object is retained. The caller is responsible
- *      for releasing it.
- *
- *      NOTE: The x,y coordinates should be relative to a coordinate system
- *      with origin at the top left, as used by XImage and CGImage, not bottom
- *      left as used by NSView.
- *
- * Side effects:
- *     None
- *
- *----------------------------------------------------------------------
- */
-
-NSBitmapImageRep *
-TkMacOSXBitmapRepFromDrawableRect(
-    Drawable drawable,
-    int x,
-    int y,
-    unsigned int width,
-    unsigned int height)
-{
-    MacDrawable *mac_drawable = (MacDrawable *) drawable;
-    CGContextRef cg_context = NULL;
-    CGImageRef cg_image = NULL, sub_cg_image = NULL;
-    NSBitmapImageRep *bitmap_rep = NULL;
-    NSView *view = NULL;
-    if (mac_drawable->flags & TK_IS_PIXMAP) {
-	/*
-	 * This MacDrawable is a bitmap, so its view is NULL.
-	 */
-
-	CGRect image_rect = CGRectMake(x, y, width, height);
-
-	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	sub_cg_image = CGImageCreateWithImageInRect(cg_image, image_rect);
-	if (sub_cg_image) {
-	    bitmap_rep = [NSBitmapImageRep alloc];
-	    [bitmap_rep initWithCGImage:sub_cg_image];
-	}
-	if (cg_image) {
-	    CGImageRelease(cg_image);
-	}
-    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
-	TKContentView *tkview = (TKContentView *)view;
-
-	/*
-	 * Convert Tk top-left to NSView bottom-left coordinates.
-	 */
-
-	int view_height = [view bounds].size.height;
-	NSRect view_rect = NSMakeRect(x + mac_drawable->xOff,
-		view_height - height - y - mac_drawable->yOff,
-		width, height);
-
-	/*
-	 * Attempt to copy from the view to a bitmapImageRep.  If the view does
-	 * not have a valid CGContext, doing this will silently corrupt memory
-	 * and make a big mess. So, in that case, we mark the view as needing
-	 * display and return NULL.
-	 */
-
-	if (view == [NSView focusView]) {
-	    bitmap_rep = [view bitmapImageRepForCachingDisplayInRect: view_rect];
-	    [bitmap_rep retain];
-	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
-	} else {
-	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    [tkview addTkDirtyRect:[tkview bounds]];
-	    return NULL;
-	}
-    } else {
-	TkMacOSXDbgMsg("Invalid source drawable");
-    }
-    return bitmap_rep;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XCopyArea --
- *
- *	Copies data from one drawable to another.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Data is moved from a window or bitmap to a second window or bitmap.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XCopyArea(
-    Display *display,		/* Display. */
-    Drawable src,		/* Source drawable. */
-    Drawable dst,		/* Destination drawable. */
-    GC gc,			/* GC to use. */
-    int src_x,			/* X & Y, width & height */
-    int src_y,			/* define the source rectangle */
-    unsigned int width,		/* that will be copied. */
-    unsigned int height,
-    int dest_x,			/* Dest X & Y on dest rect. */
-    int dest_y)
-{
-    TkMacOSXDrawingContext dc;
-    MacDrawable *srcDraw = (MacDrawable *) src;
-    NSBitmapImageRep *bitmap_rep = NULL;
-    CGImageRef img = NULL;
-    CGRect bounds, srcRect, dstRect;
-
-    display->request++;
-    if (!width || !height) {
-	return BadDrawable;
-    }
-
-    if (!TkMacOSXSetupDrawingContext(dst, gc, &dc)) {
-	TkMacOSXDbgMsg("Failed to setup drawing context.");
-	return BadDrawable;
-    }
-
-    if (!dc.context) {
-	TkMacOSXDbgMsg("Invalid destination drawable - no context.");
-	return BadDrawable;
-    }
-
-    if (srcDraw->flags & TK_IS_PIXMAP) {
-	img = TkMacOSXCreateCGImageWithDrawable(src);
-    } else if (TkMacOSXDrawableWindow(src)) {
-	bitmap_rep = TkMacOSXBitmapRepFromDrawableRect(src,
-		src_x, src_y, width, height);
-	if (bitmap_rep) {
-	    img = [bitmap_rep CGImage];
-	}
-    } else {
-	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
-    }
-
-    if (img) {
-	bounds = CGRectMake(0, 0, srcDraw->size.width, srcDraw->size.height);
-	srcRect = CGRectMake(src_x, src_y, width, height);
-	dstRect = CGRectMake(dest_x, dest_y, width, height);
-	TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-		gc->foreground, gc->background, bounds, srcRect, dstRect);
-	CFRelease(img);
-    } else {
-	TkMacOSXDbgMsg("Failed to construct CGImage.");
-    }
-
-    TkMacOSXRestoreDrawingContext(&dc);
-    return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XCopyPlane --
- *
- *	Copies a bitmap from a source drawable to a destination drawable. The
- *	plane argument specifies which bit plane of the source contains the
- *	bitmap. Note that this implementation ignores the gc->function.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Changes the destination drawable.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XCopyPlane(
-    Display *display,		/* Display. */
-    Drawable src,		/* Source drawable. */
-    Drawable dst,		/* Destination drawable. */
-    GC gc,				/* GC to use. */
-    int src_x,			/* X & Y, width & height */
-    int src_y,			/* define the source rectangle */
-    unsigned int width,	/* that will be copied. */
-    unsigned int height,
-    int dest_x,			/* Dest X & Y on dest rect. */
-    int dest_y,
-    unsigned long plane)	/* Which plane to copy. */
-{
-    TkMacOSXDrawingContext dc;
-    MacDrawable *srcDraw = (MacDrawable *) src;
-    MacDrawable *dstDraw = (MacDrawable *) dst;
-    CGRect bounds, srcRect, dstRect;
-    display->request++;
-    if (!width || !height) {
-	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
-	return BadDrawable;
-    }
-    if (plane != 1) {
-	Tcl_Panic("Unexpected plane specified for XCopyPlane");
-    }
-    if (srcDraw->flags & TK_IS_PIXMAP) {
-	if (!TkMacOSXSetupDrawingContext(dst, gc, &dc)) {
-	    return BadDrawable;
-	}
-
-	CGContextRef context = dc.context;
-
-	if (context) {
-	    CGImageRef img = TkMacOSXCreateCGImageWithDrawable(src);
-
-	    if (img) {
-		TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
-		unsigned long imageBackground  = gc->background;
-
-                if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP) {
-		    srcRect = CGRectMake(src_x, src_y, width, height);
-		    CGImageRef mask = TkMacOSXCreateCGImageWithDrawable(
-			    clipPtr->value.pixmap);
-		    CGImageRef submask = CGImageCreateWithImageInRect(
-			    img, srcRect);
-		    CGRect rect = CGRectMake(dest_x, dest_y, width, height);
-
-		    rect = CGRectOffset(rect, dstDraw->xOff, dstDraw->yOff);
-		    CGContextSaveGState(context);
-
-		    /*
-		     * Move the origin of the destination to top left.
-		     */
-
-		    CGContextTranslateCTM(context,
-			    0, rect.origin.y + CGRectGetMaxY(rect));
-		    CGContextScaleCTM(context, 1, -1);
-
-		    /*
-		     * Fill with the background color, clipping to the mask.
-		     */
-
-		    CGContextClipToMask(context, rect, submask);
-		    TkMacOSXSetColorInContext(gc, gc->background, dc.context);
-		    CGContextFillRect(context, rect);
-
-		    /*
-		     * Fill with the foreground color, clipping to the
-		     * intersection of img and mask.
-		     */
-
-		    CGImageRef subimage = CGImageCreateWithImageInRect(
-			    img, srcRect);
-		    CGContextClipToMask(context, rect, subimage);
-		    TkMacOSXSetColorInContext(gc, gc->foreground, context);
-		    CGContextFillRect(context, rect);
-		    CGContextRestoreGState(context);
-		    CGImageRelease(img);
-		    CGImageRelease(mask);
-		    CGImageRelease(submask);
-		    CGImageRelease(subimage);
-		} else {
-		    bounds = CGRectMake(0, 0,
-			    srcDraw->size.width, srcDraw->size.height);
-		    srcRect = CGRectMake(src_x, src_y, width, height);
-		    dstRect = CGRectMake(dest_x, dest_y, width, height);
-		    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-			    gc->foreground, imageBackground, bounds,
-			    srcRect, dstRect);
-		    CGImageRelease(img);
-		}
-	    } else {
-		/* no image */
-		TkMacOSXDbgMsg("Invalid source drawable");
-	    }
-	} else {
-	    TkMacOSXDbgMsg("Invalid destination drawable - "
-		    "could not get a bitmap context.");
-	}
-	TkMacOSXRestoreDrawingContext(&dc);
-	return Success;
-    } else {
-	/*
-	 * Source drawable is a Window, not a Pixmap.
-	 */
-
-	return XCopyArea(display, src, dst, gc, src_x, src_y, width, height,
-		dest_x, dest_y);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXCreateCGImageWithDrawable --
- *
- *	Create a CGImage from the given Drawable.
- *
- * Results:
- *	CGImage, release after use.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-CGImageRef
-TkMacOSXCreateCGImageWithDrawable(
-    Drawable drawable)
-{
-    CGImageRef img = NULL;
-    CGContextRef context = TkMacOSXGetCGContextForDrawable(drawable);
-
-    if (context) {
-	img = CGBitmapContextCreateImage(context);
-    }
-    return img;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * CreateNSImageWithPixmap --
- *
- *	Create NSImage for Pixmap.
- *
- * Results:
- *	NSImage.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static NSImage *
-CreateNSImageWithPixmap(
-    Pixmap pixmap,
-    int width,
-    int height)
-{
-    CGImageRef cgImage;
-    NSImage *nsImage;
-    NSBitmapImageRep *bitmapImageRep;
-
-    cgImage = TkMacOSXCreateCGImageWithDrawable(pixmap);
-    nsImage = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
-    bitmapImageRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
-    [nsImage addRepresentation:bitmapImageRep];
-    [bitmapImageRep release];
-    CFRelease(cgImage);
-
-    return nsImage;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetNSImageWithTkImage --
+ * TkMacOSXGetNSImageFromTkImage --
  *
  *	Get autoreleased NSImage for Tk_Image.
  *
@@ -499,7 +124,7 @@ CreateNSImageWithPixmap(
  */
 
 NSImage *
-TkMacOSXGetNSImageWithTkImage(
+TkMacOSXGetNSImageFromTkImage(
     Display *display,
     Tk_Image image,
     int width,
@@ -512,7 +137,7 @@ TkMacOSXGetNSImageWithTkImage(
     }
     pixmap = Tk_GetPixmap(display, None, width, height, 0);
     Tk_RedrawImage(image, 0, 0, width, height, pixmap, 0, 0);
-    nsImage = CreateNSImageWithPixmap(pixmap, width, height);
+    nsImage = CreateNSImageFromPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
 
     return [nsImage autorelease];
@@ -521,7 +146,7 @@ TkMacOSXGetNSImageWithTkImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetNSImageWithBitmap --
+ * TkMacOSXGetNSImageFromBitmap --
  *
  *	Get autoreleased NSImage for Bitmap.
  *
@@ -535,7 +160,7 @@ TkMacOSXGetNSImageWithTkImage(
  */
 
 NSImage *
-TkMacOSXGetNSImageWithBitmap(
+TkMacOSXGetNSImageFromBitmap(
     Display *display,
     Pixmap bitmap,
     GC gc,
@@ -551,10 +176,51 @@ TkMacOSXGetNSImageWithBitmap(
     XSetClipOrigin(display, gc, 0, 0);
     XCopyPlane(display, bitmap, pixmap, gc, 0, 0, width, height, 0, 0, 1);
     gc->background = origBackground;
-    nsImage = CreateNSImageWithPixmap(pixmap, width, height);
+    nsImage = CreateNSImageFromPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
 
     return [nsImage autorelease];
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreateNSImageFromPixmap --
+ *
+ *	Create NSImage for Pixmap.
+ *
+ * Results:
+ *	NSImage.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NSImage *
+CreateNSImageFromPixmap(
+    Pixmap pixmap,
+    int width,
+    int height)
+{
+    CGImageRef cgImage;
+    NSImage *nsImage;
+    NSBitmapImageRep *bitmapImageRep;
+    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
+
+    if (context) {
+	cgImage = CGBitmapContextCreateImage(context);
+    } else {
+	return NULL;
+    }
+    nsImage = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
+    bitmapImageRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
+    [nsImage addRepresentation:bitmapImageRep];
+    [bitmapImageRep release];
+    CFRelease(cgImage);
+
+    return nsImage;
 }
 
 /*

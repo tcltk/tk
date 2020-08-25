@@ -135,6 +135,13 @@
 #define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
+ * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
+ * alpha channel directly into a window.
+ */
+
+#define TKPUTIMAGE_CAN_BLEND
+
+/*
  * Used by xcolor.c
  */
 
