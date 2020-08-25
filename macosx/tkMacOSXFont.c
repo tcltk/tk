@@ -1212,7 +1212,7 @@ TkpDrawAngledCharsInContext(
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
     CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
-    [nsFont setInContext:TkMacOSXNSContext(context)];
+    [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     attributedString = [[NSAttributedString alloc] initWithString:string
 	    attributes:attributes];
