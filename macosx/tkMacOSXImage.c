@@ -471,7 +471,7 @@ XPutImage(
  *      macro TK_NO_DOUBLE_BUFFERING, the generic code never calls XGetImage
  *      or XCopyArea on macOS.  Nonetheless, these function are in the stubs
  *      table and therefore could be used by extensions.
- *      
+ *
  *      This implementation does not work correctly.  Originally it relied on
  *      [NSBitmapImageRep initWithFocusedViewRect:view_rect] which was
  *      deprecated by Apple in OSX 10.14 and also required the use of other
