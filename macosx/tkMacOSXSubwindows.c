@@ -1145,14 +1145,15 @@ TkMacOSXGetDrawablePort(
  *----------------------------------------------------------------------
  */
 
-NSView *
-TkMacOSXDrawableView(
-    MacDrawable *macWin)
+void *
+TkMacOSXGetRootControl(
+    Drawable drawable)
 {
-    NSView *result = nil;
+    void *result = NULL;
+    MacDrawable *macWin = (MacDrawable *)drawable;
 
     if (!macWin) {
-	result = nil;
+	result = NULL;
     } else if (!macWin->toplevel) {
 	result = macWin->view;
     } else if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
@@ -1161,37 +1162,10 @@ TkMacOSXDrawableView(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXDrawableView(contWinPtr->privatePtr);
+	    result = TkMacOSXGetRootControl((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetRootControl --
- *
- *	This function returns the NSView for a given X drawable.
- *
- * Results:
- *	A NSView* .
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void *
-TkMacOSXGetRootControl(
-    Drawable drawable)
-{
-    /*
-     * will probably need to fix this up for embedding
-     */
-
-    return TkMacOSXDrawableView((MacDrawable *) drawable);
 }
 
 /*
