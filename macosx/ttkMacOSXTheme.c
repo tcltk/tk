@@ -46,11 +46,12 @@ static NSColor *controlAccentColor(void) {
 }
 
 /*
- * Padding values which depend on the OS version.  These are initialized
+ * Values which depend on the OS version.  These are initialized
  * in Ttk_MacOSXInit.
  */
 
 static Ttk_Padding entryElementPadding;
+static CGFloat Ttk_ContrastDelta;
 
 /*----------------------------------------------------------------------
  * +++ ComputeButtonDrawInfo --
@@ -298,31 +299,35 @@ RGBACOLOR windowBackground[4] = RGBA256(235.0, 235.0, 235.0, 1.0);
  * GetBackgroundColor --
  *
  *      Fills the array rgba with the color coordinates for a background color.
- *      Start with the background color of a window's geometry master, or the
- *      standard ttk window background if there is no master. If the contrast
- *      parameter is nonzero, modify this color to be darker, for the aqua
- *      appearance, or lighter for the DarkAqua appearance.  This is primarily
- *      used by the Fill and Background elements.
+ *      Start with the background color of a window's container, or the
+ *      standard ttk window background if there is no container. If the
+ *      contrast parameter is nonzero, modify this color to be darker, for the
+ *      aqua appearance, or lighter for the DarkAqua appearance.  This is
+ *      primarily used by the Fill and Background elements.  The save parameter
+ *      is normally YES, so the contrasting color is saved in the private
+ *      data of the widget.  This behavior can be disabled in special cases,
+ *      such as when drawing notebook tabs in macOS 11.
  */
 
 static void GetBackgroundColorRGBA(
     TCL_UNUSED(CGContextRef),
     Tk_Window tkwin,
     int contrast,
+    Bool save,
     CGFloat *rgba)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+    TkWindow *containerPtr = (TkWindow *) TkGetGeomMaster(tkwin);
 
-    while (masterPtr && masterPtr->privatePtr) {
-	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
+    while (containerPtr && containerPtr->privatePtr) {
+	if (containerPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	masterPtr = (TkWindow *) TkGetGeomMaster(masterPtr);
+	containerPtr = (TkWindow *) TkGetGeomMaster(containerPtr);
     }
-    if (masterPtr && masterPtr->privatePtr) {
+    if (containerPtr && containerPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
-	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
+	    rgba[i] = containerPtr->privatePtr->fillRGBA[i];
 	}
     } else {
 	if ([NSApp macOSVersion] > 101300) {
@@ -336,19 +341,20 @@ static void GetBackgroundColorRGBA(
 	    }
 	}
     }
+
     if (contrast) {
 	int isDark = (rgba[0] + rgba[1] + rgba[2] < 1.5);
 
 	if (isDark) {
 	    for (int i = 0; i < 3; i++) {
-		rgba[i] += 8.0 / 255.0;
+		rgba[i] += Ttk_ContrastDelta*contrast / 255.0;
 	    }
 	} else {
 	    for (int i = 0; i < 3; i++) {
-		rgba[i] -= 8.0 / 255.0;
+		rgba[i] -= Ttk_ContrastDelta*contrast / 255.0;
 	    }
 	}
-        if (winPtr->privatePtr) {
+        if (save && winPtr->privatePtr) {
             winPtr->privatePtr->flags |= TTK_HAS_CONTRASTING_BG;
             for (int i = 0; i < 4; i++) {
                 winPtr->privatePtr->fillRGBA[i] = rgba[i];
@@ -360,10 +366,11 @@ static void GetBackgroundColorRGBA(
 static CGColorRef GetBackgroundCGColor(
     CGContextRef context,
     Tk_Window tkwin,
-    int contrast)
+    int contrast,
+    Bool save)
 {
     CGFloat rgba[4];
-    GetBackgroundColorRGBA(context, tkwin, contrast, rgba);
+    GetBackgroundColorRGBA(context, tkwin, contrast, save, rgba);
     return CGColorFromRGBA(rgba);
 }
 
@@ -409,7 +416,7 @@ static void FillBorder(
 {
     if (bounds.size.width < 2) {
 	return;
-    }    
+    }
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGPoint end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
     CGFloat corner = (radius > 0 ? radius : 2.0) / bounds.size.height;
@@ -498,7 +505,7 @@ static void DrawGrayButton(
 	 */
 
 	CGFloat rgba[4], gray;
-	GetBackgroundColorRGBA(context, tkwin, 0, rgba);
+	GetBackgroundColorRGBA(context, tkwin, 0, NO, rgba);
 	gray = (rgba[0] + rgba[1] + rgba[2]) / 3.0;
 	faceGray.grayscale = gray;
     }
@@ -636,7 +643,7 @@ static void DrawEntry(
     CGColorRef backgroundColor;
     CGFloat bgRGBA[4];
     if (isDark) {
-    	GetBackgroundColorRGBA(context, tkwin, 0, bgRGBA);
+    	GetBackgroundColorRGBA(context, tkwin, 0, NO, bgRGBA);
 
 	/*
 	 * Lighten the entry background to provide contrast.
@@ -931,7 +938,7 @@ static void DrawProgressBar(
 				 1.0, 1.0, 1.0, 0.0,
 				 1.0, 1.0, 1.0, 0.0};
 
-    GetBackgroundColorRGBA(context, tkwin, 0, rgba);
+    GetBackgroundColorRGBA(context, tkwin, 0, NO, rgba);
     if (info.attributes & kThemeTrackHorizontal) {
 	bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
 	clipBounds.size.width = 5 + ratio*(bounds.size.width + 3);
@@ -1041,7 +1048,7 @@ static void DrawSlider(
      * info.min, info.max and info.value are integers.  When this is called
      * we will have arranged that min = 0 and max is a large positive integer.
      */
-    
+
     double fraction = (from < to) ? (value - from) / (to - from) : 0.5;
     int isDark = TkMacOSXInDarkMode(tkwin);
 
@@ -1267,20 +1274,26 @@ static void DrawButton(
  *
  * This is a standalone drawing procedure which draws the contrasting rounded
  * rectangular box for LabelFrames and Notebook panes used in more recent
- * versions of macOS.
+ * versions of macOS.  Normally the contrast is set to one, since the nesting
+ * level of the Group Box is higher by 1 compared to its container.  But we
+ * allow higher contrast for special cases, notably notebook tabs in macOS 11.
+ * The save parameter is passed to GetBackgroundColor and should probably be
+ * NO in such special cases.
  */
 
 static void DrawGroupBox(
     CGRect bounds,
     CGContextRef context,
-    Tk_Window tkwin)
+    Tk_Window tkwin,
+    int contrast,
+    Bool save)
 {
     CHECK_RADIUS(5, bounds)
 
     CGPathRef path;
     CGColorRef backgroundColor, borderColor;
 
-    backgroundColor = GetBackgroundCGColor(context, tkwin, 1);
+    backgroundColor = GetBackgroundCGColor(context, tkwin, contrast, save);
     borderColor = CGColorFromGray(boxBorder);
     CGContextSetFillColorWithColor(context, backgroundColor);
     path = CGPathCreateWithRoundedRect(bounds, 5, 5, NULL);
@@ -1441,6 +1454,40 @@ DrawTab(
 	} else {
 	    DrawGrayButton(context, bounds, &tabDesign, state, tkwin);
 	}
+    }
+}
+
+static void
+DrawTab11(
+    CGRect bounds,
+    Ttk_State state,
+    CGContextRef context,
+    Tk_Window tkwin)
+{
+
+    if (state & TTK_STATE_SELECTED) {
+	DrawGrayButton(context, bounds, &pushbuttonDesign, state, tkwin);
+    } else {
+	CGRect clipRect = bounds;
+	/*
+	 * Draw a segment of a Group Box as a background for non-selected tabs.
+	 * Clip the Group Box so that the segments fit together to form a long
+	 * rounded rectangle behind the entire tab bar.
+	 */
+
+	if (!(state & TTK_STATE_FIRST_TAB)) {
+	    clipRect.origin.x -= 5;
+	    bounds.origin.x -= 5;
+	    bounds.size.width += 5;
+	}
+	if (!(state & TTK_STATE_LAST_TAB)) {
+	    clipRect.size.width += 5;
+	    bounds.size.width += 5;
+	}
+	CGContextSaveGState(context);
+	CGContextClipToRect(context, clipRect);
+	DrawGroupBox(bounds, context, tkwin, 3, NO);
+	CGContextRestoreGState(context);
     }
 }
 
@@ -1810,20 +1857,21 @@ static void TabElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-    HIThemeTabDrawInfo info = {
-	.version = 1,
-	.style = Ttk_StateTableLookup(TabStyleTable, state),
-	.direction = kThemeTabNorth,
-	.size = kHIThemeTabSizeNormal,
-	.adornment = Ttk_StateTableLookup(TabAdornmentTable, state),
-	.kind = kHIThemeTabKindNormal,
-	.position = Ttk_StateTableLookup(TabPositionTable, state),
-    };
-
     BEGIN_DRAWING(d)
-    if ([NSApp macOSVersion] > 100800) {
+    if ([NSApp macOSVersion] >= 110000) {
+	DrawTab11(bounds, state, dc.context, tkwin);
+    } else if ([NSApp macOSVersion] > 100800) {
 	DrawTab(bounds, state, dc.context, tkwin);
     } else {
+	HIThemeTabDrawInfo info = {
+	    .version = 1,
+	    .style = Ttk_StateTableLookup(TabStyleTable, state),
+	    .direction = kThemeTabNorth,
+	    .size = kHIThemeTabSizeNormal,
+	    .adornment = Ttk_StateTableLookup(TabAdornmentTable, state),
+	    .kind = kHIThemeTabKindNormal,
+	    .position = Ttk_StateTableLookup(TabPositionTable, state),
+	};
 	ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation,
 	    NULL);
     }
@@ -1867,7 +1915,7 @@ static void PaneElementDraw(
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
     if ([NSApp macOSVersion] > 100800) {
-	DrawGroupBox(bounds, dc.context, tkwin);
+	DrawGroupBox(bounds, dc.context, tkwin, 1, YES);
     } else {
 	HIThemeTabPaneDrawInfo info = {
 	    .version = 1,
@@ -1924,7 +1972,7 @@ static void GroupElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macOSVersion] > 100800) {
-	DrawGroupBox(bounds, dc.context, tkwin);
+	DrawGroupBox(bounds, dc.context, tkwin, 1, YES);
     } else {
 	const HIThemeGroupBoxDrawInfo info = {
 	    .version = 0,
@@ -2350,7 +2398,7 @@ static void TrackElementDraw(
 
     fraction = (value - from) / (to - from);
     max = RangeToFactor(fabs(to - from));
-    
+
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
@@ -2926,11 +2974,10 @@ static void FillElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-
     if ([NSApp macOSVersion] > 100800) {
 	CGColorRef bgColor;
 	BEGIN_DRAWING(d)
-	bgColor = GetBackgroundCGColor(dc.context, tkwin, 0);
+	bgColor = GetBackgroundCGColor(dc.context, tkwin, NO, 0);
 	CGContextSetFillColorWithColor(dc.context, bgColor);
 	CGContextFillRect(dc.context, bounds);
 	END_DRAWING
@@ -3094,7 +3141,7 @@ static void TreeAreaElementSize (
      */
 
     if ([NSApp macOSVersion] > 100800) {
-	Ttk_MakePadding(0, 4, 0, 0);
+	*paddingPtr = Ttk_MakePadding(0, 4, 0, 0);
     }
 }
 
@@ -3380,6 +3427,16 @@ void Ttk_MacOSXInit(
 	entryElementPadding = Ttk_MakePadding(7, 6, 7, 5);
     } else {
 	entryElementPadding = Ttk_MakePadding(7, 5, 7, 6);
+    }
+    if ([NSApp macOSVersion] < 110000) {
+	Ttk_ContrastDelta = 8.0;
+    } else {
+
+	/*
+	 * The subtle contrast became event more subtle in 11.0.
+	 */
+
+	Ttk_ContrastDelta = 5.0;
     }
 }
 

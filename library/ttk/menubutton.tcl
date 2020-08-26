@@ -57,7 +57,7 @@ if {[tk windowingsystem] eq "x11"} {
     bind TMenubutton <Button-1>  \
 	{ %W state pressed ; ttk::menubutton::Popdown %W }
     bind TMenubutton <ButtonRelease-1>  \
-	{ if {[winfo exists %W]} { %W state !pressed } }
+	{ if {[winfo exists %W]} { %W state {!pressed}} }
 }
 
 # PostPosition --
@@ -108,8 +108,11 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr y $menuPad
 		incr x $bw
 	    }
+	    flush {
+		incr y $flushPad
+		incr x -$flushPad
+	    }
 	    default {
-		incr y $bbh
 	    }
 	}
 	return [list $x $y $entry]

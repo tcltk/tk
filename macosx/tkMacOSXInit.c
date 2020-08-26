@@ -262,6 +262,38 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXVersion --
+ *
+ *	Tcl command which returns the minor version number of the currently
+ *	running operating system.
+ *
+ * Results:
+ *	Returns the minor version number.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+TkMacOSVersionObjCmd(
+    ClientData cd,
+    Tcl_Interp *ip,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    static char version[16] = "";
+    if (version[0] == '\0') {
+	snprintf(version, 16, "%d", [NSApp macOSVersion]);
+    }
+    Tcl_SetResult(ip, version, NULL);
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpInit --
  *
  *	Performs Mac-specific interpreter initialization related to the
@@ -416,9 +448,9 @@ TkpInit(
 	}
 
 	/*
-	 * Initialize the NSServices object here. Apple's docs say to do this
-	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
-	 * initialized until this function call.
+	 * Now we can run initialization routines which require that both the
+	 * NSApplication and the Tcl interpreter have been created and
+	 * initialized.
 	 */
 
 	TkMacOSXServices_Init(interp);
@@ -429,16 +461,13 @@ TkpInit(
 	
 	TkMacOSXNSImage_Init(interp);
     }
-
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
-
     if (scriptPath[0] != '\0') {
 	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
-
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",

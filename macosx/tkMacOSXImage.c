@@ -907,7 +907,6 @@ XCopyPlane(
     }
 }
 
-
 /* ---------------------------------------------------------------------------*/
 
 /*
@@ -1317,7 +1316,7 @@ TkNSImageCreate(
     int objc,			 /* Number of arguments. */
     Tcl_Obj *const objv[],	 /* Argument strings for options (not
 				  * including image name or type). */
-    TCL_UNUSED(const Tk_ImageType *), /* Pointer to our type record (not used). */
+    const Tk_ImageType *typePtr, /* Pointer to our type record (not used). */
     Tk_ImageMaster master,	 /* Token for image, to be used in callbacks. */
     ClientData *clientDataPtr)	 /* Store manager's token for image here; it
 				  * will be returned in later callbacks. */
@@ -1372,7 +1371,8 @@ TkNSImageCreate(
 
 static ClientData
 TkNSImageGet(
-    TCL_UNUSED(Tk_Window),  /* tkwin */
+    Tk_Window tkwin,		/* Token for window in which image will be
+				 * used. */
     ClientData clientData)	/* Pointer to TkNSImageMaster for image. */
 {
     TkNSImageMaster *masterPtr = (TkNSImageMaster *) clientData;
@@ -1402,7 +1402,7 @@ TkNSImageGet(
 static void
 TkNSImageDisplay(
     ClientData clientData,	/* Pointer to TkNSImageInstance for image. */
-    TCL_UNUSED(Display *),      /* display */
+    Display *display,		/* Display to use for drawing. */
     Drawable drawable,		/* Where to draw or redraw image. */
     int imageX, int imageY,	/* Origin of area to redraw, relative to
 				 * origin of image. */
@@ -1457,7 +1457,7 @@ TkNSImageDisplay(
 static void
 TkNSImageFree(
     ClientData clientData,	/* Pointer to TkNSImageInstance for instance. */
-    TCL_UNUSED(Display *))      /* display */
+    Display *display)		/* Display where image was to be drawn. */
 {
     TkNSImageInstance *instPtr = (TkNSImageInstance *) clientData;
     ckfree(instPtr);
@@ -1516,11 +1516,12 @@ TkNSImageDelete(
 
 int
 TkMacOSXNSImage_Init(
-    TCL_UNUSED(Tcl_Interp *)) /* interp */
+    Tcl_Interp *interp)		/* Interpreter for application. */
 {
     Tk_CreateImageType(&TkNSImageType);
     return 1;
 }
+
 /*
  * Local Variables:
  * mode: objc
