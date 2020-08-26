@@ -1030,22 +1030,12 @@ static const TkPlatStubs tkPlatStubs = {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
-    TkMacOSXInitMenus, /* 3 */
-    TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent, /* 5 */
-    TkMacOSXInvalClipRgns, /* 6 */
-    TkMacOSXGetDrawablePort, /* 7 */
-    TkMacOSXGetRootControl, /* 8 */
-    Tk_MacOSXSetupTkNotifier, /* 9 */
-    Tk_MacOSXIsAppInFront, /* 10 */
-    0, /* 11 */
-    0, /* 12 */
-    0, /* 13 */
-    0, /* 14 */
-    0, /* 15 */
-    TkGenWMConfigureEvent_, /* 16 */
+    Tk_MacOSXSetupTkNotifier, /* 1 */
+    TkMacOSXInitMenus, /* 2 */
+    TkMacOSXInitAppleEvents, /* 3 */
+    TkGenWMConfigureEvent, /* 4 */
+    TkMacOSXInvalClipRgns, /* 5 */
+    Tk_MacOSXIsAppInFront, /* 6 */
 #endif /* AQUA */
 };
 
