@@ -1112,7 +1112,8 @@ TkMacOSXDrawable(
  *
  * TkMacOSXGetDrawablePort --
  *
- *	This function returns the Graphics Port for a given X drawable.
+ *	This function only exists because it is listed in the stubs table.
+ *      It is useless.
  *
  * Results:
  *	NULL.
