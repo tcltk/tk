@@ -99,24 +99,6 @@ typedef struct TkWindowPrivate MacDrawable;
  */
 
 /*
- * This structure is for handling Netscape-type in process
- * embedding where Tk does not control the top-level. It contains
- * various functions that are needed by Mac specific routines, like
- * TkMacOSXGetDrawablePort. The definitions of the function types
- * are in tkMacOSX.h.
- */
-
-typedef struct {
-    Tk_MacOSXEmbedRegisterWinProc *registerWinProc;
-    Tk_MacOSXEmbedGetGrafPortProc *getPortProc;
-    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProc;
-    Tk_MacOSXEmbedGetClipProc *getClipProc;
-    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc;
-} TkMacOSXEmbedHandler;
-
-MODULE_SCOPE TkMacOSXEmbedHandler *tkMacOSXEmbedHandler;
-
-/*
  * GC CGColorRef cache for tkMacOSXColor.c
  */
 
