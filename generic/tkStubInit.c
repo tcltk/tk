@@ -56,8 +56,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkSendCleanup_ TkSendCleanup
 #define TkpTestsendCmd_ TkpTestsendCmd
 #define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
-#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
-#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
 #define TkMacOSXInitMenus_ TkMacOSXInitMenus
 #define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
@@ -1009,7 +1007,7 @@ static const TkPlatStubs tkPlatStubs = {
 #ifdef MAC_OSX_TK /* AQUA */
     Tk_MacOSXSetEmbedHandler, /* 0 */
     Tk_MacOSXTurnOffMenus, /* 1 */
-    0, /* 2 */
+    Tk_MacOSXTkOwnsCursor, /* 2 */
     TkMacOSXInitMenus, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
     TkGenWMConfigureEvent, /* 5 */
@@ -1018,12 +1016,9 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    Tk_MacOSXSetEmbedHandler_, /* 11 */
-    Tk_MacOSXTurnOffMenus_, /* 12 */
-    0, /* 13 */
-    TkMacOSXInitMenus_, /* 14 */
-    TkMacOSXInitAppleEvents_, /* 15 */
-    TkGenWMConfigureEvent_, /* 16 */
+    TkMacOSXInitMenus_, /* 11 */
+    TkMacOSXInitAppleEvents_, /* 12 */
+    TkGenWMConfigureEvent_, /* 13 */
 #endif /* AQUA */
 };
 
