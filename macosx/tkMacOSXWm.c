@@ -4530,27 +4530,6 @@ Tk_GetRootCoords(
 
 	    otherPtr = TkpGetOtherWindow(winPtr);
 	    if (otherPtr == NULL) {
-		if (tkMacOSXEmbedHandler->getOffsetProc != NULL) {
-		    Point theOffset;
-
-		    /*
-		     * We do not require that the changes.x & changes.y for a
-		     * non-Tk master window be kept up to date. So we first
-		     * subtract off the possibly bogus values that have been
-		     * added on at the top of this pass through the loop, and
-		     * then call out to the getOffsetProc to give us the
-		     * correct offset.
-		     */
-
-		    x -= winPtr->changes.x + winPtr->changes.border_width;
-		    y -= winPtr->changes.y + winPtr->changes.border_width;
-
-		    tkMacOSXEmbedHandler->getOffsetProc((Tk_Window) winPtr,
-			    &theOffset);
-
-		    x += theOffset.h;
-		    y += theOffset.v;
-		}
 		break;
 	    }
 
@@ -6067,14 +6046,7 @@ TkMacOSXMakeRealWindowExist(
 	    return;
 	}
 
-	if (tkMacOSXEmbedHandler == NULL) {
-	    Tcl_Panic("TkMacOSXMakeRealWindowExist could not find container");
-	}
-	if (tkMacOSXEmbedHandler->containerExistProc &&
-		tkMacOSXEmbedHandler->containerExistProc((Tk_Window) winPtr)
-		!= TCL_OK) {
-	    Tcl_Panic("ContainerExistProc could not make container");
-	}
+	Tcl_Panic("TkMacOSXMakeRealWindowExist could not find container");
 	return;
 
 	/*
