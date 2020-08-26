@@ -557,6 +557,28 @@ TkpSetCursor(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MacOSXTkOwnsCursor --
+ *
+ *	Sets whether Tk has the right to adjust the cursor.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May keep Tk from changing the cursor.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_MacOSXTkOwnsCursor(
+    int tkOwnsIt)
+{
+}
+
+/*
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4

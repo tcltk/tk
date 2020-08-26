@@ -91,9 +91,6 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
-				 * the flag that Tk is not to draw any
-				 * menus. */
 static int inPostMenu = 0;
 static unsigned long defaultBg = 0, defaultFg = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
@@ -483,10 +480,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkSetMainMenu: (TKMenu *) menu
 {
-    if (gNoTkMenus) {
-	return;
-    }
-
     TKMenu *applicationMenu = nil;
 
     if (menu) {
@@ -1663,7 +1656,6 @@ TkMacOSXClearMenubarActive(void)
 void
 Tk_MacOSXTurnOffMenus(void)
 {
-    gNoTkMenus = 1;
 }
 
 /*
