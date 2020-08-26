@@ -82,21 +82,11 @@ EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront(void);
-/* 11 */
-EXTERN void		Tk_MacOSXSetEmbedHandler_(
-				Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-				Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-				Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-				Tk_MacOSXEmbedGetClipProc *getClipProc,
-				Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc);
-/* 12 */
-EXTERN void		Tk_MacOSXTurnOffMenus_(void);
-/* 13 */
-EXTERN void		Tk_MacOSXTkOwnsCursor_(int tkOwnsIt);
-/* 14 */
-EXTERN void		TkMacOSXInitMenus_(Tcl_Interp *interp);
-/* 15 */
-EXTERN void		TkMacOSXInitAppleEvents_(Tcl_Interp *interp);
+/* Slot 11 is reserved */
+/* Slot 12 is reserved */
+/* Slot 13 is reserved */
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
 /* 16 */
 EXTERN void		TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y,
 				int width, int height, int flags);
@@ -126,11 +116,11 @@ typedef struct TkPlatStubs {
     void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
-    void (*tk_MacOSXSetEmbedHandler_) (Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacOSXEmbedGetClipProc *getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc); /* 11 */
-    void (*tk_MacOSXTurnOffMenus_) (void); /* 12 */
-    void (*tk_MacOSXTkOwnsCursor_) (int tkOwnsIt); /* 13 */
-    void (*tkMacOSXInitMenus_) (Tcl_Interp *interp); /* 14 */
-    void (*tkMacOSXInitAppleEvents_) (Tcl_Interp *interp); /* 15 */
+    void (*reserved11)(void);
+    void (*reserved12)(void);
+    void (*reserved13)(void);
+    void (*reserved14)(void);
+    void (*reserved15)(void);
     void (*tkGenWMConfigureEvent_) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
 #endif /* AQUA */
 } TkPlatStubs;
@@ -184,16 +174,11 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
-#define Tk_MacOSXSetEmbedHandler_ \
-	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler_) /* 11 */
-#define Tk_MacOSXTurnOffMenus_ \
-	(tkPlatStubsPtr->tk_MacOSXTurnOffMenus_) /* 12 */
-#define Tk_MacOSXTkOwnsCursor_ \
-	(tkPlatStubsPtr->tk_MacOSXTkOwnsCursor_) /* 13 */
-#define TkMacOSXInitMenus_ \
-	(tkPlatStubsPtr->tkMacOSXInitMenus_) /* 14 */
-#define TkMacOSXInitAppleEvents_ \
-	(tkPlatStubsPtr->tkMacOSXInitAppleEvents_) /* 15 */
+/* Slot 11 is reserved */
+/* Slot 12 is reserved */
+/* Slot 13 is reserved */
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
 #define TkGenWMConfigureEvent_ \
 	(tkPlatStubsPtr->tkGenWMConfigureEvent_) /* 16 */
 #endif /* AQUA */
@@ -202,11 +187,6 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
-#undef Tk_MacOSXSetEmbedHandler_
-#undef Tk_MacOSXTurnOffMenus_
-#undef Tk_MacOSXTkOwnsCursor_
-#undef TkMacOSXInitMenus_
-#undef TkMacOSXInitAppleEvents_
 #undef TkGenWMConfigureEvent_
 
 #ifdef __cplusplus

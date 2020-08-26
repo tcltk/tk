@@ -55,11 +55,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkWmCleanup_ TkWmCleanup
 #define TkSendCleanup_ TkSendCleanup
 #define TkpTestsendCmd_ TkpTestsendCmd
-#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
-#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
-#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
-#define TkMacOSXInitMenus_ TkMacOSXInitMenus
-#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 
@@ -1018,11 +1013,11 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    Tk_MacOSXSetEmbedHandler_, /* 11 */
-    Tk_MacOSXTurnOffMenus_, /* 12 */
-    Tk_MacOSXTkOwnsCursor_, /* 13 */
-    TkMacOSXInitMenus_, /* 14 */
-    TkMacOSXInitAppleEvents_, /* 15 */
+    0, /* 11 */
+    0, /* 12 */
+    0, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
     TkGenWMConfigureEvent_, /* 16 */
 #endif /* AQUA */
 };
