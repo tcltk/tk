@@ -714,7 +714,7 @@ XConfigureWindow(
      */
 
     if (value_mask & CWStackMode) {
-	NSView *view = TkMacOSXDrawableView(macWin);
+	NSView *view = TkMacOSXDrawableView(w);
 
 	if (view) {
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
@@ -1062,7 +1062,8 @@ TkMacOSXInvalidateWindow(
  *
  * TkMacOSXDrawableWindow --
  *
- *	This function returns the NSWindow for a given X drawable.
+ *	This function returns the NSWindow for a given X drawable, if the
+ *      drawable is a window.  If the drawable is a pixmap it returns nil.
  *
  * Results:
  *	A NSWindow, or nil for off screen pixmaps.
@@ -1134,7 +1135,9 @@ TkMacOSXGetDrawablePort(
  *
  * TkMacOSXDrawableView --
  *
- *	This function returns the NSView for a given X drawable.
+ *	This function returns the NSView for a given X drawable in the
+ *      case that the drawable is a window.  If the drawable is a pixmap
+ *      it returns nil.
  *
  * Results:
  *	A NSView* or nil.
@@ -1145,8 +1148,8 @@ TkMacOSXGetDrawablePort(
  *----------------------------------------------------------------------
  */
 
-void *
-TkMacOSXGetRootControl(
+NSView *
+TkMacOSXDrawableView(
     Drawable drawable)
 {
     void *result = NULL;
@@ -1162,7 +1165,7 @@ TkMacOSXGetRootControl(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXGetRootControl((Drawable)contWinPtr->privatePtr);
+	    result = TkMacOSXDrawableView((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;

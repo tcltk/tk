@@ -1109,39 +1109,23 @@ declare 0 aqua {
 	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 }
 declare 1 aqua {
-    void Tk_MacOSXTurnOffMenus(void)
+    void Tk_MacOSXSetupTkNotifier(void)
 }
 declare 2 aqua {
-    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
-}
-declare 3 aqua {
     void TkMacOSXInitMenus(Tcl_Interp *interp)
 }
-declare 4 aqua {
+declare 3 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
-declare 5 aqua {
+declare 4 aqua {
     void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
-declare 6 aqua {
+declare 5 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
-declare 7 aqua {
-    void *TkMacOSXGetDrawablePort(Drawable drawable)
-}
-declare 8 aqua {
-    void *TkMacOSXGetRootControl(Drawable drawable)
-}
-declare 9 aqua {
-    void Tk_MacOSXSetupTkNotifier(void)
-}
-declare 10 aqua {
+declare 6 aqua {
     int Tk_MacOSXIsAppInFront(void)
-}
-declare 16 aqua {
-    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
-	    int height, int flags)
 }
 
 ##############################################################################
