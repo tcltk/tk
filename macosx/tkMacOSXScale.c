@@ -149,8 +149,6 @@ TkpDisplayScale(
     MacScale *macScalePtr = clientData;
     Rect r;
     WindowRef windowRef;
-    CGrafPtr destPort, savePort;
-    Boolean portChanged;
     MacDrawable *macDraw;
     SInt32 initialValue, minValue, maxValue;
     UInt16 numTicks;
@@ -216,9 +214,7 @@ TkpDisplayScale(
      */
 
     macDraw = (MacDrawable *) Tk_WindowId(tkwin);
-    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
     windowRef = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
-    portChanged = QDSwapPort(destPort, &savePort);
 
     /*
      * Create Macintosh control.
@@ -292,9 +288,6 @@ TkpDisplayScale(
     HiliteControl(macScalePtr->scaleHandle, 0);
     Draw1Control(macScalePtr->scaleHandle);
 
-    if (portChanged) {
-	QDSwapPort(savePort, NULL);
-    }
 done:
     scalePtr->flags &= ~REDRAW_ALL;
 }
@@ -326,14 +319,10 @@ TkpScaleElement(
     ControlPartCode part;
     Point where;
     Rect bounds;
-    CGrafPtr destPort, savePort;
-    Boolean portChanged;
 
 #ifdef TK_MAC_DEBUG_SCALE
     TkMacOSXDbgMsg("TkpScaleElement");
 #endif
-    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(scalePtr->tkwin));
-    portChanged = QDSwapPort(destPort, &savePort);
 
     /*
      * All of the calculations in this procedure mirror those in
@@ -344,10 +333,6 @@ TkpScaleElement(
     where.h = x + bounds.left;
     where.v = y + bounds.top;
     part = TestControl(macScalePtr->scaleHandle, where);
-
-    if (portChanged) {
-	QDSwapPort(savePort, NULL);
-    }
 
 #ifdef TK_MAC_DEBUG_SCALE
     fprintf (stderr,"ScalePart %d, pos ( %d %d )\n", part, where.h, where.v );
@@ -400,8 +385,6 @@ MacScaleEventProc(
     Point where;
     Rect bounds;
     int part;
-    CGrafPtr destPort, savePort;
-    Boolean portChanged;
 
 #ifdef TK_MAC_DEBUG_SCALE
     fprintf(stderr,"MacScaleEventProc\n" );
@@ -413,13 +396,6 @@ MacScaleEventProc(
      * control was hit and act accordingly.
      */
 
-    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(macScalePtr->info.tkwin));
-    portChanged = QDSwapPort(destPort, &savePort);
-
-    TkMacOSXWinBounds((TkWindow *) macScalePtr->info.tkwin, &bounds);
-    where.h = eventPtr->xbutton.x + bounds.left;
-    where.v = eventPtr->xbutton.y + bounds.top;
-#ifdef TK_MAC_DEBUG_SCALE
     TkMacOSXDbgMsg("calling TestControl");
 #endif
     part = TestControl(macScalePtr->scaleHandle, where);
@@ -445,10 +421,6 @@ MacScaleEventProc(
      */
 
     TkGenerateButtonEventForXPointer(Tk_WindowId(macScalePtr->info.tkwin));
-
-    if (portChanged) {
-	QDSwapPort(savePort, NULL);
-    }
 }
 
 /*

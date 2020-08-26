@@ -714,7 +714,7 @@ XConfigureWindow(
      */
 
     if (value_mask & CWStackMode) {
-	NSView *view = TkMacOSXDrawableView(macWin);
+	NSView *view = TkMacOSXDrawableView(w);
 
 	if (view) {
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
@@ -866,15 +866,6 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		    ChkErr(HIShapeIntersect,
 			    win2Ptr->privatePtr->aboveVisRgn, rgn, rgn);
-		} else if (tkMacOSXEmbedHandler != NULL) {
-		    Region r = XCreateRegion();
-		    HIShapeRef visRgn;
-
-		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr, r);
-		    visRgn = TkMacOSXGetNativeRegion(r);
-		    ChkErr(HIShapeIntersect, visRgn, rgn, rgn);
-		    CFRelease(visRgn);
-		    TkDestroyRegion(r);
 		}
 
 		/*
@@ -1071,7 +1062,8 @@ TkMacOSXInvalidateWindow(
  *
  * TkMacOSXDrawableWindow --
  *
- *	This function returns the NSWindow for a given X drawable.
+ *	This function returns the NSWindow for a given X drawable, if the
+ *      drawable is a window.  If the drawable is a pixmap it returns nil.
  *
  * Results:
  *	A NSWindow, or nil for off screen pixmaps.
@@ -1143,7 +1135,9 @@ TkMacOSXGetDrawablePort(
  *
  * TkMacOSXDrawableView --
  *
- *	This function returns the NSView for a given X drawable.
+ *	This function returns the NSView for a given X drawable in the
+ *      case that the drawable is a window.  If the drawable is a pixmap
+ *      it returns nil.
  *
  * Results:
  *	A NSView* or nil.
@@ -1156,12 +1150,13 @@ TkMacOSXGetDrawablePort(
 
 NSView *
 TkMacOSXDrawableView(
-    MacDrawable *macWin)
+    Drawable drawable)
 {
-    NSView *result = nil;
+    void *result = NULL;
+    MacDrawable *macWin = (MacDrawable *)drawable;
 
     if (!macWin) {
-	result = nil;
+	result = NULL;
     } else if (!macWin->toplevel) {
 	result = macWin->view;
     } else if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
@@ -1170,37 +1165,10 @@ TkMacOSXDrawableView(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXDrawableView(contWinPtr->privatePtr);
+	    result = TkMacOSXDrawableView((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetRootControl --
- *
- *	This function returns the NSView for a given X drawable.
- *
- * Results:
- *	A NSView* .
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void *
-TkMacOSXGetRootControl(
-    Drawable drawable)
-{
-    /*
-     * will probably need to fix this up for embedding
-     */
-
-    return TkMacOSXDrawableView((MacDrawable *) drawable);
 }
 
 /*
