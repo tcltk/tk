@@ -427,7 +427,7 @@ TkpWillDrawWidget(Tk_Window tkwin) {
     if (tkwin) {
 	TkWindow *winPtr = (TkWindow *)tkwin;
 	TKContentView *view = (TKContentView *) TkMacOSXDrawableView(
-						    winPtr->privatePtr);
+	    (Drawable)winPtr->privatePtr);
 	result = ([NSApp isDrawing] && view == [NSView focusView]);
 #if 0
 	printf("TkpWillDrawWidget: %s %d  %d \n", Tk_PathName(tkwin),

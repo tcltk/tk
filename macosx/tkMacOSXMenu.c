@@ -91,9 +91,6 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
-				 * the flag that Tk is not to draw any
-				 * menus. */
 static int inPostMenu = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
@@ -490,10 +487,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkSetMainMenu: (TKMenu *) menu
 {
-    if (gNoTkMenus) {
-	return;
-    }
-
     TKMenu *applicationMenu = nil;
 
     if (menu) {
@@ -898,7 +891,7 @@ TkpPostMenu(
 	 * rather than the appearance of the root window.
 	 */
 	realWinPtr = (TkWindow*) realWin;
-	realWinView = TkMacOSXDrawableView(realWinPtr->privatePtr);
+	realWinView = TkMacOSXDrawableView((Drawable)(realWinPtr->privatePtr));
 	if (realWinView != nil) {
 	    break;
 	}
@@ -1657,30 +1650,6 @@ TkMacOSXClearMenubarActive(void)
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MacOSXTurnOffMenus --
- *
- *	Turns off all the menu drawing code. This is more than just disabling
- *	the "menu" command, this means that Tk will NEVER touch the menubar.
- *	It is needed in the Plugin, where Tk does not own the menubar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A flag is set which will disable all menu drawing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_MacOSXTurnOffMenus(void)
-{
-    gNoTkMenus = 1;
 }
 
 /*

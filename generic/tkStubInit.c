@@ -44,6 +44,14 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
+#define Tk_MacOSXTkOwnsCursor (void (*)(int))(void *)doNothing
+#define Tk_MacOSXTurnOffMenus (void (*)(void))(void *)doNothing
+#define TkMacOSXInitMenus (void (*)(Tcl_Interp *))(void *)doNothing
+#define Tk_MacOSXSetEmbedHandler (void (*)(Tk_MacOSXEmbedRegisterWinProc *, \
+	Tk_MacOSXEmbedGetGrafPortProc *, \
+	Tk_MacOSXEmbedMakeContainerExistProc *, \
+	Tk_MacOSXEmbedGetClipProc *, \
+	Tk_MacOSXEmbedGetOffsetInParentProc *))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -102,11 +110,6 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkWmCleanup_ TkWmCleanup
 #define TkSendCleanup_ TkSendCleanup
 #define TkpTestsendCmd_ TkpTestsendCmd
-#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
-#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
-#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
-#define TkMacOSXInitMenus_ TkMacOSXInitMenus
-#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 #define Tk_CanvasTagsParseProc \
@@ -591,7 +594,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXButtonKeyState, /* 8 */
     TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
-    TkMacOSXInstallCursor, /* 11 */
+    0, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
@@ -1027,22 +1030,12 @@ static const TkPlatStubs tkPlatStubs = {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
-    TkMacOSXInitMenus, /* 3 */
-    TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent, /* 5 */
-    TkMacOSXInvalClipRgns, /* 6 */
-    TkMacOSXGetDrawablePort, /* 7 */
-    TkMacOSXGetRootControl, /* 8 */
-    Tk_MacOSXSetupTkNotifier, /* 9 */
-    Tk_MacOSXIsAppInFront, /* 10 */
-    Tk_MacOSXSetEmbedHandler_, /* 11 */
-    Tk_MacOSXTurnOffMenus_, /* 12 */
-    Tk_MacOSXTkOwnsCursor_, /* 13 */
-    TkMacOSXInitMenus_, /* 14 */
-    TkMacOSXInitAppleEvents_, /* 15 */
-    TkGenWMConfigureEvent_, /* 16 */
+    Tk_MacOSXSetupTkNotifier, /* 1 */
+    TkMacOSXInitMenus, /* 2 */
+    TkMacOSXInitAppleEvents, /* 3 */
+    TkGenWMConfigureEvent, /* 4 */
+    TkMacOSXInvalClipRgns, /* 5 */
+    Tk_MacOSXIsAppInFront, /* 6 */
 #endif /* AQUA */
 };
 
