@@ -1135,7 +1135,7 @@ TkMacOSXGetDrawablePort(
  *
  * TkMacOSXDrawableView --
  *
- *	This function returns the NSView for a given X drawable in the
+ *	This function returns the TKContentView for a given X drawable in the
  *      case that the drawable is a window.  If the drawable is a pixmap
  *      it returns nil.
  *
