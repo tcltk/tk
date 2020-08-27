@@ -29,6 +29,7 @@ typedef int (Tk_MacOSXEmbedMakeContainerExistProc) (Tk_Window window);
 typedef void (Tk_MacOSXEmbedGetClipProc) (Tk_Window window, TkRegion rgn);
 typedef void (Tk_MacOSXEmbedGetOffsetInParentProc) (Tk_Window window, void *ulCorner);
 
+#import <Cocoa/Cocoa.h>
 #include "tkPlatDecls.h"
 
 #endif /* _TKMAC */

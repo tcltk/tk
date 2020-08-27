@@ -1128,10 +1128,10 @@ declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
 declare 7 aqua {
-    void *TkMacOSXGetDrawablePort(Drawable drawable)
+    CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable)
 }
 declare 8 aqua {
-    void *TkMacOSXGetRootControl(Drawable drawable)
+    NSView *TkMacOSXGetNSViewForDrawable(Drawable drawable)
 }
 declare 9 aqua {
     void Tk_MacOSXSetupTkNotifier(void)

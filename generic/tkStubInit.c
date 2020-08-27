@@ -1009,8 +1009,8 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXInitAppleEvents, /* 4 */
     TkGenWMConfigureEvent, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
-    TkMacOSXGetDrawablePort, /* 7 */
-    TkMacOSXGetRootControl, /* 8 */
+    TkMacOSXGetCGContextForDrawable, /* 7 */
+    TkMacOSXGetNSViewForDrawable, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
     0, /* 11 */
