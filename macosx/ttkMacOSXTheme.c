@@ -3132,7 +3132,7 @@ static void TreeAreaElementSize (
     TCL_UNUSED(Tk_Window), /* tkwin */
     TCL_UNUSED(int *),     /* minWidth */
     TCL_UNUSED(int *),     /* minHeight */
-    TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
+    Ttk_Padding *paddingPtr)
 {
 
     /*
