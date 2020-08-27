@@ -595,7 +595,7 @@ UpdateControlValues(
     HIRect contrlRect;
     short width, height;
 
-    NSView *view = TkMacOSXDrawableView((Drawable) macWin);
+    NSView *view = TkMacOSXDrawableView(macWin);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 

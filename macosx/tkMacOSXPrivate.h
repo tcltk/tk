@@ -272,7 +272,6 @@ MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
 MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
 			    int active);
 MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView*    TkMacOSXDrawableView(Drawable drawable);
 MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
@@ -446,6 +445,8 @@ VISIBILITY_HIDDEN
 - (NSPoint) tkConvertPointToScreen:(NSPoint)point;
 - (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
 @end
+
+MODULE_SCOPE TKContentView*    TkMacOSXDrawableView(MacDrawable *macWin);
 
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow

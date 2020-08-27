@@ -411,7 +411,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXDrawableView((Drawable)(winPtr->privatePtr));
+	    view = TkMacOSXDrawableView((MacDrawable *)(winPtr->privatePtr));
 	}
 	if (view) {
 	    name = [[view effectiveAppearance] name];
@@ -709,7 +709,7 @@ TkpGetColor(
     if (tkwin) {
 	display = Tk_Display(tkwin);
 	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
-	view = TkMacOSXDrawableView((Drawable) macWin);
+	view = TkMacOSXDrawableView(macWin);
     }
 
     /*

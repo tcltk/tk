@@ -531,7 +531,7 @@ CreateCGImageFromDrawableRect(
 	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
 	    CGImageRelease(cg_image);
 	}
-    } else if (TkMacOSXDrawableView(drawable) != NULL) {
+    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
