@@ -1005,7 +1005,7 @@ Tk_GetUserInactiveTime(
     uint64_t time;
     IOReturn result;
 
-    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+    regEntry = IOServiceGetMatchingService(0,
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {
