@@ -1597,7 +1597,7 @@ test wm-title-2.1 {setting and reading values} -setup {
 test wm-transient-1.1 {usage} -returnCodes error -body {
     catch {destroy .t} ; toplevel .t
     wm transient .t 1 2
-} -result {wrong # args: should be "wm transient window ?master?"}
+} -result {wrong # args: should be "wm transient window ?window?"}
 test wm-transient-1.2 {usage} -returnCodes error -body {
     catch {destroy .t} ; toplevel .t
     wm transient .t foo
@@ -1632,13 +1632,13 @@ test wm-transient-1.6 {usage} -returnCodes error -body {
     wm transient .dummy .icon
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a master: it is an icon for .top}
+} -result {can't make ".icon" a container: it is an icon for .top}
 test wm-transient-1.7 {usage} -returnCodes error -body {
     toplevel .master
     wm transient .master .master
 } -cleanup {
     deleteWindows
-} -result {setting ".master" as master creates a transient/master cycle}
+} -result {setting ".master" as container creates a transient/container cycle}
 test wm-transient-1.8 {usage} -returnCodes error -body {
     toplevel .t1
     toplevel .t2
@@ -1648,14 +1648,14 @@ test wm-transient-1.8 {usage} -returnCodes error -body {
     wm transient .t1 .t3
 } -cleanup {
     deleteWindows
-} -result {setting ".t3" as master creates a transient/master cycle}
+} -result {setting ".t3" as container creates a transient/container cycle}
 test wm-transient-1.9 {usage} -returnCodes error -body {
     toplevel .master
     frame .master.f
     wm transient .master .master.f
 } -cleanup {
     deleteWindows
-} -result {setting ".master" as master creates a transient/master cycle}
+} -result {setting ".master" as container creates a transient/container cycle}
 
 test wm-transient-2.1 {basic get/set of master} -setup {
     set results [list]
