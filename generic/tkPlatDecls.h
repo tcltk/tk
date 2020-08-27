@@ -66,7 +66,8 @@ EXTERN void		TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
 /* 6 */
 EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
 /* Slot 7 is reserved */
-/* Slot 8 is reserved */
+/* 8 */
+EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
 /* 9 */
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
@@ -94,7 +95,7 @@ typedef struct TkPlatStubs {
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
     void (*reserved7)(void);
-    void (*reserved8)(void);
+    void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
 #endif /* AQUA */
@@ -138,7 +139,8 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #define TkMacOSXInvalClipRgns \
 	(tkPlatStubsPtr->tkMacOSXInvalClipRgns) /* 6 */
 /* Slot 7 is reserved */
-/* Slot 8 is reserved */
+#define TkMacOSXGetRootControl \
+	(tkPlatStubsPtr->tkMacOSXGetRootControl) /* 8 */
 #define Tk_MacOSXSetupTkNotifier \
 	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
 #define Tk_MacOSXIsAppInFront \
