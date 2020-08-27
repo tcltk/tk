@@ -1150,7 +1150,7 @@ TkMacOSXGetDrawablePort(
  *      function and should always be used rather than directly using the
  *      obscure official name of this function.
  *
- *      It returns the TkContentView for a given X drawable in the case that the
+ *      It returns the TKContentView for a given X drawable in the case that the
  *      drawable is a window.  If the drawable is a pixmap it returns nil.
  *
  * Results:

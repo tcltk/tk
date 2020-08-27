@@ -1214,7 +1214,7 @@ static const char *const accentNames[] = {
 
 /*
  * When the services menu is opened this is called for each Responder in
- * the Responder chain until a service provider is found.  The TkContentView
+ * the Responder chain until a service provider is found.  The TKContentView
  * should be the first (and generally only) Responder in the chain.  We
  * return the TkServices object that was created in TkpInit.
  */
