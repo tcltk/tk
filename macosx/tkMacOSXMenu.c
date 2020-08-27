@@ -894,7 +894,7 @@ TkpPostMenu(
 	 * rather than the appearance of the root window.
 	 */
 	realWinPtr = (TkWindow*) realWin;
-	realWinView = TkMacOSXDrawableView((Drawable)(realWinPtr->privatePtr));
+	realWinView = TkMacOSXDrawableView((MacDrawable *)(realWinPtr->privatePtr));
 	if (realWinView != nil) {
 	    break;
 	}

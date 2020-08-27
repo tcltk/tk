@@ -1100,31 +1100,20 @@ declare 5 win {
 ################################
 # Aqua specific functions
 
-declare 0 aqua {
-    void Tk_MacOSXSetEmbedHandler(
-	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacOSXEmbedGetClipProc *getClipProc,
-	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
-}
-declare 1 aqua {
-    void Tk_MacOSXSetupTkNotifier(void)
-}
-declare 2 aqua {
-    void TkMacOSXInitMenus(Tcl_Interp *interp)
-}
-declare 3 aqua {
+declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
-declare 4 aqua {
+declare 5 aqua {
     void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
-declare 5 aqua {
+declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
-declare 6 aqua {
+declare 9 aqua {
+    void Tk_MacOSXSetupTkNotifier(void)
+}
+declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
 

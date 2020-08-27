@@ -797,8 +797,6 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkpTestsendCmd_
 #undef TkGenerateActivateEvents_
 #undef TkMacOSXSetUpClippingRgn
-#undef Tk_MacOSXTkOwnsCursor
-#undef Tk_MacOSXTurnOffMenus
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

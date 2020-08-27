@@ -44,14 +44,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
-#define Tk_MacOSXTkOwnsCursor (void (*)(int))(void *)doNothing
-#define Tk_MacOSXTurnOffMenus (void (*)(void))(void *)doNothing
-#define TkMacOSXInitMenus (void (*)(Tcl_Interp *))(void *)doNothing
-#define Tk_MacOSXSetEmbedHandler (void (*)(Tk_MacOSXEmbedRegisterWinProc *, \
-	Tk_MacOSXEmbedGetGrafPortProc *, \
-	Tk_MacOSXEmbedMakeContainerExistProc *, \
-	Tk_MacOSXEmbedGetClipProc *, \
-	Tk_MacOSXEmbedGetOffsetInParentProc *))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -1029,13 +1021,17 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_TranslateWinEvent, /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXSetupTkNotifier, /* 1 */
-    TkMacOSXInitMenus, /* 2 */
-    TkMacOSXInitAppleEvents, /* 3 */
-    TkGenWMConfigureEvent, /* 4 */
-    TkMacOSXInvalClipRgns, /* 5 */
-    Tk_MacOSXIsAppInFront, /* 6 */
+    0, /* 0 */
+    0, /* 1 */
+    0, /* 2 */
+    0, /* 3 */
+    TkMacOSXInitAppleEvents, /* 4 */
+    TkGenWMConfigureEvent, /* 5 */
+    TkMacOSXInvalClipRgns, /* 6 */
+    0, /* 7 */
+    0, /* 8 */
+    Tk_MacOSXSetupTkNotifier, /* 9 */
+    Tk_MacOSXIsAppInFront, /* 10 */
 #endif /* AQUA */
 };
 
