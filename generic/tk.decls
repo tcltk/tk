@@ -1119,8 +1119,7 @@ declare 7 aqua {
     void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
 }
 declare 8 aqua {
-    # Formerly named TkMacOSXGetRootControl (????)
-    void *TkMacOSXDrawableView(Drawable drawable)
+    void *TkMacOSXGetRootControl(Drawable drawable)
 }
 declare 9 aqua {
     void Tk_MacOSXSetupTkNotifier(void)

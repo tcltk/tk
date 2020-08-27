@@ -1029,7 +1029,7 @@ static const TkPlatStubs tkPlatStubs = {
     TkGenWMConfigureEvent, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
     0, /* 7 */
-    0, /* 8 */
+    TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
 #endif /* AQUA */

@@ -1110,12 +1110,19 @@ TkMacOSXDrawable(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetDrawablePort --
+ * TkMacOSXDrawableView/TkMacOSXGetRootControl --
  *
- *	This function returns the Graphics Port for a given X drawable.
+ *	The function name TkMacOSXGetRootControl is being preserved only
+ *      because it exists in a stubs table.  Nobody knows what it means to
+ *      get a "RootControl".  The macro TkMacOSXDrawableView calls this
+ *      function and should always be used rather than directly using the
+ *      obscure official name of this function.
+ *
+ *      It returns the TKContentView for a given X drawable in the case that the
+ *      drawable is a window.  If the drawable is a pixmap it returns nil.
  *
  * Results:
- *	NULL.
+ *	A NSView* or nil.
  *
  * Side effects:
  *	None.
@@ -1124,35 +1131,11 @@ TkMacOSXDrawable(
  */
 
 void *
-TkMacOSXGetDrawablePort(
-    TCL_UNUSED(Drawable))
-{
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXDrawableView --
- *
- *	This function returns the TKContentView for a given X drawable in the
- *      case that the drawable is a window.  If the drawable is a pixmap
- *      it returns nil.
- *
- * Results:
- *	A TKDrawableView* or nil.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-TKContentView *
-TkMacOSXDrawableView(
-    MacDrawable *macWin)
+TkMacOSXGetRootControl(
+    Drawable drawable)
 {
     void *result = NULL;
+    MacDrawable *macWin = (MacDrawable *)drawable;
 
     if (!macWin) {
 	result = NULL;
@@ -1164,7 +1147,7 @@ TkMacOSXDrawableView(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXDrawableView(contWinPtr->privatePtr);
+	    result = TkMacOSXGetRootControl((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;
