@@ -207,7 +207,7 @@ CreateNSImageFromPixmap(
     CGImageRef cgImage;
     NSImage *nsImage;
     NSBitmapImageRep *bitmapImageRep;
-    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
+    CGContextRef context = TkMacOSXCGContext(pixmap);
 
     if (context) {
 	cgImage = CGBitmapContextCreateImage(context);
@@ -1140,7 +1140,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
-    TKContentView *view = TkMacOSXDrawableView(macDraw);
+    TKContentView *view = TkMacOSXContentView(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1271,7 +1271,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = TkMacOSXDrawableView(macDraw);
+	view = TkMacOSXContentView(macDraw);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
@@ -1295,7 +1295,7 @@ TkMacOSXSetupDrawingContext(
      * drawing to a window and we use the current context of its ContentView.
      */
 
-    dc.context = TkMacOSXGetCGContextForDrawable(d);
+    dc.context = TkMacOSXCGContext(d);
     if (dc.context) {
 	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
     } else {
@@ -1523,7 +1523,7 @@ TkMacOSXGetClipRgn(
 #ifdef TK_MAC_DEBUG_DRAWING
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	NSView *view = TkMacOSXContentView(macDraw);
 	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);

@@ -538,13 +538,13 @@ CreateCGImageFromDrawableRect(
 
 	CGRect image_rect = CGRectMake(x, y, width, height);
 
-	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
+	cg_context = TkMacOSXCGContext(drawable);
 	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
 	if (cg_image) {
 	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
 	    CGImageRelease(cg_image);
 	}
-    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
+    } else if (TkMacOSXContentView(mac_drawable) != NULL) {
 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
@@ -597,7 +597,7 @@ CreateCGImageFromPixmap(
     Drawable pixmap)
 {
     CGImageRef img = NULL;
-    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
+    CGContextRef context = TkMacOSXCGContext(pixmap);
 
     if (context) {
 	img = CGBitmapContextCreateImage(context);

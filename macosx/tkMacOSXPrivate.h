@@ -237,6 +237,17 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 			    HIShapeRef inShape2, HIMutableShapeRef outResult);
 
 /*
+ * Prototypes of TkAqua internal procedures which are also declared as stubs.
+ */
+
+EXTERN NSView*      TkMacOSXGetNSViewForDrawable(Drawable drawable);
+#define TkMacOSXContentView(object) \
+    (TKContentView *) TkMacOSXGetNSViewForDrawable((Drawable) (object))
+EXTERN CGContextRef   TkMacOSXGetCGContextForDrawable(Drawable drawable);
+#define TkMacOSXCGContext(object) \
+    (CGContextRef) TkMacOSXGetCGContextForDrawable((Drawable) (object))
+
+/*
  * Prototypes of TkAqua internal procs.
  */
 
@@ -271,12 +282,10 @@ MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
 MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
 			    int active);
 MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-#define TkMacOSXDrawableView(macWin) (TKContentView *)TkMacOSXGetRootControl((Drawable)(macWin))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
-MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
