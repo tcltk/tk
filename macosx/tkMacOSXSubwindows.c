@@ -1142,15 +1142,15 @@ TkMacOSXGetDrawablePort(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXDrawableView --
+ * TkMacOSXDrawableView/TkMacOSXGetRootControl --
  *
  *	The function name TkMacOSXGetRootControl is being preserved only
  *      because it exists in a stubs table.  Nobody knows what it means to
  *      get a "RootControl".  The macro TkMacOSXDrawableView calls this
  *      function and should always be used rather than directly using the
  *      obscure official name of this function.
- * 
- *      It returns the NSView for a given X drawable in the case that the
+ *
+ *      It returns the TkContentView for a given X drawable in the case that the
  *      drawable is a window.  If the drawable is a pixmap it returns nil.
  *
  * Results:

@@ -1140,7 +1140,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
-    TKContentView *view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+    TKContentView *view = TkMacOSXDrawableView(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1271,7 +1271,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+	view = TkMacOSXDrawableView(macDraw);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
