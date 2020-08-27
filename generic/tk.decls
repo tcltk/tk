@@ -1099,7 +1099,9 @@ declare 5 win {
 
 ################################
 # Aqua specific functions
-
+declare 3 aqua {
+    void TkMacOSXInitMenus(Tcl_Interp *interp)
+}
 declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
@@ -1109,6 +1111,16 @@ declare 5 aqua {
 }
 declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
+}
+declare 7 aqua {
+    # Formerly named TkMacOSXGetDrawablePort. For a long time it just returned NULL.
+    # This is a guess of something that would be useful and may have been the intended
+    # purpose.
+    void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
+}
+declare 8 aqua {
+    # Formerly named TkMacOSXGetRootControl (????)
+    void *TkMacOSXDrawableView(Drawable drawable)
 }
 declare 9 aqua {
     void Tk_MacOSXSetupTkNotifier(void)
