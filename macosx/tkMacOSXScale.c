@@ -214,7 +214,7 @@ TkpDisplayScale(
      */
 
     macDraw = (MacDrawable *) Tk_WindowId(tkwin);
-    windowRef = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    windowRef = TkMacOSXNSWindow(Tk_WindowId(tkwin));
 
     /*
      * Create Macintosh control.

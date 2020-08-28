@@ -65,9 +65,10 @@ EXTERN void		TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
 				int width, int height, int flags);
 /* 6 */
 EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
-/* Slot 7 is reserved */
+/* 7 */
+EXTERN CGContextRef	TkMacOSXGetCGContextForDrawable(Drawable drawable);
 /* 8 */
-EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
+EXTERN void *		TkMacOSXGetNSViewForDrawable(Drawable drawable);
 /* 9 */
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
@@ -94,8 +95,8 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
-    void (*reserved7)(void);
-    void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
+    CGContextRef (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 7 */
+    void * (*tkMacOSXGetNSViewForDrawable) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
 #endif /* AQUA */
@@ -138,9 +139,10 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tkGenWMConfigureEvent) /* 5 */
 #define TkMacOSXInvalClipRgns \
 	(tkPlatStubsPtr->tkMacOSXInvalClipRgns) /* 6 */
-/* Slot 7 is reserved */
-#define TkMacOSXGetRootControl \
-	(tkPlatStubsPtr->tkMacOSXGetRootControl) /* 8 */
+#define TkMacOSXGetCGContextForDrawable \
+	(tkPlatStubsPtr->tkMacOSXGetCGContextForDrawable) /* 7 */
+#define TkMacOSXGetNSViewForDrawable \
+	(tkPlatStubsPtr->tkMacOSXGetNSViewForDrawable) /* 8 */
 #define Tk_MacOSXSetupTkNotifier \
 	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
 #define Tk_MacOSXIsAppInFront \
@@ -157,6 +159,19 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #undef Tk_MacOSXSetEmbedHandler
 #undef Tk_MacOSXTurnOffMenus
 
+/*
+ * Compatibility macros for stubs which have been renamed.  These
+ * allow building extensions even if they still use the old name for
+ * the stub.
+ */
+ 
+#define TkMacOSXGetRootControl(drawable) \
+      (TkMacOSXGetNSViewForDrawable((Drawable) (drawable)))
+#define TkMacOSXGetDrawablePort(drawable) \
+      (TkMacOSXGetCGContextForDrawable((Drawable) (drawable)))
+#define TkMacOSXGetDrawable(drawable) \
+      (TkMacOSXGetNSWindowForDrawable((Drawable) (drawable)))
+	
 #ifdef __cplusplus
 }
 #endif
