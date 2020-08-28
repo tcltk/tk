@@ -1042,9 +1042,8 @@ declare 52 aqua {
 declare 53 aqua {
     unsigned long TkpGetMS(void)
 }
-# For Canvas3d, requested by Sean Woods
 declare 54 aqua {
-    void *TkMacOSXDrawable(Drawable drawable)
+    void *TkMacOSXGetNSWindowForDrawable(Drawable drawable)
 }
 declare 55 aqua {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)

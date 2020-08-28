@@ -175,7 +175,7 @@ static void drawMacScrollbar(
     CGContextRef context)
 {
     Drawable d = (Drawable)Tk_WindowId(scrollPtr->tkwin);
-    NSView *view = TkMacOSXDrawableView(d);
+    NSView *view = TkMacOSXContentView(d);
     CGPathRef path;
     CGPoint inner[2], outer[2], thumbOrigin;
     CGSize thumbSize;
@@ -259,7 +259,7 @@ TkpDisplayScrollbar(
     }
 
     MacDrawable *macWin = (MacDrawable *) winPtr->window;
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXContentView(macWin);
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
@@ -595,7 +595,7 @@ UpdateControlValues(
     HIRect contrlRect;
     short width, height;
 
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXContentView(macWin);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 

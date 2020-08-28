@@ -141,7 +141,7 @@ XMapWindow(
     }
     MacDrawable *macWin = (MacDrawable *) window;
     TkWindow *winPtr = macWin->winPtr;
-    NSWindow *win = TkMacOSXDrawableWindow(window);
+    NSWindow *win = TkMacOSXNSWindow(window);
     XEvent event;
 
     /*
@@ -300,7 +300,7 @@ XUnmapWindow(
     MacDrawable *macWin = (MacDrawable *) window;
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
-    NSWindow *win = TkMacOSXDrawableWindow(window);
+    NSWindow *win = TkMacOSXNSWindow(window);
     XEvent event;
 
     display->request++;
@@ -341,7 +341,7 @@ XUnmapWindow(
 
 	if (parentPtr && parentPtr->privatePtr->visRgn) {
 	    TkMacOSXInvalidateViewRegion(
-		    TkMacOSXDrawableView(parentPtr->privatePtr),
+		    TkMacOSXContentView(parentPtr->privatePtr),
 		    parentPtr->privatePtr->visRgn);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) parentPtr);
@@ -515,7 +515,7 @@ MoveResizeWindow(
 {
     int deltaX = 0, deltaY = 0, parentBorderwidth = 0;
     MacDrawable *macParent = NULL;
-    NSWindow *macWindow = TkMacOSXDrawableWindow((Drawable)macWin);
+    NSWindow *macWindow = TkMacOSXNSWindow(macWin);
 
     /*
      * Find the Parent window, for an embedded window it will be its container.
@@ -714,7 +714,7 @@ XConfigureWindow(
      */
 
     if (value_mask & CWStackMode) {
-	NSView *view = TkMacOSXDrawableView(macWin);
+	NSView *view = TkMacOSXContentView(macWin);
 
 	if (view) {
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
@@ -1053,20 +1053,23 @@ TkMacOSXInvalidateWindow(
     if (macWin->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macWin->winPtr);
     }
-    TkMacOSXInvalidateViewRegion(TkMacOSXDrawableView(macWin),
+    TkMacOSXInvalidateViewRegion(TkMacOSXContentView(macWin),
 	    (flag == TK_WINDOW_ONLY) ? macWin->visRgn : macWin->aboveVisRgn);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXDrawableWindow --
+ * TkMacOSXGetNSWindowForDrawable --
  *
- *	This function returns the NSWindow for a given X drawable, if the
- *      drawable is a window.  If the drawable is a pixmap it returns nil.
+ *      This is a stub function which returns the NSWindow for a given X
+ *      drawable in the case that the drawable is a window.  If the drawable is
+ *      a pixmap it returns nil.  The stub is aliased to an older stub named
+ *      TkMacOSXDrawable.  This must have return type void * to match the
+ *      old one.
  *
  * Results:
- *	A NSWindow, or nil for off screen pixmaps.
+ *	An NSWindow* (cast as a void*), or nil for a pixmap.
  *
  * Side effects:
  *	None.
@@ -1074,8 +1077,8 @@ TkMacOSXInvalidateWindow(
  *----------------------------------------------------------------------
  */
 
-NSWindow *
-TkMacOSXDrawableWindow(
+EXTERN void *
+TkMacOSXGetNSWindowForDrawable(
     Drawable drawable)
 {
     MacDrawable *macWin = (MacDrawable *) drawable;
@@ -1094,44 +1097,35 @@ TkMacOSXDrawableWindow(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXDrawableWindow((Drawable)contWinPtr->privatePtr);
+	    result = TkMacOSXGetNSWindowForDrawable(
+			 (Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;
 }
-
-void *
-TkMacOSXDrawable(
-    Drawable drawable)
-{
-    return TkMacOSXDrawableWindow(drawable);
-}
 
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXDrawableView/TkMacOSXGetRootControl --
- *
- *	The function name TkMacOSXGetRootControl is being preserved only
- *      because it exists in a stubs table.  Nobody knows what it means to
- *      get a "RootControl".  The macro TkMacOSXDrawableView calls this
- *      function and should always be used rather than directly using the
- *      obscure official name of this function.
- *
- *      It returns the TKContentView for a given X drawable in the case that the
- *      drawable is a window.  If the drawable is a pixmap it returns nil.
- *
- * Results:
- *	A NSView* or nil.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
+ /*
+  *----------------------------------------------------------------------
+  *
+  * TkMacOSXGetNSViewForDrawable --
+  *
+  *      This is a stub function which returns the TkContentView for a given X
+  *      drawable in the case that the drawable is a window.  If the drawable is
+  *      a pixmap it returns nil.  The stub is aliased to an older stub named
+  *      TkMacOSXGetRootControl.  This must have return type void * to match the
+  *      old one.
+  *
+  * Results:
+  *	An NSView* (cast as a void*) or nil.
+  *
+  * Side effects:
+  *	None.
+  *
+  *----------------------------------------------------------------------
+  */
 
 void *
-TkMacOSXGetRootControl(
+TkMacOSXGetNSViewForDrawable(
     Drawable drawable)
 {
     void *result = NULL;
@@ -1147,7 +1141,7 @@ TkMacOSXGetRootControl(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXGetRootControl((Drawable)contWinPtr->privatePtr);
+	    result = TkMacOSXGetNSViewForDrawable((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;

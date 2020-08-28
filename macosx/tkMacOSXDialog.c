@@ -818,7 +818,7 @@ Tk_GetOpenFileObjCmd(
 	[openpanel setDirectoryURL:fileURL];
     }
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXNSWindow(((TkWindow *) tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1104,7 +1104,7 @@ Tk_GetSaveFileObjCmd(
 	[savepanel setNameFieldStringValue:@""];
     }
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXNSWindow(((TkWindow *) tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1246,10 +1246,10 @@ Tk_ChooseDirectoryObjCmd(
     if (!directory) {
 	directory = @"/";
     }
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+    parent = TkMacOSXNSWindow(((TkWindow *) tkwin)->window);
     [panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXNSWindow(((TkWindow *) tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1535,7 +1535,7 @@ Tk_MessageBoxObjCmd(
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+    parent = TkMacOSXNSWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
 	parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090

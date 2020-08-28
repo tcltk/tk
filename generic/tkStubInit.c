@@ -629,7 +629,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkGenWMDestroyEvent, /* 51 */
     TkMacOSXSetDrawingEnabled, /* 52 */
     TkpGetMS, /* 53 */
-    TkMacOSXDrawable, /* 54 */
+    TkMacOSXGetNSWindowForDrawable, /* 54 */
     TkpScanWindowId, /* 55 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
@@ -1028,8 +1028,8 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXInitAppleEvents, /* 4 */
     TkGenWMConfigureEvent, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
-    0, /* 7 */
-    TkMacOSXGetRootControl, /* 8 */
+    TkMacOSXGetCGContextForDrawable, /* 7 */
+    TkMacOSXGetNSViewForDrawable, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
 #endif /* AQUA */

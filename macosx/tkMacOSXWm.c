@@ -523,7 +523,7 @@ static void
 SetWindowSizeLimits(
     TkWindow *winPtr)
 {
-    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    NSWindow *macWindow = TkMacOSXNSWindow(winPtr->window);
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int minWidth, minHeight, maxWidth, maxHeight, base;
 
@@ -1534,7 +1534,7 @@ WmAttributesCmd(
     if (!TkMacOSXHostToplevelExists(winPtr)) {
 	TkMacOSXMakeRealWindowExist(winPtr);
     }
-    macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    macWindow = TkMacOSXNSWindow(winPtr->window);
 
     if (objc == 3) {		/* wm attributes $win */
 	Tcl_Obj *result = Tcl_NewObj();
@@ -1800,7 +1800,7 @@ WmDeiconifyCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    NSWindow *win = TkMacOSXNSWindow(winPtr->window);
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -2040,7 +2040,7 @@ WmGeometryCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    NSWindow *win = TkMacOSXNSWindow(winPtr->window);
     char xSign = '+', ySign = '+';
     int width, height, x = wmPtr->x, y= wmPtr->y;
     char *argv3;
@@ -2292,7 +2292,7 @@ WmIconbitmapCmd(
     if (!TkMacOSXHostToplevelExists(winPtr)) {
 	TkMacOSXMakeRealWindowExist(winPtr);
     }
-    if (WmSetAttribute(winPtr, TkMacOSXDrawableWindow(winPtr->window), interp,
+    if (WmSetAttribute(winPtr, TkMacOSXNSWindow(winPtr->window), interp,
 	    WMATT_TITLEPATH, objv[3]) == TCL_OK) {
 	if (!len) {
 	    if (wmPtr->hints.icon_pixmap != None) {
@@ -2725,7 +2725,7 @@ WmIconwindowCmd(
 	if (wmPtr->icon != NULL) {
 	    TkWindow *oldIcon = (TkWindow *)wmPtr->icon;
 	    WmInfo *wmPtr3 = oldIcon->wmInfoPtr;
-	    NSWindow *win = TkMacOSXDrawableWindow(oldIcon->window);
+	    NSWindow *win = TkMacOSXNSWindow(oldIcon->window);
 
 	    /*
 	     * The old icon should be withdrawn.
@@ -2955,7 +2955,7 @@ WmOverrideredirectCmd(
 {
     int flag;
     XSetWindowAttributes atts;
-    TKWindow *win = (TKWindow *)TkMacOSXDrawableWindow(winPtr->window);
+    TKWindow *win = (TKWindow *)TkMacOSXNSWindow(winPtr->window);
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -4969,7 +4969,7 @@ TkWmRestackToplevel(
 	    wmPtr->hints.initial_state == WithdrawnState) {
 	return;
     }
-    macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    macWindow = TkMacOSXNSWindow(winPtr->window);
     if (macWindow == nil) {
 	return;
     }
@@ -4985,7 +4985,7 @@ TkWmRestackToplevel(
 		otherWmPtr->hints.initial_state == WithdrawnState) {
 	    return;
 	}
-	otherMacWindow = TkMacOSXDrawableWindow(otherPtr->window);
+	otherMacWindow = TkMacOSXNSWindow(otherPtr->window);
 	if (otherMacWindow == nil) {
 	    return;
 	}
@@ -5327,7 +5327,7 @@ TkSetWMName(
     }
 
     NSString *title = [[NSString alloc] initWithUTF8String:titleUid];
-    [TkMacOSXDrawableWindow(winPtr->window) setTitle:title];
+    [TkMacOSXNSWindow(winPtr->window) setTitle:title];
     [title release];
 }
 
@@ -5439,7 +5439,7 @@ MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
-    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    NSWindow *macWindow = TkMacOSXNSWindow(winPtr->window);
     return [macWindow isZoomed];
 }
 
@@ -5821,7 +5821,7 @@ WmWinTabbingId(
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
     Tcl_Obj *result = NULL;
     NSString *idString;
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    NSWindow *win = TkMacOSXNSWindow(winPtr->window);
     if (win) {
 	idString = win.tabbingIdentifier;
 	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
@@ -5911,7 +5911,7 @@ WmWinAppearance(
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
     const char *resultString = "unrecognized";
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    NSWindow *win = TkMacOSXNSWindow(winPtr->window);
     if (win) {
 	appearance = win.appearance.name;
 	if (appearance == nil) {
@@ -6165,7 +6165,7 @@ TkpRedrawWidget(Tk_Window tkwin) {
     if ([NSApp isDrawing]) {
 	return;
     }
-    w = TkMacOSXDrawableWindow(winPtr->window);
+    w = TkMacOSXNSWindow(winPtr->window);
     if (w) {
 	TKContentView *view = [w contentView];
 	TkMacOSXWinBounds(winPtr, &tkBounds);
@@ -6374,7 +6374,7 @@ TkpWmSetState(
 	return;
     }
 
-    macWin = TkMacOSXDrawableWindow(winPtr->window);
+    macWin = TkMacOSXNSWindow(winPtr->window);
 
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
@@ -6573,7 +6573,7 @@ TkpChangeFocus(
     }
 
     if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)) {
-    	NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    	NSWindow *win = TkMacOSXNSWindow(winPtr->window);
 
     	TkWmRestackToplevel(winPtr, Above, NULL);
     	if (force) {
@@ -6628,7 +6628,7 @@ WmStackorderToplevelWrapperMap(
     if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)
 	    && (winPtr->display == display)) {
 	hPtr = Tcl_CreateHashEntry(table,
-		(char*) TkMacOSXDrawableWindow(winPtr->window), &newEntry);
+		(char*) TkMacOSXNSWindow(winPtr->window), &newEntry);
 	Tcl_SetHashValue(hPtr, winPtr);
     }
 
@@ -6756,7 +6756,7 @@ ApplyWindowAttributeFlagChanges(
 		}
 		TkMacOSXMakeRealWindowExist(winPtr);
 	    }
-	    macWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    macWindow = TkMacOSXNSWindow(winPtr->window);
 	}
 	if ((changedAttributes & kWindowCloseBoxAttribute) || initial) {
 	    [[macWindow standardWindowButton:NSWindowCloseButton]
@@ -6928,7 +6928,7 @@ ApplyContainerOverrideChanges(
 
     if (!macWindow && winPtr->window != None &&
 	    TkMacOSXHostToplevelExists(winPtr)) {
-	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+	macWindow = TkMacOSXNSWindow(winPtr->window);
     }
     styleMask = [macWindow styleMask];
 
@@ -7004,7 +7004,7 @@ ApplyContainerOverrideChanges(
 
 	    if (containerWinPtr && (containerWinPtr->window != None)
 		    && TkMacOSXHostToplevelExists(containerWinPtr)) {
-		NSWindow *containerMacWin = TkMacOSXDrawableWindow(
+		NSWindow *containerMacWin = TkMacOSXNSWindow(
 			containerWinPtr->window);
 
 		/*
