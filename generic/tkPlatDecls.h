@@ -84,7 +84,8 @@ EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 EXTERN int		Tk_MacOSXIsAppInFront(void);
 /* 11 */
 EXTERN TkWindow*	TkMacOSXGetTkWindow(void *w);
-/* Slot 12 is reserved */
+/* 12 */
+EXTERN void *		TkMacOSXGetCGContextForDrawable(Drawable drawable);
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -118,7 +119,7 @@ typedef struct TkPlatStubs {
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
     TkWindow* (*tkMacOSXGetTkWindow) (void *w); /* 11 */
-    void (*reserved12)(void);
+    void * (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
     void (*reserved13)(void);
     void (*reserved14)(void);
     void (*reserved15)(void);
@@ -177,7 +178,8 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
 #define TkMacOSXGetTkWindow \
 	(tkPlatStubsPtr->tkMacOSXGetTkWindow) /* 11 */
-/* Slot 12 is reserved */
+#define TkMacOSXGetCGContextForDrawable \
+	(tkPlatStubsPtr->tkMacOSXGetCGContextForDrawable) /* 12 */
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */

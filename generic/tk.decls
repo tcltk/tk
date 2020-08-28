@@ -1142,6 +1142,10 @@ declare 10 aqua {
 declare 11 aqua {
     TkWindow* TkMacOSXGetTkWindow(void *w)
 }
+declare 12 aqua {
+    void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
+}
+
 declare 16 aqua {
     void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
