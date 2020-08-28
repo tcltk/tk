@@ -1131,7 +1131,7 @@ declare 7 aqua {
     CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable)
 }
 declare 8 aqua {
-    NSView *TkMacOSXGetNSViewForDrawable(Drawable drawable)
+    void *TkMacOSXGetNSViewForDrawable(Drawable drawable)
 }
 declare 9 aqua {
     void Tk_MacOSXSetupTkNotifier(void)

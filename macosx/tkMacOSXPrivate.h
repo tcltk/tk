@@ -240,10 +240,10 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
  * Prototypes of TkAqua internal procedures which are also declared as stubs.
  */
 
-EXTERN NSView*      TkMacOSXGetNSViewForDrawable(Drawable drawable);
+EXTERN void *TkMacOSXGetNSViewForDrawable(Drawable drawable);
 #define TkMacOSXContentView(object) \
     (TKContentView *) TkMacOSXGetNSViewForDrawable((Drawable) (object))
-EXTERN CGContextRef   TkMacOSXGetCGContextForDrawable(Drawable drawable);
+EXTERN CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
 #define TkMacOSXCGContext(object) \
     (CGContextRef) TkMacOSXGetCGContextForDrawable((Drawable) (object))
 

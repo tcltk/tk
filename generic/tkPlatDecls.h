@@ -77,7 +77,7 @@ EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
 /* 7 */
 EXTERN CGContextRef	TkMacOSXGetCGContextForDrawable(Drawable drawable);
 /* 8 */
-EXTERN NSView *		TkMacOSXGetNSViewForDrawable(Drawable drawable);
+EXTERN void *		TkMacOSXGetNSViewForDrawable(Drawable drawable);
 /* 9 */
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
@@ -113,7 +113,7 @@ typedef struct TkPlatStubs {
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
     CGContextRef (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 7 */
-    NSView * (*tkMacOSXGetNSViewForDrawable) (Drawable drawable); /* 8 */
+    void * (*tkMacOSXGetNSViewForDrawable) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
     void (*reserved11)(void);
@@ -196,9 +196,9 @@ extern const TkPlatStubs *tkPlatStubsPtr;
  */
 
 #define TkMacOSXGetRootControl(drawable) \
-	(NSView *) TkMacOSXGetNSViewForDrawable((Drawable) (drawable))
+	(TkMacOSXGetNSViewForDrawable((Drawable) (drawable)))
 #define TkMacOSXGetDrawablePort(drawable) \
-	(CGContextRef) TkMacOSXGetCGContextForDrawable((Drawable) (drawable))
+	(TkMacOSXGetCGContextForDrawable((Drawable) (drawable)))
 	
 #ifdef __cplusplus
 }

@@ -1123,7 +1123,8 @@ TkMacOSXDrawable(
  *      This is a stub function which returns the TkContentView for a given X
  *      drawable in the case that the drawable is a window.  If the drawable is
  *      a pixmap it returns nil.  The stub is aliased to an older stub named
- *      TkMacOSXGetRootControl.
+ *      TkMacOSXGetRootControl.  This must have return type void * to match the
+ *      old one.
  *
  * Results:
  *	A NSView* or nil.
@@ -1134,7 +1135,7 @@ TkMacOSXDrawable(
  *----------------------------------------------------------------------
  */
 
-TKContentView *
+void *
 TkMacOSXGetNSViewForDrawable(
     Drawable drawable)
 {
