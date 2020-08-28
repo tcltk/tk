@@ -228,7 +228,8 @@ CreateNSImageFromPixmap(
  *
  * TkMacOSXGetCGContextForDrawable --
  *
- *	Get CGContext for given Drawable, creating one if necessary.
+ *	Stub function that returns a CGContext for given Drawable, creating one
+ *	if necessary.
  *
  * Results:
  *	CGContext.
