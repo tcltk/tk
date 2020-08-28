@@ -515,7 +515,7 @@ MoveResizeWindow(
 {
     int deltaX = 0, deltaY = 0, parentBorderwidth = 0;
     MacDrawable *macParent = NULL;
-    NSWindow *macWindow = TkMacOSXDrawableWindow((Drawable) macWin);
+    NSWindow *macWindow = TkMacOSXDrawableWindow((Drawable)macWin);
 
     /*
      * Find the Parent window, for an embedded window it will be its container.
@@ -1102,7 +1102,7 @@ TkMacOSXDrawableWindow(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXDrawableWindow((Drawable) contWinPtr->privatePtr);
+	    result = TkMacOSXDrawableWindow((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;
