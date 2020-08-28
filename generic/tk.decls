@@ -1139,6 +1139,9 @@ declare 9 aqua {
 declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
+declare 11 aqua {
+    TkWindow* TkMacOSXGetTkWindow(void *w)
+}
 declare 16 aqua {
     void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
