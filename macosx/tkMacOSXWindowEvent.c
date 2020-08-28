@@ -147,6 +147,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
   willUseFullScreenContentSize:(NSSize)proposedSize
 {
     (void)window;
+
     /*
      * We don't need to change the proposed size, but we do need to implement
      * this method.  Otherwise the full screen window will be sized to the
@@ -426,8 +427,8 @@ TkpWillDrawWidget(Tk_Window tkwin) {
     int result;
     if (tkwin) {
 	TkWindow *winPtr = (TkWindow *)tkwin;
-	TKContentView *view = (TKContentView *) TkMacOSXDrawableView(
-	    (MacDrawable *)winPtr->privatePtr);
+	TKContentView *view = TkMacOSXDrawableView(
+	    (Drawable)winPtr->privatePtr);
 	result = ([NSApp isDrawing] && view == [NSView focusView]);
 #if 0
 	printf("TkpWillDrawWidget: %s %d  %d \n", Tk_PathName(tkwin),

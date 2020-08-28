@@ -402,6 +402,7 @@ static void ProcessAppleEvent(
     }
     code = Tcl_EvalEx(AEInfo->interp, Tcl_DStringValue(&AEInfo->command),
 	    Tcl_DStringLength(&AEInfo->command), TCL_EVAL_GLOBAL);
+
     if (AEInfo->replyEvent && code >= 0) {
         int reslen;
         const char *result = Tcl_GetStringFromObj(Tcl_GetObjResult(AEInfo->interp),
@@ -415,9 +416,10 @@ static void ProcessAppleEvent(
             AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
                           keyErrorNumber, typeSInt32, (Ptr) &code, sizeof(int));
         }
-    } 	 else  if (code != TCL_OK) {
+    } else if (code != TCL_OK) {
 	Tcl_BackgroundException(AEInfo->interp, code);
     }
+
     Tcl_DStringFree(&AEInfo->command);
     ckfree(clientData);
 }

@@ -1248,7 +1248,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = TkMacOSXDrawableView(macDraw);
+	view = TkMacOSXDrawableView(d);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
