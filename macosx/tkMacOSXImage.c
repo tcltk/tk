@@ -538,7 +538,7 @@ CreateCGImageFromDrawableRect(
 
 	CGRect image_rect = CGRectMake(x, y, width, height);
 
-	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
+	cg_context = (CGContextRef)TkMacOSXGetCGContextForDrawable(drawable);
 	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
 	if (cg_image) {
 	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
@@ -597,7 +597,7 @@ CreateCGImageFromPixmap(
     Drawable pixmap)
 {
     CGImageRef img = NULL;
-    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
+    CGContextRef context = (CGContextRef)TkMacOSXGetCGContextForDrawable(pixmap);
 
     if (context) {
 	img = CGBitmapContextCreateImage(context);

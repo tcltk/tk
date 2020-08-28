@@ -207,7 +207,7 @@ CreateNSImageFromPixmap(
     CGImageRef cgImage;
     NSImage *nsImage;
     NSBitmapImageRep *bitmapImageRep;
-    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
+    CGContextRef context = (CGContextRef)TkMacOSXGetCGContextForDrawable(pixmap);
 
     if (context) {
 	cgImage = CGBitmapContextCreateImage(context);
@@ -239,7 +239,7 @@ CreateNSImageFromPixmap(
  *----------------------------------------------------------------------
  */
 
-CGContextRef
+void *
 TkMacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
