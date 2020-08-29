@@ -1099,6 +1099,10 @@ declare 5 win {
 
 ################################
 # Aqua specific functions
+# This stub was removed because the internal function was removed.
+#declare 3 aqua {
+#    void TkMacOSXInitMenus(Tcl_Interp *interp)
+#}
 declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
@@ -1109,8 +1113,11 @@ declare 5 aqua {
 declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
+# This stub was formerly named TkMacOSXGetDrawablePort. For a long time it
+# just returned NULL.  The replacement is something that would be useful and
+# may do what the original stub was intended to do.
 declare 7 aqua {
-    CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable)
+    void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
 }
 declare 8 aqua {
     void *TkMacOSXGetNSViewForDrawable(Drawable drawable)
