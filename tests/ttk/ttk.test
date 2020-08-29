@@ -654,6 +654,17 @@ test ttk-ensemble-5 "style element create: valid" -body {
      ttk::style element create plain.background from default
 } -returnCodes 0 -result ""
 
+test ttk-16.1 {ttk::style theme styles - no such theme} -body {
+    ttk::style theme styles noSuchTheme
+} -returnCodes 1 -result {theme "noSuchTheme" doesn't exist}
+test ttk-16.2 {ttk::style theme styles - theme exists} -body {
+    # simply check this produces a list with some style names,
+    # without checking exact content (not needed, and may vary
+    # depending on platform, versions, improvements...)
+    expr {[llength [ttk::style theme styles alt]] > 0}
+} -result 1
+
+
 eval destroy [winfo children .]
 
 tcltest::cleanupTests
