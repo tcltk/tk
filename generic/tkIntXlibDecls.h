@@ -469,7 +469,7 @@ EXTERN Display *	XkbOpenDisplay(const char *name, int *ev_rtrn,
 				int *err_rtrn, int *major_rtrn,
 				int *minor_rtrn, int *reason);
 #endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
+#ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -891,7 +891,7 @@ EXTERN KeySym		XkbKeycodeToKeysym(Display *d, unsigned int k, int g,
 EXTERN Display *	XkbOpenDisplay(const char *name, int *ev_rtrn,
 				int *err_rtrn, int *major_rtrn,
 				int *minor_rtrn, int *reason);
-#endif /* MACOSX */
+#endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
     int magic;
@@ -1058,7 +1058,7 @@ typedef struct TkIntXlibStubs {
     KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
     Display * (*xkbOpenDisplay) (const char *name, int *ev_rtrn, int *err_rtrn, int *major_rtrn, int *minor_rtrn, int *reason); /* 158 */
 #endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
+#ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -1218,7 +1218,7 @@ typedef struct TkIntXlibStubs {
     void (*xFreeStringList) (char **list); /* 156 */
     KeySym (*xkbKeycodeToKeysym) (Display *d, unsigned int k, int g, int i); /* 157 */
     Display * (*xkbOpenDisplay) (const char *name, int *ev_rtrn, int *err_rtrn, int *major_rtrn, int *minor_rtrn, int *reason); /* 158 */
-#endif /* MACOSX */
+#endif /* AQUA */
 } TkIntXlibStubs;
 
 extern const TkIntXlibStubs *tkIntXlibStubsPtr;
@@ -1538,7 +1538,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XkbOpenDisplay \
 	(tkIntXlibStubsPtr->xkbOpenDisplay) /* 158 */
 #endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
+#ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
@@ -1843,7 +1843,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xkbKeycodeToKeysym) /* 157 */
 #define XkbOpenDisplay \
 	(tkIntXlibStubsPtr->xkbOpenDisplay) /* 158 */
-#endif /* MACOSX */
+#endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */
 

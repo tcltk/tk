@@ -846,7 +846,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XkbKeycodeToKeysym, /* 157 */
     XkbOpenDisplay, /* 158 */
 #endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
+#ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -1006,7 +1006,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XFreeStringList, /* 156 */
     XkbKeycodeToKeysym, /* 157 */
     XkbOpenDisplay, /* 158 */
-#endif /* MACOSX */
+#endif /* AQUA */
 };
 
 static const TkPlatStubs tkPlatStubs = {
