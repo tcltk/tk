@@ -38,6 +38,10 @@
 #  endif
 #endif
 
+#if defined(MAC_OSX_TK) && !defined(MAC_OSX_TCL)
+#  define MAC_OSX_TCL 1
+#endif
+
 typedef int (*XAfterFunction) (	    /* WARNING, this type not in Xlib spec */
     Display*		/* display */
 );
