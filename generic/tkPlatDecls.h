@@ -66,7 +66,7 @@ EXTERN void		TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
 /* 6 */
 EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
 /* 7 */
-EXTERN CGContextRef	TkMacOSXGetCGContextForDrawable(Drawable drawable);
+EXTERN void *		TkMacOSXGetCGContextForDrawable(Drawable drawable);
 /* 8 */
 EXTERN void *		TkMacOSXGetNSViewForDrawable(Drawable drawable);
 /* 9 */
@@ -95,7 +95,7 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
-    CGContextRef (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 7 */
+    void * (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 7 */
     void * (*tkMacOSXGetNSViewForDrawable) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */

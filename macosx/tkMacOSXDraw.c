@@ -240,7 +240,7 @@ CreateNSImageFromPixmap(
  *----------------------------------------------------------------------
  */
 
-CGContextRef
+void *
 TkMacOSXGetCGContextForDrawable(
     Drawable drawable)
 {

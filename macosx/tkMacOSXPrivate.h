@@ -247,7 +247,7 @@ EXTERN void *TkMacOSXGetNSWindowForDrawable(Drawable drawable);
 EXTERN void *TkMacOSXGetNSViewForDrawable(Drawable drawable);
 #define TkMacOSXContentView(object) \
     (TKContentView *) TkMacOSXGetNSViewForDrawable((Drawable) (object))
-EXTERN CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
+EXTERN void *TkMacOSXGetCGContextForDrawable(Drawable drawable);
 #define TkMacOSXCGContext(object) \
     (CGContextRef) TkMacOSXGetCGContextForDrawable((Drawable) (object))
 
