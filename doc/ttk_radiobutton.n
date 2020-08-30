@@ -37,7 +37,8 @@ Default value is \fB::selectedButton\fR.
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
+\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, \fBstate\fR
+and \fBstyle\fR
 commands, radiobuttons support the following additional
 widget commands:
 .TP

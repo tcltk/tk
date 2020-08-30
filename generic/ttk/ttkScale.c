@@ -489,6 +489,7 @@ static const Ttk_Ensemble ScaleCommands[] = {
     { "set",         ScaleSetCommand,0 },
     { "get",         ScaleGetCommand,0 },
     { "coords",      ScaleCoordsCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

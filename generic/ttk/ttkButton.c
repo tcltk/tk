@@ -278,6 +278,7 @@ static const Ttk_Ensemble LabelCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -384,6 +385,7 @@ static const Ttk_Ensemble ButtonCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -591,6 +593,7 @@ static const Ttk_Ensemble CheckbuttonCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     /* MISSING: select, deselect, toggle */
     { 0,0,0 }
 };
@@ -767,6 +770,7 @@ static const Ttk_Ensemble RadiobuttonCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     /* MISSING: select, deselect */
     { 0,0,0 }
 };
@@ -835,6 +839,7 @@ static const Ttk_Ensemble MenubuttonCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

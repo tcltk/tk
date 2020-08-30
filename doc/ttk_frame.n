@@ -36,7 +36,8 @@ If specified, the widget's requested height in pixels.
 .SH "WIDGET COMMAND"
 .PP
 Supports the standard widget commands
-\fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
+\fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, \fBstate\fR
+and \fBstyle\fR;
 see \fIttk::widget(n)\fR.
 .SH "NOTES"
 .PP

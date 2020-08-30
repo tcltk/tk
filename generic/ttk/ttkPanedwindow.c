@@ -890,6 +890,7 @@ static const Ttk_Ensemble PanedCommands[] = {
     { "panes",   	PanedPanesCommand,0 },
     { "sashpos",  	PanedSashposCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

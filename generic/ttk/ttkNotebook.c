@@ -1254,6 +1254,7 @@ static const Ttk_Ensemble NotebookCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "select",		NotebookSelectCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "tab",   		NotebookTabCommand,0 },
     { "tabs",   	NotebookTabsCommand,0 },
     { 0,0,0 }

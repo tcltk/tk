@@ -290,6 +290,7 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "set",  		ScrollbarSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

@@ -1745,6 +1745,7 @@ static const Ttk_Ensemble EntryCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate", 	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -1914,6 +1915,7 @@ static const Ttk_Ensemble ComboboxCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "set", 		EntrySetCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
@@ -2026,6 +2028,7 @@ static const Ttk_Ensemble SpinboxCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "set", 		EntrySetCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },

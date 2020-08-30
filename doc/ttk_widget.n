@@ -228,6 +228,10 @@ If \fIstateSpec\fR is not specified,
 returns a list of the currently-enabled state flags.
 .RE
 .TP
+\fIpathName \fBstyle\fR
+.
+Return the style used by the widget.
+.TP
 \fIpathName \fBxview \fIargs\fR
 This command is used to query and change the horizontal position of the
 content in the widget's window.  It can take any of the following

@@ -3306,6 +3306,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "selection" ,	TreeviewSelectionCommand,0 },
     { "set",  		TreeviewSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "tag",    	0,TreeviewTagCommands },
     { "xview",  	TreeviewXViewCommand,0 },
     { "yview",  	TreeviewYViewCommand,0 },
