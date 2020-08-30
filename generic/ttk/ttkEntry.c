@@ -1914,9 +1914,9 @@ static const Ttk_Ensemble ComboboxCommands[] = {
     { "insert", 	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
+    { "set", 		EntrySetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
-    { "set", 		EntrySetCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -2027,9 +2027,9 @@ static const Ttk_Ensemble SpinboxCommands[] = {
     { "insert", 	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
+    { "set", 		EntrySetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
-    { "set", 		EntrySetCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }

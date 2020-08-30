@@ -515,8 +515,8 @@ static int ProgressbarStopCommand(
 }
 
 static const Ttk_Ensemble ProgressbarCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "start", 		ProgressbarStartCommand,0 },

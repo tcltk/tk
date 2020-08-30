@@ -1244,8 +1244,8 @@ static int NotebookTabCommand(
  */
 static const Ttk_Ensemble NotebookCommands[] = {
     { "add",    	NotebookAddCommand,0 },
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "forget",		NotebookForgetCommand,0 },
     { "hide",		NotebookHideCommand,0 },
     { "identify",	NotebookIdentifyCommand,0 },

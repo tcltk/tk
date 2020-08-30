@@ -880,8 +880,8 @@ static int PanedSashposCommand(
 
 static const Ttk_Ensemble PanedCommands[] = {
     { "add", 		PanedAddCommand,0 },
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "forget", 	PanedForgetCommand,0 },
     { "identify", 	PanedIdentifyCommand,0 },
     { "insert", 	PanedInsertCommand,0 },
