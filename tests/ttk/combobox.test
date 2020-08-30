@@ -85,4 +85,18 @@ test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
     destroy .cb
 }
 
+test combobox-4.1 "style command" -body {
+    ttk::combobox .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TCombobox TCombobox}
+test combobox-4.2 "style command" -body {
+    ttk::style configure customStyle.TCombobox
+    ttk::combobox .w -style customStyle.TCombobox
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TCombobox customStyle.TCombobox TCombobox}
+
 tcltest::cleanupTests

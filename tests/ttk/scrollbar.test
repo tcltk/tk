@@ -156,6 +156,22 @@ test scrollbar-10.2.4 {<MouseWheel> event on horizontal scrollbar} -constraints 
     destroy .t .s
 } -result {1.4}
 
+test scrollbar-11.1 "style command" -body {
+    ttk::scrollbar .wv  ; # default is  -orient vertical
+    ttk::scrollbar .wh -orient horizontal
+    list [.wv cget -style] [.wv style] [winfo class .wv] \
+         [.wh cget -style] [.wh style] [winfo class .wh]
+} -cleanup {
+    destroy .wv .wh
+} -result {{} Vertical.TScrollbar TScrollbar {} Horizontal.TScrollbar TScrollbar}
+test scrollbar-11.2 "style command" -body {
+    ttk::style configure customStyle.Horizontal.TScrollbar
+    ttk::scrollbar .w -orient horizontal -style customStyle.Horizontal.TScrollbar
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Horizontal.TScrollbar Horizontal.customStyle.Horizontal.TScrollbar TScrollbar}
+
 #
 # Scale tests:
 #
@@ -189,6 +205,22 @@ test scale-2.1 "-state option" -setup {
     destroy .s
     unset -nocomplain res
 } -result {0 normal 1 disabled 0 normal 1 normal {disabled readonly} normal}
+
+test scale-3.1 "style command" -body {
+    ttk::scale .wh  ; # default is  -orient horizontal
+    ttk::scale .wv -orient vertical
+    list [.wh cget -style] [.wh style] [winfo class .wh] \
+         [.wv cget -style] [.wv style] [winfo class .wv]
+} -cleanup {
+    destroy .wh .wv
+} -result {{} Horizontal.TScale TScale {} Vertical.TScale TScale}
+test scale-3.2 "style command" -body {
+    ttk::style configure customStyle.Vertical.TScale
+    ttk::scale .w -orient vertical -style customStyle.Vertical.TScale
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Vertical.TScale Vertical.customStyle.Vertical.TScale TScale}
 
 tcltest::cleanupTests
 
