@@ -89,15 +89,15 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 
 /* Common widget commands:
  */
+MODULE_SCOPE int TtkWidgetCgetCommand(
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetConfigureCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetCgetCommand(
+MODULE_SCOPE int TtkWidgetIdentifyCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetInstateCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetIdentifyCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStyleCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);

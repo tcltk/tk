@@ -48,11 +48,11 @@ static const Tk_OptionSpec FrameOptionSpecs[] = {
 };
 
 static const Ttk_Ensemble FrameCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",   	TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };

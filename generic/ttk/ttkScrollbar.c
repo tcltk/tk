@@ -281,8 +281,8 @@ ScrollbarFractionCommand(
 }
 
 static const Ttk_Ensemble ScrollbarCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "delta",    	ScrollbarDeltaCommand,0 },
     { "fraction",    	ScrollbarFractionCommand,0 },
     { "get",    	ScrollbarGetCommand,0 },
