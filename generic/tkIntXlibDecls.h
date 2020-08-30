@@ -1698,6 +1698,16 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+/* Those cannot be used (yet) in stub-enabled extensions on MacOS */
+#ifdef MAC_OSX_TK /* AQUA */
+#undef XSetClipRectangles
+#undef XOffsetRegion
+#undef XLowerWindow
+#undef XDestroyIC
+#undef XCreatePixmapCursor
+#undef XCreateGlyphCursor
+#undef XkbKeycodeToKeysym
+#endif
 #undef TkUnusedStubEntry
 
 #endif /* _TKINTXLIBDECLS */

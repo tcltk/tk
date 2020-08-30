@@ -5425,11 +5425,11 @@ TkMacOSXGetXWindow(
  *----------------------------------------------------------------------
  */
 
-TkWindow*
+TkWindow *
 TkMacOSXGetTkWindow(
-    NSWindow *w)
+    void *w)
 {
-    Window window = TkMacOSXGetXWindow(w);
+    Window window = TkMacOSXGetXWindow((NSWindow *)w);
     TkDisplay *dispPtr = TkGetDisplayList();
 
     return (window != None ?

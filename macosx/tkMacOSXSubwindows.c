@@ -54,7 +54,7 @@ XDestroyWindow(
     TCL_UNUSED(Display *),		/* Display. */
     Window window)		/* Window. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -139,7 +139,7 @@ XMapWindow(
     if (!window) {
 	return BadWindow;
     }
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXDrawableWindow(window);
     XEvent event;
@@ -297,7 +297,7 @@ XUnmapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXDrawableWindow(window);
@@ -379,7 +379,7 @@ XResizeWindow(
     unsigned int width,
     unsigned int height)
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
@@ -424,7 +424,7 @@ XMoveResizeWindow(
     unsigned int width,
     unsigned int height)
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
@@ -477,7 +477,7 @@ XMoveWindow(
     Window window,		/* Window. */
     int x, int y)
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
@@ -620,7 +620,7 @@ XRaiseWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
@@ -654,7 +654,7 @@ XLowerWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
@@ -692,7 +692,7 @@ XConfigureWindow(
     unsigned int value_mask,
     TCL_UNUSED(XWindowChanges *))
 {
-    MacDrawable *macWin = (MacDrawable *) w;
+    MacDrawable *macWin = (MacDrawable *)w;
     TkWindow *winPtr = macWin->winPtr;
 
     display->request++;
@@ -1069,7 +1069,7 @@ TkMacOSXInvalidateWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXDrawableWindow --
+ * TkMacOSXDrawable --
  *
  *	This function returns the NSWindow for a given X drawable.
  *
@@ -1082,11 +1082,11 @@ TkMacOSXInvalidateWindow(
  *----------------------------------------------------------------------
  */
 
-NSWindow *
-TkMacOSXDrawableWindow(
+void *
+TkMacOSXDrawable(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     NSWindow *result = nil;
 
     if (!macWin || macWin->flags & TK_IS_PIXMAP) {
@@ -1106,13 +1106,6 @@ TkMacOSXDrawableWindow(
 	}
     }
     return result;
-}
-
-void *
-TkMacOSXDrawable(
-    Drawable drawable)
-{
-    return TkMacOSXDrawableWindow(drawable);
 }
 
 /*
@@ -1491,7 +1484,7 @@ Tk_FreePixmap(
     Display *display,		/* Display. */
     Pixmap pixmap)		/* Pixmap to destroy */
 {
-    MacDrawable *macPix = (MacDrawable *) pixmap;
+    MacDrawable *macPix = (MacDrawable *)pixmap;
 
     display->request++;
     if (macPix->context) {
