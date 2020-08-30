@@ -48,7 +48,8 @@ with an extra highlight ring, or with a different border color.
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
+\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, \fBstate\fR
+and \fBstyle\fR
 commands, buttons support the following additional widget commands:
 .TP
 \fIpathName \fBinvoke\fR

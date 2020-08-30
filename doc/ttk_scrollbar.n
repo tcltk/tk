@@ -73,6 +73,9 @@ Specifies the visible range to be displayed.
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
 Modify or query the widget state; see \fIttk::widget(n)\fR.
+.TP
+\fIpathName \fBstyle\fR
+See \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 The following widget commands are used internally

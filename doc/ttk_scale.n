@@ -85,6 +85,10 @@ named in the \fB\-variable\fR option) does not cause such clipping.
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
 .
 Modify or query the widget state; see \fIttk::widget(n)\fR.
+.TP
+\fIpathName \fBstyle\fR
+.
+See \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 .TP

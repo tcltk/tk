@@ -96,6 +96,9 @@ Increments the \fB\-value\fR by \fIamount\fR.
 \fIpathName \fBstop\fR
 Stop autoincrement mode:
 cancels any recurring timer event initiated by \fIpathName \fBstart\fR.
+.TP
+\fIpathName \fBstyle\fR
+See \fIttk::widget(n)\fR.
 .SH "STYLING OPTIONS"
 .PP
 The class name for a \fBttk::progressbar\fP is \fBTProgressbar\fP.

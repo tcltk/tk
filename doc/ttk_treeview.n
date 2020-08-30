@@ -341,6 +341,9 @@ See also \fBCOLUMN IDENTIFIERS\fR.
 \fIpathname \fBstate\fR ?\fIstateSpec\fR?
 Modify or query the widget state; see \fIttk::widget(n)\fR.
 .TP
+\fIpathname \fBstyle\fR
+See \fIttk::widget(n)\fR.
+.TP
 \fIpathName \fBtag \fIargs...\fR
 .RS
 .TP

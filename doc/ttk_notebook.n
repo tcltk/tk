@@ -164,6 +164,9 @@ currently selected pane.
 \fIpathname \fBstate\fR ?\fIstatespec\fR?
 See \fIttk::widget(n)\fR.
 .TP
+\fIpathname \fBstyle\fR
+See \fIttk::widget(n)\fR.
+.TP
 \fIpathname \fBtab \fItabid\fR ?\fI\-option \fR?\fIvalue ...\fR
 Query or modify the options of the specific tab.
 If no \fI\-option\fR is specified,

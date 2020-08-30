@@ -99,6 +99,8 @@ MODULE_SCOPE int TtkWidgetStateCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetIdentifyCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+MODULE_SCOPE int TtkWidgetStyleCommand(
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 
 /* Widget constructor:
  */

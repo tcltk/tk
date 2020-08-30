@@ -48,9 +48,7 @@ An integer specifying the relative stretchability of the pane.
 When the paned window is resized, the extra space is added
 or subtracted to each pane proportionally to its \fB\-weight\fR.
 .SH "WIDGET COMMAND"
-Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR,
-and \fBinstate\fR commands; see \fIttk::widget(n)\fR for details.
-Additional commands:
+The following subcommands are possible for panedwindow widgets:
 .TP
 \fIpathname \fBadd \fIsubwindow options...\fR
 Adds a new pane to the window.
@@ -112,7 +110,7 @@ widget subcommands (see \fIttk::widget(n)\fR for details):
 .DS
 .ta 5.5c 11c
 \fBcget\fR	\fBconfigure\fR
-\fBinstate\fR	\fBstate\fR
+\fBinstate\fR	\fBstate\fR	\fBstyle\fR
 .DE
 .SH "VIRTUAL EVENTS"
 .PP

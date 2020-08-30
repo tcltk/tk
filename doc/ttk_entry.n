@@ -228,7 +228,8 @@ widget subcommands (see \fIttk::widget(n)\fR for details):
 .DS
 .ta 5.5c 11c
 \fBcget\fR	\fBconfigure\fR	\fBidentify\fR
-\fBinstate\fR	\fBstate\fR	\fBxview\fR
+\fBinstate\fR	\fBstate\fR	\fBstyle\fR
+\fBxview\fR
 .DE
 .SH VALIDATION
 .PP

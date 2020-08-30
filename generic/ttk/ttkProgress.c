@@ -523,6 +523,7 @@ static const Ttk_Ensemble ProgressbarCommands[] = {
     { "state",  	TtkWidgetStateCommand,0 },
     { "step", 		ProgressbarStepCommand,0 },
     { "stop", 		ProgressbarStopCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
