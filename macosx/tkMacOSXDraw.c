@@ -207,7 +207,7 @@ CreateNSImageFromPixmap(
     CGImageRef cgImage;
     NSImage *nsImage;
     NSBitmapImageRep *bitmapImageRep;
-    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
+    CGContextRef context = TkMacOSXCGContext(pixmap);
 
     if (context) {
 	cgImage = CGBitmapContextCreateImage(context);
@@ -226,7 +226,7 @@ CreateNSImageFromPixmap(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXCGContext --
+ * TkMacOSXGetCGContextForDrawable --
  *
  *	Get CGContext for given Drawable, creating one if necessary.
  *
@@ -240,7 +240,7 @@ CreateNSImageFromPixmap(
  */
 
 void *
-TkMacOSXCGContext(
+TkMacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;
@@ -1295,7 +1295,7 @@ TkMacOSXSetupDrawingContext(
      * drawing to a window and we use the current context of its ContentView.
      */
 
-    dc.context = TkMacOSXGetCGContextForDrawable(d);
+    dc.context = TkMacOSXCGContext(d);
     if (dc.context) {
 	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
     } else {

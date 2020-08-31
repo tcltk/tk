@@ -85,7 +85,7 @@ EXTERN int		Tk_MacOSXIsAppInFront(void);
 /* 11 */
 EXTERN TkWindow*	TkMacOSXGetTkWindow(void *w);
 /* 12 */
-EXTERN void *		TkMacOSXCGContext(Drawable drawable);
+EXTERN void *		TkMacOSXGetCGContextForDrawable(Drawable drawable);
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -119,7 +119,7 @@ typedef struct TkPlatStubs {
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
     TkWindow* (*tkMacOSXGetTkWindow) (void *w); /* 11 */
-    void * (*tkMacOSXCGContext) (Drawable drawable); /* 12 */
+    void * (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
     void (*reserved13)(void);
     void (*reserved14)(void);
     void (*reserved15)(void);
@@ -178,8 +178,8 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
 #define TkMacOSXGetTkWindow \
 	(tkPlatStubsPtr->tkMacOSXGetTkWindow) /* 11 */
-#define TkMacOSXCGContext \
-	(tkPlatStubsPtr->tkMacOSXCGContext) /* 12 */
+#define TkMacOSXGetCGContextForDrawable \
+	(tkPlatStubsPtr->tkMacOSXGetCGContextForDrawable) /* 12 */
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -202,7 +202,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #ifdef MAC_OSX_TK /* AQUA */
 #undef TkMacOSXGetTkWindow
 #undef TkMacOSXGetCGContextForDrawable
-#undef TkGenWMConfigureEvent_
 #endif
+#undef TkGenWMConfigureEvent_
 
 #endif /* _TKPLATDECLS */

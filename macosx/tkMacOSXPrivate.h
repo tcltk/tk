@@ -244,8 +244,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
     (NSWindow *)TkMacOSXDrawable(drawable)
 #define TkMacOSXContentView(drawable) \
     (TKContentView *)TkMacOSXGetRootControl(drawable)
-#define TkMacOSXGetCGContextForDrawable(drawable) \
-    (CGContextRef)TkMacOSXCGContext(drawable)
+#define TkMacOSXCGContext(drawable) \
+    (CGContextRef)TkMacOSXGetCGContextForDrawable(drawable)
 
 MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
 			    const char *symbol);
