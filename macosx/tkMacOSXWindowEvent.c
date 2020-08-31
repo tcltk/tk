@@ -536,35 +536,6 @@ GenerateUpdates(
 /*
  *----------------------------------------------------------------------
  *
- * GenerateActivateEvents --
- *
- *	Given a Macintosh window activate event this function generates all the
- *	X Activate events needed by Tk.
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue.
- *
- *----------------------------------------------------------------------
- */
-
-int
-GenerateActivateEvents(
-    TkWindow *winPtr,
-    int activeFlag)
-{
-    TkGenerateActivateEvents(winPtr, activeFlag);
-    if (activeFlag || ![NSApp isActive]) {
-	TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
-    }
-    return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXGenerateFocusEvent --
  *
  *	Given a Macintosh window activate event this function generates all
@@ -579,7 +550,7 @@ GenerateActivateEvents(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+static int
 TkMacOSXGenerateFocusEvent(
     TkWindow *winPtr,		/* Root X window for event. */
     int activeFlag)
@@ -618,6 +589,35 @@ TkMacOSXGenerateFocusEvent(
     return true;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateActivateEvents --
+ *
+ *	Given a Macintosh window activate event this function generates all the
+ *	X Activate events needed by Tk.
+ *
+ * Results:
+ *	True if event(s) are generated - false otherwise.
+ *
+ * Side effects:
+ *	Additional events may be placed on the Tk event queue.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+GenerateActivateEvents(
+    TkWindow *winPtr,
+    int activeFlag)
+{
+    TkGenerateActivateEvents(winPtr, activeFlag);
+    if (activeFlag || ![NSApp isActive]) {
+	TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
+    }
+    return true;
+}
+
 /*
  *----------------------------------------------------------------------
  *
