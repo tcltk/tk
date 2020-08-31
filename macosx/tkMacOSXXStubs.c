@@ -308,7 +308,6 @@ XkbOpenDisplay(
 
     return display;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -878,8 +877,7 @@ XForceScreenSaver(
     display->request++;
     return Success;
 }
-
-#if 0
+
 int
 XSetClipRectangles(
     Display *d,
@@ -888,24 +886,22 @@ XSetClipRectangles(
     int clip_y_origin,
     XRectangle* rectangles,
     int n,
-    int ordering)
+    TCL_UNUSED(int))
 {
-    Region clipRgn = XCreateRegion();
+    TkRegion clipRgn = TkCreateRegion();
 
     while (n--) {
-	XRectangle rect = *rectangles;
+    	XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
-	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
-	rectangles++;
+    	rect.x += clip_x_origin;
+    	rect.y += clip_y_origin;
+    	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+    	rectangles++;
     }
-    XSetRegion(d, gc, clipRgn);
-    XDestroyRegion(clipRgn);
+    TkSetRegion(d, gc, clipRgn);
+    TkDestroyRegion(clipRgn);
     return 1;
 }
-#endif
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1190,7 +1186,7 @@ Tk_GetUserInactiveTime(
     uint64_t time;
     IOReturn result;
 
-    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+    regEntry = IOServiceGetMatchingService(0,
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {

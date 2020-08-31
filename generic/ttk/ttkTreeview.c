@@ -441,21 +441,21 @@ static const char *const SelectModeStrings[] = { "none", "browse", "extended", N
 static const Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
 	"", offsetof(Treeview,tree.columnsObj), TCL_INDEX_NONE,
-	0,0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
+	0, 0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
     {TK_OPTION_STRING, "-displaycolumns","displayColumns","DisplayColumns",
 	"#all", offsetof(Treeview,tree.displayColumnsObj), TCL_INDEX_NONE,
-	0,0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
+	0, 0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-show", "show", "Show",
 	DEFAULT_SHOW, offsetof(Treeview,tree.showObj), TCL_INDEX_NONE,
-	0,0,SHOW_CHANGED | GEOMETRY_CHANGED },
+	0, 0,SHOW_CHANGED | GEOMETRY_CHANGED },
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
-	0,(ClientData)SelectModeStrings,0 },
+	0, (void *)SelectModeStrings, 0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
-	0,0,GEOMETRY_CHANGED},
+	0, 0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Treeview,tree.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
@@ -792,9 +792,8 @@ static int PickupSlack(Treeview *tv, int extra)
 {
     int newSlack = tv->tree.slack + extra;
 
-    if (   (newSlack < 0 && 0 <= tv->tree.slack)
-	|| (newSlack > 0 && 0 >= tv->tree.slack))
-    {
+    if ((newSlack < 0 && 0 <= tv->tree.slack)
+	    || (newSlack > 0 && 0 >= tv->tree.slack)) {
 	tv->tree.slack = 0;
 	return newSlack;
     } else {
@@ -1101,10 +1100,9 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	TtkScrollbarUpdateRequired(tv->tree.xscrollHandle);
 	TtkScrollbarUpdateRequired(tv->tree.yscrollHandle);
     }
-    if (  (mask & SHOW_CHANGED)
-	&& GetEnumSetFromObj(
-		    interp,tv->tree.showObj,showStrings,&showFlags) != TCL_OK)
-    {
+    if ((mask & SHOW_CHANGED)
+	    && GetEnumSetFromObj(
+		    interp,tv->tree.showObj,showStrings,&showFlags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1780,7 +1778,7 @@ static void DrawItem(
 		x+indent, y, colwidth-indent, rowHeight);
 	if (item->textObj) { displayItem.textObj = item->textObj; }
 	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
+        displayItem.anchorObj = tv->tree.column0.anchorObj;
 	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
 	x += colwidth;
     }
@@ -2109,7 +2107,7 @@ static int TreeviewIndexCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int index = 0;
+    TkSizeT index = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -2125,7 +2123,7 @@ static int TreeviewIndexCommand(
 	item = item->prev;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
@@ -2201,9 +2199,8 @@ static int TreeviewHorribleIdentify(
 
     /* ASSERT: objc == 4 */
 
-    if (   Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK
-    ) {
+    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2377,7 +2374,7 @@ static int TreeviewItemCommand(
     TreeItem *item;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item ?option ?value??...");
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?-option ?value??...");
 	return TCL_ERROR;
     }
     if (!(item = FindItem(interp, tv, objv[2]))) {
@@ -2750,9 +2747,8 @@ static int TreeviewMoveCommand(
 	Tcl_WrongNumArgs(interp, 2, objv, "item parent index");
 	return TCL_ERROR;
     }
-    if (   (item = FindItem(interp, tv, objv[2])) == 0
-	|| (parent = FindItem(interp, tv, objv[3])) == 0)
-    {
+    if ((item = FindItem(interp, tv, objv[2])) == 0
+	    || (parent = FindItem(interp, tv, objv[3])) == 0) {
 	return TCL_ERROR;
     }
 
@@ -2879,9 +2875,8 @@ static int TreeviewDragCommand(
 	return TCL_ERROR;
     }
 
-    if (  (column = FindColumn(interp, tv, objv[2])) == 0
-        || Tcl_GetIntFromObj(interp, objv[3], &newx) != TCL_OK)
-    {
+    if ((column = FindColumn(interp, tv, objv[2])) == 0
+	    || Tcl_GetIntFromObj(interp, objv[3], &newx) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3351,8 +3346,7 @@ TTK_LAYOUT("Item",
     TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	TTK_GROUP("Treeitem.focus", TTK_PACK_LEFT,
-	    TTK_NODE("Treeitem.text", TTK_PACK_LEFT))))
+	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
 TTK_LAYOUT("Cell",
     TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,

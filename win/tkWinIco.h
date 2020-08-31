@@ -11,11 +11,15 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include <windows.h>
+#include <shellapi.h>
+
+#include <tk.h>
+#include <tkPlatDecls.h>
+
 /*
- * This structure represents the contents of a icon, in terms of its image.
- * The HICON is an internal Windows format. Most of these icon-specific
- * structures originated with the Winico extension. We stripped out unused
- * parts of that code, and integrated the code more naturally with Tcl.
+ * These structures represent the contents of a icon, in terms of its image 
+ * or resource.
  */
 
 typedef struct {
@@ -27,6 +31,14 @@ typedef struct {
     LPBYTE lpAND;		/* Ptr to AND image bits */
     HICON hIcon;		/* DAS ICON */
 } ICONIMAGE, *LPICONIMAGE;
+
+typedef struct {
+    BOOL         bHasChanged;                     // Has image changed?
+    TCHAR        szOriginalICOFileName[MAX_PATH]; // Original name
+    TCHAR        szOriginalDLLFileName[MAX_PATH]; // Original name
+    int          nNumImages;                      // How many images?
+    ICONIMAGE    IconImages[1];                   // Image entries
+} ICONRESOURCE, *LPICONRESOURCE;
 
 /*
  * This structure is how we represent a block of the above items. We will

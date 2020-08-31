@@ -951,7 +951,7 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     image delete photo1
     file delete ./-teapotPhotoFile
 } -result {}
-test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
+test imgPhoto-4.75.1 {ImgPhotoCmd procedure: copy to same image} -constraints {
     hasTeapotPhoto
 } -setup {
     imageCleanup
@@ -963,7 +963,7 @@ test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
 } -cleanup {
     imageCleanup
 } -result {}
-test imgPhoto-4.76 {ImgPhotoCmd, transparancy get: too many options} -setup {
+test imgPhoto-4.76 {ImgPhotoCmd, transparency get: too many options} -setup {
     image create photo photo1
 } -body {
     photo1 put white -to 0 0 1 1
@@ -1941,9 +1941,9 @@ test imgPhoto-19.8 {MatchStirngFormat: invalid data for gif} -setup {
 } -returnCodes error -result {couldn't recognize image data}
 
 # Reject corrupted or truncated image [Bug b601ce3ab1].
-# WARNING - tests 18.1-18.9 will cause a segfault on 8.5.19 and lower,
+# WARNING - tests 20.1-20.9 will cause a segfault on 8.5.19 and lower,
 #           and on 8.6.6 and lower.
-test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -setup {
+test imgPhoto-20.1 {Reject corrupted GIF (binary string)} -setup {
     set data [binary decode base64 {
 	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
 	5qpraXIvM1JlNyAgOw==
@@ -1953,7 +1953,7 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
+test imgPhoto-20.2 {Reject corrupted GIF (base 64 string)} -setup {
     set data {
 	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
 	5qpraXIvM1JlNyAgOw==
@@ -1963,14 +1963,14 @@ test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.3 {Reject corrupted GIF (file)} -setup {
+test imgPhoto-20.3 {Reject corrupted GIF (file)} -setup {
     set fileName [file join [file dirname [info script]] corruptMangled.gif]
 } -body {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.4 {Reject truncated GIF (binary string)} -setup {
+test imgPhoto-20.4 {Reject truncated GIF (binary string)} -setup {
     set data [binary decode base64 {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
     }]
@@ -1979,7 +1979,7 @@ test imgPhoto-18.4 {Reject truncated GIF (binary string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
-test imgPhoto-18.5 {Reject truncated GIF (base 64 string)} -setup {
+test imgPhoto-20.5 {Reject truncated GIF (base 64 string)} -setup {
     set data {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
     }
@@ -1988,14 +1988,14 @@ test imgPhoto-18.5 {Reject truncated GIF (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
-test imgPhoto-18.6 {Reject truncated GIF (file)} -setup {
+test imgPhoto-20.6 {Reject truncated GIF (file)} -setup {
     set fileName [file join [file dirname [info script]] corruptTruncated.gif]
 } -body {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
-test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
+test imgPhoto-20.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
     nonPortable
 } -setup {
     # About the non portability constraint of this test: see ticket [cc42cc18a5]
@@ -2011,7 +2011,7 @@ test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
+test imgPhoto-20.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
     nonPortable
 } -setup {
     # About the non portability constraint of this test: see ticket [cc42cc18a5]
@@ -2027,7 +2027,7 @@ test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints 
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
+test imgPhoto-20.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
     nonPortable
 } -setup {
     # About the non portability constraint of this test: see ticket [cc42cc18a5]
@@ -2040,10 +2040,10 @@ test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.10 {Valid GIF (binary string)} -setup {
+test imgPhoto-20.10 {Valid GIF (binary string)} -setup {
     # Test the binary string reader with a valid GIF.
     # This is not tested elsewhere.
-    # Tests 18.11, 18.12, with matching data, are included for completeness.
+    # Tests 20.11, 20.12, with matching data, are included for completeness.
     set data [binary decode base64 {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
 	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
@@ -2053,7 +2053,7 @@ test imgPhoto-18.10 {Valid GIF (binary string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -result gif1
-test imgPhoto-18.11 {Valid GIF (base 64 string)} -setup {
+test imgPhoto-20.11 {Valid GIF (base 64 string)} -setup {
     set data {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
 	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
@@ -2063,7 +2063,7 @@ test imgPhoto-18.11 {Valid GIF (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -result gif1
-test imgPhoto-18.12 {Valid GIF (file)} -setup {
+test imgPhoto-20.12 {Valid GIF (file)} -setup {
     set fileName [file join [file dirname [info script]] red.gif]
 } -body {
     image create photo gif1 -file $fileName

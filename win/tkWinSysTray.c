@@ -46,8 +46,7 @@ static int isWin32s=-1;
 #define CONST84
 #endif
 
-
-static BOOL AdjustLPICONIMAGEPointers( LPLPICONIMAGE lpImage );
+static BOOL AdjustICONIMAGEPointers( LPICONIMAGE lpImage );
 
 typedef struct IcoInfo {
     HICON hIcon;           /* icon handle returned by LoadIcon*/
@@ -83,6 +82,7 @@ static LPFN_SHELLNOTIFYICONA notify_funcA = NULL;
 static LPFN_SHELLNOTIFYICONW notify_funcW  = NULL;
 static HMODULE hmod          = NULL;
 static HWND    handlerWindow = NULL;
+
 
 /* 
  * This function tries to swap the lines of the bitmap in various formats. 
@@ -186,9 +186,9 @@ MakeIconFromResource16(LPICONIMAGE lpIcon)
 * Create icon from 32-bit resource.
 */
 static HICON 
-MakeIconFromResource32( LPLPICONIMAGE lpIcon )
+MakeIconFromResource32(LPICONIMAGE lpIcon)
 {
-    HICON hIcon ;
+    HICON hIcon;
     static FARPROC pfnCreateIconFromResourceEx=NULL;
     static int initinfo=0;
     /* Sanity Check */
@@ -227,7 +227,7 @@ MakeIconFromResource32( LPLPICONIMAGE lpIcon )
  */
 
 static HICON 
-MakeIconFromResource( LPLPICONIMAGE lpIcon )
+MakeIconFromResource( LPICONIMAGE lpIcon )
 {
     if (ISWIN32S)
         return MakeIconFromResource16(lpIcon);
@@ -247,10 +247,10 @@ FreeIconResource(LPICONRESOURCE lpIR)
         return;
     /* Free all the bits */
     for( i=0; i< lpIR->nNumImages; i++ ) {
-        if( lpIR->LPICONIMAGEs[i].lpBits != NULL )
-            ckfree((char*)lpIR->LPICONIMAGEs[i].lpBits );
-        if( lpIR->LPICONIMAGEs[i].hIcon != NULL )
-            DestroyIcon(lpIR->LPICONIMAGEs[i].hIcon);
+        if( lpIR->IconImages[i].lpBits != NULL )
+            ckfree((char*)lpIR->IconImages[i].lpBits );
+        if( lpIR->IconImages[i].hIcon != NULL )
+            DestroyIcon(lpIR->IconImages[i].hIcon);
     }
     ckfree( (char*)lpIR );
 }
@@ -326,19 +326,19 @@ ReadIconFromICOFile(Tcl_Interp* interp, LPCSTR szFileName)
     /* Loop through and read in each image */
     for( i = 0; i < lpIR->nNumImages; i++ )    {
         /* Allocate memory for the resource */
-        if( (lpIR->LPICONIMAGEs[i].lpBits = (LPBYTE) ckalloc(lpIDE[i].dwBytesInRes)) == NULL )
+        if( (lpIR->IconImages[i].lpBits = (LPBYTE) ckalloc(lpIDE[i].dwBytesInRes)) == NULL )
         {
             Tcl_AppendResult(interp,"Error Allocating Memory",(char*)NULL);
             goto close_error;
         }
-        lpIR->LPICONIMAGEs[i].dwNumBytes = lpIDE[i].dwBytesInRes;
+        lpIR->IconImages[i].dwNumBytes = lpIDE[i].dwBytesInRes;
         /* Seek to beginning of this image */
         if (Tcl_Seek(channel, lpIDE[i].dwImageOffset, SEEK_SET) < 0) {
             Tcl_AppendResult(interp,"Error Seeking in File",(char*)NULL);
             goto close_error;
         }
         /* Read it in */
-        if ((dwBytesRead = Tcl_Read(channel, lpIR->LPICONIMAGEs[i].lpBits, 
+        if ((dwBytesRead = Tcl_Read(channel, lpIR->IconImages[i].lpBits, 
             lpIDE[i].dwBytesInRes)) < 0)
         {
             Tcl_AppendResult(interp,"Error Reading File",(char*)NULL);
@@ -350,12 +350,12 @@ ReadIconFromICOFile(Tcl_Interp* interp, LPCSTR szFileName)
             goto close_error;
         }
         /* Set the internal pointers appropriately */
-        if( ! AdjustLPICONIMAGEPointers( &(lpIR->LPICONIMAGEs[i]) ) )
+        if( ! AdjustICONIMAGEPointers( &(lpIR->IconImages[i]) ) )
         {
             Tcl_AppendResult(interp,"Error Converting to Internal Format",(char*)NULL);
             goto close_error;
         }
-        lpIR->LPICONIMAGEs[i].hIcon=MakeIconFromResource(&(lpIR->LPICONIMAGEs[i]));
+        lpIR->IconImages[i].hIcon=MakeIconFromResource(&(lpIR->IconImages[i]));
     }
     /* Clean up */
     ckfree( (char*)lpIDE );
@@ -376,7 +376,7 @@ ReadIconFromICOFile(Tcl_Interp* interp, LPCSTR szFileName)
  */
 
 static BOOL
-AdjustLPICONIMAGEPointers( LPICONIMAGE lpImage )
+AdjustICONIMAGEPointers( LPICONIMAGE lpImage )
 {
     /* Sanity check */
     if( lpImage==NULL )
@@ -577,7 +577,7 @@ NotifyA (IcoInfo* icoPtr, int oper, HICON hIcon, char* txt,  char* msgtitle, cha
     Tcl_DStringFree(&dst);
     /* Balloon notification for system tray icon. */
      if (msgtitle != NULL) {
-      info = (CHAR*)Tcl_UtfToExternalDString(NULL, msgtitle, -1, &titledst);
+      title = (CHAR*)Tcl_UtfToExternalDString(NULL, msgtitle, -1, &titledst);
       strncpy(ni.szInfoTitle, msgtitle, Tcl_DStringLength(&titledst) + 1);
       Tcl_DStringFree(&titledst);
     }
@@ -615,7 +615,7 @@ NotifyW (IcoInfo* icoPtr, int oper, HICON hIcon,  char* txt,  char* msgtitle, ch
     Tcl_DStringFree(&dst);
       /* Balloon notification for system tray icon. */
      if (msgtitle != NULL) {
-      info = (WCHAR*)Tcl_UtfToExternalDString(Encoding, msgtitle, -1, &titledst);
+      title = (WCHAR*)Tcl_UtfToExternalDString(Encoding, msgtitle, -1, &titledst);
       wcsncpy(ni.szInfoTitle, msgtitle, Tcl_DStringLength(&titledst) + 1);
       Tcl_DStringFree(&titledst);
     }
@@ -724,7 +724,7 @@ FreeIcoPtr(Tcl_Interp *interp, IcoInfo *icoPtr)
         prevPtr->nextPtr = icoPtr->nextPtr;
     }
     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
-        TaskbarOperation(icoPtr, NIM_DELETE, NULL, "");
+        TaskbarOperation(icoPtr, NIM_DELETE, NULL, "", "", "");
         Tcl_ResetResult(interp);
     }
     if(icoPtr->itype==ICO_FILE){
@@ -1006,9 +1006,9 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
 			HICON hIcon = icoPtr->hIcon;
 			if (icoPtr->iconpos != 0 && icoPtr->lpIR != NULL) {
-			    hIcon = icoPtr->lpIR->LPICONIMAGEs[icoPtr->iconpos].hIcon;
+			    hIcon = icoPtr->lpIR->IconImages[icoPtr->iconpos].hIcon;
 			}
-                        TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr->taskbar_txt);
+                        TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr->taskbar_txt, "", "");
                     }
                 }
             }
@@ -1178,9 +1178,9 @@ WinIcoCmd(ClientData clientData, Tcl_Interp *interp,
     for( i = 0; i < lpIR->nNumImages; i++ ) {
       /*take the first or a 32x32 16 color icon*/
       if(i==0 ||
-         (lpIR->LPICONIMAGEs[i].Height==32 && lpIR->LPICONIMAGEs[i].Width==32
-          && lpIR->LPICONIMAGEs[i].Colors==4)){
-        hIcon=lpIR->LPICONIMAGEs[i].hIcon;
+         (lpIR->IconImages[i].Height==32 && lpIR->IconImages[i].Width==32
+          && lpIR->IconImages[i].Colors==4)){
+        hIcon=lpIR->IconImages[i].hIcon;
         pos=i;
       }
     }
@@ -1300,7 +1300,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp *interp,
       icoPtr->taskbar_command=ckalloc((int)strlen(callback)+1);
       strcpy(icoPtr->taskbar_command,callback);
     }
-    return TaskbarOperation(icoPtr, oper, hIcon, txt);
+    return TaskbarOperation(icoPtr, oper, hIcon, txt, "", "");
   wrongargs2:
     Tcl_AppendResult(interp, "unknown option \"", args[0],"\",valid are:",
                      "-callback <tcl-callback>  -text <tooltiptext>", (char *) NULL);
@@ -1335,6 +1335,7 @@ WinIcoInit (Tcl_Interp* interp)
     
     Tcl_CreateCommand(interp, "_winico", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
+		return TCL_OK;
  
 }
 
