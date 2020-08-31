@@ -6453,29 +6453,6 @@ TkpIsWindowFloating(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * TkMacOSXWindowClass --
- *
- *	Returns OS X window class of window
- *
- * Results:
- *	1 or 0 depending on window's floating attribute.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE WindowClass
-TkMacOSXWindowClass(
-    TkWindow *winPtr)
-{
-    return winPtr->wmInfoPtr->macClass;
-}
-
-/*
  *--------------------------------------------------------------
  *
  * TkMacOSXWindowOffset --
