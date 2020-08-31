@@ -15,7 +15,7 @@ namespace eval ttk::theme::aqua {
 	    -insertwidth 1
 
 	ttk::style map . \
-	    -foreground { 
+	    -foreground {
 		disabled systemDisabledControlTextColor
 		background systemLabelColor} \
 	    -selectbackground {
@@ -49,7 +49,7 @@ namespace eval ttk::theme::aqua {
 	    -selectbackground {
 		background systemTextBackgroundColor
 	    }
-	    
+
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -100,7 +100,7 @@ namespace eval ttk::theme::aqua {
 		!focus systemTextBackgroundColor
 		focus systemSelectedTextBackgroundColor
 	    }
-	
+
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont \
