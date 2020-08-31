@@ -1143,7 +1143,7 @@ declare 11 aqua {
     TkWindow* TkMacOSXGetTkWindow(void *w)
 }
 declare 12 aqua {
-    void *TkMacOSXCGContext(Drawable drawable)
+    void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
 }
 
 declare 16 aqua {
