@@ -315,7 +315,7 @@ GetRGBA(
 	break;
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101500
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
 	    [color getComponents: rgba];
@@ -438,7 +438,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXDrawableView(winPtr->privatePtr);
+	    view = TkMacOSXDrawableView((Drawable)winPtr->privatePtr);
 	}
 	if (view) {
 	    name = [[view effectiveAppearance] name];
@@ -747,8 +747,8 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
-	view = TkMacOSXDrawableView(macWin);
+	Drawable d = (Drawable)Tk_WindowId(tkwin);
+	view = TkMacOSXDrawableView(d);
     }
 
     /*
@@ -769,19 +769,23 @@ TkpGetColor(
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance = savedAppearance;
-		if (view) {
-		    windowAppearance = [view effectiveAppearance];
-		}
-		if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
-		    colormap = darkColormap;
+		if (@available(macOS 10.14, *)) {
+		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+		    NSAppearance *windowAppearance = savedAppearance;
+		    if (view) {
+			windowAppearance = [view effectiveAppearance];
+		    }
+		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
+			colormap = darkColormap;
+		    } else {
+			colormap = lightColormap;
+		    }
+		    [NSAppearance setCurrentAppearance:windowAppearance];
+		    GetRGBA(entry, p.ulong, rgba);
+		    [NSAppearance setCurrentAppearance:savedAppearance];
 		} else {
-		    colormap = lightColormap;
+		    GetRGBA(entry, p.ulong, rgba);
 		}
-		[NSAppearance setCurrentAppearance:windowAppearance];
-		GetRGBA(entry, p.ulong, rgba);
-		[NSAppearance setCurrentAppearance:savedAppearance];
 #else
 		GetRGBA(entry, p.ulong, rgba);
 #endif

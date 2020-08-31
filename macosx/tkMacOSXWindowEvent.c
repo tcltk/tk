@@ -132,6 +132,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)window
                         defaultFrame:(NSRect)newFrame
 {
+    (void)window;
+
     /*
      * This method needs to be implemented in order for [NSWindow isZoomed] to
      * give the correct answer. But it suffices to always validate every
@@ -144,6 +146,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (NSSize)window:(NSWindow *)window
   willUseFullScreenContentSize:(NSSize)proposedSize
 {
+    (void)window;
+
     /*
      * We don't need to change the proposed size, but we do need to implement
      * this method.  Otherwise the full screen window will be sized to the
@@ -208,7 +212,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	TKContentView *view = [window contentView];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	[view viewDidChangeEffectiveAppearance];
+	if (@available(macOS 10.14, *)) {
+	    [view viewDidChangeEffectiveAppearance];
+	}
 #endif
 	[view addTkDirtyRect:[view bounds]];
 	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
@@ -290,6 +296,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) applicationActivate: (NSNotification *) notification
 {
+    (void)notification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -314,6 +322,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) applicationDeactivate: (NSNotification *) notification
 {
+    (void)notification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -336,6 +346,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
                     hasVisibleWindows:(BOOL)flag
 {
+    (void)sender;
+    (void)flag;
+
     /*
      * Allowing the default response means that withdrawn windows will get
      * displayed on the screen with unresponsive title buttons.  We don't
@@ -368,6 +381,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) displayChanged: (NSNotification *) notification
 {
+    (void)notification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -412,8 +427,8 @@ TkpWillDrawWidget(Tk_Window tkwin) {
     int result;
     if (tkwin) {
 	TkWindow *winPtr = (TkWindow *)tkwin;
-	TKContentView *view = (TKContentView *) TkMacOSXDrawableView(
-						    winPtr->privatePtr);
+	TKContentView *view = TkMacOSXDrawableView(
+	    (Drawable)winPtr->privatePtr);
 	result = ([NSApp isDrawing] && view == [NSView focusView]);
 #if 0
 	printf("TkpWillDrawWidget: %s %d  %d \n", Tk_PathName(tkwin),
@@ -891,7 +906,7 @@ ExposeRestrictProc(
 
 static Tk_RestrictAction
 ConfigureRestrictProc(
-    ClientData arg,
+    TCL_UNUSED(void *),
     XEvent *eventPtr)
 {
     return (eventPtr->type==ConfigureNotify ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
@@ -915,6 +930,7 @@ ConfigureRestrictProc(
 
 - (void) drawRect: (NSRect) rect
 {
+    (void)rect;
 
 #ifdef TK_MAC_DEBUG_DRAWING
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
@@ -1142,7 +1158,9 @@ static const char *const accentNames[] = {
 {
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
-	[self viewDidChangeEffectiveAppearance];
+	if (@available(macOS 10.14, *)) {
+	    [self viewDidChangeEffectiveAppearance];
+	}
     }
 }
 
@@ -1162,6 +1180,8 @@ static const char *const accentNames[] = {
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    (void)sender;
+
     if (!winPtr){
 	return;
     }
@@ -1204,6 +1224,8 @@ static const char *const accentNames[] = {
 
 - (void) keyDown: (NSEvent *) theEvent
 {
+    (void)theEvent;
+
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -1211,7 +1233,7 @@ static const char *const accentNames[] = {
 
 /*
  * When the services menu is opened this is called for each Responder in
- * the Responder chain until a service provider is found.  The TkContentView
+ * the Responder chain until a service provider is found.  The TKContentView
  * should be the first (and generally only) Responder in the chain.  We
  * return the TkServices object that was created in TkpInit.
  */

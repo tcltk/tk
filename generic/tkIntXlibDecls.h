@@ -713,7 +713,10 @@ EXTERN int		XSync(Display *display, Bool discard);
 /* Slot 103 is reserved */
 /* Slot 104 is reserved */
 /* Slot 105 is reserved */
-/* Slot 106 is reserved */
+/* 106 */
+EXTERN int		XSetClipRectangles(Display *display, GC gc,
+				int clip_x_origin, int clip_y_origin,
+				XRectangle rectangles[], int n, int ordering);
 /* 107 */
 EXTERN int		XFlush(Display *display);
 /* 108 */
@@ -1062,7 +1065,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved103)(void);
     void (*reserved104)(void);
     void (*reserved105)(void);
-    void (*reserved106)(void);
+    int (*xSetClipRectangles) (Display *display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 106 */
     int (*xFlush) (Display *display); /* 107 */
     int (*xGrabServer) (Display *display); /* 108 */
     int (*xUngrabServer) (Display *display); /* 109 */
@@ -1617,7 +1620,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 103 is reserved */
 /* Slot 104 is reserved */
 /* Slot 105 is reserved */
-/* Slot 106 is reserved */
+#define XSetClipRectangles \
+	(tkIntXlibStubsPtr->xSetClipRectangles) /* 106 */
 #define XFlush \
 	(tkIntXlibStubsPtr->xFlush) /* 107 */
 #define XGrabServer \
