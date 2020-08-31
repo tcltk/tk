@@ -89,11 +89,11 @@ typedef struct {
  */
 
 
-static DWORD            BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
-static LPSTR            FindDIBBits(LPSTR lpbi);
-static WORD             PaletteSize(LPSTR lpbi);
-static WORD             DIBNumColors(LPSTR lpbi);
-static int              ReadICOHeader(Tcl_Channel channel);
+DWORD            BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
+LPSTR            FindDIBBits(LPSTR lpbi);
+WORD             PaletteSize(LPSTR lpbi);
+WORD             DIBNumColors(LPSTR lpbi);
+int              ReadICOHeader(Tcl_Channel channel);
 
 /*
  * Local Variables:

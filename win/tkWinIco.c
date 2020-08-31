@@ -28,7 +28,7 @@
  *----------------------------------------------------------------------
  */
 
-static WORD
+WORD
 DIBNumColors(
     LPSTR lpbi)
 {
@@ -54,7 +54,7 @@ DIBNumColors(
 	return 0;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -68,13 +68,13 @@ DIBNumColors(
  *
  *----------------------------------------------------------------------
  */
-static WORD
+ WORD
 PaletteSize(
     LPSTR lpbi)
 {
     return (WORD) (DIBNumColors(lpbi) * sizeof(RGBQUAD));
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -92,13 +92,13 @@ PaletteSize(
  *----------------------------------------------------------------------
  */
 
-static LPSTR
+LPSTR
 FindDIBBits(
     LPSTR lpbi)
 {
     return lpbi + *((LPDWORD) lpbi) + PaletteSize(lpbi);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -114,13 +114,13 @@ FindDIBBits(
  *----------------------------------------------------------------------
  */
 
-static DWORD
+DWORD
 BytesPerLine(
     LPBITMAPINFOHEADER lpBMIH)
 {
     return WIDTHBYTES(lpBMIH->biWidth * lpBMIH->biPlanes * lpBMIH->biBitCount);
 }
-
+
 
 /*
  * Local Variables:
