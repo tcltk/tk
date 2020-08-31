@@ -737,7 +737,7 @@ EntryWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
 
@@ -3995,7 +3995,7 @@ SpinboxWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj((int)index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
 

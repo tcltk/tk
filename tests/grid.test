@@ -2039,7 +2039,7 @@ test grid-23 {grid configure -in leaked from previous master - bug
     pack forget .f
     update
     winfo ismapped .t ; # must return 1
-} {1}
+} 1
 grid_reset 23
 
 test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -setup {

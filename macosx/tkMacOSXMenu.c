@@ -91,9 +91,6 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
-				 * the flag that Tk is not to draw any
-				 * menus. */
 static int inPostMenu = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
@@ -138,6 +135,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @implementation TKBackgroundLoop
 - (void) main
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSArray *modeArray = [NSArray arrayWithObjects: NSEventTrackingRunLoopMode,
 				  nil];
     while(1) {
@@ -150,7 +148,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 				withObject:nil
 			     waitUntilDone:true
 				     modes:modeArray];
-	if (self.cancelled) {
+	if ([self isCancelled]) {
 	    [NSThread exit];
 	}
 
@@ -160,6 +158,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	[NSThread sleepForTimeInterval:0.001];
     }
+    [pool drain];
 }
 @end
 
@@ -491,10 +490,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkSetMainMenu: (TKMenu *) menu
 {
-    if (gNoTkMenus) {
-	return;
-    }
-
     TKMenu *applicationMenu = nil;
 
     if (menu) {
@@ -709,7 +704,7 @@ TkpConfigureMenuEntry(
 
     if (mePtr->image) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
-	image = TkMacOSXGetNSImageWithTkImage(mePtr->menuPtr->display,
+	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != None) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
@@ -717,7 +712,7 @@ TkpConfigureMenuEntry(
 
 	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, &imageWidth,
 		&imageHeight);
-	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
+	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
 	if (gc->foreground == defaultFg) {
 	    [image setTemplate:YES];
@@ -899,7 +894,7 @@ TkpPostMenu(
 	 * rather than the appearance of the root window.
 	 */
 	realWinPtr = (TkWindow*) realWin;
-	realWinView = TkMacOSXDrawableView(realWinPtr->privatePtr);
+	realWinView = TkMacOSXDrawableView((MacDrawable *)(realWinPtr->privatePtr));
 	if (realWinView != nil) {
 	    break;
 	}
@@ -1120,8 +1115,8 @@ TkpSetMainMenubar(
 
 	if (winPtr->wmInfoPtr &&
 		winPtr->wmInfoPtr->menuPtr &&
-		winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
-	    menubar = winPtr->wmInfoPtr->menuPtr->masterMenuPtr->tkwin;
+		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+	    menubar = winPtr->wmInfoPtr->menuPtr->mainMenuPtr->tkwin;
 	}
 
 	/*
@@ -1175,25 +1170,25 @@ static void
 CheckForSpecialMenu(
     TkMenu *menuPtr)		/* The menu we are checking */
 {
-    if (!menuPtr->masterMenuPtr->tkwin) {
+    if (!menuPtr->mainMenuPtr->tkwin) {
 	return;
     }
     for (TkMenuEntry *cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
 	    cascadeEntryPtr;
 	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if (cascadeEntryPtr->menuPtr->menuType == MENUBAR
-		&& cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin) {
-	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
+		&& cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
 	    int i = 0;
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, Tk_PathName(masterMenuPtr->tkwin), -1);
+	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), -1);
 	    while (specialMenus[i].name) {
 		Tcl_DStringAppend(&ds, specialMenus[i].name,
 			specialMenus[i].len);
 		if (strcmp(Tcl_DStringValue(&ds),
-			Tk_PathName(menuPtr->masterMenuPtr->tkwin)) == 0) {
+			Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
 		    cascadeEntryPtr->entryFlags |= specialMenus[i].flag;
 		} else {
 		    cascadeEntryPtr->entryFlags &= ~specialMenus[i].flag;
@@ -1352,7 +1347,7 @@ TkpComputeStandardMenuGeometry(
      * Do nothing if this menu is a clone.
      */
 
-    if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
+    if (menuPtr->tkwin == NULL || menuPtr->mainMenuPtr != menuPtr) {
 	return;
     }
 
@@ -1658,30 +1653,6 @@ TkMacOSXClearMenubarActive(void)
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MacOSXTurnOffMenus --
- *
- *	Turns off all the menu drawing code. This is more than just disabling
- *	the "menu" command, this means that Tk will NEVER touch the menubar.
- *	It is needed in the Plugin, where Tk does not own the menubar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A flag is set which will disable all menu drawing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_MacOSXTurnOffMenus(void)
-{
-    gNoTkMenus = 1;
 }
 
 /*

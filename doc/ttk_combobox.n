@@ -19,7 +19,7 @@ the user may select the value of the text field from among the
 values in the list.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
-\-style	\-placeholder
+\-style	\-placeholder	\-placeholderforeground
 .SE
 .\" ALSO: Other entry widget options
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -147,6 +147,8 @@ Can only be changed when using non-native and non-graphical themes.
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-postoffset\fP \fIpadding\fP
 .br

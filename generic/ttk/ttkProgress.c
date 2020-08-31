@@ -71,10 +71,10 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-mode", "mode", "ProgressMode", "determinate",
 	offsetof(Progressbar,progress.modeObj),
 	offsetof(Progressbar,progress.mode),
-	0, (ClientData)ProgressbarModeStrings, 0 },
+	0, (void *)ProgressbarModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	"horizontal", offsetof(Progressbar,progress.orientObj), TCL_INDEX_NONE,
-	0, (ClientData)ttkOrientStrings, STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
     {TK_OPTION_INT, "-phase", "phase", "Phase",
 	"0", offsetof(Progressbar,progress.phaseObj), TCL_INDEX_NONE,
 	0, 0, 0 },
@@ -137,7 +137,7 @@ static void AnimateProgressProc(ClientData clientData)
 	if (pb->progress.maxPhase)
 	    phase %= pb->progress.maxPhase;
 	Tcl_DecrRefCount(pb->progress.phaseObj);
-	pb->progress.phaseObj = Tcl_NewIntObj(phase);
+	pb->progress.phaseObj = Tcl_NewWideIntObj(phase);
 	Tcl_IncrRefCount(pb->progress.phaseObj);
 
 	/*

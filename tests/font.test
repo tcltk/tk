@@ -114,11 +114,11 @@ test font-4.1 {font command: actual: arguments} -body {
 test font-4.2 {font command: actual: arguments} -body {
     # (objc < 3)
     font actual
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.3 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 0
     font actual xyz abc def
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.4 {font command: actual: displayof specified, so skip to next} -body {
     catch {font actual xyz -displayof . -size}
 } -result 0
@@ -128,7 +128,7 @@ test font-4.5 {font command: actual: displayof specified, so skip to next} -body
 test font-4.6 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 2
     font actual xyz -displayof . abc def
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.7 {font command: actual: arguments} -constraints noExceed -body {
     # (tkfont == NULL)
     font actual "\{xyz"
@@ -430,11 +430,11 @@ test font-10.2 {font command: metrics: arguments} -body {
 test font-10.3 {font command: metrics: arguments} -body {
     # (objc < 3)
     font metrics
-} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?option?"}
+} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?-option?"}
 test font-10.4 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 0
     font metrics xyz abc def
-} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?option?"}
+} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?-option?"}
 test font-10.5 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 2
     font metrics xyz -displayof . abc
@@ -1681,14 +1681,14 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
-    .t.f config -text "foo" -under -1
+    .t.f config -text "foo" -underline -1
 } -result {}
 test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 10
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -under -1
+    .t.f config -wrap -1 -underline -1
 } -result {}
 destroy .t.f
 
