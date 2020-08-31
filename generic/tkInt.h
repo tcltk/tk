@@ -88,6 +88,11 @@
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 #endif
 
+
+#ifndef Tcl_GetParent
+#   define Tcl_GetParent Tcl_GetMaster
+#endif
+
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
