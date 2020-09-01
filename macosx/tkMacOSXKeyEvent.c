@@ -50,8 +50,8 @@ static NSUInteger textInputModifiers;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
     NSWindow *w = [theEvent window];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = (TkWindow *)tkwin, *grabWinPtr, *focusWinPtr;
     NSEventType type = [theEvent type];
     NSUInteger virtual = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
@@ -285,8 +285,8 @@ static NSUInteger textInputModifiers;
     int i, len, state;
     XEvent xEvent;
     NSString *str, *keystr, *lower;
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = Tk_MacOSXGetTkWindow([self window]);
+    TkWindow *winPtr = (TkWindow *)tkwin;
     Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
@@ -392,7 +392,7 @@ static NSUInteger textInputModifiers;
 	selectedRange: (NSRange)selRange
      replacementRange: (NSRange)repRange
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([self window]);
     Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
@@ -497,7 +497,7 @@ static NSUInteger textInputModifiers;
     }
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
 	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }

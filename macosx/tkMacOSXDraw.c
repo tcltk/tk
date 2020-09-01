@@ -226,7 +226,7 @@ CreateNSImageFromPixmap(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCGContextForDrawable --
+ * Tk_MacOSXGetCGContextForDrawable --
  *
  *	Get CGContext for given Drawable, creating one if necessary.
  *
@@ -240,7 +240,7 @@ CreateNSImageFromPixmap(
  */
 
 void *
-TkMacOSXGetCGContextForDrawable(
+Tk_MacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;
@@ -1445,7 +1445,7 @@ end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
     if (!canDraw && win != NULL) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
+	TkWindow *winPtr = Tk_MacOSXGetTkWindow(win);
 
 	if (winPtr) {
 	    fprintf(stderr, "Cannot draw in %s - postponing.\n",

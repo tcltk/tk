@@ -83,9 +83,9 @@ EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront(void);
 /* 11 */
-EXTERN TkWindow*	TkMacOSXGetTkWindow(void *w);
+EXTERN Tk_Window	Tk_MacOSXGetTkWindow(void *w);
 /* 12 */
-EXTERN void *		TkMacOSXGetCGContextForDrawable(Drawable drawable);
+EXTERN void *		Tk_MacOSXGetCGContextForDrawable(Drawable drawable);
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -118,8 +118,8 @@ typedef struct TkPlatStubs {
     void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
-    TkWindow* (*tkMacOSXGetTkWindow) (void *w); /* 11 */
-    void * (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
+    Tk_Window (*tk_MacOSXGetTkWindow) (void *w); /* 11 */
+    void * (*tk_MacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
     void (*reserved13)(void);
     void (*reserved14)(void);
     void (*reserved15)(void);
@@ -176,10 +176,10 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
-#define TkMacOSXGetTkWindow \
-	(tkPlatStubsPtr->tkMacOSXGetTkWindow) /* 11 */
-#define TkMacOSXGetCGContextForDrawable \
-	(tkPlatStubsPtr->tkMacOSXGetCGContextForDrawable) /* 12 */
+#define Tk_MacOSXGetTkWindow \
+	(tkPlatStubsPtr->tk_MacOSXGetTkWindow) /* 11 */
+#define Tk_MacOSXGetCGContextForDrawable \
+	(tkPlatStubsPtr->tk_MacOSXGetCGContextForDrawable) /* 12 */
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -198,11 +198,6 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-/* Those cannot be used (yet) in stub-enabled extensions on MacOS */
-#ifdef MAC_OSX_TK /* AQUA */
-#undef TkMacOSXGetTkWindow
-#undef TkMacOSXGetCGContextForDrawable
-#endif
 #undef TkGenWMConfigureEvent_
 
 #endif /* _TKPLATDECLS */

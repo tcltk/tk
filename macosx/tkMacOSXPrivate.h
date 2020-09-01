@@ -225,10 +225,6 @@ MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
 MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
 			    HIMutableShapeRef inDestShape,
 			    HIShapeRef inSrcShape);
-#if 0
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-#endif
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
@@ -245,7 +241,7 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 #define TkMacOSXContentView(drawable) \
     (TKContentView *)TkMacOSXGetRootControl(drawable)
 #define TkMacOSXCGContext(drawable) \
-    (CGContextRef)TkMacOSXGetCGContextForDrawable(drawable)
+    (CGContextRef)Tk_MacOSXGetCGContextForDrawable(drawable)
 
 MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
 			    const char *symbol);
@@ -256,12 +252,8 @@ MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
 			    int antiAlias);
-MODULE_SCOPE int	TkMacOSXGenerateFocusEvent(TkWindow *winPtr,
-			    int activeFlag);
-MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
-MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect imageBounds,
@@ -272,11 +264,6 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
-			    NSWindow *window, int fullscreen,
-			    Tcl_Interp *interp);
-MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
-			    int active);
 #define TkMacOSXDrawableView(macWin) (TKContentView *)TkMacOSXGetRootControl((Drawable)(macWin))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
