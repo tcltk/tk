@@ -687,7 +687,7 @@ XGrabKeyboard(
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
 
     if (keyboardGrabWinPtr && captureWinPtr) {
-	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
+	NSWindow *w = TkMacOSXGetNSWindowForDrawable((Drawable) grab_window);
 	MacDrawable *macWin = (MacDrawable *) grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
@@ -789,7 +789,7 @@ Tk_SetCaretPos(
  {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkCaret *caretPtr = &(winPtr->dispPtr->caret);
-    NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *w = TkMacOSXGetNSWindowForDrawable((Drawable) Tk_WindowId(tkwin));
 
     /*
      * Register this widget as being capable of text input, so we know we

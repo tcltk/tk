@@ -207,7 +207,7 @@ CreateNSImageFromPixmap(
     CGImageRef cgImage;
     NSImage *nsImage;
     NSBitmapImageRep *bitmapImageRep;
-    CGContextRef context = TkMacOSXCGContext(pixmap);
+    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
 
     if (context) {
 	cgImage = CGBitmapContextCreateImage(context);
@@ -239,7 +239,7 @@ CreateNSImageFromPixmap(
  *----------------------------------------------------------------------
  */
 
-void *
+CGContextRef
 TkMacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
@@ -284,6 +284,16 @@ TkMacOSXGetCGContextForDrawable(
     }
 
     return (macDraw ? macDraw->context : NULL);
+}
+/*
+ * An obsolete stub with the same effect but returning a void*.
+ */
+
+void *
+TkMacOSXGetDrawablePort(
+    Drawable drawable)
+{
+    return (void *) TkMacOSXGetCGContextForDrawable(drawable);
 }
 
 /*
@@ -1139,8 +1149,9 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *)drawable;
-    TKContentView *view = TkMacOSXDrawableView(macDraw);
+    NSView *v = TkMacOSXGetNSViewForDrawable(drawable);
+    MacDrawable *macDraw = (MacDrawable *) drawable;
+    TKContentView *view = (TKContentView *) v;
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1271,7 +1282,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = TkMacOSXDrawableView(d);
+	view = (TKContentView *) TkMacOSXGetNSViewForDrawable(d);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
@@ -1295,7 +1306,7 @@ TkMacOSXSetupDrawingContext(
      * drawing to a window and we use the current context of its ContentView.
      */
 
-    dc.context = TkMacOSXCGContext(d);
+    dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (dc.context) {
 	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
     } else {
@@ -1523,7 +1534,7 @@ TkMacOSXGetClipRgn(
 #ifdef TK_MAC_DEBUG_DRAWING
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	NSView *view = TkMacOSXGetNSViewForDrawable((Drawable) macDraw);
 	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);

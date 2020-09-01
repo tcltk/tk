@@ -115,7 +115,7 @@ enum {
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
-	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    eventWindow = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
 	    if (eventWindow) {
 		local = [eventWindow tkConvertPointFromScreen: global];
 	    } else {
@@ -134,7 +134,7 @@ enum {
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
-	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    eventWindow = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
 	} else {
 	    eventWindow = [NSApp mainWindow];
 	}
@@ -464,7 +464,7 @@ XQueryPointer(
 
 	if (getLocal) {
 	    MacDrawable *macWin = (MacDrawable *) w;
-	    NSWindow *win = TkMacOSXDrawableWindow(w);
+	    NSWindow *win = TkMacOSXGetNSWindowForDrawable((Drawable) w);
 
 	    if (win) {
 		NSPoint local;
@@ -554,7 +554,7 @@ TkGenerateButtonEvent(
     unsigned int state)		/* Button Key state suitable for X event. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
-    NSWindow *win = TkMacOSXDrawableWindow(window);
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable((Drawable) window);
     MouseEventData med;
 
     bzero(&med, sizeof(MouseEventData));
