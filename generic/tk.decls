@@ -1140,10 +1140,10 @@ declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
 declare 11 aqua {
-    TkWindow* TkMacOSXGetTkWindow(void *w)
+    Tk_Window Tk_MacOSXGetTkWindow(void *w)
 }
 declare 12 aqua {
-    void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
+    void *Tk_MacOSXGetCGContextForDrawable(Drawable drawable)
 }
 
 declare 16 aqua {

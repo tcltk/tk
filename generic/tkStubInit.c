@@ -1013,8 +1013,8 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    TkMacOSXGetTkWindow, /* 11 */
-    TkMacOSXGetCGContextForDrawable, /* 12 */
+    Tk_MacOSXGetTkWindow, /* 11 */
+    Tk_MacOSXGetCGContextForDrawable, /* 12 */
     0, /* 13 */
     0, /* 14 */
     0, /* 15 */

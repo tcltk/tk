@@ -56,10 +56,6 @@ enum {
     Tk_Window tkwin;
     NSPoint local, global;
     NSInteger button = -1;
-#if 0
-    NSTrackingArea *trackingArea = nil;
-    NSInteger eventNumber, clickCount, buttonNumber;
-#endif
     [NSEvent stopPeriodicEvents];
 
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -152,8 +148,8 @@ enum {
      */
 
     if (!tkwin) {
-	winPtr = TkMacOSXGetTkWindow(eventWindow);
-	tkwin = (Tk_Window) winPtr;
+	tkwin = Tk_MacOSXGetTkWindow(eventWindow);
+	winPtr = (TkWindow *)tkwin;
     }
     if (!tkwin) {
 
@@ -310,34 +306,6 @@ enum {
 @end
 
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXKeyModifiers --
- *
- *	Returns the current state of the modifier keys.
- *
- * Results:
- *	An OS Modifier state.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-EventModifiers
-TkMacOSXModifierState(void)
-{
-    UInt32 keyModifiers;
-    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
-
-    keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
-	    GetCurrentKeyModifiers();
-
-    return (EventModifiers) (keyModifiers & USHRT_MAX);
-}
 
 /*
  *----------------------------------------------------------------------
