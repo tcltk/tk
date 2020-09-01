@@ -1172,7 +1172,7 @@ void *
 Tk_MacOSXGetNSViewForDrawable(
     Drawable drawable)
 {
-    return (void *) TkMacOSXGetNSViewForDrawable(drawable);
+    return TkMacOSXGetNSViewForDrawable(drawable);
 }
 
 /*
@@ -1183,7 +1183,7 @@ void *
 TkMacOSXGetRootControl(
     Drawable drawable)
 {
-    return (void *) TkMacOSXGetNSViewForDrawable(drawable);
+    return TkMacOSXGetNSViewForDrawable(drawable);
 }
 
 
