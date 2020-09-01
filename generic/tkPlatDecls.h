@@ -83,11 +83,13 @@ EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront(void);
 /* 11 */
-EXTERN TkWindow*	TkMacOSXGetTkWindow(void *w);
+EXTERN TkWindow*	TkMacOSXGetTkWindow(NSWindow *w);
 /* 12 */
-EXTERN void *		TkMacOSXGetCGContextForDrawable(Drawable drawable);
-/* Slot 13 is reserved */
-/* Slot 14 is reserved */
+EXTERN struct CGContext * TkMacOSXGetCGContextForDrawable(Drawable drawable);
+/* 13 */
+EXTERN NSView*		TkMacOSXGetNSViewForDrawable(Drawable drawable);
+/* 14 */
+EXTERN NSWindow*	TkMacOSXGetNSWindowForDrawable(Drawable drawable);
 /* Slot 15 is reserved */
 /* 16 */
 EXTERN void		TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y,
@@ -118,10 +120,10 @@ typedef struct TkPlatStubs {
     void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
-    TkWindow* (*tkMacOSXGetTkWindow) (void *w); /* 11 */
-    void * (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
-    void (*reserved13)(void);
-    void (*reserved14)(void);
+    TkWindow* (*tkMacOSXGetTkWindow) (NSWindow *w); /* 11 */
+    struct CGContext * (*tkMacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
+    NSView* (*tkMacOSXGetNSViewForDrawable) (Drawable drawable); /* 13 */
+    NSWindow* (*tkMacOSXGetNSWindowForDrawable) (Drawable drawable); /* 14 */
     void (*reserved15)(void);
     void (*tkGenWMConfigureEvent_) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
 #endif /* AQUA */
@@ -180,8 +182,10 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tkMacOSXGetTkWindow) /* 11 */
 #define TkMacOSXGetCGContextForDrawable \
 	(tkPlatStubsPtr->tkMacOSXGetCGContextForDrawable) /* 12 */
-/* Slot 13 is reserved */
-/* Slot 14 is reserved */
+#define TkMacOSXGetNSViewForDrawable \
+	(tkPlatStubsPtr->tkMacOSXGetNSViewForDrawable) /* 13 */
+#define TkMacOSXGetNSWindowForDrawable \
+	(tkPlatStubsPtr->tkMacOSXGetNSWindowForDrawable) /* 14 */
 /* Slot 15 is reserved */
 #define TkGenWMConfigureEvent_ \
 	(tkPlatStubsPtr->tkGenWMConfigureEvent_) /* 16 */

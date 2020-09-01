@@ -643,6 +643,7 @@ Tk_GetOpenFileObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
+    TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, len, multiple = 0;
@@ -814,7 +815,7 @@ Tk_GetOpenFileObjCmd(
 	[openpanel setDirectoryURL:fileURL];
     }
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -914,6 +915,7 @@ Tk_GetSaveFileObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
+    TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int confirmOverwrite = 1;
@@ -1100,7 +1102,7 @@ Tk_GetSaveFileObjCmd(
 	[savepanel setNameFieldStringValue:@""];
     }
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1156,6 +1158,7 @@ Tk_ChooseDirectoryObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
+    TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, len, mustexist = 0;
@@ -1242,10 +1245,10 @@ Tk_ChooseDirectoryObjCmd(
     if (!directory) {
 	directory = @"/";
     }
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+    parent = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
     [panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1392,6 +1395,7 @@ Tk_MessageBoxObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
@@ -1529,7 +1533,7 @@ Tk_MessageBoxObjCmd(
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+    parent = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
 	parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090

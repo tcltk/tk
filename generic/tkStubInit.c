@@ -1015,8 +1015,8 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_MacOSXIsAppInFront, /* 10 */
     TkMacOSXGetTkWindow, /* 11 */
     TkMacOSXGetCGContextForDrawable, /* 12 */
-    0, /* 13 */
-    0, /* 14 */
+    TkMacOSXGetNSViewForDrawable, /* 13 */
+    TkMacOSXGetNSWindowForDrawable, /* 14 */
     0, /* 15 */
     TkGenWMConfigureEvent_, /* 16 */
 #endif /* AQUA */

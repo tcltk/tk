@@ -1140,12 +1140,17 @@ declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
 declare 11 aqua {
-    TkWindow* TkMacOSXGetTkWindow(void *w)
+    TkWindow* TkMacOSXGetTkWindow(NSWindow *w)
 }
 declare 12 aqua {
-    void *TkMacOSXGetCGContextForDrawable(Drawable drawable)
+    struct CGContext *TkMacOSXGetCGContextForDrawable(Drawable drawable)
 }
-
+declare 13 aqua {
+    NSView* TkMacOSXGetNSViewForDrawable(Drawable drawable)
+}
+declare 14 aqua {
+    NSWindow* TkMacOSXGetNSWindowForDrawable(Drawable drawable)
+}
 declare 16 aqua {
     void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)

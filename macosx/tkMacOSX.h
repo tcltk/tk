@@ -29,6 +29,12 @@ typedef int (Tk_MacOSXEmbedMakeContainerExistProc) (Tk_Window window);
 typedef void (Tk_MacOSXEmbedGetClipProc) (Tk_Window window, TkRegion rgn);
 typedef void (Tk_MacOSXEmbedGetOffsetInParentProc) (Tk_Window window, void *ulCorner);
 
+/*
+ * Declare these classes so stubs use them as parameter or return types.
+ */
+
+@class NSWindow;
+@class NSView;
 #include "tkPlatDecls.h"
 
 #endif /* _TKMAC */
