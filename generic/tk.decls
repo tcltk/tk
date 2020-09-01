@@ -1142,10 +1142,18 @@ declare 10 aqua {
 declare 11 aqua {
     Tk_Window Tk_MacOSXGetTkWindow(void *w)
 }
+# Replaces TkMacOSXGetDrawablePort
 declare 12 aqua {
     void *Tk_MacOSXGetCGContextForDrawable(Drawable drawable)
 }
-
+# Replaces TkMacOSXGetRootControl
+declare 13 aqua {
+    void *Tk_MacOSXGetNSViewForDrawable(Drawable drawable)
+}
+# Replaces TkMacOSXDrawable
+declare 14 aqua {
+    void *Tk_MacOSXGetNSWindowForDrawable(Drawable drawable)
+}
 declare 16 aqua {
     void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)

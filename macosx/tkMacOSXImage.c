@@ -538,13 +538,13 @@ CreateCGImageFromDrawableRect(
 
 	CGRect image_rect = CGRectMake(x, y, width, height);
 
-	cg_context = TkMacOSXCGContext(drawable);
+	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
 	if (cg_image) {
 	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
 	    CGImageRelease(cg_image);
 	}
-    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
+    } else if (TkMacOSXGetNSViewForDrawable(drawable) != NULL) {
 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
@@ -597,7 +597,7 @@ CreateCGImageFromPixmap(
     Drawable pixmap)
 {
     CGImageRef img = NULL;
-    CGContextRef context = TkMacOSXCGContext(pixmap);
+    CGContextRef context = TkMacOSXGetCGContextForDrawable(pixmap);
 
     if (context) {
 	img = CGBitmapContextCreateImage(context);
@@ -767,7 +767,7 @@ XCopyArea(
 
     if (srcDraw->flags & TK_IS_PIXMAP) {
 	img = CreateCGImageFromPixmap(src);
-    } else if (TkMacOSXDrawableWindow(src)) {
+    } else if (TkMacOSXGetNSWindowForDrawable(src)) {
 	img = CreateCGImageFromDrawableRect(src, src_x, src_y, width, height);
     } else {
 	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");

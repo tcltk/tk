@@ -187,7 +187,8 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 #define TK_DRAW_IN_CONTEXT		1
 
 /*
- * Prototypes of internal procs not in the stubs table.
+ * Prototypes of internal procs that are called from generic or test
+ * code but are not in the stubs table.
  */
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
@@ -195,7 +196,6 @@ MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 	int y, int width, int height);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
-MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 
 /*
  * Include the stubbed internal platform-specific API.

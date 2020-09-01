@@ -174,8 +174,8 @@ static void drawMacScrollbar(
     MacScrollbar *msPtr,
     CGContextRef context)
 {
-    Drawable d = (Drawable)Tk_WindowId(scrollPtr->tkwin);
-    NSView *view = TkMacOSXDrawableView(d);
+    Drawable d = Tk_WindowId(scrollPtr->tkwin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(d);
     CGPathRef path;
     CGPoint inner[2], outer[2], thumbOrigin;
     CGSize thumbSize;
@@ -250,6 +250,8 @@ TkpDisplayScrollbar(
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
+    Pixmap pixmap = winPtr->window;
+    MacDrawable *macWin = (MacDrawable *) pixmap;
     TkMacOSXDrawingContext dc;
 
     scrollPtr->flags &= ~REDRAW_PENDING;
@@ -258,12 +260,11 @@ TkpDisplayScrollbar(
 	return;
     }
 
-    MacDrawable *macWin = (MacDrawable *) winPtr->window;
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(pixmap);
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
-	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
+	    || !TkMacOSXSetupDrawingContext(winPtr->window, NULL, &dc)) {
 	return;
     }
 
@@ -287,22 +288,22 @@ TkpDisplayScrollbar(
     if (scrollPtr->highlightWidth != 0) {
     	GC fgGC, bgGC;
 
-    	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
+    	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, pixmap);
     	if (scrollPtr->flags & GOT_FOCUS) {
-    	    fgGC = Tk_GCForColor(scrollPtr->highlightColorPtr, (Pixmap) macWin);
+    	    fgGC = Tk_GCForColor(scrollPtr->highlightColorPtr, pixmap);
     	} else {
     	    fgGC = bgGC;
     	}
     	TkpDrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
-    		(Pixmap) macWin);
+	    pixmap);
     }
 
-    Tk_Draw3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
+    Tk_Draw3DRectangle(tkwin, pixmap, scrollPtr->bgBorder,
 	    scrollPtr->highlightWidth, scrollPtr->highlightWidth,
 	    Tk_Width(tkwin) - 2*scrollPtr->highlightWidth,
 	    Tk_Height(tkwin) - 2*scrollPtr->highlightWidth,
 	    scrollPtr->borderWidth, scrollPtr->relief);
-    Tk_Fill3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
+    Tk_Fill3DRectangle(tkwin, pixmap, scrollPtr->bgBorder,
 	    scrollPtr->inset, scrollPtr->inset,
 	    Tk_Width(tkwin) - 2*scrollPtr->inset,
 	    Tk_Height(tkwin) - 2*scrollPtr->inset, 0, TK_RELIEF_FLAT);
@@ -589,12 +590,13 @@ UpdateControlValues(
 {
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
+    Drawable drawable = Tk_WindowId(scrollPtr->tkwin);
+    MacDrawable *macWin = (MacDrawable *)drawable; 
     double dViewSize;
     HIRect contrlRect;
     short width, height;
 
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(drawable);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 
