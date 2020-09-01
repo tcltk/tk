@@ -538,31 +538,20 @@ Tk_ImageObjCmd(
             }
         }
 
-        if( ! foundImage) {
-            if (fileName != NULL) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "couldn't recognize data in image file \"%s\"",
-                    fileName));
-            } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"couldn't recognize data in image string", -1));
-            }
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "UNRECOGNIZED_DATA", NULL);
-            return TCL_ERROR;
-        }
-
 	resultObj = Tcl_NewDictObj();
-        Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("format", -1), Tcl_NewStringObj(fmt, -1));
-        Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("width",  -1), Tcl_NewWideIntObj(w));
-        Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("height", -1), Tcl_NewWideIntObj(h));
+        if (foundImage) {
+	    Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("format", -1), Tcl_NewStringObj(fmt, -1));
+	    Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("width",  -1), Tcl_NewWideIntObj(w));
+	    Tcl_DictObjPut(interp, resultObj, Tcl_NewStringObj("height", -1), Tcl_NewWideIntObj(h));
 
-        if (Tcl_DictObjFirst(interp, metadataOutObj, &search, &key, &value, &done) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        for (; !done ; Tcl_DictObjNext(&search, &key, &value, &done)) {
-            Tcl_DictObjPut(interp, resultObj, key, value);
-        }
-        Tcl_DictObjDone(&search); 
+	    if (Tcl_DictObjFirst(interp, metadataOutObj, &search, &key, &value, &done) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    for (; !done ; Tcl_DictObjNext(&search, &key, &value, &done)) {
+		Tcl_DictObjPut(interp, resultObj, key, value);
+	    }
+	    Tcl_DictObjDone(&search); 
+	}
 	Tcl_DecrRefCount(metadataOutObj);
 	Tcl_SetObjResult(interp, resultObj);
 	break;
