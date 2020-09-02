@@ -92,9 +92,9 @@ void initColorTable()
     for (key in [systemColorList allKeys]) {
 	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = ckalloc(sizeof(SystemColorDatum));
+	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
-	name = ckalloc(length + 1);
+	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = toupper(name[0]);
         if (!strcmp(name, "WindowBackgroundColor")) {
@@ -124,7 +124,7 @@ void initColorTable()
      */
 
     numSystemColors = index;
-    systemColorIndex = ckalloc(numSystemColors * sizeof(SystemColorDatum*));
+    systemColorIndex = (SystemColorDatum **)ckalloc(numSystemColors * sizeof(SystemColorDatum *));
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);

@@ -547,7 +547,7 @@ static void DrawListHeader(
      * So we have to query the Apple window manager.
      */
 
-    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
     CGFloat *bgRGBA = [win isKeyWindow] ? activeBgRGBA : inactiveBgRGBA;
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
