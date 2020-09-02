@@ -436,6 +436,13 @@ VISIBILITY_HIDDEN
 
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Bool _mouseInResizeArea;
+#endif
+}
+@property Bool mouseInResizeArea;
 @end
 
 @interface TKWindow(TKWm)
