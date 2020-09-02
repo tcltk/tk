@@ -703,7 +703,7 @@ MenuButtonEventProc(
 	    mbPtr->flags &= ~ACTIVE;
 	}
 	if ((buttonPtr->flags & REDRAW_PENDING) == 0) {
-	    Tcl_DoWhenIdle(TkpDisplayMenuButton, (ClientData) buttonPtr);
+	    Tcl_DoWhenIdle(TkpDisplayMenuButton, buttonPtr);
 	    buttonPtr->flags |= REDRAW_PENDING;
 	}
     }

@@ -309,7 +309,7 @@ static const char *scriptTextProc = "::tk::mac::DoScriptText";
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
-                data[actual] = '\0'; 
+                data[actual] = '\0';
                 AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptTextCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptTextCommand);

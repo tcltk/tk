@@ -417,7 +417,7 @@ XPutImage(
     unsigned int height)	/* distination and source. */
 {
     TkMacOSXDrawingContext dc;
-    MacDrawable *macDraw = (MacDrawable *) drawable;
+    MacDrawable *macDraw = (MacDrawable *)drawable;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
@@ -526,7 +526,7 @@ CreateCGImageFromDrawableRect(
     unsigned int width,
     unsigned int height)
 {
-    MacDrawable *mac_drawable = (MacDrawable *) drawable;
+    MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGImageRef cg_image = NULL, result = NULL;
     NSBitmapImageRep *bitmapRep = NULL;
@@ -544,7 +544,7 @@ CreateCGImageFromDrawableRect(
 	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
 	    CGImageRelease(cg_image);
 	}
-    } else if (TkMacOSXDrawableView(mac_drawable) != NULL) {
+    } else if (TkMacOSXGetNSViewForDrawable(mac_drawable) != NULL) {
 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
@@ -746,7 +746,7 @@ XCopyArea(
     int dest_y)
 {
     TkMacOSXDrawingContext dc;
-    MacDrawable *srcDraw = (MacDrawable *) src;
+    MacDrawable *srcDraw = (MacDrawable *)src;
     CGImageRef img = NULL;
     CGRect bounds, srcRect, dstRect;
 
@@ -767,7 +767,7 @@ XCopyArea(
 
     if (srcDraw->flags & TK_IS_PIXMAP) {
 	img = CreateCGImageFromPixmap(src);
-    } else if (TkMacOSXDrawableWindow(src)) {
+    } else if (TkMacOSXGetNSWindowForDrawable(src)) {
 	img = CreateCGImageFromDrawableRect(src, src_x, src_y, width, height);
     } else {
 	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
@@ -821,8 +821,8 @@ XCopyPlane(
     unsigned long plane)	/* Which plane to copy. */
 {
     TkMacOSXDrawingContext dc;
-    MacDrawable *srcDraw = (MacDrawable *) src;
-    MacDrawable *dstDraw = (MacDrawable *) dst;
+    MacDrawable *srcDraw = (MacDrawable *)src;
+    MacDrawable *dstDraw = (MacDrawable *)dst;
     CGRect bounds, srcRect, dstRect;
     display->request++;
     if (!width || !height) {

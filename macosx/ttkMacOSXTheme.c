@@ -153,7 +153,7 @@ static inline CGRect BoxToRect(
     Drawable d,
     Ttk_Box b)
 {
-    MacDrawable *md = (MacDrawable *) d;
+    MacDrawable *md = (MacDrawable *)d;
     CGRect rect;
 
     rect.origin.y       = b.y + md->yOff;
@@ -547,7 +547,7 @@ static void DrawListHeader(
      * So we have to query the Apple window manager.
      */
 
-    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
     CGFloat *bgRGBA = [win isKeyWindow] ? activeBgRGBA : inactiveBgRGBA;
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
@@ -2448,7 +2448,7 @@ static void ThumbElementDraw(
 	END_DRAWING
     } else {
 	double thumbSize, trackSize, visibleSize, factor, fraction;
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
+	MacDrawable *macWin = (MacDrawable *)Tk_WindowId(tkwin);
 	CGRect troughBounds = {{macWin->xOff, macWin->yOff},
 			       {Tk_Width(tkwin), Tk_Height(tkwin)}};
 

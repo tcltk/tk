@@ -56,10 +56,6 @@ enum {
     Tk_Window tkwin;
     NSPoint local, global;
     NSInteger button = -1;
-#if 0
-    NSTrackingArea *trackingArea = nil;
-    NSInteger eventNumber, clickCount, buttonNumber;
-#endif
     [NSEvent stopPeriodicEvents];
 
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -115,7 +111,7 @@ enum {
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
-	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	    if (eventWindow) {
 		local = [eventWindow tkConvertPointFromScreen: global];
 	    } else {
@@ -134,7 +130,7 @@ enum {
 	tkwin = TkMacOSXGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
-	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	} else {
 	    eventWindow = [NSApp mainWindow];
 	}
@@ -153,7 +149,7 @@ enum {
 
     if (!tkwin) {
 	winPtr = TkMacOSXGetTkWindow(eventWindow);
-	tkwin = (Tk_Window) winPtr;
+	tkwin = (Tk_Window)winPtr;
     }
     if (!tkwin) {
 
@@ -183,11 +179,11 @@ enum {
 	for (tkwin2 = tkEventWindow;
 	     !Tk_IsTopLevel(tkwin2);
 	     tkwin2 = Tk_Parent(tkwin2)) {
-	    if (tkwin2 == (Tk_Window) grabWinPtr) {
+	    if (tkwin2 == (Tk_Window)grabWinPtr) {
 		break;
 	    }
 	}
-	if (tkwin2 != (Tk_Window) grabWinPtr) {
+	if (tkwin2 != (Tk_Window)grabWinPtr) {
 	    return theEvent;
 	}
     }
@@ -314,34 +310,6 @@ enum {
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXKeyModifiers --
- *
- *	Returns the current state of the modifier keys.
- *
- * Results:
- *	An OS Modifier state.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-EventModifiers
-TkMacOSXModifierState(void)
-{
-    UInt32 keyModifiers;
-    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
-
-    keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
-	    GetCurrentKeyModifiers();
-
-    return (EventModifiers) (keyModifiers & USHRT_MAX);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXButtonKeyState --
  *
  *	Returns the current state of the button & modifier keys.
@@ -463,8 +431,8 @@ XQueryPointer(
 	NSPoint global = [NSEvent mouseLocation];
 
 	if (getLocal) {
-	    MacDrawable *macWin = (MacDrawable *) w;
-	    NSWindow *win = TkMacOSXDrawableWindow(w);
+	    MacDrawable *macWin = (MacDrawable *)w;
+	    NSWindow *win = TkMacOSXGetNSWindowForDrawable(w);
 
 	    if (win) {
 		NSPoint local;
@@ -553,8 +521,8 @@ TkGenerateButtonEvent(
     Window window,		/* X Window containing button event. */
     unsigned int state)		/* Button Key state suitable for X event. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
-    NSWindow *win = TkMacOSXDrawableWindow(window);
+    MacDrawable *macWin = (MacDrawable *)window;
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     MouseEventData med;
 
     bzero(&med, sizeof(MouseEventData));
@@ -680,7 +648,7 @@ TkpSetCapture(
 	winPtr = winPtr->parentPtr;
     }
     [NSEvent stopPeriodicEvents];
-    captureWinPtr = (Tk_Window) winPtr;
+    captureWinPtr = (Tk_Window)winPtr;
 }
 
 /*
