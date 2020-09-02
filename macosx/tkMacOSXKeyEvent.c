@@ -688,7 +688,7 @@ XGrabKeyboard(
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
-	MacDrawable *macWin = (MacDrawable *) grab_window;
+	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
 	    if (modalSession) {

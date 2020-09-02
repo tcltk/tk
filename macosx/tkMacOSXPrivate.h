@@ -258,7 +258,7 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow*)TkMacOSXDrawable(drawable))
-#define TkMacOSXDrawableView(macWin) (TKContentView *)TkMacOSXGetRootControl((Drawable)(macWin))
+#define TkMacOSXGetNSViewForDrawable(macWin) (NSView *)TkMacOSXGetRootControl((Drawable)(macWin))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
