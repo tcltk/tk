@@ -767,7 +767,7 @@ XCopyArea(
 
     if (srcDraw->flags & TK_IS_PIXMAP) {
 	img = CreateCGImageFromPixmap(src);
-    } else if (TkMacOSXDrawableWindow(src)) {
+    } else if (TkMacOSXGetNSWindowForDrawable(src)) {
 	img = CreateCGImageFromDrawableRect(src, src_x, src_y, width, height);
     } else {
 	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
