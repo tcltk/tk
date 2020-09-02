@@ -969,7 +969,7 @@ TkWmDeadWindow(
 	NSWindow *parent = [ourNSWindow parentWindow];
 	TkMacOSXUnregisterMacWindow(ourNSWindow);
         if (winPtr->window) {
-            ((MacDrawable *) winPtr->window)->view = nil;
+            ((MacDrawable *)winPtr->window)->view = nil;
         }
 	wmPtr->window = NULL;
 
@@ -1433,7 +1433,7 @@ WmSetAttribute(
 		    oldFlags, 1, 0);
 	    [macWindow setBackgroundColor:boolean ? [NSColor clearColor] : nil];
 	    [macWindow setOpaque:!boolean];
-	    TkMacOSXInvalidateWindow((MacDrawable *) winPtr->window,
+	    TkMacOSXInvalidateWindow((MacDrawable *)winPtr->window,
 		    TK_PARENT_WINDOW);
 	    }
 	break;
@@ -1939,7 +1939,7 @@ WmForgetCmd(
 	Tk_MakeWindowExist(frameWin);
 	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
 
-	macWin = (MacDrawable *) winPtr->window;
+	macWin = (MacDrawable *)winPtr->window;
 
     	TkFocusJoin(winPtr);
     	Tk_UnmapWindow(frameWin);
@@ -1950,7 +1950,7 @@ WmForgetCmd(
 	macWin->flags &= ~TK_HOST_EXISTS;
 
 	TkWmDeadWindow(winPtr);
-	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
+	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
 
         /*
          * Make sure wm no longer manages this window
@@ -2785,7 +2785,7 @@ WmManageCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!Tk_IsTopLevel(frameWin)) {
-	MacDrawable *macWin = (MacDrawable *) winPtr->window;
+	MacDrawable *macWin = (MacDrawable *)winPtr->window;
 
 	if (!Tk_IsManageable(frameWin)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -2801,7 +2801,7 @@ WmManageCmd(
 	    TkWmNewWindow(winPtr);
 	    if (winPtr->window == None) {
 		Tk_MakeWindowExist((Tk_Window)winPtr);
-		macWin = (MacDrawable *) winPtr->window;
+		macWin = (MacDrawable *)winPtr->window;
 	    }
 	}
 	wmPtr = winPtr->wmInfoPtr;
@@ -6029,7 +6029,7 @@ TkMacOSXMakeRealWindowExist(
 	return;
     }
 
-    macWin = (MacDrawable *) winPtr->window;
+    macWin = (MacDrawable *)winPtr->window;
 
     /*
      * If this is embedded, make sure its container's toplevel exists, then
@@ -7205,7 +7205,7 @@ RemapWindows(
      */
 
     if (winPtr->window != None) {
-	MacDrawable *macWin = (MacDrawable *) winPtr->window;
+	MacDrawable *macWin = (MacDrawable *)winPtr->window;
 
 	macWin->toplevel->referenceCount--;
 	macWin->toplevel = parentWin->toplevel;
@@ -7222,7 +7222,7 @@ RemapWindows(
 
     for (childPtr = winPtr->childList; childPtr != NULL;
 	    childPtr = childPtr->nextPtr) {
-	RemapWindows(childPtr, (MacDrawable *) winPtr->window);
+	RemapWindows(childPtr, (MacDrawable *)winPtr->window);
     }
 }
 

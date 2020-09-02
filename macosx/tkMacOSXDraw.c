@@ -1117,7 +1117,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *)drawable;
-    TKContentView *view = TkMacOSXDrawableView(macDraw);
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1248,7 +1248,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = TkMacOSXDrawableView(d);
+	view = (TKContentView *)TkMacOSXGetNSViewForDrawable(d);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
@@ -1500,7 +1500,7 @@ TkMacOSXGetClipRgn(
 #ifdef TK_MAC_DEBUG_DRAWING
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	NSView *view = TkMacOSXGetNSViewForDrawable(macDraw);
 	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);
