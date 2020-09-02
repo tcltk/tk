@@ -7347,6 +7347,13 @@ GetDumpFlags(
 	    return TCL_ERROR;
 	}
 
+        /*
+         * Forget cached value in Tcl_GetIndexFromObjStruct().
+         * This works around bug [8980ba1d0b].
+         */
+
+        Tcl_FreeIntRep(objv[arg]);
+
 	switch ((enum opts) myOptIndices[index]) {
 #define CASE(Flag) case DUMP_##Flag: *what |= TK_DUMP_##Flag; flags |= TK_DUMP_##Flag; break;
 	CASE(CHARS);
