@@ -195,7 +195,6 @@ MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 	int y, int width, int height);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
-MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 
 /*
  * Include the stubbed internal platform-specific API.
