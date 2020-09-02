@@ -69,8 +69,13 @@ enum {
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
 	button = [theEvent buttonNumber] + Button1;
+	break;
     case NSMouseEntered:
+	[(TKWindow *)eventWindow setMouseInResizeArea:YES];
+	break;
     case NSMouseExited:
+	[(TKWindow *)eventWindow setMouseInResizeArea:NO];
+	break;
     case NSCursorUpdate:
     case NSLeftMouseUp:
     case NSRightMouseUp:
@@ -100,12 +105,10 @@ enum {
 	 */
 
 	if (eventType == NSLeftMouseDown &&
+	    [(TKWindow *)eventWindow mouseInResizeArea] &&
 	    ([eventWindow styleMask] & NSResizableWindowMask) &&
 	    [NSApp macOSVersion] > 100600) {
-	    NSRect frame = [eventWindow frame];
-	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
 		return theEvent;
-	    }
 	}
 	global = [eventWindow tkConvertPointToScreen: local];
 	tkwin = TkMacOSXGetCapture();
