@@ -152,7 +152,7 @@ MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     NSWindow *win = nil;
     if (macWin->toplevel && macWin->toplevel->winPtr &&
 	macWin->toplevel->winPtr->wmInfoPtr &&
@@ -266,7 +266,7 @@ PressButtonObjCmd(
 
 static int
 InjectKeyEventObjCmd(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
