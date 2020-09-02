@@ -652,15 +652,26 @@ test image-15.1 {deleting image does not make widgets forget about it} -setup {
     imageCleanup
 } -result {10 10 20 20 foo {} {10 10 30 30} foo}
 
-test image-15.1 {Tk_ImageCmd procedure, "metadata" option} -body {
+# Tests 16.x: Basic usage of "image metadata".
+# Format specific "image metadata" tests are in the corresponding test files.
+
+test image-16.1 {Tk_ImageCmd procedure, "metadata" option} -body {
     image metadata
 } -returnCodes error -result {wrong # args: should be "image metadata ?-file name? ?-data string?"}
 
-test image-15.2 {Tk_ImageCmd procedure, "metadata" option} -body {
+test image-16.2 {Tk_ImageCmd procedure, "metadata" option} -body {
     image metadata -gorp
 } -returnCodes error -result {wrong # args: should be "image metadata ?-file name? ?-data string?"}
 
-test image-15.3 {Tk_ImageCmd procedure, "metadata" No image file} -setup {
+test image-16.3 {Tk_ImageCmd procedure, "metadata" option} -body {
+    image metadata -file
+} -returnCodes error -result {wrong # args: should be "image metadata ?-file name? ?-data string?"}
+
+test image-16.4 {Tk_ImageCmd procedure, "metadata" option} -body {
+    image metadata -data
+} -returnCodes error -result {wrong # args: should be "image metadata ?-file name? ?-data string?"}
+
+test image-16.5 {Tk_ImageCmd procedure, "metadata" No image file} -setup {
     imageCleanup
 } -body {
     image metadata -file all.tcl
@@ -668,21 +679,6 @@ test image-15.3 {Tk_ImageCmd procedure, "metadata" No image file} -setup {
     imageCleanup
 } -result {}
 
-test image-15.4 {Tk_ImageCmd procedure, "metadata" GIF file} -setup {
-    imageCleanup
-} -body {
-    image metadata -file earth.gif
-} -cleanup {
-    imageCleanup
-} -result {format gif width 320 height 200}
-
-test image-15.5 {Tk_ImageCmd procedure, "metadata" PNG file} -setup {
-    imageCleanup
-} -body {
-    image metadata -file iDOT.png
-} -cleanup {
-    imageCleanup
-} -result {format png width 174 height 40}
 
 destroy .c
 imageFinish

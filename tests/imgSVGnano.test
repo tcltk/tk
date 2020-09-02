@@ -194,7 +194,6 @@ test imgSVGnano-4.1 {reread file on configure -scale} -setup {
     unset res
 } -result {100 100 200 200}
 
-
 test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -setup {
     catch {rename foo ""}
     tcltest::makeFile $data(plus) tmpplus.svg
@@ -206,6 +205,41 @@ test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -s
     rename foo ""
     tcltest::removeFile tmpplus.svg
 } -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
+
+# Tests 5.x: Use "image metadata" with SVG image files and image data.
+
+test imgSVGnano-5.1 {image metadata -file} -setup {
+    imageCleanup
+} -body {
+    image metadata -file $data(plusFilePath)
+} -cleanup {
+    imageCleanup
+} -result {format svg width 100 height 100}
+
+test imgSVGnano-5.2 {image metadata -data} -setup {
+    imageCleanup
+} -body {
+    image metadata -data $data(plus)
+} -cleanup {
+    imageCleanup
+} -result {format svg width 100 height 100}
+
+test imgSVGnano-5.3 {image metadata -file} -setup {
+    imageCleanup
+} -body {
+    image metadata -file $data(badFilePath)
+} -cleanup {
+    imageCleanup
+} -result {}
+
+test imgSVGnano-5.4 {image metadata -data} -setup {
+    imageCleanup
+} -body {
+    image metadata -data $data(bad)
+} -cleanup {
+    imageCleanup
+} -result {}
+
 
 };# end of namespace svgnano
 

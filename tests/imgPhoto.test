@@ -2510,6 +2510,28 @@ test imgPhoto-23.20 {data: empty metadata parameter overwrites image metadata} -
     file delete $path
 } -result {0}
 
+# Tests 24.x: Use "image metadata" with GIF image files and image data.
+
+test imgPhoto-24.1 {image metadata -file} -setup {
+    imageCleanup
+} -body {
+    image metadata -file earth.gif
+} -cleanup {
+    imageCleanup
+} -result {format gif width 320 height 200}
+
+# Note, that extracting addtional metadata like "comment" is not
+# yet implemented for GIF images.
+test imgPhoto-24.2 {image metadata -data} -setup {
+    set data $::gifstart
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    append data $::gifdata $::gifend
+} -body {
+    image metadata -data $data
+} -cleanup {
+    imageCleanup
+} -result {format gif width 16 height 16}
+
 unset -nocomplain gifstart gifdata gifend
 
 
