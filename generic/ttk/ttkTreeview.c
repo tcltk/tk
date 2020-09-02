@@ -2727,7 +2727,7 @@ static int TreeviewDeleteCommand(
 
     ckfree(items);
     if (selItemDeleted) {
-        TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+        Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     }
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
@@ -3006,7 +3006,7 @@ static int TreeviewSelectionCommand(
     }
 
     ckfree(items);
-    TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;

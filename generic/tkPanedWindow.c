@@ -507,7 +507,7 @@ Tk_PanedWindowObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(pwPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(pwPtr->tkwin));
     return TCL_OK;
 }
 
@@ -730,7 +730,7 @@ PanedWindowWidgetObjCmd(
 	resultObj = Tcl_NewObj();
 	for (i = 0; i < pwPtr->numSlaves; i++) {
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj(pwPtr->slaves[i]->tkwin));
+		    Tk_NewWindowObj(pwPtr->slaves[i]->tkwin));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	break;

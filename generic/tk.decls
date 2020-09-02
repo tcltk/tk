@@ -1069,6 +1069,28 @@ declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
+# TIP#580
+declare 274 {
+    int Tk_AlwaysShowSelection(Tk_Window tkwin)
+}
+declare 275 {
+    unsigned Tk_GetButtonMask(unsigned button)
+}
+declare 276 {
+    int Tk_GetDoublePixelsFromObj(Tcl_Interp *interp, Tk_Window tkwin,
+	    Tcl_Obj *objPtr, double *doublePtr)
+}
+declare 277 {
+    Tcl_Obj *Tk_NewWindowObj(Tk_Window tkwin)
+}
+declare 278 {
+    void Tk_SendVirtualEvent(Tk_Window tkwin, const char *eventName,
+	    Tcl_Obj *detail)
+}
+declare 279 {
+    Tcl_Obj *Tk_FontGetDescription(Tk_Font tkfont)
+}
+
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
 

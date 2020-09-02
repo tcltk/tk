@@ -631,7 +631,7 @@ static void SelectTab(Notebook *nb, TkSizeT index)
     NotebookPlaceSlave(nb, index);
     TtkRedisplayWidget(&nb->core);
 
-    TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
+    Tk_SendVirtualEvent(nb->core.tkwin, "NotebookTabChanged", NULL);
 }
 
 /* NextTab --
@@ -683,7 +683,7 @@ static void SelectNearestTab(Notebook *nb)
 	Ttk_UnmapSlave(nb->notebook.mgr, currentIndex);
     }
     if (currentIndex != nextIndex) {
-	TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
+	Tk_SendVirtualEvent(nb->core.tkwin, "NotebookTabChanged", NULL);
     }
 
     nb->notebook.currentIndex = nextIndex;

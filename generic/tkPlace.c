@@ -344,7 +344,7 @@ Tk_PlaceObjCmd(
 	    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 		    slavePtr = slavePtr->nextPtr) {
 		Tcl_ListObjAppendElement(NULL, listPtr,
-			TkNewWindowObj(slavePtr->tkwin));
+			Tk_NewWindowObj(slavePtr->tkwin));
 	    }
 	    Tcl_SetObjResult(interp, listPtr);
 	}
@@ -806,7 +806,7 @@ PlaceInfoCommand(
     if (slavePtr->masterPtr != NULL) {
 	Tcl_AppendToObj(infoObj, "-in", -1);
 	Tcl_ListObjAppendElement(NULL, infoObj,
-		TkNewWindowObj(slavePtr->masterPtr->tkwin));
+		Tk_NewWindowObj(slavePtr->masterPtr->tkwin));
 	Tcl_AppendToObj(infoObj, " ", -1);
     }
     Tcl_AppendPrintfToObj(infoObj,
