@@ -293,17 +293,6 @@ Tk_MacOSXGetCGContextForDrawable(
 {
     return TkMacOSXGetCGContextForDrawable(drawable);
 }
-
-/*
- * An obsolete version of the same stub.
- */
-
-void *
-TkMacOSXGetDrawablePort(
-    Drawable drawable)
-{
-    return TkMacOSXGetCGContextForDrawable(drawable);
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1159,7 +1148,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *)drawable;
-    TKContentView *view = (TKContentView *) TkMacOSXGetNSViewForDrawable(drawable);
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1290,7 +1279,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = (TKContentView*) TkMacOSXGetNSViewForDrawable(d);
+	view = (TKContentView *)TkMacOSXGetNSViewForDrawable(d);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
@@ -1464,7 +1453,7 @@ end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
     if (!canDraw && win != NULL) {
-	TkWindow *winPtr = Tk_MacOSXGetTkWindow(win);
+	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
 
 	if (winPtr) {
 	    fprintf(stderr, "Cannot draw in %s - postponing.\n",
@@ -1542,7 +1531,7 @@ TkMacOSXGetClipRgn(
 #ifdef TK_MAC_DEBUG_DRAWING
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
-	NSView *view = TkMacOSXGetNSViewForDrawable(drawable);
+	NSView *view = TkMacOSXGetNSViewForDrawable(macDraw);
 	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);

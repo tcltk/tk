@@ -340,8 +340,9 @@ XUnmapWindow(
 	 */
 
 	if (parentPtr && parentPtr->privatePtr->visRgn) {
-	    NSView *view = TkMacOSXGetNSViewForDrawable(parentPtr->window);
-	    TkMacOSXInvalidateViewRegion(view, parentPtr->privatePtr->visRgn);
+	    TkMacOSXInvalidateViewRegion(
+		    TkMacOSXGetNSViewForDrawable(parentPtr->privatePtr),
+		    parentPtr->privatePtr->visRgn);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)parentPtr);
 	TkMacOSXUpdateClipRgn(parentPtr);
@@ -713,7 +714,7 @@ XConfigureWindow(
      */
 
     if (value_mask & CWStackMode) {
-	NSView *view = TkMacOSXGetNSViewForDrawable(w);
+	NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
 	if (view) {
 	    TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
@@ -1061,18 +1062,16 @@ TkMacOSXInvalidateWindow(
     if (macWin->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macWin->winPtr);
     }
-    TkMacOSXInvalidateViewRegion(
-	TkMacOSXGetNSViewForDrawable((Drawable) macWin),
-	(flag == TK_WINDOW_ONLY) ? macWin->visRgn : macWin->aboveVisRgn);
+    TkMacOSXInvalidateViewRegion(TkMacOSXGetNSViewForDrawable(macWin),
+	    (flag == TK_WINDOW_ONLY) ? macWin->visRgn : macWin->aboveVisRgn);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- *  -- TkMacOSXGetNSWindowForDrawable / Tk_MacOSXGetNSWindowForDrawable
+ * TkMacOSXGetNSWindowForDrawable --
  *
- *	Returns the NSWindow for a given X drawable.  The Tk_ version is
- *      exported as a stub returning a void*.
+ *	This function returns the NSWindow for a given X drawable.
  *
  * Results:
  *	A NSWindow, or nil for off screen pixmaps.
@@ -1112,11 +1111,38 @@ TkMacOSXDrawable(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetNSViewForDrawable / Tk_MacOSXGetNSViewForDrawable --
+ * TkMacOSXGetDrawablePort --
  *
- *      Returns the ContentView of the NSWindow for a given X drawable in the
- *      case that the drawable is a window.  If the drawable is a pixmap it
- *      returns nil.  The Tk_version is exported as a stub returning a void*.
+ *	This function only exists because it is listed in the stubs table.
+ *      It is useless.
+ *
+ * Results:
+ *	NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void *
+TkMacOSXGetDrawablePort(
+    TCL_UNUSED(Drawable))
+{
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MacOSXGetNSViewForDrawable --
+ *
+ *      It returns the NSView for a given X drawable in the case that the
+ *      drawable is a window.  If the drawable is a pixmap it returns nil.
+ *
+ *      The macro TkMacOSXGetNSViewForDrawable calls
+ *      this function and should always be used rather than directly using
+ *      the official name of this function.
  *
  * Results:
  *	A NSView* or nil.
@@ -1127,8 +1153,8 @@ TkMacOSXDrawable(
  *----------------------------------------------------------------------
  */
 
-NSView *
-TkMacOSXGetNSViewForDrawable(
+void *
+Tk_MacOSXGetNSViewForDrawable(
     Drawable drawable)
 {
     void *result = NULL;
@@ -1149,25 +1175,6 @@ TkMacOSXGetNSViewForDrawable(
     }
     return result;
 }
-
-void *
-Tk_MacOSXGetNSViewForDrawable(
-    Drawable drawable)
-{
-    return TkMacOSXGetNSViewForDrawable(drawable);
-}
-
-/*
- * The obsolete version of the same stub.
- */
-
-void *
-TkMacOSXGetRootControl(
-    Drawable drawable)
-{
-    return TkMacOSXGetNSViewForDrawable(drawable);
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -1426,11 +1433,11 @@ UpdateOffsets(
 
 Pixmap
 Tk_GetPixmap(
-    Display *display,	  /* Display for new pixmap (can be null). */
-    TCL_UNUSED(Drawable),
-    int width,		  /* Dimensions of pixmap. */
+    Display *display,	/* Display for new pixmap (can be null). */
+    TCL_UNUSED(Drawable),		/* Drawable where pixmap will be used (ignored). */
+    int width,		/* Dimensions of pixmap. */
     int height,
-    int depth)		  /* Bits per pixel for pixmap. */
+    int depth)		/* Bits per pixel for pixmap. */
 {
     MacDrawable *macPix;
 

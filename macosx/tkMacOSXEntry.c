@@ -92,7 +92,7 @@ TkpDrawEntryBorderAndFocus(
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
     int oldWidth = 0;
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
     const HIThemeFrameDrawInfo info = {
 	.version = 0,
 	.kind = kHIThemeFrameTextFieldSquare,
@@ -208,7 +208,7 @@ TkpDrawSpinboxButtons(
     TkMacOSXDrawingContext dc;
     XRectangle rects[1];
     GC bgGC;
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
     HIThemeButtonDrawInfo info = {
 	.version = 0,
 	.adornment = kThemeAdornmentNone,

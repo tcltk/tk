@@ -747,7 +747,7 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
-	Drawable d = (Drawable)Tk_WindowId(tkwin);
+	Drawable d = Tk_WindowId(tkwin);
 	view = TkMacOSXGetNSViewForDrawable(d);
     }
 

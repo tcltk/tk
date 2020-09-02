@@ -1189,7 +1189,7 @@ TkpDrawAngledCharsInContext(
     CTTypesetterRef typesetter;
     CFIndex start, length;
     CTLineRef line, full=nil;
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
     CGColorRef fg;
