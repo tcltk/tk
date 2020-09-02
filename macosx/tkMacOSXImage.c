@@ -80,7 +80,7 @@ TkMacOSXCreateCGImageWithXImage(
 	if (image->bitmap_bit_order != MSBFirst) {
 	    char *srcPtr = image->data + image->xoffset;
 	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = ckalloc(len));
+	    char *destPtr = (data = (char *)ckalloc(len));
 
 	    while (srcPtr < endPtr) {
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
@@ -754,7 +754,7 @@ XCopyArea(
 
     if (srcDraw->flags & TK_IS_PIXMAP) {
 	img = CreateCGImageFromPixmap(src);
-    } else if (TkMacOSXDrawableWindow(src)) {
+    } else if (TkMacOSXGetNSWindowForDrawable(src)) {
 	img = CreateCGImageFromDrawableRect(src, src_x, src_y, width, height);
     } else {
 	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
