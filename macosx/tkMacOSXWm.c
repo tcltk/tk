@@ -729,7 +729,7 @@ TkWmNewWindow(
      * detect size and position changes caused by window managers.
      */
 
-    Tk_CreateEventHandler((Tk_Window) winPtr, StructureNotifyMask,
+    Tk_CreateEventHandler((Tk_Window)winPtr, StructureNotifyMask,
 	    TopLevelEventProc, winPtr);
 
     /*
@@ -737,7 +737,7 @@ TkWmNewWindow(
      * window manager.
      */
 
-    Tk_ManageGeometry((Tk_Window) winPtr, &wmMgrType, (ClientData) 0);
+    Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, NULL);
 }
 
 /*
@@ -784,7 +784,7 @@ TkWmMapWindow(
 	 * Generate configure event when we first map the window.
 	 */
 
-	TkGenWMConfigureEvent((Tk_Window) winPtr, wmPtr->x, wmPtr->y, -1, -1,
+	TkGenWMConfigureEvent((Tk_Window)winPtr, wmPtr->x, wmPtr->y, -1, -1,
 		TK_LOCATION_CHANGED);
 
 	/*
@@ -896,8 +896,8 @@ TkWmDeadWindow(
      */
 
     RemoveTransient(winPtr);
-    Tk_ManageGeometry((Tk_Window) winPtr, NULL, NULL);
-    Tk_DeleteEventHandler((Tk_Window) winPtr, StructureNotifyMask,
+    Tk_ManageGeometry((Tk_Window)winPtr, NULL, NULL);
+    Tk_DeleteEventHandler((Tk_Window)winPtr, StructureNotifyMask,
 	    TopLevelEventProc, winPtr);
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -1094,7 +1094,7 @@ Tk_WmObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget",
@@ -1529,7 +1529,7 @@ WmAttributesCmd(
     NSWindow *macWindow;
 
     if (winPtr->window == None) {
-	Tk_MakeWindowExist((Tk_Window) winPtr);
+	Tk_MakeWindowExist((Tk_Window)winPtr);
     }
     if (!TkMacOSXHostToplevelExists(winPtr)) {
 	TkMacOSXMakeRealWindowExist(winPtr);
@@ -1663,7 +1663,7 @@ WmColormapwindowsCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tk_MakeWindowExist((Tk_Window) winPtr);
+	Tk_MakeWindowExist((Tk_Window)winPtr);
 	resultObj = Tcl_NewObj();
 	for (i = 0; i < wmPtr->cmapCount; i++) {
 	    if ((i == (wmPtr->cmapCount-1))
@@ -1671,7 +1671,7 @@ WmColormapwindowsCmd(
 		break;
 	    }
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj((Tk_Window) wmPtr->cmapList[i]));
+		    TkNewWindowObj((Tk_Window)wmPtr->cmapList[i]));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
@@ -1691,7 +1691,7 @@ WmColormapwindowsCmd(
 	    gotToplevel = 1;
 	}
 	if (winPtr2->window == None) {
-	    Tk_MakeWindowExist((Tk_Window) winPtr2);
+	    Tk_MakeWindowExist((Tk_Window)winPtr2);
 	}
 	cmapList[i] = winPtr2;
     }
@@ -1931,7 +1931,7 @@ WmForgetCmd(
     TCL_UNUSED(int),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
-    Tk_Window frameWin = (Tk_Window) winPtr;
+    Tk_Window frameWin = (Tk_Window)winPtr;
 
     if (Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin;
@@ -2007,7 +2007,7 @@ WmFrameCmd(
     }
     window = wmPtr->reparent;
     if (window == None) {
-	window = Tk_WindowId((Tk_Window) winPtr);
+	window = Tk_WindowId((Tk_Window)winPtr);
     }
     sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
@@ -2166,7 +2166,7 @@ WmGridCmd(
 	    errorMsg = "heightInc can't be <= 0";
 	    goto error;
 	}
-	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
+	Tk_SetGrid((Tk_Window)winPtr, reqWidth, reqHeight, widthInc,
 		heightInc);
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -2287,14 +2287,13 @@ WmIconbitmapCmd(
     }
     str = Tcl_GetStringFromObj(objv[3], &len);
     if (winPtr->window == None) {
-	Tk_MakeWindowExist((Tk_Window) winPtr);
+	Tk_MakeWindowExist((Tk_Window)winPtr);
     }
     if (!TkMacOSXHostToplevelExists(winPtr)) {
 	TkMacOSXMakeRealWindowExist(winPtr);
     }
-    if (WmSetAttribute(winPtr,
-	   TkMacOSXGetNSWindowForDrawable(winPtr->window), interp,
-	   WMATT_TITLEPATH, objv[3]) == TCL_OK) {
+    if (WmSetAttribute(winPtr, TkMacOSXGetNSWindowForDrawable(winPtr->window), interp,
+	    WMATT_TITLEPATH, objv[3]) == TCL_OK) {
 	if (!len) {
 	    if (wmPtr->hints.icon_pixmap != None) {
 		Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -2303,7 +2302,7 @@ WmIconbitmapCmd(
 	    wmPtr->hints.flags &= ~IconPixmapHint;
 	}
     } else {
-	pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr, Tk_GetUid(str));
+	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, Tk_GetUid(str));
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
@@ -2344,7 +2343,7 @@ WmIconifyCmd(
 	return TCL_ERROR;
     }
 
-    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+    if (Tk_Attributes((Tk_Window)winPtr)->override_redirect) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
@@ -2741,7 +2740,7 @@ WmIconwindowCmd(
 	wmPtr->hints.icon_window = Tk_WindowId(tkwin2);
 	wmPtr->hints.flags |= IconWindowHint;
 	wmPtr->icon = tkwin2;
-	wmPtr2->iconFor = (Tk_Window) winPtr;
+	wmPtr2->iconFor = (Tk_Window)winPtr;
 	if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
 	    /*
 	     * If the window is in normal or zoomed state, the icon should be
@@ -2782,7 +2781,7 @@ WmManageCmd(
     TCL_UNUSED(int),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
-    Tk_Window frameWin = (Tk_Window) winPtr;
+    Tk_Window frameWin = (Tk_Window)winPtr;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!Tk_IsTopLevel(frameWin)) {
@@ -2801,7 +2800,7 @@ WmManageCmd(
 	if (wmPtr == NULL) {
 	    TkWmNewWindow(winPtr);
 	    if (winPtr->window == None) {
-		Tk_MakeWindowExist((Tk_Window) winPtr);
+		Tk_MakeWindowExist((Tk_Window)winPtr);
 		macWin = (MacDrawable *) winPtr->window;
 	    }
 	}
@@ -2965,7 +2964,7 @@ WmOverrideredirectCmd(
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		Tk_Attributes((Tk_Window) winPtr)->override_redirect));
+		Tk_Attributes((Tk_Window)winPtr)->override_redirect));
 	return TCL_OK;
     }
 
@@ -2973,7 +2972,7 @@ WmOverrideredirectCmd(
 	return TCL_ERROR;
     }
     atts.override_redirect = flag ? True : False;
-    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
     ApplyContainerOverrideChanges(winPtr, win);
     return TCL_OK;
 }
@@ -3096,7 +3095,7 @@ WmProtocolCmd(
 	return TCL_OK;
     }
 
-    protocol = Tk_InternAtom((Tk_Window) winPtr, Tcl_GetString(objv[3]));
+    protocol = Tk_InternAtom((Tk_Window)winPtr, Tcl_GetString(objv[3]));
     if (objc == 4) {
 	/*
 	 * Return the command to handle a given protocol.
@@ -3334,7 +3333,7 @@ WmStackorderCmd(
 	    resultObj = Tcl_NewObj();
 	    for (windowPtr = windows; *windowPtr ; windowPtr++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj((Tk_Window) *windowPtr));
+		    TkNewWindowObj((Tk_Window)*windowPtr));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
 	    ckfree(windows);
@@ -3483,7 +3482,7 @@ WmStateCmd(
 
 	    break;
 	case OPT_ICONIC:
-	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+	    if (Tk_Attributes((Tk_Window)winPtr)->override_redirect) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't iconify \"%s\": override-redirect flag is set",
 			winPtr->pathName));
@@ -3699,7 +3698,7 @@ WmTransientCmd(
 	    transient->flags |= WITHDRAWN_BY_CONTAINER;
 	}
 
-	wmPtr->master = (Tk_Window) containerPtr;
+	wmPtr->master = (Tk_Window)containerPtr;
     }
     ApplyContainerOverrideChanges(winPtr, NULL);
     return TCL_OK;
@@ -4040,7 +4039,7 @@ TopLevelEventProc(
 	    Tk_ErrorHandler handler = Tk_CreateErrorHandler(winPtr->display,
 		    -1, -1, -1, NULL, NULL);
 
-	    Tk_DestroyWindow((Tk_Window) winPtr);
+	    Tk_DestroyWindow((Tk_Window)winPtr);
 	    Tk_DeleteErrorHandler(handler);
 	}
 	if (wmTracing) {
@@ -4254,7 +4253,7 @@ UpdateGeometryInfo(
 
 	    wmPtr->x = wmPtr->y = 0;
 	    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
-	    Tk_GeometryRequest((Tk_Window) contWinPtr, width, height);
+	    Tk_GeometryRequest((Tk_Window)contWinPtr, width, height);
 	}
 	return;
     }
@@ -4544,7 +4543,7 @@ Tk_GetRootCoords(
 		    x -= winPtr->changes.x + winPtr->changes.border_width;
 		    y -= winPtr->changes.y + winPtr->changes.border_width;
 
-		    tkMacOSXEmbedHandler->getOffsetProc((Tk_Window) winPtr,
+		    tkMacOSXEmbedHandler->getOffsetProc((Tk_Window)winPtr,
 			    &theOffset);
 
 		    x += theOffset.h;
@@ -4674,7 +4673,7 @@ Tk_CoordsToWindow(
     if (winPtr->mainPtr != ((TkWindow *)tkwin)->mainPtr) {
 	return NULL;
     }
-    return (Tk_Window) winPtr;
+    return (Tk_Window)winPtr;
 }
 
 /*
@@ -4767,7 +4766,7 @@ Tk_TopCoordsToWindow(
     }
     *newX = x;
     *newY = y;
-    return (Tk_Window) winPtr;
+    return (Tk_Window)winPtr;
 }
 
 /*
@@ -5617,7 +5616,7 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		TkMacOSXInDarkMode((Tk_Window) winPtr)));
+		TkMacOSXInDarkMode((Tk_Window)winPtr)));
 	return TCL_OK;
     default:
 	return TCL_ERROR;
@@ -6047,7 +6046,7 @@ TkMacOSXMakeRealWindowExist(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     MacDrawable *macWin;
     WindowClass macClass;
-    Bool overrideRedirect = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
+    Bool overrideRedirect = Tk_Attributes((Tk_Window)winPtr)->override_redirect;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
@@ -6074,7 +6073,7 @@ TkMacOSXMakeRealWindowExist(
 	    Tcl_Panic("TkMacOSXMakeRealWindowExist could not find container");
 	}
 	if (tkMacOSXEmbedHandler->containerExistProc &&
-		tkMacOSXEmbedHandler->containerExistProc((Tk_Window) winPtr)
+		tkMacOSXEmbedHandler->containerExistProc((Tk_Window)winPtr)
 		!= TCL_OK) {
 	    Tcl_Panic("ContainerExistProc could not make container");
 	}
@@ -6163,7 +6162,7 @@ TkMacOSXMakeRealWindowExist(
     	XSetWindowAttributes atts;
 
     	atts.override_redirect = True;
-    	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
     	ApplyContainerOverrideChanges(winPtr, NULL);
     }
 }
@@ -6408,7 +6407,7 @@ TkpWmSetState(
     macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
     if (state == WithdrawnState) {
-	Tk_UnmapWindow((Tk_Window) winPtr);
+	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == IconicState) {
 
 	/*
@@ -6420,9 +6419,9 @@ TkpWmSetState(
 		![macWin isMiniaturized]) {
 	    [macWin miniaturize:NSApp];
 	}
-	Tk_UnmapWindow((Tk_Window) winPtr);
+	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == NormalState || state == ZoomState) {
-	Tk_MapWindow((Tk_Window) winPtr);
+	Tk_MapWindow((Tk_Window)winPtr);
 	[macWin deminiaturize:NSApp];
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
@@ -6636,8 +6635,7 @@ WmStackorderToplevelWrapperMap(
     if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)
 	    && (winPtr->display == display)) {
 	hPtr = Tcl_CreateHashEntry(table,
-		(char*) TkMacOSXGetNSWindowForDrawable(winPtr->window),
-		&newEntry);
+		(void *)TkMacOSXGetNSWindowForDrawable(winPtr->window), &newEntry);
 	Tcl_SetHashValue(hPtr, winPtr);
     }
 
@@ -6757,7 +6755,7 @@ ApplyWindowAttributeFlagChanges(
 		if (!create) {
 		    return;
 		}
-		Tk_MakeWindowExist((Tk_Window) winPtr);
+		Tk_MakeWindowExist((Tk_Window)winPtr);
 	    }
 	    if (!TkMacOSXHostToplevelExists(winPtr)) {
 		if (!create) {
@@ -7014,7 +7012,7 @@ ApplyContainerOverrideChanges(
 	    if (containerWinPtr && (containerWinPtr->window != None)
 		    && TkMacOSXHostToplevelExists(containerWinPtr)) {
 		NSWindow *containerMacWin = TkMacOSXGetNSWindowForDrawable(
-						containerWinPtr->window);
+			containerWinPtr->window);
 
 		/*
 		 * Try to add the transient window as a child window of the

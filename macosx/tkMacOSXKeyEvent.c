@@ -83,7 +83,7 @@ static NSUInteger textInputModifiers;
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
 	    winPtr =winPtr->dispPtr->focusPtr;
-	    tkwin = (Tk_Window) winPtr;
+	    tkwin = (Tk_Window)winPtr;
 	}
     }
 
@@ -322,7 +322,7 @@ static NSUInteger textInputModifiers;
      */
 
     if (repRange.location == 0) {
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
 	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
@@ -393,7 +393,7 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([self window]);
-    Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
 
@@ -498,7 +498,7 @@ static NSUInteger textInputModifiers;
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([self window]);
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
 	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }

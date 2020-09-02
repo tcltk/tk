@@ -198,13 +198,17 @@ getFileURL(
 @implementation TKApplication(TKDialog)
 
 - (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url {
+	(void)sender;
+	(void)url;
     return YES;
 }
 
 - (void)panel:(id)sender didChangeToDirectoryURL:(NSURL *)url {
+    (void)sender; (void)url;
 }
 
 - (BOOL)panel:(id)sender validateURL:(NSURL *)url error:(NSError **)outError {
+    (void)sender; (void)url;
     *outError = nil;
     return YES;
 }
@@ -233,7 +237,7 @@ getFileURL(
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
@@ -271,7 +275,7 @@ getFileURL(
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
@@ -805,7 +809,7 @@ Tk_GetOpenFileObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
+    callbackInfo = (FilePanelCallbackInfo *)ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = multiple;
@@ -914,7 +918,7 @@ Tk_GetSaveFileObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
@@ -1082,7 +1086,7 @@ Tk_GetSaveFileObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
+    callbackInfo = (FilePanelCallbackInfo *)ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
@@ -1157,7 +1161,7 @@ Tk_ChooseDirectoryObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
@@ -1232,7 +1236,7 @@ Tk_ChooseDirectoryObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
+    callbackInfo = (FilePanelCallbackInfo *)ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
@@ -1358,7 +1362,7 @@ TkAboutDlg(void)
 
 int
 TkMacOSXStandardAboutPanelObjCmd(
-    ClientData clientData,	/* Unused. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1394,8 +1398,7 @@ Tk_MessageBoxObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
-    TkWindow *winPtr = (TkWindow *)clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
@@ -1529,11 +1532,11 @@ Tk_MessageBoxObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = ckalloc(sizeof(AlertCallbackInfo));
+    callbackInfo = (AlertCallbackInfo *)ckalloc(sizeof(AlertCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
-    parent = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
 	parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
@@ -1630,6 +1633,7 @@ enum FontchooserOption {
 - (void) changeFont: (id) sender
 {
     NSFontManager *fm = [NSFontManager sharedFontManager];
+    (void)sender;
 
     if ([fm currentFontAction] == NSViaPanelFontAction) {
 	NSFont *font = [fm convertFont:fontPanelFont];
@@ -1653,14 +1657,16 @@ enum FontchooserOption {
     }
 }
 
-- (NSUInteger) validModesForFontPanel: (NSFontPanel *) fontPanel
+- (NSUInteger) validModesForFontPanel: (NSFontPanel *)fontPanel
 {
+    (void)fontPanel;
+
     return (NSFontPanelStandardModesMask & ~NSFontPanelAllEffectsModeMask) |
 	    NSFontPanelUnderlineEffectModeMask |
 	    NSFontPanelStrikethroughEffectModeMask;
 }
 
-- (void) windowDidOrderOffScreen: (NSNotification *) notification
+- (void) windowDidOrderOffScreen: (NSNotification *)notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
@@ -1718,7 +1724,7 @@ FontchooserEvent(
 		result = Tcl_ListObjGetElements(fontchooserInterp,
 			fcdPtr->cmdObj, &objc, &objv);
 		if (result == TCL_OK) {
-		    tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		    tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		    memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		    tmpv[objc] = fontObj;
 		    TkBackgroundEvalObjv(fontchooserInterp, objc + 1, tmpv,
@@ -1760,7 +1766,7 @@ FontchooserCget(
     case FontchooserParent:
 	if (fcdPtr->parent != None) {
 	    resObj = Tcl_NewStringObj(
-		    ((TkWindow *) fcdPtr->parent)->pathName, -1);
+		    ((TkWindow *)fcdPtr->parent)->pathName, -1);
 	} else {
 	    resObj = Tcl_NewStringObj(".", 1);
 	}
@@ -1981,14 +1987,14 @@ static int
 FontchooserShowCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     FontchooserData *fcdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
 
     if (fcdPtr->parent == None) {
-	fcdPtr->parent = (Tk_Window) clientData;
+	fcdPtr->parent = (Tk_Window)clientData;
 	Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
     }
@@ -2027,10 +2033,10 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData clientData,	/* Main window */
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(void *),	/* Main window */
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
 
@@ -2129,9 +2135,9 @@ DeleteFontchooserData(
 MODULE_SCOPE int
 TkInitFontchooser(
     Tcl_Interp *interp,
-    ClientData clientData)
+    TCL_UNUSED(void *))
 {
-    FontchooserData *fcdPtr = ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = (FontchooserData *)ckalloc(sizeof(FontchooserData));
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

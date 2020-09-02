@@ -68,7 +68,7 @@ XDestroyWindow(
     if (!Tk_IsTopLevel(macWin->winPtr)) {
 	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	if (macWin->winPtr->parentPtr != NULL) {
-	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)macWin->winPtr->parentPtr);
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
@@ -187,11 +187,11 @@ XMapWindow(
 	     * the window.
 	     */
 
-	    TkMacOSXInvalClipRgns((Tk_Window) contWinPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 
-	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
+	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
 
 	/*
 	 * We only need to send the MapNotify event for toplevel windows.
@@ -221,7 +221,7 @@ XMapWindow(
 	 * and redisplay the window.
 	 */
 
-	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
+	TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
     }
 
     TKContentView *view = [win contentView];
@@ -309,7 +309,7 @@ XUnmapWindow(
 		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win orderOut:nil];
 	}
-	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
+	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
 
 	/*
 	 * We only need to send the UnmapNotify event for toplevel windows.
@@ -343,7 +343,7 @@ XUnmapWindow(
 	    NSView *view = TkMacOSXGetNSViewForDrawable(parentPtr->window);
 	    TkMacOSXInvalidateViewRegion(view, parentPtr->privatePtr->visRgn);
 	}
-	TkMacOSXInvalClipRgns((Tk_Window) parentPtr);
+	TkMacOSXInvalClipRgns((Tk_Window)parentPtr);
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
     winPtr->flags &= ~TK_MAPPED;
@@ -514,7 +514,7 @@ MoveResizeWindow(
 {
     int deltaX = 0, deltaY = 0, parentBorderwidth = 0;
     MacDrawable *macParent = NULL;
-    NSWindow *macWindow = TkMacOSXGetNSWindowForDrawable((Drawable) macWin);
+    NSWindow *macWindow = TkMacOSXGetNSWindowForDrawable((Drawable)macWin);
 
     /*
      * Find the Parent window, for an embedded window it will be its container.
@@ -551,7 +551,7 @@ MoveResizeWindow(
     if (macWindow) {
 	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	if (macParent) {
-	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)macParent->winPtr);
 	}
     }
     UpdateOffsets(macWin->winPtr, deltaX, deltaY);
@@ -716,8 +716,8 @@ XConfigureWindow(
 	NSView *view = TkMacOSXGetNSViewForDrawable(w);
 
 	if (view) {
-	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
-	    TkpRedrawWidget((Tk_Window) winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
+	    TkpRedrawWidget((Tk_Window)winPtr);
 	}
     }
 
@@ -869,7 +869,7 @@ TkMacOSXUpdateClipRgn(
 		    TkRegion r = TkCreateRegion();
 		    HIShapeRef visRgn;
 
-		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr, r);
+		    tkMacOSXEmbedHandler->getClipProc((Tk_Window)winPtr, r);
 		    visRgn = TkMacOSXGetNativeRegion(r);
 		    ChkErr(HIShapeIntersect, visRgn, rgn, rgn);
 		    CFRelease(visRgn);
@@ -1083,8 +1083,8 @@ TkMacOSXInvalidateWindow(
  *----------------------------------------------------------------------
  */
 
-NSWindow *
-TkMacOSXGetNSWindowForDrawable(
+void *
+TkMacOSXDrawable(
     Drawable drawable)
 {
     MacDrawable *macWin = (MacDrawable *)drawable;
@@ -1103,28 +1103,10 @@ TkMacOSXGetNSWindowForDrawable(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXGetNSWindowForDrawable(contWinPtr->window);
+	    result = TkMacOSXGetNSWindowForDrawable((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;
-}
-
-void *
-Tk_MacOSXGetNSWindowForDrawable(
-    Drawable drawable)
-{
-    return TkMacOSXGetNSWindowForDrawable(drawable);
-}
-
-/*
- * The obsolete version of the same stub.
- */
-
-void *
-TkMacOSXDrawable(
-    Drawable drawable)
-{
-    return TkMacOSXGetNSWindowForDrawable(drawable);
 }
 
 /*
@@ -1250,7 +1232,7 @@ TkMacOSXInvalClipRgns(
     childPtr = winPtr->childList;
     while (childPtr) {
 	if (!Tk_IsTopLevel(childPtr)) {
-	    TkMacOSXInvalClipRgns((Tk_Window) childPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)childPtr);
 	}
 	childPtr = childPtr->nextPtr;
     }
@@ -1263,7 +1245,7 @@ TkMacOSXInvalClipRgns(
 	childPtr = TkpGetOtherWindow(winPtr);
 
 	if (childPtr) {
-	    TkMacOSXInvalClipRgns((Tk_Window) childPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)childPtr);
 	}
 
 	/*
