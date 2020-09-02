@@ -431,7 +431,7 @@ XQueryPointer(
 	NSPoint global = [NSEvent mouseLocation];
 
 	if (getLocal) {
-	    MacDrawable *macWin = (MacDrawable *) w;
+	    MacDrawable *macWin = (MacDrawable *)w;
 	    NSWindow *win = TkMacOSXGetNSWindowForDrawable(w);
 
 	    if (win) {
@@ -521,7 +521,7 @@ TkGenerateButtonEvent(
     Window window,		/* X Window containing button event. */
     unsigned int state)		/* Button Key state suitable for X event. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
+    MacDrawable *macWin = (MacDrawable *)window;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     MouseEventData med;
 
