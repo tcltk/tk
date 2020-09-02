@@ -203,5 +203,6 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #undef TkGenWMConfigureEvent_
+#define Tk_MacOSXGetNSViewForDrawable TkMacOSXGetRootControl
 
 #endif /* _TKPLATDECLS */

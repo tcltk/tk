@@ -213,7 +213,7 @@ TkpDisplayScale(
      * Set up port for drawing Macintosh control.
      */
 
-    macDraw = (MacDrawable *) Tk_WindowId(tkwin);
+    macDraw = (MacDrawable *)Tk_WindowId(tkwin);
     windowRef = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
 
     /*

@@ -152,7 +152,7 @@ MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     NSWindow *win = nil;
     if (macWin->toplevel && macWin->toplevel->winPtr &&
 	macWin->toplevel->winPtr->wmInfoPtr &&
