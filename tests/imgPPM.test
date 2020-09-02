@@ -226,6 +226,25 @@ test imgPPM-5.9 {StringReadPPM procedure} -setup {
 } -cleanup {
     image delete ppm
 } -result {5 4}
+
+# Tests 6.x: Use "image metadata" with PPM image files and image data.
+
+test imgPPM-6.1 {image metadata -file} -setup {
+    imageCleanup
+} -body {
+    image metadata -file teapot.ppm
+} -cleanup {
+    imageCleanup
+} -result {format ppm width 256 height 256}
+
+test imgPPM-6.2 {image metadata -data} -setup {
+    imageCleanup
+} -body {
+    image metadata -data "P6\n5 4\n150\n012345678901234567890123456789012345678901234567890123456789"
+} -cleanup {
+    imageCleanup
+} -result {format ppm width 5 height 4}
+
 
 imageFinish
 

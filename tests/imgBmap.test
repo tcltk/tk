@@ -499,12 +499,29 @@ test imageBmap-11.2 {ImgBmapDelete procedure} -body {
     lappend x [info command new*]
 } -result {{} newi2 foo.bm {}}
 
-
 test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
     image create bitmap i2 -file foo.bm -maskfile foo2.bm
     rename i2 {}
     list [lsearch -exact [imageNames] i2] [catch {i2 foo} msg] $msg
 } -result {-1 1 {invalid command name "i2"}}
+
+# Tests 13.x: Use "image metadata" with XBM image files and image data.
+
+test imageBmp-13.1 {image metadata -file} -setup {
+    imageCleanup
+} -body {
+    image metadata -file face.xbm
+} -cleanup {
+    imageCleanup
+} -result {format xbm width 108 height 144}
+
+test imageBmp-13.2 {image metadata -data} -setup {
+    imageCleanup
+} -body {
+    image metadata -data $data1
+} -cleanup {
+    imageCleanup
+} -result {format xbm width 16 height 16}
 
 removeFile foo.bm
 removeFile foo2.bm
