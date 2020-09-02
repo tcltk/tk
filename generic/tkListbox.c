@@ -579,7 +579,7 @@ Tk_ListboxObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(listPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(listPtr->tkwin));
     return TCL_OK;
 }
 
@@ -3229,7 +3229,7 @@ static void
 GenerateListboxSelectEvent(
     Listbox *listPtr)		/* Information about widget. */
 {
-    TkSendVirtualEvent(listPtr->tkwin, "ListboxSelect", NULL);
+    Tk_SendVirtualEvent(listPtr->tkwin, "ListboxSelect", NULL);
 }
 
 /*

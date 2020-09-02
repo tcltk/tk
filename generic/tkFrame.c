@@ -732,7 +732,7 @@ CreateFrame(
     if (type == TYPE_TOPLEVEL) {
 	Tcl_DoWhenIdle(MapFrame, framePtr);
     }
-    Tcl_SetObjResult(interp, TkNewWindowObj(newWin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(newWin));
     return TCL_OK;
 
   error:

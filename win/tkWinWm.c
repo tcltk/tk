@@ -3408,7 +3408,7 @@ WmColormapwindowsCmd(
 		break;
 	    }
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj((Tk_Window) wmPtr->cmapList[i]));
+		    Tk_NewWindowObj((Tk_Window) wmPtr->cmapList[i]));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
@@ -4569,7 +4569,7 @@ WmIconwindowCmd(
     }
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -5222,7 +5222,7 @@ WmStackorderCmd(
 	    resultObj = Tcl_NewObj();
 	    for (windowPtr = windows; *windowPtr ; windowPtr++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
-			TkNewWindowObj((Tk_Window) *windowPtr));
+			Tk_NewWindowObj((Tk_Window) *windowPtr));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
 	    ckfree(windows);
@@ -5558,7 +5558,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) masterPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) masterPtr));
 	}
 	return TCL_OK;
     }

@@ -1143,11 +1143,11 @@ static const char *const accentNames[] = {
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
-    TkSendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
+	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
+	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
 }
 

@@ -2692,7 +2692,7 @@ Tk_GetNumMainWindows(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkpAlwaysShowSelection --
+ * Tk_AlwaysShowSelection --
  *
  *	Indicates whether text/entry widgets should always display
  *	their selection, regardless of window focus.
@@ -2710,7 +2710,7 @@ Tk_GetNumMainWindows(void)
  */
 
 int
-TkpAlwaysShowSelection(
+Tk_AlwaysShowSelection(
     Tk_Window tkwin)		/* Window whose application is to be
 				 * checked. */
 {

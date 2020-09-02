@@ -513,7 +513,7 @@ RefreshKeyboardMappingIfNeeded(
 /*
  *----------------------------------------------------------------------
  *
- * TkGetButtonMask --
+ * Tk_GetButtonMask --
  *
  *	Return the proper Button${n}Mask for the button.
  *
@@ -532,7 +532,7 @@ static const unsigned buttonMasks[] = {
 };
 
 unsigned
-TkGetButtonMask(
+Tk_GetButtonMask(
     unsigned button)
 {
     return (button > Button9) ? 0 : buttonMasks[button];
