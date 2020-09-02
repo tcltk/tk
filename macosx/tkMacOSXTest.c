@@ -266,7 +266,7 @@ PressButtonObjCmd(
 
 static int
 InjectKeyEventObjCmd(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])

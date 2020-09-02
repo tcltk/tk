@@ -451,7 +451,7 @@ TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
     Tcl_Interp *interp = mainPtr->interp;
-    Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
+    Tk_Window tkwin = (Tk_Window)mainPtr->winPtr;
     const struct SystemFontMapEntry *systemFont = systemFontMap;
     NSFont *nsFont;
     TkFontAttributes fa;

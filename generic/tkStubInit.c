@@ -57,6 +57,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkpTestsendCmd_ TkpTestsendCmd
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
+#define Tk_MacOSXGetNSWindowForDrawable TkMacOSXDrawable
 
 #ifdef _WIN32
 

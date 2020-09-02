@@ -85,7 +85,7 @@ TkMacOSXInitCGDrawing(
 	}
 
 	if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
-		(char *) &cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
+		(char *)&cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	cgAntiAliasLimit = limit;
@@ -95,11 +95,11 @@ TkMacOSXInitCGDrawing(
 	 */
 
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
-		(char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+		(char *)&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
-		(char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+		(char *)&useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	transparentColor = TkMacOSXClearPixel();
@@ -262,7 +262,7 @@ TkMacOSXGetCGContextForDrawable(
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
 	    bitsPerPixel = 8;
-	    bitmapInfo = (CGBitmapInfo) kCGImageAlphaOnly;
+	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitsPerPixel = 32;
@@ -1158,7 +1158,7 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *) drawable;
+    MacDrawable *macDraw = (MacDrawable *)drawable;
     TKContentView *view = (TKContentView *) TkMacOSXGetNSViewForDrawable(drawable);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
@@ -1657,8 +1657,8 @@ ClipToGC(
     HIShapeRef *clipRgnPtr) /* must point to initialized variable */
 {
     if (gc && gc->clip_mask &&
-	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	TkRegion gcClip = ((TkpClipMask *) gc->clip_mask)->value.region;
+	    ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
+	TkRegion gcClip = ((TkpClipMask *)gc->clip_mask)->value.region;
 	int xOffset = ((MacDrawable *)d)->xOff + gc->clip_x_origin;
 	int yOffset = ((MacDrawable *)d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;

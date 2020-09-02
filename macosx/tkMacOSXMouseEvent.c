@@ -179,11 +179,11 @@ enum {
 	for (tkwin2 = tkEventWindow;
 	     !Tk_IsTopLevel(tkwin2);
 	     tkwin2 = Tk_Parent(tkwin2)) {
-	    if (tkwin2 == (Tk_Window) grabWinPtr) {
+	    if (tkwin2 == (Tk_Window)grabWinPtr) {
 		break;
 	    }
 	}
-	if (tkwin2 != (Tk_Window) grabWinPtr) {
+	if (tkwin2 != (Tk_Window)grabWinPtr) {
 	    return theEvent;
 	}
     }
@@ -648,7 +648,7 @@ TkpSetCapture(
 	winPtr = winPtr->parentPtr;
     }
     [NSEvent stopPeriodicEvents];
-    captureWinPtr = (Tk_Window) winPtr;
+    captureWinPtr = (Tk_Window)winPtr;
 }
 
 /*
