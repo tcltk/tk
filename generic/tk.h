@@ -122,13 +122,14 @@ extern "C" {
  * Dummy types that are used by clients:
  */
 
+#define Tk_ImageModel Tk_ImageMaster
 typedef struct Tk_BindingTable_ *Tk_BindingTable;
 typedef struct Tk_Canvas_ *Tk_Canvas;
 typedef struct Tk_Cursor_ *Tk_Cursor;
 typedef struct Tk_ErrorHandler_ *Tk_ErrorHandler;
 typedef struct Tk_Font_ *Tk_Font;
 typedef struct Tk_Image__ *Tk_Image;
-typedef struct Tk_ImageMaster_ *Tk_ImageMaster;
+typedef struct Tk_ImageMaster_ *Tk_ImageModel;
 typedef struct Tk_OptionTable_ *Tk_OptionTable;
 typedef struct Tk_PostscriptInfo_ *Tk_PostscriptInfo;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
@@ -137,7 +138,6 @@ typedef struct Tk_3DBorder_ *Tk_3DBorder;
 typedef struct Tk_Style_ *Tk_Style;
 typedef struct Tk_StyleEngine_ *Tk_StyleEngine;
 typedef struct Tk_StyledElement_ *Tk_StyledElement;
-#define Tk_ImageModel Tk_ImageMaster
 
 /*
  * Additional types exported to clients.
@@ -1229,12 +1229,12 @@ typedef struct Tk_Outline {
 typedef struct Tk_ImageType Tk_ImageType;
 #ifdef USE_OLD_IMAGE
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
-	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
+	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
 	ClientData *masterDataPtr);
 #else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, CONST86 char *name, int objc,
-	Tcl_Obj *const objv[], CONST86 Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	Tcl_Obj *const objv[], CONST86 Tk_ImageType *typePtr, Tk_ImageModel model,
+	ClientData *modelDataPtr);
 #endif /* USE_OLD_IMAGE */
 typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData masterData);
 typedef void (Tk_ImageDisplayProc) (ClientData instanceData, Display *display,
