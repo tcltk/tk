@@ -51,7 +51,7 @@ static NSUInteger textInputModifiers;
 #endif
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window)winPtr;
     NSEventType type = [theEvent type];
     NSUInteger virtual = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
@@ -83,7 +83,7 @@ static NSUInteger textInputModifiers;
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
 	    winPtr =winPtr->dispPtr->focusPtr;
-	    tkwin = (Tk_Window) winPtr;
+	    tkwin = (Tk_Window)winPtr;
 	}
     }
 
@@ -286,7 +286,7 @@ static NSUInteger textInputModifiers;
     XEvent xEvent;
     NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window)winPtr;
     Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
@@ -322,7 +322,7 @@ static NSUInteger textInputModifiers;
      */
 
     if (repRange.location == 0) {
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
 	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
@@ -396,7 +396,7 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
     (void)selRange;
@@ -505,7 +505,7 @@ static NSUInteger textInputModifiers;
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
 	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
@@ -701,8 +701,8 @@ XGrabKeyboard(
     (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
-	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
-	MacDrawable *macWin = (MacDrawable *) grab_window;
+	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
+	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
 	    if (modalSession) {
@@ -806,7 +806,7 @@ Tk_SetCaretPos(
  {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkCaret *caretPtr = &(winPtr->dispPtr->caret);
-    NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *w = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
 
     /*
      * Register this widget as being capable of text input, so we know we

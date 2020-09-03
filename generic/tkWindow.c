@@ -3092,7 +3092,7 @@ Initialize(
 	Tcl_Interp *parent = interp;
 
 	while (Tcl_IsSafe(parent)) {
-	    parent = Tcl_GetMaster(parent);
+	    parent = Tcl_GetParent(parent);
 	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"no controlling parent interpreter", -1));

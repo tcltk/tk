@@ -582,7 +582,7 @@ test textWind-6.1 {EmbWinRequestProc procedure} -setup {
     [list [expr {$padx+2*$fixedWidth+25}] [expr {$pady+((30-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
 
 
-test textWind-7.1 {EmbWinLostSlaveProc procedure} -setup {
+test textWind-7.1 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
     destroy .f
 } -body {
@@ -599,7 +599,7 @@ test textWind-7.1 {EmbWinLostSlaveProc procedure} -setup {
     10x20+[expr {$padx+100}]+[expr {$pady+50}] \
     [list [expr {$padx+2*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
 
-test textWind-7.2 {EmbWinLostSlaveProc procedure} -setup {
+test textWind-7.2 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
     destroy .t.f
 } -body {

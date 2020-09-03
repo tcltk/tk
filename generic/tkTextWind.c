@@ -32,12 +32,12 @@
  */
 
 static void EmbWinRequestProc(ClientData clientData, Tk_Window tkwin);
-static void EmbWinLostSlaveProc(ClientData clientData, Tk_Window tkwin);
+static void EmbWinLostContentProc(ClientData clientData, Tk_Window tkwin);
 
 static const Tk_GeomMgr textGeomType = {
     "text",			/* name */
     EmbWinRequestProc,		/* requestProc */
-    EmbWinLostSlaveProc,	/* lostSlaveProc */
+    EmbWinLostContentProc,	/* lostContentProc */
 };
 
 /*
@@ -1012,9 +1012,9 @@ EmbWinRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * EmbWinLostSlaveProc --
+ * EmbWinLostContentProc --
  *
- *	This function is invoked by the Tk geometry manager when a slave
+ *	This function is invoked by the Tk geometry manager when a content
  *	window managed by a text widget is claimed away by another geometry
  *	manager.
  *
@@ -1029,7 +1029,7 @@ EmbWinRequestProc(
  */
 
 static void
-EmbWinLostSlaveProc(
+EmbWinLostContentProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     Tk_Window tkwin)		/* Window that was claimed away by another geometry manager. */
 {

@@ -85,7 +85,7 @@ TkMacOSXInitCGDrawing(
 	}
 
 	if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
-		(char *) &cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
+		(char *)&cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	cgAntiAliasLimit = limit;
@@ -95,11 +95,11 @@ TkMacOSXInitCGDrawing(
 	 */
 
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
-		(char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+		(char *)&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
-		(char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+		(char *)&useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	transparentColor = TkMacOSXClearPixel();
@@ -243,7 +243,7 @@ CGContextRef
 TkMacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
-    MacDrawable *macDraw = (MacDrawable *) drawable;
+    MacDrawable *macDraw = (MacDrawable *)drawable;
 
     if (macDraw && (macDraw->flags & TK_IS_PIXMAP) && !macDraw->context) {
 	const size_t bitsPerComponent = 8;
@@ -261,7 +261,7 @@ TkMacOSXGetCGContextForDrawable(
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
 	    bitsPerPixel = 8;
-	    bitmapInfo = (CGBitmapInfo) kCGImageAlphaOnly;
+	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitsPerPixel = 32;
@@ -314,7 +314,7 @@ TkMacOSXDrawCGImage(
     CGRect srcBounds,
     CGRect dstBounds)
 {
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
 
     if (macDraw && context && image) {
 	CGImageRef subImage = NULL;
@@ -410,7 +410,7 @@ XDrawLines(
     int npoints,		/* Number of points. */
     int mode)			/* Line drawing mode. */
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     int i, lw = gc->line_width;
 
@@ -482,7 +482,7 @@ XDrawSegments(
     XSegment *segments,
     int nsegments)
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     int i, lw = gc->line_width;
 
@@ -534,7 +534,7 @@ XFillPolygon(
     TCL_UNUSED(int),	/* Shape to draw. */
     int mode)			/* Drawing mode. */
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     int i;
 
@@ -592,7 +592,7 @@ XDrawRectangle(
     unsigned int width,		/* Width & height of rect. */
     unsigned int height)
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     int lw = gc->line_width;
 
@@ -649,7 +649,7 @@ XDrawRectangles(
     XRectangle *rectArr,
     int nRects)
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     XRectangle * rectPtr;
     int i, lw = gc->line_width;
@@ -701,7 +701,7 @@ XFillRectangles(
     XRectangle *rectangles,	/* Rectangle array. */
     int n_rectangles)		/* Number of rectangles. */
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     XRectangle * rectPtr;
     int i;
@@ -803,7 +803,7 @@ XDrawArc(
     int angle1,			/* Staring angle of arc. */
     int angle2)			/* Extent of arc. */
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     int lw = gc->line_width;
 
@@ -876,7 +876,7 @@ XDrawArcs(
     XArc *arcArr,
     int nArcs)
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     XArc *arcPtr;
     int i, lw = gc->line_width;
@@ -954,7 +954,7 @@ XFillArc(
     int angle1,			/* Staring angle of arc. */
     int angle2)			/* Extent of arc. */
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     int lw = gc->line_width;
 
@@ -1030,7 +1030,7 @@ XFillArcs(
     XArc *arcArr,
     int nArcs)
 {
-    MacDrawable *macWin = (MacDrawable *) d;
+    MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
     XArc * arcPtr;
     int i, lw = gc->line_width;
@@ -1141,8 +1141,8 @@ TkScrollWindow(
     Region damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *) drawable;
-    TKContentView *view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+    MacDrawable *macDraw = (MacDrawable *)drawable;
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1263,7 +1263,7 @@ TkMacOSXSetupDrawingContext(
     GC gc,
     TkMacOSXDrawingContext *dcPtr)
 {
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
     Bool canDraw = true;
     TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
@@ -1273,7 +1273,7 @@ TkMacOSXSetupDrawingContext(
      */
 
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
-	view = (TKContentView *) TkMacOSXDrawableView(macDraw);
+	view = (TKContentView *)TkMacOSXGetNSViewForDrawable(d);
 	if (!view) {
 	    Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		    "no NSView to draw into !");
@@ -1517,7 +1517,7 @@ HIShapeRef
 TkMacOSXGetClipRgn(
     Drawable drawable)		/* Drawable. */
 {
-    MacDrawable *macDraw = (MacDrawable *) drawable;
+    MacDrawable *macDraw = (MacDrawable *)drawable;
     HIShapeRef clipRgn = NULL;
 
     if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
@@ -1525,7 +1525,7 @@ TkMacOSXGetClipRgn(
 #ifdef TK_MAC_DEBUG_DRAWING
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 
-	NSView *view = TkMacOSXDrawableView(macDraw);
+	NSView *view = TkMacOSXGetNSViewForDrawable(macDraw);
 	CGContextRef context = GET_CGCONTEXT;
 
 	CGContextSaveGState(context);
@@ -1570,7 +1570,7 @@ TkpClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
 
     if (macDraw->drawRgn) {
 	CFRelease(macDraw->drawRgn);
@@ -1617,10 +1617,10 @@ ClipToGC(
     HIShapeRef *clipRgnPtr) /* must point to initialized variable */
 {
     if (gc && gc->clip_mask &&
-	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	Region gcClip = ((TkpClipMask *) gc->clip_mask)->value.region;
-	int xOffset = ((MacDrawable *) d)->xOff + gc->clip_x_origin;
-	int yOffset = ((MacDrawable *) d)->yOff + gc->clip_y_origin;
+	    ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
+	Region gcClip = ((TkpClipMask *)gc->clip_mask)->value.region;
+	int xOffset = ((MacDrawable *)d)->xOff + gc->clip_x_origin;
+	int yOffset = ((MacDrawable *)d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;
 
 	XOffsetRegion(gcClip, xOffset, yOffset);

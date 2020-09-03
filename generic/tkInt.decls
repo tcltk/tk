@@ -918,9 +918,10 @@ declare 9 aqua {
 declare 10 aqua {
     int TkMacOSXDispatchMenuEvent(int menuID, int index)
 }
-declare 11 aqua {
-    void TkMacOSXInstallCursor(int resizeOverride)
-}
+# Now a static function
+# declare 11 aqua {
+#     void TkMacOSXInstallCursor(int resizeOverride)
+# }
 declare 12 aqua {
     void TkMacOSXHandleTearoffMenu(void)
 }

@@ -102,12 +102,18 @@ typedef NSInteger NSModalResponse;
 #define NSStringPboardType NSPasteboardTypeString
 #define NSOnState NSControlStateValueOn
 #define NSOffState NSControlStateValueOff
-// Now we are also changing names of methods!
-#define graphicsContextWithGraphicsPort graphicsContextWithCGContext
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000
 #define NSWindowStyleMaskTexturedBackground 0
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#define GET_NSCONTEXT(context, flip) [NSGraphicsContext		\
+	    graphicsContextWithGraphicsPort:context flipped:flip]
+#else
+#define GET_NSCONTEXT(context, flip) [NSGraphicsContext		\
+	    graphicsContextWithCGContext:context flipped:NO]
 #endif
 
 #endif
