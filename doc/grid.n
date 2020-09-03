@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH grid n 8.5 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -17,30 +17,30 @@ grid \- Geometry manager that arranges widgets in a grid
 .PP
 The \fBgrid\fR command is used to communicate with the grid
 geometry manager that arranges widgets in rows and columns inside
-of another window, called the geometry master (or master window).
+of another window, called the geometry container (or container window).
 The \fBgrid\fR command can have any of several forms, depending
 on the \fIoption\fR argument:
 .TP
-\fBgrid \fIslave \fR?\fIslave ...\fR? ?\fIoptions\fR?
+\fBgrid \fIwindow \fR?\fIwindow ...\fR? ?\fIoptions\fR?
 .
-If the first argument to \fBgrid\fR is suitable as the first slave
+If the first argument to \fBgrid\fR is suitable as the first window
 argument to \fBgrid configure\fR, either a window name (any value
 starting with \fB.\fR) or one of the characters \fBx\fR or \fB^\fR
 (see the \fBRELATIVE PLACEMENT\fR section below), then the command is
 processed in the same way as \fBgrid configure\fR.
 .TP
-\fBgrid anchor \fImaster\fR ?\fIanchor\fR?
+\fBgrid anchor \fIwindow\fR ?\fIanchor\fR?
 .
-The anchor value controls how to place the grid within the master
+The anchor value controls how to place the grid within the container window
 when no row/column has any weight.  See \fBTHE GRID ALGORITHM\fR below
 for further details.  The default \fIanchor\fR is \fInw\fR.
 .TP
-\fBgrid bbox \fImaster\fR ?\fIcolumn row\fR? ?\fIcolumn2 row2\fR?
+\fBgrid bbox \fIwindow\fR ?\fIcolumn row\fR? ?\fIcolumn2 row2\fR?
 .
 With no arguments,
 the bounding box (in pixels) of the grid is returned.
 The return value consists of 4 integers.  The first two are the pixel
-offset from the master window (x then y) of the top-left corner of the
+offset from the container window (x then y) of the top-left corner of the
 grid, and the second two integers are the width and height of the grid,
 also in pixels.  If a single \fIcolumn\fR and \fIrow\fR is specified on
 the command line, then the bounding box for that cell is returned, where the
@@ -48,10 +48,10 @@ top left cell is numbered from zero.  If both \fIcolumn\fR and \fIrow\fR
 arguments are specified, then the bounding box spanning the rows and columns
 indicated is returned.
 .TP
-\fBgrid columnconfigure \fImaster index \fR?\fI\-option value...\fR?
+\fBgrid columnconfigure \fIwindow index \fR?\fI\-option value...\fR?
 .
 Query or set the column properties of the \fIindex\fR column of the
-geometry master, \fImaster\fR.
+geometry container, \fIwindow\fR.
 The valid options are \fB\-minsize\fR, \fB\-weight\fR, \fB\-uniform\fR
 and \fB\-pad\fR.
 If one or more options are provided, then \fIindex\fR may be given as
@@ -209,41 +209,41 @@ Returns a list whose elements are the current configuration state of
 the slave given by \fIslave\fR in the same option-value form that
 might be specified to \fBgrid configure\fR.
 The first two elements of the list are
-.QW "\fB\-in \fImaster\fR"
-where \fImaster\fR is the slave's master.
+.QW "\fB\-in \fIother\fR"
+where \fIother\fR is the windows's container window.
 .TP
-\fBgrid location \fImaster x y\fR
+\fBgrid location \fIwindow x y\fR
 .
-Given  \fIx\fR and \fIy\fR values in screen units relative to the master window,
+Given  \fIx\fR and \fIy\fR values in screen units relative to the container window,
 the column and row number at that \fIx\fR and \fIy\fR location is returned.
 For locations that are above or to the left of the grid, \fB\-1\fR is
 returned.
 .TP
-\fBgrid propagate \fImaster\fR ?\fIboolean\fR?
+\fBgrid propagate \fIwindow\fR ?\fIboolean\fR?
 .
 If \fIboolean\fR has a true boolean value such as \fB1\fR or \fBon\fR
-then propagation is enabled for \fImaster\fR, which must be a window
+then propagation is enabled for \fIwindow\fR, which must be a window
 name (see \fBGEOMETRY PROPAGATION\fR below).
 If \fIboolean\fR has a false boolean value then propagation is
-disabled for \fImaster\fR.
+disabled for \fIwindow\fR.
 In either of these cases an empty string is returned.
 If \fIboolean\fR is omitted then the command returns \fB0\fR or
 \fB1\fR to indicate whether propagation is currently enabled
-for \fImaster\fR.
+for \fIwindow\fR.
 Propagation is enabled by default.
 .TP
-\fBgrid rowconfigure \fImaster index \fR?\fI\-option value...\fR?
+\fBgrid rowconfigure \fIwindow index \fR?\fI\-option value...\fR?
 .
 Query or set the row properties of the \fIindex\fR row of the
-geometry master, \fImaster\fR.
+geometry window, \fIwindow\fR.
 The valid options are \fB\-minsize\fR, \fB\-weight\fR, \fB\-uniform\fR
 and \fB\-pad\fR.
 If one or more options are provided, then \fIindex\fR may be given as
 a list of row indices to which the configuration options will operate on.
 Indices may be integers, window names or the keyword \fIall\fR. For \fIall\fR
-the options apply to all rows currently occupied be slave windows. For
-a window name, that window must be a slave of this master and the options
-apply to all rows currently occupied be the slave.
+the options apply to all rows currently occupied by content windows. For
+a window name, that window must be a content window of this container and the options
+apply to all rows currently occupied by the container window.
 The \fB\-minsize\fR option sets the minimum size, in screen units,
 that will be permitted for this row.
 The \fB\-weight\fR option (an integer value)

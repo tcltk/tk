@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH place n "" Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -94,16 +94,16 @@ If \fIsize\fR is an empty string, or if no \fB\-height\fR or
 \fB\-relheight\fR option is specified, then the height requested
 internally by the window will be used.
 .TP
-\fB\-in \fImaster\fR
-\fIMaster\fR specifies the path name of the window relative
+\fB\-in \fIother\fR
+\fIOther\fR specifies the path name of the window relative
 to which \fIwindow\fR is to be placed.
-\fIMaster\fR must either be \fIwindow\fR's parent or a descendant
+\fIOther\fR must either be \fIwindow\fR's parent or a descendant
 of \fIwindow\fR's parent.
-In addition, \fImaster\fR and \fIwindow\fR must both be descendants
+In addition, \fIother\fR and \fIwindow\fR must both be descendants
 of the same top-level window.
 These restrictions are necessary to guarantee
-that \fIwindow\fR is visible whenever \fImaster\fR is visible.
-If this option is not specified then the master defaults to
+that \fIwindow\fR is visible whenever \fIother\fR is visible.
+If this option is not specified then the other window defaults to
 \fIwindow\fR's parent.
 .TP
 \fB\-relheight \fIsize\fR

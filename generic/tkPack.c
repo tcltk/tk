@@ -88,7 +88,7 @@ typedef struct Packer {
  *				Tk will set its requested size to fit the
  *				needs of its slaves.
  * ALLOCED_CONTAINER	1 means that Pack has allocated itself as
- *				geometry master for this window.
+ *				geometry container for this window.
  */
 
 #define REQUESTED_REPACK	1
@@ -104,13 +104,13 @@ typedef struct Packer {
  */
 
 static void		PackReqProc(ClientData clientData, Tk_Window tkwin);
-static void		PackLostSlaveProc(ClientData clientData,
+static void		PackLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr packerType = {
     "pack",			/* name */
     PackReqProc,		/* requestProc */
-    PackLostSlaveProc,		/* lostSlaveProc */
+    PackLostContentProc,		/* lostSlaveProc */
 };
 
 /*
@@ -118,7 +118,7 @@ static const Tk_GeomMgr packerType = {
  */
 
 static void		ArrangePacking(ClientData clientData);
-static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
+static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyPacker(void *memPtr);
 static Packer *		GetPacker(Tk_Window tkwin);
@@ -209,7 +209,7 @@ Tk_PackObjCmd(
 	const char *string = Tcl_GetString(objv[1]);
 
 	if (string[0] == '.') {
-	    return ConfigureSlaves(interp, tkwin, objc-1, objv+1);
+	    return ConfigureContent(interp, tkwin, objc-1, objv+1);
 	}
     }
     if (objc < 3) {
@@ -251,7 +251,7 @@ Tk_PackObjCmd(
     }
     case PACK_APPEND: {
 	Packer *containerPtr;
-	register Packer *prevPtr;
+	Packer *prevPtr;
 	Tk_Window tkwin2;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
@@ -268,7 +268,7 @@ Tk_PackObjCmd(
     }
     case PACK_BEFORE: {
 	Packer *packPtr, *containerPtr;
-	register Packer *prevPtr;
+	Packer *prevPtr;
 	Tk_Window tkwin2;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
@@ -304,7 +304,7 @@ Tk_PackObjCmd(
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
 	    return TCL_ERROR;
 	}
-	return ConfigureSlaves(interp, tkwin, objc-2, objv+2);
+	return ConfigureContent(interp, tkwin, objc-2, objv+2);
     case PACK_FORGET: {
 	Tk_Window slave;
 	Packer *slavePtr;
@@ -328,7 +328,7 @@ Tk_PackObjCmd(
 	break;
     }
     case PACK_INFO: {
-	register Packer *slavePtr;
+	Packer *slavePtr;
 	Tk_Window slave;
 	Tcl_Obj *infoObj;
 
@@ -404,11 +404,11 @@ Tk_PackObjCmd(
 	}
 	if (propagate) {
 	    /*
-	     * If we have slaves, we need to register as geometry master.
+	     * If we have content windows, we need to register as geometry container.
 	     */
 
 	    if (containerPtr->slavePtr != NULL) {
-		if (TkSetGeometryMaster(interp, master, "pack") != TCL_OK) {
+		if (TkSetGeometryContainer(interp, master, "pack") != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		containerPtr->flags |= ALLOCED_CONTAINER;
@@ -429,7 +429,7 @@ Tk_PackObjCmd(
 	    }
 	} else {
 	    if (containerPtr->flags & ALLOCED_CONTAINER) {
-		TkFreeGeometryMaster(master, "pack");
+		TkFreeGeometryContainer(master, "pack");
 		containerPtr->flags &= ~ALLOCED_CONTAINER;
 	    }
 	    containerPtr->flags |= DONT_PROPAGATE;
@@ -513,7 +513,7 @@ PackReqProc(
     Tk_Window tkwin)		/* Other Tk-related information about the
 				 * window. */
 {
-    register Packer *packPtr = clientData;
+    Packer *packPtr = clientData;
 
     packPtr = packPtr->containerPtr;
     if (!(packPtr->flags & REQUESTED_REPACK)) {
@@ -525,10 +525,10 @@ PackReqProc(
 /*
  *------------------------------------------------------------------------
  *
- * PackLostSlaveProc --
+ * PackLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
@@ -541,12 +541,12 @@ PackReqProc(
 
 	/* ARGSUSED */
 static void
-PackLostSlaveProc(
+PackLostContentProc(
     ClientData clientData,	/* Packer structure for slave window that was
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Packer *slavePtr = clientData;
+    Packer *slavePtr = clientData;
 
     if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
@@ -579,8 +579,8 @@ ArrangePacking(
     ClientData clientData)	/* Structure describing master whose slaves
 				 * are to be re-layed out. */
 {
-    register Packer *containerPtr = clientData;
-    register Packer *slavePtr;
+    Packer *containerPtr = clientData;
+    Packer *slavePtr;
     int cavityX, cavityY, cavityWidth, cavityHeight;
 				/* These variables keep track of the
 				 * as-yet-unallocated space remaining in the
@@ -902,7 +902,7 @@ ArrangePacking(
 
 static int
 XExpansion(
-    register Packer *slavePtr,	/* First in list of remaining slaves. */
+    Packer *slavePtr,	/* First in list of remaining slaves. */
     int cavityWidth)		/* Horizontal space left for all remaining
 				 * slaves. */
 {
@@ -968,7 +968,7 @@ XExpansion(
 
 static int
 YExpansion(
-    register Packer *slavePtr,	/* First in list of remaining slaves. */
+    Packer *slavePtr,	/* First in list of remaining slaves. */
     int cavityHeight)		/* Vertical space left for all remaining
 				 * slaves. */
 {
@@ -1031,7 +1031,7 @@ GetPacker(
     Tk_Window tkwin)		/* Token for window for which packer structure
 				 * is desired. */
 {
-    register Packer *packPtr;
+    Packer *packPtr;
     Tcl_HashEntry *hPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -1100,7 +1100,7 @@ PackAfter(
 				 * window name and side against which to
 				 * pack. */
 {
-    register Packer *packPtr;
+    Packer *packPtr;
     Tk_Window tkwin, ancestor, parent;
     Tcl_Obj **options;
     int index, optionCount, c;
@@ -1284,7 +1284,7 @@ PackAfter(
 	    Tk_ManageGeometry(tkwin, &packerType, packPtr);
 
 	    if (!(containerPtr->flags & DONT_PROPAGATE)) {
-		if (TkSetGeometryMaster(interp, containerPtr->tkwin, "pack")
+		if (TkSetGeometryContainer(interp, containerPtr->tkwin, "pack")
 			!= TCL_OK) {
 		    Tk_ManageGeometry(tkwin, NULL, NULL);
 		    Unlink(packPtr);
@@ -1327,9 +1327,9 @@ PackAfter(
 
 static void
 Unlink(
-    register Packer *packPtr)	/* Window to unlink. */
+    Packer *packPtr)	/* Window to unlink. */
 {
-    register Packer *containerPtr, *packPtr2;
+    Packer *containerPtr, *packPtr2;
 
     containerPtr = packPtr->containerPtr;
     if (containerPtr == NULL) {
@@ -1364,7 +1364,7 @@ Unlink(
      */
 
     if ((containerPtr->slavePtr == NULL) && (containerPtr->flags & ALLOCED_CONTAINER)) {
-	TkFreeGeometryMaster(containerPtr->tkwin, "pack");
+	TkFreeGeometryContainer(containerPtr->tkwin, "pack");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
     }
 
@@ -1393,7 +1393,7 @@ DestroyPacker(
     void *memPtr)		/* Info about packed window that is now
 				 * dead. */
 {
-    register Packer *packPtr = memPtr;
+    Packer *packPtr = memPtr;
 
     ckfree(packPtr);
 }
@@ -1422,7 +1422,7 @@ PackStructureProc(
 				 * eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Packer *packPtr = clientData;
+    Packer *packPtr = clientData;
 
     if (eventPtr->type == ConfigureNotify) {
 	if ((packPtr->slavePtr != NULL)
@@ -1439,7 +1439,7 @@ PackStructureProc(
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	register Packer *slavePtr, *nextPtr;
+	Packer *slavePtr, *nextPtr;
 
 	if (packPtr->containerPtr != NULL) {
 	    Unlink(packPtr);
@@ -1477,7 +1477,7 @@ PackStructureProc(
 	    Tcl_DoWhenIdle(ArrangePacking, packPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	register Packer *packPtr2;
+	Packer *packPtr2;
 
 	/*
 	 * Unmap all of the slaves when the master gets unmapped, so that they
@@ -1494,7 +1494,7 @@ PackStructureProc(
 /*
  *----------------------------------------------------------------------
  *
- * ConfigureSlaves --
+ * ConfigureContent --
  *
  *	This implements the guts of the "pack configure" command. Given a list
  *	of slaves and configuration options, it arranges for the packer to
@@ -1511,7 +1511,7 @@ PackStructureProc(
  */
 
 static int
-ConfigureSlaves(
+ConfigureContent(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Any window in application containing
 				 * slaves. Used to look up slave names. */
@@ -1845,7 +1845,7 @@ ConfigureSlaves(
 	prevPtr = slavePtr;
 
 	if (!(containerPtr->flags & DONT_PROPAGATE)) {
-	    if (TkSetGeometryMaster(interp, containerPtr->tkwin, "pack")
+	    if (TkSetGeometryContainer(interp, containerPtr->tkwin, "pack")
 		    != TCL_OK) {
 		Tk_ManageGeometry(slave, NULL, NULL);
 		Unlink(slavePtr);

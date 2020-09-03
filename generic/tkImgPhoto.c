@@ -176,7 +176,7 @@ static int		ParseSubcommandOptions(
 			    Tcl_Interp *interp, int allowedOptions,
 			    int *indexPtr, int objc, Tcl_Obj *const objv[]);
 static void		ImgPhotoCmdDeletedProc(ClientData clientData);
-static int		ImgPhotoConfigureMaster(Tcl_Interp *interp,
+static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
 			    PhotoModel *modelPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		ToggleComplexAlphaIfNeeded(PhotoModel *mPtr);
@@ -357,7 +357,7 @@ ImgPhotoCreate(
      * Process configuration options given in the image create command.
      */
 
-    if (ImgPhotoConfigureMaster(interp, modelPtr, objc, objv, 0) != TCL_OK) {
+    if (ImgPhotoConfigureModel(interp, modelPtr, objc, objv, 0) != TCL_OK) {
 	ImgPhotoDelete(modelPtr);
 	return TCL_ERROR;
     }
@@ -532,7 +532,7 @@ ImgPhotoCmd(
 			configSpecs, (char *) modelPtr, arg, 0);
 	    }
 	} else {
-	    return ImgPhotoConfigureMaster(interp, modelPtr, objc-2, objv+2,
+	    return ImgPhotoConfigureModel(interp, modelPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
 	}
 
@@ -1759,7 +1759,7 @@ ParseSubcommandOptions(
 /*
  *----------------------------------------------------------------------
  *
- * ImgPhotoConfigureMaster --
+ * ImgPhotoConfigureModel --
  *
  *	This function is called when a photo image is created or reconfigured.
  *	It processes configuration options and resets any instances of the
@@ -1777,7 +1777,7 @@ ParseSubcommandOptions(
  */
 
 static int
-ImgPhotoConfigureMaster(
+ImgPhotoConfigureModel(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     PhotoModel *modelPtr,	/* Pointer to data structure describing
 				 * overall photo image to (re)configure. */

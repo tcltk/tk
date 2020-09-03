@@ -5,8 +5,7 @@
  */
 
 #include <string.h>	/* for memset() */
-#include <tcl.h>
-#include <tk.h>
+#include "tkInt.h"
 
 #include "ttkTheme.h"
 #include "ttkWidget.h"
