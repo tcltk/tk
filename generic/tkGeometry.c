@@ -75,7 +75,7 @@ static void		MaintainSlaveProc(ClientData clientData,
  *	previous geometry manager. The geometry manager will be notified (by
  *	calling procedures in *mgrPtr) when interesting things happen in the
  *	future. If there was an existing geometry manager for tkwin different
- *	from the new one, it is notified by calling its lostSlaveProc.
+ *	from the new one, it is notified by calling its lostContentProc.
  *
  *--------------------------------------------------------------
  */
@@ -95,8 +95,8 @@ Tk_ManageGeometry(
     if ((winPtr->geomMgrPtr != NULL) && (mgrPtr != NULL)
 	    && ((winPtr->geomMgrPtr != mgrPtr)
 		|| (winPtr->geomData != clientData))
-	    && (winPtr->geomMgrPtr->lostSlaveProc != NULL)) {
-	winPtr->geomMgrPtr->lostSlaveProc(winPtr->geomData, tkwin);
+	    && (winPtr->geomMgrPtr->lostContentProc != NULL)) {
+	winPtr->geomMgrPtr->lostContentProc(winPtr->geomData, tkwin);
     }
 
     winPtr->geomMgrPtr = mgrPtr;
@@ -333,8 +333,8 @@ TkSetGeometryContainer(
     if (winPtr->geomMgrName != NULL) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "cannot use geometry manager %s inside %s which already"
-		    " has slaves managed by %s",
+		    "cannot use geometry manager %s inside %s because"
+		    " %s is already managing it's content windows",
 		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
 	}

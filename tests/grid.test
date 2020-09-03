@@ -63,10 +63,10 @@ test grid-1.5 {basic argument checking} -body {
 } -returnCodes error -result {can't manage ".": it's a top-level window}
 test grid-1.6 {basic argument checking} -body {
     grid x
-} -returnCodes error -result {can't determine master window}
+} -returnCodes error -result {can't determine container window}
 test grid-1.7 {basic argument checking} -body {
     grid configure x
-} -returnCodes error -result {can't determine master window}
+} -returnCodes error -result {can't determine container window}
 test grid-1.8 {basic argument checking} -body {
     button .b
     grid x .b
@@ -856,13 +856,13 @@ test grid-11.1 {default widget placement} -body {
     grid ^
 } -cleanup {
     grid_reset 11.1
-} -returnCodes error -result {can't use '^', cant find master}
+} -returnCodes error -result {can't use '^', can't find container window}
 test grid-11.2 {default widget placement} -body {
     button .b
     grid .b ^
 } -cleanup {
     grid_reset 11.2
-} -returnCodes error -result {can't find slave to extend with "^"}
+} -returnCodes error -result {can't find content to extend with "^"}
 test grid-11.3 {default widget placement} -body {
     button .b
     grid .b - - .c
@@ -917,7 +917,7 @@ test grid-11.9 {default widget placement} -body {
     grid .f x ^
 } -cleanup {
     grid_reset 11.9
-} -returnCodes error -result {can't find slave to extend with "^"}
+} -returnCodes error -result {can't find content to extend with "^"}
 test grid-11.10 {default widget placement} -body {
     foreach i {1 2 3} {
 	frame .f$i -width 100 -height 50 -highlightthickness 0 -bg red

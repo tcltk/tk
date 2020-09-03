@@ -107,7 +107,7 @@ static const char *const optionNames[] = {
 
 static int		ImgPhotoCreate(Tcl_Interp *interp, const char *name,
 			    int objc, Tcl_Obj *const objv[],
-			    const Tk_ImageType *typePtr, Tk_ImageMaster master,
+			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static void		ImgPhotoDelete(ClientData clientData);
 static int		ImgPhotoPostscript(ClientData clientData,
@@ -160,15 +160,15 @@ static Tcl_ThreadDataKey dataKey;
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	 NULL, offsetof(PhotoMaster, fileString), TK_CONFIG_NULL_OK, NULL},
+	 NULL, offsetof(PhotoModel, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
-	 DEF_PHOTO_GAMMA, offsetof(PhotoMaster, gamma), 0, NULL},
+	 DEF_PHOTO_GAMMA, offsetof(PhotoModel, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
-	 DEF_PHOTO_HEIGHT, offsetof(PhotoMaster, userHeight), 0, NULL},
+	 DEF_PHOTO_HEIGHT, offsetof(PhotoModel, userHeight), 0, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
-	 DEF_PHOTO_PALETTE, offsetof(PhotoMaster, palette), 0, NULL},
+	 DEF_PHOTO_PALETTE, offsetof(PhotoModel, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
-	 DEF_PHOTO_WIDTH, offsetof(PhotoMaster, userWidth), 0, NULL},
+	 DEF_PHOTO_WIDTH, offsetof(PhotoModel, userWidth), 0, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -185,12 +185,12 @@ static int		ParseSubcommandOptions(
 			    int *indexPtr, int objc, Tcl_Obj *const objv[]);
 static void		ImgPhotoCmdDeletedProc(ClientData clientData);
 static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
-			    PhotoMaster *modelPtr, int objc,
+			    PhotoModel *modelPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
-static int		ToggleComplexAlphaIfNeeded(PhotoMaster *mPtr);
-static int		ImgPhotoSetSize(PhotoMaster *modelPtr, int width,
+static int		ToggleComplexAlphaIfNeeded(PhotoModel *mPtr);
+static int		ImgPhotoSetSize(PhotoModel *modelPtr, int width,
 			    int height);
-static char *		ImgGetPhoto(PhotoMaster *modelPtr,
+static char *		ImgGetPhoto(PhotoModel *modelPtr,
 			    Tk_PhotoImageBlock *blockPtr,
 			    struct SubcommandOptions *optPtr);
 static int		MatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
@@ -344,21 +344,21 @@ ImgPhotoCreate(
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
-    Tk_ImageMaster master,	/* Token for image, to be used by us in later
+    Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
-    PhotoMaster *modelPtr;
+    PhotoModel *modelPtr;
     (void)typePtr;
 
     /*
-     * Allocate and initialize the photo image master record.
+     * Allocate and initialize the photo image model record.
      */
 
-    modelPtr = (PhotoMaster *)ckalloc(sizeof(PhotoMaster));
-    memset(modelPtr, 0, sizeof(PhotoMaster));
-    modelPtr->tkMaster = master;
+    modelPtr = (PhotoModel *)ckalloc(sizeof(PhotoModel));
+    memset(modelPtr, 0, sizeof(PhotoModel));
+    modelPtr->tkModel = model;
     modelPtr->interp = interp;
     modelPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgPhotoCmd,
 	    modelPtr, ImgPhotoCmdDeletedProc);
@@ -400,7 +400,7 @@ ImgPhotoCreate(
 
 static int
 ImgPhotoCmd(
-    ClientData clientData,	/* Information about photo master. */
+    ClientData clientData,	/* Information about photo model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -415,7 +415,7 @@ ImgPhotoCmd(
 	PHOTO_WRITE
     };
 
-    PhotoMaster *modelPtr = (PhotoMaster *)clientData;
+    PhotoModel *modelPtr = (PhotoModel *)clientData;
     int result, index, x, y, width, height;
     struct SubcommandOptions options;
     unsigned char *pixelPtr;
@@ -601,7 +601,7 @@ ImgPhotoCmd(
 	 * has a simple alpha channel.
 	 */
 
-	if (!(((PhotoMaster *) srcHandle)->flags & COMPLEX_ALPHA)) {
+	if (!(((PhotoModel *) srcHandle)->flags & COMPLEX_ALPHA)) {
 	    options.compositingRule |= SOURCE_IS_SIMPLE_ALPHA_PHOTO;
 	}
 
@@ -670,7 +670,7 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 	}
-	Tk_ImageChanged(modelPtr->tkMaster, 0, 0, 0, 0,
+	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
 		modelPtr->width, modelPtr->height);
 	if (options.background) {
 	    Tk_FreeColor(options.background);
@@ -1079,7 +1079,7 @@ ImgPhotoCmd(
 	     * Tell the core image code that part of the image has changed.
 	     */
 
-	    Tk_ImageChanged(modelPtr->tkMaster, x, y,
+	    Tk_ImageChanged(modelPtr->tkModel, x, y,
 		    (modelPtr->width - x), (modelPtr->height - y),
 		    modelPtr->width, modelPtr->height);
 	}
@@ -1260,7 +1260,7 @@ ImgPhotoCmd(
 	     * has (potentially) changed.
 	     */
 
-	    Tk_ImageChanged(modelPtr->tkMaster, x, y, 1, 1,
+	    Tk_ImageChanged(modelPtr->tkModel, x, y, 1, 1,
 		    modelPtr->width, modelPtr->height);
 	    modelPtr->flags &= ~IMAGE_CHANGED;
 	    return TCL_OK;
@@ -1763,7 +1763,7 @@ ParseSubcommandOptions(
 static int
 ImgPhotoConfigureModel(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
-    PhotoMaster *modelPtr,	/* Pointer to data structure describing
+    PhotoModel *modelPtr,	/* Pointer to data structure describing
 				 * overall photo image to (re)configure. */
     int objc,			/* Number of entries in objv. */
     Tcl_Obj *const objv[],	/* Pairs of configuration options for image. */
@@ -2028,7 +2028,7 @@ ImgPhotoConfigureModel(
      * Inform the generic image code that the image has (potentially) changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkMaster, 0, 0, modelPtr->width,
+    Tk_ImageChanged(modelPtr->tkModel, 0, 0, modelPtr->width,
 	    modelPtr->height, modelPtr->width, modelPtr->height);
     modelPtr->flags &= ~IMAGE_CHANGED;
 
@@ -2066,14 +2066,14 @@ ImgPhotoConfigureModel(
  *	None.
  *
  * Side effects:
- *	(Re)sets COMPLEX_ALPHA flag of master.
+ *	(Re)sets COMPLEX_ALPHA flag of model.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 ToggleComplexAlphaIfNeeded(
-    PhotoMaster *mPtr)
+    PhotoModel *mPtr)
 {
     size_t len = (size_t)MAX(mPtr->userWidth, mPtr->width) *
 	    (size_t)MAX(mPtr->userHeight, mPtr->height) * 4;
@@ -2104,7 +2104,7 @@ ToggleComplexAlphaIfNeeded(
  *
  * ImgPhotoDelete --
  *
- *	This function is called by the image code to delete the master
+ *	This function is called by the image code to delete the model
  *	structure for an image.
  *
  * Results:
@@ -2118,10 +2118,10 @@ ToggleComplexAlphaIfNeeded(
 
 static void
 ImgPhotoDelete(
-    ClientData masterData)	/* Pointer to PhotoMaster structure for image.
+    ClientData modelData)	/* Pointer to PhotoModel structure for image.
 				 * Must not have any more instances. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *)masterData;
+    PhotoModel *modelPtr = (PhotoModel *)modelData;
     PhotoInstance *instancePtr;
 
     while ((instancePtr = modelPtr->instancePtr) != NULL) {
@@ -2131,7 +2131,7 @@ ImgPhotoDelete(
 	Tcl_CancelIdleCall(TkImgDisposeInstance, instancePtr);
 	TkImgDisposeInstance(instancePtr);
     }
-    modelPtr->tkMaster = NULL;
+    modelPtr->tkModel = NULL;
     if (modelPtr->imageCmd != NULL) {
 	Tcl_DeleteCommandFromToken(modelPtr->interp, modelPtr->imageCmd);
     }
@@ -2170,14 +2170,14 @@ ImgPhotoDelete(
 
 static void
 ImgPhotoCmdDeletedProc(
-    ClientData clientData)	/* Pointer to PhotoMaster structure for
+    ClientData clientData)	/* Pointer to PhotoModel structure for
 				 * image. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *)clientData;
+    PhotoModel *modelPtr = (PhotoModel *)clientData;
 
     modelPtr->imageCmd = NULL;
-    if (modelPtr->tkMaster != NULL) {
-	Tk_DeleteImage(modelPtr->interp, Tk_NameOfImage(modelPtr->tkMaster));
+    if (modelPtr->tkModel != NULL) {
+	Tk_DeleteImage(modelPtr->interp, Tk_NameOfImage(modelPtr->tkModel));
     }
 }
 
@@ -2195,14 +2195,14 @@ ImgPhotoCmdDeletedProc(
  *	with memory allocation.)
  *
  * Side effects:
- *	Storage gets reallocated, for the master and all its instances.
+ *	Storage gets reallocated, for the model and all its instances.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 ImgPhotoSetSize(
-    PhotoMaster *modelPtr,
+    PhotoModel *modelPtr,
     int width, int height)
 {
     unsigned char *newPix32 = NULL;
@@ -2699,7 +2699,7 @@ MatchStringFormat(
  * Tk_FindPhoto --
  *
  *	This function is called to get an opaque handle (actually a
- *	PhotoMaster *) for a given image, which can be used in subsequent
+ *	PhotoModel *) for a given image, which can be used in subsequent
  *	calls to Tk_PhotoPutBlock, etc. The `name' parameter is the name of
  *	the image.
  *
@@ -2721,7 +2721,7 @@ Tk_FindPhoto(
 {
     const Tk_ImageType *typePtr;
     ClientData clientData =
-	    Tk_GetImageMasterData(interp, imageName, &typePtr);
+	    Tk_GetImageModelData(interp, imageName, &typePtr);
 
     if ((typePtr == NULL) || (typePtr->name != tkPhotoImageType.name)) {
 	return NULL;
@@ -2764,7 +2764,7 @@ Tk_PhotoPutBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
     Tk_PhotoImageBlock sourceBlock;
     unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
@@ -3151,7 +3151,7 @@ Tk_PhotoPutBlock(
      * Tell the core image code that this image has changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkMaster, x, y, width, height,
+    Tk_ImageChanged(modelPtr->tkModel, x, y, width, height,
 	    modelPtr->width, modelPtr->height);
 
     if (memToFree) ckfree(memToFree);
@@ -3202,7 +3202,7 @@ Tk_PhotoPutZoomedBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
     Tk_PhotoImageBlock sourceBlock;
     unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
@@ -3507,7 +3507,7 @@ Tk_PhotoPutZoomedBlock(
      * Tell the core image code that this image has changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkMaster, x, y, width, height, modelPtr->width,
+    Tk_ImageChanged(modelPtr->tkModel, x, y, width, height, modelPtr->width,
 	    modelPtr->height);
 
     if (memToFree) ckfree(memToFree);
@@ -3526,7 +3526,7 @@ Tk_PhotoPutZoomedBlock(
  * Tk_DitherPhoto --
  *
  *	This function is called to update an area of each instance's pixmap by
- *	dithering the corresponding area of the image master.
+ *	dithering the corresponding area of the image model.
  *
  * Results:
  *	None.
@@ -3541,13 +3541,13 @@ Tk_PhotoPutZoomedBlock(
 
 void
 Tk_DitherPhoto(
-    Tk_PhotoHandle photo,	/* Image master whose instances are to be
+    Tk_PhotoHandle photo,	/* Image model whose instances are to be
 				 * updated. */
     int x, int y,		/* Coordinates of the top-left pixel in the
 				 * area to be dithered. */
     int width, int height)	/* Dimensions of the area to be dithered. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) photo;
+    PhotoModel *modelPtr = (PhotoModel *) photo;
     PhotoInstance *instancePtr;
 
     if ((width <= 0) || (height <= 0)) {
@@ -3620,7 +3620,7 @@ void
 Tk_PhotoBlank(
     Tk_PhotoHandle handle)	/* Handle for the image to be blanked. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
     PhotoInstance *instancePtr;
 
     modelPtr->ditherX = modelPtr->ditherY = 0;
@@ -3651,7 +3651,7 @@ Tk_PhotoBlank(
      * Tell the core image code that this image has changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkMaster, 0, 0, modelPtr->width,
+    Tk_ImageChanged(modelPtr->tkModel, 0, 0, modelPtr->width,
 	    modelPtr->height, modelPtr->width, modelPtr->height);
 }
 
@@ -3682,7 +3682,7 @@ Tk_PhotoExpand(
     Tk_PhotoHandle handle,	/* Handle for the image to be expanded. */
     int width, int height)	/* Desired minimum dimensions of the image. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
 
     if (width <= modelPtr->width) {
 	width = modelPtr->width;
@@ -3700,7 +3700,7 @@ Tk_PhotoExpand(
 	    }
 	    return TCL_ERROR;
 	}
-	Tk_ImageChanged(modelPtr->tkMaster, 0, 0, 0, 0, modelPtr->width,
+	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0, modelPtr->width,
 		modelPtr->height);
     }
     return TCL_OK;
@@ -3730,7 +3730,7 @@ Tk_PhotoGetSize(
 				/* The dimensions of the image are returned
 				 * here. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
 
     *widthPtr = modelPtr->width;
     *heightPtr = modelPtr->height;
@@ -3762,7 +3762,7 @@ Tk_PhotoSetSize(
 				 * set. */
     int width, int height)	/* New dimensions for the image. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
 
     modelPtr->userWidth = width;
     modelPtr->userHeight = height;
@@ -3775,7 +3775,7 @@ Tk_PhotoSetSize(
 	}
 	return TCL_ERROR;
     }
-    Tk_ImageChanged(modelPtr->tkMaster, 0, 0, 0, 0,
+    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
 	    modelPtr->width, modelPtr->height);
     return TCL_OK;
 }
@@ -3805,7 +3805,7 @@ TkPhotoGetValidRegion(
     Tk_PhotoHandle handle)	/* Handle for the image whose valid region is
 				 * to obtained. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
 
     return modelPtr->validRegion;
 }
@@ -3833,7 +3833,7 @@ TkPhotoGetValidRegion(
 
 static char *
 ImgGetPhoto(
-    PhotoMaster *modelPtr,	/* Handle for the photo image from which image
+    PhotoModel *modelPtr,	/* Handle for the photo image from which image
 				 * data is desired. */
     Tk_PhotoImageBlock *blockPtr,
 				/* Information about the address and layout of
@@ -4030,7 +4030,7 @@ Tk_PhotoGetImage(
 				/* Information about the address and layout of
 				 * the image data is returned here. */
 {
-    PhotoMaster *modelPtr = (PhotoMaster *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
 
     blockPtr->pixelPtr = modelPtr->pix32;
     blockPtr->width = modelPtr->width;

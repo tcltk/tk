@@ -34,9 +34,9 @@
  * (2) Manager voluntarily relinquishes control
  * (3) Content window is destroyed
  *
- * In case (1), Tk calls the manager's lostSlaveProc.
+ * In case (1), Tk calls the manager's lostContentProc.
  * Case (2) is performed by calling Tk_ManageGeometry(slave,NULL,0);
- * in this case Tk does _not_ call the LostSlaveProc (documented behavior).
+ * in this case Tk does _not_ call the lostContentProc (documented behavior).
  * Tk doesn't handle case (3) either; to account for that we
  * register an event handler on the slave widget to track <Destroy> events.
  */
@@ -174,7 +174,7 @@ static void ContentLostEventHandler(void *clientData, XEvent *eventPtr)
 {
     Ttk_Content *slave = (Ttk_Content *)clientData;
     if (eventPtr->type == DestroyNotify) {
-	slave->manager->managerSpec->tkGeomMgr.lostSlaveProc(
+	slave->manager->managerSpec->tkGeomMgr.lostContentProc(
 	    slave->manager, slave->contentWindow);
     }
 }
@@ -229,7 +229,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 	mgr->window, ManagerEventMask, ManagerEventHandler, mgr);
 
     while (mgr->nManaged > 0) {
-	Ttk_ForgetSlave(mgr, mgr->nManaged - 1);
+	Ttk_ForgetContent(mgr, mgr->nManaged - 1);
     }
     if (mgr->content) {
 	ckfree(mgr->content);
@@ -350,7 +350,7 @@ void Ttk_InsertContent(
 /* ++ Ttk_ForgetContent --
  * 	Unmanage the specified content window.
  */
-void Ttk_ForgetSlave(Ttk_Manager *mgr, TkSizeT index)
+void Ttk_ForgetContent(Ttk_Manager *mgr, TkSizeT index)
 {
     Tk_Window contentWindow = mgr->content[index]->contentWindow;
     RemoveSlave(mgr, index);
@@ -364,7 +364,7 @@ void Ttk_ForgetSlave(Ttk_Manager *mgr, TkSizeT index)
  * 	Contrary to documentation, Tk_MaintainGeometry doesn't always
  * 	map the content window.
  */
-void Ttk_PlaceSlave(
+void Ttk_PlaceContent(
     Ttk_Manager *mgr, TkSizeT index, int x, int y, int width, int height)
 {
     Ttk_Content *slave = mgr->content[index];
@@ -378,7 +378,7 @@ void Ttk_PlaceSlave(
 /* ++ Ttk_UnmapContent --
  * 	Unmap the specified content window, but leave it managed.
  */
-void Ttk_UnmapSlave(Ttk_Manager *mgr, TkSizeT index)
+void Ttk_UnmapContent(Ttk_Manager *mgr, TkSizeT index)
 {
     Ttk_Content *slave = mgr->content[index];
     Tk_UnmaintainGeometry(slave->contentWindow, mgr->window);
@@ -404,7 +404,7 @@ void Ttk_ManagerSizeChanged(Ttk_Manager *mgr)
 
 /* +++ Accessors.
  */
-TkSizeT Ttk_NumberSlaves(Ttk_Manager *mgr)
+TkSizeT Ttk_NumberContent(Ttk_Manager *mgr)
 {
     return mgr->nManaged;
 }
@@ -433,7 +433,7 @@ TkSizeT Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window contentWindow)
     return TCL_INDEX_NONE;
 }
 
-/* ++ Ttk_GetSlaveIndexFromObj(interp, mgr, objPtr, indexPtr) --
+/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, indexPtr) --
  * 	Return the index of the content window specified by objPtr.
  * 	Content windows may be specified as an integer index or
  * 	as the name of the managed window.
@@ -487,7 +487,7 @@ int Ttk_GetContentIndexFromObj(
 /* ++ Ttk_ReorderContent(mgr, fromIndex, toIndex) --
  * 	Change content window order.
  */
-void Ttk_ReorderSlave(Ttk_Manager *mgr, TkSizeT fromIndex, TkSizeT toIndex)
+void Ttk_ReorderContent(Ttk_Manager *mgr, TkSizeT fromIndex, TkSizeT toIndex)
 {
     Ttk_Content *moved = mgr->content[fromIndex];
 
