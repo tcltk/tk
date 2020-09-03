@@ -902,7 +902,7 @@ TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
             memcpy(dst,ptr,len);
         dst+=len;
         if((dst-after)>(*aftersize-1))
-            panic("oops\n");
+            printf("oops\n");
         before++;
     }
     *dst=0;
@@ -1314,7 +1314,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp *interp,
   return TCL_OK;
 }
 
-static int 
+int 
 WinIcoInit (Tcl_Interp* interp) 
 {
     OSVERSIONINFO info;
