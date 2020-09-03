@@ -402,7 +402,7 @@ EXTERN void		Tk_HandleEvent(XEvent *eventPtr);
 /* 116 */
 EXTERN Tk_Window	Tk_IdToWindow(Display *display, Window window);
 /* 117 */
-EXTERN void		Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
+EXTERN void		Tk_ImageChanged(Tk_ImageModel master, int x, int y,
 				int width, int height, int imageWidth,
 				int imageHeight);
 /* 118 */
@@ -453,7 +453,7 @@ EXTERN CONST84_RETURN char * Tk_NameOfCursor(Display *display,
 /* 136 */
 EXTERN CONST84_RETURN char * Tk_NameOfFont(Tk_Font font);
 /* 137 */
-EXTERN CONST84_RETURN char * Tk_NameOfImage(Tk_ImageMaster imageMaster);
+EXTERN CONST84_RETURN char * Tk_NameOfImage(Tk_ImageModel imageMaster);
 /* 138 */
 EXTERN CONST84_RETURN char * Tk_NameOfJoinStyle(int join);
 /* 139 */
@@ -993,7 +993,7 @@ typedef struct TkStubs {
     int (*tk_Grab) (Tcl_Interp *interp, Tk_Window tkwin, int grabGlobal); /* 114 */
     void (*tk_HandleEvent) (XEvent *eventPtr); /* 115 */
     Tk_Window (*tk_IdToWindow) (Display *display, Window window); /* 116 */
-    void (*tk_ImageChanged) (Tk_ImageMaster master, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
+    void (*tk_ImageChanged) (Tk_ImageModel master, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
     int (*tk_Init) (Tcl_Interp *interp); /* 118 */
     Atom (*tk_InternAtom) (Tk_Window tkwin, const char *name); /* 119 */
     int (*tk_IntersectTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height); /* 120 */
@@ -1013,7 +1013,7 @@ typedef struct TkStubs {
     CONST84_RETURN char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
     CONST84_RETURN char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
     CONST84_RETURN char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
-    CONST84_RETURN char * (*tk_NameOfImage) (Tk_ImageMaster imageMaster); /* 137 */
+    CONST84_RETURN char * (*tk_NameOfImage) (Tk_ImageModel imageMaster); /* 137 */
     CONST84_RETURN char * (*tk_NameOfJoinStyle) (int join); /* 138 */
     CONST84_RETURN char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
     CONST84_RETURN char * (*tk_NameOfRelief) (int relief); /* 140 */
