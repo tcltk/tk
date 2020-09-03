@@ -202,12 +202,12 @@ Tk_PackObjCmd(
 #ifndef TK_NO_DEPRECATED
 	"after", "append", "before", "unpack",
 #endif /* !TK_NO_DEPRECATED */
-	"configure", "forget", "info", "propagate", "slaves", NULL };
+	"configure", "content", "forget", "info", "propagate", "slaves", NULL };
     enum options {
 #ifndef TK_NO_DEPRECATED
 	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
 #endif /* !TK_NO_DEPRECATED */
-	PACK_CONFIGURE, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
+	PACK_CONFIGURE, PACK_CONTENT, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
     int index;
 
     if (objc >= 2) {
@@ -445,6 +445,7 @@ Tk_PackObjCmd(
 	}
 	break;
     }
+    case PACK_CONTENT:
     case PACK_SLAVES: {
 	Tk_Window master;
 	Packer *masterPtr, *slavePtr;

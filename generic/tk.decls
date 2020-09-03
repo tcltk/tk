@@ -403,7 +403,7 @@ declare 97 {
 	    Tk_ImageChangedProc *changeProc, ClientData clientData)
 }
 declare 98 {
-    ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
+    ClientData Tk_GetImageModelData(Tcl_Interp *interp,
 	    const char *name, const Tk_ImageType **typePtrPtr)
 }
 declare 99 {
@@ -472,7 +472,7 @@ declare 116 {
     Tk_Window Tk_IdToWindow(Display *display, Window window)
 }
 declare 117 {
-    void Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
+    void Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 	    int width, int height, int imageWidth, int imageHeight)
 }
 declare 118 {
@@ -487,7 +487,7 @@ declare 120 {
 }
 declare 121 {
     void Tk_MaintainGeometry(Tk_Window slave,
-	    Tk_Window master, int x, int y, int width, int height)
+	    Tk_Window model, int x, int y, int width, int height)
 }
 declare 122 {
     Tk_Window Tk_MainWindow(Tcl_Interp *interp)
@@ -539,7 +539,7 @@ declare 136 {
     const char *Tk_NameOfFont(Tk_Font font)
 }
 declare 137 {
-    const char *Tk_NameOfImage(Tk_ImageMaster imageMaster)
+    const char *Tk_NameOfImage(Tk_ImageModel imageModel)
 }
 declare 138 {
     const char *Tk_NameOfJoinStyle(int join)

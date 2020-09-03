@@ -27,10 +27,11 @@
  * Forward declarations of the structures we define.
  */
 
+#define PhotoMaster PhotoModel
 typedef struct ColorTableId	ColorTableId;
 typedef struct ColorTable	ColorTable;
 typedef struct PhotoInstance	PhotoInstance;
-typedef struct PhotoMaster	PhotoMaster;
+typedef struct PhotoModel	PhotoModel;
 
 /*
  * A signed 8-bit integral type. If chars are unsigned and the compiler isn't
@@ -147,8 +148,8 @@ struct ColorTable {
  * Definition of the data associated with each photo image master.
  */
 
-struct PhotoMaster {
-    Tk_ImageMaster tkMaster;	/* Tk's token for image master. NULL means the
+struct PhotoModel {
+    Tk_ImageModel tkMaster;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter associated with the application
 				 * using this image. */
@@ -175,7 +176,7 @@ struct PhotoMaster {
 };
 
 /*
- * Bit definitions for the flags field of a PhotoMaster.
+ * Bit definitions for the flags field of a PhotoModel.
  * COLOR_IMAGE:			1 means that the image has different color
  *				components.
  * IMAGE_CHANGED:		1 means that the instances of this image need
@@ -202,7 +203,7 @@ struct PhotoMaster {
  */
 
 struct PhotoInstance {
-    PhotoMaster *masterPtr;	/* Pointer to master for image. */
+    PhotoModel *modelPtr;	/* Pointer to model for image. */
     Display *display;		/* Display for windows using this instance. */
     Colormap colormap;		/* The image may only be used in windows with
 				 * this particular colormap. */
