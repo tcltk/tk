@@ -7343,7 +7343,7 @@ GetDumpFlags(
 	}
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[arg], myOptStrings,
-		sizeof(char *), "option", 0, &index) != TCL_OK) {
+		sizeof(char *), "option", TCL_INDEX_TEMP_TABLE, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 

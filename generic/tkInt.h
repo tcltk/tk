@@ -113,6 +113,10 @@
 #   endif
 #endif
 
+#if !defined(TCL_INDEX_TEMP_TABLE)
+#   define TCL_INDEX_TEMP_TABLE 2
+#endif
+
 /*
  * Standard integer support (C99).
  */
