@@ -443,7 +443,7 @@ EmbWinConfigure(
 		    break;
 		}
 		if (Tk_TopWinHierarchy(ancestor)) {
-		badMaster:
+		badContainer:
 		    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
 			    "can't embed %s in %s",
 			    Tk_PathName(ewPtr->body.ew.tkwin),
@@ -459,7 +459,7 @@ EmbWinConfigure(
 	    }
 	    if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		    || (ewPtr->body.ew.tkwin == textPtr->tkwin)) {
-		goto badMaster;
+		goto badContainer;
 	    }
 
 	    if (client == NULL) {
@@ -936,12 +936,12 @@ EmbWinLayoutProc(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		goto badMaster;
+		goto badContainer;
 	    }
 	}
 	if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
-	badMaster:
+	badContainer:
 	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
 		    "can't embed %s relative to %s",
 		    Tk_PathName(ewPtr->body.ew.tkwin),

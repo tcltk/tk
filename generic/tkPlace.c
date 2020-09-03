@@ -17,10 +17,10 @@
  * Border modes for relative placement:
  *
  * BM_INSIDE:		relative distances computed using area inside all
- *			borders of master window.
+ *			borders of container window.
  * BM_OUTSIDE:		relative distances computed using outside area that
- *			includes all borders of master.
- * BM_IGNORE:		border issues are ignored: place relative to master's
+ *			includes all borders of container.
+ * BM_IGNORE:		border issues are ignored: place relative to container's
  *			actual window size.
  */
 
@@ -38,13 +38,13 @@ typedef enum {BM_INSIDE, BM_OUTSIDE, BM_IGNORE} BorderMode;
 typedef struct Slave {
     Tk_Window tkwin;		/* Tk's token for window. */
     Tk_Window inTkwin;		/* Token for the -in window. */
-    struct Master *masterPtr;	/* Pointer to information for window relative
+    struct Master *containerPtr;	/* Pointer to information for window relative
 				 * to which tkwin is placed. This isn't
 				 * necessarily the logical parent of tkwin.
-				 * NULL means the master was deleted or never
+				 * NULL means the container was deleted or never
 				 * assigned. */
     struct Slave *nextPtr;	/* Next in list of windows placed relative to
-				 * same master (NULL for end of list). */
+				 * same container (NULL for end of list). */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this command. */
     /*
@@ -57,19 +57,19 @@ typedef struct Slave {
     Tcl_Obj *xPtr, *yPtr;	/* Tcl_Obj rep's of x, y coords, to keep pixel
 				 * spec. information. */
     double relX, relY;		/* X and Y coordinates relative to size of
-				 * master. */
+				 * container. */
     int width, height;		/* Absolute dimensions for tkwin. */
     Tcl_Obj *widthPtr;		/* Tcl_Obj rep of width, to keep pixel
 				 * spec. */
     Tcl_Obj *heightPtr;		/* Tcl_Obj rep of height, to keep pixel
 				 * spec. */
     double relWidth, relHeight;	/* Dimensions for tkwin relative to size of
-				 * master. */
+				 * container. */
     Tcl_Obj *relWidthPtr;
     Tcl_Obj *relHeightPtr;
     Tk_Anchor anchor;		/* Which point on tkwin is placed at the given
 				 * position. */
-    BorderMode borderMode;	/* How to treat borders of master window. */
+    BorderMode borderMode;	/* How to treat borders of container window. */
     int flags;			/* Various flags; see below for bit
 				 * definitions. */
 } Slave;
@@ -123,14 +123,14 @@ static const Tk_OptionSpec optionSpecs[] = {
 #define CHILD_REL_HEIGHT	8
 
 /*
- * For each master window that has a slave managed by the placer there is a
+ * For each container window that has a slave managed by the placer there is a
  * structure of the following form:
  */
 
 typedef struct Master {
-    Tk_Window tkwin;		/* Tk's token for master window. */
+    Tk_Window tkwin;		/* Tk's token for container window. */
     struct Slave *slavePtr;	/* First in linked list of slaves placed
-				 * relative to this master. */
+				 * relative to this container. */
     int *abortPtr;		/* If non-NULL, it means that there is a nested
 				 * call to RecomputePlacement already working on
 				 * this window.  *abortPtr may be set to 1 to
@@ -141,7 +141,7 @@ typedef struct Master {
 } Master;
 
 /*
- * Flag definitions for masters:
+ * Flag definitions for containers:
  *
  * PARENT_RECONFIG_PENDING -	1 means that a call to RecomputePlacement is
  *				already pending via a Do_When_Idle handler.
@@ -309,9 +309,9 @@ Tk_PlaceObjCmd(
 	if (slavePtr == NULL) {
 	    return TCL_OK;
 	}
-	if ((slavePtr->masterPtr != NULL) &&
-		(slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
-	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+	if ((slavePtr->containerPtr != NULL) &&
+		(slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
+	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
 	}
 	UnlinkSlave(slavePtr);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
@@ -332,17 +332,17 @@ Tk_PlaceObjCmd(
 
     case PLACE_CONTENT:
     case PLACE_SLAVES: {
-	Master *masterPtr;
+	Master *containerPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "pathName");
 	    return TCL_ERROR;
 	}
-	masterPtr = FindMaster(tkwin);
-	if (masterPtr != NULL) {
+	containerPtr = FindMaster(tkwin);
+	if (containerPtr != NULL) {
 	    Tcl_Obj *listPtr = Tcl_NewObj();
 
-	    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+	    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 		    slavePtr = slavePtr->nextPtr) {
 		Tcl_ListObjAppendElement(NULL, listPtr,
 			TkNewWindowObj(slavePtr->tkwin));
@@ -469,13 +469,13 @@ FindSlave(
  * UnlinkSlave --
  *
  *	This function removes a slave window from the chain of slaves in its
- *	master.
+ *	container.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The slave list of slavePtr's master changes.
+ *	The slave list of slavePtr's container changes.
  *
  *----------------------------------------------------------------------
  */
@@ -484,17 +484,17 @@ static void
 UnlinkSlave(
     Slave *slavePtr)		/* Slave structure to be unlinked. */
 {
-    register Master *masterPtr;
+    register Master *containerPtr;
     register Slave *prevPtr;
 
-    masterPtr = slavePtr->masterPtr;
-    if (masterPtr == NULL) {
+    containerPtr = slavePtr->containerPtr;
+    if (containerPtr == NULL) {
 	return;
     }
-    if (masterPtr->slavePtr == slavePtr) {
-	masterPtr->slavePtr = slavePtr->nextPtr;
+    if (containerPtr->slavePtr == slavePtr) {
+	containerPtr->slavePtr = slavePtr->nextPtr;
     } else {
-	for (prevPtr = masterPtr->slavePtr; ; prevPtr = prevPtr->nextPtr) {
+	for (prevPtr = containerPtr->slavePtr; ; prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
 		Tcl_Panic("UnlinkSlave couldn't find slave to unlink");
 	    }
@@ -505,10 +505,10 @@ UnlinkSlave(
 	}
     }
 
-    if (masterPtr->abortPtr != NULL) {
-	*masterPtr->abortPtr = 1;
+    if (containerPtr->abortPtr != NULL) {
+	*containerPtr->abortPtr = 1;
     }
-    slavePtr->masterPtr = NULL;
+    slavePtr->containerPtr = NULL;
 }
 
 /*
@@ -530,27 +530,27 @@ UnlinkSlave(
 
 static Master *
 CreateMaster(
-    Tk_Window tkwin)		/* Token for desired master. */
+    Tk_Window tkwin)		/* Token for desired container. */
 {
     Tcl_HashEntry *hPtr;
-    register Master *masterPtr;
+    register Master *containerPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->masterTable, (char *) tkwin, &isNew);
     if (isNew) {
-	masterPtr = ckalloc(sizeof(Master));
-	masterPtr->tkwin = tkwin;
-	masterPtr->slavePtr = NULL;
-	masterPtr->abortPtr = NULL;
-	masterPtr->flags = 0;
-	Tcl_SetHashValue(hPtr, masterPtr);
-	Tk_CreateEventHandler(masterPtr->tkwin, StructureNotifyMask,
-		MasterStructureProc, masterPtr);
+	containerPtr = ckalloc(sizeof(Master));
+	containerPtr->tkwin = tkwin;
+	containerPtr->slavePtr = NULL;
+	containerPtr->abortPtr = NULL;
+	containerPtr->flags = 0;
+	Tcl_SetHashValue(hPtr, containerPtr);
+	Tk_CreateEventHandler(containerPtr->tkwin, StructureNotifyMask,
+		MasterStructureProc, containerPtr);
     } else {
-	masterPtr = Tcl_GetHashValue(hPtr);
+	containerPtr = Tcl_GetHashValue(hPtr);
     }
-    return masterPtr;
+    return containerPtr;
 }
 
 /*
@@ -574,7 +574,7 @@ CreateMaster(
 
 static Master *
 FindMaster(
-    Tk_Window tkwin)		/* Token for desired master. */
+    Tk_Window tkwin)		/* Token for desired container. */
 {
     register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -599,7 +599,7 @@ FindMaster(
  *	the interp's result.
  *
  * Side effects:
- *	Information in slavePtr may change, and slavePtr's master is scheduled
+ *	Information in slavePtr may change, and slavePtr's container is scheduled
  *	for reconfiguration.
  *
  *----------------------------------------------------------------------
@@ -613,12 +613,12 @@ ConfigureSlave(
     int objc,			/* Number of config arguments. */
     Tcl_Obj *const objv[])	/* Object values for arguments. */
 {
-    register Master *masterPtr;
+    register Master *containerPtr;
     Tk_SavedOptions savedOptions;
     int mask;
     Slave *slavePtr;
-    Tk_Window masterWin = NULL;
-    TkWindow *master;
+    Tk_Window containerWin = NULL;
+    TkWindow *container;
 
     if (Tk_TopWinHierarchy(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -656,13 +656,13 @@ ConfigureSlave(
 	slavePtr->flags |= CHILD_WIDTH;
     }
 
-    if (!(mask & IN_MASK) && (slavePtr->masterPtr != NULL)) {
+    if (!(mask & IN_MASK) && (slavePtr->containerPtr != NULL)) {
 	/*
 	 * If no -in option was passed and the slave is already placed then
 	 * just recompute the placement.
 	 */
 
-	masterPtr = slavePtr->masterPtr;
+	containerPtr = slavePtr->containerPtr;
 	goto scheduleLayout;
     } else if (mask & IN_MASK) {
 	/* -in changed */
@@ -672,8 +672,8 @@ ConfigureSlave(
 	tkwin = slavePtr->inTkwin;
 
 	/*
-	 * Make sure that the new master is either the logical parent of the
-	 * slave or a descendant of that window, and that the master and slave
+	 * Make sure that the new container is either the logical parent of the
+	 * slave or a descendant of that window, and that the container and slave
 	 * aren't the same.
 	 */
 
@@ -701,9 +701,9 @@ ConfigureSlave(
 	 * Check for management loops.
 	 */
 
-	for (master = (TkWindow *)tkwin; master != NULL;
-	     master = (TkWindow *)TkGetGeomMaster(master)) {
-	    if (master == (TkWindow *)slavePtr->tkwin) {
+	for (container = (TkWindow *)tkwin; container != NULL;
+	     container = (TkWindow *)TkGetGeomMaster(container)) {
+	    if (container == (TkWindow *)slavePtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
 	            Tk_PathName(slavePtr->tkwin), Tk_PathName(tkwin)));
@@ -715,52 +715,52 @@ ConfigureSlave(
 	    ((TkWindow *)slavePtr->tkwin)->maintainerPtr = (TkWindow *)tkwin;
 	}
 
-	if ((slavePtr->masterPtr != NULL)
-		&& (slavePtr->masterPtr->tkwin == tkwin)) {
+	if ((slavePtr->containerPtr != NULL)
+		&& (slavePtr->containerPtr->tkwin == tkwin)) {
 	    /*
-	     * Re-using same old master. Nothing to do.
+	     * Re-using same old container. Nothing to do.
 	     */
 
-	    masterPtr = slavePtr->masterPtr;
+	    containerPtr = slavePtr->containerPtr;
 	    goto scheduleLayout;
 	}
-	if ((slavePtr->masterPtr != NULL) &&
-		(slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
-	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+	if ((slavePtr->containerPtr != NULL) &&
+		(slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
+	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
 	}
 	UnlinkSlave(slavePtr);
-	masterWin = tkwin;
+	containerWin = tkwin;
     }
 
     /*
-     * If there's no master specified for this slave, use its Tk_Parent.
+     * If there's no container specified for this slave, use its Tk_Parent.
      */
 
-    if (masterWin == NULL) {
-	masterWin = Tk_Parent(slavePtr->tkwin);
-	slavePtr->inTkwin = masterWin;
+    if (containerWin == NULL) {
+	containerWin = Tk_Parent(slavePtr->tkwin);
+	slavePtr->inTkwin = containerWin;
     }
 
     /*
-     * Manage the slave window in this master.
+     * Manage the slave window in this container.
      */
 
-    masterPtr = CreateMaster(masterWin);
-    slavePtr->masterPtr = masterPtr;
-    slavePtr->nextPtr = masterPtr->slavePtr;
-    masterPtr->slavePtr = slavePtr;
+    containerPtr = CreateMaster(containerWin);
+    slavePtr->containerPtr = containerPtr;
+    slavePtr->nextPtr = containerPtr->slavePtr;
+    containerPtr->slavePtr = slavePtr;
     Tk_ManageGeometry(slavePtr->tkwin, &placerType, slavePtr);
 
     /*
-     * Arrange for the master to be re-arranged at the first idle moment.
+     * Arrange for the container to be re-arranged at the first idle moment.
      */
 
   scheduleLayout:
     Tk_FreeSavedOptions(&savedOptions);
 
-    if (!(masterPtr->flags & PARENT_RECONFIG_PENDING)) {
-	masterPtr->flags |= PARENT_RECONFIG_PENDING;
-	Tcl_DoWhenIdle(RecomputePlacement, masterPtr);
+    if (!(containerPtr->flags & PARENT_RECONFIG_PENDING)) {
+	containerPtr->flags |= PARENT_RECONFIG_PENDING;
+	Tcl_DoWhenIdle(RecomputePlacement, containerPtr);
     }
     return TCL_OK;
 
@@ -804,10 +804,10 @@ PlaceInfoCommand(
 	return TCL_OK;
     }
     infoObj = Tcl_NewObj();
-    if (slavePtr->masterPtr != NULL) {
+    if (slavePtr->containerPtr != NULL) {
 	Tcl_AppendToObj(infoObj, "-in", -1);
 	Tcl_ListObjAppendElement(NULL, infoObj,
-		TkNewWindowObj(slavePtr->masterPtr->tkwin));
+		TkNewWindowObj(slavePtr->containerPtr->tkwin));
 	Tcl_AppendToObj(infoObj, " ", -1);
     }
     Tcl_AppendPrintfToObj(infoObj,
@@ -849,7 +849,7 @@ PlaceInfoCommand(
  * RecomputePlacement --
  *
  *	This function is called as a when-idle handler. It recomputes the
- *	geometries of all the slaves of a given master.
+ *	geometries of all the slaves of a given container.
  *
  * Results:
  *	None.
@@ -864,15 +864,15 @@ static void
 RecomputePlacement(
     ClientData clientData)	/* Pointer to Master record. */
 {
-    register Master *masterPtr = clientData;
+    register Master *containerPtr = clientData;
     register Slave *slavePtr;
     int x, y, width, height, tmp;
-    int masterWidth, masterHeight, masterX, masterY;
+    int containerWidth, containerHeight, containerX, containerY;
     double x1, y1, x2, y2;
     int abort;			/* May get set to non-zero to abort this
 				 * placement operation. */
 
-    masterPtr->flags &= ~PARENT_RECONFIG_PENDING;
+    containerPtr->flags &= ~PARENT_RECONFIG_PENDING;
 
     /*
      * Abort any nested call to RecomputePlacement for this window, since
@@ -880,50 +880,50 @@ RecomputePlacement(
      * aborted if necessary.
      */
 
-    if (masterPtr->abortPtr != NULL) {
-	*masterPtr->abortPtr = 1;
+    if (containerPtr->abortPtr != NULL) {
+	*containerPtr->abortPtr = 1;
     }
-    masterPtr->abortPtr = &abort;
+    containerPtr->abortPtr = &abort;
     abort = 0;
-    Tcl_Preserve(masterPtr);
+    Tcl_Preserve(containerPtr);
 
     /*
-     * Iterate over all the slaves for the master. Each slave's geometry can
+     * Iterate over all the slaves for the container. Each slave's geometry can
      * be computed independently of the other slaves. Changes to the window's
      * structure could cause almost anything to happen, including deleting the
      * parent or child. If this happens, we'll be told to abort.
      */
 
-    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL && !abort;
+    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL && !abort;
 	    slavePtr = slavePtr->nextPtr) {
 	/*
-	 * Step 1: compute size and borderwidth of master, taking into account
+	 * Step 1: compute size and borderwidth of container, taking into account
 	 * desired border mode.
 	 */
 
-	masterX = masterY = 0;
-	masterWidth = Tk_Width(masterPtr->tkwin);
-	masterHeight = Tk_Height(masterPtr->tkwin);
+	containerX = containerY = 0;
+	containerWidth = Tk_Width(containerPtr->tkwin);
+	containerHeight = Tk_Height(containerPtr->tkwin);
 	if (slavePtr->borderMode == BM_INSIDE) {
-	    masterX = Tk_InternalBorderLeft(masterPtr->tkwin);
-	    masterY = Tk_InternalBorderTop(masterPtr->tkwin);
-	    masterWidth -= masterX + Tk_InternalBorderRight(masterPtr->tkwin);
-	    masterHeight -= masterY +
-		    Tk_InternalBorderBottom(masterPtr->tkwin);
+	    containerX = Tk_InternalBorderLeft(containerPtr->tkwin);
+	    containerY = Tk_InternalBorderTop(containerPtr->tkwin);
+	    containerWidth -= containerX + Tk_InternalBorderRight(containerPtr->tkwin);
+	    containerHeight -= containerY +
+		    Tk_InternalBorderBottom(containerPtr->tkwin);
 	} else if (slavePtr->borderMode == BM_OUTSIDE) {
-	    masterX = masterY = -Tk_Changes(masterPtr->tkwin)->border_width;
-	    masterWidth -= 2 * masterX;
-	    masterHeight -= 2 * masterY;
+	    containerX = containerY = -Tk_Changes(containerPtr->tkwin)->border_width;
+	    containerWidth -= 2 * containerX;
+	    containerHeight -= 2 * containerY;
 	}
 
 	/*
 	 * Step 2: compute size of slave (outside dimensions including border)
-	 * and location of anchor point within master.
+	 * and location of anchor point within container.
 	 */
 
-	x1 = slavePtr->x + masterX + (slavePtr->relX*masterWidth);
+	x1 = slavePtr->x + containerX + (slavePtr->relX*containerWidth);
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
-	y1 = slavePtr->y + masterY + (slavePtr->relY*masterHeight);
+	y1 = slavePtr->y + containerY + (slavePtr->relY*containerHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
 	if (slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) {
 	    width = 0;
@@ -939,7 +939,7 @@ RecomputePlacement(
 		 * errors in relX and relWidth accumulate.
 		 */
 
-		x2 = x1 + (slavePtr->relWidth*masterWidth);
+		x2 = x1 + (slavePtr->relWidth*containerWidth);
 		tmp = (int) (x2 + ((x2 > 0) ? 0.5 : -0.5));
 		width += tmp - x;
 	    }
@@ -957,7 +957,7 @@ RecomputePlacement(
 		 * See note above for rounding errors in width computation.
 		 */
 
-		y2 = y1 + (slavePtr->relHeight*masterHeight);
+		y2 = y1 + (slavePtr->relHeight*containerHeight);
 		tmp = (int) (y2 + ((y2 > 0) ? 0.5 : -0.5));
 		height += tmp - y;
 	    }
@@ -969,7 +969,7 @@ RecomputePlacement(
 	/*
 	 * Step 3: adjust the x and y positions so that the desired anchor
 	 * point on the slave appears at that position. Also adjust for the
-	 * border mode and master's border.
+	 * border mode and container's border.
 	 */
 
 	switch (slavePtr->anchor) {
@@ -1022,12 +1022,12 @@ RecomputePlacement(
 
 	/*
 	 * Step 5: reconfigure the window and map it if needed. If the slave
-	 * is a child of the master, we do this ourselves. If the slave isn't
-	 * a child of the master, let Tk_MaintainGeometry do the work (it will
+	 * is a child of the container, we do this ourselves. If the slave isn't
+	 * a child of the container, let Tk_MaintainGeometry do the work (it will
 	 * re-adjust things as relevant windows map, unmap, and move).
 	 */
 
-	if (masterPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
+	if (containerPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
 	    if ((x != Tk_X(slavePtr->tkwin))
 		    || (y != Tk_Y(slavePtr->tkwin))
 		    || (width != Tk_Width(slavePtr->tkwin))
@@ -1039,26 +1039,26 @@ RecomputePlacement(
             }
 
 	    /*
-	     * Don't map the slave unless the master is mapped: the slave will
-	     * get mapped later, when the master is mapped.
+	     * Don't map the slave unless the container is mapped: the slave will
+	     * get mapped later, when the container is mapped.
 	     */
 
-	    if (Tk_IsMapped(masterPtr->tkwin)) {
+	    if (Tk_IsMapped(containerPtr->tkwin)) {
 		Tk_MapWindow(slavePtr->tkwin);
 	    }
 	} else {
 	    if ((width <= 0) || (height <= 0)) {
-		Tk_UnmaintainGeometry(slavePtr->tkwin, masterPtr->tkwin);
+		Tk_UnmaintainGeometry(slavePtr->tkwin, containerPtr->tkwin);
 		Tk_UnmapWindow(slavePtr->tkwin);
 	    } else {
-		Tk_MaintainGeometry(slavePtr->tkwin, masterPtr->tkwin,
+		Tk_MaintainGeometry(slavePtr->tkwin, containerPtr->tkwin,
 			x, y, width, height);
 	    }
 	}
     }
 
-    masterPtr->abortPtr = NULL;
-    Tcl_Release(masterPtr);
+    containerPtr->abortPtr = NULL;
+    Tcl_Release(containerPtr);
 }
 
 /*
@@ -1067,7 +1067,7 @@ RecomputePlacement(
  * MasterStructureProc --
  *
  *	This function is invoked by the Tk event handler when StructureNotify
- *	events occur for a master window.
+ *	events occur for a container window.
  *
  * Results:
  *	None.
@@ -1085,55 +1085,55 @@ MasterStructureProc(
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Master *masterPtr = clientData;
+    register Master *containerPtr = clientData;
     register Slave *slavePtr, *nextPtr;
-    TkDisplay *dispPtr = ((TkWindow *) masterPtr->tkwin)->dispPtr;
+    TkDisplay *dispPtr = ((TkWindow *) containerPtr->tkwin)->dispPtr;
 
     switch (eventPtr->type) {
     case ConfigureNotify:
-	if ((masterPtr->slavePtr != NULL)
-		&& !(masterPtr->flags & PARENT_RECONFIG_PENDING)) {
-	    masterPtr->flags |= PARENT_RECONFIG_PENDING;
-	    Tcl_DoWhenIdle(RecomputePlacement, masterPtr);
+	if ((containerPtr->slavePtr != NULL)
+		&& !(containerPtr->flags & PARENT_RECONFIG_PENDING)) {
+	    containerPtr->flags |= PARENT_RECONFIG_PENDING;
+	    Tcl_DoWhenIdle(RecomputePlacement, containerPtr);
 	}
 	return;
     case DestroyNotify:
-	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 		slavePtr = nextPtr) {
-	    slavePtr->masterPtr = NULL;
+	    slavePtr->containerPtr = NULL;
 	    nextPtr = slavePtr->nextPtr;
 	    slavePtr->nextPtr = NULL;
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->masterTable,
-		(char *) masterPtr->tkwin));
-	if (masterPtr->flags & PARENT_RECONFIG_PENDING) {
-	    Tcl_CancelIdleCall(RecomputePlacement, masterPtr);
+		(char *) containerPtr->tkwin));
+	if (containerPtr->flags & PARENT_RECONFIG_PENDING) {
+	    Tcl_CancelIdleCall(RecomputePlacement, containerPtr);
 	}
-	masterPtr->tkwin = NULL;
-	if (masterPtr->abortPtr != NULL) {
-	    *masterPtr->abortPtr = 1;
+	containerPtr->tkwin = NULL;
+	if (containerPtr->abortPtr != NULL) {
+	    *containerPtr->abortPtr = 1;
 	}
-	Tcl_EventuallyFree(masterPtr, TCL_DYNAMIC);
+	Tcl_EventuallyFree(containerPtr, TCL_DYNAMIC);
 	return;
     case MapNotify:
 	/*
-	 * When a master gets mapped, must redo the geometry computation so
+	 * When a container gets mapped, must redo the geometry computation so
 	 * that all of its slaves get remapped.
 	 */
 
-	if ((masterPtr->slavePtr != NULL)
-		&& !(masterPtr->flags & PARENT_RECONFIG_PENDING)) {
-	    masterPtr->flags |= PARENT_RECONFIG_PENDING;
-	    Tcl_DoWhenIdle(RecomputePlacement, masterPtr);
+	if ((containerPtr->slavePtr != NULL)
+		&& !(containerPtr->flags & PARENT_RECONFIG_PENDING)) {
+	    containerPtr->flags |= PARENT_RECONFIG_PENDING;
+	    Tcl_DoWhenIdle(RecomputePlacement, containerPtr);
 	}
 	return;
     case UnmapNotify:
 	/*
-	 * Unmap all of the slaves when the master gets unmapped, so that they
+	 * Unmap all of the slaves when the container gets unmapped, so that they
 	 * don't keep redisplaying themselves.
 	 */
 
-	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 		slavePtr = slavePtr->nextPtr) {
 	    Tk_UnmapWindow(slavePtr->tkwin);
 	}
@@ -1168,7 +1168,7 @@ SlaveStructureProc(
     TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
     if (eventPtr->type == DestroyNotify) {
-	if (slavePtr->masterPtr != NULL) {
+	if (slavePtr->containerPtr != NULL) {
 	    UnlinkSlave(slavePtr);
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
@@ -1202,7 +1202,7 @@ PlaceRequestProc(
     Tk_Window tkwin)		/* Window that changed its desired size. */
 {
     Slave *slavePtr = clientData;
-    Master *masterPtr;
+    Master *containerPtr;
 
     if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
 	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
@@ -1214,13 +1214,13 @@ PlaceRequestProc(
         TkDoConfigureNotify((TkWindow *)(slavePtr->tkwin));
 	return;
     }
-    masterPtr = slavePtr->masterPtr;
-    if (masterPtr == NULL) {
+    containerPtr = slavePtr->containerPtr;
+    if (containerPtr == NULL) {
 	return;
     }
-    if (!(masterPtr->flags & PARENT_RECONFIG_PENDING)) {
-	masterPtr->flags |= PARENT_RECONFIG_PENDING;
-	Tcl_DoWhenIdle(RecomputePlacement, masterPtr);
+    if (!(containerPtr->flags & PARENT_RECONFIG_PENDING)) {
+	containerPtr->flags |= PARENT_RECONFIG_PENDING;
+	Tcl_DoWhenIdle(RecomputePlacement, containerPtr);
     }
 }
 
@@ -1251,8 +1251,8 @@ PlaceLostSlaveProc(
     register Slave *slavePtr = clientData;
     TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
-    if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+    if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
+	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
     }
     Tk_UnmapWindow(tkwin);
     UnlinkSlave(slavePtr);

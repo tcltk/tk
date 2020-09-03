@@ -213,7 +213,7 @@ static int ShoveDown(Paned *pw, int i, int pos)
     int sashThickness = pw->paned.sashThickness;
 
     if (i == Ttk_NumberSlaves(pw->paned.mgr) - 1) {
-	pos = pane->sashPos; /* Sentinel value == master window size */
+	pos = pane->sashPos; /* Sentinel value == container window size */
     } else {
 	Pane *nextPane = Ttk_SlaveData(pw->paned.mgr,i+1);
 	if (pos + sashThickness > nextPane->sashPos)

@@ -12,16 +12,16 @@
  * +++ The Geometry Propagation Dance.
  *
  * When a slave window requests a new size or some other parameter changes,
- * the manager recomputes the required size for the master window and calls
+ * the manager recomputes the required size for the container window and calls
  * Tk_GeometryRequest().  This is scheduled as an idle handler so multiple
  * updates can be processed as a single batch.
  *
- * If all goes well, the master's manager will process the request
- * (and so on up the chain to the toplevel window), and the master
+ * If all goes well, the container's manager will process the request
+ * (and so on up the chain to the toplevel window), and the container
  * window will eventually receive a <Configure> event.  At this point
  * it recomputes the size and position of all slaves and places them.
  *
- * If all does not go well, however, the master's request may be ignored
+ * If all does not go well, however, the container's request may be ignored
  * (typically because the top-level window has a fixed, user-specified size).
  * Tk doesn't provide any notification when this happens; to account for this,
  * we also schedule an idle handler to call the layout procedure
@@ -54,13 +54,13 @@ typedef struct
 
 /* slave->flags bits:
  */
-#define SLAVE_MAPPED 		0x1	/* slave to be mapped when master is */
+#define SLAVE_MAPPED 		0x1	/* slave to be mapped when container is */
 
 struct TtkManager_
 {
     Ttk_ManagerSpec	*managerSpec;
     void 		*managerData;
-    Tk_Window   	masterWindow;
+    Tk_Window   	containerWindow;
     unsigned		flags;
     int 	 	nSlaves;
     Ttk_Slave 		**slaves;
@@ -88,7 +88,7 @@ static void ScheduleUpdate(Ttk_Manager *mgr, unsigned flags)
 }
 
 /* ++ RecomputeSize --
- * 	Recomputes the required size of the master window,
+ * 	Recomputes the required size of the container window,
  * 	makes geometry request.
  */
 static void RecomputeSize(Ttk_Manager *mgr)
@@ -96,7 +96,7 @@ static void RecomputeSize(Ttk_Manager *mgr)
     int width = 1, height = 1;
 
     if (mgr->managerSpec->RequestedSize(mgr->managerData, &width, &height)) {
-	Tk_GeometryRequest(mgr->masterWindow, width, height);
+	Tk_GeometryRequest(mgr->containerWindow, width, height);
 	ScheduleUpdate(mgr, MGR_RELAYOUT_REQUIRED);
     }
     mgr->flags &= ~MGR_RESIZE_REQUIRED;
@@ -136,8 +136,8 @@ static void ManagerIdleProc(ClientData clientData)
  */
 
 /* ++ ManagerEventHandler --
- * 	Recompute slave layout when master widget is resized.
- * 	Keep the slave's map state in sync with the master's.
+ * 	Recompute slave layout when container widget is resized.
+ * 	Keep the slave's map state in sync with the container's.
  */
 static const int ManagerEventMask = StructureNotifyMask;
 static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
@@ -208,19 +208,19 @@ static void DeleteSlave(Ttk_Slave *slave)
  */
 
 Ttk_Manager *Ttk_CreateManager(
-    Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window masterWindow)
+    Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window containerWindow)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)ckalloc(sizeof(*mgr));
 
     mgr->managerSpec 	= managerSpec;
     mgr->managerData	= managerData;
-    mgr->masterWindow	= masterWindow;
+    mgr->containerWindow	= containerWindow;
     mgr->nSlaves 	= 0;
     mgr->slaves 	= NULL;
     mgr->flags  	= 0;
 
     Tk_CreateEventHandler(
-	mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
+	mgr->containerWindow, ManagerEventMask, ManagerEventHandler, mgr);
 
     return mgr;
 }
@@ -228,7 +228,7 @@ Ttk_Manager *Ttk_CreateManager(
 void Ttk_DeleteManager(Ttk_Manager *mgr)
 {
     Tk_DeleteEventHandler(
-	mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
+	mgr->containerWindow, ManagerEventMask, ManagerEventHandler, mgr);
 
     while (mgr->nSlaves > 0) {
 	Ttk_ForgetSlave(mgr, mgr->nSlaves - 1);
@@ -300,7 +300,7 @@ static void RemoveSlave(Ttk_Manager *mgr, int index)
 	slave->slaveWindow, SlaveEventMask, SlaveEventHandler, slave);
 
     /* Note [1] */
-    Tk_UnmaintainGeometry(slave->slaveWindow, mgr->masterWindow);
+    Tk_UnmaintainGeometry(slave->slaveWindow, mgr->containerWindow);
     Tk_UnmapWindow(slave->slaveWindow);
 
     DeleteSlave(slave);
@@ -370,9 +370,9 @@ void Ttk_PlaceSlave(
     Ttk_Manager *mgr, int slaveIndex, int x, int y, int width, int height)
 {
     Ttk_Slave *slave = mgr->slaves[slaveIndex];
-    Tk_MaintainGeometry(slave->slaveWindow,mgr->masterWindow,x,y,width,height);
+    Tk_MaintainGeometry(slave->slaveWindow,mgr->containerWindow,x,y,width,height);
     slave->flags |= SLAVE_MAPPED;
-    if (Tk_IsMapped(mgr->masterWindow)) {
+    if (Tk_IsMapped(mgr->containerWindow)) {
 	Tk_MapWindow(slave->slaveWindow);
     }
 }
@@ -383,7 +383,7 @@ void Ttk_PlaceSlave(
 void Ttk_UnmapSlave(Ttk_Manager *mgr, int slaveIndex)
 {
     Ttk_Slave *slave = mgr->slaves[slaveIndex];
-    Tk_UnmaintainGeometry(slave->slaveWindow, mgr->masterWindow);
+    Tk_UnmaintainGeometry(slave->slaveWindow, mgr->containerWindow);
     slave->flags &= ~SLAVE_MAPPED;
     /* Contrary to documentation, Tk_UnmaintainGeometry doesn't always
      * unmap the slave:
@@ -467,12 +467,12 @@ int Ttk_GetSlaveIndexFromObj(
     /* Try interpreting as a slave window name;
      */
     if ((*string == '.') &&
-	    (tkwin = Tk_NameToWindow(interp, string, mgr->masterWindow))) {
+	    (tkwin = Tk_NameToWindow(interp, string, mgr->containerWindow))) {
 	slaveIndex = Ttk_SlaveIndex(mgr, tkwin);
 	if (slaveIndex < 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
-		    Tk_PathName(mgr->masterWindow)));
+		    Tk_PathName(mgr->containerWindow)));
 	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
 	    return TCL_ERROR;
 	}
@@ -512,22 +512,22 @@ void Ttk_ReorderSlave(Ttk_Manager *mgr, int fromIndex, int toIndex)
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }
 
-/* ++ Ttk_Maintainable(interp, slave, master) --
- * 	Utility routine.  Verifies that 'master' may be used to maintain
+/* ++ Ttk_Maintainable(interp, slave, container) --
+ * 	Utility routine.  Verifies that 'container' may be used to maintain
  *	the geometry of 'slave' via Tk_MaintainGeometry:
  *
- * 	+ 'master' is either 'slave's parent -OR-
- * 	+ 'master is a descendant of 'slave's parent.
+ * 	+ 'container' is either 'slave's parent -OR-
+ * 	+ 'container is a descendant of 'slave's parent.
  * 	+ 'slave' is not a toplevel window
- * 	+ 'slave' belongs to the same toplevel as 'master'
+ * 	+ 'slave' belongs to the same toplevel as 'container'
  *
  * Returns: 1 if OK; otherwise 0, leaving an error message in 'interp'.
  */
-int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window master)
+int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window container)
 {
-    Tk_Window ancestor = master, parent = Tk_Parent(slave);
+    Tk_Window ancestor = container, parent = Tk_Parent(slave);
 
-    if (Tk_IsTopLevel(slave) || slave == master) {
+    if (Tk_IsTopLevel(slave) || slave == container) {
 	goto badWindow;
     }
 
@@ -542,7 +542,7 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window master)
 
 badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as slave of %s",
-	    Tk_PathName(slave), Tk_PathName(master)));
+	    Tk_PathName(slave), Tk_PathName(container)));
     Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
     return 0;
 }
