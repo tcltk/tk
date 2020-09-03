@@ -29,7 +29,7 @@ typedef struct Packer {
 				 * window has been deleted, but the packet
 				 * hasn't had a chance to clean up yet because
 				 * the structure is still in use. */
-    struct Packer *masterPtr;	/* Master window within which this window is
+    struct Packer *containerPtr;	/* Master window within which this window is
 				 * packed (NULL means this window isn't
 				 * managed by the packer). */
     struct Packer *nextPtr;	/* Next window packed within same master. List
@@ -87,8 +87,8 @@ typedef struct Packer {
  *				size. 0 means if this window is a master then
  *				Tk will set its requested size to fit the
  *				needs of its slaves.
- * ALLOCED_MASTER               1 means that Pack has allocated itself as
- *                              geometry master for this window.
+ * ALLOCED_CONTAINER	1 means that Pack has allocated itself as
+ *				geometry master for this window.
  */
 
 #define REQUESTED_REPACK	1
@@ -97,7 +97,7 @@ typedef struct Packer {
 #define EXPAND			8
 #define OLD_STYLE		16
 #define DONT_PROPAGATE		32
-#define ALLOCED_MASTER		64
+#define ALLOCED_CONTAINER	64
 
 /*
  * The following structure is the official type record for the packer:
@@ -124,7 +124,7 @@ static void		DestroyPacker(void *memPtr);
 static Packer *		GetPacker(Tk_Window tkwin);
 #ifndef TK_NO_DEPRECATED
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
-			    Packer *masterPtr, int objc,Tcl_Obj *const objv[]);
+			    Packer *containerPtr, int objc,Tcl_Obj *const objv[]);
 #endif /* !TK_NO_DEPRECATED */
 static void		PackStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -249,33 +249,33 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	prevPtr = GetPacker(tkwin2);
-	if (prevPtr->masterPtr == NULL) {
+	if (prevPtr->containerPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" isn't packed", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
 	    return TCL_ERROR;
 	}
-	return PackAfter(interp, prevPtr, prevPtr->masterPtr, objc-3, objv+3);
+	return PackAfter(interp, prevPtr, prevPtr->containerPtr, objc-3, objv+3);
     }
     case PACK_APPEND: {
-	Packer *masterPtr;
+	Packer *containerPtr;
 	Packer *prevPtr;
 	Tk_Window tkwin2;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	masterPtr = GetPacker(tkwin2);
-	prevPtr = masterPtr->slavePtr;
+	containerPtr = GetPacker(tkwin2);
+	prevPtr = containerPtr->slavePtr;
 	if (prevPtr != NULL) {
 	    while (prevPtr->nextPtr != NULL) {
 		prevPtr = prevPtr->nextPtr;
 	    }
 	}
-	return PackAfter(interp, prevPtr, masterPtr, objc-3, objv+3);
+	return PackAfter(interp, prevPtr, containerPtr, objc-3, objv+3);
     }
     case PACK_BEFORE: {
-	Packer *packPtr, *masterPtr;
+	Packer *packPtr, *containerPtr;
 	Packer *prevPtr;
 	Tk_Window tkwin2;
 
@@ -283,14 +283,14 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	packPtr = GetPacker(tkwin2);
-	if (packPtr->masterPtr == NULL) {
+	if (packPtr->containerPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" isn't packed", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
 	    return TCL_ERROR;
 	}
-	masterPtr = packPtr->masterPtr;
-	prevPtr = masterPtr->slavePtr;
+	containerPtr = packPtr->containerPtr;
+	prevPtr = containerPtr->slavePtr;
 	if (prevPtr == packPtr) {
 	    prevPtr = NULL;
 	} else {
@@ -303,7 +303,7 @@ Tk_PackObjCmd(
 		}
 	    }
 	}
-	return PackAfter(interp, prevPtr, masterPtr, objc-3, objv+3);
+	return PackAfter(interp, prevPtr, containerPtr, objc-3, objv+3);
     }
 #endif /* !TK_NO_DEPRECATED */
     case PACK_CONFIGURE:
@@ -324,11 +324,11 @@ Tk_PackObjCmd(
 		continue;
 	    }
 	    slavePtr = GetPacker(slave);
-	    if ((slavePtr != NULL) && (slavePtr->masterPtr != NULL)) {
+	    if ((slavePtr != NULL) && (slavePtr->containerPtr != NULL)) {
 		Tk_ManageGeometry(slave, NULL, NULL);
-		if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
+		if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 		    Tk_UnmaintainGeometry(slavePtr->tkwin,
-			    slavePtr->masterPtr->tkwin);
+			    slavePtr->containerPtr->tkwin);
 		}
 		Unlink(slavePtr);
 		Tk_UnmapWindow(slavePtr->tkwin);
@@ -349,7 +349,7 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	slavePtr = GetPacker(slave);
-	if (slavePtr->masterPtr == NULL) {
+	if (slavePtr->containerPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" isn't packed", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
@@ -358,7 +358,7 @@ Tk_PackObjCmd(
 
 	infoObj = Tcl_NewObj();
 	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
-		Tk_NewWindowObj(slavePtr->masterPtr->tkwin));
+		Tk_NewWindowObj(slavePtr->containerPtr->tkwin));
 	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-anchor", -1),
 		Tcl_NewStringObj(Tk_NameOfAnchor(slavePtr->anchor), -1));
 	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-expand", -1),
@@ -392,7 +392,7 @@ Tk_PackObjCmd(
     }
     case PACK_PROPAGATE: {
 	Tk_Window master;
-	Packer *masterPtr;
+	Packer *containerPtr;
 	int propagate;
 
 	if (objc > 4) {
@@ -402,10 +402,10 @@ Tk_PackObjCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	masterPtr = GetPacker(master);
+	containerPtr = GetPacker(master);
 	if (objc == 3) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewBooleanObj(!(masterPtr->flags & DONT_PROPAGATE)));
+		    Tcl_NewBooleanObj(!(containerPtr->flags & DONT_PROPAGATE)));
 	    return TCL_OK;
 	}
 	if (Tcl_GetBooleanFromObj(interp, objv[3], &propagate) != TCL_OK) {
@@ -416,39 +416,39 @@ Tk_PackObjCmd(
 	     * If we have slaves, we need to register as geometry master.
 	     */
 
-	    if (masterPtr->slavePtr != NULL) {
+	    if (containerPtr->slavePtr != NULL) {
 		if (TkSetGeometryMaster(interp, master, "pack") != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		masterPtr->flags |= ALLOCED_MASTER;
+		containerPtr->flags |= ALLOCED_CONTAINER;
 	    }
-	    masterPtr->flags &= ~DONT_PROPAGATE;
+	    containerPtr->flags &= ~DONT_PROPAGATE;
 
 	    /*
 	     * Repack the master to allow new geometry information to
 	     * propagate upwards to the master's master.
 	     */
 
-	    if (masterPtr->abortPtr != NULL) {
-		*masterPtr->abortPtr = 1;
+	    if (containerPtr->abortPtr != NULL) {
+		*containerPtr->abortPtr = 1;
 	    }
-	    if (!(masterPtr->flags & REQUESTED_REPACK)) {
-		masterPtr->flags |= REQUESTED_REPACK;
-		Tcl_DoWhenIdle(ArrangePacking, masterPtr);
+	    if (!(containerPtr->flags & REQUESTED_REPACK)) {
+		containerPtr->flags |= REQUESTED_REPACK;
+		Tcl_DoWhenIdle(ArrangePacking, containerPtr);
 	    }
 	} else {
-	    if (masterPtr->flags & ALLOCED_MASTER) {
+	    if (containerPtr->flags & ALLOCED_CONTAINER) {
 		TkFreeGeometryMaster(master, "pack");
-		masterPtr->flags &= ~ALLOCED_MASTER;
+		containerPtr->flags &= ~ALLOCED_CONTAINER;
 	    }
-	    masterPtr->flags |= DONT_PROPAGATE;
+	    containerPtr->flags |= DONT_PROPAGATE;
 	}
 	break;
     }
     case PACK_CONTENT:
     case PACK_SLAVES: {
 	Tk_Window master;
-	Packer *masterPtr, *slavePtr;
+	Packer *containerPtr, *slavePtr;
 	Tcl_Obj *resultObj;
 
 	if (objc != 3) {
@@ -459,8 +459,8 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	resultObj = Tcl_NewObj();
-	masterPtr = GetPacker(master);
-	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+	containerPtr = GetPacker(master);
+	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 		slavePtr = slavePtr->nextPtr) {
 	    Tcl_ListObjAppendElement(NULL, resultObj,
 		    Tk_NewWindowObj(slavePtr->tkwin));
@@ -481,11 +481,11 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	packPtr = GetPacker(tkwin2);
-	if ((packPtr != NULL) && (packPtr->masterPtr != NULL)) {
+	if ((packPtr != NULL) && (packPtr->containerPtr != NULL)) {
 	    Tk_ManageGeometry(tkwin2, NULL, NULL);
-	    if (packPtr->masterPtr->tkwin != Tk_Parent(packPtr->tkwin)) {
+	    if (packPtr->containerPtr->tkwin != Tk_Parent(packPtr->tkwin)) {
 		Tk_UnmaintainGeometry(packPtr->tkwin,
-			packPtr->masterPtr->tkwin);
+			packPtr->containerPtr->tkwin);
 	    }
 	    Unlink(packPtr);
 	    Tk_UnmapWindow(packPtr->tkwin);
@@ -526,7 +526,7 @@ PackReqProc(
     Packer *packPtr = (Packer *)clientData;
     (void)tkwin;
 
-    packPtr = packPtr->masterPtr;
+    packPtr = packPtr->containerPtr;
     if (!(packPtr->flags & REQUESTED_REPACK)) {
 	packPtr->flags |= REQUESTED_REPACK;
 	Tcl_DoWhenIdle(ArrangePacking, packPtr);
@@ -559,8 +559,8 @@ PackLostSlaveProc(
     Packer *slavePtr = (Packer *)clientData;
     (void)tkwin;
 
-    if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+    if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
+	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
     }
     Unlink(slavePtr);
     Tk_UnmapWindow(slavePtr->tkwin);
@@ -580,7 +580,7 @@ PackLostSlaveProc(
  *	None.
  *
  * Side effects:
- *	The packed slaves of masterPtr may get resized or moved.
+ *	The packed slaves of containerPtr may get resized or moved.
  *
  *------------------------------------------------------------------------
  */
@@ -590,7 +590,7 @@ ArrangePacking(
     ClientData clientData)	/* Structure describing master whose slaves
 				 * are to be re-layed out. */
 {
-    Packer *masterPtr = (Packer *)clientData;
+    Packer *containerPtr = (Packer *)clientData;
     Packer *slavePtr;
     int cavityX, cavityY, cavityWidth, cavityHeight;
 				/* These variables keep track of the
@@ -608,7 +608,7 @@ ArrangePacking(
     int borderLeft, borderRight;
     int maxWidth, maxHeight, tmp;
 
-    masterPtr->flags &= ~REQUESTED_REPACK;
+    containerPtr->flags &= ~REQUESTED_REPACK;
 
     /*
      * If the master has no slaves anymore, then leave the master's size as-is.
@@ -616,7 +616,7 @@ ArrangePacking(
      * so another geometry manager can take over.
      */
 
-    if (masterPtr->slavePtr == NULL) {
+    if (containerPtr->slavePtr == NULL) {
 	return;
     }
 
@@ -626,12 +626,12 @@ ArrangePacking(
      * necessary.
      */
 
-    if (masterPtr->abortPtr != NULL) {
-	*masterPtr->abortPtr = 1;
+    if (containerPtr->abortPtr != NULL) {
+	*containerPtr->abortPtr = 1;
     }
-    masterPtr->abortPtr = &abort;
+    containerPtr->abortPtr = &abort;
     abort = 0;
-    Tcl_Preserve(masterPtr);
+    Tcl_Preserve(containerPtr);
 
     /*
      * Pass #1: scan all the slaves to figure out the total amount of space
@@ -650,11 +650,11 @@ ArrangePacking(
      * maxHeight -	Same as maxWidth, except keeps height info.
      */
 
-    width = maxWidth = Tk_InternalBorderLeft(masterPtr->tkwin) +
-	    Tk_InternalBorderRight(masterPtr->tkwin);
-    height = maxHeight = Tk_InternalBorderTop(masterPtr->tkwin) +
-	    Tk_InternalBorderBottom(masterPtr->tkwin);
-    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+    width = maxWidth = Tk_InternalBorderLeft(containerPtr->tkwin) +
+	    Tk_InternalBorderRight(containerPtr->tkwin);
+    height = maxHeight = Tk_InternalBorderTop(containerPtr->tkwin) +
+	    Tk_InternalBorderBottom(containerPtr->tkwin);
+    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
 	if ((slavePtr->side == TOP) || (slavePtr->side == BOTTOM)) {
 	    tmp = Tk_ReqWidth(slavePtr->tkwin) + slavePtr->doubleBw
@@ -681,11 +681,11 @@ ArrangePacking(
 	maxHeight = height;
     }
 
-    if (maxWidth < Tk_MinReqWidth(masterPtr->tkwin)) {
-	maxWidth = Tk_MinReqWidth(masterPtr->tkwin);
+    if (maxWidth < Tk_MinReqWidth(containerPtr->tkwin)) {
+	maxWidth = Tk_MinReqWidth(containerPtr->tkwin);
     }
-    if (maxHeight < Tk_MinReqHeight(masterPtr->tkwin)) {
-	maxHeight = Tk_MinReqHeight(masterPtr->tkwin);
+    if (maxHeight < Tk_MinReqHeight(containerPtr->tkwin)) {
+	maxHeight = Tk_MinReqHeight(containerPtr->tkwin);
     }
 
     /*
@@ -695,12 +695,12 @@ ArrangePacking(
      * master has had a chance to resize us.
      */
 
-    if (((maxWidth != Tk_ReqWidth(masterPtr->tkwin))
-	    || (maxHeight != Tk_ReqHeight(masterPtr->tkwin)))
-	    && !(masterPtr->flags & DONT_PROPAGATE)) {
-	Tk_GeometryRequest(masterPtr->tkwin, maxWidth, maxHeight);
-	masterPtr->flags |= REQUESTED_REPACK;
-	Tcl_DoWhenIdle(ArrangePacking, masterPtr);
+    if (((maxWidth != Tk_ReqWidth(containerPtr->tkwin))
+	    || (maxHeight != Tk_ReqHeight(containerPtr->tkwin)))
+	    && !(containerPtr->flags & DONT_PROPAGATE)) {
+	Tk_GeometryRequest(containerPtr->tkwin, maxWidth, maxHeight);
+	containerPtr->flags |= REQUESTED_REPACK;
+	Tcl_DoWhenIdle(ArrangePacking, containerPtr);
 	goto done;
     }
 
@@ -713,15 +713,15 @@ ArrangePacking(
      * somewhere inside the frame, depending on anchor.
      */
 
-    cavityX = x = Tk_InternalBorderLeft(masterPtr->tkwin);
-    cavityY = y = Tk_InternalBorderTop(masterPtr->tkwin);
-    cavityWidth = Tk_Width(masterPtr->tkwin) -
-	    Tk_InternalBorderLeft(masterPtr->tkwin) -
-	    Tk_InternalBorderRight(masterPtr->tkwin);
-    cavityHeight = Tk_Height(masterPtr->tkwin) -
-	    Tk_InternalBorderTop(masterPtr->tkwin) -
-	    Tk_InternalBorderBottom(masterPtr->tkwin);
-    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+    cavityX = x = Tk_InternalBorderLeft(containerPtr->tkwin);
+    cavityY = y = Tk_InternalBorderTop(containerPtr->tkwin);
+    cavityWidth = Tk_Width(containerPtr->tkwin) -
+	    Tk_InternalBorderLeft(containerPtr->tkwin) -
+	    Tk_InternalBorderRight(containerPtr->tkwin);
+    cavityHeight = Tk_Height(containerPtr->tkwin) -
+	    Tk_InternalBorderTop(containerPtr->tkwin) -
+	    Tk_InternalBorderBottom(containerPtr->tkwin);
+    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
 	if ((slavePtr->side == TOP) || (slavePtr->side == BOTTOM)) {
 	    frameWidth = cavityWidth;
@@ -845,7 +845,7 @@ ArrangePacking(
 	 * this here. Otherwise let Tk_MaintainGeometry do the work.
 	 */
 
-	if (masterPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
+	if (containerPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
 	    if ((width <= 0) || (height <= 0)) {
 		Tk_UnmapWindow(slavePtr->tkwin);
 	    } else {
@@ -864,16 +864,16 @@ ArrangePacking(
 		 * the master gets mapped later.
 		 */
 
-		if (Tk_IsMapped(masterPtr->tkwin)) {
+		if (Tk_IsMapped(containerPtr->tkwin)) {
 		    Tk_MapWindow(slavePtr->tkwin);
 		}
 	    }
 	} else {
 	    if ((width <= 0) || (height <= 0)) {
-		Tk_UnmaintainGeometry(slavePtr->tkwin, masterPtr->tkwin);
+		Tk_UnmaintainGeometry(slavePtr->tkwin, containerPtr->tkwin);
 		Tk_UnmapWindow(slavePtr->tkwin);
 	    } else {
-		Tk_MaintainGeometry(slavePtr->tkwin, masterPtr->tkwin,
+		Tk_MaintainGeometry(slavePtr->tkwin, containerPtr->tkwin,
 			x, y, width, height);
 	    }
 	}
@@ -890,8 +890,8 @@ ArrangePacking(
     }
 
   done:
-    masterPtr->abortPtr = NULL;
-    Tcl_Release(masterPtr);
+    containerPtr->abortPtr = NULL;
+    Tcl_Release(containerPtr);
 }
 
 /*
@@ -1065,7 +1065,7 @@ GetPacker(
     }
     packPtr = (Packer *)ckalloc(sizeof(Packer));
     packPtr->tkwin = tkwin;
-    packPtr->masterPtr = NULL;
+    packPtr->containerPtr = NULL;
     packPtr->nextPtr = NULL;
     packPtr->slavePtr = NULL;
     packPtr->side = TOP;
@@ -1106,8 +1106,8 @@ PackAfter(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Packer *prevPtr,		/* Pack windows in argv just after this
 				 * window; NULL means pack as first child of
-				 * masterPtr. */
-    Packer *masterPtr,		/* Master in which to pack windows. */
+				 * containerPtr. */
+    Packer *containerPtr,		/* Master in which to pack windows. */
     int objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[])	/* Array of lists, each containing 2 elements:
 				 * window name and side against which to
@@ -1139,13 +1139,13 @@ PackAfter(
 	 * its parent.
 	 */
 
-	if (TkGetWindowFromObj(interp, masterPtr->tkwin, objv[0], &tkwin)
+	if (TkGetWindowFromObj(interp, containerPtr->tkwin, objv[0], &tkwin)
 		!= TCL_OK) {
 	    return TCL_ERROR;
 	}
 
 	parent = Tk_Parent(tkwin);
-	for (ancestor = masterPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
+	for (ancestor = containerPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
 	    if (ancestor == parent) {
 		break;
 	    }
@@ -1153,7 +1153,7 @@ PackAfter(
 	    badWindow:
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't pack %s inside %s", Tcl_GetString(objv[0]),
-			Tk_PathName(masterPtr->tkwin)));
+			Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		return TCL_ERROR;
 	    }
@@ -1161,7 +1161,7 @@ PackAfter(
 	if (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_HIERARCHY) {
 	    goto badWindow;
 	}
-	if (tkwin == masterPtr->tkwin) {
+	if (tkwin == containerPtr->tkwin) {
 	    goto badWindow;
 	}
 	packPtr = GetPacker(tkwin);
@@ -1271,12 +1271,12 @@ PackAfter(
 	     * Unpack this window if it's currently packed.
 	     */
 
-	    if (packPtr->masterPtr != NULL) {
-		if ((packPtr->masterPtr != masterPtr) &&
-			(packPtr->masterPtr->tkwin
+	    if (packPtr->containerPtr != NULL) {
+		if ((packPtr->containerPtr != containerPtr) &&
+			(packPtr->containerPtr->tkwin
 			!= Tk_Parent(packPtr->tkwin))) {
 		    Tk_UnmaintainGeometry(packPtr->tkwin,
-			    packPtr->masterPtr->tkwin);
+			    packPtr->containerPtr->tkwin);
 		}
 		Unlink(packPtr);
 	    }
@@ -1286,24 +1286,24 @@ PackAfter(
 	     * order, then make sure that the window is managed by us.
 	     */
 
-	    packPtr->masterPtr = masterPtr;
+	    packPtr->containerPtr = containerPtr;
 	    if (prevPtr == NULL) {
-		packPtr->nextPtr = masterPtr->slavePtr;
-		masterPtr->slavePtr = packPtr;
+		packPtr->nextPtr = containerPtr->slavePtr;
+		containerPtr->slavePtr = packPtr;
 	    } else {
 		packPtr->nextPtr = prevPtr->nextPtr;
 		prevPtr->nextPtr = packPtr;
 	    }
 	    Tk_ManageGeometry(tkwin, &packerType, packPtr);
 
-	    if (!(masterPtr->flags & DONT_PROPAGATE)) {
-		if (TkSetGeometryMaster(interp, masterPtr->tkwin, "pack")
+	    if (!(containerPtr->flags & DONT_PROPAGATE)) {
+		if (TkSetGeometryMaster(interp, containerPtr->tkwin, "pack")
 			!= TCL_OK) {
 		    Tk_ManageGeometry(tkwin, NULL, NULL);
 		    Unlink(packPtr);
 		    return TCL_ERROR;
 		}
-		masterPtr->flags |= ALLOCED_MASTER;
+		containerPtr->flags |= ALLOCED_CONTAINER;
 	    }
 	}
     }
@@ -1312,12 +1312,12 @@ PackAfter(
      * Arrange for the master to be re-packed at the first idle moment.
      */
 
-    if (masterPtr->abortPtr != NULL) {
-	*masterPtr->abortPtr = 1;
+    if (containerPtr->abortPtr != NULL) {
+	*containerPtr->abortPtr = 1;
     }
-    if (!(masterPtr->flags & REQUESTED_REPACK)) {
-	masterPtr->flags |= REQUESTED_REPACK;
-	Tcl_DoWhenIdle(ArrangePacking, masterPtr);
+    if (!(containerPtr->flags & REQUESTED_REPACK)) {
+	containerPtr->flags |= REQUESTED_REPACK;
+	Tcl_DoWhenIdle(ArrangePacking, containerPtr);
     }
     return TCL_OK;
 }
@@ -1343,16 +1343,16 @@ static void
 Unlink(
     Packer *packPtr)	/* Window to unlink. */
 {
-    Packer *masterPtr, *packPtr2;
+    Packer *containerPtr, *packPtr2;
 
-    masterPtr = packPtr->masterPtr;
-    if (masterPtr == NULL) {
+    containerPtr = packPtr->containerPtr;
+    if (containerPtr == NULL) {
 	return;
     }
-    if (masterPtr->slavePtr == packPtr) {
-	masterPtr->slavePtr = packPtr->nextPtr;
+    if (containerPtr->slavePtr == packPtr) {
+	containerPtr->slavePtr = packPtr->nextPtr;
     } else {
-	for (packPtr2 = masterPtr->slavePtr; ; packPtr2 = packPtr2->nextPtr) {
+	for (packPtr2 = containerPtr->slavePtr; ; packPtr2 = packPtr2->nextPtr) {
 	    if (packPtr2 == NULL) {
 		Tcl_Panic("Unlink couldn't find previous window");
 	    }
@@ -1362,15 +1362,15 @@ Unlink(
 	    }
 	}
     }
-    if (!(masterPtr->flags & REQUESTED_REPACK)) {
-	masterPtr->flags |= REQUESTED_REPACK;
-	Tcl_DoWhenIdle(ArrangePacking, masterPtr);
+    if (!(containerPtr->flags & REQUESTED_REPACK)) {
+	containerPtr->flags |= REQUESTED_REPACK;
+	Tcl_DoWhenIdle(ArrangePacking, containerPtr);
     }
-    if (masterPtr->abortPtr != NULL) {
-	*masterPtr->abortPtr = 1;
+    if (containerPtr->abortPtr != NULL) {
+	*containerPtr->abortPtr = 1;
     }
 
-    packPtr->masterPtr = NULL;
+    packPtr->containerPtr = NULL;
 
     /*
      * If we have emptied this master from slaves it means we are no longer
@@ -1380,10 +1380,10 @@ Unlink(
      * being no managed children inside it.
      */
 
-    if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
-	TkFreeGeometryMaster(masterPtr->tkwin, "pack");
-	masterPtr->flags &= ~ALLOCED_MASTER;
-	Tk_SendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
+    if ((containerPtr->slavePtr == NULL) && (containerPtr->flags & ALLOCED_CONTAINER)) {
+	TkFreeGeometryMaster(containerPtr->tkwin, "pack");
+	containerPtr->flags &= ~ALLOCED_CONTAINER;
+	Tk_SendVirtualEvent(containerPtr->tkwin, "NoManagedChild", NULL);
     }
 
 }
@@ -1448,18 +1448,18 @@ PackStructureProc(
 	    packPtr->flags |= REQUESTED_REPACK;
 	    Tcl_DoWhenIdle(ArrangePacking, packPtr);
 	}
-	if ((packPtr->masterPtr != NULL)
+	if ((packPtr->containerPtr != NULL)
 	        && (packPtr->doubleBw != 2*Tk_Changes(packPtr->tkwin)->border_width)) {
-	    if (!(packPtr->masterPtr->flags & REQUESTED_REPACK)) {
+	    if (!(packPtr->containerPtr->flags & REQUESTED_REPACK)) {
 		packPtr->doubleBw = 2*Tk_Changes(packPtr->tkwin)->border_width;
-		packPtr->masterPtr->flags |= REQUESTED_REPACK;
-		Tcl_DoWhenIdle(ArrangePacking, packPtr->masterPtr);
+		packPtr->containerPtr->flags |= REQUESTED_REPACK;
+		Tcl_DoWhenIdle(ArrangePacking, packPtr->containerPtr);
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	Packer *slavePtr, *nextPtr;
 
-	if (packPtr->masterPtr != NULL) {
+	if (packPtr->containerPtr != NULL) {
 	    Unlink(packPtr);
 	}
 
@@ -1467,7 +1467,7 @@ PackStructureProc(
 		slavePtr = nextPtr) {
 	    Tk_ManageGeometry(slavePtr->tkwin, NULL, NULL);
 	    Tk_UnmapWindow(slavePtr->tkwin);
-	    slavePtr->masterPtr = NULL;
+	    slavePtr->containerPtr = NULL;
 	    nextPtr = slavePtr->nextPtr;
 	    slavePtr->nextPtr = NULL;
 	}
@@ -1539,7 +1539,7 @@ ConfigureSlaves(
 				 * "option value" pairs. Caller must make sure
 				 * that there is at least one window name. */
 {
-    Packer *masterPtr, *slavePtr, *prevPtr, *otherPtr;
+    Packer *containerPtr, *slavePtr, *prevPtr, *otherPtr;
     Tk_Window other, slave, parent, ancestor;
     TkWindow *master;
     int i, j, numWindows, tmp, positionGiven;
@@ -1573,7 +1573,7 @@ ConfigureSlaves(
      * options only get processed for the first window.
      */
 
-    masterPtr = NULL;
+    containerPtr = NULL;
     prevPtr = NULL;
     positionGiven = 0;
     for (j = 0; j < numWindows; j++) {
@@ -1596,7 +1596,7 @@ ConfigureSlaves(
 	 * a previous packing).
 	 */
 
-	if (slavePtr->masterPtr == NULL) {
+	if (slavePtr->containerPtr == NULL) {
 	    slavePtr->side = TOP;
 	    slavePtr->anchor = TK_ANCHOR_CENTER;
 	    slavePtr->padX = slavePtr->padY = 0;
@@ -1626,7 +1626,7 @@ ConfigureSlaves(
 			return TCL_ERROR;
 		    }
 		    prevPtr = GetPacker(other);
-		    if (prevPtr->masterPtr == NULL) {
+		    if (prevPtr->containerPtr == NULL) {
 		    notPacked:
 			Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 				"window \"%s\" isn't packed",
@@ -1635,7 +1635,7 @@ ConfigureSlaves(
 				NULL);
 			return TCL_ERROR;
 		    }
-		    masterPtr = prevPtr->masterPtr;
+		    containerPtr = prevPtr->containerPtr;
 		    positionGiven = 1;
 		}
 		break;
@@ -1652,11 +1652,11 @@ ConfigureSlaves(
 			return TCL_ERROR;
 		    }
 		    otherPtr = GetPacker(other);
-		    if (otherPtr->masterPtr == NULL) {
+		    if (otherPtr->containerPtr == NULL) {
 			goto notPacked;
 		    }
-		    masterPtr = otherPtr->masterPtr;
-		    prevPtr = masterPtr->slavePtr;
+		    containerPtr = otherPtr->containerPtr;
+		    prevPtr = containerPtr->slavePtr;
 		    if (prevPtr == otherPtr) {
 			prevPtr = NULL;
 		    } else {
@@ -1700,8 +1700,8 @@ ConfigureSlaves(
 			    != TCL_OK) {
 			return TCL_ERROR;
 		    }
-		    masterPtr = GetPacker(other);
-		    prevPtr = masterPtr->slavePtr;
+		    containerPtr = GetPacker(other);
+		    prevPtr = containerPtr->slavePtr;
 		    if (prevPtr != NULL) {
 			while (prevPtr->nextPtr != NULL) {
 			    prevPtr = prevPtr->nextPtr;
@@ -1760,8 +1760,8 @@ ConfigureSlaves(
 	 * current packing list.
 	 */
 
-	if (!positionGiven && (slavePtr->masterPtr != NULL)) {
-	    masterPtr = slavePtr->masterPtr;
+	if (!positionGiven && (slavePtr->containerPtr != NULL)) {
+	    containerPtr = slavePtr->containerPtr;
 	    goto scheduleLayout;
 	}
 
@@ -1772,7 +1772,7 @@ ConfigureSlaves(
 	 */
 
 	if (prevPtr == slavePtr) {
-	    masterPtr = slavePtr->masterPtr;
+	    containerPtr = slavePtr->containerPtr;
 	    goto scheduleLayout;
 	}
 
@@ -1783,8 +1783,8 @@ ConfigureSlaves(
 	 */
 
 	if (!positionGiven) {
-	    masterPtr = GetPacker(Tk_Parent(slave));
-	    prevPtr = masterPtr->slavePtr;
+	    containerPtr = GetPacker(Tk_Parent(slave));
+	    prevPtr = containerPtr->slavePtr;
 	    if (prevPtr != NULL) {
 		while (prevPtr->nextPtr != NULL) {
 		    prevPtr = prevPtr->nextPtr;
@@ -1799,19 +1799,19 @@ ConfigureSlaves(
 	 */
 
 	parent = Tk_Parent(slave);
-	for (ancestor = masterPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
+	for (ancestor = containerPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
 	    if (ancestor == parent) {
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't pack %s inside %s", Tcl_GetString(objv[j]),
-			Tk_PathName(masterPtr->tkwin)));
+			Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		return TCL_ERROR;
 	    }
 	}
-	if (slave == masterPtr->tkwin) {
+	if (slave == containerPtr->tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't pack %s inside itself", Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
@@ -1822,18 +1822,18 @@ ConfigureSlaves(
 	 * Check for management loops.
 	 */
 
-	for (master = (TkWindow *)masterPtr->tkwin; master != NULL;
+	for (master = (TkWindow *)containerPtr->tkwin; master != NULL;
 	     master = (TkWindow *)TkGetGeomMaster(master)) {
 	    if (master == (TkWindow *)slave) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
-	            Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
+	            Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		return TCL_ERROR;
 	    }
 	}
-	if (masterPtr->tkwin != Tk_Parent(slave)) {
-	    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)masterPtr->tkwin;
+	if (containerPtr->tkwin != Tk_Parent(slave)) {
+	    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)containerPtr->tkwin;
 	}
 
 	/*
@@ -1841,20 +1841,20 @@ ConfigureSlaves(
 	 * prevPtr.
 	 */
 
-	if (slavePtr->masterPtr != NULL) {
-	    if ((slavePtr->masterPtr != masterPtr) &&
-		    (slavePtr->masterPtr->tkwin
+	if (slavePtr->containerPtr != NULL) {
+	    if ((slavePtr->containerPtr != containerPtr) &&
+		    (slavePtr->containerPtr->tkwin
 		    != Tk_Parent(slavePtr->tkwin))) {
 		Tk_UnmaintainGeometry(slavePtr->tkwin,
-			slavePtr->masterPtr->tkwin);
+			slavePtr->containerPtr->tkwin);
 	    }
 	    Unlink(slavePtr);
 	}
 
-	slavePtr->masterPtr = masterPtr;
+	slavePtr->containerPtr = containerPtr;
 	if (prevPtr == NULL) {
-	    slavePtr->nextPtr = masterPtr->slavePtr;
-	    masterPtr->slavePtr = slavePtr;
+	    slavePtr->nextPtr = containerPtr->slavePtr;
+	    containerPtr->slavePtr = slavePtr;
 	} else {
 	    slavePtr->nextPtr = prevPtr->nextPtr;
 	    prevPtr->nextPtr = slavePtr;
@@ -1862,14 +1862,14 @@ ConfigureSlaves(
 	Tk_ManageGeometry(slave, &packerType, slavePtr);
 	prevPtr = slavePtr;
 
-	if (!(masterPtr->flags & DONT_PROPAGATE)) {
-	    if (TkSetGeometryMaster(interp, masterPtr->tkwin, "pack")
+	if (!(containerPtr->flags & DONT_PROPAGATE)) {
+	    if (TkSetGeometryMaster(interp, containerPtr->tkwin, "pack")
 		    != TCL_OK) {
 		Tk_ManageGeometry(slave, NULL, NULL);
 		Unlink(slavePtr);
 		return TCL_ERROR;
 	    }
-	    masterPtr->flags |= ALLOCED_MASTER;
+	    containerPtr->flags |= ALLOCED_CONTAINER;
 	}
 
 	/*
@@ -1877,12 +1877,12 @@ ConfigureSlaves(
 	 */
 
     scheduleLayout:
-	if (masterPtr->abortPtr != NULL) {
-	    *masterPtr->abortPtr = 1;
+	if (containerPtr->abortPtr != NULL) {
+	    *containerPtr->abortPtr = 1;
 	}
-	if (!(masterPtr->flags & REQUESTED_REPACK)) {
-	    masterPtr->flags |= REQUESTED_REPACK;
-	    Tcl_DoWhenIdle(ArrangePacking, masterPtr);
+	if (!(containerPtr->flags & REQUESTED_REPACK)) {
+	    containerPtr->flags |= REQUESTED_REPACK;
+	    Tcl_DoWhenIdle(ArrangePacking, containerPtr);
 	}
     }
     return TCL_OK;

@@ -507,12 +507,13 @@ static int LabelRequest(void *managerData, TkSizeT index, int width, int height)
  *
  * <<NOTE-LABELREMOVED>>:
  * 	This routine is also called when the widget voluntarily forgets
- * 	the slave in LabelframeConfigure.
+ * 	the window in LabelframeConfigure.
  */
-static void LabelRemoved(void *managerData, TkSizeT slaveIndex)
+static void LabelRemoved(
+    void *managerData,
+    TCL_UNUSED(TkSizeT))
 {
     Labelframe *lframe = (Labelframe *)managerData;
-    (void)slaveIndex;
 
     lframe->label.labelWidget = 0;
 }
