@@ -260,7 +260,7 @@ static int		AdjustOffsets(int width, int elements,
 static void		ArrangeGrid(ClientData clientData);
 static int		CheckSlotData(Gridder *containerPtr, int slot,
 			    int slotType, int checkOnly);
-static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
+static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyGrid(void *memPtr);
 static Gridder *	GetGrid(Tk_Window tkwin);
@@ -353,7 +353,7 @@ Tk_GridObjCmd(
 
 	if ((argv1[0] == '.') || (argv1[0] == REL_SKIP) ||
     		(argv1[0] == REL_VERT)) {
-	    return ConfigureSlaves(interp, tkwin, objc-1, objv+1);
+	    return ConfigureContent(interp, tkwin, objc-1, objv+1);
 	}
     }
     if (objc < 3) {
@@ -372,7 +372,7 @@ Tk_GridObjCmd(
     case GRID_BBOX:
 	return GridBboxCommand(tkwin, interp, objc, objv);
     case GRID_CONFIGURE:
-	return ConfigureSlaves(interp, tkwin, objc-2, objv+2);
+	return ConfigureContent(interp, tkwin, objc-2, objv+2);
     case GRID_FORGET:
     case GRID_REMOVE:
 	return GridForgetRemoveCommand(tkwin, interp, objc, objv);
@@ -721,7 +721,7 @@ GridInfoCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register Gridder *slavePtr;
+    Gridder *slavePtr;
     Tk_Window slave;
     Tcl_Obj *infoObj;
 
@@ -786,7 +786,7 @@ GridLocationCommand(
     Tk_Window container;
     Gridder *containerPtr;		/* Master grid record. */
     GridMaster *gridPtr;	/* Pointer to grid data. */
-    register SlotInfo *slotPtr;
+    SlotInfo *slotPtr;
     int x, y;			/* Offset in pixels, from edge of container. */
     int i, j;			/* Corresponding column and row indeces. */
     int endX, endY;		/* End of grid. */
@@ -910,7 +910,7 @@ GridPropagateCommand(
 	     */
 
 	    if (containerPtr->slavePtr != NULL) {
-		if (TkSetGeometryMaster(interp, container, "grid")	!= TCL_OK) {
+		if (TkSetGeometryContainer(interp, container, "grid")	!= TCL_OK) {
 		    return TCL_ERROR;
 		}
 		containerPtr->flags |= ALLOCED_CONTAINER;
@@ -918,7 +918,7 @@ GridPropagateCommand(
 	    containerPtr->flags &= ~DONT_PROPAGATE;
 	} else {
 	    if (containerPtr->flags & ALLOCED_CONTAINER) {
-		TkFreeGeometryMaster(container, "grid");
+		TkFreeGeometryContainer(container, "grid");
 		containerPtr->flags &= ~ALLOCED_CONTAINER;
 	    }
 	    containerPtr->flags |= DONT_PROPAGATE;
@@ -1432,7 +1432,7 @@ GridReqProc(
     Tk_Window tkwin)		/* Other Tk-related information about the
 				 * window. */
 {
-    register Gridder *gridPtr = clientData;
+    Gridder *gridPtr = clientData;
 
     gridPtr = gridPtr->containerPtr;
     if (gridPtr && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
@@ -1464,7 +1464,7 @@ GridLostSlaveProc(
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Gridder *slavePtr = clientData;
+    Gridder *slavePtr = clientData;
 
     if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
@@ -1497,9 +1497,9 @@ static int
 AdjustOffsets(
     int size,			/* The total layout size (in pixels). */
     int slots,			/* Number of slots. */
-    register SlotInfo *slotPtr)	/* Pointer to slot array. */
+    SlotInfo *slotPtr)	/* Pointer to slot array. */
 {
-    register int slot;		/* Current slot. */
+    int slot;		/* Current slot. */
     int diff;			/* Extra pixels needed to add to the layout. */
     int totalWeight;		/* Sum of the weights for all the slots. */
     int weight;			/* Sum of the weights so far. */
@@ -1722,8 +1722,8 @@ ArrangeGrid(
     ClientData clientData)	/* Structure describing container whose slaves
 				 * are to be re-layed out. */
 {
-    register Gridder *containerPtr = clientData;
-    register Gridder *slavePtr;
+    Gridder *containerPtr = clientData;
+    Gridder *slavePtr;
     GridMaster *slotPtr = containerPtr->containerDataPtr;
     int abort;
     int width, height;		/* Requested size of layout, in pixels. */
@@ -1904,8 +1904,8 @@ ResolveConstraints(
     int maxOffset)		/* The actual maximum size of this layout in
 				 * pixels, or 0 (not currently used). */
 {
-    register SlotInfo *slotPtr;	/* Pointer to row/col constraints. */
-    register Gridder *slavePtr;	/* List of slave windows in this grid. */
+    SlotInfo *slotPtr;	/* Pointer to row/col constraints. */
+    Gridder *slavePtr;	/* List of slave windows in this grid. */
     int constraintCount;	/* Count of rows or columns that have
 				 * constraints. */
     int slotCount;		/* Last occupied row or column. */
@@ -2423,7 +2423,7 @@ GetGrid(
     Tk_Window tkwin)		/* Token for window for which grid structure
 				 * is desired. */
 {
-    register Gridder *gridPtr;
+    Gridder *gridPtr;
     Tcl_HashEntry *hPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -2496,7 +2496,7 @@ static void
 SetGridSize(
     Gridder *containerPtr)		/* The geometry container for this grid. */
 {
-    register Gridder *slavePtr;	/* Current slave window. */
+    Gridder *slavePtr;	/* Current slave window. */
     int maxX = 0, maxY = 0;
 
     for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
@@ -2742,9 +2742,9 @@ InitMasterData(
 
 static void
 Unlink(
-    register Gridder *slavePtr)	/* Window to unlink. */
+    Gridder *slavePtr)	/* Window to unlink. */
 {
-    register Gridder *containerPtr, *slavePtr2;
+    Gridder *containerPtr, *slavePtr2;
 
     containerPtr = slavePtr->containerPtr;
     if (containerPtr == NULL) {
@@ -2781,7 +2781,7 @@ Unlink(
      */
 
     if ((containerPtr->slavePtr == NULL) && (containerPtr->flags & ALLOCED_CONTAINER)) {
-	TkFreeGeometryMaster(containerPtr->tkwin, "grid");
+	TkFreeGeometryContainer(containerPtr->tkwin, "grid");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
     }
 }
@@ -2810,7 +2810,7 @@ static void
 DestroyGrid(
     void *memPtr)		/* Info about window that is now dead. */
 {
-    register Gridder *gridPtr = memPtr;
+    Gridder *gridPtr = memPtr;
 
     if (gridPtr->containerDataPtr != NULL) {
 	if (gridPtr->containerDataPtr->rowPtr != NULL) {
@@ -2851,7 +2851,7 @@ GridStructureProc(
 				 * eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Gridder *gridPtr = clientData;
+    Gridder *gridPtr = clientData;
     TkDisplay *dispPtr = ((TkWindow *) gridPtr->tkwin)->dispPtr;
 
     if (eventPtr->type == ConfigureNotify) {
@@ -2869,7 +2869,7 @@ GridStructureProc(
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	register Gridder *slavePtr, *nextPtr;
+	Gridder *slavePtr, *nextPtr;
 
 	if (gridPtr->containerPtr != NULL) {
 	    Unlink(gridPtr);
@@ -2896,7 +2896,7 @@ GridStructureProc(
 	    Tcl_DoWhenIdle(ArrangeGrid, gridPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	register Gridder *slavePtr;
+	Gridder *slavePtr;
 
 	for (slavePtr = gridPtr->slavePtr; slavePtr != NULL;
 		slavePtr = slavePtr->nextPtr) {
@@ -2908,7 +2908,7 @@ GridStructureProc(
 /*
  *----------------------------------------------------------------------
  *
- * ConfigureSlaves --
+ * ConfigureContent --
  *
  *	This implements the guts of the "grid configure" command. Given a list
  *	of slaves and configuration options, it arranges for the grid to
@@ -2926,7 +2926,7 @@ GridStructureProc(
  */
 
 static int
-ConfigureSlaves(
+ConfigureContent(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Any window in application containing
 				 * slaves. Used to look up slave names. */
@@ -3375,7 +3375,7 @@ ConfigureSlaves(
 	Tk_ManageGeometry(slave, &gridMgrType, slavePtr);
 
 	if (!(containerPtr->flags & DONT_PROPAGATE)) {
-	    if (TkSetGeometryMaster(interp, containerPtr->tkwin, "grid")
+	    if (TkSetGeometryContainer(interp, containerPtr->tkwin, "grid")
 		    != TCL_OK) {
 		Tk_ManageGeometry(slave, NULL, NULL);
 		Unlink(slavePtr);
@@ -3520,7 +3520,7 @@ ConfigureSlaves(
      */
 
     if (containerPtr->slavePtr == NULL && containerPtr->flags & ALLOCED_CONTAINER) {
-	TkFreeGeometryMaster(containerPtr->tkwin, "grid");
+	TkFreeGeometryContainer(containerPtr->tkwin, "grid");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
     }
 

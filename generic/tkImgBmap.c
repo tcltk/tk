@@ -149,7 +149,7 @@ static int		ImgBmapCmd(ClientData clientData, Tcl_Interp *interp,
 			    int argc, Tcl_Obj *const objv[]);
 static void		ImgBmapCmdDeletedProc(ClientData clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
-static int		ImgBmapConfigureMaster(BitmapModel *modelPtr,
+static int		ImgBmapConfigureModel(BitmapModel *modelPtr,
 			    int argc, Tcl_Obj *const objv[], int flags);
 static int		NextBitmapWord(ParseInfo *parseInfoPtr);
 
@@ -200,7 +200,7 @@ ImgBmapCreate(
     modelPtr->maskFileString = NULL;
     modelPtr->maskDataString = NULL;
     modelPtr->instancePtr = NULL;
-    if (ImgBmapConfigureMaster(modelPtr, argc, argv, 0) != TCL_OK) {
+    if (ImgBmapConfigureModel(modelPtr, argc, argv, 0) != TCL_OK) {
 	ImgBmapDelete(modelPtr);
 	return TCL_ERROR;
     }
@@ -211,7 +211,7 @@ ImgBmapCreate(
 /*
  *----------------------------------------------------------------------
  *
- * ImgBmapConfigureMaster --
+ * ImgBmapConfigureModel --
  *
  *	This procedure is called when a bitmap image is created or
  *	reconfigured. It process configuration options and resets any
@@ -229,7 +229,7 @@ ImgBmapCreate(
  */
 
 static int
-ImgBmapConfigureMaster(
+ImgBmapConfigureModel(
     BitmapModel *modelPtr,	/* Pointer to data structure describing
 				 * overall bitmap image to (reconfigure). */
     int objc,			/* Number of entries in objv. */
@@ -785,7 +785,7 @@ ImgBmapCmd(
 		    configSpecs, (char *) modelPtr,
 		    Tcl_GetString(objv[2]), 0);
 	} else {
-	    return ImgBmapConfigureMaster(modelPtr, objc-2, objv+2,
+	    return ImgBmapConfigureModel(modelPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
 	}
     default:

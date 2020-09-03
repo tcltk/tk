@@ -155,13 +155,13 @@ typedef struct Master {
 
 static void		PlaceRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
-static void		PlaceLostSlaveProc(ClientData clientData,
+static void		PlaceLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr placerType = {
     "place",			/* name */
     PlaceRequestProc,		/* requestProc */
-    PlaceLostSlaveProc,		/* lostSlaveProc */
+    PlaceLostContentProc,		/* lostSlaveProc */
 };
 
 /*
@@ -170,7 +170,7 @@ static const Tk_GeomMgr placerType = {
 
 static void		SlaveStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		ConfigureSlave(Tcl_Interp *interp, Tk_Window tkwin,
+static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_OptionTable table, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PlaceInfoCommand(Tcl_Interp *interp, Tk_Window tkwin);
@@ -179,7 +179,7 @@ static void		FreeSlave(Slave *slavePtr);
 static Slave *		FindSlave(Tk_Window tkwin);
 static Master *		CreateMaster(Tk_Window tkwin);
 static Master *		FindMaster(Tk_Window tkwin);
-static void		MasterStructureProc(ClientData clientData,
+static void		PlaceStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		RecomputePlacement(ClientData clientData);
 static void		UnlinkSlave(Slave *slavePtr);
@@ -252,7 +252,7 @@ Tk_PlaceObjCmd(
 	    dispPtr->placeInit = 1;
 	}
 
-	return ConfigureSlave(interp, tkwin, optionTable, objc-2, objv+2);
+	return ConfigureContent(interp, tkwin, optionTable, objc-2, objv+2);
     }
 
     /*
@@ -298,7 +298,7 @@ Tk_PlaceObjCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
 	}
-	return ConfigureSlave(interp, tkwin, optionTable, objc-3, objv+3);
+	return ConfigureContent(interp, tkwin, optionTable, objc-3, objv+3);
 
     case PLACE_FORGET:
 	if (objc != 3) {
@@ -379,7 +379,7 @@ CreateSlave(
     Tk_OptionTable table)
 {
     Tcl_HashEntry *hPtr;
-    register Slave *slavePtr;
+    Slave *slavePtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
@@ -453,7 +453,7 @@ static Slave *
 FindSlave(
     Tk_Window tkwin)		/* Token for desired slave. */
 {
-    register Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, (char *) tkwin);
@@ -484,8 +484,8 @@ static void
 UnlinkSlave(
     Slave *slavePtr)		/* Slave structure to be unlinked. */
 {
-    register Master *containerPtr;
-    register Slave *prevPtr;
+    Master *containerPtr;
+    Slave *prevPtr;
 
     containerPtr = slavePtr->containerPtr;
     if (containerPtr == NULL) {
@@ -533,7 +533,7 @@ CreateMaster(
     Tk_Window tkwin)		/* Token for desired container. */
 {
     Tcl_HashEntry *hPtr;
-    register Master *containerPtr;
+    Master *containerPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
@@ -546,7 +546,7 @@ CreateMaster(
 	containerPtr->flags = 0;
 	Tcl_SetHashValue(hPtr, containerPtr);
 	Tk_CreateEventHandler(containerPtr->tkwin, StructureNotifyMask,
-		MasterStructureProc, containerPtr);
+		PlaceStructureProc, containerPtr);
     } else {
 	containerPtr = Tcl_GetHashValue(hPtr);
     }
@@ -576,7 +576,7 @@ static Master *
 FindMaster(
     Tk_Window tkwin)		/* Token for desired container. */
 {
-    register Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, (char *) tkwin);
@@ -589,7 +589,7 @@ FindMaster(
 /*
  *----------------------------------------------------------------------
  *
- * ConfigureSlave --
+ * ConfigureContent --
  *
  *	This function is called to process an argv/argc list to reconfigure
  *	the placement of a window.
@@ -606,14 +606,14 @@ FindMaster(
  */
 
 static int
-ConfigureSlave(
+ConfigureContent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Window tkwin,		/* Token for the window to manipulate. */
     Tk_OptionTable table,	/* Token for option table. */
     int objc,			/* Number of config arguments. */
     Tcl_Obj *const objv[])	/* Object values for arguments. */
 {
-    register Master *containerPtr;
+    Master *containerPtr;
     Tk_SavedOptions savedOptions;
     int mask;
     Slave *slavePtr;
@@ -864,8 +864,8 @@ static void
 RecomputePlacement(
     ClientData clientData)	/* Pointer to Master record. */
 {
-    register Master *containerPtr = clientData;
-    register Slave *slavePtr;
+    Master *containerPtr = clientData;
+    Slave *slavePtr;
     int x, y, width, height, tmp;
     int containerWidth, containerHeight, containerX, containerY;
     double x1, y1, x2, y2;
@@ -1064,7 +1064,7 @@ RecomputePlacement(
 /*
  *----------------------------------------------------------------------
  *
- * MasterStructureProc --
+ * PlaceStructureProc --
  *
  *	This function is invoked by the Tk event handler when StructureNotify
  *	events occur for a container window.
@@ -1080,13 +1080,13 @@ RecomputePlacement(
  */
 
 static void
-MasterStructureProc(
+PlaceStructureProc(
     ClientData clientData,	/* Pointer to Master structure for window
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Master *containerPtr = clientData;
-    register Slave *slavePtr, *nextPtr;
+    Master *containerPtr = clientData;
+    Slave *slavePtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) containerPtr->tkwin)->dispPtr;
 
     switch (eventPtr->type) {
@@ -1164,7 +1164,7 @@ SlaveStructureProc(
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Slave *slavePtr = clientData;
+    Slave *slavePtr = clientData;
     TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
     if (eventPtr->type == DestroyNotify) {
@@ -1227,28 +1227,28 @@ PlaceRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * PlaceLostSlaveProc --
+ * PlaceLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all placer-related information about the slave.
+ *	Forgets all placer-related information about the content window.
  *
  *--------------------------------------------------------------
  */
 
 	/* ARGSUSED */
 static void
-PlaceLostSlaveProc(
+PlaceLostContentProc(
     ClientData clientData,	/* Slave structure for slave window that was
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Slave *slavePtr = clientData;
+    Slave *slavePtr = clientData;
     TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
     if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {

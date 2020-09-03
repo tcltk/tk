@@ -5,8 +5,7 @@
  */
 
 #include <math.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -48,14 +47,14 @@ static Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	"horizontal", Tk_Offset(Progressbar,progress.orientObj), -1,
-	0, (ClientData)ttkOrientStrings, STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
         DEF_PROGRESSBAR_LENGTH, Tk_Offset(Progressbar,progress.lengthObj), -1,
 	0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-mode", "mode", "ProgressMode", "determinate",
 	Tk_Offset(Progressbar,progress.modeObj),
 	Tk_Offset(Progressbar,progress.mode),
-	0, (ClientData)ProgressbarModeStrings, 0 },
+	0, (void *)ProgressbarModeStrings, 0 },
     {TK_OPTION_DOUBLE, "-maximum", "maximum", "Maximum",
 	"100", Tk_Offset(Progressbar,progress.maximumObj), -1,
 	0, 0, 0 },
