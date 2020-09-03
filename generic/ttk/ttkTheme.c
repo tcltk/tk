@@ -390,7 +390,7 @@ typedef struct CleanupStruct {
 } Cleanup;
 
 /*------------------------------------------------------------------------
- * +++ Master style package data structure.
+ * +++ Style package data structure.
  */
 typedef struct
 {
@@ -404,7 +404,7 @@ typedef struct
     int themeChangePending;		/* scheduled ThemeChangedProc call? */
 } StylePackageData;
 
-static void ThemeChangedProc(ClientData);	/* Forward */
+static void ThemeChangedProc(void *);	/* Forward */
 
 /* Ttk_StylePkgFree --
  *	Cleanup procedure for StylePackageData.
@@ -1179,7 +1179,7 @@ static Tcl_Obj* HashTableToDict(Tcl_HashTable *ht)
  */
 static int
 StyleMapCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1459,7 +1459,7 @@ static int StyleThemeNamesCmd(
  */
 static int
 StyleThemeSettingsCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1617,7 +1617,7 @@ static int StyleLayoutCmd(
  */
 static int
 StyleThemeUseCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1674,7 +1674,7 @@ static const Ttk_Ensemble StyleEnsemble[] = {
 
 static int
 StyleObjCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */

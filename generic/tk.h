@@ -651,8 +651,9 @@ typedef struct Tk_ClassProcs {
  * the geometry manager to carry out certain functions.
  */
 
+#define Tk_GeomLostContentProc Tk_GeomLostSlaveProc
 typedef void (Tk_GeomRequestProc) (ClientData clientData, Tk_Window tkwin);
-typedef void (Tk_GeomLostSlaveProc) (ClientData clientData, Tk_Window tkwin);
+typedef void (Tk_GeomLostContentProc) (ClientData clientData, Tk_Window tkwin);
 
 typedef struct Tk_GeomMgr {
     const char *name;		/* Name of the geometry manager (command used
@@ -661,7 +662,7 @@ typedef struct Tk_GeomMgr {
     Tk_GeomRequestProc *requestProc;
 				/* Procedure to invoke when a slave's
 				 * requested geometry changes. */
-    Tk_GeomLostSlaveProc *lostSlaveProc;
+    Tk_GeomLostContentProc *lostSlaveProc;
 				/* Procedure to invoke when a slave is taken
 				 * away from one geometry manager by another.
 				 * NULL means geometry manager doesn't care

@@ -83,7 +83,7 @@ Stretch the slave both horizontally and vertically.
 .RE
 .TP
 \fB\-in \fIother\fR
-Insert the slave(s) at the end of the packing order for the master
+Insert the window at the end of the packing order for the content
 window given by \fIother\fR.
 .TP
 \fB\-ipadx \fIamount\fR

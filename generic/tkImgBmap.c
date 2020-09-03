@@ -18,7 +18,7 @@
  * image:
  */
 
-typedef struct BitmapMaster {
+typedef struct {
     Tk_ImageMaster tkMaster;	/* Tk's token for image master. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter for application that is using
@@ -41,7 +41,7 @@ typedef struct BitmapMaster {
     struct BitmapInstance *instancePtr;
 				/* First in list of all instances associated
 				 * with this master. */
-} BitmapMaster;
+} BitmapModel;
 
 /*
  * The following data structure represents all of the instances of an image
@@ -51,7 +51,7 @@ typedef struct BitmapMaster {
 typedef struct BitmapInstance {
     size_t refCount;		/* Number of instances that share this data
 				 * structure. */
-    BitmapMaster *modelPtr;	/* Pointer to master for image. */
+    BitmapModel *modelPtr;	/* Pointer to master for image. */
     Tk_Window tkwin;		/* Window in which the instances will be
 				 * displayed. */
     XColor *fg;			/* Foreground color for displaying image. */
@@ -108,17 +108,17 @@ Tk_ImageType tkBitmapImageType = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_UID, "-background", NULL, NULL,
-	"", offsetof(BitmapMaster, bgUid), 0, NULL},
+	"", offsetof(BitmapModel, bgUid), 0, NULL},
     {TK_CONFIG_STRING, "-data", NULL, NULL,
-	NULL, offsetof(BitmapMaster, dataString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, dataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	NULL, offsetof(BitmapMaster, fileString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_UID, "-foreground", NULL, NULL,
-	"#000000", offsetof(BitmapMaster, fgUid), 0, NULL},
+	"#000000", offsetof(BitmapModel, fgUid), 0, NULL},
     {TK_CONFIG_STRING, "-maskdata", NULL, NULL,
-	NULL, offsetof(BitmapMaster, maskDataString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, maskDataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-maskfile", NULL, NULL,
-	NULL, offsetof(BitmapMaster, maskFileString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, maskFileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -149,7 +149,7 @@ static int		ImgBmapCmd(ClientData clientData, Tcl_Interp *interp,
 			    int argc, Tcl_Obj *const objv[]);
 static void		ImgBmapCmdDeletedProc(ClientData clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
-static int		ImgBmapConfigureMaster(BitmapMaster *modelPtr,
+static int		ImgBmapConfigureModel(BitmapModel *modelPtr,
 			    int argc, Tcl_Obj *const objv[], int flags);
 static int		NextBitmapWord(ParseInfo *parseInfoPtr);
 
@@ -183,7 +183,7 @@ ImgBmapCreate(
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
-    BitmapMaster *modelPtr = (BitmapMaster *)ckalloc(sizeof(BitmapMaster));
+    BitmapModel *modelPtr = (BitmapModel *)ckalloc(sizeof(BitmapModel));
     (void)typePtr;
 
     modelPtr->tkMaster = master;
@@ -200,7 +200,7 @@ ImgBmapCreate(
     modelPtr->maskFileString = NULL;
     modelPtr->maskDataString = NULL;
     modelPtr->instancePtr = NULL;
-    if (ImgBmapConfigureMaster(modelPtr, argc, argv, 0) != TCL_OK) {
+    if (ImgBmapConfigureModel(modelPtr, argc, argv, 0) != TCL_OK) {
 	ImgBmapDelete(modelPtr);
 	return TCL_ERROR;
     }
@@ -211,7 +211,7 @@ ImgBmapCreate(
 /*
  *----------------------------------------------------------------------
  *
- * ImgBmapConfigureMaster --
+ * ImgBmapConfigureModel --
  *
  *	This procedure is called when a bitmap image is created or
  *	reconfigured. It process configuration options and resets any
@@ -229,8 +229,8 @@ ImgBmapCreate(
  */
 
 static int
-ImgBmapConfigureMaster(
-    BitmapMaster *modelPtr,	/* Pointer to data structure describing
+ImgBmapConfigureModel(
+    BitmapModel *modelPtr,	/* Pointer to data structure describing
 				 * overall bitmap image to (reconfigure). */
     int objc,			/* Number of entries in objv. */
     Tcl_Obj *const objv[],	/* Pairs of configuration options for image. */
@@ -340,7 +340,7 @@ static void
 ImgBmapConfigureInstance(
     BitmapInstance *instancePtr)/* Instance to reconfigure. */
 {
-    BitmapMaster *modelPtr = instancePtr->modelPtr;
+    BitmapModel *modelPtr = instancePtr->modelPtr;
     XColor *colorPtr;
     XGCValues gcValues;
     GC gc;
@@ -757,7 +757,7 @@ ImgBmapCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const bmapOptions[] = {"cget", "configure", NULL};
-    BitmapMaster *modelPtr = (BitmapMaster *)clientData;
+    BitmapModel *modelPtr = (BitmapModel *)clientData;
     int index;
 
     if (objc < 2) {
@@ -785,7 +785,7 @@ ImgBmapCmd(
 		    configSpecs, (char *) modelPtr,
 		    Tcl_GetString(objv[2]), 0);
 	} else {
-	    return ImgBmapConfigureMaster(modelPtr, objc-2, objv+2,
+	    return ImgBmapConfigureModel(modelPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
 	}
     default:
@@ -819,7 +819,7 @@ ImgBmapGet(
     ClientData masterData)	/* Pointer to our master structure for the
 				 * image. */
 {
-    BitmapMaster *modelPtr = (BitmapMaster *)masterData;
+    BitmapModel *modelPtr = (BitmapModel *)masterData;
     BitmapInstance *instancePtr;
 
     /*
@@ -1006,10 +1006,10 @@ ImgBmapFree(
 
 static void
 ImgBmapDelete(
-    ClientData masterData)	/* Pointer to BitmapMaster structure for
+    ClientData masterData)	/* Pointer to BitmapModel structure for
 				 * image. Must not have any more instances. */
 {
-    BitmapMaster *modelPtr = (BitmapMaster *)masterData;
+    BitmapModel *modelPtr = (BitmapModel *)masterData;
 
     if (modelPtr->instancePtr != NULL) {
 	Tcl_Panic("tried to delete bitmap image when instances still exist");
@@ -1047,10 +1047,10 @@ ImgBmapDelete(
 
 static void
 ImgBmapCmdDeletedProc(
-    ClientData clientData)	/* Pointer to BitmapMaster structure for
+    ClientData clientData)	/* Pointer to BitmapModel structure for
 				 * image. */
 {
-    BitmapMaster *modelPtr = (BitmapMaster *)clientData;
+    BitmapModel *modelPtr = (BitmapModel *)clientData;
 
     modelPtr->imageCmd = NULL;
     if (modelPtr->tkMaster != NULL) {
@@ -1197,7 +1197,7 @@ ImgBmapPostscript(
     int x, int y, int width, int height,
     int prepass)
 {
-    BitmapMaster *modelPtr = (BitmapMaster *)clientData;
+    BitmapModel *modelPtr = (BitmapModel *)clientData;
     Tcl_InterpState interpState;
     Tcl_Obj *psObj;
 
