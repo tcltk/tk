@@ -145,11 +145,11 @@ struct ColorTable {
 #define MAP_COLORS		8
 
 /*
- * Definition of the data associated with each photo image master.
+ * Definition of the data associated with each photo image model.
  */
 
 struct PhotoModel {
-    Tk_ImageModel tkMaster;	/* Tk's token for image model. NULL means the
+    Tk_ImageModel tkModel;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter associated with the application
 				 * using this image. */
@@ -172,7 +172,7 @@ struct PhotoModel {
     TkRegion validRegion;	/* Tk region indicating which parts of the
 				 * image have valid image data. */
     PhotoInstance *instancePtr;	/* First in the list of instances associated
-				 * with this master. */
+				 * with this model. */
 };
 
 /*
@@ -208,7 +208,7 @@ struct PhotoInstance {
     Colormap colormap;		/* The image may only be used in windows with
 				 * this particular colormap. */
     PhotoInstance *nextPtr;	/* Pointer to the next instance in the list of
-				 * instances associated with this master. */
+				 * instances associated with this model. */
 #if TCL_MAJOR_VERSION > 8
     size_t refCount;		/* Number of instances using this structure. */
 #else
@@ -217,7 +217,7 @@ struct PhotoInstance {
     Tk_Uid palette;		/* Palette for these particular instances. */
     double gamma;		/* Gamma value for these instances. */
     Tk_Uid defaultPalette;	/* Default palette to use if a palette is not
-				 * specified for the master. */
+				 * specified for the model. */
     ColorTable *colorTablePtr;	/* Pointer to information about colors
 				 * allocated for image display in windows like
 				 * this one. */

@@ -35,15 +35,15 @@ typedef enum {BM_INSIDE, BM_OUTSIDE, BM_IGNORE} BorderMode;
  * structure of the following type:
  */
 
-typedef struct Slave {
+typedef struct Content {
     Tk_Window tkwin;		/* Tk's token for window. */
     Tk_Window inTkwin;		/* Token for the -in window. */
-    struct Master *containerPtr;	/* Pointer to information for window relative
+    struct Container *containerPtr;	/* Pointer to information for window relative
 				 * to which tkwin is placed. This isn't
 				 * necessarily the logical parent of tkwin.
 				 * NULL means the container was deleted or never
 				 * assigned. */
-    struct Slave *nextPtr;	/* Next in list of windows placed relative to
+    struct Content *nextPtr;	/* Next in list of windows placed relative to
 				 * same container (NULL for end of list). */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this command. */
@@ -72,7 +72,7 @@ typedef struct Slave {
     BorderMode borderMode;	/* How to treat borders of container window. */
     int flags;			/* Various flags; see below for bit
 				 * definitions. */
-} Slave;
+} Content;
 
 /*
  * Type masks for options:
@@ -82,34 +82,34 @@ typedef struct Slave {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", TCL_INDEX_NONE,
-	 offsetof(Slave, anchor), 0, 0, 0},
+	 offsetof(Content, anchor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
-	 offsetof(Slave, borderMode), 0, borderModeStrings, 0},
-    {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Slave, heightPtr),
-	 offsetof(Slave, height), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Slave, inTkwin),
+	 offsetof(Content, borderMode), 0, borderModeStrings, 0},
+    {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Content, heightPtr),
+	 offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Content, inTkwin),
 	 0, 0, IN_MASK},
     {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, "",
-	 offsetof(Slave, relHeightPtr), offsetof(Slave, relHeight),
+	 offsetof(Content, relHeightPtr), offsetof(Content, relHeight),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-relwidth", NULL, NULL, "",
-	 offsetof(Slave, relWidthPtr), offsetof(Slave, relWidth),
+	 offsetof(Content, relWidthPtr), offsetof(Content, relWidth),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0", TCL_INDEX_NONE,
-	 offsetof(Slave, relX), 0, 0, 0},
+	 offsetof(Content, relX), 0, 0, 0},
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0", TCL_INDEX_NONE,
-	 offsetof(Slave, relY), 0, 0, 0},
-    {TK_OPTION_PIXELS, "-width", NULL, NULL, "", offsetof(Slave, widthPtr),
-	 offsetof(Slave, width), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Slave, xPtr),
-	 offsetof(Slave, x), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Slave, yPtr),
-	 offsetof(Slave, y), TK_OPTION_NULL_OK, 0, 0},
+	 offsetof(Content, relY), 0, 0, 0},
+    {TK_OPTION_PIXELS, "-width", NULL, NULL, "", offsetof(Content, widthPtr),
+	 offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xPtr),
+	 offsetof(Content, x), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yPtr),
+	 offsetof(Content, y), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
 /*
- * Flag definitions for Slave structures:
+ * Flag definitions for Content structures:
  *
  * CHILD_WIDTH -		1 means -width was specified;
  * CHILD_REL_WIDTH -		1 means -relwidth was specified.
@@ -127,9 +127,9 @@ static const Tk_OptionSpec optionSpecs[] = {
  * structure of the following form:
  */
 
-typedef struct Master {
+typedef struct Container {
     Tk_Window tkwin;		/* Tk's token for container window. */
-    struct Slave *slavePtr;	/* First in linked list of slaves placed
+    struct Content *contentPtr;	/* First in linked list of slaves placed
 				 * relative to this container. */
     int *abortPtr;		/* If non-NULL, it means that there is a nested
 				 * call to RecomputePlacement already working on
@@ -138,7 +138,7 @@ typedef struct Master {
 				 * example, if tkwin or any of its slaves
 				 * is deleted. */
     int flags;			/* See below for bit definitions. */
-} Master;
+} Container;
 
 /*
  * Flag definitions for containers:
@@ -161,28 +161,28 @@ static void		PlaceLostContentProc(ClientData clientData,
 static const Tk_GeomMgr placerType = {
     "place",			/* name */
     PlaceRequestProc,		/* requestProc */
-    PlaceLostContentProc,		/* lostSlaveProc */
+    PlaceLostContentProc,		/* lostContentProc */
 };
 
 /*
  * Forward declarations for functions defined later in this file:
  */
 
-static void		SlaveStructureProc(ClientData clientData,
+static void		ContentStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_OptionTable table, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PlaceInfoCommand(Tcl_Interp *interp, Tk_Window tkwin);
-static Slave *		CreateSlave(Tk_Window tkwin, Tk_OptionTable table);
-static void		FreeSlave(Slave *slavePtr);
-static Slave *		FindSlave(Tk_Window tkwin);
-static Master *		CreateMaster(Tk_Window tkwin);
-static Master *		FindMaster(Tk_Window tkwin);
+static Content *		CreateContent(Tk_Window tkwin, Tk_OptionTable table);
+static void		FreeContent(Content *contentPtr);
+static Content *		FindContent(Tk_Window tkwin);
+static Container *		CreateContainer(Tk_Window tkwin);
+static Container *		FindContainer(Tk_Window tkwin);
 static void		PlaceStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		RecomputePlacement(ClientData clientData);
-static void		UnlinkSlave(Slave *slavePtr);
+static void		UnlinkContent(Content *contentPtr);
 
 /*
  *--------------------------------------------------------------
@@ -210,7 +210,7 @@ Tk_PlaceObjCmd(
 {
     Tk_Window main_win = (Tk_Window)clientData;
     Tk_Window tkwin;
-    Slave *slavePtr;
+    Content *contentPtr;
     TkDisplay *dispPtr;
     Tk_OptionTable optionTable;
     static const char *const optionStrings[] = {
@@ -247,8 +247,8 @@ Tk_PlaceObjCmd(
 
 	dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	if (!dispPtr->placeInit) {
-	    Tcl_InitHashTable(&dispPtr->masterTable, TCL_ONE_WORD_KEYS);
-	    Tcl_InitHashTable(&dispPtr->slaveTable, TCL_ONE_WORD_KEYS);
+	    Tcl_InitHashTable(&dispPtr->containerTable, TCL_ONE_WORD_KEYS);
+	    Tcl_InitHashTable(&dispPtr->contentTable, TCL_ONE_WORD_KEYS);
 	    dispPtr->placeInit = 1;
 	}
 
@@ -271,8 +271,8 @@ Tk_PlaceObjCmd(
 
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
     if (!dispPtr->placeInit) {
-	Tcl_InitHashTable(&dispPtr->masterTable, TCL_ONE_WORD_KEYS);
-	Tcl_InitHashTable(&dispPtr->slaveTable, TCL_ONE_WORD_KEYS);
+	Tcl_InitHashTable(&dispPtr->containerTable, TCL_ONE_WORD_KEYS);
+	Tcl_InitHashTable(&dispPtr->contentTable, TCL_ONE_WORD_KEYS);
 	dispPtr->placeInit = 1;
     }
 
@@ -286,11 +286,11 @@ Tk_PlaceObjCmd(
 	if (objc == 3 || objc == 4) {
 	    Tcl_Obj *objPtr;
 
-	    slavePtr = FindSlave(tkwin);
-	    if (slavePtr == NULL) {
+	    contentPtr = FindContent(tkwin);
+	    if (contentPtr == NULL) {
 		return TCL_OK;
 	    }
-	    objPtr = Tk_GetOptionInfo(interp, slavePtr, optionTable,
+	    objPtr = Tk_GetOptionInfo(interp, contentPtr, optionTable,
 		    (objc == 4) ? objv[3] : NULL, tkwin);
 	    if (objPtr == NULL) {
 		return TCL_ERROR;
@@ -305,22 +305,22 @@ Tk_PlaceObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pathName");
 	    return TCL_ERROR;
 	}
-	slavePtr = FindSlave(tkwin);
-	if (slavePtr == NULL) {
+	contentPtr = FindContent(tkwin);
+	if (contentPtr == NULL) {
 	    return TCL_OK;
 	}
-	if ((slavePtr->containerPtr != NULL) &&
-		(slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
-	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
+	if ((contentPtr->containerPtr != NULL) &&
+		(contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin))) {
+	    Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
 	}
-	UnlinkSlave(slavePtr);
-	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
+	UnlinkContent(contentPtr);
+	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->contentTable,
 		tkwin));
-	Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
-		slavePtr);
+	Tk_DeleteEventHandler(tkwin, StructureNotifyMask, ContentStructureProc,
+		contentPtr);
 	Tk_ManageGeometry(tkwin, NULL, NULL);
 	Tk_UnmapWindow(tkwin);
-	FreeSlave(slavePtr);
+	FreeContent(contentPtr);
 	break;
 
     case PLACE_INFO:
@@ -332,20 +332,20 @@ Tk_PlaceObjCmd(
 
     case PLACE_CONTENT:
     case PLACE_SLAVES: {
-	Master *containerPtr;
+	Container *containerPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "pathName");
 	    return TCL_ERROR;
 	}
-	containerPtr = FindMaster(tkwin);
+	containerPtr = FindContainer(tkwin);
 	if (containerPtr != NULL) {
 	    Tcl_Obj *listPtr = Tcl_NewObj();
 
-	    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-		    slavePtr = slavePtr->nextPtr) {
+	    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+		    contentPtr = contentPtr->nextPtr) {
 		Tcl_ListObjAppendElement(NULL, listPtr,
-			Tk_NewWindowObj(slavePtr->tkwin));
+			Tk_NewWindowObj(contentPtr->tkwin));
 	    }
 	    Tcl_SetObjResult(interp, listPtr);
 	}
@@ -359,33 +359,33 @@ Tk_PlaceObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * CreateSlave --
+ * CreateContent --
  *
- *	Given a Tk_Window token, find the Slave structure corresponding to
+ *	Given a Tk_Window token, find the Content structure corresponding to
  *	that token, creating a new one if necessary.
  *
  * Results:
- *	Pointer to the Slave structure.
+ *	Pointer to the Content structure.
  *
  * Side effects:
- *	A new Slave structure may be created.
+ *	A new Content structure may be created.
  *
  *----------------------------------------------------------------------
  */
 
-static Slave *
-CreateSlave(
+static Content *
+CreateContent(
     Tk_Window tkwin,		/* Token for desired slave. */
     Tk_OptionTable table)
 {
     Tcl_HashEntry *hPtr;
-    Slave *slavePtr;
+    Content *contentPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_CreateHashEntry(&dispPtr->slaveTable, (char *) tkwin, &isNew);
+    hPtr = Tcl_CreateHashEntry(&dispPtr->contentTable, (char *) tkwin, &isNew);
     if (!isNew) {
-	return (Slave *)Tcl_GetHashValue(hPtr);
+	return (Content *)Tcl_GetHashValue(hPtr);
     }
 
     /*
@@ -393,25 +393,25 @@ CreateSlave(
      * populate it with some default values.
      */
 
-    slavePtr = (Slave *)ckalloc(sizeof(Slave));
-    memset(slavePtr, 0, sizeof(Slave));
-    slavePtr->tkwin = tkwin;
-    slavePtr->inTkwin = NULL;
-    slavePtr->anchor = TK_ANCHOR_NW;
-    slavePtr->borderMode = BM_INSIDE;
-    slavePtr->optionTable = table;
-    Tcl_SetHashValue(hPtr, slavePtr);
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
-	    slavePtr);
-    return slavePtr;
+    contentPtr = (Content *)ckalloc(sizeof(Content));
+    memset(contentPtr, 0, sizeof(Content));
+    contentPtr->tkwin = tkwin;
+    contentPtr->inTkwin = NULL;
+    contentPtr->anchor = TK_ANCHOR_NW;
+    contentPtr->borderMode = BM_INSIDE;
+    contentPtr->optionTable = table;
+    Tcl_SetHashValue(hPtr, contentPtr);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, ContentStructureProc,
+	    contentPtr);
+    return contentPtr;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * FreeSlave --
+ * FreeContent --
  *
- *	Frees the resources held by a Slave structure.
+ *	Frees the resources held by a Content structure.
  *
  * Results:
  *	None
@@ -423,25 +423,25 @@ CreateSlave(
  */
 
 static void
-FreeSlave(
-    Slave *slavePtr)
+FreeContent(
+    Content *contentPtr)
 {
-    Tk_FreeConfigOptions((char *) slavePtr, slavePtr->optionTable,
-	    slavePtr->tkwin);
-    ckfree(slavePtr);
+    Tk_FreeConfigOptions((char *) contentPtr, contentPtr->optionTable,
+	    contentPtr->tkwin);
+    ckfree(contentPtr);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * FindSlave --
+ * FindContent --
  *
- *	Given a Tk_Window token, find the Slave structure corresponding to
+ *	Given a Tk_Window token, find the Content structure corresponding to
  *	that token. This is purely a lookup function; it will not create a
  *	record if one does not yet exist.
  *
  * Results:
- *	Pointer to Slave structure; NULL if none exists.
+ *	Pointer to Content structure; NULL if none exists.
  *
  * Side effects:
  *	None.
@@ -449,24 +449,24 @@ FreeSlave(
  *----------------------------------------------------------------------
  */
 
-static Slave *
-FindSlave(
+static Content *
+FindContent(
     Tk_Window tkwin)		/* Token for desired slave. */
 {
     Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, tkwin);
+    hPtr = Tcl_FindHashEntry(&dispPtr->contentTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
-    return (Slave *)Tcl_GetHashValue(hPtr);
+    return (Content *)Tcl_GetHashValue(hPtr);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * UnlinkSlave --
+ * UnlinkContent --
  *
  *	This function removes a slave window from the chain of slaves in its
  *	container.
@@ -475,31 +475,31 @@ FindSlave(
  *	None.
  *
  * Side effects:
- *	The slave list of slavePtr's container changes.
+ *	The slave list of contentPtr's container changes.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-UnlinkSlave(
-    Slave *slavePtr)		/* Slave structure to be unlinked. */
+UnlinkContent(
+    Content *contentPtr)		/* Content structure to be unlinked. */
 {
-    Master *containerPtr;
-    Slave *prevPtr;
+    Container *containerPtr;
+    Content *prevPtr;
 
-    containerPtr = slavePtr->containerPtr;
+    containerPtr = contentPtr->containerPtr;
     if (containerPtr == NULL) {
 	return;
     }
-    if (containerPtr->slavePtr == slavePtr) {
-	containerPtr->slavePtr = slavePtr->nextPtr;
+    if (containerPtr->contentPtr == contentPtr) {
+	containerPtr->contentPtr = contentPtr->nextPtr;
     } else {
-	for (prevPtr = containerPtr->slavePtr; ; prevPtr = prevPtr->nextPtr) {
+	for (prevPtr = containerPtr->contentPtr; ; prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
-		Tcl_Panic("UnlinkSlave couldn't find slave to unlink");
+		Tcl_Panic("UnlinkContent couldn't find slave to unlink");
 	    }
-	    if (prevPtr->nextPtr == slavePtr) {
-		prevPtr->nextPtr = slavePtr->nextPtr;
+	    if (prevPtr->nextPtr == contentPtr) {
+		prevPtr->nextPtr = contentPtr->nextPtr;
 		break;
 	    }
 	}
@@ -508,47 +508,47 @@ UnlinkSlave(
     if (containerPtr->abortPtr != NULL) {
 	*containerPtr->abortPtr = 1;
     }
-    slavePtr->containerPtr = NULL;
+    contentPtr->containerPtr = NULL;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * CreateMaster --
+ * CreateContainer --
  *
- *	Given a Tk_Window token, find the Master structure corresponding to
+ *	Given a Tk_Window token, find the Container structure corresponding to
  *	that token, creating a new one if necessary.
  *
  * Results:
- *	Pointer to the Master structure.
+ *	Pointer to the Container structure.
  *
  * Side effects:
- *	A new Master structure may be created.
+ *	A new Container structure may be created.
  *
  *----------------------------------------------------------------------
  */
 
-static Master *
-CreateMaster(
+static Container *
+CreateContainer(
     Tk_Window tkwin)		/* Token for desired container. */
 {
     Tcl_HashEntry *hPtr;
-    Master *containerPtr;
+    Container *containerPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_CreateHashEntry(&dispPtr->masterTable, (char *) tkwin, &isNew);
+    hPtr = Tcl_CreateHashEntry(&dispPtr->containerTable, (char *)tkwin, &isNew);
     if (isNew) {
-	containerPtr = (Master *)ckalloc(sizeof(Master));
+	containerPtr = (Container *)ckalloc(sizeof(Container));
 	containerPtr->tkwin = tkwin;
-	containerPtr->slavePtr = NULL;
+	containerPtr->contentPtr = NULL;
 	containerPtr->abortPtr = NULL;
 	containerPtr->flags = 0;
 	Tcl_SetHashValue(hPtr, containerPtr);
 	Tk_CreateEventHandler(containerPtr->tkwin, StructureNotifyMask,
 		PlaceStructureProc, containerPtr);
     } else {
-	containerPtr = (Master *)Tcl_GetHashValue(hPtr);
+	containerPtr = (Container *)Tcl_GetHashValue(hPtr);
     }
     return containerPtr;
 }
@@ -556,14 +556,14 @@ CreateMaster(
 /*
  *----------------------------------------------------------------------
  *
- * FindMaster --
+ * FindContainer --
  *
- *	Given a Tk_Window token, find the Master structure corresponding to
+ *	Given a Tk_Window token, find the Container structure corresponding to
  *	that token. This is simply a lookup function; a new record will not be
  *	created if one does not already exist.
  *
  * Results:
- *	Pointer to the Master structure; NULL if one does not exist for the
+ *	Pointer to the Container structure; NULL if one does not exist for the
  *	given Tk_Window token.
  *
  * Side effects:
@@ -572,18 +572,18 @@ CreateMaster(
  *----------------------------------------------------------------------
  */
 
-static Master *
-FindMaster(
+static Container *
+FindContainer(
     Tk_Window tkwin)		/* Token for desired container. */
 {
     Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, tkwin);
+    hPtr = Tcl_FindHashEntry(&dispPtr->containerTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
-    return (Master *)Tcl_GetHashValue(hPtr);
+    return (Container *)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -599,7 +599,7 @@ FindMaster(
  *	the interp's result.
  *
  * Side effects:
- *	Information in slavePtr may change, and slavePtr's container is scheduled
+ *	Information in contentPtr may change, and contentPtr's container is scheduled
  *	for reconfiguration.
  *
  *----------------------------------------------------------------------
@@ -613,10 +613,10 @@ ConfigureContent(
     int objc,			/* Number of config arguments. */
     Tcl_Obj *const objv[])	/* Object values for arguments. */
 {
-    Master *containerPtr;
+    Container *containerPtr;
     Tk_SavedOptions savedOptions;
     int mask;
-    Slave *slavePtr;
+    Content *contentPtr;
     Tk_Window containerWin = NULL;
     TkWindow *container;
 
@@ -628,10 +628,10 @@ ConfigureContent(
 	return TCL_ERROR;
     }
 
-    slavePtr = CreateSlave(tkwin, table);
+    contentPtr = CreateContent(tkwin, table);
 
-    if (Tk_SetOptions(interp, slavePtr, table, objc, objv,
-	    slavePtr->tkwin, &savedOptions, &mask) != TCL_OK) {
+    if (Tk_SetOptions(interp, contentPtr, table, objc, objv,
+	    contentPtr->tkwin, &savedOptions, &mask) != TCL_OK) {
 	goto error;
     }
 
@@ -639,37 +639,37 @@ ConfigureContent(
      * Set slave flags. First clear the field, then add bits as needed.
      */
 
-    slavePtr->flags = 0;
-    if (slavePtr->heightPtr) {
-	slavePtr->flags |= CHILD_HEIGHT;
+    contentPtr->flags = 0;
+    if (contentPtr->heightPtr) {
+	contentPtr->flags |= CHILD_HEIGHT;
     }
 
-    if (slavePtr->relHeightPtr) {
-	slavePtr->flags |= CHILD_REL_HEIGHT;
+    if (contentPtr->relHeightPtr) {
+	contentPtr->flags |= CHILD_REL_HEIGHT;
     }
 
-    if (slavePtr->relWidthPtr) {
-	slavePtr->flags |= CHILD_REL_WIDTH;
+    if (contentPtr->relWidthPtr) {
+	contentPtr->flags |= CHILD_REL_WIDTH;
     }
 
-    if (slavePtr->widthPtr) {
-	slavePtr->flags |= CHILD_WIDTH;
+    if (contentPtr->widthPtr) {
+	contentPtr->flags |= CHILD_WIDTH;
     }
 
-    if (!(mask & IN_MASK) && (slavePtr->containerPtr != NULL)) {
+    if (!(mask & IN_MASK) && (contentPtr->containerPtr != NULL)) {
 	/*
 	 * If no -in option was passed and the slave is already placed then
 	 * just recompute the placement.
 	 */
 
-	containerPtr = slavePtr->containerPtr;
+	containerPtr = contentPtr->containerPtr;
 	goto scheduleLayout;
     } else if (mask & IN_MASK) {
 	/* -in changed */
 	Tk_Window tkwin;
 	Tk_Window ancestor;
 
-	tkwin = slavePtr->inTkwin;
+	tkwin = contentPtr->inTkwin;
 
 	/*
 	 * Make sure that the new container is either the logical parent of the
@@ -678,21 +678,21 @@ ConfigureContent(
 	 */
 
 	for (ancestor = tkwin; ; ancestor = Tk_Parent(ancestor)) {
-	    if (ancestor == Tk_Parent(slavePtr->tkwin)) {
+	    if (ancestor == Tk_Parent(contentPtr->tkwin)) {
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't place %s relative to %s",
-			Tk_PathName(slavePtr->tkwin), Tk_PathName(tkwin)));
+			Tk_PathName(contentPtr->tkwin), Tk_PathName(tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		goto error;
 	    }
 	}
-	if (slavePtr->tkwin == tkwin) {
+	if (contentPtr->tkwin == tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't place %s relative to itself",
-		    Tk_PathName(slavePtr->tkwin)));
+		    Tk_PathName(contentPtr->tkwin)));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    goto error;
 	}
@@ -703,32 +703,32 @@ ConfigureContent(
 
 	for (container = (TkWindow *)tkwin; container != NULL;
 	     container = (TkWindow *)TkGetGeomMaster(container)) {
-	    if (container == (TkWindow *)slavePtr->tkwin) {
+	    if (container == (TkWindow *)contentPtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
-	            Tk_PathName(slavePtr->tkwin), Tk_PathName(tkwin)));
+	            Tk_PathName(contentPtr->tkwin), Tk_PathName(tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		goto error;
 	    }
 	}
-	if (tkwin != Tk_Parent(slavePtr->tkwin)) {
-	    ((TkWindow *)slavePtr->tkwin)->maintainerPtr = (TkWindow *)tkwin;
+	if (tkwin != Tk_Parent(contentPtr->tkwin)) {
+	    ((TkWindow *)contentPtr->tkwin)->maintainerPtr = (TkWindow *)tkwin;
 	}
 
-	if ((slavePtr->containerPtr != NULL)
-		&& (slavePtr->containerPtr->tkwin == tkwin)) {
+	if ((contentPtr->containerPtr != NULL)
+		&& (contentPtr->containerPtr->tkwin == tkwin)) {
 	    /*
 	     * Re-using same old container. Nothing to do.
 	     */
 
-	    containerPtr = slavePtr->containerPtr;
+	    containerPtr = contentPtr->containerPtr;
 	    goto scheduleLayout;
 	}
-	if ((slavePtr->containerPtr != NULL) &&
-		(slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
-	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
+	if ((contentPtr->containerPtr != NULL) &&
+		(contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin))) {
+	    Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
 	}
-	UnlinkSlave(slavePtr);
+	UnlinkContent(contentPtr);
 	containerWin = tkwin;
     }
 
@@ -737,19 +737,19 @@ ConfigureContent(
      */
 
     if (containerWin == NULL) {
-	containerWin = Tk_Parent(slavePtr->tkwin);
-	slavePtr->inTkwin = containerWin;
+	containerWin = Tk_Parent(contentPtr->tkwin);
+	contentPtr->inTkwin = containerWin;
     }
 
     /*
      * Manage the slave window in this container.
      */
 
-    containerPtr = CreateMaster(containerWin);
-    slavePtr->containerPtr = containerPtr;
-    slavePtr->nextPtr = containerPtr->slavePtr;
-    containerPtr->slavePtr = slavePtr;
-    Tk_ManageGeometry(slavePtr->tkwin, &placerType, slavePtr);
+    containerPtr = CreateContainer(containerWin);
+    contentPtr->containerPtr = containerPtr;
+    contentPtr->nextPtr = containerPtr->contentPtr;
+    containerPtr->contentPtr = contentPtr;
+    Tk_ManageGeometry(contentPtr->tkwin, &placerType, contentPtr);
 
     /*
      * Arrange for the container to be re-arranged at the first idle moment.
@@ -796,49 +796,49 @@ PlaceInfoCommand(
     Tcl_Interp *interp,		/* Interp into which to place result. */
     Tk_Window tkwin)		/* Token for the window to get info on. */
 {
-    Slave *slavePtr;
+    Content *contentPtr;
     Tcl_Obj *infoObj;
 
-    slavePtr = FindSlave(tkwin);
-    if (slavePtr == NULL) {
+    contentPtr = FindContent(tkwin);
+    if (contentPtr == NULL) {
 	return TCL_OK;
     }
     infoObj = Tcl_NewObj();
-    if (slavePtr->containerPtr != NULL) {
+    if (contentPtr->containerPtr != NULL) {
 	Tcl_AppendToObj(infoObj, "-in", -1);
 	Tcl_ListObjAppendElement(NULL, infoObj,
-		Tk_NewWindowObj(slavePtr->containerPtr->tkwin));
+		Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
 	Tcl_AppendToObj(infoObj, " ", -1);
     }
     Tcl_AppendPrintfToObj(infoObj,
 	    "-x %d -relx %.4g -y %d -rely %.4g",
-	    slavePtr->x, slavePtr->relX, slavePtr->y, slavePtr->relY);
-    if (slavePtr->flags & CHILD_WIDTH) {
-	Tcl_AppendPrintfToObj(infoObj, " -width %d", slavePtr->width);
+	    contentPtr->x, contentPtr->relX, contentPtr->y, contentPtr->relY);
+    if (contentPtr->flags & CHILD_WIDTH) {
+	Tcl_AppendPrintfToObj(infoObj, " -width %d", contentPtr->width);
     } else {
 	Tcl_AppendToObj(infoObj, " -width {}", -1);
     }
-    if (slavePtr->flags & CHILD_REL_WIDTH) {
+    if (contentPtr->flags & CHILD_REL_WIDTH) {
 	Tcl_AppendPrintfToObj(infoObj,
-		" -relwidth %.4g", slavePtr->relWidth);
+		" -relwidth %.4g", contentPtr->relWidth);
     } else {
 	Tcl_AppendToObj(infoObj, " -relwidth {}", -1);
     }
-    if (slavePtr->flags & CHILD_HEIGHT) {
-	Tcl_AppendPrintfToObj(infoObj, " -height %d", slavePtr->height);
+    if (contentPtr->flags & CHILD_HEIGHT) {
+	Tcl_AppendPrintfToObj(infoObj, " -height %d", contentPtr->height);
     } else {
 	Tcl_AppendToObj(infoObj, " -height {}", -1);
     }
-    if (slavePtr->flags & CHILD_REL_HEIGHT) {
+    if (contentPtr->flags & CHILD_REL_HEIGHT) {
 	Tcl_AppendPrintfToObj(infoObj,
-		" -relheight %.4g", slavePtr->relHeight);
+		" -relheight %.4g", contentPtr->relHeight);
     } else {
 	Tcl_AppendToObj(infoObj, " -relheight {}", -1);
     }
 
     Tcl_AppendPrintfToObj(infoObj, " -anchor %s -bordermode %s",
-	    Tk_NameOfAnchor(slavePtr->anchor),
-	    borderModeStrings[slavePtr->borderMode]);
+	    Tk_NameOfAnchor(contentPtr->anchor),
+	    borderModeStrings[contentPtr->borderMode]);
     Tcl_SetObjResult(interp, infoObj);
     return TCL_OK;
 }
@@ -862,10 +862,10 @@ PlaceInfoCommand(
 
 static void
 RecomputePlacement(
-    ClientData clientData)	/* Pointer to Master record. */
+    ClientData clientData)	/* Pointer to Container record. */
 {
-    Master *containerPtr = (Master *)clientData;
-    Slave *slavePtr;
+    Container *containerPtr = (Container *)clientData;
+    Content *contentPtr;
     int x, y, width, height, tmp;
     int containerWidth, containerHeight, containerX, containerY;
     double x1, y1, x2, y2;
@@ -894,8 +894,8 @@ RecomputePlacement(
      * parent or child. If this happens, we'll be told to abort.
      */
 
-    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL && !abort;
-	    slavePtr = slavePtr->nextPtr) {
+    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL && !abort;
+	    contentPtr = contentPtr->nextPtr) {
 	/*
 	 * Step 1: compute size and borderwidth of container, taking into account
 	 * desired border mode.
@@ -904,13 +904,13 @@ RecomputePlacement(
 	containerX = containerY = 0;
 	containerWidth = Tk_Width(containerPtr->tkwin);
 	containerHeight = Tk_Height(containerPtr->tkwin);
-	if (slavePtr->borderMode == BM_INSIDE) {
+	if (contentPtr->borderMode == BM_INSIDE) {
 	    containerX = Tk_InternalBorderLeft(containerPtr->tkwin);
 	    containerY = Tk_InternalBorderTop(containerPtr->tkwin);
 	    containerWidth -= containerX + Tk_InternalBorderRight(containerPtr->tkwin);
 	    containerHeight -= containerY +
 		    Tk_InternalBorderBottom(containerPtr->tkwin);
-	} else if (slavePtr->borderMode == BM_OUTSIDE) {
+	} else if (contentPtr->borderMode == BM_OUTSIDE) {
 	    containerX = containerY = -Tk_Changes(containerPtr->tkwin)->border_width;
 	    containerWidth -= 2 * containerX;
 	    containerHeight -= 2 * containerY;
@@ -921,16 +921,16 @@ RecomputePlacement(
 	 * and location of anchor point within container.
 	 */
 
-	x1 = slavePtr->x + containerX + (slavePtr->relX*containerWidth);
+	x1 = contentPtr->x + containerX + (contentPtr->relX*containerWidth);
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
-	y1 = slavePtr->y + containerY + (slavePtr->relY*containerHeight);
+	y1 = contentPtr->y + containerY + (contentPtr->relY*containerHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
-	if (slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) {
+	if (contentPtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) {
 	    width = 0;
-	    if (slavePtr->flags & CHILD_WIDTH) {
-		width += slavePtr->width;
+	    if (contentPtr->flags & CHILD_WIDTH) {
+		width += contentPtr->width;
 	    }
-	    if (slavePtr->flags & CHILD_REL_WIDTH) {
+	    if (contentPtr->flags & CHILD_REL_WIDTH) {
 		/*
 		 * The code below is a bit tricky. In order to round correctly
 		 * when both relX and relWidth are specified, compute the
@@ -939,31 +939,31 @@ RecomputePlacement(
 		 * errors in relX and relWidth accumulate.
 		 */
 
-		x2 = x1 + (slavePtr->relWidth*containerWidth);
+		x2 = x1 + (contentPtr->relWidth*containerWidth);
 		tmp = (int) (x2 + ((x2 > 0) ? 0.5 : -0.5));
 		width += tmp - x;
 	    }
 	} else {
-	    width = Tk_ReqWidth(slavePtr->tkwin)
-		    + 2*Tk_Changes(slavePtr->tkwin)->border_width;
+	    width = Tk_ReqWidth(contentPtr->tkwin)
+		    + 2*Tk_Changes(contentPtr->tkwin)->border_width;
 	}
-	if (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT)) {
+	if (contentPtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT)) {
 	    height = 0;
-	    if (slavePtr->flags & CHILD_HEIGHT) {
-		height += slavePtr->height;
+	    if (contentPtr->flags & CHILD_HEIGHT) {
+		height += contentPtr->height;
 	    }
-	    if (slavePtr->flags & CHILD_REL_HEIGHT) {
+	    if (contentPtr->flags & CHILD_REL_HEIGHT) {
 		/*
 		 * See note above for rounding errors in width computation.
 		 */
 
-		y2 = y1 + (slavePtr->relHeight*containerHeight);
+		y2 = y1 + (contentPtr->relHeight*containerHeight);
 		tmp = (int) (y2 + ((y2 > 0) ? 0.5 : -0.5));
 		height += tmp - y;
 	    }
 	} else {
-	    height = Tk_ReqHeight(slavePtr->tkwin)
-		    + 2*Tk_Changes(slavePtr->tkwin)->border_width;
+	    height = Tk_ReqHeight(contentPtr->tkwin)
+		    + 2*Tk_Changes(contentPtr->tkwin)->border_width;
 	}
 
 	/*
@@ -972,7 +972,7 @@ RecomputePlacement(
 	 * border mode and container's border.
 	 */
 
-	switch (slavePtr->anchor) {
+	switch (contentPtr->anchor) {
 	case TK_ANCHOR_N:
 	    x -= width/2;
 	    break;
@@ -1011,8 +1011,8 @@ RecomputePlacement(
 	 * height aren't zero.
 	 */
 
-	width -= 2*Tk_Changes(slavePtr->tkwin)->border_width;
-	height -= 2*Tk_Changes(slavePtr->tkwin)->border_width;
+	width -= 2*Tk_Changes(contentPtr->tkwin)->border_width;
+	height -= 2*Tk_Changes(contentPtr->tkwin)->border_width;
 	if (width <= 0) {
 	    width = 1;
 	}
@@ -1027,12 +1027,12 @@ RecomputePlacement(
 	 * re-adjust things as relevant windows map, unmap, and move).
 	 */
 
-	if (containerPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
-	    if ((x != Tk_X(slavePtr->tkwin))
-		    || (y != Tk_Y(slavePtr->tkwin))
-		    || (width != Tk_Width(slavePtr->tkwin))
-		    || (height != Tk_Height(slavePtr->tkwin))) {
-		Tk_MoveResizeWindow(slavePtr->tkwin, x, y, width, height);
+	if (containerPtr->tkwin == Tk_Parent(contentPtr->tkwin)) {
+	    if ((x != Tk_X(contentPtr->tkwin))
+		    || (y != Tk_Y(contentPtr->tkwin))
+		    || (width != Tk_Width(contentPtr->tkwin))
+		    || (height != Tk_Height(contentPtr->tkwin))) {
+		Tk_MoveResizeWindow(contentPtr->tkwin, x, y, width, height);
 	    }
             if (abort) {
                 break;
@@ -1044,14 +1044,14 @@ RecomputePlacement(
 	     */
 
 	    if (Tk_IsMapped(containerPtr->tkwin)) {
-		Tk_MapWindow(slavePtr->tkwin);
+		Tk_MapWindow(contentPtr->tkwin);
 	    }
 	} else {
 	    if ((width <= 0) || (height <= 0)) {
-		Tk_UnmaintainGeometry(slavePtr->tkwin, containerPtr->tkwin);
-		Tk_UnmapWindow(slavePtr->tkwin);
+		Tk_UnmaintainGeometry(contentPtr->tkwin, containerPtr->tkwin);
+		Tk_UnmapWindow(contentPtr->tkwin);
 	    } else {
-		Tk_MaintainGeometry(slavePtr->tkwin, containerPtr->tkwin,
+		Tk_MaintainGeometry(contentPtr->tkwin, containerPtr->tkwin,
 			x, y, width, height);
 	    }
 	}
@@ -1081,30 +1081,30 @@ RecomputePlacement(
 
 static void
 PlaceStructureProc(
-    ClientData clientData,	/* Pointer to Master structure for window
+    ClientData clientData,	/* Pointer to Container structure for window
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    Master *containerPtr = (Master *)clientData;
-    Slave *slavePtr, *nextPtr;
+    Container *containerPtr = (Container *)clientData;
+    Content *contentPtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) containerPtr->tkwin)->dispPtr;
 
     switch (eventPtr->type) {
     case ConfigureNotify:
-	if ((containerPtr->slavePtr != NULL)
+	if ((containerPtr->contentPtr != NULL)
 		&& !(containerPtr->flags & PARENT_RECONFIG_PENDING)) {
 	    containerPtr->flags |= PARENT_RECONFIG_PENDING;
 	    Tcl_DoWhenIdle(RecomputePlacement, containerPtr);
 	}
 	return;
     case DestroyNotify:
-	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-		slavePtr = nextPtr) {
-	    slavePtr->containerPtr = NULL;
-	    nextPtr = slavePtr->nextPtr;
-	    slavePtr->nextPtr = NULL;
+	for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+		contentPtr = nextPtr) {
+	    contentPtr->containerPtr = NULL;
+	    nextPtr = contentPtr->nextPtr;
+	    contentPtr->nextPtr = NULL;
 	}
-	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->masterTable,
+	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->containerTable,
 		containerPtr->tkwin));
 	if (containerPtr->flags & PARENT_RECONFIG_PENDING) {
 	    Tcl_CancelIdleCall(RecomputePlacement, containerPtr);
@@ -1121,7 +1121,7 @@ PlaceStructureProc(
 	 * that all of its slaves get remapped.
 	 */
 
-	if ((containerPtr->slavePtr != NULL)
+	if ((containerPtr->contentPtr != NULL)
 		&& !(containerPtr->flags & PARENT_RECONFIG_PENDING)) {
 	    containerPtr->flags |= PARENT_RECONFIG_PENDING;
 	    Tcl_DoWhenIdle(RecomputePlacement, containerPtr);
@@ -1133,9 +1133,9 @@ PlaceStructureProc(
 	 * don't keep redisplaying themselves.
 	 */
 
-	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-		slavePtr = slavePtr->nextPtr) {
-	    Tk_UnmapWindow(slavePtr->tkwin);
+	for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+		contentPtr = contentPtr->nextPtr) {
+	    Tk_UnmapWindow(contentPtr->tkwin);
 	}
 	return;
     }
@@ -1144,7 +1144,7 @@ PlaceStructureProc(
 /*
  *----------------------------------------------------------------------
  *
- * SlaveStructureProc --
+ * ContentStructureProc --
  *
  *	This function is invoked by the Tk event handler when StructureNotify
  *	events occur for a slave window.
@@ -1159,21 +1159,21 @@ PlaceStructureProc(
  */
 
 static void
-SlaveStructureProc(
-    ClientData clientData,	/* Pointer to Slave structure for window
+ContentStructureProc(
+    ClientData clientData,	/* Pointer to Content structure for window
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    Slave *slavePtr = (Slave *)clientData;
-    TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
+    Content *contentPtr = (Content *)clientData;
+    TkDisplay *dispPtr = ((TkWindow *) contentPtr->tkwin)->dispPtr;
 
     if (eventPtr->type == DestroyNotify) {
-	if (slavePtr->containerPtr != NULL) {
-	    UnlinkSlave(slavePtr);
+	if (contentPtr->containerPtr != NULL) {
+	    UnlinkContent(contentPtr);
 	}
-	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-		slavePtr->tkwin));
-	FreeSlave(slavePtr);
+	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->contentTable,
+		contentPtr->tkwin));
+	FreeContent(contentPtr);
     }
 }
 
@@ -1198,23 +1198,22 @@ SlaveStructureProc(
 static void
 PlaceRequestProc(
     ClientData clientData,	/* Pointer to our record for slave. */
-    Tk_Window tkwin)		/* Window that changed its desired size. */
+    TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
 {
-    Slave *slavePtr = (Slave *)clientData;
-    Master *containerPtr;
-    (void)tkwin;
+    Content *contentPtr = (Content *)clientData;
+    Container *containerPtr;
 
-    if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
-	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
+    if ((contentPtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
+	    && (contentPtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
         /*
          * Send a ConfigureNotify to indicate that the size change
          * request was rejected.
          */
 
-        TkDoConfigureNotify((TkWindow *)(slavePtr->tkwin));
+        TkDoConfigureNotify((TkWindow *)(contentPtr->tkwin));
 	return;
     }
-    containerPtr = slavePtr->containerPtr;
+    containerPtr = contentPtr->containerPtr;
     if (containerPtr == NULL) {
 	return;
     }
@@ -1243,23 +1242,23 @@ PlaceRequestProc(
 
 static void
 PlaceLostContentProc(
-    ClientData clientData,	/* Slave structure for slave window that was
+    ClientData clientData,	/* Content structure for slave window that was
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    Slave *slavePtr = (Slave *)clientData;
-    TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
+    Content *contentPtr = (Content *)clientData;
+    TkDisplay *dispPtr = ((TkWindow *) contentPtr->tkwin)->dispPtr;
 
-    if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
+    if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
+	Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
     }
     Tk_UnmapWindow(tkwin);
-    UnlinkSlave(slavePtr);
-    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
+    UnlinkContent(contentPtr);
+    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->contentTable,
 	    tkwin));
-    Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
-	    slavePtr);
-    FreeSlave(slavePtr);
+    Tk_DeleteEventHandler(tkwin, StructureNotifyMask, ContentStructureProc,
+	    contentPtr);
+    FreeContent(contentPtr);
 }
 
 /*

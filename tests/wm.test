@@ -785,7 +785,7 @@ test wm-iconify-2.3 {Misc errors} -body {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2
-} -result {can't iconify .t2: it is an icon for .t}
+} -result {can't iconify ".t2": it is an icon for ".t"}
 # test embedded window for Windows
 test wm-iconify-2.4.1 {Misc errors} -constraints win -setup {
     destroy .t2
@@ -795,7 +795,7 @@ test wm-iconify-2.4.1 {Misc errors} -constraints win -setup {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2 .r.f
-} -result {can't iconify .t2: the container does not support the request}
+} -result {can't iconify ".t2": the container does not support the request}
 # test embedded window for other platforms
 test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
     destroy .t2
@@ -805,7 +805,7 @@ test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2 .r.f
-} -result {can't iconify .t2: it is an embedded window}
+} -result {can't iconify ".t2": it is an embedded window}
 
 test wm-iconify-3.1 {iconify behavior} -body {
     toplevel .t2
@@ -1623,7 +1623,7 @@ test wm-transient-1.5 {usage} -returnCodes error -body {
     wm transient .icon .dummy
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a transient: it is an icon for .top}
+} -result {can't make ".icon" a transient, it is an icon for .top}
 test wm-transient-1.6 {usage} -returnCodes error -body {
     toplevel .icon -bg blue
     toplevel .top
@@ -1632,13 +1632,13 @@ test wm-transient-1.6 {usage} -returnCodes error -body {
     wm transient .dummy .icon
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a container: it is an icon for .top}
+} -result {can't make ".icon" a container, it is an icon for .top}
 test wm-transient-1.7 {usage} -returnCodes error -body {
     toplevel .top
     wm transient .top .top
 } -cleanup {
     deleteWindows
-} -result {setting ".top" as container creates a transient/container cycle}
+} -result {can't set ".top" as container, would cause management loop}
 test wm-transient-1.8 {usage} -returnCodes error -body {
     toplevel .t1
     toplevel .t2
@@ -1648,14 +1648,14 @@ test wm-transient-1.8 {usage} -returnCodes error -body {
     wm transient .t1 .t3
 } -cleanup {
     deleteWindows
-} -result {setting ".t3" as container creates a transient/container cycle}
+} -result {can't set ".t3" as container, would cause management loop}
 test wm-transient-1.9 {usage} -returnCodes error -body {
     toplevel .top
     frame .top.f
     wm transient .top .top.f
 } -cleanup {
     deleteWindows
-} -result {setting ".top" as container creates a transient/container cycle}
+} -result {can't set ".top" as container, would cause management loop}
 
 test wm-transient-2.1 {basic get/set of toplevel} -setup {
     set results [list]

@@ -27,7 +27,7 @@ typedef struct Image {
 				 * image is eventually freed tkwin may not
 				 * exist anymore. */
     struct ImageModel *modelPtr;
-				/* Master for this image (identifiers image
+				/* Model for this image (identifiers image
 				 * manager, for example). */
     ClientData instanceData;	/* One word argument to pass to image manager
 				 * when dealing with this image instance. */
@@ -40,7 +40,7 @@ typedef struct Image {
 } Image;
 
 /*
- * For each image master there is one of the following structures, which
+ * For each image model there is one of the following structures, which
  * represents a name in the image table and all of the images instantiated
  * from it. Entries in mainPtr->imageTable point to these structures.
  */
@@ -50,7 +50,7 @@ typedef struct ImageModel {
 				 * that no image manager owns this image: the
 				 * image was deleted. */
     ClientData modelData;	/* One-word argument to pass to image mgr when
-				 * dealing with the master, as opposed to
+				 * dealing with the model, as opposed to
 				 * instances. */
     int width, height;		/* Last known dimensions for image. */
     Tcl_HashTable *tablePtr;	/* Pointer to hash table containing image (the
@@ -298,7 +298,7 @@ Tk_ImageObjCmd(
 
 	    /*
 	     * Need to check if the _command_ that we are about to create is
-	     * the name of the current master widget command (normally "." but
+	     * the name of the current model widget command (normally "." but
 	     * could have been renamed) and fail in that case before a really
 	     * nasty and hard to stop crash happens.
 	     */
@@ -333,7 +333,7 @@ Tk_ImageObjCmd(
 	} else {
 	    /*
 	     * An image already exists by this name. Disconnect the instances
-	     * from the master.
+	     * from the model.
 	     */
 
 	    modelPtr = (ImageModel *)Tcl_GetHashValue(hPtr);
@@ -450,7 +450,7 @@ Tk_ImageObjCmd(
     case IMAGE_WIDTH:
 	/*
 	 * These operations all parse virtually identically. First check to
-	 * see if three args are given. Then get a non-deleted master from the
+	 * see if three args are given. Then get a non-deleted model from the
 	 * third arg.
 	 */
 
@@ -552,7 +552,7 @@ Tk_ImageChanged(
  *
  * Tk_NameOfImage --
  *
- *	Given a token for an image master, this function returns the name of
+ *	Given a token for an image model, this function returns the name of
  *	the image.
  *
  * Results:
@@ -693,8 +693,8 @@ Tk_FreeImage(
     ckfree(imagePtr);
 
     /*
-     * If there are no more instances left for the master, and if the master
-     * image has been deleted, then delete the master too.
+     * If there are no more instances left for the model, and if the model
+     * image has been deleted, then delete the model too.
      */
 
     if ((modelPtr->typePtr == NULL) && (modelPtr->instancePtr == NULL)) {
@@ -744,7 +744,7 @@ Tk_PostscriptImage(
 
     if (imagePtr->modelPtr->typePtr == NULL) {
 	/*
-	 * No master for image, so nothing to display on postscript.
+	 * No model for image, so nothing to display on postscript.
 	 */
 
 	return TCL_OK;
@@ -840,7 +840,7 @@ Tk_RedrawImage(
 
     if (imagePtr->modelPtr->typePtr == NULL) {
 	/*
-	 * No master for image, so nothing to display.
+	 * No model for image, so nothing to display.
 	 */
 
 	return;
@@ -949,7 +949,7 @@ Tk_DeleteImage(
  *
  * Side effects:
  *	The connection is dropped between instances of this image and an image
- *	master. Image instances will redisplay themselves as empty areas, but
+ *	model. Image instances will redisplay themselves as empty areas, but
  *	existing instances will not be deleted.
  *
  *----------------------------------------------------------------------
@@ -1057,7 +1057,7 @@ TkDeleteAllImages(
  * Tk_GetImageModelData --
  *
  *	Given the name of an image, this function returns the type of the
- *	image and the clientData associated with its master.
+ *	image and the clientData associated with its model.
  *
  * Results:
  *	If there is no image by the given name, then NULL is returned and a

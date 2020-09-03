@@ -66,8 +66,8 @@ static int imgPhotoColorHashInitialized;
  * TkImgPhotoConfigureInstance --
  *
  *	This function is called to create displaying information for a photo
- *	image instance based on the configuration information in the master.
- *	It is invoked both when new instances are created and when the master
+ *	image instance based on the configuration information in the model.
+ *	It is invoked both when new instances are created and when the model
  *	is reconfigured.
  *
  * Results:
@@ -91,9 +91,9 @@ TkImgPhotoConfigureInstance(
     XRectangle validBox;
 
     /*
-     * If the -palette configuration option has been set for the master, use
+     * If the -palette configuration option has been set for the model, use
      * the value specified for our palette, but only if it is a valid palette
-     * for our windows. Use the gamma value specified the master.
+     * for our windows. Use the gamma value specified the model.
      */
 
     if ((modelPtr->palette && modelPtr->palette[0])
@@ -166,7 +166,7 @@ TkImgPhotoConfigureInstance(
     }
 
     /*
-     * If the user has specified a width and/or height for the master which is
+     * If the user has specified a width and/or height for the model which is
      * different from our current width/height, set the size to the values
      * specified by the user. If we have no pixmap, we do this also, since it
      * has the side effect of allocating a pixmap for us.
@@ -214,7 +214,7 @@ ClientData
 TkImgPhotoGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData modelData)	/* Pointer to our master structure for the
+    ClientData modelData)	/* Pointer to our model structure for the
 				 * image. */
 {
     PhotoModel *modelPtr = (PhotoModel *)modelData;
@@ -380,7 +380,7 @@ TkImgPhotoGet(
      */
 
     if (instancePtr->nextPtr == NULL) {
-	Tk_ImageChanged(modelPtr->tkMaster, 0, 0, 0, 0,
+	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
 		modelPtr->width, modelPtr->height);
     }
 
@@ -1624,7 +1624,7 @@ TkImgDisposeInstance(
  * TkImgDitherInstance --
  *
  *	This function is called to update an area of an instance's pixmap by
- *	dithering the corresponding area of the master.
+ *	dithering the corresponding area of the model.
  *
  * Results:
  *	None.
@@ -1827,7 +1827,7 @@ TkImgDitherInstance(
 		/*
 		 * Multibit monochrome window. The operation here is similar
 		 * to the color window case above, except that there is only
-		 * one component. If the master image is in color, use the
+		 * one component. If the model image is in color, use the
 		 * luminance computed as
 		 *	0.344 * red + 0.5 * green + 0.156 * blue.
 		 */

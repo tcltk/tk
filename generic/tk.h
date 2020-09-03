@@ -122,14 +122,14 @@ extern "C" {
  * Dummy types that are used by clients:
  */
 
-#define Tk_ImageModel Tk_ImageMaster
+#define Tk_ImageMaster Tk_ImageModel
 typedef struct Tk_BindingTable_ *Tk_BindingTable;
 typedef struct Tk_Canvas_ *Tk_Canvas;
 typedef struct Tk_Cursor_ *Tk_Cursor;
 typedef struct Tk_ErrorHandler_ *Tk_ErrorHandler;
 typedef struct Tk_Font_ *Tk_Font;
 typedef struct Tk_Image__ *Tk_Image;
-typedef struct Tk_ImageMaster_ *Tk_ImageModel;
+typedef struct Tk_ImageModel_ *Tk_ImageModel;
 typedef struct Tk_OptionTable_ *Tk_OptionTable;
 typedef struct Tk_PostscriptInfo_ *Tk_PostscriptInfo;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
@@ -651,7 +651,7 @@ typedef struct Tk_ClassProcs {
  * the geometry manager to carry out certain functions.
  */
 
-#define Tk_GeomLostContentProc Tk_GeomLostSlaveProc
+#define Tk_GeomLostSlaveProc Tk_GeomLostContentProc
 typedef void (Tk_GeomRequestProc) (ClientData clientData, Tk_Window tkwin);
 typedef void (Tk_GeomLostContentProc) (ClientData clientData, Tk_Window tkwin);
 
@@ -662,7 +662,7 @@ typedef struct Tk_GeomMgr {
     Tk_GeomRequestProc *requestProc;
 				/* Procedure to invoke when a slave's
 				 * requested geometry changes. */
-    Tk_GeomLostContentProc *lostSlaveProc;
+    Tk_GeomLostContentProc *lostContentProc;
 				/* Procedure to invoke when a slave is taken
 				 * away from one geometry manager by another.
 				 * NULL means geometry manager doesn't care

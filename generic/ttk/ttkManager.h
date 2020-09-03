@@ -38,7 +38,7 @@ typedef struct {			/* Manager hooks */
 /*
  * Default implementations for Tk_GeomMgr hooks:
  */
-#define Ttk_LostContentProc Ttk_LostSlaveProc
+#define Ttk_LostSlaveProc Ttk_LostContentProc
 MODULE_SCOPE void Ttk_GeometryRequestProc(ClientData, Tk_Window slave);
 MODULE_SCOPE void Ttk_LostContentProc(ClientData, Tk_Window slave);
 
@@ -79,7 +79,7 @@ MODULE_SCOPE void Ttk_ManagerLayoutChanged(Ttk_Manager *);
 MODULE_SCOPE TkSizeT Ttk_ContentIndex(Ttk_Manager *, Tk_Window);
     /* Returns: index in content array of specified window, TCL_INDEX_NONE if not found */
 
-#define Ttk_GetContentIndexFromObj Ttk_GetSlaveIndexFromObj
+#define Ttk_GetSlaveIndexFromObj Ttk_GetContentIndexFromObj
 MODULE_SCOPE int Ttk_GetContentIndexFromObj(
     Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, TkSizeT *indexPtr);
 

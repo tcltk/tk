@@ -850,7 +850,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     set result [list [catch {wm iconify .t2} msg] $msg]
     destroy .t2
     set result
-} {1 {can't iconify .t2: it is an icon for .t}}
+} {1 {can't iconify ".t2": it is an icon for ".t"}}
 test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
