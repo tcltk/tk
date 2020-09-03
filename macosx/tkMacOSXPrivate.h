@@ -226,10 +226,6 @@ MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
 MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
 			    HIMutableShapeRef inDestShape,
 			    HIShapeRef inSrcShape);
-#if 0
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-#endif
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
@@ -250,12 +246,8 @@ MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
 			    int antiAlias);
-MODULE_SCOPE int	TkMacOSXGenerateFocusEvent(TkWindow *winPtr,
-			    int activeFlag);
-MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
-MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect imageBounds,
@@ -266,13 +258,8 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
-			    NSWindow *window, int fullscreen,
-			    Tcl_Interp *interp);
-MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
-			    int active);
-MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin);
+#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow*)TkMacOSXDrawable(drawable))
+#define TkMacOSXGetNSViewForDrawable(macWin) (NSView *)TkMacOSXGetRootControl((Drawable)(macWin))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
@@ -305,6 +292,7 @@ MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
+MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 

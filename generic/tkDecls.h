@@ -355,7 +355,7 @@ EXTERN Tk_Image		Tk_GetImage(Tcl_Interp *interp, Tk_Window tkwin,
 				Tk_ImageChangedProc *changeProc,
 				ClientData clientData);
 /* 98 */
-EXTERN ClientData	Tk_GetImageMasterData(Tcl_Interp *interp,
+EXTERN ClientData	Tk_GetImageModelData(Tcl_Interp *interp,
 				const char *name,
 				const Tk_ImageType **typePtrPtr);
 /* 99 */
@@ -411,7 +411,7 @@ EXTERN void		Tk_HandleEvent(XEvent *eventPtr);
 /* 116 */
 EXTERN Tk_Window	Tk_IdToWindow(Display *display, Window window);
 /* 117 */
-EXTERN void		Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
+EXTERN void		Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 				int width, int height, int imageWidth,
 				int imageHeight);
 /* 118 */
@@ -422,9 +422,8 @@ EXTERN Atom		Tk_InternAtom(Tk_Window tkwin, const char *name);
 EXTERN int		Tk_IntersectTextLayout(Tk_TextLayout layout, int x,
 				int y, int width, int height);
 /* 121 */
-EXTERN void		Tk_MaintainGeometry(Tk_Window slave,
-				Tk_Window master, int x, int y, int width,
-				int height);
+EXTERN void		Tk_MaintainGeometry(Tk_Window slave, Tk_Window model,
+				int x, int y, int width, int height);
 /* 122 */
 EXTERN Tk_Window	Tk_MainWindow(Tcl_Interp *interp);
 /* 123 */
@@ -461,7 +460,7 @@ EXTERN const char *	Tk_NameOfCursor(Display *display, Tk_Cursor cursor);
 /* 136 */
 EXTERN const char *	Tk_NameOfFont(Tk_Font font);
 /* 137 */
-EXTERN const char *	Tk_NameOfImage(Tk_ImageMaster imageMaster);
+EXTERN const char *	Tk_NameOfImage(Tk_ImageModel imageModel);
 /* 138 */
 EXTERN const char *	Tk_NameOfJoinStyle(int join);
 /* 139 */
@@ -1003,7 +1002,7 @@ typedef struct TkStubs {
     void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics *fmPtr); /* 95 */
     GC (*tk_GetGC) (Tk_Window tkwin, unsigned long valueMask, XGCValues *valuePtr); /* 96 */
     Tk_Image (*tk_GetImage) (Tcl_Interp *interp, Tk_Window tkwin, const char *name, Tk_ImageChangedProc *changeProc, ClientData clientData); /* 97 */
-    ClientData (*tk_GetImageMasterData) (Tcl_Interp *interp, const char *name, const Tk_ImageType **typePtrPtr); /* 98 */
+    ClientData (*tk_GetImageModelData) (Tcl_Interp *interp, const char *name, const Tk_ImageType **typePtrPtr); /* 98 */
     Tk_ItemType * (*tk_GetItemTypes) (void); /* 99 */
     int (*tk_GetJoinStyle) (Tcl_Interp *interp, const char *str, int *joinPtr); /* 100 */
     int (*tk_GetJustify) (Tcl_Interp *interp, const char *str, Tk_Justify *justifyPtr); /* 101 */
@@ -1022,11 +1021,11 @@ typedef struct TkStubs {
     int (*tk_Grab) (Tcl_Interp *interp, Tk_Window tkwin, int grabGlobal); /* 114 */
     void (*tk_HandleEvent) (XEvent *eventPtr); /* 115 */
     Tk_Window (*tk_IdToWindow) (Display *display, Window window); /* 116 */
-    void (*tk_ImageChanged) (Tk_ImageMaster master, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
+    void (*tk_ImageChanged) (Tk_ImageModel model, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
     int (*tk_Init) (Tcl_Interp *interp); /* 118 */
     Atom (*tk_InternAtom) (Tk_Window tkwin, const char *name); /* 119 */
     int (*tk_IntersectTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height); /* 120 */
-    void (*tk_MaintainGeometry) (Tk_Window slave, Tk_Window master, int x, int y, int width, int height); /* 121 */
+    void (*tk_MaintainGeometry) (Tk_Window slave, Tk_Window model, int x, int y, int width, int height); /* 121 */
     Tk_Window (*tk_MainWindow) (Tcl_Interp *interp); /* 122 */
     void (*tk_MakeWindowExist) (Tk_Window tkwin); /* 123 */
     void (*tk_ManageGeometry) (Tk_Window tkwin, const Tk_GeomMgr *mgrPtr, ClientData clientData); /* 124 */
@@ -1042,7 +1041,7 @@ typedef struct TkStubs {
     const char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
     const char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
     const char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
-    const char * (*tk_NameOfImage) (Tk_ImageMaster imageMaster); /* 137 */
+    const char * (*tk_NameOfImage) (Tk_ImageModel imageModel); /* 137 */
     const char * (*tk_NameOfJoinStyle) (int join); /* 138 */
     const char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
     const char * (*tk_NameOfRelief) (int relief); /* 140 */
@@ -1395,8 +1394,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_GetGC) /* 96 */
 #define Tk_GetImage \
 	(tkStubsPtr->tk_GetImage) /* 97 */
-#define Tk_GetImageMasterData \
-	(tkStubsPtr->tk_GetImageMasterData) /* 98 */
+#define Tk_GetImageModelData \
+	(tkStubsPtr->tk_GetImageModelData) /* 98 */
 #define Tk_GetItemTypes \
 	(tkStubsPtr->tk_GetItemTypes) /* 99 */
 #define Tk_GetJoinStyle \
@@ -1774,7 +1773,7 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_FreeStyleFromObj
 #define Tk_GetStyleFromObj(obj) Tk_AllocStyleFromObj(NULL, obj)
 #define Tk_FreeStyleFromObj(obj) /* no-op */
-
+#define Tk_GetImageMasterData Tk_GetImageModelData
 
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
