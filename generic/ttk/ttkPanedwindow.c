@@ -212,7 +212,7 @@ static int ShoveDown(Paned *pw, TkSizeT i, int pos)
     int sashThickness = pw->paned.sashThickness;
 
     if (i == Ttk_NumberSlaves(pw->paned.mgr) - 1) {
-	pos = pane->sashPos; /* Sentinel value == master window size */
+	pos = pane->sashPos; /* Sentinel value == container window size */
     } else {
 	Pane *nextPane = (Pane *)Ttk_SlaveData(pw->paned.mgr,i+1);
 	if (pos + sashThickness > nextPane->sashPos)
@@ -441,7 +441,7 @@ static int AddPane(
 
 /* PaneRequest --
  * 	Only update pane request size if slave is currently unmapped.
- * 	Geometry requests from mapped slaves are not directly honored
+ * 	Geometry requests from mapped panes are not directly honored
  * 	in order to avoid unexpected pane resizes (esp. while the
  * 	user is dragging a sash [#1325286]).
  */

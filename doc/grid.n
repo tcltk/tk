@@ -48,10 +48,10 @@ top left cell is numbered from zero.  If both \fIcolumn\fR and \fIrow\fR
 arguments are specified, then the bounding box spanning the rows and columns
 indicated is returned.
 .TP
-\fBgrid columnconfigure \fImaster index \fR?\fI\-option value...\fR?
+\fBgrid columnconfigure \fIwindow index \fR?\fI\-option value...\fR?
 .
 Query or set the column properties of the \fIindex\fR column of the
-geometry master, \fImaster\fR.
+geometry manager, \fIwindow\fR.
 The valid options are \fB\-minsize\fR, \fB\-weight\fR, \fB\-uniform\fR
 and \fB\-pad\fR.
 If one or more options are provided, then \fIindex\fR may be given as
@@ -240,10 +240,10 @@ If \fIboolean\fR is omitted then the command returns \fB0\fR or
 for \fImaster\fR.
 Propagation is enabled by default.
 .TP
-\fBgrid rowconfigure \fImaster index \fR?\fI\-option value...\fR?
+\fBgrid rowconfigure \fIwindow index \fR?\fI\-option value...\fR?
 .
 Query or set the row properties of the \fIindex\fR row of the
-geometry master, \fImaster\fR.
+geometry manager, \fIwindow\fR.
 The valid options are \fB\-minsize\fR, \fB\-weight\fR, \fB\-uniform\fR
 and \fB\-pad\fR.
 If one or more options are provided, then \fIindex\fR may be given as
@@ -295,16 +295,16 @@ may choose to resize itself (or otherwise respond) to such a change.
 .VE TIP518
 .RE
 .TP
-\fBgrid size \fImaster\fR
+\fBgrid size \fIwindow\fR
 .
-Returns the size of the grid (in columns then rows) for \fImaster\fR.
+Returns the size of the grid (in columns then rows) for \fIwindow\fR.
 The size is determined either by the \fIslave\fR occupying the largest
 row or column, or the largest column or row with a \fB\-minsize\fR,
 \fB\-weight\fR, or \fB\-pad\fR that is non-zero.
 .TP
-\fBgrid slaves \fImaster\fR ?\fI\-option value\fR?
+\fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?
 .
-If no options are supplied, a list of all of the slaves in \fImaster\fR
+If no options are supplied, a list of all of the slaves in \fIwindow\fR
 are returned, most recently manages first.
 \fIOption\fR can be either \fB\-row\fR or \fB\-column\fR which
 causes only the slaves in the row (or column) specified by \fIvalue\fR
@@ -409,7 +409,7 @@ If propagation is disabled then grid will not set
 the requested width and height of the master window.
 This may be useful if, for example, you wish for a master
 window to have a fixed size that you specify.
-.SH "RESTRICTIONS ON MASTER WINDOWS"
+.SH "RESTRICTIONS ON CONTAINER WINDOWS"
 .PP
 The master for each slave must either be the slave's parent
 (the default) or a descendant of the slave's parent.

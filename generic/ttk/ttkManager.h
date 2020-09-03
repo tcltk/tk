@@ -14,7 +14,7 @@ typedef struct TtkManager_ Ttk_Manager;
 /*
  * Geometry manager specification record:
  *
- * RequestedSize computes the requested size of the master window.
+ * RequestedSize computes the requested size of the container window.
  *
  * PlaceSlaves sets the position and size of all managed slaves
  * by calling Ttk_PlaceSlave().
@@ -45,7 +45,7 @@ MODULE_SCOPE void Ttk_LostSlaveProc(ClientData, Tk_Window slave);
  * Public API:
  */
 MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
-	Ttk_ManagerSpec *, void *managerData, Tk_Window masterWindow);
+	Ttk_ManagerSpec *, void *managerData, Tk_Window window);
 MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
 MODULE_SCOPE void Ttk_InsertSlave(
@@ -78,15 +78,15 @@ MODULE_SCOPE int Ttk_GetSlaveIndexFromObj(
 /* Accessor functions:
  */
 MODULE_SCOPE TkSizeT Ttk_NumberSlaves(Ttk_Manager *);
-    /* Returns: number of managed slaves */
+    /* Returns: number of managed windows */
 
-MODULE_SCOPE void *Ttk_SlaveData(Ttk_Manager *, TkSizeT slaveIndex);
-    /* Returns: client data associated with slave */
+MODULE_SCOPE void *Ttk_SlaveData(Ttk_Manager *, TkSizeT index);
+    /* Returns: client data associated with managed window */
 
 MODULE_SCOPE Tk_Window Ttk_SlaveWindow(Ttk_Manager *, TkSizeT slaveIndex);
     /* Returns: slave window */
 
-MODULE_SCOPE int Ttk_Maintainable(Tcl_Interp *, Tk_Window slave, Tk_Window master);
-    /* Returns: 1 if master can manage slave; 0 otherwise leaving error msg */
+MODULE_SCOPE int Ttk_Maintainable(Tcl_Interp *, Tk_Window content, Tk_Window container);
+    /* Returns: 1 if container can manage content; 0 otherwise leaving error msg */
 
 #endif /* _TTKMANAGER */

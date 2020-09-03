@@ -118,7 +118,7 @@ test packgrid-1.8 {pack and grid in same master} -setup {
     # Basic conflict should stop widget from being handled
     pack .p
     catch { grid .g }
-    grid slaves .
+    grid content .
 } -cleanup {
     destroy .p
     destroy .g
