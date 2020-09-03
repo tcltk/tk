@@ -239,7 +239,7 @@ If propagation is disabled then the packer will not set
 the requested width and height of the packer.
 This may be useful if, for example, you wish for a master
 window to have a fixed size that you specify.
-.SH "RESTRICTIONS ON MASTER WINDOWS"
+.SH "RESTRICTIONS ON CONTAINER WINDOWS"
 .PP
 The master for each slave must either be the slave's parent
 (the default) or a descendant of the slave's parent.
