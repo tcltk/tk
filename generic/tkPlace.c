@@ -214,9 +214,9 @@ Tk_PlaceObjCmd(
     TkDisplay *dispPtr;
     Tk_OptionTable optionTable;
     static const char *const optionStrings[] = {
-	"configure", "forget", "info", "slaves", NULL
+	"configure", "content", "forget", "info", "slaves", NULL
     };
-    enum options { PLACE_CONFIGURE, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
+    enum options { PLACE_CONFIGURE, PLACE_CONTENT, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
     int index;
 
     if (objc < 3) {
@@ -330,6 +330,7 @@ Tk_PlaceObjCmd(
 	}
 	return PlaceInfoCommand(interp, tkwin);
 
+    case PLACE_CONTENT:
     case PLACE_SLAVES: {
 	Master *masterPtr;
 
