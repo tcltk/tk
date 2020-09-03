@@ -460,7 +460,7 @@ static void LabelframeDoLayout(void *recordPtr)
 	Ttk_PlaceLayout(
 	    lframePtr->label.labelLayout, corePtr->state, labelParcel);
     }
-    /* labelWidget placed in LabelframePlaceSlaves GM hook */
+    /* labelWidget placed in LabelframePlaceContent GM hook */
     lframePtr->label.labelParcel = labelParcel;
 }
 
@@ -476,19 +476,19 @@ static void LabelframeDisplay(void *recordPtr, Drawable d)
 /* +++ Labelframe geometry manager hooks.
  */
 
-/* LabelframePlaceSlaves --
+/* LabelframePlaceContent --
  * 	Sets the position and size of the labelwidget.
  */
-static void LabelframePlaceSlaves(void *recordPtr)
+static void LabelframePlaceContent(void *recordPtr)
 {
     Labelframe *lframe = (Labelframe *)recordPtr;
 
-    if (Ttk_NumberSlaves(lframe->label.mgr) == 1) {
+    if (Ttk_NumberContent(lframe->label.mgr) == 1) {
 	Ttk_Box b;
 	LabelframeDoLayout(recordPtr);
 	b = lframe->label.labelParcel;
 	/* ASSERT: slave #0 is lframe->label.labelWidget */
-	Ttk_PlaceSlave(lframe->label.mgr, 0, b.x,b.y,b.width,b.height);
+	Ttk_PlaceContent(lframe->label.mgr, 0, b.x,b.y,b.width,b.height);
     }
 }
 
@@ -519,9 +519,9 @@ static void LabelRemoved(
 }
 
 static Ttk_ManagerSpec LabelframeManagerSpec = {
-    { "labelframe", Ttk_GeometryRequestProc, Ttk_LostSlaveProc },
+    { "labelframe", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     LabelframeSize,
-    LabelframePlaceSlaves,
+    LabelframePlaceContent,
     LabelRequest,
     LabelRemoved
 };
@@ -604,15 +604,15 @@ static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
     /* Update -labelwidget changes, if any:
      */
     if (mask & LABELWIDGET_CHANGED) {
-	if (Ttk_NumberSlaves(lframePtr->label.mgr) == 1) {
-	    Ttk_ForgetSlave(lframePtr->label.mgr, 0);
+	if (Ttk_NumberContent(lframePtr->label.mgr) == 1) {
+	    Ttk_ForgetContent(lframePtr->label.mgr, 0);
 	    /* Restore labelWidget field (see <<NOTE-LABELREMOVED>>)
 	     */
 	    lframePtr->label.labelWidget = labelWidget;
 	}
 
 	if (labelWidget) {
-	    Ttk_InsertSlave(lframePtr->label.mgr, 0, labelWidget, NULL);
+		Ttk_InsertContent(lframePtr->label.mgr, 0, labelWidget, NULL);
 	    RaiseLabelWidget(lframePtr);
 	}
     }

@@ -260,7 +260,7 @@ static int		AdjustOffsets(int width, int elements,
 static void		ArrangeGrid(ClientData clientData);
 static int		CheckSlotData(Gridder *containerPtr, int slot,
 			    int slotType, int checkOnly);
-static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
+static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyGrid(void *memPtr);
 static Gridder *	GetGrid(Tk_Window tkwin);
@@ -353,7 +353,7 @@ Tk_GridObjCmd(
 
 	if ((argv1[0] == '.') || (argv1[0] == REL_SKIP) ||
     		(argv1[0] == REL_VERT)) {
-	    return ConfigureSlaves(interp, tkwin, objc-1, objv+1);
+	    return ConfigureContent(interp, tkwin, objc-1, objv+1);
 	}
     }
     if (objc < 3) {
@@ -372,7 +372,7 @@ Tk_GridObjCmd(
     case GRID_BBOX:
 	return GridBboxCommand(tkwin, interp, objc, objv);
     case GRID_CONFIGURE:
-	return ConfigureSlaves(interp, tkwin, objc-2, objv+2);
+	return ConfigureContent(interp, tkwin, objc-2, objv+2);
     case GRID_FORGET:
     case GRID_REMOVE:
 	return GridForgetRemoveCommand(tkwin, interp, objc, objv);
@@ -910,7 +910,7 @@ GridPropagateCommand(
 	     */
 
 	    if (containerPtr->slavePtr != NULL) {
-		if (TkSetGeometryMaster(interp, container, "grid")	!= TCL_OK) {
+		if (TkSetGeometryContainer(interp, container, "grid")	!= TCL_OK) {
 		    return TCL_ERROR;
 		}
 		containerPtr->flags |= ALLOCED_CONTAINER;
@@ -918,7 +918,7 @@ GridPropagateCommand(
 	    containerPtr->flags &= ~DONT_PROPAGATE;
 	} else {
 	    if (containerPtr->flags & ALLOCED_CONTAINER) {
-		TkFreeGeometryMaster(container, "grid");
+		TkFreeGeometryContainer(container, "grid");
 		containerPtr->flags &= ~ALLOCED_CONTAINER;
 	    }
 	    containerPtr->flags |= DONT_PROPAGATE;
@@ -1429,11 +1429,10 @@ static void
 GridReqProc(
     ClientData clientData,	/* Grid's information about window that got
 				 * new preferred geometry. */
-    Tk_Window tkwin)		/* Other Tk-related information about the
+    TCL_UNUSED(Tk_Window))		/* Other Tk-related information about the
 				 * window. */
 {
     Gridder *gridPtr = (Gridder *)clientData;
-    (void)tkwin;
 
     gridPtr = gridPtr->containerPtr;
     if (gridPtr && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
@@ -1461,12 +1460,11 @@ GridReqProc(
 
 static void
 GridLostSlaveProc(
-    ClientData clientData,	/* Grid structure for slave window that was
+    ClientData clientData,	/* Grid structure for content window that was
 				 * stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    TCL_UNUSED(Tk_Window))		/* Tk's handle for the content window. */
 {
     Gridder *slavePtr = (Gridder *)clientData;
-    (void)tkwin;
 
     if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
@@ -2785,7 +2783,7 @@ Unlink(
      */
 
     if ((containerPtr->slavePtr == NULL) && (containerPtr->flags & ALLOCED_CONTAINER)) {
-	TkFreeGeometryMaster(containerPtr->tkwin, "grid");
+	TkFreeGeometryContainer(containerPtr->tkwin, "grid");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
 	Tk_SendVirtualEvent(containerPtr->tkwin, "NoManagedChild", NULL);
     }
@@ -2913,7 +2911,7 @@ GridStructureProc(
 /*
  *----------------------------------------------------------------------
  *
- * ConfigureSlaves --
+ * ConfigureContent --
  *
  *	This implements the guts of the "grid configure" command. Given a list
  *	of slaves and configuration options, it arranges for the grid to
@@ -2931,7 +2929,7 @@ GridStructureProc(
  */
 
 static int
-ConfigureSlaves(
+ConfigureContent(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Any window in application containing
 				 * slaves. Used to look up slave names. */
@@ -3380,7 +3378,7 @@ ConfigureSlaves(
 	Tk_ManageGeometry(slave, &gridMgrType, slavePtr);
 
 	if (!(containerPtr->flags & DONT_PROPAGATE)) {
-	    if (TkSetGeometryMaster(interp, containerPtr->tkwin, "grid")
+	    if (TkSetGeometryContainer(interp, containerPtr->tkwin, "grid")
 		    != TCL_OK) {
 		Tk_ManageGeometry(slave, NULL, NULL);
 		Unlink(slavePtr);
@@ -3528,7 +3526,7 @@ ConfigureSlaves(
      */
 
     if (containerPtr->slavePtr == NULL && containerPtr->flags & ALLOCED_CONTAINER) {
-	TkFreeGeometryMaster(containerPtr->tkwin, "grid");
+	TkFreeGeometryContainer(containerPtr->tkwin, "grid");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
 	Tk_SendVirtualEvent(containerPtr->tkwin, "NoManagedChild", NULL);
     }

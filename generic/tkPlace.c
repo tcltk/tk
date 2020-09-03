@@ -155,13 +155,13 @@ typedef struct Master {
 
 static void		PlaceRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
-static void		PlaceLostSlaveProc(ClientData clientData,
+static void		PlaceLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr placerType = {
     "place",			/* name */
     PlaceRequestProc,		/* requestProc */
-    PlaceLostSlaveProc,		/* lostSlaveProc */
+    PlaceLostContentProc,		/* lostSlaveProc */
 };
 
 /*
@@ -170,7 +170,7 @@ static const Tk_GeomMgr placerType = {
 
 static void		SlaveStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		ConfigureSlave(Tcl_Interp *interp, Tk_Window tkwin,
+static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_OptionTable table, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PlaceInfoCommand(Tcl_Interp *interp, Tk_Window tkwin);
@@ -179,7 +179,7 @@ static void		FreeSlave(Slave *slavePtr);
 static Slave *		FindSlave(Tk_Window tkwin);
 static Master *		CreateMaster(Tk_Window tkwin);
 static Master *		FindMaster(Tk_Window tkwin);
-static void		MasterStructureProc(ClientData clientData,
+static void		PlaceStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		RecomputePlacement(ClientData clientData);
 static void		UnlinkSlave(Slave *slavePtr);
@@ -252,7 +252,7 @@ Tk_PlaceObjCmd(
 	    dispPtr->placeInit = 1;
 	}
 
-	return ConfigureSlave(interp, tkwin, optionTable, objc-2, objv+2);
+	return ConfigureContent(interp, tkwin, optionTable, objc-2, objv+2);
     }
 
     /*
@@ -298,7 +298,7 @@ Tk_PlaceObjCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
 	}
-	return ConfigureSlave(interp, tkwin, optionTable, objc-3, objv+3);
+	return ConfigureContent(interp, tkwin, optionTable, objc-3, objv+3);
 
     case PLACE_FORGET:
 	if (objc != 3) {
@@ -546,7 +546,7 @@ CreateMaster(
 	containerPtr->flags = 0;
 	Tcl_SetHashValue(hPtr, containerPtr);
 	Tk_CreateEventHandler(containerPtr->tkwin, StructureNotifyMask,
-		MasterStructureProc, containerPtr);
+		PlaceStructureProc, containerPtr);
     } else {
 	containerPtr = (Master *)Tcl_GetHashValue(hPtr);
     }
@@ -589,7 +589,7 @@ FindMaster(
 /*
  *----------------------------------------------------------------------
  *
- * ConfigureSlave --
+ * ConfigureContent --
  *
  *	This function is called to process an argv/argc list to reconfigure
  *	the placement of a window.
@@ -606,7 +606,7 @@ FindMaster(
  */
 
 static int
-ConfigureSlave(
+ConfigureContent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Window tkwin,		/* Token for the window to manipulate. */
     Tk_OptionTable table,	/* Token for option table. */
@@ -1064,7 +1064,7 @@ RecomputePlacement(
 /*
  *----------------------------------------------------------------------
  *
- * MasterStructureProc --
+ * PlaceStructureProc --
  *
  *	This function is invoked by the Tk event handler when StructureNotify
  *	events occur for a container window.
@@ -1080,7 +1080,7 @@ RecomputePlacement(
  */
 
 static void
-MasterStructureProc(
+PlaceStructureProc(
     ClientData clientData,	/* Pointer to Master structure for window
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
@@ -1227,22 +1227,22 @@ PlaceRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * PlaceLostSlaveProc --
+ * PlaceLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all placer-related information about the slave.
+ *	Forgets all placer-related information about the content window.
  *
  *--------------------------------------------------------------
  */
 
 static void
-PlaceLostSlaveProc(
+PlaceLostContentProc(
     ClientData clientData,	/* Slave structure for slave window that was
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
