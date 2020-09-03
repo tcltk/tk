@@ -198,11 +198,11 @@ Tk_PackObjCmd(
     const char *argv2;
     static const char *const optionStrings[] = {
 	/* after, append, before and unpack are deprecated */
-	"after", "append", "before", "unpack",
-	"configure", "forget", "info", "propagate", "slaves", NULL };
+	"after", "append", "before", "unpack", "configure",
+	"content", "forget", "info", "propagate", "slaves", NULL };
     enum options {
-	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
-	PACK_CONFIGURE, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
+	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK, PACK_CONFIGURE,
+	PACK_CONTENT, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
     int index;
 
     if (objc >= 2) {
@@ -436,6 +436,7 @@ Tk_PackObjCmd(
 	}
 	break;
     }
+    case PACK_CONTENT:
     case PACK_SLAVES: {
 	Tk_Window master;
 	Packer *masterPtr, *slavePtr;
