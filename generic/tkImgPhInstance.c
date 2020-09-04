@@ -77,7 +77,7 @@ void
 TkImgPhotoConfigureInstance(
     PhotoInstance *instancePtr)	/* Instance to reconfigure. */
 {
-    PhotoMaster *masterPtr = instancePtr->masterPtr;
+    PhotoModel *masterPtr = instancePtr->masterPtr;
     XImage *imagePtr;
     int bitsPerPixel;
     ColorTable *colorTablePtr;
@@ -210,7 +210,7 @@ TkImgPhotoGet(
     ClientData masterData)	/* Pointer to our master structure for the
 				 * image. */
 {
-    PhotoMaster *masterPtr = masterData;
+    PhotoModel *masterPtr = masterData;
     PhotoInstance *instancePtr;
     Colormap colormap;
     int mono, nRed, nGreen, nBlue, numVisuals;
@@ -768,7 +768,7 @@ void
 TkImgPhotoInstanceSetSize(
     PhotoInstance *instancePtr)	/* Instance whose size is to be changed. */
 {
-    PhotoMaster *masterPtr;
+    PhotoModel *masterPtr;
     schar *newError, *errSrcPtr, *errDestPtr;
     int h, offset;
     XRectangle validBox;
@@ -1635,7 +1635,7 @@ TkImgDitherInstance(
 				 * block to be dithered. */
     int width, int height)	/* Dimensions of the block to be dithered. */
 {
-    PhotoMaster *masterPtr = instancePtr->masterPtr;
+    PhotoModel *masterPtr = instancePtr->masterPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
     int nLines, bigEndian, i, c, x, y, xEnd, doDithering = 1;

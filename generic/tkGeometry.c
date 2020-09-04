@@ -90,7 +90,7 @@ Tk_ManageGeometry(
     ClientData clientData)	/* Arbitrary one-word argument to pass to
 				 * geometry manager procedures. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if ((winPtr->geomMgrPtr != NULL) && (mgrPtr != NULL)
 	    && ((winPtr->geomMgrPtr != mgrPtr)
@@ -132,7 +132,7 @@ Tk_GeometryRequest(
     int reqWidth, int reqHeight)/* Minimum desired dimensions for window, in
 				 * pixels. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     /*
      * X gets very upset if a window requests a width or height of zero, so
@@ -182,8 +182,8 @@ Tk_SetInternalBorderEx(
     int left, int right,	/* Width of internal border, in pixels. */
     int top, int bottom)
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
-    register int changed = 0;
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    int changed = 0;
 
     if (left < 0) {
 	left = 0;
@@ -279,7 +279,7 @@ Tk_SetMinimumRequestSize(
     Tk_Window tkwin,		/* Window that will have internal border. */
     int minWidth, int minHeight)/* Minimum requested size, in pixels. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if ((winPtr->minReqWidth == minWidth) &&
 	    (winPtr->minReqHeight == minHeight)) {
@@ -303,31 +303,31 @@ Tk_SetMinimumRequestSize(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetGeometryMaster --
+ * TkSetGeometryContainer --
  *
- *	Set a geometry master for this window. Only one master may own
+ *	Set a geometry container for this window. Only one container may own
  *	a window at any time.
  *
  * Results:
  *	A standard Tcl result.
  *
  * Side effects:
- *	The geometry master is recorded for the window.
+ *	The geometry container is recorded for the window.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkSetGeometryMaster(
+TkSetGeometryContainer(
     Tcl_Interp *interp,		/* Current interpreter, for error. */
-    Tk_Window tkwin,		/* Window that will have geometry master
+    Tk_Window tkwin,		/* Window that will have geometry container
 				 * set. */
-    const char *master)		/* The master identity. */
+    const char *name)		/* The name of the geometry manager. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->geomMgrName != NULL &&
-	    strcmp(winPtr->geomMgrName, master) == 0) {
+	    strcmp(winPtr->geomMgrName, name) == 0) {
 	return TCL_OK;
     }
     if (winPtr->geomMgrName != NULL) {
@@ -335,46 +335,46 @@ TkSetGeometryMaster(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "cannot use geometry manager %s inside %s which already"
 		    " has slaves managed by %s",
-		    master, Tk_PathName(tkwin), winPtr->geomMgrName));
+		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
 	}
 	return TCL_ERROR;
     }
 
-    winPtr->geomMgrName = ckalloc(strlen(master) + 1);
-    strcpy(winPtr->geomMgrName, master);
+    winPtr->geomMgrName = ckalloc(strlen(name) + 1);
+    strcpy(winPtr->geomMgrName, name);
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkFreeGeometryMaster --
+ * TkFreeGeometryContainer --
  *
- *	Remove a geometry master for this window. Only one master may own
+ *	Remove a geometry container for this window. Only one container may own
  *	a window at any time.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The geometry master is cleared for the window.
+ *	The geometry container is cleared for the window.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkFreeGeometryMaster(
-    Tk_Window tkwin,		/* Window that will have geometry master
+TkFreeGeometryContainer(
+    Tk_Window tkwin,		/* Window that will have geometry container
 				 * cleared. */
-    const char *master)		/* The master identity. */
+    const char *name)		/* The name of the geometry manager. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->geomMgrName != NULL &&
-	    strcmp(winPtr->geomMgrName, master) != 0) {
+	    strcmp(winPtr->geomMgrName, name) != 0) {
 	Tcl_Panic("Trying to free %s from geometry manager %s",
-		winPtr->geomMgrName, master);
+		winPtr->geomMgrName, name);
     }
     if (winPtr->geomMgrName != NULL) {
 	ckfree(winPtr->geomMgrName);
@@ -419,7 +419,7 @@ Tk_MaintainGeometry(
 {
     Tcl_HashEntry *hPtr;
     MaintainMaster *masterPtr;
-    register MaintainSlave *slavePtr;
+    MaintainSlave *slavePtr;
     int isNew, map;
     Tk_Window ancestor, parent;
     TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
@@ -568,7 +568,7 @@ Tk_UnmaintainGeometry(
 {
     Tcl_HashEntry *hPtr;
     MaintainMaster *masterPtr;
-    register MaintainSlave *slavePtr, *prevPtr;
+    MaintainSlave *slavePtr, *prevPtr;
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
 
