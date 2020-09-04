@@ -181,13 +181,6 @@ TkpDisplayMenuButton(
     TkMacOSXComputeMenuButtonDrawParams(butPtr, dpPtr);
 
     /*
-     * Set up clipping region.  Make sure the we are using the port for this
-     * button, or we will set the wrong window's clip.
-     */
-
-    TkMacOSXSetUpClippingRgn(pixmap);
-
-    /*
      * Draw the native portion of the buttons.
      */
 
@@ -364,7 +357,7 @@ TkpComputeMenuButtonGeometry(butPtr)
  *
  * DrawMenuButtonImageAndText --
  *
- *        Draws the image and text associated witha button or label.
+ *        Draws the image and text associated with a button or label.
  *
  * Results:
  *        None.
@@ -567,7 +560,7 @@ TkMacOSXDrawMenuButton(
         static HIThemeButtonDrawInfo hiinfo;
 
         MenuButtonBackgroundDrawCB(mbPtr, 32, true);
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
@@ -598,7 +591,7 @@ TkMacOSXDrawMenuButton(
         MenuButtonContentDrawCB(mbPtr->btnkind, &mbPtr->drawinfo,
 		mbPtr, 32, true);
     } else {
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 	TkMacOSXRestoreDrawingContext(&dc);
@@ -710,7 +703,7 @@ MenuButtonEventProc(
 	    mbPtr->flags &= ~ACTIVE;
 	}
 	if ((buttonPtr->flags & REDRAW_PENDING) == 0) {
-	    Tcl_DoWhenIdle(TkpDisplayMenuButton, (ClientData) buttonPtr);
+	    Tcl_DoWhenIdle(TkpDisplayMenuButton, buttonPtr);
 	    buttonPtr->flags |= REDRAW_PENDING;
 	}
     }

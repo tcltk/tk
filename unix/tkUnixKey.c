@@ -305,6 +305,14 @@ TkpGetKeySym(
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
     /*
+     * X11 keycodes always lie in the inclusive range [8,255].
+     */
+
+    if (eventPtr->xkey.keycode > 0xff) {
+        return NoSymbol;
+    }
+
+    /*
      * Refresh the mapping information if it's stale. This must happen before
      * we do any input method processing. [Bug 3599312]
      */

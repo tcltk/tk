@@ -41,6 +41,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
+@synthesize needsToDraw = _needsToDraw;
 @end
 
 /*
@@ -490,13 +491,11 @@ TkpGetAppName(
 
 static int
 TkMacOSXGetAppPathCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    (void)dummy;
-
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
@@ -625,11 +624,10 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    const char* module,
-    const char* symbol)
+    TCL_UNUSED(const char *),
+    const char *symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
-    (void)module;
 
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */

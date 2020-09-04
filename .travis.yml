@@ -147,19 +147,19 @@ jobs:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Clang/Xcode 11.6/Shared"
+    - name: "macOS/Clang/Xcode 11.7/Shared"
       os: osx
       osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Clang++/Xcode 11.6/Shared"
+    - name: "macOS/Clang++/Xcode 11.7/Shared"
       os: osx
       osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib CC=clang++ --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-D__private_extern__=extern"
-    - name: "macOS/Clang/Xcode 11.6/Shared"
+    - name: "macOS/Clang/Xcode 11.7/Shared"
       os: osx
       osx_image: xcode11.7
       env:
@@ -169,7 +169,7 @@ jobs:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: &mactest
         - make all tktest
-    - name: "macOS/Clang/Xcode 11.6/Static"
+    - name: "macOS/Clang/Xcode 11.7/Static"
       os: osx
       osx_image: xcode11.7
       env:
@@ -178,7 +178,7 @@ jobs:
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 11.6/Debug"
+    - name: "macOS/Clang/Xcode 11.7/Debug"
       os: osx
       osx_image: xcode11.7
       env:
@@ -187,7 +187,7 @@ jobs:
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 11.6/Shared/XQuartz"
+    - name: "macOS/Clang/Xcode 11.7/Shared/XQuartz"
       os: osx
       osx_image: xcode11.7
       env:

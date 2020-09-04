@@ -229,7 +229,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = openDocumentProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
 }
 
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
@@ -248,7 +248,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = printDocProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
 }
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
@@ -309,7 +309,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                 AEInfo->interp = _eventInterp;
                 AEInfo->procedure = scriptFileProc;
                 AEInfo->replyEvent = nil;
-                Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+                Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
             }
         }
     } else if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
@@ -325,6 +325,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
+		data[actual] = '\0';
                 AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptTextCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptTextCommand);
@@ -334,10 +335,10 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 		AEInfo->procedure = scriptTextProc;
                 if (Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
                     AEInfo->replyEvent = replyEvent;
-                    ProcessAppleEvent((ClientData)AEInfo);
+                    ProcessAppleEvent(AEInfo);
                 } else {
                     AEInfo->replyEvent = nil;
-                    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+                    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
                 }
 	    }
 	}
@@ -360,7 +361,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = launchURLProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
 }
 
 @end
@@ -401,9 +402,6 @@ static void ProcessAppleEvent(
     }
     code = Tcl_EvalEx(AEInfo->interp, Tcl_DStringValue(&AEInfo->command),
 	    Tcl_DStringLength(&AEInfo->command), TCL_EVAL_GLOBAL);
-    if (code != TCL_OK) {
-	Tcl_BackgroundException(AEInfo->interp, code);
-    }
 
     if (AEInfo->replyEvent && code >= 0) {
         int reslen;
@@ -418,7 +416,10 @@ static void ProcessAppleEvent(
             AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
                           keyErrorNumber, typeSInt32, (Ptr) &code, sizeof(int));
         }
+    } else if (code != TCL_OK) {
+	Tcl_BackgroundException(AEInfo->interp, code);
     }
+
     Tcl_DStringFree(&AEInfo->command);
     ckfree(clientData);
 }
