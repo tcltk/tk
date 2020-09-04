@@ -660,13 +660,13 @@ typedef struct Tk_GeomMgr {
 				 * to invoke it, or name of widget class that
 				 * allows embedded widgets). */
     Tk_GeomRequestProc *requestProc;
-				/* Procedure to invoke when a slave's
+				/* Procedure to invoke when a content's
 				 * requested geometry changes. */
     Tk_GeomLostContentProc *lostContentProc;
-				/* Procedure to invoke when a slave is taken
+				/* Procedure to invoke when content is taken
 				 * away from one geometry manager by another.
 				 * NULL means geometry manager doesn't care
-				 * when slaves are lost. */
+				 * when content lost. */
 } Tk_GeomMgr;
 
 /*
@@ -1306,18 +1306,18 @@ typedef struct Tk_ImageType Tk_ImageType;
 #if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
 	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
-	ClientData *modelDataPtr);
+	ClientData *clientDataPtr);
 #else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, int objc,
 	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageModel model,
-	ClientData *modelDataPtr);
+	ClientData *clientDataPtr);
 #endif /* USE_OLD_IMAGE */
-typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData modelData);
-typedef void (Tk_ImageDisplayProc) (ClientData instanceData, Display *display,
+typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData clientData);
+typedef void (Tk_ImageDisplayProc) (ClientData clientData, Display *display,
 	Drawable drawable, int imageX, int imageY, int width, int height,
 	int drawableX, int drawableY);
-typedef void (Tk_ImageFreeProc) (ClientData instanceData, Display *display);
-typedef void (Tk_ImageDeleteProc) (ClientData modelData);
+typedef void (Tk_ImageFreeProc) (ClientData clientData, Display *display);
+typedef void (Tk_ImageDeleteProc) (ClientData clientData);
 typedef void (Tk_ImageChangedProc) (ClientData clientData, int x, int y,
 	int width, int height, int imageWidth, int imageHeight);
 typedef int (Tk_ImagePostscriptProc) (ClientData clientData,

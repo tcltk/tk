@@ -3455,14 +3455,14 @@ WmStateCmd(
     if (objc == 4) {
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't change state of %s: it is an icon for %s",
+		    "can't change state of \"%s\": it is an icon for \"%s\"",
 		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 	if (winPtr->flags & TK_EMBEDDED) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't change state of %s: it is an embedded window",
+		    "can't change state of \"%s\": it is an embedded window",
 		    winPtr->pathName));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "EMBEDDED", NULL);
 	    return TCL_ERROR;
@@ -3643,7 +3643,7 @@ WmTransientCmd(
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" a transient, it is an icon for %s",
+		    "can't make \"%s\" a transient: it is an icon for %s",
 		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
@@ -3657,7 +3657,7 @@ WmTransientCmd(
 
 	if (wmPtr2 != NULL && wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" a container, it is an icon for %s",
+		    "can't make \"%s\" a container: it is an icon for %s",
 		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
@@ -3667,7 +3667,7 @@ WmTransientCmd(
 		w = (TkWindow *)w->wmInfoPtr->container) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set \"%s\" as container, would cause management loop",
+		    "can't set \"%s\" as container: would cause management loop",
 		    Tk_PathName(containerPtr)));
 		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 		return TCL_ERROR;

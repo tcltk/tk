@@ -3606,7 +3606,7 @@ WmTransientCmd(
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" a transient, it is an icon for %s",
+		    "can't make \"%s\" a transient: it is an icon for %s",
 		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
@@ -3619,7 +3619,7 @@ WmTransientCmd(
 
 	if (wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" a container, it is an icon for %s",
+		    "can't make \"%s\" a container: it is an icon for %s",
 		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
@@ -3629,7 +3629,7 @@ WmTransientCmd(
 	     w = (TkWindow *)w->wmInfoPtr->masterPtr) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set \"%s\" as container, would cause management loop",
+		    "can't set \"%s\" as container: would cause management loop",
 		    Tk_PathName(masterPtr)));
 		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 		return TCL_ERROR;

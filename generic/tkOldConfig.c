@@ -1108,7 +1108,7 @@ GetCachedSpecs(
 
 	/*
 	 * Now allocate our working copy's space and copy over the contents
-	 * from the main copy.
+	 * from the origin.
 	 */
 
 	cachedSpecs = (Tk_ConfigSpec *)ckalloc(entrySpace);
