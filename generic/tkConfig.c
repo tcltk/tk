@@ -67,7 +67,7 @@ typedef struct TkOption {
 				 * monochrome displays. */
 	struct TkOption *synonymPtr;
 				/* For synonym options, this points to the
-				 * master entry. */
+				 * original entry. */
 	const struct Tk_ObjCustomOption *custom;
 				/* For TK_OPTION_CUSTOM. */
     } extra;
@@ -237,8 +237,8 @@ Tk_CreateOptionTable(
 
 	if (specPtr->type == TK_OPTION_SYNONYM) {
 	    /*
-	     * This is a synonym option; find the master option that it refers
-	     * to and create a pointer from the synonym to the master.
+	     * This is a synonym option; find the original option that it refers
+	     * to and create a pointer from the synonym to the origin.
 	     */
 
 	    for (specPtr2 = templatePtr, i = 0; ; specPtr2++, i++) {

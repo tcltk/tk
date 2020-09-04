@@ -80,7 +80,7 @@ typedef struct SlotInfo {
 				 * inproportion to their weights. */
     int pad;			/* Extra padding, in pixels, required for this
 				 * slot. This amount is "added" to the largest
-				 * slave in the slot. */
+				 * content in the slot. */
     Tk_Uid uniform;		/* Value of -uniform option. It is used to
 				 * group slots that should have the same
 				 * size. */
@@ -99,13 +99,13 @@ typedef struct SlotInfo {
  */
 
 typedef struct GridLayout {
-    struct Gridder *binNextPtr;	/* The next slave window in this bin. Each bin
-    				 * contains a list of all slaves whose spans
+    struct Gridder *binNextPtr;	/* The next content window in this bin. Each bin
+    				 * contains a list of all content whose spans
     				 * are >1 and whose right edges fall in this
     				 * slot. */
     int minSize;		/* Minimum size needed for this slot, in
     				 * pixels. This is the space required to hold
-    				 * any slaves contained entirely in this slot,
+    				 * any content contained entirely in this slot,
     				 * adjusted for any slot constrants, such as
     				 * size or padding. */
     int pad;			/* Padding needed for this slot */
@@ -130,11 +130,11 @@ typedef struct GridLayout {
 typedef struct {
     SlotInfo *columnPtr;	/* Pointer to array of column constraints. */
     SlotInfo *rowPtr;		/* Pointer to array of row constraints. */
-    int columnEnd;		/* The last column occupied by any slave. */
+    int columnEnd;		/* The last column occupied by any content. */
     int columnMax;		/* The number of columns with constraints. */
     int columnSpace;		/* The number of slots currently allocated for
     				 * column constraints. */
-    int rowEnd;			/* The last row occupied by any slave. */
+    int rowEnd;			/* The last row occupied by any content. */
     int rowMax;			/* The number of rows with constraints. */
     int rowSpace;		/* The number of slots currently allocated for
     				 * row constraints. */
@@ -144,11 +144,11 @@ typedef struct {
     				 * container. */
     Tk_Anchor anchor;		/* Value of anchor option: specifies where a
 				 * grid without weight should be placed. */
-} GridMaster;
+} GridContainer;
 
 /*
  * For each window that the grid cares about (either because the window is
- * managed by the grid or because the window has slaves that are managed by
+ * managed by the grid or because the window has content that are managed by
  * the grid), there is a structure of the following type:
  */
 
@@ -157,18 +157,18 @@ typedef struct Gridder {
 				 * window has been deleted, but the gridder
 				 * hasn't had a chance to clean up yet because
 				 * the structure is still in use. */
-    struct Gridder *containerPtr;	/* Master window within which this window is
+    struct Gridder *containerPtr;	/* Container window within which this window is
 				 * managed (NULL means this window isn't
 				 * managed by the gridder). */
     struct Gridder *nextPtr;	/* Next window managed within same container.
 				 * List order doesn't matter. */
-    struct Gridder *slavePtr;	/* First in list of slaves managed inside this
-				 * window (NULL means no grid slaves). */
-    GridMaster *containerDataPtr;	/* Additional data for geometry container. */
+    struct Gridder *contentPtr;	/* First in list of content managed inside this
+				 * window (NULL means no grid content). */
+    GridContainer *containerDataPtr;	/* Additional data for geometry container. */
     Tcl_Obj *in;                /* Store container name when removed. */
     int column, row;		/* Location in the grid (starting from
 				 * zero). */
-    int numCols, numRows;	/* Number of columns or rows this slave spans.
+    int numCols, numRows;	/* Number of columns or rows this content spans.
 				 * Should be at least 1. */
     int padX, padY;		/* Total additional pixels to leave around the
 				 * window. Some is of this space is on each
@@ -190,7 +190,7 @@ typedef struct Gridder {
 				 * nested call to ArrangeGrid already working
 				 * on this window. *abortPtr may be set to 1
 				 * to abort that nested call. This happens,
-				 * for example, if tkwin or any of its slaves
+				 * for example, if tkwin or any of its content
 				 * is deleted. */
     int flags;			/* Miscellaneous flags; see below for
 				 * definitions. */
@@ -199,9 +199,9 @@ typedef struct Gridder {
      * These fields are used temporarily for layout calculations only.
      */
 
-    struct Gridder *binNextPtr;	/* Link to next span>1 slave in this bin. */
+    struct Gridder *binNextPtr;	/* Link to next span>1 content in this bin. */
     int size;			/* Nominal size (width or height) in pixels of
-    				 * the slave. This includes the padding. */
+    				 * the content. This includes the padding. */
 } Gridder;
 
 /*
@@ -235,12 +235,12 @@ typedef struct UniformGroup {
  * Flag values for Grid structures:
  *
  * REQUESTED_RELAYOUT		1 means a Tcl_DoWhenIdle request has already
- *				been made to re-arrange all the slaves of this
+ *				been made to re-arrange all the content of this
  *				window.
  * DONT_PROPAGATE		1 means don't set this window's requested
  *				size. 0 means if this window is a container then
  *				Tk will set its requested size to fit the
- *				needs of its slaves.
+ *				needs of its content.
  * ALLOCED_CONTAINER		1 means that Grid has allocated itself as
  *				geometry container for this window.
  */
@@ -253,7 +253,7 @@ typedef struct UniformGroup {
  * Prototypes for procedures used only in this file:
  */
 
-static void		AdjustForSticky(Gridder *slavePtr, int *xPtr,
+static void		AdjustForSticky(Gridder *contentPtr, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
 static int		AdjustOffsets(int width, int elements,
 			    SlotInfo *slotPtr);
@@ -284,22 +284,22 @@ static int		GridRowColumnConfigureCommand(Tk_Window tkwin,
 			    Tcl_Obj *const objv[]);
 static int		GridSizeCommand(Tk_Window tkwin, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-static int		GridSlavesCommand(Tk_Window tkwin, Tcl_Interp *interp,
+static int		GridContentCommand(Tk_Window tkwin, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static void		GridStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
-static void		GridLostSlaveProc(ClientData clientData,
+static void		GridLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		GridReqProc(ClientData clientData, Tk_Window tkwin);
-static void		InitMasterData(Gridder *containerPtr);
+static void		InitContainerData(Gridder *containerPtr);
 static Tcl_Obj *	NewPairObj(int, int);
 static Tcl_Obj *	NewQuadObj(int, int, int, int);
 static int		ResolveConstraints(Gridder *gridPtr, int rowOrColumn,
 			    int maxOffset);
 static void		SetGridSize(Gridder *gridPtr);
-static int		SetSlaveColumn(Tcl_Interp *interp, Gridder *slavePtr,
+static int		SetContentColumn(Tcl_Interp *interp, Gridder *contentPtr,
 			    int column, int numCols);
-static int		SetSlaveRow(Tcl_Interp *interp, Gridder *slavePtr,
+static int		SetContentRow(Tcl_Interp *interp, Gridder *contentPtr,
 			    int row, int numRows);
 static Tcl_Obj *	StickyToObj(int flags);
 static int		StringToSticky(const char *string);
@@ -308,7 +308,7 @@ static void		Unlink(Gridder *gridPtr);
 static const Tk_GeomMgr gridMgrType = {
     "grid",			/* name */
     GridReqProc,		/* requestProc */
-    GridLostSlaveProc,		/* lostSlaveProc */
+    GridLostContentProc,		/* lostSlaveProc */
 };
 
 /*
@@ -335,7 +335,7 @@ Tk_GridObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     static const char *const optionStrings[] = {
 	"anchor", "bbox", "columnconfigure", "configure",
 	"content", "forget", "info", "location", "propagate",
@@ -386,7 +386,7 @@ Tk_GridObjCmd(
 	return GridSizeCommand(tkwin, interp, objc, objv);
     case GRID_CONTENT:
     case GRID_SLAVES:
-	return GridSlavesCommand(tkwin, interp, objc, objv);
+	return GridContentCommand(tkwin, interp, objc, objv);
 
     /*
      * Sample argument combinations:
@@ -434,7 +434,7 @@ GridAnchorCommand(
 {
     Tk_Window container;
     Gridder *containerPtr;
-    GridMaster *gridPtr;
+    GridContainer *gridPtr;
     Tk_Anchor old;
 
     if (objc > 4) {
@@ -455,7 +455,7 @@ GridAnchorCommand(
 	return TCL_OK;
     }
 
-    InitMasterData(containerPtr);
+    InitContainerData(containerPtr);
     gridPtr = containerPtr->containerDataPtr;
     old = gridPtr->anchor;
     if (Tk_GetAnchorFromObj(interp, objv[3], &gridPtr->anchor) != TCL_OK) {
@@ -503,7 +503,7 @@ GridBboxCommand(
 {
     Tk_Window container;
     Gridder *containerPtr;		/* container grid record */
-    GridMaster *gridPtr;	/* pointer to grid data */
+    GridContainer *gridPtr;	/* pointer to grid data */
     int row, column;		/* origin for bounding box */
     int row2, column2;		/* end of bounding box */
     int endX, endY;		/* last column/row in the layout */
@@ -631,67 +631,67 @@ GridForgetRemoveCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window slave;
-    Gridder *slavePtr;
+    Tk_Window content;
+    Gridder *contentPtr;
     int i;
     const char *string = Tcl_GetString(objv[1]);
     char c = string[0];
 
     for (i = 2; i < objc; i++) {
-	if (TkGetWindowFromObj(interp, tkwin, objv[i], &slave) != TCL_OK) {
+	if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
-	slavePtr = GetGrid(slave);
-	if (slavePtr->containerPtr != NULL) {
+	contentPtr = GetGrid(content);
+	if (contentPtr->containerPtr != NULL) {
 	    /*
 	     * For "forget", reset all the settings to their defaults
 	     */
 
 	    if (c == 'f') {
-		slavePtr->column = -1;
-		slavePtr->row = -1;
-		slavePtr->numCols = 1;
-		slavePtr->numRows = 1;
-		slavePtr->padX = 0;
-		slavePtr->padY = 0;
-		slavePtr->padLeft = 0;
-		slavePtr->padTop = 0;
-		slavePtr->iPadX = 0;
-		slavePtr->iPadY = 0;
-		if (slavePtr->in != NULL) {
-		    Tcl_DecrRefCount(slavePtr->in);
-		    slavePtr->in = NULL;
+		contentPtr->column = -1;
+		contentPtr->row = -1;
+		contentPtr->numCols = 1;
+		contentPtr->numRows = 1;
+		contentPtr->padX = 0;
+		contentPtr->padY = 0;
+		contentPtr->padLeft = 0;
+		contentPtr->padTop = 0;
+		contentPtr->iPadX = 0;
+		contentPtr->iPadY = 0;
+		if (contentPtr->in != NULL) {
+		    Tcl_DecrRefCount(contentPtr->in);
+		    contentPtr->in = NULL;
 		}
-		slavePtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
-		if (slavePtr->flags & REQUESTED_RELAYOUT) {
-		    Tcl_CancelIdleCall(ArrangeGrid, slavePtr);
+		contentPtr->doubleBw = 2*Tk_Changes(tkwin)->border_width;
+		if (contentPtr->flags & REQUESTED_RELAYOUT) {
+		    Tcl_CancelIdleCall(ArrangeGrid, contentPtr);
 		}
-		slavePtr->flags = 0;
-		slavePtr->sticky = 0;
+		contentPtr->flags = 0;
+		contentPtr->sticky = 0;
 	    } else {
 		/*
 		 * When removing, store name of container to be able to
 		 * restore it later, even if the container is recreated.
 		 */
 
-		if (slavePtr->in != NULL) {
-		    Tcl_DecrRefCount(slavePtr->in);
-		    slavePtr->in = NULL;
+		if (contentPtr->in != NULL) {
+		    Tcl_DecrRefCount(contentPtr->in);
+		    contentPtr->in = NULL;
 		}
-		if (slavePtr->containerPtr != NULL) {
-		    slavePtr->in = Tcl_NewStringObj(
-			    Tk_PathName(slavePtr->containerPtr->tkwin), -1);
-		    Tcl_IncrRefCount(slavePtr->in);
+		if (contentPtr->containerPtr != NULL) {
+		    contentPtr->in = Tcl_NewStringObj(
+			    Tk_PathName(contentPtr->containerPtr->tkwin), -1);
+		    Tcl_IncrRefCount(contentPtr->in);
 		}
 	    }
-	    Tk_ManageGeometry(slave, NULL, NULL);
-	    if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-		Tk_UnmaintainGeometry(slavePtr->tkwin,
-			slavePtr->containerPtr->tkwin);
+	    Tk_ManageGeometry(content, NULL, NULL);
+	    if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
+		Tk_UnmaintainGeometry(contentPtr->tkwin,
+			contentPtr->containerPtr->tkwin);
 	    }
-	    Unlink(slavePtr);
-	    Tk_UnmapWindow(slavePtr->tkwin);
+	    Unlink(contentPtr);
+	    Tk_UnmapWindow(contentPtr->tkwin);
 	}
     }
     return TCL_OK;
@@ -721,40 +721,40 @@ GridInfoCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Gridder *slavePtr;
-    Tk_Window slave;
+    Gridder *contentPtr;
+    Tk_Window content;
     Tcl_Obj *infoObj;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
-    if (TkGetWindowFromObj(interp, tkwin, objv[2], &slave) != TCL_OK) {
+    if (TkGetWindowFromObj(interp, tkwin, objv[2], &content) != TCL_OK) {
 	return TCL_ERROR;
     }
-    slavePtr = GetGrid(slave);
-    if (slavePtr->containerPtr == NULL) {
+    contentPtr = GetGrid(content);
+    if (contentPtr->containerPtr == NULL) {
 	Tcl_ResetResult(interp);
 	return TCL_OK;
     }
 
     infoObj = Tcl_NewObj();
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
-	    TkNewWindowObj(slavePtr->containerPtr->tkwin));
+	    TkNewWindowObj(contentPtr->containerPtr->tkwin));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-column", -1),
-	    Tcl_NewIntObj(slavePtr->column));
+	    Tcl_NewIntObj(contentPtr->column));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-row", -1),
-	    Tcl_NewIntObj(slavePtr->row));
+	    Tcl_NewIntObj(contentPtr->row));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-columnspan", -1),
-	    Tcl_NewIntObj(slavePtr->numCols));
+	    Tcl_NewIntObj(contentPtr->numCols));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-rowspan", -1),
-	    Tcl_NewIntObj(slavePtr->numRows));
-    TkAppendPadAmount(infoObj, "-ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
-    TkAppendPadAmount(infoObj, "-ipady", slavePtr->iPadY/2, slavePtr->iPadY);
-    TkAppendPadAmount(infoObj, "-padx", slavePtr->padLeft, slavePtr->padX);
-    TkAppendPadAmount(infoObj, "-pady", slavePtr->padTop, slavePtr->padY);
+	    Tcl_NewIntObj(contentPtr->numRows));
+    TkAppendPadAmount(infoObj, "-ipadx", contentPtr->iPadX/2, contentPtr->iPadX);
+    TkAppendPadAmount(infoObj, "-ipady", contentPtr->iPadY/2, contentPtr->iPadY);
+    TkAppendPadAmount(infoObj, "-padx", contentPtr->padLeft, contentPtr->padX);
+    TkAppendPadAmount(infoObj, "-pady", contentPtr->padTop, contentPtr->padY);
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-sticky", -1),
-	    StickyToObj(slavePtr->sticky));
+	    StickyToObj(contentPtr->sticky));
     Tcl_SetObjResult(interp, infoObj);
     return TCL_OK;
 }
@@ -784,8 +784,8 @@ GridLocationCommand(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
-    Gridder *containerPtr;		/* Master grid record. */
-    GridMaster *gridPtr;	/* Pointer to grid data. */
+    Gridder *containerPtr;		/* Container grid record. */
+    GridContainer *gridPtr;	/* Pointer to grid data. */
     SlotInfo *slotPtr;
     int x, y;			/* Offset in pixels, from edge of container. */
     int i, j;			/* Corresponding column and row indeces. */
@@ -906,10 +906,10 @@ GridPropagateCommand(
     if (propagate != old) {
 	if (propagate) {
 	    /*
-	     * If we have slaves, we need to register as geometry container.
+	     * If we have content, we need to register as geometry container.
 	     */
 
-	    if (containerPtr->slavePtr != NULL) {
+	    if (containerPtr->contentPtr != NULL) {
 		if (TkSetGeometryContainer(interp, container, "grid")	!= TCL_OK) {
 		    return TCL_ERROR;
 		}
@@ -964,8 +964,8 @@ GridRowColumnConfigureCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window container, slave;
-    Gridder *containerPtr, *slavePtr;
+    Tk_Window container, content;
+    Gridder *containerPtr, *contentPtr;
     SlotInfo *slotPtr = NULL;
     int slot;			/* the column or row number */
     int slotType;		/* COLUMN or ROW */
@@ -1011,8 +1011,8 @@ GridRowColumnConfigureCommand(
     }
 
     containerPtr = GetGrid(container);
-    first = 0; /* lint */
-    last = 0; /* lint */
+    first = 0;
+    last = 0;
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
@@ -1102,32 +1102,32 @@ GridRowColumnConfigureCommand(
     }
 
     for (j = 0; j < lObjc; j++) {
-	int allSlaves = 0;
+	int allContent = 0;
 
 	if (Tcl_GetIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
 	    first = slot;
 	    last = slot;
-	    slavePtr = NULL;
+	    contentPtr = NULL;
 	} else if (strcmp(Tcl_GetString(lObjv[j]), "all") == 0) {
 	    /*
 	     * Make sure container is initialised.
 	     */
 
-	    InitMasterData(containerPtr);
+	    InitContainerData(containerPtr);
 
-	    slavePtr = containerPtr->slavePtr;
-	    if (slavePtr == NULL) {
+	    contentPtr = containerPtr->contentPtr;
+	    if (contentPtr == NULL) {
 		continue;
 	    }
-	    allSlaves = 1;
-	} else if (TkGetWindowFromObj(NULL, tkwin, lObjv[j], &slave)
+	    allContent = 1;
+	} else if (TkGetWindowFromObj(NULL, tkwin, lObjv[j], &content)
 		== TCL_OK) {
 	    /*
 	     * Is it gridded in this container?
 	     */
 
-	    slavePtr = GetGrid(slave);
-	    if (slavePtr->containerPtr != containerPtr) {
+	    contentPtr = GetGrid(content);
+	    if (contentPtr->containerPtr != containerPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"the window \"%s\" is not managed by \"%s\"",
 			Tcl_GetString(lObjv[j]), Tcl_GetString(objv[2])));
@@ -1148,11 +1148,11 @@ GridRowColumnConfigureCommand(
 	 */
 
 	do {
-	    if (slavePtr != NULL) {
+	    if (contentPtr != NULL) {
 		first = (slotType == COLUMN) ?
-			slavePtr->column : slavePtr->row;
+			contentPtr->column : contentPtr->row;
 		last = first - 1 + ((slotType == COLUMN) ?
-			slavePtr->numCols : slavePtr->numRows);
+			contentPtr->numCols : contentPtr->numRows);
 	    }
 
 	    for (slot = first; slot <= last; slot++) {
@@ -1222,10 +1222,10 @@ GridRowColumnConfigureCommand(
 		    }
 		}
 	    }
-	    if (slavePtr != NULL) {
-		slavePtr = slavePtr->nextPtr;
+	    if (contentPtr != NULL) {
+		contentPtr = contentPtr->nextPtr;
 	    }
-	} while ((allSlaves == 1) && (slavePtr != NULL));
+	} while ((allContent == 1) && (contentPtr != NULL));
     }
     Tcl_DecrRefCount(listCopy);
 
@@ -1299,7 +1299,7 @@ GridSizeCommand(
 {
     Tk_Window container;
     Gridder *containerPtr;
-    GridMaster *gridPtr;	/* pointer to grid data */
+    GridContainer *gridPtr;	/* pointer to grid data */
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1326,23 +1326,23 @@ GridSizeCommand(
 /*
  *----------------------------------------------------------------------
  *
- * GridSlavesCommand --
+ * GridContentCommand --
  *
- *	Implementation of the [grid slaves] subcommand. See the user
+ *	Implementation of the [grid content] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
  *	Standard Tcl result.
  *
  * Side effects:
- *	Places a list of slaves of the specified window in the interpreter's
- *	result field.
+ *	Places a list of content windows of the specified window in the
+ *	interpreter's result field.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-GridSlavesCommand(
+GridContentCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -1350,13 +1350,13 @@ GridSlavesCommand(
 {
     Tk_Window container;
     Gridder *containerPtr;		/* container grid record */
-    Gridder *slavePtr;
+    Gridder *contentPtr;
     int i, value, index;
     int row = -1, column = -1;
     static const char *const optionStrings[] = {
 	"-column", "-row", NULL
     };
-    enum options { SLAVES_COLUMN, SLAVES_ROW };
+    enum options { CONTENT_COLUMN, CONTENT_ROW };
     Tcl_Obj *res;
 
     if ((objc < 3) || ((objc % 2) == 0)) {
@@ -1378,7 +1378,7 @@ GridSlavesCommand(
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "NEG_INDEX", NULL);
 	    return TCL_ERROR;
 	}
-	if (index == SLAVES_COLUMN) {
+	if (index == CONTENT_COLUMN) {
 	    column = value;
 	} else {
 	    row = value;
@@ -1391,17 +1391,17 @@ GridSlavesCommand(
     containerPtr = GetGrid(container);
 
     res = Tcl_NewListObj(0, NULL);
-    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-	    slavePtr = slavePtr->nextPtr) {
-	if ((column >= 0) && (slavePtr->column > column
-		|| slavePtr->column+slavePtr->numCols-1 < column)) {
+    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+	    contentPtr = contentPtr->nextPtr) {
+	if ((column >= 0) && (contentPtr->column > column
+		|| contentPtr->column+contentPtr->numCols-1 < column)) {
 	    continue;
 	}
-	if ((row >= 0) && (slavePtr->row > row ||
-		slavePtr->row+slavePtr->numRows-1 < row)) {
+	if ((row >= 0) && (contentPtr->row > row ||
+		contentPtr->row+contentPtr->numRows-1 < row)) {
 	    continue;
 	}
-	Tcl_ListObjAppendElement(interp,res, TkNewWindowObj(slavePtr->tkwin));
+	Tcl_ListObjAppendElement(interp,res, TkNewWindowObj(contentPtr->tkwin));
     }
     Tcl_SetObjResult(interp, res);
     return TCL_OK;
@@ -1429,10 +1429,10 @@ static void
 GridReqProc(
     ClientData clientData,	/* Grid's information about window that got
 				 * new preferred geometry. */
-    Tk_Window tkwin)		/* Other Tk-related information about the
+    TCL_UNUSED(Tk_Window))		/* Other Tk-related information about the
 				 * window. */
 {
-    Gridder *gridPtr = clientData;
+    Gridder *gridPtr = (Gridder *)clientData;
 
     gridPtr = gridPtr->containerPtr;
     if (gridPtr && !(gridPtr->flags & REQUESTED_RELAYOUT)) {
@@ -1444,33 +1444,33 @@ GridReqProc(
 /*
  *----------------------------------------------------------------------
  *
- * GridLostSlaveProc --
+ * GridLostContentProc --
  *
  *	This procedure is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all grid-related information about the slave.
+ *	Forgets all grid-related information about the content.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-GridLostSlaveProc(
-    ClientData clientData,	/* Grid structure for slave window that was
+GridLostContentProc(
+    ClientData clientData,	/* Grid structure for content window that was
 				 * stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    TCL_UNUSED(Tk_Window))		/* Tk's handle for the content window. */
 {
-    Gridder *slavePtr = clientData;
+    Gridder *contentPtr = (Gridder *)clientData;
 
-    if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
+    if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
+	Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
     }
-    Unlink(slavePtr);
-    Tk_UnmapWindow(slavePtr->tkwin);
+    Unlink(contentPtr);
+    Tk_UnmapWindow(contentPtr->tkwin);
 }
 
 /*
@@ -1644,12 +1644,12 @@ AdjustOffsets(
  *
  * AdjustForSticky --
  *
- *	This procedure adjusts the size of a slave in its cavity based on its
+ *	This procedure adjusts the size of a content in its cavity based on its
  *	"sticky" flags.
  *
  * Results:
  *	The input x, y, width, and height are changed to represent the desired
- *	coordinates of the slave.
+ *	coordinates of the content.
  *
  * Side effects:
  *	None.
@@ -1659,29 +1659,29 @@ AdjustOffsets(
 
 static void
 AdjustForSticky(
-    Gridder *slavePtr,	/* Slave window to arrange in its cavity. */
+    Gridder *contentPtr,	/* Content window to arrange in its cavity. */
     int *xPtr,		/* Pixel location of the left edge of the cavity. */
     int *yPtr,		/* Pixel location of the top edge of the cavity. */
     int *widthPtr,	/* Width of the cavity (in pixels). */
     int *heightPtr)	/* Height of the cavity (in pixels). */
 {
-    int diffx = 0;	/* Cavity width - slave width. */
-    int diffy = 0;	/* Cavity hight - slave height. */
-    int sticky = slavePtr->sticky;
+    int diffx = 0;	/* Cavity width - content width. */
+    int diffy = 0;	/* Cavity hight - content height. */
+    int sticky = contentPtr->sticky;
 
-    *xPtr += slavePtr->padLeft;
-    *widthPtr -= slavePtr->padX;
-    *yPtr += slavePtr->padTop;
-    *heightPtr -= slavePtr->padY;
+    *xPtr += contentPtr->padLeft;
+    *widthPtr -= contentPtr->padX;
+    *yPtr += contentPtr->padTop;
+    *heightPtr -= contentPtr->padY;
 
-    if (*widthPtr > (Tk_ReqWidth(slavePtr->tkwin) + slavePtr->iPadX)) {
-	diffx = *widthPtr - (Tk_ReqWidth(slavePtr->tkwin) + slavePtr->iPadX);
-	*widthPtr = Tk_ReqWidth(slavePtr->tkwin) + slavePtr->iPadX;
+    if (*widthPtr > (Tk_ReqWidth(contentPtr->tkwin) + contentPtr->iPadX)) {
+	diffx = *widthPtr - (Tk_ReqWidth(contentPtr->tkwin) + contentPtr->iPadX);
+	*widthPtr = Tk_ReqWidth(contentPtr->tkwin) + contentPtr->iPadX;
     }
 
-    if (*heightPtr > (Tk_ReqHeight(slavePtr->tkwin) + slavePtr->iPadY)) {
-	diffy = *heightPtr - (Tk_ReqHeight(slavePtr->tkwin) + slavePtr->iPadY);
-	*heightPtr = Tk_ReqHeight(slavePtr->tkwin) + slavePtr->iPadY;
+    if (*heightPtr > (Tk_ReqHeight(contentPtr->tkwin) + contentPtr->iPadY)) {
+	diffy = *heightPtr - (Tk_ReqHeight(contentPtr->tkwin) + contentPtr->iPadY);
+	*heightPtr = Tk_ReqHeight(contentPtr->tkwin) + contentPtr->iPadY;
     }
 
     if (sticky&STICK_EAST && sticky&STICK_WEST) {
@@ -1712,19 +1712,19 @@ AdjustForSticky(
  *	None.
  *
  * Side effects:
- *	The slaves of containerPtr may get resized or moved.
+ *	The content of containerPtr may get resized or moved.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 ArrangeGrid(
-    ClientData clientData)	/* Structure describing container whose slaves
+    ClientData clientData)	/* Structure describing container whose content
 				 * are to be re-layed out. */
 {
-    Gridder *containerPtr = clientData;
-    Gridder *slavePtr;
-    GridMaster *slotPtr = containerPtr->containerDataPtr;
+    Gridder *containerPtr = (Gridder *)clientData;
+    Gridder *contentPtr;
+    GridContainer *slotPtr = containerPtr->containerDataPtr;
     int abort;
     int width, height;		/* Requested size of layout, in pixels. */
     int realWidth, realHeight;	/* Actual size layout should take-up. */
@@ -1733,13 +1733,13 @@ ArrangeGrid(
     containerPtr->flags &= ~REQUESTED_RELAYOUT;
 
     /*
-     * If the container has no slaves anymore, then don't do anything at all:
+     * If the container has no content anymore, then don't do anything at all:
      * just leave the container's size as-is. Otherwise there is no way to
      * "relinquish" control over the container so another geometry manager can
      * take over.
      */
 
-    if (containerPtr->slavePtr == NULL) {
+    if (containerPtr->contentPtr == NULL) {
 	return;
     }
 
@@ -1813,62 +1813,62 @@ ArrangeGrid(
 	    0, 0, usedX, usedY, &slotPtr->startX, &slotPtr->startY);
 
     /*
-     * Now adjust the actual size of the slave to its cavity by computing the
+     * Now adjust the actual size of the content to its cavity by computing the
      * cavity size, and adjusting the widget according to its stickyness.
      */
 
-    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL && !abort;
-	    slavePtr = slavePtr->nextPtr) {
+    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL && !abort;
+	    contentPtr = contentPtr->nextPtr) {
 	int x, y;			/* Top left coordinate */
-	int width, height;		/* Slot or slave size */
-	int col = slavePtr->column;
-	int row = slavePtr->row;
+	int width, height;		/* Slot or content size */
+	int col = contentPtr->column;
+	int row = contentPtr->row;
 
 	x = (col>0) ? slotPtr->columnPtr[col-1].offset : 0;
 	y = (row>0) ? slotPtr->rowPtr[row-1].offset : 0;
 
-	width = slotPtr->columnPtr[slavePtr->numCols+col-1].offset - x;
-	height = slotPtr->rowPtr[slavePtr->numRows+row-1].offset - y;
+	width = slotPtr->columnPtr[contentPtr->numCols+col-1].offset - x;
+	height = slotPtr->rowPtr[contentPtr->numRows+row-1].offset - y;
 
 	x += slotPtr->startX;
 	y += slotPtr->startY;
 
-	AdjustForSticky(slavePtr, &x, &y, &width, &height);
+	AdjustForSticky(contentPtr, &x, &y, &width, &height);
 
 	/*
 	 * Now put the window in the proper spot. (This was taken directly
-	 * from tkPack.c.) If the slave is a child of the container, then do this
+	 * from tkPack.c.) If the content is a child of the container, then do this
 	 * here. Otherwise let Tk_MaintainGeometry do the work.
 	 */
 
-	if (containerPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
+	if (containerPtr->tkwin == Tk_Parent(contentPtr->tkwin)) {
 	    if ((width <= 0) || (height <= 0)) {
-		Tk_UnmapWindow(slavePtr->tkwin);
+		Tk_UnmapWindow(contentPtr->tkwin);
 	    } else {
-		if ((x != Tk_X(slavePtr->tkwin))
-			|| (y != Tk_Y(slavePtr->tkwin))
-			|| (width != Tk_Width(slavePtr->tkwin))
-			|| (height != Tk_Height(slavePtr->tkwin))) {
-		    Tk_MoveResizeWindow(slavePtr->tkwin, x, y, width, height);
+		if ((x != Tk_X(contentPtr->tkwin))
+			|| (y != Tk_Y(contentPtr->tkwin))
+			|| (width != Tk_Width(contentPtr->tkwin))
+			|| (height != Tk_Height(contentPtr->tkwin))) {
+		    Tk_MoveResizeWindow(contentPtr->tkwin, x, y, width, height);
 		}
 		if (abort) {
 		    break;
 		}
 
 		/*
-		 * Don't map the slave if the container isn't mapped: wait until
+		 * Don't map the content if the container isn't mapped: wait until
 		 * the container gets mapped later.
 		 */
 
 		if (Tk_IsMapped(containerPtr->tkwin)) {
-		    Tk_MapWindow(slavePtr->tkwin);
+		    Tk_MapWindow(contentPtr->tkwin);
 		}
 	    }
 	} else if ((width <= 0) || (height <= 0)) {
-	    Tk_UnmaintainGeometry(slavePtr->tkwin, containerPtr->tkwin);
-	    Tk_UnmapWindow(slavePtr->tkwin);
+	    Tk_UnmaintainGeometry(contentPtr->tkwin, containerPtr->tkwin);
+	    Tk_UnmapWindow(contentPtr->tkwin);
 	} else {
-	    Tk_MaintainGeometry(slavePtr->tkwin, containerPtr->tkwin, x, y,
+	    Tk_MaintainGeometry(contentPtr->tkwin, containerPtr->tkwin, x, y,
 		    width, height);
 	}
     }
@@ -1905,7 +1905,7 @@ ResolveConstraints(
 				 * pixels, or 0 (not currently used). */
 {
     SlotInfo *slotPtr;	/* Pointer to row/col constraints. */
-    Gridder *slavePtr;	/* List of slave windows in this grid. */
+    Gridder *contentPtr;	/* List of content windows in this grid. */
     int constraintCount;	/* Count of rows or columns that have
 				 * constraints. */
     int slotCount;		/* Last occupied row or column. */
@@ -1914,7 +1914,7 @@ ResolveConstraints(
     GridLayout *layoutPtr;	/* Temporary layout structure. */
     int requiredSize;		/* The natural size of the grid (pixels).
 				 * This is the minimum size needed to
-				 * accommodate all of the slaves at their
+				 * accommodate all of the content at their
 				 * requested sizes. */
     int offset;			/* The pixel offset of the right edge of the
 				 * current slot from the beginning of the
@@ -1957,7 +1957,7 @@ ResolveConstraints(
 
     gridCount = MAX(constraintCount, slotCount);
     if (gridCount >= TYPICAL_SIZE) {
-	layoutPtr = ckalloc(sizeof(GridLayout) * (1+gridCount));
+	layoutPtr = (GridLayout *)ckalloc(sizeof(GridLayout) * (1+gridCount));
     } else {
 	layoutPtr = layoutData;
     }
@@ -1998,29 +1998,29 @@ ResolveConstraints(
 
     /*
      * Step 2.
-     * Slaves with a span of 1 are used to determine the minimum size of each
-     * slot. Slaves whose span is two or more slots don't contribute to the
+     * Content with a span of 1 are used to determine the minimum size of each
+     * slot. Content whose span is two or more slots don't contribute to the
      * minimum size of each slot directly, but can cause slots to grow if
      * their size exceeds the the sizes of the slots they span.
      *
-     * Bin all slaves whose spans are > 1 by their right edges. This allows
+     * Bin all content whose spans are > 1 by their right edges. This allows
      * the computation on minimum and maximum possible layout sizes at each
-     * slot boundary, without the need to re-sort the slaves.
+     * slot boundary, without the need to re-sort the content.
      */
 
     switch (slotType) {
     case COLUMN:
-	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-		slavePtr = slavePtr->nextPtr) {
-	    int rightEdge = slavePtr->column + slavePtr->numCols - 1;
+	for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+		contentPtr = contentPtr->nextPtr) {
+	    int rightEdge = contentPtr->column + contentPtr->numCols - 1;
 
-	    slavePtr->size = Tk_ReqWidth(slavePtr->tkwin) + slavePtr->padX
-		    + slavePtr->iPadX + slavePtr->doubleBw;
-	    if (slavePtr->numCols > 1) {
-		slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
-		layoutPtr[rightEdge].binNextPtr = slavePtr;
+	    contentPtr->size = Tk_ReqWidth(contentPtr->tkwin) + contentPtr->padX
+		    + contentPtr->iPadX + contentPtr->doubleBw;
+	    if (contentPtr->numCols > 1) {
+		contentPtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
+		layoutPtr[rightEdge].binNextPtr = contentPtr;
 	    } else if (rightEdge >= 0) {
-		int size = slavePtr->size + layoutPtr[rightEdge].pad;
+		int size = contentPtr->size + layoutPtr[rightEdge].pad;
 
 		if (size > layoutPtr[rightEdge].minSize) {
 		    layoutPtr[rightEdge].minSize = size;
@@ -2029,17 +2029,17 @@ ResolveConstraints(
 	}
 	break;
     case ROW:
-	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-		slavePtr = slavePtr->nextPtr) {
-	    int rightEdge = slavePtr->row + slavePtr->numRows - 1;
+	for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+		contentPtr = contentPtr->nextPtr) {
+	    int rightEdge = contentPtr->row + contentPtr->numRows - 1;
 
-	    slavePtr->size = Tk_ReqHeight(slavePtr->tkwin) + slavePtr->padY
-		    + slavePtr->iPadY + slavePtr->doubleBw;
-	    if (slavePtr->numRows > 1) {
-		slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
-		layoutPtr[rightEdge].binNextPtr = slavePtr;
+	    contentPtr->size = Tk_ReqHeight(contentPtr->tkwin) + contentPtr->padY
+		    + contentPtr->iPadY + contentPtr->doubleBw;
+	    if (contentPtr->numRows > 1) {
+		contentPtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
+		layoutPtr[rightEdge].binNextPtr = contentPtr;
 	    } else if (rightEdge >= 0) {
-		int size = slavePtr->size + layoutPtr[rightEdge].pad;
+		int size = contentPtr->size + layoutPtr[rightEdge].pad;
 
 		if (size > layoutPtr[rightEdge].minSize) {
 		    layoutPtr[rightEdge].minSize = size;
@@ -2079,7 +2079,7 @@ ResolveConstraints(
 			    * sizeof(UniformGroup);
 		    size_t newSize = (uniformGroupsAlloced + UNIFORM_PREALLOC)
 			    * sizeof(UniformGroup);
-		    UniformGroup *newUG = ckalloc(newSize);
+		    UniformGroup *newUG = (UniformGroup *)ckalloc(newSize);
 		    UniformGroup *oldUG = uniformGroupPtr;
 
 		    memcpy(newUG, oldUG, oldSize);
@@ -2130,16 +2130,16 @@ ResolveConstraints(
     /*
      * Step 3.
      * Determine the minimum slot offsets going from left to right that would
-     * fit all of the slaves. This determines the minimum
+     * fit all of the content. This determines the minimum
      */
 
     for (offset=0,slot=0; slot < gridCount; slot++) {
 	layoutPtr[slot].minOffset = layoutPtr[slot].minSize + offset;
-	for (slavePtr = layoutPtr[slot].binNextPtr; slavePtr != NULL;
-		slavePtr = slavePtr->binNextPtr) {
+	for (contentPtr = layoutPtr[slot].binNextPtr; contentPtr != NULL;
+		contentPtr = contentPtr->binNextPtr) {
 	    int span = (slotType == COLUMN) ?
-		    slavePtr->numCols : slavePtr->numRows;
-	    int required = slavePtr->size + layoutPtr[slot - span].minOffset;
+		    contentPtr->numCols : contentPtr->numRows;
+	    int required = contentPtr->size + layoutPtr[slot - span].minOffset;
 
 	    if (required > layoutPtr[slot].minOffset) {
 		layoutPtr[slot].minOffset = required;
@@ -2171,11 +2171,11 @@ ResolveConstraints(
 	layoutPtr[slot].maxOffset = offset;
     }
     for (slot=gridCount-1; slot > 0;) {
-	for (slavePtr = layoutPtr[slot].binNextPtr; slavePtr != NULL;
-		slavePtr = slavePtr->binNextPtr) {
+	for (contentPtr = layoutPtr[slot].binNextPtr; contentPtr != NULL;
+		contentPtr = contentPtr->binNextPtr) {
 	    int span = (slotType == COLUMN) ?
-		    slavePtr->numCols : slavePtr->numRows;
-	    int require = offset - slavePtr->size;
+		    contentPtr->numCols : contentPtr->numRows;
+	    int require = offset - contentPtr->size;
 	    int startSlot = slot - span;
 
 	    if (startSlot >=0 && require < layoutPtr[startSlot].maxOffset) {
@@ -2440,14 +2440,14 @@ GetGrid(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->gridHashTable, (char*) tkwin, &isNew);
     if (!isNew) {
-	return Tcl_GetHashValue(hPtr);
+	return (Gridder *)Tcl_GetHashValue(hPtr);
     }
-    gridPtr = ckalloc(sizeof(Gridder));
+    gridPtr = (Gridder *)ckalloc(sizeof(Gridder));
     gridPtr->tkwin = tkwin;
     gridPtr->containerPtr = NULL;
     gridPtr->containerDataPtr = NULL;
     gridPtr->nextPtr = NULL;
-    gridPtr->slavePtr = NULL;
+    gridPtr->contentPtr = NULL;
     gridPtr->binNextPtr = NULL;
 
     gridPtr->column = -1;
@@ -2479,7 +2479,7 @@ GetGrid(
  *
  * SetGridSize --
  *
- *	This internal procedure sets the size of the grid occupied by slaves.
+ *	This internal procedure sets the size of the grid occupied by content.
  *
  * Results:
  *	None
@@ -2496,13 +2496,13 @@ static void
 SetGridSize(
     Gridder *containerPtr)		/* The geometry container for this grid. */
 {
-    Gridder *slavePtr;	/* Current slave window. */
+    Gridder *contentPtr;	/* Current content window. */
     int maxX = 0, maxY = 0;
 
-    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-	    slavePtr = slavePtr->nextPtr) {
-	maxX = MAX(maxX, slavePtr->numCols + slavePtr->column);
-	maxY = MAX(maxY, slavePtr->numRows + slavePtr->row);
+    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+	    contentPtr = contentPtr->nextPtr) {
+	maxX = MAX(maxX, contentPtr->numCols + contentPtr->column);
+	maxY = MAX(maxY, contentPtr->numRows + contentPtr->row);
     }
     containerPtr->containerDataPtr->columnEnd = maxX;
     containerPtr->containerDataPtr->rowEnd = maxY;
@@ -2513,31 +2513,31 @@ SetGridSize(
 /*
  *----------------------------------------------------------------------
  *
- * SetSlaveColumn --
+ * SetContentColumn --
  *
- *	Update column data for a slave, checking that MAX_ELEMENT bound
+ *	Update column data for a content, checking that MAX_ELEMENT bound
  *      is not passed.
  *
  * Results:
  *	TCL_ERROR if out of bounds, TCL_OK otherwise
  *
  * Side effects:
- *	Slave fields are updated.
+ *	Content fields are updated.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-SetSlaveColumn(
+SetContentColumn(
     Tcl_Interp *interp,		/* Interp for error message. */
-    Gridder *slavePtr,		/* Slave to be updated. */
+    Gridder *contentPtr,		/* Content to be updated. */
     int column,			/* New column or -1 to be unchanged. */
     int numCols)		/* New columnspan or -1 to be unchanged. */
 {
     int newColumn, newNumCols, lastCol;
 
-    newColumn = (column >= 0) ? column : slavePtr->column;
-    newNumCols = (numCols >= 1) ? numCols : slavePtr->numCols;
+    newColumn = (column >= 0) ? column : contentPtr->column;
+    newNumCols = (numCols >= 1) ? numCols : contentPtr->numCols;
 
     lastCol = ((newColumn >= 0) ? newColumn : 0) + newNumCols;
     if (lastCol >= MAX_ELEMENT) {
@@ -2546,39 +2546,39 @@ SetSlaveColumn(
 	return TCL_ERROR;
     }
 
-    slavePtr->column = newColumn;
-    slavePtr->numCols = newNumCols;
+    contentPtr->column = newColumn;
+    contentPtr->numCols = newNumCols;
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * SetSlaveRow --
+ * SetContentRow --
  *
- *	Update row data for a slave, checking that MAX_ELEMENT bound
+ *	Update row data for a content, checking that MAX_ELEMENT bound
  *      is not passed.
  *
  * Results:
  *	TCL_ERROR if out of bounds, TCL_OK otherwise
  *
  * Side effects:
- *	Slave fields are updated.
+ *	Content fields are updated.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-SetSlaveRow(
+SetContentRow(
     Tcl_Interp *interp,		/* Interp for error message. */
-    Gridder *slavePtr,		/* Slave to be updated. */
+    Gridder *contentPtr,		/* Content to be updated. */
     int row,			/* New row or -1 to be unchanged. */
     int numRows)		/* New rowspan or -1 to be unchanged. */
 {
     int newRow, newNumRows, lastRow;
 
-    newRow = (row >= 0) ? row : slavePtr->row;
-    newNumRows = (numRows >= 1) ? numRows : slavePtr->numRows;
+    newRow = (row >= 0) ? row : contentPtr->row;
+    newNumRows = (numRows >= 1) ? numRows : contentPtr->numRows;
 
     lastRow = ((newRow >= 0) ? newRow : 0) + newNumRows;
     if (lastRow >= MAX_ELEMENT) {
@@ -2587,8 +2587,8 @@ SetSlaveRow(
 	return TCL_ERROR;
     }
 
-    slavePtr->row = newRow;
-    slavePtr->numRows = newNumRows;
+    contentPtr->row = newRow;
+    contentPtr->numRows = newNumRows;
     return TCL_OK;
 }
 
@@ -2640,7 +2640,7 @@ CheckSlotData(
      * of the offsets as well.
      */
 
-    InitMasterData(containerPtr);
+    InitContainerData(containerPtr);
     end = (slotType == ROW) ? containerPtr->containerDataPtr->rowMax :
 	    containerPtr->containerDataPtr->columnMax;
     if (checkOnly == CHECK_ONLY) {
@@ -2652,7 +2652,7 @@ CheckSlotData(
 	    int newNumSlot = slot + PREALLOC;
 	    size_t oldSize = numSlot * sizeof(SlotInfo);
 	    size_t newSize = newNumSlot * sizeof(SlotInfo);
-	    SlotInfo *newSI = ckalloc(newSize);
+	    SlotInfo *newSI = (SlotInfo *)ckalloc(newSize);
 	    SlotInfo *oldSI = (slotType == ROW)
 		    ? containerPtr->containerDataPtr->rowPtr
 		    : containerPtr->containerDataPtr->columnPtr;
@@ -2682,7 +2682,7 @@ CheckSlotData(
 /*
  *----------------------------------------------------------------------
  *
- * InitMasterData --
+ * InitContainerData --
  *
  *	This internal procedure is used to allocate and initialize the data
  *	for a geometry container, if the data doesn't exist already.
@@ -2698,21 +2698,21 @@ CheckSlotData(
  */
 
 static void
-InitMasterData(
+InitContainerData(
     Gridder *containerPtr)
 {
     if (containerPtr->containerDataPtr == NULL) {
-	GridMaster *gridPtr = containerPtr->containerDataPtr =
-		ckalloc(sizeof(GridMaster));
+	GridContainer *gridPtr = containerPtr->containerDataPtr =
+		ckalloc(sizeof(GridContainer));
 	size_t size = sizeof(SlotInfo) * TYPICAL_SIZE;
 
 	gridPtr->columnEnd = 0;
 	gridPtr->columnMax = 0;
-	gridPtr->columnPtr = ckalloc(size);
+	gridPtr->columnPtr = (SlotInfo *)ckalloc(size);
 	gridPtr->columnSpace = TYPICAL_SIZE;
 	gridPtr->rowEnd = 0;
 	gridPtr->rowMax = 0;
-	gridPtr->rowPtr = ckalloc(size);
+	gridPtr->rowPtr = (SlotInfo *)ckalloc(size);
 	gridPtr->rowSpace = TYPICAL_SIZE;
 	gridPtr->startX = 0;
 	gridPtr->startY = 0;
@@ -2728,7 +2728,7 @@ InitMasterData(
  *
  * Unlink --
  *
- *	Remove a grid from its container's list of slaves.
+ *	Remove a grid from its container's list of content.
  *
  * Results:
  *	None.
@@ -2742,24 +2742,24 @@ InitMasterData(
 
 static void
 Unlink(
-    Gridder *slavePtr)	/* Window to unlink. */
+    Gridder *contentPtr)	/* Window to unlink. */
 {
-    Gridder *containerPtr, *slavePtr2;
+    Gridder *containerPtr, *contentPtr2;
 
-    containerPtr = slavePtr->containerPtr;
+    containerPtr = contentPtr->containerPtr;
     if (containerPtr == NULL) {
 	return;
     }
 
-    if (containerPtr->slavePtr == slavePtr) {
-	containerPtr->slavePtr = slavePtr->nextPtr;
+    if (containerPtr->contentPtr == contentPtr) {
+	containerPtr->contentPtr = contentPtr->nextPtr;
     } else {
-	for (slavePtr2=containerPtr->slavePtr ; ; slavePtr2=slavePtr2->nextPtr) {
-	    if (slavePtr2 == NULL) {
+	for (contentPtr2=containerPtr->contentPtr ; ; contentPtr2=contentPtr2->nextPtr) {
+	    if (contentPtr2 == NULL) {
 		Tcl_Panic("Unlink couldn't find previous window");
 	    }
-	    if (slavePtr2->nextPtr == slavePtr) {
-		slavePtr2->nextPtr = slavePtr->nextPtr;
+	    if (contentPtr2->nextPtr == contentPtr) {
+		contentPtr2->nextPtr = contentPtr->nextPtr;
 		break;
 	    }
 	}
@@ -2772,15 +2772,15 @@ Unlink(
 	*containerPtr->abortPtr = 1;
     }
 
-    SetGridSize(slavePtr->containerPtr);
-    slavePtr->containerPtr = NULL;
+    SetGridSize(contentPtr->containerPtr);
+    contentPtr->containerPtr = NULL;
 
     /*
-     * If we have emptied this container from slaves it means we are no longer
+     * If we have emptied this container from content it means we are no longer
      * handling it and should mark it as free.
      */
 
-    if ((containerPtr->slavePtr == NULL) && (containerPtr->flags & ALLOCED_CONTAINER)) {
+    if ((containerPtr->contentPtr == NULL) && (containerPtr->flags & ALLOCED_CONTAINER)) {
 	TkFreeGeometryContainer(containerPtr->tkwin, "grid");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
     }
@@ -2810,7 +2810,7 @@ static void
 DestroyGrid(
     void *memPtr)		/* Info about window that is now dead. */
 {
-    Gridder *gridPtr = memPtr;
+    Gridder *gridPtr = (Gridder *)memPtr;
 
     if (gridPtr->containerDataPtr != NULL) {
 	if (gridPtr->containerDataPtr->rowPtr != NULL) {
@@ -2840,7 +2840,7 @@ DestroyGrid(
  *
  * Side effects:
  *	If a window was just deleted, clean up all its grid-related
- *	information. If it was just resized, re-configure its slaves, if any.
+ *	information. If it was just resized, re-configure its content, if any.
  *
  *----------------------------------------------------------------------
  */
@@ -2851,11 +2851,11 @@ GridStructureProc(
 				 * eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    Gridder *gridPtr = clientData;
+    Gridder *gridPtr = (Gridder *)clientData;
     TkDisplay *dispPtr = ((TkWindow *) gridPtr->tkwin)->dispPtr;
 
     if (eventPtr->type == ConfigureNotify) {
-	if ((gridPtr->slavePtr != NULL)
+	if ((gridPtr->contentPtr != NULL)
 		&& !(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	    gridPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, gridPtr);
@@ -2869,38 +2869,38 @@ GridStructureProc(
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	Gridder *slavePtr, *nextPtr;
+	Gridder *contentPtr, *nextPtr;
 
 	if (gridPtr->containerPtr != NULL) {
 	    Unlink(gridPtr);
 	}
-	for (slavePtr = gridPtr->slavePtr; slavePtr != NULL;
-		slavePtr = nextPtr) {
-	    Tk_ManageGeometry(slavePtr->tkwin, NULL, NULL);
-	    Tk_UnmapWindow(slavePtr->tkwin);
-	    slavePtr->containerPtr = NULL;
-	    nextPtr = slavePtr->nextPtr;
-	    slavePtr->nextPtr = NULL;
+	for (contentPtr = gridPtr->contentPtr; contentPtr != NULL;
+		contentPtr = nextPtr) {
+	    Tk_ManageGeometry(contentPtr->tkwin, NULL, NULL);
+	    Tk_UnmapWindow(contentPtr->tkwin);
+	    contentPtr->containerPtr = NULL;
+	    nextPtr = contentPtr->nextPtr;
+	    contentPtr->nextPtr = NULL;
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->gridHashTable,
-		(char *) gridPtr->tkwin));
+		(char *)gridPtr->tkwin));
 	if (gridPtr->flags & REQUESTED_RELAYOUT) {
 	    Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
 	}
 	gridPtr->tkwin = NULL;
 	Tcl_EventuallyFree(gridPtr, (Tcl_FreeProc *)DestroyGrid);
     } else if (eventPtr->type == MapNotify) {
-	if ((gridPtr->slavePtr != NULL)
+	if ((gridPtr->contentPtr != NULL)
 		&& !(gridPtr->flags & REQUESTED_RELAYOUT)) {
 	    gridPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, gridPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	Gridder *slavePtr;
+	Gridder *contentPtr;
 
-	for (slavePtr = gridPtr->slavePtr; slavePtr != NULL;
-		slavePtr = slavePtr->nextPtr) {
-	    Tk_UnmapWindow(slavePtr->tkwin);
+	for (contentPtr = gridPtr->contentPtr; contentPtr != NULL;
+		contentPtr = contentPtr->nextPtr) {
+	    Tk_UnmapWindow(contentPtr->tkwin);
 	}
     }
 }
@@ -2911,8 +2911,8 @@ GridStructureProc(
  * ConfigureContent --
  *
  *	This implements the guts of the "grid configure" command. Given a list
- *	of slaves and configuration options, it arranges for the grid to
- *	manage the slaves and sets the specified options. Arguments consist
+ *	of content and configuration options, it arranges for the grid to
+ *	manage the content and sets the specified options. Arguments consist
  *	of windows or window shortcuts followed by "-option value" pairs.
  *
  * Results:
@@ -2920,7 +2920,7 @@ GridStructureProc(
  *	and the interp's result is set to contain an error message.
  *
  * Side effects:
- *	Slave windows get taken over by the grid.
+ *	Content windows get taken over by the grid.
  *
  *----------------------------------------------------------------------
  */
@@ -2929,7 +2929,7 @@ static int
 ConfigureContent(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Any window in application containing
-				 * slaves. Used to look up slave names. */
+				 * content. Used to look up content names. */
     int objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[])	/* Argument objects: contains one or more
 				 * window names followed by any number of
@@ -2937,8 +2937,8 @@ ConfigureContent(
 				 * that there is at least one window name. */
 {
     Gridder *containerPtr = NULL;
-    Gridder *slavePtr;
-    Tk_Window other, slave, parent, ancestor;
+    Gridder *contentPtr;
+    Tk_Window other, content, parent, ancestor;
     TkWindow *container;
     int i, j, tmp;
     int numWindows;
@@ -2975,34 +2975,34 @@ ConfigureContent(
 
 	if (firstChar == '.') {
 	    /*
-	     * Check that windows are valid, and locate the first slave's
+	     * Check that windows are valid, and locate the first content's
 	     * parent window (default for -in).
 	     */
 
-	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &slave) != TCL_OK) {
+	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (containerPtr == NULL) {
 		/*
-		 * Is there any saved -in from a removed slave?
+		 * Is there any saved -in from a removed content?
 		 * If there is, it becomes default for -in.
 		 * If the stored container does not exist, just ignore it.
 		 */
 
-		struct Gridder *slavePtr = GetGrid(slave);
-		if (slavePtr->in != NULL) {
-		    if (TkGetWindowFromObj(interp, slave, slavePtr->in, &parent)
+		struct Gridder *contentPtr = GetGrid(content);
+		if (contentPtr->in != NULL) {
+		    if (TkGetWindowFromObj(interp, content, contentPtr->in, &parent)
 			    == TCL_OK) {
 			containerPtr = GetGrid(parent);
-			InitMasterData(containerPtr);
+			InitContainerData(containerPtr);
 		    }
 		}
 	    }
 	    if (containerPtr == NULL) {
-		parent = Tk_Parent(slave);
+		parent = Tk_Parent(content);
 		if (parent != NULL) {
 		    containerPtr = GetGrid(parent);
-		    InitMasterData(containerPtr);
+		    InitContainerData(containerPtr);
 		}
 	    }
 	    numWindows++;
@@ -3071,7 +3071,7 @@ ConfigureContent(
 		return TCL_ERROR;
 	    }
 	    containerPtr = GetGrid(other);
-	    InitMasterData(containerPtr);
+	    InitContainerData(containerPtr);
 	} else if (index == CONF_ROW) {
 	    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK
 		    || tmp < 0) {
@@ -3100,10 +3100,10 @@ ConfigureContent(
     }
 
     /*
-     * Iterate over all of the slave windows and short-cuts, parsing options
-     * for each slave. It's a bit wasteful to re-parse the options for each
-     * slave, but things get too messy if we try to parse the arguments just
-     * once at the beginning. For example, if a slave already is managed we
+     * Iterate over all of the content windows and short-cuts, parsing options
+     * for each content. It's a bit wasteful to re-parse the options for each
+     * content, but things get too messy if we try to parse the arguments just
+     * once at the beginning. For example, if a content already is managed we
      * want to just change a few existing values without resetting everything.
      * If there are multiple windows, the -in option only gets processed for
      * the first window.
@@ -3116,7 +3116,7 @@ ConfigureContent(
 
 	/*
 	 * '^' and 'x' cause us to skip a column. '-' is processed as part of
-	 * its preceeding slave.
+	 * its preceeding content.
 	 */
 
 	if ((firstChar == REL_VERT) || (firstChar == REL_SKIP)) {
@@ -3136,27 +3136,27 @@ ConfigureContent(
 	    }
 	}
 
-	if (TkGetWindowFromObj(interp, tkwin, objv[j], &slave) != TCL_OK) {
+	if (TkGetWindowFromObj(interp, tkwin, objv[j], &content) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
-	if (Tk_TopWinHierarchy(slave)) {
+	if (Tk_TopWinHierarchy(content)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't manage \"%s\": it's a top-level window",
 		    Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
 	}
-	slavePtr = GetGrid(slave);
+	contentPtr = GetGrid(content);
 
 	/*
 	 * The following statement is taken from tkPack.c:
 	 *
-	 * "If the slave isn't currently managed, reset all of its
+	 * "If the content isn't currently managed, reset all of its
 	 * configuration information to default values (there could be old
 	 * values left from a previous packer)."
 	 *
-	 * I [D.S.] disagree with this statement. If a slave is disabled
+	 * I [D.S.] disagree with this statement. If a content is disabled
 	 * (using "forget") and then re-enabled, I submit that 90% of the time
 	 * the programmer will want it to retain its old configuration
 	 * information. If the programmer doesn't want this behavior, then the
@@ -3177,7 +3177,7 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
-		if (SetSlaveColumn(interp, slavePtr, tmp, -1) != TCL_OK) {
+		if (SetContentColumn(interp, contentPtr, tmp, -1) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		break;
@@ -3190,7 +3190,7 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "SPAN", NULL);
 		    return TCL_ERROR;
 		}
-		if (SetSlaveColumn(interp, slavePtr, -1, tmp) != TCL_OK) {
+		if (SetContentColumn(interp, contentPtr, -1, tmp) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		break;
@@ -3199,7 +3199,7 @@ ConfigureContent(
 			&other) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (other == slave) {
+		if (other == content) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "window can't be managed in itself", -1));
 		    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
@@ -3207,7 +3207,7 @@ ConfigureContent(
 		}
 		positionGiven = 1;
 		containerPtr = GetGrid(other);
-		InitMasterData(containerPtr);
+		InitContainerData(containerPtr);
 		break;
 	    case CONF_STICKY: {
 		int sticky = StringToSticky(Tcl_GetString(objv[i+1]));
@@ -3220,11 +3220,11 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->sticky = sticky;
+		contentPtr->sticky = sticky;
 		break;
 	    }
 	    case CONF_IPADX:
-		if ((Tk_GetPixelsFromObj(NULL, slave, objv[i+1],
+		if ((Tk_GetPixelsFromObj(NULL, content, objv[i+1],
 			&tmp) != TCL_OK) || (tmp < 0)) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "bad ipadx value \"%s\": must be positive screen distance",
@@ -3232,10 +3232,10 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "INT_PAD", NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->iPadX = tmp * 2;
+		contentPtr->iPadX = tmp * 2;
 		break;
 	    case CONF_IPADY:
-		if ((Tk_GetPixelsFromObj(NULL, slave, objv[i+1],
+		if ((Tk_GetPixelsFromObj(NULL, content, objv[i+1],
 			&tmp) != TCL_OK) || (tmp < 0)) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "bad ipady value \"%s\": must be positive screen distance",
@@ -3243,17 +3243,17 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "INT_PAD", NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->iPadY = tmp * 2;
+		contentPtr->iPadY = tmp * 2;
 		break;
 	    case CONF_PADX:
 		if (TkParsePadAmount(interp, tkwin, objv[i+1],
-			&slavePtr->padLeft, &slavePtr->padX) != TCL_OK) {
+			&contentPtr->padLeft, &contentPtr->padX) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		break;
 	    case CONF_PADY:
 		if (TkParsePadAmount(interp, tkwin, objv[i+1],
-			&slavePtr->padTop, &slavePtr->padY) != TCL_OK) {
+			&contentPtr->padTop, &contentPtr->padY) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		break;
@@ -3266,7 +3266,7 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
-		if (SetSlaveRow(interp, slavePtr, tmp, -1) != TCL_OK) {
+		if (SetContentRow(interp, contentPtr, tmp, -1) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		break;
@@ -3279,7 +3279,7 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "SPAN", NULL);
 		    return TCL_ERROR;
 		}
-		if (SetSlaveRow(interp, slavePtr, -1, tmp) != TCL_OK) {
+		if (SetContentRow(interp, contentPtr, -1, tmp) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		break;
@@ -3287,12 +3287,12 @@ ConfigureContent(
 	}
 
 	/*
-	 * If no position was specified via -in and the slave is already
+	 * If no position was specified via -in and the content is already
 	 * packed, then leave it in its current location.
 	 */
 
-    	if (!positionGiven && (slavePtr->containerPtr != NULL)) {
-	    containerPtr = slavePtr->containerPtr;
+    	if (!positionGiven && (contentPtr->containerPtr != NULL)) {
+	    containerPtr = contentPtr->containerPtr;
 	    goto scheduleLayout;
     	}
 
@@ -3301,41 +3301,41 @@ ConfigureContent(
 	 * its current location.
 	 */
 
-	if (positionGiven && (containerPtr == slavePtr->containerPtr)) {
+	if (positionGiven && (containerPtr == contentPtr->containerPtr)) {
 	    goto scheduleLayout;
 	}
 
 	/*
 	 * Make sure we have a geometry container. We look at:
 	 *  1)   the -in flag
-	 *  2)   the parent of the first slave.
+	 *  2)   the parent of the first content.
 	 */
 
-	parent = Tk_Parent(slave);
+	parent = Tk_Parent(content);
     	if (containerPtr == NULL) {
 	    containerPtr = GetGrid(parent);
-	    InitMasterData(containerPtr);
+	    InitContainerData(containerPtr);
     	}
 
-	if (slavePtr->containerPtr != NULL && slavePtr->containerPtr != containerPtr) {
-            if (slavePtr->containerPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
-                Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->containerPtr->tkwin);
+	if (contentPtr->containerPtr != NULL && contentPtr->containerPtr != containerPtr) {
+            if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
+                Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
             }
-	    Unlink(slavePtr);
-	    slavePtr->containerPtr = NULL;
+	    Unlink(contentPtr);
+	    contentPtr->containerPtr = NULL;
 	}
 
-	if (slavePtr->containerPtr == NULL) {
-	    Gridder *tempPtr = containerPtr->slavePtr;
+	if (contentPtr->containerPtr == NULL) {
+	    Gridder *tempPtr = containerPtr->contentPtr;
 
-	    slavePtr->containerPtr = containerPtr;
-	    containerPtr->slavePtr = slavePtr;
-	    slavePtr->nextPtr = tempPtr;
+	    contentPtr->containerPtr = containerPtr;
+	    containerPtr->contentPtr = contentPtr;
+	    contentPtr->nextPtr = tempPtr;
 	}
 
 	/*
-	 * Make sure that the slave's parent is either the container or an
-	 * ancestor of the container, and that the container and slave aren't the
+	 * Make sure that the content's parent is either the container or an
+	 * ancestor of the container, and that the container and content aren't the
 	 * same.
 	 */
 
@@ -3348,7 +3348,7 @@ ConfigureContent(
 			"can't put %s inside %s", Tcl_GetString(objv[j]),
 			Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
-		Unlink(slavePtr);
+		Unlink(contentPtr);
 		return TCL_ERROR;
 	    }
 	}
@@ -3359,26 +3359,26 @@ ConfigureContent(
 
 	for (container = (TkWindow *)containerPtr->tkwin; container != NULL;
 	     container = (TkWindow *)TkGetGeomMaster(container)) {
-	    if (container == (TkWindow *)slave) {
+	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
 	            Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
-		Unlink(slavePtr);
+		Unlink(contentPtr);
 		return TCL_ERROR;
 	    }
 	}
-	if (containerPtr->tkwin != Tk_Parent(slave)) {
-	    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)containerPtr->tkwin;
+	if (containerPtr->tkwin != Tk_Parent(content)) {
+	    ((TkWindow *)content)->maintainerPtr = (TkWindow *)containerPtr->tkwin;
 	}
 
-	Tk_ManageGeometry(slave, &gridMgrType, slavePtr);
+	Tk_ManageGeometry(content, &gridMgrType, contentPtr);
 
 	if (!(containerPtr->flags & DONT_PROPAGATE)) {
 	    if (TkSetGeometryContainer(interp, containerPtr->tkwin, "grid")
 		    != TCL_OK) {
-		Tk_ManageGeometry(slave, NULL, NULL);
-		Unlink(slavePtr);
+		Tk_ManageGeometry(content, NULL, NULL);
+		Unlink(contentPtr);
 		return TCL_ERROR;
 	    }
 	    containerPtr->flags |= ALLOCED_CONTAINER;
@@ -3388,21 +3388,21 @@ ConfigureContent(
 	 * Assign default position information.
 	 */
 
-	if (slavePtr->column == -1) {
-	    if (SetSlaveColumn(interp, slavePtr, defaultColumn,-1) != TCL_OK){
+	if (contentPtr->column == -1) {
+	    if (SetContentColumn(interp, contentPtr, defaultColumn,-1) != TCL_OK){
 		return TCL_ERROR;
 	    }
 	}
-	if (SetSlaveColumn(interp, slavePtr, -1,
-		slavePtr->numCols + defaultColumnSpan - 1) != TCL_OK) {
+	if (SetContentColumn(interp, contentPtr, -1,
+		contentPtr->numCols + defaultColumnSpan - 1) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (slavePtr->row == -1) {
-	    if (SetSlaveRow(interp, slavePtr, defaultRow, -1) != TCL_OK) {
+	if (contentPtr->row == -1) {
+	    if (SetContentRow(interp, contentPtr, defaultRow, -1) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	}
-	defaultColumn += slavePtr->numCols;
+	defaultColumn += contentPtr->numCols;
 	defaultColumnSpan = 1;
 
 	/*
@@ -3480,19 +3480,19 @@ ConfigureContent(
 	lastColumn += numSkip;
 
 	match = 0;
-	for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-		slavePtr = slavePtr->nextPtr) {
+	for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+		contentPtr = contentPtr->nextPtr) {
 
-	    if (slavePtr->column == lastColumn
-		    && slavePtr->row + slavePtr->numRows - 1 == lastRow) {
-		if (slavePtr->numCols <= width) {
-		    if (SetSlaveRow(interp, slavePtr, -1,
-			    slavePtr->numRows + 1) != TCL_OK) {
+	    if (contentPtr->column == lastColumn
+		    && contentPtr->row + contentPtr->numRows - 1 == lastRow) {
+		if (contentPtr->numCols <= width) {
+		    if (SetContentRow(interp, contentPtr, -1,
+			    contentPtr->numRows + 1) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		    match++;
-		    j += slavePtr->numCols - 1;
-		    lastWindow = Tk_PathName(slavePtr->tkwin);
+		    j += contentPtr->numCols - 1;
+		    lastWindow = Tk_PathName(contentPtr->tkwin);
 		    numSkip = 0;
 		    break;
 		}
@@ -3515,11 +3515,11 @@ ConfigureContent(
     SetGridSize(containerPtr);
 
     /*
-     * If we have emptied this container from slaves it means we are no longer
+     * If we have emptied this container from content it means we are no longer
      * handling it and should mark it as free.
      */
 
-    if (containerPtr->slavePtr == NULL && containerPtr->flags & ALLOCED_CONTAINER) {
+    if (containerPtr->contentPtr == NULL && containerPtr->flags & ALLOCED_CONTAINER) {
 	TkFreeGeometryContainer(containerPtr->tkwin, "grid");
 	containerPtr->flags &= ~ALLOCED_CONTAINER;
     }
