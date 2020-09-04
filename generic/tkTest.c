@@ -1074,14 +1074,14 @@ TestobjconfigObjCmd(
     }
 
     case TWO_WINDOWS: {
-	typedef struct SlaveRecord {
+	typedef struct ContentRecord {
 	    TrivialCommandHeader header;
 	    Tcl_Obj *windowPtr;
-	} SlaveRecord;
-	SlaveRecord *recordPtr;
-	static const Tk_OptionSpec slaveSpecs[] = {
+	} ContentRecord;
+	ContentRecord *recordPtr;
+	static const Tk_OptionSpec contentSpecs[] = {
 	    {TK_OPTION_WINDOW, "-window", "window", "Window", ".bar",
-		offsetof(SlaveRecord, windowPtr), TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL, 0},
+		offsetof(ContentRecord, windowPtr), TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_Window tkwin = Tk_CreateWindowFromPath(interp,
@@ -1092,10 +1092,10 @@ TestobjconfigObjCmd(
 	}
 	Tk_SetClass(tkwin, "Test");
 
-	recordPtr = (SlaveRecord *)ckalloc(sizeof(SlaveRecord));
+	recordPtr = (ContentRecord *)ckalloc(sizeof(ContentRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = Tk_CreateOptionTable(interp,
-		slaveSpecs);
+		contentSpecs);
 	tables[index] = recordPtr->header.optionTable;
 	recordPtr->header.tkwin = tkwin;
 	recordPtr->windowPtr = NULL;

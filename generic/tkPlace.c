@@ -123,19 +123,19 @@ static const Tk_OptionSpec optionSpecs[] = {
 #define CHILD_REL_HEIGHT	8
 
 /*
- * For each container window that has a slave managed by the placer there is a
+ * For each container window that has a content managed by the placer there is a
  * structure of the following form:
  */
 
 typedef struct Container {
     Tk_Window tkwin;		/* Tk's token for container window. */
-    struct Content *contentPtr;	/* First in linked list of slaves placed
+    struct Content *contentPtr;	/* First in linked list of content windowslaced
 				 * relative to this container. */
     int *abortPtr;		/* If non-NULL, it means that there is a nested
 				 * call to RecomputePlacement already working on
 				 * this window.  *abortPtr may be set to 1 to
 				 * abort that nested call.  This happens, for
-				 * example, if tkwin or any of its slaves
+				 * example, if tkwin or any of its content
 				 * is deleted. */
     int flags;			/* See below for bit definitions. */
 } Container;
@@ -375,7 +375,7 @@ Tk_PlaceObjCmd(
 
 static Content *
 CreateContent(
-    Tk_Window tkwin,		/* Token for desired slave. */
+    Tk_Window tkwin,		/* Token for desired content. */
     Tk_OptionTable table)
 {
     Tcl_HashEntry *hPtr;
@@ -389,7 +389,7 @@ CreateContent(
     }
 
     /*
-     * No preexisting slave structure for that window, so make a new one and
+     * No preexisting content structure for that window, so make a new one and
      * populate it with some default values.
      */
 
@@ -451,7 +451,7 @@ FreeContent(
 
 static Content *
 FindContent(
-    Tk_Window tkwin)		/* Token for desired slave. */
+    Tk_Window tkwin)		/* Token for desired content. */
 {
     Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -468,14 +468,14 @@ FindContent(
  *
  * UnlinkContent --
  *
- *	This function removes a slave window from the chain of slaves in its
+ *	This function removes a content window from the chain of content windows in its
  *	container.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The slave list of contentPtr's container changes.
+ *	The content list of contentPtr's container changes.
  *
  *----------------------------------------------------------------------
  */
@@ -496,7 +496,7 @@ UnlinkContent(
     } else {
 	for (prevPtr = containerPtr->contentPtr; ; prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
-		Tcl_Panic("UnlinkContent couldn't find slave to unlink");
+		Tcl_Panic("UnlinkContent couldn't find content to unlink");
 	    }
 	    if (prevPtr->nextPtr == contentPtr) {
 		prevPtr->nextPtr = contentPtr->nextPtr;
@@ -636,7 +636,7 @@ ConfigureContent(
     }
 
     /*
-     * Set slave flags. First clear the field, then add bits as needed.
+     * Set content flags. First clear the field, then add bits as needed.
      */
 
     contentPtr->flags = 0;
@@ -658,7 +658,7 @@ ConfigureContent(
 
     if (!(mask & IN_MASK) && (contentPtr->containerPtr != NULL)) {
 	/*
-	 * If no -in option was passed and the slave is already placed then
+	 * If no -in option was passed and the content is already placed then
 	 * just recompute the placement.
 	 */
 
@@ -673,7 +673,7 @@ ConfigureContent(
 
 	/*
 	 * Make sure that the new container is either the logical parent of the
-	 * slave or a descendant of that window, and that the container and slave
+	 * content window or a descendant of that window, and that the container and content
 	 * aren't the same.
 	 */
 
@@ -683,7 +683,7 @@ ConfigureContent(
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't place %s relative to %s",
+			"can't place \"%s\" relative to \"%s\"",
 			Tk_PathName(contentPtr->tkwin), Tk_PathName(tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		goto error;
@@ -691,7 +691,7 @@ ConfigureContent(
 	}
 	if (contentPtr->tkwin == tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't place %s relative to itself",
+		    "can't place \"%s\" relative to itself",
 		    Tk_PathName(contentPtr->tkwin)));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    goto error;
@@ -705,7 +705,7 @@ ConfigureContent(
 	     container = (TkWindow *)TkGetGeomMaster(container)) {
 	    if (container == (TkWindow *)contentPtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't put %s inside %s, would cause management loop",
+		    "can't put \"%s\" inside \"%s\": would cause management loop",
 	            Tk_PathName(contentPtr->tkwin), Tk_PathName(tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		goto error;
@@ -733,7 +733,7 @@ ConfigureContent(
     }
 
     /*
-     * If there's no container specified for this slave, use its Tk_Parent.
+     * If there's no container specified for this content, use its Tk_Parent.
      */
 
     if (containerWin == NULL) {
@@ -742,7 +742,7 @@ ConfigureContent(
     }
 
     /*
-     * Manage the slave window in this container.
+     * Manage the content window in this container.
      */
 
     containerPtr = CreateContainer(containerWin);
@@ -849,7 +849,7 @@ PlaceInfoCommand(
  * RecomputePlacement --
  *
  *	This function is called as a when-idle handler. It recomputes the
- *	geometries of all the slaves of a given container.
+ *	geometries of all the content of a given container.
  *
  * Results:
  *	None.
@@ -888,8 +888,8 @@ RecomputePlacement(
     Tcl_Preserve(containerPtr);
 
     /*
-     * Iterate over all the slaves for the container. Each slave's geometry can
-     * be computed independently of the other slaves. Changes to the window's
+     * Iterate over all the content windows for the container. Each content's geometry can
+     * be computed independently of the other content. Changes to the window's
      * structure could cause almost anything to happen, including deleting the
      * parent or child. If this happens, we'll be told to abort.
      */
@@ -917,7 +917,7 @@ RecomputePlacement(
 	}
 
 	/*
-	 * Step 2: compute size of slave (outside dimensions including border)
+	 * Step 2: compute size of content (outside dimensions including border)
 	 * and location of anchor point within container.
 	 */
 
@@ -968,7 +968,7 @@ RecomputePlacement(
 
 	/*
 	 * Step 3: adjust the x and y positions so that the desired anchor
-	 * point on the slave appears at that position. Also adjust for the
+	 * point on the content appears at that position. Also adjust for the
 	 * border mode and container's border.
 	 */
 
@@ -1021,8 +1021,8 @@ RecomputePlacement(
 	}
 
 	/*
-	 * Step 5: reconfigure the window and map it if needed. If the slave
-	 * is a child of the container, we do this ourselves. If the slave isn't
+	 * Step 5: reconfigure the window and map it if needed. If the content
+	 * is a child of the container, we do this ourselves. If the content isn't
 	 * a child of the container, let Tk_MaintainGeometry do the work (it will
 	 * re-adjust things as relevant windows map, unmap, and move).
 	 */
@@ -1039,7 +1039,7 @@ RecomputePlacement(
             }
 
 	    /*
-	     * Don't map the slave unless the container is mapped: the slave will
+	     * Don't map the content unless the container is mapped: the content will
 	     * get mapped later, when the container is mapped.
 	     */
 
@@ -1074,7 +1074,7 @@ RecomputePlacement(
  *
  * Side effects:
  *	Structures get cleaned up if the window was deleted. If the window was
- *	resized then slave geometries get recomputed.
+ *	resized then content geometries get recomputed.
  *
  *----------------------------------------------------------------------
  */
@@ -1118,7 +1118,7 @@ PlaceStructureProc(
     case MapNotify:
 	/*
 	 * When a container gets mapped, must redo the geometry computation so
-	 * that all of its slaves get remapped.
+	 * that all of its content get remapped.
 	 */
 
 	if ((containerPtr->contentPtr != NULL)
@@ -1129,7 +1129,7 @@ PlaceStructureProc(
 	return;
     case UnmapNotify:
 	/*
-	 * Unmap all of the slaves when the container gets unmapped, so that they
+	 * Unmap all of the content when the container gets unmapped, so that they
 	 * don't keep redisplaying themselves.
 	 */
 
@@ -1147,7 +1147,7 @@ PlaceStructureProc(
  * ContentStructureProc --
  *
  *	This function is invoked by the Tk event handler when StructureNotify
- *	events occur for a slave window.
+ *	events occur for a content window.
  *
  * Results:
  *	None.
@@ -1182,7 +1182,7 @@ ContentStructureProc(
  *
  * PlaceRequestProc --
  *
- *	This function is invoked by Tk whenever a slave managed by us changes
+ *	This function is invoked by Tk whenever a content managed by us changes
  *	its requested geometry.
  *
  * Results:
@@ -1197,7 +1197,7 @@ ContentStructureProc(
 
 static void
 PlaceRequestProc(
-    ClientData clientData,	/* Pointer to our record for slave. */
+    ClientData clientData,	/* Pointer to our record for content. */
     TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
 {
     Content *contentPtr = (Content *)clientData;
@@ -1242,9 +1242,9 @@ PlaceRequestProc(
 
 static void
 PlaceLostContentProc(
-    ClientData clientData,	/* Content structure for slave window that was
+    ClientData clientData,	/* Content structure for content window that was
 				 * stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    Tk_Window tkwin)		/* Tk's handle for the content window. */
 {
     Content *contentPtr = (Content *)clientData;
     TkDisplay *dispPtr = ((TkWindow *) contentPtr->tkwin)->dispPtr;

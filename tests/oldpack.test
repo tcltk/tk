@@ -492,7 +492,7 @@ test oldpack-8.12 {syntax errors} -body {
 } -returnCodes error -result {wrong # args: window ".pack.blue" should be followed by options}
 test oldpack-8.13 {syntax errors} -body {
     pack append . .pack.blue top
-} -returnCodes error -result {can't pack .pack.blue inside .}
+} -returnCodes error -result {can't pack ".pack.blue" inside "."}
 test oldpack-8.14 {syntax errors} -body {
     pack append .pack .pack.blue f
 } -returnCodes error -result {bad option "f": should be top, bottom, left, right, expand, fill, fillx, filly, padx, pady, or frame}
