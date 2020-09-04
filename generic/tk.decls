@@ -472,7 +472,7 @@ declare 116 {
     Tk_Window Tk_IdToWindow(Display *display, Window window)
 }
 declare 117 {
-    void Tk_ImageChanged(Tk_ImageModel master, int x, int y,
+    void Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
 	    int width, int height, int imageWidth, int imageHeight)
 }
 declare 118 {
@@ -539,7 +539,7 @@ declare 136 {
     CONST84_RETURN char *Tk_NameOfFont(Tk_Font font)
 }
 declare 137 {
-    CONST84_RETURN char *Tk_NameOfImage(Tk_ImageModel imageMaster)
+    CONST84_RETURN char *Tk_NameOfImage(Tk_ImageMaster imageMaster)
 }
 declare 138 {
     CONST84_RETURN char *Tk_NameOfJoinStyle(int join)
