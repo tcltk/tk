@@ -224,8 +224,9 @@ Tk_UpdatePointer(
     TkWindow *targetWinPtr;
     XPoint pos;
     XEvent event;
-    int changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
-    int type, b, mask;
+    unsigned changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
+    int type, b;
+    unsigned mask;
 
     pos.x = x;
     pos.y = y;
@@ -254,7 +255,7 @@ Tk_UpdatePointer(
      */
 
     for (b = Button1; b <= Button9; b++) {
-	mask = TkGetButtonMask(b);
+	mask = Tk_GetButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {
 		type = ButtonPress;

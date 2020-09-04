@@ -1,6 +1,7 @@
 *.a
 *.dll
 *.dylib
+*.dylib.E
 *.exe
 *.exp
 *.la
@@ -21,10 +22,16 @@
 */wish*
 */tktest*
 */versions.vc
+*/version.vc
+*/libtk.vfs
+*/libtk_*.zip
+html
+macosx/configure
 win/Debug*
 win/Release*
 win/*.manifest
 win/nmhlp-out.txt
 win/nmakehlp.out
 unix/tk.pc
-html/*
+unix/Tk-Info.plist
+unix/Wish-Info.plist

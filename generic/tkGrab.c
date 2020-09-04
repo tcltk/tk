@@ -270,7 +270,7 @@ Tk_GrabObjCmd(
 	    }
 	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    if (dispPtr->eventualGrabWinPtr != NULL) {
-		Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+		Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window)
 			dispPtr->eventualGrabWinPtr));
 	    }
 	} else {
@@ -279,7 +279,7 @@ Tk_GrabObjCmd(
 	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		    dispPtr = dispPtr->nextPtr) {
 		if (dispPtr->eventualGrabWinPtr != NULL) {
-		    Tcl_ListObjAppendElement(NULL, resultObj, TkNewWindowObj(
+		    Tcl_ListObjAppendElement(NULL, resultObj, Tk_NewWindowObj(
 			    (Tk_Window) dispPtr->eventualGrabWinPtr));
 		}
 	    }
@@ -666,6 +666,9 @@ ReleaseButtonGrab(
  *	This function is called for each pointer-related event, before the
  *	event has been processed. It does various things to make grabs work
  *	correctly.
+ *	Also, this function takes care of warping the mouse pointer with
+ *	respect to a given window, both when there is a grab in effect and
+ *	when there is none.
  *
  * Results:
  *	If the return value is 1 it means the event should be processed (event
@@ -677,6 +680,7 @@ ReleaseButtonGrab(
  *	Grab state information may be updated. New events may also be pushed
  *	back onto the event queue to replace or augment the one passed in
  *	here.
+ *	The mouse pointer may be moved.
  *
  *----------------------------------------------------------------------
  */
@@ -773,9 +777,23 @@ TkPointerEvent(
 	return 1;
     }
 
+    if ((eventPtr->type == MotionNotify) && !appGrabbed) {
+
+        /*
+         * Warp the mouse pointer with respect to window dispPtr->warpWindow
+         * if such a window was set in HandleEventGenerate.
+         */
+
+        TkDoWarpWrtWin(dispPtr);
+    }
+
     if (!appGrabbed) {
 	return 1;
     }
+
+    /*
+     * From this point on, there is a grab in effect.
+     */
 
     if (eventPtr->type == MotionNotify) {
 	/*
@@ -799,6 +817,13 @@ TkPointerEvent(
 	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);
 	    return 0;
 	}
+
+        /*
+         * Warp the mouse pointer with respect to window dispPtr->warpWindow
+         * if such a window was set in HandleEventGenerate.
+         */
+
+        TkDoWarpWrtWin(dispPtr);
 	return 1;
     }
 
@@ -871,7 +896,7 @@ TkPointerEvent(
 	} else {
 	    if (eventPtr->xbutton.button != AnyButton &&
 		    ((eventPtr->xbutton.state & ALL_BUTTONS)
-		    == TkGetButtonMask(eventPtr->xbutton.button))) {
+		    == Tk_GetButtonMask(eventPtr->xbutton.button))) {
 		ReleaseButtonGrab(dispPtr);			/* Note 4. */
 	    }
 	}

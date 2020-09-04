@@ -43,6 +43,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -71,6 +72,13 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
 #define Tk_CreateOldPhotoImageFormat 0
+#ifdef MAC_OSX_TK
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+#endif
 #else
 static void
 doNothing(void)
@@ -94,11 +102,6 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkWmCleanup_ TkWmCleanup
 #define TkSendCleanup_ TkSendCleanup
 #define TkpTestsendCmd_ TkpTestsendCmd
-#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
-#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
-#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
-#define TkMacOSXInitMenus_ TkMacOSXInitMenus
-#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 #define Tk_CanvasTagsParseProc \
@@ -495,7 +498,16 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-    TkDebugPhotoStringMatchDef, /* 185 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 185 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 185 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+    TkpRedrawWidget, /* 185 */
+#endif /* AQUA */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 186 */
 #endif /* X11 */
@@ -504,18 +516,9 @@ static const TkIntStubs tkIntStubs = {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
-    TkpRedrawWidget, /* 186 */
+    TkpWillDrawWidget, /* 186 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 187 */
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    0, /* 187 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 187 */ /* Dummy entry for stubs table backwards compatibility */
-    TkpWillDrawWidget, /* 187 */
-#endif /* AQUA */
+    TkDebugPhotoStringMatchDef, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -583,7 +586,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXButtonKeyState, /* 8 */
     TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
-    TkMacOSXInstallCursor, /* 11 */
+    0, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
@@ -950,7 +953,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XIconifyWindow, /* 103 */
     XWithdrawWindow, /* 104 */
     XListHosts, /* 105 */
-    0, /* 106 */
+    XSetClipRectangles, /* 106 */
     XFlush, /* 107 */
     XGrabServer, /* 108 */
     XUngrabServer, /* 109 */
@@ -1018,23 +1021,17 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_TranslateWinEvent, /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
-    TkMacOSXInitMenus, /* 3 */
+    0, /* 0 */
+    0, /* 1 */
+    0, /* 2 */
+    0, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
     TkGenWMConfigureEvent, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
-    TkMacOSXGetDrawablePort, /* 7 */
+    0, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    Tk_MacOSXSetEmbedHandler_, /* 11 */
-    Tk_MacOSXTurnOffMenus_, /* 12 */
-    Tk_MacOSXTkOwnsCursor_, /* 13 */
-    TkMacOSXInitMenus_, /* 14 */
-    TkMacOSXInitAppleEvents_, /* 15 */
-    TkGenWMConfigureEvent_, /* 16 */
 #endif /* AQUA */
 };
 
@@ -1146,7 +1143,7 @@ const TkStubs tkStubs = {
     Tk_GetFontMetrics, /* 95 */
     Tk_GetGC, /* 96 */
     Tk_GetImage, /* 97 */
-    Tk_GetImageMasterData, /* 98 */
+    Tk_GetImageModelData, /* 98 */
     Tk_GetItemTypes, /* 99 */
     Tk_GetJoinStyle, /* 100 */
     Tk_GetJustify, /* 101 */
@@ -1322,7 +1319,13 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
-    Tk_CreatePhotoImageFormatVersion3 /* 274 */
+    Tk_AlwaysShowSelection, /* 274 */
+    Tk_GetButtonMask, /* 275 */
+    Tk_GetDoublePixelsFromObj, /* 276 */
+    Tk_NewWindowObj, /* 277 */
+    Tk_SendVirtualEvent, /* 278 */
+    Tk_FontGetDescription, /* 279 */
+    Tk_CreatePhotoImageFormatVersion3, /* 280 */
 };
 
 /* !END!: Do not edit above this line. */

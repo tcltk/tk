@@ -685,7 +685,7 @@ ReconfigureWindowsMenu(
 
 		Tcl_DStringInit(&ds);
 		Tcl_DStringAppend(&ds,
-			Tk_PathName(menuPtr->masterMenuPtr->tkwin), -1);
+			Tk_PathName(menuPtr->mainMenuPtr->tkwin), -1);
 		Tcl_DStringAppend(&ds, ".system", 7);
 
 		menuRefPtr = TkFindMenuReferences(menuPtr->interp,
@@ -696,7 +696,7 @@ ReconfigureWindowsMenu(
 		if ((menuRefPtr != NULL)
 			&& (menuRefPtr->menuPtr != NULL)
 			&& (menuPtr->parentTopLevelPtr != NULL)
-			&& (systemMenuPtr->masterMenuPtr
+			&& (systemMenuPtr->mainMenuPtr
 				== menuRefPtr->menuPtr)) {
 		    HMENU systemMenuHdl = (HMENU) systemMenuPtr->platformData;
 		    HWND wrapper = TkWinGetWrapperWindow(menuPtr
@@ -1252,7 +1252,8 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    TkSizeT i, len, underline;
+	    TkSizeT i, len;
+	    int underline;
 	    Tcl_Obj *labelPtr;
 	    WCHAR *wlabel;
 	    int menuChar;
@@ -1270,7 +1271,7 @@ TkWinHandleMenuEvent(
 	    for (i = 0; i < menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
-		if ((underline != TCL_INDEX_NONE) && (labelPtr != NULL)) {
+		if ((underline >= 0) && (labelPtr != NULL)) {
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
@@ -1689,7 +1690,7 @@ GetTearoffEntryGeometry(
     (void)mePtr;
     (void)tkfont;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
     } else {
 	*heightPtr = fmPtr->linespace;
@@ -2597,7 +2598,7 @@ DrawTearoffEntry(
     (void)tkfont;
     (void)fmPtr;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	return;
     }
 
@@ -3229,7 +3230,7 @@ TkpMenuNotifyToplevelCreate(
     if ((menuName != NULL) && (menuName[0] != '\0')) {
 	menuRefPtr = TkFindMenuReferences(interp, menuName);
 	if ((menuRefPtr != NULL) && (menuRefPtr->menuPtr != NULL)) {
-	    for (menuPtr = menuRefPtr->menuPtr->masterMenuPtr; menuPtr != NULL;
+	    for (menuPtr = menuRefPtr->menuPtr->mainMenuPtr; menuPtr != NULL;
 		    menuPtr = menuPtr->nextInstancePtr) {
 		if (menuPtr->menuType == MENUBAR) {
 		    ScheduleMenuReconfigure(menuPtr);

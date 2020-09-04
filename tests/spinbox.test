@@ -12,6 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # For xscrollcommand
+set scrollInfo {}
 proc scroll args {
         global scrollInfo
         set scrollInfo $args
@@ -713,7 +714,7 @@ test spinbox-1.61 {configuration option: "repeatinterval"} -setup {
     .e cget -repeatinterval
 } -cleanup {
     destroy .e
-} -result {-500}
+} -result -500
 test spinbox-1.62 {configuration option: "repeatinterval" for spinbox} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
@@ -1871,7 +1872,7 @@ test spinbox-3.79 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -4
+    .e xview -1
     .e index @0
 } -cleanup {
     destroy .e
@@ -2013,9 +2014,10 @@ test spinbox-5.7 {ConfigureSpinbox procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    set timeout [after 500 {set $scrollInfo "timeout"}]
-    vwait scrollInfo
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e configure -width 5
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2219,8 +2221,9 @@ test spinbox-7.1 {InsertChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 2 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2236,8 +2239,9 @@ test spinbox-7.2 {InsertChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 500 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2370,8 +2374,9 @@ test spinbox-8.1 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 2 4
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2386,8 +2391,9 @@ test spinbox-8.2 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    .e delete -2 2
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
+    .e delete -1 2
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2402,8 +2408,9 @@ test spinbox-8.3 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 3 1000
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -3115,7 +3122,7 @@ test spinbox-13.23 {GetSpinboxIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -10
+    .e index -1
 } -cleanup {
     destroy .e
 } -result 0
@@ -3203,9 +3210,10 @@ test spinbox-16.2 {SpinboxVisibleRange procedure} -body {
 test spinbox-17.1 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 0 end
     .e insert 0 123
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3216,8 +3224,9 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
     .e insert 0 0123456789abcdef
+    update idletasks
+    set timeout [after 500 {set $scrollInfo {-1000000 -1000000}}]
     .e xview 3
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3227,23 +3236,26 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
 test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcdefghijklmnopqrs
-    .e xview 6
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    .e xview
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
     after cancel $timeout
-} -result {0.315789 0.842105}
+} -result {0.000000 0.526316}
 test spinbox-17.4 {SpinboxUpdateScrollbar procedure} -setup {
     proc bgerror msg {
 	global x
 	set x $msg
 }
 } -body {
-    spinbox .e -width 5 -xscrollcommand thisisnotacommand
+    spinbox .e -width 5
     pack .e
+    update idletasks
+    .e configure -xscrollcommand thisisnotacommand
     vwait x
     list $x $errorInfo
 } -cleanup {
@@ -3624,7 +3636,7 @@ test spinbox-19.19 {spinbox widget validation} -setup {
     list [.e cget -validate] [.e get] $::vVals
 } -cleanup {
     destroy .e
-} -result {none mydata {.e -1 -1 nextdata nextdata {} all forced}}
+} -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
 
 ## This leaves validate alone because we trigger validation through the
 ## textvar (a write trace), and the write during validation triggers
@@ -3650,6 +3662,26 @@ test spinbox-19.20 {spinbox widget validation} -setup {
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
+
+## This leaves validate alone because we trigger validation through the
+## textvar (a write trace), and the write during validation triggers
+## nothing (by definition of avoiding loops on var traces).  This is
+## one of those "dangerous" conditions where the user will have a
+## different value in the entry widget shown as is in the textvar.
+test spinbox-19.21 {spinbox widget validation - bug 40e4bf6198} -setup {
+    unset -nocomplain ::e ::vVals
+} -body {
+    spinbox .e -validate key \
+        -validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+        -textvariable ::e
+    pack .e
+    set ::e origdata
+    .e insert 0 A
+    list [.e cget -validate] [.e get] $::e $::vVals
+} -cleanup {
+    destroy .e
+} -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
+
 ##
 ## End validation tests
 ##

@@ -99,24 +99,6 @@ typedef struct TkWindowPrivate MacDrawable;
  */
 
 /*
- * This structure is for handling Netscape-type in process
- * embedding where Tk does not control the top-level. It contains
- * various functions that are needed by Mac specific routines, like
- * TkMacOSXGetDrawablePort. The definitions of the function types
- * are in tkMacOSX.h.
- */
-
-typedef struct {
-    Tk_MacOSXEmbedRegisterWinProc *registerWinProc;
-    Tk_MacOSXEmbedGetGrafPortProc *getPortProc;
-    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProc;
-    Tk_MacOSXEmbedGetClipProc *getClipProc;
-    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc;
-} TkMacOSXEmbedHandler;
-
-MODULE_SCOPE TkMacOSXEmbedHandler *tkMacOSXEmbedHandler;
-
-/*
  * GC CGColorRef cache for tkMacOSXColor.c
  */
 
@@ -180,7 +162,7 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 #define TK_MACOSX_HANDLE_EVENT_IMMEDIATELY 1024
 
 /*
- * Defines for tkTextDisp.c
+ * Defines for tkTextDisp.c and tkFont.c
  */
 
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
@@ -196,8 +178,7 @@ MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 MODULE_SCOPE void TkpRetainRegion(Region r);
 MODULE_SCOPE void TkpReleaseRegion(Region r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
-MODULE_SCOPE Bool TkTestLogDisplay(void);
-MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
+MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
 
 /*
  * Include the stubbed internal platform-specific API.

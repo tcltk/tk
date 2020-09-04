@@ -67,7 +67,7 @@ typedef struct TkOption {
 				 * monochrome displays. */
 	struct TkOption *synonymPtr;
 				/* For synonym options, this points to the
-				 * master entry. */
+				 * original entry. */
 	const struct Tk_ObjCustomOption *custom;
 				/* For TK_OPTION_CUSTOM. */
     } extra;
@@ -237,8 +237,8 @@ Tk_CreateOptionTable(
 
 	if (specPtr->type == TK_OPTION_SYNONYM) {
 	    /*
-	     * This is a synonym option; find the master option that it refers
-	     * to and create a pointer from the synonym to the master.
+	     * This is a synonym option; find the original option that it refers
+	     * to and create a pointer from the synonym to the origin.
 	     */
 
 	    for (specPtr2 = templatePtr, i = 0; ; specPtr2++, i++) {
@@ -1405,8 +1405,6 @@ Tk_RestoreSavedOptions(
 	    CLANG_ASSERT(internalPtr);
 	    switch (specPtr->type) {
 	    case TK_OPTION_BOOLEAN:
-		*((int *) internalPtr) = *((int *) ptr);
-		break;
 	    case TK_OPTION_INT:
 		*((int *) internalPtr) = *((int *) ptr);
 		break;
@@ -1874,106 +1872,106 @@ GetObjectForOption(
     void *internalPtr;		/* Points to internal value of option in
 				 * record. */
 
-    internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
     objPtr = NULL;
-    switch (optionPtr->specPtr->type) {
-    case TK_OPTION_BOOLEAN:
-	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
-	break;
-    case TK_OPTION_INT:
-	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
-	break;
-    case TK_OPTION_DOUBLE:
-	objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
-	break;
-    case TK_OPTION_STRING:
-	objPtr = Tcl_NewStringObj(*((char **) internalPtr), -1);
-	break;
-    case TK_OPTION_STRING_TABLE:
-	objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
-		*((int *) internalPtr)], -1);
-	break;
-    case TK_OPTION_COLOR: {
-	XColor *colorPtr = *((XColor **) internalPtr);
+    if (optionPtr->specPtr->internalOffset != TCL_INDEX_NONE) {
+	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
+	switch (optionPtr->specPtr->type) {
+	case TK_OPTION_BOOLEAN:
+	case TK_OPTION_INT:
+	    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+	    break;
+	case TK_OPTION_DOUBLE:
+	    objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
+	    break;
+	case TK_OPTION_STRING:
+	    objPtr = Tcl_NewStringObj(*((char **) internalPtr), -1);
+	    break;
+	case TK_OPTION_STRING_TABLE:
+	    objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
+		    *((int *) internalPtr)], -1);
+	    break;
+	case TK_OPTION_COLOR: {
+	    XColor *colorPtr = *((XColor **) internalPtr);
 
-	if (colorPtr != NULL) {
-	    objPtr = Tcl_NewStringObj(Tk_NameOfColor(colorPtr), -1);
+	    if (colorPtr != NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfColor(colorPtr), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_FONT: {
-	Tk_Font tkfont = *((Tk_Font *) internalPtr);
+	case TK_OPTION_FONT: {
+	    Tk_Font tkfont = *((Tk_Font *) internalPtr);
 
-	if (tkfont != NULL) {
-	    objPtr = Tcl_NewStringObj(Tk_NameOfFont(tkfont), -1);
+	    if (tkfont != NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfFont(tkfont), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_STYLE: {
-	Tk_Style style = *((Tk_Style *) internalPtr);
+	case TK_OPTION_STYLE: {
+	    Tk_Style style = *((Tk_Style *) internalPtr);
 
-	if (style != NULL) {
-	    objPtr = Tcl_NewStringObj(Tk_NameOfStyle(style), -1);
+	    if (style != NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfStyle(style), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_BITMAP: {
-	Pixmap pixmap = *((Pixmap *) internalPtr);
+	case TK_OPTION_BITMAP: {
+	    Pixmap pixmap = *((Pixmap *) internalPtr);
 
-	if (pixmap != None) {
-	    objPtr = Tcl_NewStringObj(
+	    if (pixmap != None) {
+		objPtr = Tcl_NewStringObj(
 		    Tk_NameOfBitmap(Tk_Display(tkwin), pixmap), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_BORDER: {
-	Tk_3DBorder border = *((Tk_3DBorder *) internalPtr);
+	case TK_OPTION_BORDER: {
+	    Tk_3DBorder border = *((Tk_3DBorder *) internalPtr);
 
-	if (border != NULL) {
-	    objPtr = Tcl_NewStringObj(Tk_NameOf3DBorder(border), -1);
+	    if (border != NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOf3DBorder(border), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_RELIEF:
-	objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *) internalPtr)), -1);
-	break;
-    case TK_OPTION_CURSOR: {
-	Tk_Cursor cursor = *((Tk_Cursor *) internalPtr);
+	case TK_OPTION_RELIEF:
+	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *) internalPtr)), -1);
+	    break;
+	case TK_OPTION_CURSOR: {
+	    Tk_Cursor cursor = *((Tk_Cursor *) internalPtr);
 
-	if (cursor != NULL) {
-	    objPtr = Tcl_NewStringObj(
-		    Tk_NameOfCursor(Tk_Display(tkwin), cursor), -1);
+	    if (cursor != NULL) {
+		objPtr = Tcl_NewStringObj(
+		Tk_NameOfCursor(Tk_Display(tkwin), cursor), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_JUSTIFY:
-	objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
-		*((Tk_Justify *) internalPtr)), -1);
-	break;
-    case TK_OPTION_ANCHOR:
-	objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
-		*((Tk_Anchor *) internalPtr)), -1);
-	break;
-    case TK_OPTION_PIXELS:
-	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
-	break;
-    case TK_OPTION_WINDOW: {
-	Tk_Window tkwin = *((Tk_Window *) internalPtr);
+	case TK_OPTION_JUSTIFY:
+	    objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
+		    *((Tk_Justify *) internalPtr)), -1);
+	    break;
+	case TK_OPTION_ANCHOR:
+	    objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
+		    *((Tk_Anchor *) internalPtr)), -1);
+	    break;
+	case TK_OPTION_PIXELS:
+	    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+	    break;
+	case TK_OPTION_WINDOW: {
+	    Tk_Window tkwin = *((Tk_Window *) internalPtr);
 
-	if (tkwin != NULL) {
-	    objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
+	    if (tkwin != NULL) {
+		objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
+	    }
+	    break;
 	}
-	break;
-    }
-    case TK_OPTION_CUSTOM: {
-	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	case TK_OPTION_CUSTOM: {
+	    const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 
-	objPtr = custom->getProc(custom->clientData, tkwin, (char *)recordPtr,
-		optionPtr->specPtr->internalOffset);
-	break;
-    }
-    default:
-	Tcl_Panic("bad option type in GetObjectForOption");
+	    objPtr = custom->getProc(custom->clientData, tkwin, (char *)recordPtr,
+		    optionPtr->specPtr->internalOffset);
+	    break;
+        }
+        default:
+	    Tcl_Panic("bad option type in GetObjectForOption");
+	}
     }
     if (objPtr == NULL) {
 	objPtr = Tcl_NewObj();

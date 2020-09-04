@@ -12,6 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # For xscrollcommand
+set scrollInfo {}
 proc scroll args {
         global scrollInfo
         set scrollInfo $args
@@ -1533,7 +1534,7 @@ test entry-3.79 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -4
+    .e xview -1
     .e index @0
 } -cleanup {
     destroy .e
@@ -1617,7 +1618,7 @@ test entry-5.3 {ConfigureEntry procedure, -textvariable} -setup {
 } -body {
     .e insert 0 "Some text"
     .e configure -textvariable x
-    return $x
+    set x
 } -cleanup {
     destroy .e
 } -result {Some text}
@@ -1652,7 +1653,7 @@ test entry-5.5 {ConfigureEntry procedure} -setup {
     lappend x [selection get]
     .e1 configure -exportselection 1
     lappend x [selection get]
-    return $x
+    set x
 } -cleanup {
     destroy .e1 .e2
 } -result {{This is so} {This is so} 1234}
@@ -1688,9 +1689,10 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    set timeout [after 500 {set $scrollInfo "timeout"}]
-    vwait scrollInfo
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e configure -width 5
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -1933,9 +1935,9 @@ test entry-7.1 {InsertChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e insert 2 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -1950,9 +1952,9 @@ test entry-7.2 {InsertChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e insert 500 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2084,9 +2086,9 @@ test entry-8.1 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e delete 2 4
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2100,9 +2102,9 @@ test entry-8.2 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
-    .e delete -2 2
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    .e delete -1 2
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2116,9 +2118,9 @@ test entry-8.3 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e delete 3 1000
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2833,7 +2835,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -10
+    .e index -1
 } -cleanup {
     destroy .e
 } -result 0
@@ -2964,9 +2966,10 @@ test entry-16.4 {EntryVisibleRange procedure} -body {
 test entry-17.1 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 0 end
     .e insert 0 123
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -2976,9 +2979,9 @@ test entry-17.1 {EntryUpdateScrollbar procedure} -body {
 test entry-17.2 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 0123456789abcdef
     .e xview 3
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -2988,9 +2991,9 @@ test entry-17.2 {EntryUpdateScrollbar procedure} -body {
 test entry-17.3 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3003,8 +3006,10 @@ test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
 	set x $msg
 }
 } -body {
-    entry .e -width 5 -xscrollcommand thisisnotacommand
+    entry .e -width 5
     pack .e
+    update idletasks
+    .e configure -xscrollcommand thisisnotacommand
     vwait x
     list $x $errorInfo
 } -cleanup {
@@ -3047,7 +3052,7 @@ test entry-19.1 {entry widget validation} -setup {
         -background red -foreground white
     pack .e
     .e insert 0 a
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 1 0 a {} a all key}
@@ -3079,7 +3084,7 @@ test entry-19.3 {entry widget validation} -setup {
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 1 2 abc ab c all key}
@@ -3111,7 +3116,7 @@ test entry-19.5 {entry widget validation} -setup {
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 0 2 a13bc a123bc 2 all key}
@@ -3128,7 +3133,7 @@ test entry-19.6 {entry widget validation} -setup {
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
     .e delete 1 3
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 0 1 abc a13bc 13 key key}
@@ -3145,7 +3150,7 @@ test entry-19.7 {entry widget validation} -setup {
     .e insert end abc                 ;# previous settings
     set ::vVals {}
     .e insert end d
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3164,7 +3169,7 @@ test entry-19.8 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusin}
@@ -3185,7 +3190,7 @@ test entry-19.9 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusout}
@@ -3203,7 +3208,7 @@ test entry-19.10 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusin}
@@ -3224,7 +3229,7 @@ test entry-19.11 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusout}
@@ -3242,7 +3247,7 @@ test entry-19.12 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
@@ -3261,7 +3266,7 @@ test entry-19.13 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3280,7 +3285,7 @@ test entry-19.14 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3302,7 +3307,7 @@ test entry-19.15 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusout focusout}
@@ -3385,7 +3390,7 @@ test entry-19.19 {entry widget validation} -setup {
     list [.e cget -validate] [.e get] $::vVals
 } -cleanup {
     destroy .e
-} -result {none mydata {.e -1 -1 nextdata nextdata {} all forced}}
+} -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
 
 ## This leaves validate alone because we trigger validation through the
 ## textvar (a write trace), and the write during validation triggers
@@ -3411,6 +3416,26 @@ test entry-19.20 {entry widget validation} -setup {
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
+
+## This leaves validate alone because we trigger validation through the
+## textvar (a write trace), and the write during validation triggers
+## nothing (by definition of avoiding loops on var traces).  This is
+## one of those "dangerous" conditions where the user will have a
+## different value in the entry widget shown as is in the textvar.
+test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
+    unset -nocomplain ::e ::vVals
+} -body {
+    entry .e -validate key \
+        -validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+        -textvariable ::e
+    pack .e
+    set ::e origdata
+    .e insert 0 A
+    list [.e cget -validate] [.e get] $::e $::vVals
+} -cleanup {
+    destroy .e
+} -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
+
 ##
 ## End validation tests
 ##
