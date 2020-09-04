@@ -1104,7 +1104,7 @@ GetCachedSpecs(
 
 	/*
 	 * Now allocate our working copy's space and copy over the contents
-	 * from the master copy.
+	 * from the origin.
 	 */
 
 	cachedSpecs = ckalloc(entrySpace);

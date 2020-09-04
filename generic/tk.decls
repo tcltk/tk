@@ -1146,12 +1146,8 @@ declare 11 aqua {
 declare 12 aqua {
     void *Tk_MacOSXGetCGContextForDrawable(Drawable drawable)
 }
-# Replaces TkMacOSXGetRootControl
-declare 13 aqua {
-    void *Tk_MacOSXGetNSViewForDrawable(Drawable drawable)
-}
 # Replaces TkMacOSXDrawable
-declare 14 aqua {
+declare 13 aqua {
     void *Tk_MacOSXGetNSWindowForDrawable(Drawable drawable)
 }
 declare 16 aqua {

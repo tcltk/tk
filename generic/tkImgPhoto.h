@@ -27,6 +27,7 @@
  * Forward declarations of the structures we define.
  */
 
+#define PhotoModel PhotoMaster
 typedef struct ColorTableId	ColorTableId;
 typedef struct ColorTable	ColorTable;
 typedef struct PhotoInstance	PhotoInstance;
@@ -141,7 +142,7 @@ struct ColorTable {
  */
 
 struct PhotoMaster {
-    Tk_ImageMaster tkMaster;	/* Tk's token for image master. NULL means the
+    Tk_ImageMaster tkMaster;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter associated with the application
 				 * using this image. */
