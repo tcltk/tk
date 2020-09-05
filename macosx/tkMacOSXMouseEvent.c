@@ -57,10 +57,17 @@ enum {
     NSPoint local, global;
     NSInteger button = -1;
     int win_x, win_y;
+    Bool inTitleBar = NO;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
+    
+    if (eventWindow) {
+	NSRect viewFrame = [[eventWindow contentView] frame];
+	NSPoint location = [theEvent locationInWindow];
+	inTitleBar = viewFrame.size.height < location.y;
+    }
     switch (eventType) {
     case NSLeftMouseDown:
     case NSRightMouseDown:
@@ -71,10 +78,15 @@ enum {
 	button = [theEvent buttonNumber] + Button1;
 	break;
     case NSMouseEntered:
-	[(TKWindow *)eventWindow setMouseInResizeArea:YES];
-	break;
+	if (!inTitleBar) {
+	    [(TKWindow *)eventWindow setMouseInResizeArea:YES];
+	    break;
+	}
     case NSMouseExited:
-	[(TKWindow *)eventWindow setMouseInResizeArea:NO];
+	if (! inTitleBar) {
+	    [(TKWindow *)eventWindow setMouseInResizeArea:NO];
+	    break;
+	}
 	break;
     case NSLeftMouseUp:
     case NSRightMouseUp:
@@ -90,14 +102,22 @@ enum {
     }
 
     /*
-     * Do not send ButtonPress XEvents for MouseDown NSEvents that start a
-     * resize.  (The MouseUp will be handled during LiveResize.)  See
-     * ticket [d72abe6b54].
+     * Ignore button presses that start a resize.  (The release will be handled
+     * during LiveResize.)  See ticket [d72abe6b54].
      */
 
     if ((eventType == NSLeftMouseDown) &&
 	[(TKWindow *)eventWindow mouseInResizeArea] &&
 	([eventWindow styleMask] & NSResizableWindowMask)) {
+	return theEvent;
+    }
+
+    /*
+     * Ignore button presses and releases that occur in the title bar.
+     */
+    
+    if ((eventType == NSLeftMouseDown || eventType == NSLeftMouseUp) &&
+	inTitleBar) {
 	return theEvent;
     }
 
