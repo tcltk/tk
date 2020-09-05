@@ -607,6 +607,23 @@ GenerateButtonEvent(
     return true;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWarpPointer --
+ *
+ *	Move the mouse cursor to the screen location specified by the warpX and
+ *	warpY fields of a TkDisplay.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	The mouse cursor is moved.
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpWarpPointer(
     TkDisplay *dispPtr)
