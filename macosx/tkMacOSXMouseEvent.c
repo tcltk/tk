@@ -76,11 +76,11 @@ enum {
     case NSMouseExited:
 	[(TKWindow *)eventWindow setMouseInResizeArea:NO];
 	break;
-    case NSMouseMoved:
-    case NSCursorUpdate:
     case NSLeftMouseUp:
     case NSRightMouseUp:
     case NSOtherMouseUp:
+    case NSMouseMoved:	
+    case NSCursorUpdate:
     case NSTabletPoint:
     case NSTabletProximity:
     case NSScrollWheel:
@@ -95,7 +95,7 @@ enum {
      * ticket [d72abe6b54].
      */
 
-    if (eventType == NSLeftMouseDown &&
+    if ((eventType == NSLeftMouseDown) &&
 	[(TKWindow *)eventWindow mouseInResizeArea] &&
 	([eventWindow styleMask] & NSResizableWindowMask)) {
 	return theEvent;
@@ -143,7 +143,7 @@ enum {
      */
 
     global = [NSEvent mouseLocation];
-    local = [eventWindow convertPointFromScreen: global];
+    local = [eventWindow tkConvertPointFromScreen: global];
     global.x = floor(global.x);
     global.y = floor(TkMacOSXZeroScreenHeight() - global.y);
     local.x = floor(local.x);
@@ -202,6 +202,13 @@ enum {
      */
 
     unsigned int state = 0;
+
+    /*
+     * For mouseDown events we set the single bit for that button in the state.
+     * Otherwise the button state is 0.  Hopefully this allows TkUpdatePointer
+     * to maintain its button state correctly.
+     */
+
     if (button > 0) {
 	state |= TkGetButtonMask(button);
     }
@@ -233,8 +240,9 @@ enum {
     if (eventType != NSScrollWheel) {
 
 	/*
-	 * For normal mouse events, Tk_UpdatePointer will send the XEvent.
-	 * Unfortunately, it will also recompute the local coordinates.
+	 * For normal mouse events, Tk_UpdatePointer will send the appropriate
+	 * XEvents using its cached state information.  Unfortunately, it will
+	 * also recompute the local coordinates.
 	 */
 
 #ifdef TK_MAC_DEBUG_EVENTS
