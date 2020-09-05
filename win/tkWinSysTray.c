@@ -33,8 +33,8 @@
 static int isWin32s = -1;
 #define ISWIN32S isWin32s
 
-#ifdef HAVE_STDLIB_H#include <stdlib.h>
-
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
 #endif
 
 #ifdef HAVE_STDINT_H#include <stdint.h>
