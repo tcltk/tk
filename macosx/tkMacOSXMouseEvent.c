@@ -62,7 +62,7 @@ enum {
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    
+
     if (eventWindow) {
 	NSRect viewFrame = [[eventWindow contentView] frame];
 	NSPoint location = [theEvent locationInWindow];
@@ -80,18 +80,15 @@ enum {
     case NSMouseEntered:
 	if (!inTitleBar) {
 	    [(TKWindow *)eventWindow setMouseInResizeArea:YES];
-	    break;
 	}
+	break;
     case NSMouseExited:
-	if (! inTitleBar) {
-	    [(TKWindow *)eventWindow setMouseInResizeArea:NO];
-	    break;
-	}
+	[(TKWindow *)eventWindow setMouseInResizeArea:NO];
 	break;
     case NSLeftMouseUp:
     case NSRightMouseUp:
     case NSOtherMouseUp:
-    case NSMouseMoved:	
+    case NSMouseMoved:
     case NSCursorUpdate:
     case NSTabletPoint:
     case NSTabletProximity:
@@ -115,7 +112,7 @@ enum {
     /*
      * Ignore button presses and releases that occur in the title bar.
      */
-    
+
     if ((eventType == NSLeftMouseDown || eventType == NSLeftMouseUp) &&
 	inTitleBar) {
 	return theEvent;
