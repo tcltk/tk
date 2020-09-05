@@ -37,8 +37,8 @@ static int isWin32s = -1;
 #include <stdlib.h>
 #endif
 
-#ifdef HAVE_STDINT_H#include <stdint.h>
-
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
 #endif
 
 /* Deal with Tcl 8.4 constificiation */
