@@ -12,6 +12,14 @@
                                         
 */
 
+
+#include <windows.h>
+#include <shellapi.h>
+#include <tk.h>
+#include <tkPlatDecls.h>
+#include "tkWinIco.h"
+#include "tkWinInt.h"
+
 /* 
  * Based extensively on the winico extension and sample code from Microsoft. 
  * Some of the code was adapted into tkWinWM.c to implement the "wm iconphoto" 
@@ -20,12 +28,6 @@
  * to add balloon/system notifications.  
  */
 
-#include <windows.h>
-#include <shellapi.h>
-#include <tk.h>
-#include <tkPlatDecls.h>
-#include "tkWinIco.h"
-#include "tkWinInt.h"
 
 #define GETHINSTANCE Tk_GetHINSTANCE()
 static int isWin32s = -1;
@@ -80,9 +82,23 @@ static LPFN_SHELLNOTIFYICONW notify_funcW = NULL;
 static HMODULE hmod = NULL;
 static HWND handlerWindow = NULL;
 
-/* 
- * This function tries to swap the lines of the bitmap in various formats. 
+/*
+ *----------------------------------------------------------------------
+ * 
+ * swaplines --
+ *
+ *	This function tries to swap the lines of the bitmap in various formats.
+ *
+ * Results:
+ *	Swaps lines as needed.
+ *
+ * Side effects:
+ *	Accurate rendering of bitmap. 
+ *
+ *----------------------------------------------------------------------
+ *
  */
+ 
 static void
 swaplines(unsigned char * bits, int width, int height, int bpp) {
     #define MAX_LINE 512
@@ -121,8 +137,21 @@ swaplines(unsigned char * bits, int width, int height, int bpp) {
 }
 
 /*
- * Create icon from 16-bit resource.
+ *----------------------------------------------------------------------
+ *
+ * MakeIconFromResource16 -- 
+ * 
+ * 	Create icon from 16-bit resource.
+ *
+ * Results:
+ *	Icon is created. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
+ 
 static HICON
 MakeIconFromResource16(LPICONIMAGE lpIcon) {
     HICON hIcon;
@@ -177,8 +206,21 @@ MakeIconFromResource16(LPICONIMAGE lpIcon) {
 }
 
 /*
- * Create icon from 32-bit resource.
+ *----------------------------------------------------------------------
+ *
+ * MakeIconFromResource32 -- 
+ * 
+ * 	Create icon from 32-bit resource.
+ *
+ * Results:
+ *	Icon is created. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
+ 
 static HICON
 MakeIconFromResource32(LPICONIMAGE lpIcon) {
     HICON hIcon;
@@ -215,9 +257,23 @@ MakeIconFromResource32(LPICONIMAGE lpIcon) {
     return hIcon;
 }
 
+
 /*
- * Wrapper function to create icon.
+ *----------------------------------------------------------------------
+ *
+ * MakeIconFromResource -- 
+ * 
+ * 	Wrapper function to create icon.
+ *
+ * Results:
+ *	Icon is created. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
+ 
 
 static HICON
 MakeIconFromResource(LPICONIMAGE lpIcon) {
@@ -228,8 +284,21 @@ MakeIconFromResource(LPICONIMAGE lpIcon) {
 }
 
 /*
- * Free memory.
+ *----------------------------------------------------------------------
+ *
+ * FreeIconResource -- 
+ * 
+ * 	Frees memory from icon.
+ *
+ * Results:
+ *	Memory released.  
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
+ 
 
 static void
 FreeIconResource(LPICONRESOURCE lpIR) {
@@ -246,8 +315,21 @@ FreeIconResource(LPICONRESOURCE lpIR) {
     ckfree((char * ) lpIR);
 }
 
+
 /*
- * Read icon resource from an ICO file.
+ *----------------------------------------------------------------------
+ *
+ * ReadIconFromICOFile -- 
+ * 
+ * 	Read icon resource from an ICO file.
+ *
+ * Results:
+ *	Icon is created. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
 
 LPICONRESOURCE
@@ -357,8 +439,21 @@ ReadIconFromICOFile(Tcl_Interp * interp, LPCSTR szFileName) {
     return NULL;
 }
 
+
 /*
- * Adjust internal pointers in icon resource struct.
+ *----------------------------------------------------------------------
+ *
+ * AdjustICONIMAGEPointers -- 
+ * 
+ * 	Adjust internal pointers in icon resource struct.
+ *
+ * Results:
+ *	Pointers adjusted as needed in icon resource struct.
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
 
 static BOOL
@@ -381,9 +476,23 @@ AdjustICONIMAGEPointers(LPICONIMAGE lpImage) {
     return TRUE;
 }
 
+
 /*
- * Read the header from an ICO file.
+ *----------------------------------------------------------------------
+ *
+ * ReadICOHeader -- 
+ * 
+ * 	Read the header from an ICO file.
+ *
+ * Results:
+ *	Icon is created. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
+
 
 static int
 ReadICOHeader(Tcl_Channel channel) {
@@ -436,9 +545,23 @@ ReadICOHeader(Tcl_Channel channel) {
 #define RectWidth(r)((r).right - (r).left + 1)
 #define RectHeight(r)((r).bottom - (r).top + 1)
 
+
 /*
- * Using DIB functions, draw XOR mask on hDC in Rect.
+ *----------------------------------------------------------------------
+ *
+ * DrawXORMask -- 
+ * 
+ * 	Using DIB functions, draw XOR mask on hDC in Rect.
+ *
+ * Results:
+ *	Icon is rendered. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
+
 
 static BOOL
 DrawXORMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
@@ -471,7 +594,19 @@ DrawXORMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
 }
 
 /*
- * Using DIB functions, draw AND mask on hDC in Rect.
+ *----------------------------------------------------------------------
+ *
+ * DrawANDMask -- 
+ * 
+ * 	Using DIB functions, draw AND mask on hDC in Rect.
+ *
+ * Results:
+ *	Icon is rendered. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
 
 BOOL
@@ -522,7 +657,19 @@ DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
 #endif
 
 /*
- * Locate the image bits in a CF_DIB format DIB.
+ *----------------------------------------------------------------------
+ *
+ * FindDIBBits -- 
+ * 
+ * 	Locate the image bits in a CF_DIB format DIB.
+ *
+ * Results:
+ *	Icon is rendered. 
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
  */
 
 static LPSTR
@@ -530,6 +677,23 @@ FindDIBBits(LPSTR lpbi) {
     return (lpbi + * (LPDWORD) lpbi + PaletteSize(lpbi));
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * NotifyA -- 
+ * 
+ * 	Display icon in system tray on older ANSI-encoded systems. 
+ *
+ * Results:
+ *	Icon is displayed.
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
+ */
+
+ 
 static BOOL
 NotifyA(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     NOTIFYICONDATAA ni;
@@ -552,6 +716,22 @@ NotifyA(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     return notify_funcA(oper, & ni);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * NotifyW -- 
+ * 
+ * 	Display icon in system tray on more recent systems supporting Unicode.
+ *
+ * Results:
+ *	Icon is displayed.
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static BOOL
 NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     NOTIFYICONDATAW ni;
@@ -575,6 +755,22 @@ NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     return notify_funcW(oper, & ni);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TaskbarOperation -- 
+ * 
+ * 	Management of icon display.
+ *
+ * Results:
+ *	Icon is displayed or deleted.
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static int
 TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     int result;
@@ -620,6 +816,22 @@ TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * NewIcon -- 
+ * 
+ * 	Create icon for display in system tray.
+ *
+ * Results:
+ *	Icon is created for display.
+ *
+ * Side effects: 
+ *	None.	
+ *
+ *----------------------------------------------------------------------
+ */
+
 static IcoInfo *
     NewIcon(Tcl_Interp * interp, HICON hIcon,
         int itype, LPICONRESOURCE lpIR, int iconpos) {
@@ -653,6 +865,22 @@ static IcoInfo *
         Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
         return icoPtr;
     }
+    
+/*
+ *----------------------------------------------------------------------
+ *
+ * FreeIcoPtr -- 
+ * 
+ * 	Delete icon and free memory. 
+ *
+ * Results:
+ *	Icon is removed from display.
+ *
+ * Side effects: 
+ *	Memory/resources freed.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 FreeIcoPtr(Tcl_Interp * interp, IcoInfo * icoPtr) {
@@ -682,6 +910,22 @@ FreeIcoPtr(Tcl_Interp * interp, IcoInfo * icoPtr) {
     ckfree((char * ) icoPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetIcoPtr -- 
+ * 
+ * 	Get pointer to icon for display.
+ *
+ * Results:
+ *	Icon is obtained for display.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static IcoInfo * GetIcoPtr(Tcl_Interp * interp, char * string) {
     IcoInfo * icoPtr;
     int id;
@@ -705,13 +949,44 @@ static IcoInfo * GetIcoPtr(Tcl_Interp * interp, char * string) {
     return NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetInt -- 
+ * 
+ * Utility function for calculating buffer length.
+ *
+ * Results:
+ *	Length.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static int
 GetInt(long theint, char * buffer, size_t len) {
     snprintf(buffer, len, "0x%lx", theint);
     buffer[len - 1] = 0;
     return (int) strlen(buffer);
 }
-
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetIntDec -- 
+ * 
+ * Utility function for calculating buffer length.
+ *
+ * Results:
+ *	Length.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static int
 GetIntDec(long theint, char * buffer, size_t len) {
     snprintf(buffer, len - 1, "%ld", theint);
@@ -719,25 +994,42 @@ GetIntDec(long theint, char * buffer, size_t len) {
     return (int) strlen(buffer);
 }
 
-static char *
-    TaskbarExpandPercents(IcoInfo * icoPtr, char * msgstring,
-        WPARAM wParam, LPARAM lParam, char * before, char * after, int * aftersize) {
-        #define SPACELEFT( * aftersize - (dst - after) - 1)
-        #define AFTERLEN(( * aftersize > 0) ? ( * aftersize * 2) : 1024)
-        #define ALLOCLEN((len > AFTERLEN) ? (len * 2) : AFTERLEN)
-        char buffer[TCL_INTEGER_SPACE + 5];
-        char * dst;
-        dst = after;
-        while ( * before) {
-            char * ptr = before;
-            int len = 1;
-            if ( * before == '%') {
-                switch (before[1]) {
+/*
+ *----------------------------------------------------------------------
+ *
+ * TaskbarExpandPercents -- 
+ * 
+ * Parse strings in taskbar display.
+ *
+ * Results:
+ *	Strings.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+static char* 
+TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
+    WPARAM wParam, LPARAM lParam, char *before, char *after, int *aftersize)
+{
+#define SPACELEFT (*aftersize-(dst-after)-1)
+#define AFTERLEN ((*aftersize>0)?(*aftersize*2):1024)
+#define ALLOCLEN ((len>AFTERLEN)?(len*2):AFTERLEN)
+    char buffer[TCL_INTEGER_SPACE + 5];
+    char* dst;
+    dst = after;
+    while (*before) {
+        char *ptr=before;
+        int len=1;
+        if(*before=='%') {
+            switch(before[1]){
                 case 'M':
                 case 'm': {
                     before++;
-                    len = (int) strlen(msgstring);
-                    ptr = msgstring;
+                    len=(int)strlen(msgstring);
+                    ptr=msgstring;
                     break;
                 }
                 /* case 'W': {
@@ -749,99 +1041,116 @@ static char *
                 */
                 case 'i': {
                     before++;
-                    snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr -> id);
-                    len = (int) strlen(buffer);
-                    ptr = buffer;
+                    snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
+                    len=(int)strlen(buffer);
+                    ptr=buffer;
                     break;
                 }
                 case 'w': {
                     before++;
-                    len = GetInt((long) wParam, buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetInt((long)wParam,buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 'l': {
                     before++;
-                    len = GetInt((long) lParam, buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetInt((long)lParam,buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 't': {
                     before++;
-                    len = GetInt((long) GetTickCount(), buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetInt((long)GetTickCount(), buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 'x': {
                     POINT pt;
-                    GetCursorPos( & pt);
+                    GetCursorPos(&pt);
                     before++;
-                    len = GetIntDec((long) pt.x, buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetIntDec((long)pt.x, buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 'y': {
                     POINT pt;
-                    GetCursorPos( & pt);
+                    GetCursorPos(&pt);
                     before++;
-                    len = GetIntDec((long) pt.y, buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetIntDec((long)pt.y,buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 'X': {
                     DWORD dw;
-                    dw = GetMessagePos();
+                    dw=GetMessagePos();
                     before++;
-                    len = GetIntDec((long) LOWORD(dw), buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetIntDec((long)LOWORD(dw),buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 'Y': {
                     DWORD dw;
-                    dw = GetMessagePos();
+                    dw=GetMessagePos();
                     before++;
-                    len = GetIntDec((long) HIWORD(dw), buffer, sizeof(buffer));
-                    ptr = buffer;
+                    len=GetIntDec((long)HIWORD(dw),buffer, sizeof(buffer));
+                    ptr=buffer;
                     break;
                 }
                 case 'H': {
                     before++;
-                    len = GetInt((long) icoPtr -> hwndFocus, buffer, sizeof(buffer));
+                    len = GetInt((long)icoPtr->hwndFocus, buffer, sizeof(buffer));
                     ptr = buffer;
                     break;
                 }
                 case '%': {
                     before++;
-                    len = 1;
-                    ptr = "%";
+                    len=1;
+                    ptr="%";
                     break;
                 }
-                }
             }
-            if (SPACELEFT < len) {
-                char * newspace;
-                ptrdiff_t dist = dst - after;
-                int alloclen = ALLOCLEN;
-                newspace = (char * ) ckalloc(alloclen);
-                if (dist > 0)
-                    memcpy((VOID * ) newspace, (VOID * ) after, dist);
-                if (after && * aftersize)
-                    ckfree(after);
-                * aftersize = alloclen;
-                after = newspace;
-                dst = after + dist;
-            }
-            if (len > 0)
-                memcpy(dst, ptr, len);
-            dst += len;
-            if ((dst - after) > ( * aftersize - 1))
-                printf("oops\n");
-            before++;
         }
-        * dst = 0;
-        return after;
+        if (SPACELEFT < len) {
+            char *newspace;
+            ptrdiff_t dist = dst - after;
+            int alloclen = ALLOCLEN;
+            newspace = (char *) ckalloc(alloclen);
+            if(dist>0)
+                memcpy((VOID *) newspace, (VOID *) after, dist);
+            if(after && *aftersize)
+                ckfree(after);
+            *aftersize =alloclen;
+            after = newspace;
+            dst=after+dist;
+        }
+        if(len>0)
+            memcpy(dst,ptr,len);
+        dst+=len;
+        if((dst-after)>(*aftersize-1))
+            printf("oops\n");
+        before++;
     }
+    *dst=0;
+    return after;
+}
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TaskbarEval -- 
+ * 
+ * Parse mouse and keyboard events over taskbar.
+ *
+ * Results:
+ *	Event processing.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static void
 TaskbarEval(IcoInfo * icoPtr, WPARAM wParam, LPARAM lParam) {
     char * msgstring = "none";
@@ -928,11 +1237,26 @@ TaskbarEval(IcoInfo * icoPtr, WPARAM wParam, LPARAM lParam) {
     if (expanded != evalspace) {
         ckfree(expanded);
     }
-}\
+}
+
+
 /*
- * Windows callback procedure, if ICON_MESSAGE arrives, try to execute
- * the taskbar_command
+ *----------------------------------------------------------------------
+ *
+ * TaskbarHandlerProc -- 
+ * 
+ * 	Windows callback procedure, if ICON_MESSAGE arrives, try to execute
+ * 	the taskbar_command.
+ *
+ * Results:
+ *	Command execution.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
+
 
 static LRESULT CALLBACK
 TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -972,12 +1296,26 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
         }
         return DefWindowProc(hwnd, message, wParam, lParam);
     }
-    return 0 L;
+    return 0;
 }
 
+
 /*
- * Registers the handler window class
+ *----------------------------------------------------------------------
+ *
+ * RegisterHandlerClass -- 
+ * 
+ * 	Registers the handler window class.
+ *
+ * Results:
+ *	Handler class registered.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
+
 static int
 RegisterHandlerClass(HINSTANCE hInstance) {
     WNDCLASS wndclass;
@@ -996,8 +1334,22 @@ RegisterHandlerClass(HINSTANCE hInstance) {
 }
 
 /*
- *Creates a hidden window to handle taskbar messages
+ *----------------------------------------------------------------------
+ *
+ * CreateTaskbarHandlerWindow -- 
+ * 
+ * 	Creates a hidden window to handle taskbar messages.
+ *
+ * Results:
+ *	Hidden window created.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
+
+
 static HWND
 CreateTaskbarHandlerWindow(void) {
     static int registered = 0;
@@ -1013,38 +1365,85 @@ CreateTaskbarHandlerWindow(void) {
         CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL));
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DestroyHandlerWindow -- 
+ * 
+ * 	Destroys hidden window.
+ *
+ * Results:
+ *	Hidden window deleted.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 DestroyHandlerWindow(void) {
     if (handlerWindow)
         DestroyWindow(handlerWindow);
 }
 
-static char *
-    StandardIcon(CONST84 char * arg) {
-        if (!stricmp(arg, "application"))
-            return IDI_APPLICATION;
-        if (!stricmp(arg, "asterisk"))
-            return IDI_ASTERISK;
-        if (!stricmp(arg, "error"))
-            return IDI_ERROR;
-        if (!stricmp(arg, "exclamation"))
-            return IDI_EXCLAMATION;
-        if (!stricmp(arg, "hand"))
-            return IDI_HAND;
-        if (!stricmp(arg, "question"))
-            return IDI_QUESTION;
-        if (!stricmp(arg, "information"))
-            return IDI_INFORMATION;
-        if (!stricmp(arg, "warning"))
-            return IDI_WARNING;
-        if (!stricmp(arg, "winlogo"))
-            return IDI_WINLOGO;
-        return NULL;
-    }
 
 /*
- * Tries to get a valid window handle from a Tk-pathname for a toplevel.
+ *----------------------------------------------------------------------
+ *
+ * StandardIcon -- 
+ * 
+ * 	Returns standard Windows icons.
+ *
+ * Results:
+ *	Icons displayed.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
+
+static char *
+StandardIcon(CONST84 char * arg) {
+	if (!stricmp(arg, "application"))
+		return IDI_APPLICATION;
+	if (!stricmp(arg, "asterisk"))
+		return IDI_ASTERISK;
+	if (!stricmp(arg, "error"))
+		return IDI_ERROR;
+	if (!stricmp(arg, "exclamation"))
+		return IDI_EXCLAMATION;
+	if (!stricmp(arg, "hand"))
+		return IDI_HAND;
+	if (!stricmp(arg, "question"))
+		return IDI_QUESTION;
+	if (!stricmp(arg, "information"))
+		return IDI_INFORMATION;
+	if (!stricmp(arg, "warning"))
+		return IDI_WARNING;
+	if (!stricmp(arg, "winlogo"))
+		return IDI_WINLOGO;
+	return NULL;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NameOrHandle -- 
+ * 
+ * 	Tries to get a valid window handle from a Tk-pathname for a toplevel.
+ *
+ * Results:
+ *	Window handle obtained.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 NameOrHandle(Tcl_Interp * interp, char * arg, HWND * hwndPtr) {
     #define WINFO_FRAME "wm frame "
@@ -1087,6 +1486,22 @@ NameOrHandle(Tcl_Interp * interp, char * arg, HWND * hwndPtr) {
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WinIcoDestroy -- 
+ * 
+ * 	Deletes icon and hidden window from display.
+ *
+ * Results:
+ *	Icon/window removed and memory freed.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 WinIcoDestroy(ClientData clientData) {
     IcoInfo * icoPtr;
@@ -1099,6 +1514,22 @@ WinIcoDestroy(ClientData clientData) {
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WinIcoCmd -- 
+ * 
+ * 	Main command for creating, displaying, and removing icons from taskbar.
+ *
+ * Results:
+ *	Management of icon display in taskbar/system tray.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static int
 WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     int argc, CONST84 char * argv[]) {
@@ -1242,9 +1673,23 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     return TCL_OK;
 }
 
+
 /*
- * Balloon notification in system tray.
+ *----------------------------------------------------------------------
+ *
+ * WinSystrayCmd -- 
+ * 
+ * 	Main command for creating and displaying notifications/balloons from system tray.
+ *
+ * Results:
+ *	Display of notifications.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
+ 
 static int
 WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     int argc, CONST84 char * argv[]) {
@@ -1306,6 +1751,22 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WinIcoInit -- 
+ * 
+ * 	Initialize this package and create script-level commands.
+ *
+ * Results:
+ *	Initialization of code.
+ *
+ * Side effects: 
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 int
 WinIcoInit(Tcl_Interp * interp) {
     OSVERSIONINFO info;
