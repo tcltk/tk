@@ -378,7 +378,7 @@ static void             RemoveTransient(TkWindow *winPtr);
 
 - (void) tkLayoutChanged
 {
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(self);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     if (winPtr) {
 	NSRect frameRect;
@@ -407,7 +407,7 @@ static void             RemoveTransient(TkWindow *winPtr);
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
 - (void)toggleTabBar:(id)sender
 {
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(self);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (!winPtr) {
 	return;
     }
@@ -420,7 +420,7 @@ static void             RemoveTransient(TkWindow *winPtr);
                     toSize:(NSSize)frameSize
 {
     NSRect currentFrame = [sender frame];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(sender);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
     if (winPtr) {
 	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
 	    frameSize.width = currentFrame.size.width;
@@ -434,7 +434,7 @@ static void             RemoveTransient(TkWindow *winPtr);
 
 - (BOOL) canBecomeKeyWindow
 {
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(self);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     if (!winPtr || !winPtr->wmInfoPtr) {
 	return NO;
@@ -618,7 +618,7 @@ FrontWindowAtPoint(
     TkWindow *winPtr = NULL;
 
     for (NSWindow *w in windows) {
-	winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+	winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
 	    WmInfo *wmPtr = winPtr->wmInfoPtr;
 	    NSRect windowFrame = [w frame];
@@ -1002,7 +1002,7 @@ TkWmDeadWindow(
 	 */
 
 	for (NSWindow *w in [NSApp orderedWindows]) {
-	    TkWindow *winPtr2 = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 	    BOOL isOnScreen;
 
 	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
@@ -5490,7 +5490,7 @@ TkMacOSXZoomToplevel(
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
     NSWindow *window = whichWindow;
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(window);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     WmInfo *wmPtr;
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -6480,7 +6480,7 @@ TkMacOSXWindowOffset(
     int *xOffset,
     int *yOffset)
 {
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(wRef);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(wRef);
 
     if (winPtr && winPtr->wmInfoPtr) {
 	*xOffset = winPtr->wmInfoPtr->xInParent;
