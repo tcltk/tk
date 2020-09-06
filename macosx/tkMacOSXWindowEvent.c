@@ -1103,7 +1103,9 @@ static const char *const accentNames[] = {
     const char *accentName, *highlightName;
     static NSUserDefaults *preferences = nil;
     NSString *accent, *highlight;
+    NSArray *highlightWords;
     static const char *defaultColor;
+
     if (!preferences) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
 	preferences = [[NSUserDefaults standardUserDefaults] retain];
@@ -1120,11 +1122,16 @@ static const char *const accentNames[] = {
 			 context:NULL];
     }
     accent = [preferences stringForKey:@"AppleAccentColor"];
-    highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "]
-			        objectAtIndex:3];
+    highlightWords = [[preferences stringForKey:@"AppleHighlightColor"]
+			        componentsSeparatedByString: @" "];
+    if ([highlightWords count] >= 4) {
+	highlight = (NSString *)[highlightWords objectAtIndex:3];
+	highlightName  = highlight.UTF8String;
+    } else {
+	highlightName = defaultColor;
+    }
+
     accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
-    highlightName = highlight ? highlight.UTF8String: defaultColor;
 
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
