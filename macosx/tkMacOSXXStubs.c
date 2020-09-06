@@ -308,7 +308,6 @@ XkbOpenDisplay(
 
     return display;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -488,7 +487,7 @@ XGetGeometry(
     unsigned int *border_width_return,
     unsigned int *depth_return)
 {
-    TkWindow *winPtr = ((MacDrawable *) d)->winPtr;
+    TkWindow *winPtr = ((MacDrawable *)d)->winPtr;
 
     display->request++;
     *root_return = ROOT_ID;
@@ -500,7 +499,7 @@ XGetGeometry(
 	*border_width_return = winPtr->changes.border_width;
 	*depth_return = Tk_Depth(winPtr);
     } else {
-	CGSize size = ((MacDrawable *) d)->size;
+	CGSize size = ((MacDrawable *)d)->size;
 	*x_return = 0;
 	*y_return =  0;
 	*width_return = size.width;
@@ -878,8 +877,7 @@ XForceScreenSaver(
     display->request++;
     return Success;
 }
-
-#if 0
+
 int
 XSetClipRectangles(
     Display *d,
@@ -888,24 +886,22 @@ XSetClipRectangles(
     int clip_y_origin,
     XRectangle* rectangles,
     int n,
-    int ordering)
+    TCL_UNUSED(int))
 {
-    Region clipRgn = XCreateRegion();
+    TkRegion clipRgn = TkCreateRegion();
 
     while (n--) {
-	XRectangle rect = *rectangles;
+    	XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
-	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
-	rectangles++;
+    	rect.x += clip_x_origin;
+    	rect.y += clip_y_origin;
+    	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+    	rectangles++;
     }
-    XSetRegion(d, gc, clipRgn);
-    XDestroyRegion(clipRgn);
+    TkSetRegion(d, gc, clipRgn);
+    TkDestroyRegion(clipRgn);
     return 1;
 }
-#endif
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1190,7 +1186,7 @@ Tk_GetUserInactiveTime(
     uint64_t time;
     IOReturn result;
 
-    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+    regEntry = IOServiceGetMatchingService(0,
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {

@@ -21,7 +21,7 @@ jobs:
 # Testing on Linux with various compilers
     - name: "Linux/GCC/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -34,21 +34,21 @@ jobs:
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
     - name: "Linux/GCC/Static"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-shared"
     - name: "Linux/GCC/Debug"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -77,7 +77,7 @@ jobs:
 # Older versions of GCC...
     - name: "Linux/GCC 7/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc-7
       addons:
         apt:
@@ -114,7 +114,7 @@ jobs:
 # Clang
     - name: "Linux/Clang/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
@@ -127,21 +127,21 @@ jobs:
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
     - name: "Linux/Clang/Shared/no-xft"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
     - name: "Linux/Clang/Static"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - CFGOPT="--disable-shared"
         - BUILD_DIR=unix
     - name: "Linux/Clang/Debug"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
@@ -149,7 +149,7 @@ jobs:
 # Testing on Mac, various styles
     - name: "macOS/Clang/Xcode 11.6/Shared"
       os: osx
-      osx_image: xcode11.6
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -171,7 +171,7 @@ jobs:
         - make all tktest
     - name: "macOS/Clang/Xcode 11.6/Static"
       os: osx
-      osx_image: xcode11.6
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -180,7 +180,7 @@ jobs:
       script: *mactest
     - name: "macOS/Clang/Xcode 11.6/Debug"
       os: osx
-      osx_image: xcode11.6
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -189,7 +189,7 @@ jobs:
       script: *mactest
     - name: "macOS/Clang/Xcode 11.6/Shared/XQuartz"
       os: osx
-      osx_image: xcode11.6
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -250,7 +250,7 @@ jobs:
 # "make dist" only
     - name: "Linux: make dist"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: gcc
       env:
         - BUILD_DIR=unix

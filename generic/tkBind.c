@@ -5003,7 +5003,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modMask |= TkGetButtonMask(button);
+		    patPtr->modMask |= Tk_GetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -5013,7 +5013,7 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modMask |= TkGetButtonMask(button);
+			patPtr->modMask |= Tk_GetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
@@ -5192,15 +5192,15 @@ GetPatternObj(
 		case ButtonPress:
 		case ButtonRelease:
 		    assert(patPtr->info <= Button9);
-		    Tcl_AppendPrintfToObj(patternObj, "-%d", (int) patPtr->info);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) patPtr->info);
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
 		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
-			int button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%d", button);
-			mask &= ~TkGetButtonMask(button);
+			unsigned button = ButtonNumberFromState(mask);
+			Tcl_AppendPrintfToObj(patternObj, "-%u", button);
+			mask &= ~Tk_GetButtonMask(button);
 		    }
 		    break;
 		}

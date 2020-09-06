@@ -760,7 +760,7 @@ ButtonCreate(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(butPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(butPtr->tkwin));
     return TCL_OK;
 }
 

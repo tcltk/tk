@@ -108,8 +108,9 @@ The index of the last character up to which to draw.  The character
 specified by \fIlastChar\fR itself will not be drawn.  A number less
 than 0 means to draw all characters in the text layout.
 .AP int underline in
-Index of the single character to underline in the text layout, or a number
-less than 0 for no underline.
+Index of the single character to underline in the text layout, or a
+negative number counting backwards from the end of the string. Any
+out-of-range number (e.g. INT_MIN) means no underline.
 .AP int index in
 The index of the character whose bounding box is desired.  The bounding
 box is computed with respect to the upper-left hand corner of the text layout.
