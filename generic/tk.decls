@@ -1142,7 +1142,6 @@ declare 10 aqua {
 declare 11 aqua {
     Tk_Window Tk_MacOSXGetTkWindow(void *w)
 }
-# Replaces TkMacOSXGetDrawablePort
 declare 12 aqua {
     void *Tk_MacOSXGetCGContextForDrawable(Drawable drawable)
 }

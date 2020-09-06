@@ -187,8 +187,7 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 #define TK_DRAW_IN_CONTEXT		1
 
 /*
- * Prototypes of internal procs that are called from generic or test
- * code but are not in the stubs table.
+ * Prototypes of internal procs not in the stubs table.
  */
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);

@@ -647,7 +647,6 @@ Tk_GetOpenFileObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
-    TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, len, multiple = 0;
@@ -819,7 +818,7 @@ Tk_GetOpenFileObjCmd(
 	[openpanel setDirectoryURL:fileURL];
     }
     if (haveParentOption) {
-	parent = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+	parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -919,7 +918,6 @@ Tk_GetSaveFileObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
-    TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int confirmOverwrite = 1;
@@ -1106,7 +1104,7 @@ Tk_GetSaveFileObjCmd(
 	[savepanel setNameFieldStringValue:@""];
     }
     if (haveParentOption) {
-	parent = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+	parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1162,7 +1160,6 @@ Tk_ChooseDirectoryObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
-    TkWindow *winPtr = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, len, mustexist = 0;
@@ -1249,10 +1246,10 @@ Tk_ChooseDirectoryObjCmd(
     if (!directory) {
 	directory = @"/";
     }
-    parent = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
     [panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
     if (haveParentOption) {
-	parent = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+	parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
