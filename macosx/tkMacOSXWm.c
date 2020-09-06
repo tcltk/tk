@@ -5846,7 +5846,8 @@ WmWinTabbingId(
 	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
     }
     if (result == NULL) {
-	NSLog(@"Failed to read tabbing identifier; try calling update idletasks before getting/setting the tabbing identifier of the window.");
+	NSLog(@"Failed to read tabbing identifier; try calling update idletasks"
+	      " before getting/setting the tabbing identifier of the window.");
 	return TCL_OK;
     }
     Tcl_SetObjResult(interp, result);
