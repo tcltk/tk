@@ -76,6 +76,9 @@ enum {
     case NSOtherMouseUp:
 	buttonState &= ~TkGetButtonMask(button);
 	break;
+    case NSLeftMouseDragged:
+    case NSRightMouseDragged:
+    case NSOtherMouseDragged:
     case NSRightMouseDown:
     case NSOtherMouseDown:
 	buttonState |= TkGetButtonMask(button);
@@ -94,9 +97,6 @@ enum {
     case NSScrollWheel:
 #if 0
     case NSCursorUpdate:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged:
     case NSTabletPoint:
     case NSTabletProximity:
 #endif
