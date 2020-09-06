@@ -1696,7 +1696,7 @@ static int
 WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     int argc, char * argv[]) {
     size_t length;
-    HICON hIcon;
+    HICON hIcon = NULL;
     IcoInfo * icoPtr;
     Tcl_DString infodst;
     Tcl_DString titledst;
@@ -1717,7 +1717,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     ni.uID = icoPtr -> id;
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
-    ni.hIcon = (HICON) hIcon;
+    ni.hIcon = hIcon;
 
     if (argc < 2) {
         Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -1752,6 +1752,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
         Shell_NotifyIcon(NIM_MODIFY, & ni);
         return TCL_OK;
     }
+	return TCL_OK;
 }
 
 /*
@@ -1788,9 +1789,9 @@ WinIcoInit(Tcl_Interp * interp) {
     GetVersionEx( & info);
     isWin32s = (info.dwPlatformId == VER_PLATFORM_WIN32s);
 
-    Tcl_CreateCommand(interp, "_winico", WinIcoCmd, (ClientData) interp,
+    Tcl_CreateObjCommand(interp, "_winico", WinIcoCmd, (ClientData) interp,
         (Tcl_CmdDeleteProc * ) WinIcoDestroy);
-    Tcl_CreateCommand(interp, "_systray", WinSystrayCmd, (ClientData) interp,
+    Tcl_CreateObjCommand(interp, "_systray", WinSystrayCmd, (ClientData) interp,
         NULL);
     return TCL_OK;
 
