@@ -24,6 +24,7 @@ typedef struct {
     Point global;
     Point local;
 } MouseEventData;
+
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
@@ -52,12 +53,14 @@ enum {
 {
     NSWindow *eventWindow = [theEvent window];
     NSEventType eventType = [theEvent type];
+    NSInteger button = [theEvent buttonNumber] + Button1;
     TkWindow *winPtr = NULL, *grabWinPtr;
     Tk_Window tkwin = None, capture, target;
     NSPoint local, global;
-    NSInteger button = -1;
     int win_x, win_y;
     Bool inTitleBar = NO;
+    static int validPresses = 0, ignoredPresses = 0;
+    unsigned int buttonState = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
@@ -69,13 +72,16 @@ enum {
 	inTitleBar = viewFrame.size.height < location.y;
     }
     switch (eventType) {
-    case NSLeftMouseDown:
+    case NSRightMouseUp:
+    case NSOtherMouseUp:
+	buttonState &= ~TkGetButtonMask(button);
+	break;
     case NSRightMouseDown:
     case NSOtherMouseDown:
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
-	button = [theEvent buttonNumber] + Button1;
+	buttonState |= TkGetButtonMask(button);
 	break;
     case NSMouseEntered:
 	if (!inTitleBar) {
@@ -86,8 +92,7 @@ enum {
 	[(TKWindow *)eventWindow setMouseInResizeArea:NO];
 	break;
     case NSLeftMouseUp:
-    case NSRightMouseUp:
-    case NSOtherMouseUp:
+    case NSLeftMouseDown:
     case NSMouseMoved:
     case NSCursorUpdate:
     case NSTabletPoint:
@@ -99,23 +104,41 @@ enum {
     }
 
     /*
-     * Ignore button presses that start a resize.  (The release will be handled
-     * during LiveResize.)  See ticket [d72abe6b54].
+     * Update the button state.  We ignore left button presses that start a
+     * resize or occur in the title bar.  See tickets [d72abe6b54] and
+     * [39cbacb9e8].
      */
 
-    if ((eventType == NSLeftMouseDown) &&
-	[(TKWindow *)eventWindow mouseInResizeArea] &&
-	([eventWindow styleMask] & NSResizableWindowMask)) {
-	return theEvent;
+    if (eventType == NSLeftMouseDown) {
+	if ([(TKWindow *)eventWindow mouseInResizeArea] &&
+	    ([eventWindow styleMask] & NSResizableWindowMask)) {
+
+	    /* 
+	     * When the left button is pressed in the resize area, we receive
+	     * NSMouseDown, but when it is released we do not receive
+	     * NSMouseUp.  So ignore the event and clear the button state but
+	     * do not change the ignoredPresses count.
+	     */
+
+	    buttonState &= ~TkGetButtonMask(Button1);
+	    return theEvent;
+	}
+	if (inTitleBar) {
+	    ignoredPresses++;
+	    return theEvent;
+	}
+	validPresses++;
+	buttonState |= TkGetButtonMask(Button1);
     }
-
-    /*
-     * Ignore button presses and releases that occur in the title bar.
-     */
-
-    if ((eventType == NSLeftMouseDown || eventType == NSLeftMouseUp) &&
-	inTitleBar) {
-	return theEvent;
+    if (eventType == NSLeftMouseUp) {
+	if (ignoredPresses > 0) {
+	    ignoredPresses--;
+	} else if (validPresses > 0) {
+	    validPresses--;
+	}
+	if (validPresses == 0) {
+	    buttonState &= ~TkGetButtonMask(Button1);
+	}
     }
 
     /*
@@ -218,18 +241,7 @@ enum {
      *  Generate an XEvent for this mouse event.
      */
 
-    unsigned int state = 0;
-
-    /*
-     * For mouseDown events we set the single bit for that button in the state.
-     * Otherwise the button state is 0.  Hopefully this allows TkUpdatePointer
-     * to maintain its button state correctly.
-     */
-
-    if (button > 0) {
-	state |= TkGetButtonMask(button);
-    }
-
+    unsigned int state = buttonState;
     NSUInteger modifiers = [theEvent modifierFlags];
 
     if (modifiers & NSAlphaShiftKeyMask) {
