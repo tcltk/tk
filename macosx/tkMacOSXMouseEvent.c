@@ -78,9 +78,6 @@ enum {
 	break;
     case NSRightMouseDown:
     case NSOtherMouseDown:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged:
 	buttonState |= TkGetButtonMask(button);
 	break;
     case NSMouseEntered:
@@ -94,12 +91,17 @@ enum {
     case NSLeftMouseUp:
     case NSLeftMouseDown:
     case NSMouseMoved:
+    case NSScrollWheel:
+#if 0
     case NSCursorUpdate:
+    case NSLeftMouseDragged:
+    case NSRightMouseDragged:
+    case NSOtherMouseDragged:
     case NSTabletPoint:
     case NSTabletProximity:
-    case NSScrollWheel:
+#endif
 	break;
-    default: /* Unrecognized mouse event. */
+    default: /* This type of event is ignored. */
 	return theEvent;
     }
 
@@ -113,7 +115,7 @@ enum {
 	if ([(TKWindow *)eventWindow mouseInResizeArea] &&
 	    ([eventWindow styleMask] & NSResizableWindowMask)) {
 
-	    /* 
+	    /*
 	     * When the left button is pressed in the resize area, we receive
 	     * NSMouseDown, but when it is released we do not receive
 	     * NSMouseUp.  So ignore the event and clear the button state but
