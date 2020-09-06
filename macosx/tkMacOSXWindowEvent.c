@@ -1101,16 +1101,13 @@ static const char *const accentNames[] = {
     }
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
     const char *accentName, *highlightName;
-    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
-    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
-    NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "]
-			        objectAtIndex:3];
-    static const char *defaultColor = NULL;
-
-    if (!defaultColor) {
+    static NSUserDefaults *preferences = nil;
+    NSString *accent, *highlight;
+    static const char *defaultColor;
+    if (!preferences) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
-
+	preferences = [[NSUserDefaults standardUserDefaults] retain];
+	
 	/*
 	 * AppKit calls this method when the user changes the Accent Color
 	 * but not when the user changes the Highlight Color.  So we register
@@ -1122,6 +1119,10 @@ static const char *const accentNames[] = {
 			 options:NSKeyValueObservingOptionNew
 			 context:NULL];
     }
+    accent = [preferences stringForKey:@"AppleAccentColor"];
+    highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
+			        componentsSeparatedByString: @" "]
+			        objectAtIndex:3];
     accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
     highlightName = highlight ? highlight.UTF8String: defaultColor;
 
