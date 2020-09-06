@@ -24,6 +24,7 @@
 #if defined(MAC_OSX_TK)
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -57,7 +58,14 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkpTestsendCmd_ TkpTestsendCmd
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
-#define Tk_MacOSXGetNSWindowForDrawable TkMacOSXDrawable
+
+#if defined(MAC_OSX_TK)
+#   define Tk_MacOSXGetNSWindowForDrawable TkMacOSXDrawable
+#   define Tk_MacOSXGetCGContextForDrawable GetCGContextForDrawable
+static void *GetCGContextForDrawable(Drawable d) {
+	return TkMacOSXGetCGContextForDrawable(d);
+}
+#endif
 
 #ifdef _WIN32
 

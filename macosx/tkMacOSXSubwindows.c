@@ -1135,14 +1135,16 @@ TkMacOSXGetDrawablePort(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_MacOSXGetNSViewForDrawable --
+ * TkMacOSXGetNSViewForDrawable/TkMacOSXGetRootControl --
+ *
+ *	The function name TkMacOSXGetRootControl is being preserved only
+ *      because it exists in a stubs table.  Nobody knows what it means to
+ *      get a "RootControl".  The macro TkMacOSXGetNSViewForDrawable calls
+ *      this function and should always be used rather than directly using
+ *      the obscure official name of this function.
  *
  *      It returns the NSView for a given X drawable in the case that the
  *      drawable is a window.  If the drawable is a pixmap it returns nil.
- *
- *      The macro TkMacOSXGetNSViewForDrawable calls
- *      this function and should always be used rather than directly using
- *      the official name of this function.
  *
  * Results:
  *	A NSView* or nil.
@@ -1154,7 +1156,7 @@ TkMacOSXGetDrawablePort(
  */
 
 void *
-Tk_MacOSXGetNSViewForDrawable(
+TkMacOSXGetRootControl(
     Drawable drawable)
 {
     void *result = NULL;
@@ -1170,7 +1172,7 @@ Tk_MacOSXGetNSViewForDrawable(
 	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
-	    result = TkMacOSXGetNSViewForDrawable(contWinPtr->window);
+	    result = TkMacOSXGetRootControl((Drawable)contWinPtr->privatePtr);
 	}
     }
     return result;

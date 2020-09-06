@@ -148,8 +148,8 @@ enum {
      */
 
     if (!tkwin) {
-	tkwin = Tk_MacOSXGetTkWindow(eventWindow);
-	winPtr = (TkWindow *)tkwin;
+	winPtr = TkMacOSXGetTkWindow(eventWindow);
+	tkwin = (Tk_Window)winPtr;
     }
     if (!tkwin) {
 

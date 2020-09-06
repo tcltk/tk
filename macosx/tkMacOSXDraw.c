@@ -226,10 +226,9 @@ CreateNSImageFromPixmap(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCGContextForDrawable / Tk_MacOSXGetCGContextForDrawable --
+ * TkMacOSXGetCGContextForDrawable --
  *
- *	Get CGContext for given Drawable, creating one if necessary.  The
- *      Tk_ version is exported as a stub returning a void *.
+ *	Get CGContext for given Drawable, creating one if necessary.
  *
  * Results:
  *	CGContext.
@@ -285,13 +284,6 @@ TkMacOSXGetCGContextForDrawable(
     }
 
     return (macDraw ? macDraw->context : NULL);
-}
-
-void *
-Tk_MacOSXGetCGContextForDrawable(
-    Drawable drawable)
-{
-    return TkMacOSXGetCGContextForDrawable(drawable);
 }
 
 /*
