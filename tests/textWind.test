@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-set fixedFont {"Courier New" -12}
+set fixedFont {"Courier" -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
@@ -171,7 +171,7 @@ test textWind-2.7 {TkTextWindowCmd procedure, "cget" option} -setup {
     .t window cget .f -pady
 } -cleanup {
     destroy .f
-} -returnCodes ok -result {2}
+} -returnCodes ok -result 2
 test textWind-2.8 {TkTextWindowCmd procedure} -body {
     .t window co
 } -returnCodes error -result {wrong # args: should be ".t window configure index ?-option value ...?"}
@@ -582,7 +582,7 @@ test textWind-6.1 {EmbWinRequestProc procedure} -setup {
     [list [expr {$padx+2*$fixedWidth+25}] [expr {$pady+((30-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
 
 
-test textWind-7.1 {EmbWinLostSlaveProc procedure} -setup {
+test textWind-7.1 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
     destroy .f
 } -body {
@@ -599,7 +599,7 @@ test textWind-7.1 {EmbWinLostSlaveProc procedure} -setup {
     10x20+[expr {$padx+100}]+[expr {$pady+50}] \
     [list [expr {$padx+2*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
 
-test textWind-7.2 {EmbWinLostSlaveProc procedure} -setup {
+test textWind-7.2 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
     destroy .t.f
 } -body {
@@ -751,15 +751,17 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t.f
     proc bgerror args {
         global msg
-	lappend msg $args
+        if {$msg == ""} {
+	    lappend msg $args
+	}
     }
 } -body {
     .t insert 1.0 "Some sample text"
+    set msg {}
     .t window create 1.5 -create {
         frame .t.f
         frame .t.f.f -width 10 -height 20 -bg $color
     }
-    set msg {}
     update idletasks
     lappend msg [winfo exists .t.f.f]
 } -cleanup {
@@ -858,7 +860,7 @@ test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 125 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth-1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
@@ -873,7 +875,7 @@ test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 126 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -889,15 +891,15 @@ test textWind-10.12 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 127 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list $padx [expr {$pady+$fixedHeight}] 127 20] \
-    [list [expr {$padx+127}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
+    [list $padx [expr {$pady+$fixedHeight}] [expr {($tWidth-12)*$fixedWidth+1}] 20] \
+    [list [expr {$padx+($tWidth-12)*$fixedWidth+1}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
 
 test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
     .t delete 1.0 end
@@ -905,7 +907,7 @@ test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width 130 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -921,7 +923,7 @@ test textWind-10.14 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width 130 -height 220 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 220 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -1405,7 +1407,7 @@ test textWind-17.1 {peer widgets and embedded windows} -setup {
     update ; update
     destroy .t .tt
     winfo exists .f
-} -result {0}
+} -result 0
 
 test textWind-17.2 {peer widgets and embedded windows} -setup {
     destroy .t .f .tt

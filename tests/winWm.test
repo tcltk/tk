@@ -274,7 +274,7 @@ test winWm-6.2 {wm attributes} -constraints win -setup {
     wm attributes .t -disabled
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test winWm-6.3 {wm attributes} -constraints win -setup {
     destroy .t
 } -body {

@@ -483,10 +483,10 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	word {
 	    if {$cur < [$w index anchor]} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+		set after [tcl_wordBreakAfter [$w get] $anchor-1]
 	    } else {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+		set after [tcl_wordBreakAfter [$w get] $cur-1]
 	    }
 	    if {$before < 0} {
 		set before 0
@@ -589,5 +589,5 @@ proc ::tk::spinbox::AutoScan {w} {
 
 proc ::tk::spinbox::GetSelection {w} {
     return [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
 }

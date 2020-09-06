@@ -992,7 +992,7 @@ Tk_SelectionObjCmd(
 
 	    if ((infoPtr != NULL)
 		    && (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
-		Tcl_SetObjResult(interp, TkNewWindowObj(infoPtr->owner));
+		Tcl_SetObjResult(interp, Tk_NewWindowObj(infoPtr->owner));
 	    }
 	    return TCL_OK;
 	}

@@ -84,7 +84,7 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
     	-expand false -fill x
     update ; # no error
     lappend res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
-} -result {1} -cleanup {destroy .te .tsb}
+} -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
     ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
@@ -128,28 +128,28 @@ test entry-3.3 "xview" -body {
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview end
     set result [.e index @0]
-} -result {7}
+} -result 7
 
 test entry-3.4 "xview" -body {
     .e delete 0 end;
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview moveto 1.0
     set result [.e index @0]
-} -result {7}
+} -result 7
 
 test entry-3.5 "xview" -body {
     .e delete 0 end;
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview scroll 5 units
     set result [.e index @0]
-} -result {5}
+} -result 5
 
 test entry-3.6 "xview" -body {
     .e delete 0 end;
     .e insert end [string repeat abcdefghijklmnopqrstuvwxyz 5]
     .e xview scroll 2 pages
     set result [.e index @0]
-} -result {40}
+} -result 40
 
 test entry-3.last "Series 3 cleanup" -body {
     destroy .e
@@ -341,6 +341,18 @@ test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
 } -cleanup {
     destroy .e
 } -result {red}
+
+test entry-10.3 {styling option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    set current [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground blue
+    set res [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground $current
+    set res
+} -cleanup {
+    destroy .e
+} -result {blue}
 
 test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
     pack [ttk::entry .e]

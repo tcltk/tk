@@ -824,7 +824,7 @@ InterpreterObjCmd(
 
     if ((otherInterp == NULL) || Tcl_InterpDeleted(otherInterp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no active master interp", -1));
+		"no active parent interp", -1));
 	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", NULL);
 	return TCL_ERROR;
     }
@@ -947,7 +947,7 @@ ConsoleDeleteProc(
  *
  * ConsoleEventProc --
  *
- *	This event function is registered on the main window of the slave
+ *	This event function is registered on the main window of the child
  *	interpreter. If the user or a running script causes the main window to
  *	be destroyed, then we need to inform the console interpreter by
  *	invoking "::tk::ConsoleExit".

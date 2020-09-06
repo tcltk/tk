@@ -278,9 +278,6 @@ proc ttk::copyBindings {from to} {
 # On OSX, Tk generates sensible values for the %D field in <MouseWheel> events.
 #
 # On Windows, %D must be scaled by a factor of 120.
-# In addition, Tk redirects mousewheel events to the window with
-# keyboard focus instead of sending them to the window under the pointer.
-# We do not attempt to fix that here, see also TIP#171.
 #
 # OSX conventionally uses Shift+MouseWheel for horizontal scrolling,
 # and Option+MouseWheel for accelerated scrolling.
