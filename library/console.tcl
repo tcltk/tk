@@ -740,9 +740,9 @@ proc ::tk::console::FontchooserToggle {} {
 }
 proc ::tk::console::FontchooserVisibility {index} {
     if {[tk fontchooser configure -visible]} {
-	.menubar.edit entryconfigure $index -label [msgcat::mc "Hide Fonts"]
+	.menubar.edit entryconfigure $index -label [::tk::msgcat::mc "Hide Fonts"]
     } else {
-	.menubar.edit entryconfigure $index -label [msgcat::mc "Show Fonts"]
+	.menubar.edit entryconfigure $index -label [::tk::msgcat::mc "Show Fonts"]
     }
 }
 proc ::tk::console::FontchooserFocus {w isFocusIn} {

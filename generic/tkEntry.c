@@ -574,7 +574,7 @@ Tk_EntryObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(entryPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(entryPtr->tkwin));
     return TCL_OK;
 }
 
@@ -737,7 +737,7 @@ EntryWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
 
@@ -1684,7 +1684,7 @@ DisplayEntry(
      * Hide the selection whenever we don't have the focus, unless we
      * always want to show selection.
      */
-    if (TkpAlwaysShowSelection(entryPtr->tkwin)) {
+    if (Tk_AlwaysShowSelection(entryPtr->tkwin)) {
 	showSelection = 1;
     } else {
 	showSelection = (entryPtr->flags & GOT_FOCUS);
@@ -1766,34 +1766,56 @@ DisplayEntry(
 	}
     }
 
-    /*
-     * Draw the text in two pieces: first the unselected portion, then the
-     * selected portion on top of it.
-     */
+    if ((entryPtr->numChars == 0) && (entryPtr->placeholderChars != 0)) {
 
-    if ((entryPtr->numChars != 0) || (entryPtr->placeholderChars == 0)) {
-        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
-	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-	    entryPtr->leftIndex, entryPtr->numChars);
-    } else {
-	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
+        /*
+         * Draw the placeholder text.
+         */
+
+        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
 	    entryPtr->placeholderLayout, entryPtr->placeholderX, entryPtr->layoutY,
 	    entryPtr->placeholderLeftIndex, entryPtr->placeholderChars);
-    }
 
-    if (showSelection && (entryPtr->state != STATE_DISABLED)
-	    && (entryPtr->selTextGC != entryPtr->textGC)
-	    && (entryPtr->selectFirst + 1 < entryPtr->selectLast + 1)) {
-	int selFirst;
+    } else {
 
-	if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
-	    selFirst = entryPtr->leftIndex;
-	} else {
-	    selFirst = entryPtr->selectFirst;
-	}
-	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
-		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-		selFirst, entryPtr->selectLast);
+        if (showSelection && (entryPtr->state != STATE_DISABLED)
+	        && (entryPtr->selTextGC != entryPtr->textGC)
+	        && (entryPtr->selectFirst + 1 < entryPtr->selectLast + 1)) {
+
+	    /*
+	     * Draw the selected and unselected portions separately.
+	     */
+
+	    TkSizeT selFirst;
+
+	    if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
+	        selFirst = entryPtr->leftIndex;
+	    } else {
+	        selFirst = entryPtr->selectFirst;
+	    }
+	    if (entryPtr->leftIndex < selFirst) {
+	        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		        entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		        entryPtr->leftIndex, selFirst);
+	    }
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    selFirst, entryPtr->selectLast);
+	    if (entryPtr->selectLast < entryPtr->numChars) {
+	        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		        entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		        entryPtr->selectLast, entryPtr->numChars);
+	    }
+        } else {
+
+            /*
+             * Draw the entire visible text
+             */
+
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    entryPtr->leftIndex, entryPtr->numChars);
+        }
     }
 
     if (entryPtr->type == TK_SPINBOX) {
@@ -2956,7 +2978,7 @@ EntryLostSelection(
      * This is controlled by ::tk::AlwaysShowSelection.
      */
 
-    if (TkpAlwaysShowSelection(entryPtr->tkwin)
+    if (Tk_AlwaysShowSelection(entryPtr->tkwin)
 	    && (entryPtr->selectFirst != TCL_INDEX_NONE) && entryPtr->exportSelection
 	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	entryPtr->selectFirst = TCL_INDEX_NONE;
@@ -3098,7 +3120,7 @@ EntryUpdateScrollbar(
     Tcl_DStringAppend(&buf, firstStr, TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, lastStr, TCL_INDEX_NONE);
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (code != TCL_OK) {
 	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
@@ -3385,17 +3407,21 @@ EntryValidateChange(
 
     if (entryPtr->validateCmd == NULL ||
 	entryPtr->validate == VALIDATE_NONE) {
+        if (entryPtr->flags & VALIDATING) {
+            entryPtr->flags |= VALIDATE_ABORT;
+        }
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
     /*
-     * If we're already validating, then we're hitting a loop condition Return
-     * and set validate to 0 to disallow further validations and prevent
-     * current validation from finishing
+     * If we're already validating, then we're hitting a loop condition. Set
+     * validate to none to disallow further validations, arrange for flags
+     * to prevent current validation from finishing, and return.
      */
 
     if (entryPtr->flags & VALIDATING) {
 	entryPtr->validate = VALIDATE_NONE;
+        entryPtr->flags |= VALIDATE_ABORT;
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
@@ -3781,7 +3807,7 @@ Tk_SpinboxObjCmd(
 	goto error;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(entryPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(entryPtr->tkwin));
     return TCL_OK;
 
   error:
@@ -3969,7 +3995,7 @@ SpinboxWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj((int)index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
 

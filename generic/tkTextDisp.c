@@ -1367,7 +1367,7 @@ LayoutDLine(
 	 * expectations in the rest of the code, but we are able to skip
 	 * elided portions of the line quickly.
 	 *
-	 * If current chunk is elided and last chunk was too, coalese.
+	 * If current chunk is elided and last chunk was too, coalesce.
 	 *
 	 * This also means that each logical line which is entirely elided
 	 * still gets laid out into a DLine, but with zero height. This isn't
@@ -3164,8 +3164,8 @@ GenerateWidgetViewSyncEvent(
 	} else {
 	    textPtr->dInfoPtr->flags |= OUT_OF_SYNC;
 	}
-        TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
-                           Tcl_NewBooleanObj(NewSyncState));
+	Tk_SendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+		Tcl_NewBooleanObj(NewSyncState));
     }
 }
 
@@ -5276,7 +5276,7 @@ TkTextRelayoutWindow(
 
     /*
      * Invalidate cached scrollbar positions, so that scrollbars sliders will
-     * be udpated.
+     * be updated.
      */
 
     dInfoPtr->xScrollFirst = dInfoPtr->xScrollLast = -1;
@@ -6528,7 +6528,7 @@ GetXView(
 	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, -1);
 	Tcl_DStringAppend(&buf, buf1, -1);
 	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -6813,7 +6813,7 @@ GetYView(
 	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, -1);
 	Tcl_DStringAppend(&buf, buf1, -1);
 	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,

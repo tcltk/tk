@@ -174,8 +174,8 @@ static void drawMacScrollbar(
     MacScrollbar *msPtr,
     CGContextRef context)
 {
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
-    NSView *view = TkMacOSXDrawableView(macWin);
+    Drawable d = Tk_WindowId(scrollPtr->tkwin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(d);
     CGPathRef path;
     CGPoint inner[2], outer[2], thumbOrigin;
     CGSize thumbSize;
@@ -258,12 +258,12 @@ TkpDisplayScrollbar(
 	return;
     }
 
-    MacDrawable *macWin = (MacDrawable *) winPtr->window;
-    NSView *view = TkMacOSXDrawableView(macWin);
+    MacDrawable *macWin = (MacDrawable *)winPtr->window;
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
-	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
+	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
 
@@ -316,7 +316,7 @@ TkpDisplayScrollbar(
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationInverted);
-    } else if ([NSApp macMinorVersion] <= 8) {
+    } else if ([NSApp macOSVersion] <= 100800) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
@@ -377,7 +377,7 @@ TkpComputeScrollbarGeometry(
 	scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;
     } else {
 	scrollPtr->arrowLength = 0;
@@ -590,12 +590,12 @@ UpdateControlValues(
 {
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
+    MacDrawable *macWin = (MacDrawable *)Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect contrlRect;
     short width, height;
 
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 

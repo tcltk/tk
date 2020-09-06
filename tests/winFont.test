@@ -37,12 +37,12 @@ test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
     win
 } -body {
     expr {[font actual {-size -10} -size] > 0}
-} -result {1}
+} -result 1
 test winfont-2.2 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
     win
 } -body {
     expr {[font actual {-family Arial} -size] > 0}
-} -result {1}
+} -result 1
 test winfont-2.3 {TkpGetFontFromAttributes procedure: normal weight} -constraints {
     win
 } -body {
@@ -221,7 +221,7 @@ test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -constra
     .t.c index $t @[expr {int($cx*2.5)}],1
 } -cleanup {
     destroy .t.c
-} -result {2}
+} -result 2
 
 test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -constraints {
     win
@@ -337,7 +337,7 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
     expr {$x < ($width*10)}
 } -cleanup {
     destroy .t.l
-} -result {1}
+} -result 1
 
 
 test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
@@ -375,12 +375,12 @@ test winfont-7.3 {AllocFont procedure: extract info from textmetric} -constraint
     win
 } -body {
     font metric {arial 10 bold italic underline overstrike} -fixed
-} -result {0}
+} -result 0
 test winfont-7.4 {AllocFont procedure: extract info from textmetric} -constraints {
     win
 } -body {
     font metric systemfixed -fixed
-} -result {1}
+} -result 1
 
 # cleanup
 cleanupTests

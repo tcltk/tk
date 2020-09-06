@@ -670,7 +670,7 @@ CreateWidget(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(textPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(textPtr->tkwin));
     return TCL_OK;
 }
 
@@ -1051,7 +1051,7 @@ TextWidgetObjCmd(
 
     badOption:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad option \"%s\" must be -chars, -displaychars, "
+		"bad option \"%s\": must be -chars, -displaychars, "
 		"-displayindices, -displaylines, -indices, -lines, -update, "
 		"-xpixels, or -ypixels", Tcl_GetString(objv[i])));
 	Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
@@ -1753,7 +1753,7 @@ TextPeerCmd(
 	while (tPtr != NULL) {
 	    if (tPtr != textPtr) {
 		Tcl_ListObjAppendElement(NULL, peersObj,
-			TkNewWindowObj(tPtr->tkwin));
+			Tk_NewWindowObj(tPtr->tkwin));
 	    }
 	    tPtr = tPtr->next;
 	}
@@ -3557,7 +3557,7 @@ TkTextLostSelection(
 {
     TkText *textPtr = (TkText *)clientData;
 
-    if (TkpAlwaysShowSelection(textPtr->tkwin)) {
+    if (Tk_AlwaysShowSelection(textPtr->tkwin)) {
 	TkTextIndex start, end;
 
 	if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
@@ -3615,7 +3615,7 @@ TkTextSelectionEvent(
      *     event generate $textWidget <<Selection>>
      */
 
-    TkSendVirtualEvent(textPtr->tkwin, "Selection", NULL);
+    Tk_SendVirtualEvent(textPtr->tkwin, "Selection", NULL);
 }
 
 /*
@@ -5084,7 +5084,7 @@ DumpSegment(
 	Tcl_DStringAppend(&buf, Tcl_GetString(command), -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -5490,7 +5490,7 @@ GenerateModifiedEvent(
     for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
 	    textPtr = textPtr->next) {
 	Tk_MakeWindowExist(textPtr->tkwin);
-	TkSendVirtualEvent(textPtr->tkwin, "Modified", NULL);
+	Tk_SendVirtualEvent(textPtr->tkwin, "Modified", NULL);
     }
 }
 
@@ -5520,7 +5520,7 @@ GenerateUndoStackEvent(
     for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
 	    textPtr = textPtr->next) {
 	Tk_MakeWindowExist(textPtr->tkwin);
-	TkSendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
+	Tk_SendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
     }
 }
 
@@ -6787,7 +6787,7 @@ GetLineStartEnd(
     (void)dummy;
     (void)tkwin;
 
-    if ((internalOffset == TCL_INDEX_NONE) || (recordPtr == NULL)) {
+    if (linePtr == NULL) {
 	return Tcl_NewObj();
     }
     return Tcl_NewWideIntObj(1 + TkBTreeLinesTo(NULL, linePtr));

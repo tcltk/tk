@@ -56,7 +56,7 @@ proc ttk::scrollbar::Press {w x y} {
     set State(yPress) $y
 
     switch -glob -- [$w identify $x $y] {
-    	*uparrow -
+	*uparrow -
 	*leftarrow {
 	    ttk::Repeatedly Scroll $w -1 units
 	}
@@ -64,6 +64,7 @@ proc ttk::scrollbar::Press {w x y} {
 	*rightarrow {
 	    ttk::Repeatedly Scroll $w  1 units
 	}
+	*grip -
 	*thumb {
 	    set State(first) [lindex [$w get] 0]
 	}
@@ -109,6 +110,7 @@ proc ttk::scrollbar::Jump {w x y} {
     variable State
 
     switch -glob -- [$w identify $x $y] {
+	*grip -
 	*thumb -
 	*trough {
 	    set State(first) [$w fraction $x $y]

@@ -56,10 +56,6 @@ enum {
     Tk_Window tkwin;
     NSPoint local, global;
     NSInteger button = -1;
-#if 0
-    NSTrackingArea *trackingArea = nil;
-    NSInteger eventNumber, clickCount, buttonNumber;
-#endif
     [NSEvent stopPeriodicEvents];
 
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -105,7 +101,7 @@ enum {
 
 	if (eventType == NSLeftMouseDown &&
 	    ([eventWindow styleMask] & NSResizableWindowMask) &&
-	    [NSApp macMinorVersion] > 6) {
+	    [NSApp macOSVersion] > 100600) {
 	    NSRect frame = [eventWindow frame];
 	    if (local.x < 3 || local.x > frame.size.width - 3 || local.y < 3) {
 		return theEvent;
@@ -115,7 +111,7 @@ enum {
 	tkwin = TkpGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
-	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	    if (eventWindow) {
 		local = [eventWindow tkConvertPointFromScreen: global];
 	    } else {
@@ -134,7 +130,7 @@ enum {
 	tkwin = TkpGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
-	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	} else {
 	    eventWindow = [NSApp mainWindow];
 	}
@@ -153,7 +149,7 @@ enum {
 
     if (!tkwin) {
 	winPtr = TkMacOSXGetTkWindow(eventWindow);
-	tkwin = (Tk_Window) winPtr;
+	tkwin = (Tk_Window)winPtr;
     }
     if (!tkwin) {
 
@@ -183,11 +179,11 @@ enum {
 	for (tkwin2 = tkEventWindow;
 	     !Tk_IsTopLevel(tkwin2);
 	     tkwin2 = Tk_Parent(tkwin2)) {
-	    if (tkwin2 == (Tk_Window) grabWinPtr) {
+	    if (tkwin2 == (Tk_Window)grabWinPtr) {
 		break;
 	    }
 	}
-	if (tkwin2 != (Tk_Window) grabWinPtr) {
+	if (tkwin2 != (Tk_Window)grabWinPtr) {
 	    return theEvent;
 	}
     }
@@ -229,7 +225,7 @@ enum {
 
     unsigned int state = 0;
     if (button > 0) {
-	state |= TkGetButtonMask(button);
+	state |= Tk_GetButtonMask(button);
     }
 
     NSUInteger modifiers = [theEvent modifierFlags];
@@ -310,34 +306,6 @@ enum {
 @end
 
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXKeyModifiers --
- *
- *	Returns the current state of the modifier keys.
- *
- * Results:
- *	An OS Modifier state.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-EventModifiers
-TkMacOSXModifierState(void)
-{
-    UInt32 keyModifiers;
-    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
-
-    keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
-	    GetCurrentKeyModifiers();
-
-    return (EventModifiers) (keyModifiers & USHRT_MAX);
-}
 
 /*
  *----------------------------------------------------------------------
@@ -468,8 +436,8 @@ XQueryPointer(
 	NSPoint global = [NSEvent mouseLocation];
 
 	if (getLocal) {
-	    MacDrawable *macWin = (MacDrawable *) w;
-	    NSWindow *win = TkMacOSXDrawableWindow(w);
+	    MacDrawable *macWin = (MacDrawable *)w;
+	    NSWindow *win = TkMacOSXGetNSWindowForDrawable(w);
 
 	    if (win) {
 		NSPoint local;
@@ -507,7 +475,7 @@ XQueryPointer(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -545,7 +513,7 @@ TkGenerateButtonEventForXPointer(
  *	True if event(s) are generated, false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -558,8 +526,8 @@ TkGenerateButtonEvent(
     Window window,		/* X Window containing button event. */
     unsigned int state)		/* Button Key state suitable for X event. */
 {
-    MacDrawable *macWin = (MacDrawable *) window;
-    NSWindow *win = TkMacOSXDrawableWindow(window);
+    MacDrawable *macWin = (MacDrawable *)window;
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     MouseEventData med;
 
     bzero(&med, sizeof(MouseEventData));
@@ -597,7 +565,7 @@ TkGenerateButtonEvent(
  *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
- *	Additional events may be place on the Tk event queue. Grab state may
+ *	Additional events may be placed on the Tk event queue. Grab state may
  *	also change.
  *
  *----------------------------------------------------------------------
@@ -645,46 +613,18 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
-    NSPoint loc;
-    int wNum;
 
     if (dispPtr->warpWindow) {
 	int x, y;
-	TkWindow *winPtr = (TkWindow *) dispPtr->warpWindow;
-	TkWindow *topPtr = winPtr->privatePtr->toplevel->winPtr;
-	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-	wNum = [w windowNumber];
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
-	loc.x = dispPtr->warpX;
-	loc.y = Tk_Height(topPtr) - dispPtr->warpY;
     } else {
-	wNum = 0;
-	pt.x = loc.x = dispPtr->warpX;
+	pt.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
-	loc.y = TkMacOSXZeroScreenHeight() - pt.y;
     }
 
-    /*
-     * Generate an NSEvent of type NSMouseMoved.
-     *
-     * It is not clear why this is necessary.  For example, calling
-     *     event generate $w <Motion> -warp 1 -x $X -y $Y
-     * will cause two <Motion> events to be added to the Tcl queue.
-     */
-
     CGWarpMouseCursorPosition(pt);
-    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved
-	location:loc
-	modifierFlags:0
-	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
-	context:nil
-	eventNumber:0
-	clickCount:1
-	pressure:0.0];
-    [NSApp postEvent:warpEvent atStart:NO];
 }
 
 /*
@@ -713,7 +653,7 @@ TkpSetCapture(
 	winPtr = winPtr->parentPtr;
     }
     [NSEvent stopPeriodicEvents];
-    captureWinPtr = (Tk_Window) winPtr;
+    captureWinPtr = (Tk_Window)winPtr;
 }
 
 /*
