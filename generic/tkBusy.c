@@ -865,7 +865,7 @@ Tk_BusyObjCmd(
 
     case BUSY_CONFIGURE:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-option? ?value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
@@ -900,7 +900,7 @@ Tk_BusyObjCmd(
 	    if (pattern == NULL ||
 		    Tcl_StringCaseMatch(Tk_PathName(busyPtr->tkRef), pattern, 0)) {
 		Tcl_ListObjAppendElement(interp, objPtr,
-			TkNewWindowObj(busyPtr->tkRef));
+			Tk_NewWindowObj(busyPtr->tkRef));
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);

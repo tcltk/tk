@@ -1043,7 +1043,7 @@ FreeWindowInternalRep(
 /*
  *----------------------------------------------------------------------
  *
- * TkNewWindowObj --
+ * Tk_NewWindowObj --
  *
  *	This function allocates a new Tcl_Obj that refers to a particular to a
  *	particular Tk window.
@@ -1058,7 +1058,7 @@ FreeWindowInternalRep(
  */
 
 Tcl_Obj *
-TkNewWindowObj(
+Tk_NewWindowObj(
     Tk_Window tkwin)
 {
     Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);

@@ -4,7 +4,8 @@
  *	Macros and declarations that are purely internal & private to TkAqua.
  *
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
+ * Copyright (c) 2008-2009 Apple Inc.
+ * Copyright (c) 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -225,10 +226,6 @@ MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
 MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
 			    HIMutableShapeRef inDestShape,
 			    HIShapeRef inSrcShape);
-#if 0
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-#endif
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
@@ -249,41 +246,28 @@ MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
 			    int antiAlias);
-MODULE_SCOPE int	TkMacOSXGenerateFocusEvent(TkWindow *winPtr,
-			    int activeFlag);
-MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
-MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
-MODULE_SCOPE NSBitmapImageRep* TkMacOSXBitmapRepFromDrawableRect(Drawable drawable,
-			    int x, int y, unsigned int width, unsigned int height);
-MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect imageBounds,
 			    CGRect srcBounds, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
-			    int useCG, TkMacOSXDrawingContext *dcPtr);
+			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
-			    NSWindow *window, int fullscreen,
-			    Tcl_Interp *interp);
-MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
-			    int active);
-MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin);
+#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow*)TkMacOSXDrawable(drawable))
+#define TkMacOSXGetNSViewForDrawable(macWin) (NSView *)TkMacOSXGetRootControl((Drawable)(macWin))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
 MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
-MODULE_SCOPE CGImageRef	TkMacOSXCreateCGImageWithDrawable(Drawable drawable);
-MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithTkImage(Display *display,
+MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
-MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithBitmap(Display *display,
+MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
 MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
@@ -308,6 +292,7 @@ MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
+MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 

@@ -85,7 +85,7 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
-	 TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,
+	 TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
          GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Base,base.paddingObj), TCL_INDEX_NONE,
@@ -823,7 +823,7 @@ static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 	"", offsetof(Menubutton, menubutton.menuObj), TCL_INDEX_NONE, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	"below", offsetof(Menubutton, menubutton.directionObj), TCL_INDEX_NONE,
-	0,(ClientData)directionStrings,GEOMETRY_CHANGED},
+	0, (void *)directionStrings, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)

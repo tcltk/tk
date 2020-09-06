@@ -22,13 +22,13 @@
 
 static void		EmbWinRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
-static void		EmbWinLostSlaveProc(ClientData clientData,
+static void		EmbWinLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr textGeomType = {
     "text",			/* name */
     EmbWinRequestProc,		/* requestProc */
-    EmbWinLostSlaveProc,	/* lostSlaveProc */
+    EmbWinLostContentProc,	/* lostContentProc */
 };
 
 /*
@@ -443,7 +443,7 @@ EmbWinConfigure(
 		    break;
 		}
 		if (Tk_TopWinHierarchy(ancestor)) {
-		badMaster:
+		badContainer:
 		    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
 			    "can't embed %s in %s",
 			    Tk_PathName(ewPtr->body.ew.tkwin),
@@ -459,7 +459,7 @@ EmbWinConfigure(
 	    }
 	    if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		    || (ewPtr->body.ew.tkwin == textPtr->tkwin)) {
-		goto badMaster;
+		goto badContainer;
 	    }
 
 	    if (client == NULL) {
@@ -594,9 +594,9 @@ EmbWinRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * EmbWinLostSlaveProc --
+ * EmbWinLostContentProc --
  *
- *	This function is invoked by the Tk geometry manager when a slave
+ *	This function is invoked by the Tk geometry manager when a content
  *	window managed by a text widget is claimed away by another geometry
  *	manager.
  *
@@ -611,7 +611,7 @@ EmbWinRequestProc(
  */
 
 static void
-EmbWinLostSlaveProc(
+EmbWinLostContentProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     Tk_Window tkwin)		/* Window that was claimed away by another
 				 * geometry manager. */
@@ -939,12 +939,12 @@ EmbWinLayoutProc(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		goto badMaster;
+		goto badContainer;
 	    }
 	}
 	if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
-	badMaster:
+	badContainer:
 	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
 		    "can't embed %s relative to %s",
 		    Tk_PathName(ewPtr->body.ew.tkwin),

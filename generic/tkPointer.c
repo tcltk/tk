@@ -255,7 +255,7 @@ Tk_UpdatePointer(
      */
 
     for (b = Button1; b <= Button9; b++) {
-	mask = TkGetButtonMask(b);
+	mask = Tk_GetButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {
 		type = ButtonPress;

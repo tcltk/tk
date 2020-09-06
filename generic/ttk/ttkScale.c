@@ -5,6 +5,7 @@
  */
 
 #include "tkInt.h"
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -57,11 +58,11 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable", "",
 	offsetof(Scale,scale.variableObj), TCL_INDEX_NONE,
-	0,0,0},
+	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Scale,scale.orientObj),
 	offsetof(Scale,scale.orient), 0,
-	(ClientData)ttkOrientStrings, STYLE_CHANGED },
+	(void *)ttkOrientStrings, STYLE_CHANGED },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
 	offsetof(Scale,scale.fromObj), TCL_INDEX_NONE, 0, 0, 0},
@@ -75,7 +76,7 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 
     {TK_OPTION_STRING, "-state", "state", "State",
 	"normal", offsetof(Scale,scale.stateObj), TCL_INDEX_NONE,
-        0,0,STATE_CHANGED},
+        0, 0, STATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
