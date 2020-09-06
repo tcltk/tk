@@ -41,9 +41,12 @@ static int isWin32s = -1;
 #include <stdint.h>
 #endif
 
-/* Deal with Tcl 8.4 constificiation */
-#ifndef CONST84
-#define CONST84
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
 #endif
 
 static BOOL AdjustICONIMAGEPointers(LPICONIMAGE lpImage);
@@ -1405,7 +1408,7 @@ DestroyHandlerWindow(void) {
  */
 
 static char *
-StandardIcon(CONST84 char * arg) {
+StandardIcon(char * arg) {
 	if (!stricmp(arg, "application"))
 		return IDI_APPLICATION;
 	if (!stricmp(arg, "asterisk"))
@@ -1532,7 +1535,7 @@ WinIcoDestroy(ClientData clientData) {
  
 static int
 WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
-    int argc, CONST84 char * argv[]) {
+    int argc, char * argv[]) {
     size_t length;
     HICON hIcon;
     int i;
@@ -1611,7 +1614,6 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         int c;
         int length;
         int count;
-        int newpos;
         char * txt;
         if (argc < 4) {
             Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -1692,21 +1694,24 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
  
 static int
 WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
-    int argc, CONST84 char * argv[]) {
+    int argc, char * argv[]) {
     size_t length;
     HICON hIcon;
-    int i;
     IcoInfo * icoPtr;
+    Tcl_DString infodst;
+    Tcl_DString titledst;
+    NOTIFYICONDATAA ni;
+    char * msgtitle;
+    char * msginfo;
+    char * title;
+    char * info;
 
     icoPtr = GetIcoPtr(interp, (char * ) argv[2]);
     if (icoPtr == NULL) {
         Tcl_ResetResult(interp);
         return TCL_OK;
     }
-    Tcl_DString infodst;
-    Tcl_DString titledst;
 
-    NOTIFYICONDATAA ni;
     ni.cbSize = sizeof(NOTIFYICONDATAA);
     ni.hWnd = CreateTaskbarHandlerWindow();
     ni.uID = icoPtr -> id;
@@ -1725,14 +1730,12 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
         (length >= 2)) {
         if (argc != 5) {
             Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " notify ?id? ?title? ?detail?\ ", (char * ) NULL);
+                argv[0], " notify ?id? ?title? ?detail?\"", (char * ) NULL);
             return TCL_ERROR;
         }
 
-        char * msgtitle = (char * ) argv[3];
-        char * msginfo = (char * ) argv[4];
-        char * title;
-        char * info;
+        msgtitle = (char * ) argv[3];
+        msginfo = (char * ) argv[4];
 
         /* Balloon notification for system tray icon. */
         if (msgtitle != NULL) {
