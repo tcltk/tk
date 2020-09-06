@@ -53,24 +53,37 @@ enum {
 {
     NSWindow *eventWindow = [theEvent window];
     NSEventType eventType = [theEvent type];
-    NSInteger button = [theEvent buttonNumber] + Button1;
+    NSRect viewFrame = [[eventWindow contentView] frame];
     TkWindow *winPtr = NULL, *grabWinPtr;
     Tk_Window tkwin = None, capture, target;
     NSPoint local, global;
-    int win_x, win_y;
+    NSInteger button;
     Bool inTitleBar = NO;
-    static int validPresses = 0, ignoredPresses = 0;
+    int win_x, win_y;
     unsigned int buttonState = 0;
+    static int validPresses = 0, ignoredPresses = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
 
-    if (eventWindow) {
-	NSRect viewFrame = [[eventWindow contentView] frame];
-	NSPoint location = [theEvent locationInWindow];
-	inTitleBar = viewFrame.size.height < location.y;
+    /*
+     * If this event is not for a Tk toplevel, just pass it up the responder
+     * chain.
+     */
+
+    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
+	return theEvent;
     }
+
+    /*
+     * Check if the event is located in the titlebar.
+     */
+
+    if (eventWindow) {
+	inTitleBar = viewFrame.size.height < [theEvent locationInWindow].y;
+    }
+    button = [theEvent buttonNumber] + Button1;
     switch (eventType) {
     case NSRightMouseUp:
     case NSOtherMouseUp:
