@@ -409,7 +409,7 @@ GenerateEditEvent(
 {
     XVirtualEvent event;
     int x, y;
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([NSApp keyWindow]);
+    TkWindow *winPtr = TkMacOSXGetTkWindow([NSApp keyWindow]);
     Tk_Window tkwin;
 
     if (!winPtr) {

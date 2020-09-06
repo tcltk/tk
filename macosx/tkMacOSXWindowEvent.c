@@ -55,7 +55,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     BOOL activate = [[notification name]
 	    isEqualToString:NSWindowDidBecomeKeyNotification];
     NSWindow *w = [notification object];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr && Tk_IsMapped(winPtr)) {
 	GenerateActivateEvents(winPtr, activate);
@@ -70,7 +70,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     BOOL movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
     NSWindow *w = [notification object];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -106,7 +106,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     NSWindow *w = [notification object];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	winPtr->wmInfoPtr->hints.initial_state =
@@ -179,10 +179,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     NSWindow *w = [notification object];
-    Tk_Window tkwin = Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-    if (tkwin) {
-	Tk_UnmapWindow(tkwin);
+    if (winPtr) {
+	Tk_UnmapWindow((Tk_Window)winPtr);
     }
 }
 
@@ -191,10 +191,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, w);
 #endif
-    Tk_Window tkwin = Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-    if (tkwin) {
-	TkGenWMDestroyEvent(tkwin);
+    if (winPtr) {
+	TkGenWMDestroyEvent((Tk_Window)winPtr);
     }
 
     /*
@@ -202,14 +202,14 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      * can always return NO from -windowShouldClose: for a Tk window.
      */
 
-    return (tkwin ? NO : YES);
+    return (winPtr ? NO : YES);
 }
 
 - (void) windowBecameVisible: (NSNotification *) notification
 {
     NSWindow *window = [notification object];
-    Tk_Window tkwin = Tk_MacOSXGetTkWindow(window);
-    if (tkwin) {
+    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+    if (winPtr) {
 	TKContentView *view = [window contentView];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	if (@available(macOS 10.14, *)) {
@@ -225,7 +225,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowMapped: (NSNotification *) notification
 {
     NSWindow *w = [notification object];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
@@ -249,7 +249,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 {
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
     NSWindow *w = [notification object];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	//Tk_UnmapWindow((Tk_Window)winPtr);
@@ -310,7 +310,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      */
 
     for (NSWindow *win in [NSApp windows]) {
-	TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(win);
+	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
 	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
@@ -933,7 +933,7 @@ ConfigureRestrictProc(
     (void)rect;
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([self window]);
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     if (winPtr) {
 	fprintf(stderr, "drawRect: drawing %s in %s\n",
 	    Tk_PathName(winPtr), NSStringFromRect(rect).UTF8String);
@@ -966,7 +966,7 @@ ConfigureRestrictProc(
 {
     [super setFrameSize: newsize];
     NSWindow *w = [self window];
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow(w);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
     if (![self inLiveResize] &&
@@ -1038,7 +1038,7 @@ ConfigureRestrictProc(
     unsigned long serial;
     int updatesNeeded;
     CGRect updateBounds;
-    TkWindow *winPtr = (TkWindow *)Tk_MacOSXGetTkWindow([self window]);
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
     if (!winPtr) {
@@ -1109,7 +1109,7 @@ static const char *const accentNames[] = {
 
 - (void) viewDidChangeEffectiveAppearance
 {
-    Tk_Window tkwin = Tk_MacOSXGetTkWindow([self window]);
+    Tk_Window tkwin = (Tk_Window)TkMacOSXGetTkWindow([self window]);
     if (!tkwin) {
 	return;
     }
@@ -1178,8 +1178,8 @@ static const char *const accentNames[] = {
 #endif
     XVirtualEvent event;
     int x, y;
-    Tk_Window tkwin = Tk_MacOSXGetTkWindow([self window]);
-    TkWindow *winPtr = (TkWindow *)tkwin;
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    Tk_Window tkwin = (Tk_Window)winPtr;
     (void)sender;
 
     if (!winPtr){
