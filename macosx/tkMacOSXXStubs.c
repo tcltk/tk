@@ -466,7 +466,7 @@ XGetGeometry(
     unsigned int *border_width_return,
     unsigned int *depth_return)
 {
-    TkWindow *winPtr = ((MacDrawable *) d)->winPtr;
+    TkWindow *winPtr = ((MacDrawable *)d)->winPtr;
 
     display->request++;
     *root_return = ROOT_ID;
@@ -478,7 +478,7 @@ XGetGeometry(
 	*border_width_return = winPtr->changes.border_width;
 	*depth_return = Tk_Depth(winPtr);
     } else {
-	CGSize size = ((MacDrawable *) d)->size;
+	CGSize size = ((MacDrawable *)d)->size;
 	*x_return = 0;
 	*y_return =  0;
 	*width_return = size.width;
@@ -1005,7 +1005,7 @@ Tk_GetUserInactiveTime(
     uint64_t time;
     IOReturn result;
 
-    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+    regEntry = IOServiceGetMatchingService(0,
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {

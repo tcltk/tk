@@ -479,7 +479,7 @@ XOffsetRegion(
  *----------------------------------------------------------------------
  *
  * TkMacOSXHIShapeCreateEmpty, TkMacOSXHIShapeCreateMutableWithRect,
- * TkMacOSXHIShapeSetWithShape, TkMacOSXHIShapeSetWithRect,
+ * TkMacOSXHIShapeSetWithShape,
  * TkMacOSHIShapeDifferenceWithRect, TkMacOSHIShapeUnionWithRect,
  * TkMacOSHIShapeUnion --
  *
@@ -517,22 +517,6 @@ TkMacOSXHIShapeSetWithShape(
     result = HIShapeSetWithShape(inDestShape, inSrcShape);
     return result;
 }
-
-#if 0
-OSStatus
-TkMacOSXHIShapeSetWithRect(
-    HIMutableShapeRef inShape,
-    const CGRect *inRect)
-{
-    OSStatus result;
-    HIShapeRef rgn = HIShapeCreateWithRect(inRect);
-
-    result = TkMacOSXHIShapeSetWithShape(inShape, rgn);
-    CFRelease(rgn);
-
-    return result;
-}
-#endif
 
 OSStatus
 TkMacOSHIShapeDifferenceWithRect(

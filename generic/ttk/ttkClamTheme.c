@@ -4,7 +4,7 @@
  * "clam" theme; inspired by the XFCE family of Gnome themes.
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 
 /*

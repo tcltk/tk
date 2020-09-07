@@ -1720,6 +1720,7 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_Init
 #undef Tk_SafeInit
 #undef Tk_CreateConsoleWindow
+#define Tk_GetImageModelData Tk_GetImageMasterData
 
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
