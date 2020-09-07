@@ -75,7 +75,7 @@ static void		MaintainSlaveProc(ClientData clientData,
  *	previous geometry manager. The geometry manager will be notified (by
  *	calling procedures in *mgrPtr) when interesting things happen in the
  *	future. If there was an existing geometry manager for tkwin different
- *	from the new one, it is notified by calling its lostSlaveProc.
+ *	from the new one, it is notified by calling its lostContentProc.
  *
  *--------------------------------------------------------------
  */
@@ -95,8 +95,8 @@ Tk_ManageGeometry(
     if ((winPtr->geomMgrPtr != NULL) && (mgrPtr != NULL)
 	    && ((winPtr->geomMgrPtr != mgrPtr)
 		|| (winPtr->geomData != clientData))
-	    && (winPtr->geomMgrPtr->lostSlaveProc != NULL)) {
-	winPtr->geomMgrPtr->lostSlaveProc(winPtr->geomData, tkwin);
+	    && (winPtr->geomMgrPtr->lostContentProc != NULL)) {
+	winPtr->geomMgrPtr->lostContentProc(winPtr->geomData, tkwin);
     }
 
     winPtr->geomMgrPtr = mgrPtr;
@@ -303,78 +303,78 @@ Tk_SetMinimumRequestSize(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetGeometryMaster --
+ * TkSetGeometryContainer --
  *
- *	Set a geometry master for this window. Only one master may own
+ *	Set a geometry container for this window. Only one container may own
  *	a window at any time.
  *
  * Results:
  *	A standard Tcl result.
  *
  * Side effects:
- *	The geometry master is recorded for the window.
+ *	The geometry container is recorded for the window.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkSetGeometryMaster(
+TkSetGeometryContainer(
     Tcl_Interp *interp,		/* Current interpreter, for error. */
-    Tk_Window tkwin,		/* Window that will have geometry master
+    Tk_Window tkwin,		/* Window that will have geometry container
 				 * set. */
-    const char *master)		/* The master identity. */
+    const char *name)		/* The name of the geometry manager. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->geomMgrName != NULL &&
-	    strcmp(winPtr->geomMgrName, master) == 0) {
+	    strcmp(winPtr->geomMgrName, name) == 0) {
 	return TCL_OK;
     }
     if (winPtr->geomMgrName != NULL) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "cannot use geometry manager %s inside %s which already"
-		    " has slaves managed by %s",
-		    master, Tk_PathName(tkwin), winPtr->geomMgrName));
+		    "cannot use geometry manager %s inside %s because"
+		    " %s is already managing it's content windows",
+		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
 	}
 	return TCL_ERROR;
     }
 
-    winPtr->geomMgrName = (char *)ckalloc(strlen(master) + 1);
-    strcpy(winPtr->geomMgrName, master);
+    winPtr->geomMgrName = (char *)ckalloc(strlen(name) + 1);
+    strcpy(winPtr->geomMgrName, name);
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkFreeGeometryMaster --
+ * TkFreeGeometryContainer --
  *
- *	Remove a geometry master for this window. Only one master may own
+ *	Remove a geometry container for this window. Only one container may own
  *	a window at any time.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The geometry master is cleared for the window.
+ *	The geometry container is cleared for the window.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkFreeGeometryMaster(
-    Tk_Window tkwin,		/* Window that will have geometry master
+TkFreeGeometryContainer(
+    Tk_Window tkwin,		/* Window that will have geometry container
 				 * cleared. */
-    const char *master)		/* The master identity. */
+    const char *name)		/* The name of the geometry manager. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->geomMgrName != NULL &&
-	    strcmp(winPtr->geomMgrName, master) != 0) {
+	    strcmp(winPtr->geomMgrName, name) != 0) {
 	Tcl_Panic("Trying to free %s from geometry manager %s",
-		winPtr->geomMgrName, master);
+		winPtr->geomMgrName, name);
     }
     if (winPtr->geomMgrName != NULL) {
 	ckfree(winPtr->geomMgrName);
@@ -418,7 +418,7 @@ Tk_MaintainGeometry(
     int width, int height)	/* Desired dimensions for slave. */
 {
     Tcl_HashEntry *hPtr;
-    MaintainMaster *masterPtr;
+    MaintainMaster *containerPtr;
     MaintainSlave *slavePtr;
     int isNew, map;
     Tk_Window ancestor, parent;
@@ -463,13 +463,13 @@ Tk_MaintainGeometry(
     hPtr = Tcl_CreateHashEntry(&dispPtr->maintainHashTable,
 	    (char *) master, &isNew);
     if (!isNew) {
-	masterPtr = (MaintainMaster *)Tcl_GetHashValue(hPtr);
+	containerPtr = (MaintainMaster *)Tcl_GetHashValue(hPtr);
     } else {
-	masterPtr = (MaintainMaster *)ckalloc(sizeof(MaintainMaster));
-	masterPtr->ancestor = master;
-	masterPtr->checkScheduled = 0;
-	masterPtr->slavePtr = NULL;
-	Tcl_SetHashValue(hPtr, masterPtr);
+	containerPtr = (MaintainMaster *)ckalloc(sizeof(MaintainMaster));
+	containerPtr->ancestor = master;
+	containerPtr->checkScheduled = 0;
+	containerPtr->slavePtr = NULL;
+	Tcl_SetHashValue(hPtr, containerPtr);
     }
 
     /*
@@ -477,7 +477,7 @@ Tk_MaintainGeometry(
      * one.
      */
 
-    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
 	if (slavePtr->slave == slave) {
 	    goto gotSlave;
@@ -486,8 +486,8 @@ Tk_MaintainGeometry(
     slavePtr = (MaintainSlave *)ckalloc(sizeof(MaintainSlave));
     slavePtr->slave = slave;
     slavePtr->master = master;
-    slavePtr->nextPtr = masterPtr->slavePtr;
-    masterPtr->slavePtr = slavePtr;
+    slavePtr->nextPtr = containerPtr->slavePtr;
+    containerPtr->slavePtr = slavePtr;
     Tk_CreateEventHandler(slave, StructureNotifyMask, MaintainSlaveProc,
 	    slavePtr);
 
@@ -495,15 +495,15 @@ Tk_MaintainGeometry(
      * Make sure that there are event handlers registered for all the windows
      * between master and slave's parent (including master but not slave's
      * parent). There may already be handlers for master and some of its
-     * ancestors (masterPtr->ancestor tells how many).
+     * ancestors (containerPtr->ancestor tells how many).
      */
 
     for (ancestor = master; ancestor != parent;
 	    ancestor = Tk_Parent(ancestor)) {
-	if (ancestor == masterPtr->ancestor) {
+	if (ancestor == containerPtr->ancestor) {
 	    Tk_CreateEventHandler(ancestor, StructureNotifyMask,
-		    MaintainMasterProc, masterPtr);
-	    masterPtr->ancestor = Tk_Parent(ancestor);
+		    MaintainMasterProc, containerPtr);
+	    containerPtr->ancestor = Tk_Parent(ancestor);
 	}
     }
 
@@ -567,7 +567,7 @@ Tk_UnmaintainGeometry(
 				 * slave's parent. */
 {
     Tcl_HashEntry *hPtr;
-    MaintainMaster *masterPtr;
+    MaintainMaster *containerPtr;
     MaintainSlave *slavePtr, *prevPtr;
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
@@ -596,10 +596,10 @@ Tk_UnmaintainGeometry(
     if (hPtr == NULL) {
 	return;
     }
-    masterPtr = (MaintainMaster *)Tcl_GetHashValue(hPtr);
-    slavePtr = masterPtr->slavePtr;
+    containerPtr = (MaintainMaster *)Tcl_GetHashValue(hPtr);
+    slavePtr = containerPtr->slavePtr;
     if (slavePtr->slave == slave) {
-	masterPtr->slavePtr = slavePtr->nextPtr;
+	containerPtr->slavePtr = slavePtr->nextPtr;
     } else {
 	for (prevPtr = slavePtr, slavePtr = slavePtr->nextPtr; ;
 		prevPtr = slavePtr, slavePtr = slavePtr->nextPtr) {
@@ -615,21 +615,21 @@ Tk_UnmaintainGeometry(
     Tk_DeleteEventHandler(slavePtr->slave, StructureNotifyMask,
 	    MaintainSlaveProc, slavePtr);
     ckfree(slavePtr);
-    if (masterPtr->slavePtr == NULL) {
-	if (masterPtr->ancestor != NULL) {
+    if (containerPtr->slavePtr == NULL) {
+	if (containerPtr->ancestor != NULL) {
 	    for (ancestor = master; ; ancestor = Tk_Parent(ancestor)) {
 		Tk_DeleteEventHandler(ancestor, StructureNotifyMask,
-			MaintainMasterProc, masterPtr);
-		if (ancestor == masterPtr->ancestor) {
+			MaintainMasterProc, containerPtr);
+		if (ancestor == containerPtr->ancestor) {
 		    break;
 		}
 	    }
 	}
-	if (masterPtr->checkScheduled) {
-	    Tcl_CancelIdleCall(MaintainCheckProc, masterPtr);
+	if (containerPtr->checkScheduled) {
+	    Tcl_CancelIdleCall(MaintainCheckProc, containerPtr);
 	}
 	Tcl_DeleteHashEntry(hPtr);
-	ckfree(masterPtr);
+	ckfree(containerPtr);
     }
 }
 
@@ -660,27 +660,27 @@ MaintainMasterProc(
 				 * master window. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    MaintainMaster *masterPtr = (MaintainMaster *)clientData;
+    MaintainMaster *containerPtr = (MaintainMaster *)clientData;
     MaintainSlave *slavePtr;
     int done;
 
     if ((eventPtr->type == ConfigureNotify)
 	    || (eventPtr->type == MapNotify)
 	    || (eventPtr->type == UnmapNotify)) {
-	if (!masterPtr->checkScheduled) {
-	    masterPtr->checkScheduled = 1;
-	    Tcl_DoWhenIdle(MaintainCheckProc, masterPtr);
+	if (!containerPtr->checkScheduled) {
+	    containerPtr->checkScheduled = 1;
+	    Tcl_DoWhenIdle(MaintainCheckProc, containerPtr);
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	/*
 	 * Delete all of the state associated with this master, but be careful
-	 * not to use masterPtr after the last slave is deleted, since its
+	 * not to use containerPtr after the last slave is deleted, since its
 	 * memory will have been freed.
 	 */
 
 	done = 0;
 	do {
-	    slavePtr = masterPtr->slavePtr;
+	    slavePtr = containerPtr->slavePtr;
 	    if (slavePtr->nextPtr == NULL) {
 		done = 1;
 	    }
@@ -746,13 +746,13 @@ MaintainCheckProc(
     ClientData clientData)	/* Pointer to MaintainMaster structure for the
 				 * master window. */
 {
-    MaintainMaster *masterPtr = (MaintainMaster *)clientData;
+    MaintainMaster *containerPtr = (MaintainMaster *)clientData;
     MaintainSlave *slavePtr;
     Tk_Window ancestor, parent;
     int x, y, map;
 
-    masterPtr->checkScheduled = 0;
-    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+    containerPtr->checkScheduled = 0;
+    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
 	parent = Tk_Parent(slavePtr->slave);
 	x = slavePtr->x;

@@ -165,11 +165,6 @@ MODULE_SCOPE void Ttk_UntraceVariable(Ttk_TraceHandle *);
 MODULE_SCOPE int Ttk_FireTrace(Ttk_TraceHandle *);
 
 /*
- * Virtual events:
- */
-MODULE_SCOPE void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
-
-/*
  * Helper routines for data accessor commands:
  */
 MODULE_SCOPE int TtkEnumerateOptions(

@@ -278,7 +278,7 @@ Tk_MessageObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(msgPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(msgPtr->tkwin));
     return TCL_OK;
 }
 

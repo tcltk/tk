@@ -44,14 +44,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
-#define Tk_MacOSXTkOwnsCursor (void (*)(int))(void *)doNothing
-#define Tk_MacOSXTurnOffMenus (void (*)(void))(void *)doNothing
-#define TkMacOSXInitMenus (void (*)(Tcl_Interp *))(void *)doNothing
-#define Tk_MacOSXSetEmbedHandler (void (*)(Tk_MacOSXEmbedRegisterWinProc *, \
-	Tk_MacOSXEmbedGetGrafPortProc *, \
-	Tk_MacOSXEmbedMakeContainerExistProc *, \
-	Tk_MacOSXEmbedGetClipProc *, \
-	Tk_MacOSXEmbedGetOffsetInParentProc *))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -609,14 +601,14 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXMakeRealWindowExist, /* 23 */
     TkMacOSXMakeStippleMap, /* 24 */
     TkMacOSXMenuClick, /* 25 */
-    TkMacOSXRegisterOffScreenWindow, /* 26 */
+    0, /* 26 */
     TkMacOSXResizable, /* 27 */
     TkMacOSXSetHelpMenuItemCount, /* 28 */
     TkMacOSXSetScrollbarGrow, /* 29 */
     TkMacOSXSetUpClippingRgn, /* 30 */
     TkMacOSXSetUpGraphicsPort, /* 31 */
     TkMacOSXUpdateClipRgn, /* 32 */
-    TkMacOSXUnregisterMacWindow, /* 33 */
+    0, /* 33 */
     TkMacOSXUseMenuID, /* 34 */
     TkMacOSXVisableClipRgn, /* 35 */
     TkMacOSXWinBounds, /* 36 */
@@ -1029,13 +1021,17 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_TranslateWinEvent, /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXSetupTkNotifier, /* 1 */
-    TkMacOSXInitMenus, /* 2 */
-    TkMacOSXInitAppleEvents, /* 3 */
-    TkGenWMConfigureEvent, /* 4 */
-    TkMacOSXInvalClipRgns, /* 5 */
-    Tk_MacOSXIsAppInFront, /* 6 */
+    0, /* 0 */
+    0, /* 1 */
+    0, /* 2 */
+    0, /* 3 */
+    TkMacOSXInitAppleEvents, /* 4 */
+    TkGenWMConfigureEvent, /* 5 */
+    TkMacOSXInvalClipRgns, /* 6 */
+    0, /* 7 */
+    TkMacOSXGetRootControl, /* 8 */
+    Tk_MacOSXSetupTkNotifier, /* 9 */
+    Tk_MacOSXIsAppInFront, /* 10 */
 #endif /* AQUA */
 };
 
@@ -1147,7 +1143,7 @@ const TkStubs tkStubs = {
     Tk_GetFontMetrics, /* 95 */
     Tk_GetGC, /* 96 */
     Tk_GetImage, /* 97 */
-    Tk_GetImageMasterData, /* 98 */
+    Tk_GetImageModelData, /* 98 */
     Tk_GetItemTypes, /* 99 */
     Tk_GetJoinStyle, /* 100 */
     Tk_GetJustify, /* 101 */
@@ -1323,6 +1319,12 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    Tk_AlwaysShowSelection, /* 274 */
+    Tk_GetButtonMask, /* 275 */
+    Tk_GetDoublePixelsFromObj, /* 276 */
+    Tk_NewWindowObj, /* 277 */
+    Tk_SendVirtualEvent, /* 278 */
+    Tk_FontGetDescription, /* 279 */
 };
 
 /* !END!: Do not edit above this line. */
