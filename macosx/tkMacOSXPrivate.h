@@ -437,16 +437,40 @@ VISIBILITY_HIDDEN
 
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Bool _mouseInResizeArea;
+    Window _tkWindow;
+#endif
+}
+@property Bool mouseInResizeArea;
+@property Window tkWindow;
 @end
 
 @interface TKWindow(TKWm)
 - (void)    tkLayoutChanged;
 @end
 
-@interface NSDrawerWindow : NSWindow
+@interface TKDrawerWindow : NSWindow
 {
     id _i1, _i2;
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
 }
+@property Window tkWindow;
+@end
+
+@interface TKPanel : NSPanel
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
+}
+@property Window tkWindow;
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities
