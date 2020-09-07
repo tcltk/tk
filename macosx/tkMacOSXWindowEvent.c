@@ -207,8 +207,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	if (@available(macOS 10.14, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
+	if (@available(macOS 10.15, *)) {
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
@@ -1106,6 +1106,20 @@ static const char *const accentNames[] = {
     NSArray *highlightWords;
     static const char *defaultColor;
 
+    if (effectiveAppearanceName == NSAppearanceNameAqua) {
+	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
+    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
+	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
+    }
+    if ([NSApp macOSVersion] < 101500) {
+
+	/*
+	 * Mojave cannot handle the KVO shenanigans that we need for the
+	 * highlight and accent color notifications.
+	 */
+
+	return;
+    }
     if (!preferences) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
 	preferences = [[NSUserDefaults standardUserDefaults] retain];
@@ -1138,11 +1152,6 @@ static const char *const accentNames[] = {
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
     TkSendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
-    if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
-    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
