@@ -318,19 +318,15 @@ GetRGBA(
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
-	    [color getComponents: rgba];
 #endif
-	    break;
-	}
-	if (entry->index == selectedTabTextIndex) {
+	} else if (entry->index == selectedTabTextIndex) {
 	    int OSVersion = [NSApp macOSVersion];
 	    if (OSVersion > 100600 && OSVersion < 110000) {
-		color = [NSColor whiteColor];
-		[color getComponents: rgba];
-		break;
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    }
+	} else {
+	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	}
-	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	[color getComponents: rgba];
 	break;
     case clearColor:
@@ -438,7 +434,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXDrawableView(winPtr->privatePtr);
+	    view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 	}
 	if (view) {
 	    name = [[view effectiveAppearance] name];
@@ -747,8 +743,8 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
-	view = TkMacOSXDrawableView(macWin);
+	Drawable d = Tk_WindowId(tkwin);
+	view = TkMacOSXGetNSViewForDrawable(d);
     }
 
     /*

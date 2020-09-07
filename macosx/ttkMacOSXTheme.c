@@ -189,7 +189,7 @@ static inline CGRect BoxToRect(
     Drawable d,
     Ttk_Box b)
 {
-    MacDrawable *md = (MacDrawable *) d;
+    MacDrawable *md = (MacDrawable *)d;
     CGRect rect;
 
     rect.origin.y       = b.y + md->yOff;
@@ -323,7 +323,7 @@ static void GetBackgroundColorRGBA(
 	if (containerPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	containerPtr = (TkWindow *) TkGetGeomMaster(containerPtr);
+	containerPtr = (TkWindow *)TkGetGeomMaster(containerPtr);
     }
     if (containerPtr && containerPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
@@ -1331,13 +1331,14 @@ static void DrawListHeader(
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
     CGColorRef strokeColor, backgroundColor;
+
     /*
      * Apple changes the background color of a list header when the window is
      * not active.  But Ttk does not indicate that in the state of a
      * TreeHeader.  So we have to query the Apple window manager.
      */
 
-    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
     if (!isDark) {
 	GrayColor bgGray = [win isKeyWindow] ?
 	    listheaderActiveBG : listheaderInactiveBG;
@@ -2724,7 +2725,7 @@ static void ThumbElementDraw(
 	END_DRAWING
     } else {
 	double thumbSize, trackSize, visibleSize, factor, fraction;
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
+	MacDrawable *macWin = (MacDrawable *)Tk_WindowId(tkwin);
 	CGRect troughBounds = {{macWin->xOff, macWin->yOff},
 			       {Tk_Width(tkwin), Tk_Height(tkwin)}};
 

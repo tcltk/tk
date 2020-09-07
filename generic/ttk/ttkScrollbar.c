@@ -4,8 +4,7 @@
  * ttk::scrollbar widget.
  */
 
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -40,7 +39,7 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Scrollbar,scrollbar.orientObj),
 	Tk_Offset(Scrollbar,scrollbar.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
