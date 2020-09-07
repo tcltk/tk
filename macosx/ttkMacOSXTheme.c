@@ -116,7 +116,6 @@ static inline HIThemeButtonDrawInfo ComputeButtonDrawInfo(
     return info;
 }
 
-
 /*
  * When we draw simulated Apple widgets we use the Core Graphics framework.
  * Core Graphics uses CGColorRefs, not NSColors.  A CGColorRef must be retained
@@ -247,7 +246,7 @@ static CGRect NormalizeButtonBounds(
 {
     SInt32 height;
 
-    if (params->heightMetric != (UInt32) NoThemeMetric) {
+    if (params->heightMetric != NoThemeMetric) {
 	ChkErr(GetThemeMetric, params->heightMetric, &height);
 	height += 2;
 	bounds.origin.y += round(1 + (bounds.size.height - height) / 2);
@@ -1505,6 +1504,7 @@ static void DrawDarkSeparator(
     TCL_UNUSED(Tk_Window))
 {
     CGColorRef sepColor = CGColorFromGray(darkSeparator);
+
     CGContextSetFillColorWithColor(context, sepColor);
     CGContextFillRect(context, bounds);
 }
@@ -2219,12 +2219,12 @@ static void SpinButtonReBounds(
 }
 
 static void SpinButtonElementSize(
-    TCL_UNUSED(void *),        /* clientData */
-    TCL_UNUSED(void *),        /* elementRecord */
-    TCL_UNUSED(Tk_Window),     /* tkwin */
+    TCL_UNUSED(void *),       /* clientdata */
+    TCL_UNUSED(void *),       /* elementRecord */
+    TCL_UNUSED(Tk_Window),    /* tkwin */
     int *minWidth,
     int *minHeight,
-    TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
+    TCL_UNUSED(Ttk_Padding*)) /* PaddingPtr */
 {
     SInt32 s;
 
