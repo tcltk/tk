@@ -68,12 +68,16 @@ enum {
 #endif
 
     /*
-     * If this event is not for a Tk toplevel, just pass it up the responder
-     * chain.
+     * If this event is not for a Tk toplevel, it should just be passed up the
+     * responder chain.  However, there is an exception for synthesized events,
+     * which are used in testing.  Those events are recognized by having their
+     * (unused) pressure field set to the impossible value -1.0.
      */
 
     if (![eventWindow isMemberOfClass:[TKWindow class]]) {
-	return theEvent;
+	if (eventWindow && [eventWindow pressure] != -1.0) {
+	    return theEvent;
+	}
     }
 
     /*
