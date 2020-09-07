@@ -582,14 +582,14 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXMakeRealWindowExist, /* 23 */
     TkMacOSXMakeStippleMap, /* 24 */
     TkMacOSXMenuClick, /* 25 */
-    TkMacOSXRegisterOffScreenWindow, /* 26 */
+    0, /* 26 */
     TkMacOSXResizable, /* 27 */
     TkMacOSXSetHelpMenuItemCount, /* 28 */
     TkMacOSXSetScrollbarGrow, /* 29 */
     TkMacOSXSetUpClippingRgn, /* 30 */
     TkMacOSXSetUpGraphicsPort, /* 31 */
     TkMacOSXUpdateClipRgn, /* 32 */
-    TkMacOSXUnregisterMacWindow, /* 33 */
+    0, /* 33 */
     TkMacOSXUseMenuID, /* 34 */
     TkMacOSXVisableClipRgn, /* 35 */
     TkMacOSXWinBounds, /* 36 */
