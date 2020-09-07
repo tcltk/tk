@@ -406,7 +406,7 @@ TkMacOSXContainerId(
     for (containerPtr = firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->embeddedPtr == winPtr) {
-	    return (MacDrawable *) containerPtr->parent;
+	    return (MacDrawable *)containerPtr->parent;
 	}
     }
     Tcl_Panic("TkMacOSXContainerId couldn't find window");
@@ -818,7 +818,7 @@ ContainerEventProc(
 	 * Here we are following unix, by destroying the container.
 	 */
 
-	Tk_DestroyWindow((Tk_Window) winPtr);
+	Tk_DestroyWindow((Tk_Window)winPtr);
     }
     Tk_DeleteErrorHandler(errHandler);
 }
@@ -867,8 +867,8 @@ EmbedStructureProc(
 
 	    errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
 		    -1, -1, NULL, NULL);
-	    Tk_MoveResizeWindow((Tk_Window) containerPtr->embeddedPtr, 0, 0,
-		    (unsigned) Tk_Width((Tk_Window) containerPtr->parentPtr),
+	    Tk_MoveResizeWindow((Tk_Window)containerPtr->embeddedPtr, 0, 0,
+		    (unsigned) Tk_Width((Tk_Window)containerPtr->parentPtr),
 		    (unsigned) Tk_Height((Tk_Window)containerPtr->parentPtr));
 	    Tk_DeleteErrorHandler(errHandler);
 	}
@@ -1013,7 +1013,7 @@ EmbedGeometryRequest(
      * if the window's size didn't change then generate a configure event.
      */
 
-    Tk_GeometryRequest((Tk_Window) winPtr, width, height);
+    Tk_GeometryRequest((Tk_Window)winPtr, width, height);
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {}
     if ((winPtr->changes.width != width)
 	    || (winPtr->changes.height != height)) {

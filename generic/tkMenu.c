@@ -593,7 +593,7 @@ Tk_MenuObjCmd(
     	}
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(menuPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(menuPtr->tkwin));
     return TCL_OK;
 }
 

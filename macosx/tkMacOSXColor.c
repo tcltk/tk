@@ -92,9 +92,9 @@ void initColorTable()
     for (key in [systemColorList allKeys]) {
 	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = ckalloc(sizeof(SystemColorDatum));
+	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
-	name = ckalloc(length + 1);
+	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = toupper(name[0]);
         if (!strcmp(name, "WindowBackgroundColor")) {
@@ -124,7 +124,7 @@ void initColorTable()
      */
 
     numSystemColors = index;
-    systemColorIndex = ckalloc(numSystemColors * sizeof(SystemColorDatum*));
+    systemColorIndex = (SystemColorDatum **)ckalloc(numSystemColors * sizeof(SystemColorDatum *));
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
@@ -318,19 +318,15 @@ GetRGBA(
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
-	    [color getComponents: rgba];
 #endif
-	    break;
-	}
-	if (entry->index == selectedTabTextIndex) {
+	} else if (entry->index == selectedTabTextIndex) {
 	    int OSVersion = [NSApp macOSVersion];
 	    if (OSVersion > 100600 && OSVersion < 110000) {
-		color = [NSColor whiteColor];
-		[color getComponents: rgba];
-		break;
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    }
+	} else {
+	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	}
-	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	[color getComponents: rgba];
 	break;
     case clearColor:
@@ -411,7 +407,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXDrawableView((Drawable)(winPtr->privatePtr));
+	    view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 	}
 	if (view) {
 	    name = [[view effectiveAppearance] name];
@@ -708,8 +704,8 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
-	view = TkMacOSXDrawableView((Drawable) macWin);
+	Drawable d = Tk_WindowId(tkwin);
+	view = TkMacOSXGetNSViewForDrawable(d);
     }
 
     /*

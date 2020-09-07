@@ -32,7 +32,7 @@ static char scriptPath[PATH_MAX + 1] = "";
  * Forward declarations...
  */
 
-static int		TkMacOSXGetAppPathObjCmd(ClientData cd, Tcl_Interp *ip,
+static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
@@ -450,6 +450,54 @@ TkpInit(
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXGetAppPathObjCmd --
+ *
+ *	Returns the path of the Wish application bundle.
+ *
+ * Results:
+ *	Returns the application path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXGetAppPathObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
+
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
+
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpGetAppName --
  *
  *	Retrieves the name of the current application from a platform specific
@@ -482,56 +530,6 @@ TkpGetAppName(
 	}
     }
     Tcl_DStringAppend(namePtr, name, -1);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetAppPathObjCmd --
- *
- *	Returns the path of the Wish application bundle.
- *
- * Results:
- *	Returns the application path.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TkMacOSXGetAppPathObjCmd(
-    ClientData dummy,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
-{
-    (void)dummy;
-
-    if (objc != 1) {
-	Tcl_WrongNumArgs(interp, 1, objv, NULL);
-	return TCL_ERROR;
-    }
-
-    /*
-     * Get the application path URL and convert it to a string path reference.
-     */
-
-    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    CFStringRef appPath =
-	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
-
-    /*
-     * Convert (and copy) the string reference into a Tcl result.
-     */
-
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
-
-    CFRelease(mainBundleURL);
-    CFRelease(appPath);
-    return TCL_OK;
 }
 
 /*

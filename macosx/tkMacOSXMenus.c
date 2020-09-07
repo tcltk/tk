@@ -399,7 +399,7 @@ GenerateEditEvent(
     if (!winPtr) {
 	return;
     }
-    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    tkwin = (Tk_Window)winPtr->dispPtr->focusPtr;
     if (!tkwin) {
 	return;
     }
