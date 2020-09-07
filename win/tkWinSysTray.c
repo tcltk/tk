@@ -1535,7 +1535,7 @@ WinIcoDestroy(ClientData clientData) {
  
 static int
 WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
-    int argc, char * argv[]) {
+    int argc, const char * argv[]) {
     size_t length;
     HICON hIcon;
     int i;
@@ -1694,7 +1694,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
  
 static int
 WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
-    int argc, char * argv[]) {
+    int argc, const char * argv[]) {
     size_t length;
     HICON hIcon = NULL;
     IcoInfo * icoPtr;
