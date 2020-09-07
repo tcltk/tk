@@ -75,7 +75,7 @@ enum {
      */
 
     if (![eventWindow isMemberOfClass:[TKWindow class]]) {
-	if (eventWindow && [eventWindow pressure] != -1.0) {
+	if (eventWindow && [theEvent pressure] != -1.0) {
 	    return theEvent;
 	}
     }
