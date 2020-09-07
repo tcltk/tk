@@ -229,7 +229,7 @@ PressButtonObjCmd(
     pt.x = loc.x = x;
     pt.y = y;
     loc.y = ScreenHeight - y;
-    wNum = 0;
+    wNum = -1;
     CGWarpMouseCursorPosition(pt);
     motion = [NSEvent mouseEventWithType:NSMouseMoved
 	location:loc
