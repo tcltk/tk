@@ -1114,12 +1114,7 @@ static const char *const accentNames[] = {
 	return;
     }
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
-    const char *accentName, *highlightName;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
-    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
-    NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "]
-			        objectAtIndex:3];
     static const char *defaultColor = NULL;
 
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
@@ -1150,9 +1145,12 @@ static const char *const accentNames[] = {
 			 options:NSKeyValueObservingOptionNew
 			 context:NULL];
     }
-    accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
-    highlightName = highlight ? highlight.UTF8String: defaultColor;
-
+    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
+    NSArray *words = [[preferences stringForKey:@"AppleHighlightColor"]
+			        componentsSeparatedByString: @" "];
+    NSString *highlight = [words count] > 3 ? [words objectAtIndex:3] : nil;
+    const char *accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
+    const char *highlightName = highlight ? highlight.UTF8String: defaultColor;
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
 	     effectiveAppearanceName.UTF8String, accentName,
