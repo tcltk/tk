@@ -969,9 +969,11 @@ EXTERN char *		TkSmoothPrintProc(ClientData clientData,
 /* Slot 181 is reserved */
 /* Slot 182 is reserved */
 /* Slot 183 is reserved */
+/* Slot 184 is reserved */
+/* Slot 185 is reserved */
 #ifndef TkUnusedStubEntry_TCL_DECLARED
 #define TkUnusedStubEntry_TCL_DECLARED
-/* 184 */
+/* 186 */
 EXTERN void		TkUnusedStubEntry(void);
 #endif
 
@@ -1190,7 +1192,9 @@ typedef struct TkIntStubs {
     VOID *reserved181;
     VOID *reserved182;
     VOID *reserved183;
-    void (*tkUnusedStubEntry) (void); /* 184 */
+    VOID *reserved184;
+    VOID *reserved185;
+    void (*tkUnusedStubEntry) (void); /* 186 */
 } TkIntStubs;
 
 extern TkIntStubs *tkIntStubsPtr;
@@ -1863,9 +1867,11 @@ extern TkIntStubs *tkIntStubsPtr;
 /* Slot 181 is reserved */
 /* Slot 182 is reserved */
 /* Slot 183 is reserved */
+/* Slot 184 is reserved */
+/* Slot 185 is reserved */
 #ifndef TkUnusedStubEntry
 #define TkUnusedStubEntry \
-	(tkIntStubsPtr->tkUnusedStubEntry) /* 184 */
+	(tkIntStubsPtr->tkUnusedStubEntry) /* 186 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

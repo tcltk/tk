@@ -481,7 +481,9 @@ TkIntStubs tkIntStubs = {
     NULL, /* 181 */
     NULL, /* 182 */
     NULL, /* 183 */
-    TkUnusedStubEntry, /* 184 */
+    NULL, /* 184 */
+    NULL, /* 185 */
+    TkUnusedStubEntry, /* 186 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
@@ -961,6 +963,12 @@ TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
+    NULL, /* 11 */
+    NULL, /* 12 */
+    NULL, /* 13 */
+    NULL, /* 14 */
+    NULL, /* 15 */
+    TkUnusedStubEntry, /* 16 */
 #endif /* AQUA */
 };
 

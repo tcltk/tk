@@ -1141,6 +1141,9 @@ declare 9 aqua {
 declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
+declare 16 aqua {
+    void TkUnusedStubEntry(void)
+}
 
 ##############################################################################
 
