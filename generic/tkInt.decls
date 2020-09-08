@@ -636,10 +636,10 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 aqua {
+declare 185 macosx {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 aqua {
+declare 186 macosx {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
@@ -1851,7 +1851,7 @@ declare 112 aqua {
 declare 114 aqua {
     VisualID XVisualIDFromVisual(Visual *visual)
 }
-declare 120 macosx {
+declare 120 aqua {
     int XOffsetRegion(void *rgn, int dx, int dy)
 }
 declare 129 aqua {
@@ -1874,7 +1874,7 @@ declare 146 aqua {
 	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
 	    XColor _Xconst *x2)
 }
-declare 157 macosx {
+declare 157 aqua {
     KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
 }
 declare 158 aqua {

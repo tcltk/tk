@@ -59,6 +59,13 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 
+#if !defined(MAC_OSX_TK) || defined(MAC_OSX_TCL)
+#   undef TkpWillDrawWidget
+#   undef TkpRedrawWidget
+#   define TkpWillDrawWidget 0
+#   define TkpRedrawWidget 0
+#endif
+
 #if defined(MAC_OSX_TK)
 #   define Tk_MacOSXGetNSWindowForDrawable TkMacOSXDrawable
 #   define Tk_MacOSXGetCGContextForDrawable GetCGContextForDrawable
@@ -489,26 +496,24 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 185 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 185 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpRedrawWidget, /* 185 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#endif /* MACOSX */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 186 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 186 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
-#endif /* AQUA */
+#endif /* MACOSX */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -1315,6 +1320,8 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    0, /* 274 */
+    TkUnusedStubEntry, /* 275 */
 };
 
 /* !END!: Do not edit above this line. */
