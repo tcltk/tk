@@ -5390,12 +5390,15 @@ TkMacOSXGetXWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetTkWindow --
+ * Tk_MacOSXGetTkWindow --
  *
- *	Returns the TkWindow* associated with the given NSWindow*.
+ *	Returns the Tk_Window associated with the given NSWindow*.  This
+ *      function is a stub, so the NSWindow* parameter must be declared as
+ *      void*.
  *
  * Results:
- *	The TkWindow* returned. NULL is returned if not a Tk window.
+ *	A Tk_Window, or NULL if the NSWindow is not associated with
+ *      any Tk window.
  *
  * Side effects:
  *	None.
@@ -5403,17 +5406,17 @@ TkMacOSXGetXWindow(
  *----------------------------------------------------------------------
  */
 
-TkWindow*
-TkMacOSXGetTkWindow(
-    NSWindow *w)
+Tk_Window
+Tk_MacOSXGetTkWindow(
+    void *w)
 {
     Window window = None;
     TkDisplay *dispPtr = TkGetDisplayList();
-    if ([w respondsToSelector: @selector (tkWindow)]) {
+    if ([(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
 	window = [(TKWindow *)w tkWindow];
     }
     return (window != None ?
-	    (TkWindow *)Tk_IdToWindow(dispPtr->display, window) : NULL);
+	    Tk_IdToWindow(dispPtr->display, window) : NULL);
 
 }
 

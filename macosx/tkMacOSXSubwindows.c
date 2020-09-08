@@ -1075,7 +1075,7 @@ TkMacOSXInvalidateWindow(
  */
 
 void *
-TkMacOSXDrawable(
+Tk_MacOSXGetNSWindowForDrawable(
     Drawable drawable)
 {
     MacDrawable *macWin = (MacDrawable *)drawable;
