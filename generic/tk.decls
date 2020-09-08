@@ -486,8 +486,8 @@ declare 120 {
 	    int width, int height)
 }
 declare 121 {
-    void Tk_MaintainGeometry(Tk_Window slave,
-	    Tk_Window model, int x, int y, int width, int height)
+    void Tk_MaintainGeometry(Tk_Window window,
+	    Tk_Window container, int x, int y, int width, int height)
 }
 declare 122 {
     Tk_Window Tk_MainWindow(Tcl_Interp *interp)
@@ -539,7 +539,7 @@ declare 136 {
     const char *Tk_NameOfFont(Tk_Font font)
 }
 declare 137 {
-    const char *Tk_NameOfImage(Tk_ImageModel imageModel)
+    const char *Tk_NameOfImage(Tk_ImageModel model)
 }
 declare 138 {
     const char *Tk_NameOfJoinStyle(int join)
@@ -692,7 +692,7 @@ declare 180 {
     void Tk_Ungrab(Tk_Window tkwin)
 }
 declare 181 {
-    void Tk_UnmaintainGeometry(Tk_Window slave, Tk_Window master)
+    void Tk_UnmaintainGeometry(Tk_Window window, Tk_Window container)
 }
 declare 182 {
     void Tk_UnmapWindow(Tk_Window tkwin)

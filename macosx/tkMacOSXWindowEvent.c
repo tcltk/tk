@@ -1118,9 +1118,9 @@ static const char *const accentNames[] = {
     static const char *defaultColor = NULL;
 
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
+	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
+	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
     if ([NSApp macOSVersion] < 101500) {
 
