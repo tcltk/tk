@@ -1327,7 +1327,12 @@ const TkStubs tkStubs = {
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
     0, /* 274 */
-    TkUnusedStubEntry, /* 275 */
+    0, /* 275 */
+    0, /* 276 */
+    0, /* 277 */
+    0, /* 278 */
+    0, /* 279 */
+    TkUnusedStubEntry, /* 280 */
 };
 
 /* !END!: Do not edit above this line. */

@@ -865,7 +865,12 @@ EXTERN void		Tk_CreateOldImageType(const Tk_ImageType *typePtr);
 EXTERN void		Tk_CreateOldPhotoImageFormat(
 				const Tk_PhotoImageFormat *formatPtr);
 /* Slot 274 is reserved */
-/* 275 */
+/* Slot 275 is reserved */
+/* Slot 276 is reserved */
+/* Slot 277 is reserved */
+/* Slot 278 is reserved */
+/* Slot 279 is reserved */
+/* 280 */
 EXTERN void		TkUnusedStubEntry(void);
 
 typedef struct {
@@ -1154,7 +1159,12 @@ typedef struct TkStubs {
     void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
     void (*reserved274)(void);
-    void (*tkUnusedStubEntry) (void); /* 275 */
+    void (*reserved275)(void);
+    void (*reserved276)(void);
+    void (*reserved277)(void);
+    void (*reserved278)(void);
+    void (*reserved279)(void);
+    void (*tkUnusedStubEntry) (void); /* 280 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1716,8 +1726,13 @@ extern const TkStubs *tkStubsPtr;
 #define Tk_CreateOldPhotoImageFormat \
 	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
 /* Slot 274 is reserved */
+/* Slot 275 is reserved */
+/* Slot 276 is reserved */
+/* Slot 277 is reserved */
+/* Slot 278 is reserved */
+/* Slot 279 is reserved */
 #define TkUnusedStubEntry \
-	(tkStubsPtr->tkUnusedStubEntry) /* 275 */
+	(tkStubsPtr->tkUnusedStubEntry) /* 280 */
 
 #endif /* defined(USE_TK_STUBS) */
 
