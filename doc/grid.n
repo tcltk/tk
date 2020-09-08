@@ -275,9 +275,8 @@ Removes each of the \fIwindow\fRs from grid for its
 container and unmaps their windows.
 The content will no longer be managed by the grid geometry manager.
 However, the configuration options for that window are remembered,
-so that if the
-slave is managed once more by the grid geometry manager, the previous
-values are retained.
+so that if the content window is managed once more by the grid
+geometry manager, the previous values are retained.
 .TP
 \fBgrid size \fIcontainer\fR
 .

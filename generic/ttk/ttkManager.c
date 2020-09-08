@@ -11,7 +11,7 @@
 /*------------------------------------------------------------------------
  * +++ The Geometry Propagation Dance.
  *
- * When a slave window requests a new size or some other parameter changes,
+ * When a content window requests a new size or some other parameter changes,
  * the manager recomputes the required size for the container window and calls
  * Tk_GeometryRequest().  This is scheduled as an idle handler so multiple
  * updates can be processed as a single batch.
@@ -19,7 +19,7 @@
  * If all goes well, the container's manager will process the request
  * (and so on up the chain to the toplevel window), and the container
  * window will eventually receive a <Configure> event.  At this point
- * it recomputes the size and position of all slaves and places them.
+ * it recomputes the size and position of all content windows and places them.
  *
  * If all does not go well, however, the container's request may be ignored
  * (typically because the top-level window has a fixed, user-specified size).
@@ -36,23 +36,23 @@
  * (3) Content window is destroyed
  *
  * In case (1), Tk calls the manager's lostSlaveProc.
- * Case (2) is performed by calling Tk_ManageGeometry(slave,NULL,0);
- * in this case Tk does _not_ call the LostSlaveProc (documented behavior).
+ * Case (2) is performed by calling Tk_ManageGeometry(window,NULL,0);
+ * in this case Tk does _not_ call the lostSlaveProc (documented behavior).
  * Tk doesn't handle case (3) either; to account for that we
- * register an event handler on the slave widget to track <Destroy> events.
+ * register an event handler on the content window to track <Destroy> events.
  */
 
 /* ++ Data structures.
  */
 typedef struct
 {
-    Tk_Window 		contentWindow;
+    Tk_Window 		window;
     Ttk_Manager 	*manager;
     void 		*data;
     unsigned		flags;
 } Ttk_Content;
 
-/* slave->flags bits:
+/* content->flags bits:
  */
 #define CONTENT_MAPPED 	0x1	/* content windows to be mapped when container is */
 
@@ -60,7 +60,7 @@ struct TtkManager_
 {
     Ttk_ManagerSpec	*managerSpec;
     void 		*managerData;
-    Tk_Window   	containerWindow;
+    Tk_Window   	window;
     unsigned		flags;
     int 	 	nContent;
     Ttk_Content 		**content;
@@ -96,14 +96,14 @@ static void RecomputeSize(Ttk_Manager *mgr)
     int width = 1, height = 1;
 
     if (mgr->managerSpec->RequestedSize(mgr->managerData, &width, &height)) {
-	Tk_GeometryRequest(mgr->containerWindow, width, height);
+	Tk_GeometryRequest(mgr->window, width, height);
 	ScheduleUpdate(mgr, MGR_RELAYOUT_REQUIRED);
     }
     mgr->flags &= ~MGR_RESIZE_REQUIRED;
 }
 
 /* ++ RecomputeLayout --
- * 	Recompute geometry of all slaves.
+ * 	Recompute geometry of all content windows.
  */
 static void RecomputeLayout(Ttk_Manager *mgr)
 {
@@ -136,8 +136,8 @@ static void ManagerIdleProc(ClientData clientData)
  */
 
 /* ++ ManagerEventHandler --
- * 	Recompute slave layout when container widget is resized.
- * 	Keep the slave's map state in sync with the container's.
+ * 	Recompute content layout when container widget is resized.
+ * 	Keep the content's map state in sync with the container's.
  */
 static const int ManagerEventMask = StructureNotifyMask;
 static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
@@ -152,45 +152,44 @@ static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
 	    break;
 	case MapNotify:
 	    for (i = 0; i < mgr->nContent; ++i) {
-		Ttk_Content *slave = mgr->content[i];
-		if (slave->flags & CONTENT_MAPPED) {
-		    Tk_MapWindow(slave->contentWindow);
+		Ttk_Content *content = mgr->content[i];
+		if (content->flags & CONTENT_MAPPED) {
+		    Tk_MapWindow(content->window);
 		}
 	    }
 	    break;
 	case UnmapNotify:
 	    for (i = 0; i < mgr->nContent; ++i) {
-		Ttk_Content *slave = mgr->content[i];
-		Tk_UnmapWindow(slave->contentWindow);
+		Ttk_Content *content = mgr->content[i];
+		Tk_UnmapWindow(content->window);
 	    }
 	    break;
     }
 }
 
-/* ++ LostContentEventHandler --
- * 	Notifies manager when a slave is destroyed
+/* ++ ContentLostEventHandler --
+ * 	Notifies manager when a content window is destroyed
  * 	(see <<NOTE-LOSTCONTENT>>).
  */
-static const unsigned SlaveEventMask = StructureNotifyMask;
-static void LostContentEventHandler(ClientData clientData, XEvent *eventPtr)
+static void ContentLostEventHandler(void *clientData, XEvent *eventPtr)
 {
-    Ttk_Content *slave = (Ttk_Content *)clientData;
+    Ttk_Content *content = (Ttk_Content *)clientData;
     if (eventPtr->type == DestroyNotify) {
-	slave->manager->managerSpec->tkGeomMgr.lostSlaveProc(
-	    slave->manager, slave->contentWindow);
+	content->manager->managerSpec->tkGeomMgr.lostSlaveProc(
+	    content->manager, content->window);
     }
 }
 
 /*------------------------------------------------------------------------
- * +++ Slave initialization and cleanup.
+ * +++ Content initialization and cleanup.
  */
 
 static Ttk_Content *NewContent(
-    Ttk_Manager *mgr, Tk_Window contentWindow, void *data)
+    Ttk_Manager *mgr, Tk_Window window, void *data)
 {
     Ttk_Content *content = (Ttk_Content *)ckalloc(sizeof(Ttk_Content));
 
-    content->contentWindow = contentWindow;
+    content->window = window;
     content->manager = mgr;
     content->flags = 0;
     content->data = data;
@@ -198,7 +197,7 @@ static Ttk_Content *NewContent(
     return content;
 }
 
-static void DeleteSlave(Ttk_Content *content)
+static void DeleteContent(Ttk_Content *content)
 {
     ckfree(content);
 }
@@ -208,19 +207,19 @@ static void DeleteSlave(Ttk_Content *content)
  */
 
 Ttk_Manager *Ttk_CreateManager(
-    Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window containerWindow)
+    Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)ckalloc(sizeof(*mgr));
 
     mgr->managerSpec 	= managerSpec;
     mgr->managerData	= managerData;
-    mgr->containerWindow	= containerWindow;
+    mgr->window	= window;
     mgr->nContent 	= 0;
     mgr->content 	= NULL;
     mgr->flags  	= 0;
 
     Tk_CreateEventHandler(
-	mgr->containerWindow, ManagerEventMask, ManagerEventHandler, mgr);
+	mgr->window, ManagerEventMask, ManagerEventHandler, mgr);
 
     return mgr;
 }
@@ -228,7 +227,7 @@ Ttk_Manager *Ttk_CreateManager(
 void Ttk_DeleteManager(Ttk_Manager *mgr)
 {
     Tk_DeleteEventHandler(
-	mgr->containerWindow, ManagerEventMask, ManagerEventHandler, mgr);
+	mgr->window, ManagerEventMask, ManagerEventHandler, mgr);
 
     while (mgr->nContent > 0) {
 	Ttk_ForgetContent(mgr, mgr->nContent - 1);
@@ -243,7 +242,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 }
 
 /*------------------------------------------------------------------------
- * +++ Slave management.
+ * +++ Content window management.
  */
 
 /* ++ InsertContent --
@@ -261,26 +260,26 @@ static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, int index)
 
     mgr->content[index] = content;
 
-    Tk_ManageGeometry(content->contentWindow,
+    Tk_ManageGeometry(content->window,
 	&mgr->managerSpec->tkGeomMgr, mgr);
 
-    Tk_CreateEventHandler(content->contentWindow,
-	SlaveEventMask, LostContentEventHandler, content);
+    Tk_CreateEventHandler(content->window,
+	StructureNotifyMask, ContentLostEventHandler, content);
 
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }
 
-/* RemoveSlave --
- * 	Unmanage and delete the slave.
+/* RemoveContent --
+ * 	Unmanage and delete the content window.
  *
  * NOTES/ASSUMPTIONS:
  *
  * [1] It's safe to call Tk_UnmapWindow / Tk_UnmaintainGeometry even if this
- * routine is called from the slave's DestroyNotify event handler.
+ * routine is called from the content window's DestroyNotify event handler.
  */
-static void RemoveSlave(Ttk_Manager *mgr, int index)
+static void RemoveContent(Ttk_Manager *mgr, int index)
 {
-    Ttk_Content *slave = mgr->content[index];
+    Ttk_Content *content = mgr->content[index];
     int i;
 
     /* Notify manager:
@@ -297,13 +296,13 @@ static void RemoveSlave(Ttk_Manager *mgr, int index)
     /* Clean up:
      */
     Tk_DeleteEventHandler(
-	slave->contentWindow, SlaveEventMask, LostContentEventHandler, slave);
+	content->window, StructureNotifyMask, ContentLostEventHandler, content);
 
     /* Note [1] */
-    Tk_UnmaintainGeometry(slave->contentWindow, mgr->containerWindow);
-    Tk_UnmapWindow(slave->contentWindow);
+    Tk_UnmaintainGeometry(content->window, mgr->window);
+    Tk_UnmapWindow(content->window);
 
-    DeleteSlave(slave);
+    DeleteContent(content);
 
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }
@@ -312,12 +311,12 @@ static void RemoveSlave(Ttk_Manager *mgr, int index)
  * +++ Tk_GeomMgr hooks.
  */
 
-void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window contentWindow)
+void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
-    int index = Ttk_ContentIndex(mgr, contentWindow);
-    int reqWidth = Tk_ReqWidth(contentWindow);
-    int reqHeight= Tk_ReqHeight(contentWindow);
+    int index = Ttk_ContentIndex(mgr, window);
+    int reqWidth = Tk_ReqWidth(window);
+    int reqHeight= Tk_ReqHeight(window);
 
     if (mgr->managerSpec->SlaveRequest(
 		mgr->managerData, index, reqWidth, reqHeight))
@@ -326,13 +325,13 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window contentWindow)
     }
 }
 
-void Ttk_LostContentProc(ClientData clientData, Tk_Window contentWindow)
+void Ttk_LostContentProc(ClientData clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
-    int index = Ttk_ContentIndex(mgr, contentWindow);
+    int index = Ttk_ContentIndex(mgr, window);
 
     /* ASSERT: index >= 0 */
-    RemoveSlave(mgr, index);
+    RemoveContent(mgr, index);
 }
 
 /*------------------------------------------------------------------------
@@ -345,8 +344,8 @@ void Ttk_LostContentProc(ClientData clientData, Tk_Window contentWindow)
 void Ttk_InsertContent(
     Ttk_Manager *mgr, int index, Tk_Window tkwin, void *data)
 {
-    Ttk_Content *slave = NewContent(mgr, tkwin, data);
-    InsertContent(mgr, slave, index);
+    Ttk_Content *content = NewContent(mgr, tkwin, data);
+    InsertContent(mgr, content, index);
 }
 
 /* ++ Ttk_ForgetContent --
@@ -354,9 +353,9 @@ void Ttk_InsertContent(
  */
 void Ttk_ForgetContent(Ttk_Manager *mgr, int index)
 {
-    Tk_Window contentWindow = mgr->content[index]->contentWindow;
-    RemoveSlave(mgr, index);
-    Tk_ManageGeometry(contentWindow, NULL, 0);
+    Tk_Window window = mgr->content[index]->window;
+    RemoveContent(mgr, index);
+    Tk_ManageGeometry(window, NULL, 0);
 }
 
 /* ++ Ttk_PlaceContent --
@@ -369,11 +368,11 @@ void Ttk_ForgetContent(Ttk_Manager *mgr, int index)
 void Ttk_PlaceContent(
     Ttk_Manager *mgr, int index, int x, int y, int width, int height)
 {
-    Ttk_Content *slave = mgr->content[index];
-    Tk_MaintainGeometry(slave->contentWindow,mgr->containerWindow,x,y,width,height);
-    slave->flags |= CONTENT_MAPPED;
-    if (Tk_IsMapped(mgr->containerWindow)) {
-	Tk_MapWindow(slave->contentWindow);
+    Ttk_Content *content = mgr->content[index];
+    Tk_MaintainGeometry(content->window,mgr->window,x,y,width,height);
+    content->flags |= CONTENT_MAPPED;
+    if (Tk_IsMapped(mgr->window)) {
+	Tk_MapWindow(content->window);
     }
 }
 
@@ -382,13 +381,13 @@ void Ttk_PlaceContent(
  */
 void Ttk_UnmapContent(Ttk_Manager *mgr, int index)
 {
-    Ttk_Content *slave = mgr->content[index];
-    Tk_UnmaintainGeometry(slave->contentWindow, mgr->containerWindow);
-    slave->flags &= ~CONTENT_MAPPED;
+    Ttk_Content *content = mgr->content[index];
+    Tk_UnmaintainGeometry(content->window, mgr->window);
+    content->flags &= ~CONTENT_MAPPED;
     /* Contrary to documentation, Tk_UnmaintainGeometry doesn't always
      * unmap the content window:
      */
-    Tk_UnmapWindow(slave->contentWindow);
+    Tk_UnmapWindow(content->window);
 }
 
 /* LayoutChanged, SizeChanged --
@@ -416,7 +415,7 @@ void *Ttk_ContentData(Ttk_Manager *mgr, int index)
 }
 Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, int index)
 {
-    return mgr->content[index]->contentWindow;
+    return mgr->content[index]->window;
 }
 
 /*------------------------------------------------------------------------
@@ -426,11 +425,11 @@ Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, int index)
 /* ++ Ttk_ContentIndex --
  * 	Returns the index of specified content window, -1 if not found.
  */
-int Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window contentWindow)
+int Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
 {
     int index;
     for (index = 0; index < mgr->nContent; ++index)
-	if (mgr->content[index]->contentWindow == contentWindow)
+	if (mgr->content[index]->window == window)
 	    return index;
     return -1;
 }
@@ -467,12 +466,12 @@ int Ttk_GetContentIndexFromObj(
     /* Try interpreting as a slave window name;
      */
     if ((*string == '.') &&
-	    (tkwin = Tk_NameToWindow(interp, string, mgr->containerWindow))) {
+	    (tkwin = Tk_NameToWindow(interp, string, mgr->window))) {
 	index = Ttk_ContentIndex(mgr, tkwin);
 	if (index < 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
-		    Tk_PathName(mgr->containerWindow)));
+		    Tk_PathName(mgr->window)));
 	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
 	    return TCL_ERROR;
 	}
