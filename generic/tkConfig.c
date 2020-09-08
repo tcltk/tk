@@ -1497,9 +1497,8 @@ Tk_FreeSavedOptions(
 	Tk_FreeSavedOptions(savePtr->nextPtr);
 	ckfree(savePtr->nextPtr);
     }
-    for (count = savePtr->numItems,
-	    savedOptionPtr = &savePtr->items[savePtr->numItems-1];
-	    count > 0;  count--, savedOptionPtr--) {
+    for (count = savePtr->numItems; count > 0; count--) {
+	savedOptionPtr = &savePtr->items[count-1];
 	if (savedOptionPtr->optionPtr->flags & OPTION_NEEDS_FREEING) {
 	    FreeResources(savedOptionPtr->optionPtr, savedOptionPtr->valuePtr,
 		    (char *) &savedOptionPtr->internalForm, savePtr->tkwin);
