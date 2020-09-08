@@ -24,6 +24,7 @@
 #if defined(MAC_OSX_TK)
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -57,6 +58,14 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkpTestsendCmd_ TkpTestsendCmd
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
+
+#if defined(MAC_OSX_TK)
+#   define Tk_MacOSXGetNSWindowForDrawable TkMacOSXDrawable
+#   define Tk_MacOSXGetCGContextForDrawable GetCGContextForDrawable
+static void *GetCGContextForDrawable(Drawable d) {
+	return TkMacOSXGetCGContextForDrawable(d);
+}
+#endif
 
 #ifdef _WIN32
 
@@ -1013,9 +1022,9 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    0, /* 11 */
-    0, /* 12 */
-    0, /* 13 */
+    Tk_MacOSXGetTkWindow, /* 11 */
+    Tk_MacOSXGetCGContextForDrawable, /* 12 */
+    Tk_MacOSXGetNSWindowForDrawable, /* 13 */
     0, /* 14 */
     0, /* 15 */
     TkGenWMConfigureEvent_, /* 16 */
