@@ -16,7 +16,6 @@
 
 #if !defined(MAC_OSX_TK)
 #   include <X11/Xlib.h>
-#   define gcCacheSize 0
 #   define TkpInitGCCache(gc)
 #   define TkpFreeGCCache(gc)
 #   define TkpGetGCCache(gc)
@@ -24,10 +23,18 @@
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
 #   include <X11/X.h>
-#   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
 
+#define MAX_DASH_LIST_SIZE 10
+typedef struct {
+    XGCValues gc;
+    char dash[MAX_DASH_LIST_SIZE];
+#ifdef MAC_OSX_TK
+    TkpGCCache cache;
+#endif
+} XGCValuesWithCache;
+
 /*
  *----------------------------------------------------------------------
  *
@@ -110,9 +117,7 @@ XCreateGC(
      * initialization.
      */
 
-#define MAX_DASH_LIST_SIZE 10
-
-    gp = (GC)ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE + gcCacheSize);
+    gp = (GC)ckalloc(sizeof(XGCValuesWithCache));
     if (!gp) {
 	return NULL;
     }
@@ -175,8 +180,7 @@ XCreateGC(
 
 TkpGCCache*
 TkpGetGCCache(GC gc) {
-    return (gc ? (TkpGCCache*)(((char*) gc) + sizeof(XGCValues) +
-	    MAX_DASH_LIST_SIZE) : NULL);
+    return (gc ? &((XGCValuesWithCache *)gc)->cache : NULL);
 }
 #endif
 
