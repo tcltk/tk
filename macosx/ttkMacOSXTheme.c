@@ -501,10 +501,13 @@ static void SolidFillRoundedRectangle(
     NSColor *color)
 {
     CGPathRef path;
-    CHECK_RADIUS(radius, bounds)
 
-    CGContextSetFillColorWithColor(context, CGCOLOR(color));
+    CHECK_RADIUS(radius, bounds)
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    if (!path) {
+	return;
+    }
+    CGContextSetFillColorWithColor(context, CGCOLOR(color));
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextFillPath(context);
