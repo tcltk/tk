@@ -1129,7 +1129,7 @@ declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
 declare 5 aqua {
-    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
+    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
 declare 6 aqua {
@@ -1147,6 +1147,20 @@ declare 9 aqua {
 }
 declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
+}
+declare 11 aqua {
+    Tk_Window Tk_MacOSXGetTkWindow(void *w)
+}
+declare 12 aqua {
+    void *Tk_MacOSXGetCGContextForDrawable(Drawable drawable)
+}
+# Replaces TkMacOSXDrawable
+declare 13 aqua {
+    void *Tk_MacOSXGetNSWindowForDrawable(Drawable drawable)
+}
+declare 16 aqua {
+    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
+	    int height, int flags)
 }
 
 ##############################################################################
