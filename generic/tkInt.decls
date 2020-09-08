@@ -568,7 +568,7 @@ declare 180 {
     char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
-declare 184 {
+declare 186 {
     void TkUnusedStubEntry(void)
 }
 
@@ -1718,7 +1718,7 @@ declare 90 aqua {
 	    Window **w4, unsigned int *ui)
 }
 declare 91 aqua {
-    int XSync(Display *display, Bool flag)
+    int XSync(Display *display, Bool discard)
 }
 declare 158 aqua {
     void TkUnusedStubEntry(void)

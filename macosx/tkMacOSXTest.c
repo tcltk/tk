@@ -13,14 +13,20 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXWm.h"
+
 
 /*
  * Forward declarations of procedures defined later in this file:
  */
 
-static int		DebuggerCmd (ClientData dummy, Tcl_Interp *interp,
-			    int argc, const char **argv);
-MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+static int		DebuggerObjCmd(ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const objv[]);
+#endif
+static int		MenuBarHeightObjCmd(ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const *objv);
+
 
 /*
  *----------------------------------------------------------------------
@@ -47,18 +53,51 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-    Tcl_CreateCommand(interp, "debugger", DebuggerCmd,
-	    (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
+#endif
+    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * DebuggerCmd --
+ * DebuggerObjCmd --
  *
- *	This procedure simply calls the low level debugger.
+ *	This procedure simply calls the low level debugger, which was
+ *      deprecated in OSX 10.8.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+static int
+DebuggerObjCmd(
+    ClientData clientData,		/* Not used. */
+    Tcl_Interp *interp,			/* Not used. */
+    int objc,				/* Not used. */
+    Tcl_Obj *const objv[])			/* Not used. */
+{
+    Debugger();
+    return TCL_OK;
+}
+#endif
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuBarHeightObjCmd --
+ *
+ *	This procedure calls [NSMenu menuBarHeight] and returns the result
+ *      as an integer.  Windows can never be placed to overlap the MenuBar,
+ *      so tests need to be aware of its size.
  *
  * Results:
  *	A standard Tcl result.
@@ -70,13 +109,17 @@ TkplatformtestInit(
  */
 
 static int
-DebuggerCmd(
+MenuBarHeightObjCmd(
     ClientData clientData,		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
-    int argc,				/* Not used. */
-    const char **argv)			/* Not used. */
+    int objc,				/* Not used. */
+    Tcl_Obj *const objv[])			/* Not used. */
 {
-    Debugger();
+    static int height = 0;
+    if (height == 0) {
+	height = (int) [[NSApp mainMenu] menuBarHeight];
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(height));
     return TCL_OK;
 }
 

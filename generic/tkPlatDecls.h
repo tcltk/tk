@@ -129,6 +129,16 @@ EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront(void);
 #endif
+/* Slot 11 is reserved */
+/* Slot 12 is reserved */
+/* Slot 13 is reserved */
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
+#ifndef TkUnusedStubEntry_TCL_DECLARED
+#define TkUnusedStubEntry_TCL_DECLARED
+/* 16 */
+EXTERN void		TkUnusedStubEntry(void);
+#endif
 #endif /* AQUA */
 
 typedef struct TkPlatStubs {
@@ -155,6 +165,12 @@ typedef struct TkPlatStubs {
     VOID * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
+    VOID *reserved11;
+    VOID *reserved12;
+    VOID *reserved13;
+    VOID *reserved14;
+    VOID *reserved15;
+    void (*tkUnusedStubEntry) (void); /* 16 */
 #endif /* AQUA */
 } TkPlatStubs;
 
@@ -240,6 +256,15 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #ifndef Tk_MacOSXIsAppInFront
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
+#endif
+/* Slot 11 is reserved */
+/* Slot 12 is reserved */
+/* Slot 13 is reserved */
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkPlatStubsPtr->tkUnusedStubEntry) /* 16 */
 #endif
 #endif /* AQUA */
 

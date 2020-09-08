@@ -1299,7 +1299,7 @@ EXTERN Status		XQueryTree(Display *d, Window w1, Window *w2,
 #ifndef XSync_TCL_DECLARED
 #define XSync_TCL_DECLARED
 /* 91 */
-EXTERN int		XSync(Display *display, Bool flag);
+EXTERN int		XSync(Display *display, Bool discard);
 #endif
 /* Slot 92 is reserved */
 /* Slot 93 is reserved */
@@ -1631,7 +1631,7 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColor) (Display *display, Colormap colormap, XColor *def_in_out); /* 88 */
     void (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
-    int (*xSync) (Display *display, Bool flag); /* 91 */
+    int (*xSync) (Display *display, Bool discard); /* 91 */
     VOID *reserved92;
     VOID *reserved93;
     VOID *reserved94;
