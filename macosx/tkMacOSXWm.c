@@ -5382,8 +5382,11 @@ Window
 TkMacOSXGetXWindow(
     void *macWinPtr)
 {
+    Window window = None;
     TKWindow *w = (TKWindow *)macWinPtr;
-    Window window = (Window) TkMacOSXGetTkWindow(w);
+    if ([w respondsToSelector: @selector (tkWindow)]) {
+	window = [w tkWindow];
+    }
     return window ? window : None;
 }
 
@@ -5417,7 +5420,6 @@ Tk_MacOSXGetTkWindow(
     }
     return (window != None ?
 	    Tk_IdToWindow(dispPtr->display, window) : NULL);
-
 }
 
 /*
