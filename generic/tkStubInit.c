@@ -81,10 +81,11 @@ doNothing(void)
 }
 #endif
 #else
-static void
+static void *
 doNothing(void)
 {
     /* dummy implementation, no need to do anything */
+    return NULL;
 }
 #define Tk_FreeXId ((void (*)(Display *, XID))(void *)doNothing)
 #define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *))(void *)doNothing)
@@ -113,6 +114,12 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 		(const char *(*) (void *,Tk_Window, char *, int, \
 		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
 
+#if !defined(MAC_OSX_TK)
+#   undef TkpWillDrawWidget
+#   undef TkpRedrawWidget
+#   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
+#   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
+#endif
 
 #ifdef _WIN32
 
@@ -501,26 +508,24 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 185 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 185 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpRedrawWidget, /* 185 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#endif /* MACOSX */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 186 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 186 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
-#endif /* AQUA */
+#endif /* MACOSX */
     TkDebugPhotoStringMatchDef, /* 187 */
 };
 
