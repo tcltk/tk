@@ -53,7 +53,7 @@ typedef struct
  * relevant to the tab.
  *
  * PaneOptionSpecs includes additional options for child window placement
- * and is used to configure the slave.
+ * and is used to configure the pane.
  */
 static const Tk_OptionSpec TabOptionSpecs[] =
 {
@@ -98,7 +98,7 @@ typedef struct
     TkSizeT activeIndex;		/* index of currently active tab */
     Ttk_Layout tabLayout;	/* Sublayout for tabs */
 
-    Ttk_Box clientArea;		/* Where to pack slave widgets */
+    Ttk_Box clientArea;		/* Where to pack content windows */
 } NotebookPart;
 
 typedef struct
@@ -187,13 +187,13 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
  * +++ Tab management.
  */
 
-static Tab *CreateTab(Tcl_Interp *interp, Notebook *nb, Tk_Window slaveWindow)
+static Tab *CreateTab(Tcl_Interp *interp, Notebook *nb, Tk_Window window)
 {
     Tk_OptionTable optionTable = nb->notebook.paneOptionTable;
     Tab *record = (Tab *)ckalloc(sizeof(Tab));
     memset(record, 0, sizeof(Tab));
 
-    if (Tk_InitOptions(interp, record, optionTable, slaveWindow) != TCL_OK) {
+    if (Tk_InitOptions(interp, record, optionTable, window) != TCL_OK) {
 	ckfree(record);
 	return NULL;
     }
@@ -209,7 +209,7 @@ static void DestroyTab(Notebook *nb, Tab *tab)
 }
 
 static int ConfigureTab(
-    Tcl_Interp *interp, Notebook *nb, Tab *tab, Tk_Window slaveWindow,
+    Tcl_Interp *interp, Notebook *nb, Tab *tab, Tk_Window window,
     int objc, Tcl_Obj *const objv[])
 {
     Ttk_Sticky sticky = tab->sticky;
@@ -218,7 +218,7 @@ static int ConfigureTab(
     int mask = 0;
 
     if (Tk_SetOptions(interp, tab, nb->notebook.paneOptionTable,
-	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
+	    objc, objv, window, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
     }
@@ -230,7 +230,7 @@ static int ConfigureTab(
     {
 	goto error;
     }
-    if (Ttk_GetPaddingFromObj(interp, slaveWindow, tab->paddingObj, &padding)
+    if (Ttk_GetPaddingFromObj(interp, window, tab->paddingObj, &padding)
 	    != TCL_OK)
     {
 	goto error;
@@ -378,7 +378,7 @@ static void TabrowSize(
  *
  * Total height is tab height + client area height + pane internal padding
  * Total width is max(client width, tab width) + pane internal padding
- * Client area size determined by max size of slaves,
+ * Client area size determined by max size of content windows,
  * overridden by -width and/or -height if nonzero.
  */
 
@@ -395,18 +395,18 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     NotebookStyleOptions(nb, &nbstyle);
 
-    /* Compute max requested size of all slaves:
+    /* Compute max requested size of all content windows:
      */
     for (i = 0; i < Ttk_NumberContent(nb->notebook.mgr); ++i) {
-	Tk_Window slaveWindow = Ttk_ContentWindow(nb->notebook.mgr, i);
+	Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, i);
 	Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, i);
-	int slaveWidth
-	    = Tk_ReqWidth(slaveWindow) + Ttk_PaddingWidth(tab->padding);
-	int slaveHeight
-	    = Tk_ReqHeight(slaveWindow) + Ttk_PaddingHeight(tab->padding);
+	int width
+	    = Tk_ReqWidth(window) + Ttk_PaddingWidth(tab->padding);
+	int height
+	    = Tk_ReqHeight(window) + Ttk_PaddingHeight(tab->padding);
 
-	clientWidth = MAX(clientWidth, slaveWidth);
-	clientHeight = MAX(clientHeight, slaveHeight);
+	clientWidth = MAX(clientWidth, width);
+	clientHeight = MAX(clientHeight, height);
     }
 
     /* Client width/height overridable by widget options:
@@ -513,7 +513,7 @@ static void PlaceTabs(
  *	Computes notebook layout and places tabs.
  *
  * Side effects:
- * 	Sets clientArea, used to place slave panes.
+ * 	Sets clientArea, used to place panes.
  */
 static void NotebookDoLayout(void *recordPtr)
 {
@@ -574,13 +574,13 @@ static void NotebookDoLayout(void *recordPtr)
 static void NotebookPlaceContent(Notebook *nb, TkSizeT index)
 {
     Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
-    Tk_Window slaveWindow = Ttk_ContentWindow(nb->notebook.mgr, index);
-    Ttk_Box slaveBox =
+    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
+    Ttk_Box box =
 	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
-	    Tk_ReqWidth(slaveWindow), Tk_ReqHeight(slaveWindow),tab->sticky);
+	    Tk_ReqWidth(window), Tk_ReqHeight(window),tab->sticky);
 
     Ttk_PlaceContent(nb->notebook.mgr, index,
-	slaveBox.x, slaveBox.y, slaveBox.width, slaveBox.height);
+	box.x, box.y, box.width, box.height);
 }
 
 /* NotebookPlaceContents --
@@ -693,7 +693,7 @@ static void SelectNearestTab(Notebook *nb)
 
 /* TabRemoved -- GM TabRemoved hook.
  * 	Select the next tab if the current one is being removed.
- * 	Adjust currentIndex to account for removed slave.
+ * 	Adjust currentIndex to account for removed content window.
  */
 static void TabRemoved(void *managerData, TkSizeT index)
 {
@@ -713,13 +713,12 @@ static void TabRemoved(void *managerData, TkSizeT index)
     TtkRedisplayWidget(&nb->core);
 }
 
-static int TabRequest(void *managerData, TkSizeT index, int width, int height)
+static int TabRequest(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(TkSizeT),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    (void)managerData;
-    (void)index;
-    (void)width;
-    (void)height;
-
     return 1;
 }
 
@@ -728,17 +727,17 @@ static int TabRequest(void *managerData, TkSizeT index, int width, int height)
  */
 static int AddTab(
     Tcl_Interp *interp, Notebook *nb,
-    TkSizeT destIndex, Tk_Window slaveWindow,
+    TkSizeT destIndex, Tk_Window window,
     int objc, Tcl_Obj *const objv[])
 {
     Tab *tab;
-    if (!Ttk_Maintainable(interp, slaveWindow, nb->core.tkwin)) {
+    if (!Ttk_Maintainable(interp, window, nb->core.tkwin)) {
 	return TCL_ERROR;
     }
 #if 0 /* can't happen */
-    if (Ttk_ContentIndex(nb->notebook.mgr, slaveWindow) != TCL_INDEX_NONE) {
+    if (Ttk_ContentIndex(nb->notebook.mgr, window) != TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s already added",
-	    Tk_PathName(slaveWindow)));
+	    Tk_PathName(window)));
 	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", NULL);
 	return TCL_ERROR;
     }
@@ -746,16 +745,16 @@ static int AddTab(
 
     /* Create and insert tab.
      */
-    tab = CreateTab(interp, nb, slaveWindow);
+    tab = CreateTab(interp, nb, window);
     if (!tab) {
 	return TCL_ERROR;
     }
-    if (ConfigureTab(interp, nb, tab, slaveWindow, objc, objv) != TCL_OK) {
+    if (ConfigureTab(interp, nb, tab, window, objc, objv) != TCL_OK) {
 	DestroyTab(nb, tab);
 	return TCL_ERROR;
     }
 
-    Ttk_InsertContent(nb->notebook.mgr, destIndex, slaveWindow, tab);
+    Ttk_InsertContent(nb->notebook.mgr, destIndex, window, tab);
 
     /* Adjust indices and/or autoselect first tab:
      */
@@ -814,7 +813,7 @@ static void NotebookEventHandler(ClientData clientData, XEvent *eventPtr)
  *	+ positional specifications @x,y,
  *	+ "current",
  *	+ numeric indices [0..nTabs],
- *	+ slave window names
+ *	+ content window names
  *
  *	Stores index of specified tab in *index_rtn, -1 if not found.
  *
@@ -854,8 +853,8 @@ static int FindTabIndex(
     }
     if (*index_rtn == Ttk_NumberContent(nb->notebook.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Invalid slave specification %s", string));
-	Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
+		"Invalid tab specification %s", string));
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "SPEC", NULL);
 	return TCL_ERROR;
     }
 
@@ -875,8 +874,8 @@ static int GetTabIndex(
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
 	if (status == TCL_OK && *index_rtn + 1 >= Ttk_NumberContent(nb->notebook.mgr) + 1) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Slave index %s out of bounds", Tcl_GetString(objPtr)));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
+		"tab index %s out of bounds", Tcl_GetString(objPtr)));
+	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -899,7 +898,7 @@ static int NotebookAddCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
-    Tk_Window slaveWindow;
+    Tk_Window window;
     int index;
     Tab *tab;
 
@@ -908,21 +907,21 @@ static int NotebookAddCommand(
 	return TCL_ERROR;
     }
 
-    slaveWindow = Tk_NameToWindow(interp,Tcl_GetString(objv[2]),nb->core.tkwin);
-    if (!slaveWindow) {
+    window = Tk_NameToWindow(interp,Tcl_GetString(objv[2]),nb->core.tkwin);
+    if (!window) {
 	return TCL_ERROR;
     }
-    index = Ttk_ContentIndex(nb->notebook.mgr, slaveWindow);
+    index = Ttk_ContentIndex(nb->notebook.mgr, window);
 
     if (index < 0) { /* New tab */
-	return AddTab(interp, nb, Ttk_NumberContent(nb->notebook.mgr), slaveWindow, objc-3,objv+3);
+	return AddTab(interp, nb, Ttk_NumberContent(nb->notebook.mgr), window, objc-3,objv+3);
     }
 
     tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
     if (tab->state == TAB_STATE_HIDDEN) {
 	tab->state = TAB_STATE_NORMAL;
     }
-    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-3,objv+3) != TCL_OK) {
+    if (ConfigureTab(interp, nb, tab, window, objc-3,objv+3) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -939,11 +938,11 @@ static int NotebookInsertCommand(
 {
     Notebook *nb = (Notebook *)recordPtr;
     TkSizeT current = nb->notebook.currentIndex;
-    TkSizeT nSlaves = Ttk_NumberContent(nb->notebook.mgr);
+    TkSizeT nContent = Ttk_NumberContent(nb->notebook.mgr);
     TkSizeT srcIndex, destIndex;
 
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2,objv, "index slave ?-option value ...?");
+	Tcl_WrongNumArgs(interp, 2,objv, "index window ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -953,18 +952,18 @@ static int NotebookInsertCommand(
     }
 
     if (Tcl_GetString(objv[3])[0] == '.') {
-	/* Window name -- could be new or existing slave.
+	/* Window name -- could be new or existing content window.
 	 */
-	Tk_Window slaveWindow =
+	Tk_Window window =
 	    Tk_NameToWindow(interp,Tcl_GetString(objv[3]),nb->core.tkwin);
 
-	if (!slaveWindow) {
+	if (!window) {
 	    return TCL_ERROR;
 	}
 
-	srcIndex = Ttk_ContentIndex(nb->notebook.mgr, slaveWindow);
-	if (srcIndex == TCL_INDEX_NONE) {	/* New slave */
-	    return AddTab(interp, nb, destIndex, slaveWindow, objc-4,objv+4);
+	srcIndex = Ttk_ContentIndex(nb->notebook.mgr, window);
+	if (srcIndex == TCL_INDEX_NONE) {	/* New content window */
+	    return AddTab(interp, nb, destIndex, window, objc-4,objv+4);
 	}
     } else if (Ttk_GetContentIndexFromObj(
 		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
@@ -974,7 +973,7 @@ static int NotebookInsertCommand(
 	srcIndex = Ttk_NumberContent(nb->notebook.mgr) - 1;
     }
 
-    /* Move existing slave:
+    /* Move existing content window:
      */
     if (ConfigureTab(interp, nb,
 	     (Tab *)Ttk_ContentData(nb->notebook.mgr, srcIndex),
@@ -984,8 +983,8 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (destIndex + 1 >= nSlaves + 1) {
-	destIndex  = nSlaves - 1;
+    if (destIndex + 1 >= nContent + 1) {
+	destIndex  = nContent - 1;
     }
     Ttk_ReorderContent(nb->notebook.mgr, srcIndex, destIndex);
 
@@ -1202,7 +1201,7 @@ static int NotebookTabCommand(
     Notebook *nb = (Notebook *)recordPtr;
     Ttk_Manager *mgr = nb->notebook.mgr;
     TkSizeT index;
-    Tk_Window slaveWindow;
+    Tk_Window window;
     Tab *tab;
 
     if (objc < 3) {
@@ -1215,17 +1214,17 @@ static int NotebookTabCommand(
     }
 
     tab = (Tab *)Ttk_ContentData(mgr, index);
-    slaveWindow = Ttk_ContentWindow(mgr, index);
+    window = Ttk_ContentWindow(mgr, index);
 
     if (objc == 3) {
 	return TtkEnumerateOptions(interp, tab,
-	    PaneOptionSpecs, nb->notebook.paneOptionTable, slaveWindow);
+	    PaneOptionSpecs, nb->notebook.paneOptionTable, window);
     } else if (objc == 4) {
 	return TtkGetOptionValue(interp, tab, objv[3],
-	    nb->notebook.paneOptionTable, slaveWindow);
+	    nb->notebook.paneOptionTable, window);
     } /* else */
 
-    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-3,objv+3) != TCL_OK) {
+    if (ConfigureTab(interp, nb, tab, window, objc-3,objv+3) != TCL_OK) {
 	return TCL_ERROR;
     }
 

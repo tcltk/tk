@@ -1120,7 +1120,7 @@ static void
 WinItemLostContentProc(
     ClientData clientData,	/* WindowItem structure for content window window that
 				 * was stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the content window window. */
+    Tk_Window tkwin)		/* Tk's handle for the content window. */
 {
     WindowItem *winItemPtr = (WindowItem *)clientData;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(winItemPtr->canvas);
