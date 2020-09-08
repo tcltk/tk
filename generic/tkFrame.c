@@ -314,7 +314,7 @@ static void		DisplayFrame(ClientData clientData);
 static void		FrameCmdDeletedProc(ClientData clientData);
 static void		FrameEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static void		FrameLostSlaveProc(ClientData clientData,
+static void		FrameLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		FrameRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
@@ -346,7 +346,7 @@ static const Tk_ClassProcs frameClass = {
 static const Tk_GeomMgr frameGeomType = {
     "labelframe",		/* name */
     FrameRequestProc,		/* requestProc */
-    FrameLostSlaveProc		/* lostSlaveProc */
+    FrameLostContentProc		/* lostSlaveProc */
 };
 
 /*
@@ -1914,25 +1914,25 @@ FrameRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * FrameLostSlaveProc --
+ * FrameLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all frame-related information about the slave.
+ *	Forgets all frame-related information about the content window.
  *
  *--------------------------------------------------------------
  */
 
 static void
-FrameLostSlaveProc(
-    ClientData clientData,	/* Frame structure for slave window that was
+FrameLostContentProc(
+    ClientData clientData,	/* Frame structure for content window that was
 				 * stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    Tk_Window tkwin)		/* Tk's handle for the content window. */
 {
     Frame *framePtr = clientData;
     Labelframe *labelframePtr = clientData;

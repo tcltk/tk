@@ -15,11 +15,11 @@
 
 /*
  * Data structures of the following type are used by Tk_MaintainGeometry. For
- * each slave managed by Tk_MaintainGeometry, there is one of these structures
- * associated with its master.
+ * each content managed by Tk_MaintainGeometry, there is one of these structures
+ * associated with its container.
  */
 
-typedef struct MaintainSlave {
+typedef struct MaintainContent {
     Tk_Window slave;		/* The slave window being positioned. */
     Tk_Window master;		/* The master that determines slave's
 				 * position; it must be a descendant of
@@ -27,17 +27,17 @@ typedef struct MaintainSlave {
     int x, y;			/* Desired position of slave relative to
 				 * master. */
     int width, height;		/* Desired dimensions of slave. */
-    struct MaintainSlave *nextPtr;
+    struct MaintainContent *nextPtr;
 				/* Next in list of Maintains associated with
 				 * master. */
-} MaintainSlave;
+} MaintainContent;
 
 /*
- * For each window that has been specified as a master to Tk_MaintainGeometry,
+ * For each window that has been specified as a content to Tk_MaintainGeometry,
  * there is a structure of the following type:
  */
 
-typedef struct MaintainMaster {
+typedef struct MaintainContainer {
     Tk_Window ancestor;		/* The lowest ancestor of this window for
 				 * which we have *not* created a
 				 * StructureNotify handler. May be the same as
@@ -45,18 +45,18 @@ typedef struct MaintainMaster {
     int checkScheduled;		/* Non-zero means that there is already a call
 				 * to MaintainCheckProc scheduled as an idle
 				 * handler. */
-    MaintainSlave *slavePtr;	/* First in list of all slaves associated with
-				 * this master. */
-} MaintainMaster;
+    MaintainContent *slavePtr;	/* First in list of all content associated with
+				 * this container. */
+} MaintainContainer;
 
 /*
  * Prototypes for static procedures in this file:
  */
 
 static void		MaintainCheckProc(ClientData clientData);
-static void		MaintainMasterProc(ClientData clientData,
+static void		MaintainContainerProc(ClientData clientData,
 			    XEvent *eventPtr);
-static void		MaintainSlaveProc(ClientData clientData,
+static void		MaintainContentProc(ClientData clientData,
 			    XEvent *eventPtr);
 
 /*
@@ -418,8 +418,8 @@ Tk_MaintainGeometry(
     int width, int height)	/* Desired dimensions for slave. */
 {
     Tcl_HashEntry *hPtr;
-    MaintainMaster *masterPtr;
-    MaintainSlave *slavePtr;
+    MaintainContainer *masterPtr;
+    MaintainContent *slavePtr;
     int isNew, map;
     Tk_Window ancestor, parent;
     TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
@@ -455,7 +455,7 @@ Tk_MaintainGeometry(
     }
 
     /*
-     * See if there is already a MaintainMaster structure for the master; if
+     * See if there is already a MaintainContainer structure for the master; if
      * not, then create one.
      */
 
@@ -465,7 +465,7 @@ Tk_MaintainGeometry(
     if (!isNew) {
 	masterPtr = Tcl_GetHashValue(hPtr);
     } else {
-	masterPtr = ckalloc(sizeof(MaintainMaster));
+	masterPtr = ckalloc(sizeof(MaintainContainer));
 	masterPtr->ancestor = master;
 	masterPtr->checkScheduled = 0;
 	masterPtr->slavePtr = NULL;
@@ -473,7 +473,7 @@ Tk_MaintainGeometry(
     }
 
     /*
-     * Create a MaintainSlave structure for the slave if there isn't already
+     * Create a MaintainContent structure for the slave if there isn't already
      * one.
      */
 
@@ -483,12 +483,12 @@ Tk_MaintainGeometry(
 	    goto gotSlave;
 	}
     }
-    slavePtr = ckalloc(sizeof(MaintainSlave));
+    slavePtr = ckalloc(sizeof(MaintainContent));
     slavePtr->slave = slave;
     slavePtr->master = master;
     slavePtr->nextPtr = masterPtr->slavePtr;
     masterPtr->slavePtr = slavePtr;
-    Tk_CreateEventHandler(slave, StructureNotifyMask, MaintainSlaveProc,
+    Tk_CreateEventHandler(slave, StructureNotifyMask, MaintainContentProc,
 	    slavePtr);
 
     /*
@@ -502,7 +502,7 @@ Tk_MaintainGeometry(
 	    ancestor = Tk_Parent(ancestor)) {
 	if (ancestor == masterPtr->ancestor) {
 	    Tk_CreateEventHandler(ancestor, StructureNotifyMask,
-		    MaintainMasterProc, masterPtr);
+		    MaintainContainerProc, masterPtr);
 	    masterPtr->ancestor = Tk_Parent(ancestor);
 	}
     }
@@ -567,8 +567,8 @@ Tk_UnmaintainGeometry(
 				 * slave's parent. */
 {
     Tcl_HashEntry *hPtr;
-    MaintainMaster *masterPtr;
-    MaintainSlave *slavePtr, *prevPtr;
+    MaintainContainer *masterPtr;
+    MaintainContent *slavePtr, *prevPtr;
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
 
@@ -613,13 +613,13 @@ Tk_UnmaintainGeometry(
 	}
     }
     Tk_DeleteEventHandler(slavePtr->slave, StructureNotifyMask,
-	    MaintainSlaveProc, slavePtr);
+	    MaintainContentProc, slavePtr);
     ckfree(slavePtr);
     if (masterPtr->slavePtr == NULL) {
 	if (masterPtr->ancestor != NULL) {
 	    for (ancestor = master; ; ancestor = Tk_Parent(ancestor)) {
 		Tk_DeleteEventHandler(ancestor, StructureNotifyMask,
-			MaintainMasterProc, masterPtr);
+			MaintainContainerProc, masterPtr);
 		if (ancestor == masterPtr->ancestor) {
 		    break;
 		}
@@ -636,7 +636,7 @@ Tk_UnmaintainGeometry(
 /*
  *----------------------------------------------------------------------
  *
- * MaintainMasterProc --
+ * MaintainContainerProc --
  *
  *	This procedure is invoked by the Tk event dispatcher in response to
  *	StructureNotify events on the master or one of its ancestors, on
@@ -655,13 +655,13 @@ Tk_UnmaintainGeometry(
  */
 
 static void
-MaintainMasterProc(
-    ClientData clientData,	/* Pointer to MaintainMaster structure for the
+MaintainContainerProc(
+    ClientData clientData,	/* Pointer to MaintainContainer structure for the
 				 * master window. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    MaintainMaster *masterPtr = clientData;
-    MaintainSlave *slavePtr;
+    MaintainContainer *masterPtr = clientData;
+    MaintainContent *slavePtr;
     int done;
 
     if ((eventPtr->type == ConfigureNotify)
@@ -692,7 +692,7 @@ MaintainMasterProc(
 /*
  *----------------------------------------------------------------------
  *
- * MaintainSlaveProc --
+ * MaintainContentProc --
  *
  *	This procedure is invoked by the Tk event dispatcher in response to
  *	StructureNotify events on a slave being managed by
@@ -709,12 +709,12 @@ MaintainMasterProc(
  */
 
 static void
-MaintainSlaveProc(
-    ClientData clientData,	/* Pointer to MaintainSlave structure for
+MaintainContentProc(
+    ClientData clientData,	/* Pointer to MaintainContent structure for
 				 * master-slave pair. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    MaintainSlave *slavePtr = clientData;
+    MaintainContent *slavePtr = clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	Tk_UnmaintainGeometry(slavePtr->slave, slavePtr->master);
@@ -743,11 +743,11 @@ MaintainSlaveProc(
 
 static void
 MaintainCheckProc(
-    ClientData clientData)	/* Pointer to MaintainMaster structure for the
+    ClientData clientData)	/* Pointer to MaintainContainer structure for the
 				 * master window. */
 {
-    MaintainMaster *masterPtr = clientData;
-    MaintainSlave *slavePtr;
+    MaintainContainer *masterPtr = clientData;
+    MaintainContent *slavePtr;
     Tk_Window ancestor, parent;
     int x, y, map;
 
