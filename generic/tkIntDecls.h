@@ -1217,7 +1217,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 
 #endif /* UNIX */
 
-#if !defined(MAC_OSX_TK) || defined(MAC_OSX_TCL)
+#if !defined(MAC_OSX_TK)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 #   define TkpWillDrawWidget(w) 0
