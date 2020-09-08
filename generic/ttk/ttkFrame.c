@@ -88,12 +88,12 @@ static Ttk_Padding FrameMargins(Frame *framePtr)
  * 	The frame doesn't request a size of its own by default,
  * 	but it does have an internal border.  See also <<NOTE-SIZE>>
  */
-static int FrameSize(void *recordPtr, int *widthPtr, int *heightPtr)
+static int FrameSize(
+    void *recordPtr,
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *))
 {
     Frame *framePtr = (Frame *)recordPtr;
-    (void)widthPtr;
-    (void)heightPtr;
-
     Ttk_SetMargins(framePtr->core.tkwin, FrameMargins(framePtr));
     return 0;
 }
@@ -340,15 +340,16 @@ LabelframeLabelSize(Labelframe *lframePtr, int *widthPtr, int *heightPtr)
  * 	Like the frame, this doesn't request a size of its own
  * 	but it does have internal padding and a minimum size.
  */
-static int LabelframeSize(void *recordPtr, int *widthPtr, int *heightPtr)
+static int LabelframeSize(
+    void *recordPtr,
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *))
 {
     Labelframe *lframePtr = (Labelframe *)recordPtr;
     WidgetCore *corePtr = &lframePtr->core;
     Ttk_Padding margins;
     LabelframeStyle style;
     int labelWidth, labelHeight;
-    (void)widthPtr;
-    (void)heightPtr;
 
     LabelframeStyleOptions(lframePtr, &style);
 
@@ -487,18 +488,17 @@ static void LabelframePlaceContent(void *recordPtr)
 	Ttk_Box b;
 	LabelframeDoLayout(recordPtr);
 	b = lframe->label.labelParcel;
-	/* ASSERT: slave #0 is lframe->label.labelWidget */
+	/* ASSERT: content #0 is lframe->label.labelWidget */
 	Ttk_PlaceContent(lframe->label.mgr, 0, b.x,b.y,b.width,b.height);
     }
 }
 
-static int LabelRequest(void *managerData, TkSizeT index, int width, int height)
+static int LabelRequest(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(TkSizeT),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    (void)managerData;
-    (void)index;
-    (void)width;
-    (void)height;
-
     return 1;
 }
 
@@ -529,10 +529,11 @@ static Ttk_ManagerSpec LabelframeManagerSpec = {
 /* LabelframeInitialize --
  * 	Initialization hook.
  */
-static void LabelframeInitialize(Tcl_Interp *dummy, void *recordPtr)
+static void LabelframeInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Labelframe *lframe = (Labelframe *)recordPtr;
-    (void)dummy;
 
     lframe->label.mgr = Ttk_CreateManager(
 	&LabelframeManagerSpec, lframe, lframe->core.tkwin);

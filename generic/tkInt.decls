@@ -636,10 +636,10 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 aqua {
+declare 185 macosx {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 aqua {
+declare 186 macosx {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
