@@ -400,7 +400,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
 	event add <<SelectNextPara>>	<Control-Shift-Down>
-	event add <<ToggleSelection>>	<Control-ButtonPress-1>
+	event add <<ToggleSelection>>	<Control-Button-1>
 
 	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
 	# returned when the user presses <Shift-Tab>. In order for tab
@@ -449,7 +449,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
 	event add <<SelectNextPara>>	<Control-Shift-Down>
-	event add <<ToggleSelection>>	<Control-ButtonPress-1>
+	event add <<ToggleSelection>>	<Control-Button-1>
     }
     "aqua" {
 	event add <<Cut>>		<Command-Key-x> <Key-F2> <Command-Lock-Key-X>
@@ -486,7 +486,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<NextPara>>		<Option-Down>
 	event add <<SelectPrevPara>>	<Shift-Option-Up>
 	event add <<SelectNextPara>>	<Shift-Option-Down>
-	event add <<ToggleSelection>>	<Command-ButtonPress-1>
+	event add <<ToggleSelection>>	<Command-Button-1>
     }
 }
 

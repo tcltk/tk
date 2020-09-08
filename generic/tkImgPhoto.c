@@ -339,7 +339,7 @@ ImgPhotoCreate(
     PhotoModel *modelPtr;
 
     /*
-     * Allocate and initialize the photo image master record.
+     * Allocate and initialize the photo image model record.
      */
 
     modelPtr = ckalloc(sizeof(PhotoModel));
@@ -386,7 +386,7 @@ ImgPhotoCreate(
 
 static int
 ImgPhotoCmd(
-    ClientData clientData,	/* Information about photo master. */
+    ClientData clientData,	/* Information about photo model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2083,7 +2083,7 @@ ImgPhotoConfigureModel(
  *	None.
  *
  * Side effects:
- *	(Re)sets COMPLEX_ALPHA flag of master.
+ *	(Re)sets COMPLEX_ALPHA flag of model.
  *
  *----------------------------------------------------------------------
  */
@@ -2121,7 +2121,7 @@ ToggleComplexAlphaIfNeeded(
  *
  * ImgPhotoDelete --
  *
- *	This function is called by the image code to delete the master
+ *	This function is called by the image code to delete the model
  *	structure for an image.
  *
  * Results:
@@ -2135,10 +2135,10 @@ ToggleComplexAlphaIfNeeded(
 
 static void
 ImgPhotoDelete(
-    ClientData masterData)	/* Pointer to PhotoModel structure for image.
+    ClientData modelData)	/* Pointer to PhotoModel structure for image.
 				 * Must not have any more instances. */
 {
-    PhotoModel *modelPtr = masterData;
+    PhotoModel *modelPtr = modelData;
     PhotoInstance *instancePtr;
 
     while ((instancePtr = modelPtr->instancePtr) != NULL) {
@@ -2212,7 +2212,7 @@ ImgPhotoCmdDeletedProc(
  *	with memory allocation.)
  *
  * Side effects:
- *	Storage gets reallocated, for the master and all its instances.
+ *	Storage gets reallocated, for the model and all its instances.
  *
  *----------------------------------------------------------------------
  */
@@ -3486,7 +3486,7 @@ Tk_PhotoPutZoomedBlock(
  * Tk_DitherPhoto --
  *
  *	This function is called to update an area of each instance's pixmap by
- *	dithering the corresponding area of the image master.
+ *	dithering the corresponding area of the image model.
  *
  * Results:
  *	None.
@@ -3501,7 +3501,7 @@ Tk_PhotoPutZoomedBlock(
 
 void
 Tk_DitherPhoto(
-    Tk_PhotoHandle photo,	/* Image master whose instances are to be
+    Tk_PhotoHandle photo,	/* Image model whose instances are to be
 				 * updated. */
     int x, int y,		/* Coordinates of the top-left pixel in the
 				 * area to be dithered. */

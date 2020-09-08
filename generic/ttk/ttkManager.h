@@ -16,14 +16,14 @@ typedef struct TtkManager_ Ttk_Manager;
  *
  * RequestedSize computes the requested size of the container window.
  *
- * PlaceSlaves sets the position and size of all managed slaves
+ * PlaceSlaves sets the position and size of all managed content windows
  * by calling Ttk_PlaceContent().
  *
- * SlaveRemoved() is called immediately before a slave is removed.
- * NB: the associated slave window may have been destroyed when this
+ * SlaveRemoved() is called immediately before a content window is removed.
+ * NB: the associated content window may have been destroyed when this
  * routine is called.
  *
- * SlaveRequest() is called when a slave requests a size change.
+ * SlaveRequest() is called when a content window requests a size change.
  * It should return 1 if the request should propagate, 0 otherwise.
  */
 typedef struct {			/* Manager hooks */
@@ -39,8 +39,8 @@ typedef struct {			/* Manager hooks */
  * Default implementations for Tk_GeomMgr hooks:
  */
 #define Ttk_LostContentProc Ttk_LostSlaveProc
-MODULE_SCOPE void Ttk_GeometryRequestProc(ClientData, Tk_Window slave);
-MODULE_SCOPE void Ttk_LostContentProc(ClientData, Tk_Window slave);
+MODULE_SCOPE void Ttk_GeometryRequestProc(ClientData, Tk_Window window);
+MODULE_SCOPE void Ttk_LostContentProc(ClientData, Tk_Window window);
 
 /*
  * Public API:
@@ -77,7 +77,7 @@ MODULE_SCOPE void Ttk_ManagerLayoutChanged(Ttk_Manager *);
  */
 #define Ttk_ContentIndex Ttk_SlaveIndex
 MODULE_SCOPE int Ttk_ContentIndex(Ttk_Manager *, Tk_Window);
-    /* Returns: index in slave array of specified window, -1 if not found */
+    /* Returns: index in content array of specified window, -1 if not found */
 
 #define Ttk_GetContentIndexFromObj Ttk_GetSlaveIndexFromObj
 MODULE_SCOPE int Ttk_GetContentIndexFromObj(
