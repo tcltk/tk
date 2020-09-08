@@ -226,7 +226,7 @@ CreateNSImageFromPixmap(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCGContextForDrawable --
+ * Tk_MacOSXGetCGContextForDrawable --
  *
  *	Get CGContext for given Drawable, creating one if necessary.
  *
@@ -239,8 +239,8 @@ CreateNSImageFromPixmap(
  *----------------------------------------------------------------------
  */
 
-CGContextRef
-TkMacOSXGetCGContextForDrawable(
+void *
+Tk_MacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;

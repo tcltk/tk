@@ -1267,10 +1267,8 @@ MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 
-#define TkSetGeometryContainer TkSetGeometryMaster
 MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
-#define TkFreeGeometryContainer TkFreeGeometryMaster
 MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 

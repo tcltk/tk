@@ -24,6 +24,7 @@
 #if defined(MAC_OSX_TK)
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -73,17 +74,19 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoSetSize_Panic 0
 #define Tk_CreateOldPhotoImageFormat 0
 #ifdef MAC_OSX_TK
-static void
+static int
 doNothing(void)
 {
     /* dummy implementation, no need to do anything */
+    return 0;
 }
 #endif
 #else
-static void
+static int
 doNothing(void)
 {
     /* dummy implementation, no need to do anything */
+    return 0;
 }
 #define Tk_FreeXId ((void (*)(Display *, XID))(void *)doNothing)
 #define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *))(void *)doNothing)
@@ -104,12 +107,20 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkpTestsendCmd_ TkpTestsendCmd
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
+#define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
 #define Tk_CanvasTagsParseProc \
 		(int (*) (void *, Tcl_Interp *,Tk_Window, const char *, char *, \
 		int offset))(void *)TkCanvasTagsParseProc
 #define Tk_CanvasTagsPrintProc \
 		(const char *(*) (void *,Tk_Window, char *, int, \
 		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
+
+#if !defined(MAC_OSX_TK)
+#   undef TkpWillDrawWidget
+#   undef TkpRedrawWidget
+#   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
+#   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
+#endif
 
 #ifdef _WIN32
 
@@ -498,26 +509,24 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 185 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 185 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpRedrawWidget, /* 185 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#endif /* MACOSX */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 186 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 186 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
-#endif /* AQUA */
+#endif /* MACOSX */
     TkDebugPhotoStringMatchDef, /* 187 */
 };
 
@@ -1026,12 +1035,18 @@ static const TkPlatStubs tkPlatStubs = {
     0, /* 2 */
     0, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent, /* 5 */
+    TkGenWMConfigureEvent_, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
     0, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
+    Tk_MacOSXGetTkWindow, /* 11 */
+    Tk_MacOSXGetCGContextForDrawable, /* 12 */
+    Tk_MacOSXGetNSWindowForDrawable, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
+    TkGenWMConfigureEvent, /* 16 */
 #endif /* AQUA */
 };
 

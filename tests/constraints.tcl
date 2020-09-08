@@ -197,8 +197,8 @@ testConstraint noExceed [expr {
 }]
 
 # constraints for testing facilities defined in the tktest executable...
-testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
-testConstraint testOldImageType [expr {[lsearch [image types] oldtest] >= 0}]
+testConstraint testImageType [expr {"test" in [image types]}]
+testConstraint testOldImageType [expr {"oldtest" in [image types]}]
 testConstraint testbitmap    [llength [info commands testbitmap]]
 testConstraint testborder    [llength [info commands testborder]]
 testConstraint testcbind     [llength [info commands testcbind]]
@@ -247,10 +247,10 @@ testConstraint pseudocolor8 [expr {
 }]
 destroy .t
 testConstraint haveTruecolor24 [expr {
-    [lsearch -exact [winfo visualsavailable .] {truecolor 24}] >= 0
+    {truecolor 24} in [winfo visualsavailable .]
 }]
 testConstraint haveGrayscale8 [expr {
-    [lsearch -exact [winfo visualsavailable .] {grayscale 8}] >= 0
+    {grayscale 8} in [winfo visualsavailable .]
 }]
 testConstraint defaultPseudocolor8 [expr {
     ([winfo visual .] eq "pseudocolor") && ([winfo depth .] == 8)
