@@ -82,9 +82,12 @@ EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront(void);
-/* Slot 11 is reserved */
-/* Slot 12 is reserved */
-/* Slot 13 is reserved */
+/* 11 */
+EXTERN Tk_Window	Tk_MacOSXGetTkWindow(void *w);
+/* 12 */
+EXTERN void *		Tk_MacOSXGetCGContextForDrawable(Drawable drawable);
+/* 13 */
+EXTERN void *		Tk_MacOSXGetNSWindowForDrawable(Drawable drawable);
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
 /* 16 */
@@ -116,9 +119,9 @@ typedef struct TkPlatStubs {
     void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
-    void (*reserved11)(void);
-    void (*reserved12)(void);
-    void (*reserved13)(void);
+    Tk_Window (*tk_MacOSXGetTkWindow) (void *w); /* 11 */
+    void * (*tk_MacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
+    void * (*tk_MacOSXGetNSWindowForDrawable) (Drawable drawable); /* 13 */
     void (*reserved14)(void);
     void (*reserved15)(void);
     void (*tkGenWMConfigureEvent_) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
@@ -174,9 +177,12 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
-/* Slot 11 is reserved */
-/* Slot 12 is reserved */
-/* Slot 13 is reserved */
+#define Tk_MacOSXGetTkWindow \
+	(tkPlatStubsPtr->tk_MacOSXGetTkWindow) /* 11 */
+#define Tk_MacOSXGetCGContextForDrawable \
+	(tkPlatStubsPtr->tk_MacOSXGetCGContextForDrawable) /* 12 */
+#define Tk_MacOSXGetNSWindowForDrawable \
+	(tkPlatStubsPtr->tk_MacOSXGetNSWindowForDrawable) /* 13 */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
 #define TkGenWMConfigureEvent_ \
@@ -187,13 +193,14 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
-#undef TkGenWMConfigureEvent_
-
 #ifdef __cplusplus
 }
 #endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkGenWMConfigureEvent_
+#define Tk_MacOSXGetNSViewForDrawable TkMacOSXGetRootControl
 
 #endif /* _TKPLATDECLS */

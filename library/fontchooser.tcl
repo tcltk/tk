@@ -121,7 +121,7 @@ proc ::tk::fontchooser::Configure {args} {
     if {[string trim $S(-title)] eq ""} {
         set S(-title) [::msgcat::mc "Font"]
     }
-    if {[winfo exists $S(W)] && [lsearch $args -font] != -1} {
+    if {[winfo exists $S(W)] && ("-font" in $args)} {
 	Init $S(-font)
 	event generate $S(-parent) <<TkFontchooserFontChanged>>
     }
