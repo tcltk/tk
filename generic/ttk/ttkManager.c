@@ -463,7 +463,7 @@ int Ttk_GetContentIndexFromObj(
 	return TCL_OK;
     }
 
-    /* Try interpreting as a slave window name;
+    /* Try interpreting as a window name;
      */
     if ((*string == '.') &&
 	    (tkwin = Tk_NameToWindow(interp, string, mgr->window))) {
@@ -505,28 +505,28 @@ void Ttk_ReorderContent(Ttk_Manager *mgr, int fromIndex, int toIndex)
     /* ASSERT: fromIndex == toIndex */
     mgr->content[fromIndex] = moved;
 
-    /* Schedule a relayout.  In general, rearranging slaves
+    /* Schedule a relayout.  In general, rearranging content
      * may also change the size:
      */
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }
 
-/* ++ Ttk_Maintainable(interp, slave, container) --
+/* ++ Ttk_Maintainable(interp, window, container) --
  * 	Utility routine.  Verifies that 'container' may be used to maintain
- *	the geometry of 'slave' via Tk_MaintainGeometry:
+ *	the geometry of 'window' via Tk_MaintainGeometry:
  *
- * 	+ 'container' is either 'slave's parent -OR-
- * 	+ 'container is a descendant of 'slave's parent.
- * 	+ 'slave' is not a toplevel window
- * 	+ 'slave' belongs to the same toplevel as 'container'
+ * 	+ 'container' is either 'window's parent -OR-
+ * 	+ 'container is a descendant of 'window's parent.
+ * 	+ 'window' is not a toplevel window
+ * 	+ 'window' belongs to the same toplevel as 'container'
  *
  * Returns: 1 if OK; otherwise 0, leaving an error message in 'interp'.
  */
-int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window container)
+int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window window, Tk_Window container)
 {
-    Tk_Window ancestor = container, parent = Tk_Parent(slave);
+    Tk_Window ancestor = container, parent = Tk_Parent(window);
 
-    if (Tk_IsTopLevel(slave) || slave == container) {
+    if (Tk_IsTopLevel(window) || window == container) {
 	goto badWindow;
     }
 
@@ -541,7 +541,7 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window container)
 
 badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as slave of %s",
-	    Tk_PathName(slave), Tk_PathName(container)));
+	    Tk_PathName(window), Tk_PathName(container)));
     Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
     return 0;
 }
