@@ -25,7 +25,7 @@ proc eatColors {w} {
     catch {destroy $w}
     toplevel $w
     wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
+    canvas $w.c -width 400 -height 200 -borderwidth 0
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
 	for {set x 0} {$x < 40} {incr x} {
@@ -191,22 +191,22 @@ test frame-1.14 {frame configuration options} -body {
     .f configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-1.15 {frame configuration options} -body {
-    .f configure -bd 4
-    lindex [.f configure -bd] 4
+    .f configure -borderwidth 4
+    lindex [.f configure -borderwidth] 4
 } -cleanup {
-    .f configure -bd [lindex [.f configure -bd] 3]
+    .f configure -borderwidth [lindex [.f configure -borderwidth] 3]
 } -result 4
 test frame-1.16 {frame configuration options} -body {
-    .f configure -bd badValue
+    .f configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test frame-1.17 {frame configuration options} -body {
-    .f configure -bg #00ff00
-    lindex [.f configure -bg] 4
+    .f configure -background #00ff00
+    lindex [.f configure -background] 4
 } -cleanup {
-    .f configure -bg [lindex [.f configure -bg] 3]
+    .f configure -background [lindex [.f configure -background] 3]
 } -result "#00ff00"
 test frame-1.18 {frame configuration options} -body {
-    .f configure -bg non-existent
+    .f configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-1.19 {frame configuration options} -body {
     .f configure -borderwidth 1.3
@@ -498,18 +498,18 @@ test frame-2.21 {toplevel configuration options} -body {
     .t configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-2.22 {toplevel configuration options} -body {
-    .t configure -bd 4
-    lindex [.t configure -bd] 4
+    .t configure -borderwidth 4
+    lindex [.t configure -borderwidth] 4
 } -result 4
 test frame-2.23 {toplevel configuration options} -body {
-    .t configure -bd badValue
+    .t configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test frame-2.24 {toplevel configuration options} -body {
-    .t configure -bg #00ff00
-    lindex [.t configure -bg] 4
+    .t configure -background #00ff00
+    lindex [.t configure -background] 4
 } -result "#00ff00"
 test frame-2.25 {toplevel configuration options} -body {
-    .t configure -bg non-existent
+    .t configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-2.26 {toplevel configuration options} -body {
     .t configure -borderwidth 1.3
@@ -599,7 +599,7 @@ test frame-3.3 {TkCreateFrame procedure} -setup {
 test frame-3.4 {TkCreateFrame procedure} -setup {
     deleteWindows
 } -body {
-    toplevel .t -width 350 -class NewClass -bg black -visual default -height 90
+    toplevel .t -width 350 -class NewClass -background black -visual default -height 90
     wm geometry .t +0+0
     update
     list [lindex [.t configure -width] 4] \
@@ -649,7 +649,7 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
-    toplevel .x -width 140 -height 300 -use [winfo id .t] -bg green
+    toplevel .x -width 140 -height 300 -use [winfo id .t] -background green
     tkwait visibility .x
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
@@ -676,7 +676,7 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
 	update
     }
     option add *x.use [winfo id .t]
-    toplevel .x -width 140 -height 300 -bg green
+    toplevel .x -width 140 -height 300 -background green
     if {[tk windowingsystem] eq "aqua"} {
 	update idletasks
     } else {
@@ -701,7 +701,7 @@ test frame-3.11 {TkCreateFrame procedure} -constraints {
 } -setup {
     destroy .t
 } -body {
-    toplevel .t -width 300 -height 200 -bg #475601
+    toplevel .t -width 300 -height 200 -background #475601
     wm geometry .t +0+0
     update
     colorsFree .t
@@ -713,7 +713,7 @@ test frame-3.12 {TkCreateFrame procedure} -constraints {
 } -setup {
     destroy .t
 } -body {
-    toplevel .t -width 300 -height 200 -bg #475601 -colormap new
+    toplevel .t -width 300 -height 200 -background #475601 -colormap new
     wm geometry .t +0+0
     update
     colorsFree .t
@@ -727,7 +727,7 @@ test frame-3.13 {TkCreateFrame procedure} -constraints {
 } -body {
     option add *t.class Toplevel2
     option add *Toplevel2.colormap new
-    toplevel .t -width 300 -height 200 -bg #475601
+    toplevel .t -width 300 -height 200 -background #475601
     wm geometry .t +0+0
     update
     option clear
@@ -742,7 +742,7 @@ test frame-3.14 {TkCreateFrame procedure} -constraints {
 } -body {
     option add *t.class Toplevel3
     option add *Toplevel3.Colormap new
-    toplevel .t -width 300 -height 200 -bg #475601 -colormap new
+    toplevel .t -width 300 -height 200 -background #475601 -colormap new
     wm geometry .t +0+0
     update
     option clear
@@ -757,7 +757,7 @@ test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
-    toplevel .x -width 140 -height 300 -use [winfo id .t] -bg green -colormap new
+    toplevel .x -width 140 -height 300 -use [winfo id .t] -background green -colormap new
     tkwait visibility .x
     list [colorsFree .t] [colorsFree .x]
 } -cleanup {
@@ -768,7 +768,7 @@ test frame-3.16 {TkCreateFrame procedure} -constraints {
 } -setup {
     destroy .t
 } -body {
-    toplevel .t -width 300 -height 200 -bg #475601 -visual default
+    toplevel .t -width 300 -height 200 -background #475601 -visual default
     wm geometry .t +0+0
     update
     colorsFree .t
@@ -780,7 +780,7 @@ test frame-3.17 {TkCreateFrame procedure} -constraints {
 } -setup {
     destroy .t
 } -body {
-    toplevel .t -width 300 -height 200 -bg #475601 -visual default \
+    toplevel .t -width 300 -height 200 -background #475601 -visual default \
 	    -colormap new
     wm geometry .t +0+0
     update
@@ -793,7 +793,7 @@ test frame-3.18 {TkCreateFrame procedure} -constraints {
 } -setup {
     destroy .t
 } -body {
-    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343
+    toplevel .t -visual {grayscale 8} -width 300 -height 200 -background #434343
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
@@ -807,7 +807,7 @@ test frame-3.19 {TkCreateFrame procedure} -constraints {
 } -body {
     option add *t.class T4
     option add *T4.visual {grayscale 8}
-    toplevel .t -width 300 -height 200 -bg #434343
+    toplevel .t -width 300 -height 200 -background #434343
     wm geometry .t +0+0
     update
     option clear
@@ -822,7 +822,7 @@ test frame-3.20 {TkCreateFrame procedure} -constraints {
 } -body {
     option add *t.class T5
     option add *T5.Visual {grayscale 8}
-    toplevel .t -width 300 -height 200 -bg #434343
+    toplevel .t -width 300 -height 200 -background #434343
     wm geometry .t +0+0
     update
     option clear
@@ -835,7 +835,7 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 } -setup {
     destroy .t
 } -body {
-    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343
+    toplevel .t -visual {grayscale 8} -width 300 -height 200 -background #434343
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
@@ -852,7 +852,7 @@ test frame-3.22 {TkCreateFrame procedure, default dimensions} -setup {
     wm geometry .t +0+0
     update
     set result "[winfo reqwidth .t] [winfo reqheight .t]"
-    frame .t.f -bg red
+    frame .t.f -background red
     pack .t.f
     update
     lappend result [winfo reqwidth .t.f] [winfo reqheight .t.f]
@@ -974,10 +974,10 @@ test frame-7.2 {FrameEventProc procedure} -setup {
     deleteWindows
     set x {}
 } -body {
-    frame .f1 -bg #543210
+    frame .f1 -background #543210
     rename .f1 .f2
     lappend x [winfo children .]
-    lappend x [.f2 cget -bg]
+    lappend x [.f2 cget -background]
     destroy .f1
     lappend x [info command .f*] [winfo children .]
 } -cleanup {
@@ -1096,7 +1096,7 @@ test frame-11.2 {TkInstallFrameMenu - frame renamed} -setup {
 test frame-12.1 {FrameWorldChanged procedure} -setup {
     deleteWindows
 } -body {
-    # Test -bd -padx and -pady
+    # Test -borderwidth -padx and -pady
     frame .f -borderwidth 2 -padx 3 -pady 4
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
@@ -1110,7 +1110,7 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
 } -body {
     # Test all -labelanchor positions
     set font {helvetica 12}
-    labelframe .f -highlightthickness 1 -bd 3 -padx 1 -pady 2 -font $font \
+    labelframe .f -highlightthickness 1 -borderwidth 3 -padx 1 -pady 2 -font $font \
             -text "Mupp"
     set fh [expr {max([font metrics $font -linespace] + 2 - 3, 0)}]
     set fw [expr {max([font measure $font "Mupp"] + 2 - 3, 0)}]
@@ -1248,22 +1248,22 @@ test frame-13.11 {labelframe configuration options} -body {
     .f configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-13.12 {labelframe configuration options} -body {
-    .f configure -bd 4
-    lindex [.f configure -bd] 4
+    .f configure -borderwidth 4
+    lindex [.f configure -borderwidth] 4
 } -cleanup {
-    .f configure -bd [lindex [.f configure -bd] 3]
+    .f configure -borderwidth [lindex [.f configure -borderwidth] 3]
 } -result 4
 test frame-13.13 {labelframe configuration options} -body {
-    .f configure -bd badValue
+    .f configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test frame-13.14 {labelframe configuration options} -body {
-    .f configure -bg #00ff00
-    lindex [.f configure -bg] 4
+    .f configure -background #00ff00
+    lindex [.f configure -background] 4
 } -cleanup {
-    .f configure -bg [lindex [.f configure -bg] 3]
+    .f configure -background [lindex [.f configure -background] 3]
 } -result "#00ff00"
 test frame-13.15 {labelframe configuration options} -body {
-    .f configure -bg non-existent
+    .f configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-13.16 {labelframe configuration options} -body {
     .f configure -borderwidth 1.3
@@ -1541,7 +1541,7 @@ test frame-15.3 {TIP 262: frame background images} -setup {
     pack .f
     .f configure -tile yes
     update
-    list [.f cget -bgimg] [.f cget -tile]
+    list [.f cget -backgroundimage] [.f cget -tile]
 } -cleanup {
     image delete gorp
     deleteWindows
@@ -1557,7 +1557,7 @@ test frame-15.4 {TIP 262: frame background images} -setup {
     update
     gorp put red -to 15 15 20 20
     update
-    list [.f cget -bgimg] [.f cget -tile]
+    list [.f cget -backgroundimage] [.f cget -tile]
 } -cleanup {
     image delete gorp
     deleteWindows
@@ -1574,7 +1574,7 @@ test frame-15.5 {TIP 262: frame background images} -setup {
     update
     image delete gorp
     update
-    set result [list [.f cget -bgimg] [.f cget -tile]]
+    set result [list [.f cget -backgroundimage] [.f cget -tile]]
     image create photo gorp -width 250 -height 250
     update
     lappend result [.f cget -backgroundimage]
@@ -1588,7 +1588,7 @@ test frame-15.6 {TIP 262: frame background images} -setup {
     . configure -width 200 -height 200
 } -constraints testImageType -body {
     image create test gorp -variable result
-    pack [frame .f -width 100 -height 100 -bgimg gorp]
+    pack [frame .f -width 100 -height 100 -backgroundimage gorp]
     update idletasks; update
     return [uniq $result]
 } -cleanup {
@@ -1601,7 +1601,7 @@ test frame-15.6a {TIP 262: frame background images (offsets)} -setup {
     . configure -width 200 -height 200
 } -constraints testImageType -body {
     image create test gorp -variable result
-    pack [frame .f -width 10 -height 10 -bgimg gorp]
+    pack [frame .f -width 10 -height 10 -backgroundimage gorp]
     update idletasks; update
     # On MacOS must wait for the test image display procedure to run.
     set timer [after 300 {lappend result "timedout"}]
@@ -1622,7 +1622,7 @@ test frame-15.7 {TIP 262: frame background images} -setup {
     . configure -width 200 -height 200
 } -constraints testImageType -body {
     image create test gorp -variable result
-    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1]
+    pack [frame .f -width 50 -height 25 -backgroundimage gorp -tile 1]
     update idletasks; update
     # On MacOS must wait for the test image display procedure to run.
     set timer [after 300 {lappend result "timedout"}]
@@ -1645,7 +1645,7 @@ test frame-15.7a {TIP 262: frame background images (offsets)} -setup {
     . configure -width 200 -height 200
 } -constraints testImageType -body {
     image create test gorp -variable result
-    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -highlightthick 1]
+    pack [frame .f -width 50 -height 25 -backgroundimage gorp -tile 1 -highlightthick 1]
     update idletasks; update
     # On MacOS must wait for the test image display procedure to run.
     set timer [after 300 {lappend result "timedout"}]
@@ -1665,7 +1665,7 @@ test frame-15.7b {TIP 262: frame background images (offsets)} -setup {
     . configure -width 200 -height 200
 } -constraints testImageType -body {
     image create test gorp -variable result
-    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -bd 2]
+    pack [frame .f -width 50 -height 25 -backgroundimage gorp -tile 1 -borderwidth 2]
     update idletasks; update
     return [uniq $result]
 } -cleanup {
@@ -1678,7 +1678,7 @@ test frame-15.7c {TIP 262: frame background images (offsets)} -setup {
     . configure -width 200 -height 200
 } -constraints testImageType -body {
     image create test gorp -variable result
-    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -bd 2 -highlightthick 1]
+    pack [frame .f -width 50 -height 25 -backgroundimage gorp -tile 1 -borderwidth 2 -highlightthick 1]
     update idletasks; update
     return [uniq $result]
 } -cleanup {
@@ -1719,7 +1719,7 @@ test frame-15.10 {TIP 262: toplevel background images} -setup {
 } -body {
     toplevel .t -width 100 -height 100 -backgroundimage gorp -tile yes
     update
-    list [.t cget -bgimg] [.t cget -tile]
+    list [.t cget -backgroundimage] [.t cget -tile]
 } -cleanup {
     image delete gorp
     deleteWindows
@@ -1733,7 +1733,7 @@ test frame-15.11 {TIP 262: toplevel background images} -setup {
     update
     gorp put red -to 15 15 20 20
     update
-    list [.t cget -bgimg] [.t cget -tile]
+    list [.t cget -backgroundimage] [.t cget -tile]
 } -cleanup {
     image delete gorp
     deleteWindows
@@ -1748,7 +1748,7 @@ test frame-15.12 {TIP 262: toplevel background images} -setup {
     update
     image delete gorp
     update
-    set result [list [.t cget -bgimg] [.t cget -tile]]
+    set result [list [.t cget -backgroundimage] [.t cget -tile]]
     image create photo gorp -width 250 -height 250
     update
     lappend result [.t cget -backgroundimage]
@@ -1761,7 +1761,7 @@ test frame-15.13 {TIP 262: toplevel background images} -setup {
     set result {}
 } -constraints testImageType -body {
     image create test gorp -variable result
-    toplevel .t -width 100 -height 100 -bgimg gorp
+    toplevel .t -width 100 -height 100 -backgroundimage gorp
     wm overrideredirect .t 1;	# Reduce trouble from window managers
     update idletasks; update
     return [uniq $result]
@@ -1774,7 +1774,7 @@ test frame-15.14 {TIP 262: toplevel background images} -setup {
     set result {}
 } -constraints testImageType -body {
     image create test gorp -variable result
-    toplevel .t -width 50 -height 25 -bgimg gorp -tile 1
+    toplevel .t -width 50 -height 25 -backgroundimage gorp -tile 1
     wm overrideredirect .t 1;	# Reduce trouble from window managers
     update idletasks; update
     # On MacOS must wait for the test image display procedure to run.

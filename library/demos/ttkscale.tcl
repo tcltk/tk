@@ -10,7 +10,7 @@ package require Tk
 
 set w .ttkscale
 catch {destroy $w}
-toplevel $w -bg [ttk::style lookup TLabel -background]
+toplevel $w -background [ttk::style lookup TLabel -background]
 wm title $w "Themed Scale Demonstration"
 wm iconname $w "ttkscale"
 positionWindow $w

@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Canvas used in 1.* - 17.* tests
-canvas .c -width 400 -height 300 -bd 2 -relief sunken
+canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 pack .c
 update
 
@@ -869,7 +869,7 @@ end
     set font {Courier 12 italic}
     set ax [font measure $font 0]
     set ay [font metrics $font -linespace]
-    .c config -height 300 -highlightthickness 0 -bd 0
+    .c config -height 300 -highlightthickness 0 -borderwidth 0
     update
     .c create text 100 100 -tags test
     .c itemconfig test -font $font -text "00000000" -width [expr 3*$ax]
@@ -897,7 +897,7 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} -setup {
 
 test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup {
     destroy .c
-    set c [canvas .c -bg black -width 964]
+    set c [canvas .c -background black -width 964]
     pack $c
     $c delete all
     after 100 "set done 1"; vwait done

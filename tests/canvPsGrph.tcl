@@ -34,9 +34,9 @@ button .t.bot.quit -text Quit -command {destroy .t}
 button .t.bot.print -text Print -command "lpr $c"
 pack .t.bot.print .t.bot.quit -side left -pady 1m -expand 1
 
-frame .t.mid -relief sunken -bd 2
+frame .t.mid -relief sunken -borderwidth 2
 pack .t.mid -side top -expand yes -fill both -padx 2m -pady 2m
-canvas $c -width 400 -height 350 -bd 0 -relief sunken
+canvas $c -width 400 -height 350 -borderwidth 0 -relief sunken
 pack $c -expand yes -fill both -padx 1 -pady 1
 
 proc mkObjs c {

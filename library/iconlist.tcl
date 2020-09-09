@@ -266,7 +266,7 @@ package require Tk 8.6
 	}
 
 	set bbox [$canvas bbox item$rTag]
-	set pad [expr {[$canvas cget -highlightthickness]+[$canvas cget -bd]}]
+	set pad [expr {[$canvas cget -highlightthickness]+[$canvas cget -borderwidth]}]
 
 	set x1 [lindex $bbox 0]
 	set x2 [lindex $bbox 2]
@@ -311,7 +311,7 @@ package require Tk 8.6
 
 	set W [winfo width  $canvas]
 	set H [winfo height $canvas]
-	set pad [expr {[$canvas cget -highlightthickness]+[$canvas cget -bd]}]
+	set pad [expr {[$canvas cget -highlightthickness]+[$canvas cget -borderwidth]}]
 	if {$pad < 2} {
 	    set pad 2
 	}

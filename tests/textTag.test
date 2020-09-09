@@ -63,15 +63,15 @@ test textTag-1.2 {configuration options} -body {
     .t tag configure x -background [lindex [.t tag configure x -background] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.3 {tag configuration options} -body {
-    .t tag configure x -bgstipple gray50
-    .t tag cget x -bgstipple
+    .t tag configure x -backgroundstipple gray50
+    .t tag cget x -backgroundstipple
 } -cleanup {
-    .t tag configure x -bgstipple [lindex [.t tag configure x -bgstipple] 3]
+    .t tag configure x -backgroundstipple [lindex [.t tag configure x -backgroundstipple] 3]
 } -result {gray50}
 test textTag-1.4 {configuration options} -body {
-    .t tag configure x -bgstipple badStipple
+    .t tag configure x -backgroundstipple badStipple
 } -cleanup {
-    .t tag configure x -bgstipple [lindex [.t tag configure x -bgstipple] 3]
+    .t tag configure x -backgroundstipple [lindex [.t tag configure x -backgroundstipple] 3]
 } -returnCodes error -result {bitmap "badStipple" not defined}
 test textTag-1.5 {tag configuration options} -body {
     .t tag configure x -borderwidth 2
@@ -85,15 +85,15 @@ test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
 } -returnCodes error -result {bad screen distance "46q"}
 test textTag-1.7 {tag configuration options} -body {
-    .t tag configure x -fgstipple gray25
-    .t tag cget x -fgstipple
+    .t tag configure x -stipple gray25
+    .t tag cget x -stipple
 } -cleanup {
-    .t tag configure x -fgstipple [lindex [.t tag configure x -fgstipple] 3]
+    .t tag configure x -stipple [lindex [.t tag configure x -stipple] 3]
 } -result {gray25}
 test textTag-1.8 {configuration options} -body {
-    .t tag configure x -fgstipple bogus
+    .t tag configure x -stipple bogus
 } -cleanup {
-    .t tag configure x -fgstipple [lindex [.t tag configure x -fgstipple] 3]
+    .t tag configure x -stipple [lindex [.t tag configure x -stipple] 3]
 } -returnCodes error -result {bitmap "bogus" not defined}
 test textTag-1.9 {tag configuration options} -body {
     .t tag configure x -font fixed
@@ -102,15 +102,15 @@ test textTag-1.9 {tag configuration options} -body {
     .t tag configure x -font [lindex [.t tag configure x -font] 3]
 } -result {fixed}
 test textTag-1.10 {tag configuration options} -body {
-    .t tag configure x -foreground #001122
-    .t tag cget x -foreground
+    .t tag configure x -color #001122
+    .t tag cget x -color
 } -cleanup {
-    .t tag configure x -foreground [lindex [.t tag configure x -foreground] 3]
+    .t tag configure x -color [lindex [.t tag configure x -color] 3]
 } -result {#001122}
 test textTag-1.11 {configuration options} -body {
-    .t tag configure x -foreground {silly color}
+    .t tag configure x -color {silly color}
 } -cleanup {
-    .t tag configure x -foreground [lindex [.t tag configure x -foreground] 3]
+    .t tag configure x -color [lindex [.t tag configure x -color] 3]
 } -returnCodes error -result {unknown color name "silly color"}
 test textTag-1.12 {tag configuration options} -body {
     .t tag configure x -justify left
@@ -179,15 +179,15 @@ test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
 test textTag-1.21a {tag configuration options} -body {
-    .t tag configure x -overstrikefg red
-    .t tag cget x -overstrikefg
+    .t tag configure x -overstrikecolor red
+    .t tag cget x -overstrikecolor
 } -cleanup {
-    .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
+    .t tag configure x -overstrikecolor [lindex [.t tag configure x -overstrikecolor] 3]
 } -result {red}
 test textTag-1.21b {configuration options} -body {
-    .t tag configure x -overstrikefg stupid
+    .t tag configure x -overstrikecolor stupid
 } -cleanup {
-    .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
+    .t tag configure x -overstrikecolor [lindex [.t tag configure x -overstrikecolor] 3]
 } -returnCodes error -result {unknown color name "stupid"}
 test textTag-1.22 {tag configuration options} -body {
     .t tag configure x -relief raised
@@ -234,15 +234,15 @@ test textTag-1.25d {configuration options} -body {
     .t tag configure x -selectbackground [lindex [.t tag configure x -selectbackground] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.25e {tag configuration options} -body {
-    .t tag configure x -selectforeground #012345
-    .t tag cget x -selectforeground
+    .t tag configure x -selectcolor #012345
+    .t tag cget x -selectcolor
 } -cleanup {
-    .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
+    .t tag configure x -selectcolor [lindex [.t tag configure x -selectcolor] 3]
 } -result {#012345}
 test textTag-1.25f {configuration options} -body {
-    .t tag configure x -selectforeground non-existent
+    .t tag configure x -selectcolor non-existent
 } -cleanup {
-    .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
+    .t tag configure x -selectcolor [lindex [.t tag configure x -selectcolor] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.26 {tag configuration options} -body {
     .t tag configure x -spacing1 10
@@ -300,15 +300,15 @@ test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
 test textTag-1.36 {tag configuration options} -body {
-    .t tag configure x -underlinefg red
-    .t tag cget x -underlinefg
+    .t tag configure x -underlinecolor red
+    .t tag cget x -underlinecolor
 } -cleanup {
-    .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
+    .t tag configure x -underlinecolor [lindex [.t tag configure x -underlinecolor] 3]
 } -result {red}
 test textTag-1.37 {configuration options} -body {
-    .t tag configure x -underlinefg stupid
+    .t tag configure x -underlinecolor stupid
 } -cleanup {
-    .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
+    .t tag configure x -underlinecolor [lindex [.t tag configure x -underlinecolor] 3]
 } -returnCodes error -result {unknown color name "stupid"}
 
 
@@ -506,11 +506,11 @@ test textTag-5.4 {TkTextTagCmd - "configure" option} -body {
 } -result {-underline {} {} {} yes}
 test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
-    .t tag configure x -underlinefg lightgreen
-    .t tag configure x -underlinefg
+    .t tag configure x -underlinecolor lightgreen
+    .t tag configure x -underlinecolor
 } -cleanup {
     .t tag delete x
-} -result {-underlinefg {} {} {} lightgreen}
+} -result {-underlinecolor {} {} {} lightgreen}
 test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -overstrike on
@@ -520,11 +520,11 @@ test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
 } -result {on}
 test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
-    .t tag configure x -overstrikefg lightgreen
-    .t tag configure x -overstrikefg
+    .t tag configure x -overstrikecolor lightgreen
+    .t tag configure x -overstrikecolor
 } -cleanup {
     .t tag delete x
-} -result {-overstrikefg {} {} {} lightgreen}
+} -result {-overstrikecolor {} {} {} lightgreen}
 test textTag-5.6 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -overstrike foo
 } -cleanup {
@@ -639,11 +639,11 @@ test textTag-5.20 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "4.2.3"}
 test textTag-5.21 {TkTextTagCmd - "configure" option} -body {
-    .t configure -selectborderwidth 2 -selectforeground blue \
+    .t configure -selectborderwidth 2 -selectcolor blue \
         -selectbackground black
-    .t tag configure sel -borderwidth 4 -foreground green -background yellow
+    .t tag configure sel -borderwidth 4 -color green -background yellow
     set x {}
-    foreach i {-selectborderwidth -selectforeground -selectbackground} {
+    foreach i {-selectborderwidth -selectcolor -selectbackground} {
         lappend x [lindex [.t configure $i] 4]
     }
     return $x
@@ -678,25 +678,25 @@ test textTag-5.23 {TkTextTagCmd - "configure" option} -body {
 } -result {yellow blue red white}
 test textTag-5.24 {TkTextTagCmd - "configure" option} -body {
     set x {}
-    # when [.t tag cget sel -selectforeground] == "", mirroring happens between
-    #     the text widget option -selectforeground
-    # and the tag         option -foreground
-    .t tag configure sel -selectforeground {}
-    .t configure -selectforeground black
-    .t tag configure sel -foreground yellow
-    lappend x [.t cget -selectforeground]
-    .t tag configure sel -foreground orange
-    .t configure -selectforeground blue
-    lappend x [.t tag cget sel -foreground]
-    # when [.t tag cget sel -selectforeground] != "", mirroring happens between
-    #     the text widget option -selectforeground
-    # and the tag         option -selectforeground
-    .t tag configure sel -selectforeground green
-    .t configure -selectforeground red
-    lappend x [.t tag cget sel -selectforeground]
-    .t configure -selectforeground black
-    .t tag configure sel -selectforeground white
-    lappend x [.t cget -selectforeground]
+    # when [.t tag cget sel -selectcolor] == "", mirroring happens between
+    #     the text widget option -selectcolor
+    # and the tag         option -color
+    .t tag configure sel -selectcolor {}
+    .t configure -selectcolor black
+    .t tag configure sel -color yellow
+    lappend x [.t cget -selectcolor]
+    .t tag configure sel -color orange
+    .t configure -selectcolor blue
+    lappend x [.t tag cget sel -color]
+    # when [.t tag cget sel -selectcolor] != "", mirroring happens between
+    #     the text widget option -selectcolor
+    # and the tag         option -selectcolor
+    .t tag configure sel -selectcolor green
+    .t configure -selectcolor red
+    lappend x [.t tag cget sel -selectcolor]
+    .t configure -selectcolor black
+    .t tag configure sel -selectcolor white
+    lappend x [.t cget -selectcolor]
     return $x
 } -result {yellow blue red white}
 
@@ -710,7 +710,7 @@ test textTag-6.3 {TkTextTagCmd - "delete" option} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     .t tag config x -background black
-    .t tag config y -foreground white
+    .t tag config y -color white
     .t tag config z -background black
     .t tag delete y z
     lsort [.t tag names]
@@ -721,7 +721,7 @@ test textTag-6.4 {TkTextTagCmd - "delete" option} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     .t tag config x -background black
-    .t tag config y -foreground white
+    .t tag config y -color white
     .t tag config z -background black
     eval .t tag delete [.t tag names]
     .t tag names

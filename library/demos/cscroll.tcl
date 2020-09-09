@@ -42,7 +42,7 @@ grid $w.hscroll -in $w.grid -padx 1 -pady 1 \
     -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
 
 
-set bg [lindex [$c config -bg] 4]
+set bg [lindex [$c config -background] 4]
 for {set i 0} {$i < 20} {incr i} {
     set x [expr {-10 + 3*$i}]
     for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {

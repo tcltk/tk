@@ -39,7 +39,7 @@ string.
 .SH EXAMPLE
 .PP
 .CS
-button .b \-bg [tk_chooseColor \-initialcolor gray \-title "Choose color"]
+button .b \-background [tk_chooseColor \-initialcolor gray \-title "Choose color"]
 .CE
 .SH KEYWORDS
 color, color selection, dialog

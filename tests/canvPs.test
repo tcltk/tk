@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 imageInit
 
 # canvas used in 1.* and 2.* test cases
-canvas .c -width 400 -height 300 -bd 2 -relief sunken
+canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 .c create rectangle 20 20 80 80 -fill red
 pack .c
 update

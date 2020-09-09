@@ -51,7 +51,7 @@ update idletasks
 set courier {Courier -10}
 set cx [font measure $courier 0]
 
-label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font fixed
+label .b.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left -text "0" -font fixed
 pack .b.l
 canvas .b.c -closeenough 0
 

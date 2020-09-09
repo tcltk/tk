@@ -23,7 +23,7 @@ pack $w.msg -side top
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
 
 proc colorrefresh {w col} {
-    $w configure -bg $col
+    $w configure -background $col
     if {[tk windowingsystem] eq "aqua"} {
 	# set highlightbackground of all buttons in $w
 	set l [list $w]

@@ -26,7 +26,7 @@ pack $btns -side bottom -fill x
 panedwindow $w.pane
 pack $w.pane -side top -expand yes -fill both -pady 2 -padx 2m
 
-label $w.pane.left  -text "This is the\nleft side"  -fg black -bg yellow
-label $w.pane.right -text "This is the\nright side" -fg black -bg cyan
+label $w.pane.left  -text "This is the\nleft side"  -fg black -background yellow
+label $w.pane.right -text "This is the\nright side" -fg black -background cyan
 
 $w.pane add $w.pane.left $w.pane.right

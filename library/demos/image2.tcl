@@ -59,7 +59,7 @@ proc loadImage {w x y} {
 	image2a configure -file $file
     }]} then {
 	# Mark the file as not loadable
-	$w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
+	$w.f.list itemconfigure @$x,$y -background \#c00000 -selectbackground \#ff0000
     }
 }
 

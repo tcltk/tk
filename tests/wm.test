@@ -525,7 +525,7 @@ test wm-deiconify-1.3 {usage} -returnCodes error -body {
 test wm-deiconify-1.4 {usage} -setup {
     destroy .icon
 } -body {
-    toplevel .icon -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background red
     wm iconwindow .t .icon
     wm deiconify .icon
 } -returnCodes error -cleanup {
@@ -934,7 +934,7 @@ test wm-iconwindow-1.4 {usage} -setup {
 test wm-iconwindow-1.5 {usage} -setup {
     destroy .icon .t2
 } -body {
-    toplevel .icon -width 50 -height 50 -bg green
+    toplevel .icon -width 50 -height 50 -background green
     toplevel .t2
     wm geom .t2 -0+0
     wm iconwindow .t2 .icon
@@ -948,7 +948,7 @@ test wm-iconwindow-2.1 {setting and reading values} -setup {
     set result {}
 } -body {
     lappend result [wm iconwindow .t]
-    toplevel .icon -width 50 -height 50 -bg green
+    toplevel .icon -width 50 -height 50 -background green
     wm iconwindow .t .icon
     lappend result [wm iconwindow .t]
     wm iconwindow .t {}
@@ -1564,7 +1564,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
 	stacking order} -body {
     toplevel .real -container 1
-    toplevel .embd -bg blue -use [winfo id .real]
+    toplevel .embd -background blue -use [winfo id .real]
     update
     wm stackorder .
 } -cleanup {
@@ -1616,7 +1616,7 @@ test wm-transient-1.4 {usage} -returnCodes error -body {
     deleteWindows
 } -result {can't iconify ".subject": it is a transient}
 test wm-transient-1.5 {usage} -returnCodes error -body {
-    toplevel .icon -bg blue
+    toplevel .icon -background blue
     toplevel .top
     wm iconwindow .top .icon
     toplevel .dummy
@@ -1625,7 +1625,7 @@ test wm-transient-1.5 {usage} -returnCodes error -body {
     deleteWindows
 } -result {can't make ".icon" a transient: it is an icon for .top}
 test wm-transient-1.6 {usage} -returnCodes error -body {
-    toplevel .icon -bg blue
+    toplevel .icon -background blue
     toplevel .top
     wm iconwindow .top .icon
     toplevel .dummy

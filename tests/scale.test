@@ -42,13 +42,13 @@ test scale-1.4 {configuration options} -body {
         .s configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.5 {configuration options} -body {
-    .s configure -bd 4
-    .s cget -bd
+    .s configure -borderwidth 4
+    .s cget -borderwidth
 } -cleanup {
-    .s configure -bd [lindex [.s configure -bd] 3]
+    .s configure -borderwidth [lindex [.s configure -borderwidth] 3]
 } -result 4
 test scale-1.6 {configuration options} -body {
-        .s configure -bd badValue
+        .s configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test scale-1.7 {configuration options} -body {
     .s configure -bigincrement 12.5
@@ -60,13 +60,13 @@ test scale-1.8 {configuration options} -body {
         .s configure -bigincrement badValue
 } -returnCodes error -result {expected floating-point number but got "badValue"}
 test scale-1.9 {configuration options} -body {
-    .s configure -bg #ff0000
-    .s cget -bg
+    .s configure -background #ff0000
+    .s cget -background
 } -cleanup {
-    .s configure -bg [lindex [.s configure -bg] 3]
+    .s configure -background [lindex [.s configure -background] 3]
 } -result {#ff0000}
 test scale-1.10 {configuration options} -body {
-        .s configure -bg non-existent
+        .s configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.11 {configuration options} -body {
     .s configure -borderwidth 1.3
@@ -367,8 +367,8 @@ test scale-3.7 {ScaleWidgetCmd procedure, configure option} -body {
     .s configure -foo
 } -returnCodes error -result {unknown option "-foo"}
 test scale-3.8 {ScaleWidgetCmd procedure, configure option} -body {
-    .s configure -borderwidth 2 -bg
-} -returnCodes error -result {value for "-bg" missing}
+    .s configure -borderwidth 2 -background
+} -returnCodes error -result {value for "-background" missing}
 test scale-3.9 {ScaleWidgetCmd procedure, coords option} -body {
     .s coords a b
 } -returnCodes error -result {wrong # args: should be ".s coords ?value?"}
@@ -738,7 +738,7 @@ test scale-7.4 {ComputeScaleGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 1000 -orient vertical -showvalue 0 -bd 5 \
+    scale .s -from 0 -to 1000 -orient vertical -showvalue 0 -borderwidth 5 \
         -relief sunken
     pack .s
     update
@@ -786,7 +786,7 @@ test scale-7.7 {ComputeScaleGeometry procedure} -constraints {
 test scale-7.8 {ComputeScaleGeometry procedure} -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 1000 -orient horizontal -showvalue 0 -bd 5 \
+    scale .s -from 0 -to 1000 -orient horizontal -showvalue 0 -borderwidth 5 \
         -relief raised -highlightthickness 2
     pack .s
     update
@@ -801,7 +801,7 @@ test scale-8.1 {ScaleElement procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient vertical -bd 1 -tick 20 -length 300
+    scale .s -from 0 -to 100 -orient vertical -borderwidth 1 -tick 20 -length 300
     pack .s
     .s set 30
     update
@@ -815,7 +815,7 @@ test scale-8.2 {ScaleElement procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient vertical -bd 1 -tick 20 -length 300
+    scale .s -from 0 -to 100 -orient vertical -borderwidth 1 -tick 20 -length 300
     pack .s
     .s set 30
     update
@@ -829,7 +829,7 @@ test scale-8.3 {ScaleElement procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient vertical -bd 1 -tick 20 -length 300
+    scale .s -from 0 -to 100 -orient vertical -borderwidth 1 -tick 20 -length 300
     pack .s
     .s set 30
     update
@@ -841,7 +841,7 @@ test scale-8.3 {ScaleElement procedure} -constraints {
 test scale-8.4 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient vertical -bd 4 -width 10 \
+    scale .s -from 0 -to 100 -orient vertical -borderwidth 4 -width 10 \
         -highlightthickness 1 -length 300 -showvalue 0
     pack .s
     .s set 30
@@ -856,7 +856,7 @@ test scale-8.5 {ScaleElement procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient horizontal -bd 1 \
+    scale .s -from 0 -to 100 -orient horizontal -borderwidth 1 \
         -highlightthickness 2 -tick 20 -sliderlength 20 \
         -length 200 -label Test
     pack .s
@@ -872,7 +872,7 @@ test scale-8.6 {ScaleElement procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient horizontal -bd 2 \
+    scale .s -from 0 -to 100 -orient horizontal -borderwidth 2 \
         -highlightthickness 1 -tick 20 -length 200
     pack .s
     .s set 30
@@ -885,7 +885,7 @@ test scale-8.6 {ScaleElement procedure} -constraints {
 test scale-8.7 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient horizontal -bd 4 -highlightthickness 2 \
+    scale .s -from 0 -to 100 -orient horizontal -borderwidth 4 -highlightthickness 2 \
         -length 200 -width 10 -showvalue 0
     pack .s
     .s set 30
@@ -898,7 +898,7 @@ test scale-8.7 {ScaleElement procedure} -setup {
 test scale-8.8 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient horizontal -bd 1 -highlightthickness 2 \
+    scale .s -from 0 -to 100 -orient horizontal -borderwidth 1 -highlightthickness 2 \
         -tick 20 -sliderlength 20 -length 200 -label Test -showvalue 0
     pack .s
     .s set 30
@@ -911,7 +911,7 @@ test scale-8.8 {ScaleElement procedure} -setup {
 test scale-8.9 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -orient horizontal -bd 1 -highlightthickness 2 \
+    scale .s -from 0 -to 100 -orient horizontal -borderwidth 1 -highlightthickness 2 \
         -tick 20 -sliderlength 20 -length 200 -label Test -showvalue 0
     pack .s
     .s set 80
@@ -927,47 +927,47 @@ test scale-8.9 {ScaleElement procedure} -setup {
 destroy .s
 pack [scale .s]
 test scale-9.1 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get 46 0
 } -result 0
 test scale-9.2 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 9
 } -result 0
 test scale-9.3 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 12
 } -result 1
 test scale-9.4 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 46
 } -result 35
 test scale-9.5 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 110
 } -result 99
 test scale-9.6 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 111
 } -result 100
 test scale-9.7 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 112
 } -result 100
 test scale-9.8 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2
     update
     .s get -10 154
 } -result 100
 test scale-9.9 {PixelToValue procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal
     update
     .s get 76 152
@@ -980,7 +980,7 @@ test scale-10.1 {ValueToPixel procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 0 -to 100 -sliderlength 20 -length 124 -bd 2 \
+    scale .s -from 0 -to 100 -sliderlength 20 -length 124 -borderwidth 2 \
         -orient horizontal -label Test -tick 20
     pack .s
     update
@@ -993,7 +993,7 @@ test scale-10.2 {ValueToPixel procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    scale .s -from 100 -to 0 -sliderlength 20 -length 122 -bd 1 \
+    scale .s -from 100 -to 0 -sliderlength 20 -length 122 -borderwidth 1 \
         -orient vertical -label Test -tick 20
     pack .s
     update
@@ -1030,10 +1030,10 @@ test scale-11.2 {ScaleEventProc procedure} -setup {
     deleteWindows
     set x {}
 } -body {
-    scale .s1 -bg #543210
+    scale .s1 -background #543210
     rename .s1 .s2
     lappend x [winfo children .]
-    lappend x [.s2 cget -bg]
+    lappend x [.s2 cget -background]
     destroy .s1
     lappend x [info command .s*] [winfo children .]
 } -cleanup {
@@ -1105,78 +1105,78 @@ destroy .s
 pack [scale .s]
 update
 test scale-14.1 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result 72
 test scale-14.2 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 100 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result 76
 
 test scale-14.3 {RoundValueToResolution procedure} -body {
-    .s configure -from 100 -to 0 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 100 -to 0 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result 28
 test scale-14.4 {RoundValueToResolution procedure} -body {
-    .s configure -from 100 -to 0 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 100 -to 0 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result 24
 
 test scale-14.5 {RoundValueToResolution procedure} -body {
-    .s configure -from -100 -to 0 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from -100 -to 0 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result -28
 test scale-14.6 {RoundValueToResolution procedure} -body {
-    .s configure -from -100 -to 0 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from -100 -to 0 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result -24
 
 test scale-14.7 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to -100 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to -100 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result -72
 test scale-14.8 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to -100 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to -100 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result -76
 
 test scale-14.9 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 0
     update
     .s get 84 152
 } -result {1.64}
 test scale-14.10 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 0
     update
     .s get 86 152
 } -result {1.69}
 
 test scale-14.11 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to 225 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 225 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 0 -digits 5
     update
     .s get 84 152
 } -result {164.25}
 test scale-14.12 {RoundValueToResolution procedure} -body {
-    .s configure -from 0 -to 225 -sliderlength 10 -length 114 -bd 2 \
+    .s configure -from 0 -to 225 -sliderlength 10 -length 114 -borderwidth 2 \
         -orient horizontal -resolution 0 -digits 5
     update
     .s get 86 152
@@ -1200,7 +1200,7 @@ test scale-14a.1 {RoundValueToResolution, RoundIntervalToResolution procedures} 
     pack [scale .s -orient horizontal]
     update
 } -body {
-    .s configure -length 400 -bd 0 -from 1 -to 9 -resolution 2 -tickinterval 1
+    .s configure -length 400 -borderwidth 0 -from 1 -to 9 -resolution 2 -tickinterval 1
     update
     .s get 200 0
 } -cleanup {
@@ -1210,7 +1210,7 @@ test scale-14a.2 {RoundValueToResolution, RoundIntervalToResolution procedures} 
     pack [scale .s -orient horizontal]
     update
 } -body {
-    .s configure -length 400 -bd 0 -from -1.5 -to 1.5 -resolution 1 \
+    .s configure -length 400 -borderwidth 0 -from -1.5 -to 1.5 -resolution 1 \
             -tickinterval 1 -digits 2
     update
     .s get 250 0

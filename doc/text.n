@@ -408,7 +408,7 @@ widget commands.
 .PP
 Tags serve three purposes in text widgets. First, they control the way
 information is displayed on the screen. By default, characters are displayed
-as determined by the \fB\-background\fR, \fB\-font\fR, and \fB\-foreground\fR
+as determined by the \fB\-background\fR, \fB\-font\fR, and \fB\-color\fR
 options for the text widget. However, display options may be associated with
 individual tags using the
 .QW "\fIpathName \fBtag configure\fR"
@@ -421,7 +421,7 @@ options are currently supported for tags:
 \fIColor\fR specifies the background color to use for characters associated
 with the tag. It may have any of the forms accepted by \fBTk_GetColor\fR.
 .TP
-\fB\-bgstipple \fIbitmap\fR
+\fB\-backgroundstipple \fIbitmap\fR
 .
 \fIBitmap\fR specifies a bitmap that is used as a stipple pattern for the
 background. It may have any of the forms accepted by \fBTk_GetBitmap\fR. If
@@ -440,7 +440,7 @@ conjunction with the \fB\-relief\fR option to provide the desired border.
 (characters, images, embedded windows, etc.) is not displayed and takes no
 space on screen, but further on behaves just as normal data.
 .TP
-\fB\-fgstipple \fIbitmap\fR
+\fB\-stipple \fIbitmap\fR
 .
 \fIBitmap\fR specifies a bitmap that is used as a stipple pattern when drawing
 text and other foreground information such as underlines. It may have any of
@@ -453,7 +453,7 @@ used.
 \fIFontName\fR is the name of a font to use for drawing characters. It may
 have any of the forms accepted by \fBTk_GetFont\fR.
 .TP
-\fB\-foreground \fIcolor\fR
+\fB\-color \fIcolor\fR
 .
 \fIColor\fR specifies the color to use when drawing text and other foreground
 information such as underlines. It may have any of the forms accepted by
@@ -510,12 +510,12 @@ Specifies whether or not to draw a horizontal rule through the middle of
 characters. \fIBoolean\fR may have any of the forms accepted by
 \fBTcl_GetBoolean\fR.
 .TP
-\fB\-overstrikefg \fIcolor\fR
+\fB\-overstrikecolor \fIcolor\fR
 .
 \fIColor\fR specifies the color to use when displaying the overstrike. It may
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
-specified by the \fB\-foreground\fR tag option is used.
+specified by the \fB\-color\fR tag option is used.
 .TP
 \fB\-relief \fIrelief\fR
 .
@@ -550,11 +550,11 @@ items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 string, then the color specified by the \fB\-background\fR tag option is
 used.
 .TP
-\fB\-selectforeground \fIcolor\fR
-\fIColor\fR specifies the foreground color to use when displaying selected
+\fB\-selectcolor \fIcolor\fR
+\fIColor\fR specifies the color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
-string, then the color specified by the \fB\-foreground\fR tag option is
+string, then the color specified by the \fB\-color\fR tag option is
 used.
 .TP
 \fB\-spacing1 \fIpixels\fR
@@ -599,12 +599,12 @@ unspecified for the tag (the default).
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
-\fB\-underlinefg \fIcolor\fR
+\fB\-underlinecolor \fIcolor\fR
 .
 \fIColor\fR specifies the color to use when displaying the underline. It may
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
-specified by the \fB\-foreground\fR tag option is used.
+specified by the \fB\-color\fR tag option is used.
 .TP
 \fB\-wrap \fImode\fR
 .
@@ -852,9 +852,9 @@ The \fBsel\fR tag is automatically defined when a text widget is created, and
 it may not be deleted with the
 .QW "\fIpathName \fBtag delete\fR"
 widget command. Furthermore, the \fB\-selectbackground\fR,
-\fB\-selectborderwidth\fR, and \fB\-selectforeground\fR options for the text
+\fB\-selectborderwidth\fR, and \fB\-selectcolor\fR options for the text
 widget are tied to the \fB\-background\fR, \fB\-borderwidth\fR, and
-\fB\-foreground\fR options for the \fBsel\fR tag: changes in either will
+\fB\-color\fR options for the \fBsel\fR tag: changes in either will
 automatically be reflected in the other. Also the
 \fB\-inactiveselectbackground\fR option for the text widget is used instead of
 \fB\-selectbackground\fR when the text widget does not have the focus. This

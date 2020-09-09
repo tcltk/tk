@@ -219,14 +219,14 @@ testConstraint testwrapper   [llength [info commands testwrapper]]
 # constraint to see what sort of fonts are available
 testConstraint fonts 1
 destroy .e
-entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
+entry .e -width 0 -font {Helvetica -12} -borderwidth 1 -highlightthickness 1
 .e insert end a.bcd
 if {([winfo reqwidth .e] != 37) || ([winfo reqheight .e] != 20)} {
     testConstraint fonts 0
 }
 destroy .e
 destroy .t
-text .t -width 80 -height 20 -font {Times -14} -bd 1
+text .t -width 80 -height 20 -font {Times -14} -borderwidth 1
 pack .t
 .t insert end "This is\na dot."
 update

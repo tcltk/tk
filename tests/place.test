@@ -17,11 +17,11 @@ testConstraint memory [llength [info commands memory]]
 # few of the features are tested.
 
 # Widgets used in tests 1.* - 8.*
-toplevel .t -width 300 -height 200 -bd 0
+toplevel .t -width 300 -height 200 -borderwidth 0
 wm geom .t +0+0
-frame .t.f -width 154 -height 84 -bd 2 -relief raised
+frame .t.f -width 154 -height 84 -borderwidth 2 -relief raised
 place .t.f -x 48 -y 38
-frame .t.f2 -width 30 -height 60 -bd 2 -relief raised
+frame .t.f2 -width 30 -height 60 -borderwidth 2 -relief raised
 update
 
 test place-1.1 {Tk_PlaceCmd procedure, "info" option} -setup {
@@ -218,7 +218,7 @@ test place-7.5 {ReconfigurePlacement procedure, position rounding} -setup {
 test place-7.6 {ReconfigurePlacement procedure, position rounding} -setup {
     destroy .t.f3
 } -body {
-    frame .t.f3 -width 100 -height 100 -bg #f00000 -bd 0
+    frame .t.f3 -width 100 -height 100 -background #f00000 -borderwidth 0
     place .t.f3 -x 0 -y 0
     raise .t.f2
     place forget .t.f2

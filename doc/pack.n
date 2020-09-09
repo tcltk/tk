@@ -275,8 +275,8 @@ the stacking order of either the container or the content.
 .PP
 .CS
 # Make the widgets
-label .t \-text "This widget is at the top"    \-bg red
-label .b \-text "This widget is at the bottom" \-bg green
+label .t \-text "This widget is at the top"    \-background red
+label .b \-text "This widget is at the bottom" \-background green
 label .l \-text "Left\enHand\enSide"
 label .r \-text "Right\enHand\enSide"
 text .mid

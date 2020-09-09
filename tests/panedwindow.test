@@ -26,23 +26,23 @@ test panedwindow-1.1 {configuration options: -background (good)} -body {
 test panedwindow-1.2 {configuration options: -background (bad)} -body {
     .p configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
-test panedwindow-1.3 {configuration options: -bd (good)} -body {
-    .p configure -bd 4
-    list [lindex [.p configure -bd] 4] [.p cget -bd]
+test panedwindow-1.3 {configuration options: -borderwidth (good)} -body {
+    .p configure -borderwidth 4
+    list [lindex [.p configure -borderwidth] 4] [.p cget -borderwidth]
 } -cleanup {
-    .p configure -bd [lindex [.p configure -bd] 3]
+    .p configure -borderwidth [lindex [.p configure -borderwidth] 3]
 } -result {4 4}
-test panedwindow-1.4 {configuration options: -bd (bad)} -body {
-    .p configure -bd badValue
+test panedwindow-1.4 {configuration options: -borderwidth (bad)} -body {
+    .p configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
-test panedwindow-1.5 {configuration options: -bg (good)} -body {
-    .p configure -bg #ff0000
-    list [lindex [.p configure -bg] 4] [.p cget -bg]
+test panedwindow-1.5 {configuration options: -background (good)} -body {
+    .p configure -background #ff0000
+    list [lindex [.p configure -background] 4] [.p cget -background]
 } -cleanup {
-    .p configure -bg [lindex [.p configure -bg] 3]
+    .p configure -background [lindex [.p configure -background] 3]
 } -result {{#ff0000} #ff0000}
-test panedwindow-1.6 {configuration options: -bg (bad)} -body {
-    .p configure -bg non-existent
+test panedwindow-1.6 {configuration options: -background (bad)} -body {
+    .p configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test panedwindow-1.7 {configuration options: -borderwidth (good)} -body {
     .p configure -borderwidth 1.3
@@ -736,7 +736,7 @@ test panedwindow-10.9 {sash place subcommand, respects minsize} -setup {
 	deleteWindows
 } -body {
     panedwindow .p
-    .p add [frame .f -width 20 -height 20 -bg pink]
+    .p add [frame .f -width 20 -height 20 -background pink]
     .p sash place 0 2 0
 } -cleanup {
 	deleteWindows
@@ -959,7 +959,7 @@ test panedwindow-12.3 {horizontal panedwindow lays out widgets properly} -setup 
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
     foreach {win color} {.p.f blue .p.f2 green} {
-	    .p add [frame $win -width 20 -height 20 -bg $color] -padx 10 -pady 5 \
+	    .p add [frame $win -width 20 -height 20 -background $color] -padx 10 -pady 5 \
             -sticky ""
     }
     pack .p
@@ -1320,7 +1320,7 @@ test panedwindow-15.1 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky {}
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky {}
     place .p -width 40 -height 40
     update
     list {} [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1331,7 +1331,7 @@ test panedwindow-15.2 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky n
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky n
     place .p -width 40 -height 40
     update
     list n [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1342,7 +1342,7 @@ test panedwindow-15.3 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky s
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky s
     place .p -width 40 -height 40
     update
     list s [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1353,7 +1353,7 @@ test panedwindow-15.4 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky e
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky e
     place .p -width 40 -height 40
     update
     list e [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1364,7 +1364,7 @@ test panedwindow-15.5 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky w
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky w
     place .p -width 40 -height 40
     update
     list w [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1375,7 +1375,7 @@ test panedwindow-15.6 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky ns
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky ns
     place .p -width 40 -height 40
     update
     list ns [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1386,7 +1386,7 @@ test panedwindow-15.7 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky ew
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky ew
     place .p -width 40 -height 40
     update
     list ew [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1397,7 +1397,7 @@ test panedwindow-15.8 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky nw
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky nw
     place .p -width 40 -height 40
     update
     list nw [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1408,7 +1408,7 @@ test panedwindow-15.9 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky ne
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky ne
     place .p -width 40 -height 40
     update
     list ne [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1419,7 +1419,7 @@ test panedwindow-15.10 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky se
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky se
     place .p -width 40 -height 40
     update
     list se [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1430,7 +1430,7 @@ test panedwindow-15.11 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky sw
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky sw
     place .p -width 40 -height 40
     update
     list sw [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1441,7 +1441,7 @@ test panedwindow-15.12 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky nse
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky nse
     place .p -width 40 -height 40
     update
     list nse [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1452,7 +1452,7 @@ test panedwindow-15.13 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky nsw
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky nsw
     place .p -width 40 -height 40
     update
     list nsw [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1463,7 +1463,7 @@ test panedwindow-15.14 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky sew
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky sew
     place .p -width 40 -height 40
     update
     list sew [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1474,7 +1474,7 @@ test panedwindow-15.15 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky new
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky new
     place .p -width 40 -height 40
     update
     list new [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1485,7 +1485,7 @@ test panedwindow-15.16 {panedwindow sticky works} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
-    .p add [frame .p.f -height 20 -width 20 -bg red] -sticky news
+    .p add [frame .p.f -height 20 -width 20 -background red] -sticky news
     place .p -width 40 -height 40
     update
     list news [winfo x .p.f] [winfo y .p.f]  [winfo width .p.f] [winfo height .p.f]
@@ -1498,7 +1498,7 @@ test panedwindow-16.1 {setting minsize when pane is too small snaps width} -setu
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .p.f -height 20 -width 20 -bg red]
+    .p add [frame .p.f -height 20 -width 20 -background red]
     set result [winfo reqwidth .p]
     .p paneconfigure .p.f -minsize 40
     lappend result [winfo reqwidth .p]
@@ -1513,7 +1513,7 @@ test panedwindow-17.1 {MoveSash, move right} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Get the requested width of the paned window
@@ -1534,7 +1534,7 @@ test panedwindow-17.2 {MoveSash, move right (unmapped) clipped by reqwidth} -set
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 0 100 0
@@ -1550,7 +1550,7 @@ test panedwindow-17.3 {MoveSash, move right (mapped, width < reqwidth) clipped b
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Put the panedwindow up on the display and give it a width < reqwidth
@@ -1570,7 +1570,7 @@ test panedwindow-17.4 {MoveSash, move right (mapped, width > reqwidth) clipped b
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Put the panedwindow up on the display and give it a width > reqwidth
@@ -1590,7 +1590,7 @@ test panedwindow-17.5 {MoveSash, move right respects minsize} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 100 0
@@ -1606,7 +1606,7 @@ test panedwindow-17.6 {MoveSash, move right respects minsize} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 100 0
@@ -1621,7 +1621,7 @@ test panedwindow-17.7 {MoveSash, move right pushes other sashes} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 0 100 0
@@ -1637,7 +1637,7 @@ test panedwindow-17.8 {MoveSash, move right pushes other sashes, respects minsiz
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 100 0
@@ -1653,7 +1653,7 @@ test panedwindow-17.9 {MoveSash, move right respects minsize, exludes pad} -setu
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize 10 -padx 5
     }
 
@@ -1670,7 +1670,7 @@ test panedwindow-17.10 {MoveSash, move right, negative minsize becomes 0} -setup
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize -50
     }
 
@@ -1688,7 +1688,7 @@ test panedwindow-17.11 {MoveSash, move left} -setup {
     set result {}
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Get the requested width of the paned window
@@ -1709,7 +1709,7 @@ test panedwindow-17.12 {MoveSash, move left, can't move outside of window} -setu
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 0 -100 0
@@ -1725,7 +1725,7 @@ test panedwindow-17.13 {MoveSash, move left respects minsize} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 0 0
@@ -1741,7 +1741,7 @@ test panedwindow-17.14 {MoveSash, move left respects minsize} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 1 0 0
@@ -1756,7 +1756,7 @@ test panedwindow-17.15 {MoveSash, move left pushes other sashes} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 1 0 0
@@ -1772,7 +1772,7 @@ test panedwindow-17.16 {MoveSash, move left pushes other sashes, respects minsiz
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 1 0 0
@@ -1788,7 +1788,7 @@ test panedwindow-17.17 {MoveSash, move left respects minsize, exludes pad} -setu
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize 10 -padx 5
     }
 
@@ -1805,7 +1805,7 @@ test panedwindow-17.18 {MoveSash, move left, negative minsize becomes 0} -setup 
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue green} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize -50
     }
 
@@ -1826,7 +1826,7 @@ test panedwindow-18.1 {MoveSash, move down} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Get the requested width of the paned window
@@ -1848,7 +1848,7 @@ test panedwindow-18.2 {MoveSash, move down (unmapped) clipped by reqheight} -set
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 0 0 100
@@ -1865,7 +1865,7 @@ test panedwindow-18.3 {MoveSash, move down (mapped, height < reqheight) clipped 
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Put the panedwindow up on the display and give it a height < reqheight
@@ -1886,7 +1886,7 @@ test panedwindow-18.4 {MoveSash, move down (mapped, height > reqheight) clipped 
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Put the panedwindow up on the display and give it a width > reqwidth
@@ -1907,7 +1907,7 @@ test panedwindow-18.5 {MoveSash, move down respects minsize} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 0 100
@@ -1924,7 +1924,7 @@ test panedwindow-18.6 {MoveSash, move down respects minsize} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 0 100
@@ -1941,7 +1941,7 @@ test panedwindow-18.7 {MoveSash, move down pushes other sashes} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 0 0 100
@@ -1958,7 +1958,7 @@ test panedwindow-18.8 {MoveSash, move down pushes other sashes, respects minsize
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 0 100
@@ -1975,7 +1975,7 @@ test panedwindow-18.9 {MoveSash, move down respects minsize, exludes pad} -setup
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize 10 -pady 5
     }
 
@@ -1993,7 +1993,7 @@ test panedwindow-18.10 {MoveSash, move right, negative minsize becomes 0} -setup
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize -50
     }
 
@@ -2012,7 +2012,7 @@ test panedwindow-18.11 {MoveSash, move up} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     # Get the requested width of the paned window
@@ -2034,7 +2034,7 @@ test panedwindow-18.12 {MoveSash, move up, can't move outside of window} -setup 
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 0 0 -100
@@ -2051,7 +2051,7 @@ test panedwindow-18.13 {MoveSash, move up respects minsize} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 0 0 0
@@ -2068,7 +2068,7 @@ test panedwindow-18.14 {MoveSash, move up respects minsize} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 1 0 0
@@ -2084,7 +2084,7 @@ test panedwindow-18.15 {MoveSash, move up pushes other sashes} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew
     }
 
     .p sash place 1 0 0
@@ -2101,7 +2101,7 @@ test panedwindow-18.16 {MoveSash, move up pushes other sashes, respects minsize}
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] -sticky nsew -minsize 10
+	    .p add [frame $w -height 20 -width 20 -background $c] -sticky nsew -minsize 10
     }
 
     .p sash place 1 0 0
@@ -2118,7 +2118,7 @@ test panedwindow-18.17 {MoveSash, move up respects minsize, exludes pad} -setup 
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize 10 -pady 5
     }
 
@@ -2136,7 +2136,7 @@ test panedwindow-18.18 {MoveSash, move up, negative minsize becomes 0} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue green} {
-	    .p add [frame $w -height 20 -width 20 -bg $c] \
+	    .p add [frame $w -height 20 -width 20 -background $c] \
 		    -sticky nsew -minsize -50
     }
 
@@ -2159,7 +2159,7 @@ test panedwindow-19.1 {ComputeGeometry, reqheight taken from widgets} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
     foreach w {.f1 .f2 .f3} {
-	    .p add [frame $w -width 20 -height 20 -bg blue]
+	    .p add [frame $w -width 20 -height 20 -background blue]
     }
     set result [list [list [winfo reqwidth .p] [winfo reqheight .p]]]
     .f3 configure -height 40
@@ -2173,7 +2173,7 @@ test panedwindow-19.2 {ComputeGeometry, reqheight taken from widgets} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
     foreach w {.f1 .f2 .f3} {
-	    .p add [frame $w -width 20 -height 20 -bg blue]
+	    .p add [frame $w -width 20 -height 20 -background blue]
     }
     set result [list [list [winfo reqwidth .p] [winfo reqheight .p]]]
     .p paneconfigure .f3 -height 40
@@ -2187,7 +2187,7 @@ test panedwindow-19.3 {ComputeGeometry, reqheight taken from widgets} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0
     foreach w {.f1 .f2 .f3} {
-	    .p add [frame $w -width 20 -height 20 -bg blue] -pady 20
+	    .p add [frame $w -width 20 -height 20 -background blue] -pady 20
     }
     set result [list [list [winfo reqwidth .p] [winfo reqheight .p]]]
     .p paneconfigure .f3 -height 40
@@ -2202,7 +2202,7 @@ test panedwindow-19.4 {ComputeGeometry, reqwidth taken from widgets} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0 \
             -orient vertical
     foreach w {.f1 .f2 .f3} {
-	.p add [frame $w -width 20 -height 20 -bg blue]
+	.p add [frame $w -width 20 -height 20 -background blue]
     }
     set result [list [list [winfo reqwidth .p] [winfo reqheight .p]]]
     .f3 configure -width 40
@@ -2217,7 +2217,7 @@ test panedwindow-19.5 {ComputeGeometry, reqwidth taken from widgets} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0 \
             -orient vertical
     foreach w {.f1 .f2 .f3} {
-	.p add [frame $w -width 20 -height 20 -bg blue]
+	.p add [frame $w -width 20 -height 20 -background blue]
     }
     set result [list [list [winfo reqwidth .p] [winfo reqheight .p]]]
     .p paneconfigure .f3 -width 40
@@ -2232,7 +2232,7 @@ test panedwindow-19.6 {ComputeGeometry, reqwidth taken from widgets} -setup {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 0 \
             -orient vertical
     foreach w {.f1 .f2 .f3} {
-	.p add [frame $w -width 20 -height 20 -bg blue] -padx 20
+	.p add [frame $w -width 20 -height 20 -background blue] -padx 20
     }
     set result [list [list [winfo reqwidth .p] [winfo reqheight .p]]]
     .p paneconfigure .f3 -width 40
@@ -2249,7 +2249,7 @@ test panedwindow-19.7 {ComputeGeometry, one pane, reqsize set properly} -setup {
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -2261,7 +2261,7 @@ test panedwindow-19.8 {ComputeGeometry, three panes, reqsize set properly} -setu
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2274,7 +2274,7 @@ test panedwindow-19.9 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2288,7 +2288,7 @@ test panedwindow-19.10 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -2312,7 +2312,7 @@ test panedwindow-19.11 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2326,7 +2326,7 @@ test panedwindow-19.12 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -2341,7 +2341,7 @@ test panedwindow-19.13 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2356,7 +2356,7 @@ test panedwindow-19.14 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -2378,7 +2378,7 @@ test panedwindow-19.15 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -2390,7 +2390,7 @@ test panedwindow-19.16 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2403,7 +2403,7 @@ test panedwindow-19.17 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2417,7 +2417,7 @@ test panedwindow-19.18 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -2441,7 +2441,7 @@ test panedwindow-19.19 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2455,7 +2455,7 @@ test panedwindow-19.20 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -2470,7 +2470,7 @@ test panedwindow-19.21 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2485,7 +2485,7 @@ test panedwindow-19.22 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -2507,7 +2507,7 @@ test panedwindow-19.23 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -2519,7 +2519,7 @@ test panedwindow-19.24 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2532,7 +2532,7 @@ test panedwindow-19.25 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2546,7 +2546,7 @@ test panedwindow-19.26 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -2570,7 +2570,7 @@ test panedwindow-19.27 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2584,7 +2584,7 @@ test panedwindow-19.28 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -2599,7 +2599,7 @@ test panedwindow-19.29 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2614,7 +2614,7 @@ test panedwindow-19.30 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -2636,7 +2636,7 @@ test panedwindow-19.31 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -2648,7 +2648,7 @@ test panedwindow-19.32 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2661,7 +2661,7 @@ test panedwindow-19.33 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2675,7 +2675,7 @@ test panedwindow-19.34 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -2699,7 +2699,7 @@ test panedwindow-19.35 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 0 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2713,7 +2713,7 @@ test panedwindow-19.36 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -2728,7 +2728,7 @@ test panedwindow-19.37 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2743,7 +2743,7 @@ test panedwindow-19.38 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -2765,7 +2765,7 @@ test panedwindow-19.39 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -2777,7 +2777,7 @@ test panedwindow-19.40 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2790,7 +2790,7 @@ test panedwindow-19.41 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2804,7 +2804,7 @@ test panedwindow-19.42 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -2828,7 +2828,7 @@ test panedwindow-19.43 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2842,7 +2842,7 @@ test panedwindow-19.44 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -2857,7 +2857,7 @@ test panedwindow-19.45 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2872,7 +2872,7 @@ test panedwindow-19.46 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -2894,7 +2894,7 @@ test panedwindow-19.47 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -2906,7 +2906,7 @@ test panedwindow-19.48 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2919,7 +2919,7 @@ test panedwindow-19.49 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -2933,7 +2933,7 @@ test panedwindow-19.50 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -2957,7 +2957,7 @@ test panedwindow-19.51 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -2971,7 +2971,7 @@ test panedwindow-19.52 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -2986,7 +2986,7 @@ test panedwindow-19.53 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3001,7 +3001,7 @@ test panedwindow-19.54 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3023,7 +3023,7 @@ test panedwindow-19.55 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3035,7 +3035,7 @@ test panedwindow-19.56 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3048,7 +3048,7 @@ test panedwindow-19.57 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3062,7 +3062,7 @@ test panedwindow-19.58 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3086,7 +3086,7 @@ test panedwindow-19.59 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3100,7 +3100,7 @@ test panedwindow-19.60 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3115,7 +3115,7 @@ test panedwindow-19.61 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3130,7 +3130,7 @@ test panedwindow-19.62 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3152,7 +3152,7 @@ test panedwindow-19.63 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3164,7 +3164,7 @@ test panedwindow-19.64 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3177,7 +3177,7 @@ test panedwindow-19.65 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3191,7 +3191,7 @@ test panedwindow-19.66 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3215,7 +3215,7 @@ test panedwindow-19.67 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 0 -sashpad 5 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3229,7 +3229,7 @@ test panedwindow-19.68 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3244,7 +3244,7 @@ test panedwindow-19.69 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3259,7 +3259,7 @@ test panedwindow-19.70 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3281,7 +3281,7 @@ test panedwindow-19.71 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3293,7 +3293,7 @@ test panedwindow-19.72 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3306,7 +3306,7 @@ test panedwindow-19.73 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3320,7 +3320,7 @@ test panedwindow-19.74 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3344,7 +3344,7 @@ test panedwindow-19.75 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3358,7 +3358,7 @@ test panedwindow-19.76 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3373,7 +3373,7 @@ test panedwindow-19.77 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3388,7 +3388,7 @@ test panedwindow-19.78 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3410,7 +3410,7 @@ test panedwindow-19.79 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3422,7 +3422,7 @@ test panedwindow-19.80 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3435,7 +3435,7 @@ test panedwindow-19.81 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3449,7 +3449,7 @@ test panedwindow-19.82 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3473,7 +3473,7 @@ test panedwindow-19.83 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3487,7 +3487,7 @@ test panedwindow-19.84 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3502,7 +3502,7 @@ test panedwindow-19.85 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3517,7 +3517,7 @@ test panedwindow-19.86 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3539,7 +3539,7 @@ test panedwindow-19.87 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3551,7 +3551,7 @@ test panedwindow-19.88 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3564,7 +3564,7 @@ test panedwindow-19.89 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3578,7 +3578,7 @@ test panedwindow-19.90 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3602,7 +3602,7 @@ test panedwindow-19.91 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3616,7 +3616,7 @@ test panedwindow-19.92 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3631,7 +3631,7 @@ test panedwindow-19.93 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3646,7 +3646,7 @@ test panedwindow-19.94 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup 
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3668,7 +3668,7 @@ test panedwindow-19.95 {ComputeGeometry, one pane, reqsize set properly} -setup 
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3680,7 +3680,7 @@ test panedwindow-19.96 {ComputeGeometry, three panes, reqsize set properly} -set
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3693,7 +3693,7 @@ test panedwindow-19.97 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3707,7 +3707,7 @@ test panedwindow-19.98 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3731,7 +3731,7 @@ test panedwindow-19.99 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 0 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3745,7 +3745,7 @@ test panedwindow-19.100 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3760,7 +3760,7 @@ test panedwindow-19.101 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3775,7 +3775,7 @@ test panedwindow-19.102 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3797,7 +3797,7 @@ test panedwindow-19.103 {ComputeGeometry, one pane, reqsize set properly} -setup
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3809,7 +3809,7 @@ test panedwindow-19.104 {ComputeGeometry, three panes, reqsize set properly} -se
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3822,7 +3822,7 @@ test panedwindow-19.105 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3836,7 +3836,7 @@ test panedwindow-19.106 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3860,7 +3860,7 @@ test panedwindow-19.107 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3874,7 +3874,7 @@ test panedwindow-19.108 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -3889,7 +3889,7 @@ test panedwindow-19.109 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3904,7 +3904,7 @@ test panedwindow-19.110 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup
         -sashwidth 0 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -3926,7 +3926,7 @@ test panedwindow-19.111 {ComputeGeometry, one pane, reqsize set properly} -setup
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -3938,7 +3938,7 @@ test panedwindow-19.112 {ComputeGeometry, three panes, reqsize set properly} -se
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -3951,7 +3951,7 @@ test panedwindow-19.113 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -3965,7 +3965,7 @@ test panedwindow-19.114 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 0 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -3989,7 +3989,7 @@ test panedwindow-19.115 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -orient vertical -sashwidth 0 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -4003,7 +4003,7 @@ test panedwindow-19.116 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -4018,7 +4018,7 @@ test panedwindow-19.117 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -4033,7 +4033,7 @@ test panedwindow-19.118 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup
         -sashwidth 0 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -4055,7 +4055,7 @@ test panedwindow-19.119 {ComputeGeometry, one pane, reqsize set properly} -setup
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 0 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 0 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -4067,7 +4067,7 @@ test panedwindow-19.120 {ComputeGeometry, three panes, reqsize set properly} -se
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -4080,7 +4080,7 @@ test panedwindow-19.121 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -4094,7 +4094,7 @@ test panedwindow-19.122 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 0
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -4118,7 +4118,7 @@ test panedwindow-19.123 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 0
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 0 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 0 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -4132,7 +4132,7 @@ test panedwindow-19.124 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -4147,7 +4147,7 @@ test panedwindow-19.125 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -4162,7 +4162,7 @@ test panedwindow-19.126 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup
         -sashwidth 3 -handlesize 6 -showhandle 0 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -4184,7 +4184,7 @@ test panedwindow-19.127 {ComputeGeometry, one pane, reqsize set properly} -setup
     # ever be drawn.
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
-    .p add [frame .p.f -width 20 -height 20 -bg red] -padx 1 -sticky ""
+    .p add [frame .p.f -width 20 -height 20 -background red] -padx 1 -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
     deleteWindows
@@ -4196,7 +4196,7 @@ test panedwindow-19.128 {ComputeGeometry, three panes, reqsize set properly} -se
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] -sticky ""
+        .p add [frame $w -width 20 -height 20 -background blue] -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -4209,7 +4209,7 @@ test panedwindow-19.129 {ComputeGeometry, sash coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -4223,7 +4223,7 @@ test panedwindow-19.130 {ComputeGeometry/ArrangePanes, pane coords} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -sashwidth 3 -handlesize 6 -showhandle 1
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 3 -padx 11
     }
     pack .p
@@ -4247,7 +4247,7 @@ test panedwindow-19.131 {ComputeGeometry, one pane, vertical} -setup {
     panedwindow .p -borderwidth 2 -sashpad 5 \
         -orient vertical -sashwidth 3 -handlesize 6 \
         -showhandle 1
-    .p add [frame .f -width 20 -height 20 -bg red] -pady 1 \
+    .p add [frame .f -width 20 -height 20 -background red] -pady 1 \
                     -sticky ""
     list [winfo reqwidth .p] [winfo reqheight .p]
 } -cleanup {
@@ -4261,7 +4261,7 @@ test panedwindow-19.132 {ComputeGeometry, three panes, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [winfo reqwidth .p] [winfo reqheight .p]
@@ -4276,7 +4276,7 @@ test panedwindow-19.133 {ComputeGeometry, sash coords, vertical} -setup {
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.f1 .f2 .f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
                             -sticky ""
     }
     list [.p sash coord 0] [.p sash coord 1]
@@ -4291,7 +4291,7 @@ test panedwindow-19.134 {ComputeGeometry/ArrangePanes, pane coords, vert} -setup
         -sashwidth 3 -handlesize 6 -showhandle 1 \
         -orient vertical
     foreach w {.p.f1 .p.f2 .p.f3} {
-        .p add [frame $w -width 20 -height 20 -bg blue] \
+        .p add [frame $w -width 20 -height 20 -background blue] \
             -sticky nsew -pady 11 -padx 3
     }
     pack .p
@@ -4311,7 +4311,7 @@ test panedwindow-20.1 {destroyed widgets are removed from panedwindow} -setup {
 	deleteWindows
 } -body {
     panedwindow .p
-    .p add [frame .f -width 20 -height 20 -bg blue]
+    .p add [frame .f -width 20 -height 20 -background blue]
     destroy .f
     .p panes
 } -cleanup {
@@ -4321,8 +4321,8 @@ test panedwindow-20.2 {destroyed pane causes geometry recomputation} -setup {
 	deleteWindows
 } -body {
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red]
+    .p add [frame .f -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red]
     destroy .f
     winfo reqwidth .p
 } -cleanup {
@@ -4334,8 +4334,8 @@ test panedwindow-21.1 {ArrangePanes, extra space is given to the last pane} -set
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red] -sticky nsew
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red] -sticky nsew
     place .p -width 100 -x 0 -y 0
     update
     winfo width .f2
@@ -4347,8 +4347,8 @@ test panedwindow-21.2 {ArrangePanes, extra space is given to the last pane} -set
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red] -sticky nsew
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red] -sticky nsew
     place .p -height 100 -x 0 -y 0
     update
     winfo height .f2
@@ -4359,8 +4359,8 @@ test panedwindow-21.3 {ArrangePanes, explicit height/width are preferred} -setup
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red] -sticky ""
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red] -sticky ""
     .p paneconfigure .f1 -width 10 -height 15
     pack .p
     update
@@ -4372,8 +4372,8 @@ test panedwindow-21.4 {ArrangePanes, panes clipped by size of pane} -setup {
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red]
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red]
     .p sash place 0 10 0
     pack .p
     update
@@ -4386,8 +4386,8 @@ test panedwindow-21.5 {ArrangePanes, panes clipped by size of pane} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red]
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red]
     .p sash place 0 0 10
     pack .p
     update
@@ -4399,8 +4399,8 @@ test panedwindow-21.6 {ArrangePanes, height of pane taken from total height} -se
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .p.f1 -width 20 -height 20 -bg blue] \
-	    [frame .p.f2 -width 20 -height 40 -bg red] -sticky ""
+    .p add [frame .p.f1 -width 20 -height 20 -background blue] \
+	    [frame .p.f2 -width 20 -height 40 -background red] -sticky ""
     pack .p
     update
     winfo y .p.f1
@@ -4412,8 +4412,8 @@ test panedwindow-21.7 {ArrangePanes, width of pane taken from total width} -setu
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
-    .p add [frame .p.f1 -width 20 -height 20 -bg blue] \
-	    [frame .p.f2 -width 40 -height 40 -bg red] -sticky ""
+    .p add [frame .p.f1 -width 20 -height 20 -background blue] \
+	    [frame .p.f2 -width 40 -height 40 -background red] -sticky ""
     pack .p
     update
     winfo x .p.f1
@@ -4424,8 +4424,8 @@ test panedwindow-21.8 {ArrangePanes, panes with width <= 0 are unmapped} -setup 
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 40 -bg red]
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 40 -background red]
     pack .p
     update
     set result [winfo ismapped .f1]
@@ -4439,8 +4439,8 @@ test panedwindow-21.9 {ArrangePanes, panes with width <= 0 are unmapped} -setup 
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .p.f1 -width 20 -height 20 -bg blue] \
-	    [frame .p.f2 -width 20 -height 40 -bg red]
+    .p add [frame .p.f1 -width 20 -height 20 -background blue] \
+	    [frame .p.f2 -width 20 -height 40 -background red]
     pack .p
     update
     set result [winfo ismapped .p.f1]
@@ -4454,8 +4454,8 @@ test panedwindow-21.10 {ArrangePanes, panes with width <= 0 are unmapped} -setup
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 -orient vertical
-    .p add [frame .p.f1 -width 20 -height 20 -bg blue] \
-	    [frame .p.f2 -width 20 -height 40 -bg red]
+    .p add [frame .p.f1 -width 20 -height 20 -background blue] \
+	    [frame .p.f2 -width 20 -height 40 -background red]
     pack .p
     update
     set result [winfo ismapped .p.f1]
@@ -4469,8 +4469,8 @@ test panedwindow-21.11 {ArrangePanes, last pane shrinks} -setup {
 	deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red] -sticky nsew
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red] -sticky nsew
     place .p -width 40 -x 0 -y 0
     update
     winfo width .f2
@@ -4482,8 +4482,8 @@ test panedwindow-21.12 {ArrangePanes, last pane shrinks} -setup {
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 20 -bg red] -sticky nsew
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 20 -background red] -sticky nsew
     place .p -height 40 -x 0 -y 0
     update
     winfo height .f2
@@ -4494,7 +4494,7 @@ test panedwindow-21.13 {ArrangePanes, panedwindow resizes} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -width 200 -borderwidth 0
-	frame .f1 -height 50 -bg blue
+	frame .f1 -height 50 -background blue
 	set result [list]
 	lappend result [winfo reqwidth .p] [winfo reqheight .p]
 	.p add .f1
@@ -4507,7 +4507,7 @@ test panedwindow-21.14 {ArrangePanes, panedwindow resizes} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -height 200 -borderwidth 0 -orient vertical
-	frame .f1 -width 50 -bg blue
+	frame .f1 -width 50 -background blue
 	set result [list]
 	lappend result [winfo reqwidth .p] [winfo reqheight .p]
 	.p add .f1
@@ -4520,8 +4520,8 @@ test panedwindow-21.15 {ArrangePanes, last pane grows} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -height 50
-	.p add [frame .f1 -width 50 -bg red] [frame .f2 -width 50 -bg white] \
-		[frame .f3 -width 50 -bg blue] [frame .f4 -width 50 -bg green]
+	.p add [frame .f1 -width 50 -background red] [frame .f2 -width 50 -background white] \
+		[frame .f3 -width 50 -background blue] [frame .f4 -width 50 -background green]
 	.p sash place 1 250 0
 	pack .p
 	update
@@ -4542,8 +4542,8 @@ test panedwindow-22.1 {PanedWindowReqProc, react to pane geometry changes} -setu
 } -body {
     # Basically just want to make sure that the PanedWindowReqProc is called
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 2
-    .p add [frame .f1 -width 20 -height 20 -bg blue] \
-	    [frame .f2 -width 20 -height 40 -bg red]
+    .p add [frame .f1 -width 20 -height 20 -background blue] \
+	    [frame .f2 -width 20 -height 40 -background red]
     set result [winfo reqheight .p]
     .f1 configure -height 80
     lappend result [winfo reqheight .p]
@@ -4909,10 +4909,10 @@ test panedwindow-23.29 {ConfigurePanes, -hide works} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false
-	frame .f1 -width 40 -height 100 -bg red
-	frame .f2 -width 40 -height 100 -bg white
-	frame .f3 -width 40 -height 100 -bg blue
-	frame .f4 -width 40 -height 100 -bg green
+	frame .f1 -width 40 -height 100 -background red
+	frame .f2 -width 40 -height 100 -background white
+	frame .f3 -width 40 -height 100 -background blue
+	frame .f4 -width 40 -height 100 -background green
 	.p add .f1 .f2 .f3 .f4
 	pack .p
 	update
@@ -4934,10 +4934,10 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -width 130 -height 100
-	frame .f1 -width 40 -bg red
-	frame .f2 -width 40 -bg white
-	frame .f3 -width 40 -bg blue
-	frame .f4 -width 40 -bg green
+	frame .f1 -width 40 -background red
+	frame .f2 -width 40 -background white
+	frame .f3 -width 40 -background blue
+	frame .f4 -width 40 -background green
 	.p add .f1 .f2 .f3 .f4
 	pack .p
 	update
@@ -4991,9 +4991,9 @@ test panedwindow-23.31 {ConfigurePanes, -hide works, last pane stretches} -setup
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -width 200 -height 200 -borderwidth 0
-	frame .f1 -width 50 -bg red
-	frame .f2 -width 50 -bg green
-	frame .f3 -width 50 -bg blue
+	frame .f1 -width 50 -background red
+	frame .f2 -width 50 -background green
+	frame .f3 -width 50 -background blue
 	.p add .f1 .f2 .f3
 	pack .p
 	update
@@ -5010,9 +5010,9 @@ test panedwindow-23.32 {ConfigurePanes, -hide works, last pane stretches} -setup
 } -body {
 	panedwindow .p -showhandle false -width 200 -height 200 \
 		-borderwidth 0 -orient vertical
-	frame .f1 -height 50 -bg red
-	frame .f2 -height 50 -bg green
-	frame .f3 -height 50 -bg blue
+	frame .f1 -height 50 -background red
+	frame .f2 -height 50 -background green
+	frame .f3 -height 50 -background blue
 	.p add .f1 .f2 .f3
 	pack .p
 	update
@@ -5029,10 +5029,10 @@ test panedwindow-23.33 {ConfigurePanes, -stretch first} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -height 100 -width 182
-	frame .f1 -width 40 -bg red
-	frame .f2 -width 40 -bg white
-	frame .f3 -width 40 -bg blue
-	frame .f4 -width 40 -bg green
+	frame .f1 -width 40 -background red
+	frame .f2 -width 40 -background white
+	frame .f3 -width 40 -background blue
+	frame .f4 -width 40 -background green
 	.p add .f1 .f2 .f3 .f4 -stretch first
 	pack .p
 	update
@@ -5050,10 +5050,10 @@ test panedwindow-23.34 {ConfigurePanes, -stretch middle} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -height 100 -width 182
-	frame .f1 -width 40 -bg red
-	frame .f2 -width 40 -bg white
-	frame .f3 -width 40 -bg blue
-	frame .f4 -width 40 -bg green
+	frame .f1 -width 40 -background red
+	frame .f2 -width 40 -background white
+	frame .f3 -width 40 -background blue
+	frame .f4 -width 40 -background green
 	.p add .f1 .f2 .f3 .f4 -stretch middle
 	pack .p
 	update
@@ -5071,10 +5071,10 @@ test panedwindow-23.35 {ConfigurePanes, -stretch always} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -height 100 -width 182
-	frame .f1 -width 40 -bg red
-	frame .f2 -width 40 -bg white
-	frame .f3 -width 40 -bg blue
-	frame .f4 -width 40 -bg green
+	frame .f1 -width 40 -background red
+	frame .f2 -width 40 -background white
+	frame .f3 -width 40 -background blue
+	frame .f4 -width 40 -background green
 	.p add .f1 .f2 .f3 .f4 -stretch always
 	pack .p
 	update
@@ -5092,10 +5092,10 @@ test panedwindow-23.36 {ConfigurePanes, -stretch never} -setup {
 	deleteWindows
 } -body {
 	panedwindow .p -showhandle false -height 100 -width 182
-	frame .f1 -width 40 -bg red
-	frame .f2 -width 40 -bg white
-	frame .f3 -width 40 -bg blue
-	frame .f4 -width 40 -bg green
+	frame .f1 -width 40 -background red
+	frame .f2 -width 40 -background white
+	frame .f3 -width 40 -background blue
+	frame .f4 -width 40 -background green
 	.p add .f1 .f2 .f3 .f4 -stretch never
 	pack .p
 	update
@@ -5172,9 +5172,9 @@ test panedwindow-25.2 {UnmapNotify and MapNotify events are propagated to panes}
 test panedwindow-26.1 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 0
 } -cleanup {
 	deleteWindows
@@ -5182,9 +5182,9 @@ test panedwindow-26.1 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.2 {PanedWindowIdentifyCoords, padding is included} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 20 0
 } -cleanup {
 	deleteWindows
@@ -5192,9 +5192,9 @@ test panedwindow-26.2 {PanedWindowIdentifyCoords, padding is included} -setup {
 test panedwindow-26.3 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 22 0
 } -cleanup {
 	deleteWindows
@@ -5202,9 +5202,9 @@ test panedwindow-26.3 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.4 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 24 0
 } -cleanup {
 	deleteWindows
@@ -5212,9 +5212,9 @@ test panedwindow-26.4 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.5 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 26 0
 } -cleanup {
 	deleteWindows
@@ -5222,9 +5222,9 @@ test panedwindow-26.5 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.6 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 26 -1
 } -cleanup {
 	deleteWindows
@@ -5232,9 +5232,9 @@ test panedwindow-26.6 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.7 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 26 100
 } -cleanup {
 	deleteWindows
@@ -5242,10 +5242,10 @@ test panedwindow-26.7 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.8 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 6
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 22 4
 } -cleanup {
 	deleteWindows
@@ -5253,10 +5253,10 @@ test panedwindow-26.8 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.9 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 6
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 22 5
 } -cleanup {
 	deleteWindows
@@ -5264,10 +5264,10 @@ test panedwindow-26.9 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.10 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 8
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 20 5
 } -cleanup {
 	deleteWindows
@@ -5275,10 +5275,10 @@ test panedwindow-26.10 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.11 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 8
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 20 0
 } -cleanup {
 	deleteWindows
@@ -5286,10 +5286,10 @@ test panedwindow-26.11 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.12 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -showhandle false -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20] \
-	    [frame .f3 -bg green -width 20 -height 20]
+    panedwindow .p -showhandle false -borderwidth 0 -sashwidth 2 -sashpad 2
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20] \
+	    [frame .f3 -background green -width 20 -height 20]
     .p identify 48 0
 } -cleanup {
 	deleteWindows
@@ -5321,9 +5321,9 @@ test panedwindow-26.15 {identify subcommand errors} -setup {
 test panedwindow-26.16 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 0
 } -cleanup {
 	deleteWindows
@@ -5331,9 +5331,9 @@ test panedwindow-26.16 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.17 {PanedWindowIdentifyCoords, padding is included} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 20
 } -cleanup {
 	deleteWindows
@@ -5341,9 +5341,9 @@ test panedwindow-26.17 {PanedWindowIdentifyCoords, padding is included} -setup {
 test panedwindow-26.18 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 22
 } -cleanup {
 	deleteWindows
@@ -5351,9 +5351,9 @@ test panedwindow-26.18 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.19 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 24
 } -cleanup {
 	deleteWindows
@@ -5361,9 +5361,9 @@ test panedwindow-26.19 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.20 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 26
 } -cleanup {
 	deleteWindows
@@ -5371,9 +5371,9 @@ test panedwindow-26.20 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.21 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify -1 26
 } -cleanup {
 	deleteWindows
@@ -5381,9 +5381,9 @@ test panedwindow-26.21 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.22 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 100 26
 } -cleanup {
 	deleteWindows
@@ -5391,10 +5391,10 @@ test panedwindow-26.22 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.23 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 6 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 4 22
 } -cleanup {
 	deleteWindows
@@ -5402,10 +5402,10 @@ test panedwindow-26.23 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.24 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 6 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 5 22
 } -cleanup {
 	deleteWindows
@@ -5413,10 +5413,10 @@ test panedwindow-26.24 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.25 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 8 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 5 20
 } -cleanup {
 	deleteWindows
@@ -5424,10 +5424,10 @@ test panedwindow-26.25 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.26 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
+    panedwindow .p -borderwidth 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 8 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20]
     .p identify 0 20
 } -cleanup {
 	deleteWindows
@@ -5435,10 +5435,10 @@ test panedwindow-26.26 {PanedWindowIdentifyCoords} -setup {
 test panedwindow-26.27 {PanedWindowIdentifyCoords} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -showhandle false -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20] \
-	    [frame .f3 -bg green -width 20 -height 20]
+    panedwindow .p -showhandle false -borderwidth 0 -sashwidth 2 -sashpad 2 -orient vertical
+    .p add [frame .f -background red -width 20 -height 20] \
+	    [frame .f2 -background blue -width 20 -height 20] \
+	    [frame .f3 -background green -width 20 -height 20]
     .p identify 0 48
 } -cleanup {
 	deleteWindows
@@ -5467,9 +5467,9 @@ test panedwindow-27.2 {destroy the window cleanly on rename [Bug #616589]} -setu
 test panedwindow-28.1 {resizing width} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -bd 5
-    frame .f1 -width 100 -height 50 -bg blue
-    frame .f2 -width 100 -height 50 -bg red
+    panedwindow .p -borderwidth 5
+    frame .f1 -width 100 -height 50 -background blue
+    frame .f2 -width 100 -height 50 -background red
 
     .p add .f1 -sticky news
     .p add .f2 -sticky news
@@ -5490,9 +5490,9 @@ test panedwindow-28.1 {resizing width} -setup {
 test panedwindow-28.2 {resizing height} -setup {
 	deleteWindows
 } -body {
-    panedwindow .p -orient vertical -bd 5
-    frame .f1 -width 50 -height 100 -bg blue
-    frame .f2 -width 50 -height 100 -bg red
+    panedwindow .p -orient vertical -borderwidth 5
+    frame .f1 -width 50 -height 100 -background blue
+    frame .f2 -width 50 -height 100 -background red
 
     .p add .f1 -sticky news
     .p add .f2 -sticky news

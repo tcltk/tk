@@ -27,7 +27,7 @@ pack $w.msg -side top
 
 set menustatus "    "
 frame $w.statusBar
-label $w.statusBar.label -textvariable menustatus -relief sunken -bd 1 -font "Helvetica 10" -anchor w
+label $w.statusBar.label -textvariable menustatus -relief sunken -borderwidth 1 -font "Helvetica 10" -anchor w
 pack $w.statusBar.label -side left -padx 2 -expand yes -fill both
 pack $w.statusBar -side bottom -fill x -pady 2
 

@@ -25,7 +25,7 @@ pack $btns -side bottom -fill x
 frame $w.frame -borderwidth 10
 pack $w.frame -side top -fill x
 
-canvas $w.frame.canvas -width 50 -height 50 -bd 0 -highlightthickness 0
+canvas $w.frame.canvas -width 50 -height 50 -borderwidth 0 -highlightthickness 0
 $w.frame.canvas create polygon 0 0 1 1 2 2 -fill DeepSkyBlue3 -tags poly
 $w.frame.canvas create line 0 0 1 1 2 2 0 0 -fill black -tags line
 scale $w.frame.scale -orient horizontal -length 284 -from 0 -to 250 \

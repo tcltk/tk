@@ -24,7 +24,7 @@ set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
 foreach i {f1 f2 f3 f4 f5} {
-    frame $w.$i -bd 2
+    frame $w.$i -borderwidth 2
     entry $w.$i.entry -relief sunken -width 40
     label $w.$i.label
     pack $w.$i.entry -side right

@@ -66,7 +66,7 @@ labelframe $w.l1 -text "Integer Entry"
 # and not just 32-bit ones.
 entry $w.l1.e -validate focus -vcmd {string is integer %P}
 $w.l1.e configure -invalidcommand \
-	"focusAndFlash %W [$w.l1.e cget -fg] [$w.l1.e cget -bg]"
+	"focusAndFlash %W [$w.l1.e cget -fg] [$w.l1.e cget -background]"
 pack $w.l1.e -fill x -expand 1 -padx 1m -pady 1m
 
 labelframe $w.l2 -text "Length-Constrained Entry"

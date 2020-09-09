@@ -30,7 +30,7 @@ $w.p add [labelframe $w.p.l2 -text "Phase Space"]
 
 # Create the canvas containing the graphical representation of the
 # simulated system.
-canvas $w.c -width 320 -height 200 -background white -bd 2 -relief sunken
+canvas $w.c -width 320 -height 200 -background white -borderwidth 2 -relief sunken
 $w.c create text 5 5 -anchor nw -text "Click to Adjust Bob Start Position"
 # Coordinates of these items don't matter; they will be set properly below
 $w.c create line 0 25 320 25   -tags plate -fill grey50 -width 2
@@ -42,7 +42,7 @@ pack $w.c -in $w.p.l1 -fill both -expand true
 # Create the canvas containing the phase space graph; this consists of
 # a line that gets gradually paler as it ages, which is an extremely
 # effective visual trick.
-canvas $w.k -width 320 -height 200 -background white -bd 2 -relief sunken
+canvas $w.k -width 320 -height 200 -background white -borderwidth 2 -relief sunken
 $w.k create line 160 200 160 0 -fill grey75 -arrow last -tags y_axis
 $w.k create line 0 100 320 100 -fill grey75 -arrow last -tags x_axis
 for {set i 90} {$i>=0} {incr i -10} {

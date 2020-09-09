@@ -7014,7 +7014,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     grab release .top
     wm geometry .top 200x200+300+300
     label .top.l -height 5 -width 20 -highlightthickness 2 \
-            -highlightbackground black -bg yellow -text "My label"
+            -highlightbackground black -background yellow -text "My label"
     pack .top.l -side bottom
     update
     # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel

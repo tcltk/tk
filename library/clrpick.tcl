@@ -209,7 +209,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
 
     # TopFrame contains the color strips and the color selection
     #
-    set topFrame [frame $w.top -relief raised -bd 1]
+    set topFrame [frame $w.top -relief raised -borderwidth 1]
 
     # StripsFrame contains the colorstrips and the individual RGB entries
     set stripsFrame [frame $topFrame.colorStrip]
@@ -241,11 +241,11 @@ proc ::tk::dialog::color::BuildDialog {w} {
 
 	set height [expr {
 	    [winfo reqheight $box.entry] -
-	    2*([$box.entry cget -highlightthickness] + [$box.entry cget -bd])
+	    2*([$box.entry cget -highlightthickness] + [$box.entry cget -borderwidth])
 	}]
 
 	canvas $f.color -height $height \
-		-width $data(BARS_WIDTH) -relief sunken -bd 2
+		-width $data(BARS_WIDTH) -relief sunken -borderwidth 2
 	canvas $f.sel -height $data(PLGN_HEIGHT) \
 		-width $data(canvasWidth) -highlightthickness 0
 	pack $f.color -expand yes -fill both
@@ -283,8 +283,8 @@ proc ::tk::dialog::color::BuildDialog {w} {
     set ent [entry $selFrame.ent \
 	    -textvariable ::tk::dialog::color::[winfo name $w](selection) \
 	    -width 16]
-    set f1  [frame $selFrame.f1 -relief sunken -bd 2]
-    set data(finalCanvas) [frame $f1.demo -bd 0 -width 100 -height 70]
+    set f1  [frame $selFrame.f1 -relief sunken -borderwidth 2]
+    set data(finalCanvas) [frame $f1.demo -borderwidth 0 -width 100 -height 70]
 
     pack $lab $ent -side top -fill x -padx 4 -pady 2
     pack $f1 -expand yes -anchor nw -fill both -padx 6 -pady 10
@@ -297,7 +297,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
 
     # the botFrame frame contains the buttons
     #
-    set botFrame [frame $w.bot -relief raised -bd 1]
+    set botFrame [frame $w.bot -relief raised -borderwidth 1]
 
     ::tk::AmpWidget button $botFrame.ok     -text [mc "&OK"]		\
 	    -command [list tk::dialog::color::OkCmd $w]
@@ -428,7 +428,7 @@ proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
     }
 
     # Draw the color bars.
-    set highlightW [expr {[$col cget -highlightthickness] + [$col cget -bd]}]
+    set highlightW [expr {[$col cget -highlightthickness] + [$col cget -borderwidth]}]
     for {set i 0} { $i < $data(NUM_COLORBARS)} { incr i} {
 	set intensity [expr {$i * $data(intensityIncr)}]
 	set startx [expr {$i * $data(colorbarWidth) + $highlightW}]
@@ -488,7 +488,7 @@ proc ::tk::dialog::color::RedrawFinalColor {w} {
     set color [format "#%02x%02x%02x" $data(red,intensity) \
 	    $data(green,intensity) $data(blue,intensity)]
 
-    $data(finalCanvas) configure -bg $color
+    $data(finalCanvas) configure -background $color
     set data(finalColor) $color
     set data(selection) $color
     set data(finalRGB) [list \

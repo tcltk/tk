@@ -97,10 +97,10 @@ proc DoDisplay {w} {
     global S C
 
     ttk::frame $w.ctrl -relief ridge -borderwidth 2 -padding 5
-    pack [frame $w.screen -bd 2 -relief raised] \
+    pack [frame $w.screen -borderwidth 2 -relief raised] \
 	    -side left -fill both -expand 1
 
-    canvas $w.c -width 860 -height 730 -bg $C(bg) -highlightthickness 0
+    canvas $w.c -width 860 -height 730 -background $C(bg) -highlightthickness 0
     $w.c config -scrollregion {0 0 1000 1000}	;# Kludge: move everything up
     $w.c yview moveto .05
     pack $w.c -in $w.screen -side top -fill both -expand 1

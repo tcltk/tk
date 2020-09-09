@@ -74,8 +74,8 @@ proc ::tk_dialog {w title text bitmap default args} {
     frame $w.bot
     frame $w.top
     if {$windowingsystem eq "x11"} {
-	$w.bot configure -relief raised -bd 1
-	$w.top configure -relief raised -bd 1
+	$w.bot configure -relief raised -borderwidth 1
+	$w.top configure -relief raised -borderwidth 1
     }
     pack $w.bot -side bottom -fill both
     pack $w.top -side top -fill both -expand 1

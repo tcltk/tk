@@ -524,7 +524,7 @@ test font-12.2 {UpdateDependantFonts procedure: pings the widgets} -setup {
     update
 } -body {
     font create xyz -family times -size 20
-    .t.f config -font xyz -text "abcd" -padx 0 -bd 0 -highlightthickness 0
+    .t.f config -font xyz -text "abcd" -padx 0 -borderwidth 0 -highlightthickness 0
     set a1 [font measure xyz "abcd"]
     update
     set b1 [winfo reqwidth .t.f]
@@ -712,7 +712,7 @@ test font-15.12 {Tk_AllocFontFromObj procedure: setup tab width} -setup {
 	destroy .l
 } -body {
     # Tk_MeasureChars(fontPtr, "0", ...)
-    label .l -bd 0 -padx 0  -highlightthickness 0 -font $fixed -text "a\tb"
+    label .l -borderwidth 0 -padx 0  -highlightthickness 0 -font $fixed -text "a\tb"
     update
     set res1 [winfo reqwidth .l]
 	set res2 [expr [font measure $fixed "0"]*9]
@@ -1451,7 +1451,7 @@ test font-21.66 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 test font-22.1 {Tk_TextWidth procedure} -setup {
 	destroy .t.l
 } -body {
-	label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+	label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
 		-text "0" -font "Courier -12"
 	pack .t.l
 	set ax [winfo reqwidth .t.l]
@@ -1476,7 +1476,7 @@ test font-23.1 {Tk_UnderlineChars procedure} -setup {
 
 # Data used in 24.* tests
 destroy .t.l
-label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
 	-text "0" -font "Courier -12"
 pack .t.l
 update
