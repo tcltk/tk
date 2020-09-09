@@ -6891,7 +6891,7 @@ ApplyContainerOverrideChanges(
 	}
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
-		oldAttributes == kWindowNoActivatesAttribute) {
+	    (oldAttributes & kWindowNoActivatesAttribute)) {
 	    wmPtr->macClass = kDocumentWindowClass;
 	    wmPtr->attributes =
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
