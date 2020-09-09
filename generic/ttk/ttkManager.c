@@ -462,7 +462,7 @@ int Ttk_GetContentIndexFromObj(
 	return TCL_OK;
     }
 
-    /* Try interpreting as a content window name;
+    /* Try interpreting as a window name;
      */
     if ((*string == '.') &&
 	    (tkwin = Tk_NameToWindow(interp, string, mgr->window))) {
@@ -504,20 +504,20 @@ void Ttk_ReorderContent(Ttk_Manager *mgr, TkSizeT fromIndex, TkSizeT toIndex)
     /* ASSERT: fromIndex == toIndex */
     mgr->content[fromIndex] = moved;
 
-    /* Schedule a relayout.  In general, rearranging contents
+    /* Schedule a relayout.  In general, rearranging content
      * may also change the size:
      */
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }
 
-/* ++ Ttk_Maintainable(interp, content, container) --
+/* ++ Ttk_Maintainable(interp, window, container) --
  * 	Utility routine.  Verifies that 'container' may be used to maintain
- *	the geometry of 'content' via Tk_MaintainGeometry:
+ *	the geometry of 'window' via Tk_MaintainGeometry:
  *
- * 	+ 'container' is either 'content's parent -OR-
- * 	+ 'container is a descendant of 'content's parent.
- * 	+ 'content' is not a toplevel window
- * 	+ 'content' belongs to the same toplevel as 'container'
+ * 	+ 'container' is either 'window's parent -OR-
+ * 	+ 'container is a descendant of 'window's parent.
+ * 	+ 'window' is not a toplevel window
+ * 	+ 'window' belongs to the same toplevel as 'container'
  *
  * Returns: 1 if OK; otherwise 0, leaving an error message in 'interp'.
  */
