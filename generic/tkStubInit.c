@@ -59,7 +59,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 
-#if !defined(MAC_OSX_TK)
+#if !defined(MAC_OSX_TK) && defined(MAC_OSX_TCL)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 static int

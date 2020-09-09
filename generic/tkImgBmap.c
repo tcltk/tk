@@ -14,7 +14,7 @@
 #include "tkInt.h"
 
 /*
- * The following data structure represents the master for a bitmap
+ * The following data structure represents the model for a bitmap
  * image:
  */
 
@@ -40,7 +40,7 @@ typedef struct BitmapModel {
     char *maskDataString;	/* Value of -maskdata option (malloc'ed). */
     struct BitmapInstance *instancePtr;
 				/* First in list of all instances associated
-				 * with this master. */
+				 * with this model. */
 } BitmapModel;
 
 /*
@@ -51,7 +51,7 @@ typedef struct BitmapModel {
 typedef struct BitmapInstance {
     int refCount;		/* Number of instances that share this data
 				 * structure. */
-    BitmapModel *modelPtr;	/* Pointer to master for image. */
+    BitmapModel *modelPtr;	/* Pointer to model for image. */
     Tk_Window tkwin;		/* Window in which the instances will be
 				 * displayed. */
     XColor *fg;			/* Foreground color for displaying image. */
@@ -322,8 +322,8 @@ ImgBmapConfigureModel(
  * ImgBmapConfigureInstance --
  *
  *	This procedure is called to create displaying information for a bitmap
- *	image instance based on the configuration information in the master.
- *	It is invoked both when new instances are created and when the master
+ *	image instance based on the configuration information in the model.
+ *	It is invoked both when new instances are created and when the model
  *	is reconfigured.
  *
  * Results:
@@ -751,7 +751,7 @@ NextBitmapWord(
 
 static int
 ImgBmapCmd(
-    ClientData clientData,	/* Information about the image master. */
+    ClientData clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -816,10 +816,10 @@ static ClientData
 ImgBmapGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData masterData)	/* Pointer to our master structure for the
+    ClientData modelData)	/* Pointer to our model structure for the
 				 * image. */
 {
-    BitmapModel *modelPtr = masterData;
+    BitmapModel *modelPtr = modelData;
     BitmapInstance *instancePtr;
 
     /*
@@ -993,7 +993,7 @@ ImgBmapFree(
  *
  * ImgBmapDelete --
  *
- *	This procedure is called by the image code to delete the master
+ *	This procedure is called by the image code to delete the model
  *	structure for an image.
  *
  * Results:
@@ -1007,10 +1007,10 @@ ImgBmapFree(
 
 static void
 ImgBmapDelete(
-    ClientData masterData)	/* Pointer to BitmapModel structure for
+    ClientData modelData)	/* Pointer to BitmapModel structure for
 				 * image. Must not have any more instances. */
 {
-    BitmapModel *modelPtr = masterData;
+    BitmapModel *modelPtr = modelData;
 
     if (modelPtr->instancePtr != NULL) {
 	Tcl_Panic("tried to delete bitmap image when instances still exist");
