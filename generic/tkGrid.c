@@ -384,8 +384,8 @@ Tk_GridObjCmd(
 	return GridPropagateCommand(tkwin, interp, objc, objv);
     case GRID_SIZE:
 	return GridSizeCommand(tkwin, interp, objc, objv);
-    case GRID_CONTENT:
     case GRID_SLAVES:
+    case GRID_CONTENT:
 	return GridContentCommand(tkwin, interp, objc, objv);
 
     /*
