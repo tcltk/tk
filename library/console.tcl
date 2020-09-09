@@ -131,7 +131,7 @@ proc ::tk::ConsoleInit {} {
         default { set preferred {} }
     }
     foreach {family size} $preferred {
-        if {[lsearch -exact $families $family] != -1} {
+        if {$family in $families} {
             font configure TkConsoleFont -family $family -size $size
             break
         }

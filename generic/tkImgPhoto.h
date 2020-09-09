@@ -27,11 +27,11 @@
  * Forward declarations of the structures we define.
  */
 
-#define PhotoMaster PhotoModel
+#define PhotoModel PhotoMaster
 typedef struct ColorTableId	ColorTableId;
 typedef struct ColorTable	ColorTable;
 typedef struct PhotoInstance	PhotoInstance;
-typedef struct PhotoModel	PhotoModel;
+typedef struct PhotoMaster	PhotoMaster;
 
 /*
  * A signed 8-bit integral type. If chars are unsigned and the compiler isn't
@@ -138,11 +138,11 @@ struct ColorTable {
 #define MAP_COLORS		8
 
 /*
- * Definition of the data associated with each photo image master.
+ * Definition of the data associated with each photo image model.
  */
 
-struct PhotoModel {
-    Tk_ImageModel tkMaster;	/* Tk's token for image model. NULL means the
+struct PhotoMaster {
+    Tk_ImageMaster tkMaster;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter associated with the application
 				 * using this image. */
@@ -165,11 +165,11 @@ struct PhotoModel {
     TkRegion validRegion;	/* Tk region indicating which parts of the
 				 * image have valid image data. */
     PhotoInstance *instancePtr;	/* First in the list of instances associated
-				 * with this master. */
+				 * with this model. */
 };
 
 /*
- * Bit definitions for the flags field of a PhotoModel.
+ * Bit definitions for the flags field of a PhotoMaster.
  * COLOR_IMAGE:			1 means that the image has different color
  *				components.
  * IMAGE_CHANGED:		1 means that the instances of this image need
@@ -196,17 +196,17 @@ struct PhotoModel {
  */
 
 struct PhotoInstance {
-    PhotoModel *masterPtr;	/* Pointer to master for image. */
+    PhotoMaster *masterPtr;	/* Pointer to model for image. */
     Display *display;		/* Display for windows using this instance. */
     Colormap colormap;		/* The image may only be used in windows with
 				 * this particular colormap. */
     PhotoInstance *nextPtr;	/* Pointer to the next instance in the list of
-				 * instances associated with this master. */
+				 * instances associated with this model. */
     int refCount;		/* Number of instances using this structure. */
     Tk_Uid palette;		/* Palette for these particular instances. */
     double gamma;		/* Gamma value for these instances. */
     Tk_Uid defaultPalette;	/* Default palette to use if a palette is not
-				 * specified for the master. */
+				 * specified for the model. */
     ColorTable *colorTablePtr;	/* Pointer to information about colors
 				 * allocated for image display in windows like
 				 * this one. */

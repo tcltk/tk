@@ -861,9 +861,9 @@ typedef struct TkWindow {
 #endif /* TK_USE_INPUT_METHODS */
     char *geomMgrName;          /* Records the name of the geometry manager. */
     struct TkWindow *maintainerPtr;
-				/* The geometry master for this window. The
-				 * value is NULL if the window has no master or
-				 * if its master is its parent. */
+				/* The geometry container for this window. The
+				 * value is NULL if the window has no container or
+				 * if its container is its parent. */
 } TkWindow;
 
 /*
@@ -1221,10 +1221,12 @@ MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    double *doublePtr);
-MODULE_SCOPE int	TkSetGeometryMaster(Tcl_Interp *interp,
-			    Tk_Window tkwin, const char *master);
-MODULE_SCOPE void	TkFreeGeometryMaster(Tk_Window tkwin,
-			    const char *master);
+#define TkSetGeometryContainer TkSetGeometryMaster
+MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
+			    Tk_Window tkwin, const char *name);
+#define TkFreeGeometryContainer TkFreeGeometryMaster
+MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
+			    const char *name);
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);

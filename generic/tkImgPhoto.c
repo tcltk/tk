@@ -176,7 +176,7 @@ static int		ParseSubcommandOptions(
 			    Tcl_Interp *interp, int allowedOptions,
 			    int *indexPtr, int objc, Tcl_Obj *const objv[]);
 static void		ImgPhotoCmdDeletedProc(ClientData clientData);
-static int		ImgPhotoConfigureMaster(Tcl_Interp *interp,
+static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
 			    PhotoModel *modelPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		ToggleComplexAlphaIfNeeded(PhotoModel *mPtr);
@@ -339,7 +339,7 @@ ImgPhotoCreate(
     PhotoModel *modelPtr;
 
     /*
-     * Allocate and initialize the photo image master record.
+     * Allocate and initialize the photo image model record.
      */
 
     modelPtr = ckalloc(sizeof(PhotoModel));
@@ -357,7 +357,7 @@ ImgPhotoCreate(
      * Process configuration options given in the image create command.
      */
 
-    if (ImgPhotoConfigureMaster(interp, modelPtr, objc, objv, 0) != TCL_OK) {
+    if (ImgPhotoConfigureModel(interp, modelPtr, objc, objv, 0) != TCL_OK) {
 	ImgPhotoDelete(modelPtr);
 	return TCL_ERROR;
     }
@@ -386,7 +386,7 @@ ImgPhotoCreate(
 
 static int
 ImgPhotoCmd(
-    ClientData clientData,	/* Information about photo master. */
+    ClientData clientData,	/* Information about photo model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -532,7 +532,7 @@ ImgPhotoCmd(
 			configSpecs, (char *) modelPtr, arg, 0);
 	    }
 	} else {
-	    return ImgPhotoConfigureMaster(interp, modelPtr, objc-2, objv+2,
+	    return ImgPhotoConfigureModel(interp, modelPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
 	}
 
@@ -1759,7 +1759,7 @@ ParseSubcommandOptions(
 /*
  *----------------------------------------------------------------------
  *
- * ImgPhotoConfigureMaster --
+ * ImgPhotoConfigureModel --
  *
  *	This function is called when a photo image is created or reconfigured.
  *	It processes configuration options and resets any instances of the
@@ -1777,7 +1777,7 @@ ParseSubcommandOptions(
  */
 
 static int
-ImgPhotoConfigureMaster(
+ImgPhotoConfigureModel(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     PhotoModel *modelPtr,	/* Pointer to data structure describing
 				 * overall photo image to (re)configure. */
@@ -2083,7 +2083,7 @@ ImgPhotoConfigureMaster(
  *	None.
  *
  * Side effects:
- *	(Re)sets COMPLEX_ALPHA flag of master.
+ *	(Re)sets COMPLEX_ALPHA flag of model.
  *
  *----------------------------------------------------------------------
  */
@@ -2121,7 +2121,7 @@ ToggleComplexAlphaIfNeeded(
  *
  * ImgPhotoDelete --
  *
- *	This function is called by the image code to delete the master
+ *	This function is called by the image code to delete the model
  *	structure for an image.
  *
  * Results:
@@ -2135,10 +2135,10 @@ ToggleComplexAlphaIfNeeded(
 
 static void
 ImgPhotoDelete(
-    ClientData masterData)	/* Pointer to PhotoModel structure for image.
+    ClientData modelData)	/* Pointer to PhotoModel structure for image.
 				 * Must not have any more instances. */
 {
-    PhotoModel *modelPtr = masterData;
+    PhotoModel *modelPtr = modelData;
     PhotoInstance *instancePtr;
 
     while ((instancePtr = modelPtr->instancePtr) != NULL) {
@@ -2212,7 +2212,7 @@ ImgPhotoCmdDeletedProc(
  *	with memory allocation.)
  *
  * Side effects:
- *	Storage gets reallocated, for the master and all its instances.
+ *	Storage gets reallocated, for the model and all its instances.
  *
  *----------------------------------------------------------------------
  */
@@ -3486,7 +3486,7 @@ Tk_PhotoPutZoomedBlock(
  * Tk_DitherPhoto --
  *
  *	This function is called to update an area of each instance's pixmap by
- *	dithering the corresponding area of the image master.
+ *	dithering the corresponding area of the image model.
  *
  * Results:
  *	None.
@@ -3501,7 +3501,7 @@ Tk_PhotoPutZoomedBlock(
 
 void
 Tk_DitherPhoto(
-    Tk_PhotoHandle photo,	/* Image master whose instances are to be
+    Tk_PhotoHandle photo,	/* Image model whose instances are to be
 				 * updated. */
     int x, int y,		/* Coordinates of the top-left pixel in the
 				 * area to be dithered. */

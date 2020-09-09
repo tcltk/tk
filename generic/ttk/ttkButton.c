@@ -4,8 +4,7 @@
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -81,9 +80,9 @@ static Tk_OptionSpec BaseOptionSpecs[] =
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 NULL, Tk_Offset(Base,base.compoundObj), -1,
-	 TK_OPTION_NULL_OK,(ClientData)ttkCompoundStrings,
-         GEOMETRY_CHANGED },
+	NULL, Tk_Offset(Base,base.compoundObj), -1,
+	TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
+	GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, Tk_Offset(Base,base.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
@@ -820,7 +819,7 @@ static Tk_OptionSpec MenubuttonOptionSpecs[] =
 	"", Tk_Offset(Menubutton, menubutton.menuObj), -1, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	"below", Tk_Offset(Menubutton, menubutton.directionObj), -1,
-	0,(ClientData)directionStrings,GEOMETRY_CHANGED},
+	0, (void *)directionStrings, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
