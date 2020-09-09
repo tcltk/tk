@@ -49,9 +49,9 @@ if {[winfo depth $w] > 1} {
     $w.text tag configure sunken -background white -relief sunken \
 	    -borderwidth 1
 }
-$w.text tag configure bgstipple -background black -borderwidth 0 \
-	-bgstipple gray12
-$w.text tag configure fgstipple -fgstipple gray50
+$w.text tag configure backgroundstipple -background black -borderwidth 0 \
+	-backgroundstipple gray12
+$w.text tag configure stipple -stipple gray50
 $w.text tag configure underline -underline on
 $w.text tag configure overstrike -overstrike on
 $w.text tag configure right -justify right
@@ -87,9 +87,9 @@ $w.text insert end both {color1 color2}
 $w.text insert end ".\n"
 $w.text insert end "\n3. Stippling." big
 $w.text insert end "  You can cause either the "
-$w.text insert end background bgstipple
+$w.text insert end background backgroundstipple
 $w.text insert end " or "
-$w.text insert end foreground fgstipple
+$w.text insert end foreground stipple
 $w.text insert end {
 information to be drawn with a stipple fill instead of a solid fill.
 }

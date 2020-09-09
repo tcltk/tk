@@ -22,7 +22,7 @@ proc setup1 w {
     }
     foreach i {a b c d} {
         destroy $w.$i
-        frame  $w.$i -width 200 -height 50 -bd 2 -relief raised
+        frame  $w.$i -width 200 -height 50 -borderwidth 2 -relief raised
         pack $w.$i
     }
     .b configure -width 0 -height 0

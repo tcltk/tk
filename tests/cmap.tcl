@@ -17,8 +17,8 @@ proc colors {w redInc greenInc blueInc} {
     set blue 0
     for {set y 0} {$y < 8} {incr y} {
 	for {set x 0} {$x < 8} {incr x} {
-	    frame $w.f$x,$y -width 40 -height 40 -bd 2 -relief raised \
-		    -bg [format #%02x%02x%02x $red $green $blue]
+	    frame $w.f$x,$y -width 40 -height 40 -borderwidth 2 -relief raised \
+		    -background [format #%02x%02x%02x $red $green $blue]
 	    place $w.f$x,$y -x [expr {40*$x}] -y [expr {40*$y}]
 	    incr red $redInc
 	    incr green $greenInc
@@ -33,10 +33,10 @@ pack .t.m -side top -fill x
 button .t.quit -text Quit -command {destroy .t}
 pack .t.quit -side bottom -pady 3 -ipadx 4 -ipady 2
 
-frame .t.f -width 700 -height 450 -relief raised -bd 2
+frame .t.f -width 700 -height 450 -relief raised -borderwidth 2
 pack .t.f -side top -padx 1c -pady 1c
 colors .t.f 4 0 0
-frame .t.f.f -width 350 -height 350 -colormap new -bd 2 -relief raised
+frame .t.f.f -width 350 -height 350 -colormap new -borderwidth 2 -relief raised
 place .t.f.f -relx 1.0 -rely 0 -anchor ne
 colors .t.f.f 0 4 0
 bind .t.f.f <Enter> {wm colormapwindows .t {.t.f.f .t}}

@@ -21,7 +21,7 @@ proc raise_setup {} {
 	        destroy $i
         }
     foreach i {a b c d e} {
-	    label .raise.$i -text $i -relief raised -bd 2
+	    label .raise.$i -text $i -relief raised -borderwidth 2
     }
     place .raise.a -x 20 -y 60 -width 60 -height 80
     place .raise.b -x 60 -y 60 -width 60 -height 80

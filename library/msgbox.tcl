@@ -251,7 +251,7 @@ proc ::tk::MessageBox {args} {
     # and bottom parts.
 
     catch {destroy $w}
-    toplevel $w -class Dialog -bg $bg
+    toplevel $w -class Dialog -background $bg
     wm title $w $data(-title)
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW [list $w.$cancel invoke]

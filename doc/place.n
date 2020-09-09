@@ -249,7 +249,7 @@ frames and canvases that provide configuration options for this purpose.
 Make the label occupy the middle bit of the toplevel, no matter how it
 is resized:
 .CS
-label .l \-text "In the\enMiddle!" \-bg black \-fg white
+label .l \-text "In the\enMiddle!" \-background black \-foreground white
 \fBplace\fR .l \-relwidth .3 \-relx .35 \-relheight .3 \-rely .35
 .CE
 .SH "SEE ALSO"

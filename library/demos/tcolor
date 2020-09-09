@@ -164,7 +164,7 @@ proc tc_scaleChanged args {
 	}
     }
     set color [format "#%04x%04x%04x" $red $green $blue]
-    .sample.swatch config -bg $color
+    .sample.swatch config -background $color
     if {$autoUpdate} doUpdate
     update idletasks
 }
@@ -227,7 +227,7 @@ proc tc_loadNamedColor name {
     }
     tc_setScales
     set color [format "#%04x%04x%04x" $red $green $blue]
-    .sample.swatch config -bg $color
+    .sample.swatch config -background $color
     if {$autoUpdate} doUpdate
 }
 

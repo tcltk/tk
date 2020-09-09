@@ -66,8 +66,8 @@ test entry-1.3 {configuration option: "bd" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -bd 4
-    .e cget -bd
+    .e configure -borderwidth 4
+    .e cget -borderwidth
 } -cleanup {
     destroy .e
 } -result 4
@@ -76,7 +76,7 @@ test entry-1.4 {configuration option: "bd" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -bd badValue
+    .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {bad screen distance "badValue"}
@@ -86,8 +86,8 @@ test entry-1.5 {configuration option: "bg" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -bg #ff0000
-    .e cget -bg
+    .e configure -background #ff0000
+    .e cget -background
 } -cleanup {
     destroy .e
 } -result {#ff0000}
@@ -96,7 +96,7 @@ test entry-1.6 {configuration option: "bg" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -bg non-existent
+    .e configure -background non-existent
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -813,8 +813,8 @@ test entry-3.13 {EntryWidgetCmd procedure, "cget" widget command} -setup {
 test entry-3.14 {EntryWidgetCmd procedure, "cget" widget command} -setup {
     entry .e
 } -body {
-    .e configure -bd 4
-    .e cget -bd
+    .e configure -borderwidth 4
+    .e cget -borderwidth
 } -cleanup {
     destroy .e
 } -result 4
@@ -837,9 +837,9 @@ test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
 test entry-3.17 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {
-    .e configure -bd 4
-    .e configure -bg #ffffff
-    lindex [.e configure -bd] 4
+    .e configure -borderwidth 4
+    .e configure -background #ffffff
+    lindex [.e configure -borderwidth] 4
 } -cleanup {
     destroy .e
 } -result 4
@@ -1721,7 +1721,7 @@ test entry-5.9 {ConfigureEntry procedure} -constraints {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised
     .e insert end "0123"
     update
     list [.e index @10] [.e index @11] [.e index @12] [.e index @13]
@@ -1734,7 +1734,7 @@ test entry-5.10 {ConfigureEntry procedure} -constraints {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief flat
+    .e configure -font {Courier -12} -borderwidth 2 -relief flat
     .e insert end "0123"
     update
     list [.e index @10] [.e index @11] [.e index @12] [.e index @13]
@@ -1761,7 +1761,7 @@ test entry-6.1 {EntryComputeGeometry procedure} -constraints {
     entry .e
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised -width 20 \
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised -width 20 \
         -highlightthickness 3
     .e insert end 012\t45
     update
@@ -1775,7 +1775,7 @@ test entry-6.2 {EntryComputeGeometry procedure} -constraints {
     entry .e
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised -width 20 \
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised -width 20 \
         -justify center -highlightthickness 3
     .e insert end 012\t45
     update
@@ -1789,7 +1789,7 @@ test entry-6.3 {EntryComputeGeometry procedure} -constraints {
     entry .e
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised -width 20 \
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised -width 20 \
         -justify right -highlightthickness 3
     .e insert end 012\t45
     update
@@ -1801,7 +1801,7 @@ test entry-6.4 {EntryComputeGeometry procedure} -setup {
     entry .e
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised -width 5
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised -width 5
     .e insert end "01234567890"
     update
     .e xview 6
@@ -1813,7 +1813,7 @@ test entry-6.5 {EntryComputeGeometry procedure} -setup {
     entry .e -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised -width 5
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised -width 5
     .e insert end "01234567890"
     update
     .e xview 7
@@ -1827,7 +1827,7 @@ test entry-6.6 {EntryComputeGeometry procedure} -constraints {
     entry .e -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Courier -12} -bd 2 -relief raised -width 10
+    .e configure -font {Courier -12} -borderwidth 2 -relief raised -width 10
     .e insert end "01234\t67890"
     update
     .e xview 3
@@ -1841,7 +1841,7 @@ test entry-6.7 {EntryComputeGeometry procedure} -constraints {
     entry .e -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Helvetica -24} -bd 3 -relief raised -width 5
+    .e configure -font {Helvetica -24} -borderwidth 3 -relief raised -width 5
     .e insert end "01234567"
     update
     list [winfo reqwidth .e] [winfo reqheight .e]
@@ -1854,7 +1854,7 @@ test entry-6.8 {EntryComputeGeometry procedure} -constraints {
     entry .e -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Helvetica -24} -bd 3 -relief raised -width 0
+    .e configure -font {Helvetica -24} -borderwidth 3 -relief raised -width 0
     .e insert end "01234567"
     update
     list [winfo reqwidth .e] [winfo reqheight .e]
@@ -1867,7 +1867,7 @@ test entry-6.9 {EntryComputeGeometry procedure} -constraints {
     entry .e -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Helvetica -24} -bd 3 -relief raised -width 0
+    .e configure -font {Helvetica -24} -borderwidth 3 -relief raised -width 0
     update
     list [winfo reqwidth .e] [winfo reqheight .e]
 } -cleanup {
@@ -1879,7 +1879,7 @@ test entry-6.10 {EntryComputeGeometry procedure} -constraints {
     entry .e -highlightthickness 2 -font {Helvetica -12}
     pack .e
 } -body {
-    .e configure -bd 1 -relief raised -width 0 -show .
+    .e configure -borderwidth 1 -relief raised -width 0 -show .
     .e insert 0 12345
     update
     set x [winfo reqwidth .e]
@@ -1896,7 +1896,7 @@ test entry-6.11 {EntryComputeGeometry procedure} -constraints {
     entry .e -highlightthickness 2
     pack .e
 } -body {
-    .e configure -bd 1 -relief raised -width 0 -show . -font {helvetica 12}
+    .e configure -borderwidth 1 -relief raised -width 0 -show . -font {helvetica 12}
     .e insert 0 12345
     update
     set x1 [winfo reqwidth .e]
@@ -1917,7 +1917,7 @@ test entry-6.12 {EntryComputeGeometry procedure} -constraints {
     fonts
 } -setup {
     catch {destroy .e}
-    entry .e -font {Courier -12} -bd 2 -relief raised -width 20
+    entry .e -font {Courier -12} -borderwidth 2 -relief raised -width 20
     pack .e
 } -body {
     .e insert end "012\t456\t"
@@ -1930,7 +1930,7 @@ test entry-6.12 {EntryComputeGeometry procedure} -constraints {
 
 test entry-7.1 {InsertChars procedure} -setup {
     unset -nocomplain contents
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -1947,7 +1947,7 @@ test entry-7.1 {InsertChars procedure} -setup {
 
 test entry-7.2 {InsertChars procedure} -setup {
     unset -nocomplain contents
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -1962,7 +1962,7 @@ test entry-7.2 {InsertChars procedure} -setup {
     after cancel $timeout
 } -result {abcdeXXX abcdeXXX {0.000000 1.000000}}
 test entry-7.3 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 0123456789
@@ -1976,7 +1976,7 @@ test entry-7.3 {InsertChars procedure} -setup {
     destroy .e
 } -result {5 9 5 8}
 test entry-7.4 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 0123456789
@@ -1990,7 +1990,7 @@ test entry-7.4 {InsertChars procedure} -setup {
     destroy .e
 } -result {2 9 2 8}
 test entry-7.5 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 0123456789
@@ -2004,7 +2004,7 @@ test entry-7.5 {InsertChars procedure} -setup {
     destroy .e
 } -result {2 9 2 8}
 test entry-7.6 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 0123456789
@@ -2018,7 +2018,7 @@ test entry-7.6 {InsertChars procedure} -setup {
     destroy .e
 } -result {2 6 2 5}
 test entry-7.7 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -xscrollcommand scroll
@@ -2030,7 +2030,7 @@ test entry-7.7 {InsertChars procedure} -setup {
     destroy .e
 } -result 7
 test entry-7.8 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 0123456789
@@ -2041,7 +2041,7 @@ test entry-7.8 {InsertChars procedure} -setup {
     destroy .e
 } -result 4
 test entry-7.9 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 "This is a very long string"
@@ -2053,7 +2053,7 @@ test entry-7.9 {InsertChars procedure} -setup {
     destroy .e
 } -result 7
 test entry-7.10 {InsertChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 "This is a very long string"
@@ -2068,7 +2068,7 @@ test entry-7.10 {InsertChars procedure} -setup {
 test entry-7.11 {InsertChars procedure} -constraints {
     fonts
 } -setup {
-    entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 0 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 "xyzzy"
@@ -2081,7 +2081,7 @@ test entry-7.11 {InsertChars procedure} -constraints {
 
 test entry-8.1 {DeleteChars procedure} -setup {
     unset -nocomplain contents
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2097,7 +2097,7 @@ test entry-8.1 {DeleteChars procedure} -setup {
 } -result {abe abe {0.000000 1.000000}}
 test entry-8.2 {DeleteChars procedure} -setup {
     unset -nocomplain contents
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2113,7 +2113,7 @@ test entry-8.2 {DeleteChars procedure} -setup {
 } -result {cde cde {0.000000 1.000000}}
 test entry-8.3 {DeleteChars procedure} -setup {
     unset -nocomplain contents
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2128,7 +2128,7 @@ test entry-8.3 {DeleteChars procedure} -setup {
     after cancel $timeout
 } -result {abc abc {0.000000 1.000000}}
 test entry-8.4 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2144,7 +2144,7 @@ test entry-8.4 {DeleteChars procedure} -setup {
     destroy .e
 } -result {1 6 1 5}
 test entry-8.5 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2160,7 +2160,7 @@ test entry-8.5 {DeleteChars procedure} -setup {
     destroy .e
 } -result {1 5 1 4}
 test entry-8.6 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2176,7 +2176,7 @@ test entry-8.6 {DeleteChars procedure} -setup {
     destroy .e
 } -result {1 2 1 5}
 test entry-8.7 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2190,7 +2190,7 @@ test entry-8.7 {DeleteChars procedure} -setup {
     destroy .e
 } -returnCodes error -result {selection isn't in widget .e}
 test entry-8.8 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2206,7 +2206,7 @@ test entry-8.8 {DeleteChars procedure} -setup {
     destroy .e
 } -result {3 4 3 8}
 test entry-8.9 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e insert 0 0123456789abcde
@@ -2219,7 +2219,7 @@ test entry-8.9 {DeleteChars procedure} -setup {
     destroy .e
 } -returnCodes error -result {selection isn't in widget .e}
 test entry-8.10 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2235,7 +2235,7 @@ test entry-8.10 {DeleteChars procedure} -setup {
     destroy .e
 } -result {3 5 5 8}
 test entry-8.11 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2251,7 +2251,7 @@ test entry-8.11 {DeleteChars procedure} -setup {
     destroy .e
 } -result {3 8 4 8}
 test entry-8.12 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2264,7 +2264,7 @@ test entry-8.12 {DeleteChars procedure} -setup {
     destroy .e
 } -result 1
 test entry-8.13 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2277,7 +2277,7 @@ test entry-8.13 {DeleteChars procedure} -setup {
     destroy .e
 } -result 1
 test entry-8.14 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2290,7 +2290,7 @@ test entry-8.14 {DeleteChars procedure} -setup {
     destroy .e
 } -result 4
 test entry-8.15 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2303,7 +2303,7 @@ test entry-8.15 {DeleteChars procedure} -setup {
     destroy .e
 } -result 1
 test entry-8.16 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2316,7 +2316,7 @@ test entry-8.16 {DeleteChars procedure} -setup {
     destroy .e
 } -result 1
 test entry-8.17 {DeleteChars procedure} -setup {
-    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 10 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2329,7 +2329,7 @@ test entry-8.17 {DeleteChars procedure} -setup {
     destroy .e
 } -result 4
 test entry-8.18 {DeleteChars procedure} -setup {
-    entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
+    entry .e -width 0 -font {Courier -12} -highlightthickness 2 -borderwidth 2
     pack .e
     focus .e
 } -body {
@@ -2368,7 +2368,7 @@ test entry-9.1 {EntryValueChanged procedure} -setup {
 test entry-10.1 {EntrySetValue procedure} -constraints fonts -body {
     set x abcde
     set y ab
-    entry .e  -font {Helvetica -12} -highlightthickness 2 -bd 2  -width 0
+    entry .e  -font {Helvetica -12} -highlightthickness 2 -borderwidth 2  -width 0
     pack .e
     .e configure -textvariable x
     .e configure -textvariable y
@@ -2379,7 +2379,7 @@ test entry-10.1 {EntrySetValue procedure} -constraints fonts -body {
 } -result {ab 24}
 test entry-10.2 {EntrySetValue procedure, updating selection} -setup {
     unset -nocomplain x
-    entry .e -font {Helvetica -12} -highlightthickness 2 -bd 2
+    entry .e -font {Helvetica -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -textvariable x
@@ -2392,7 +2392,7 @@ test entry-10.2 {EntrySetValue procedure, updating selection} -setup {
 } -returnCodes error -result {selection isn't in widget .e}
 test entry-10.3 {EntrySetValue procedure, updating selection} -setup {
     unset -nocomplain x
-    entry .e -font {Helvetica -12} -highlightthickness 2 -bd 2
+    entry .e -font {Helvetica -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -textvariable x
@@ -2405,7 +2405,7 @@ test entry-10.3 {EntrySetValue procedure, updating selection} -setup {
 } -result {4 7}
 test entry-10.4 {EntrySetValue procedure, updating selection} -setup {
     unset -nocomplain x
-    entry .e -font {Helvetica -12} -highlightthickness 2 -bd 2
+    entry .e -font {Helvetica -12} -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -textvariable x
@@ -2418,7 +2418,7 @@ test entry-10.4 {EntrySetValue procedure, updating selection} -setup {
 } -result {4 10}
 test entry-10.5 {EntrySetValue procedure, updating display position} -setup {
     unset -nocomplain x
-    entry .e -highlightthickness 2 -bd 2
+    entry .e -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -width 10 -font {Courier -12} -textvariable x
@@ -2433,7 +2433,7 @@ test entry-10.5 {EntrySetValue procedure, updating display position} -setup {
 } -result 0
 test entry-10.6 {EntrySetValue procedure, updating display position} -setup {
     unset -nocomplain x
-    entry .e -highlightthickness 2 -bd 2
+    entry .e -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -width 10 -font {Courier -12} -textvariable x
@@ -2449,7 +2449,7 @@ test entry-10.6 {EntrySetValue procedure, updating display position} -setup {
 } -result 10
 test entry-10.7 {EntrySetValue procedure, updating insertion cursor} -setup {
     unset -nocomplain x
-    entry .e -highlightthickness 2 -bd 2
+    entry .e -highlightthickness 2 -borderwidth 2
     pack .e
     update
 } -body {
@@ -2464,7 +2464,7 @@ test entry-10.7 {EntrySetValue procedure, updating insertion cursor} -setup {
 } -result 3
 test entry-10.8 {EntrySetValue procedure, updating insertion cursor} -setup {
     unset -nocomplain x
-    entry .e -highlightthickness 2 -bd 2
+    entry .e -highlightthickness 2 -borderwidth 2
     pack .e
 } -body {
     .e configure -width 10 -font {Courier -12} -textvariable x
@@ -2478,7 +2478,7 @@ test entry-10.8 {EntrySetValue procedure, updating insertion cursor} -setup {
 } -result 5
 
 test entry-11.1 {EntryEventProc procedure} -setup {
-    entry .e -highlightthickness 2 -bd 2 -font {Helvetica -12}
+    entry .e -highlightthickness 2 -borderwidth 2 -font {Helvetica -12}
     pack .e
 } -body {
     .e insert 0 abcdefg
@@ -2510,7 +2510,7 @@ test entry-12.1 {EntryCmdDeletedProc procedure} -body {
 
 
 test entry-13.1 {GetEntryIndex procedure} -setup {
-    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
     pack .e
 } -body {
     .e insert 0 012345678901234567890
@@ -2527,7 +2527,7 @@ test entry-13.2 {GetEntryIndex procedure} -body {
     destroy .e
 } -returnCodes error -result {bad entry index "abogus"}
 test entry-13.3 {GetEntryIndex procedure} -setup {
-    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
     pack .e
 } -body {
     .e insert 0 012345678901234567890
@@ -2540,7 +2540,7 @@ test entry-13.3 {GetEntryIndex procedure} -setup {
     destroy .e
 } -result 1
 test entry-13.4 {GetEntryIndex procedure} -setup {
-    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
     pack .e
 } -body {
     .e insert 0 012345678901234567890
@@ -2553,7 +2553,7 @@ test entry-13.4 {GetEntryIndex procedure} -setup {
     destroy .e
 } -result 4
 test entry-13.5 {GetEntryIndex procedure} -setup {
-    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
     pack .e
 } -body {
     .e insert 0 012345678901234567890
@@ -2574,7 +2574,7 @@ test entry-13.6 {GetEntryIndex procedure} -setup {
     destroy .e
 } -returnCodes error -result {bad entry index "ebogus"}
 test entry-13.7 {GetEntryIndex procedure} -setup {
-    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
     pack .e
 } -body {
     .e insert 0 012345678901234567890
@@ -2593,7 +2593,7 @@ test entry-13.8 {GetEntryIndex procedure} -setup {
     destroy .e
 } -returnCodes error -result {bad entry index "ibogus"}
 test entry-13.9 {GetEntryIndex procedure} -setup {
-    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
     pack .e
 } -body {
     .e insert 0 012345678901234567890
@@ -2615,7 +2615,7 @@ test entry-13.10 {GetEntryIndex procedure} -constraints x11 -body {
 # On unix, when selection is cleared, entry widget's internal
 # selection range is reset.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2635,7 +2635,7 @@ test entry-13.11 {GetEntryIndex procedure} -constraints aquaOrWin32 -body {
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2653,7 +2653,7 @@ test entry-13.11 {GetEntryIndex procedure} -constraints aquaOrWin32 -body {
 
 test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2672,7 +2672,7 @@ test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 # it behaves differently?
 test entry-13.12.1 {GetEntryIndex procedure} -constraints unix -body {
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2689,7 +2689,7 @@ test entry-13.12.1 {GetEntryIndex procedure} -constraints unix -body {
 
 test entry-13.13 {GetEntryIndex procedure} -constraints win -body {
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2709,7 +2709,7 @@ test entry-13.14 {GetEntryIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2729,7 +2729,7 @@ test entry-13.14.1 {GetEntryIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+	entry .e -font {Courier -12} -width 5 -borderwidth 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2754,7 +2754,7 @@ test entry-13.15 {GetEntryIndex procedure} -body {
 } -returnCodes error -result {bad entry index "@xyz"}
 
 test entry-13.16 {GetEntryIndex procedure} -constraints fonts -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2765,7 +2765,7 @@ test entry-13.16 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result 4
 test entry-13.17 {GetEntryIndex procedure} -constraints fonts -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2776,7 +2776,7 @@ test entry-13.17 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result 4
 test entry-13.18 {GetEntryIndex procedure} -constraints fonts -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2787,7 +2787,7 @@ test entry-13.18 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result 5
 test entry-13.19 {GetEntryIndex procedure} -constraints fonts -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2798,7 +2798,7 @@ test entry-13.19 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result 8
 test entry-13.20 {GetEntryIndex procedure} -constraints fonts -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2809,7 +2809,7 @@ test entry-13.20 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result 9
 test entry-13.21 {GetEntryIndex procedure} -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2829,7 +2829,7 @@ test entry-13.22 {GetEntryIndex procedure} -setup {
     destroy .e
 } -returnCodes error -result {bad entry index "1xyz"}
 test entry-13.23 {GetEntryIndex procedure} -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2840,7 +2840,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     destroy .e
 } -result 0
 test entry-13.24 {GetEntryIndex procedure} -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2851,7 +2851,7 @@ test entry-13.24 {GetEntryIndex procedure} -body {
     destroy .e
 } -result 12
 test entry-13.25 {GetEntryIndex procedure} -body {
-    entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
+    entry .e -width 5 -relief sunken -highlightthickness 2 -borderwidth 2\
         -font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
@@ -2862,7 +2862,7 @@ test entry-13.25 {GetEntryIndex procedure} -body {
     destroy .e
 } -result 21
 test entry-13.26 {GetEntryIndex procedure} -constraints fonts -body {
-    entry .e -highlightthickness 2 -bd 2 -font {Helvetica -12}
+    entry .e -highlightthickness 2 -borderwidth 2 -font {Helvetica -12}
     selection clear .e
     .e configure -show .
     .e insert 0 XXXYZZY
@@ -3502,7 +3502,7 @@ test entry-20.7 {widget deletion with textvariable active} -body {
 # SF bugs 607390 and 617446
     set FOO init
     entry .e -textvariable FOO -validate all \
-	    -vcmd {%W configure -bg white; format 1}
+	    -vcmd {%W configure -background white; format 1}
     bind .e <Destroy> { set FOO hello }
     destroy .e
     winfo exists .e

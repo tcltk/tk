@@ -22,9 +22,9 @@ wm geometry . 300x300
 raise .
 update
 
-frame .f -bd 2 -relief raised
-frame .f.f -bd 2 -relief sunken
-frame .f.f.f -bd 2 -relief raised
+frame .f -borderwidth 2 -relief raised
+frame .f.f -borderwidth 2 -relief sunken
+frame .f.f.f -borderwidth 2 -relief raised
 button .b1 -text .b1
 button .b2 -text .b2
 button .b3 -text .b3
@@ -86,11 +86,11 @@ test geometry-3.1 {Tk_SetInternalBorder procedure} -setup {
     place .b1 -in .f -x 50 -y 5
     update
     set x [list [winfo x .b1] [winfo y .b1]]
-    .f configure -bd 5
+    .f configure -borderwidth 5
     update
     lappend x [winfo x .b1] [winfo y .b1]
 } -cleanup {
-    .f configure -bd 2
+    .f configure -borderwidth 2
 } -result {72 37 75 40}
 
 
@@ -234,8 +234,8 @@ test geometry-4.8 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     place .b3 -in .f.f.f -x 50 -y 25
     update
     destroy .f.f
-    frame .f.f -bd 2 -relief raised
-    frame .f.f.f -bd 2 -relief raised
+    frame .f.f -borderwidth 2 -relief raised
+    frame .f.f.f -borderwidth 2 -relief raised
     place .f -x 30 -y 25
     update
     list [winfo x .b1] [winfo y .b1] [winfo ismapped .b1] \

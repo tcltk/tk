@@ -10,7 +10,7 @@ package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-canvas .c -width 400 -height 300 -bd 2 -relief sunken
+canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 .c create rectangle 20 20 80 80 -tag {test rect1}
 .c create rectangle 40 40 90 100 -tag {test rect2}
 

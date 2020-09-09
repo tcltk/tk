@@ -67,22 +67,22 @@ test menubutton-1.8 {configuration options} -body {
     .mb configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test menubutton-1.9 {configuration options} -body {
-    .mb configure -bd 4
-    .mb cget -bd
+    .mb configure -borderwidth 4
+    .mb cget -borderwidth
 } -cleanup {
-    .mb configure -bd [lindex [.mb configure -bd] 3]
+    .mb configure -borderwidth [lindex [.mb configure -borderwidth] 3]
 } -result 4
 test menubutton-1.10 {configuration options} -body {
-    .mb configure -bd badValue
+    .mb configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test menubutton-1.11 {configuration options} -body {
-    .mb configure -bg #ff0000
-    .mb cget -bg
+    .mb configure -background #ff0000
+    .mb cget -background
 } -cleanup {
-    .mb configure -bg [lindex [.mb configure -bg] 3]
+    .mb configure -background [lindex [.mb configure -background] 3]
 } -result {#ff0000}
 test menubutton-1.12 {configuration options} -body {
-    .mb configure -bg non-existent
+    .mb configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test menubutton-1.13 {configuration options} -body {
     .mb configure -bitmap questhead
@@ -372,11 +372,11 @@ test menubutton-3.8 {ButtonWidgetCmd procedure, "configure" option} -body {
     .mb configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
 test menubutton-3.9 {ButtonWidgetCmd procedure, "configure" option} -body {
-    .mb co -bg #ffffff -fg
+    .mb co -background #ffffff -fg
 } -returnCodes error -result {value for "-fg" missing}
 test menubutton-3.10 {ButtonWidgetCmd procedure, "configure" option} -body {
     .mb configure -fg #123456
-    .mb configure -bg #654321
+    .mb configure -background #654321
     lindex [.mb configure -fg] 4
 } -result {#123456}
 test menubutton-3.11 {ButtonWidgetCmd procedure, "configure" option} -body {
@@ -521,10 +521,10 @@ test menubutton-5.1 {MenuButtonEventProc procedure} -setup {
     deleteWindows
     set x {}
 } -body {
-    menubutton .mb1 -bg #543210
+    menubutton .mb1 -background #543210
     rename .mb1 .mb2
     lappend x [winfo children .]
-    lappend x [.mb2 cget -bg]
+    lappend x [.mb2 cget -background]
     destroy .mb1
     lappend x [info command .mb*] [winfo children .]
 } -cleanup {
@@ -553,7 +553,7 @@ test menubutton-7.1 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 4 -highlightthickness 0
+    menubutton .mb -image image1 -borderwidth 4 -highlightthickness 0
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -566,7 +566,7 @@ test menubutton-7.2 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 3 -highlightthickness 1
+    menubutton .mb -image image1 -borderwidth 3 -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -579,7 +579,7 @@ test menubutton-7.3 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 1 -highlightthickness 3 -padx 5 -pady 5
+    menubutton .mb -image image1 -borderwidth 1 -highlightthickness 3 -padx 5 -pady 5
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -592,7 +592,7 @@ test menubutton-7.4 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 2 -relief raised -width 40 \
+    menubutton .mb -image image1 -borderwidth 2 -relief raised -width 40 \
         -highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -606,7 +606,7 @@ test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 2 -relief raised -height 30 \
+    menubutton .mb -image image1 -borderwidth 2 -relief raised -height 30 \
         -highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -617,7 +617,7 @@ test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
 test menubutton-7.6 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
-    menubutton .mb -bitmap question -bd 2 -relief raised \
+    menubutton .mb -bitmap question -borderwidth 2 -relief raised \
         -highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -627,7 +627,7 @@ test menubutton-7.6 {ComputeMenuButtonGeometry procedure} -setup {
 test menubutton-7.7 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
-    menubutton .mb -bitmap question -bd 2 -relief raised -width 40 \
+    menubutton .mb -bitmap question -borderwidth 2 -relief raised -width 40 \
         -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -637,7 +637,7 @@ test menubutton-7.7 {ComputeMenuButtonGeometry procedure} -setup {
 test menubutton-7.8 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
-    menubutton .mb -bitmap question -bd 2 -relief raised -height 50 \
+    menubutton .mb -bitmap question -borderwidth 2 -relief raised -height 50 \
         -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -649,7 +649,7 @@ test menubutton-7.9 {ComputeMenuButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    menubutton .mb -text String -bd 2 -relief raised -padx 0 -pady 0 \
+    menubutton .mb -text String -borderwidth 2 -relief raised -padx 0 -pady 0 \
         -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -661,7 +661,7 @@ test menubutton-7.10 {ComputeMenuButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    menubutton .mb -text String -bd 2 -relief raised -width 20 \
+    menubutton .mb -text String -borderwidth 2 -relief raised -width 20 \
         -padx 0 -pady 0 -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -673,7 +673,7 @@ test menubutton-7.11 {ComputeMenuButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    menubutton .mb -text String -bd 2 -relief raised -height 2 \
+    menubutton .mb -text String -borderwidth 2 -relief raised -height 2 \
         -padx 0 -pady 0 -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -685,7 +685,7 @@ test menubutton-7.12 {ComputeMenuButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    menubutton .mb -text String -bd 2 -relief raised -padx 10 -pady 5 \
+    menubutton .mb -text String -borderwidth 2 -relief raised -padx 10 -pady 5 \
         -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -697,7 +697,7 @@ test menubutton-7.13 {ComputeMenuButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    menubutton .mb -text String -bd 2 -relief raised \
+    menubutton .mb -text String -borderwidth 2 -relief raised \
         -highlightthickness 1 -indicatoron 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -713,7 +713,7 @@ test menubutton-7.14 {ComputeMenuButtonGeometry procedure} -constraints {
     # The following test is non-portable because the indicator's pixel
     # size varies to maintain constant absolute size.
 
-    menubutton .mb -image image1 -bd 2 -relief raised \
+    menubutton .mb -image image1 -borderwidth 2 -relief raised \
         -highlightthickness 2 -indicatoron 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
@@ -730,7 +730,7 @@ test menubutton-7.15 {ComputeMenuButtonGeometry procedure} -constraints {
     # The following test is non-portable because the indicator's pixel
     # size varies to maintain constant absolute size.
 
-    menubutton .mb -image image1 -bd 2 -relief raised \
+    menubutton .mb -image image1 -borderwidth 2 -relief raised \
         -highlightthickness 2 -indicatoron 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]

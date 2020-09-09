@@ -25,11 +25,11 @@ pack $btns -side bottom -fill x
 # Main widget program sets variable tk_demoDirectory
 catch {image delete image1a}
 image create photo image1a -file [file join $tk_demoDirectory images earth.gif]
-label $w.l1 -image image1a -bd 1 -relief sunken
+label $w.l1 -image image1a -borderwidth 1 -relief sunken
 
 catch {image delete image1b}
 image create photo image1b \
 	-file [file join $tk_demoDirectory images earthris.gif]
-label $w.l2 -image image1b -bd 1 -relief sunken
+label $w.l2 -image image1b -borderwidth 1 -relief sunken
 
 pack $w.l1 $w.l2 -side top -padx .5m -pady .5m

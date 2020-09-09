@@ -73,7 +73,7 @@ for {set i 0} {$i < 12} {incr i} {
     $c create text $x.15c .75c -text $i -anchor sw
 }
 $c addtag well withtag [$c create rect 13.2c 1c 13.8c 0.5c \
-	-fill [lindex [$c config -bg] 4]]
+	-fill [lindex [$c config -background] 4]]
 $c addtag well withtag [rulerMkTab $c [winfo pixels $c 13.5c] \
 	[winfo pixels $c .65c]]
 

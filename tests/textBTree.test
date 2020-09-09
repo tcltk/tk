@@ -41,7 +41,7 @@ proc msetup {} {
 proc setupBig {} {
     .t delete 1.0 end
     .t tag delete x y
-    .t tag configure x -foreground blue
+    .t tag configure x -color blue
     .t tag configure y -underline true
     # Create a Btree with 2002 lines (2000 + already existing + phantom at end)
     # This generates a level 3 node with 9 children

@@ -28,7 +28,7 @@ frame $w.right
 pack $w.left $w.right -side left -expand yes -fill y  -pady .5c -padx .5c
 
 label $w.left.label -text "Icon"
-frame $w.left.sep -relief ridge -bd 1 -height 2
+frame $w.left.sep -relief ridge -borderwidth 1 -height 2
 pack $w.left.label -side top
 pack $w.left.sep -side top -fill x -expand no
 
@@ -40,7 +40,7 @@ foreach i {error info question warning} {
 }
 
 label $w.right.label -text "Type"
-frame $w.right.sep -relief ridge -bd 1 -height 2
+frame $w.right.sep -relief ridge -borderwidth 1 -height 2
 pack $w.right.label -side top
 pack $w.right.sep -side top -fill x -expand no
 

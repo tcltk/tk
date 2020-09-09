@@ -16,7 +16,7 @@ proc focusSetup {} {
     toplevel .t
     wm geom .t +0+0
     foreach i {b1 b2 b3 b4} {
-	    button .t.$i -text .t.$i -relief raised -bd 2
+	    button .t.$i -text .t.$i -relief raised -borderwidth 2
 	    pack .t.$i
     }
     tkwait visibility .t.b4
@@ -26,7 +26,7 @@ proc focusSetupAlt {} {
     destroy .alt
     toplevel .alt -screen $env(TK_ALT_DISPLAY)
     foreach i {a b c d} {
-	button .alt.$i -text .alt.$i -relief raised -bd 2
+	button .alt.$i -text .alt.$i -relief raised -borderwidth 2
 	pack .alt.$i
     }
     tkwait visibility .alt.d
@@ -49,7 +49,7 @@ proc focusClear {} {
 
 
 # Button used in some tests in the whole test file
-button .b -text .b -relief raised -bd 2
+button .b -text .b -relief raised -borderwidth 2
 pack .b
 
 # Make sure the window manager knows who has focus
@@ -111,8 +111,8 @@ test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
     focusClear
     toplevel .t2
     wm geom .t2 +10+10
-    frame .t2.f -width 200 -height 100 -bd 2 -relief raised
-    frame .t2.f2 -width 200 -height 100 -bd 2 -relief raised
+    frame .t2.f -width 200 -height 100 -borderwidth 2 -relief raised
+    frame .t2.f2 -width 200 -height 100 -borderwidth 2 -relief raised
     pack .t2.f .t2.f2
     bind .t2.f <Destroy> {focus .t2.f}
     bind .t2.f2 <Destroy> {focus .t2}
@@ -631,7 +631,7 @@ test focus-6.1 {miscellaneous - embedded application in same process} -constrain
     frame .t.f1 -container 1
     frame .t.f2
     pack .t.f1 .t.f2
-    entry .t.f2.e1 -bg red
+    entry .t.f2.e1 -background red
     pack .t.f2.e1
     bind all <FocusIn> {lappend x "focus in %W %d"}
     bind all <FocusOut> {lappend x "focus out %W %d"}
@@ -639,7 +639,7 @@ test focus-6.1 {miscellaneous - embedded application in same process} -constrain
     child eval "set argv {-use [winfo id .t.f1]}"
     load {} Tk child
     child eval {
-	    entry .e1 -bg lightBlue
+	    entry .e1 -background lightBlue
 	    pack .e1
 	    bind all <FocusIn> {lappend x "focus in %W %d"}
 	    bind all <FocusOut> {lappend x "focus out %W %d"}
@@ -686,13 +686,13 @@ test focus-6.2 {miscellaneous - embedded application in different process} -cons
     frame .t.f1 -container 1
     frame .t.f2
     pack .t.f1 .t.f2
-    entry .t.f2.e1 -bg red
+    entry .t.f2.e1 -background red
     pack .t.f2.e1
     bind all <FocusIn> {lappend x "focus in %W %d"}
     bind all <FocusOut> {lappend x "focus out %W %d"}
     setupbg -use [winfo id .t.f1]
     dobg {
-	    entry .e1 -bg lightBlue
+	    entry .e1 -background lightBlue
 	    pack .e1
 	    bind all <FocusIn> {lappend x "focus in %W %d"}
 	    bind all <FocusOut> {lappend x "focus out %W %d"}

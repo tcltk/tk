@@ -77,8 +77,8 @@ test message-1.7 {configuration option: "bd"} -setup {
     pack .m
     update
 } -body {
-    .m configure -bd 4
-    .m cget -bd
+    .m configure -borderwidth 4
+    .m cget -borderwidth
 } -cleanup {
     destroy .m
 } -result 4
@@ -87,27 +87,27 @@ test message-1.8 {configuration option: "bd"} -setup {
     pack .m
     update
 } -body {
-    .m configure -bd badValue
+    .m configure -borderwidth badValue
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {bad screen distance "badValue"}
 
-test message-1.9 {configuration option: "bg"} -setup {
+test message-1.9 {configuration option: "background"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
     update
 } -body {
-    .m configure -bg #ff0000
-    .m cget -bg
+    .m configure -background #ff0000
+    .m cget -background
 } -cleanup {
     destroy .m
 } -result {#ff0000}
-test message-1.10 {configuration option: "bg"} -setup {
+test message-1.10 {configuration option: "background"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
     update
 } -body {
-    .m configure -bg non-existent
+    .m configure -background non-existent
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -463,9 +463,9 @@ test message-3.6 {MessageWidgetObjCmd procedure, "configure"} -setup {
 test message-3.7 {MessageWidgetObjCmd procedure, "configure"} -setup {
     message .m
 } -body {
-    .m configure -bd 4
-    .m configure -bg #ffffff
-    lindex [.m configure -bd] 4
+    .m configure -borderwidth 4
+    .m configure -background #ffffff
+    lindex [.m configure -borderwidth] 4
 } -cleanup {
     destroy .m
 } -result 4

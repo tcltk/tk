@@ -18,16 +18,16 @@ destroy .pack
 frame .pack
 place .pack -width 100 -height 100
 frame .pack.red -width 10 -height 20
-label .pack.red.l -text R -bd 2 -relief raised
+label .pack.red.l -text R -borderwidth 2 -relief raised
 place .pack.red.l -relwidth 1.0 -relheight 1.0
 frame .pack.green -width 30 -height 40
-label .pack.green.l -text G -bd 2 -relief raised
+label .pack.green.l -text G -borderwidth 2 -relief raised
 place .pack.green.l -relwidth 1.0 -relheight 1.0
 frame .pack.blue -width 40 -height 40
-label .pack.blue.l -text B -bd 2 -relief raised
+label .pack.blue.l -text B -borderwidth 2 -relief raised
 place .pack.blue.l -relwidth 1.0 -relheight 1.0
 frame .pack.violet -width 80 -height 20
-label .pack.violet.l -text P -bd 2 -relief raised
+label .pack.violet.l -text P -borderwidth 2 -relief raised
 place .pack.violet.l -relwidth 1.0 -relheight 1.0
 
 test oldpack-1.1 {basic positioning} -body {
@@ -363,8 +363,8 @@ test oldpack-6.3 {geometry propagation} -body {
     winfo reqwidth .pack} -result 40
 test oldpack-6.4 {geometry propagation} -body {
     winfo reqheight .pack} -result 100
-frame .pack.violet -width 80 -height 20 -bg violet
-label .pack.violet.l -text P -bd 2 -relief raised
+frame .pack.violet -width 80 -height 20 -background violet
+label .pack.violet.l -text P -borderwidth 2 -relief raised
 place .pack.violet.l -relwidth 1.0 -relheight 1.0
 pack append .pack .pack.red left .pack.green right .pack.blue bottom \
     .pack.violet top
@@ -462,7 +462,7 @@ test oldpack-8.5 {syntax errors} -body {
 test oldpack-8.6 {syntax errors} -setup {
     destroy .pack.yellow
 } -body {
-    frame .pack.yellow -bg yellow
+    frame .pack.yellow -background yellow
     pack after .pack.yellow
 } -cleanup {
     destroy .pack.yellow
@@ -476,7 +476,7 @@ test oldpack-8.8 {syntax errors} -body {
 test oldpack-8.9 {syntax errors} -setup {
     destroy .pack.yellow
 } -body {
-    frame .pack.yellow -bg yellow
+    frame .pack.yellow -background yellow
     pack before .pack.yellow
 } -cleanup {
     destroy .pack.yellow

@@ -327,8 +327,8 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     # Create the dialog toplevel and internal frames.
     #
     toplevel $w -class TkMotifFDialog
-    set top [frame $w.top -relief raised -bd 1]
-    set bot [frame $w.bot -relief raised -bd 1]
+    set top [frame $w.top -relief raised -borderwidth 1]
+    set bot [frame $w.bot -relief raised -borderwidth 1]
 
     pack $w.bot -side bottom -fill x
     pack $w.top -side top -expand yes -fill both

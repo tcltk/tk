@@ -36,7 +36,7 @@ proc cname4 {r g b} {
 
 proc mkColors {c width height r g b rx gx bx ry gy by} {
     catch {destroy $c}
-    canvas $c -width 400 -height 200 -bd 0
+    canvas $c -width 400 -height 200 -borderwidth 0
     for {set y 0} {$y < $height} {incr y} {
 	for {set x 0} {$x < $width} {incr x} {
 	    set color [format #%02x%02x%02x [expr $r + $y*$ry + $x*$rx] \

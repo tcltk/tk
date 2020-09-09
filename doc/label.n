@@ -108,8 +108,8 @@ labels are not intended to be interactive.
 .PP
 .CS
 # Make the widgets
-\fBlabel\fR .t \-text "This widget is at the top"    \-bg red
-\fBlabel\fR .b \-text "This widget is at the bottom" \-bg green
+\fBlabel\fR .t \-text "This widget is at the top"    \-background red
+\fBlabel\fR .b \-text "This widget is at the bottom" \-background green
 \fBlabel\fR .l \-text "Left\enHand\enSide"
 \fBlabel\fR .r \-text "Right\enHand\enSide"
 text .mid

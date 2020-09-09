@@ -23,7 +23,7 @@ proc eatColors {w {options ""}} {
     destroy $w
     eval toplevel $w $options
     wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
+    canvas $w.c -width 400 -height 200 -borderwidth 0
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
         for {set x 0} {$x < 40} {incr x} {
@@ -135,7 +135,7 @@ test winfo-4.5 {"winfo containing" command} -body {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
-    frame .t.f -width 80 -height 60 -bd 2 -relief raised
+    frame .t.f -width 80 -height 60 -borderwidth 2 -relief raised
     place .t.f -x 50 -y 50
     wm geom .t +0+0
     update
@@ -151,7 +151,7 @@ test winfo-4.6 {"winfo containing" command} -constraints {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
-    frame .t.f -width 80 -height 60 -bd 2 -relief raised
+    frame .t.f -width 80 -height 60 -borderwidth 2 -relief raised
     place .t.f -x 50 -y 50
     wm geom .t +0+0
     update
@@ -164,7 +164,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
-    frame .t.f -width 80 -height 60 -bd 2 -relief raised
+    frame .t.f -width 80 -height 60 -borderwidth 2 -relief raised
     place .t.f -x 50 -y 50
     wm geom .t +0+0
     update
@@ -300,9 +300,9 @@ test winfo-9.4 {"winfo viewable" command} -body {
 test winfo-9.5 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
-    frame .f1 -width 100 -height 100 -relief raised -bd 2
+    frame .f1 -width 100 -height 100 -relief raised -borderwidth 2
     place .f1 -x 0 -y 0
-    frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
+    frame .f1.f2 -width 50 -height 50 -relief raised -borderwidth 2
     place .f1.f2 -x 0 -y 0
     update
     list [winfo viewable .f1] [winfo viewable .f1.f2]
@@ -312,8 +312,8 @@ test winfo-9.5 {"winfo viewable" command} -setup {
 test winfo-9.6 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
-    frame .f1 -width 100 -height 100 -relief raised -bd 2
-    frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
+    frame .f1 -width 100 -height 100 -relief raised -borderwidth 2
+    frame .f1.f2 -width 50 -height 50 -relief raised -borderwidth 2
     place .f1.f2 -x 0 -y 0
     update
     list [winfo viewable .f1] [winfo viewable .f1.f2]
@@ -323,9 +323,9 @@ test winfo-9.6 {"winfo viewable" command} -setup {
 test winfo-9.7 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
-    frame .f1 -width 100 -height 100 -relief raised -bd 2
+    frame .f1 -width 100 -height 100 -relief raised -borderwidth 2
     place .f1 -x 0 -y 0
-    frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
+    frame .f1.f2 -width 50 -height 50 -relief raised -borderwidth 2
     place .f1.f2 -x 0 -y 0
     update
     wm iconify .
@@ -383,7 +383,7 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -406,7 +406,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -423,7 +423,7 @@ test winfo-13.3 {destroying container window} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -440,7 +440,7 @@ test winfo-13.4 {[winfo containing] with embedded windows} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update

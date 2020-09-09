@@ -112,12 +112,12 @@ labelframe $w.right -text "GIF Image"
 pack $w.left $w.right -side left -padx 10 -pady 10 -expand yes
 
 # This method of scrolling text looks far better with a fixed-width font
-label $w.left.l1 -bd 4 -relief ridge -font fixedFont
-label $w.left.l2 -bd 4 -relief groove -font fixedFont
-label $w.left.l3 -bd 4 -relief flat -font fixedFont -width 18
+label $w.left.l1 -borderwidth 4 -relief ridge -font fixedFont
+label $w.left.l2 -borderwidth 4 -relief groove -font fixedFont
+label $w.left.l3 -borderwidth 4 -relief flat -font fixedFont -width 18
 pack $w.left.l1 $w.left.l2 $w.left.l3 -side top -expand yes -padx 10 -pady 10 -anchor w
 # Don't need to do very much with this label except turn off the border
-label $w.right.l -bd 0
+label $w.right.l -borderwidth 0
 pack $w.right.l -side top -expand yes -padx 10 -pady 10
 
 # This is a base-64-encoded animated GIF file.

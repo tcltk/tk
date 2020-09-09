@@ -224,7 +224,7 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
     .t insert 1.0 "x\ty"
     .t tag delete x y z
     .t tag configure x -tabs 50
-    .t tag configure y -foreground black
+    .t tag configure y -color black
     .t tag configure z -tabs 70
     .t tag add x 1.0 1.end
     .t tag add y 1.0 1.end
@@ -709,7 +709,7 @@ test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
 test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16"
-    button .b -text "Test" -bd 2 -highlightthickness 2
+    button .b -text "Test" -borderwidth 2 -highlightthickness 2
     .t window create 3.end -window .b
     .t yview moveto 1
     updateText
@@ -839,10 +839,10 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {textfonts} {
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
     .t tag configure spacing -spacing1 8 -spacing3 2
     .t tag add spacing 1.0 end
-    frame .t.f1 -width 10 -height 4 -bg black
-    frame .t.f2 -width 10 -height 4 -bg black
-    frame .t.f3 -width 10 -height 4 -bg black
-    frame .t.f4 -width 10 -height 4 -bg black
+    frame .t.f1 -width 10 -height 4 -background black
+    frame .t.f2 -width 10 -height 4 -background black
+    frame .t.f3 -width 10 -height 4 -background black
+    frame .t.f4 -width 10 -height 4 -background black
     .t window create 1.3 -window .t.f1 -align top
     .t window create 1.7 -window .t.f2 -align center
     .t window create 2.1 -window .t.f3 -align bottom
@@ -859,7 +859,7 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {textfonts} {
 
 test textDisp-5.2 {DisplayDLine, line resizes during display} {
     .t delete 1.0 end
-    frame .t.f -width 20 -height 20 -bd 2 -relief raised
+    frame .t.f -width 20 -height 20 -borderwidth 2 -relief raised
     bind .t.f <Configure> {.t.f configure -width 30 -height 30}
     .t window create insert -window .t.f
     updateText
@@ -917,7 +917,7 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
 test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortable} {
     .t configure -wrap char
-    frame .f2 -bg red
+    frame .f2 -background red
     place .f2 -in .t -relx 0.5 -rely 0.5 -relwidth 0.5 -relheight 0.5
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, a couple of times"
@@ -933,9 +933,9 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortabl
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unix nonPortable} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0.2 -rely 0.5 -relwidth 0.5 -relheight 0.5
-    .t configure -bd 2 -relief raised
+    .t configure -borderwidth 2 -relief raised
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, a couple of times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -947,7 +947,7 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unix n
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {borders 1.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
-.t configure -bd 0
+.t configure -borderwidth 0
 test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1008,14 +1008,14 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll.} {aqua
 # they result in a lot of extra redisplay under Ultrix.  I don't
 # know why this is so.
 
-.t configure -bd 2 -relief raised -wrap char
+.t configure -borderwidth 2 -relief raised -wrap char
 .t delete 1.0 end
 .t insert 1.0 "Line 1 is so long that it wraps around, a couple of times"
 foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
     .t insert end "\nLine $i"
 }
 test textDisp-7.1 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0.2 -relwidth 0.6 -rely 0.22 -relheight 0.55
     updateText
     destroy .f2
@@ -1023,7 +1023,7 @@ test textDisp-7.1 {TkTextRedrawRegion} {nonPortable} {
     list $tk_textRelayout $tk_textRedraw
 } {{} {1.40 2.0 3.0 4.0 5.0 6.0}}
 test textDisp-7.2 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0 -relwidth 0.5 -rely 0 -relheight 0.5
     updateText
     destroy .f2
@@ -1031,7 +1031,7 @@ test textDisp-7.2 {TkTextRedrawRegion} {nonPortable} {
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 1.0 1.20 1.40 2.0 3.0}}
 test textDisp-7.3 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0.5 -relwidth 0.5 -rely 0.5 -relheight 0.5
     updateText
     destroy .f2
@@ -1039,7 +1039,7 @@ test textDisp-7.3 {TkTextRedrawRegion} {nonPortable} {
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 4.0 5.0 6.0 7.0 8.0}}
 test textDisp-7.4 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 0 -relheight 0.2 \
 	    -bordermode ignore
     updateText
@@ -1048,7 +1048,7 @@ test textDisp-7.4 {TkTextRedrawRegion} {nonPortable} {
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 1.0 1.20}}
 test textDisp-7.5 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 1.0 -relheight 0.2 \
 	    -anchor s -bordermode ignore
     updateText
@@ -1057,7 +1057,7 @@ test textDisp-7.5 {TkTextRedrawRegion} {nonPortable} {
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 7.0 8.0}}
 test textDisp-7.6 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor w -bordermode ignore
     updateText
@@ -1066,7 +1066,7 @@ test textDisp-7.6 {TkTextRedrawRegion} {nonPortable} {
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
 test textDisp-7.7 {TkTextRedrawRegion} {nonPortable} {
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 1.0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor e -bordermode ignore
     updateText
@@ -1077,7 +1077,7 @@ test textDisp-7.7 {TkTextRedrawRegion} {nonPortable} {
 test textDisp-7.8 {TkTextRedrawRegion} {nonPortable} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\n"
-    frame .f2 -bg #ff0000
+    frame .f2 -background #ff0000
     place .f2 -in .t -relx 0.0 -relwidth 0.4 -rely 0.35 -relheight 0.4 \
 	    -anchor nw -bordermode ignore
     updateText
@@ -1085,7 +1085,7 @@ test textDisp-7.8 {TkTextRedrawRegion} {nonPortable} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 4.0 5.0 6.0 7.0 eof}}
-.t configure -bd 0
+.t configure -borderwidth 0
 
 test textDisp-8.1 {TkTextChanged: redisplay whole lines} {textfonts} {
     .t configure -wrap word
@@ -1419,16 +1419,16 @@ test textDisp-10.1 {TkTextRelayoutWindow} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
     updateText
-    .t configure -bg black
+    .t configure -background black
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 2.0 2.20 3.0 3.20 4.0} {borders 1.0 2.0 2.20 3.0 3.20 4.0 eof}}
-.t configure -bg [lindex [.t configure -bg] 3]
+.t configure -background [lindex [.t configure -background] 3]
 catch {destroy .top}
 test textDisp-10.2 {TkTextRelayoutWindow} {
     toplevel .top -width 300 -height 200
     wm geometry .top +0+0
-    text .top.t -font $fixedFont -width 20 -height 10 -relief raised -bd 2
+    text .top.t -font $fixedFont -width 20 -height 10 -relief raised -borderwidth 2
     place .top.t -x 0 -y 0 -width 20 -height 20
     .top.t insert end "First line"
     .top.t see insert
@@ -1617,7 +1617,7 @@ test textDisp-11.19 {TkTextSetYView, see in elided lines} {
         .top.t insert end "Line $i\n"
     }
     # button just for having a line with a larger height
-    button .top.t.b -text "Test" -bd 2 -highlightthickness 2
+    button .top.t.b -text "Test" -borderwidth 2 -highlightthickness 2
     .top.t window create 21.0 -window .top.t.b
     .top.t tag add hidden 15.36 21.0
     .top.t tag configure hidden -elide true
@@ -1799,7 +1799,7 @@ test textDisp-13.10 {TkTextSeeCmd procedure} {} {
     # SF Bug 641778
     set w .tsee
     destroy $w
-    text $w -font {Helvetica 8 normal} -bd 16
+    text $w -font {Helvetica 8 normal} -borderwidth 16
     $w insert end Hello
     $w see end
     set res [$w bbox end]
@@ -2995,7 +2995,7 @@ Using 8.5a4 (ActiveState beta 4) under Linux.  No problem with ActiveState beta 
 
 toplevel .tt
 pack [text .tt.u] -side right
-.tt.u configure -width 30 -height 27 -wrap word -bg #FFFFFF
+.tt.u configure -width 30 -height 27 -wrap word -background #FFFFFF
 .tt.u insert end $message
 .tt.u mark set insert 3.10
 tkwait visibility .tt.u
@@ -3080,10 +3080,10 @@ test textDisp-22.9 {TkTextCharBbox, handling of spacing} {textfonts} {
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
     .t tag configure spacing -spacing1 8 -spacing3 2
     .t tag add spacing 1.0 end
-    frame .t.f1 -width 10 -height 4 -bg black
-    frame .t.f2 -width 10 -height 4 -bg black
-    frame .t.f3 -width 10 -height 4 -bg black
-    frame .t.f4 -width 10 -height 4 -bg black
+    frame .t.f1 -width 10 -height 4 -background black
+    frame .t.f2 -width 10 -height 4 -background black
+    frame .t.f3 -width 10 -height 4 -background black
+    frame .t.f4 -width 10 -height 4 -background black
     .t window create 1.3 -window .t.f1 -align top
     .t window create 1.7 -window .t.f2 -align center
     .t window create 2.1 -window .t.f3 -align bottom
@@ -3146,12 +3146,12 @@ test textDisp-23.1 {TkTextDLineInfo} {textfonts} {
 	    [.t dlineinfo 56.0]
 } [list {} [list 3 3 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {4*$fixedDiff + 55}] 91 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
 test textDisp-23.2 {TkTextDLineInfo} {textfonts} {
-    .t config -bd 4 -wrap word
+    .t config -borderwidth 4 -wrap word
     updateText
     .t yview 48.0
     .t dlineinfo 50.40
 } [list 7 [expr {4*$fixedDiff + 59}] 91 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]
-.t config -bd 0
+.t config -borderwidth 0
 test textDisp-23.3 {TkTextDLineInfo} {textfonts} {
     .t config -wrap none
     updateText
@@ -3378,14 +3378,14 @@ test textDisp-24.21 {TkTextCharLayoutProc, word breaks} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Sample text xxxxxxx yyyyy zzzzzzz qqqqq rrrr ssss tt u vvvvv"
-    frame .t.f -width 30 -height 20 -bg black
+    frame .t.f -width 30 -height 20 -background black
     .t window create 1.36 -window .t.f
     .t bbox 1.26
 } [list 3 [expr {$fixedDiff/2 + 19}] 7 $fixedHeight]
 test textDisp-24.22 {TkTextCharLayoutProc, word breaks} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
-    frame .t.f -width 30 -height 20 -bg black
+    frame .t.f -width 30 -height 20 -background black
     .t insert 1.0 "Sample text xxxxxxx yyyyyyy"
     .t window create end -window .t.f
     .t insert end "zzzzzzz qqqqq rrrr ssss tt u vvvvv"
@@ -3394,7 +3394,7 @@ test textDisp-24.22 {TkTextCharLayoutProc, word breaks} {textfonts} {
 test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
-    frame .t.f -width 30 -height 20 -bg black
+    frame .t.f -width 30 -height 20 -background black
     .t insert 1.0 "Sample text xxxxxxx yyyyyyy "
     .t insert end "zzzzzzz qqqqq rrrr ssss tt"
     .t window create end -window .t.f
@@ -3422,7 +3422,7 @@ test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -constraints 
     destroy .tt
 } -result [list [list 38 5 7 $fixedHeight] [list 38 20 7 $fixedHeight] [list 38 35 7 $fixedHeight]]
 
-.t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 \
+.t configure -width 40 -borderwidth 0 -relief flat -highlightthickness 0 -padx 0 \
     -tabs 100
 updateText
 test textDisp-25.1 {CharBboxProc procedure, check tab width} {textfonts} {
@@ -3431,7 +3431,7 @@ test textDisp-25.1 {CharBboxProc procedure, check tab width} {textfonts} {
     list [.t bbox 1.3] [.t bbox 1.5] [.t bbox 1.6]
 } [list [list 21 1 79 $fixedHeight] [list 107 1 93 $fixedHeight] [list 200 1 7 $fixedHeight]]
 
-.t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 \
+.t configure -width 40 -borderwidth 0 -relief flat -highlightthickness 0 -padx 0 \
 	-tabs {}
 updateText
 test textDisp-26.1 {AdjustForTab procedure, no tabs} {textfonts} {
@@ -3601,7 +3601,7 @@ test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {textfonts} {
     set res
 } [list 112 56 112 56]
 
-.t configure -width 20 -bd 2 -highlightthickness 2 -relief sunken -tabs {} \
+.t configure -width 20 -borderwidth 2 -highlightthickness 2 -relief sunken -tabs {} \
 	-wrap char
 updateText
 test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {textfonts} {
@@ -3780,7 +3780,7 @@ test textDisp-29.1 {miscellaneous: lines wrap but are still too long} {textfonts
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     pack .t2.s -side bottom -fill x
     .t2.t insert end 123
-    frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
+    frame .t2.t.f -width 300 -height 50 -borderwidth 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
@@ -3795,7 +3795,7 @@ test textDisp-29.2 {miscellaneous: lines wrap but are still too long} {textfonts
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     pack .t2.s -side bottom -fill x
     .t2.t insert end 123
-    frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
+    frame .t2.t.f -width 300 -height 50 -borderwidth 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
     .t2.t xview scroll 1 unit
@@ -3828,7 +3828,7 @@ test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} {textfon
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     pack .t2.s -side bottom -fill x
     .t2.t insert end 123
-    frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
+    frame .t2.t.f -width 300 -height 50 -borderwidth 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
     .t2.t xview scroll 2 unit
@@ -3845,7 +3845,7 @@ test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} {textfon
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     pack .t2.s -side bottom -fill x
     .t2.t insert end 123
-    frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
+    frame .t2.t.f -width 300 -height 50 -borderwidth 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
     .t2.t xview scroll 7 pixels
@@ -3862,7 +3862,7 @@ test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} {textfon
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     pack .t2.s -side bottom -fill x
     .t2.t insert end 123
-    frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
+    frame .t2.t.f -width 300 -height 50 -borderwidth 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
     .t2.t xview scroll 17 pixels
@@ -3875,7 +3875,7 @@ test textDisp-29.2.5 {miscellaneous: can show last character} {
     wm geometry .t2 121x141+200+200
     text .t2.t -width 5 -height 5 -font {Arial 10} \
       -wrap none -xscrollcommand ".t2.s set" \
-      -bd 2 -highlightthickness 0 -padx 1
+      -borderwidth 2 -highlightthickness 0 -padx 1
     .t2.t insert end "WWWWWWWWWWWWi"
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     grid .t2.t -row 0 -column 0 -sticky nsew
@@ -3907,7 +3907,7 @@ test textDisp-29.3 {miscellaneous: lines wrap but are still too long} {textfonts
     scrollbar .t2.s -orient horizontal -command ".t2.t xview"
     pack .t2.s -side bottom -fill x
     .t2.t insert end 123
-    frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
+    frame .t2.t.f -width 300 -height 50 -borderwidth 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
     .t2.t xview scroll 200 units
@@ -4083,7 +4083,7 @@ test textDisp-32.1 {everything elided} {
     destroy .tt
 } {}
 test textDisp-32.2 {elide and tags} {
-    pack [text .tt -height 30 -width 100 -bd 0 \
+    pack [text .tt -height 30 -width 100 -borderwidth 0 \
       -highlightthickness 0 -padx 0]
     .tt insert end \
       {test text using tags 1 and 3 } \

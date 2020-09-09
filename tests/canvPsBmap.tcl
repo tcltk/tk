@@ -20,7 +20,7 @@ button .t.bot.quit -text Quit -command {destroy .t}
 button .t.bot.print -text Print -command "lpr $c"
 pack .t.bot.print .t.bot.quit -side left -pady 1m -expand 1
 
-canvas $c -width 6i -height 6i -bd 2 -relief sunken
+canvas $c -width 6i -height 6i -borderwidth 2 -relief sunken
 pack $c -expand yes -fill both -padx 2m -pady 2m
 
 set canvPsBmapImageDir [file join [file dirname [info script]] images]

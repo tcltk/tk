@@ -25,7 +25,7 @@ button .t.bot.quit -text Quit -command {destroy .t}
 button .t.bot.print -text Print -command "lpr $c"
 pack .t.bot.print .t.bot.quit -side left -pady 1m -expand 1
 
-canvas $c -width 6i -height 7i -bd 2 -relief sunken
+canvas $c -width 6i -height 7i -borderwidth 2 -relief sunken
 pack $c -expand yes -fill both -padx 2m -pady 2m
 
 $c create rect 2.95i 0.45i 3.05i 0.55i -fill {} -outline black
