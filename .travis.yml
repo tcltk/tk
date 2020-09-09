@@ -23,16 +23,20 @@ jobs:
     - name: "Linux/GCC/Shared"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
       script: &x11gui
         - make binaries libraries tktest
         - make install
-        - xvfb-run make test
+        - make test
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -41,6 +45,8 @@ jobs:
     - name: "Linux/GCC/Shared/bionic"
       os: linux
       dist: bionic
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -48,6 +54,8 @@ jobs:
     - name: "Linux/GCC/Shared/xenial"
       os: linux
       dist: xenial
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
@@ -169,8 +177,7 @@ jobs:
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script:
-        - make binaries libraries tktest
-        - Xvfb :1337 & make test DISPLAY=:1337
+        - Xvfb :1337 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix & make binaries libraries tktest test DISPLAY=:1337 ERROR_ON_FAILURES=1
 # Older MacOS versions
     - name: "macOS/Clang/Xcode 11/Shared"
       os: osx
