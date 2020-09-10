@@ -107,14 +107,15 @@ Tk_ImageType tkBitmapImageType = {
  */
 
 static const Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_UID, "-background", NULL, NULL,
+    {TK_CONFIG_UID, "-background", "background", "Background",
 	"", offsetof(BitmapModel, bgUid), 0, NULL},
+    {TK_CONFIG_UID, "-color", "color", "Color",
+	"#000000", offsetof(BitmapModel, fgUid), 0, NULL},
     {TK_CONFIG_STRING, "-data", NULL, NULL,
 	NULL, offsetof(BitmapModel, dataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	NULL, offsetof(BitmapModel, fileString), TK_CONFIG_NULL_OK, NULL},
-    {TK_CONFIG_UID, "-foreground", NULL, NULL,
-	"#000000", offsetof(BitmapModel, fgUid), 0, NULL},
+    {TK_CONFIG_SYNONYM, "-foreground", "color", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_STRING, "-maskdata", NULL, NULL,
 	NULL, offsetof(BitmapModel, maskDataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-maskfile", NULL, NULL,

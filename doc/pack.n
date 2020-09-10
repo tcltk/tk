@@ -158,17 +158,15 @@ If \fIboolean\fR is omitted then the command returns \fB0\fR or
 for \fIcontainer\fR.
 Propagation is enabled by default.
 .TP
-\fBpack slaves \fIwindow\fR
+\fBpack content \fIwindow\fR
 Returns a list of all of the content windows in the packing order for \fIwindow\fR.
 The order of the content windows in the list is the same as their order in
 the packing order.
 If \fIwindow\fR has no content then an empty string is returned.
 .TP
-.VS "TIP 581"
-\fBpack content \fIwindow\fR
+\fBpack slaves \fIwindow\fR
 .
-Synonym for . \fBpack slaves \fIwindow\fR
-.VE "TIP 581"
+Synonym for . \fBpack content \fIwindow\fR
 .SH "THE PACKER ALGORITHM"
 .PP
 For each container the packer maintains an ordered list of content

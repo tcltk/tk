@@ -439,7 +439,7 @@ Tk_GetOption(
      * To work around this, the option name field syntax was extended to allow
      * for a "." in the name; if this character occurs in the name, then it
      * indicates that this name contains a new window class and an option
-     * name, ie, "Button.foreground". If we see this form in the name field,
+     * name, ie, "Button.color". If we see this form in the name field,
      * we query the option database directly (since the option stacks will not
      * have the information we need).
      */

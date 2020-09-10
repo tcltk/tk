@@ -191,15 +191,13 @@ The list consists of \fIoption\-value\fR pairs in exactly the
 same form as might be specified to the \fBplace configure\fR
 command.
 .TP
-\fBplace slaves \fIwindow\fR
+\fBplace content \fIwindow\fR
 Returns a list of all the content windows for which \fIwindow\fR is the container.
 If there is no content for \fIwindow\fR then an empty string is returned.
 .TP
-.VS "TIP 581"
-\fBplace content \fIwindow\fR
+\fBplace slaves \fIwindow\fR
 .
-Synonym for . \fBplace slaves \fIwindow\fR
-.VE "TIP 581"
+Synonym for . \fBplace content \fIwindow\fR
 .PP
 If the configuration of a window has been retrieved with
 \fBplace info\fR, that configuration can be restored later by
