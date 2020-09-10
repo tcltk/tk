@@ -1289,12 +1289,10 @@ static int
 SelGetProc(
     ClientData clientData,	/* Dynamic string holding partially assembled
 				 * selection. */
-    Tcl_Interp *dummy,		/* Interpreter used for error reporting (not
+    TCL_UNUSED(Tcl_Interp *),	/* Interpreter used for error reporting (not
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    (void)dummy;
-
     Tcl_DStringAppend((Tcl_DString *)clientData, portion, -1);
     return TCL_OK;
 }

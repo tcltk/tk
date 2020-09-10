@@ -1362,11 +1362,10 @@ Tk_GetFontFromObj(
 
 static int
 SetFontFromAny(
-    Tcl_Interp *dummy,		/* Used for error reporting if not NULL. */
+    TCL_UNUSED(Tcl_Interp *),	/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
-    (void)dummy;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -3400,7 +3399,7 @@ noMapping:	;
 static int
 ConfigAttributesObj(
     Tcl_Interp *interp,		/* Interp for error return. */
-    Tk_Window tkwin,		/* For display on which font will be used. */
+    TCL_UNUSED(Tk_Window),	/* For display on which font will be used. */
     int objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[],	/* Command line options. */
     TkFontAttributes *faPtr)	/* Font attributes structure whose fields are
@@ -3410,7 +3409,6 @@ ConfigAttributesObj(
     int i, n, index;
     Tcl_Obj *optionPtr, *valuePtr;
     const char *value;
-    (void)tkwin;
 
     for (i = 0; i < objc; i += 2) {
 	optionPtr = objv[i];
