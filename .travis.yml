@@ -177,7 +177,8 @@ jobs:
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script:
-        - Xvfb :1337 -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix & make binaries libraries tktest test DISPLAY=:1337 ERROR_ON_FAILURES=1
+        - make binaries libraries tktest
+        - ./xvfb-run make test
 # Older MacOS versions
     - name: "macOS/Clang/Xcode 11/Shared"
       os: osx

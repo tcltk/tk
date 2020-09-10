@@ -93,9 +93,7 @@ clean_up() {
 }
 
 # Parse the command line.
-ARGS=$(getopt --options +ae:f:hn:lp:s:w: \
-       --long auto-servernum,error-file:,auth-file:,help,server-num:,listen-tcp,xauth-protocol:,server-args:,wait: \
-       --name "$PROGNAME" -- "$@")
+ARGS=$(getopt ae:f:hn:lp:s:w: "$@")
 GETOPT_STATUS=$?
 
 if [ $GETOPT_STATUS -ne 0 ]; then
@@ -152,7 +150,23 @@ if [ -z "$AUTHFILE" ]; then
 fi
 
 # Start Xvfb.
-MCOOKIE=$(mcookie)
+# Get the cookie to use.
+set +e
+MCOOKIE=$(mcookie 2>/dev/null)
+
+# If the mcookie utility is not installed, simulate it.
+
+if [ $? -ne 0 ]; then
+   #
+   # Set the random device to /dev/random if you need very secure 
+   # random numbers. Otherwise, /dev/urandom will be fine.
+   # 
+
+   RANDOM_DEVICE=/dev/urandom
+
+   MCOOKIE=$(od -X -A n -N 16 $RANDOM_DEVICE | tr -d '\011\040')
+fi
+set -e
 tries=10
 while [ $tries -gt 0 ]; do
     tries=$(( $tries - 1 ))
