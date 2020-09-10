@@ -4539,8 +4539,8 @@ TkTextGetTabs(
      * Parse the elements of the list one at a time to fill in the array.
      */
 
-    tabArrayPtr = (TkTextTabArray *)ckalloc(sizeof(TkTextTabArray)
-	    + (count - 1) * sizeof(TkTextTab));
+    tabArrayPtr = (TkTextTabArray *)ckalloc(offsetof(TkTextTabArray, tabs)
+	    + count * sizeof(TkTextTab));
     tabArrayPtr->numTabs = 0;
     prevStop = 0.0;
     lastStop = 0.0;

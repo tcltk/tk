@@ -489,7 +489,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[1];		/* Array of tabs. The actual size will be
+    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;
