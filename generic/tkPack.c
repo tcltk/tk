@@ -445,8 +445,8 @@ Tk_PackObjCmd(
 	}
 	break;
     }
-    case PACK_CONTENT:
-    case PACK_SLAVES: {
+    case PACK_SLAVES:
+    case PACK_CONTENT: {
 	Tk_Window container;
 	Packer *containerPtr, *contentPtr;
 	Tcl_Obj *resultObj;

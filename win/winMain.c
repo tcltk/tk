@@ -278,6 +278,7 @@ main(
     char **dummy)
 {
     TCHAR **argv;
+    (void)dummy;
 #else
 int
 _tmain(
