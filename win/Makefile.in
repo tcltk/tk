@@ -137,9 +137,9 @@ SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
-TKTEST			= tktest${EXEEXT}
-CAT32			= cat32$(EXEEXT)
-MAN2TCL			= man2tcl$(EXEEXT)
+TKTEST			= tktest.exe
+CAT32			= cat32.exe
+MAN2TCL			= man2tcl.exe
 
 @SET_MAKE@
 
@@ -181,7 +181,6 @@ CPPFLAGS	= @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@ @LDFLAGS_DEFAULT@
 LDFLAGS_CONSOLE	= @LDFLAGS_CONSOLE@
 LDFLAGS_WINDOW	= @LDFLAGS_WINDOW@
-EXEEXT		= @EXEEXT@
 OBJEXT		= @OBJEXT@
 STLIB_LD	= @STLIB_LD@
 SHLIB_LD	= @SHLIB_LD@
@@ -707,7 +706,7 @@ tkWindow.$(OBJEXT): configure Makefile
 depend:
 
 cleanhelp:
-	$(RM) *.hlp *.cnt *.hpj *.GID *.rtf man2tcl${EXEEXT}
+	$(RM) *.hlp *.cnt *.hpj *.GID *.rtf man2tcl.exe
 
 clean: cleanhelp
 	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
