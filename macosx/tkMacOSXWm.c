@@ -674,7 +674,7 @@ TkWmNewWindow(
     wmPtr->reparent = None;
     wmPtr->titleUid = NULL;
     wmPtr->iconName = NULL;
-    wmPtr->master = NULL;
+    wmPtr->container = NULL;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
     wmPtr->hints.initial_state = NormalState;
@@ -950,7 +950,7 @@ TkWmDeadWindow(
 
     	if (containerPtr == winPtr) {
     	    wmPtr2 = winPtr2->wmInfoPtr;
-    	    wmPtr2->master = NULL;
+    	    wmPtr2->container = NULL;
     	}
     }
 
@@ -1827,7 +1827,7 @@ WmDeiconifyCmd(
 	    ZoomState : NormalState);
     [win setExcludedFromWindowsMenu:NO];
     TkMacOSXApplyWindowAttributes(winPtr, win);
-    [win orderFront:nil];
+    [win orderFront:NSApp];
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
     }
@@ -2353,7 +2353,7 @@ WmIconifyCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
 		NULL);
 	return TCL_ERROR;
-    } else if (wmPtr->master != NULL) {
+    } else if (wmPtr->container != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": it is a transient", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "TRANSIENT", NULL);
@@ -3493,7 +3493,7 @@ WmStateCmd(
 			"OVERRIDE_REDIRECT", NULL);
 		return TCL_ERROR;
 	    }
-	    if (wmPtr->master != NULL) {
+	    if (wmPtr->container != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
@@ -3620,9 +3620,9 @@ WmTransientCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	if (wmPtr->master != NULL) {
+	if (wmPtr->container != NULL) {
 	    Tcl_SetObjResult(interp,
-		Tcl_NewStringObj(Tk_PathName(wmPtr->master), -1));
+		Tcl_NewStringObj(Tk_PathName(wmPtr->container), -1));
 	}
 	return TCL_OK;
     }
@@ -3665,7 +3665,7 @@ WmTransientCmd(
 	}
 
 	for (w = containerPtr; w != NULL && w->wmInfoPtr != NULL;
-		w = (TkWindow *)w->wmInfoPtr->master) {
+		w = (TkWindow *)w->wmInfoPtr->container) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "setting \"%s\" as master creates a transient/master cycle",
@@ -3701,7 +3701,7 @@ WmTransientCmd(
 	    transient->flags |= WITHDRAWN_BY_CONTAINER;
 	}
 
-	wmPtr->master = (Tk_Window)containerPtr;
+	wmPtr->container = (Tk_Window)containerPtr;
     }
     ApplyContainerOverrideChanges(winPtr, NULL);
     return TCL_OK;
@@ -3734,15 +3734,15 @@ RemoveTransient(
     TkWindow *containerPtr;
     Transient *transPtr, *temp;
 
-    if (wmPtr == NULL || wmPtr->master == NULL) {
+    if (wmPtr == NULL || wmPtr->container == NULL) {
 	return;
     }
-    containerPtr = (TkWindow *)wmPtr->master;
+    containerPtr = (TkWindow *)wmPtr->container;
     wmPtr2 = containerPtr->wmInfoPtr;
     if (wmPtr2 == NULL) {
 	return;
     }
-    wmPtr->master= NULL;
+    wmPtr->container= NULL;
     transPtr = wmPtr2->transientPtr;
     while (transPtr != NULL) {
 	if (transPtr->winPtr != winPtr) {
@@ -5375,7 +5375,7 @@ TkGetTransientMaster(
     TkWindow *winPtr)
 {
     if (winPtr->wmInfoPtr != NULL) {
-	return (Tk_Window)winPtr->wmInfoPtr->master;
+	return (Tk_Window)winPtr->wmInfoPtr->container;
     }
     return NULL;
 }
@@ -6124,6 +6124,8 @@ TkMacOSXMakeRealWindowExist(
     NSRect contentRect = NSMakeRect(5 - structureRect.origin.x,
 	    TkMacOSXZeroScreenHeight() - (TkMacOSXZeroScreenTop() + 5 +
 	    structureRect.origin.y + structureRect.size.height + 200), 200, 200);
+    if (wmPtr->hints.initial_state == WithdrawnState) {
+    }
     TKWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
     if (!window) {
@@ -6647,7 +6649,7 @@ TkMacOSXApplyWindowAttributes(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     ApplyWindowAttributeFlagChanges(winPtr, macWindow, 0, 0, 0, 1);
-    if (wmPtr->master != NULL || winPtr->atts.override_redirect) {
+    if (wmPtr->container != NULL || winPtr->atts.override_redirect) {
 	ApplyContainerOverrideChanges(winPtr, macWindow);
     }
 }
@@ -6781,7 +6783,7 @@ ApplyWindowAttributeFlagChanges(
 		 */
 
 		if ((winPtr->atts.override_redirect) ||
-			(wmPtr->master != NULL) ||
+			(wmPtr->container != NULL) ||
 			(winPtr->wmInfoPtr->macClass == kHelpWindowClass)) {
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			    NSWindowCollectionBehaviorFullScreenAuxiliary);
@@ -6889,7 +6891,7 @@ ApplyContainerOverrideChanges(
 	}
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
-		oldAttributes == kWindowNoActivatesAttribute) {
+	    (oldAttributes & kWindowNoActivatesAttribute)) {
 	    wmPtr->macClass = kDocumentWindowClass;
 	    wmPtr->attributes =
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
@@ -6921,9 +6923,9 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:YES];
 	    [macWindow setStyleMask:styleMask];
 	    if (wmPtr->hints.initial_state == NormalState) {
-		[macWindow orderFront:nil];
+		[macWindow orderFront:NSApp];
 	    }
-	    if (wmPtr->master != NULL) {
+	    if (wmPtr->container != NULL) {
 		wmPtr->flags |= WM_TOPMOST;
 	    } else {
 		wmPtr->flags &= ~WM_TOPMOST;
@@ -6939,8 +6941,8 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	if (wmPtr->master != None) {
-	    TkWindow *containerWinPtr = (TkWindow *)wmPtr->master;
+	if (wmPtr->container != None) {
+	    TkWindow *containerWinPtr = (TkWindow *)wmPtr->container;
 
 	    if (containerWinPtr && (containerWinPtr->window != None)
 		    && TkMacOSXHostToplevelExists(containerWinPtr)) {
