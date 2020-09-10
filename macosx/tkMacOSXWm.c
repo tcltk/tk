@@ -1827,7 +1827,7 @@ WmDeiconifyCmd(
 	    ZoomState : NormalState);
     [win setExcludedFromWindowsMenu:NO];
     TkMacOSXApplyWindowAttributes(winPtr, win);
-    [win orderFront:nil];
+    [win orderFront:NSApp];
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
     }
@@ -6124,6 +6124,8 @@ TkMacOSXMakeRealWindowExist(
     NSRect contentRect = NSMakeRect(5 - structureRect.origin.x,
 	    TkMacOSXZeroScreenHeight() - (TkMacOSXZeroScreenTop() + 5 +
 	    structureRect.origin.y + structureRect.size.height + 200), 200, 200);
+    if (wmPtr->hints.initial_state == WithdrawnState) {
+    }
     TKWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
     if (!window) {
@@ -6889,7 +6891,7 @@ ApplyContainerOverrideChanges(
 	}
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
-		oldAttributes == kWindowNoActivatesAttribute) {
+	    (oldAttributes & kWindowNoActivatesAttribute)) {
 	    wmPtr->macClass = kDocumentWindowClass;
 	    wmPtr->attributes =
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
@@ -6921,7 +6923,7 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:YES];
 	    [macWindow setStyleMask:styleMask];
 	    if (wmPtr->hints.initial_state == NormalState) {
-		[macWindow orderFront:nil];
+		[macWindow orderFront:NSApp];
 	    }
 	    if (wmPtr->container != NULL) {
 		wmPtr->flags |= WM_TOPMOST;
