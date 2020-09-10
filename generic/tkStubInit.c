@@ -115,7 +115,7 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 		(const char *(*) (void *,Tk_Window, char *, int, \
 		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
 
-#if !defined(MAC_OSX_TK)
+#if !defined(MAC_OSX_TK) && defined(MAC_OSX_TCL)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 #   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
