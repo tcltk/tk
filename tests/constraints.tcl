@@ -17,7 +17,7 @@ if {![winfo ismapped .]} {
     update
 }
 
-package require tcltest 2.1
+package require tcltest 2.2
 
 namespace eval tk {
     namespace eval test {
