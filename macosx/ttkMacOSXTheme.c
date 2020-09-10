@@ -393,8 +393,11 @@ static void FillRoundedRectangle(
     CGPathRef path;
     CHECK_RADIUS(radius, bounds)
 
-    CGContextSetFillColorWithColor(context, color);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    if (!path) {
+	return;
+    }
+    CGContextSetFillColorWithColor(context, color);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextFillPath(context);
