@@ -81,6 +81,12 @@
 #   endif
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#   define TKFLEXARRAY 0
+#else
+#   define TKFLEXARRAY 1
+#endif
+
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
 # define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
