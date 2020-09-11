@@ -84,6 +84,11 @@
 # endif
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#   define TKFLEXARRAY 0
+#else
+#   define TKFLEXARRAY 1
+#endif
 
 #ifndef Tcl_GetParent
 #   define Tcl_GetParent Tcl_GetMaster
