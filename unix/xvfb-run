@@ -17,18 +17,9 @@ XVFBARGS="-screen 0 1280x1024x24"
 LISTENTCP="-nolisten tcp"
 XAUTHPROTO=.
 
-# Query the terminal to establish a default number of columns to use for
-# displaying messages to the user.  This is used only as a fallback in the event
-# the COLUMNS variable is not set.  ($COLUMNS can react to SIGWINCH while the
-# script is running, and this cannot, only being calculated once.)
-DEFCOLUMNS=$(stty size 2>/dev/null | awk '{print $2}') || true
-case "$DEFCOLUMNS" in
-    *[!0-9]*|'') DEFCOLUMNS=80 ;;
-esac
-
-# Display a message, wrapping lines at the terminal width.
+# Display a message.
 message () {
-    echo "$PROGNAME: $*" | fmt -t -w ${COLUMNS:-$DEFCOLUMNS}
+    echo "$PROGNAME: $*"
 }
 
 # Display an error message.
