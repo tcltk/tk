@@ -444,7 +444,7 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     int numBytes;		/* Number of bytes to display. */
-    char chars[1];		/* UTF characters to display.
+    char chars[TKFLEXARRAY];		/* UTF characters to display.
 				 * Allocated as large as necessary. THIS MUST BE THE LAST
 				 * FIELD IN THE STRUCTURE. */
 } CharInfo;
