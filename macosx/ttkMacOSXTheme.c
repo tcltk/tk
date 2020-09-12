@@ -2449,7 +2449,6 @@ static void TrackElementDraw(
 
     fraction = (value - from) / (to - from);
     max = RangeToFactor(fabs(to - from));
-
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
@@ -2589,7 +2588,7 @@ static void PbarElementDraw(
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = isIndeterminate? kThemeIndeterminateBar : kThemeProgressBar,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = 0,
 	.max = maximum * factor,
 	.value = value * factor,
