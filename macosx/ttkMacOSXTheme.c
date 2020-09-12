@@ -671,13 +671,6 @@ static void DrawEntry(
  * +++ Chevrons, CheckMarks, etc. --
  */
 
-/*----------------------------------------------------------------------
- * DrawDownArrow --
- *
- * Draws a single downward pointing arrow for ListHeaders, Comboboxes
- * and Disclosure Buttons.
- */
-
 static void DrawDownArrow(
     CGContextRef context,
     CGRect bounds,
@@ -787,6 +780,60 @@ static void DrawUpDownArrows(
 	{{x, y - gap}, {x + size / 2, y - gap - size / 2}, {x + size, y - gap}};
     CGContextAddLines(context, topArrow, 3);
     CGContextSetStrokeColorWithColor(context, CGCOLOR(topStrokeColor));
+    CGContextStrokePath(context);
+}
+
+/*----------------------------------------------------------------------
+ * DrawClosedDisclosure --
+ *
+ * Draws a disclosure chevron in the Big Sur style, for Treeviews.
+ */
+
+static void DrawClosedDisclosure(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {
+	{x, y - size / 4 - 1}, {x + size / 2, y}, {x, y + size / 4 + 1}
+    };
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
+/*----------------------------------------------------------------------
+ * DrawOpenDisclosure --
+ *
+ * Draws an open disclosure chevron in the Big Sur style, for Treeviews.
+ */
+
+static void DrawOpenDisclosure(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {
+	{x, y - size / 4}, {x + size / 2, y + size / 2}, {x + size, y - size / 4}
+    };
+    CGContextAddLines(context, arrow, 3);
     CGContextStrokePath(context);
 }
 
@@ -3262,8 +3309,21 @@ static void DisclosureElementDraw(
 	};
 
 	BEGIN_DRAWING(d)
-	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
+	if ([NSApp macOSVersion] >= 110000) {
+	    CGFloat rgba[4];
+	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	    NSColor *stroke = [[NSColor textColor]
+		colorUsingColorSpace: deviceRGB];
+	    [stroke getComponents: rgba];
+	    if (state & TTK_TREEVIEW_STATE_OPEN) {
+		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
+	    } else {
+		DrawClosedDisclosure(dc.context, bounds, 2, 12, rgba);
+	    }
+	} else {
+	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	    NULL);
+	}
 	END_DRAWING
     }
 }
