@@ -2144,10 +2144,13 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
     factor = RangeToFactor(to);
 
+    // HIThemeTrackDrawInfo uses 2-byte alignment; assign to separate
+    // bounds variable to avoid UBSan (-fsanitize=alignment) complaint.
+    CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = from * factor,
 	.max = to * factor,
 	.value = value * factor,
@@ -2282,13 +2285,16 @@ static void PbarElementDraw(
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
     factor = RangeToFactor(maximum);
 
+    // HIThemeTrackDrawInfo uses 2-byte alignment; assign to separate
+    // bounds variable to avoid UBSan (-fsanitize=alignment) complaint.
+    CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind =
 	    (!strcmp("indeterminate",
 	    Tcl_GetString(pbar->modeObj)) && value) ?
 	    kThemeIndeterminateBar : kThemeProgressBar,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = 0,
 	.max = maximum * factor,
 	.value = value * factor,
