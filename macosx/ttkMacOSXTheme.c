@@ -2144,8 +2144,11 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
     factor = RangeToFactor(to);
 
-    // HIThemeTrackDrawInfo uses 2-byte alignment; assign to separate
-    // bounds variable to avoid UBSan (-fsanitize=alignment) complaint.
+    /*
+     * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
+     * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
+     */
+    
     CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
@@ -2285,8 +2288,11 @@ static void PbarElementDraw(
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
     factor = RangeToFactor(maximum);
 
-    // HIThemeTrackDrawInfo uses 2-byte alignment; assign to separate
-    // bounds variable to avoid UBSan (-fsanitize=alignment) complaint.
+    /*
+     * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
+     * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
+     */
+
     CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
