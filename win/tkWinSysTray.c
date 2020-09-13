@@ -1791,7 +1791,7 @@ WinIcoInit(Tcl_Interp * interp) {
 
     Tcl_CreateCommand(interp, "_systray", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
-    Tcl_CreateCommand(interp, "_sysnotify", WinSystrayCmd, NULL, NULL);
+    Tcl_CreateCommand(interp, "_systraynotify", WinSystrayCmd, NULL, NULL);
     return TCL_OK;
 }
 
