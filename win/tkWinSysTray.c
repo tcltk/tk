@@ -1789,9 +1789,9 @@ WinIcoInit(Tcl_Interp * interp) {
     GetVersionEx( & info);
     isWin32s = (info.dwPlatformId == VER_PLATFORM_WIN32s);
 
-    Tcl_CreateCommand(interp, "_winico", WinIcoCmd, (ClientData)interp,
+    Tcl_CreateCommand(interp, "_systray", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
-    Tcl_CreateCommand(interp, "_systray", WinSystrayCmd, NULL, NULL);
+    Tcl_CreateCommand(interp, "_sysnotify", WinSystrayCmd, NULL, NULL);
     return TCL_OK;
 }
 
