@@ -28,7 +28,7 @@ typedef struct {
 				 * chunk. */
     char buffer[4];		/* A buffer to hold part of a UTF character
 				 * that is split across chunks. */
-    char command[1];		/* Command to invoke. Actual space is
+    char command[TKFLEXARRAY];		/* Command to invoke. Actual space is
 				 * allocated as large as necessary. This must
 				 * be the last entry in the structure. */
 } CommandInfo;

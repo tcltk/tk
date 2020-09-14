@@ -178,8 +178,8 @@ TkTestLogDisplay(
  *      location.  It injects NSEvents into the NSApplication event queue, as
  *      opposed to adding events to the Tcl queue as event generate would do.
  *      One application is for testing the grab command. These events have
- *      pressure = -1.0 as a signal indicating that they should not be ignored
- *      by [NSApp tkProcessMouseEvent].
+ *      their unused context property set to 1 as a signal indicating that they
+ *      should not be ignored by [NSApp tkProcessMouseEvent].
  *
  * Results:
  *	A standard Tcl result.
@@ -238,17 +238,17 @@ PressButtonObjCmd(
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil
+	context:(void *) 1
 	eventNumber:0
 	clickCount:1
-	pressure:-1.0];
+	pressure:0.0];
     [NSApp postEvent:motion atStart:NO];
     press = [NSEvent mouseEventWithType:NSLeftMouseDown
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil
+	context:(void *)1
 	eventNumber:1
 	clickCount:1
 	pressure:-1.0];
@@ -258,7 +258,7 @@ PressButtonObjCmd(
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil
+	context:(void*) 1
 	eventNumber:2
 	clickCount:1
 	pressure:-1.0];
