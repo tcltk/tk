@@ -1083,7 +1083,7 @@ GetByte(
     int size;
 
     size = Tcl_Read(chan, &buffer, 1);
-    if (size <= 0) {
+    if (size != 1) {
 	return EOF;
     } else {
 	return buffer;

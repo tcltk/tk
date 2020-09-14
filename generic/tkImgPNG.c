@@ -626,7 +626,7 @@ ReadData(
 	int blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
 	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
-	if (blockSz < 0) {
+	if (blockSz == -1) {
 	    /* TODO: failure info... */
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel read failed: %s", Tcl_PosixError(interp)));
@@ -2884,7 +2884,7 @@ WriteData(
 	}
 
 	memcpy(destPtr+objSz, srcPtr, srcSz);
-    } else if (Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) < 0) {
+    } else if (Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) == -1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"write to channel failed: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;
