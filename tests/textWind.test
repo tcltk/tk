@@ -773,7 +773,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup
     .t delete 1.0 end
     proc bgerror args {
         global msg
-        if {[lsearch -exact $msg $args] == -1} {
+        if {[lsearch -exact $msg $args] < 0} {
             lappend msg $args
         }
     }

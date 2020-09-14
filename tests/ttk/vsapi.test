@@ -6,7 +6,7 @@ package require tcltest ; namespace import -force tcltest::*
 loadTestedCommands
 
 testConstraint xpnative \
-    [expr {[lsearch -exact [ttk::style theme names] xpnative] != -1}]
+    [expr {"xpnative" in [ttk::style theme names]}]
 
 test vsapi-1.1 "WINDOW WP_SMALLCLOSEBUTTON" -constraints {xpnative} -body {
     ttk::style element create smallclose vsapi \
