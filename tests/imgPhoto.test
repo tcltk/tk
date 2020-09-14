@@ -1495,7 +1495,7 @@ test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
 } -body {
     image create photo photo2 -file $teapotPhotoFile
     rename photo2 {}
-    list [expr {photo2 in [imageNames]}] [catch {photo2 foo} msg] $msg
+    list [expr {"photo2" in [imageNames]}] [catch {photo2 foo} msg] $msg
 } -result {0 1 {invalid command name "photo2"}}
 
 test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
