@@ -323,8 +323,8 @@ FileWritePPM(
 	    pixelPtr = pixLinePtr;
 	    for (w = blockPtr->width; w > 0; w--) {
 		if (    Tcl_Write(chan,(char *)&pixelPtr[0], 1) == -1 ||
-			Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1)==-1 ||
-			Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) ==-1) {
+			Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1) == -1 ||
+			Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) == -1) {
 		    goto writeerror;
 		}
 		pixelPtr += blockPtr->pixelSize;
