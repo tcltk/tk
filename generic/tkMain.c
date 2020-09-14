@@ -40,6 +40,9 @@ static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
  * to strcmp here.
  */
 #ifdef _WIN32
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
@@ -50,6 +53,9 @@ typedef struct {
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
 extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#ifdef __cplusplus
+}
+#endif
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -417,7 +423,7 @@ StdinProc(
 
     count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count == -1 && !isPtr->gotPartial) {
+    if ((count == -1) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
