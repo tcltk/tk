@@ -717,8 +717,8 @@ test listbox-3.60 {ListboxWidgetCmd procedure, "index" option} -body {
     .l index 2
 } -result 2
 test listbox-3.61 {ListboxWidgetCmd procedure, "index" option} -body {
-    .l index {}
-} -result -1
+    expr {[.l index {}]<0}
+} -result 1
 test listbox-3.62 {ListboxWidgetCmd procedure, "index" option} -body {
     .l index end
 } -result 18
@@ -2129,10 +2129,10 @@ test listbox-10.19 {GetListboxIndex procedure} -setup {
     pack [listbox .l]
     .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11
     update
-    .l index {}
+    expr {[.l index {}]<0}
 } -cleanup {
     destroy .l
-} -result -1
+} -result 1
 test listbox-10.20 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {

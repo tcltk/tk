@@ -845,7 +845,7 @@ MenuWidgetObjCmd(
 	}
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	if (index == TCL_INDEX_NONE) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewObj());
 	} else
 #endif
 	Tcl_SetObjResult(interp, TkNewIndexObj(index));

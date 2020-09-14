@@ -1376,7 +1376,7 @@ MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 #   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 #else
-#   define TkNewIndexObj(value) (((value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
+#   define TkNewIndexObj(value) (((TkSizeT)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
 #endif
 
 #ifdef _WIN32
