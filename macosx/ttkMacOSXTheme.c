@@ -2148,7 +2148,7 @@ static void TrackElementDraw(
      * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
      * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
      */
-    
+
     CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
