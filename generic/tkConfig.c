@@ -1427,8 +1427,6 @@ Tk_RestoreSavedOptions(
 	    switch (specPtr->type) {
 	    case TK_OPTION_BOOLEAN:
 	    case TK_OPTION_INT:
-		*((int *) internalPtr) = *((int *) ptr);
-		break;
 	    case TK_OPTION_INDEX:
 		*((int *) internalPtr) = *((int *) ptr);
 		break;
@@ -1905,7 +1903,7 @@ GetObjectForOption(
 	    break;
 	case TK_OPTION_INDEX:
 	    if (*((int *) internalPtr) == INT_MIN) {
-		objPtr = Tcl_NewObj();
+		objPtr = TkNewIndexObj(TCL_INDEX_NONE);
 	    } else if (*((int *) internalPtr) == INT_MAX) {
 		objPtr = Tcl_NewStringObj("end+1", -1);
 	    } else if (*((int *) internalPtr) == -1) {
