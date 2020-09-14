@@ -422,8 +422,9 @@ EXTERN Atom		Tk_InternAtom(Tk_Window tkwin, const char *name);
 EXTERN int		Tk_IntersectTextLayout(Tk_TextLayout layout, int x,
 				int y, int width, int height);
 /* 121 */
-EXTERN void		Tk_MaintainGeometry(Tk_Window slave, Tk_Window model,
-				int x, int y, int width, int height);
+EXTERN void		Tk_MaintainGeometry(Tk_Window window,
+				Tk_Window container, int x, int y, int width,
+				int height);
 /* 122 */
 EXTERN Tk_Window	Tk_MainWindow(Tcl_Interp *interp);
 /* 123 */
@@ -460,7 +461,7 @@ EXTERN const char *	Tk_NameOfCursor(Display *display, Tk_Cursor cursor);
 /* 136 */
 EXTERN const char *	Tk_NameOfFont(Tk_Font font);
 /* 137 */
-EXTERN const char *	Tk_NameOfImage(Tk_ImageModel imageModel);
+EXTERN const char *	Tk_NameOfImage(Tk_ImageModel model);
 /* 138 */
 EXTERN const char *	Tk_NameOfJoinStyle(int join);
 /* 139 */
@@ -593,8 +594,8 @@ EXTERN void		Tk_UnderlineTextLayout(Display *display,
 /* 180 */
 EXTERN void		Tk_Ungrab(Tk_Window tkwin);
 /* 181 */
-EXTERN void		Tk_UnmaintainGeometry(Tk_Window slave,
-				Tk_Window master);
+EXTERN void		Tk_UnmaintainGeometry(Tk_Window window,
+				Tk_Window container);
 /* 182 */
 EXTERN void		Tk_UnmapWindow(Tk_Window tkwin);
 /* 183 */
@@ -1025,7 +1026,7 @@ typedef struct TkStubs {
     int (*tk_Init) (Tcl_Interp *interp); /* 118 */
     Atom (*tk_InternAtom) (Tk_Window tkwin, const char *name); /* 119 */
     int (*tk_IntersectTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height); /* 120 */
-    void (*tk_MaintainGeometry) (Tk_Window slave, Tk_Window model, int x, int y, int width, int height); /* 121 */
+    void (*tk_MaintainGeometry) (Tk_Window window, Tk_Window container, int x, int y, int width, int height); /* 121 */
     Tk_Window (*tk_MainWindow) (Tcl_Interp *interp); /* 122 */
     void (*tk_MakeWindowExist) (Tk_Window tkwin); /* 123 */
     void (*tk_ManageGeometry) (Tk_Window tkwin, const Tk_GeomMgr *mgrPtr, ClientData clientData); /* 124 */
@@ -1041,7 +1042,7 @@ typedef struct TkStubs {
     const char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
     const char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
     const char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
-    const char * (*tk_NameOfImage) (Tk_ImageModel imageModel); /* 137 */
+    const char * (*tk_NameOfImage) (Tk_ImageModel model); /* 137 */
     const char * (*tk_NameOfJoinStyle) (int join); /* 138 */
     const char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
     const char * (*tk_NameOfRelief) (int relief); /* 140 */
@@ -1085,7 +1086,7 @@ typedef struct TkStubs {
     void (*tk_UnderlineChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int x, int y, int firstByte, int lastByte); /* 178 */
     void (*tk_UnderlineTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int underline); /* 179 */
     void (*tk_Ungrab) (Tk_Window tkwin); /* 180 */
-    void (*tk_UnmaintainGeometry) (Tk_Window slave, Tk_Window master); /* 181 */
+    void (*tk_UnmaintainGeometry) (Tk_Window window, Tk_Window container); /* 181 */
     void (*tk_UnmapWindow) (Tk_Window tkwin); /* 182 */
     void (*tk_UnsetGrid) (Tk_Window tkwin); /* 183 */
     void (*tk_UpdatePointer) (Tk_Window tkwin, int x, int y, int state); /* 184 */

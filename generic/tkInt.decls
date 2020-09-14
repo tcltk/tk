@@ -636,10 +636,10 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 aqua {
+declare 185 macosx {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 aqua {
+declare 186 macosx {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
@@ -963,9 +963,10 @@ declare 24 aqua {
 declare 25 aqua {
     void TkMacOSXMenuClick(void)
 }
-declare 26 aqua {
-    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
-}
+# The corresponding Unregister was not a stub, and this should be static.
+#declare 26 aqua {
+#    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
+#}
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
 }
@@ -984,9 +985,10 @@ declare 31 aqua {
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
-declare 33 aqua {
-    void TkMacOSXUnregisterMacWindow(void *portPtr)
-}
+# This was not implemented.  Perhaps meant to be OffScreen ?
+#declare 33 aqua {
+#    void TkMacOSXUnregisterMacWindow(void *portPtr)
+#}
 declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }

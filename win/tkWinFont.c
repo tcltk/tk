@@ -1495,9 +1495,9 @@ MultiFontTextOut(
 		familyPtr = lastSubFontPtr->familyPtr;
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			(int) (p - source), &runString);
-		familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
+		familyPtr->textOutProc(hdc, x-((double)tm.tmOverhang/2), y,
 			(WCHAR *)Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString)>>familyPtr->isWideFont);
+			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 		familyPtr->getTextExtentPoint32Proc(hdc,
 			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
@@ -1517,7 +1517,7 @@ MultiFontTextOut(
 	familyPtr = lastSubFontPtr->familyPtr;
  	Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		(int) (p - source), &runString);
-	familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
+	familyPtr->textOutProc(hdc, x-((double)tm.tmOverhang/2), y,
 		(WCHAR *)Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);

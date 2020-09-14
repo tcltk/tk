@@ -283,9 +283,8 @@ Removes each of the \fIwindow\fRs from grid for its
 container and unmaps their windows.
 The content will no longer be managed by the grid geometry manager.
 However, the configuration options for that window are remembered,
-so that if the
-window is managed once more by the grid geometry manager, the previous
-values are retained.
+so that if the content window is managed once more by the grid
+geometry manager, the previous values are retained.
 .RS
 .PP
 .VS "TIP 518"
@@ -302,7 +301,7 @@ The size is determined either by the \fIcontent\fR occupying the largest
 row or column, or the largest column or row with a \fB\-minsize\fR,
 \fB\-weight\fR, or \fB\-pad\fR that is non-zero.
 .TP
-\fBgrid slaves fI\window\fR ?\fI\-option value\fR?
+\fBgrid content fI\window\fR ?\fI\-option value\fR?
 .
 If no options are supplied, a list of all of the content in \window\fR
 is returned, most recently managed first.
@@ -310,11 +309,9 @@ is returned, most recently managed first.
 causes only the content in the row (or column) specified by \fIvalue\fR
 to be returned.
 .TP
-.VS "TIP 581"
-\fBgrid content \fIwindow\fR ?\fI\-option value\fR?
+\fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?
 .
-Synonym for . \fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?
-.VE "TIP 581"
+Synonym for . \fBgrid content \fIwindow\fR ?\fI\-option value\fR?
 .SH "RELATIVE PLACEMENT"
 .PP
 The \fBgrid\fR command contains a limited set of capabilities that

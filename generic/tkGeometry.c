@@ -15,29 +15,29 @@
 
 /*
  * Data structures of the following type are used by Tk_MaintainGeometry. For
- * each slave managed by Tk_MaintainGeometry, there is one of these structures
- * associated with its master.
+ * each content managed by Tk_MaintainGeometry, there is one of these structures
+ * associated with its container.
  */
 
-typedef struct MaintainSlave {
-    Tk_Window slave;		/* The slave window being positioned. */
-    Tk_Window master;		/* The master that determines slave's
+typedef struct MaintainContent {
+    Tk_Window content;		/* The content window being positioned. */
+    Tk_Window container;		/* The container that determines content's
 				 * position; it must be a descendant of
-				 * slave's parent. */
-    int x, y;			/* Desired position of slave relative to
-				 * master. */
-    int width, height;		/* Desired dimensions of slave. */
-    struct MaintainSlave *nextPtr;
+				 * content's parent. */
+    int x, y;			/* Desired position of content relative to
+				 * container. */
+    int width, height;		/* Desired dimensions of content. */
+    struct MaintainContent *nextPtr;
 				/* Next in list of Maintains associated with
-				 * master. */
-} MaintainSlave;
+				 * container. */
+} MaintainContent;
 
 /*
- * For each window that has been specified as a master to Tk_MaintainGeometry,
+ * For each window that has been specified as a content to Tk_MaintainGeometry,
  * there is a structure of the following type:
  */
 
-typedef struct MaintainMaster {
+typedef struct MaintainContainer {
     Tk_Window ancestor;		/* The lowest ancestor of this window for
 				 * which we have *not* created a
 				 * StructureNotify handler. May be the same as
@@ -45,18 +45,18 @@ typedef struct MaintainMaster {
     int checkScheduled;		/* Non-zero means that there is already a call
 				 * to MaintainCheckProc scheduled as an idle
 				 * handler. */
-    MaintainSlave *slavePtr;	/* First in list of all slaves associated with
-				 * this master. */
-} MaintainMaster;
+    MaintainContent *contentPtr;	/* First in list of all content associated with
+				 * this container. */
+} MaintainContainer;
 
 /*
  * Prototypes for static procedures in this file:
  */
 
 static void		MaintainCheckProc(ClientData clientData);
-static void		MaintainMasterProc(ClientData clientData,
+static void		MaintainContainerProc(ClientData clientData,
 			    XEvent *eventPtr);
-static void		MaintainSlaveProc(ClientData clientData,
+static void		MaintainContentProc(ClientData clientData,
 			    XEvent *eventPtr);
 
 /*
@@ -65,7 +65,7 @@ static void		MaintainSlaveProc(ClientData clientData,
  * Tk_ManageGeometry --
  *
  *	Arrange for a particular procedure to manage the geometry of a given
- *	slave window.
+ *	content window.
  *
  * Results:
  *	None.
@@ -218,7 +218,7 @@ Tk_SetInternalBorderEx(
     }
 
     /*
-     * All the slaves for which this is the master window must now be
+     * All the content for which this is the container window must now be
      * repositioned to take account of the new internal border width. To
      * signal all the geometry managers to do this, trigger a ConfigureNotify
      * event. This will cause geometry managers to recompute everything.
@@ -387,12 +387,12 @@ TkFreeGeometryContainer(
  *
  * Tk_MaintainGeometry --
  *
- *	This procedure is invoked by geometry managers to handle slaves whose
- *	master's are not their parents. It translates the desired geometry for
- *	the slave into the coordinate system of the parent and respositions
- *	the slave if it isn't already at the right place. Furthermore, it sets
- *	up event handlers so that if the master (or any of its ancestors up to
- *	the slave's parent) is mapped, unmapped, or moved, then the slave will
+ *	This procedure is invoked by geometry managers to handle content whose
+ *	container's are not their parents. It translates the desired geometry for
+ *	the content into the coordinate system of the parent and respositions
+ *	the content if it isn't already at the right place. Furthermore, it sets
+ *	up event handlers so that if the container (or any of its ancestors up to
+ *	the content's parent) is mapped, unmapped, or moved, then the content will
  *	be adjusted to match.
  *
  * Results:
@@ -400,7 +400,7 @@ TkFreeGeometryContainer(
  *
  * Side effects:
  *	Event handlers are created and state is allocated to keep track of
- *	slave. Note: if slave was already managed for master by
+ *	content. Note: if content was already managed for container by
  *	Tk_MaintainGeometry, then the previous information is replaced with
  *	the new information. The caller must eventually call
  *	Tk_UnmaintainGeometry to eliminate the correspondence (or, the state
@@ -411,40 +411,40 @@ TkFreeGeometryContainer(
 
 void
 Tk_MaintainGeometry(
-    Tk_Window slave,		/* Slave for geometry management. */
-    Tk_Window master,		/* Master for slave; must be a descendant of
-				 * slave's parent. */
-    int x, int y,		/* Desired position of slave within master. */
-    int width, int height)	/* Desired dimensions for slave. */
+    Tk_Window window,		/* Window for geometry management. */
+    Tk_Window container,		/* Container for window; must be a descendant of
+				 * window's parent. */
+    int x, int y,		/* Desired position of window within container. */
+    int width, int height)	/* Desired dimensions for window. */
 {
     Tcl_HashEntry *hPtr;
-    MaintainMaster *containerPtr;
-    MaintainSlave *slavePtr;
+    MaintainContainer *containerPtr;
+    MaintainContent *contentPtr;
     int isNew, map;
     Tk_Window ancestor, parent;
-    TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
+    TkDisplay *dispPtr = ((TkWindow *) container)->dispPtr;
 
-    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)master;
+    ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
 
-    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)master;
-    if (master == Tk_Parent(slave)) {
+    ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
+    if (container == Tk_Parent(window)) {
 	/*
-	 * If the slave is a direct descendant of the master, don't bother
+	 * If the window is a direct descendant of the container, don't bother
 	 * setting up the extra infrastructure for management, just make a
 	 * call to Tk_MoveResizeWindow; the parent/child relationship will
 	 * take care of the rest.
 	 */
 
-	Tk_MoveResizeWindow(slave, x, y, width, height);
+	Tk_MoveResizeWindow(window, x, y, width, height);
 
 	/*
-	 * Map the slave if the master is already mapped; otherwise, wait
-	 * until the master is mapped later (in which case mapping the slave
+	 * Map the window if the container is already mapped; otherwise, wait
+	 * until the container is mapped later (in which case mapping the window
 	 * is taken care of elsewhere).
 	 */
 
-	if (Tk_IsMapped(master)) {
-	    Tk_MapWindow(slave);
+	if (Tk_IsMapped(container)) {
+	    Tk_MapWindow(window);
 	}
 	return;
     }
@@ -455,54 +455,54 @@ Tk_MaintainGeometry(
     }
 
     /*
-     * See if there is already a MaintainMaster structure for the master; if
+     * See if there is already a MaintainContainer structure for the container; if
      * not, then create one.
      */
 
-    parent = Tk_Parent(slave);
+    parent = Tk_Parent(window);
     hPtr = Tcl_CreateHashEntry(&dispPtr->maintainHashTable,
-	    (char *) master, &isNew);
+	    (char *) container, &isNew);
     if (!isNew) {
-	containerPtr = (MaintainMaster *)Tcl_GetHashValue(hPtr);
+	containerPtr = (MaintainContainer *)Tcl_GetHashValue(hPtr);
     } else {
-	containerPtr = (MaintainMaster *)ckalloc(sizeof(MaintainMaster));
-	containerPtr->ancestor = master;
+	containerPtr = (MaintainContainer *)ckalloc(sizeof(MaintainContainer));
+	containerPtr->ancestor = container;
 	containerPtr->checkScheduled = 0;
-	containerPtr->slavePtr = NULL;
+	containerPtr->contentPtr = NULL;
 	Tcl_SetHashValue(hPtr, containerPtr);
     }
 
     /*
-     * Create a MaintainSlave structure for the slave if there isn't already
+     * Create a MaintainContent structure for the window if there isn't already
      * one.
      */
 
-    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-	    slavePtr = slavePtr->nextPtr) {
-	if (slavePtr->slave == slave) {
-	    goto gotSlave;
+    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+	    contentPtr = contentPtr->nextPtr) {
+	if (contentPtr->content == window) {
+	    goto gotContent;
 	}
     }
-    slavePtr = (MaintainSlave *)ckalloc(sizeof(MaintainSlave));
-    slavePtr->slave = slave;
-    slavePtr->master = master;
-    slavePtr->nextPtr = containerPtr->slavePtr;
-    containerPtr->slavePtr = slavePtr;
-    Tk_CreateEventHandler(slave, StructureNotifyMask, MaintainSlaveProc,
-	    slavePtr);
+    contentPtr = (MaintainContent *)ckalloc(sizeof(MaintainContent));
+    contentPtr->content = window;
+    contentPtr->container = container;
+    contentPtr->nextPtr = containerPtr->contentPtr;
+    containerPtr->contentPtr = contentPtr;
+    Tk_CreateEventHandler(window, StructureNotifyMask, MaintainContentProc,
+	    contentPtr);
 
     /*
      * Make sure that there are event handlers registered for all the windows
-     * between master and slave's parent (including master but not slave's
-     * parent). There may already be handlers for master and some of its
+     * between container and windows's parent (including container but not window's
+     * parent). There may already be handlers for container and some of its
      * ancestors (containerPtr->ancestor tells how many).
      */
 
-    for (ancestor = master; ancestor != parent;
+    for (ancestor = container; ancestor != parent;
 	    ancestor = Tk_Parent(ancestor)) {
 	if (ancestor == containerPtr->ancestor) {
 	    Tk_CreateEventHandler(ancestor, StructureNotifyMask,
-		    MaintainMasterProc, containerPtr);
+		    MaintainContainerProc, containerPtr);
 	    containerPtr->ancestor = Tk_Parent(ancestor);
 	}
     }
@@ -512,27 +512,27 @@ Tk_MaintainGeometry(
      * if it's not currently in the right place or state.
      */
 
-  gotSlave:
-    slavePtr->x = x;
-    slavePtr->y = y;
-    slavePtr->width = width;
-    slavePtr->height = height;
+  gotContent:
+    contentPtr->x = x;
+    contentPtr->y = y;
+    contentPtr->width = width;
+    contentPtr->height = height;
     map = 1;
-    for (ancestor = slavePtr->master; ; ancestor = Tk_Parent(ancestor)) {
+    for (ancestor = contentPtr->container; ; ancestor = Tk_Parent(ancestor)) {
 	if (!Tk_IsMapped(ancestor) && (ancestor != parent)) {
 	    map = 0;
 	}
 	if (ancestor == parent) {
-	    if ((x != Tk_X(slavePtr->slave))
-		    || (y != Tk_Y(slavePtr->slave))
-		    || (width != Tk_Width(slavePtr->slave))
-		    || (height != Tk_Height(slavePtr->slave))) {
-		Tk_MoveResizeWindow(slavePtr->slave, x, y, width, height);
+	    if ((x != Tk_X(contentPtr->content))
+		    || (y != Tk_Y(contentPtr->content))
+		    || (width != Tk_Width(contentPtr->content))
+		    || (height != Tk_Height(contentPtr->content))) {
+		Tk_MoveResizeWindow(contentPtr->content, x, y, width, height);
 	    }
 	    if (map) {
-		Tk_MapWindow(slavePtr->slave);
+		Tk_MapWindow(contentPtr->content);
 	    } else {
-		Tk_UnmapWindow(slavePtr->slave);
+		Tk_UnmapWindow(contentPtr->content);
 	    }
 	    break;
 	}
@@ -547,37 +547,37 @@ Tk_MaintainGeometry(
  * Tk_UnmaintainGeometry --
  *
  *	This procedure cancels a previous Tk_MaintainGeometry call, so that
- *	the relationship between slave and master is no longer maintained.
+ *	the relationship between window and container is no longer maintained.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The slave is unmapped and state is released, so that slave won't track
- *	master any more. If we weren't previously managing slave relative to
- *	master, then this procedure has no effect.
+ *	The window is unmapped and state is released, so that window won't track
+ *	container any more. If we weren't previously managing window relative to
+ *	container, then this procedure has no effect.
  *
  *----------------------------------------------------------------------
  */
 
 void
 Tk_UnmaintainGeometry(
-    Tk_Window slave,		/* Slave for geometry management. */
-    Tk_Window master)		/* Master for slave; must be a descendant of
-				 * slave's parent. */
+    Tk_Window window,		/* WIndow for geometry management. */
+    Tk_Window container)		/* Container for window; must be a descendant of
+				 * window's parent. */
 {
     Tcl_HashEntry *hPtr;
-    MaintainMaster *containerPtr;
-    MaintainSlave *slavePtr, *prevPtr;
+    MaintainContainer *containerPtr;
+    MaintainContent *contentPtr, *prevPtr;
     Tk_Window ancestor;
-    TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
+    TkDisplay *dispPtr = ((TkWindow *) window)->dispPtr;
 
-    ((TkWindow *)slave)->maintainerPtr = NULL;
+    ((TkWindow *)window)->maintainerPtr = NULL;
 
-    ((TkWindow *)slave)->maintainerPtr = NULL;
-    if (master == Tk_Parent(slave)) {
+    ((TkWindow *)window)->maintainerPtr = NULL;
+    if (container == Tk_Parent(window)) {
 	/*
-	 * If the slave is a direct descendant of the master,
+	 * If the window is a direct descendant of the container,
 	 * Tk_MaintainGeometry will not have set up any of the extra
 	 * infrastructure. Don't even bother to look for it, just return.
 	 */
@@ -589,37 +589,37 @@ Tk_UnmaintainGeometry(
 	Tcl_InitHashTable(&dispPtr->maintainHashTable, TCL_ONE_WORD_KEYS);
     }
 
-    if (!(((TkWindow *) slave)->flags & TK_ALREADY_DEAD)) {
-	Tk_UnmapWindow(slave);
+    if (!(((TkWindow *) window)->flags & TK_ALREADY_DEAD)) {
+	Tk_UnmapWindow(window);
     }
-    hPtr = Tcl_FindHashEntry(&dispPtr->maintainHashTable, master);
+    hPtr = Tcl_FindHashEntry(&dispPtr->maintainHashTable, container);
     if (hPtr == NULL) {
 	return;
     }
-    containerPtr = (MaintainMaster *)Tcl_GetHashValue(hPtr);
-    slavePtr = containerPtr->slavePtr;
-    if (slavePtr->slave == slave) {
-	containerPtr->slavePtr = slavePtr->nextPtr;
+    containerPtr = (MaintainContainer *)Tcl_GetHashValue(hPtr);
+    contentPtr = containerPtr->contentPtr;
+    if (contentPtr->content == window) {
+	containerPtr->contentPtr = contentPtr->nextPtr;
     } else {
-	for (prevPtr = slavePtr, slavePtr = slavePtr->nextPtr; ;
-		prevPtr = slavePtr, slavePtr = slavePtr->nextPtr) {
-	    if (slavePtr == NULL) {
+	for (prevPtr = contentPtr, contentPtr = contentPtr->nextPtr; ;
+		prevPtr = contentPtr, contentPtr = contentPtr->nextPtr) {
+	    if (contentPtr == NULL) {
 		return;
 	    }
-	    if (slavePtr->slave == slave) {
-		prevPtr->nextPtr = slavePtr->nextPtr;
+	    if (contentPtr->content == window) {
+		prevPtr->nextPtr = contentPtr->nextPtr;
 		break;
 	    }
 	}
     }
-    Tk_DeleteEventHandler(slavePtr->slave, StructureNotifyMask,
-	    MaintainSlaveProc, slavePtr);
-    ckfree(slavePtr);
-    if (containerPtr->slavePtr == NULL) {
+    Tk_DeleteEventHandler(contentPtr->content, StructureNotifyMask,
+	    MaintainContentProc, contentPtr);
+    ckfree(contentPtr);
+    if (containerPtr->contentPtr == NULL) {
 	if (containerPtr->ancestor != NULL) {
-	    for (ancestor = master; ; ancestor = Tk_Parent(ancestor)) {
+	    for (ancestor = container; ; ancestor = Tk_Parent(ancestor)) {
 		Tk_DeleteEventHandler(ancestor, StructureNotifyMask,
-			MaintainMasterProc, containerPtr);
+			MaintainContainerProc, containerPtr);
 		if (ancestor == containerPtr->ancestor) {
 		    break;
 		}
@@ -636,10 +636,10 @@ Tk_UnmaintainGeometry(
 /*
  *----------------------------------------------------------------------
  *
- * MaintainMasterProc --
+ * MaintainContainerProc --
  *
  *	This procedure is invoked by the Tk event dispatcher in response to
- *	StructureNotify events on the master or one of its ancestors, on
+ *	StructureNotify events on the container or one of its ancestors, on
  *	behalf of Tk_MaintainGeometry.
  *
  * Results:
@@ -648,20 +648,20 @@ Tk_UnmaintainGeometry(
  * Side effects:
  *	It schedules a call to MaintainCheckProc, which will eventually caused
  *	the postions and mapped states to be recalculated for all the
- *	maintained slaves of the master. Or, if the master window is being
+ *	maintained windows of the container. Or, if the container window is being
  *	deleted then state is cleaned up.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-MaintainMasterProc(
-    ClientData clientData,	/* Pointer to MaintainMaster structure for the
-				 * master window. */
+MaintainContainerProc(
+    ClientData clientData,	/* Pointer to MaintainContainer structure for the
+				 * container window. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    MaintainMaster *containerPtr = (MaintainMaster *)clientData;
-    MaintainSlave *slavePtr;
+    MaintainContainer *containerPtr = (MaintainContainer *)clientData;
+    MaintainContent *contentPtr;
     int done;
 
     if ((eventPtr->type == ConfigureNotify)
@@ -673,18 +673,18 @@ MaintainMasterProc(
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	/*
-	 * Delete all of the state associated with this master, but be careful
-	 * not to use containerPtr after the last slave is deleted, since its
+	 * Delete all of the state associated with this container, but be careful
+	 * not to use containerPtr after the last window is deleted, since its
 	 * memory will have been freed.
 	 */
 
 	done = 0;
 	do {
-	    slavePtr = containerPtr->slavePtr;
-	    if (slavePtr->nextPtr == NULL) {
+	    contentPtr = containerPtr->contentPtr;
+	    if (contentPtr->nextPtr == NULL) {
 		done = 1;
 	    }
-	    Tk_UnmaintainGeometry(slavePtr->slave, slavePtr->master);
+	    Tk_UnmaintainGeometry(contentPtr->content, contentPtr->container);
 	} while (!done);
     }
 }
@@ -692,10 +692,10 @@ MaintainMasterProc(
 /*
  *----------------------------------------------------------------------
  *
- * MaintainSlaveProc --
+ * MaintainContentProc --
  *
  *	This procedure is invoked by the Tk event dispatcher in response to
- *	StructureNotify events on a slave being managed by
+ *	StructureNotify events on a window being managed by
  *	Tk_MaintainGeometry.
  *
  * Results:
@@ -703,21 +703,21 @@ MaintainMasterProc(
  *
  * Side effects:
  *	If the event is a DestroyNotify event then the Maintain state and
- *	event handlers for this slave are deleted.
+ *	event handlers for this window are deleted.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-MaintainSlaveProc(
-    ClientData clientData,	/* Pointer to MaintainSlave structure for
-				 * master-slave pair. */
+MaintainContentProc(
+    ClientData clientData,	/* Pointer to MaintainContent structure for
+				 * container-window pair. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    MaintainSlave *slavePtr = (MaintainSlave *)clientData;
+    MaintainContent *contentPtr = (MaintainContent *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
-	Tk_UnmaintainGeometry(slavePtr->slave, slavePtr->master);
+	Tk_UnmaintainGeometry(contentPtr->content, contentPtr->container);
     }
 }
 
@@ -727,50 +727,50 @@ MaintainSlaveProc(
  * MaintainCheckProc --
  *
  *	This procedure is invoked by the Tk event dispatcher as an idle
- *	handler, when a master or one of its ancestors has been reconfigured,
- *	mapped, or unmapped. Its job is to scan all of the slaves for the
- *	master and reposition them, map them, or unmap them as needed to
- *	maintain their geometry relative to the master.
+ *	handler, when a container or one of its ancestors has been reconfigured,
+ *	mapped, or unmapped. Its job is to scan all of the windows for the
+ *	container and reposition them, map them, or unmap them as needed to
+ *	maintain their geometry relative to the container.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Slaves can get repositioned, mapped, or unmapped.
+ *	Windows can get repositioned, mapped, or unmapped.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 MaintainCheckProc(
-    ClientData clientData)	/* Pointer to MaintainMaster structure for the
-				 * master window. */
+    ClientData clientData)	/* Pointer to MaintainContainer structure for the
+				 * container window. */
 {
-    MaintainMaster *containerPtr = (MaintainMaster *)clientData;
-    MaintainSlave *slavePtr;
+    MaintainContainer *containerPtr = (MaintainContainer *)clientData;
+    MaintainContent *contentPtr;
     Tk_Window ancestor, parent;
     int x, y, map;
 
     containerPtr->checkScheduled = 0;
-    for (slavePtr = containerPtr->slavePtr; slavePtr != NULL;
-	    slavePtr = slavePtr->nextPtr) {
-	parent = Tk_Parent(slavePtr->slave);
-	x = slavePtr->x;
-	y = slavePtr->y;
+    for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
+	    contentPtr = contentPtr->nextPtr) {
+	parent = Tk_Parent(contentPtr->content);
+	x = contentPtr->x;
+	y = contentPtr->y;
 	map = 1;
-	for (ancestor = slavePtr->master; ; ancestor = Tk_Parent(ancestor)) {
+	for (ancestor = contentPtr->container; ; ancestor = Tk_Parent(ancestor)) {
 	    if (!Tk_IsMapped(ancestor) && (ancestor != parent)) {
 		map = 0;
 	    }
 	    if (ancestor == parent) {
-		if ((x != Tk_X(slavePtr->slave))
-			|| (y != Tk_Y(slavePtr->slave))) {
-		    Tk_MoveWindow(slavePtr->slave, x, y);
+		if ((x != Tk_X(contentPtr->content))
+			|| (y != Tk_Y(contentPtr->content))) {
+		    Tk_MoveWindow(contentPtr->content, x, y);
 		}
 		if (map) {
-		    Tk_MapWindow(slavePtr->slave);
+		    Tk_MapWindow(contentPtr->content);
 		} else {
-		    Tk_UnmapWindow(slavePtr->slave);
+		    Tk_UnmapWindow(contentPtr->content);
 		}
 		break;
 	    }
