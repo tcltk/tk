@@ -933,10 +933,6 @@ typedef struct {
 #ifndef TCL_INDEX_END
 #   define TCL_INDEX_END ((TkSizeT)-2)
 #endif
-/* See TIP #577 */
-#ifndef TCL_INDEX_ERROR
-#   define TCL_INDEX_ERROR	0x100
-#endif
 
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble
@@ -1375,9 +1371,12 @@ MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 #   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
+#   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
 #else
 #   define TkNewIndexObj(value) (((TkSizeT)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
+#   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 #endif
+
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

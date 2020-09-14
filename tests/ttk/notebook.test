@@ -66,10 +66,11 @@ test notebook-2.4 "tab - set value" -body {
 } -result "Changed Foo"
 
 test notebook-2.5 "tab - get all options" -body {
+    .nb tab .nb.foo -underline -1
     .nb tab .nb.foo
 } -result [list \
     -padding 0 -sticky nsew \
-    -state normal -text "Changed Foo" -image "" -compound {} -underline {}]
+    -state normal -text "Changed Foo" -image "" -compound {} -underline -1]
 
 test notebook-4.1 "Test .nb index end" -body {
     .nb index end
