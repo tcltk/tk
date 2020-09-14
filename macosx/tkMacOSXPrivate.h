@@ -258,20 +258,20 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow*)TkMacOSXDrawable(drawable))
-#define TkMacOSXGetNSViewForDrawable(macWin) (NSView *)TkMacOSXGetRootControl((Drawable)(macWin))
+#define TkMacOSXGetTkWindow(window) (TkWindow *)Tk_MacOSXGetTkWindow(window)
+#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
+#define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
+#define TkMacOSXGetCGContextForDrawable(drawable) ((CGContextRef)Tk_MacOSXGetCGContextForDrawable(drawable))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
-MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
 MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
-MODULE_SCOPE TkWindow*	TkMacOSXGetTkWindow(NSWindow *w);
 MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
 MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
@@ -437,16 +437,40 @@ VISIBILITY_HIDDEN
 
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Bool _mouseInResizeArea;
+    Window _tkWindow;
+#endif
+}
+@property Bool mouseInResizeArea;
+@property Window tkWindow;
 @end
 
 @interface TKWindow(TKWm)
 - (void)    tkLayoutChanged;
 @end
 
-@interface NSDrawerWindow : NSWindow
+@interface TKDrawerWindow : NSWindow
 {
     id _i1, _i2;
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
 }
+@property Window tkWindow;
+@end
+
+@interface TKPanel : NSPanel
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
+}
+@property Window tkWindow;
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities
