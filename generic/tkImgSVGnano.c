@@ -1,7 +1,7 @@
 /*
  * tkImgSVGnano.c
  *
- *	A photo file handler for SVG files.
+ *  A photo file handler for SVG files.
  *
  * Copyright (c) 2013-14 Mikko Mononen memon@inside.org
  * Copyright (c) 2018 Christian Gollwitzer auriocus@gmx.de
@@ -18,9 +18,9 @@
  */
 
 #include "tkInt.h"
-#define NANOSVG_malloc	ckalloc
-#define NANOSVG_realloc	ckrealloc
-#define NANOSVG_free	ckfree
+#define NANOSVG_malloc  ckalloc
+#define NANOSVG_realloc ckrealloc
+#define NANOSVG_free    ckfree
 #define NANOSVG_SCOPE MODULE_SCOPE
 #define NANOSVG_ALL_COLOR_KEYWORDS
 #define NANOSVG_IMPLEMENTATION
@@ -28,74 +28,54 @@
 #define NANOSVGRAST_IMPLEMENTATION
 #include "nanosvgrast.h"
 
+#define MAX_MATCH_BYTES 4096
+
 /* Additional parameters to nsvgRasterize() */
 
 typedef struct {
     double scale;
+    double dpi;
     int scaleToHeight;
     int scaleToWidth;
 } RastOpts;
 
-/*
- * Per interp cache of last NSVGimage which was matched to
- * be immediately rasterized after the match. This helps to
- * eliminate double parsing of the SVG file/string.
- */
-
-typedef struct {
-    /* A poiner to remember if it is the same svn image (data)
-     * It is a Tcl_Channel if image created by -file option
-     * or a Tcl_Obj, if image is created with the -data option
-     */
-    ClientData dataOrChan;
-    Tcl_DString formatString;
-    NSVGimage *nsvgImage;
-    RastOpts ropts;
-} NSVGcache;
-
-static int		FileMatchSVG(Tcl_Channel chan, const char *fileName,
-			    Tcl_Obj *format, int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp);
-static int		FileReadSVG(Tcl_Interp *interp, Tcl_Channel chan,
-			    const char *fileName, Tcl_Obj *format,
-			    Tk_PhotoHandle imageHandle, int destX, int destY,
-			    int width, int height, int srcX, int srcY);
-static int		StringMatchSVG(Tcl_Obj *dataObj, Tcl_Obj *format,
-			    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
-static int		StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
-			    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
-			    int destX, int destY, int width, int height,
-			    int srcX, int srcY);
-static NSVGimage *	ParseSVGWithOptions(Tcl_Interp *interp,
-			    const char *input, TkSizeT length, Tcl_Obj *format,
-			    RastOpts *ropts);
-static int		RasterizeSVG(Tcl_Interp *interp,
-			    Tk_PhotoHandle imageHandle, NSVGimage *nsvgImage,
-			    int destX, int destY, int width, int height,
-			    int srcX, int srcY, RastOpts *ropts);
-static double		GetScaleFromParameters(NSVGimage *nsvgImage,
-			    RastOpts *ropts, int *widthPtr, int *heightPtr);
-static NSVGcache *	GetCachePtr(Tcl_Interp *interp);
-static int		CacheSVG(Tcl_Interp *interp, ClientData dataOrChan,
-			    Tcl_Obj *formatObj, NSVGimage *nsvgImage,
-			    RastOpts *ropts);
-static NSVGimage *	GetCachedSVG(Tcl_Interp *interp, ClientData dataOrChan,
-			    Tcl_Obj *formatObj, RastOpts *ropts);
-static void		CleanCache(Tcl_Interp *interp);
-static void		FreeCache(ClientData clientData, Tcl_Interp *interp);
+static int      FileMatchSVG(Tcl_Channel chan, const char *fileName,
+                Tcl_Obj *format, int *widthPtr, int *heightPtr,
+                Tcl_Interp *interp);
+static int      FileReadSVG(Tcl_Interp *interp, Tcl_Channel chan,
+                const char *fileName, Tcl_Obj *format,
+                Tk_PhotoHandle imageHandle, int destX, int destY,
+                int width, int height, int srcX, int srcY);
+static int      StringMatchSVG(Tcl_Obj *dataObj, Tcl_Obj *format,
+                int *widthPtr, int *heightPtr, Tcl_Interp *interp);
+static int      StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
+                Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+                int destX, int destY, int width, int height,
+                int srcX, int srcY);
+static NSVGimage * ParseSVGWithOptions(Tcl_Interp *interp,
+                const char *input, TkSizeT length, Tcl_Obj *format,
+                RastOpts *ropts);
+static int      ParseFormatOptions( Tcl_Interp *interp,
+                Tcl_Obj *formatObj, RastOpts *ropts);
+static int      RasterizeSVG(Tcl_Interp *interp,
+                Tk_PhotoHandle imageHandle, NSVGimage *nsvgImage,
+                int destX, int destY, int width, int height,
+                int srcX, int srcY, RastOpts *ropts);
+static double   GetScaleFromParameters(float svgWidth, float svgHeight,
+                RastOpts *ropts, int *widthPtr, int *heightPtr);
 
 /*
  * The format record for the SVG nano file format:
  */
 
 Tk_PhotoImageFormat tkImgFmtSVGnano = {
-    "svg",			/* name */
-    FileMatchSVG,		/* fileMatchProc */
-    StringMatchSVG,		/* stringMatchProc */
-    FileReadSVG,		/* fileReadProc */
-    StringReadSVG,		/* stringReadProc */
-    NULL,			/* fileWriteProc */
-    NULL,			/* stringWriteProc */
+    "svg",              /* name */
+    FileMatchSVG,       /* fileMatchProc */
+    StringMatchSVG,     /* stringMatchProc */
+    FileReadSVG,        /* fileReadProc */
+    StringReadSVG,      /* stringReadProc */
+    NULL,               /* fileWriteProc */
+    NULL,               /* stringWriteProc */
     NULL
 };
 
@@ -104,18 +84,138 @@ Tk_PhotoImageFormat tkImgFmtSVGnano = {
  *
  * FileMatchSVG --
  *
- *	This function is invoked by the photo image type to see if a file
- *	contains image data in SVG format.
+ *  This function is invoked by the photo image type to see if a file
+ *  contains image data in SVG format.
  *
  * Results:
- *	The return value is >0 if the file can be successfully parsed,
- *	and 0 otherwise.
- *
- * Side effects:
- *	The file is saved in the internal cache for further use.
+ *  The return value is >0 if the file can be successfully parsed,
+ *  and 0 otherwise.
  *
  *----------------------------------------------------------------------
  */
+
+static int svg_parseUnits(const char* units)
+{
+    if (units[0] == 'p' && units[1] == 'x')
+        return NSVG_UNITS_PX;
+    else if (units[0] == 'p' && units[1] == 't')
+        return NSVG_UNITS_PT;
+    else if (units[0] == 'p' && units[1] == 'c')
+        return NSVG_UNITS_PC;
+    else if (units[0] == 'm' && units[1] == 'm')
+        return NSVG_UNITS_MM;
+    else if (units[0] == 'c' && units[1] == 'm')
+        return NSVG_UNITS_CM;
+    else if (units[0] == 'i' && units[1] == 'n')
+        return NSVG_UNITS_IN;
+    else if (units[0] == '%')
+        return NSVG_UNITS_PERCENT;
+    else if (units[0] == 'e' && units[1] == 'm')
+        return NSVG_UNITS_EM;
+    else if (units[0] == 'e' && units[1] == 'x')
+        return NSVG_UNITS_EX;
+    return NSVG_UNITS_USER;
+}
+
+static NSVGcoordinate svg_parseCoordinateRaw(const char* str)
+{
+    NSVGcoordinate coord = {0, NSVG_UNITS_USER};
+    char units[32]="";
+    sscanf(str, "%f%2s", &coord.value, units);
+    coord.units = svg_parseUnits(units);
+    return coord;
+}
+
+static float svg_convertToPixels(NSVGcoordinate c, float dpi)
+{
+    switch (c.units) {
+        case NSVG_UNITS_USER:    return c.value;
+        case NSVG_UNITS_PX:      return c.value;
+        case NSVG_UNITS_PT:      return c.value / 72.0f * dpi;
+        case NSVG_UNITS_PC:      return c.value / 6.0f * dpi;
+        case NSVG_UNITS_MM:      return c.value / 25.4f * dpi;
+        case NSVG_UNITS_CM:      return c.value / 2.54f * dpi;
+        case NSVG_UNITS_IN:      return c.value * dpi;
+        case NSVG_UNITS_PERCENT: return 0.0f;
+        default:                 return c.value;
+    }
+    return c.value;
+}
+
+static float svg_parseCoordinate(const char* str, float dpi)
+{
+    NSVGcoordinate coord = svg_parseCoordinateRaw(str);
+    return svg_convertToPixels(coord, dpi);
+}
+
+static int
+IsSvgFile(
+    const char *data,
+    int maxInd,
+    float dpi,
+    float *svgWidth,
+    float *svgHeight)
+{
+    int curInd = 0;
+    const char *svgStart   = NULL;
+    const char *svgEnd     = NULL;
+    const char *widthStr   = NULL;
+    const char *heightStr  = NULL;
+    const char *viewBoxStr = NULL;
+
+    svgEnd = data + maxInd;
+    while (data[curInd] && curInd < maxInd) {
+        if (data[curInd] == '<') {
+            curInd++;
+            if (curInd + 3 < maxInd && strncmp(&data[curInd], "svg", 3) == 0) {
+                curInd += 3;
+                svgStart = &data[curInd];
+            }
+        } else if (data[curInd] == '>' && svgStart) {
+            svgEnd = &data[curInd];
+            break;
+        }
+        curInd++;
+    }
+    if (!svgStart) {
+        return 0;
+    }
+    widthStr   = strstr(svgStart, " width=");
+    heightStr  = strstr(svgStart, " height=");
+    viewBoxStr = strstr(svgStart, " viewBox=");
+    if (viewBoxStr && viewBoxStr < svgEnd) {
+        float viewMinx, viewMiny, viewWidth, viewHeight;
+        sscanf(viewBoxStr + 10, "%f%*[%%, \t]%f%*[%%, \t]%f%*[%%, \t]%f", 
+               &viewMinx, &viewMiny, &viewWidth, &viewHeight);
+        *svgWidth  = viewWidth;
+        *svgHeight = viewHeight;
+    }
+    if (widthStr && widthStr < svgEnd) {
+        float val = svg_parseCoordinate( widthStr + 8, dpi);
+        if (val != 0.0f) {
+            *svgWidth = val;
+        }
+    }
+    if (heightStr && heightStr < svgEnd) {
+        float val = svg_parseCoordinate( heightStr + 9, dpi);
+        if (val != 0.0f) {
+            *svgHeight = val;
+        }
+    }
+    if (*svgHeight == 0.0f && *svgWidth > 0.0f) {
+        *svgHeight = *svgWidth;
+    }
+    if (*svgWidth == 0.0f && *svgHeight > 0.0f) {
+        *svgWidth = *svgHeight;
+    }
+    if (*svgWidth == 0.0f) {
+        *svgWidth = 300.0f;
+    }
+    if (*svgHeight == 0.0f) {
+        *svgHeight = 300.0f;
+    }
+    return 1;
+}
 
 static int
 FileMatchSVG(
@@ -128,31 +228,34 @@ FileMatchSVG(
     TkSizeT length;
     Tcl_Obj *dataObj = Tcl_NewObj();
     const char *data;
+    unsigned int maxInd;
+    float svgWidth  = 0.0f;
+    float svgHeight = 0.0f;
     RastOpts ropts;
-    NSVGimage *nsvgImage;
+    int numBytesRead;
     (void)fileName;
 
-    CleanCache(interp);
-    if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
-	/* in case of an error reading the file */
-	Tcl_DecrRefCount(dataObj);
-	return 0;
+    if (!ParseFormatOptions(interp, formatObj, &ropts)) {
+        return 0;
+    }
+    numBytesRead = Tcl_ReadChars(chan, dataObj, MAX_MATCH_BYTES, 0);
+    if (numBytesRead == TCL_IO_FAILURE) {
+        /* in case of an error reading the file */
+        Tcl_DecrRefCount(dataObj);
+        return 0;
     }
     data = TkGetStringFromObj(dataObj, &length);
-    nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
-    Tcl_DecrRefCount(dataObj);
-    if (nsvgImage != NULL) {
-        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
-        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
-	    nsvgDelete(nsvgImage);
-	    return 0;
-        }
-        if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
-	    nsvgDelete(nsvgImage);
-        }
-        return 1;
+    maxInd = length < MAX_MATCH_BYTES? length: MAX_MATCH_BYTES;
+    if (!IsSvgFile (data, maxInd, ropts.dpi, &svgWidth, &svgHeight)) {
+        Tcl_DecrRefCount(dataObj);
+        return 0;
     }
-    return 0;
+    GetScaleFromParameters(svgWidth, svgHeight, &ropts, widthPtr, heightPtr);
+    Tcl_DecrRefCount(dataObj);
+    if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
+        return 0;
+    }
+    return 1;
 }
 
 /*
@@ -160,16 +263,16 @@ FileMatchSVG(
  *
  * FileReadSVG --
  *
- *	This function is called by the photo image type to read SVG format
- *	data from a file and write it into a given photo image.
+ *  This function is called by the photo image type to read SVG format
+ *  data from a file and write it into a given photo image.
  *
  * Results:
- *	A standard TCL completion code. If TCL_ERROR is returned then an error
- *	message is left in the interp's result.
+ *  A standard TCL completion code. If TCL_ERROR is returned then an error
+ *  message is left in the interp's result.
  *
  * Side effects:
- *	The access position in file f is changed, and new data is added to the
- *	image given by imageHandle.
+ *  The access position in file f is changed, and new data is added to the
+ *  image given by imageHandle.
  *
  *----------------------------------------------------------------------
  */
@@ -188,29 +291,25 @@ FileReadSVG(
     TkSizeT length;
     const char *data;
     RastOpts ropts;
-    NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
+    NSVGimage *nsvgImage = NULL;
+    Tcl_Obj *dataObj = Tcl_NewObj();
     (void)fileName;
 
+    if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
+        /* in case of an error reading the file */
+        Tcl_DecrRefCount(dataObj);
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("read error", -1));
+        Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "READ_ERROR", NULL);
+        return TCL_ERROR;
+    }
+    data = TkGetStringFromObj(dataObj, &length);
+    nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
+    Tcl_DecrRefCount(dataObj);
     if (nsvgImage == NULL) {
-        Tcl_Obj *dataObj = Tcl_NewObj();
-
-	if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
-	    /* in case of an error reading the file */
-	    Tcl_DecrRefCount(dataObj);
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("read error", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "READ_ERROR", NULL);
-	    return TCL_ERROR;
-	}
-	data = TkGetStringFromObj(dataObj, &length);
-	nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
-			    &ropts);
-	Tcl_DecrRefCount(dataObj);
-	if (nsvgImage == NULL) {
-	    return TCL_ERROR;
-	}
+        return TCL_ERROR;
     }
     return RasterizeSVG(interp, imageHandle, nsvgImage, destX, destY,
-		width, height, srcX, srcY, &ropts);
+                        width, height, srcX, srcY, &ropts);
 }
 
 /*
@@ -218,15 +317,12 @@ FileReadSVG(
  *
  * StringMatchSVG --
  *
- *	This function is invoked by the photo image type to see if a string
- *	contains image data in SVG format.
+ *  This function is invoked by the photo image type to see if a string
+ *  contains image data in SVG format.
  *
  * Results:
- *	The return value is >0 if the file can be successfully parsed,
- *	and 0 otherwise.
- *
- * Side effects:
- *	The file is saved in the internal cache for further use.
+ *  The return value is >0 if the file can be successfully parsed,
+ *  and 0 otherwise.
  *
  *----------------------------------------------------------------------
  */
@@ -240,24 +336,27 @@ StringMatchSVG(
 {
     TkSizeT length;
     const char *data;
+    unsigned int maxInd;
+    float svgWidth  = 0.0f;
+    float svgHeight = 0.0f;
     RastOpts ropts;
-    NSVGimage *nsvgImage;
 
-    CleanCache(interp);
-    data = TkGetStringFromObj(dataObj, &length);
-    nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
-    if (nsvgImage != NULL) {
-        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
-        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
-	    nsvgDelete(nsvgImage);
-	    return 0;
-        }
-        if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
-	    nsvgDelete(nsvgImage);
-        }
-        return 1;
+    if (!ParseFormatOptions (interp, formatObj, &ropts)) {
+        return 0;
     }
-    return 0;
+
+    data = TkGetStringFromObj (dataObj, &length);
+    maxInd = length < MAX_MATCH_BYTES? length: MAX_MATCH_BYTES;
+
+    if (!IsSvgFile (data, maxInd, ropts.dpi, &svgWidth, &svgHeight)) {
+        return 0;
+    }
+
+    GetScaleFromParameters (svgWidth, svgHeight, &ropts, widthPtr, heightPtr);
+    if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
+        return 0;
+    }
+    return 1;
 }
 
 /*
@@ -265,15 +364,15 @@ StringMatchSVG(
  *
  * StringReadSVG --
  *
- *	This function is called by the photo image type to read SVG format
- *	data from a string and write it into a given photo image.
+ *  This function is called by the photo image type to read SVG format
+ *  data from a string and write it into a given photo image.
  *
  * Results:
- *	A standard TCL completion code. If TCL_ERROR is returned then an error
- *	message is left in the interp's result.
+ *  A standard TCL completion code. If TCL_ERROR is returned then an error
+ *  message is left in the interp's result.
  *
  * Side effects:
- *	New data is added to the image given by imageHandle.
+ *  New data is added to the image given by imageHandle.
  *
  *----------------------------------------------------------------------
  */
@@ -291,18 +390,15 @@ StringReadSVG(
     TkSizeT length;
     const char *data;
     RastOpts ropts;
-    NSVGimage *nsvgImage = GetCachedSVG(interp, dataObj, formatObj, &ropts);
+    NSVGimage *nsvgImage = NULL;
 
+    data = TkGetStringFromObj(dataObj, &length);
+    nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     if (nsvgImage == NULL) {
-        data = TkGetStringFromObj(dataObj, &length);
-	nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
-			    &ropts);
-    }
-    if (nsvgImage == NULL) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     return RasterizeSVG(interp, imageHandle, nsvgImage, destX, destY,
-		width, height, srcX, srcY, &ropts);
+                        width, height, srcX, srcY, &ropts);
 }
 
 /*
@@ -310,15 +406,139 @@ StringReadSVG(
  *
  * ParseSVGWithOptions --
  *
- *	This function is called to parse the given input string as SVG.
+ *  This function is called to parse the given input string as SVG.
  *
  * Results:
- *	Return a newly create NSVGimage on success, and NULL otherwise.
+ *  Return a newly create NSVGimage on success, and NULL otherwise.
  *
  * Side effects:
  *
  *----------------------------------------------------------------------
  */
+
+static int
+ParseFormatOptions(
+    Tcl_Interp *interp,
+    Tcl_Obj *formatObj,
+    RastOpts *ropts)
+{
+    Tcl_Obj **objv = NULL;
+    int objc = 0;
+    int parameterScaleSeen = 0;
+    static const char *const fmtOptions[] = {
+        "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
+    };
+    enum fmtOptions {
+        OPT_DPI, OPT_SCALE, OPT_SCALE_TO_HEIGHT, OPT_SCALE_TO_WIDTH
+    };
+
+    /*
+     * Process elements of format specification as a list.
+     */
+
+    ropts->scale = 1.0;
+    ropts->dpi   = 96.0;
+    ropts->scaleToHeight = 0;
+    ropts->scaleToWidth  = 0;
+    if ((formatObj != NULL) &&
+        Tcl_ListObjGetElements(interp, formatObj, &objc, &objv) != TCL_OK) {
+        return 0;
+    }
+    for (; objc > 0 ; objc--, objv++) {
+        int optIndex;
+
+        /*
+         * Ignore the "svg" part of the format specification.
+         */
+
+        if (!strcasecmp(Tcl_GetString(objv[0]), "svg")) {
+            continue;
+        }
+
+        if (Tcl_GetIndexFromObjStruct(interp, objv[0], fmtOptions,
+            sizeof(char *), "option", 0, &optIndex) == TCL_ERROR) {
+            return 0;
+        }
+
+        if (objc < 2) {
+            Tcl_WrongNumArgs(interp, 1, objv, "value");
+            return 0;
+        }
+
+        objc--;
+        objv++;
+
+        /*
+         * check that only one scale option is given
+         */
+        switch ((enum fmtOptions) optIndex) {
+            case OPT_SCALE:
+            case OPT_SCALE_TO_HEIGHT:
+            case OPT_SCALE_TO_WIDTH:
+                if ( parameterScaleSeen ) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "only one of -scale, -scaletoheight, -scaletowidth may be given", -1));
+                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE", NULL);
+                    return 0;
+                }
+                parameterScaleSeen = 1;
+                break;
+            default:
+                break;
+        }
+
+        /*
+         * Decode parameters
+         */
+        switch ((enum fmtOptions) optIndex) {
+            case OPT_DPI:
+                if (Tcl_GetDoubleFromObj(interp, objv[0], &ropts->dpi) == TCL_ERROR) {
+                    return 0;
+                }
+                if (ropts->dpi < 0.0) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "-dpi value must be positive", -1));
+                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_DPI", NULL);
+                    return 0;
+                }
+                break;
+            case OPT_SCALE:
+                if (Tcl_GetDoubleFromObj(interp, objv[0], &ropts->scale) == TCL_ERROR) {
+                    return 0;
+                }
+                if (ropts->scale <= 0.0) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "-scale value must be positive", -1));
+                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE", NULL);
+                    return 0;
+                }
+                break;
+            case OPT_SCALE_TO_HEIGHT:
+                if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToHeight) == TCL_ERROR) {
+                    return 0;
+                }
+                if (ropts->scaleToHeight <= 0) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "-scaletoheight value must be positive", -1));
+                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE", NULL);
+                    return 0;
+                }
+                break;
+            case OPT_SCALE_TO_WIDTH:
+                if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToWidth) == TCL_ERROR) {
+                    return 0;
+                }
+                if (ropts->scaleToWidth <= 0) {
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "-scaletowidth value must be positive", -1));
+                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE", NULL);
+                    return 0;
+                }
+                break;
+        }
+    }
+    return 1;
+}
 
 static NSVGimage *
 ParseSVGWithOptions(
@@ -328,18 +548,8 @@ ParseSVGWithOptions(
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
-    Tcl_Obj **objv = NULL;
-    int objc = 0;
-    double dpi = 96.0;
     char *inputCopy = NULL;
-    NSVGimage *nsvgImage;
-    int parameterScaleSeen = 0;
-    static const char *const fmtOptions[] = {
-        "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
-    };
-    enum fmtOptions {
-	OPT_DPI, OPT_SCALE, OPT_SCALE_TO_HEIGHT, OPT_SCALE_TO_WIDTH
-    };
+    NSVGimage *nsvgImage = NULL;
 
     /*
      * The parser destroys the original input string,
@@ -348,133 +558,20 @@ ParseSVGWithOptions(
 
     inputCopy = (char *)attemptckalloc(length+1);
     if (inputCopy == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
-	goto error;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", -1));
+        Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
+        goto error;
     }
     memcpy(inputCopy, input, length);
     inputCopy[length] = '\0';
 
-    /*
-     * Process elements of format specification as a list.
-     */
+    ParseFormatOptions (interp, formatObj, ropts);
 
-    ropts->scale = 1.0;
-    ropts->scaleToHeight = 0;
-    ropts->scaleToWidth = 0;
-    if ((formatObj != NULL) &&
-	    Tcl_ListObjGetElements(interp, formatObj, &objc, &objv) != TCL_OK) {
-        goto error;
-    }
-    for (; objc > 0 ; objc--, objv++) {
-	int optIndex;
-
-	/*
-	 * Ignore the "svg" part of the format specification.
-	 */
-
-	if (!strcasecmp(Tcl_GetString(objv[0]), "svg")) {
-	    continue;
-	}
-
-	if (Tcl_GetIndexFromObjStruct(interp, objv[0], fmtOptions,
-		sizeof(char *), "option", 0, &optIndex) == TCL_ERROR) {
-	    goto error;
-	}
-
-	if (objc < 2) {
-	    ckfree(inputCopy);
-	    inputCopy = NULL;
-	    Tcl_WrongNumArgs(interp, 1, objv, "value");
-	    goto error;
-	}
-
-	objc--;
-	objv++;
-
-	/*
-	 * check that only one scale option is given
-	 */
-	switch ((enum fmtOptions) optIndex) {
-	case OPT_SCALE:
-	case OPT_SCALE_TO_HEIGHT:
-	case OPT_SCALE_TO_WIDTH:
-	    if ( parameterScaleSeen ) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"only one of -scale, -scaletoheight, -scaletowidth may be given", -1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
-		goto error;
-	    }
-	    parameterScaleSeen = 1;
-	    break;
-	default:
-	    break;
-	}
-
-	/*
-	 * Decode parameters
-	 */
-	switch ((enum fmtOptions) optIndex) {
-	case OPT_DPI:
-	    if (Tcl_GetDoubleFromObj(interp, objv[0], &dpi) == TCL_ERROR) {
-	        goto error;
-	    }
-	    if (dpi < 0.0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-dpi value must be positive", -1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_DPI",
-			NULL);
-		goto error;
-	    }
-	    break;
-	case OPT_SCALE:
-	    if (Tcl_GetDoubleFromObj(interp, objv[0], &ropts->scale) ==
-		TCL_ERROR) {
-	        goto error;
-	    }
-	    if (ropts->scale <= 0.0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-scale value must be positive", -1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
-		goto error;
-	    }
-	    break;
-	case OPT_SCALE_TO_HEIGHT:
-	    if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToHeight) ==
-		TCL_ERROR) {
-	        goto error;
-	    }
-	    if (ropts->scaleToHeight <= 0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-scaletoheight value must be positive", -1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
-		goto error;
-	    }
-	    break;
-	case OPT_SCALE_TO_WIDTH:
-	    if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToWidth) ==
-		TCL_ERROR) {
-	        goto error;
-	    }
-	    if (ropts->scaleToWidth <= 0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-scaletowidth value must be positive", -1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
-		goto error;
-	    }
-	    break;
-	}
-    }
-
-    nsvgImage = nsvgParse(inputCopy, "px", (float) dpi);
+    nsvgImage = nsvgParse(inputCopy, "px", ropts->dpi);
     if (nsvgImage == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
-	goto error;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", -1));
+        Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
+        goto error;
     }
     ckfree(inputCopy);
     return nsvgImage;
@@ -491,16 +588,16 @@ error:
  *
  * RasterizeSVG --
  *
- *	This function is called to rasterize the given nsvgImage and
- *	fill the imageHandle with data.
+ *  This function is called to rasterize the given nsvgImage and
+ *  fill the imageHandle with data.
  *
  * Results:
- *	A standard TCL completion code. If TCL_ERROR is returned then an error
- *	message is left in the interp's result.
+ *  A standard TCL completion code. If TCL_ERROR is returned then an error
+ *  message is left in the interp's result.
  *
  *
  * Side effects:
- *	On error the given nsvgImage will be deleted.
+ *  On error the given nsvgImage will be deleted.
  *
  *----------------------------------------------------------------------
  */
@@ -523,23 +620,21 @@ RasterizeSVG(
     (void)srcX;
     (void)srcY;
 
-    scale = GetScaleFromParameters(nsvgImage, ropts, &w, &h);
+    scale = GetScaleFromParameters(nsvgImage->width, nsvgImage->height, ropts, &w, &h);
 
     rast = nsvgCreateRasterizer();
     if (rast == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "RASTERIZER_ERROR",
-		NULL);
-	goto cleanAST;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", -1));
+        Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "RASTERIZER_ERROR", NULL);
+        goto cleanAST;
     }
     imgData = (unsigned char *)attemptckalloc(w * h *4);
     if (imgData == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
-	goto cleanRAST;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", -1));
+        Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
+        goto cleanRAST;
     }
-    nsvgRasterize(rast, nsvgImage, 0, 0,
-	    (float) scale, imgData, w, h, w * 4);
+    nsvgRasterize(rast, nsvgImage, 0, 0, (float) scale, imgData, w, h, w * 4);
     /* transfer the data to a photo block */
     svgblock.pixelPtr = imgData;
     svgblock.width = w;
@@ -547,15 +642,14 @@ RasterizeSVG(
     svgblock.pitch = w * 4;
     svgblock.pixelSize = 4;
     for (c = 0; c <= 3; c++) {
-	svgblock.offset[c] = c;
+        svgblock.offset[c] = c;
     }
-    if (Tk_PhotoExpand(interp, imageHandle,
-		destX + width, destY + height) != TCL_OK) {
-	goto cleanRAST;
+    if (Tk_PhotoExpand(interp, imageHandle, destX + width, destY + height) != TCL_OK) {
+        goto cleanRAST;
     }
     if (Tk_PhotoPutBlock(interp, imageHandle, &svgblock, destX, destY,
-		width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-	goto cleanimg;
+                         width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
+        goto cleanimg;
     }
     ckfree(imgData);
     nsvgDeleteRasterizer(rast);
@@ -578,23 +672,24 @@ cleanAST:
  *
  * GetScaleFromParameters --
  *
- *	Get the scale value from the already parsed parameters -scale,
- *	-scaletoheight and -scaletowidth.
+ *  Get the scale value from the already parsed parameters -scale,
+ *  -scaletoheight and -scaletowidth.
  *
- *	The image width and height is also returned.
+ *  The image width and height is also returned.
  *
  * Results:
- *	The evaluated or configured scale value, or 0.0 on failure
+ *  The evaluated or configured scale value, or 0.0 on failure
  *
  * Side effects:
- *	heightPtr and widthPtr are set to height and width of the image.
+ *  heightPtr and widthPtr are set to height and width of the image.
  *
  *----------------------------------------------------------------------
  */
 
 static double
 GetScaleFromParameters(
-    NSVGimage *nsvgImage,
+    float svgWidth,
+    float svgHeight,
     RastOpts *ropts,
     int *widthPtr,
     int *heightPtr)
@@ -602,210 +697,33 @@ GetScaleFromParameters(
     double scale;
     int width, height;
 
-    if ((nsvgImage->width == 0.0) || (nsvgImage->height == 0.0)) {
+    if ((svgWidth == 0.0) || (svgHeight == 0.0)) {
         width = height = 0;
         scale = 1.0;
     } else if (ropts->scaleToHeight > 0) {
-	/*
-	 * Fixed height
-	 */
-	height = ropts->scaleToHeight;
-	scale = height / nsvgImage->height;
-	width = (int) ceil(nsvgImage->width * scale);
+        /*
+         * Fixed height
+         */
+        height = ropts->scaleToHeight;
+        scale = height / svgHeight;
+        width = (int) ceil(svgWidth * scale);
     } else if (ropts->scaleToWidth > 0) {
-	/*
-	 * Fixed width
-	 */
-	width = ropts->scaleToWidth;
-	scale = width / nsvgImage->width;
-	height = (int) ceil(nsvgImage->height * scale);
+        /*
+         * Fixed width
+         */
+        width = ropts->scaleToWidth;
+        scale = width / svgWidth;
+        height = (int) ceil(svgHeight * scale);
     } else {
-	/*
-	 * Scale factor
-	 */
-	scale = ropts->scale;
-	width = (int) ceil(nsvgImage->width * scale);
-	height = (int) ceil(nsvgImage->height * scale);
+        /*
+         * Scale factor
+         */
+        scale = ropts->scale;
+        width = (int) ceil(svgWidth * scale);
+        height = (int) ceil(svgHeight * scale);
     }
 
     *heightPtr = height;
     *widthPtr = width;
     return scale;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * GetCachePtr --
- *
- *	This function is called to get the per interpreter used
- *	svg image cache.
- *
- * Results:
- * 	Return a pointer to the used cache.
- *
- * Side effects:
- *	Initialize the cache on the first call.
- *
- *----------------------------------------------------------------------
- */
-
-static NSVGcache *
-GetCachePtr(
-    Tcl_Interp *interp
-) {
-    NSVGcache *cachePtr = (NSVGcache *)Tcl_GetAssocData(interp, "tksvgnano", NULL);
-    if (cachePtr == NULL) {
-	cachePtr = (NSVGcache *)ckalloc(sizeof(NSVGcache));
-	cachePtr->dataOrChan = NULL;
-	Tcl_DStringInit(&cachePtr->formatString);
-	cachePtr->nsvgImage = NULL;
-	Tcl_SetAssocData(interp, "tksvgnano", FreeCache, cachePtr);
-    }
-    return cachePtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * CacheSVG --
- *
- *	Add the given svg image informations to the cache for further usage.
- *
- * Results:
- *	Return 1 on success, and 0 otherwise.
- *
- * Side effects:
- *
- *----------------------------------------------------------------------
- */
-
-static int
-CacheSVG(
-    Tcl_Interp *interp,
-    ClientData dataOrChan,
-    Tcl_Obj *formatObj,
-    NSVGimage *nsvgImage,
-    RastOpts *ropts)
-{
-    TkSizeT length;
-    const char *data;
-    NSVGcache *cachePtr = GetCachePtr(interp);
-
-    if (cachePtr != NULL) {
-        cachePtr->dataOrChan = dataOrChan;
-	if (formatObj != NULL) {
-	    data = TkGetStringFromObj(formatObj, &length);
-	    Tcl_DStringAppend(&cachePtr->formatString, data, length);
-	}
-	cachePtr->nsvgImage = nsvgImage;
-	cachePtr->ropts = *ropts;
-	return 1;
-    }
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GetCachedSVG --
- *
- *	Try to get the NSVGimage from the internal cache.
- *
- * Results:
- *	Return the found NSVGimage on success, and NULL otherwise.
- *
- * Side effects:
- *	Calls the CleanCache() function.
- *
- *----------------------------------------------------------------------
- */
-
-static NSVGimage *
-GetCachedSVG(
-    Tcl_Interp *interp,
-    ClientData dataOrChan,
-    Tcl_Obj *formatObj,
-    RastOpts *ropts)
-{
-    TkSizeT length;
-    const char *data;
-    NSVGcache *cachePtr = GetCachePtr(interp);
-    NSVGimage *nsvgImage = NULL;
-
-    if ((cachePtr != NULL) && (cachePtr->nsvgImage != NULL) &&
-	(cachePtr->dataOrChan == dataOrChan)) {
-        if (formatObj != NULL) {
-	    data = TkGetStringFromObj(formatObj, &length);
-	    if (strcmp(data, Tcl_DStringValue(&cachePtr->formatString)) == 0) {
-	        nsvgImage = cachePtr->nsvgImage;
-		*ropts = cachePtr->ropts;
-		cachePtr->nsvgImage = NULL;
-	    }
-	} else if (Tcl_DStringLength(&cachePtr->formatString) == 0) {
-	    nsvgImage = cachePtr->nsvgImage;
-	    *ropts = cachePtr->ropts;
-	    cachePtr->nsvgImage = NULL;
-	}
-    }
-    CleanCache(interp);
-    return nsvgImage;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * CleanCache --
- *
- *	Reset the cache and delete the saved image in it.
- *
- * Results:
- *
- * Side effects:
- *
- *----------------------------------------------------------------------
- */
-
-static void
-CleanCache(Tcl_Interp *interp)
-{
-    NSVGcache *cachePtr = GetCachePtr(interp);
-
-    if (cachePtr != NULL) {
-        cachePtr->dataOrChan = NULL;
-        Tcl_DStringSetLength(&cachePtr->formatString, 0);
-	if (cachePtr->nsvgImage != NULL) {
-	    nsvgDelete(cachePtr->nsvgImage);
-	    cachePtr->nsvgImage = NULL;
-	}
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FreeCache --
- *
- *	This function is called to clean up the internal cache data.
- *
- * Results:
- *
- * Side effects:
- *	Existing image data in the cache and the cache will be deleted.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FreeCache(ClientData clientData, Tcl_Interp *interp)
-{
-    NSVGcache *cachePtr = (NSVGcache *)clientData;
-    (void)interp;
-
-    Tcl_DStringFree(&cachePtr->formatString);
-    if (cachePtr->nsvgImage != NULL) {
-        nsvgDelete(cachePtr->nsvgImage);
-    }
-    ckfree(cachePtr);
-}
-
