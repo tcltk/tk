@@ -384,7 +384,7 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
         $S(W).l${var}s selection clear 0 end
         set n [lsearch -exact $S(${var}s,lcase) $value]
         $S(W).l${var}s selection set $n
-        if {$n != -1} {
+        if {$n >= 0} {
             set S($var) [lindex $S(${var}s) $n]
             $S(W).e$var icursor end
             $S(W).e$var selection clear
