@@ -192,14 +192,18 @@ IsSvgFile(
     }
     if (widthStr && widthStr < svgEnd) {
         float val = svg_parseCoordinate( widthStr + 8, dpi);
-        if (val != 0.0f) {
+        if (val > 0.0f) {
             *svgWidth = val;
+        } else {
+            return 0;
         }
     }
     if (heightStr && heightStr < svgEnd) {
         float val = svg_parseCoordinate( heightStr + 9, dpi);
-        if (val != 0.0f) {
+        if (val > 0.0f) {
             *svgHeight = val;
+        } else {
+            return 0;
         }
     }
     if (*svgHeight == 0.0f && *svgWidth > 0.0f) {
