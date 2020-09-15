@@ -523,7 +523,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} -body {
 } -result 0
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} -body {
     llength [.l configure]
-} -result 28
+} -result 30
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} -body {
     .l configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
@@ -2832,10 +2832,13 @@ test listbox-23.2 {ConfigureListboxItem} -setup {
     destroy .l
 } -result [list {-background background Background {} {}} \
 	{-bg -background} \
-	{-fg -foreground} \
-	{-foreground foreground Foreground {} {}} \
-	{-selectbackground selectBackground Foreground {} {}} \
-	{-selectforeground selectForeground Background {} {}}]
+	{-color color Color {} {}} \
+	{-fg -color} \
+	{-foreground -color} \
+	{-selectbackground selectBackground SelectBackground {} {}} \
+	{-selectcolor selectColor SelectColor {} {}} \
+	{-selectfg -selectcolor} \
+	{-selectforeground -selectcolor}]
 test listbox-23.3 {ConfigureListboxItem, itemco shortcut} -setup {
     destroy .l
 } -body {

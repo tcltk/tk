@@ -623,10 +623,10 @@ ReadData(
     }
 
     while (destSz) {
-	size_t blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	TkSizeT blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
-	blockSz = (size_t)Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
-	if (blockSz == (size_t)-1) {
+	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
+	if (blockSz == TCL_IO_FAILURE) {
 	    /* TODO: failure info... */
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel read failed: %s", Tcl_PosixError(interp)));

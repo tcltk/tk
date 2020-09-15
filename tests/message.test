@@ -452,7 +452,7 @@ test message-3.5 {MessageWidgetObjCmd procedure, "configure"} -setup {
     llength [.m configure]
 } -cleanup {
     destroy .m
-} -result 21
+} -result 22
 test message-3.6 {MessageWidgetObjCmd procedure, "configure"} -setup {
     message .m
 } -body {

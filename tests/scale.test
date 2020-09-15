@@ -361,8 +361,8 @@ test scale-3.5 {ScaleWidgetCmd procedure, cget option} -body {
     .s cget -highlightthickness
 } -result 2
 test scale-3.6 {ScaleWidgetCmd procedure, configure option} -body {
-    list [llength [.s configure]] [lindex [.s configure] 6]
-} -result {33 {-command command Command {} {}}}
+    list [llength [.s configure]] [lindex [.s configure] 7]
+} -result {34 {-command command Command {} {}}}
 test scale-3.7 {ScaleWidgetCmd procedure, configure option} -body {
     .s configure -foo
 } -returnCodes error -result {unknown option "-foo"}
