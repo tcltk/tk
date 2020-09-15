@@ -278,18 +278,18 @@ TkpInit(
     static int initialized = 0;
 
     /*
-     * Since it is possible for TkInit to be called multiple times and we
-     * don't want to do the following initialization multiple times we protect
-     * against doing it more than once.
+     * TkpInit can be called multiple times with different interpreters. But
+     * The application initialization should only be done onece.
      */
 
     if (!initialized) {
 	struct stat st;
-	initialized = 1;
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
+
+	initialized = 1;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #   error Mac OS X 10.6 required
@@ -427,6 +427,22 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+
+	/*
+	 * The root window has been created and mapped, but XMapWindow deferred its
+	 * call to makeKeyAndOrderFront because the first call to XMapWindow
+	 * occurs too early in the initialization process for that.  Process idle
+	 * tasks now, so the root window is configured, then order it front.
+	 */
+
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	for (NSWindow *window in [NSApp windows]) {
+	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+	    if (winPtr && Tk_IsMapped(winPtr)) {
+		[window makeKeyAndOrderFront:NSApp];
+		break;
+	    }
+	}
     }
 
     if (tkLibPath[0] != '\0') {
@@ -445,17 +461,6 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
 
-     /*
-      * The root window has been created and mapped, but XMapWindow deferred its
-      * call to makeKeyAndOrderFront because the first call to XMapWindow
-      * occurs too early in the initialization process for that.  Process idle
-      * tasks now, so the root window is configured, then order it front.
-      */
-
-     while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-     for (NSWindow *window in [NSApp windows]) {
-	 [window makeKeyAndOrderFront:NSApp];
-     }
     return TCL_OK;
 }
 
