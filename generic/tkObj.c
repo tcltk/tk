@@ -951,12 +951,11 @@ TkGetWindowFromObj(
 
 static int
 SetWindowFromAny(
-    Tcl_Interp *dummy,		/* Used for error reporting if not NULL. */
+    TCL_UNUSED(Tcl_Interp *),
     Tcl_Obj *objPtr)	/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
     WindowRep *winPtr;
-    (void)dummy;
 
     /*
      * Free the old internalRep before setting the new one.

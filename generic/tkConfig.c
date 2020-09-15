@@ -2099,7 +2099,7 @@ Tk_GetOptionValue(
 
 Tcl_Obj *
 TkDebugConfig(
-    Tcl_Interp *dummy,		/* Interpreter in which the table is
+    TCL_UNUSED(Tcl_Interp *),		/* Interpreter in which the table is
 				 * defined. */
     Tk_OptionTable table)	/* Table about which information is to be
 				 * returned. May not necessarily exist in the
@@ -2111,7 +2111,6 @@ TkDebugConfig(
     Tcl_Obj *objPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     objPtr = Tcl_NewObj();
     if (!tablePtr || !tsdPtr->initialized) {
