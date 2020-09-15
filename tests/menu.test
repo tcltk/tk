@@ -1367,7 +1367,7 @@ test menu-3.18 {MenuWidgetCmd procedure, "configure" option} -setup {
     llength [.m1 configure]
 } -cleanup {
 	destroy .m1
-} -result 21
+} -result 24
 test menu-3.19 {MenuWidgetCmd procedure, "configure" option} -setup {
 	destroy .m1
 } -body {
@@ -1519,7 +1519,7 @@ test menu-3.36 {MenuWidgetCmd procedure, "entryconfigure" option} -setup {
     llength [.m1 entryconfigure 1]
 } -cleanup {
 	destroy .m1
-} -result 15
+} -result 17
 test menu-3.37 {MenuWidgetCmd procedure, "entryconfigure" option} -setup {
 	destroy .m1
 } -body {

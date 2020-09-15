@@ -705,7 +705,7 @@ package require Tk 8.6
 	    }
 	}
 
-	if {$theIndex > -1} {
+	if {$theIndex >= 0} {
 	    $w selection clear 0 end
 	    $w selection set $theIndex
 	    $w selection anchor $theIndex

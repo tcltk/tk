@@ -303,9 +303,10 @@ static void GetBackgroundColor(
 
 
 /*----------------------------------------------------------------------
- * +++ Single Arrow Buttons --
+ * +++ Single Arrow Images --
  *
- * Used in ListHeaders and Comboboxes.
+ * Used in ListHeaders and Comboboxes as well as disclosure triangles in
+ * macOS 11.
  */
 
 static void DrawDownArrow(
@@ -347,6 +348,48 @@ static void DrawUpArrow(
     CGPoint arrow[3] = {
 	{x, y + size / 4}, {x + size / 2, y - size / 4},
 	{x + size, y + size / 4}
+    };
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
+static void DrawClosedDisclosure(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {
+	{x, y - size / 4 - 1}, {x + size / 2, y}, {x, y + size / 4 + 1}
+    };
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
+static void DrawOpenDisclosure(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {
+	{x, y - size / 4}, {x + size / 2, y + size / 2}, {x + size, y - size / 4}
     };
     CGContextAddLines(context, arrow, 3);
     CGContextStrokePath(context);
@@ -2101,10 +2144,16 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
     factor = RangeToFactor(to);
 
+    /*
+     * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
+     * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
+     */
+
+    CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = from * factor,
 	.max = to * factor,
 	.value = value * factor,
@@ -2240,13 +2289,19 @@ static void PbarElementDraw(
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
     factor = RangeToFactor(maximum);
 
+    /*
+     * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
+     * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
+     */
+
+    CGRect bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind =
 	    (!strcmp("indeterminate",
 	    Tcl_GetString(pbar->modeObj)) && value) ?
 	    kThemeIndeterminateBar : kThemeProgressBar,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = 0,
 	.max = maximum * factor,
 	.value = value * factor,
@@ -3002,8 +3057,21 @@ static void DisclosureElementDraw(
 	};
 
 	BEGIN_DRAWING(d)
-	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
+	if ([NSApp macOSVersion] >= 110000) {
+	    CGFloat rgba[4];
+	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	    NSColor *stroke = [[NSColor textColor]
+		colorUsingColorSpace: deviceRGB];
+	    [stroke getComponents: rgba];
+	    if (state & TTK_TREEVIEW_STATE_OPEN) {
+		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
+	    } else {
+		DrawClosedDisclosure(dc.context, bounds, 2, 12, rgba);
+	    }
+	} else {
+	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	    NULL);
+	}
 	END_DRAWING
     }
 }

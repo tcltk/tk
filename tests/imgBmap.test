@@ -366,11 +366,11 @@ test imageBmap-7.5 {ImgBmapCmd procedure, "cget" option} -body {
 } -returnCodes error -result {unknown option "-stupid"}
 test imageBmap-7.6 {ImgBmapCmd procedure} -body {
     llength [i1 configure]
-} -result 6
+} -result 7
 test imageBmap-7.7 {ImgBmapCmd procedure} -body {
-    i1 co -foreground #001122
-    i1 configure -foreground
-} -result {-foreground {} {} #000000 #001122}
+    i1 co -color #001122
+    i1 configure -color
+} -result {-color color Color #000000 #001122}
 test imageBmap-7.8 {ImgBmapCmd procedure} -body {
     i1 configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
@@ -503,8 +503,8 @@ test imageBmap-11.2 {ImgBmapDelete procedure} -body {
 test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
     image create bitmap i2 -file foo.bm -maskfile foo2.bm
     rename i2 {}
-    list [lsearch -exact [imageNames] i2] [catch {i2 foo} msg] $msg
-} -result {-1 1 {invalid command name "i2"}}
+    list [expr {"i2" in [imageNames]}] [catch {i2 foo} msg] $msg
+} -result {0 1 {invalid command name "i2"}}
 
 removeFile foo.bm
 removeFile foo2.bm
