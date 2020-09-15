@@ -74,6 +74,9 @@ proc ttk::panedwindow::ResetCursor {w} {
 proc ttk::panedwindow::SetCursor {w x y} {
     variable State
 
+    if { $State(pressed) } {
+      return
+    }
     ttk::saveCursor $w State(userConfCursor) \
             [list [ttk::cursor hresize] [ttk::cursor vresize]]
 
