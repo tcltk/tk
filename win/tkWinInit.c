@@ -35,6 +35,7 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
+    (void)interp;
     /*
      * This is necessary for static initialization, and is ok otherwise
      * because TkWinXInit flips a static bit to do its work just once.
@@ -183,20 +184,21 @@ TkWin32ErrorObj(
     Tcl_Obj* errPtr = NULL;
     Tcl_DString ds;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
 	    LANG_NEUTRAL, (LPWSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
-	wsprintf(sBuffer, L"Error Code: %08lX", hrError);
+	wsprintfW(sBuffer, L"Error Code: %08lX", hrError);
     }
 
     if ((p = wcsrchr(lpBuffer, '\r')) != NULL) {
 	*p = '\0';
     }
 
-    Tcl_WinTCharToUtf(lpBuffer, -1, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 

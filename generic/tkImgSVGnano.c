@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2013-14 Mikko Mononen memon@inside.org
  * Copyright (c) 2018 Christian Gollwitzer auriocus@gmx.de
+ * Copyright (c) 2018 Christian Werner https://www.androwish.org/
  * Copyright (c) 2018 Rene Zaumseil r.zaumseil@freenet.de
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -12,7 +13,7 @@
  *
  * This handler is build using the original nanosvg library files from
  * https://github.com/memononen/nanosvg and the tcl extension files from
- * https://github.com/auriocus/tksvg
+ * androwish https://www.androwish.org/ .
  *
  */
 
@@ -129,6 +130,7 @@ FileMatchSVG(
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
+    (void)fileName;
 
     CleanCache(interp);
     if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
@@ -187,6 +189,7 @@ FileReadSVG(
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
+    (void)fileName;
 
     if (nsvgImage == NULL) {
         Tcl_Obj *dataObj = Tcl_NewObj();
@@ -343,7 +346,7 @@ ParseSVGWithOptions(
      * therefore first duplicate.
      */
 
-    inputCopy = attemptckalloc(length+1);
+    inputCopy = (char *)attemptckalloc(length+1);
     if (inputCopy == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
@@ -517,6 +520,8 @@ RasterizeSVG(
     unsigned char *imgData;
     Tk_PhotoImageBlock svgblock;
     double scale;
+    (void)srcX;
+    (void)srcY;
 
     scale = GetScaleFromParameters(nsvgImage, ropts, &w, &h);
 
@@ -527,7 +532,7 @@ RasterizeSVG(
 		NULL);
 	goto cleanAST;
     }
-    imgData = attemptckalloc(w * h *4);
+    imgData = (unsigned char *)attemptckalloc(w * h *4);
     if (imgData == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
@@ -649,9 +654,9 @@ static NSVGcache *
 GetCachePtr(
     Tcl_Interp *interp
 ) {
-    NSVGcache *cachePtr = Tcl_GetAssocData(interp, "tksvgnano", NULL);
+    NSVGcache *cachePtr = (NSVGcache *)Tcl_GetAssocData(interp, "tksvgnano", NULL);
     if (cachePtr == NULL) {
-	cachePtr = ckalloc(sizeof(NSVGcache));
+	cachePtr = (NSVGcache *)ckalloc(sizeof(NSVGcache));
 	cachePtr->dataOrChan = NULL;
 	Tcl_DStringInit(&cachePtr->formatString);
 	cachePtr->nsvgImage = NULL;
@@ -794,7 +799,8 @@ CleanCache(Tcl_Interp *interp)
 static void
 FreeCache(ClientData clientData, Tcl_Interp *interp)
 {
-    NSVGcache *cachePtr = clientData;
+    NSVGcache *cachePtr = (NSVGcache *)clientData;
+    (void)interp;
 
     Tcl_DStringFree(&cachePtr->formatString);
     if (cachePtr->nsvgImage != NULL) {

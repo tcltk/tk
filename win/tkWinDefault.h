@@ -158,7 +158,7 @@
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
 #define DEF_ENTRY_PLACEHOLDER		""
-#define DEF_ENTRY_PLACEHOLDERFG		"#b3b3b3"
+#define DEF_ENTRY_PLACEHOLDERFG		"SystemPlaceHolderText"
 #define DEF_ENTRY_READONLY_BG_COLOR	"SystemButtonFace"
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
@@ -521,6 +521,14 @@
  */
 
 #define DEF_CANVTEXT_FONT		"TkDefaultFont"
+
+/*
+ * Defaults for canvas items
+ * (arcs, bitmaps, lines, polygons, rectangles, and ovals):
+ */
+
+#define DEF_CANVBMAP_FG			NORMAL_FG
+#define DEF_CANVITEM_OUTLINE		NORMAL_FG
 
 /*
  * Defaults for toplevels (most of the defaults for frames also apply

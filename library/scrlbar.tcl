@@ -39,7 +39,7 @@ bind Scrollbar <Leave> {
     }
     %W activate {}
 }
-bind Scrollbar <1> {
+bind Scrollbar <Button-1> {
     tk::ScrollButtonDown %W %x %y
 }
 bind Scrollbar <B1-Motion> {
@@ -57,13 +57,13 @@ bind Scrollbar <B1-Leave> {
 bind Scrollbar <B1-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <2> {
+bind Scrollbar <Button-2> {
     tk::ScrollButton2Down %W %x %y
 }
-bind Scrollbar <B1-2> {
+bind Scrollbar <B1-Button-2> {
     # Do nothing, since button 1 is already down.
 }
-bind Scrollbar <B2-1> {
+bind Scrollbar <B2-Button-1> {
     # Do nothing, since button 2 is already down.
 }
 bind Scrollbar <B2-Motion> {
@@ -84,10 +84,10 @@ bind Scrollbar <B2-Leave> {
 bind Scrollbar <B2-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <Control-1> {
+bind Scrollbar <Control-Button-1> {
     tk::ScrollTopBottom %W %x %y
 }
-bind Scrollbar <Control-2> {
+bind Scrollbar <Control-Button-2> {
     tk::ScrollTopBottom %W %x %y
 }
 
@@ -130,16 +130,16 @@ bind Scrollbar <<LineEnd>> {
 }
 
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W v [expr {%D/-30.0}]
+    tk::ScrollByUnits %W hv [expr {%D/-30.0}]
 }
 bind Scrollbar <Option-MouseWheel> {
-    tk::ScrollByUnits %W v [expr {%D/-3.0}]
+    tk::ScrollByUnits %W hv [expr {%D/-3.0}]
 }
 bind Scrollbar <Shift-MouseWheel> {
-    tk::ScrollByUnits %W h [expr {%D/-30.0}]
+    tk::ScrollByUnits %W hv [expr {%D/-30.0}]
 }
 bind Scrollbar <Shift-Option-MouseWheel> {
-    tk::ScrollByUnits %W h [expr {%D/-3.0}]
+    tk::ScrollByUnits %W hv [expr {%D/-3.0}]
 }
 
 # tk::ScrollButtonDown --

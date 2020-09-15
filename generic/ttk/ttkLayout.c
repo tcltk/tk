@@ -36,10 +36,10 @@ Ttk_NewBoxObj(Ttk_Box box)
 {
     Tcl_Obj *result[4];
 
-    result[0] = Tcl_NewIntObj(box.x);
-    result[1] = Tcl_NewIntObj(box.y);
-    result[2] = Tcl_NewIntObj(box.width);
-    result[3] = Tcl_NewIntObj(box.height);
+    result[0] = Tcl_NewWideIntObj(box.x);
+    result[1] = Tcl_NewWideIntObj(box.y);
+    result[2] = Tcl_NewWideIntObj(box.width);
+    result[3] = Tcl_NewWideIntObj(box.height);
 
     return Tcl_NewListObj(4, result);
 }
@@ -524,7 +524,7 @@ struct Ttk_LayoutNode_
 static Ttk_LayoutNode *Ttk_NewLayoutNode(
     unsigned flags, Ttk_ElementClass *elementClass)
 {
-    Ttk_LayoutNode *node = ckalloc(sizeof(*node));
+    Ttk_LayoutNode *node = (Ttk_LayoutNode *)ckalloc(sizeof(*node));
 
     node->flags = flags;
     node->eclass = elementClass;
@@ -557,8 +557,8 @@ struct Ttk_TemplateNode_ {
 
 static Ttk_TemplateNode *Ttk_NewTemplateNode(const char *name, unsigned flags)
 {
-    Ttk_TemplateNode *op = ckalloc(sizeof(*op));
-    op->name = ckalloc(strlen(name) + 1); strcpy(op->name, name);
+    Ttk_TemplateNode *op = (Ttk_TemplateNode *)ckalloc(sizeof(*op));
+    op->name = (char *)ckalloc(strlen(name) + 1); strcpy(op->name, name);
     op->flags = flags;
     op->next = op->child = 0;
     return op;
@@ -809,7 +809,7 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 	APPENDSTR("-sticky");
 	APPENDOBJ(Ttk_NewStickyObj(flags & _TTK_MASK_STICK));
 
-	/* @@@ Check again: are these necessary? */
+	/* @@@ Check again: are these necessary? Can't see any effect! */
 	if (flags & TTK_BORDER)	{ APPENDSTR("-border"); APPENDSTR("1"); }
 	if (flags & TTK_UNIT) 	{ APPENDSTR("-unit"); APPENDSTR("1"); }
 
@@ -843,7 +843,7 @@ static Ttk_Layout TTKNewLayout(
     void *recordPtr,Tk_OptionTable optionTable, Tk_Window tkwin,
     Ttk_LayoutNode *root)
 {
-    Ttk_Layout layout = ckalloc(sizeof(*layout));
+    Ttk_Layout layout = (Ttk_Layout)ckalloc(sizeof(*layout));
     layout->style = style;
     layout->recordPtr = recordPtr;
     layout->optionTable = optionTable;

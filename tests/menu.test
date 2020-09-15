@@ -270,11 +270,11 @@ test menu-2.27 {configuration options -takefocus {any string}} -body {
 test menu-2.28 {configuration options -tearoff 0} -body {
     .m1 configure -tearoff 0
     .m1 cget -tearoff
-} -result {0}
+} -result 0
 test menu-2.29 {configuration options -tearoff 1} -body {
     .m1 configure -tearoff 1
     .m1 cget -tearoff
-} -result {1}
+} -result 1
 test menu-2.30 {configuration options -tearoffcommand {any old string}} -body {
     .m1 configure -tearoffcommand {any old string}
     .m1 cget -tearoffcommand
@@ -545,12 +545,12 @@ test menu-2.85 {entry configuration options 0 -columnbreak 1 tearoff} -body {
 test menu-2.86 {entry configuration options 1 -columnbreak 1 command} -body {
     .m1 entryconfigure 1 -columnbreak 1
     lindex [.m1 entryconfigure 1 -columnbreak] 4
-} -result {1}
+} -result 1
 
 test menu-2.87 {entry configuration options 2 -columnbreak 1 cascade} -body {
     .m1 entryconfigure 2 -columnbreak 1
     lindex [.m1 entryconfigure 2 -columnbreak] 4
-} -result {1}
+} -result 1
 
 test menu-2.88 {entry configuration options 3 -columnbreak 1 separator} -body {
     .m1 entryconfigure 3 -columnbreak 1
@@ -559,12 +559,12 @@ test menu-2.88 {entry configuration options 3 -columnbreak 1 separator} -body {
 test menu-2.89 {entry configuration options 4 -columnbreak 1 checkbutton} -body {
     .m1 entryconfigure 4 -columnbreak 1
     lindex [.m1 entryconfigure 4 -columnbreak] 4
-} -result {1}
+} -result 1
 
 test menu-2.90 {entry configuration options 5 -columnbreak 1 radiobutton} -body {
     .m1 entryconfigure 5 -columnbreak 1
     lindex [.m1 entryconfigure 5 -columnbreak] 4
-} -result {1}
+} -result 1
 
 test menu-2.91 {entry configuration options 0 -command beep tearoff} -body {
     .m1 entryconfigure 0 -command beep
@@ -829,12 +829,12 @@ test menu-2.142 {entry configuration options 3 -indicatoron 1 separator} -body {
 test menu-2.143 {entry configuration options 4 -indicatoron 1 checkbutton} -body {
     .m1 entryconfigure 4 -indicatoron 1
     lindex [.m1 entryconfigure 4 -indicatoron] 4
-} -result {1}
+} -result 1
 
 test menu-2.144 {entry configuration options 5 -indicatoron 1 radiobutton} -body {
     .m1 entryconfigure 5 -indicatoron 1
     lindex [.m1 entryconfigure 5 -indicatoron] 4
-} -result {1}
+} -result 1
 
 test menu-2.145 {entry configuration options 0 -label test tearoff} -body {
     .m1 entryconfigure 0 -label test
@@ -1172,12 +1172,12 @@ test menu-2.217 {entry configuration options 0 -underline 0 tearoff} -body {
 test menu-2.218 {entry configuration options 1 -underline 0 command} -body {
     .m1 entryconfigure 1 -underline 0
     lindex [.m1 entryconfigure 1 -underline] 4
-} -result {0}
+} -result 0
 
 test menu-2.219 {entry configuration options 2 -underline 0 cascade} -body {
     .m1 entryconfigure 2 -underline 0
     lindex [.m1 entryconfigure 2 -underline] 4
-} -result {0}
+} -result 0
 
 test menu-2.220 {entry configuration options 3 -underline 0 separator} -body {
     .m1 entryconfigure 3 -underline 0
@@ -1186,12 +1186,12 @@ test menu-2.220 {entry configuration options 3 -underline 0 separator} -body {
 test menu-2.221 {entry configuration options 4 -underline 0 checkbutton} -body {
     .m1 entryconfigure 4 -underline 0
     lindex [.m1 entryconfigure 4 -underline] 4
-} -result {0}
+} -result 0
 
 test menu-2.222 {entry configuration options 5 -underline 0 radiobutton} -body {
     .m1 entryconfigure 5 -underline 0
     lindex [.m1 entryconfigure 5 -underline] 4
-} -result {0}
+} -result 0
 
 test menu-2.223 {entry configuration options 0 -underline 3p tearoff} -body {
     .m1 entryconfigure 0 -underline 3p
@@ -1367,7 +1367,7 @@ test menu-3.18 {MenuWidgetCmd procedure, "configure" option} -setup {
     llength [.m1 configure]
 } -cleanup {
 	destroy .m1
-} -result {21}
+} -result 21
 test menu-3.19 {MenuWidgetCmd procedure, "configure" option} -setup {
 	destroy .m1
 } -body {
@@ -1519,7 +1519,7 @@ test menu-3.36 {MenuWidgetCmd procedure, "entryconfigure" option} -setup {
     llength [.m1 entryconfigure 1]
 } -cleanup {
 	destroy .m1
-} -result {15}
+} -result 15
 test menu-3.37 {MenuWidgetCmd procedure, "entryconfigure" option} -setup {
 	destroy .m1
 } -body {
@@ -1787,7 +1787,7 @@ test menu-3.66a {MenuWidgetCmd procedure, "yposition" option, no tearoff} -setup
     .m1 yposition 1
 } -cleanup {
 	destroy .m1
-} -result {0}
+} -result 0
 test menu-3.66b {MenuWidgetCmd procedure, "yposition" option, with tearoff} -constraints {
     notAqua
 } -setup {
@@ -1799,7 +1799,7 @@ test menu-3.66b {MenuWidgetCmd procedure, "yposition" option, with tearoff} -con
     .m1 yposition 1
 } -cleanup {
 	destroy .m1
-} -result {1}
+} -result 1
 test menu-3.66c {MenuWidgetCmd procedure, "yposition" option, with tearoff} -constraints {
     aqua
 } -setup {
@@ -1811,7 +1811,7 @@ test menu-3.66c {MenuWidgetCmd procedure, "yposition" option, with tearoff} -con
     .m1 yposition 1
 } -cleanup {
 	destroy .m1
-} -result {0}
+} -result 0
 test menu-3.67 {MenuWidgetCmd procedure, bad option} -setup {
 	destroy .m1
 } -body {
@@ -1878,7 +1878,7 @@ test menu-4.2 {TkInvokeMenu: tearoff} -setup {
 	catch {.m1 invoke 0}
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test menu-4.3 {TkInvokeMenu: checkbutton -on} -setup {
     destroy .m1
 } -body {
@@ -2060,7 +2060,7 @@ test menu-5.8 {DestroyMenuInstance - multiple clones} -setup {
     set tearoff2 [tk::TearOffMenu .m1]
     list [destroy $tearoff1] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-test menu-5.9 {DestroyMenuInstace - master menu} -setup {
+test menu-5.9 {DestroyMenuInstace - main menu} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -2139,7 +2139,7 @@ test menu-6.5 {TkDestroyMenu} -setup {
     .m1 clone .m2
     destroy .m1
     winfo exists .m2
-} -result {0}
+} -result 0
 test menu-6.6 {TkDestroyMenu} -setup {
     destroy .m1 .m2
 } -body {
@@ -3375,7 +3375,7 @@ test menu-22.1 {GetIndexFromCoords} -setup {
     .m1 index @5
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test menu-22.2 {GetIndexFromCoords} -setup {
     deleteWindows
 } -body {
@@ -3385,7 +3385,7 @@ test menu-22.2 {GetIndexFromCoords} -setup {
     .m1 index @5,5
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test menu-22.3 {GetIndexFromCoords: mapped window, y only} -setup {
     deleteWindows
 } -constraints {x11} -body {
@@ -3397,7 +3397,7 @@ test menu-22.3 {GetIndexFromCoords: mapped window, y only} -setup {
     .m1 index @5
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test menu-22.4 {GetIndexFromCoords: mapped window x,y} -setup {
     deleteWindows
 } -constraints {x11} -body {
@@ -3411,7 +3411,7 @@ test menu-22.4 {GetIndexFromCoords: mapped window x,y} -setup {
     .m1 index @$x,5
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
     deleteWindows
 } -constraints {x11} -body {
@@ -3426,7 +3426,7 @@ test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
     .m1 index @$x,5
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 
 test menu-23.1 {RecursivelyDeleteMenu} -setup {
     deleteWindows
@@ -3949,14 +3949,14 @@ test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over 
     pack .top.mb
     update
     # simulate mouse click on the menubutton, which posts its menu
-    event generate .top.mb <ButtonPress-1> -warp 1
+    event generate .top.mb <Button-1> -warp 1
     update
     after 50
     event generate .top.mb <ButtonRelease-1>
     update
     # simulate mouse click on the menu again, i.e. without
     # entering/leaving the posted menu
-    event generate .top.mb <ButtonPress-1>
+    event generate .top.mb <Button-1>
     update
     after 50
     event generate .top.mb <ButtonRelease-1>
@@ -3965,7 +3965,7 @@ test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over 
     winfo ismapped .top.mb.m
 } -cleanup {
     destroy .top.mb.m .top.m .top
-} -result {0}
+} -result 0
 
 
 # cleanup

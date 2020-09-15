@@ -25,7 +25,13 @@ int _CRT_glob = 0;
 #endif /* __GNUC__ */
 
 #ifdef TK_TEST
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern Tcl_PackageInitProc Tktest_Init;
+#ifdef __cplusplus
+}
+#endif
 #endif /* TK_TEST */
 
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
@@ -106,6 +112,10 @@ _tWinMain(
     TCHAR **argv;
     int argc;
     TCHAR *p;
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpszCmdLine;
+    (void)nCmdShow;
 
     /*
      * Create the console channels and install them as the standard channels.
@@ -268,6 +278,7 @@ main(
     char **dummy)
 {
     TCHAR **argv;
+    (void)dummy;
 #else
 int
 _tmain(
@@ -367,7 +378,7 @@ setargv(
     #undef Tcl_Alloc
     #undef Tcl_DbCkalloc
 
-    argSpace = ckalloc(size * sizeof(char *)
+    argSpace = (TCHAR *)ckalloc(size * sizeof(char *)
 	    + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));

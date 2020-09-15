@@ -78,7 +78,7 @@ test textTag-1.5 {tag configuration options} -body {
     .t tag cget x -borderwidth
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
-} -result {2}
+} -result 2
 test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
@@ -128,7 +128,7 @@ test textTag-1.14 {tag configuration options} -body {
     .t tag cget x -lmargin1
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
-} -result {10}
+} -result 10
 test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
@@ -139,7 +139,7 @@ test textTag-1.16 {tag configuration options} -body {
     .t tag cget x -lmargin2
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
-} -result {10}
+} -result 10
 test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
@@ -161,7 +161,7 @@ test textTag-1.18 {tag configuration options} -body {
     .t tag cget x -offset
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
-} -result {2}
+} -result 2
 test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
@@ -205,7 +205,7 @@ test textTag-1.24 {tag configuration options} -body {
     .t tag cget x -rmargin
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
-} -result {10}
+} -result 10
 test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
@@ -249,7 +249,7 @@ test textTag-1.26 {tag configuration options} -body {
     .t tag cget x -spacing1
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
-} -result {10}
+} -result 10
 test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
@@ -260,7 +260,7 @@ test textTag-1.28 {tag configuration options} -body {
     .t tag cget x -spacing2
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
-} -result {10}
+} -result 10
 test textTag-1.29 {configuration options} -body {
     .t tag configure x -spacing2 bad
 } -cleanup {
@@ -271,7 +271,7 @@ test textTag-1.30 {tag configuration options} -body {
     .t tag cget x -spacing3
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -result {10}
+} -result 10
 test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
@@ -399,7 +399,7 @@ test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     .tt tag add mytag 1.0 1.end
     destroy .ptt .tt
     set res 1
-} -result {1}
+} -result 1
 
 
 test textTag-3.1 {TkTextTagCmd - "bind" option} -body {
@@ -488,7 +488,7 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} -body {
 
 test textTag-5.1 {TkTextTagCmd - "configure" option} -body {
     .t tag configure
-} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option? ?value? ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option value ...?"}
 test textTag-5.2 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -foo
 } -returnCodes error -result {unknown option "-foo"}
@@ -1233,7 +1233,8 @@ set y5 [expr [lindex $c 1] + [lindex $c 3]/2]
 
 test textTag-15.1 {TkTextBindProc} -setup {
     .t tag delete x y
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     bind .t <ButtonRelease> {lappend x up}
     .t tag bind x <ButtonRelease> {lappend x x-up}
@@ -1258,14 +1259,15 @@ test textTag-15.1 {TkTextBindProc} -setup {
 
 test textTag-15.2 {TkTextBindProc} -setup {
     .t tag delete x y
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
-    .t tag bind x <ButtonPress> {lappend x x-down}
+    .t tag bind x <Button> {lappend x x-down}
     .t tag bind x <ButtonRelease> {lappend x x-up}
     .t tag bind x <Leave> {lappend x x-leave}
     .t tag bind y <Enter> {lappend x y-enter}
-    .t tag bind y <ButtonPress> {lappend x y-down}
+    .t tag bind y <Button> {lappend x y-down}
     .t tag bind y <ButtonRelease> {lappend x y-up}
     .t tag bind y <Leave> {lappend x y-leave}
     event gen .t <Motion> -x 0 -y 0
@@ -1286,15 +1288,16 @@ test textTag-15.2 {TkTextBindProc} -setup {
 
 test textTag-15.3 {TkTextBindProc} -setup {
     .t tag delete x y
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
-    .t tag bind x <Any-ButtonPress-1> {lappend x x-down}
-    .t tag bind x <Any-ButtonRelease-1> {lappend x x-up}
+    .t tag bind x <Button-1> {lappend x x-down}
+    .t tag bind x <ButtonRelease-1> {lappend x x-up}
     .t tag bind x <Leave> {lappend x x-leave}
     .t tag bind y <Enter> {lappend x y-enter}
-    .t tag bind y <Any-ButtonPress-1> {lappend x y-down}
-    .t tag bind y <Any-ButtonRelease-1> {lappend x y-up}
+    .t tag bind y <Button-1> {lappend x y-down}
+    .t tag bind y <ButtonRelease-1> {lappend x y-up}
     .t tag bind y <Leave> {lappend x y-leave}
     event gen .t <Motion> -x 0 -y 0
     set x {}
@@ -1319,7 +1322,8 @@ test textTag-15.3 {TkTextBindProc} -setup {
 
 test textTag-16.1 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     event gen .t <ButtonRelease-1> -state 0x100 -x $x1 -y $y1
     set x [.t index current]
@@ -1341,7 +1345,8 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
     haveFontSizes
 } -setup {
     .t tag delete {*}[.t tag names]
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1360,7 +1365,8 @@ test textTag-16.3 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     foreach i {a b c d} {
         .t tag bind $i <Enter> "lappend x enter-$i"
@@ -1387,7 +1393,8 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     foreach i {a b c d} {
         .t tag bind $i <Enter> "lappend x enter-$i"
@@ -1415,7 +1422,8 @@ test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1435,7 +1443,8 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1456,7 +1465,8 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1488,7 +1498,8 @@ test textTag-17.1 {insert procedure inserts tags} -setup {
 
 test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     destroy .t
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
       -highlightthickness 10 -pady 2

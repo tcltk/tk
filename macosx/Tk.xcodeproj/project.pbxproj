@@ -1043,7 +1043,6 @@
 		F966BBD208F27A3B005CB29B /* tkMacOSXEmbed.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXEmbed.c; sourceTree = "<group>"; };
 		F966BBD308F27A3B005CB29B /* tkMacOSXEntry.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXEntry.c; sourceTree = "<group>"; };
 		F966BBD408F27A3B005CB29B /* tkMacOSXEvent.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXEvent.c; sourceTree = "<group>"; };
-		F966BBD508F27A3B005CB29B /* tkMacOSXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXEvent.h; sourceTree = "<group>"; };
 		F966BBD608F27A3B005CB29B /* tkMacOSXFont.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXFont.c; sourceTree = "<group>"; };
 		F966BBD708F27A3B005CB29B /* tkMacOSXHLEvents.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXHLEvents.c; sourceTree = "<group>"; };
 		F966BBD808F27A3B005CB29B /* tkMacOSXInit.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXInit.c; sourceTree = "<group>"; };
@@ -1409,7 +1408,7 @@
 		F96D3E1F08F272A5004A47F5 /* CrtInterp.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtInterp.3; sourceTree = "<group>"; };
 		F96D3E2008F272A5004A47F5 /* CrtMathFnc.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtMathFnc.3; sourceTree = "<group>"; };
 		F96D3E2108F272A5004A47F5 /* CrtObjCmd.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtObjCmd.3; sourceTree = "<group>"; };
-		F96D3E2208F272A5004A47F5 /* CrtSlave.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtSlave.3; sourceTree = "<group>"; };
+		F96D3E2208F272A5004A47F5 /* CrtAlias.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtAlias.3; sourceTree = "<group>"; };
 		F96D3E2308F272A5004A47F5 /* CrtTimerHdlr.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtTimerHdlr.3; sourceTree = "<group>"; };
 		F96D3E2408F272A5004A47F5 /* CrtTrace.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = CrtTrace.3; sourceTree = "<group>"; };
 		F96D3E2508F272A5004A47F5 /* dde.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = dde.n; sourceTree = "<group>"; };
@@ -2584,7 +2583,6 @@
 				F966BBD208F27A3B005CB29B /* tkMacOSXEmbed.c */,
 				F966BBD308F27A3B005CB29B /* tkMacOSXEntry.c */,
 				F966BBD408F27A3B005CB29B /* tkMacOSXEvent.c */,
-				F966BBD508F27A3B005CB29B /* tkMacOSXEvent.h */,
 				F966BBD608F27A3B005CB29B /* tkMacOSXFont.c */,
 				F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */,
 				F966BBD708F27A3B005CB29B /* tkMacOSXHLEvents.c */,
@@ -3074,7 +3072,7 @@
 				F96D3E1F08F272A5004A47F5 /* CrtInterp.3 */,
 				F96D3E2008F272A5004A47F5 /* CrtMathFnc.3 */,
 				F96D3E2108F272A5004A47F5 /* CrtObjCmd.3 */,
-				F96D3E2208F272A5004A47F5 /* CrtSlave.3 */,
+				F96D3E2208F272A5004A47F5 /* CrtAlias.3 */,
 				F96D3E2308F272A5004A47F5 /* CrtTimerHdlr.3 */,
 				F96D3E2408F272A5004A47F5 /* CrtTrace.3 */,
 				F96D3E2508F272A5004A47F5 /* dde.n */,

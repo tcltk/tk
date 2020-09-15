@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -197,7 +197,7 @@ test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
 destroy .s2
 test scrollbar-3.15 {ScrollbarWidgetCmd procedure, "configure" option} {
     llength [.s configure]
-} {20}
+} 20
 test scrollbar-3.16 {ScrollbarWidgetCmd procedure, "configure" option} {
     list [catch {.s configure -bad} msg] $msg
 } {1 {unknown option "-bad"}}
@@ -230,7 +230,7 @@ test scrollbar-3.24 {ScrollbarWidgetCmd procedure, "delta" option} {
 } {1 {expected integer but got "xxyz"}}
 test scrollbar-3.25 {ScrollbarWidgetCmd procedure, "delta" option} {
     format {%.6g} [.s delta 20 0]
-} {0}
+} 0
 test scrollbar-3.26 {ScrollbarWidgetCmd procedure, "delta" option} {
     format {%.6g} [.s delta 0 20]
 } [format %.6g [expr {20.0/([getTroughSize .s]-1)}]]
@@ -262,20 +262,20 @@ test scrollbar-3.32 {ScrollbarWidgetCmd procedure, "fraction" option} {
 } {1 {expected integer but got "bogus"}}
 test scrollbar-3.33 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 0 0]
-} {0}
+} 0
 test scrollbar-3.34 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 0 1000]
-} {1}
+} 1
 test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
 } [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
        /([getTroughSize .s] - 1)}]]
 test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} x11 {
     format {%.6g} [.s fraction 4 179]
-} {1}
+} 1
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
-} {1}
+} 1
 test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} x11 {
     format {%.6g} [.s fraction 4 178]
 } {0.993711}
@@ -309,7 +309,7 @@ if {[testConstraint testmetrics]} {
 update
 test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.t.s fraction 100 0]
-} {0}
+} 0
 destroy .t
 test scrollbar-3.43 {ScrollbarWidgetCmd procedure, "get" option} {
     list [catch {.s get a} msg] $msg
@@ -341,7 +341,7 @@ test scrollbar-3.49 {ScrollbarWidgetCmd procedure, "identify" option} {
 test scrollbar-3.50.1 {ScrollbarWidgetCmd procedure, "identify" option} notAqua {
     .s identify 5 5
 } {arrow1}
-test scrollbar-3.50.1 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
+test scrollbar-3.50.2 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
     # macOS scrollbars have no arrows nowadays
     .s identify 5 5
 } {trough1}
@@ -645,7 +645,7 @@ test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} notAqua {
     .t.f.s set 0 .5
     update
     set result [winfo exists .t.f.s]
-    event generate .t.f.s <ButtonPress> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
+    event generate .t.f.s <Button> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
     event generate .t <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
@@ -666,7 +666,7 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} notAqua {
     .t.f.s set 0 .5
     update
     set result [winfo exists .t.f.s]
-    event generate .t.f.s <ButtonPress> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
+    event generate .t.f.s <Button> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
     event generate .t.f <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
@@ -714,6 +714,20 @@ test scrollbar-10.2 {<MouseWheel> event on scrollbar} -setup {
 } -cleanup {
     destroy .t .s
 } -result {1.4}
+test scrollbar-10.2.3 {<MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.4}
 
 test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destruction} -body {
     proc destroy_scrollbar {} {
@@ -723,11 +737,11 @@ test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     }
     toplevel .top
     scrollbar .top.s
-    bind .top.s <2> {destroy_scrollbar}
+    bind .top.s <Button-2> {destroy_scrollbar}
     pack .top.s
     focus -force .top.s
     update
-    event generate .top.s <2>
+    event generate .top.s <Button-2>
     update  ; # shall not trigger error  invalid command name ".top.s"
 } -cleanup {
     destroy .top.s .top
@@ -742,11 +756,11 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     wm minsize .top 50 400
     update
     scrollbar .top.s
-    bind .top.s <2> {after idle destroy_scrollbar}
+    bind .top.s <Button-2> {after idle destroy_scrollbar}
     pack .top.s -expand true -fill y
     focus -force .top.s
     update
-    event generate .top.s <2> -x 2 -y [expr {[winfo height .top.s] / 2}]
+    event generate .top.s <Button-2> -x 2 -y [expr {[winfo height .top.s] / 2}]
     update  ; # shall not trigger error  invalid command name ".top.s"
 } -cleanup {
     destroy .top.s .top

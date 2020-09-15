@@ -11,7 +11,6 @@
 
 #include "tkUnixInt.h"
 #include "tkMenu.h"
-#include "default.h"
 
 /*
  * Constants used for menu drawing.
@@ -147,6 +146,8 @@ void
 TkpDestroyMenu(
     TkMenu *menuPtr)
 {
+    (void)menuPtr;
+
     /*
      * Nothing to do.
      */
@@ -173,6 +174,8 @@ void
 TkpDestroyMenuEntry(
     TkMenuEntry *mEntryPtr)
 {
+    (void)mEntryPtr;
+
     /*
      * Nothing to do.
      */
@@ -241,6 +244,8 @@ int
 TkpMenuNewEntry(
     TkMenuEntry *mePtr)
 {
+    (void)mePtr;
+
     return TCL_OK;
 }
 
@@ -296,6 +301,10 @@ TkpSetMainMenubar(
     Tk_Window tkwin,
     const char *menuName)
 {
+    (void)interp;
+    (void)tkwin;
+    (void)menuName;
+
     /*
      * Nothing to do.
      */
@@ -329,6 +338,8 @@ GetMenuIndicatorGeometry(
     int *heightPtr)		/* The resulting height */
 {
     int borderWidth;
+    (void)tkfont;
+    (void)fmPtr;
 
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
@@ -560,6 +571,10 @@ DrawMenuEntryIndicator(
     int width,			/* Width of menu entry */
     int height)			/* Height of menu entry */
 {
+    (void)tkfont;
+    (void)fmPtr;
+    (void)width;
+
     /*
      * Draw check-button indicator.
      */
@@ -632,6 +647,10 @@ DrawMenuSeparator(
 {
     XPoint points[2];
     Tk_3DBorder border;
+    (void)mePtr;
+    (void)gc;
+    (void)tkfont;
+    (void)fmPtr;
 
     if (menuPtr->menuType == MENUBAR) {
 	return;
@@ -789,7 +808,7 @@ DrawMenuEntryLabel(
 		    imageHeight, d, leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height-imageHeight)/2 + imageYOffset));
     	}
-    } else if (mePtr->bitmapPtr != None) {
+    } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
 
 	XCopyPlane(menuPtr->display, bitmap, d,	gc, 0, 0,
@@ -817,7 +836,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != None)) {
+		&& (menuPtr->disabledImageGC != NULL)) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
@@ -853,17 +872,19 @@ DrawMenuUnderline(
     int x, int y,
     int width, int height)
 {
+    (void)width;
+
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
 	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
-	    int activeBorderWidth, leftEdge;
+	    int activeBorderWidth, leftEdge, ch;
 	    const char *label, *start, *end;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, mePtr->underline);
-	    end = Tcl_UtfNext(start);
+	    end = start + TkUtfToUniChar(start, &ch);
 
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
@@ -930,13 +951,14 @@ TkpPostMenu(
 
 int
 TkpPostTearoffMenu(
-    Tcl_Interp *interp,		/* The interpreter of the menu */
+    Tcl_Interp *dummy,		/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y, int index)	/* The root X,Y coordinates where the
 				 * specified entry will be posted */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
+    (void)dummy;
 
     if (index >= (int)menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
@@ -1027,6 +1049,10 @@ GetMenuSeparatorGeometry(
     int *widthPtr,		/* The resulting width */
     int *heightPtr)		/* The resulting height */
 {
+    (void)menuPtr;
+    (void)mePtr;
+    (void)tkfont;
+
     *widthPtr = 0;
     *heightPtr = fmPtr->linespace;
 }
@@ -1056,7 +1082,9 @@ GetTearoffEntryGeometry(
     int *widthPtr,		/* The resulting width */
     int *heightPtr)		/* The resulting height */
 {
-    if (menuPtr->menuType != MASTER_MENU) {
+    (void)mePtr;
+
+    if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
 	*widthPtr = 0;
     } else {
@@ -1110,7 +1138,7 @@ TkpComputeMenubarGeometry(
 
 	maxWindowWidth = Tk_Width(menuPtr->tkwin);
 	if (maxWindowWidth == 1) {
-	    maxWindowWidth = 0x7ffffff;
+	    maxWindowWidth = 0x7FFFFFF;
 	}
 	currentRowHeight = 0;
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
@@ -1279,8 +1307,12 @@ DrawTearoffEntry(
     XPoint points[2];
     int segmentWidth, maxX;
     Tk_3DBorder border;
+    (void)mePtr;
+    (void)gc;
+    (void)tkfont;
+    (void)fmPtr;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	return;
     }
 
@@ -1327,6 +1359,9 @@ TkpInitializeMenuBindings(
     Tk_BindingTable bindingTable)
 				/* The table to add to. */
 {
+    (void)interp;
+    (void)bindingTable;
+
     /*
      * Nothing to do.
      */
@@ -1372,16 +1407,16 @@ SetHelpMenu(
 	    cascadeEntryPtr != NULL;
 	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if ((cascadeEntryPtr->menuPtr->menuType == MENUBAR)
-		&& (cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin != NULL)
-		&& (menuPtr->masterMenuPtr->tkwin != NULL)) {
-	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
-	    char *helpMenuName = ckalloc(strlen(Tk_PathName(
-		    masterMenuPtr->tkwin)) + strlen(".help") + 1);
+		&& (cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin != NULL)
+		&& (menuPtr->mainMenuPtr->tkwin != NULL)) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
+	    char *helpMenuName = (char *)ckalloc(strlen(Tk_PathName(
+		    mainMenuPtr->tkwin)) + strlen(".help") + 1);
 
-	    strcpy(helpMenuName, Tk_PathName(masterMenuPtr->tkwin));
+	    strcpy(helpMenuName, Tk_PathName(mainMenuPtr->tkwin));
 	    strcat(helpMenuName, ".help");
 	    if (strcmp(helpMenuName,
-		    Tk_PathName(menuPtr->masterMenuPtr->tkwin)) == 0) {
+		    Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
 		cascadeEntryPtr->entryFlags |= ENTRY_HELP_MENU;
 	    } else {
 		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU;
@@ -1851,9 +1886,12 @@ TkpComputeStandardMenuGeometry(
 
 void
 TkpMenuNotifyToplevelCreate(
-    Tcl_Interp *interp,		/* The interp the menu lives in. */
+    Tcl_Interp *dummy,		/* The interp the menu lives in. */
     const char *menuName)	/* The name of the menu to reconfigure. */
 {
+    (void)dummy;
+    (void)menuName;
+
     /*
      * Nothing to do.
      */

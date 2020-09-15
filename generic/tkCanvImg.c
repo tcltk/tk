@@ -47,7 +47,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
@@ -385,6 +385,8 @@ DeleteImage(
     Display *display)		/* Display containing window for canvas. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
+    (void)canvas;
+    (void)display;
 
     if (imgPtr->imageString != NULL) {
 	ckfree(imgPtr->imageString);
@@ -424,7 +426,6 @@ DeleteImage(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeImageBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -537,6 +538,7 @@ DisplayImage(
     short drawableX, drawableY;
     Tk_Image image;
     Tk_State state = itemPtr->state;
+    (void)display;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -595,6 +597,7 @@ ImageToPoint(
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = imgPtr->header.x1;
     y1 = imgPtr->header.y1;
@@ -652,6 +655,7 @@ ImageToArea(
 				 * area. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= imgPtr->header.x1)
 	    || (rectPtr[0] >= imgPtr->header.x2)
@@ -888,7 +892,7 @@ ImageChangedProc(
 				 * 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    ImageItem *imgPtr = clientData;
+    ImageItem *imgPtr = (ImageItem *)clientData;
 
     /*
      * If the image's size changed and it's not anchored at its northwest

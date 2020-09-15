@@ -22,11 +22,11 @@ typedef struct
     SeparatorPart separator;
 } Separator;
 
-static Tk_OptionSpec SeparatorOptionSpecs[] = {
+static const Tk_OptionSpec SeparatorOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Separator,separator.orientObj),
 	offsetof(Separator,separator.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -39,7 +39,7 @@ static Tk_OptionSpec SeparatorOptionSpecs[] = {
 static Ttk_Layout SeparatorGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
-    Separator *sep = recordPtr;
+    Separator *sep = (Separator *)recordPtr;
     return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, sep->separator.orientObj);
 }
@@ -59,7 +59,7 @@ static const Ttk_Ensemble SeparatorCommands[] = {
 /*
  * Widget specification:
  */
-static WidgetSpec SeparatorWidgetSpec =
+static const WidgetSpec SeparatorWidgetSpec =
 {
     "TSeparator",		/* className */
     sizeof(Separator),		/* recordSize */
@@ -83,7 +83,7 @@ TTK_END_LAYOUT
  * 	Has no options or methods other than the standard ones.
  */
 
-static Tk_OptionSpec SizegripOptionSpecs[] = {
+static const Tk_OptionSpec SizegripOptionSpecs[] = {
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
@@ -97,7 +97,7 @@ static const Ttk_Ensemble SizegripCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec SizegripWidgetSpec =
+static const WidgetSpec SizegripWidgetSpec =
 {
     "TSizegrip",		/* className */
     sizeof(WidgetCore),		/* recordSize */

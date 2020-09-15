@@ -42,13 +42,7 @@
 
 # Standard Motif bindings:
 
-bind Text <Map> {
-    if {[tk windowingsystem] eq "aqua"} {
-    	::tk::RegisterServiceWidget %W
-    }
-}
-
-bind Text <1> {
+bind Text <Button-1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 0.0 end
 }
@@ -57,26 +51,26 @@ bind Text <B1-Motion> {
     set tk::Priv(y) %y
     tk::TextSelectTo %W %x %y
 }
-bind Text <Double-1> {
+bind Text <Double-Button-1> {
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.first}
 }
-bind Text <Triple-1> {
+bind Text <Triple-Button-1> {
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.first}
 }
-bind Text <Shift-1> {
+bind Text <Shift-Button-1> {
     tk::TextResetAnchor %W @%x,%y
     set tk::Priv(selectMode) char
     tk::TextSelectTo %W %x %y
 }
-bind Text <Double-Shift-1>	{
+bind Text <Double-Shift-Button-1>	{
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y 1
 }
-bind Text <Triple-Shift-1>	{
+bind Text <Triple-Shift-Button-1>	{
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
 }
@@ -92,7 +86,7 @@ bind Text <ButtonRelease-1> {
     tk::CancelRepeat
 }
 
-bind Text <Control-1> {
+bind Text <Control-Button-1> {
     %W mark set insert @%x,%y
     # An operation that moves the insert mark without making it
     # one end of the selection must insert an autoseparator
@@ -101,7 +95,7 @@ bind Text <Control-1> {
     }
 }
 # stop an accidental double click triggering <Double-Button-1>
-bind Text <Double-Control-1> { # nothing }
+bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
@@ -298,22 +292,22 @@ bind Text <<PasteSelection>> {
 bind Text <Insert> {
     catch {tk::TextInsert %W [::tk::GetSelection %W PRIMARY]}
 }
-bind Text <KeyPress> {
+bind Text <Key> {
     tk::TextInsert %W %A
 }
 
 # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
-# <KeyPress> class binding will also fire and insert the character,
+# <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for <Escape>.
 
-bind Text <Alt-KeyPress> {# nothing }
-bind Text <Meta-KeyPress> {# nothing}
-bind Text <Control-KeyPress> {# nothing}
+bind Text <Alt-Key> {# nothing }
+bind Text <Meta-Key> {# nothing}
+bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-KeyPress> {# nothing}
+    bind Text <Command-Key> {# nothing}
 }
 
 # Additional emacs-like bindings:
@@ -397,6 +391,26 @@ bind Text <Meta-Delete> {
     }
 }
 
+# Bindings for IME text input.
+
+bind Text <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Text <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W tag add IMEmarkedtext $mark insert
+	%W tag configure IMEmarkedtext -underline on
+    }
+}
+bind Text <<TkClearIMEMarkedText>> {
+    %W delete IMEmarkedtext.first IMEmarkedtext.last
+}
+bind Text <<TkAccentBackspace>> {
+    %W delete insert-1c
+}
+
 # Macintosh only bindings:
 
 if {[tk windowingsystem] eq "aqua"} {
@@ -415,14 +429,27 @@ bind Text <Control-h> {
 	%W see insert
     }
 }
-bind Text <2> {
-    if {!$tk_strictMotif} {
-	tk::TextScanMark %W %x %y
+if {[tk windowingsystem] ne "aqua"} {
+    bind Text <Button-2> {
+        if {!$tk_strictMotif} {
+        tk::TextScanMark %W %x %y
+        }
     }
-}
-bind Text <B2-Motion> {
-    if {!$tk_strictMotif} {
-	tk::TextScanDrag %W %x %y
+    bind Text <B2-Motion> {
+        if {!$tk_strictMotif} {
+        tk::TextScanDrag %W %x %y
+        }
+    }
+} else {
+    bind Text <Button-3> {
+        if {!$tk_strictMotif} {
+        tk::TextScanMark %W %x %y
+        }
+    }
+    bind Text <B3-Motion> {
+        if {!$tk_strictMotif} {
+        tk::TextScanDrag %W %x %y
+        }
     }
 }
 set ::tk::Priv(prevPos) {}
@@ -1177,7 +1204,6 @@ proc ::tk::TextScanDrag {w x y} {
 	$w scan dragto $x $y
     }
 }
-
 # ::tk::TextUndoRedoProcessMarks --
 #
 # This proc is executed after an undo or redo action.
@@ -1219,7 +1245,11 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
     set nUndoMarks [llength $undoMarks]
     set n [expr {$nUndoMarks / 2}]
     set undoMarks [lsort -dictionary $undoMarks]
-    set Lmarks [lrange $undoMarks 0 [expr {$n - 1}]]
+    if {$n > 0} {
+	set Lmarks [lrange $undoMarks 0 [expr {$n - 1}]]
+    } else {
+	set Lmarks {}
+    }
     set Rmarks [lrange $undoMarks $n [llength $undoMarks]]
     foreach Lmark $Lmarks Rmark $Rmarks {
         lappend indices [$w index $Lmark] [$w index $Rmark]

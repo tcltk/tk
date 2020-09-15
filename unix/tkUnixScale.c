@@ -52,7 +52,9 @@ TkScale *
 TkpCreateScale(
     Tk_Window tkwin)
 {
-    return ckalloc(sizeof(TkScale));
+    (void)tkwin;
+
+    return (TkScale *)ckalloc(sizeof(TkScale));
 }
 
 /*
@@ -546,7 +548,7 @@ void
 TkpDisplayScale(
     ClientData clientData)	/* Widget record for scale. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
     Tcl_Interp *interp = scalePtr->interp;
     Pixmap pixmap;
@@ -575,7 +577,7 @@ TkpDisplayScale(
 	Tcl_DStringAppend(&buf, scalePtr->command, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, string, -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");

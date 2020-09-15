@@ -80,6 +80,9 @@ See also \fB\-justify\fR (for widgets supporting this option).
 .OP \-compound compound Compound
 Specifies how to display the image relative to the text,
 in the case both \fB\-text\fR and \fB\-image\fR are present.
+If set to the empty string (the default), the rules described in the
+"Elements" section of \fIttk::intro(n)\fR explain which value is actually
+used.
 Valid values are:
 .RS
 .IP text
@@ -94,7 +97,7 @@ Display text centered on top of image.
 .IP right
 Display image above, below, left of, or right of the text, respectively.
 .IP none
-The default; display the image if present, otherwise the text.
+Display the image if present, otherwise the text.
 .RE
 .OP \-font font Font
 Font to use for the text displayed by the widget.
@@ -149,13 +152,14 @@ to zero, then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "ENTRY OPTIONS"
-The following option is supported by entry, spinbox and combobox:
+The following options are supported by entry, spinbox and combobox:
 .OP \-placeholder placeHolder PlaceHolder
 Specifies a help text string to display if no text is otherwise displayed,
 that is when the widget is empty. The placeholder text is displayed using
-the values of the \fB\-font\fR and \fB\-justify\fR options. The foreground
-color of the placeholder text can be changed using the
-\fB\-placeholderforeground\fR style option.
+the values of the \fB\-font\fR, \fB\-justify\fR and
+\fB\-placeholderforeground\fR options.
+.OP \-placeholderforeground placeHolderForeground PlaceHolderForeground
+Specifies the foreground color of the placeholder text.
 .SH "COMPATIBILITY OPTIONS"
 This option is only available for themed widgets that have
 .QW corresponding

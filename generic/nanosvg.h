@@ -91,12 +91,16 @@ extern "C" {
 #define cosf(a) (float)cos(a)
 #define sinf(a) (float)sin(a)
 #define sqrtf(a) (float)sqrt(a)
-#define fabsf(a) (float)abs(a)
+#define fabsf(a) (float)fabs(a)
 #define acosf(a) (float)acos(a)
 #define atan2f(a,b) (float)atan2(a,b)
 #define ceilf(a) (float)ceil(a)
 #define fmodf(a,b) (float)fmod(a,b)
 #define floorf(a) (float)floor(a)
+#endif
+// float emulation for MS VC8++ compiler
+#if (_MSC_VER == 1400)
+#define fabsf(a) (float)fabs(a)
 #endif
 
 enum NSVGpaintType {
@@ -658,7 +662,7 @@ static void nsvg__curveBounds(float* bounds, float* curve)
 	}
 }
 
-static NSVGparser* nsvg__createParser()
+static NSVGparser* nsvg__createParser(void)
 {
 	NSVGparser* p;
 	p = (NSVGparser*)NANOSVG_malloc(sizeof(NSVGparser));
@@ -700,10 +704,10 @@ static void nsvg__deleteStyles(NSVGstyles* style) {
 	while (style) {
 		NSVGstyles *next = style->next;
 		if (style->name!= NULL)
-			free(style->name);
+			NANOSVG_free(style->name);
 		if (style->description != NULL)
-			free(style->description);
-		free(style);
+			NANOSVG_free(style->description);
+		NANOSVG_free(style);
 		style = next;
 	}
 }
@@ -2839,7 +2843,7 @@ static void nsvg__content(void* ud, const char* s)
 				if (state == 1) {
 					NSVGstyles* next = p->styles;
 
-					p->styles = (NSVGstyles*)malloc(sizeof(NSVGstyles));
+					p->styles = (NSVGstyles*)NANOSVG_malloc(sizeof(NSVGstyles));
 					p->styles->next = next;
 					p->styles->name = nsvg__strndup(start, (size_t)(s - start));
 					start = s + 1;

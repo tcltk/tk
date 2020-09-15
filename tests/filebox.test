@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -48,7 +48,7 @@ proc ToEnterFileByKey {parent fileName fileDir} {
 
 proc PressButton {btn} {
     event generate $btn <Enter>
-    event generate $btn <1> -x 5 -y 5
+    event generate $btn <Button-1> -x 5 -y 5
     event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
@@ -93,7 +93,7 @@ proc SendButtonPress {parent btn type} {
 	event generate $w <Enter>
 	focus $w
 	event generate $button <Enter>
-	event generate $w <KeyPress> -keysym Return
+	event generate $w <Key> -keysym Return
     }
 }
 
