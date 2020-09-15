@@ -94,8 +94,10 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#ifndef Tcl_GetParent
+#if (TCL_MAJOR_VERSION < 9)
+#  ifndef Tcl_GetParent
 #   define Tcl_GetParent Tcl_GetMaster
+#  endif
 #endif
 
 /*

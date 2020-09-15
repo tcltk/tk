@@ -59,6 +59,12 @@ static int TkWinGetPlatformId(void) {
 #   define TkWinGetPlatformId 0
 #endif
 
+static int
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+    return 0;
+}
 
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
@@ -73,21 +79,7 @@ static int TkWinGetPlatformId(void) {
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
 #define Tk_CreateOldPhotoImageFormat 0
-#ifdef MAC_OSX_TK
-static int
-doNothing(void)
-{
-    /* dummy implementation, no need to do anything */
-    return 0;
-}
-#endif
 #else
-static int
-doNothing(void)
-{
-    /* dummy implementation, no need to do anything */
-    return 0;
-}
 #define Tk_FreeXId ((void (*)(Display *, XID))(void *)doNothing)
 #define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *))(void *)doNothing)
 #define Tk_GetStyleFromObj getStyleFromObj
