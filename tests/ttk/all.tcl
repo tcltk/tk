@@ -16,5 +16,5 @@ tcltest::configure -testdir [file normalize [file dirname [info script]]]
 tcltest::configure -loadfile \
     [file join [file dirname [tcltest::testsDirectory]] constraints.tcl]
 tcltest::configure -singleproc 1
-tcltest::runAllTests
-
+set ErrorOnFailures [info exists env(ERROR_ON_FAILURES)]
+if {[tcltest::runAllTests] && $ErrorOnFailures} {exit 1}
