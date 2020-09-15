@@ -125,10 +125,9 @@ SetWindowInstanceData(
 static void
 BusyCustodyProc(
     ClientData clientData,	/* Information about the busy window. */
-    Tk_Window tkwin)		/* Not used. */
+    TCL_UNUSED(Tk_Window))		/* Not used. */
 {
     Busy *busyPtr = (Busy *)clientData;
-    (void)tkwin;
 
     Tk_DeleteEventHandler(busyPtr->tkBusy, StructureNotifyMask, BusyEventProc,
 	    busyPtr);
@@ -158,14 +157,11 @@ BusyCustodyProc(
 
 static void
 BusyGeometryProc(
-    ClientData dummy,	/* Information about window that got new
+    TCL_UNUSED(void *),	/* Information about window that got new
 				 * preferred geometry. */
-    Tk_Window tkwin)		/* Other Tk-related information about the
+    TCL_UNUSED(Tk_Window))		/* Other Tk-related information about the
 				 * window. */
 {
-    (void)dummy;
-    (void)tkwin;
-
     /* Should never get here */
 }
 
