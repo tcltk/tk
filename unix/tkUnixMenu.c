@@ -1057,7 +1057,7 @@ GetTearoffEntryGeometry(
     int *widthPtr,		/* The resulting width */
     int *heightPtr)		/* The resulting height */
 {
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
 	*widthPtr = 0;
     } else {
@@ -1281,7 +1281,7 @@ DrawTearoffEntry(
     int segmentWidth, maxX;
     Tk_3DBorder border;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	return;
     }
 

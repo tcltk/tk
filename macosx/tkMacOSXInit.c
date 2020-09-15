@@ -28,6 +28,13 @@ static char tkLibPath[PATH_MAX + 1] = "";
 
 static char scriptPath[PATH_MAX + 1] = "";
 
+/*
+ * Forward declarations...
+ */
+
+static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
+			    int objc, Tcl_Obj *const objv[]);
+
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
@@ -86,6 +93,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
+    (void)aNotification;
 
     /*
      * Initialize notifications.
@@ -117,6 +125,8 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+    (void)notification;
+
     /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
@@ -275,7 +285,6 @@ TkpInit(
 
     if (!initialized) {
 	struct stat st;
-
 	initialized = 1;
 
 	/*
@@ -330,15 +339,15 @@ TkpInit(
 	[NSApp _setup:interp];
 
         /*
-         * WARNING: The finishLaunching method runs asynchronously, apparently
-         * in a separate thread.  This creates a race between the
-         * initialization of the NSApplication and the initialization of Tk.
-         * If Tk wins the race bad things happen with the root window (see
-         * below).  If the NSApplication wins then an AppleEvent created during
-         * launch, e.g. by dropping a file icon on the application icon, will
-         * be delivered before the procedure meant to to handle the AppleEvent
-         * has been defined.  This is now handled by processing the AppleEvent
-         * as an idle task.  See tkMacOSXHLEvents.c.
+         * WARNING: The finishLaunching method runs asynchronously. This
+         * creates a race between the initialization of the NSApplication and
+         * the initialization of Tk.  If Tk wins the race bad things happen
+         * with the root window (see below).  If the NSApplication wins then an
+         * AppleEvent created during launch, e.g. by dropping a file icon on
+         * the application icon, will be delivered before the procedure meant
+         * to to handle the AppleEvent has been defined.  This is now handled
+         * by processing the AppleEvent as an idle task.  See
+         * tkMacOSXHLEvents.c.
          */
 
 	[NSApp finishLaunching];
@@ -367,35 +376,47 @@ TkpInit(
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
-	 * If we don't have a TTY and stdin is a special character file of
+	 * If we don't have a TTY or stdin is a special character file of
 	 * length 0, (e.g. /dev/null, which is what Finder sets when double
 	 * clicking Wish) then use the Tk based console interpreter.
 	 */
 
-	if (getenv("TK_CONSOLE") ||
-		(!isatty(0) && (fstat(0, &st) ||
-		(S_ISCHR(st.st_mode) && st.st_blocks == 0)))) {
-	    Tk_InitConsoleChannels(interp);
-	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
-	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
-	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
+	if (!isatty(0) && (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0))) {
+	    if (getenv("TK_CONSOLE")) {
+		Tk_InitConsoleChannels(interp);
+		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
+		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
+		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
 
-	    /*
-	     * Only show the console if we don't have a startup script and
-	     * tcl_interactive hasn't been set already.
-	     */
+		/*
+		 * Only show the console if we don't have a startup script and
+		 * tcl_interactive hasn't been set already.
+		 */
 
-	    if (Tcl_GetStartupScript(NULL) == NULL) {
-		const char *intvar = Tcl_GetVar2(interp,
-			"tcl_interactive", NULL, TCL_GLOBAL_ONLY);
+		if (Tcl_GetStartupScript(NULL) == NULL) {
+		    const char *intvar = Tcl_GetVar2(interp,
+						     "tcl_interactive", NULL, TCL_GLOBAL_ONLY);
 
-		if (intvar == NULL) {
-		    Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
-			    TCL_GLOBAL_ONLY);
+		    if (intvar == NULL) {
+			Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
+				    TCL_GLOBAL_ONLY);
+		    }
 		}
-	    }
-	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
-		return TCL_ERROR;
+		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
+		    return TCL_ERROR;
+		}
+	    } else {
+
+		/*
+		 * When launched as a macOS application with no console,
+		 * redirect stderr and stdout to /dev/null. This avoids waiting
+		 * forever for those files to become writable if the underlying
+		 * Tcl program tries to write to them with a puts command.
+		 */
+
+		FILE *null = fopen("/dev/null", "w");
+		dup2(fileno(null), STDOUT_FILENO);
+		dup2(fileno(null), STDERR_FILENO);
 	    }
 	}
 
@@ -421,7 +442,20 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
+	    TkMacOSXGetAppPathCmd, NULL, NULL);
+
+     /*
+      * The root window has been created and mapped, but XMapWindow deferred its
+      * call to makeKeyAndOrderFront because the first call to XMapWindow
+      * occurs too early in the initialization process for that.  Process idle
+      * tasks now, so the root window is configured, then order it front.
+      */
+
+     while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+     for (NSWindow *window in [NSApp windows]) {
+	 [window makeKeyAndOrderFront:NSApp];
+     }
     return TCL_OK;
 }
 
@@ -461,11 +495,11 @@ TkpGetAppName(
     }
     Tcl_DStringAppend(namePtr, name, -1);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetAppPath --
+ * TkMacOSXGetAppPathCmd --
  *
  *	Returns the path of the Wish application bundle.
  *
@@ -477,42 +511,39 @@ TkpGetAppName(
  *
  *----------------------------------------------------------------------
  */
-int TkMacOSXGetAppPath(
-		       ClientData cd,
-		       Tcl_Interp *ip,
-		       int objc,
-		       Tcl_Obj *const objv[])
+
+static int
+TkMacOSXGetAppPathCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
 
-  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
 
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
 
-  /*
-   * Convert the URL reference into a string reference.
-   */
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
 
-  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
 
-  /*
-   * Get the system encoding method.
-   */
-
-  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
-
-  /*
-   * Convert the string reference into a C string.
-   */
-
-  char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
-
-  Tcl_SetResult(ip, path, NULL);
-
-  CFRelease(mainBundleURL);
-  CFRelease(appPath);
-  return TCL_OK;
-
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
+    return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -579,7 +610,7 @@ TkMacOSXDefaultStartupScript(void)
 	    CFURLRef scriptFldrURL;
 	    char startupScript[PATH_MAX + 1];
 
-	    if (CFURLGetFileSystemRepresentation (appMainURL, true,
+	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
 		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
@@ -616,10 +647,11 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    const char* module,
-    const char* symbol)
+    TCL_UNUSED(const char *),
+    const char *symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
+
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */
     }

@@ -1123,7 +1123,7 @@ becomes visible; if it is positive then information farther to the right
 becomes visible.
 .RE
 .TP
-\fIpathName \fByview \fI?args\fR?
+\fIpathName \fByview ?\fIargs\fR?
 .
 This command is used to query and change the vertical position of the
 information displayed in the canvas's window.
