@@ -5,8 +5,7 @@
  *
  */
 
-#include <tcl.h>
-#include <tk.h>
+#include "tkInt.h"
 #include <string.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"

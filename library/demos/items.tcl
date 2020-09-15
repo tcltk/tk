@@ -250,14 +250,14 @@ proc itemsUnderArea {c} {
     set area [$c find withtag area]
     set items ""
     foreach i [$c find enclosed $areaX1 $areaY1 $areaX2 $areaY2] {
-	if {[lsearch [$c gettags $i] item] != -1} {
+	if {[lsearch [$c gettags $i] item] >= 0} {
 	    lappend items $i
 	}
     }
     puts stdout "Items enclosed by area: $items"
     set items ""
     foreach i [$c find overlapping $areaX1 $areaY1 $areaX2 $areaY2] {
-	if {[lsearch [$c gettags $i] item] != -1} {
+	if {[lsearch [$c gettags $i] item] >= 0} {
 	    lappend items $i
 	}
     }

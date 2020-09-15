@@ -451,7 +451,7 @@ TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
     Tcl_Interp *interp = mainPtr->interp;
-    Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
+    Tk_Window tkwin = (Tk_Window)mainPtr->winPtr;
     const struct SystemFontMapEntry *systemFont = systemFontMap;
     NSFont *nsFont;
     TkFontAttributes fa;
@@ -1189,7 +1189,7 @@ TkpDrawAngledCharsInContext(
     CTTypesetterRef typesetter;
     CFIndex start, length;
     CTLineRef line, full=nil;
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
     CGColorRef fg;
@@ -1199,7 +1199,7 @@ TkpDrawAngledCharsInContext(
 
     if (rangeStart < 0 || rangeLength <= 0  ||
 	rangeStart + rangeLength > numBytes ||
-	!TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
+	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
@@ -1212,8 +1212,7 @@ TkpDrawAngledCharsInContext(
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
     CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
-    [nsFont setInContext:[NSGraphicsContext graphicsContextWithGraphicsPort:
-	    context flipped:NO]];
+    [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     attributedString = [[NSAttributedString alloc] initWithString:string
 	    attributes:attributes];

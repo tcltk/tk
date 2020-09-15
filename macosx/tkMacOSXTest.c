@@ -26,11 +26,11 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 
 
 /*
@@ -117,10 +117,10 @@ DebuggerObjCmd(
 
 static int
 MenuBarHeightObjCmd(
-    ClientData clientData,		/* Not used. */
+    TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
-    int objc,				/* Not used. */
-    Tcl_Obj *const objv[])		/* Not used. */
+    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
 {
     static int height = 0;
     if (height == 0) {
@@ -152,7 +152,7 @@ MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     NSWindow *win = nil;
     if (macWin->toplevel && macWin->toplevel->winPtr &&
 	macWin->toplevel->winPtr->wmInfoPtr &&
@@ -175,9 +175,11 @@ TkTestLogDisplay(
  * PressButtonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
- *      location.  It injects NSEvents into the NSApplication event queue,
- *      as opposed to adding events to the Tcl queue as event generate
- *      would do.  One application is for testing the grab command.
+ *      location.  It injects NSEvents into the NSApplication event queue, as
+ *      opposed to adding events to the Tcl queue as event generate would do.
+ *      One application is for testing the grab command. These events have
+ *      their unused context property set to 1 as a signal indicating that they
+ *      should not be ignored by [NSApp tkProcessMouseEvent].
  *
  * Results:
  *	A standard Tcl result.
@@ -188,10 +190,9 @@ TkTestLogDisplay(
  *----------------------------------------------------------------------
  */
 
-        /* ARGSUSED */
 static int
 PressButtonObjCmd(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -237,7 +238,7 @@ PressButtonObjCmd(
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil
+	context:(void *) 1
 	eventNumber:0
 	clickCount:1
 	pressure:0.0];
@@ -247,27 +248,27 @@ PressButtonObjCmd(
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil
+	context:(void *)1
 	eventNumber:1
 	clickCount:1
-	pressure:0.0];
+	pressure:-1.0];
     [NSApp postEvent:press atStart:NO];
     release = [NSEvent mouseEventWithType:NSLeftMouseUp
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil
+	context:(void*) 1
 	eventNumber:2
 	clickCount:1
-	pressure:0.0];
+	pressure:-1.0];
     [NSApp postEvent:release atStart:NO];
     return TCL_OK;
 }
 
 static int
 InjectKeyEventObjCmd(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])

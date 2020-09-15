@@ -3,8 +3,9 @@
 # what it currently does)
 #
 
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require Tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 # consistencyCheck --
@@ -729,7 +730,7 @@ test treeview-3085489-2 "tag remove, no -tags" -setup {
 
 test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     pack [ttk::treeview .tv]
-    .tv insert {} end -id foo -text "<-- (1) Click the blank space to my left" 
+    .tv insert {} end -id foo -text "<-- (1) Click the blank space to my left"
     update
 } -body {
     foreach {x y w h} [.tv bbox foo #0] {}
@@ -748,7 +749,7 @@ test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
 
 test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview is allowed" -setup {
     pack [ttk::treeview .tv]
-    .tv heading #0 -text "Drag my right edge -->" 
+    .tv heading #0 -text "Drag my right edge -->"
     update
 } -body {
     set res [.tv column #0 -width]
@@ -818,7 +819,7 @@ test treeview-ce470f20fd-4 "changing -stretch resizes columns" -setup {
     update idletasks ; # redisplay treeview
 } -body {
     # only some columns are displayed (and in a different order than declared
-    # in -columns), a non-displayed column becomes stretchable  --> nothing 
+    # in -columns), a non-displayed column becomes stretchable  --> nothing
     # happens
     set origTreeWidth [winfo width .tv]
     set res [list [.tv column bar -width] [.tv column colA -width]]

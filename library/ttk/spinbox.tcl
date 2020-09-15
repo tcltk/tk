@@ -12,13 +12,13 @@ namespace eval ttk::spinbox { }
 ttk::copyBindings TEntry TSpinbox
 
 bind TSpinbox <Motion>			{ ttk::spinbox::Motion %W %x %y }
-bind TSpinbox <ButtonPress-1> 		{ ttk::spinbox::Press %W %x %y }
+bind TSpinbox <Button-1> 		{ ttk::spinbox::Press %W %x %y }
 bind TSpinbox <ButtonRelease-1> 	{ ttk::spinbox::Release %W }
 bind TSpinbox <Double-Button-1> 	{ ttk::spinbox::DoubleClick %W %x %y }
 bind TSpinbox <Triple-Button-1> 	{} ;# disable TEntry triple-click
 
-bind TSpinbox <KeyPress-Up>		{ event generate %W <<Increment>> }
-bind TSpinbox <KeyPress-Down> 		{ event generate %W <<Decrement>> }
+bind TSpinbox <Up>			{ event generate %W <<Increment>> }
+bind TSpinbox <Down> 			{ event generate %W <<Decrement>> }
 
 bind TSpinbox <<Increment>>		{ ttk::spinbox::Spin %W +1 }
 bind TSpinbox <<Decrement>> 		{ ttk::spinbox::Spin %W -1 }

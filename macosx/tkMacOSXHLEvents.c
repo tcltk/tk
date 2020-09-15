@@ -309,6 +309,7 @@ static const char *scriptTextProc = "::tk::mac::DoScriptText";
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
+                data[actual] = '\0';
                 AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptTextCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptTextCommand);
@@ -383,9 +384,6 @@ static void ProcessAppleEvent(
     }
     code = Tcl_EvalEx(AEInfo->interp, Tcl_DStringValue(&AEInfo->command),
 	    Tcl_DStringLength(&AEInfo->command), TCL_EVAL_GLOBAL);
-    if (code != TCL_OK) {
-	Tcl_BackgroundException(AEInfo->interp, code);
-    }
 
     if (AEInfo->replyEvent && code >= 0) {
         int reslen;
@@ -400,7 +398,10 @@ static void ProcessAppleEvent(
             AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
                           keyErrorNumber, typeSInt32, (Ptr) &code, sizeof(int));
         }
+    } else if (code != TCL_OK) {
+	Tcl_BackgroundException(AEInfo->interp, code);
     }
+
     Tcl_DStringFree(&AEInfo->command);
     ckfree(clientData);
 }

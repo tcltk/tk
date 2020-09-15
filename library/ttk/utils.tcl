@@ -58,7 +58,7 @@ proc ttk::traverseTo {w} {
 }
 
 ## ttk::clickToFocus $w --
-#	Utility routine, used in <ButtonPress-1> bindings --
+#	Utility routine, used in <Button-1> bindings --
 #	Assign keyboard focus to the specified widget if -takefocus is enabled.
 #
 proc ttk::clickToFocus {w} {
@@ -298,8 +298,8 @@ proc ttk::copyBindings {from to} {
 
 proc ttk::bindMouseWheel {bindtag callback} {
     if {[tk windowingsystem] eq "x11"} {
-	bind $bindtag <ButtonPress-4> "$callback -1"
-	bind $bindtag <ButtonPress-5> "$callback +1"
+	bind $bindtag <Button-4> "$callback -1"
+	bind $bindtag <Button-5> "$callback +1"
     }
     if {[tk windowingsystem] eq "aqua"} {
 	bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
@@ -318,10 +318,10 @@ proc ttk::bindMouseWheel {bindtag callback} {
 #
 
 if {[tk windowingsystem] eq "x11"} {
-    bind TtkScrollable <ButtonPress-4>       { %W yview scroll -5 units }
-    bind TtkScrollable <ButtonPress-5>       { %W yview scroll  5 units }
-    bind TtkScrollable <Shift-ButtonPress-4> { %W xview scroll -5 units }
-    bind TtkScrollable <Shift-ButtonPress-5> { %W xview scroll  5 units }
+    bind TtkScrollable <Button-4>       { %W yview scroll -5 units }
+    bind TtkScrollable <Button-5>       { %W yview scroll  5 units }
+    bind TtkScrollable <Shift-Button-4> { %W xview scroll -5 units }
+    bind TtkScrollable <Shift-Button-5> { %W xview scroll  5 units }
 }
 if {[tk windowingsystem] eq "aqua"} {
     bind TtkScrollable <MouseWheel> \

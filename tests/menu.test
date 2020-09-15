@@ -2052,7 +2052,7 @@ test menu-5.8 {DestroyMenuInstance - multiple clones} -setup {
     set tearoff2 [tk::TearOffMenu .m1]
     list [destroy $tearoff1] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-test menu-5.9 {DestroyMenuInstace - master menu} -setup {
+test menu-5.9 {DestroyMenuInstace - main menu} -setup {
     destroy .m1
 } -body {
     menu .m1

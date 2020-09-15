@@ -177,7 +177,7 @@ XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
     Window owner,		/* Window to be the owner. */
-    Time time)			/* The current time? */
+    TCL_UNUSED(Time))			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
 
@@ -237,8 +237,8 @@ TkMacOSXSelDeadWindow(
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
-    TkClipboardTarget *targetPtr)
+    TCL_UNUSED(TkWindow *),		/* Window associated with clipboard. */
+    TCL_UNUSED(TkClipboardTarget *))
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
@@ -294,7 +294,7 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
 }
 

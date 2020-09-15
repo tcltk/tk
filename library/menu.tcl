@@ -138,7 +138,7 @@ bind Menu <Leave> {
 bind Menu <Motion> {
     tk::MenuMotion %W %x %y %s
 }
-bind Menu <ButtonPress> {
+bind Menu <Button> {
     tk::MenuButtonDown %W
 }
 bind Menu <ButtonRelease> {
