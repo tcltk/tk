@@ -121,7 +121,7 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    MacScrollbar *scrollPtr = ckalloc(sizeof(MacScrollbar));
+    MacScrollbar *scrollPtr = (MacScrollbar *)ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->troughGC = NULL;
     scrollPtr->copyGC = NULL;
@@ -174,8 +174,8 @@ static void drawMacScrollbar(
     MacScrollbar *msPtr,
     CGContextRef context)
 {
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
-    NSView *view = TkMacOSXDrawableView(macWin);
+    Drawable d = Tk_WindowId(scrollPtr->tkwin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(d);
     CGPathRef path;
     CGPoint inner[2], outer[2], thumbOrigin;
     CGSize thumbSize;
@@ -214,12 +214,20 @@ static void drawMacScrollbar(
     CGContextStrokeLineSegments(context, outer, 2);
 
     /*
-     * Do not display the thumb unless scrolling is possible.
+     * Do not display the thumb unless scrolling is possible, in accordance
+     * with macOS behavior.
+     *
+     * Native scrollbars and Ttk scrollbars are always 15 pixels wide, but we
+     * allow Tk scrollbars to have any width, even if it looks bad. To prevent
+     * sporadic assertion errors when drawing skinny thumbs we must make sure
+     * the radius is at most half the width.
      */
 
     if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
 	CGRect thumbBounds = {thumbOrigin, thumbSize};
-	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
+	int width = scrollPtr->vertical ? thumbSize.width : thumbSize.height;
+	int radius = width >= 8 ? 4 : width >> 1;
+	path = CGPathCreateWithRoundedRect(thumbBounds, radius, radius, NULL);
 	CGContextBeginPath(context);
 	CGContextAddPath(context, path);
 	if (msPtr->info.trackInfo.scrollbar.pressState != 0) {
@@ -250,12 +258,12 @@ TkpDisplayScrollbar(
 	return;
     }
 
-    MacDrawable *macWin = (MacDrawable *) winPtr->window;
-    NSView *view = TkMacOSXDrawableView(macWin);
+    MacDrawable *macWin = (MacDrawable *)winPtr->window;
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
-	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
+	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
 
@@ -308,7 +316,7 @@ TkpDisplayScrollbar(
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationInverted);
-    } else if ([NSApp macMinorVersion] <= 8) {
+    } else if ([NSApp macOSVersion] <= 100800) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
@@ -369,7 +377,7 @@ TkpComputeScrollbarGeometry(
 	scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;
     } else {
 	scrollPtr->arrowLength = 0;
@@ -478,6 +486,7 @@ void
 TkpConfigureScrollbar(
     TkScrollbar *scrollPtr)
 {
+    (void)scrollPtr;
     /* empty */
 }
 
@@ -581,12 +590,12 @@ UpdateControlValues(
 {
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
+    MacDrawable *macWin = (MacDrawable *)Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect contrlRect;
     short width, height;
 
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 

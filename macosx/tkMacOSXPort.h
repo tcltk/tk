@@ -1,7 +1,7 @@
 /*
  * tkMacOSXPort.h --
  *
- *	This file is included by all of the Tk C files. It contains
+ *	This file is included by all of the Tk C files.  It contains
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
@@ -17,14 +17,15 @@
 #define _TKMACPORT
 
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <math.h>
 #include <pwd.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -48,6 +49,9 @@
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -107,19 +111,6 @@
 #define REDO_KEYSYM_LOOKUP
 
 /*
- * Defines for X functions that are used by Tk but are treated as
- * no-op functions on the Macintosh.
- */
-
-#define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XGrabServer(display)
-#define XNoOp(display) {display->request++;}
-#define XUngrabServer(display)
-#define XSynchronize(display, bool) {display->request++;}
-#define XVisualIDFromVisual(visual) (visual->visualid)
-
-/*
  * The following functions are not used on the Mac, so we stub them out.
  */
 
@@ -140,29 +131,22 @@
  */
 
 #define TK_NO_DOUBLE_BUFFERING 1
+#define TK_HAS_DYNAMIC_COLORS 1
+#define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
- * Magic pixel code values for system colors.
- *
- * NOTE: values must be kept in sync with indices into the
- *	 systemColorMap array in tkMacOSXColor.c !
+ * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
+ * alpha channel directly into a window.
  */
 
-#define TRANSPARENT_PIXEL		30
-#define APPEARANCE_PIXEL		52
-#define PIXEL_MAGIC ((unsigned char) 0x69)
+#define TKPUTIMAGE_CAN_BLEND
 
 /*
- * The following macro returns the pixel value that corresponds to the
- * 16-bit RGB values in the given XColor structure.
- * The format is: (PIXEL_MAGIC <<< 24) | (R << 16) | (G << 8) | B
- * where each of R, G and B is the high order byte of a 16-bit component.
+ * Used by xcolor.c
  */
 
-#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
-
+MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
+					    unsigned long blue);
+#define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
 
 #endif /* _TKMACPORT */

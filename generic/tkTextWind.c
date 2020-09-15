@@ -22,13 +22,13 @@
 
 static void		EmbWinRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
-static void		EmbWinLostSlaveProc(ClientData clientData,
+static void		EmbWinLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr textGeomType = {
     "text",			/* name */
     EmbWinRequestProc,		/* requestProc */
-    EmbWinLostSlaveProc,	/* lostSlaveProc */
+    EmbWinLostContentProc,	/* lostContentProc */
 };
 
 /*
@@ -57,7 +57,7 @@ static int		EmbWinDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 static int		EmbWinLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars,int noCharsYet,
+			    TkSizeT offset, int maxX, TkSizeT maxChars,int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 static void		EmbWinStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -99,18 +99,18 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", -1, offsetof(TkTextEmbWindow, align),
+	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align),
 	0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
-	"0", -1, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
-	NULL, -1, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -133,7 +133,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 int
 TkTextWindowCmd(
-    register TkText *textPtr,	/* Information about text widget. */
+    TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
@@ -147,7 +147,7 @@ TkTextWindowCmd(
     enum windOptions {
 	WIND_CGET, WIND_CONFIGURE, WIND_CREATE, WIND_NAMES
     };
-    register TkTextSegment *ewPtr;
+    TkTextSegment *ewPtr;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
@@ -290,7 +290,7 @@ TkTextWindowCmd(
 	 * Create the new window segment and initialize it.
 	 */
 
-	ewPtr = ckalloc(EW_SEG_SIZE);
+	ewPtr = (TkTextSegment *)ckalloc(EW_SEG_SIZE);
 	ewPtr->typePtr = &tkTextEmbWindowType;
 	ewPtr->size = 1;
 	ewPtr->body.ew.sharedTextPtr = textPtr->sharedTextPtr;
@@ -302,7 +302,7 @@ TkTextWindowCmd(
 	ewPtr->body.ew.stretch = 0;
 	ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
-	client = ckalloc(sizeof(TkTextEmbWindowClient));
+	client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
 	client->next = NULL;
 	client->textPtr = textPtr;
 	client->tkwin = NULL;
@@ -345,7 +345,7 @@ TkTextWindowCmd(
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->windowTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
+		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
 		    -1));
 	}
 	Tcl_SetObjResult(interp, resultObj);
@@ -443,7 +443,7 @@ EmbWinConfigure(
 		    break;
 		}
 		if (Tk_TopWinHierarchy(ancestor)) {
-		badMaster:
+		badContainer:
 		    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
 			    "can't embed %s in %s",
 			    Tk_PathName(ewPtr->body.ew.tkwin),
@@ -459,7 +459,7 @@ EmbWinConfigure(
 	    }
 	    if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		    || (ewPtr->body.ew.tkwin == textPtr->tkwin)) {
-		goto badMaster;
+		goto badContainer;
 	    }
 
 	    if (client == NULL) {
@@ -467,7 +467,7 @@ EmbWinConfigure(
 		 * Have to make the new client.
 		 */
 
-		client = ckalloc(sizeof(TkTextEmbWindowClient));
+		client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
 		client->next = ewPtr->body.ew.clients;
 		client->textPtr = textPtr;
 		client->tkwin = NULL;
@@ -526,7 +526,7 @@ EmbWinStructureProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    TkTextEmbWindowClient *client = clientData;
+    TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
     TkTextSegment *ewPtr = client->parent;
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
@@ -573,15 +573,15 @@ EmbWinStructureProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 EmbWinRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
     Tk_Window tkwin)		/* Window that changed its desired size. */
 {
-    TkTextEmbWindowClient *client = clientData;
+    TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
     TkTextSegment *ewPtr = client->parent;
     TkTextIndex index;
+    (void)tkwin;
 
     index.tree = ewPtr->body.ew.sharedTextPtr->tree;
     index.linePtr = ewPtr->body.ew.linePtr;
@@ -594,9 +594,9 @@ EmbWinRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * EmbWinLostSlaveProc --
+ * EmbWinLostContentProc --
  *
- *	This function is invoked by the Tk geometry manager when a slave
+ *	This function is invoked by the Tk geometry manager when a content
  *	window managed by a text widget is claimed away by another geometry
  *	manager.
  *
@@ -611,12 +611,12 @@ EmbWinRequestProc(
  */
 
 static void
-EmbWinLostSlaveProc(
+EmbWinLostContentProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     Tk_Window tkwin)		/* Window that was claimed away by another
 				 * geometry manager. */
 {
-    TkTextEmbWindowClient *client = clientData;
+    TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
     TkTextSegment *ewPtr = client->parent;
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
@@ -736,7 +736,6 @@ TkTextWinFreeClient(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 EmbWinDeleteProc(
     TkTextSegment *ewPtr,	/* Segment being deleted. */
@@ -747,6 +746,8 @@ EmbWinDeleteProc(
 {
     TkTextEmbWindowClient *client;
     client = ewPtr->body.ew.clients;
+    (void)linePtr;
+    (void)treeGone;
 
     while (client != NULL) {
 	TkTextEmbWindowClient *next = client->next;
@@ -816,30 +817,32 @@ EmbWinCleanupProc(
  *--------------------------------------------------------------
  */
 
-	/*ARGSUSED*/
 static int
 EmbWinLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
     TkTextSegment *ewPtr,	/* Segment corresponding to indexPtr. */
-    int offset,			/* Offset within segPtr corresponding to
+    TkSizeT offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    int maxChars,		/* Chunk must not include more than this many
+    TkSizeT maxChars,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
     TkWrapMode wrapMode,	/* Wrap mode to use for line:
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
 				 * TEXT_WRAPMODE_WORD. */
-    register TkTextDispChunk *chunkPtr)
+    TkTextDispChunk *chunkPtr)
 				/* Structure to fill in with information about
 				 * this chunk. The x field has already been
 				 * set by the caller. */
 {
     int width, height;
     TkTextEmbWindowClient *client;
+    (void)indexPtr;
+    (void)maxChars;
+    (void)wrapMode;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbWinLayoutProc");
@@ -936,12 +939,12 @@ EmbWinLayoutProc(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		goto badMaster;
+		goto badContainer;
 	    }
 	}
 	if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
-	badMaster:
+	badContainer:
 	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
 		    "can't embed %s relative to %s",
 		    Tk_PathName(ewPtr->body.ew.tkwin),
@@ -959,7 +962,7 @@ EmbWinLayoutProc(
 	     * now need to add to our client list.
 	     */
 
-	    client = ckalloc(sizeof(TkTextEmbWindowClient));
+	    client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
 	    client->next = ewPtr->body.ew.clients;
 	    client->textPtr = textPtr;
 	    client->tkwin = NULL;
@@ -1054,11 +1057,13 @@ EmbWinCheckProc(
     TkTextSegment *ewPtr,	/* Segment to check. */
     TkTextLine *linePtr)	/* Line containing segment. */
 {
+    (void)linePtr;
+
     if (ewPtr->nextPtr == NULL) {
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", (int)ewPtr->size);
     }
 }
 
@@ -1100,8 +1105,11 @@ TkTextEmbWinDisplayProc(
 {
     int lineX, windowX, windowY, width, height;
     Tk_Window tkwin;
-    TkTextSegment *ewPtr = chunkPtr->clientData;
+    TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
+    (void)y;
+    (void)display;
+    (void)dst;
 
     if (client == NULL) {
 	return;
@@ -1180,7 +1188,7 @@ EmbWinUndisplayProc(
     TkText *textPtr,		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-    TkTextSegment *ewPtr = chunkPtr->clientData;
+    TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
 
     if (client == NULL) {
@@ -1243,8 +1251,9 @@ EmbWinBboxProc(
 				 * pixels. */
 {
     Tk_Window tkwin;
-    TkTextSegment *ewPtr = chunkPtr->clientData;
+    TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
+    (void)index;
 
     if (client == NULL) {
 	tkwin = NULL;
@@ -1305,7 +1314,7 @@ static void
 EmbWinDelayedUnmap(
     ClientData clientData)	/* Token for the window to be unmapped. */
 {
-    TkTextEmbWindowClient *client = clientData;
+    TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
 
     if (!client->displayed && (client->tkwin != NULL)) {
 	if (client->textPtr->tkwin != Tk_Parent(client->tkwin)) {
@@ -1353,7 +1362,7 @@ TkTextWindowIndex(
 	return 0;
     }
 
-    ewPtr = Tcl_GetHashValue(hPtr);
+    ewPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = ewPtr->body.ew.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(ewPtr, indexPtr->linePtr);

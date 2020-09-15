@@ -1,5 +1,6 @@
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require Tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 testConstraint coreScrollbar [expr {[tk windowingsystem] eq "aqua"}]
@@ -69,6 +70,50 @@ test scrollbar-1.3 "Change orientation" -body {
     set w [winfo width .tsb] ; set h [winfo height .tsb]
     expr {$h < $w}
 } -result 1
+
+test scrollbar-10.1.1 {<MouseWheel> event on scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -yscrollcommand {.s set}] -side left
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Line $i\n"}
+    pack [ttk::scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
+    update
+    focus -force .s
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {5.0}
+
+test scrollbar-10.2.1 {<Shift-MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <Shift-MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.4}
+test scrollbar-10.2.2 {<MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.4}
 
 #
 # Scale tests:

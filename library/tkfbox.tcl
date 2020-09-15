@@ -463,7 +463,7 @@ proc ::tk::dialog::file::Create {w class} {
     wm protocol $w WM_DELETE_WINDOW [list ::tk::dialog::file::CancelCmd $w]
     $data(upBtn)     configure -command [list ::tk::dialog::file::UpDirCmd $w]
     $data(cancelBtn) configure -command [list ::tk::dialog::file::CancelCmd $w]
-    bind $w <KeyPress-Escape> [list $data(cancelBtn) invoke]
+    bind $w <Escape> [list $data(cancelBtn) invoke]
     bind $w <Alt-Key> [list tk::AltKeyInDialog $w %A]
 
     # Set up event handlers specific to File or Directory Dialogs

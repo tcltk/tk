@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.7
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a2"
+TK_PATCH_LEVEL="a4"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -456,8 +456,8 @@ if test $tk_aqua = no; then
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
 	if test "$found_xft" = "no" ; then
 	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
+	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
+	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
 	AC_MSG_RESULT([$found_xft])
 	dnl make sure that compiling against Xft header file doesn't bomb
@@ -517,57 +517,6 @@ if test $tk_aqua = no; then
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
     AC_SUBST(UNIX_FONT_OBJS)
-fi
-
-#--------------------------------------------------------------------
-#	Check for XkbKeycodeToKeysym.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no; then
-    tk_oldCFlags=$CFLAGS
-    tk_oldLibs=$LIBS
-    CFLAGS="$CFLAGS $XINCLUDES"
-    LIBS="$LIBS $XLIBSW"
-    AC_CHECK_HEADER(X11/XKBlib.h, [
-	xkblib_header_found=yes
-    ], [
-	xkblib_header_found=no
-    ], [#include <X11/Xlib.h>])
-    if test $xkblib_header_found = "yes" ; then
-	AC_CHECK_LIB(X11, XkbKeycodeToKeysym, [
-	    xkbkeycodetokeysym_found=yes
-	], [
-	    xkbkeycodetokeysym_found=no
-	])
-    else
-	xkbkeycodetokeysym_found=no
-    fi
-    if test $xkbkeycodetokeysym_found = "yes" ; then
-	AC_DEFINE(HAVE_XKBKEYCODETOKEYSYM, 1, [Do we have XkbKeycodeToKeysym?])
-    fi
-    CFLAGS=$tk_oldCFlags
-    LIBS=$tk_oldLibs
-fi
-
-#--------------------------------------------------------------------
-# Check whether XKeycodeToKeysym is deprecated in X11 headers.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no && test "$GCC" = yes; then
-    AC_MSG_CHECKING([whether XKeycodeToKeysym is deprecated])
-    tk_oldCFlags=$CFLAGS
-    CFLAGS="$CFLAGS -Werror"
-    AC_TRY_LINK([
-	#include <X11/Xlib.h>
-    ], [
-	XKeycodeToKeysym(0,0,0);
-    ], [
-	AC_MSG_RESULT([no])
-    ], [
-    AC_MSG_RESULT([yes])
-	AC_DEFINE(XKEYCODETOKEYSYM_IS_DEPRECATED, 1, [Is XKeycodeToKeysym deprecated?])
-	])
-    CFLAGS=$tk_oldCFlags
 fi
 
 #--------------------------------------------------------------------
@@ -649,7 +598,7 @@ if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 fi
 
-TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
+test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
 PRIVATE_INCLUDE_DIR='$(includedir)'
 HTML_DIR='$(DISTDIR)/html'
 TK_PKG_DIR='tk$(VERSION)'

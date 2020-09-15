@@ -93,7 +93,7 @@ TkWinGetModifierState(void)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_PointerEvent --
+ * TkWinPointerEvent --
  *
  *	This procedure is called for each pointer-related event. It converts
  *	the position to root coords and updates the global pointer state
@@ -109,7 +109,7 @@ TkWinGetModifierState(void)
  */
 
 void
-Tk_PointerEvent(
+TkWinPointerEvent(
     HWND hwnd,			/* Window for coords, or NULL for the root
 				 * window. */
     int x, int y)		/* Coords relative to hwnd, or screen if hwnd
@@ -179,6 +179,12 @@ XGrabKeyboard(
     int keyboard_mode,
     Time time)
 {
+    (void)display;
+    (void)owner_events;
+    (void)pointer_mode;
+    (void)keyboard_mode;
+    (void)time;
+
     keyboardWinPtr = TkWinGetWinPtr(grab_window);
     return GrabSuccess;
 }
@@ -204,6 +210,9 @@ XUngrabKeyboard(
     Display *display,
     Time time)
 {
+    (void)display;
+    (void)time;
+
     keyboardWinPtr = NULL;
     return Success;
 }
@@ -226,9 +235,10 @@ XUngrabKeyboard(
 
 void
 MouseTimerProc(
-    ClientData clientData)
+    ClientData dummy)
 {
     POINT pos;
+    (void)dummy;
 
     mouseTimerSet = 0;
 
@@ -238,7 +248,7 @@ MouseTimerProc(
      */
 
     GetCursorPos(&pos);
-    Tk_PointerEvent(NULL, pos.x, pos.y);
+    TkWinPointerEvent(NULL, pos.x, pos.y);
 }
 
 /*
@@ -290,6 +300,7 @@ TkGetPointerCoords(
     int *xPtr, int *yPtr)	/* Store pointer coordinates here. */
 {
     POINT point;
+    (void)tkwin;
 
     GetCursorPos(&point);
     *xPtr = point.x;
@@ -327,6 +338,12 @@ XQueryPointer(
     int *win_y_return,
     unsigned int *mask_return)
 {
+    (void)w;
+    (void)root_return;
+    (void)child_return;
+    (void)win_x_return;
+    (void)win_y_return;
+
     display->request++;
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
     *mask_return = TkWinGetModifierState();
@@ -362,10 +379,25 @@ void TkSetCursorPos(
     int y)
 {
     INPUT input;
+    int xscreen = (int)(GetSystemMetrics(SM_CXSCREEN) - 1);
+    int yscreen = (int)(GetSystemMetrics(SM_CYSCREEN) - 1);
 
     input.type = INPUT_MOUSE;
-    input.mi.dx = x * (65535.0 / (GetSystemMetrics(SM_CXSCREEN) - 1));
-    input.mi.dy = y * (65535.0 / (GetSystemMetrics(SM_CYSCREEN) - 1));
+    input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
+    input.mi.dy = (y * 65535 + yscreen/2) / yscreen;
+
+    /*
+     * Horrible workaround here. There is a bug on Win 10: when warping to
+     * pixel (x = 0, y = 0) the SendInput() below just does not move the
+     * mouse pointer. However, as soon as dx or dy is non zero it moves as
+     * expected. Given the scaling factor of 65535 (see above),
+     * (dx = 1 , dy = 0) still means pixel (x = 0, y = 0).
+     * See ticket [69b48f427e].
+     */
+    if (input.mi.dx == 0 && input.mi.dy == 0) {
+        input.mi.dx = 1;
+    }
+
     input.mi.mouseData = 0;
     input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
     input.mi.time = 0;
@@ -386,6 +418,12 @@ XWarpPointer(
     int dest_y)
 {
     RECT r;
+    (void)display;
+    (void)src_w;
+    (void)src_x;
+    (void)src_y;
+    (void)src_width;
+    (void)src_height;
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
     TkSetCursorPos(r.left+dest_x, r.top+dest_y);
@@ -430,7 +468,7 @@ XGetInputFocus(
 {
     Tk_Window tkwin = Tk_HWNDToWindow(GetFocus());
 
-    *focus_return = tkwin ? Tk_WindowId(tkwin) : None;
+    *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
     display->request++;
     return Success;
@@ -460,6 +498,9 @@ XSetInputFocus(
     int revert_to,
     Time time)
 {
+    (void)revert_to;
+    (void)time;
+
     display->request++;
     if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));

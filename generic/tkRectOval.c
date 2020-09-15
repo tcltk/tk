@@ -12,6 +12,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each rectangle/oval item.
@@ -46,7 +47,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
@@ -102,7 +103,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"0,0", offsetof(RectOvalItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_COLOR, "-outline", NULL, NULL,
-	"black", offsetof(RectOvalItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, offsetof(RectOvalItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
 	"0,0", offsetof(RectOvalItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
@@ -578,6 +579,7 @@ DeleteRectOval(
     Display *display)		/* Display containing window for canvas. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
+    (void)canvas;
 
     Tk_DeleteOutline(display, &(rectOvalPtr->outline));
     if (rectOvalPtr->fillColor != NULL) {
@@ -620,7 +622,6 @@ DeleteRectOval(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeRectOvalBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -751,6 +752,10 @@ DisplayRectOval(
     short x1, y1, x2, y2;
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 
     /*
      * Compute the screen coordinates of the bounding box for the item. Make
@@ -960,7 +965,6 @@ DisplayRectOval(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 RectToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1080,7 +1084,6 @@ RectToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 OvalToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1135,7 +1138,6 @@ OvalToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 RectToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1209,7 +1211,6 @@ RectToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 OvalToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1445,6 +1446,7 @@ RectOvalToPostscript(
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     y1 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[3]);
@@ -1519,18 +1521,14 @@ RectOvalToPostscript(
 	Tcl_AppendObjToObj(psObj, pathObj);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    if (color != NULL) {
 		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
@@ -1549,10 +1547,7 @@ RectOvalToPostscript(
 	Tcl_AppendToObj(psObj, "0 setlinejoin 2 setlinecap\n", -1);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr,
-		&rectOvalPtr->outline)!= TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &rectOvalPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     }
 
@@ -1565,12 +1560,6 @@ RectOvalToPostscript(
     Tcl_DecrRefCount(psObj);
     Tcl_DecrRefCount(pathObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    Tcl_DecrRefCount(pathObj);
-    return TCL_ERROR;
 }
 
 /*

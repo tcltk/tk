@@ -58,7 +58,7 @@ proc ttk::traverseTo {w} {
 }
 
 ## ttk::clickToFocus $w --
-#	Utility routine, used in <ButtonPress-1> bindings --
+#	Utility routine, used in <Button-1> bindings --
 #	Assign keyboard focus to the specified widget if -takefocus is enabled.
 #
 proc ttk::clickToFocus {w} {

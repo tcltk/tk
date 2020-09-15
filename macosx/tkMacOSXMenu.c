@@ -41,7 +41,7 @@ static const struct {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
     SPECIALMENU(window,	WINDOWS),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef SPECIALMENU
 
@@ -58,7 +58,7 @@ static const struct {
     MODIFIER(Command,	NSCommandKeyMask),
     MODIFIER(Cmd,	NSCommandKeyMask),
     MODIFIER(Meta,	NSCommandKeyMask),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef MODIFIER
 
@@ -86,16 +86,12 @@ static const struct {
     ACCEL(Help,		NSHelpFunctionKey),
     ACCEL(Power,	0x233d),
     ACCEL(Eject,	0xf804),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef ACCEL
 #undef sl
 
-static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
-				 * the flag that Tk is not to draw any
-				 * menus. */
 static int inPostMenu = 0;
-static unsigned long defaultBg = 0, defaultFg = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -107,6 +103,67 @@ static int	GenerateMenuSelectEvent(TKMenu *menu, NSMenuItem *menuItem);
 static void	MenuSelectEvent(TkMenu *menuPtr);
 static void	RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static int	ModifierCharWidth(Tk_Font tkfont);
+
+#pragma mark TkBackgroundLoop
+
+/*
+ * The function TkMacOSXEventsCheckProc (in tkMacOSXNotify.c) is the "check
+ * proc" for the macOS event source.  Its job is to remove NSEvents from the
+ * default event queue of the NSApplication.  It does this by calling the
+ * method [NSApp nextEventMatchingMask: untilDate: inMode: dequeue:]. As a
+ * rule, when the untilDate is set to the distant past this method returns
+ * immediately.  An exception to that rule is when the next event is the button
+ * press on a menu button.  In that case, the method starts running a nested
+ * event loop in the mode NSEventTrackingRunLoopMode which does not return
+ * until the menu has been dismissed.  In Tk 8.6.10 and earlier, this meant
+ * that the Tk event loop would block in its call to the check proc as long as
+ * the menu was posted.  For example, opening a menu during the Rube Goldberg
+ * demo would cause the animation to stop.  This was also the case for
+ * menubuttons.
+ *
+ * The TKBackground object below works around this problem, and allows a Tk
+ * event loop to run while a menu is open.  It is a subclass of NSThread which
+ * inserts requests to call [NSApp _runBackgroundLoop] onto the queue
+ * associated with the NSEventTrackingRunLoopMode.  One of these threads gets
+ * started in the callback [NSApp menuBeginTracking] and cancelled in [NSApp
+ * menuEndTracking].
+ */
+
+@interface TKBackgroundLoop: NSThread
+@end
+
+@implementation TKBackgroundLoop
+- (void) main
+{
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    NSArray *modeArray = [NSArray arrayWithObjects: NSEventTrackingRunLoopMode,
+				  nil];
+    while(1) {
+
+	/*
+	 * Queue a request to process Tk events during event tracking.
+	 */
+
+	[NSApp performSelectorOnMainThread:@selector(_runBackgroundLoop)
+				withObject:nil
+			     waitUntilDone:true
+				     modes:modeArray];
+	if ([self isCancelled]) {
+	    [NSThread exit];
+	}
+
+	/*
+	 * Allow the tracked events to be processed too.
+	 */
+
+	[NSThread sleepForTimeInterval:0.001];
+    }
+    [pool drain];
+}
+@end
+
+TKBackgroundLoop *backgroundLoop = nil;
+
 
 #pragma mark TKMenu
 
@@ -287,6 +344,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
+    (void)menu;
+
     /*
      * Use lowercaseString when comparing keyEquivalents since the notion of
      * a shifted upper case letter does not make much sense.
@@ -343,6 +402,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuWillOpen: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
@@ -352,6 +413,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuDidClose: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	RecursivelyClearActiveMenu(_tkMenu);
     }
@@ -359,6 +422,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menu: (NSMenu *) menu willHighlightItem: (NSMenuItem *) item
 {
+    (void)menu;
+
     if (_tkMenu) {
 	GenerateMenuSelectEvent(self, item);
     }
@@ -367,6 +432,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) menuNeedsUpdate: (NSMenu *) menu
 {
     TkMenu *menuPtr = (TkMenu *) _tkMenu;
+    (void)menu;
 
     if (menuPtr) {
 	Tcl_Interp *interp = menuPtr->interp;
@@ -392,18 +458,31 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuBeginTracking: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (backgroundLoop) {
+	[backgroundLoop cancel];
+	[backgroundLoop release];
+    }
+    backgroundLoop = [[TKBackgroundLoop alloc] init];
+    [backgroundLoop start];
     //TkMacOSXClearMenubarActive();
     //TkMacOSXPreprocessMenu();
 }
 
 - (void) menuEndTracking: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (backgroundLoop) {
+	[backgroundLoop cancel];
+	[backgroundLoop release];
+	backgroundLoop = nil;
+    }
     if (!inPostMenu) {
 	TkMacOSXClearMenubarActive();
     }
@@ -411,10 +490,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) tkSetMainMenu: (TKMenu *) menu
 {
-    if (gNoTkMenus) {
-	return;
-    }
-
     TKMenu *applicationMenu = nil;
 
     if (menu) {
@@ -613,12 +688,23 @@ TkpConfigureMenuEntry(
     NSDictionary *attributes;
     int imageWidth, imageHeight;
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
-    Tcl_Obj *fontPtr = (mePtr->fontPtr ? mePtr->fontPtr :
-	    mePtr->menuPtr->fontPtr);
+    Tcl_Obj *fontPtr = (mePtr->fontPtr ?
+			mePtr->fontPtr : mePtr->menuPtr->fontPtr);
+    static unsigned long defaultBg, defaultFg;
+    static int initialized = 0;
+
+    if (!initialized) {
+	TkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
+	defaultBg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
+	tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
+	defaultFg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
+    }
 
     if (mePtr->image) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
-	image = TkMacOSXGetNSImageWithTkImage(mePtr->menuPtr->display,
+	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != None) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
@@ -626,10 +712,9 @@ TkpConfigureMenuEntry(
 
 	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, &imageWidth,
 		&imageHeight);
-	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
+	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
 	if (gc->foreground == defaultFg) {
-	    // Use a semantic foreground color by default
 	    [image setTemplate:YES];
 	}
     }
@@ -785,7 +870,7 @@ TkpDestroyMenuEntry(
 
 int
 TkpPostMenu(
-    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TCL_UNUSED(Tcl_Interp *),		/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
@@ -793,20 +878,35 @@ TkpPostMenu(
     int index)
 {
     int result;
-    Tk_Window root = Tk_MainWindow(interp);
+    Tk_Window realWin = menuPtr->tkwin;
+    TkWindow *realWinPtr;
+    NSView *realWinView;
 
-    if (root == NULL) {
-	return TCL_ERROR;
+    while (1) {
+	if (realWin == NULL) {
+	    return TCL_ERROR;
+	}
+	/*
+	 * Fix for bug 07cfc9f03e: use the view for the parent real (non-menu)
+	 * toplevel window, rather than always using the root window.
+	 * This allows menus to appear on a separate monitor than the root
+	 * window, and to use the appearance of their parent real window
+	 * rather than the appearance of the root window.
+	 */
+	realWinPtr = (TkWindow*) realWin;
+	realWinView = TkMacOSXGetNSViewForDrawable(realWinPtr->privatePtr);
+	if (realWinView != nil) {
+	    break;
+	}
+	realWin = Tk_Parent(realWin);
     }
-    Drawable d = Tk_WindowId(root);
-    NSView *rootview = TkMacOSXGetRootControl(d);
-    NSWindow *win = [rootview window];
+    NSWindow *win = [realWinView window];
     NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSInteger itemIndex = index;
     NSInteger numItems = [menu numberOfItems];
     NSMenuItem *item = nil;
-    NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    NSPoint location = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     inPostMenu = 1;
     result = TkPreprocessMenu(menuPtr);
@@ -867,7 +967,7 @@ TkpPostMenu(
 
 int
 TkpPostTearoffMenu(
-    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TCL_UNUSED(Tcl_Interp *),	/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y, int index)	/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
@@ -1015,8 +1115,8 @@ TkpSetMainMenubar(
 
 	if (winPtr->wmInfoPtr &&
 		winPtr->wmInfoPtr->menuPtr &&
-		winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
-	    menubar = winPtr->wmInfoPtr->menuPtr->masterMenuPtr->tkwin;
+		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+	    menubar = winPtr->wmInfoPtr->menuPtr->mainMenuPtr->tkwin;
 	}
 
 	/*
@@ -1070,25 +1170,25 @@ static void
 CheckForSpecialMenu(
     TkMenu *menuPtr)		/* The menu we are checking */
 {
-    if (!menuPtr->masterMenuPtr->tkwin) {
+    if (!menuPtr->mainMenuPtr->tkwin) {
 	return;
     }
     for (TkMenuEntry *cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
 	    cascadeEntryPtr;
 	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if (cascadeEntryPtr->menuPtr->menuType == MENUBAR
-		&& cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin) {
-	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
+		&& cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
 	    int i = 0;
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, Tk_PathName(masterMenuPtr->tkwin), -1);
+	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), -1);
 	    while (specialMenus[i].name) {
 		Tcl_DStringAppend(&ds, specialMenus[i].name,
 			specialMenus[i].len);
 		if (strcmp(Tcl_DStringValue(&ds),
-			Tk_PathName(menuPtr->masterMenuPtr->tkwin)) == 0) {
+			Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
 		    cascadeEntryPtr->entryFlags |= specialMenus[i].flag;
 		} else {
 		    cascadeEntryPtr->entryFlags &= ~specialMenus[i].flag;
@@ -1247,7 +1347,7 @@ TkpComputeStandardMenuGeometry(
      * Do nothing if this menu is a clone.
      */
 
-    if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
+    if (menuPtr->tkwin == NULL || menuPtr->mainMenuPtr != menuPtr) {
 	return;
     }
 
@@ -1546,34 +1646,13 @@ TkMacOSXClearMenubarActive(void)
     if (mainMenu && [mainMenu isKindOfClass:[TKMenu class]]) {
 	TkMenu *menuPtr = [(TKMenu *) mainMenu tkMenu];
 
-	if (menuPtr && menuPtr->numEntries && menuPtr->entries) {
+	if (menuPtr &&
+	    !(menuPtr->menuFlags & MENU_DELETION_PENDING) &&
+	    menuPtr->numEntries > 0 &&
+	    menuPtr->entries != NULL) {
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MacOSXTurnOffMenus --
- *
- *	Turns off all the menu drawing code. This is more than just disabling
- *	the "menu" command, this means that Tk will NEVER touch the menubar.
- *	It is needed in the Plugin, where Tk does not own the menubar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A flag is set which will disable all menu drawing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_MacOSXTurnOffMenus(void)
-{
-    gNoTkMenus = 1;
 }
 
 /*
@@ -1595,7 +1674,7 @@ Tk_MacOSXTurnOffMenus(void)
 void
 TkpMenuInit(void)
 {
-    TkColor *tkColPtr;
+    //    TkColor *tkColPtr;
 
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
@@ -1606,13 +1685,6 @@ TkpMenuInit(void)
 #undef observe
 
     [NSMenuItem setUsesUserKeyEquivalents:NO];
-    tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
-    defaultBg = tkColPtr->color.pixel;
-    ckfree(tkColPtr);
-    tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
-    defaultFg = tkColPtr->color.pixel;
-    ckfree(tkColPtr);
-
     ChkErr(GetThemeMetric, kThemeMetricMenuMarkColumnWidth,
 	    &menuMarkColumnWidth);
     ChkErr(GetThemeMetric, kThemeMetricMenuTextLeadingEdgeMargin,
@@ -1673,8 +1745,8 @@ TkpMenuThreadInit(void)
 
 void
 TkpMenuNotifyToplevelCreate(
-    Tcl_Interp *interp,		/* The interp the menu lives in. */
-    const char *menuName)	/* The name of the menu to reconfigure. */
+    TCL_UNUSED(Tcl_Interp *),	/* The interp the menu lives in. */
+    TCL_UNUSED(const char *))	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.
@@ -1702,8 +1774,8 @@ TkpMenuNotifyToplevelCreate(
 
 void
 TkpInitializeMenuBindings(
-    Tcl_Interp *interp,		/* The interpreter to set. */
-    Tk_BindingTable bindingTable)
+    TCL_UNUSED(Tcl_Interp *),		/* The interpreter to set. */
+    TCL_UNUSED(Tk_BindingTable))
 				/* The table to add to. */
 {
     /*
@@ -1756,17 +1828,17 @@ TkpComputeMenubarGeometry(
 
 void
 TkpDrawMenuEntry(
-    TkMenuEntry *mePtr,		/* The entry to draw */
-    Drawable d,			/* What to draw into */
-    Tk_Font tkfont,		/* Precalculated font for menu */
-    const Tk_FontMetrics *menuMetricsPtr,
+    TCL_UNUSED(TkMenuEntry *),		/* The entry to draw */
+    TCL_UNUSED(Drawable),			/* What to draw into */
+    TCL_UNUSED(Tk_Font),		/* Precalculated font for menu */
+    TCL_UNUSED(const Tk_FontMetrics *),
 				/* Precalculated metrics for menu */
-    int x,			/* X-coordinate of topleft of entry */
-    int y,			/* Y-coordinate of topleft of entry */
-    int width,			/* Width of the entry rectangle */
-    int height,			/* Height of the current rectangle */
-    int strictMotif,		/* Boolean flag */
-    int drawArrow)		/* Whether or not to draw the cascade arrow
+    TCL_UNUSED(int),			/* X-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
+    TCL_UNUSED(int),			/* Width of the entry rectangle */
+    TCL_UNUSED(int),			/* Height of the current rectangle */
+    TCL_UNUSED(int),		/* Boolean flag */
+    TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
 {
 }
@@ -1815,7 +1887,7 @@ TkMacOSXPreprocessMenu(void)
 
 int
 TkMacOSXUseMenuID(
-    short macID)		/* The id to take out of the table */
+    TCL_UNUSED(short))		/* The id to take out of the table */
 {
     return TCL_OK;
 }
@@ -1838,8 +1910,8 @@ TkMacOSXUseMenuID(
 
 int
 TkMacOSXDispatchMenuEvent(
-    int menuID,			/* The menu id of the menu we are invoking */
-    int index)			/* The one-based index of the item that was
+    TCL_UNUSED(int),			/* The menu id of the menu we are invoking */
+    TCL_UNUSED(int))			/* The one-based index of the item that was
 				 * selected. */
 {
     return TCL_ERROR;

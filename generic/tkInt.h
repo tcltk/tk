@@ -58,12 +58,44 @@
 #   endif
 #endif
 
+#ifndef JOIN
+#  define JOIN(a,b) JOIN1(a,b)
+#  define JOIN1(a,b) a##b
+#endif
+
+#ifndef TCL_UNUSED
+#   if defined(__cplusplus)
+#	define TCL_UNUSED(T) T
+#   elif defined(__GNUC__) && (__GNUC__ > 2)
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__) __attribute__((unused))
+#   else
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__)
+#   endif
+#endif
+
 #ifndef TkSizeT
 #   if TCL_MAJOR_VERSION > 8
 #	define TkSizeT size_t
 #   else
 #	define TkSizeT int
 #   endif
+#endif
+
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
+# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
+# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
+# define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
+# define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
+#endif
+
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#   define TKFLEXARRAY 0
+#else
+#   define TKFLEXARRAY 1
+#endif
+
+#ifndef Tcl_GetParent
+#   define Tcl_GetParent Tcl_GetMaster
 #endif
 
 /*
@@ -91,10 +123,6 @@
 #   endif
 #endif
 
-#ifndef TCL_AUTO_LENGTH
-#   define TCL_AUTO_LENGTH (-1)
-#endif
-
 #ifndef TCL_Z_MODIFIER
 #   if defined(_WIN64)
 #	define TCL_Z_MODIFIER	"I"
@@ -113,7 +141,7 @@ typedef struct TkColormap TkColormap;
 typedef struct TkFontAttributes TkFontAttributes;
 typedef struct TkGrabEvent TkGrabEvent;
 typedef struct TkpCursor_ *TkpCursor;
-typedef struct TkRegion_ *TkRegion;
+#define TkRegion Region
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
 typedef struct Busy *TkBusy;
@@ -172,6 +200,8 @@ typedef struct TkCaret {
  * specific data, since each thread will have its own TkDisplay structure.
  */
 
+typedef enum TkLockUsage {LU_IGNORE, LU_CAPS, LU_SHIFT} TkLockUsage;
+
 typedef struct TkDisplay {
     Display *display;		/* Xlib's info about display. */
     struct TkDisplay *nextPtr;	/* Next in list of all displays. */
@@ -213,7 +243,7 @@ typedef struct TkDisplay {
     unsigned int altModMask;	/* Has one bit set to indicate the modifier
 				 * corresponding to the "Meta" key. If no such
 				 * modifier, then this is zero. */
-    enum {LU_IGNORE, LU_CAPS, LU_SHIFT} lockUsage;
+    TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
     int numModKeyCodes;		/* Number of entries in modKeyCodes array
@@ -339,9 +369,9 @@ typedef struct TkDisplay {
      */
 
     Tcl_HashTable maintainHashTable;
-				/* Hash table that maps from a master's
-				 * Tk_Window token to a list of slaves managed
-				 * by that master. */
+				/* Hash table that maps from a container's
+				 * Tk_Window token to a list of windows managed
+				 * by that container. */
     int geomInit;
 
 #define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
@@ -422,9 +452,9 @@ typedef struct TkDisplay {
      */
 
     int placeInit;		/* 0 means tables below need initializing. */
-    Tcl_HashTable masterTable;	/* Maps from Tk_Window toke to the Master
+    Tcl_HashTable containerTable;	/* Maps from Tk_Window token to the Container
 				 * structure for the window, if it exists. */
-    Tcl_HashTable slaveTable;	/* Maps from Tk_Window toke to the Slave
+    Tcl_HashTable contentTable;	/* Maps from Tk_Window token to the Content
 				 * structure for the window, if it exists. */
 
     /*
@@ -496,7 +526,7 @@ typedef struct TkDisplay {
      * Miscellaneous information:
      */
 
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
@@ -540,8 +570,11 @@ typedef struct TkDisplay {
 
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
-#ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIM inputMethod;		/* Input method for this display. */
+    XIMStyle inputStyle;	/* Input style selected for this display. */
+    XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
 #endif /* TK_USE_INPUT_METHODS */
 } TkDisplay;
 
@@ -553,15 +586,11 @@ typedef struct TkDisplay {
  *	Whether to use input methods for this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
- *  TK_DISPLAY_IN_WARP:			(default off)
- *	Indicates that we are in a pointer warp
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
-#define TK_DISPLAY_IN_WARP			(1 << 4)
-#define TK_DISPLAY_USE_XKB			(1 << 5)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -657,7 +686,7 @@ typedef struct TkMainInfo {
 				/* Top level of option hierarchy for this main
 				 * window. NULL means uninitialized. Managed
 				 * by tkOption.c. */
-    Tcl_HashTable imageTable;	/* Maps from image names to Tk_ImageMaster
+    Tcl_HashTable imageTable;	/* Maps from image names to Tk_ImageModel
 				 * structures. Managed by tkImage.c. */
     int strictMotif;		/* This is linked to the tk_strictMotif global
 				 * variable. */
@@ -704,7 +733,7 @@ typedef struct TkWindow {
     Visual *visual;		/* Visual to use for window. If not default,
 				 * MUST be set before X window is created. */
     int depth;			/* Number of bits/pixel. */
-    Window window;		/* X's id for window. NULL means window hasn't
+    Window window;		/* X's id for window. None means window hasn't
 				 * actually been created yet, or it's been
 				 * deleted. */
     struct TkWindow *childList;	/* First in list of child windows, or NULL if
@@ -766,7 +795,7 @@ typedef struct TkWindow {
 
     TkEventHandler *handlerList;/* First in list of event handlers declared
 				 * for this window, or NULL if none. */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC inputContext;		/* XIM input context. */
 #endif /* TK_USE_INPUT_METHODS */
 
@@ -847,14 +876,18 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
     char *geomMgrName;          /* Records the name of the geometry manager. */
     struct TkWindow *maintainerPtr;
-				/* The geometry master for this window. The
-				 * value is NULL if the window has no master or
-				 * if its master is its parent. */
+				/* The geometry container for this window. The
+				 * value is NULL if the window has no container or
+				 * if its container is its parent. */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIC inputContext;		/* XIM input context. */
+    int ximGeneration;          /* Used to invalidate XIC */
+#endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
 
 /*
@@ -863,8 +896,13 @@ typedef struct TkWindow {
  */
 
 typedef struct {
-    XKeyEvent keyEvent;	/* The real event from X11. */
-    char *charValuePtr;	/* A pointer to a string that holds the key's
+    XKeyEvent keyEvent;		/* The real event from X11. */
+#ifdef _WIN32
+    char trans_chars[XMaxTransChars];
+                            /* translated characters */
+    unsigned char nbytes;
+#elif !defined(MAC_OSC_TK)
+    char *charValuePtr;		/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
@@ -873,6 +911,7 @@ typedef struct {
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
+#endif
 } TkKeyEvent;
 
 /*
@@ -923,7 +962,7 @@ typedef struct TkpClipMask {
     int type;			/* TKP_CLIP_PIXMAP or TKP_CLIP_REGION. */
     union {
 	Pixmap pixmap;
-	TkRegion region;
+	Region region;
     } value;
 } TkpClipMask;
 
@@ -1007,8 +1046,6 @@ typedef struct TkpClipMask {
 		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
-
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
  * be properly registered with Tcl:
@@ -1083,6 +1120,10 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
  */
 
 #include "tkIntDecls.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Themed widget set init function:
@@ -1236,13 +1277,10 @@ MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 
-MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
-			    Tk_Window tkwin, Tcl_Obj *objPtr,
-			    double *doublePtr);
-MODULE_SCOPE int	TkSetGeometryMaster(Tcl_Interp *interp,
-			    Tk_Window tkwin, const char *master);
-MODULE_SCOPE void	TkFreeGeometryMaster(Tk_Window tkwin,
-			    const char *master);
+MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
+			    Tk_Window tkwin, const char *name);
+MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
+			    const char *name);
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
@@ -1256,6 +1294,15 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
+#if TCL_MAJOR_VERSION > 8
+MODULE_SCOPE int TkCanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
+    Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
+MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
+#else
+#define TkCanvasTagsParseProc Tk_CanvasTagsParseProc
+#define TkCanvasTagsPrintProc Tk_CanvasTagsPrintProc
+#endif
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
@@ -1264,7 +1311,7 @@ MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
-MODULE_SCOPE void	TkpBuildRegionFromAlphaData(TkRegion region,
+MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,
 			    unsigned x, unsigned y, unsigned width,
 			    unsigned height, unsigned char *dataPtr,
 			    unsigned pixelStride, unsigned lineStride);
@@ -1275,11 +1322,14 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
-MODULE_SCOPE int	TkpAlwaysShowSelection(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int x, int y);
+MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
 			    const char *source, int numBytes, int rangeStart,
 			    int rangeLength, int maxLength, int flags,
@@ -1293,7 +1343,6 @@ MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
 			    Tk_3DBorder border, int highlightWidth,
 			    int borderWidth, int relief);
-MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
@@ -1303,8 +1352,6 @@ MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv, int flags);
-MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin,
-			    const char *eventName, Tcl_Obj *detail);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    ClientData clientData, const TkEnsemble *map);
@@ -1314,14 +1361,17 @@ MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
 			    Tcl_Interp *interp);
+MODULE_SCOPE void	TkDoWarpWrtWin(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
-MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
+MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
+
+#define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
@@ -1330,16 +1380,44 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 				Colormap map, const char* spec,
 				XColor * colorPtr);
 #endif
+#if !defined(_WIN32) && !defined(__CYGWIN__) /* UNIX and MacOSX */
+#undef TkPutImage
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#else
+#undef XPutImage
+#define XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#endif
+
+/*
+ * These macros are just wrappers for the equivalent X Region calls.
+ */
+#define TkClipBox XClipBox
+#define TkCreateRegion XCreateRegion
+#define TkDestroyRegion XDestroyRegion
+#define TkIntersectRegion XIntersectRegion
+#define TkRectInRegion XRectInRegion
+#define TkSetRegion XSetRegion
+#define TkSubtractRegion XSubtractRegion
+#define TkUnionRectWithRegion XUnionRectWithRegion
+
 #ifdef HAVE_XFT
-MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
+#endif
+
+#if !defined(__cplusplus) && !defined(c_plusplus)
+# define c_class class
 #endif
 
 #if TCL_UTF_MAX > 4
-#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
-#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
+#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
+#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
+#   define TkUtfPrev Tcl_UtfPrev
 #else
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
+    MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
 #endif
 
 #if TCL_MAJOR_VERSION > 8
@@ -1352,7 +1430,6 @@ MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
 #define TkGetStringFromObj Tcl_GetStringFromObj
 #define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
 #endif
-
 
 /*
  * Unsupported commands.
@@ -1373,6 +1450,10 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #define TkplatformtestInit(x) TCL_OK
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _TKINT */

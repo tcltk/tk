@@ -623,10 +623,10 @@ ReadData(
     }
 
     while (destSz) {
-	size_t blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	TkSizeT blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
-	blockSz = (size_t)Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
-	if (blockSz == (size_t)-1) {
+	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
+	if (blockSz == TCL_IO_FAILURE) {
 	    /* TODO: failure info... */
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel read failed: %s", Tcl_PosixError(interp)));
@@ -2237,14 +2237,14 @@ ApplyAlpha(
     PNGImage *pngPtr)
 {
     if (pngPtr->alpha != 1.0) {
-	register unsigned char *p = pngPtr->block.pixelPtr;
+	unsigned char *p = pngPtr->block.pixelPtr;
 	unsigned char *endPtr = p + pngPtr->blockLen;
 	int offset = pngPtr->block.offset[3];
 
 	p += offset;
 
 	if (16 == pngPtr->bitDepth) {
-	    register unsigned int channel;
+	    unsigned int channel;
 
 	    while (p < endPtr) {
 		channel = (unsigned int)
@@ -2520,7 +2520,7 @@ DecodePNG(
     pngPtr->thisLineObj = Tcl_NewObj();
     Tcl_IncrRefCount(pngPtr->thisLineObj);
 
-    pngPtr->block.pixelPtr = attemptckalloc(pngPtr->blockLen);
+    pngPtr->block.pixelPtr = (unsigned char *)attemptckalloc(pngPtr->blockLen);
     if (!pngPtr->block.pixelPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"memory allocation failed", -1));
@@ -2676,6 +2676,8 @@ FileMatchPNG(
 {
     PNGImage png;
     int match = 0;
+    (void)fileName;
+    (void)fmtObj;
 
     InitPNGImage(NULL, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2725,6 +2727,11 @@ FileReadPNG(
 {
     PNGImage png;
     int result = TCL_ERROR;
+    (void)fileName;
+    (void)width;
+    (void)height;
+    (void)srcX;
+    (void)srcY;
 
     result = InitPNGImage(interp, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2764,6 +2771,7 @@ StringMatchPNG(
 {
     PNGImage png;
     int match = 0;
+    (void)fmtObj;
 
     InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
@@ -2812,6 +2820,10 @@ StringReadPNG(
 {
     PNGImage png;
     int result = TCL_ERROR;
+    (void)width;
+    (void)height;
+    (void)srcX;
+    (void)srcY;
 
     result = InitPNGImage(interp, &png, NULL, pObjData,
 	    TCL_ZLIB_STREAM_INFLATE);
@@ -3459,6 +3471,7 @@ FileWritePNG(
     Tcl_Channel chan;
     PNGImage png;
     int result = TCL_ERROR;
+    (void)fmtObj;
 
     /*
      * Open a Tcl file channel where the image data will be stored. Tk ought
@@ -3529,6 +3542,7 @@ StringWritePNG(
     Tcl_Obj *resultObj = Tcl_NewObj();
     PNGImage png;
     int result = TCL_ERROR;
+    (void)fmtObj;
 
     /*
      * Initalize PNGImage instance for encoding.

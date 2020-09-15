@@ -31,7 +31,7 @@
 # can put "break"s in their bindings to avoid the error, but this check
 # makes that unnecessary.
 
-bind Listbox <1> {
+bind Listbox <Button-1> {
     if {[winfo exists %W]} {
 	tk::ListboxBeginSelect %W [%W index @%x,%y] 1
     }
@@ -41,7 +41,7 @@ bind Listbox <1> {
 # Among other things, this prevents errors if the user deletes the
 # listbox on a double click.
 
-bind Listbox <Double-1> {
+bind Listbox <Double-Button-1> {
     # Empty script
 }
 
@@ -54,10 +54,10 @@ bind Listbox <ButtonRelease-1> {
     tk::CancelRepeat
     %W activate @%x,%y
 }
-bind Listbox <Shift-1> {
+bind Listbox <Shift-Button-1> {
     tk::ListboxBeginExtend %W [%W index @%x,%y]
 }
-bind Listbox <Control-1> {
+bind Listbox <Control-Button-1> {
     tk::ListboxBeginToggle %W [%W index @%x,%y]
 }
 bind Listbox <B1-Leave> {
@@ -169,7 +169,7 @@ bind Listbox <<SelectNone>> {
 
 # Additional Tk bindings that aren't part of the Motif look and feel:
 
-bind Listbox <2> {
+bind Listbox <Button-2> {
     %W scan mark %x %y
 }
 bind Listbox <B2-Motion> {
@@ -263,13 +263,13 @@ proc ::tk::ListboxMotion {w el} {
 		set Priv(listboxSelection) [$w curselection]
 	    }
 	    while {($i < $el) && ($i < $anchor)} {
-		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
+		if {$i in $Priv(listboxSelection)} {
 		    $w selection set $i
 		}
 		incr i
 	    }
 	    while {($i > $el) && ($i > $anchor)} {
-		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
+		if {$i in $Priv(listboxSelection)} {
 		    $w selection set $i
 		}
 		incr i -1
@@ -469,7 +469,7 @@ proc ::tk::ListboxCancel w {
     }
     $w selection clear $first $last
     while {$first <= $last} {
-	if {[lsearch $Priv(listboxSelection) $first] >= 0} {
+	if {$first in $Priv(listboxSelection)} {
 	    $w selection set $first
 	}
 	incr first

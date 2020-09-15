@@ -46,7 +46,7 @@ typedef struct {
 /* Text element options table.
  * NB: Keep in sync with label element option table.
  */
-static Ttk_ElementOptionSpec TextElementOptions[] = {
+static const Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-text", TK_OPTION_STRING,
 	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
@@ -65,7 +65,7 @@ static Ttk_ElementOptionSpec TextElementOptions[] = {
 	offsetof(TextElement,wrapLengthObj), "0" },
     { "-embossed", TK_OPTION_INT,
 	offsetof(TextElement,embossedObj), "0"},
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static int TextSetup(TextElement *text, Tk_Window tkwin)
@@ -193,10 +193,12 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 }
 
 static void TextElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    TextElement *text = elementRecord;
+    TextElement *text = (TextElement *)elementRecord;
+    (void)dummy;
+    (void)paddingPtr;
 
     if (!TextSetup(text, tkwin))
 	return;
@@ -210,17 +212,20 @@ static void TextElementSize(
 }
 
 static void TextElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    TextElement *text = elementRecord;
+    TextElement *text = (TextElement *)elementRecord;
+    (void)dummy;
+    (void)state;
+
     if (TextSetup(text, tkwin)) {
 	TextDraw(text, tkwin, d, b);
 	TextCleanup(text);
     }
 }
 
-static Ttk_ElementSpec TextElementSpec = {
+static const Ttk_ElementSpec TextElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TextElement),
     TextElementOptions,
@@ -246,14 +251,14 @@ typedef struct {
 
 /* ===> NB: Keep in sync with label element option table.  <===
  */
-static Ttk_ElementOptionSpec ImageElementOptions[] = {
+static const Ttk_ElementOptionSpec ImageElementOptions[] = {
     { "-image", TK_OPTION_STRING,
 	offsetof(ImageElement,imageObj), "" },
     { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
 	offsetof(ImageElement,stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	offsetof(ImageElement,backgroundObj), DEFAULT_BACKGROUND },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 /*
@@ -360,10 +365,12 @@ static void ImageDraw(
 }
 
 static void ImageElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ImageElement *image = elementRecord;
+    ImageElement *image = (ImageElement *)elementRecord;
+    (void)dummy;
+    (void)paddingPtr;
 
     if (ImageSetup(image, tkwin, 0)) {
 	*widthPtr = image->width;
@@ -373,10 +380,11 @@ static void ImageElementSize(
 }
 
 static void ImageElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    ImageElement *image = elementRecord;
+    ImageElement *image = (ImageElement *)elementRecord;
+    (void)dummy;
 
     if (ImageSetup(image, tkwin, state)) {
 	ImageDraw(image, tkwin, d, b, state);
@@ -384,7 +392,7 @@ static void ImageElementDraw(
     }
 }
 
-static Ttk_ElementSpec ImageElementSpec = {
+static const Ttk_ElementSpec ImageElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ImageElement),
     ImageElementOptions,
@@ -440,7 +448,7 @@ typedef struct {
     int 		totalWidth, totalHeight;
 } LabelElement;
 
-static Ttk_ElementOptionSpec LabelElementOptions[] = {
+static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-compound", TK_OPTION_ANY,
 	offsetof(LabelElement,compoundObj), "none" },
     { "-space", TK_OPTION_PIXELS,
@@ -477,7 +485,7 @@ static Ttk_ElementOptionSpec LabelElementOptions[] = {
 	offsetof(LabelElement,image.stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	offsetof(LabelElement,image.backgroundObj), DEFAULT_BACKGROUND },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 /*
@@ -494,8 +502,8 @@ static void LabelSetup(
 {
     Ttk_Compound *compoundPtr = &c->compound;
 
-    Tk_GetPixelsFromObj(NULL,tkwin,c->spaceObj,&c->space);
-    Ttk_GetCompoundFromObj(NULL,c->compoundObj,(int*)compoundPtr);
+    Tk_GetPixelsFromObj(NULL, tkwin, c->spaceObj, &c->space);
+    Ttk_GetCompoundFromObj(NULL, c->compoundObj, compoundPtr);
 
     /*
      * Deal with TTK_COMPOUND_NONE.
@@ -561,11 +569,13 @@ static void LabelCleanup(LabelElement *c)
 }
 
 static void LabelElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    LabelElement *label = elementRecord;
+    LabelElement *label = (LabelElement *)elementRecord;
     int textReqWidth = 0;
+    (void)dummy;
+    (void)paddingPtr;
 
     LabelSetup(label, tkwin, 0);
 
@@ -607,7 +617,7 @@ static void LabelElementSize(
  */
 static void DrawCompound(
     LabelElement *l, Ttk_Box b, Tk_Window tkwin, Drawable d, Ttk_State state,
-    int imageSide, int textSide)
+	Ttk_Side imageSide, Ttk_Side textSide)
 {
     Ttk_Box imageBox =
 	Ttk_PlaceBox(&b, l->image.width, l->image.height, imageSide, 0);
@@ -618,11 +628,12 @@ static void DrawCompound(
 }
 
 static void LabelElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    LabelElement *l = elementRecord;
+    LabelElement *l = (LabelElement *)elementRecord;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
+    (void)dummy;
 
     LabelSetup(l, tkwin, state);
 
@@ -673,7 +684,7 @@ static void LabelElementDraw(
     LabelCleanup(l);
 }
 
-static Ttk_ElementSpec LabelElementSpec = {
+static const Ttk_ElementSpec LabelElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(LabelElement),
     LabelElementOptions,

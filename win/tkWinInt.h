@@ -142,6 +142,9 @@ MODULE_SCOPE const int tkpWinBltModes[];
 
 #include "tkIntPlatDecls.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * Special proc needed as tsd accessor function between
  * tkWinX.c:GenerateXEvent and tkWinClipboard.c:UpdateClipboard
@@ -185,6 +188,7 @@ MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 
 #define TK_THEME_WIN_CLASSIC    1
 #define TK_THEME_WIN_XP         2
+#define TK_THEME_WIN_VISTA      3
 
 /*
  * The following is implemented in tkWinWm and used by tkWinEmbed.c
@@ -199,6 +203,10 @@ MODULE_SCOPE long		TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
 			    int reqValue);
 MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
 MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
+
+MODULE_SCOPE int		TkTranslateWinEvent(HWND hwnd, UINT message,
+			    WPARAM wParam, LPARAM lParam, LRESULT *result);
+MODULE_SCOPE void		TkWinPointerEvent(HWND hwnd, int x, int y);
 
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c
@@ -219,12 +227,8 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
  */
 
 #ifndef GetClassLongPtr
-#   define GetClassLongPtrA	GetClassLongA
 #   define GetClassLongPtrW	GetClassLongW
-#   define SetClassLongPtrA	SetClassLongA
 #   define SetClassLongPtrW	SetClassLongW
-#	define GetClassLongPtr	GetClassLongPtrW
-#	define SetClassLongPtr	SetClassLongPtrW
 #endif /* !GetClassLongPtr */
 #ifndef GCLP_HICON
 #   define GCLP_HICON		GCL_HICON
@@ -234,12 +238,8 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 #endif /* !GCLP_HICONSM */
 
 #ifndef GetWindowLongPtr
-#   define GetWindowLongPtrA	GetWindowLongA
 #   define GetWindowLongPtrW	GetWindowLongW
-#   define SetWindowLongPtrA	SetWindowLongA
 #   define SetWindowLongPtrW	SetWindowLongW
-#	define GetWindowLongPtr	GetWindowLongPtrW
-#	define SetWindowLongPtr	SetWindowLongPtrW
 #endif /* !GetWindowLongPtr */
 #ifndef GWLP_WNDPROC
 #define GWLP_WNDPROC		GWL_WNDPROC
@@ -248,5 +248,9 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 #define GWLP_USERDATA		GWL_USERDATA
 #define GWLP_ID			GWL_ID
 #endif /* !GWLP_WNDPROC */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _TKWININT */

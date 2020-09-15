@@ -355,7 +355,7 @@ EXTERN Tk_Image		Tk_GetImage(Tcl_Interp *interp, Tk_Window tkwin,
 				Tk_ImageChangedProc *changeProc,
 				ClientData clientData);
 /* 98 */
-EXTERN ClientData	Tk_GetImageMasterData(Tcl_Interp *interp,
+EXTERN ClientData	Tk_GetImageModelData(Tcl_Interp *interp,
 				const char *name,
 				const Tk_ImageType **typePtrPtr);
 /* 99 */
@@ -411,7 +411,7 @@ EXTERN void		Tk_HandleEvent(XEvent *eventPtr);
 /* 116 */
 EXTERN Tk_Window	Tk_IdToWindow(Display *display, Window window);
 /* 117 */
-EXTERN void		Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
+EXTERN void		Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 				int width, int height, int imageWidth,
 				int imageHeight);
 /* 118 */
@@ -422,8 +422,8 @@ EXTERN Atom		Tk_InternAtom(Tk_Window tkwin, const char *name);
 EXTERN int		Tk_IntersectTextLayout(Tk_TextLayout layout, int x,
 				int y, int width, int height);
 /* 121 */
-EXTERN void		Tk_MaintainGeometry(Tk_Window slave,
-				Tk_Window master, int x, int y, int width,
+EXTERN void		Tk_MaintainGeometry(Tk_Window window,
+				Tk_Window container, int x, int y, int width,
 				int height);
 /* 122 */
 EXTERN Tk_Window	Tk_MainWindow(Tcl_Interp *interp);
@@ -461,7 +461,7 @@ EXTERN const char *	Tk_NameOfCursor(Display *display, Tk_Cursor cursor);
 /* 136 */
 EXTERN const char *	Tk_NameOfFont(Tk_Font font);
 /* 137 */
-EXTERN const char *	Tk_NameOfImage(Tk_ImageMaster imageMaster);
+EXTERN const char *	Tk_NameOfImage(Tk_ImageModel model);
 /* 138 */
 EXTERN const char *	Tk_NameOfJoinStyle(int join);
 /* 139 */
@@ -594,8 +594,8 @@ EXTERN void		Tk_UnderlineTextLayout(Display *display,
 /* 180 */
 EXTERN void		Tk_Ungrab(Tk_Window tkwin);
 /* 181 */
-EXTERN void		Tk_UnmaintainGeometry(Tk_Window slave,
-				Tk_Window master);
+EXTERN void		Tk_UnmaintainGeometry(Tk_Window window,
+				Tk_Window container);
 /* 182 */
 EXTERN void		Tk_UnmapWindow(Tk_Window tkwin);
 /* 183 */
@@ -878,6 +878,21 @@ EXTERN void		Tk_CreateOldImageType(const Tk_ImageType *typePtr);
 /* 273 */
 EXTERN void		Tk_CreateOldPhotoImageFormat(
 				const Tk_PhotoImageFormat *formatPtr);
+/* 274 */
+EXTERN int		Tk_AlwaysShowSelection(Tk_Window tkwin);
+/* 275 */
+EXTERN unsigned		Tk_GetButtonMask(unsigned button);
+/* 276 */
+EXTERN int		Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
+				Tk_Window tkwin, Tcl_Obj *objPtr,
+				double *doublePtr);
+/* 277 */
+EXTERN Tcl_Obj *	Tk_NewWindowObj(Tk_Window tkwin);
+/* 278 */
+EXTERN void		Tk_SendVirtualEvent(Tk_Window tkwin,
+				const char *eventName, Tcl_Obj *detail);
+/* 279 */
+EXTERN Tcl_Obj *	Tk_FontGetDescription(Tk_Font tkfont);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -988,7 +1003,7 @@ typedef struct TkStubs {
     void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics *fmPtr); /* 95 */
     GC (*tk_GetGC) (Tk_Window tkwin, unsigned long valueMask, XGCValues *valuePtr); /* 96 */
     Tk_Image (*tk_GetImage) (Tcl_Interp *interp, Tk_Window tkwin, const char *name, Tk_ImageChangedProc *changeProc, ClientData clientData); /* 97 */
-    ClientData (*tk_GetImageMasterData) (Tcl_Interp *interp, const char *name, const Tk_ImageType **typePtrPtr); /* 98 */
+    ClientData (*tk_GetImageModelData) (Tcl_Interp *interp, const char *name, const Tk_ImageType **typePtrPtr); /* 98 */
     Tk_ItemType * (*tk_GetItemTypes) (void); /* 99 */
     int (*tk_GetJoinStyle) (Tcl_Interp *interp, const char *str, int *joinPtr); /* 100 */
     int (*tk_GetJustify) (Tcl_Interp *interp, const char *str, Tk_Justify *justifyPtr); /* 101 */
@@ -1007,11 +1022,11 @@ typedef struct TkStubs {
     int (*tk_Grab) (Tcl_Interp *interp, Tk_Window tkwin, int grabGlobal); /* 114 */
     void (*tk_HandleEvent) (XEvent *eventPtr); /* 115 */
     Tk_Window (*tk_IdToWindow) (Display *display, Window window); /* 116 */
-    void (*tk_ImageChanged) (Tk_ImageMaster master, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
+    void (*tk_ImageChanged) (Tk_ImageModel model, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
     int (*tk_Init) (Tcl_Interp *interp); /* 118 */
     Atom (*tk_InternAtom) (Tk_Window tkwin, const char *name); /* 119 */
     int (*tk_IntersectTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height); /* 120 */
-    void (*tk_MaintainGeometry) (Tk_Window slave, Tk_Window master, int x, int y, int width, int height); /* 121 */
+    void (*tk_MaintainGeometry) (Tk_Window window, Tk_Window container, int x, int y, int width, int height); /* 121 */
     Tk_Window (*tk_MainWindow) (Tcl_Interp *interp); /* 122 */
     void (*tk_MakeWindowExist) (Tk_Window tkwin); /* 123 */
     void (*tk_ManageGeometry) (Tk_Window tkwin, const Tk_GeomMgr *mgrPtr, ClientData clientData); /* 124 */
@@ -1027,7 +1042,7 @@ typedef struct TkStubs {
     const char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
     const char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
     const char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
-    const char * (*tk_NameOfImage) (Tk_ImageMaster imageMaster); /* 137 */
+    const char * (*tk_NameOfImage) (Tk_ImageModel model); /* 137 */
     const char * (*tk_NameOfJoinStyle) (int join); /* 138 */
     const char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
     const char * (*tk_NameOfRelief) (int relief); /* 140 */
@@ -1071,7 +1086,7 @@ typedef struct TkStubs {
     void (*tk_UnderlineChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int x, int y, int firstByte, int lastByte); /* 178 */
     void (*tk_UnderlineTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int underline); /* 179 */
     void (*tk_Ungrab) (Tk_Window tkwin); /* 180 */
-    void (*tk_UnmaintainGeometry) (Tk_Window slave, Tk_Window master); /* 181 */
+    void (*tk_UnmaintainGeometry) (Tk_Window window, Tk_Window container); /* 181 */
     void (*tk_UnmapWindow) (Tk_Window tkwin); /* 182 */
     void (*tk_UnsetGrid) (Tk_Window tkwin); /* 183 */
     void (*tk_UpdatePointer) (Tk_Window tkwin, int x, int y, int state); /* 184 */
@@ -1164,6 +1179,12 @@ typedef struct TkStubs {
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
+    int (*tk_AlwaysShowSelection) (Tk_Window tkwin); /* 274 */
+    unsigned (*tk_GetButtonMask) (unsigned button); /* 275 */
+    int (*tk_GetDoublePixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 276 */
+    Tcl_Obj * (*tk_NewWindowObj) (Tk_Window tkwin); /* 277 */
+    void (*tk_SendVirtualEvent) (Tk_Window tkwin, const char *eventName, Tcl_Obj *detail); /* 278 */
+    Tcl_Obj * (*tk_FontGetDescription) (Tk_Font tkfont); /* 279 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1374,8 +1395,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_GetGC) /* 96 */
 #define Tk_GetImage \
 	(tkStubsPtr->tk_GetImage) /* 97 */
-#define Tk_GetImageMasterData \
-	(tkStubsPtr->tk_GetImageMasterData) /* 98 */
+#define Tk_GetImageModelData \
+	(tkStubsPtr->tk_GetImageModelData) /* 98 */
 #define Tk_GetItemTypes \
 	(tkStubsPtr->tk_GetItemTypes) /* 99 */
 #define Tk_GetJoinStyle \
@@ -1724,6 +1745,18 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_CreateOldImageType) /* 272 */
 #define Tk_CreateOldPhotoImageFormat \
 	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
+#define Tk_AlwaysShowSelection \
+	(tkStubsPtr->tk_AlwaysShowSelection) /* 274 */
+#define Tk_GetButtonMask \
+	(tkStubsPtr->tk_GetButtonMask) /* 275 */
+#define Tk_GetDoublePixelsFromObj \
+	(tkStubsPtr->tk_GetDoublePixelsFromObj) /* 276 */
+#define Tk_NewWindowObj \
+	(tkStubsPtr->tk_NewWindowObj) /* 277 */
+#define Tk_SendVirtualEvent \
+	(tkStubsPtr->tk_SendVirtualEvent) /* 278 */
+#define Tk_FontGetDescription \
+	(tkStubsPtr->tk_FontGetDescription) /* 279 */
 
 #endif /* defined(USE_TK_STUBS) */
 
@@ -1741,7 +1774,7 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_FreeStyleFromObj
 #define Tk_GetStyleFromObj(obj) Tk_AllocStyleFromObj(NULL, obj)
 #define Tk_FreeStyleFromObj(obj) /* no-op */
-
+#define Tk_GetImageMasterData Tk_GetImageModelData
 
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
@@ -1757,6 +1790,7 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_PhotoPutBlock_Panic
 #undef Tk_PhotoPutZoomedBlock_Panic
 #undef Tk_PhotoSetSize_Panic
+#undef Tk_CreateOldPhotoImageFormat
 #endif /* TK_NO_DEPRECATED */
 
 #undef TCL_STORAGE_CLASS

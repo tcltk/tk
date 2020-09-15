@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
@@ -809,10 +809,10 @@ test textIndex-19.12.1 {Display lines} {
 
 test textIndex-19.12.2 {Display lines} {
     .t compare [.t index "2.50 + 100 displaylines"] == "end - 1 c"
-} {1}
+} 1
 
 test textIndex-19.13 {Display lines} {
-    destroy {*}[pack slaves .]
+    destroy {*}[pack content .]
     text .txt -height 1 -wrap word -yscroll ".sbar set" -width 400
     scrollbar .sbar -command ".txt yview"
     grid .txt .sbar -sticky news

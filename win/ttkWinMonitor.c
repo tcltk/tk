@@ -22,7 +22,7 @@ typedef struct {
     int index;
 } SystemColorEntry;
 
-static SystemColorEntry sysColors[] = {
+static const SystemColorEntry sysColors[] = {
 	{ "System3dDarkShadow",		COLOR_3DDKSHADOW },
 	{ "System3dLight",		COLOR_3DLIGHT },
 	{ "SystemActiveBorder",		COLOR_ACTIVEBORDER },
@@ -55,7 +55,7 @@ static SystemColorEntry sysColors[] = {
 static void RegisterSystemColors(Tcl_Interp *interp)
 {
     Ttk_ResourceCache cache = Ttk_GetResourceCache(interp);
-    SystemColorEntry *sysColor;
+    const SystemColorEntry *sysColor;
 
     for (sysColor = sysColors; sysColor->name; ++sysColor) {
 	DWORD pixel = GetSysColor(sysColor->index);
@@ -70,29 +70,29 @@ static void RegisterSystemColors(Tcl_Interp *interp)
 static HWND
 CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 {
-    WNDCLASSEX wc;
+    WNDCLASSEXW wc;
     HWND       hwnd = NULL;
     WCHAR      title[32] = L"TtkMonitorWindow";
     WCHAR      name[32] = L"TtkMonitorClass";
 
-    wc.cbSize        = sizeof(WNDCLASSEX);
+    wc.cbSize        = sizeof(WNDCLASSEXW);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc   = (WNDPROC)WndProc;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = hinst;
-    wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.hIcon         = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+    wc.hIconSm       = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+    wc.hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
     wc.lpszMenuName  = name;
     wc.lpszClassName = name;
 
-    if (RegisterClassEx(&wc)) {
-	hwnd = CreateWindow( name, title, WS_OVERLAPPEDWINDOW,
+    if (RegisterClassExW(&wc)) {
+	hwnd = CreateWindowW( name, title, WS_OVERLAPPEDWINDOW,
 	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 	    NULL, NULL, hinst, NULL );
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) interp);
+	SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR) interp);
 	ShowWindow(hwnd, SW_HIDE);
 	UpdateWindow(hwnd);
     }
@@ -109,7 +109,7 @@ DestroyThemeMonitorWindow(void *clientData)
 static LRESULT WINAPI
 WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     Ttk_Theme theme;
 
     switch (msg) {
@@ -137,7 +137,7 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	break;
     }
-    return DefWindowProc(hwnd, msg, wp, lp);
+    return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
 /*

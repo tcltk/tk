@@ -19,7 +19,7 @@ struct TtkTag {
 
 struct TtkTagTable {
     Tk_Window		tkwin;		/* owner window */
-    Tk_OptionSpec	*optionSpecs;	/* ... */
+    const Tk_OptionSpec	*optionSpecs;	/* ... */
     Tk_OptionTable	optionTable;	/* ... */
     int         	recordSize;	/* size of tag record */
     int 		nTags;		/* #tags defined so far */
@@ -31,7 +31,7 @@ struct TtkTagTable {
  */
 static Ttk_Tag NewTag(Ttk_TagTable tagTable, const char *tagName)
 {
-    Ttk_Tag tag = ckalloc(sizeof(*tag));
+    Ttk_Tag tag = (Ttk_Tag)ckalloc(sizeof(*tag));
     tag->tagRecord = ckalloc(tagTable->recordSize);
     memset(tag->tagRecord, 0, tagTable->recordSize);
     /* Don't need Tk_InitOptions() here, all defaults should be NULL. */
@@ -53,9 +53,9 @@ static void DeleteTag(Ttk_TagTable tagTable, Ttk_Tag tag)
 
 Ttk_TagTable Ttk_CreateTagTable(
     Tcl_Interp *interp, Tk_Window tkwin,
-    Tk_OptionSpec optionSpecs[], int recordSize)
+    const Tk_OptionSpec *optionSpecs, int recordSize)
 {
-    Ttk_TagTable tagTable = ckalloc(sizeof(*tagTable));
+    Ttk_TagTable tagTable = (Ttk_TagTable)ckalloc(sizeof(*tagTable));
     tagTable->tkwin = tkwin;
     tagTable->optionSpecs = optionSpecs;
     tagTable->optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -72,12 +72,23 @@ void Ttk_DeleteTagTable(Ttk_TagTable tagTable)
 
     entryPtr = Tcl_FirstHashEntry(&tagTable->tags, &search);
     while (entryPtr != NULL) {
-	DeleteTag(tagTable, Tcl_GetHashValue(entryPtr));
+	DeleteTag(tagTable, (Ttk_Tag)Tcl_GetHashValue(entryPtr));
 	entryPtr = Tcl_NextHashEntry(&search);
     }
 
     Tcl_DeleteHashTable(&tagTable->tags);
     ckfree(tagTable);
+}
+
+void Ttk_DeleteTagFromTable(Ttk_TagTable tagTable, Ttk_Tag tag)
+{
+    Tcl_HashEntry *entryPtr;
+
+    entryPtr = Tcl_FindHashEntry(&tagTable->tags, tag->tagName);
+    if (entryPtr != NULL) {
+        DeleteTag(tagTable, tag);
+        Tcl_DeleteHashEntry(entryPtr);
+    }
 }
 
 Ttk_Tag Ttk_GetTag(Ttk_TagTable tagTable, const char *tagName)
@@ -87,10 +98,10 @@ Ttk_Tag Ttk_GetTag(Ttk_TagTable tagTable, const char *tagName)
 	&tagTable->tags, tagName, &isNew);
 
     if (isNew) {
-	tagName = Tcl_GetHashKey(&tagTable->tags, entryPtr);
+	tagName = (char *)Tcl_GetHashKey(&tagTable->tags, entryPtr);
 	Tcl_SetHashValue(entryPtr, NewTag(tagTable,tagName));
     }
-    return Tcl_GetHashValue(entryPtr);
+    return (Ttk_Tag)Tcl_GetHashValue(entryPtr);
 }
 
 Ttk_Tag Ttk_GetTagFromObj(Ttk_TagTable tagTable, Tcl_Obj *objPtr)
@@ -113,7 +124,7 @@ Ttk_Tag Ttk_GetTagFromObj(Ttk_TagTable tagTable, Tcl_Obj *objPtr)
 Ttk_TagSet Ttk_GetTagSetFromObj(
     Tcl_Interp *interp, Ttk_TagTable tagTable, Tcl_Obj *objPtr)
 {
-    Ttk_TagSet tagset = ckalloc(sizeof(*tagset));
+    Ttk_TagSet tagset = (Ttk_TagSet)ckalloc(sizeof(*tagset));
     Tcl_Obj **objv;
     int i, objc;
 
@@ -128,7 +139,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
     	return NULL;
     }
 
-    tagset->tags = ckalloc((objc+1) * sizeof(Ttk_Tag));
+    tagset->tags = (Ttk_Tag *)ckalloc((objc+1) * sizeof(Ttk_Tag));
     for (i=0; i<objc; ++i) {
 	tagset->tags[i] = Ttk_GetTagFromObj(tagTable, objv[i]);
     }
@@ -185,7 +196,7 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
 	    return 0;
 	}
     }
-    tagset->tags = ckrealloc(tagset->tags,
+    tagset->tags = (Ttk_Tag *)ckrealloc(tagset->tags,
 	    (tagset->nTags+1)*sizeof(tagset->tags[0]));
     tagset->tags[tagset->nTags++] = tag;
     return 1;
@@ -269,8 +280,8 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
     memset(record, 0, tagTable->recordSize);
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
-	Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
-	int offset = optionSpec->objOffset;
+	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
+	TkSizeT offset = optionSpec->objOffset;
 	int prio = LOWEST_PRIORITY;
 
 	for (j = 0; j < tagSet->nTags; ++j) {
@@ -286,10 +297,10 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 void Ttk_TagSetApplyStyle(
     Ttk_TagTable tagTable, Ttk_Style style, Ttk_State state, void *record)
 {
-    Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
+    const Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
 
     while (optionSpec->type != TK_OPTION_END) {
-	int offset = optionSpec->objOffset;
+	TkSizeT offset = optionSpec->objOffset;
 	const char *optionName = optionSpec->optionName;
 	Tcl_Obj *val = Ttk_StyleMap(style, optionName, state);
 	if (val) {

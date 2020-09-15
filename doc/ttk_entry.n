@@ -26,7 +26,7 @@ standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 \-class	\-cursor
 \-font	\-foreground
 \-style
-\-takefocus	\-xscrollcommand	\-placeholder
+\-takefocus	\-xscrollcommand	\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -353,9 +353,10 @@ insert cursor in the entry without affecting the selection.
 If any normal printing characters are typed in an entry, they are
 inserted at the point of the insert cursor.
 .IP \0\(bu 4
-The view in the entry can be adjusted by dragging with mouse button 2.
-If mouse button 2 is clicked without moving the mouse, the selection
-is copied into the entry at the position of the mouse cursor.
+The view in the entry can be adjusted by dragging with the middle
+mouse button (button 2, or button 3 in TkAqua). If the middle mouse
+button is clicked without moving the mouse, the selection is copied
+into the entry at the position of the mouse cursor.
 .IP \0\(bu 4
 If the mouse is dragged out of the entry on the left or right sides
 while button 1 is pressed, the entry will automatically scroll to
@@ -452,6 +453,8 @@ Some themes use a graphical background and their field background colors cannot 
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-relief\fP \fIrelief\fP
 .br

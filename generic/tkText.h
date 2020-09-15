@@ -165,10 +165,10 @@ typedef struct TkTextSegment {
     struct TkTextSegment *nextPtr;
 				/* Next in list of segments for this line, or
 				 * NULL for end of list. */
-    int size;			/* Size of this segment (# of bytes of index
+    TkSizeT size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[2];		/* Characters that make up character info.
+	char chars[TKFLEXARRAY];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -489,7 +489,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[1];		/* Array of tabs. The actual size will be
+    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;
@@ -847,7 +847,7 @@ typedef struct TkText {
  */
 
 typedef TkTextSegment *	Tk_SegSplitProc(struct TkTextSegment *segPtr,
-			    int index);
+			    TkSizeT index);
 typedef int		Tk_SegDeleteProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 typedef TkTextSegment *	Tk_SegCleanupProc(struct TkTextSegment *segPtr,
@@ -856,8 +856,8 @@ typedef void		Tk_SegLineChangeProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 typedef int		Tk_SegLayoutProc(struct TkText *textPtr,
 			    struct TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, TkSizeT offset, int maxX,
+			    TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    struct TkTextDispChunk *chunkPtr);
 typedef void		Tk_SegCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
@@ -1060,7 +1060,7 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, int noBreakYet,
+			    TkSizeT offset, int maxX, TkSizeT maxChars, int noBreakYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
@@ -1106,7 +1106,7 @@ MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
-			    int *offsetPtr);
+			    TkSizeT *offsetPtr);
 MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex,
