@@ -21,7 +21,7 @@
 #	If you let it repeat then it will choose random start positions
 #	for each new tour.
 
-package require Tk 8.5
+package require Tk
 
 # Return a list of accessible squares from a given square
 proc ValidMoves {square} {
