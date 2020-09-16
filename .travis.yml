@@ -34,11 +34,14 @@ jobs:
         - make test
     - name: "Linux/GCC/Shared: NO_DEPRECATED"
       os: linux
-      dist: bionic
+      dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
+      script: *x11gui
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
@@ -83,21 +86,21 @@ jobs:
         - CFGOPT="--enable-symbols"
     - name: "Linux/G++/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-Dregister=dont+use+register"
     - name: "Linux/G++/Shared UTF_MAX=4"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-DTCL_UTF_MAX=4"
     - name: "Linux/G++/Shared UTF_MAX=6"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
@@ -148,7 +151,7 @@ jobs:
         - BUILD_DIR=unix
     - name: "Linux/Clang/Shared: NO_DEPRECATED"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
