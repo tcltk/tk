@@ -318,19 +318,15 @@ GetRGBA(
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
-	    [color getComponents: rgba];
 #endif
-	    break;
-	}
-	if (entry->index == selectedTabTextIndex) {
+	} else if (entry->index == selectedTabTextIndex) {
 	    int OSVersion = [NSApp macOSVersion];
 	    if (OSVersion > 100600 && OSVersion < 110000) {
-		color = [NSColor whiteColor];
-		[color getComponents: rgba];
-		break;
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    }
+	} else {
+	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	}
-	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	[color getComponents: rgba];
 	break;
     case clearColor:

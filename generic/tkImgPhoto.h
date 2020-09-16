@@ -176,7 +176,7 @@ struct PhotoModel {
 };
 
 /*
- * Bit definitions for the flags field of a PhotoMaster.
+ * Bit definitions for the flags field of a PhotoModel.
  * COLOR_IMAGE:			1 means that the image has different color
  *				components.
  * IMAGE_CHANGED:		1 means that the instances of this image need
