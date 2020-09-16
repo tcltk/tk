@@ -955,11 +955,10 @@ ClearList(
 
 static PSEntry *
 FreePatSeqEntry(
-    PSList *pool,
+    TCL_UNUSED(PSList *),
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
-    (void)pool;
 
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
@@ -5198,7 +5197,7 @@ GetPatternObj(
 		case ButtonPress:
 		case ButtonRelease:
 		    assert(patPtr->info <= Button9);
-		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) patPtr->info);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned)patPtr->info);
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {

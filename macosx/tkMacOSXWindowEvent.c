@@ -211,8 +211,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	if (@available(macOS 10.14, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
+	if (@available(macOS 10.15, *)) {
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
@@ -1114,14 +1114,23 @@ static const char *const accentNames[] = {
 	return;
     }
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
-    const char *accentName, *highlightName;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
-    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
-    NSString *highlight = [[[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "]
-			        objectAtIndex:3];
     static const char *defaultColor = NULL;
 
+    if (effectiveAppearanceName == NSAppearanceNameAqua) {
+	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
+    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
+	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
+    }
+    if ([NSApp macOSVersion] < 101500) {
+
+	/*
+	 * Mojave cannot handle the KVO shenanigans that we need for the
+	 * highlight and accent color notifications.
+	 */
+
+	return;
+    }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
 
@@ -1136,19 +1145,17 @@ static const char *const accentNames[] = {
 			 options:NSKeyValueObservingOptionNew
 			 context:NULL];
     }
-    accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
-    highlightName = highlight ? highlight.UTF8String: defaultColor;
-
+    NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
+    NSArray *words = [[preferences stringForKey:@"AppleHighlightColor"]
+			        componentsSeparatedByString: @" "];
+    NSString *highlight = [words count] > 3 ? [words objectAtIndex:3] : nil;
+    const char *accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
+    const char *highlightName = highlight ? highlight.UTF8String: defaultColor;
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
-    if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
-    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath

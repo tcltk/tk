@@ -330,8 +330,8 @@ Tk_PlaceObjCmd(
 	}
 	return PlaceInfoCommand(interp, tkwin);
 
-    case PLACE_CONTENT:
-    case PLACE_SLAVES: {
+    case PLACE_SLAVES:
+    case PLACE_CONTENT: {
 	Container *containerPtr;
 
 	if (objc != 3) {

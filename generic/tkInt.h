@@ -88,8 +88,13 @@
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#   define TKFLEXARRAY 0
+#else
+#   define TKFLEXARRAY 1
+#endif
 
-#ifndef Tcl_GetParent
+#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
 #   define Tcl_GetParent Tcl_GetMaster
 #endif
 
@@ -1267,10 +1272,8 @@ MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 
-#define TkSetGeometryContainer TkSetGeometryMaster
 MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
-#define TkFreeGeometryContainer TkFreeGeometryMaster
 MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 

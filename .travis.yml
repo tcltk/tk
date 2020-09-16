@@ -11,6 +11,7 @@ addons:
       - gcc-multilib
       - tcl-dev
       - libx11-dev
+      - xvfb
   homebrew:
     packages:
       - tcl-tk
@@ -22,23 +23,53 @@ jobs:
     - name: "Linux/GCC/Shared"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
+      script: &x11gui
+        - make binaries libraries tktest
+        - make install
+        - make test
     - name: "Linux/GCC/Shared: NO_DEPRECATED"
       os: linux
-      dist: bionic
+      dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
+      script: *x11gui
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
+      script: *x11gui
+    - name: "Linux/GCC/Shared/bionic"
+      os: linux
+      dist: bionic
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script: *x11gui
+    - name: "Linux/GCC/Shared/xenial"
+      os: linux
+      dist: xenial
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script: *x11gui
     - name: "Linux/GCC/Static"
       os: linux
       dist: focal
@@ -55,21 +86,21 @@ jobs:
         - CFGOPT="--enable-symbols"
     - name: "Linux/G++/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-Dregister=dont+use+register"
     - name: "Linux/G++/Shared UTF_MAX=4"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-DTCL_UTF_MAX=4"
     - name: "Linux/G++/Shared UTF_MAX=6"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
@@ -120,7 +151,7 @@ jobs:
         - BUILD_DIR=unix
     - name: "Linux/Clang/Shared: NO_DEPRECATED"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix
@@ -147,21 +178,21 @@ jobs:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Clang/Xcode 11.6/Shared"
+    - name: "macOS/Clang/Xcode 11.7/Shared"
       os: osx
       osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Clang++/Xcode 11.6/Shared"
+    - name: "macOS/Clang++/Xcode 11.7/Shared"
       os: osx
-      osx_image: xcode11.6
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib CC=clang++ --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-D__private_extern__=extern"
-    - name: "macOS/Clang/Xcode 11.6/Shared"
+    - name: "macOS/Clang/Xcode 11.7/Shared"
       os: osx
-      osx_image: xcode11.6
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -169,7 +200,7 @@ jobs:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: &mactest
         - make all tktest
-    - name: "macOS/Clang/Xcode 11.6/Static"
+    - name: "macOS/Clang/Xcode 11.7/Static"
       os: osx
       osx_image: xcode11.7
       env:
@@ -178,7 +209,7 @@ jobs:
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 11.6/Debug"
+    - name: "macOS/Clang/Xcode 11.7/Debug"
       os: osx
       osx_image: xcode11.7
       env:
@@ -187,7 +218,7 @@ jobs:
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 11.6/Shared/XQuartz"
+    - name: "macOS/Clang/Xcode 11.7/Shared/XQuartz"
       os: osx
       osx_image: xcode11.7
       env:
