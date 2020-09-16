@@ -12,8 +12,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * This handler is build using the original nanosvg library files from
- * https://github.com/memononen/nanosvg and the tcl extension files from
- * androwish https://www.androwish.org/ .
+ * https://github.com/memononen/nanosvg
  *
  */
 
