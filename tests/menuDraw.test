@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -51,7 +51,7 @@ test menuDraw-5.2 {TkMenuConfigureDrawOptions - old menu} {
 test menuDraw-5.3 {TkMenuConfigureDrawOptions - no disabledFg} {
 	catch {destroy .m1}
 	list [menu .m1 -disabledforeground ""] [destroy .m1]
-} {.m1 {}}	
+} {.m1 {}}
 
 test menuDraw-6.1 {TkMenuConfigureEntryDrawOptions - no tkfont specified} {
     catch {destroy .m1}

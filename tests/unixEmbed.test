@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out the procedures in the file 
+# This file is a Tcl script to test out the procedures in the file
 # tkUnixEmbed.c.  It is organized in the standard fashion for Tcl
 # tests.
 #
@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 

@@ -5,7 +5,7 @@ if {[namespace exists tk::test]} {
     return
 }
 
-package require Tk 8.4
+package require Tk
 tk appname tktest
 wm title . tktest
 # If the main window isn't already mapped (e.g. because the tests are
@@ -17,7 +17,7 @@ if {![winfo ismapped .]} {
     update
 }
 
-package require tcltest 2.1
+package require tcltest 2.2
 
 namespace eval tk {
     namespace eval test {
@@ -36,7 +36,7 @@ namespace eval tk {
 	}
 
 	namespace eval bg {
-	    # Manage a background process.  
+	    # Manage a background process.
 	    # Replace with slave interp or thread?
 	    namespace import ::tcltest::interpreter
 	    namespace import ::tk::test::loadTkCommand
@@ -124,7 +124,7 @@ namespace eval tk {
 	    eval destroy [winfo children .]
 	}
 
-	namespace export fixfocus 
+	namespace export fixfocus
 	proc fixfocus {} {
             catch {destroy .focus}
             toplevel .focus
@@ -144,13 +144,14 @@ namespace import -force tk::test::*
 namespace import -force tcltest::testConstraint
 testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
+testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
-    [testConstraint userInteraction] || 
+    [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])
 }]
-testConstraint haveDISPLAY [info exists env(DISPLAY)]
+testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
@@ -168,7 +169,6 @@ testConstraint testcursor    [llength [info commands testcursor]]
 testConstraint testembed     [llength [info commands testembed]]
 testConstraint testfont      [llength [info commands testfont]]
 testConstraint testmakeexist [llength [info commands testmakeexist]]
-testConstraint testmenubar   [llength [info commands testmenubar]]
 testConstraint testmenubar   [llength [info commands testmenubar]]
 testConstraint testmetrics   [llength [info commands testmetrics]]
 testConstraint testobjconfig [llength [info commands testobjconfig]]

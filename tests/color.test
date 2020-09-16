@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -168,7 +168,7 @@ test color-1.5 {Color table} nonPortable {
 	if {$rgb != [lrange $line 0 2] } {
 		append result $line\n
 	}
-	
+
     }
     return $result
 } {}
