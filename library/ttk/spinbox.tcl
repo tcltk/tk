@@ -151,6 +151,7 @@ proc ttk::spinbox::Spin {w dir} {
         set current $State($w,values.index)
         if {$value ne $State($w,values.last)} {
             set current [lsearch -exact $State($w,values) $value]
+	    if {$current < 0} {set current -1}
         }
         set State($w,values.index) [Adjust $w [expr {$current + $dir}] 0 \
                 [expr {$State($w,values.length) - 1}]]

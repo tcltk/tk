@@ -174,10 +174,10 @@ ClipboardAppHandler(
 static TkSizeT
 ClipboardWindowHandler(
     TCL_UNUSED(void *),	/* Not used. */
-    TCL_UNUSED(int),			/* Return selection bytes starting at this
+    TCL_UNUSED(TkSizeT),			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    TCL_UNUSED(int))		/* Maximum # of bytes to store at buffer. */
+    TCL_UNUSED(TkSizeT))		/* Maximum # of bytes to store at buffer. */
 {
     buffer[0] = '.';
     buffer[1] = 0;
