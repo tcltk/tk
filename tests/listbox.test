@@ -426,7 +426,7 @@ test listbox-3.15 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
 } -body {
     .l yview 0
     update
-    list [.l bbox none] [.l bbox 0]
+    list [.l bbox {}] [.l bbox 0]
 } -result {{} {7 7 17 14}}
 test listbox-3.16 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
 	fonts
