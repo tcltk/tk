@@ -446,18 +446,9 @@ package require Tk
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	if {[tk windowingsystem] eq "aqua"} {
-	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel [expr {40 * (%D)}]}]
-	    bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel [expr {400 * (%D)}]}]
-	} else {
-	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
-	}
-	if {[tk windowingsystem] eq "x11"} {
-	    bind $canvas <Shift-Button-4>	[namespace code {my MouseWheel 120}]
-	    bind $canvas <Shift-Button-5>	[namespace code {my MouseWheel -120}]
-	    bind $canvas <Button-6>		[namespace code {my MouseWheel 120}]
-	    bind $canvas <Button-7>		[namespace code {my MouseWheel -120}]
-	}
+	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
+	bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel [expr {10*%D}]}]
+
 
 	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
 	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]

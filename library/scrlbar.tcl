@@ -135,12 +135,6 @@ bind Scrollbar <MouseWheel> {
 bind Scrollbar <Option-MouseWheel> {
     tk::ScrollByUnits %W hv [expr {%D/-3.0}]
 }
-bind Scrollbar <Shift-MouseWheel> {
-    tk::ScrollByUnits %W hv [expr {%D/-30.0}]
-}
-bind Scrollbar <Shift-Option-MouseWheel> {
-    tk::ScrollByUnits %W hv [expr {%D/-3.0}]
-}
 
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
