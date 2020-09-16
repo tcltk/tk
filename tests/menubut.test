@@ -10,7 +10,7 @@
 # XXX of a procedure has tests then the whole procedure has tests,
 # XXX but many procedures have no tests.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 

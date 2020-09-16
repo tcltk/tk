@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -229,7 +229,7 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} {
     wm geometry .t +0+0
     tkwait visibility .t
     update
-    frame .t.f 
+    frame .t.f
     pack .t.f
     button .t.quit -text Quit -command exit
     pack .t.quit -in .t.f

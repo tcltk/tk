@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -326,7 +326,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests\
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
-    
+
     # Now drag until selend is highlighted, then click up
 
     set current $anchor
@@ -390,7 +390,7 @@ test event-3.2(click-drag) {click and drag in an entry widget, this\
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
-    
+
     # Now drag until selend is highlighted, then click up
 
     set current $anchor
@@ -743,7 +743,7 @@ test event-7.2(double-click) {A double click on a lone character\
     set result [list]
     lappend result [$e index insert]
     lappend result [_get_selection $e]
-  
+
     # Clear selection by clicking at 0,0
 
     event generate $e <ButtonPress-1> -x 0 -y 0

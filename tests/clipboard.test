@@ -11,7 +11,7 @@
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 

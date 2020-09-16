@@ -1,7 +1,7 @@
 # This file is a Tcl script to test out Tk's "tk_dialog" command.
 # It is organized in the standard fashion for Tcl tests.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
