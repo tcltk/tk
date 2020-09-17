@@ -145,7 +145,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
 }
 
@@ -336,7 +336,6 @@ TkpInit(
 			      nil]];
 	[TKApplication sharedApplication];
 	[pool drain];
-	[NSApp _setup:interp];
 
         /*
          * WARNING: The finishLaunching method runs asynchronously. This
@@ -345,11 +344,12 @@ TkpInit(
          * with the root window (see below).  If the NSApplication wins then an
          * AppleEvent created during launch, e.g. by dropping a file icon on
          * the application icon, will be delivered before the procedure meant
-         * to to handle the AppleEvent has been defined.  This is now handled
-         * by processing the AppleEvent as an idle task.  See
-         * tkMacOSXHLEvents.c.
+         * to to handle the AppleEvent has been defined.  This is handled in
+         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+         * ApplEvent later, after the required procedure has been defined.
          */
 
+	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
         /*
