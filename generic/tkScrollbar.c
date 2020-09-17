@@ -196,7 +196,7 @@ Tk_ScrollbarObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(scrollPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(scrollPtr->tkwin));
     return TCL_OK;
 }
 

@@ -5,14 +5,14 @@
  *
  * Copyright (c) 2013-14 Mikko Mononen memon@inside.org
  * Copyright (c) 2018 Christian Gollwitzer auriocus@gmx.de
+ * Copyright (c) 2018 Christian Werner https://www.androwish.org/
  * Copyright (c) 2018 Rene Zaumseil r.zaumseil@freenet.de
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * This handler is build using the original nanosvg library files from
- * https://github.com/memononen/nanosvg and the tcl extension files from
- * https://github.com/auriocus/tksvg
+ * https://github.com/memononen/nanosvg
  *
  */
 

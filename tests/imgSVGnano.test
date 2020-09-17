@@ -207,6 +207,21 @@ test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -s
     tcltest::removeFile tmpplus.svg
 } -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
 
+# Special images
+test imgSVGnano-5.0 {image without any of  "width", "height" and "viewbox"} -body {
+    image create photo foo -data\
+			{<?xml version="1.0"?><!DOCTYPE svg PUBLIC\
+			"-//W3C//DTD SVG 1.0//EN\"\
+			"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\
+			<svg xmlns="http://www.w3.org/2000/svg">\
+			<g style="fill-opacity:0.7;">\
+			<circle cx="6.5cm" cy="2cm" r="100" style="fill:green;\
+			stroke:black; stroke-width:0.1cm" transform="translate(-70,150)"/>\
+			</g></svg>}
+} -cleanup {
+    rename foo ""
+} -result {foo}
+
 };# end of namespace svgnano
 
 namespace delete svgnano

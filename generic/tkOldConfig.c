@@ -1108,7 +1108,7 @@ GetCachedSpecs(
 
 	/*
 	 * Now allocate our working copy's space and copy over the contents
-	 * from the master copy.
+	 * from the origin.
 	 */
 
 	cachedSpecs = (Tk_ConfigSpec *)ckalloc(entrySpace);
@@ -1161,12 +1161,11 @@ GetCachedSpecs(
 static void
 DeleteSpecCacheTable(
     ClientData clientData,
-    Tcl_Interp *dummy)
+    TCL_UNUSED(Tcl_Interp *))
 {
     Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;
     Tcl_HashEntry *entryPtr;
     Tcl_HashSearch search;
-    (void)dummy;
 
     for (entryPtr = Tcl_FirstHashEntry(tablePtr,&search); entryPtr != NULL;
 	    entryPtr = Tcl_NextHashEntry(&search)) {
