@@ -211,6 +211,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
 	if (@available(macOS 10.15, *)) {
 	    [view viewDidChangeEffectiveAppearance];

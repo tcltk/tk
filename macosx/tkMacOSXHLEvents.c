@@ -39,6 +39,7 @@ typedef struct AppleEventInfo {
     const char *procedure;
     Tcl_DString command;
     NSAppleEventDescriptor *replyEvent; /* Only used for DoScriptText. */
+    int retryCount;
 } AppleEventInfo;
 
 /*
@@ -229,7 +230,14 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = openDocumentProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+
+    if (Tcl_FindCommand(_eventInterp, "::tk::mac::OpenDocuments", NULL, 0)){
+	ProcessAppleEvent((ClientData)AEInfo);
+    } else {
+	Tcl_CreateTimerHandler(500, ProcessAppleEvent, (ClientData)AEInfo);
+    }
 }
 
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
@@ -248,7 +256,9 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = printDocProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
 }
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
@@ -309,7 +319,9 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                 AEInfo->interp = _eventInterp;
                 AEInfo->procedure = scriptFileProc;
                 AEInfo->replyEvent = nil;
-                Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
+                Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+		AEInfo->retryCount = 0;
+                ProcessAppleEvent((ClientData)AEInfo);
             }
         }
     } else if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
@@ -333,12 +345,14 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 		Tcl_DStringAppendElement(scriptTextCommand, data);
 		AEInfo->interp = _eventInterp;
 		AEInfo->procedure = scriptTextProc;
+		AEInfo->retryCount = 0;
                 if (Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
                     AEInfo->replyEvent = replyEvent;
                     ProcessAppleEvent(AEInfo);
                 } else {
                     AEInfo->replyEvent = nil;
-                    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
+                    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+                    ProcessAppleEvent((ClientData)AEInfo);
                 }
 	    }
 	}
@@ -361,7 +375,9 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = launchURLProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
+    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
 }
 
 @end
@@ -396,8 +412,27 @@ static void ProcessAppleEvent(
 {
     int code;
     AppleEventInfo *AEInfo = (AppleEventInfo*) clientData;
-    if (!AEInfo->interp ||
-        !Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
+    static Bool retry = NO;
+
+    if (!AEInfo->interp) {
+	return;
+    }
+
+    /*
+     * Apple events that are delivered during the app startup can arrive
+     * before the Tcl procedure for handling the events has been defined.
+     * If the command is not found we create a timer handler to process
+     * the event later, hopefully after the command has been created.
+     * We retry up to 2 times before giving up.
+     */
+
+    if (!Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
+	if (AEInfo->retryCount < 2) {
+	    AEInfo->retryCount++;
+	    Tcl_CreateTimerHandler(200, ProcessAppleEvent, clientData);
+	} else {
+	    ckfree(clientData);
+	}
 	return;
     }
     code = Tcl_EvalEx(AEInfo->interp, Tcl_DStringValue(&AEInfo->command),
