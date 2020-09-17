@@ -513,7 +513,7 @@ RefreshKeyboardMappingIfNeeded(
 /*
  *----------------------------------------------------------------------
  *
- * TkGetButtonMask --
+ * Tk_GetButtonMask --
  *
  *	Return the proper Button${n}Mask for the button.
  *
@@ -532,7 +532,7 @@ static const unsigned buttonMasks[] = {
 };
 
 unsigned
-TkGetButtonMask(
+Tk_GetButtonMask(
     unsigned button)
 {
     return (button > Button9) ? 0 : buttonMasks[button];
@@ -691,7 +691,7 @@ Tk_CreateEventHandler(
     ClientData clientData)	/* Arbitrary data to pass to proc. */
 {
     TkEventHandler *handlerPtr;
-    TkWindow *winPtr = (TkWindow *) token;
+    TkWindow *winPtr = (TkWindow *)token;
 
     /*
      * Skim through the list of existing handlers to (a) compute the overall
@@ -1040,10 +1040,9 @@ TkEventInit(void)
 static int
 TkXErrorHandler(
     ClientData clientData,	/* Pointer to flag we set. */
-    XErrorEvent *errEventPtr)	/* X error info. */
+    TCL_UNUSED(XErrorEvent *))	/* X error info. */
 {
     int *error = (int *)clientData;
-    (void)errEventPtr;
 
     *error = 1;
     return 0;
@@ -2003,10 +2002,9 @@ TkDeleteThreadExitHandler(
 
 void
 TkFinalize(
-    ClientData dummy)	/* Arbitrary value to pass to proc. */
+    TCL_UNUSED(void *))	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
-    (void)dummy;
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
     if (!tclStubsPtr) {
@@ -2056,12 +2054,11 @@ TkFinalize(
 
 void
 TkFinalizeThread(
-    ClientData dummy)	/* Arbitrary value to pass to proc. */
+    TCL_UNUSED(void *))	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     Tcl_DeleteThreadExitHandler(TkFinalizeThread, NULL);
 

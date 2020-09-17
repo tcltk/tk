@@ -145,7 +145,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
 }
 
@@ -278,19 +278,18 @@ TkpInit(
     static int initialized = 0;
 
     /*
-     * Since it is possible for TkInit to be called multiple times and we
-     * don't want to do the following initialization multiple times we protect
-     * against doing it more than once.
+     * TkpInit can be called multiple times with different interpreters. But
+     * The application initialization should only be done onece.
      */
 
     if (!initialized) {
 	struct stat st;
 
-	initialized = 1;
-
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
+
+	initialized = 1;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #   error Mac OS X 10.6 required
@@ -337,20 +336,20 @@ TkpInit(
 			      nil]];
 	[TKApplication sharedApplication];
 	[pool drain];
-	[NSApp _setup:interp];
 
         /*
-         * WARNING: The finishLaunching method runs asynchronously, apparently
-         * in a separate thread.  This creates a race between the
-         * initialization of the NSApplication and the initialization of Tk.
-         * If Tk wins the race bad things happen with the root window (see
-         * below).  If the NSApplication wins then an AppleEvent created during
-         * launch, e.g. by dropping a file icon on the application icon, will
-         * be delivered before the procedure meant to to handle the AppleEvent
-         * has been defined.  This is now handled by processing the AppleEvent
-         * as an idle task.  See tkMacOSXHLEvents.c.
+         * WARNING: The finishLaunching method runs asynchronously. This
+         * creates a race between the initialization of the NSApplication and
+         * the initialization of Tk.  If Tk wins the race bad things happen
+         * with the root window (see below).  If the NSApplication wins then an
+         * AppleEvent created during launch, e.g. by dropping a file icon on
+         * the application icon, will be delivered before the procedure meant
+         * to to handle the AppleEvent has been defined.  This is handled in
+         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+         * ApplEvent later, after the required procedure has been defined.
          */
 
+	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
         /*
@@ -377,35 +376,47 @@ TkpInit(
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
-	 * If we don't have a TTY and stdin is a special character file of
+	 * If we don't have a TTY or stdin is a special character file of
 	 * length 0, (e.g. /dev/null, which is what Finder sets when double
 	 * clicking Wish) then use the Tk based console interpreter.
 	 */
 
-	if (getenv("TK_CONSOLE") ||
-		(!isatty(0) && (fstat(0, &st) ||
-		(S_ISCHR(st.st_mode) && st.st_blocks == 0)))) {
-	    Tk_InitConsoleChannels(interp);
-	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
-	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
-	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
+	if (!isatty(0) && (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0))) {
+	    if (getenv("TK_CONSOLE")) {
+		Tk_InitConsoleChannels(interp);
+		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
+		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
+		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
 
-	    /*
-	     * Only show the console if we don't have a startup script and
-	     * tcl_interactive hasn't been set already.
-	     */
+		/*
+		 * Only show the console if we don't have a startup script and
+		 * tcl_interactive hasn't been set already.
+		 */
 
-	    if (Tcl_GetStartupScript(NULL) == NULL) {
-		const char *intvar = Tcl_GetVar2(interp,
-			"tcl_interactive", NULL, TCL_GLOBAL_ONLY);
+		if (Tcl_GetStartupScript(NULL) == NULL) {
+		    const char *intvar = Tcl_GetVar2(interp,
+						     "tcl_interactive", NULL, TCL_GLOBAL_ONLY);
 
-		if (intvar == NULL) {
-		    Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
-			    TCL_GLOBAL_ONLY);
+		    if (intvar == NULL) {
+			Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
+				    TCL_GLOBAL_ONLY);
+		    }
 		}
-	    }
-	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
-		return TCL_ERROR;
+		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
+		    return TCL_ERROR;
+		}
+	    } else {
+
+		/*
+		 * When launched as a macOS application with no console,
+		 * redirect stderr and stdout to /dev/null. This avoids waiting
+		 * forever for those files to become writable if the underlying
+		 * Tcl program tries to write to them with a puts command.
+		 */
+
+		FILE *null = fopen("/dev/null", "w");
+		dup2(fileno(null), STDOUT_FILENO);
+		dup2(fileno(null), STDERR_FILENO);
 	    }
 	}
 
@@ -416,6 +427,22 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+
+	/*
+	 * The root window has been created and mapped, but XMapWindow deferred its
+	 * call to makeKeyAndOrderFront because the first call to XMapWindow
+	 * occurs too early in the initialization process for that.  Process idle
+	 * tasks now, so the root window is configured, then order it front.
+	 */
+
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	for (NSWindow *window in [NSApp windows]) {
+	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+	    if (winPtr && Tk_IsMapped(winPtr)) {
+		[window makeKeyAndOrderFront:NSApp];
+		break;
+	    }
+	}
     }
 
     if (tkLibPath[0] != '\0') {
@@ -433,6 +460,7 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
+
     return TCL_OK;
 }
 
@@ -491,7 +519,7 @@ TkpGetAppName(
 
 static int
 TkMacOSXGetAppPathCmd(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
