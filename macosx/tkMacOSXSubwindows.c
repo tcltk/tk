@@ -315,6 +315,7 @@ XUnmapWindow(
 	if (!Tk_IsEmbedded(winPtr) &&
 		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win orderOut:nil];
+	    [win setExcludedFromWindowsMenu:YES];
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
 
