@@ -7039,7 +7039,7 @@ test text-27.28 {edit undo and edit redo do not leave \
     lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
 } -cleanup {
     destroy .t
-} -result [list 1 1]
+} -result {1 1}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
