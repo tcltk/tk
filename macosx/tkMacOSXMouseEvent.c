@@ -132,7 +132,10 @@ enum {
      * [39cbacb9e8].
      */
 
-    if (eventType == NSLeftMouseDown || eventType == NSLeftMouseDragged) {
+    if (eventType == NSLeftMouseDragged) {
+	    buttonState &= ~TkGetButtonMask(Button1);
+    }
+    if (eventType == NSLeftMouseDown) {
 	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
 	    [(TKWindow *) eventWindow mouseInResizeArea]) {
 
