@@ -72,11 +72,11 @@ enum {
      * If this event is not for a Tk toplevel, it should just be passed up the
      * responder chain.  However, there is an exception for synthesized events,
      * which are used in testing.  Those events are recognized by having their
-     * (unused) context pointer set to 1.
+     * both the windowNumber and the eventNumber set to -1.
      */
 
     if (eventWindow && ![eventWindow isMemberOfClass:[TKWindow class]]) {
-	if ([theEvent context] != (void *) 1)
+	if ([theEvent windowNumber] != -1 || [theEvent eventNumber] != -1)
 	    return theEvent;
     }
 
