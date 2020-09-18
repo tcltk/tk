@@ -151,7 +151,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
 }
 
@@ -284,18 +284,18 @@ TkpInit(
     static int initialized = 0;
 
     /*
-     * Since it is possible for TkInit to be called multiple times and we
-     * don't want to do the following initialization multiple times we protect
-     * against doing it more than once.
+     * TkpInit can be called multiple times with different interpreters. But
+     * The application initialization should only be done onece.
      */
 
     if (!initialized) {
 	struct stat st;
-	initialized = 1;
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
+
+	initialized = 1;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #   error Mac OS X 10.6 required
@@ -342,7 +342,6 @@ TkpInit(
 			      nil]];
 	[TKApplication sharedApplication];
 	[pool drain];
-	[NSApp _setup:interp];
 
         /*
          * WARNING: The finishLaunching method runs asynchronously. This
@@ -351,11 +350,12 @@ TkpInit(
          * with the root window (see below).  If the NSApplication wins then an
          * AppleEvent created during launch, e.g. by dropping a file icon on
          * the application icon, will be delivered before the procedure meant
-         * to to handle the AppleEvent has been defined.  This is now handled
-         * by processing the AppleEvent as an idle task.  See
-         * tkMacOSXHLEvents.c.
+         * to to handle the AppleEvent has been defined.  This is handled in
+         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+         * ApplEvent later, after the required procedure has been defined.
          */
 
+	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
         /*
@@ -433,12 +433,23 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+	TkMacOSXNSImage_Init(interp);
 
 	/*
-	 * Add the nsimage type.
+	 * The root window has been created and mapped, but XMapWindow deferred its
+	 * call to makeKeyAndOrderFront because the first call to XMapWindow
+	 * occurs too early in the initialization process for that.  Process idle
+	 * tasks now, so the root window is configured, then order it front.
 	 */
-	
-	TkMacOSXNSImage_Init(interp);
+
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	for (NSWindow *window in [NSApp windows]) {
+	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+	    if (winPtr && Tk_IsMapped(winPtr)) {
+		[window makeKeyAndOrderFront:NSApp];
+		break;
+	    }
+	}
     }
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
@@ -504,17 +515,6 @@ TkMacOSXGetAppPathObjCmd(
     CFRelease(mainBundleURL);
     CFRelease(appPath);
 
-     /*
-      * The root window has been created and mapped, but XMapWindow deferred its
-      * call to makeKeyAndOrderFront because the first call to XMapWindow
-      * occurs too early in the initialization process for that.  Process idle
-      * tasks now, so the root window is configured, then order it front.
-      */
-
-     while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-     for (NSWindow *window in [NSApp windows]) {
-	 [window makeKeyAndOrderFront:NSApp];
-     }
     return TCL_OK;
 }
 
