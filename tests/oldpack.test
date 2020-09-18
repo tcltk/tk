@@ -30,8 +30,13 @@ frame .pack.violet -width 80 -height 20
 label .pack.violet.l -text P -bd 2 -relief raised
 place .pack.violet.l -relwidth 1.0 -relheight 1.0
 
+if {![catch {pack ap .pack .pack.red top}]} {
+
+# Don't execute any of this file if Tk is compiled with -DTCL_NO_DEPRECATED
+
+
 test oldpack-1.1 {basic positioning} -body {
-    pack ap .pack .pack.red top
+    #pack ap .pack .pack.red top
     update
     winfo geometry .pack.red
 } -result 10x20+45+0
@@ -544,6 +549,7 @@ test oldpack-9.3 {information output} -body {
         [pack info .pack.green] [pack info .pack.violet]
 } -result {{.pack.blue .pack.red .pack.green .pack.violet} {-in .pack -anchor center -expand 0 -fill none -ipadx 0 -ipady 0 -padx 0 -pady 0 -side top} {-in .pack -anchor center -expand 0 -fill none -ipadx 0 -ipady 0 -padx 0 -pady 0 -side top} {-in .pack -anchor center -expand 0 -fill none -ipadx 0 -ipady 0 -padx 0 -pady 0 -side top} {-in .pack -anchor center -expand 0 -fill none -ipadx 0 -ipady 0 -padx 0 -pady 0 -side top}}
 
+}
 destroy .pack
 
 # cleanup
