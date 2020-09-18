@@ -5246,20 +5246,22 @@ TkStringToKeysym(
 #endif /* REDO_KEYSYM_LOOKUP */
     int keysym;
 
-    if (name[0] & 0x80) {
-	size_t len = TkUtfToUniChar(name, &keysym);
-	if (name[len] == '\0') {
-	    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+    size_t len = TkUtfToUniChar(name, &keysym);
+    if (name[len] == '\0') {
+        if (!Tcl_UniCharIsPrint(keysym)) {
+    	/* This form not supported */
+        } else if ((unsigned)(keysym - 0x21) <= 0x5D) {
 		return keysym;
 	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
 		return keysym;
 	    } else if (keysym == 0x20AC) {
 		return 0x20AC;
+	    } else {
+		return keysym + 0x1000000;
 	    }
-	    return keysym + 0x1000000;
-	}
+    }
 #ifdef REDO_KEYSYM_LOOKUP
-    } else if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
+    if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
 	char *p = (char *)name + 1;
 	keysym = strtol(p, &p, 16);
 	if ((p >= name + 5) && (p <= name + 9) && !*p && (keysym >= 0x20)
@@ -5273,8 +5275,8 @@ TkStringToKeysym(
 	    }
 	    return keysym + 0x1000000;
 	}
-#endif
     }
+#endif
 #ifdef REDO_KEYSYM_LOOKUP
     hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr) {
