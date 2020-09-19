@@ -381,8 +381,9 @@ TkpInit(
 	 * clicking Wish) then use the Tk based console interpreter.
 	 */
 
-	if (!isatty(0) && (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0))) {
-	    if (getenv("TK_CONSOLE")) {
+	if (getenv("TK_CONSOLE") ||
+		(!isatty(0) && (fstat(0, &st) ||
+		(S_ISCHR(st.st_mode) && st.st_blocks == 0)))) {
 		Tk_InitConsoleChannels(interp);
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
@@ -400,11 +401,11 @@ TkpInit(
 		    if (intvar == NULL) {
 			Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 				    TCL_GLOBAL_ONLY);
+			NSLog(@"tcl_interactive");
 		    }
 		}
 		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		    return TCL_ERROR;
-		}
 	    } else {
 
 		/*
