@@ -402,8 +402,7 @@ TkpInit(
 	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		return TCL_ERROR;
 	    }
-	}
-	if (isBeingLaunched && !shouldOpenConsole) {
+	} else if (isBeingLaunched) {
 
 	    /*
 	     * When launched as a macOS application with no console,
