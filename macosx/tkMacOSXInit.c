@@ -401,7 +401,6 @@ TkpInit(
 		    if (intvar == NULL) {
 			Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 				    TCL_GLOBAL_ONLY);
-			NSLog(@"tcl_interactive");
 		    }
 		}
 		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
