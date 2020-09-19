@@ -132,7 +132,7 @@ enum {
      * [39cbacb9e8].
      */
 
-    if (eventType == NSLeftMouseDown || eventType == NSLeftMouseDragged) {
+    if (eventType == NSLeftMouseDown) {
 	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
 	    [(TKWindow *) eventWindow mouseInResizeArea]) {
 
