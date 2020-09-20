@@ -19,18 +19,8 @@ bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
 # Redirect scrollwheel bindings to the scrollbar widget
 #
-# The shift-bindings scroll left/right (not up/down)
-# if a widget has both possibilities
-set eventList [list <MouseWheel>]
-switch [tk windowingsystem] {
-    aqua {
-        lappend eventList <Option-MouseWheel>
-    }
-}
-foreach event $eventList {
-    bind TScrollbar $event [bind Scrollbar $event]
-}
-unset eventList event
+bind TScrollbar <MouseWheel> [bind Scrollbar <MouseWheel>]
+bind TScrollbar <Option-MouseWheel> [bind Scrollbar <Option-MouseWheel>]
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]

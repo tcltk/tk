@@ -56,9 +56,9 @@ for {set i 0} {$i < 20} {incr i} {
 $c bind all <Enter> "scrollEnter $c"
 $c bind all <Leave> "scrollLeave $c"
 $c bind all <Button-1> "scrollButton $c"
-bind $c <Button-2> "$c scan mark %x %y"
-bind $c <B2-Motion> "$c scan dragto %x %y"
 if {[package vsatisfies [package provide Tk] 8.7-]} {
+    bind $c <Button-2> "$c scan mark %x %y"
+    bind $c <B2-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
 	%W yview scroll [expr {%D/-30.0}] units
     }
@@ -72,6 +72,8 @@ if {[package vsatisfies [package provide Tk] 8.7-]} {
 	%W xview scroll [expr {%D/-3.0}] units
     }
 } elseif {[tk windowingsystem] eq "aqua"} {
+    bind $c <Button-3> "$c scan mark %x %y"
+    bind $c <B3-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
 	%W yview scroll [expr {-(%D)}] units
     }
@@ -85,6 +87,8 @@ if {[package vsatisfies [package provide Tk] 8.7-]} {
 	%W xview scroll [expr {-10 * (%D)}] units
     }
 } else {
+    bind $c <Button-2> "$c scan mark %x %y"
+    bind $c <B2-Motion> "$c scan dragto %x %y"
     # We must make sure that positive and negative movements are rounded
     # equally to integers, avoiding the problem that
     #     (int)1/30 = 0,

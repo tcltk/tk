@@ -89,6 +89,9 @@ enum {
     }
 
     button = [theEvent buttonNumber] + Button1;
+    if ((button & -2) == Button2) {
+	button ^= 1; /* Swap buttons 2/3 */
+    }
     switch (eventType) {
     case NSRightMouseUp:
     case NSOtherMouseUp:
