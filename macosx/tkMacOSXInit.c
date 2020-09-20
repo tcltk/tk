@@ -284,7 +284,6 @@ TkpInit(
 
     if (!initialized) {
 	struct stat st;
-	Bool isBeingLaunched;
 	Bool shouldOpenConsole = NO;
 
 	/*
@@ -296,16 +295,6 @@ TkpInit(
 #endif
 
 	initialized = 1;
-	fstat(0, &st);
-
-	/*
-	 * If we don't have a TTY or stdin is a special character file of
-	 * length 0, (e.g. /dev/null, which is what Finder sets when double
-	 * clicking Wish) then we are being launched as a macOS app.
-	 */
-
-	isBeingLaunched = (!isatty(0) ||
-			   (S_ISCHR(st.st_mode) && st.st_blocks == 0));
 
 #ifdef TK_FRAMEWORK
 	/*
@@ -380,12 +369,12 @@ TkpInit(
 	/*
 	 * Decide whether to open a console window.  If the TK_CONSOLE
 	 * environment variable is not defined we only show the console if
-	 * there is no startup script.
+	 * stdin is not a tty and there is no startup script.
 	 */
 
 	if (getenv("TK_CONSOLE")) {
 	    shouldOpenConsole = YES;
-	} else if (Tcl_GetStartupScript(NULL) == NULL) {
+	} else if (!isatty(0) && Tcl_GetStartupScript(NULL) == NULL) {
 	    const char *intvar = Tcl_GetVar2(interp, "tcl_interactive",
 					     NULL, TCL_GLOBAL_ONLY);
 	    if (intvar == NULL) {
@@ -402,7 +391,7 @@ TkpInit(
 	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		return TCL_ERROR;
 	    }
-	} else if (isBeingLaunched) {
+	} else if (!isatty(0)) {
 
 	    /*
 	     * When launched as a macOS application with no console,
