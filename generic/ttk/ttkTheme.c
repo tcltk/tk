@@ -95,7 +95,7 @@ Tcl_Obj *Ttk_StyleMap(Ttk_Style style, const char *optionName, Ttk_State state)
 
 /*
  * Ttk_StyleDefault --
- * 	Look up default resource setting the in the specified style.
+ * 	Look up default resource setting in the specified style.
  */
 Tcl_Obj *Ttk_StyleDefault(Ttk_Style style, const char *optionName)
 {
@@ -1263,10 +1263,10 @@ usage:
     styleName = Tcl_GetString(objv[2]);
     stylePtr = Ttk_GetStyle(theme, styleName);
 
-    if (objc == 3) {		/* style default $styleName */
+    if (objc == 3) {		/* style configure $styleName */
 	Tcl_SetObjResult(interp, HashTableToDict(&stylePtr->defaultsTable));
 	return TCL_OK;
-    } else if (objc == 4) {	/* style default $styleName -option */
+    } else if (objc == 4) {	/* style configure $styleName -option */
 	const char *optionName = Tcl_GetString(objv[3]);
 	Tcl_HashEntry *entryPtr =
 	    Tcl_FindHashEntry(&stylePtr->defaultsTable, optionName);
