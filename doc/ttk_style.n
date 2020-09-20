@@ -33,6 +33,10 @@ The \fBttk::style\fR command takes the following arguments:
 .TP
 \fBttk::style configure \fIstyle\fR ?\fI\-option\fR ?\fIvalue option value...\fR? ?
 Sets the default value of the specified option(s) in \fIstyle\fR.
+If only \fIstyle\fR and \fI-option\fR are specified, get the default value
+for option \fI-option\fR of style \fIstyle\fR.
+If only \fIstyle\fR is specified, get the default value for all options
+of style \fIstyle\fR.
 .TP
 \fBttk::style element\fR \fIargs\fR
 .RS
