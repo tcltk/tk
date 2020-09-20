@@ -27,6 +27,9 @@ this may be overridden by the \fB\-style\fR option.
 .PP
 A \fItheme\fR is a collection of elements and styles
 which controls the overall look and feel of an application.
+The
+.QW .
+style is the theme root style on which derived styles are based.
 .SH DESCRIPTION
 .PP
 The \fBttk::style\fR command takes the following arguments:
@@ -76,11 +79,15 @@ value in case no specification for \fI\-option\fR is found.
 If \fIstyle\fR does not exist, it is created.
 .TP
 \fBttk::style map \fIstyle\fR ?\fI\-option\fB { \fIstatespec value...\fB }\fR?
-Sets dynamic values of the specified option(s) in \fIstyle\fR.
+Sets dynamic (state dependent) values of the specified option(s) in \fIstyle\fR.
 Each \fIstatespec / value\fR pair is examined in order;
 the value corresponding to the first matching \fIstatespec\fR
 is used.
 If \fIstyle\fR does not exist, it is created.
+If only \fIstyle\fR and \fI-option\fR are specified, get the dynamic values
+for option \fI-option\fR of style \fIstyle\fR.
+If only \fIstyle\fR is specified, get the dynamic values for all options
+of style \fIstyle\fR.
 .TP
 \fBttk::style theme\fR \fIargs\fR
 .RS
