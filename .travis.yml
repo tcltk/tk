@@ -9,7 +9,7 @@ addons:
       - gcc-mingw-w64-i686
       - gcc-mingw-w64-x86-64
       - gcc-multilib
-      - tcl-dev
+      - tcl8.6-dev
       - libx11-dev
       - xvfb
   homebrew:
