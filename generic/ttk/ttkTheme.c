@@ -1316,9 +1316,7 @@ static int StyleLookupCmd(
     }
 
     style = Ttk_GetStyle(theme, Tcl_GetString(objv[2]));
-    if (!style) {
-	return TCL_ERROR;
-    }
+
     optionName = Tcl_GetString(objv[3]);
 
     if (objc >= 5) {
