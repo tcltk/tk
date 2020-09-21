@@ -130,10 +130,10 @@ bind Scrollbar <<LineEnd>> {
 }
 
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W hv [expr {%D/-30.0}]
+    tk::ScrollByUnits %W hv %D/-30
 }
 bind Scrollbar <Option-MouseWheel> {
-    tk::ScrollByUnits %W hv [expr {%D/-3.0}]
+    tk::ScrollByUnits %W hv %D/-3
 }
 
 # tk::ScrollButtonDown --

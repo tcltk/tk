@@ -446,8 +446,8 @@ package require Tk
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
-	bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel [expr {10*%D}]}]
+	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D/-120}]
+	bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel %D/-12}]
 
 
 	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
@@ -500,7 +500,7 @@ package require Tk
 	if {$noScroll || $::tk_strictMotif} {
 	    return
 	}
-	$canvas xview scroll [expr {$amount/-120.0}] units
+	$canvas xview scroll $amount units
     }
     method Btn1 {x y} {
 	focus $canvas

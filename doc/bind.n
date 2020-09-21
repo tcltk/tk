@@ -544,7 +544,10 @@ The \fIborder_width\fR field from the event.  Valid only for
 This reports the \fIdelta\fR value of a \fBMouseWheel\fR event.  The
 \fIdelta\fR value represents the rotation units the mouse wheel has
 been moved. The sign of the value represents the direction the mouse
-wheel was scrolled.
+wheel was scrolled. If \fB%D\fR is immediately followed by
+\fB*\fR or \fB/\fR followed by a positive integer, this integer
+will be used as scalefactor. When dividing, the result is rounded
+away from zero, so it will only be zero if the delta was actually zero.
 .IP \fB%E\fR 5
 The \fIsend_event\fR field from the event.  Valid for all event types.
 \fB0\fR indicates that this is a
