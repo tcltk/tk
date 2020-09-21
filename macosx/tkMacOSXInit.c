@@ -14,8 +14,6 @@
  */
 
 #include "tkMacOSXPrivate.h"
-
-#include <sys/stat.h>
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 
@@ -283,7 +281,6 @@ TkpInit(
      */
 
     if (!initialized) {
-	struct stat st;
 	Bool shouldOpenConsole = NO;
 
 	/*
