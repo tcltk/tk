@@ -1099,7 +1099,8 @@ static void DrawSlider(
     CGPoint thumbPoint;
     CGFloat position;
     CGColorRef accentColor;
-    double from = info.min, to = info.max, value = info.value;
+    Bool fromIsSmaller = info.reserved;
+    double from = info.min, to = fabs((double) info.max), value = info.value;
 
     /*
      * info.min, info.max and info.value are integers.  When this is called
@@ -1114,17 +1115,27 @@ static void DrawSlider(
 	trackBounds.size.height = 3;
 	position = 8 + fraction * (trackBounds.size.width - 16);
 	clipBounds = trackBounds;
-	clipBounds.size.width = position;
-	thumbPoint = CGPointMake(clipBounds.origin.x + position,
-				 clipBounds.origin.y + 1);
+	if (fromIsSmaller) {
+	    clipBounds.size.width = position;
+	} else {
+	    clipBounds.origin.x += position;
+	    clipBounds.size.width -= position;
+	}
+	thumbPoint = CGPointMake(trackBounds.origin.x + position,
+				 trackBounds.origin.y + 1);
     } else {
 	trackBounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 0);
 	trackBounds.size.width = 3;
 	position = 8 + fraction * (trackBounds.size.height - 16);
 	clipBounds = trackBounds;
-	clipBounds.size.height = position;
-	thumbPoint = CGPointMake(clipBounds.origin.x + 1,
-				 clipBounds.origin.y + position);
+	if (fromIsSmaller) {
+	    clipBounds.size.height = position;
+	} else {
+	    clipBounds.origin.y += position;
+	    clipBounds.size.height -= position;
+	}
+	thumbPoint = CGPointMake(trackBounds.origin.x + 1,
+				 trackBounds.origin.y + position);
     }
     trackColor = isDark ? CGColorFromGray(darkTrack):
 	CGColorFromGray(lightTrack);
@@ -1132,7 +1143,7 @@ static void DrawSlider(
     CGContextSaveGState(context);
     FillRoundedRectangle(context, trackBounds, 1.5, trackColor);
     CGContextClipToRect(context, clipBounds);
-    if (state & TTK_STATE_BACKGROUND) {
+    if (state & (TTK_STATE_BACKGROUND | TTK_STATE_DISABLED)) {
 	accentColor = isDark ? CGColorFromGray(darkInactiveTrack) :
 	    CGColorFromGray(lightInactiveTrack);
     } else {
@@ -2486,6 +2497,14 @@ static void TrackElementDraw(
     }
     BEGIN_DRAWING(d)
     if (([NSApp macOSVersion] > 100800) && !(state & TTK_STATE_ALTERNATE)) {
+
+	/*
+	 * We use the reserved field to indicate whether "from" is less than
+	 * "to".  It should be 0 if passing the info to HIThemeDrawInfo, but
+	 * we aren't doing that.
+	 */
+
+	info.reserved = (from < to);
 	DrawSlider(dc.context, bounds, info, state, tkwin);
     } else {
 	ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
@@ -2600,7 +2619,7 @@ static void PbarElementDraw(
 	 * and then decreases back to min.  We scale the value by 3 to
 	 * speed the animation up a bit.
 	 */
-	
+
 	double remainder = fmod(3*value, 2*maximum);
 	value = remainder > maximum ? 2*maximum - remainder : remainder;
     }
