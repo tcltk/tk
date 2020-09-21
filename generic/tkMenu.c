@@ -2128,7 +2128,7 @@ GetMenuIndex(
     const char *string;
 
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
-	if (*indexPtr != TCL_INDEX_NONE) {
+	if (*indexPtr != TCL_INDEX_NONE || menuPtr->numEntries == 0) {
 	    if (*indexPtr >= menuPtr->numEntries) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	    }
@@ -2360,7 +2360,7 @@ MenuAddOrInsert(
     }
     if (index == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\"", Tcl_GetString(indexPtr)));
+		"bad menu entry index \"%s\"", Tcl_GetString(indexPtr)));
 	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
 	return TCL_ERROR;
     }
