@@ -999,6 +999,9 @@ static void DrawProgressBar(
 	} else {
 	    colorBounds.size.width = ratio*bounds.size.width;
 	}
+	if (colorBounds.size.width > 0 && colorBounds.size.width < 6) {
+	    colorBounds.size.width = 6;
+	}
     } else {
 	bounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 1);
 	colorBounds = bounds;
@@ -1010,6 +1013,9 @@ static void DrawProgressBar(
 	    colorBounds.size.height = height;
 	} else {
 	    colorBounds.size.height = ratio*(bounds.size.height);
+	}
+	if (colorBounds.size.height > 0 && colorBounds.size.height < 6) {
+	    colorBounds.size.height = 6;
 	}
 	colorBounds.origin.y += bounds.size.height - colorBounds.size.height;
     }
