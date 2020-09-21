@@ -197,7 +197,7 @@ proc createwindows {} {
 
     bind . <Return> {.buttons.ok   flash; .buttons.ok   invoke}
     bind . <Escape> {.buttons.quit flash; .buttons.quit invoke}
-    bind . <1> {
+    bind . <Button-1> {
 	if {![string match .buttons* %W]} {
 	    .buttons.apply  configure -state normal
 	    .buttons.cancel configure -state normal
