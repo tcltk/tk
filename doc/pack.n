@@ -155,8 +155,8 @@ Returns a list of all of the content windows in the packing order for \fIwindow\
 The order of the content windows in the list is the same as their order in
 the packing order.
 If \fIwindow\fR has no content then an empty string is returned.
-.TP
 .VS "TIP 581"
+.TP
 \fBpack content \fIwindow\fR
 .
 Synonym for . \fBpack slaves \fIwindow\fR
