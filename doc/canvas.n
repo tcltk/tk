@@ -1147,8 +1147,7 @@ total width of the canvas is off-screen to the left.
 .
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer or a float, but if it is a float then
-it is converted to an integer, rounded away from 0.
+\fINumber\fR must be an integer.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR or an abbreviation
 of one of these.
 If \fIwhat is \fBpages\fR then the view

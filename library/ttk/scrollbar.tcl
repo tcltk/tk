@@ -17,6 +17,10 @@ bind TScrollbar <Button-2> 		{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
+bind TScrollbar <Button-3> 		{ ttk::scrollbar::Jump %W %x %y }
+bind TScrollbar <B3-Motion>		{ ttk::scrollbar::Drag %W %x %y }
+bind TScrollbar <ButtonRelease-3>	{ ttk::scrollbar::Release %W %x %y }
+
 # Redirect scrollwheel bindings to the scrollbar widget
 #
 bind TScrollbar <MouseWheel> [bind Scrollbar <MouseWheel>]
@@ -89,7 +93,7 @@ proc ttk::scrollbar::Release {w x y} {
     ttk::CancelRepeat
 }
 
-# scrollbar::Jump -- Button-2 binding for scrollbars.
+# scrollbar::Jump -- Button-2/3 binding for scrollbars.
 # 	Behaves exactly like scrollbar::Press, except that
 #	clicking in the trough jumps to the the selected position.
 #
