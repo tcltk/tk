@@ -961,7 +961,9 @@ DrawHelpSymbol(
  * DrawProgressBar --
  *
  * Draws a progress bar, with parameters supplied by a HIThemeTrackDrawInfo
- * struct.
+ * struct.  Draws a rounded rectangular track overlayed by a colored
+ * rounded rectangular indicator.  An indeterminate progress bar is
+ * animated.
  */
 
 static void DrawProgressBar(
@@ -971,41 +973,57 @@ static void DrawProgressBar(
     int state,
     Tk_Window tkwin)
 {
-    CGRect clipBounds = bounds;
+    CGRect colorBounds;
     CGFloat rgba[4];
     CGColorRef trackColor, highlightColor, fillColor;
     NSColor *accent;
-    CGFloat ratio = (CGFloat) info.value / (CGFloat) info.max;
-    CGFloat locations[6] = {0.0, 0.5, 0.5, 0.5, 0.5, 1.0};
-    CGPoint end;
-    CGPathRef path;
-    CGGradientRef gradient;
-    static CGFloat colors[24] = {1.0, 1.0, 1.0, 0.0,
-				 1.0, 1.0, 1.0, 0.0,
-				 1.0, 1.0, 1.0, 0.5,
-				 1.0, 1.0, 1.0, 0.5,
-				 1.0, 1.0, 1.0, 0.0,
-				 1.0, 1.0, 1.0, 0.0};
+    CGFloat ratio = (CGFloat) info.value / (CGFloat) (info.max - info.min);
 
     GetBackgroundColorRGBA(context, tkwin, 0, NO, rgba);
+
+    /*
+     * Compute the bounds for the track and indicator.  The track is 6 pixels
+     * wide in the center of the widget bounds.
+     */
+
     if (info.attributes & kThemeTrackHorizontal) {
 	bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
-	clipBounds.size.width = 5 + ratio*(bounds.size.width + 3);
-	clipBounds.origin.x -= 5;
-	end = CGPointMake(bounds.origin.x + bounds.size.width, bounds.origin.y);
+	colorBounds = bounds;
+	if (info.kind == kThemeIndeterminateBar) {
+	    CGFloat width = 0.25*bounds.size.width;
+	    CGFloat travel = 0.75*bounds.size.width;
+	    CGFloat center = bounds.origin.x + (width / 2) + ratio*travel;
+	    colorBounds.origin.x = center - width / 2;
+	    colorBounds.size.width = width;
+	} else {
+	    colorBounds.size.width = ratio*bounds.size.width;
+	}
     } else {
 	bounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 1);
-	clipBounds.size.height = 5 + ratio*(bounds.size.height + 3);
-	clipBounds.origin.y -= 5;
-	end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
+	colorBounds = bounds;
+	if (info.kind == kThemeIndeterminateBar) {
+	    CGFloat height = 0.25*bounds.size.height;
+	    CGFloat travel = 0.75*bounds.size.height;
+	    CGFloat center = bounds.origin.y + (height / 2) + ratio*travel;
+	    colorBounds.origin.y = center - height / 2;
+	    colorBounds.size.height = height;
+	} else {
+	    colorBounds.size.height = ratio*(bounds.size.height);
+	}
+	colorBounds.origin.y += bounds.size.height - colorBounds.size.height;
     }
+
+    /*
+     * Compute the colors for the track and indicator.
+     */
+
     if (TkMacOSXInDarkMode(tkwin)) {
 	for(int i=0; i < 3; i++) {
 	    rgba[i] += 30.0 / 255.0;
 	}
 	trackColor = CGColorFromRGBA(rgba);
 	for(int i=0; i < 3; i++) {
-	    rgba[i] -= 15.0 / 255.0;
+	    rgba[i] -= 5.0 / 255.0;
 	}
 	highlightColor = CGColorFromRGBA(rgba);
 	FillRoundedRectangle(context, bounds, 3, trackColor);
@@ -1015,7 +1033,7 @@ static void DrawProgressBar(
 	}
 	trackColor = CGColorFromRGBA(rgba);
 	for(int i=0; i < 3; i++) {
-	    rgba[i] -= 12.0 / 255.0;
+	    rgba[i] += 3.0 / 255.0;
 	}
 	highlightColor = CGColorFromRGBA(rgba);
 	bounds.size.height -= 1;
@@ -1026,44 +1044,33 @@ static void DrawProgressBar(
     } else {
 	accent = controlAccentColor();
     }
+
+    /*
+     * Draw the track, with highlighting around the edge.
+     */
+
     FillRoundedRectangle(context, bounds, 3, trackColor);
-    bounds = CGRectInset(bounds, 0, 1);
-    FillRoundedRectangle(context, bounds, 2, highlightColor);
-    bounds = CGRectInset(bounds, 1, 1);
-    FillRoundedRectangle(context, bounds, 1, trackColor);
-    bounds = CGRectInset(bounds, -1, -2);
-    CGContextSaveGState(context);
-    if (info.kind == kThemeProgressBar) {
-	CGContextClipToRect(context, clipBounds);
-    }
-    fillColor = CGCOLOR([accent colorWithAlphaComponent:0.9]);
-    FillRoundedRectangle(context, bounds, 3, fillColor);
-    bounds = CGRectInset(bounds, 0, 1);
-    fillColor = CGCOLOR([[NSColor blackColor] colorWithAlphaComponent:0.1]);
-    FillRoundedRectangle(context, bounds, 2, fillColor);
-    bounds = CGRectInset(bounds, 1, 1);
-    fillColor = CGCOLOR([accent colorWithAlphaComponent:1.0]);
-    FillRoundedRectangle(context, bounds, 1, fillColor);
-    CGContextRestoreGState(context);
+    bounds = CGRectInset(bounds, 0, 0.5);
+    FillRoundedRectangle(context, bounds, 2.5, highlightColor);
+    bounds = CGRectInset(bounds, 0.5, 0.5);
+    FillRoundedRectangle(context, bounds, 2, trackColor);
+    bounds = CGRectInset(bounds, -0.5, -1);
+
+    /*
+     * Draw the indicator.  Make it slightly transparent around the
+     * edge so the highlightng shows through.
+     */
+
     if (info.kind == kThemeIndeterminateBar &&
-	(state & TTK_STATE_SELECTED)) {
-	NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-	bounds = CGRectInset(bounds, 0, -2);
-	locations[1] = ratio < 0.2 ? 0.0 : ratio - 0.2;
-	locations[2] = ratio < 0.1 ? 0.0 : ratio - 0.1;
-	locations[3] = ratio > 0.9 ? 1.0 : ratio + 0.1;
-	locations[4] = ratio > 0.8 ? 1.0 : ratio + 0.2;
-	gradient = CGGradientCreateWithColorComponents(sRGB.CGColorSpace,
-						       colors, locations, 5);
-	CGContextSaveGState(context);
-	path = CGPathCreateWithRoundedRect(bounds, 3, 3, NULL);
-	CGContextBeginPath(context);
-	CGContextAddPath(context, path);
-	CGContextClip(context);
-	CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0.0);
-	CGContextRestoreGState(context);
-	CFRelease(path);
+	(state & TTK_STATE_SELECTED) == 0) {
+	return;
     }
+
+    fillColor = CGCOLOR([accent colorWithAlphaComponent:0.9]);
+    FillRoundedRectangle(context, colorBounds, 3, fillColor);
+    colorBounds = CGRectInset(colorBounds, 1, 1);
+    fillColor = CGCOLOR([accent colorWithAlphaComponent:1.0]);
+    FillRoundedRectangle(context, colorBounds, 2.5, fillColor);
 }
 
 /*----------------------------------------------------------------------
@@ -1091,7 +1098,8 @@ static void DrawSlider(
     CGPoint thumbPoint;
     CGFloat position;
     CGColorRef accentColor;
-    double from = info.min, to = info.max, value = info.value;
+    Bool fromIsSmaller = info.reserved;
+    double from = info.min, to = fabs((double) info.max), value = info.value;
 
     /*
      * info.min, info.max and info.value are integers.  When this is called
@@ -1106,17 +1114,27 @@ static void DrawSlider(
 	trackBounds.size.height = 3;
 	position = 8 + fraction * (trackBounds.size.width - 16);
 	clipBounds = trackBounds;
-	clipBounds.size.width = position;
-	thumbPoint = CGPointMake(clipBounds.origin.x + position,
-				 clipBounds.origin.y + 1);
+	if (fromIsSmaller) {
+	    clipBounds.size.width = position;
+	} else {
+	    clipBounds.origin.x += position;
+	    clipBounds.size.width -= position;
+	}
+	thumbPoint = CGPointMake(trackBounds.origin.x + position,
+				 trackBounds.origin.y + 1);
     } else {
 	trackBounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 0);
 	trackBounds.size.width = 3;
 	position = 8 + fraction * (trackBounds.size.height - 16);
 	clipBounds = trackBounds;
-	clipBounds.size.height = position;
-	thumbPoint = CGPointMake(clipBounds.origin.x + 1,
-				 clipBounds.origin.y + position);
+	if (fromIsSmaller) {
+	    clipBounds.size.height = position;
+	} else {
+	    clipBounds.origin.y += position;
+	    clipBounds.size.height -= position;
+	}
+	thumbPoint = CGPointMake(trackBounds.origin.x + 1,
+				 trackBounds.origin.y + position);
     }
     trackColor = isDark ? CGColorFromGray(darkTrack):
 	CGColorFromGray(lightTrack);
@@ -1124,7 +1142,7 @@ static void DrawSlider(
     CGContextSaveGState(context);
     FillRoundedRectangle(context, trackBounds, 1.5, trackColor);
     CGContextClipToRect(context, clipBounds);
-    if (state & TTK_STATE_BACKGROUND) {
+    if (state & (TTK_STATE_BACKGROUND | TTK_STATE_DISABLED)) {
 	accentColor = isDark ? CGColorFromGray(darkInactiveTrack) :
 	    CGColorFromGray(lightInactiveTrack);
     } else {
@@ -2474,6 +2492,14 @@ static void TrackElementDraw(
     }
     BEGIN_DRAWING(d)
     if (([NSApp macOSVersion] > 100800) && !(state & TTK_STATE_ALTERNATE)) {
+
+	/*
+	 * We use the reserved field to indicate whether "from" is less than
+	 * "to".  It should be 0 if passing the info to HIThemeDrawInfo, but
+	 * we aren't doing that.
+	 */
+
+	info.reserved = (from < to);
 	DrawSlider(dc.context, bounds, info, state, tkwin);
     } else {
 	ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
@@ -2581,7 +2607,15 @@ static void PbarElementDraw(
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
 
     if (isIndeterminate) {
-	double remainder = fmod(value, 2*maximum);
+
+	/*
+	 * When an indeterminate progress bar is animated the phase is
+	 * (currently) always 0 and the value increases from min to max
+	 * and then decreases back to min.  We scale the value by 3 to
+	 * speed the animation up a bit.
+	 */
+
+	double remainder = fmod(3*value, 2*maximum);
 	value = remainder > maximum ? 2*maximum - remainder : remainder;
     }
     factor = RangeToFactor(maximum);
