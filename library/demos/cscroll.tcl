@@ -53,12 +53,12 @@ for {set i 0} {$i < 20} {incr i} {
     }
 }
 
-$c bind all <Any-Enter> "scrollEnter $c"
-$c bind all <Any-Leave> "scrollLeave $c"
-$c bind all <1> "scrollButton $c"
-bind $c <2> "$c scan mark %x %y"
-bind $c <B2-Motion> "$c scan dragto %x %y"
+$c bind all <Enter> "scrollEnter $c"
+$c bind all <Leave> "scrollLeave $c"
+$c bind all <Button-1> "scrollButton $c"
 if {[tk windowingsystem] eq "aqua"} {
+    bind $c <Button-3> "$c scan mark %x %y"
+    bind $c <B3-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
 	%W yview scroll [expr {-(%D)}] units
     }
@@ -72,11 +72,33 @@ if {[tk windowingsystem] eq "aqua"} {
 	%W xview scroll [expr {-10 * (%D)}] units
     }
 } else {
+    bind $c <Button-2> "$c scan mark %x %y"
+    bind $c <B2-Motion> "$c scan dragto %x %y"
+    # We must make sure that positive and negative movements are rounded
+    # equally to integers, avoiding the problem that
+    #     (int)1/30 = 0,
+    # but
+    #     (int)-1/30 = -1
+    # The following code ensure equal +/- behaviour.
     bind $c <MouseWheel> {
-	%W yview scroll [expr {-(%D / 30)}] units
+	if {%D >= 0} {
+	    %W yview scroll [expr {%D/-30}] units
+	} else {
+	    %W yview scroll [expr {(%D-29)/-30}] units
+	}
+    }
+    bind $c <Option-MouseWheel> {
+	%W yview scroll [expr {%D/-3}] units
     }
     bind $c <Shift-MouseWheel> {
-	%W xview scroll [expr {-(%D / 30)}] units
+	if {%D >= 0} {
+	    %W xview scroll [expr {%D/-30}] units
+	} else {
+	    %W xview scroll [expr {(%D-29)/-30}] units
+	}
+    }
+    bind $c <Shift-Option-MouseWheel> {
+	%W xview scroll [expr {%D/-3}] units
     }
 }
 
@@ -85,22 +107,22 @@ if {[tk windowingsystem] eq "x11"} {
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
     #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind $c <4> {
+    bind $c <Button-4> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll -5 units
 	}
     }
-    bind $c <Shift-4> {
+    bind $c <Shift-Button-4> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll -5 units
 	}
     }
-    bind $c <5> {
+    bind $c <Button-5> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll 5 units
 	}
     }
-    bind $c <Shift-5> {
+    bind $c <Shift-Button-5> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 5 units
 	}
