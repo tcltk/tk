@@ -13,6 +13,7 @@
 
 #include <tcl.h>
 #include <tk.h>
+#inlude "tkUnixInt.h"
 
 /* 
  * Based extensively on the tktray extension package. Here we are removing 
