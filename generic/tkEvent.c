@@ -1148,7 +1148,7 @@ Tk_HandleEvent(
 	} else if (eventPtr->type == ButtonPress) {
 	    eventPtr->type = MouseWheelEvent;
 	    eventPtr->xany.send_event = -1;
-	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 120 : -120;
+	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? -120 : 120;
 	    if (eventPtr->xkey.keycode > Button5) {
 		eventPtr->xkey.state ^= ShiftMask;
 	    }
