@@ -3194,21 +3194,21 @@ ExpandPercents(
 		/* If %D is followed by '*' or '/', use the number after that as scale factor */
 		if ((before[2] == '/' || before[2] == '*') && (((unsigned)(before[(before[3] == '-') ? 4 : 3] - '1') < 9))) {
 		    char *p;
-		    int scale = strtol(before + 3, &p, 10);
+		    long scale = strtol(before + 3, &p, 10);
 		    if (scale < 0) {scale = -scale;}
-		    if (p > before + 3) {
-		        /* Division/multiplcation is done with positive numbers only */
-			    if (wheel < 0) {wheel = -wheel;}
-			    if (before[2] == '/') {
-			    wheel = (wheel + (scale - 1)) / scale;
+		    /* protect against redicilous values. No scaling in that case */
+		    if (wheel != 0 && scale < 65536) {
+			if (wheel < 0) {wheel = -wheel;}
+			if (before[2] == '/') {
+			    wheel = (wheel + ((int)scale - 1)) / (int)scale;
 			    if (wheel == 0) wheel = 1;
-			    } else {
-			    	wheel *= scale;
-			    }
-			    /* Correct sign if result must be negative after all */
-			    if (((int)evPtr->xbutton.button < 0) ^ (before[3] == '-')) {wheel = -wheel;}
-			    before = p - 2;
+			} else {
+			    wheel *= scale;
+			}
+			/* Correct sign if result must be negative after all */
+			if (((int)evPtr->xbutton.button < 0) ^ (before[3] == '-')) {wheel = -wheel;}
 		    }
+		    before = p - 2;
 		}
 		SET_NUMBER(wheel);
 	    }
