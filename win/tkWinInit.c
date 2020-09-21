@@ -39,10 +39,10 @@ TkpInit(
     /*
      * This is necessary for static initialization, and is ok otherwise
      * because TkWinXInit flips a static bit to do its work just once. Also,
-	 * initialize the Windows systray command here.
+     * initialize the Windows systray command here.
      */
 
-	WinIcoInit(interp);	
+    WinIcoInit(interp);	
     TkWinXInit(Tk_GetHINSTANCE());
     return TCL_OK;
 }
