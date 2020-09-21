@@ -714,7 +714,7 @@ test scrollbar-10.2 {<MouseWheel> event on scrollbar} -setup {
 } -cleanup {
     destroy .t .s
 } -result {1.4}
-test scrollbar-10.2.3 {<MouseWheel> event on horizontal scrollbar} -setup {
+test scrollbar-10.3 {<MouseWheel> event on horizontal scrollbar} -setup {
     destroy .t .s
 } -body {
     pack [text .t -xscrollcommand {.s set} -wrap none] -side top
