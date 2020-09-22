@@ -14,10 +14,9 @@
  */
 
 #include "tkMacOSXPrivate.h"
-
-#include <sys/stat.h>
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
+#include <sys/stat.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -284,16 +283,19 @@ TkpInit(
 
     if (!initialized) {
 	struct stat st;
+	Bool shouldOpenConsole = NO;
+        Bool stdinIsNullish = (!isatty(0) &&
+	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-	initialized = 1;
-
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #   error Mac OS X 10.6 required
 #endif
+
+	initialized = 1;
 
 #ifdef TK_FRAMEWORK
 	/*
@@ -310,16 +312,6 @@ TkpInit(
 	    # endif
 	}
 #endif
-
-	/*
-	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
-	 * fight with gdb for stdin & stdout
-	 */
-
-	if (getenv("XCNOSTDIN") != NULL) {
-	    close(0);
-	    close(1);
-	}
 
 	/*
 	 * Instantiate our NSApplication object. This needs to be done before
@@ -376,48 +368,52 @@ TkpInit(
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
-	 * If we don't have a TTY or stdin is a special character file of
-	 * length 0, (e.g. /dev/null, which is what Finder sets when double
-	 * clicking Wish) then use the Tk based console interpreter.
+	 * Decide whether to open a console window.  If the TK_CONSOLE
+	 * environment variable is not defined we only show the console if
+	 * stdin is not a tty and there is no startup script.
 	 */
 
-	if (!isatty(0) && (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0))) {
-	    if (getenv("TK_CONSOLE")) {
-		Tk_InitConsoleChannels(interp);
-		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
-		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
-		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-
-		/*
-		 * Only show the console if we don't have a startup script and
-		 * tcl_interactive hasn't been set already.
-		 */
-
-		if (Tcl_GetStartupScript(NULL) == NULL) {
-		    const char *intvar = Tcl_GetVar2(interp,
-						     "tcl_interactive", NULL, TCL_GLOBAL_ONLY);
-
-		    if (intvar == NULL) {
-			Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
-				    TCL_GLOBAL_ONLY);
-		    }
-		}
-		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
-		    return TCL_ERROR;
-		}
-	    } else {
-
-		/*
-		 * When launched as a macOS application with no console,
-		 * redirect stderr and stdout to /dev/null. This avoids waiting
-		 * forever for those files to become writable if the underlying
-		 * Tcl program tries to write to them with a puts command.
-		 */
-
-		FILE *null = fopen("/dev/null", "w");
-		dup2(fileno(null), STDOUT_FILENO);
-		dup2(fileno(null), STDERR_FILENO);
+	if (getenv("TK_CONSOLE")) {
+	    shouldOpenConsole = YES;
+	} else if (stdinIsNullish && Tcl_GetStartupScript(NULL) == NULL) {
+	    const char *intvar = Tcl_GetVar2(interp, "tcl_interactive",
+					     NULL, TCL_GLOBAL_ONLY);
+	    if (intvar == NULL) {
+		Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
+			    TCL_GLOBAL_ONLY);
 	    }
+	    shouldOpenConsole = YES;
+	}
+	if (shouldOpenConsole) {
+	    Tk_InitConsoleChannels(interp);
+	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
+	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
+	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
+	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
+		return TCL_ERROR;
+	    }
+	} else if (stdinIsNullish) {
+
+	    /*
+	     * When launched as a macOS application with no console,
+	     * redirect stderr and stdout to /dev/null. This avoids waiting
+	     * forever for those files to become writable if the underlying
+	     * Tcl program tries to write to them with a puts command.
+	     */
+
+	    FILE *null = fopen("/dev/null", "w");
+	    dup2(fileno(null), STDOUT_FILENO);
+	    dup2(fileno(null), STDERR_FILENO);
+	}
+
+	/*
+	 * FIXME: Close stdin & stdout for remote debugging if XCNOSTDIN is
+	 * set.  Otherwise we will fight with gdb for stdin & stdout
+	 */
+
+	if (getenv("XCNOSTDIN") != NULL) {
+	    close(0);
+	    close(1);
 	}
 
 	/*
@@ -444,6 +440,10 @@ TkpInit(
 	    }
 	}
     }
+
+    /*
+     * Initialization steps that are needed for all interpreters.
+     */
 
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
