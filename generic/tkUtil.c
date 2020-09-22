@@ -667,7 +667,7 @@ Tk_GetScrollInfo(
 	if (argc != 5) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
-		    argv[0], argv[1], "scroll number pages|units"));
+		    argv[0], argv[1], "scroll number coarse|fine|pages|units"));
 	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
@@ -680,10 +680,20 @@ Tk_GetScrollInfo(
 	    return TK_SCROLL_PAGES;
 	} else if ((c == 'u') && (strncmp(argv[4], "units", length) == 0)) {
 	    return TK_SCROLL_UNITS;
+	} else if ((c == 'c') && (strncmp(argv[4], "coarse", length) == 0)) {
+	    int scaled = (6 - *intPtr)/12;
+	    if (scaled == 0) {scaled = (*intPtr > 0) ? -1 : 1;}
+	    *intPtr = scaled;
+	    return TK_SCROLL_UNITS;
+	} else if ((c == 'f') && (strncmp(argv[4], "fine", length) == 0)) {
+	    int scaled = (60 - *intPtr)/120;
+	    if (scaled == 0) {scaled = (*intPtr > 0) ? -1 : 1;}
+	    *intPtr = scaled;
+	    return TK_SCROLL_UNITS;
 	}
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad argument \"%s\": must be pages or units", argv[4]));
+		"bad argument \"%s\": must be coarse, fine, pages or units", argv[4]));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }
@@ -745,7 +755,7 @@ Tk_GetScrollInfoObj(
 	return TK_SCROLL_MOVETO;
     } else if (ArgPfxEq("scroll")) {
 	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number pages|units");
+	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number coarse|fine|pages|units");
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
@@ -757,10 +767,20 @@ Tk_GetScrollInfoObj(
 	    return TK_SCROLL_PAGES;
 	} else if (ArgPfxEq("units")) {
 	    return TK_SCROLL_UNITS;
+	} else if ArgPfxEq("coarse") {
+	    int scaled = (6 - *intPtr)/12;
+	    if (scaled == 0) {scaled = (*intPtr > 0) ? -1 : 1;}
+	    *intPtr = scaled;
+	    return TK_SCROLL_UNITS;
+	} else if ArgPfxEq("fine") {
+	    int scaled = (60 - *intPtr)/120;
+	    if (scaled == 0) {scaled = (*intPtr > 0) ? -1 : 1;}
+	    *intPtr = scaled;
+	    return TK_SCROLL_UNITS;
 	}
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad argument \"%s\": must be pages or units", arg));
+		"bad argument \"%s\": must be coarse, fine, pages or units", arg));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }

@@ -130,10 +130,10 @@ bind Scrollbar <<LineEnd>> {
 }
 
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W hv %D/-30
+    tk::ScrollByUnits %W hv %D -30
 }
 bind Scrollbar <Option-MouseWheel> {
-    tk::ScrollByUnits %W hv %D/-3
+    tk::ScrollByUnits %W hv %D -3
 }
 
 # tk::ScrollButtonDown --
@@ -306,17 +306,19 @@ proc ::tk::ScrollEndDrag {w x y} {
 #		horizontal, "v" for vertical, "hv" for both.
 # amount -	How many units to scroll:  typically 1 or -1.
 
-proc ::tk::ScrollByUnits {w orient amount} {
+proc ::tk::ScrollByUnits {w orient amount {scale 1}} {
     set cmd [$w cget -command]
     if {$cmd eq "" || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
     set info [$w get]
+    set scaled [expr {($amount + abs($scale)/2)/$scale}]
+    if {$scaled == 0} {set $scaled [expr {($amount >= 0) ^ ($scale >= 0) ? 1: -1}]}
     if {[llength $info] == 2} {
-	uplevel #0 $cmd scroll $amount units
+	uplevel #0 $cmd scroll $scaled units
     } else {
-	uplevel #0 $cmd [expr {[lindex $info 2] + $amount}]
+	uplevel #0 $cmd [expr {[lindex $info 2] + $scaled}]
     }
 }
 

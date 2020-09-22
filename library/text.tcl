@@ -441,28 +441,17 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows and MacOS X.
-# However, someone could use the "event generate" command to produce one
-# on other platforms.  We must be careful not to round -ve values of %D
-# down to zero.
-
-# We must make sure that positive and negative movements are rounded
-# equally to integers, avoiding the problem that
-#     (int)1/3 = 0,
-# but
-#     (int)-1/3 = -1
-# The following code ensure equal +/- behaviour.
 bind Text <MouseWheel> {
-    %W yview scroll %D/-3 pixels
+    %W yview scroll %D fine
 }
 bind Text <Option-MouseWheel> {
-    %W yview scroll %D*-3 pixels
+    %W yview scroll %D coarse
 }
 bind Text <Shift-MouseWheel> {
-    %W xview scroll %D/-3 pixels
+    %W xview scroll %D fine
 }
 bind Text <Shift-Option-MouseWheel> {
-    %W xview scroll %D*-3 pixels
+    %W xview scroll %D coarse
 }
 
 # ::tk::TextClosestGap --
@@ -514,12 +503,7 @@ proc ::tk::TextButton1 {w x y} {
     } else {
 	$w mark gravity $anchorname left
     }
-    # Allow focus in any case on Windows, because that will let the
-    # selection be displayed even for state disabled text widgets.
-    if {[tk windowingsystem] eq "win32" \
-	    || [$w cget -state] eq "normal"} {
-	focus $w
-    }
+    focus $w
     if {[$w cget -autoseparators]} {
 	$w edit separator
     }

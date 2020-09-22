@@ -2111,9 +2111,9 @@ CanvasWidgetCmd(
 	    break;
 	case TK_SCROLL_UNITS:
 	    if (canvasPtr->xScrollIncrement > 0) {
-		newX = canvasPtr->xOrigin + count*canvasPtr->xScrollIncrement;
+		newX = canvasPtr->xOrigin + count*4*canvasPtr->xScrollIncrement;
 	    } else {
-		newX = (int) (canvasPtr->xOrigin + count * .1
+		newX = (int) (canvasPtr->xOrigin + count * .4
 			* (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    }
 	    break;

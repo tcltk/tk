@@ -8781,10 +8781,10 @@ TextGetScrollInfoObj(
 	VIEW_MOVETO, VIEW_SCROLL
     };
     static const char *const units[] = {
-	"pages", "pixels", "units", NULL
+	"coarse", "fine", "pages", "pixels", "units", NULL
     };
     enum viewUnits {
-	VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
+	VIEW_SCROLL_COARSE, VIEW_SCROLL_FINE, VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
     };
     int index;
 
@@ -8805,7 +8805,7 @@ TextGetScrollInfoObj(
 	return TKTEXT_SCROLL_MOVETO;
     case VIEW_SCROLL:
 	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "number pages|pixels|units");
+	    Tcl_WrongNumArgs(interp, 3, objv, "number coarse|fine|pages|pixels|units");
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	if (Tcl_GetIndexFromObjStruct(interp, objv[4], units,
@@ -8813,25 +8813,33 @@ TextGetScrollInfoObj(
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	switch ((enum viewUnits) index) {
-	case VIEW_SCROLL_PAGES:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
-		return TKTEXT_SCROLL_ERROR;
+	case VIEW_SCROLL_COARSE:
+	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) == TCL_OK) {
+		*intPtr *= -3;
+		return TKTEXT_SCROLL_UNITS;
 	    }
-	    return TKTEXT_SCROLL_PAGES;
+	case VIEW_SCROLL_FINE:
+	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) == TCL_OK) {
+		int scaled = (1 - *intPtr)/3;
+		if (scaled == 0) {scaled = (*intPtr > 0) ? -1 : 1;}
+		*intPtr = scaled;
+		return TKTEXT_SCROLL_UNITS;
+	    }
+	case VIEW_SCROLL_PAGES:
+	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) == TCL_OK) {
+		return TKTEXT_SCROLL_PAGES;
+	    }
 	case VIEW_SCROLL_PIXELS:
 	    if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[3],
-		    intPtr) != TCL_OK) {
-		return TKTEXT_SCROLL_ERROR;
+		    intPtr) == TCL_OK) {
+		return TKTEXT_SCROLL_PIXELS;
 	    }
-	    return TKTEXT_SCROLL_PIXELS;
 	case VIEW_SCROLL_UNITS:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
-		return TKTEXT_SCROLL_ERROR;
+	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) == TCL_OK) {
+		return TKTEXT_SCROLL_UNITS;
 	    }
-	    return TKTEXT_SCROLL_UNITS;
 	}
     }
-    Tcl_Panic("unexpected switch fallthrough");
     return TKTEXT_SCROLL_ERROR;
 }
 
