@@ -1693,3 +1693,12 @@ int Tktray_Init ( Tcl_Interp* interp )
 
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
