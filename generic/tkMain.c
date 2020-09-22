@@ -407,15 +407,15 @@ StdinProc(
 {
     char *cmd;
     int code;
-    size_t count;
+    TkSizeT count;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
     (void)mask;
 
-    count = (size_t)Tcl_Gets(chan, &isPtr->line);
+    count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count == (size_t)-1 && !isPtr->gotPartial) {
+    if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
