@@ -273,6 +273,9 @@ proc ttk::copyBindings {from to} {
 #
 # Platform inconsistencies:
 #
+# The Shift+MouseWheel behavior is not conventional on Windows or most
+# X11 toolkits, but it's useful.
+#
 # MouseWheel scrolling is accelerated on X11, which is conventional
 # for Tk and appears to be conventional for other toolkits (although
 # Gtk+ and Qt do not appear to use as large a factor).
@@ -285,8 +288,8 @@ proc ttk::copyBindings {from to} {
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
-    bind $bindtag <MouseWheel> [append callback { %D/-120}]
-    bind $bindtag <Option-MouseWheel> [append callback { %D/-12}]
+    bind $bindtag <MouseWheel> [append callback { %D fine}]
+    bind $bindtag <Option-MouseWheel> [append callback { %D coarse}]
 }
 
 ## Mousewheel bindings for standard scrollable widgets.
@@ -298,12 +301,12 @@ proc ttk::bindMouseWheel {bindtag callback} {
 #
 
 bind TtkScrollable <MouseWheel> \
-	{ %W yview scroll %D/-120 units }
+	{ %W yview scroll %D fine }
 bind TtkScrollable <Option-MouseWheel> \
-	{ %W yview scroll %D/-12 units }
+	{ %W yview scroll %D coarse }
 bind TtkScrollable <Shift-MouseWheel> \
-	{ %W xview scroll %D/-120 units }
+	{ %W xview scroll %D fine }
 bind TtkScrollable <Shift-Option-MouseWheel> \
-	{ %W xview scroll %D/-12 units }
+	{ %W xview scroll %D coarse }
 
 #*EOF*
