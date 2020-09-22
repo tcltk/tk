@@ -55,7 +55,7 @@
 
 #define TKU_NO_BAD_WINDOW_BEGIN(display) \
     { Tk_ErrorHandler error__handler = \
-	Tk_CreateErrorHandler(display,BadWindow,-1,-1,(int(*)())NULL, NULL);
+	Tk_CreateErrorHandler(display, BadWindow, -1, -1, NULL, NULL);
 #define TKU_NO_BAD_WINDOW_END Tk_DeleteErrorHandler(error__handler); }
 
 /*Declaration for utility functions.*/
@@ -117,7 +117,7 @@ static Window TKU_XID(Tk_Window w)
 
 static void TKU_VirtualEvent(Tk_Window tkwin, Tk_Uid eventid)
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
@@ -125,7 +125,7 @@ static void TKU_VirtualEvent(Tk_Window tkwin, Tk_Uid eventid)
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(tkwin);
     event.general.xany.display = Tk_Display(tkwin);
-    event.virtual.name = eventid;
+    event.virt.name = eventid;
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
@@ -660,23 +660,23 @@ static void DockToManager(DockIcon *icon)
 static
 Tk_OptionSpec IconOptionSpec[]={
     {TK_OPTION_STRING,"-image","image","Image",
-     (char *) NULL, -1, Tk_Offset(DockIcon, imageString),
+     (char *) NULL, -1, offsetof(DockIcon, imageString),
      TK_OPTION_NULL_OK, (ClientData) NULL,
      ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_STRING,"-class","class","Class",
-     "TrayIcon", -1, Tk_Offset(DockIcon, classString),
+     "TrayIcon", -1, offsetof(DockIcon, classString),
      0, (ClientData) NULL,
      ICON_CONF_CLASS},
     {TK_OPTION_BOOLEAN,"-docked","docked","Docked",
-     "1", -1, Tk_Offset(DockIcon, docked),
+     "1", -1, offsetof(DockIcon, docked),
      0, (ClientData) NULL,
      ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-shape","shape","Shape",
-     "0", -1, Tk_Offset(DockIcon, useShapeExt),
+     "0", -1, offsetof(DockIcon, useShapeExt),
      0, (ClientData) NULL,
      ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-visible","visible","Visible",
-     "1", -1, Tk_Offset(DockIcon, visible),
+     "1", -1, offsetof(DockIcon, visible),
      0, (ClientData) NULL,
      ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_END}
@@ -1569,7 +1569,7 @@ static void TrayIconDeleteProc( ClientData cd )
 static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
 			     int objc,  Tcl_Obj *const objv[])
 {
-    Tk_Window mainWindow = cd;
+    Tk_Window mainWindow = (Tk_Window)cd;
     DockIcon *icon;
 
     icon = (DockIcon*)attemptckalloc(sizeof(DockIcon));
