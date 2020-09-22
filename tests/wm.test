@@ -11,7 +11,7 @@
 # Window manager tests that only work on a specific platform should be placed
 # in unixWm.test or winWm.test.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 

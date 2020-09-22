@@ -976,7 +976,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 	    update
 	    bind .t1 <Key> {lappend y {key %A}}
 	    set y {}
-	    event generate .t1 <Keys> -keysym a
+	    event generate .t1 <Key> -keysym a
 	    set y
     }]
     update

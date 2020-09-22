@@ -1395,12 +1395,11 @@ QueueGrabWindowChange(
 static int
 GrabWinEventProc(
     Tcl_Event *evPtr,		/* Event of type NewGrabWinEvent. */
-    int flags)			/* Flags argument to Tcl_DoOneEvent: indicates
+    TCL_UNUSED(int))			/* Flags argument to Tcl_DoOneEvent: indicates
 				 * what kinds of events are being processed
 				 * right now. */
 {
     NewGrabWinEvent *grabEvPtr = (NewGrabWinEvent *) evPtr;
-    (void)flags;
 
     grabEvPtr->dispPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(
 	    grabEvPtr->dispPtr->display, grabEvPtr->grabWindow);

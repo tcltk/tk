@@ -5,7 +5,7 @@ if {[namespace exists tk::test]} {
     return
 }
 
-package require Tk 8.4
+package require Tk
 tk appname tktest
 wm title . tktest
 # If the main window isn't already mapped (e.g. because the tests are
@@ -17,7 +17,7 @@ if {![winfo ismapped .]} {
     update
 }
 
-package require tcltest 2.1
+package require tcltest 2.2
 
 namespace eval tk {
     namespace eval test {
