@@ -29,7 +29,6 @@ MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
 
 #endif /* _TKUNIXINT */
 
-MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp); 
 
 /*
  * Local Variables:

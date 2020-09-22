@@ -13,7 +13,7 @@
 
 #include <tcl.h>
 #include <tk.h>
-#inlude "tkUnixInt.h"
+#include "tkUnixInt.h"
 
 /* 
  * Based extensively on the tktray extension package. Here we are removing 
@@ -58,7 +58,28 @@
 	Tk_CreateErrorHandler(display,BadWindow,-1,-1,(int(*)())NULL, NULL);
 #define TKU_NO_BAD_WINDOW_END Tk_DeleteErrorHandler(error__handler); }
 
+/*Declaration for utility functions.*/
+static void TKU_WmWithdraw(Tk_Window winPtr, Tcl_Interp* interp);
+static Tk_Window TKU_GetWrapper(Tk_Window winPtr);
+void TKU_AddInput( Display* dpy, Window win, long add_to_mask);
+static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp);
+static Window TKU_XID(Tk_Window w);
+static void TKU_VirtualEvent(Tk_Window tkwin, Tk_Uid eventid);
 
+/* Customized window withdraw */
+static void TKU_WmWithdraw(Tk_Window winPtr, Tcl_Interp* interp)
+{
+    /*Silence compiler warning.*/
+    (void) interp;
+    TkpWmSetState((TkWindow*)winPtr, WithdrawnState);
+}
+
+/* The wrapper should exist */
+static Tk_Window TKU_GetWrapper(Tk_Window winPtr)
+{
+    return (Tk_Window)
+	TkpGetWrapperWindow((TkWindow*)winPtr);
+}
 
 /* Subscribe for extra X11 events (needed for MANAGER selection) */
 void TKU_AddInput( Display* dpy, Window win, long add_to_mask)
@@ -73,12 +94,12 @@ void TKU_AddInput( Display* dpy, Window win, long add_to_mask)
 /* Get Tk Window wrapper (make it exist if ny) */
 static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp)
 {
-    Tk_Window wrapper = TKU_GetWrapper(w);
+  Tk_Window wrapper = TKU_GetWrapper(w);
     if (!wrapper) {
 	Tk_MakeWindowExist(w);
 	TKU_WmWithdraw(w, interp);
 	Tk_MapWindow(w);
-	wrapper = TKU_GetWrapper(w);
+	wrapper = (Tk_Window) TKU_GetWrapper(w);
     }
     return wrapper;
 }
@@ -186,11 +207,11 @@ typedef struct {
  */
 
 static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc, Tcl_Obj * CONST objv[]);
+			     int objc,  Tcl_Obj *const objv[]);
 static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc, Tcl_Obj * CONST objv[]);
+			     int objc,  Tcl_Obj *const objv[]);
 static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
-				   int objc, Tcl_Obj* CONST objv[],
+				   int objc,  Tcl_Obj *const objv[],
 				   int addflags);
 static int PostBalloon(DockIcon* icon, const char * utf8msg,
 		       long timeout);
@@ -237,7 +258,7 @@ int Tktray_Init ( Tcl_Interp* interp );
  */
 
 static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc, Tcl_Obj * CONST objv[])
+			     int objc,  Tcl_Obj *const objv[])
 {
     DockIcon *icon = (DockIcon*)cd;
     int bbox[4] = {0,0,0,0};
@@ -766,6 +787,14 @@ static void IgnoreImageChange(ClientData cd,
 			      int x, int y, int w, int h,
 			      int imgw, int imgh) 
 {
+	/*Silence compiler warnings.*/
+	(void)cd; 
+	(void)x; 
+	(void)y; 
+	(void)w; 
+	(void)h; 
+	(void)imgw; 
+	(void)imgh;
 }
 
 /*
@@ -1446,7 +1475,7 @@ static void TrayIconUpdate(DockIcon* icon, int mask)
 
 
 static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
-				   int objc, Tcl_Obj* CONST objv[],
+				   int objc,  Tcl_Obj *const objv[],
 				   int addflags)
 {
     Tk_SavedOptions saved;
@@ -1538,7 +1567,7 @@ static void TrayIconDeleteProc( ClientData cd )
 
 
 static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc, Tcl_Obj * CONST objv[])
+			     int objc,  Tcl_Obj *const objv[])
 {
     Tk_Window mainWindow = cd;
     DockIcon *icon;
