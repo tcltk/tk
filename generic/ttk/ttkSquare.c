@@ -51,28 +51,29 @@ typedef struct
 static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), TCL_INDEX_NONE,
-     0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
-     DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
-     TCL_INDEX_NONE, 0, 0, 0},
-
+	DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), TCL_INDEX_NONE,
+	0,0,GEOMETRY_CHANGED },
+    {TK_OPTION_BORDER, "-color", "color", "Color",
+	DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
+	TCL_INDEX_NONE, 0, 0, 0},
+    {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
+	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-     "50", offsetof(Square,square.widthObj), TCL_INDEX_NONE, 0, 0,
-     GEOMETRY_CHANGED},
+	"50", offsetof(Square,square.widthObj), TCL_INDEX_NONE, 0, 0,
+	GEOMETRY_CHANGED},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-     "50", offsetof(Square,square.heightObj), TCL_INDEX_NONE, 0, 0,
-     GEOMETRY_CHANGED},
+	"50", offsetof(Square,square.heightObj), TCL_INDEX_NONE, 0, 0,
+	GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-padding", "padding", "Pad", NULL,
-     offsetof(Square,square.paddingObj), TCL_INDEX_NONE,
-     TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	offsetof(Square,square.paddingObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-     NULL, offsetof(Square,square.reliefObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(Square,square.reliefObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
 
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-     NULL, offsetof(Square,square.anchorObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(Square,square.anchorObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)

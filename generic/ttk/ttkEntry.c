@@ -197,9 +197,11 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(Entry, entry.styleData.backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
+    {TK_OPTION_COLOR, "-color", "color", "Color",
 	NULL, offsetof(Entry, entry.styleData.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
+    {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
+	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
         "PlaceholderForeground", NULL,
         offsetof(Entry, entry.styleData.placeholderForegroundObj), TCL_INDEX_NONE,
@@ -263,7 +265,7 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
     if ((tmp=Ttk_QueryOption(entryPtr->core.layout,name,state))) \
     	es->member=tmp;
     INIT(placeholderForegroundObj, "-placeholderforeground");
-    INIT(foregroundObj, "-foreground");
+    INIT(foregroundObj, "-color");
     INIT(selBorderObj, "-selectbackground")
     INIT(selBorderWidthObj, "-selectborderwidth")
     INIT(selForegroundObj, "-selectforeground")

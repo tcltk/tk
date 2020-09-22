@@ -9,8 +9,9 @@ addons:
       - gcc-mingw-w64-i686
       - gcc-mingw-w64-x86-64
       - gcc-multilib
-      - tcl-dev
+      - tcl8.6-dev
       - libx11-dev
+      - xvfb
   homebrew:
     packages:
       - tcl-tk
@@ -22,23 +23,53 @@ jobs:
     - name: "Linux/GCC/Shared"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
+      script: &x11gui
+        - make binaries libraries tktest
+        - make install
+        - make test
     - name: "Linux/GCC/Shared: NO_DEPRECATED"
       os: linux
-      dist: bionic
+      dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="CFLAGS=-DTK_NO_DEPRECATED=1"
+      script: *x11gui
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
+      script: *x11gui
+    - name: "Linux/GCC/Shared/bionic"
+      os: linux
+      dist: bionic
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script: *x11gui
+    - name: "Linux/GCC/Shared/xenial"
+      os: linux
+      dist: xenial
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script: *x11gui
     - name: "Linux/GCC/Static"
       os: linux
       dist: focal
@@ -55,21 +86,21 @@ jobs:
         - CFGOPT="--enable-symbols"
     - name: "Linux/G++/Shared"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-Dregister=dont+use+register"
     - name: "Linux/G++/Shared UTF_MAX=4"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
         - CFGOPT="CC=g++ CFLAGS=-DTCL_UTF_MAX=4"
     - name: "Linux/G++/Shared UTF_MAX=6"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: g++
       env:
         - BUILD_DIR=unix
@@ -120,7 +151,7 @@ jobs:
         - BUILD_DIR=unix
     - name: "Linux/Clang/Shared: NO_DEPRECATED"
       os: linux
-      dist: bionic
+      dist: focal
       compiler: clang
       env:
         - BUILD_DIR=unix

@@ -826,7 +826,7 @@ test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result 38
+} -result 39
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {

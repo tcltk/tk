@@ -203,9 +203,11 @@ static const Tk_OptionSpec TagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(DisplayItem,backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
-    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
+    {TK_OPTION_COLOR, "-color", "color", "Color",
 	NULL, offsetof(DisplayItem,foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
+    {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
+	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	NULL, offsetof(DisplayItem,fontObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
@@ -3375,7 +3377,7 @@ typedef struct {
 } TreeitemIndicator;
 
 static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
-    { "-foreground", TK_OPTION_COLOR,
+    { "-color", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-indicatorsize", TK_OPTION_PIXELS,
 	offsetof(TreeitemIndicator,sizeObj), "12" },
