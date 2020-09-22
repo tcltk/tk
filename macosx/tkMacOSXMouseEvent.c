@@ -54,6 +54,7 @@ enum {
     NSWindow *eventWindow = [theEvent window];
     NSEventType eventType = [theEvent type];
     NSRect viewFrame = [[eventWindow contentView] frame];
+    NSPoint location = [theEvent locationInWindow];
     TkWindow *winPtr = NULL, *grabWinPtr;
     Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
@@ -71,13 +72,12 @@ enum {
      * If this event is not for a Tk toplevel, it should just be passed up the
      * responder chain.  However, there is an exception for synthesized events,
      * which are used in testing.  Those events are recognized by having their
-     * (unused) pressure field set to the impossible value -1.0.
+     * both the windowNumber and the eventNumber set to -1.
      */
 
-    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
-	if (eventWindow && [theEvent pressure] != -1.0) {
+    if (eventWindow && ![eventWindow isMemberOfClass:[TKWindow class]]) {
+	if ([theEvent windowNumber] != -1 || [theEvent eventNumber] != -1)
 	    return theEvent;
-	}
     }
 
     /*
@@ -85,8 +85,9 @@ enum {
      */
 
     if (eventWindow) {
-	inTitleBar = viewFrame.size.height < [theEvent locationInWindow].y;
+	inTitleBar = viewFrame.size.height < location.y;
     }
+
     button = [theEvent buttonNumber] + Button1;
     switch (eventType) {
     case NSRightMouseUp:
@@ -101,13 +102,16 @@ enum {
 	buttonState |= Tk_GetButtonMask(button);
 	break;
     case NSMouseEntered:
-	if (!inTitleBar) {
+	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
+	    !inTitleBar) {
 	    [(TKWindow *)eventWindow setMouseInResizeArea:YES];
 	}
 	break;
     case NSMouseExited:
-	[(TKWindow *)eventWindow setMouseInResizeArea:NO];
-	break;
+	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)]) {
+	    [(TKWindow *)eventWindow setMouseInResizeArea:NO];
+	    break;
+	}
     case NSLeftMouseUp:
     case NSLeftMouseDown:
     case NSMouseMoved:
@@ -128,9 +132,9 @@ enum {
      * [39cbacb9e8].
      */
 
-    if (eventType == NSLeftMouseDown || eventType == NSLeftMouseDragged) {
-	if ([(TKWindow *)eventWindow mouseInResizeArea] &&
-	    ([eventWindow styleMask] & NSResizableWindowMask)) {
+    if (eventType == NSLeftMouseDown) {
+	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
+	    [(TKWindow *) eventWindow mouseInResizeArea]) {
 
 	    /*
 	     * When the left button is pressed in the resize area, we receive
