@@ -222,6 +222,19 @@ test imgSVGnano-5.0 {image without any of  "width", "height" and "viewbox"} -bod
     rename foo ""
 } -result {foo}
 
+test imgSVGnano-5.1 {bug ea665e08f3 - too many values in parameters of the transform attribute} -body {
+    # shall not loop endlessly
+    image create photo foo -data\
+			{<?xml version="1.0"?><!DOCTYPE svg PUBLIC\
+			"-//W3C//DTD SVG 1.0//EN\"\
+			"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\
+			<svg xmlns="http://www.w3.org/2000/svg">\
+			<circle cx="6.5cm" cy="2cm" r="100" transform="skewX(1 1)"/>\
+			</g></svg>}
+} -cleanup {
+    rename foo ""
+} -result {foo}
+
 };# end of namespace svgnano
 
 namespace delete svgnano
