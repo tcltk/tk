@@ -412,7 +412,6 @@ static void ProcessAppleEvent(
 {
     int code;
     AppleEventInfo *AEInfo = (AppleEventInfo*) clientData;
-    static Bool retry = NO;
 
     if (!AEInfo->interp) {
 	return;

@@ -9,12 +9,14 @@ addons:
       - gcc-mingw-w64-i686
       - gcc-mingw-w64-x86-64
       - gcc-multilib
-      - tcl-dev
+      - tcl8.6-dev
       - libx11-dev
+      - libnotify-dev
       - xvfb
   homebrew:
     packages:
       - tcl-tk
+      - libnotify
     casks:
       - xquartz
 jobs:
@@ -51,6 +53,16 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
+      script: *x11gui
+    - name: "Linux/GCC/Shared/no-libnotify"
+      os: linux
+      dist: focal
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="--disable-libnotify"
       script: *x11gui
     - name: "Linux/GCC/Shared/bionic"
       os: linux

@@ -303,7 +303,7 @@ row or column, or the largest column or row with a \fB\-minsize\fR,
 .TP
 \fBgrid content fI\window\fR ?\fI\-option value\fR?
 .
-If no options are supplied, a list of all of the content in \window\fR
+If no options are supplied, a list of all of the content in \fIwindow\fR
 is returned, most recently managed first.
 \fIOption\fR can be either \fB\-row\fR or \fB\-column\fR which
 causes only the content in the row (or column) specified by \fIvalue\fR
