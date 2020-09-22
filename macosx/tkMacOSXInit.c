@@ -16,6 +16,7 @@
 #include "tkMacOSXPrivate.h"
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
+#include <sys/stat.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -281,7 +282,10 @@ TkpInit(
      */
 
     if (!initialized) {
+	struct stat st;
 	Bool shouldOpenConsole = NO;
+        Bool stdinIsNullish = (!isatty(0) &&
+	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
@@ -371,7 +375,7 @@ TkpInit(
 
 	if (getenv("TK_CONSOLE")) {
 	    shouldOpenConsole = YES;
-	} else if (!isatty(0) && Tcl_GetStartupScript(NULL) == NULL) {
+	} else if (stdinIsNullish && Tcl_GetStartupScript(NULL) == NULL) {
 	    const char *intvar = Tcl_GetVar2(interp, "tcl_interactive",
 					     NULL, TCL_GLOBAL_ONLY);
 	    if (intvar == NULL) {
@@ -388,7 +392,7 @@ TkpInit(
 	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		return TCL_ERROR;
 	    }
-	} else if (!isatty(0)) {
+	} else if (stdinIsNullish) {
 
 	    /*
 	     * When launched as a macOS application with no console,
