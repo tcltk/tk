@@ -7862,8 +7862,8 @@ $as_echo "$found_libnotify" >&6; }
 	UNIX_LIBNOTIFY_OBJS=tkUnixSysnotify.o
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
-	 tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $LIBNOTIFY_LIBS $GLIB_LIBS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLIBS $LIBNOTIFY_LIBS $GLIB_LIBS"
 
 $as_echo "#define HAVE_LIBNOTIFY 1" >>confdefs.h
 

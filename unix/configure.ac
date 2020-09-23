@@ -553,8 +553,8 @@ if test $tk_aqua = no; then
 	UNIX_LIBNOTIFY_OBJS=tkUnixSysnotify.o
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
-	 tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $LIBNOTIFY_LIBS $GLIB_LIBS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLIBS $LIBNOTIFY_LIBS $GLIB_LIBS"
 	AC_DEFINE(HAVE_LIBNOTIFY, 1, [Have we turned on libnotify?])
     else
 	UNIX_LIBNOTIFY_OBJS=""
