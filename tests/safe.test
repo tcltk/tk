@@ -203,6 +203,5 @@ test safe-7.1 {canvas printing} {
 
 # cleanup
 set ::auto_path $saveAutoPath
-unset hidden_cmds
 cleanupTests
 return

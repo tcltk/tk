@@ -184,8 +184,6 @@ before_install:
   - cd ${BUILD_DIR}
 install:
   - ./configure ${CFGOPT} --prefix=$HOME || (cat config.log && exit 1)
-before_script:
-  - export ERROR_ON_FAILURES=1
 script:
   - make binaries libraries tktest
   - make install
