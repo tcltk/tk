@@ -392,7 +392,7 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
-	tkUnixSend.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
+	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
 
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -513,8 +513,8 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
-	$(UNIX_DIR)/tkUnixSelect.c \
-	$(UNIX_DIR)/tkUnixSend.c $(UNIX_DIR)/tkUnixSysTray.c \
+	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
+	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
 	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c
 
 AQUA_SRCS = \
@@ -1259,6 +1259,9 @@ tkUnixSelect.o: $(UNIX_DIR)/tkUnixSelect.c
 
 tkUnixSend.o: $(UNIX_DIR)/tkUnixSend.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSend.c
+
+tkUnixSysNotify.o: $(UNIX_DIR)/tkUnixSysNotify.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSysNotify.c
 
 tkUnixSysTray.o: $(UNIX_DIR)/tkUnixSysTray.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSysTray.c
