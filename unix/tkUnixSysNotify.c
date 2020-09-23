@@ -9,6 +9,8 @@
                                         
  */
 
+#include <tcl.h>
+#include <tk.h>
 #include <libnotify/notify.h>
 
 /*
@@ -18,7 +20,7 @@
 static void SysNotifyDeleteCmd ( ClientData cd );
 static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 			 int argc, const char * argv[]);
-int SysNotify_Init ( Tcl_Interp* interp )
+int SysNotify_Init ( Tcl_Interp* interp );
 
 /*
  *----------------------------------------------------------------------
@@ -37,7 +39,7 @@ int SysNotify_Init ( Tcl_Interp* interp )
  */
 
 
-  static void SysNotifyDeleteCmd ( ClientData cd )
+static void SysNotifyDeleteCmd ( ClientData cd )
 {
   (void) cd;
   notify_uninit();
@@ -70,6 +72,8 @@ static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 		     argv[0], " title  message ", (char * ) NULL);
     return TCL_ERROR;
   }
+
+  (void) clientData;
 
   char *title;
   char *message;
