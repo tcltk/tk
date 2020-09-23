@@ -31,10 +31,10 @@ jobs:
       script: &x11gui
         - make binaries libraries tktest
         - make install
-        - make test-classic "-file color.test" >out-classic.txt
+        - make test-classic TESTFLAGS="-file color.test" >out-classic.txt
         - cat out-classic.txt
         - grep -q "Failed\t0" out-classic.txt
-        - make test-ttk "-file entry.test" >out-ttk.txt
+        - make test-ttk >out-ttk.txt
         - cat out-ttk.txt
         - grep -q "Failed\t0" out-ttk.txt
     - name: "Linux/GCC/Shared/no-xft"
