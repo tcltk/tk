@@ -106,7 +106,7 @@ test winWm-2.2 {TkpWmSetState} win {
     update
     lappend result [wm state .t]
     wm deiconify .t
-    update 
+    update
     lappend result [wm state .t]
     destroy .t
     set result
@@ -123,7 +123,7 @@ test winWm-2.3 {TkpWmSetState} win {
     update
     lappend result [wm state .t]
     wm state .t normal
-    update 
+    update
     lappend result [wm state .t]
     destroy .t
     set result
@@ -205,7 +205,7 @@ test winWm-5.1 {UpdateGeometryInfo: menu resizing} win {
     update
     lappend result [winfo height .t]
     destroy .t
-    
+
     set result
 } {50 50 31}
 test winWm-5.2 {UpdateGeometryInfo: menu resizing} win {
@@ -238,7 +238,7 @@ test winWm-6.2 {wm attributes} win {
     destroy .t
     toplevel .t
     wm attributes .t -disabled
-} {0}
+} 0
 test winWm-6.3 {wm attributes} win {
     # This isn't quite the correct error message yet, but it works.
     destroy .t
@@ -400,7 +400,7 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constrai
     global winwm90done
     set winwm90done wait
     toplevel .t
-} -body {    
+} -body {
     pack [button .t.b -text "Show" -command {winwm90proc1 .tx}]
     bind .t.b <Map> {bind %W <Map> {}; after idle {winwm90click %W}}
     after 5000 {set winwm90done timeout}
@@ -411,7 +411,7 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constrai
         rename winwm90$cmd {}
     }
     destroy .tx .t .sd
-} -result {ok}
+} -result ok
 
 test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win -setup {
     proc winwm91click {w} {
@@ -445,7 +445,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     global winwm91done
     set winwm91done wait
     toplevel .t
-} -body {    
+} -body {
     pack [button .t.b -text "Show" -command {winwm91proc1 .tx}]
     bind .t.b <Map> {bind %W <Map> {}; after idle {winwm91click %W}}
     after 5000 {set winwm91done timeout}
@@ -456,7 +456,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
         rename winwm91$cmd {}
     }
     destroy .tx .t .sd
-} -result {ok}
+} -result ok
 
 test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -setup {
     destroy .t
