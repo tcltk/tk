@@ -531,6 +531,8 @@ if test $tk_aqua = no; then
 	[enable_libnotify=$enableval], [enable_libfnotify="default"])
     LIBNOTIFY_CFLAGS=""
     LIBNOTIFY_LIBS=""
+    GLIB_CFLAGS=""
+    GLIB_LIBS=""
     if test "$enable_libnotify" = "no" ; then
 	AC_MSG_RESULT([$enable_libnotify])
     else
@@ -542,6 +544,8 @@ if test $tk_aqua = no; then
 	    found_libnotify=yes
 	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
 	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
 	fi
 	AC_MSG_RESULT([$found_libnotify])
     fi
@@ -551,6 +555,8 @@ if test $tk_aqua = no; then
     else
 	UNIX_LIBNOTIFY_OBJS=""
     fi
+    AC_SUBST(GLIB_CFLAGS)
+    AC_SUBST(GLIB_LIBS)
     AC_SUBST(LIBNOTIFY_CFLAGS)
     AC_SUBST(LIBNOTIFY_LIBS)
     AC_SUBST(UNIX_LIBNOTIFY_OBJS)
