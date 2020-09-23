@@ -30,14 +30,6 @@ tcltest::loadTestedCommands
 ## Ensure that any changes that occured to tk.tcl will work or
 ## are properly prevented in a safe interpreter.  -- hobbs
 
-# The set of hidden commands is platform dependent:
-
-if {[string equal $tcl_platform(platform) "windows"]} {
-    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile tk_messageBox toplevel unload wm}
-} else {
-    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source toplevel unload wm}
-}
-
 set saveAutoPath $::auto_path
 set auto_path [list [info library] $::tk_library]
 
@@ -48,14 +40,14 @@ test safe-1.1 {Safe Tk loading into an interpreter} {
     set x {}
     set x
 } ""
-test safe-1.2 {Safe Tk loading into an interpreter} {
+test safe-1.2 {Safe Tk loading into an interpreter} -body {
     catch {safe::interpDelete a}
     safe::interpCreate a
     safe::loadTk a
     set l [lsort [interp hidden a]]
     safe::interpDelete a
     set l
-} $hidden_cmds
+} -match glob -result {bell cd clipboard encoding exec exit fconfigure*glob grab load menu open pwd selection send socket source*toplevel unload wm}
 test safe-1.3 {Safe Tk loading into an interpreter} -body {
     catch {safe::interpDelete a}
     safe::interpCreate a
@@ -63,7 +55,7 @@ test safe-1.3 {Safe Tk loading into an interpreter} -body {
     set l [lsort [interp aliases a]]
     safe::interpDelete a
     set l
-} -match glob -result {*encoding*exit*file*load*source*}
+} -match glob -result {*encoding*exit*load*source*}
 
 test safe-2.1 {Unsafe commands not available} {
     catch {safe::interpDelete a}
