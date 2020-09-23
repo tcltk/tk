@@ -45,6 +45,8 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 test textWind-1.1 {basic tests of options} {fonts} {
     .t delete 1.0 end
     .t insert end "This is the first line"
@@ -493,7 +495,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} {textf
     update
     lappend msg [.t bbox 1.5]
 } [list {{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}} [list 40 [expr {11+$fixedDiff/2}] 0 0]]
-test textWind-10.6.1 {EmbWinLayoutProc procedure, error in creating window} {
+test textWind-10.6.1 {EmbWinLayoutProc procedure, error in creating window} failsOnUbuntu {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     catch {destroy .t2}

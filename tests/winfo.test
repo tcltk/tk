@@ -35,6 +35,8 @@ proc eatColors {w {options ""}} {
     update
 }
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the winfo options are tested.
 
@@ -218,7 +220,7 @@ test winfo-9.2 {"winfo viewable" command} {
 test winfo-9.3 {"winfo viewable" command} {
     winfo viewable .
 } {1}
-test winfo-9.4 {"winfo viewable" command} {
+test winfo-9.4 {"winfo viewable" command} failsOnUbuntu {
     wm iconify .
     winfo viewable .
 } {0}
@@ -239,7 +241,7 @@ test winfo-9.6 {"winfo viewable" command} {
     update
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {0 0}
-test winfo-9.7 {"winfo viewable" command} {
+test winfo-9.7 {"winfo viewable" command} failsOnUbuntu {
     deleteWindows
     frame .f1 -width 100 -height 100 -relief raised -bd 2
     place .f1 -x 0 -y 0

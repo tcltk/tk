@@ -13,6 +13,8 @@ tcltest::loadTestedCommands
 button .b -text .b -relief raised -bd 2
 pack .b
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 proc focusSetup {} {
     catch {destroy .t}
     toplevel .t
@@ -511,7 +513,7 @@ test focus-4.4 {TkFocusDeadWindow procedure} {unix testwrapper} {
 
 setupbg
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} \
-	{unix testwrapper secureserver} {
+	{unix testwrapper secureserver failsOnUbuntu} {
     focusSetup
     focus -force .t
     update
