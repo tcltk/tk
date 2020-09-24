@@ -2808,7 +2808,7 @@ test textDisp-19.16 {count -ypixels} {
       [.t count -ypixels 16.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"]
 } [list [expr {260 + 20 * $fixedDiff}] [expr {260 + 20 * $fixedDiff}] $fixedHeight [expr {2*$fixedHeight}] $fixedHeight [expr {3*$fixedHeight}]]
-test textDisp-19.17 {count -ypixels with indices in elided lines} {
+test textDisp-19.17 {count -ypixels with indices in elided lines} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
@@ -2835,7 +2835,7 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
     .t yview 35.0
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {4 * $fixedHeight}] [expr {3 * $fixedHeight}] 0 0 0 0 0 0 [expr {5 * $fixedHeight}] [expr {- 5 * $fixedHeight}] [expr {2 * $fixedHeight}] [expr {3 * $fixedHeight}] [expr {5 * $fixedHeight}]]
-test textDisp-19.18 {count -ypixels with indices in elided lines} {
+test textDisp-19.18 {count -ypixels with indices in elided lines} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {

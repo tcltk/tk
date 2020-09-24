@@ -565,10 +565,10 @@ test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics win} {
     .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s] \
 		       - 1] [expr [winfo height .t.s] / 2]
 } {slider}
-test scrollbar-6.44 {ScrollbarPosition procedure} unix {
+test scrollbar-6.44 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
     .t.s identify 100 18
 } {trough2}
-test scrollbar-6.46 {ScrollbarPosition procedure} win {
+test scrollbar-6.45 {ScrollbarPosition procedure} win {
     .t.s identify 100 [expr [winfo height .t.s] - 1]
 } {trough2}
 

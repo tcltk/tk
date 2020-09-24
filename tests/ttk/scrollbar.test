@@ -63,7 +63,7 @@ test scale-1.0 "Self-destruction" -body {
     ttk::scale .s -variable v
     pack .s ; update
     .s set 1 ; update
-} -returnCodes 1 -match glob -result "*"
+} -returnCodes error -match glob -result "*"
 
 tcltest::cleanupTests
 

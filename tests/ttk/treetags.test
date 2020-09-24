@@ -165,7 +165,7 @@ test treetags-2.3 "Virtual events delivered to focus item" -body {
 
 test treetags-2.4 "Bad events" -body {
     $tv tag bind bad <Enter> { puts "Entered!" }
-} -returnCodes 1 -result "unsupported event <Enter>*" -match glob
+} -returnCodes error -result "unsupported event <Enter>*" -match glob
 
 test treetags-3.0 "tag configure - set" -body {
     $tv tag configure tag1 -foreground blue -background red

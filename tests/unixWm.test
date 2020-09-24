@@ -2471,7 +2471,7 @@ test unixWm-60.5 {wm attributes - bad attribute} -constraints unix -body {
     destroy .t
     toplevel .t
     wm attributes .t -foo
-} -returnCodes 1 -match glob -result {bad attribute "-foo":*}
+} -returnCodes error -match glob -result {bad attribute "-foo":*}
 
 test unixWm-61.1 {Tk_WmCmd procedure, "iconphoto" option} unix {
     list [catch {wm iconph .} msg] $msg
