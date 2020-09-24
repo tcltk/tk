@@ -11,6 +11,7 @@
 
 #include <tcl.h>
 #include <tk.h>
+#include "tkUnixInt.h"
 #include <libnotify/notify.h>
 
 /*
