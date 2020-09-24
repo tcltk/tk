@@ -12,6 +12,9 @@
 #include <tcl.h>
 #include <tk.h>
 #include "tkUnixInt.h"
+
+#ifdef HAVE_LIBNOTIFY
+
 #include <libnotify/notify.h>
 
 /*
@@ -117,6 +120,7 @@ int SysNotify_Init ( Tcl_Interp* interp )
   return TCL_OK;
 }
 
+#endif /* HAVE_LIBNOTIFY */
 /*
  * Local Variables:
  * mode: objc

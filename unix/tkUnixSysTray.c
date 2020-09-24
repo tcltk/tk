@@ -15,6 +15,8 @@
 #include <tk.h>
 #include "tkUnixInt.h"
 
+#ifdef HAVE_LIBNOTIFY
+
 /* 
  * Based extensively on the tktray extension package. Here we are removing 
  * non-essential parts of tktray.
@@ -1693,6 +1695,8 @@ int Tktray_Init ( Tcl_Interp* interp )
 
     return TCL_OK;
 }
+
+#endif /* HAVE_LIBNOTIFY */
 
 /*
  * Local Variables:
