@@ -523,7 +523,7 @@ fi
 #	Check for libnotify.
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no; then
+if test $tk_aqua = "no" ; then
     AC_MSG_CHECKING([whether to use libnotify])
     AC_ARG_ENABLE(libnotify,
 	AC_HELP_STRING([--enable-libnotify],
@@ -540,8 +540,10 @@ if test $tk_aqua = no; then
 	dnl make sure pkg-config says that libnotify is present.
 	LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
 	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
 	if test "$found_libnotify" = "no" ; then
-	    found_libnotify=yes
+	    found_libnotify="yes"
 	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
 	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
 	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
@@ -549,12 +551,12 @@ if test $tk_aqua = no; then
 	fi
 	AC_MSG_RESULT([$found_libnotify])
     fi
-    if test $enable_libnotify = "yes" ; then
+    if test "$enable_libnotify" = "yes" ; then
 	UNIX_LIBNOTIFY_OBJS=tkUnixSysnotify.o
 	tk_oldCFlags=$CFLAGS
-	CFLAGS="$CFLAGS $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
+	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
 	tk_oldLibs=$LIBS
-	LIBS="$tk_oldLIBS $LIBNOTIFY_LIBS $GLIB_LIBS"
+	LIBS="$tk_oldLibs $LIBNOTIFY_LIBS $GLIB_LIBS"
 	AC_DEFINE(HAVE_LIBNOTIFY, 1, [Have we turned on libnotify?])
     else
 	UNIX_LIBNOTIFY_OBJS=""
