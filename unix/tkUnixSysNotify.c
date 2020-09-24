@@ -1,5 +1,5 @@
 /* 
- * 	tkUnixSysNotify.c implements a "systraynotify" Tcl command which 
+ * 	tkUnixSysNotify.c implements a "sysnotify" Tcl command which 
  permits one to post system notifications based on the libnotify API.
  * 
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC. 
@@ -71,27 +71,26 @@ static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 			 int argc, const char * argv[])
 {
 
-  if (argc < 3) {
-    Tcl_AppendResult(interp, "wrong # args,must be:",
-		     argv[0], " title  message ", (char * ) NULL);
-    return TCL_ERROR;
-  }
+    (void) clientData;
 
-  (void) clientData;
+    char *title;
+    char *message;
+    NotifyNotification *notif;
 
-  char *title;
-  char *message;
+    if (argc < 3) {
+	Tcl_AppendResult(interp, "wrong # args,must be:",
+			 argv[0], " title  message ", (char * ) NULL);
+	return TCL_ERROR;
+    }
  
-  title = (char *) argv[1];
-  message = (char *) argv[2];
+    title = (char *) argv[1];
+    message = (char *) argv[2];
+
+    notif = notify_notification_new(title, message, NULL);
+    notify_notification_show(notif, NULL);
 
 
-  NotifyNotification *notif;
-  notif = notify_notification_new(title, message, NULL);
-  notify_notification_show(notif, NULL);
-
-
-  return TCL_OK;
+    return TCL_OK;
 }
 
 /*
