@@ -78,27 +78,13 @@ static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 
   char *title;
   char *message;
-  char *notiftitle;
-  char *notifmessage;
-
-  Tcl_DString msgdst;
-  Tcl_DString titledst;
-
+ 
   title = (char *) argv[1];
   message = (char *) argv[2];
 
-  if (title !=NULL) {
-    notiftitle = (char *)  Tcl_UtfToExternalDString(NULL, title, -1, & titledst);
-    Tcl_DStringFree( & titledst);
-  }
-
-  if (message !=NULL){
-    notifmessage = (char *)  Tcl_UtfToExternalDString(NULL, message, -1, & msgdst);
-    Tcl_DStringFree( & msgdst);
-  }
 
   NotifyNotification *notif;
-  notif = notify_notification_new(notiftitle, notifmessage, NULL);
+  notif = notify_notification_new(title, message, NULL);
   notify_notification_show(notif, NULL);
 
 
