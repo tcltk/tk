@@ -15,8 +15,6 @@
 #include <tk.h>
 #include "tkUnixInt.h"
 
-#ifdef HAVE_LIBNOTIFY
-
 /* 
  * Based extensively on the tktray extension package. Here we are removing 
  * non-essential parts of tktray.
@@ -355,17 +353,17 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
 	return TCL_OK;
     case XWC_ORIENTATION:
 	if (icon->myManager == None || icon->wrapper == None) {
-	    Tcl_SetResult(interp, "none", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
 	} else {
 	    switch(QueryTrayOrientation(icon)) {
 	    case 0:
-		Tcl_SetResult(interp, "horizontal", TCL_STATIC); 
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("horizontal", -1));
 		break;
 	    case 1:
-		Tcl_SetResult(interp, "vertical", TCL_STATIC); 
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("vertical", -1));
 		break;
 	    default:
-		Tcl_SetResult(interp, "unknown", TCL_STATIC); 
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("unknown", -1));
 		break;
 	    }
 	}
@@ -663,25 +661,25 @@ static
 Tk_OptionSpec IconOptionSpec[]={
     {TK_OPTION_STRING,"-image","image","Image",
      (char *) NULL, -1, offsetof(DockIcon, imageString),
-     TK_OPTION_NULL_OK, (ClientData) NULL,
+     TK_OPTION_NULL_OK, NULL,
      ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_STRING,"-class","class","Class",
      "TrayIcon", -1, offsetof(DockIcon, classString),
-     0, (ClientData) NULL,
+     0, NULL,
      ICON_CONF_CLASS},
     {TK_OPTION_BOOLEAN,"-docked","docked","Docked",
      "1", -1, offsetof(DockIcon, docked),
-     0, (ClientData) NULL,
+     0, NULL,
      ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-shape","shape","Shape",
      "0", -1, offsetof(DockIcon, useShapeExt),
-     0, (ClientData) NULL,
+     0, NULL,
      ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-visible","visible","Visible",
      "1", -1, offsetof(DockIcon, visible),
-     0, (ClientData) NULL,
+     0, NULL,
      ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*
@@ -1576,7 +1574,7 @@ static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
 
     icon = (DockIcon*)attemptckalloc(sizeof(DockIcon));
     if (!icon) {
-	Tcl_SetResult(interp, "running out of memory", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", -1));
 	goto handleErrors;
     }
     memset(icon,0,sizeof(*icon));
@@ -1695,8 +1693,6 @@ int Tktray_Init ( Tcl_Interp* interp )
 
     return TCL_OK;
 }
-
-#endif /* HAVE_LIBNOTIFY */
 
 /*
  * Local Variables:
