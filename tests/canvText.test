@@ -478,7 +478,7 @@ set font {Courier 12 italic}
 set ax [font measure $font 0]
 set ay [font metrics $font -linespace]
 
-test canvText-17.1 {TextToPostscript procedure} {
+test canvText-17.1 {TextToPostscript procedure} failsOnUbuntu {
     .c delete all
     .c config -height 300 -highlightthickness 0 -bd 0
     update

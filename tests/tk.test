@@ -12,16 +12,16 @@ namespace import -force tcltest::test
 
 test tk-1.1 {tk command: general} -body {
     tk
-} -returnCodes 1 -result {wrong # args: should be "tk option ?arg?"}
+} -returnCodes error -result {wrong # args: should be "tk option ?arg?"}
 test tk-1.2 {tk command: general} -body {
     tk xyz
-} -returnCodes 1 -result {bad option "xyz": must be appname, caret, scaling, useinputmethods, windowingsystem, or inactive}
+} -returnCodes error -result {bad option "xyz": must be appname, caret, scaling, useinputmethods, windowingsystem, or inactive}
 
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
 test tk-2.1 {tk command: appname} -body {
     tk appname xyz abc
-} -returnCodes 1 -result {wrong # args: should be "tk appname ?newName?"}
+} -returnCodes error -result {wrong # args: should be "tk appname ?newName?"}
 test tk-2.2 {tk command: appname} -body {
     tk appname foobazgarply
 } -result foobazgarply
@@ -38,7 +38,7 @@ tk appname $appname
 set scaling [tk scaling]
 test tk-3.1 {tk command: scaling} -body {
     tk scaling -displayof
-} -returnCodes 1 -result {value for "-displayof" missing}
+} -returnCodes error -result {value for "-displayof" missing}
 test tk-3.2 {tk command: scaling: get current} -body {
     tk scaling 1
     format %.2g [tk scaling]
@@ -49,10 +49,10 @@ test tk-3.3 {tk command: scaling: get current} -body {
 } -result 1.25
 test tk-3.4 {tk command: scaling: set new} -body {
     tk scaling xyz
-} -returnCodes 1 -result {expected floating-point number but got "xyz"}
+} -returnCodes error -result {expected floating-point number but got "xyz"}
 test tk-3.5 {tk command: scaling: set new} -body {
     tk scaling -displayof . xyz
-} -returnCodes 1 -result {expected floating-point number but got "xyz"}
+} -returnCodes error -result {expected floating-point number but got "xyz"}
 test tk-3.6 {tk command: scaling: set new} -body {
     tk scaling 1
     format %.2g [tk scaling]
@@ -85,7 +85,7 @@ tk scaling $scaling
 set useim [tk useinputmethods]
 test tk-4.1 {tk command: useinputmethods} -body {
     tk useinputmethods -displayof
-} -returnCodes 1 -result {value for "-displayof" missing}
+} -returnCodes error -result {value for "-displayof" missing}
 test tk-4.2 {tk command: useinputmethods: get current} -body {
     tk useinputmethods no
 } -cleanup {
@@ -99,10 +99,10 @@ test tk-4.3 {tk command: useinputmethods: get current} -body {
 } -result 0
 test tk-4.4 {tk command: useinputmethods: set new} -body {
     tk useinputmethods xyz
-} -returnCodes 1 -result {expected boolean value but got "xyz"}
+} -returnCodes error -result {expected boolean value but got "xyz"}
 test tk-4.5 {tk command: useinputmethods: set new} -body {
     tk useinputmethods -displayof . xyz
-} -returnCodes 1 -result {expected boolean value but got "xyz"}
+} -returnCodes error -result {expected boolean value but got "xyz"}
 test tk-4.6 {tk command: useinputmethods: set new} -constraints unix -body {
     # This isn't really a test, but more of a check... The answer is what was
     # given, because we may be on a Unix system that doesn't have the XIM
@@ -122,16 +122,16 @@ test tk-4.7 {tk command: useinputmethods: set new} -constraints win -body {
 
 test tk-5.1 {tk caret} -body {
     tk caret
-} -returnCodes 1 -result {wrong # args: should be "tk caret window ?-x x? ?-y y? ?-height height?"}
+} -returnCodes error -result {wrong # args: should be "tk caret window ?-x x? ?-y y? ?-height height?"}
 test tk-5.2 {tk caret} -body {
     tk caret bogus
-} -returnCodes 1 -result {bad window path name "bogus"}
+} -returnCodes error -result {bad window path name "bogus"}
 test tk-5.3 {tk caret} -body {
     tk caret . -foo
-} -returnCodes 1 -result {bad caret option "-foo": must be -x, -y, or -height}
+} -returnCodes error -result {bad caret option "-foo": must be -x, -y, or -height}
 test tk-5.4 {tk caret} -body {
     tk caret . -x 0 -y
-} -returnCodes 1 -result {wrong # args: should be "tk caret window ?-x x? ?-y y? ?-height height?"}
+} -returnCodes error -result {wrong # args: should be "tk caret window ?-x x? ?-y y? ?-height height?"}
 test tk-5.5 {tk caret} -body {
     tk caret . -x 10 -y 11 -h 12; tk caret .
 } -result {-height 12 -x 10 -y 11}
@@ -148,10 +148,10 @@ test tk-6.2 {tk inactive reset} -body {
 } -match glob -result *
 test tk-6.3 {tk inactive wrong argument} -body {
     tk inactive foo
-} -returnCodes 1 -result {bad option "foo": must be reset}
+} -returnCodes error -result {bad option "foo": must be reset}
 test tk-6.4 {tk inactive too many arguments} -body {
     tk inactive reset foo
-} -returnCodes 1 -result {wrong # args: should be "tk inactive ?-displayof window? ?reset?"}
+} -returnCodes error -result {wrong # args: should be "tk inactive ?-displayof window? ?reset?"}
 test tk-6.5 {tk inactive} -body {
     tk inactive reset
     update
@@ -175,7 +175,7 @@ test tk-7.2 {tk inactive reset in a safe interpreter} -body {
     foo eval {tk inactive reset}
 } -cleanup {
     ::safe::interpDelete foo
-} -returnCodes 1 -result {resetting the user inactivity timer is not allowed in a safe interpreter}
+} -returnCodes error -result {resetting the user inactivity timer is not allowed in a safe interpreter}
 
 # cleanup
 cleanupTests
