@@ -12,11 +12,13 @@ addons:
       - tcl8.6-dev
       - libx11-dev
       - libnotify-dev
+      - libglib2.0-dev
       - xvfb
   homebrew:
     packages:
       - tcl-tk
       - libnotify
+      - glib
     casks:
       - xquartz
 jobs:
