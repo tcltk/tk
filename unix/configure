@@ -7861,7 +7861,7 @@ $as_echo "$enable_libnotify" >&6; }
 $as_echo "$found_libnotify" >&6; }
     fi
     if test "$enable_libnotify" = "yes" ; then
-	UNIX_LIBNOTIFY_OBJS=tkUnixSysnotify.o
+	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
 	tk_oldLibs=$LIBS
