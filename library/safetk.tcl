@@ -220,7 +220,7 @@ proc ::safe::tkTopLevel {child display} {
     set w ".safe$tkSafeId"
     if {[catch {toplevel $w -screen $display -class SafeTk} msg]} {
 	return -code error -errorcode {TK TOPLEVEL SAFE} \
-	    "Unable to create toplevel for safe child \"$child\" ($msg)"
+	    "Unable to create toplevel for \"$child\" ($msg)"
     }
     Log $child "New toplevel $w" NOTICE
 

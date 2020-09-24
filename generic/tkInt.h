@@ -84,6 +84,11 @@
 # endif
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#   define TKFLEXARRAY 0
+#else
+#   define TKFLEXARRAY 1
+#endif
 
 #ifndef Tcl_GetParent
 #   define Tcl_GetParent Tcl_GetMaster
@@ -358,14 +363,14 @@ typedef struct TkDisplay {
      */
 
     Tcl_HashTable maintainHashTable;
-				/* Hash table that maps from a master's
-				 * Tk_Window token to a list of slaves managed
-				 * by that master. */
+				/* Hash table that maps from a container's
+				 * Tk_Window token to a list of windows managed
+				 * by that container. */
     int geomInit;
 
 #define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
     ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
-#define TkGetGeomContainer TkGetGeomMaster
+#define TkGetContainer TkGetGeomMaster
 
     /*
      * Information used by tkGet.c only:

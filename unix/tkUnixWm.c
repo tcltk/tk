@@ -27,8 +27,8 @@ typedef struct ProtocolHandler {
 				/* Next in list of protocol handlers for the
 				 * same top-level window, or NULL for end of
 				 * list. */
-    Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char command[1];		/* Tcl command to invoke when a client message
+    Tcl_Interp *interp;	/* Interpreter in which to invoke command. */
+    char command[TKFLEXARRAY];	/* Tcl command to invoke when a client message
 				 * for this protocol arrives. The actual size
 				 * of the structure varies to accommodate the
 				 * needs of the actual command. THIS MUST BE

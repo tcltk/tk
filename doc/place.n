@@ -194,8 +194,8 @@ command.
 \fBplace slaves \fIwindow\fR
 Returns a list of all the content windows for which \fIwindow\fR is the container.
 If there is no content for \fIwindow\fR then an empty string is returned.
-.TP
 .VS "TIP 581"
+.TP
 \fBplace content \fIwindow\fR
 .
 Synonym for . \fBplace slaves \fIwindow\fR
