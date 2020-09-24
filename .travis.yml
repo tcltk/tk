@@ -9,8 +9,9 @@ addons:
       - gcc-mingw-w64-i686
       - gcc-mingw-w64-x86-64
       - gcc-multilib
-      - tcl-dev
+      - tcl8.6-dev
       - libx11-dev
+      - xvfb
   homebrew:
     packages:
       - tcl-tk
@@ -22,16 +23,43 @@ jobs:
     - name: "Linux/GCC/Shared"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
+      script: &x11gui
+        - make binaries libraries tktest
+        - make install
+        - make test
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
+      services:
+        - xvfb
       compiler: gcc
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
+      script: *x11gui
+    - name: "Linux/GCC/Shared/bionic"
+      os: linux
+      dist: bionic
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script: *x11gui
+    - name: "Linux/GCC/Shared/xenial"
+      os: linux
+      dist: xenial
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+      script: *x11gui
     - name: "Linux/GCC/Static"
       os: linux
       dist: focal
