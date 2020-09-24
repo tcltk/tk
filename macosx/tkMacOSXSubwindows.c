@@ -196,27 +196,6 @@ XMapWindow(
 
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
 
-	/*
-	 * We only need to send the MapNotify event for toplevel windows.
-	 */
-
-	event.xany.serial = LastKnownRequestProcessed(display);
-	event.xany.send_event = False;
-	event.xany.display = display;
-
-	event.xmap.window = window;
-	event.xmap.type = MapNotify;
-	event.xmap.event = window;
-	event.xmap.override_redirect = winPtr->atts.override_redirect;
-
-	/*
-	 * To update the mapped status of packed or placed subwindows
-	 * we handle this event immediately and then process the idle
-	 * events that it generates.
-	 */
-
-	Tk_HandleEvent(&event);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 
 	/*
@@ -226,6 +205,38 @@ XMapWindow(
 
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
     }
+
+    /*
+     * Send a MapNotify event.  To make sure we update the mapped status of
+     * packed, placed or gridded subwindows we handle this event immediately
+     * and then process the idle events that it generates. But not all geometry
+     * managers can handle this. The text geometry manager crashes in the
+     * textDisp-5.2 test.  So we do not send the MapNotify to windows managed
+     * by a text widget. We also do not sent them to windows managed by a
+     * notebook, because there is no need and the extra map events confuse test
+     * notebook-1343984-1.
+     */
+
+    const Tk_GeomMgr *geomMgrPtr = winPtr->geomMgrPtr;
+    if (geomMgrPtr &&
+	strcmp(geomMgrPtr->name, "text") &&
+	strcmp(geomMgrPtr->name, "notebook")) {
+	event.xany.serial = LastKnownRequestProcessed(display);
+	event.xany.send_event = False;
+	event.xany.display = display;
+	event.xmap.window = window;
+	event.xmap.type = MapNotify;
+	event.xmap.event = window;
+	event.xmap.override_redirect = winPtr->atts.override_redirect;
+	Tk_HandleEvent(&event);
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+    }
+
+
+    /*
+     * Mark the toplevel as needing to be redrawn, unless the window is being
+     * mapped while drawing is taking place.
+     */
 
     TKContentView *view = [win contentView];
     if (view != [NSView focusView]) {
