@@ -552,7 +552,7 @@ if test $tk_aqua = "no" ; then
 	AC_MSG_RESULT([$found_libnotify])
     fi
     if test "$enable_libnotify" = "yes" ; then
-	UNIX_LIBNOTIFY_OBJS=tkUnixSysnotify.o
+	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
 	tk_oldLibs=$LIBS
