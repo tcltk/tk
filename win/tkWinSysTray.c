@@ -50,6 +50,7 @@ static int isWin32s = -1;
 #endif
 
 static BOOL AdjustICONIMAGEPointers(LPICONIMAGE lpImage);
+LPICONRESOURCE CreateIcoFromTkImage(Tcl_Interp *interp, Tk_Image image);        
 
 typedef struct IcoInfo {
     HICON hIcon; /* icon handle returned by LoadIcon*/
@@ -1520,6 +1521,165 @@ WinIcoDestroy(ClientData clientData) {
 /*
  *----------------------------------------------------------------------
  *
+ * CreateIcoFromTkImage --
+ *
+ *	Create ico pointer from Tk image for display in system tray. Adapted
+ *      from "wm iconphoto" code in tkWinWm.c.
+
+ * Results:
+ *	Icon image is created from a valid Tk photo image.
+ *
+ * Side effects:
+ *	Icon is created.
+ *
+ *----------------------------------------------------------------------
+ */
+
+LPICONRESOURCE
+CreateIcoFromTkImage(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tk_Image image             /* Image to convert. */
+                     )
+{
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int i, width, height, idx, bufferSize, startObj = 3;
+    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
+    union {unsigned char *ptr; void *voidPtr;} bgraMask;
+    BlockOfIconImagesPtr lpIR;
+    HICON hIcon;
+    unsigned size;
+    BITMAPINFO bmInfo;
+    ICONINFO iconInfo;
+
+    /*
+     * Iterate over all images to validate their existence.
+     */
+    
+    for (i = startObj; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	if (photo == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't use \"%s\" as status tray icon: not a photo image",
+		    Tcl_GetString(objv[i])));
+	    return TCL_ERROR;
+	}
+    }
+
+    /*
+     * We have calculated the size of the data. Try to allocate the needed
+     * memory space.
+     */
+
+    size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE) * (objc-startObj-1));
+    lpIR = (BlockOfIconImagesPtr)attemptckalloc(size);
+    if (lpIR == NULL) {
+	return TCL_ERROR;
+    }
+    ZeroMemory(lpIR, size);
+
+    lpIR->nNumImages = objc - startObj;
+
+    for (i = startObj; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	Tk_PhotoGetSize(photo, &width, &height);
+	Tk_PhotoGetImage(photo, &block);
+
+	/*
+	 * Don't use CreateIcon to create the icon, as it requires color
+	 * bitmap data in device-dependent format. Instead we use
+	 * CreateIconIndirect which takes device-independent bitmaps and
+	 * converts them as required. Initialise icon info structure.
+	 */
+
+	ZeroMemory(&iconInfo, sizeof(iconInfo));
+	iconInfo.fIcon = TRUE;
+
+	/*
+	 * Create device-independent color bitmap.
+	 */
+
+	ZeroMemory(&bmInfo, sizeof bmInfo);
+	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmInfo.bmiHeader.biWidth = width;
+	bmInfo.bmiHeader.biHeight = -height;
+	bmInfo.bmiHeader.biPlanes = 1;
+	bmInfo.bmiHeader.biBitCount = 32;
+	bmInfo.bmiHeader.biCompression = BI_RGB;
+
+	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+		&bgraPixel.voidPtr, NULL, 0);
+	if (!iconInfo.hbmColor) {
+	    ckfree(lpIR);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "failed to create an icon image with image \"%s\"",
+		    Tcl_GetString(objv[i])));
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Convert the photo image data into BGRA format (RGBQUAD).
+	 */
+
+	bufferSize = height * width * 4;
+	for (idx = 0 ; idx < bufferSize ; idx += 4) {
+	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+	    bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+	    bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+	    bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
+	}
+
+	/*
+	 * Create a dummy mask bitmap. The contents of this don't appear to
+	 * matter, as CreateIconIndirect will setup the icon mask based on the
+	 * alpha channel in our color bitmap.
+	 */
+
+	bmInfo.bmiHeader.biBitCount = 1;
+
+	iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+		&bgraMask.voidPtr, NULL, 0);
+	if (!iconInfo.hbmMask) {
+	    DeleteObject(iconInfo.hbmColor);
+	    ckfree(lpIR);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "failed to create mask bitmap for \"%s\"",
+		    Tcl_GetString(objv[i])));
+	    return TCL_ERROR;
+	}
+
+	ZeroMemory(bgraMask.ptr, width*height/8);
+
+	/*
+	 * Create an icon from the bitmaps.
+	 */
+
+	hIcon = CreateIconIndirect(&iconInfo);
+	DeleteObject(iconInfo.hbmColor);
+	DeleteObject(iconInfo.hbmMask);
+	if (hIcon == NULL) {
+	    /*
+	     * XXX should free up created icons.
+	     */
+
+	    ckfree(lpIR);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "failed to create icon for \"%s\"",
+		    Tcl_GetString(objv[i])));
+	    return TCL_ERROR;
+	}
+	lpIR->IconImages[i-startObj].Width = width;
+	lpIR->IconImages[i-startObj].Height = height;
+	lpIR->IconImages[i-startObj].Colors = 4;
+	lpIR->IconImages[i-startObj].hIcon = hIcon;
+    }
+
+    return lpIR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WinIcoCmd -- 
  * 
  * 	Main command for creating, displaying, and removing icons from taskbar.
@@ -1552,10 +1712,12 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         int pos = 0;
         if (argc < 3) {
             Tcl_AppendResult(interp, "wrong # args,must be:",
-                argv[0], " createfrom <icofilename> ", (char * ) NULL);
+                argv[0], " createfrom <Tk image> ", (char * ) NULL);
             return TCL_ERROR;
         }
-        lpIR = ReadIconFromICOFile(interp, argv[2]);
+        //     lpIR = ReadIconFromICOFile(interp, argv[2]);
+ lpIR = CreateIcoFromTkImage(interp, argv[2]);
+        
         if (lpIR == NULL) {
             Tcl_AppendResult(interp, "reading of ", argv[2], " failed!", (char * ) NULL);
             return TCL_ERROR;
@@ -1801,3 +1963,6 @@ WinIcoInit(Tcl_Interp * interp) {
  * indent-tabs-mode: nil
  * End:
  */
+
+
+
