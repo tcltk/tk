@@ -50,7 +50,7 @@ static int isWin32s = -1;
 #endif
 
 static BOOL AdjustICONIMAGEPointers(LPICONIMAGE lpImage);
-LPICONRESOURCE CreateIcoFromTkImage(Tcl_Interp *interp, char * image);        
+BlockOfIconImagesPtr CreateIcoFromTkImage(Tcl_Interp *interp, char * image);        
 
 typedef struct IcoInfo {
     HICON hIcon; /* icon handle returned by LoadIcon*/
@@ -1535,7 +1535,7 @@ WinIcoDestroy(ClientData clientData) {
  *----------------------------------------------------------------------
  */
 
-LPICONRESOURCE
+BlockOfIconImagesPtr
 CreateIcoFromTkImage(
     Tcl_Interp *interp,		/* Current interpreter. */
     char * image          /* Image to convert. */
@@ -1543,7 +1543,7 @@ CreateIcoFromTkImage(
 {
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, width, height, idx, bufferSize;
+    int width, height, idx, bufferSize;
     union {unsigned char *ptr; void *voidPtr;} bgraPixel;
     union {unsigned char *ptr; void *voidPtr;} bgraMask;
     BlockOfIconImagesPtr lpIR;
@@ -1561,7 +1561,7 @@ CreateIcoFromTkImage(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use \"%s\" as status tray icon: not a photo image", 
 			image));
-	    return TCL_ERROR;
+	    return NULL;
 	}
 
     /*
@@ -1572,7 +1572,7 @@ CreateIcoFromTkImage(
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE));
     lpIR = (BlockOfIconImagesPtr)attemptckalloc(size);
     if (lpIR == NULL) {
-	return TCL_ERROR;
+	return NULL;
     }
     ZeroMemory(lpIR, size);
 
@@ -1611,7 +1611,7 @@ CreateIcoFromTkImage(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an icon image with image \"%s\"",
 		   image));
-	    return TCL_ERROR;
+	    return NULL;
 	}
 
 	/*
@@ -1642,7 +1642,7 @@ CreateIcoFromTkImage(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create mask bitmap for \"%s\"",
 		  image));
-	    return TCL_ERROR;
+	    return NULL;
 	}
 
 	ZeroMemory(bgraMask.ptr, width*height/8);
@@ -1663,7 +1663,7 @@ CreateIcoFromTkImage(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create icon for \"%s\"",
 		   image));
-	    return TCL_ERROR;
+	    return NULL;
 	}
 	lpIR->IconImages[1].Width = width;
 	lpIR->IconImages[1].Height = height;
@@ -1705,7 +1705,9 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
 
     length = strlen(argv[1]);
     if ((strncmp(argv[1], "createfrom", length) == 0) && (length >= 2)) {
-        LPICONRESOURCE lpIR = NULL;
+		
+		
+        BlockOfIconImagesPtr lpIR = NULL;
         int pos = 0;
         if (argc < 3) {
             Tcl_AppendResult(interp, "wrong # args,must be:",
