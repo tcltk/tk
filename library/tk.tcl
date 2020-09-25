@@ -533,6 +533,13 @@ proc ::tk::CancelRepeat {} {
     set Priv(afterId) {}
 }
 
+## ::tk::MouseWheel $w $dir $amount $factor $units
+
+proc ::tk::MouseWheel {w dir amount factor {units units}} {
+    $w ${dir}view scroll [expr {$amount/$factor}] $units
+}
+
+
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
 # It sends a <<TraverseOut>> virtual event to the previous focus window,
