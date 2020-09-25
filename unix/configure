@@ -7860,7 +7860,7 @@ $as_echo "$enable_libnotify" >&6; }
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $found_libnotify" >&5
 $as_echo "$found_libnotify" >&6; }
     fi
-    if test "$found_libnotify" = "yes" ; then
+    if test "$enable_libnotify" = "yes" ; then
 	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
