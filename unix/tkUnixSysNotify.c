@@ -89,7 +89,6 @@ static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
     notif = notify_notification_new(title, message, NULL);
     notify_notification_show(notif, NULL);
 
-
     return TCL_OK;
 }
 
