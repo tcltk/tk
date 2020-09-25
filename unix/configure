@@ -7854,13 +7854,13 @@ $as_echo "$enable_libnotify" >&6; }
 	    found_libnotify="yes"
 	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
 	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
-	    GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
 	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
 	fi
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $found_libnotify" >&5
 $as_echo "$found_libnotify" >&6; }
     fi
-    if test "$enable_libnotify" = "yes" ; then
+    if test "$found_libnotify" = "yes" ; then
 	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
