@@ -97,23 +97,23 @@ if {[package vsatisfies [package provide Tk] 8.7-]} {
     # The following code ensure equal +/- behaviour.
     bind $c <MouseWheel> {
 	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/30}] units
+	    %W yview scroll [expr {%D/-30}] units
 	} else {
-	    %W yview scroll [expr {(29-%D)/30}] units
+	    %W yview scroll [expr {(%D-29)/-30}] units
 	}
     }
     bind $c <Option-MouseWheel> {
-	%W yview scroll [expr {-(%D / 3)}] units
+	%W yview scroll [expr {%D/-3}] units
     }
     bind $c <Shift-MouseWheel> {
 	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/30}] units
+	    %W xview scroll [expr {%D/-30}] units
 	} else {
-	    %W xview scroll [expr {(29-%D)/30}] units
+	    %W xview scroll [expr {(%D-29)/-30}] units
 	}
     }
     bind $c <Shift-Option-MouseWheel> {
-	%W xview scroll [expr {-(%D / 3)}] units
+	%W xview scroll [expr {%D/-3}] units
     }
 }
 

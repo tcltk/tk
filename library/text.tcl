@@ -522,12 +522,7 @@ proc ::tk::TextButton1 {w x y} {
     } else {
 	$w mark gravity $anchorname left
     }
-    # Allow focus in any case on Windows, because that will let the
-    # selection be displayed even for state disabled text widgets.
-    if {[tk windowingsystem] eq "win32" \
-	    || [$w cget -state] eq "normal"} {
-	focus $w
-    }
+    focus $w
     if {[$w cget -autoseparators]} {
 	$w edit separator
     }
