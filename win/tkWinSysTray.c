@@ -50,7 +50,7 @@ static int isWin32s = -1;
 #endif
 
 static BOOL AdjustICONIMAGEPointers(LPICONIMAGE lpImage);
-LPICONRESOURCE CreateIcoFromTkImage(Tcl_Interp *interp, Tk_Image image);        
+LPICONRESOURCE CreateIcoFromTkImage(Tcl_Interp *interp, char * image);        
 
 typedef struct IcoInfo {
     HICON hIcon; /* icon handle returned by LoadIcon*/
@@ -1538,12 +1538,12 @@ WinIcoDestroy(ClientData clientData) {
 LPICONRESOURCE
 CreateIcoFromTkImage(
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tk_Image image             /* Image to convert. */
+    char * image          /* Image to convert. */
                      )
 {
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, width, height, idx, bufferSize, startObj = 3;
+    int i, width, height, idx, bufferSize;
     union {unsigned char *ptr; void *voidPtr;} bgraPixel;
     union {unsigned char *ptr; void *voidPtr;} bgraMask;
     BlockOfIconImagesPtr lpIR;
@@ -1556,32 +1556,29 @@ CreateIcoFromTkImage(
      * Iterate over all images to validate their existence.
      */
     
-    for (i = startObj; i < objc; i++) {
-	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	photo = Tk_FindPhoto(interp, image);
 	if (photo == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't use \"%s\" as status tray icon: not a photo image",
-		    Tcl_GetString(objv[i])));
+		    "can't use \"%s\" as status tray icon: not a photo image", 
+			image));
 	    return TCL_ERROR;
 	}
-    }
 
     /*
      * We have calculated the size of the data. Try to allocate the needed
      * memory space.
      */
 
-    size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE) * (objc-startObj-1));
+    size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE));
     lpIR = (BlockOfIconImagesPtr)attemptckalloc(size);
     if (lpIR == NULL) {
 	return TCL_ERROR;
     }
     ZeroMemory(lpIR, size);
 
-    lpIR->nNumImages = objc - startObj;
+    lpIR->nNumImages = 1;
 
-    for (i = startObj; i < objc; i++) {
-	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	photo = Tk_FindPhoto(interp, photo);
 	Tk_PhotoGetSize(photo, &width, &height);
 	Tk_PhotoGetImage(photo, &block);
 
@@ -1613,7 +1610,7 @@ CreateIcoFromTkImage(
 	    ckfree(lpIR);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an icon image with image \"%s\"",
-		    Tcl_GetString(objv[i])));
+		   image));
 	    return TCL_ERROR;
 	}
 
@@ -1644,7 +1641,7 @@ CreateIcoFromTkImage(
 	    ckfree(lpIR);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create mask bitmap for \"%s\"",
-		    Tcl_GetString(objv[i])));
+		  image));
 	    return TCL_ERROR;
 	}
 
@@ -1665,14 +1662,14 @@ CreateIcoFromTkImage(
 	    ckfree(lpIR);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create icon for \"%s\"",
-		    Tcl_GetString(objv[i])));
+		   image));
 	    return TCL_ERROR;
 	}
-	lpIR->IconImages[i-startObj].Width = width;
-	lpIR->IconImages[i-startObj].Height = height;
-	lpIR->IconImages[i-startObj].Colors = 4;
-	lpIR->IconImages[i-startObj].hIcon = hIcon;
-    }
+	lpIR->IconImages[1].Width = width;
+	lpIR->IconImages[1].Height = height;
+	lpIR->IconImages[1].Colors = 4;
+	lpIR->IconImages[1].hIcon = hIcon;
+  
 
     return lpIR;
 }
