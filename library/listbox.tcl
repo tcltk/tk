@@ -177,16 +177,16 @@ bind Listbox <B2-Motion> {
 }
 
 bind Listbox <MouseWheel> {
-    %W yview scroll [expr {%D/-30.0}] units
+    tk::MouseWheel %W y %D -30.0
 }
 bind Listbox <Option-MouseWheel> {
-    %W yview scroll [expr {%D/-3.0}] units
+    tk::MouseWheel %W y %D -3.0
 }
 bind Listbox <Shift-MouseWheel> {
-    %W xview scroll [expr {%D/-30.0}] units
+    tk::MouseWheel %W x %D -30.0
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    %W xview scroll [expr {%D/-3.0}] units
+    tk::MouseWheel %W x %D -3.0
 }
 
 # ::tk::ListboxBeginSelect --

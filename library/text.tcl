@@ -453,24 +453,16 @@ set ::tk::Priv(prevPos) {}
 #     (int)-1/3 = -1
 # The following code ensure equal +/- behaviour.
 bind Text <MouseWheel> {
-    if {%D >= 0} {
-	%W yview scroll [expr {-%D/3}] pixels
-    } else {
-	%W yview scroll [expr {(2-%D)/3}] pixels
-    }
+    tk::MouseWheel y %D -3.0 pixels
 }
 bind Text <Option-MouseWheel> {
-    %W yview scroll [expr {-3*%D}] pixels
+    tk::MouseWheel y %D -0.3 pixels
 }
 bind Text <Shift-MouseWheel> {
-    if {%D >= 0} {
-	%W xview scroll [expr {-%D/3}] pixels
-    } else {
-	%W xview scroll [expr {(2-%D)/3}] pixels
-    }
+    tk::MouseWheel x %D -3.0 pixels
 }
 bind Text <Shift-Option-MouseWheel> {
-    %W xview scroll [expr {-3*%D}] pixels
+    tk::MouseWheel x %D -0.3 pixels
 }
 
 # ::tk::TextClosestGap --

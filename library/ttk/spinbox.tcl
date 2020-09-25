@@ -82,11 +82,11 @@ proc ttk::spinbox::Release {w} {
 #	Mousewheel callback.  Turn these into <<Increment>> (-1, up)
 # 	or <<Decrement> (+1, down) events.
 #
-proc ttk::spinbox::MouseWheel {w dir} {
+proc ttk::spinbox::MouseWheel {w dir {factor 1}} {
     if {[$w instate disabled]} { return }
-    if {$dir < 0} {
+    if {($dir < 0) ^ ($factor < 0)} {
 	event generate $w <<Increment>>
-    } else {
+    } elseif {$dir > 0} {
 	event generate $w <<Decrement>>
     }
 }

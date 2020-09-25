@@ -60,16 +60,16 @@ if {[package vsatisfies [package provide Tk] 8.7-]} {
     bind $c <Button-2> "$c scan mark %x %y"
     bind $c <B2-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
-	%W yview scroll [expr {%D/-30.0}] units
+	tk::MouseWheel %W y %D -30.0
     }
     bind $c <Option-MouseWheel> {
-	%W yview scroll [expr {%D/-3.0}] units
+	tk::MouseWheel %W y %D -3.0
     }
     bind $c <Shift-MouseWheel> {
-	%W xview scroll [expr {%D/-30.0}] units
+	tk::MouseWheel %W x %D -30.0
     }
     bind $c <Shift-Option-MouseWheel> {
-	%W xview scroll [expr {%D/-3.0}] units
+	tk::MouseWheel %W x %D -3.0
     }
 } elseif {[tk windowingsystem] eq "aqua"} {
     bind $c <Button-3> "$c scan mark %x %y"

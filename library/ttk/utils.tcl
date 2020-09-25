@@ -285,8 +285,8 @@ proc ttk::copyBindings {from to} {
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
-    bind $bindtag <MouseWheel> [append callback { [expr {%D/-120.0}]}]
-    bind $bindtag <Option-MouseWheel> [append callback { [expr {%D/-12.0}]}]
+    bind $bindtag <MouseWheel> [append callback { %D -120.0}]
+    bind $bindtag <Option-MouseWheel> [append callback { %D -12.0}]
 }
 
 ## Mousewheel bindings for standard scrollable widgets.
@@ -298,12 +298,12 @@ proc ttk::bindMouseWheel {bindtag callback} {
 #
 
 bind TtkScrollable <MouseWheel> \
-	{ %W yview scroll [expr {%D/-120.0}] units }
+	{ tk::MouseWheel %W y %D -120.0 }
 bind TtkScrollable <Option-MouseWheel> \
-	{ %W yview scroll [expr {%D/-12.0}] units }
+	{ tk::MouseWheel %W y %D -12.0 }
 bind TtkScrollable <Shift-MouseWheel> \
-	{ %W xview scroll [expr {%D/-120.0}] units }
+	{ tk::MouseWheel %W x %D -120.0 }
 bind TtkScrollable <Shift-Option-MouseWheel> \
-	{ %W xview scroll [expr {%D/-12.0}] units }
+	{ tk::MouseWheel %W x %D -120.0 }
 
 #*EOF*
