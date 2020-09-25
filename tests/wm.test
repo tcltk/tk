@@ -11,7 +11,7 @@
 # Window manager tests that only work on a specific platform should be placed
 # in unixWm.test or winWm.test.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -1623,7 +1623,7 @@ test wm-transient-1.5 {usage} -returnCodes error -body {
     wm transient .icon .dummy
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a transient, it is an icon for .top}
+} -result {can't make ".icon" a transient: it is an icon for .top}
 test wm-transient-1.6 {usage} -returnCodes error -body {
     toplevel .icon -bg blue
     toplevel .top
@@ -1632,13 +1632,13 @@ test wm-transient-1.6 {usage} -returnCodes error -body {
     wm transient .dummy .icon
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a container, it is an icon for .top}
+} -result {can't make ".icon" a container: it is an icon for .top}
 test wm-transient-1.7 {usage} -returnCodes error -body {
     toplevel .top
     wm transient .top .top
 } -cleanup {
     deleteWindows
-} -result {can't set ".top" as container, would cause management loop}
+} -result {can't set ".top" as container: would cause management loop}
 test wm-transient-1.8 {usage} -returnCodes error -body {
     toplevel .t1
     toplevel .t2
@@ -1648,14 +1648,14 @@ test wm-transient-1.8 {usage} -returnCodes error -body {
     wm transient .t1 .t3
 } -cleanup {
     deleteWindows
-} -result {can't set ".t3" as container, would cause management loop}
+} -result {can't set ".t3" as container: would cause management loop}
 test wm-transient-1.9 {usage} -returnCodes error -body {
     toplevel .top
     frame .top.f
     wm transient .top .top.f
 } -cleanup {
     deleteWindows
-} -result {can't set ".top" as container, would cause management loop}
+} -result {can't set ".top" as container: would cause management loop}
 
 test wm-transient-2.1 {basic get/set of toplevel} -setup {
     set results [list]

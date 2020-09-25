@@ -104,12 +104,11 @@ static void		EventuallyDeleteImage(ImageModel *modelPtr,
 
 static void
 ImageTypeThreadExitProc(
-    ClientData dummy)	/* not used */
+    TCL_UNUSED(void *))
 {
     Tk_ImageType *freePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     while (tsdPtr->oldImageTypeList != NULL) {
 	freePtr = tsdPtr->oldImageTypeList;

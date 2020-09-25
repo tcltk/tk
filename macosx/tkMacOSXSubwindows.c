@@ -143,6 +143,7 @@ XMapWindow(
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     XEvent event;
+    static Bool initialized = NO;
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -172,12 +173,14 @@ XMapWindow(
 
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
-	    [NSApp activateIgnoringOtherApps:NO];
+	    [NSApp activateIgnoringOtherApps:initialized];
 	    [view addTkDirtyRect: [view bounds]];
-	    if ([win canBecomeKeyWindow]) {
-		[win makeKeyAndOrderFront:NSApp];
-	    } else {
-		[win orderFrontRegardless];
+	    if (initialized) {
+		if ([win canBecomeKeyWindow]) {
+		    [win makeKeyAndOrderFront:NSApp];
+		} else {
+		    [win orderFrontRegardless];
+		}
 	    }
 	} else {
 	    TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
@@ -233,11 +236,15 @@ XMapWindow(
      * Generate VisibilityNotify events for window and all mapped children.
      */
 
-    event.xany.send_event = False;
-    event.xany.display = display;
-    event.xvisibility.type = VisibilityNotify;
-    event.xvisibility.state = VisibilityUnobscured;
-    NotifyVisibility(winPtr, &event);
+    if (initialized) {
+	event.xany.send_event = False;
+	event.xany.display = display;
+	event.xvisibility.type = VisibilityNotify;
+	event.xvisibility.state = VisibilityUnobscured;
+	NotifyVisibility(winPtr, &event);
+    } else {
+	initialized = YES;
+    }
     return Success;
 }
 
@@ -308,6 +315,7 @@ XUnmapWindow(
 	if (!Tk_IsEmbedded(winPtr) &&
 		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win orderOut:nil];
+	    [win setExcludedFromWindowsMenu:YES];
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
 
@@ -1075,7 +1083,7 @@ TkMacOSXInvalidateWindow(
  */
 
 void *
-TkMacOSXDrawable(
+Tk_MacOSXGetNSWindowForDrawable(
     Drawable drawable)
 {
     MacDrawable *macWin = (MacDrawable *)drawable;

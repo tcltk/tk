@@ -28,7 +28,7 @@
  * gives the same result as changing the size by X+Y pixels
  * in one step).
  *
- * The request size is initially set to the slave window's requested size.
+ * The request size is initially set to the content window's requested size.
  * When the user drags a sash, each pane's request size is set to its
  * actual size.  This ensures that panes "stay put" on the next resize.
  *
@@ -107,21 +107,21 @@ static const Tk_OptionSpec PaneOptionSpecs[] = {
 /* CreatePane --
  * 	Create a new pane record.
  */
-static Pane *CreatePane(Tcl_Interp *interp, Paned *pw, Tk_Window slaveWindow)
+static Pane *CreatePane(Tcl_Interp *interp, Paned *pw, Tk_Window window)
 {
     Tk_OptionTable optionTable = pw->paned.paneOptionTable;
     void *record = ckalloc(sizeof(Pane));
     Pane *pane = (Pane *)record;
 
     memset(record, 0, sizeof(Pane));
-    if (Tk_InitOptions(interp, record, optionTable, slaveWindow) != TCL_OK) {
+    if (Tk_InitOptions(interp, record, optionTable, window) != TCL_OK) {
 	ckfree(record);
 	return NULL;
     }
 
     pane->reqSize
 	= pw->paned.orient == TTK_ORIENT_HORIZONTAL
-	? Tk_ReqWidth(slaveWindow) : Tk_ReqHeight(slaveWindow);
+	? Tk_ReqWidth(window) : Tk_ReqHeight(window);
 
     return pane;
 }
@@ -140,7 +140,7 @@ static void DestroyPane(Paned *pw, Pane *pane)
  * 	Set pane options.
  */
 static int ConfigurePane(
-    Tcl_Interp *interp, Paned *pw, Pane *pane, Tk_Window slaveWindow,
+    Tcl_Interp *interp, Paned *pw, Pane *pane, Tk_Window window,
     int objc, Tcl_Obj *const objv[])
 {
     Ttk_Manager *mgr = pw->paned.mgr;
@@ -148,7 +148,7 @@ static int ConfigurePane(
     int mask = 0;
 
     if (Tk_SetOptions(interp, pane, pw->paned.paneOptionTable,
-	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
+	    objc, objv, window, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
     }
@@ -239,20 +239,20 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
     if (pw->paned.orient == TTK_ORIENT_HORIZONTAL) {
 	for (index = 0; index < nPanes; ++index) {
 	    Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
-	    Tk_Window slaveWindow = Ttk_ContentWindow(pw->paned.mgr, index);
+	    Tk_Window window = Ttk_ContentWindow(pw->paned.mgr, index);
 
-	    if (height < Tk_ReqHeight(slaveWindow))
-		height = Tk_ReqHeight(slaveWindow);
+	    if (height < Tk_ReqHeight(window))
+		height = Tk_ReqHeight(window);
 	    width += pane->reqSize;
 	}
 	width += nSashes * sashThickness;
     } else {
 	for (index = 0; index < nPanes; ++index) {
 	    Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
-	    Tk_Window slaveWindow = Ttk_ContentWindow(pw->paned.mgr, index);
+	    Tk_Window window = Ttk_ContentWindow(pw->paned.mgr, index);
 
-	    if (width < Tk_ReqWidth(slaveWindow))
-		width = Tk_ReqWidth(slaveWindow);
+	    if (width < Tk_ReqWidth(window))
+		width = Tk_ReqWidth(window);
 	    height += pane->reqSize;
 	}
 	height += nSashes * sashThickness;
@@ -364,7 +364,7 @@ static void PlaceSashes(Paned *pw, int width, int height)
 }
 
 /* PlacePanes --
- *	Places slave panes based on sash positions.
+ *	Places panes based on sash positions.
  */
 static void PlacePanes(Paned *pw)
 {
@@ -412,35 +412,35 @@ static void PaneRemoved(void *managerData, TkSizeT index)
 
 static int AddPane(
     Tcl_Interp *interp, Paned *pw,
-    int destIndex, Tk_Window slaveWindow,
+    int destIndex, Tk_Window window,
     int objc, Tcl_Obj *const objv[])
 {
     Pane *pane;
-    if (!Ttk_Maintainable(interp, slaveWindow, pw->core.tkwin)) {
+    if (!Ttk_Maintainable(interp, window, pw->core.tkwin)) {
 	return TCL_ERROR;
     }
-    if (Ttk_ContentIndex(pw->paned.mgr, slaveWindow) != TCL_INDEX_NONE) {
+    if (Ttk_ContentIndex(pw->paned.mgr, window) != TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%s already added", Tk_PathName(slaveWindow)));
+		"%s already added", Tk_PathName(window)));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", NULL);
 	return TCL_ERROR;
     }
 
-    pane = CreatePane(interp, pw, slaveWindow);
+    pane = CreatePane(interp, pw, window);
     if (!pane) {
 	return TCL_ERROR;
     }
-    if (ConfigurePane(interp, pw, pane, slaveWindow, objc, objv) != TCL_OK) {
+    if (ConfigurePane(interp, pw, pane, window, objc, objv) != TCL_OK) {
 	DestroyPane(pw, pane);
 	return TCL_ERROR;
     }
 
-    Ttk_InsertContent(pw->paned.mgr, destIndex, slaveWindow, pane);
+    Ttk_InsertContent(pw->paned.mgr, destIndex, window, pane);
     return TCL_OK;
 }
 
 /* PaneRequest --
- * 	Only update pane request size if slave is currently unmapped.
+ * 	Only update pane request size if pane is currently unmapped.
  * 	Geometry requests from mapped panes are not directly honored
  * 	in order to avoid unexpected pane resizes (esp. while the
  * 	user is dragging a sash [#1325286]).
@@ -449,10 +449,10 @@ static int PaneRequest(void *managerData, TkSizeT index, int width, int height)
 {
     Paned *pw = (Paned *)managerData;
     Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
-    Tk_Window slaveWindow = Ttk_ContentWindow(pw->paned.mgr, index);
+    Tk_Window window = Ttk_ContentWindow(pw->paned.mgr, index);
     int horizontal = pw->paned.orient == TTK_ORIENT_HORIZONTAL;
 
-    if (!Tk_IsMapped(slaveWindow)) {
+    if (!Tk_IsMapped(window)) {
 	pane->reqSize = horizontal ? width : height;
     }
     return 1;
@@ -519,10 +519,12 @@ static void PanedCleanup(void *recordPtr)
 
 /* Post-configuration hook.
  */
-static int PanedPostConfigure(Tcl_Interp *dummy, void *clientData, int mask)
+static int PanedPostConfigure(
+    TCL_UNUSED(Tcl_Interp *),
+    void *clientData,
+    int mask)
 {
     Paned *pw = (Paned *)clientData;
-    (void)dummy;
 
     if (mask & GEOMETRY_CHANGED) {
 	/* User has changed -width or -height.
@@ -604,10 +606,10 @@ static void DrawSash(Paned *pw, int index, Drawable d)
 static void PanedDisplay(void *recordPtr, Drawable d)
 {
     Paned *pw = (Paned *)recordPtr;
-    TkSizeT i, nSlaves = Ttk_NumberContent(pw->paned.mgr);
+    TkSizeT i, nContent = Ttk_NumberContent(pw->paned.mgr);
 
     TtkWidgetDisplay(recordPtr, d);
-    for (i = 1; i < nSlaves; ++i) {
+    for (i = 1; i < nContent; ++i) {
 	DrawSash(pw, i - 1, d);
     }
 }
@@ -622,43 +624,43 @@ static int PanedAddCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    Tk_Window slaveWindow;
+    Tk_Window window;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
 
-    slaveWindow = Tk_NameToWindow(
+    window = Tk_NameToWindow(
 	interp, Tcl_GetString(objv[2]), pw->core.tkwin);
 
-    if (!slaveWindow) {
+    if (!window) {
 	return TCL_ERROR;
     }
 
-    return AddPane(interp, pw, Ttk_NumberContent(pw->paned.mgr), slaveWindow,
+    return AddPane(interp, pw, Ttk_NumberContent(pw->paned.mgr), window,
 	    objc - 3, objv + 3);
 }
 
-/* $pw insert $index $slave ?-option value ...?
- * 	Insert new slave, or move existing one.
+/* $pw insert $index $window ?-option value ...?
+ * 	Insert new content window, or move existing one.
  */
 static int PanedInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    TkSizeT nSlaves = Ttk_NumberContent(pw->paned.mgr);
+    TkSizeT nContent = Ttk_NumberContent(pw->paned.mgr);
     TkSizeT srcIndex, destIndex;
-    Tk_Window slaveWindow;
+    Tk_Window window;
 
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2,objv, "index slave ?-option value ...?");
+	Tcl_WrongNumArgs(interp, 2,objv, "index window ?-option value ...?");
 	return TCL_ERROR;
     }
 
-    slaveWindow = Tk_NameToWindow(
+    window = Tk_NameToWindow(
 	interp, Tcl_GetString(objv[3]), pw->core.tkwin);
-    if (!slaveWindow) {
+    if (!window) {
 	return TCL_ERROR;
     }
 
@@ -668,13 +670,13 @@ static int PanedInsertCommand(
 	return TCL_ERROR;
     }
 
-    srcIndex = Ttk_ContentIndex(pw->paned.mgr, slaveWindow);
-    if (srcIndex == TCL_INDEX_NONE) { /* New slave: */
-	return AddPane(interp, pw, destIndex, slaveWindow, objc-4, objv+4);
-    } /* else -- move existing slave: */
+    srcIndex = Ttk_ContentIndex(pw->paned.mgr, window);
+    if (srcIndex == TCL_INDEX_NONE) { /* New content: */
+	return AddPane(interp, pw, destIndex, window, objc-4, objv+4);
+    } /* else -- move existing content: */
 
-    if (destIndex + 1 >= nSlaves + 1)
-	destIndex  = nSlaves - 1;
+    if (destIndex + 1 >= nContent + 1)
+	destIndex  = nContent - 1;
     Ttk_ReorderContent(pw->paned.mgr, srcIndex, destIndex);
 
     return objc == 4 ? TCL_OK :
@@ -771,7 +773,7 @@ static int PanedPaneCommand(
 {
     Paned *pw = (Paned *)recordPtr;
     TkSizeT paneIndex;
-    Tk_Window slaveWindow;
+    Tk_Window window;
     Pane *pane;
 
     if (objc < 3) {
@@ -788,17 +790,17 @@ static int PanedPaneCommand(
     }
 
     pane = (Pane *)Ttk_ContentData(pw->paned.mgr, paneIndex);
-    slaveWindow = Ttk_ContentWindow(pw->paned.mgr, paneIndex);
+    window = Ttk_ContentWindow(pw->paned.mgr, paneIndex);
 
     switch (objc) {
 	case 3:
 	    return TtkEnumerateOptions(interp, pane, PaneOptionSpecs,
-			pw->paned.paneOptionTable, slaveWindow);
+			pw->paned.paneOptionTable, window);
 	case 4:
 	    return TtkGetOptionValue(interp, pane, objv[3],
-			pw->paned.paneOptionTable, slaveWindow);
+			pw->paned.paneOptionTable, window);
 	default:
-	    return ConfigurePane(interp, pw, pane, slaveWindow, objc-3,objv+3);
+	    return ConfigurePane(interp, pw, pane, window, objc-3,objv+3);
     }
 }
 
@@ -930,14 +932,15 @@ static const Ttk_ElementOptionSpec SashElementOptions[] = {
 };
 
 static void SashElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    TCL_UNUSED(Tk_Window),
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     SashElement *sash = (SashElement *)elementRecord;
     int thickness = DEFAULT_SASH_THICKNESS;
-    (void)dummy;
-    (void)tkwin;
-    (void)paddingPtr;
 
     Tcl_GetIntFromObj(NULL, sash->thicknessObj, &thickness);
     *widthPtr = *heightPtr = thickness;
