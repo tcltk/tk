@@ -1280,7 +1280,7 @@ test font-38.9 {ParseFontNameObj procedure: arguments} {
 test font-38.10 {ParseFontNameObj procedure: arguments} {
     list [catch {font actual {times xyz xyz}} msg] $msg
 } {1 {expected integer but got "xyz"}}
-test font-38.12 {ParseFontNameObj procedure: stylelist loop} unixOrPc {
+test font-38.12 {ParseFontNameObj procedure: stylelist loop} {unixOrPc failsOnUbuntu} {
     lrange [font actual {times 12 bold italic overstrike underline}] 4 end
 } {-weight bold -slant italic -underline 1 -overstrike 1}
 test font-38.13 {ParseFontNameObj procedure: stylelist error} {
@@ -1351,7 +1351,7 @@ tk scaling 0.5
 test font-44.1 {TkFontGetPixels: size < 0} failsOnUbuntu {
     font actual {times -12} -size
 } 24
-test font-44.2 {TkFontGetPoints: size >= 0} noExceed {
+test font-44.2 {TkFontGetPoints: size >= 0} {noExceed failsOnUbuntu} {
     font actual {times 12} -size
 } 12
 
