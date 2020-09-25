@@ -16,7 +16,7 @@ namespace eval ::_test_tmp {}
 # ------------------------------------------------------------------------------
 #  Proc ::_test_tmp::testInterp
 # ------------------------------------------------------------------------------
-# Command that creates an unsafe child interpreter and tries to load Tk.
+# Command that creates an child interpreter and tries to load Tk.
 # This code is borrowed from safePrimarySelection.test
 # This is necessary for loading Tktest if the tests are done in the build
 # directory without installing Tk.  In that case the usual auto_path loading
@@ -976,7 +976,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 	    update
 	    bind .t1 <Key> {lappend y {key %A}}
 	    set y {}
-	    event generate .t1 <Keys> -keysym a
+	    event generate .t1 <Key> -keysym a
 	    set y
     }]
     update

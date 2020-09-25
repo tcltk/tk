@@ -96,7 +96,7 @@ typedef struct TextLayout {
 				 * layout. */
     int numChunks;		/* Number of chunks actually used in following
 				 * array. */
-    LayoutChunk chunks[1];	/* Array of chunks. The actual size will be
+    LayoutChunk chunks[TKFLEXARRAY];/* Array of chunks. The actual size will be
 				 * maxChunks. THIS FIELD MUST BE THE LAST IN
 				 * THE STRUCTURE. */
 } TextLayout;
@@ -1362,11 +1362,10 @@ Tk_GetFontFromObj(
 
 static int
 SetFontFromAny(
-    Tcl_Interp *dummy,		/* Used for error reporting if not NULL. */
+    TCL_UNUSED(Tcl_Interp *),	/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
-    (void)dummy;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -2002,8 +2001,8 @@ Tk_ComputeTextLayout(
 
     maxChunks = 1;
 
-    layoutPtr = (TextLayout *)ckalloc(sizeof(TextLayout)
-	    + (maxChunks-1) * sizeof(LayoutChunk));
+    layoutPtr = (TextLayout *)ckalloc(offsetof(TextLayout, chunks)
+	    + maxChunks * sizeof(LayoutChunk));
     layoutPtr->tkfont = tkfont;
     layoutPtr->string = string;
     layoutPtr->numChunks = 0;
@@ -3400,7 +3399,7 @@ noMapping:	;
 static int
 ConfigAttributesObj(
     Tcl_Interp *interp,		/* Interp for error return. */
-    Tk_Window tkwin,		/* For display on which font will be used. */
+    TCL_UNUSED(Tk_Window),	/* For display on which font will be used. */
     int objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[],	/* Command line options. */
     TkFontAttributes *faPtr)	/* Font attributes structure whose fields are
@@ -3410,7 +3409,6 @@ ConfigAttributesObj(
     int i, n, index;
     Tcl_Obj *optionPtr, *valuePtr;
     const char *value;
-    (void)tkwin;
 
     for (i = 0; i < objc; i += 2) {
 	optionPtr = objv[i];
@@ -3827,7 +3825,7 @@ NewChunk(
     maxChunks = *maxPtr;
     if (layoutPtr->numChunks == maxChunks) {
 	maxChunks *= 2;
-	s = sizeof(TextLayout) + ((maxChunks - 1) * sizeof(LayoutChunk));
+	s = offsetof(TextLayout, chunks) + (maxChunks * sizeof(LayoutChunk));
 	layoutPtr = (TextLayout *)ckrealloc(layoutPtr, s);
 
 	*layoutPtrPtr = layoutPtr;

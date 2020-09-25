@@ -27,8 +27,8 @@ typedef struct ProtocolHandler {
 				/* Next in list of protocol handlers for the
 				 * same top-level window, or NULL for end of
 				 * list. */
-    Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char command[1];		/* Tcl command to invoke when a client message
+    Tcl_Interp *interp;	/* Interpreter in which to invoke command. */
+    char command[TKFLEXARRAY];	/* Tcl command to invoke when a client message
 				 * for this protocol arrives. The actual size
 				 * of the structure varies to accommodate the
 				 * needs of the actual command. THIS MUST BE
@@ -82,7 +82,7 @@ typedef struct TkWmInfo {
 				 * (corresponds to hints.window_group).
 				 * Malloc-ed. Note: this field doesn't get
 				 * updated if leader is destroyed. */
-    TkWindow *masterPtr;	/* Master window for TRANSIENT_FOR property,
+    TkWindow *containerPtr;	/* Container window for TRANSIENT_FOR property,
 				 * or NULL. */
     Tk_Window icon;		/* Window to use as icon for this window, or
 				 * NULL. */
@@ -259,7 +259,7 @@ typedef struct TkWmInfo {
  *				window (controlled by "wm resizable" command).
  * WM_WITHDRAWN -		non-zero means that this window has explicitly
  *				been withdrawn. If it's a transient, it should
- *				not mirror state changes in the master.
+ *				not mirror state changes in the container.
  */
 
 #define WM_NEVER_MAPPED			1
@@ -571,7 +571,7 @@ TkWmNewWindow(
     memset(wmPtr, 0, sizeof(WmInfo));
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
-    wmPtr->masterPtr = NULL;
+    wmPtr->containerPtr = NULL;
     wmPtr->numTransients = 0;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
@@ -684,12 +684,12 @@ TkWmMapWindow(
 	UpdateTitle(winPtr);
 	UpdatePhotoIcon(winPtr);
 
-	if (wmPtr->masterPtr != NULL) {
+	if (wmPtr->containerPtr != NULL) {
 	    /*
-	     * Don't map a transient if the master is not mapped.
+	     * Don't map a transient if the container is not mapped.
 	     */
 
-	    if (!Tk_IsMapped(wmPtr->masterPtr)) {
+	    if (!Tk_IsMapped(wmPtr->containerPtr)) {
 		wmPtr->withdrawn = 1;
 		wmPtr->hints.initial_state = WithdrawnState;
 	    }
@@ -700,7 +700,7 @@ TkWmMapWindow(
 	     */
 
 	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
-		    wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
+		    wmPtr->containerPtr->wmInfoPtr->wrapperPtr->window);
 	}
 
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -909,16 +909,16 @@ TkWmDeadWindow(
     }
 
     /*
-     * Reset all transient windows whose master is the dead window.
+     * Reset all transient windows whose container is the dead window.
      */
 
     for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
 	    wmPtr2 = wmPtr2->nextPtr) {
-	if (wmPtr2->masterPtr == winPtr) {
+	if (wmPtr2->containerPtr == winPtr) {
 	    wmPtr->numTransients--;
-	    Tk_DeleteEventHandler((Tk_Window) wmPtr2->masterPtr,
+	    Tk_DeleteEventHandler((Tk_Window) wmPtr2->containerPtr,
 		    StructureNotifyMask, WmWaitMapProc, wmPtr2->winPtr);
-	    wmPtr2->masterPtr = NULL;
+	    wmPtr2->containerPtr = NULL;
 	    if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, wmPtr2->wrapperPtr->window,
 			Tk_InternAtom((Tk_Window) winPtr, "WM_TRANSIENT_FOR"));
@@ -933,19 +933,19 @@ TkWmDeadWindow(
     }
     /* ASSERT: numTransients == 0 [Bug 1789819] */
 
-    if (wmPtr->masterPtr != NULL) {
-	wmPtr2 = wmPtr->masterPtr->wmInfoPtr;
+    if (wmPtr->containerPtr != NULL) {
+	wmPtr2 = wmPtr->containerPtr->wmInfoPtr;
 
 	/*
-	 * If we had a master, tell them that we aren't tied to them anymore
+	 * If we had a container, tell them that we aren't tied to them anymore
 	 */
 
 	if (wmPtr2 != NULL) {
 	    wmPtr2->numTransients--;
 	}
-	Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
+	Tk_DeleteEventHandler((Tk_Window) wmPtr->containerPtr,
 		StructureNotifyMask, WmWaitMapProc, winPtr);
-	wmPtr->masterPtr = NULL;
+	wmPtr->containerPtr = NULL;
     }
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
@@ -2231,7 +2231,7 @@ WmIconifyCmd(
 		NULL);
 	return TCL_ERROR;
     }
-    if (wmPtr->masterPtr != NULL) {
+    if (wmPtr->containerPtr != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": it is a transient",
 		winPtr->pathName));
@@ -3432,7 +3432,7 @@ WmStateCmd(
 			"OVERRIDE_REDIRECT", NULL);
 		return TCL_ERROR;
 	    }
-	    if (wmPtr->masterPtr != NULL) {
+	    if (wmPtr->containerPtr != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
@@ -3556,7 +3556,7 @@ WmTransientCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow *masterPtr = wmPtr->masterPtr, *w;
+    TkWindow *containerPtr = wmPtr->containerPtr, *w;
     WmInfo *wmPtr2;
 
     if ((objc != 3) && (objc != 4)) {
@@ -3564,20 +3564,20 @@ WmTransientCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	if (masterPtr != NULL) {
-	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) masterPtr));
+	if (containerPtr != NULL) {
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) containerPtr));
 	}
 	return TCL_OK;
     }
     if (Tcl_GetString(objv[3])[0] == '\0') {
-	if (masterPtr != NULL) {
+	if (containerPtr != NULL) {
 	    /*
-	     * If we had a master, tell them that we aren't tied to them
+	     * If we had a container, tell them that we aren't tied to them
 	     * anymore
 	     */
 
-	    masterPtr->wmInfoPtr->numTransients--;
-	    Tk_DeleteEventHandler((Tk_Window) masterPtr, StructureNotifyMask,
+	    containerPtr->wmInfoPtr->numTransients--;
+	    Tk_DeleteEventHandler((Tk_Window) containerPtr, StructureNotifyMask,
 		    WmWaitMapProc, winPtr);
 
 	    /*
@@ -3587,77 +3587,77 @@ WmTransientCmd(
 	     */
 	}
 
-	wmPtr->masterPtr = NULL;
+	wmPtr->containerPtr = NULL;
     } else {
-	Tk_Window masterWin;
+	Tk_Window container;
 
-	if (TkGetWindowFromObj(interp, tkwin, objv[3], &masterWin)!=TCL_OK) {
+	if (TkGetWindowFromObj(interp, tkwin, objv[3], &container)!=TCL_OK) {
 	    return TCL_ERROR;
 	}
-	masterPtr = (TkWindow *) masterWin;
-	while (!Tk_TopWinHierarchy(masterPtr)) {
+	containerPtr = (TkWindow *) container;
+	while (!Tk_TopWinHierarchy(containerPtr)) {
 	    /*
-	     * Ensure that the master window is actually a Tk toplevel.
+	     * Ensure that the container window is actually a Tk toplevel.
 	     */
 
-	    masterPtr = masterPtr->parentPtr;
+	    containerPtr = containerPtr->parentPtr;
 	}
-	Tk_MakeWindowExist((Tk_Window) masterPtr);
+	Tk_MakeWindowExist((Tk_Window) containerPtr);
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" a transient, it is an icon for %s",
+		    "can't make \"%s\" a transient: it is an icon for %s",
 		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 
-	wmPtr2 = masterPtr->wmInfoPtr;
+	wmPtr2 = containerPtr->wmInfoPtr;
 	if (wmPtr2->wrapperPtr == NULL) {
 	    CreateWrapper(wmPtr2);
 	}
 
 	if (wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" a container, it is an icon for %s",
+		    "can't make \"%s\" a container: it is an icon for %s",
 		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 
-	for (w = masterPtr; w != NULL && w->wmInfoPtr != NULL;
-	     w = (TkWindow *)w->wmInfoPtr->masterPtr) {
+	for (w = containerPtr; w != NULL && w->wmInfoPtr != NULL;
+	     w = (TkWindow *)w->wmInfoPtr->containerPtr) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set \"%s\" as container, would cause management loop",
-		    Tk_PathName(masterPtr)));
+		    "can't set \"%s\" as container: would cause management loop",
+		    Tk_PathName(containerPtr)));
 		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 		return TCL_ERROR;
 	    }
 	}
 
-	if (masterPtr != wmPtr->masterPtr) {
+	if (containerPtr != wmPtr->containerPtr) {
 	    /*
-	     * Remove old master map/unmap binding before setting the new
-	     * master. The event handler will ensure that transient states
-	     * reflect the state of the master.
+	     * Remove old container map/unmap binding before setting the new
+	     * container. The event handler will ensure that transient states
+	     * reflect the state of the container.
 	     */
 
-	    if (wmPtr->masterPtr != NULL) {
-		wmPtr->masterPtr->wmInfoPtr->numTransients--;
-		Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
+	    if (wmPtr->containerPtr != NULL) {
+		wmPtr->containerPtr->wmInfoPtr->numTransients--;
+		Tk_DeleteEventHandler((Tk_Window) wmPtr->containerPtr,
 			StructureNotifyMask, WmWaitMapProc, winPtr);
 	    }
 
-	    masterPtr->wmInfoPtr->numTransients++;
-	    Tk_CreateEventHandler((Tk_Window) masterPtr,
+	    containerPtr->wmInfoPtr->numTransients++;
+	    Tk_CreateEventHandler((Tk_Window) containerPtr,
 		    StructureNotifyMask, WmWaitMapProc, winPtr);
 
-	    wmPtr->masterPtr = masterPtr;
+	    wmPtr->containerPtr = containerPtr;
 	}
     }
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	if (wmPtr->masterPtr != NULL && !Tk_IsMapped(wmPtr->masterPtr)) {
+	if (wmPtr->containerPtr != NULL && !Tk_IsMapped(wmPtr->containerPtr)) {
 	    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send withdraw message to window manager",
@@ -3666,10 +3666,10 @@ WmTransientCmd(
 		return TCL_ERROR;
 	    }
 	} else {
-	    if (wmPtr->masterPtr != NULL) {
+	    if (wmPtr->containerPtr != NULL) {
 		XSetTransientForHint(winPtr->display,
 			wmPtr->wrapperPtr->window,
-			wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
+			wmPtr->containerPtr->wmInfoPtr->wrapperPtr->window);
 	    } else {
 		XDeleteProperty(winPtr->display, wmPtr->wrapperPtr->window,
 			Tk_InternAtom((Tk_Window) winPtr,"WM_TRANSIENT_FOR"));
@@ -3746,7 +3746,7 @@ WmUpdateGeom(
 
 /*
  * Invoked when a MapNotify or UnmapNotify event is delivered for a toplevel
- * that is the master of a transient toplevel.
+ * that is the container of a transient toplevel.
  */
 
 static void
@@ -3755,9 +3755,9 @@ WmWaitMapProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
-    TkWindow *masterPtr = winPtr->wmInfoPtr->masterPtr;
+    TkWindow *containerPtr = winPtr->wmInfoPtr->containerPtr;
 
-    if (masterPtr == NULL) {
+    if (containerPtr == NULL) {
 	return;
     }
 
