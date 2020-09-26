@@ -1610,7 +1610,8 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     ni.uID = icoPtr -> id;
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
-    ni.hIcon = hIcon;
+    ni.hIcon = icoPtr -> hIcon;
+	ni.dwInfoFlags = NIIF_INFO;
 
     if (argc < 2) {
         Tcl_AppendResult(interp, "wrong # args: should be \"",
