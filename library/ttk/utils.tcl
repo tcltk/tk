@@ -298,12 +298,12 @@ proc ttk::bindMouseWheel {bindtag callback} {
 #
 
 bind TtkScrollable <MouseWheel> \
-	{ tk::MouseWheel %W y %D -120.0 }
+	{ tk::MouseWheel %W y %D }
 bind TtkScrollable <Option-MouseWheel> \
 	{ tk::MouseWheel %W y %D -12.0 }
 bind TtkScrollable <Shift-MouseWheel> \
-	{ tk::MouseWheel %W x %D -120.0 }
+	{ tk::MouseWheel %W x %D }
 bind TtkScrollable <Shift-Option-MouseWheel> \
-	{ tk::MouseWheel %W x %D -120.0 }
+	{ tk::MouseWheel %W x %D -12.0 }
 
 #*EOF*
