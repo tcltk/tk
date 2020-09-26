@@ -1339,7 +1339,7 @@ CreateIcoFromTkImage(
 	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
 		&bgraPixel.voidPtr, NULL, 0);
 	if (!iconInfo.hbmColor) {
-	    FreeIconPOINT(iconBits);
+	    FreeIconResource(iconBits);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an iconphoto with image \"%s\"",
 		    image));
