@@ -535,7 +535,7 @@ proc ::tk::CancelRepeat {} {
 
 ## ::tk::MouseWheel $w $dir $amount $factor $units
 
-proc ::tk::MouseWheel {w dir amount factor {units units}} {
+proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
     $w ${dir}view scroll [expr {$amount/$factor}] $units
 }
 
