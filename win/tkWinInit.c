@@ -42,7 +42,7 @@ TkpInit(
      * initialize the Windows systray command here.
      */
 
-    WinIcoInit(interp);	
+    WinIcoInit(interp);
     TkWinXInit(Tk_GetHINSTANCE());
     return TCL_OK;
 }

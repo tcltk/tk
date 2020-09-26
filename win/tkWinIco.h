@@ -2,7 +2,7 @@
  * tkWinIco.h --
  *
  *	This file contains declarations for icon-manipulation routines
- *      in Windows. 
+ *      in Windows.
  *
  * Copyright (c) 1995-1996 Microsoft Corp.
  * Copyright (c) 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
@@ -18,7 +18,7 @@
 #include <tkPlatDecls.h>
 
 /*
- * These structures represent the contents of a icon, in terms of its image 
+ * These structures represent the contents of a icon, in terms of its image
  * or resource.
  */
 
