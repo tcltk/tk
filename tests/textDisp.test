@@ -1193,7 +1193,7 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
     update idletasks
 } {}
 
-test textDisp-9.1 {TkTextRedrawTag} {
+test textDisp-9.1 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -3931,7 +3931,7 @@ test textDisp-31.4 {line embedded image height update} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
 
-test textDisp-31.5 {line update index shifting} {
+test textDisp-31.5 {line update index shifting} failsOnUbuntu {
     set res {}
     textest configure -height 100
     update ; after 1000 ; update
@@ -3948,7 +3948,7 @@ test textDisp-31.5 {line update index shifting} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
-test textDisp-31.6 {line update index shifting} {
+test textDisp-31.6 {line update index shifting} failsOnUbuntu {
     # Should do exactly the same as the above, as long
     # as we are correctly tagging the correct lines for
     # recalculation.  The 'update' and 'delay' must be
