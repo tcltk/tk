@@ -253,7 +253,7 @@ Tcl_AppInit(
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
-		
+
     return TCL_OK;
 }
 

@@ -1,22 +1,22 @@
-/* 
+/*
  * 	tkUnixSysTray.c implements a "systray" Tcl command which permits to
- * 	change the system tray/taskbar icon of a Tk toplevel window and 
- * 	to post system notifications. 
+ * 	change the system tray/taskbar icon of a Tk toplevel window and
+ * 	to post system notifications.
  *
  * Copyright (c) 2005 Anton Kovalenko.
- * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC. 
+ * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-                                        
+
 */
 
 #include <tcl.h>
 #include <tk.h>
 #include "tkUnixInt.h"
 
-/* 
- * Based extensively on the tktray extension package. Here we are removing 
+/*
+ * Based extensively on the tktray extension package. Here we are removing
  * non-essential parts of tktray.
  */
 
@@ -244,15 +244,15 @@ int Tktray_Init ( Tcl_Interp* interp );
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconObjectCmd -- 
- * 
+ * TrayIconObjectCmd --
+ *
  * 	Manage attributes of tray icon.
  *
  * Results:
- *	Various values of the tray icon are set and retrieved. 
+ *	Various values of the tray icon are set and retrieved.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -375,15 +375,15 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
 /*
  *----------------------------------------------------------------------
  *
- * QueryTrayOrientation -- 
- * 
+ * QueryTrayOrientation --
+ *
  * 	Obtain the orientation of the tray icon.
  *
  * Results:
- *	Orientation is returned. 
+ *	Orientation is returned.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -421,15 +421,15 @@ static int QueryTrayOrientation(DockIcon* icon)
 /*
  *----------------------------------------------------------------------
  *
- * DockSelectionAtomFor -- 
- * 
+ * DockSelectionAtomFor --
+ *
  * 	Obtain the dock selection atom.
  *
  * Results:
- *	Selection returned. 
+ *	Selection returned.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -447,15 +447,15 @@ static Atom DockSelectionAtomFor(Tk_Window tkwin)
 /*
  *----------------------------------------------------------------------
  *
- * XembedSetState -- 
- * 
+ * XembedSetState --
+ *
  * 	Set the xembed state.
  *
  * Results:
- *	Updates the xembed state. 
+ *	Updates the xembed state.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -467,7 +467,7 @@ static void XembedSetState(DockIcon *icon, long xembedState)
     if (icon->drawingWin) {
 	XChangeProperty(Tk_Display(icon->drawingWin),
 			icon->wrapper,
-			icon->a_XEMBED_INFO, 
+			icon->a_XEMBED_INFO,
 			icon->a_XEMBED_INFO, 32,
 			PropModeReplace, (unsigned char*)info, 2);
     }
@@ -476,15 +476,15 @@ static void XembedSetState(DockIcon *icon, long xembedState)
 /*
  *----------------------------------------------------------------------
  *
- * XembedRequestDock -- 
- * 
+ * XembedRequestDock --
+ *
  * 	Obtain the docking window.
  *
  * Results:
- *	The dock window is requested. 
+ *	The dock window is requested.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -494,7 +494,7 @@ static void XembedRequestDock(DockIcon *icon)
     Tk_Window tkwin = icon->drawingWin;
     XEvent ev;
     Display *dpy = Tk_Display(tkwin);
-    
+
     memset(&ev, 0, sizeof(ev));
     ev.xclient.type = ClientMessage;
     ev.xclient.window = icon->myManager;
@@ -511,15 +511,15 @@ static void XembedRequestDock(DockIcon *icon)
 /*
  *----------------------------------------------------------------------
  *
- * CheckArgbVisual -- 
- * 
+ * CheckArgbVisual --
+ *
  * 	Find out if a visual is recommended and if it looks like argb32.
  *
  * Results:
- *	Render the visual as needed. 
+ *	Render the visual as needed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -575,15 +575,15 @@ static void CheckArgbVisual(DockIcon *icon)
 /*
  *----------------------------------------------------------------------
  *
- * CreateTrayIconWindow -- 
- * 
+ * CreateTrayIconWindow --
+ *
  * 	Create and configure the window for the icon tray.
  *
  * Results:
- *	The window is created and displayed. 
+ *	The window is created and displayed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -593,7 +593,7 @@ static void CreateTrayIconWindow(DockIcon *icon)
     Tk_Window tkwin;
     Tk_Window wrapper;
     XSetWindowAttributes attr;
-    
+
     Tcl_SaveResult(icon->interp, &oldResult);
     /* Use the same name (tail) as the widget name, to enable
        name-based icon management for supporting trays, as promised by
@@ -637,15 +637,15 @@ static void CreateTrayIconWindow(DockIcon *icon)
 /*
  *----------------------------------------------------------------------
  *
- * DockToManager -- 
- * 
+ * DockToManager --
+ *
  * 	Helper function to manage icon in display.
  *
  * Results:
- *	Icon is created and displayed. 
+ *	Icon is created and displayed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -685,15 +685,15 @@ Tk_OptionSpec IconOptionSpec[]={
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconRequestSize -- 
- * 
+ * TrayIconRequestSize --
+ *
  * 	Set icon size.
  *
  * Results:
  *	Icon size is obtained/set.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -719,15 +719,15 @@ static void TrayIconRequestSize(DockIcon* icon, int w, int h)
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconImageChanged -- 
- * 
+ * TrayIconImageChanged --
+ *
  * 	Fires when icon state changes.
  *
  * Results:
  *	Icon changes are rendered.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -745,7 +745,7 @@ static void TrayIconImageChanged(ClientData cd,
 	}
 	if (icon->offscreenPixmap) {
 	    /* its size is bad */
-	    Tk_FreePixmap(Tk_Display(icon->tkwin), 
+	    Tk_FreePixmap(Tk_Display(icon->tkwin),
 			  icon->offscreenPixmap);
 	    icon->offscreenPixmap = None;
 	}
@@ -760,7 +760,7 @@ static void TrayIconImageChanged(ClientData cd,
     icon->imageHeight = imgh;
     if (imgw == w && imgh == h && x == 0 && y == 0) {
 	icon->photo = NULL;	/* invalidate */
-	
+
     }
     TrayIconRequestSize(icon,imgw,imgh);
     EventuallyRedrawIcon(icon);
@@ -769,15 +769,15 @@ static void TrayIconImageChanged(ClientData cd,
 /*
  *----------------------------------------------------------------------
  *
- * IgnoreImageChange -- 
- * 
+ * IgnoreImageChange --
+ *
  * 	Currently no-op.
  *
  * Results:
  *	None.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -785,30 +785,30 @@ static void TrayIconImageChanged(ClientData cd,
 
 static void IgnoreImageChange(ClientData cd,
 			      int x, int y, int w, int h,
-			      int imgw, int imgh) 
+			      int imgw, int imgh)
 {
 	/*Silence compiler warnings.*/
-	(void)cd; 
-	(void)x; 
-	(void)y; 
-	(void)w; 
-	(void)h; 
-	(void)imgw; 
+	(void)cd;
+	(void)x;
+	(void)y;
+	(void)w;
+	(void)h;
+	(void)imgw;
 	(void)imgh;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * ForceImageChange -- 
- * 
+ * ForceImageChange --
+ *
  * 	Push icon changes through.
  *
  * Results:
  *	Icon image is updated.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -826,15 +826,15 @@ static void TrayIconForceImageChange(DockIcon* icon)
 /*
  *----------------------------------------------------------------------
  *
- *  EventuallyRedrawIcon -- 
- * 
+ *  EventuallyRedrawIcon --
+ *
  * 	Update image icon.
  *
  * Results:
  *	Icon image is updated.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -852,15 +852,15 @@ static void EventuallyRedrawIcon(DockIcon* icon) {
 /*
  *----------------------------------------------------------------------
  *
- *  DisplayIcon -- 
- * 
+ *  DisplayIcon --
+ *
  * 	Main function for displaying icon.
  *
  * Results:
  *	Icon image is displayed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -931,24 +931,24 @@ static void DisplayIcon(ClientData cd)
 		for (cy=0;cy<h;++cy) {
 		    for (cx=0;cx<w;++cx) {
 			XPutPixel(xim,cx,cy,
-				  (*(pib.pixelPtr + 
+				  (*(pib.pixelPtr +
 				     pib.pixelSize*cx +
-				     pib.pitch*cy + 
+				     pib.pitch*cy +
 				     pib.offset[0])<<16) |
-				  (*(pib.pixelPtr + 
+				  (*(pib.pixelPtr +
 				     pib.pixelSize*cx +
-				     pib.pitch*cy + 
+				     pib.pitch*cy +
 				     pib.offset[1])<<8) |
-				  (*(pib.pixelPtr + 
+				  (*(pib.pixelPtr +
 				     pib.pixelSize*cx +
-				     pib.pitch*cy + 
+				     pib.pitch*cy +
 				     pib.offset[2])) |
 				  (pib.offset[3] ?
-				   (*(pib.pixelPtr + 
+				   (*(pib.pixelPtr +
 				      pib.pixelSize*cx +
-				      pib.pitch*cy + 
+				      pib.pitch*cy +
 				      pib.offset[3])<<24) : 0));
-		    } 
+		    }
 		}
 		XPutImage(Tk_Display(icon->drawingWin),
 			  icon->offscreenPixmap,
@@ -992,15 +992,15 @@ static void DisplayIcon(ClientData cd)
 /*
  *----------------------------------------------------------------------
  *
- *  RetargetEvent -- 
- * 
- * 	Redirect X events to widgets. 
+ *  RetargetEvent --
+ *
+ * 	Redirect X events to widgets.
  *
  * Results:
  *	Icon image is displayed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1048,15 +1048,15 @@ static void RetargetEvent(DockIcon *icon, XEvent *ev)
 /*
  *----------------------------------------------------------------------
  *
- *  TrayIconWrapperEvent -- 
- * 
+ *  TrayIconWrapperEvent --
+ *
  * 	Ensure automapping in root window is done in withdrawn state.
  *
  * Results:
  *	Icon image is displayed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1102,15 +1102,15 @@ static void TrayIconWrapperEvent(ClientData cd, XEvent* ev)
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconEvent -- 
- * 
+ * TrayIconEvent --
+ *
  * 	Handle X events.
  *
  * Results:
  *	Events are handled and processed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1171,15 +1171,15 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
 /*
  *----------------------------------------------------------------------
  *
- * UserIconEvent -- 
- * 
+ * UserIconEvent --
+ *
  * 	Handle user events.
  *
  * Results:
  *	Events are handled and processed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1228,15 +1228,15 @@ static void UserIconEvent(ClientData cd, XEvent* ev)
 /*
  *----------------------------------------------------------------------
  *
- * PostBalloon -- 
- * 
+ * PostBalloon --
+ *
  * 	Display tooltip/balloon window over tray icon.
  *
  * Results:
  *	Window is displayed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1252,7 +1252,7 @@ static int PostBalloon(DockIcon* icon, const char * utf8msg,
     if (!(icon->drawingWin) || (icon->myManager == None))
 	return 0;
     /* overflow protection */
-    if (icon->msgid < 0) 
+    if (icon->msgid < 0)
 	icon->msgid = 0;
 
     memset(&ev, 0, sizeof(ev));
@@ -1293,15 +1293,15 @@ static int PostBalloon(DockIcon* icon, const char * utf8msg,
 /*
  *----------------------------------------------------------------------
  *
- * CancelBalloon -- 
- * 
+ * CancelBalloon --
+ *
  * 	Remove balloon from display over tray icon.
  *
  * Results:
- *	Window is destroyed. 
+ *	Window is destroyed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1315,7 +1315,7 @@ static void CancelBalloon(DockIcon* icon, int msgid)
     if (!(icon->drawingWin) || (icon->myManager == None))
 	return;
     /* overflow protection */
-    if (icon->msgid < 0) 
+    if (icon->msgid < 0)
 	icon->msgid = 0;
 
     memset(&ev, 0, sizeof(ev));
@@ -1330,7 +1330,7 @@ static void CancelBalloon(DockIcon* icon, int msgid)
     ev.xclient.data.l[1]=SYSTEM_TRAY_CANCEL_MESSAGE;
     ev.xclient.data.l[2]=msgid;
     TKU_NO_BAD_WINDOW_BEGIN(Tk_Display(icon->tkwin))
-	XSendEvent(dpy, icon->myManager , True, 
+	XSendEvent(dpy, icon->myManager , True,
 		   StructureNotifyMask|SubstructureNotifyMask, &ev);
     TKU_NO_BAD_WINDOW_END
 }
@@ -1338,19 +1338,19 @@ static void CancelBalloon(DockIcon* icon, int msgid)
 /*
  *----------------------------------------------------------------------
  *
- * IconGenericHandler -- 
- * 
- * 	Process non-tk events. 
+ * IconGenericHandler --
+ *
+ * 	Process non-tk events.
  *
  * Results:
- *	Events are processed. 
+ *	Events are processed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
- 
+
 static int IconGenericHandler(ClientData cd, XEvent *ev)
 {
     DockIcon *icon = (DockIcon*)cd;
@@ -1384,19 +1384,19 @@ static int IconGenericHandler(ClientData cd, XEvent *ev)
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconUpdate -- 
- * 
- * 	Get in touch with new options that are certainly valid. 
+ * TrayIconUpdate --
+ *
+ * 	Get in touch with new options that are certainly valid.
  *
  * Results:
  *	Options updated.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
- 
+
 static void TrayIconUpdate(DockIcon* icon, int mask)
 {
     /* why should someone need this option?
@@ -1416,7 +1416,7 @@ static void TrayIconUpdate(DockIcon* icon, int mask)
     */
     if (mask & ICON_CONF_XEMBED) {
 	if (icon->myManager == None &&
-	    icon->trayManager != None && 
+	    icon->trayManager != None &&
 	    icon->docked) {
 	    CheckArgbVisual(icon);
 	    if (icon->drawingWin &&
@@ -1459,16 +1459,16 @@ static void TrayIconUpdate(DockIcon* icon, int mask)
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconConfigureMethod -- 
- * 
+ * TrayIconConfigureMethod --
+ *
  *      Returns TCL_ERROR if some option is invalid,
- *      or else retrieve resource references and free old resources. 
+ *      or else retrieve resource references and free old resources.
  *
  * Results:
  *	Widget configured.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1528,15 +1528,15 @@ static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconDeleteProc -- 
- * 
+ * TrayIconDeleteProc --
+ *
  *      Delete tray window and clean up.
  *
  * Results:
  *	Window destroyed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1552,15 +1552,15 @@ static void TrayIconDeleteProc( ClientData cd )
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconCreateCmd -- 
- * 
- *      Create tray command and (unreal) window. 
+ * TrayIconCreateCmd --
+ *
+ *      Create tray command and (unreal) window.
  *
  * Results:
  *	Icon tray and hidden window created.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -1672,15 +1672,15 @@ handleErrors:
 /*
  *----------------------------------------------------------------------
  *
- * Tktray_Init -- 
- * 
+ * Tktray_Init --
+ *
  *      Initialize the command.
  *
  * Results:
  *	Command initialized.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */

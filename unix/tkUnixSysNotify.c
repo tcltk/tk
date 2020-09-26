@@ -1,12 +1,12 @@
-/* 
- * 	tkUnixSysNotify.c implements a "sysnotify" Tcl command which 
+/*
+ * 	tkUnixSysNotify.c implements a "sysnotify" Tcl command which
  permits one to post system notifications based on the libnotify API.
- * 
- * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC. 
+ *
+ * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-                                        
+
  */
 
 #include <tcl.h>
@@ -29,15 +29,15 @@ int SysNotify_Init ( Tcl_Interp* interp );
 /*
  *----------------------------------------------------------------------
  *
- * SysNotifyDeleteCmd -- 
- * 
+ * SysNotifyDeleteCmd --
+ *
  *      Delete notification and clean up.
  *
  * Results:
  *	Window destroyed.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -53,36 +53,34 @@ static void SysNotifyDeleteCmd ( ClientData cd )
 /*
  *----------------------------------------------------------------------
  *
- * SysNotifyCreateCmd -- 
- * 
- *      Create tray command and (unreal) window. 
+ * SysNotifyCreateCmd --
+ *
+ *      Create tray command and (unreal) window.
  *
  * Results:
  *	Icon tray and hidden window created.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
 
 
-static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
+static int SysNotifyCmd(ClientData clientData, Tcl_Interp * interp,
 			 int argc, const char * argv[])
 {
-
-    (void) clientData;
-
     char *title;
     char *message;
     NotifyNotification *notif;
+    (void)clientData;
 
     if (argc < 3) {
 	Tcl_AppendResult(interp, "wrong # args,must be:",
 			 argv[0], " title  message ", (char * ) NULL);
 	return TCL_ERROR;
     }
- 
+
     title = (char *) argv[1];
     message = (char *) argv[2];
 
@@ -95,15 +93,15 @@ static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 /*
  *----------------------------------------------------------------------
  *
- * SysNotify_Init -- 
- * 
+ * SysNotify_Init --
+ *
  *      Initialize the command.
  *
  * Results:
  *	Command initialized.
  *
- * Side effects: 
- *	None.	
+ * Side effects:
+ *	None.
  *
  *-------------------------------z---------------------------------------
  */
@@ -112,7 +110,7 @@ int SysNotify_Init ( Tcl_Interp* interp )
 {
 
   notify_init("Wish");
-  
+
   Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, (ClientData)interp,
 		    (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
   return TCL_OK;
