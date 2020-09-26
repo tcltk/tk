@@ -58,7 +58,7 @@ typedef struct IcoInfo {
     int id;
     /* Integer identifier for command;  used to
                  cancel it. */
-    BlockOfIconImagesPtr lpIR; /* IconresourcePtr if type==ICO_FILE */
+    BlockOfIconImagesPtr lpIR; /* IconresourcePtr*/
     int iconpos; /* hIcon is the nth Icon*/
     char * taskbar_txt; /* malloced text to display in the taskbar*/
     Tcl_Interp * interp; /* interp which created the icon*/
@@ -141,152 +141,6 @@ swaplines(unsigned char * bits, int width, int height, int bpp) {
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * MakeIconFromResource16 --
- *
- * 	Create icon from 16-bit resource.
- *
- * Results:
- *	Icon is created.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static HICON
-MakeIconFromResource16(LPICONIMAGE lpIcon) {
-    HICON hIcon;
-    UINT cb;
-    HBITMAP hBmp;
-    BITMAP bm;
-    LPBYTE lpbDst;
-    HDC hdc;
-    int width = ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biWidth;
-    int height = ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biHeight / 2;
-    int bitCount = ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biBitCount;
-    if (lpIcon == NULL)
-        return NULL;
-    if (lpIcon -> lpBits == NULL)
-        return NULL;
-    swaplines(lpIcon -> lpAND, width, height, 1);
-    hdc = GetDC(NULL);
-    if (bitCount == 1 || bitCount > 8)
-        hBmp = CreateBitmap((UINT) width, (UINT) height, 1, 1, NULL);
-    else
-        hBmp = CreateCompatibleBitmap(hdc, (UINT) width, (UINT) height);
-
-    if (!hBmp) {
-        ReleaseDC(NULL, hdc);
-        return NULL;
-    }
-    ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biHeight /= 2;
-    if (!SetDIBits(hdc, hBmp, 0, (UINT) height, (LPVOID) lpIcon -> lpXOR,
-            (LPBITMAPINFO) lpIcon -> lpBits, DIB_RGB_COLORS)) {
-        DeleteObject(hBmp);
-        ReleaseDC(NULL, hdc);
-        return NULL;
-    }
-    ReleaseDC(NULL, hdc);
-    ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biHeight *= 2;
-    GetObject(hBmp, sizeof(bm), & bm);
-    cb = bm.bmHeight * bm.bmWidthBytes * bm.bmPlanes;
-    /* if (cb % 4 != 0)        // dword align */
-    /* cb += 4 - (cb % 4); */
-    lpbDst = (LPBYTE) ckalloc(cb);
-    if (!GetBitmapBits(hBmp, cb, (LPVOID) lpbDst)) {
-        DeleteObject(hBmp);
-        ckfree((char * ) lpbDst);
-        return NULL;
-    }
-    hIcon = CreateIcon(GETHINSTANCE, width, height,
-        (BYTE) bm.bmPlanes, (BYTE) bm.bmBitsPixel,
-        lpIcon -> lpAND, lpbDst);
-    DeleteObject(hBmp);
-    ckfree((char * ) lpbDst);
-    return hIcon;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * MakeIconFromResource32 --
- *
- * 	Create icon from 32-bit resource.
- *
- * Results:
- *	Icon is created.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static HICON
-MakeIconFromResource32(LPICONIMAGE lpIcon) {
-    HICON hIcon;
-    static FARPROC pfnCreateIconFromResourceEx = NULL;
-    static int initinfo = 0;
-    /* Sanity Check */
-    if (lpIcon == NULL)
-        return NULL;
-    if (lpIcon -> lpBits == NULL)
-        return NULL;
-    if (!initinfo) {
-        HMODULE hMod = GetModuleHandleA("USER32.DLL");
-        initinfo = 1;
-        if (hMod) {
-            pfnCreateIconFromResourceEx = GetProcAddress(hMod, "CreateIconFromResourceEx");
-        }
-    }
-    /* Let the OS do the real work :) */
-    if (pfnCreateIconFromResourceEx != NULL) {
-        hIcon = (HICON)(pfnCreateIconFromResourceEx)
-            (lpIcon -> lpBits, lpIcon -> dwNumBytes, TRUE, 0x00030000,
-                ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biWidth,
-                ( * (LPBITMAPINFOHEADER)(lpIcon -> lpBits)).biHeight / 2, 0);
-    } else {
-        hIcon = NULL;
-    }
-    /* It failed, odds are good we're on NT so try the non-Ex way */
-    if (hIcon == NULL) {
-        /* We would break on NT if we try with a 16bpp image */
-        if (lpIcon -> lpbi -> bmiHeader.biBitCount != 16) {
-            hIcon = CreateIconFromResource(lpIcon -> lpBits, lpIcon -> dwNumBytes, TRUE, 0x00030000);
-        }
-    }
-    return hIcon;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * MakeIconFromResource --
- *
- * 	Wrapper function to create icon.
- *
- * Results:
- *	Icon is created.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-static HICON
-MakeIconFromResource(LPICONIMAGE lpIcon) {
-    if (ISWIN32S)
-        return MakeIconFromResource16(lpIcon);
-    else
-        return MakeIconFromResource32(lpIcon);
-}
 
 /*
  *----------------------------------------------------------------------
@@ -306,7 +160,7 @@ MakeIconFromResource(LPICONIMAGE lpIcon) {
 
 
 static void
-FreeIconResource(LPICONRESOURCE lpIR) {
+FreeIconResource(BlockOfIconImagesPtr lpIR) {
     int i;
     if (lpIR == NULL)
         return;
@@ -320,129 +174,6 @@ FreeIconResource(LPICONRESOURCE lpIR) {
     ckfree((char * ) lpIR);
 }
 
-
-/*
- *----------------------------------------------------------------------
- *
- * ReadIconFromICOFile --
- *
- * 	Read icon resource from an ICO file.
- *
- * Results:
- *	Icon is created.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-LPICONRESOURCE
-ReadIconFromICOFile(Tcl_Interp * interp, LPCSTR szFileName) {
-    LPICONRESOURCE lpIR = NULL, lpNew = NULL;
-    int i = 0;
-    DWORD dwBytesRead = 0;
-    LPICONDIRENTRY lpIDE = NULL;
-    Tcl_Obj * oPath = NULL;
-    Tcl_Channel channel;
-
-    Tcl_ResetResult(interp);
-
-    /*
-     * Access the icon file. We use Tcl_FS* methods to support virtual
-     * filesystems.
-     */
-    oPath = Tcl_NewStringObj(szFileName, -1);
-    Tcl_IncrRefCount(oPath);
-
-    channel = Tcl_FSOpenFileChannel(interp, oPath, "r", 0644);
-    if (channel == NULL) {
-        return NULL;
-    }
-
-    if (Tcl_SetChannelOption(interp, channel,
-            "-translation", "binary") != TCL_OK) {
-        return NULL;
-    }
-
-    /* Allocate memory for the resource structure */
-    if ((lpIR = (LPICONRESOURCE) ckalloc(sizeof(ICONRESOURCE))) == NULL) {
-        Tcl_AppendResult(interp, "Error Allocating Memory", (char * ) NULL);
-        goto close_error;
-    }
-    /* Read in the header */
-    if ((lpIR -> nNumImages = ReadICOHeader(channel)) == -1) {
-        Tcl_AppendResult(interp, "Error Reading File Header", (char * ) NULL);
-        goto close_error;
-    }
-    /* Adjust the size of the struct to account for the images */
-    if ((lpNew = (LPICONRESOURCE) ckrealloc((char * ) lpIR, sizeof(ICONRESOURCE) + ((lpIR -> nNumImages - 1) * sizeof(LPICONIMAGE)))) == NULL) {
-        Tcl_AppendResult(interp, "Error Allocating Memory", (char * ) NULL);
-        goto close_error;
-    }
-
-    lpIR = lpNew;
-    /* Store the original name */
-    lstrcpy(lpIR -> szOriginalICOFileName, szFileName);
-    lstrcpy(lpIR -> szOriginalDLLFileName, "");
-    /* Allocate enough memory for the icon directory entries */
-    if ((lpIDE = (LPICONDIRENTRY) ckalloc(lpIR -> nNumImages * sizeof(ICONDIRENTRY))) == NULL) {
-        Tcl_AppendResult(interp, "Error Allocating Memory", (char * ) NULL);
-        goto close_error;
-    }
-    /* Read in the icon directory entries */
-    if ((dwBytesRead = Tcl_Read(channel, (char * ) lpIDE,
-            lpIR -> nNumImages * sizeof(ICONDIRENTRY))) < 0) {
-        Tcl_AppendResult(interp, "Error Reading File", (char * ) NULL);
-        goto close_error;
-    }
-    if (dwBytesRead != lpIR -> nNumImages * sizeof(ICONDIRENTRY)) {
-        Tcl_AppendResult(interp, "Error Reading File", (char * ) NULL);
-        goto close_error;
-    }
-    /* Loop through and read in each image */
-    for (i = 0; i < lpIR -> nNumImages; i++) {
-        /* Allocate memory for the resource */
-        if ((lpIR -> IconImages[i].lpBits = (LPBYTE) ckalloc(lpIDE[i].dwBytesInRes)) == NULL) {
-            Tcl_AppendResult(interp, "Error Allocating Memory", (char * ) NULL);
-            goto close_error;
-        }
-        lpIR -> IconImages[i].dwNumBytes = lpIDE[i].dwBytesInRes;
-        /* Seek to beginning of this image */
-        if (Tcl_Seek(channel, lpIDE[i].dwImageOffset, SEEK_SET) < 0) {
-            Tcl_AppendResult(interp, "Error Seeking in File", (char * ) NULL);
-            goto close_error;
-        }
-        /* Read it in */
-        if ((dwBytesRead = Tcl_Read(channel, lpIR -> IconImages[i].lpBits,
-                lpIDE[i].dwBytesInRes)) < 0) {
-            Tcl_AppendResult(interp, "Error Reading File", (char * ) NULL);
-            goto close_error;
-        }
-        if (dwBytesRead != lpIDE[i].dwBytesInRes) {
-            Tcl_AppendResult(interp, "Error Reading File", (char * ) NULL);
-            goto close_error;
-        }
-        /* Set the internal pointers appropriately */
-        if (!AdjustICONIMAGEPointers( & (lpIR -> IconImages[i]))) {
-            Tcl_AppendResult(interp, "Error Converting to Internal Format", (char * ) NULL);
-            goto close_error;
-        }
-        lpIR -> IconImages[i].hIcon = MakeIconFromResource( & (lpIR -> IconImages[i]));
-    }
-    /* Clean up */
-    ckfree((char * ) lpIDE);
-    Tcl_Close(interp, channel);
-    Tcl_DecrRefCount(oPath);
-    return lpIR;
-
-    close_error:
-        Tcl_Close(interp, channel);
-    Tcl_DecrRefCount(oPath);
-    ckfree((char * ) lpIR);
-    ckfree((char * ) lpIDE);
-    return NULL;
-}
 
 
 /*
@@ -1608,7 +1339,7 @@ CreateIcoFromTkImage(
 	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
 		&bgraPixel.voidPtr, NULL, 0);
 	if (!iconInfo.hbmColor) {
-	    ckfree(iconBits);
+	    FreeIconPOINT(iconBits);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an iconphoto with image \"%s\"",
 		    image));
@@ -1639,7 +1370,7 @@ CreateIcoFromTkImage(
 		&bgraMask.voidPtr, NULL, 0);
 	if (!iconInfo.hbmMask) {
 	    DeleteObject(iconInfo.hbmColor);
-	    ckfree(iconBits);
+	    FreeIconResource(iconBits);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create mask bitmap for \"%s\"",
 		    image));
@@ -1660,7 +1391,7 @@ CreateIcoFromTkImage(
 	     * XXX should free up created icons.
 	     */
 
-	    ckfree(iconBits);
+	    FreeIconResource(iconBits);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create icon for \"%s\"",
 		    image));
@@ -1732,7 +1463,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
             }
         }
         if (hIcon == NULL) {
-			ckfree(lpIR);
+			FreeIconResource(lpIR);
             Tcl_AppendResult(interp, "Could not find an icon in ", argv[2], (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1952,7 +1683,7 @@ WinIcoInit(Tcl_Interp * interp) {
 
     Tcl_CreateCommand(interp, "_systray", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
-    Tcl_CreateCommand(interp, "_systraynotify", WinSystrayCmd, NULL, NULL);
+    Tcl_CreateCommand(interp, "_sysnotify", WinSystrayCmd, NULL, NULL);
     return TCL_OK;
 }
 
