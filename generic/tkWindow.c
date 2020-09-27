@@ -13,7 +13,7 @@
  */
 
 #include "tkInt.h"
-
+#include "tkPort.h"
 #ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
@@ -1642,7 +1642,7 @@ Tk_MapWindow(
     event.xmap.event = winPtr->window;
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    Tk_HandleEvent(&event);
+    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
 }
 
 /*
@@ -1804,7 +1804,7 @@ Tk_UnmapWindow(
 	event.xunmap.event = winPtr->window;
 	event.xunmap.window = winPtr->window;
 	event.xunmap.from_configure = False;
-	Tk_HandleEvent(&event);
+	TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
     }
 }
 
