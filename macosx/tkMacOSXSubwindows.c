@@ -119,14 +119,18 @@ XDestroyWindow(
  *
  * XMapWindow --
  *
- *	Map the given X Window to the screen. See X window documentation for
- *	more details.
+ *	This X11 stub maps the given X11 Window but does not update any of
+ *      the Tk structures describing the window.  Tk applications should
+ *	never call this directly, but it is called by Tk_MapWindow and
+ *      Tk_WmMapWindow.
  *
  * Results:
- *	None.
+ *	Returns Success or BadWindow.
  *
  * Side effects:
- *	The subwindow or toplevel may appear on the screen.
+ *	The subwindow or toplevel may appear on the screen.  VisibilityNotify
+ *      events are generated.
+ *
  *
  *----------------------------------------------------------------------
  */
@@ -142,7 +146,6 @@ XMapWindow(
     MacDrawable *macWin = (MacDrawable *)window;
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-    XEvent event;
     static Bool initialized = NO;
 
     /*
@@ -158,7 +161,6 @@ XMapWindow(
     }
 
     display->request++;
-    winPtr->flags |= TK_MAPPED;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
 	    TKContentView *view = [win contentView];
@@ -193,30 +195,7 @@ XMapWindow(
 	    TkMacOSXInvalClipRgns((Tk_Window)contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
-
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
-
-	/*
-	 * We only need to send the MapNotify event for toplevel windows.
-	 */
-
-	event.xany.serial = LastKnownRequestProcessed(display);
-	event.xany.send_event = False;
-	event.xany.display = display;
-
-	event.xmap.window = window;
-	event.xmap.type = MapNotify;
-	event.xmap.event = window;
-	event.xmap.override_redirect = winPtr->atts.override_redirect;
-
-	/*
-	 * To update the mapped status of packed or placed subwindows
-	 * we handle this event immediately and then process the idle
-	 * events that it generates.
-	 */
-
-	Tk_HandleEvent(&event);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 
 	/*
@@ -226,6 +205,11 @@ XMapWindow(
 
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
     }
+
+    /*
+     * Mark the toplevel as needing to be redrawn, unless the window is being
+     * mapped while drawing is taking place.
+     */
 
     TKContentView *view = [win contentView];
     if (view != [NSView focusView]) {
@@ -237,6 +221,7 @@ XMapWindow(
      */
 
     if (initialized) {
+	XEvent event;
 	event.xany.send_event = False;
 	event.xany.display = display;
 	event.xvisibility.type = VisibilityNotify;
@@ -287,11 +272,13 @@ NotifyVisibility(
  *
  * XUnmapWindow --
  *
- *	Unmap the given X Window to the screen. See X window documentation for
- *	more details.
+ *	This X11 stub maps the given X11 Window but does not update any of
+ *	The Tk structures describing the window.  Tk applications should
+ *	never call this directly, but it is called by Tk_UnmapWindow and
+ *      Tk_WmUnmapWindow.
  *
  * Results:
- *	None.
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	The subwindow or toplevel may be removed from the screen.
@@ -308,8 +295,10 @@ XUnmapWindow(
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-    XEvent event;
 
+    if (!window) {
+	return BadWindow;
+    }
     display->request++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
@@ -318,28 +307,6 @@ XUnmapWindow(
 	    [win setExcludedFromWindowsMenu:YES];
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
-
-	/*
-	 * We only need to send the UnmapNotify event for toplevel windows.
-	 */
-
-	event.xany.serial = LastKnownRequestProcessed(display);
-	event.xany.send_event = False;
-	event.xany.display = display;
-
-	event.xunmap.type = UnmapNotify;
-	event.xunmap.window = window;
-	event.xunmap.event = window;
-	event.xunmap.from_configure = false;
-
-	/*
-	 * To update the mapped status of packed or placed subwindows
-	 * we handle this event immediately and then process the idle
-	 * events that it generates.
-	 */
-
-	Tk_HandleEvent(&event);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     } else {
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
@@ -355,7 +322,6 @@ XUnmapWindow(
 	TkMacOSXInvalClipRgns((Tk_Window)parentPtr);
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
-    winPtr->flags &= ~TK_MAPPED;
     TKContentView *view = [win contentView];
     if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
