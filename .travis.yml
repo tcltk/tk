@@ -35,10 +35,10 @@ jobs:
         - make install
         - make test-classic >out-classic.txt
         - cat out-classic.txt
-        - grep -q "Failed\t0" out-classic.txt
+        - grep -q "Failed	0" out-classic.txt
         - make test-ttk >out-ttk.txt
         - cat out-ttk.txt
-        - grep -q "Failed\t0" out-ttk.txt
+        - grep -q "Failed	0" out-ttk.txt
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
