@@ -946,7 +946,7 @@ TkWmDeadWindow(
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
     	TkWindow *winPtr2 = transientPtr->winPtr;
-    	TkWindow *containerPtr = (TkWindow *)TkGetTransientMaster(winPtr2);
+    	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
 
     	if (containerPtr == winPtr) {
     	    wmPtr2 = winPtr2->wmInfoPtr;
@@ -1841,7 +1841,7 @@ WmDeiconifyCmd(
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
 	WmInfo *wmPtr2 = winPtr2->wmInfoPtr;
-	TkWindow *containerPtr = (TkWindow *)TkGetTransientMaster(winPtr2);
+	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
 
     	if (containerPtr == winPtr) {
 	    if ((wmPtr2->hints.initial_state == WithdrawnState) &&
@@ -2385,7 +2385,7 @@ WmIconifyCmd(
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
-	TkWindow *containerPtr = (TkWindow *)TkGetTransientMaster(winPtr2);
+	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
     	if (containerPtr == winPtr &&
 		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
 	    TkpWmSetState(winPtr2, WithdrawnState);
@@ -3815,7 +3815,7 @@ WmWithdrawCmd(
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
-	TkWindow *containerPtr = (TkWindow *)TkGetTransientMaster(winPtr2);
+	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
 
     	if (containerPtr == winPtr &&
 		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
@@ -5337,7 +5337,7 @@ TkSetWMName(
 /*
  *----------------------------------------------------------------------
  *
- * TkGetTransientMaster --
+ * TkMacOSXGetContainer --
  *
  *	If the passed window has the TRANSIENT_FOR property set this will
  *	return the container window. Otherwise it will return None.
@@ -5352,7 +5352,7 @@ TkSetWMName(
  */
 
 Tk_Window
-TkGetTransientMaster(
+TkMacOSXGetContainer(
     TkWindow *winPtr)
 {
     if (winPtr->wmInfoPtr != NULL) {
