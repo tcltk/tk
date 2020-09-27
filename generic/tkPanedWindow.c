@@ -1370,17 +1370,13 @@ PanedWindowEventProc(
 	DestroyPanedWindow(pwPtr);
     } else if (eventPtr->type == UnmapNotify) {
         for (i = 0; i < pwPtr->numPanes; i++) {
-            if (!pwPtr->panes[i]->hide &&
-		(Tk_Width(pwPtr->panes[i]->tkwin) > 1 ||
-		 Tk_Height(pwPtr->panes[i]->tkwin) > 1)) {
+            if (!pwPtr->panes[i]->hide) {
                 Tk_UnmapWindow(pwPtr->panes[i]->tkwin);
             }
         }
     } else if (eventPtr->type == MapNotify) {
         for (i = 0; i < pwPtr->numPanes; i++) {
-            if (!pwPtr->panes[i]->hide &&
-		(Tk_Width(pwPtr->panes[i]->tkwin) > 1 ||
-		 Tk_Height(pwPtr->panes[i]->tkwin) > 1)) {
+            if (!pwPtr->panes[i]->hide) {
                 Tk_MapWindow(pwPtr->panes[i]->tkwin);
             }
         }
