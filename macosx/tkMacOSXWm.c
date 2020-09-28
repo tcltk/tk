@@ -776,7 +776,7 @@ TkWmNewWindow(
  */
 static Tk_RestrictAction
 MapUnmapRestrictProc(
-    ClientData arg,
+    TCL_UNUSED(void*),
     XEvent *eventPtr)
 {
     return (eventPtr->type==MapNotify || eventPtr->type==UnmapNotify ?
