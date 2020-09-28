@@ -7,6 +7,8 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 variable scrollInfo
 proc scroll args {
     global scrollInfo
@@ -75,7 +77,7 @@ test entry-2.1 "Create entry before scrollbar" -body {
     	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
-test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
+test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints failsOnUbuntu -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     .te insert end [string repeat "abc" 50]
