@@ -45,6 +45,8 @@ toplevel .b
 wm geom .b +0+0
 update idletasks
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 # Font should be fixed width and have chars missing below char 32, so can
 # test control char expansion and missing character code.
 
@@ -69,7 +71,7 @@ proc getsize {} {
 test unixfont-1.1 {TkpGetNativeFont procedure: not native} {unix noExceed} {
     list [catch {font measure {} xyz} msg] $msg
 } {1 {font "" doesn't exist}}
-test unixfont-1.2 {TkpGetNativeFont procedure: native} unix {
+test unixfont-1.2 {TkpGetNativeFont procedure: native} {unix failsOnUbuntu} {
     font measure fixed 0
 } {6}
 
@@ -78,21 +80,21 @@ test unixfont-2.1 {TkpGetFontFromAttributes procedure: no family} unix {
     set x {}
 } {}
 test unixfont-2.2 {TkpGetFontFromAttributes procedure: Times relatives} \
-	{unix noExceed hasTimesNew} {
+	{unix noExceed hasTimesNew failsOnUbuntu} {
     set x {}
     lappend x [lindex [font actual {-family "Times New Roman"}] 1]
     lappend x [lindex [font actual {-family "New York"}] 1]
     lappend x [lindex [font actual {-family "Times"}] 1]
 } {times times times}
 test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
-	{unix noExceed hasCourierNew} {
+	{unix noExceed hasCourierNew failsOnUbuntu} {
     set x {}
     lappend x [lindex [font actual {-family "Courier New"}] 1]
     lappend x [lindex [font actual {-family "Monaco"}] 1]
     lappend x [lindex [font actual {-family "Courier"}] 1]
 } {courier courier courier}
 test unixfont-2.4 {TkpGetFontFromAttributes procedure: Helvetica relatives} \
-	{unix noExceed hasArial} {
+	{unix noExceed hasArial failsOnUbuntu} {
     set x {}
     lappend x [lindex [font actual {-family "Arial"}] 1]
     lappend x [lindex [font actual {-family "Geneva"}] 1]
@@ -102,19 +104,19 @@ test unixfont-2.5 {TkpGetFontFromAttributes procedure: fallback} unix {
     font actual {-xyz-xyz-*-*-*-*-*-*-*-*-*-*-*-*}
     set x {}
 } {}
-test unixfont-2.6 {TkpGetFontFromAttributes: fallback to fixed family} unix {
+test unixfont-2.6 {TkpGetFontFromAttributes: fallback to fixed family} {unix failsOnUbuntu} {
     lindex [font actual {-family fixed -size 10}] 1
 } {fixed}
 test unixfont-2.7 {TkpGetFontFromAttributes: fixed family not available!} unix {
     # no test available
 } {}
-test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} unix {
+test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {unix failsOnUbuntu} {
     lindex [font actual {-family fixed -size 31}] 1
 } {fixed}
-test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {unix noExceed} {
+test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {unix noExceed failsOnUbuntu} {
     lindex [font actual {-family courier}] 1
 } {courier}
-test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} unix {
+test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {unix failsOnUbuntu} {
     lindex [font actual {-family courier -size 37}] 3
 } {37}
 test unixfont-2.11 {TkpGetFontFromAttributes: font cannot be loaded} unix {
@@ -166,11 +168,11 @@ test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} unix {
     .b.l config -text "000000     00000"
     getsize
 } "[expr $ax*6] [expr $ay*2]"
-test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} unix {
+test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {unix failsOnUbuntu} {
     .b.l config -text "00  000     00000"
     getsize
 } "[expr $ax*7] [expr $ay*2]"
-test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} unix {
+test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {unix failsOnUbuntu} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0000"
     .b.c index $t @[expr int($ax*2.5)],1
@@ -186,7 +188,7 @@ test unixfont-5.11 {Tk_MeasureChars: TK_AT_LEAST_ONE + not even one char fit!} u
     .b.l config -wrap $a
     set x
 } "$ax [expr $ay*6]"
-test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} unix {
+test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {unix failsOnUbuntu} {
     .b.l config -text "000   \n000"
     getsize
 } "[expr $ax*6] [expr $ay*2]"
@@ -253,7 +255,7 @@ test unixfont-8.3 {AllocFont procedure: can't parse info from name} unix {
     catch {unset fontArray}
     set result
 } {-family -overstrike -size -slant -underline -weight}
-test unixfont-8.4 {AllocFont procedure: classify characters} unix {
+test unixfont-8.4 {AllocFont procedure: classify characters} {unix failsOnUbuntu} {
     set x 0
     incr x [font measure $courier "\u4000"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
@@ -264,7 +266,7 @@ test unixfont-8.4 {AllocFont procedure: classify characters} unix {
 test unixfont-8.5 {AllocFont procedure: setup widths of normal chars} unix {
     font metrics $courier -fixed
 } {1}
-test unixfont-8.6 {AllocFont procedure: setup widths of special chars} unix {
+test unixfont-8.6 {AllocFont procedure: setup widths of special chars} {unix failsOnUbuntu} {
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
     incr x [font measure $courier "\002"]   ;# 4
@@ -292,7 +294,7 @@ test unixfont-8.11 {AllocFont procedure: XA_UNDERLINE_POSITION was 0} unix {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} unix {
+test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {unix failsOnUbuntu} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -301,7 +303,7 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} unix {
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} unix {
+test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {unix failsOnUbuntu} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}

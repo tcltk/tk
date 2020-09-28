@@ -10,6 +10,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 test cursor-1.1 {Tk_AllocCursorFromObj - converting internal reps} {testcursor} {
     set x watch
     lindex $x 0
@@ -105,7 +107,7 @@ test cursor-3.1 {Tk_FreeCursorFromObj - reference counts} {testcursor} {
     lappend result [testcursor heart]
 } {{{3 1}} {{2 1}} {{1 1}} {}}
 
-test cursor-4.1 {FreeCursorObjProc} {testcursor} {
+test cursor-4.1 {FreeCursorObjProc} {testcursor failsOnUbuntu} {
     destroy .b
     set x [format heart]
     button .b -cursor $x

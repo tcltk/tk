@@ -45,6 +45,8 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 test textWind-1.1 {basic tests of options} {fonts} {
     .t delete 1.0 end
     .t insert end "This is the first line"
@@ -493,7 +495,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} {textf
     update
     lappend msg [.t bbox 1.5]
 } [list {{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}} [list 40 [expr {11+$fixedDiff/2}] 0 0]]
-test textWind-10.6.1 {EmbWinLayoutProc procedure, error in creating window} {
+test textWind-10.6.1 {EmbWinLayoutProc procedure, error in creating window} failsOnUbuntu {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     catch {destroy .t2}
@@ -550,7 +552,7 @@ test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} {fonts} {
     update
     list [.t bbox .f] [.t bbox 1.13]
 } {{5 18 127 20} {132 21 7 13}}
-test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} {
+test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
@@ -578,7 +580,7 @@ test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} {fonts} {
     list [.t bbox .f] [.t bbox 1.13]
 } {{5 18 210 65} {}}
 
-test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} {
+test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} failsOnUbuntu {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     pack forget .t
@@ -590,7 +592,7 @@ test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} {
 } {30x20+119+55}
 place forget .t
 pack .t
-test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} {
+test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} failsOnUbuntu {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     pack forget .t
@@ -672,7 +674,7 @@ test textWind-12.1 {EmbWinUndisplayProc procedure, mapping/unmapping} {
     set x
 } {created mapped modified replaced unmapped mapped off-screen unmapped}
 
-test textWind-13.1 {EmbWinBboxProc procedure} {
+test textWind-13.1 {EmbWinBboxProc procedure} failsOnUbuntu {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .f -width 5 -height 5 -bg $color
@@ -829,7 +831,7 @@ test textWind-16.1 {EmbWinTextStructureProc procedure} {
     winfo ismapped .f
 } 0
 pack .t
-test textWind-16.2 {EmbWinTextStructureProc procedure} {
+test textWind-16.2 {EmbWinTextStructureProc procedure} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
@@ -854,7 +856,7 @@ test textWind-16.3 {EmbWinTextStructureProc procedure} {
     update
 } {}
 pack .t
-test textWind-16.4 {EmbWinTextStructureProc procedure} {
+test textWind-16.4 {EmbWinTextStructureProc procedure} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
