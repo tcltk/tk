@@ -149,4 +149,12 @@ MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long gre
 					    unsigned long blue);
 #define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
 
+/*
+ * Used by tkWindow.c
+ */
+
+MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
+
+#define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
+
 #endif /* _TKMACPORT */

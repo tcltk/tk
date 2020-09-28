@@ -1135,7 +1135,7 @@ static const char *const accentNames[] = {
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
 	preferences = [[NSUserDefaults standardUserDefaults] retain];
-	
+
 	/*
 	 * AppKit calls this method when the user changes the Accent Color
 	 * but not when the user changes the Highlight Color.  So we register
