@@ -47,7 +47,7 @@ test panedwindow-1.7 "Make sure empty panedwindow still still doesn't crash" -bo
 
 test panedwindow-1.8 "Re-forget pane" -body {
     .pw forget .pw.f1
-} -returnCodes 1 -result ".pw.f1 is not managed by .pw"
+} -returnCodes error -result ".pw.f1 is not managed by .pw"
 
 test panedwindow-1.end "Cleanup" -body {
     destroy .pw
@@ -119,11 +119,11 @@ test panedwindow-3.0 "configure pane" -body {
 
 test panedwindow-3.1 "configure pane -- errors" -body {
     .pw pane 1 -weight -4
-} -returnCodes 1 -match glob -result "-weight must be nonnegative"
+} -returnCodes error -match glob -result "-weight must be nonnegative"
 
 test panedwindow-3.2 "add pane -- errors" -body {
     .pw add [ttk::label .pw.l] -weight -1
-} -returnCodes 1 -match glob -result "-weight must be nonnegative"
+} -returnCodes error -match glob -result "-weight must be nonnegative"
 
 
 test panedwindow-3.end "cleanup" -body { destroy .pw }
@@ -147,7 +147,7 @@ test panedwindow-4.1 "forget" -body {
 
 test panedwindow-4.2 "forget forgotten" -body {
     .pw forget .pw.l1
-} -returnCodes 1 -result ".pw.l1 is not managed by .pw"
+} -returnCodes error -result ".pw.l1 is not managed by .pw"
 
 # checkorder $winlist --
 #	Ensure that Y coordinates windows in $winlist are strictly increasing.
