@@ -1,6 +1,8 @@
 language: c
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
       - binutils-mingw-w64-i686
       - binutils-mingw-w64-x86-64
@@ -19,7 +21,7 @@ addons:
       - xquartz
 jobs:
   include:
-# Testing on Linux with various compilers
+# Testing on Linux GCC
     - name: "Linux/GCC/Shared"
       os: linux
       dist: focal
@@ -31,7 +33,11 @@ jobs:
       script: &x11gui
         - make binaries libraries tktest
         - make install
-        - make test
+        - make test-classic >out-classic.txt
+        - cat out-classic.txt
+        - make test-ttk >out-ttk.txt
+        - cat out-ttk.txt
+        - grep -q "Failed	0" out-ttk.txt
     - name: "Linux/GCC/Shared/no-xft"
       os: linux
       dist: focal
@@ -74,29 +80,15 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
-# Older versions of GCC...
-    - name: "Linux/GCC 7/Shared"
+# Newer/Older versions of GCC
+    - name: "Linux/GCC 10/Shared"
       os: linux
       dist: focal
-      compiler: gcc-7
+      compiler: gcc-10
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
-            - g++-7
-      env:
-        - BUILD_DIR=unix
-    - name: "Linux/GCC 6/Shared"
-      os: linux
-      dist: bionic
-      compiler: gcc-6
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
+            - g++-10
       env:
         - BUILD_DIR=unix
     - name: "Linux/GCC 5/Shared"
@@ -105,13 +97,11 @@ jobs:
       compiler: gcc-5
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
             - g++-5
       env:
         - BUILD_DIR=unix
-# Clang
+# Testing on Linux Clang
     - name: "Linux/Clang/Shared"
       os: linux
       dist: focal
@@ -140,9 +130,9 @@ jobs:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Clang/Xcode 11.7/Shared"
+    - name: "macOS/Xcode 12/Shared"
       os: osx
-      osx_image: xcode11.7
+      osx_image: xcode12
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -150,27 +140,27 @@ jobs:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: &mactest
         - make binaries libraries tktest
-    - name: "macOS/Clang/Xcode 11.7/Static"
+    - name: "macOS/Xcode 12/Static"
       os: osx
-      osx_image: xcode11.7
+      osx_image: xcode12
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CFLAGS=-I/usr/local/opt/tcl-tk/include"
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 11.7/Debug"
+    - name: "macOS/Xcode 12/Debug"
       os: osx
-      osx_image: xcode11.7
+      osx_image: xcode12
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CFLAGS=-I/usr/local/opt/tcl-tk/include"
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 11.7/Shared/XQuartz"
+    - name: "macOS/Xcode 12/Shared/XQuartz"
       os: osx
-      osx_image: xcode11.7
+      osx_image: xcode12
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
@@ -178,37 +168,27 @@ jobs:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
 # Older MacOS versions
-    - name: "macOS/Clang/Xcode 11/Shared"
+    - name: "macOS/Xcode 11/Shared"
       os: osx
-      osx_image: xcode11
+      osx_image: xcode11.7
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 10/Shared"
+    - name: "macOS/Xcode 10/Shared"
       os: osx
       osx_image: xcode10.3
-      addons:
-        homebrew:
-          packages:
-            - tcl-tk
-          update: true
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
       install:
         - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
       script: *mactest
-    - name: "macOS/Clang/Xcode 9/Shared"
+    - name: "macOS/Xcode 9/Shared"
       os: osx
       osx_image: xcode9.4
-      addons:
-        homebrew:
-          packages:
-            - tcl-tk
-          update: true
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.13"
@@ -249,8 +229,6 @@ before_install:
 install:
   - mkdir "$HOME/install dir"
   - ./configure ${CFGOPT} "--prefix=$HOME/install dir" || (cat config.log && exit 1)
-before_script:
-  - export ERROR_ON_FAILURES=1
 script:
   - make binaries libraries tktest
   - make install
