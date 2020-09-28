@@ -300,7 +300,7 @@ TkTextImageCmd(
     default:
 	Tcl_Panic("unexpected switch fallthrough");
     }
-//    return TCL_ERROR;
+    return TCL_ERROR;
 }
 
 /*
