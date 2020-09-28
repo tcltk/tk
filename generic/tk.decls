@@ -1117,10 +1117,9 @@ declare 1 aqua {
 declare 2 aqua {
     void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
 }
-# Stub removed because the function no longer exists.
-#declare 3 aqua {
-#    void TkMacOSXInitMenus(Tcl_Interp *interp)
-#}
+declare 3 aqua {
+    void TkMacOSXInitMenus(Tcl_Interp *interp)
+}
 declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
