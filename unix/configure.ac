@@ -520,43 +520,6 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for libnotify.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no; then
-    AC_MSG_CHECKING([whether to use libnotify])
-    AC_ARG_ENABLE(libnotify,
-	AC_HELP_STRING([--enable-libnotify],
-	    [use libnotify (default: on)]),
-	[enable_libnotify=$enableval], [enable_libfnotify="default"])
-    LIBNOTIFY_CFLAGS=""
-    LIBNOTIFY_LIBS=""
-    if test "$enable_libnotify" = "no" ; then
-	AC_MSG_RESULT([$enable_libnotify])
-    else
-	found_libnotify="yes"
-	dnl make sure pkg-config says that libnotify is present.
-	LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
-	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
-	if test "$found_libnotify" = "no" ; then
-	    found_libnotify=yes
-	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
-	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
-	fi
-	AC_MSG_RESULT([$found_libnotify])
-    fi
-    if test $enable_libnotify = "yes" ; then
-	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
-	AC_DEFINE(HAVE_LIBNOTIFY, 1, [Have we turned on libnotify?])
-    else
-	UNIX_LIBNOTIFY_OBJS=""
-    fi
-    AC_SUBST(LIBNOTIFY_CFLAGS)
-    AC_SUBST(LIBNOTIFY_LIBS)
-    AC_SUBST(UNIX_LIBNOTIFY_OBJS)
-fi
-
-#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
