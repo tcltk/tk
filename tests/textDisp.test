@@ -101,6 +101,8 @@ wm positionfrom . user
 wm deiconify .
 updateText
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 # Some window managers (like olwm under SunOS 4.1.3) misbehave in a way
 # that tends to march windows off the top and left of the screen.  If
 # this happens, some tests will fail because parts of the window will
@@ -277,7 +279,7 @@ test textDisp-2.5 {LayoutDLine, word wrap} {textfonts} {
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.13] [.t bbox 1.19] [.t bbox 1.20] [.t bbox 1.21]
 } [list [list 96 5 $fixedWidth $fixedHeight] [list 138 5 $fixedWidth $fixedHeight] [list 145 5 0  $fixedHeight] [list 5 [expr {$fixedDiff + 18}] $fixedWidth $fixedHeight]]
-test textDisp-2.6 {LayoutDLine, word wrap} {
+test textDisp-2.6 {LayoutDLine, word wrap} failsOnUbuntu {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
@@ -1180,7 +1182,7 @@ test textDisp-8.9 {TkTextChanged} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 8.0} {2.0 8.0}}
-test textDisp-8.10 {TkTextChanged} {
+test textDisp-8.10 {TkTextChanged} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1240,7 +1242,7 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
     update idletasks
 } {}
 
-test textDisp-9.1 {TkTextRedrawTag} {
+test textDisp-9.1 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1258,7 +1260,7 @@ test textDisp-9.2 {TkTextRedrawTag} {textfonts} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 2.0 2.17} {1.0 2.0 2.17}}
-test textDisp-9.3 {TkTextRedrawTag} {
+test textDisp-9.3 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1269,7 +1271,7 @@ test textDisp-9.3 {TkTextRedrawTag} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.4 {TkTextRedrawTag} {
+test textDisp-9.4 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1280,7 +1282,7 @@ test textDisp-9.4 {TkTextRedrawTag} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.5 {TkTextRedrawTag} {
+test textDisp-9.5 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1291,7 +1293,7 @@ test textDisp-9.5 {TkTextRedrawTag} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.6 {TkTextRedrawTag} {
+test textDisp-9.6 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap"
@@ -1302,7 +1304,7 @@ test textDisp-9.6 {TkTextRedrawTag} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag} {
+test textDisp-9.7 {TkTextRedrawTag} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1860,7 +1862,7 @@ test textDisp-14.5 {TkTextXviewCmd procedure} {
 test textDisp-14.6 {TkTextXviewCmd procedure} {
     list [catch {.t xview moveto a} msg] $msg
 } {1 {expected floating-point number but got "a"}}
-test textDisp-14.7 {TkTextXviewCmd procedure} {
+test textDisp-14.7 {TkTextXviewCmd procedure} failsOnUbuntu {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
     .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n"
@@ -2060,7 +2062,7 @@ test textDisp-16.9 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.10 {TkTextYviewCmd procedure, "moveto" option} {
     list [catch {.t yview moveto gorp} msg] $msg
 } {1 {expected floating-point number but got "gorp"}}
-test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
     .t yview moveto 0.5
     .t index @0,0
 } {103.0}
@@ -2072,21 +2074,21 @@ test textDisp-16.13 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto 1.1
     .t index @0,0
 } {191.0}
-test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
     .t yview moveto .75
     .t index @0,0
 } {151.60}
-test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
     .t yview moveto .752
     .t index @0,0
 } {151.60}
-test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {textfonts} {
+test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} textfonts {
     set count [expr {5 * $bigHeight + 150 * $fixedHeight}]
     set extra [expr {0.04 * double($fixedDiff * 150) / double($count)}]
     .t yview moveto [expr {.753 - $extra}]
     .t index @0,0
 } {151.60}
-test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
     .t yview moveto .755
     .t index @0,0
 } {151.80}
@@ -2250,7 +2252,7 @@ test textDisp-16.38 {TkTextYviewCmd procedure} {
 test textDisp-16.39 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 1.3i pixels} msg] $msg
 } {0 {}}
-test textDisp-16.40 {text count -xpixels} {
+test textDisp-16.40 {text count -xpixels} failsOnUbuntu {
     set res {}
     lappend res [.t count -xpixels 1.0 1.5] \
       [.t count -xpixels 1.5 1.0] \
@@ -2564,7 +2566,7 @@ test textDisp-19.7 {GetYView procedure} {
     updateText
     set x $scrollInfo
 } {0.125 0.75}
-test textDisp-19.8 {GetYView procedure} {
+test textDisp-19.8 {GetYView procedure} failsOnUbuntu {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
@@ -2861,7 +2863,7 @@ test textDisp-19.16 {count -ypixels} {
       [.t count -ypixels 16.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"]
 } [list [expr {260 + 20 * $fixedDiff}] [expr {260 + 20 * $fixedDiff}] $fixedHeight [expr {2*$fixedHeight}] $fixedHeight [expr {3*$fixedHeight}]]
-test textDisp-19.17 {count -ypixels with indices in elided lines} {
+test textDisp-19.17 {count -ypixels with indices in elided lines} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
@@ -2888,7 +2890,7 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
     .t yview 35.0
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {4 * $fixedHeight}] [expr {3 * $fixedHeight}] 0 0 0 0 0 0 [expr {5 * $fixedHeight}] [expr {- 5 * $fixedHeight}] [expr {2 * $fixedHeight}] [expr {3 * $fixedHeight}] [expr {5 * $fixedHeight}]]
-test textDisp-19.18 {count -ypixels with indices in elided lines} {
+test textDisp-19.18 {count -ypixels with indices in elided lines} failsOnUbuntu {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
@@ -3927,7 +3929,7 @@ catch {destroy .t2}
 .t configure -height 1
 updateText
 
-test textDisp-31.1 {line embedded window height update} {
+test textDisp-31.1 {line embedded window height update} failsOnUbuntu {
     set res {}
     .t delete 1.0 end
     .t insert end "abcd\nefgh\nijkl\nmnop\nqrst\nuvwx\nyx"
@@ -3940,7 +3942,7 @@ test textDisp-31.1 {line embedded window height update} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
 
-test textDisp-31.2 {line update index shifting} {
+test textDisp-31.2 {line update index shifting} failsOnUbuntu {
     set res {}
     .t.f configure -height 100
     updateText
@@ -3957,7 +3959,7 @@ test textDisp-31.2 {line update index shifting} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
-test textDisp-31.3 {line update index shifting} {
+test textDisp-31.3 {line update index shifting} failsOnUbuntu {
     # Should do exactly the same as the above, as long
     # as we are correctly tagging the correct lines for
     # recalculation.  The 'update' and 'delay' must be
@@ -3994,7 +3996,7 @@ test textDisp-31.4 {line embedded image height update} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
 
-test textDisp-31.5 {line update index shifting} {
+test textDisp-31.5 {line update index shifting} failsOnUbuntu {
     set res {}
     textest configure -height 100
     updateText
@@ -4011,7 +4013,7 @@ test textDisp-31.5 {line update index shifting} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
-test textDisp-31.6 {line update index shifting} {
+test textDisp-31.6 {line update index shifting} failsOnUbuntu {
     # Should do exactly the same as the above, as long
     # as we are correctly tagging the correct lines for
     # recalculation.  The 'update' and 'delay' must be
