@@ -483,7 +483,7 @@ proc ttk::combobox::Unpost {cb} {
 ## LBMaster $lb --
 #	Return the combobox main widget that owns the listbox.
 #
-proc ttk::combobox:LBMaster {lb} {
+proc ttk::combobox::LBMaster {lb} {
     winfo parent [winfo parent [winfo parent $lb]]
 }
 

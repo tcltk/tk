@@ -57,7 +57,7 @@ if {[tk windowingsystem] eq "x11"} {
     bind TMenubutton <Button-1>  \
 	{ %W state pressed ; ttk::menubutton::Popdown %W }
     bind TMenubutton <ButtonRelease-1>  \
-	{ if {[winfo exists %W]} { %W state {!pressed}} }
+	{ if {[winfo exists %W]} { %W state !pressed } }
 }
 
 # PostPosition --
