@@ -316,13 +316,13 @@ static void GetBackgroundColorRGBA(
     CGFloat *rgba)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    TkWindow *containerPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+    TkWindow *containerPtr = (TkWindow *) TkGetContainer(tkwin);
 
     while (containerPtr && containerPtr->privatePtr) {
 	if (containerPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	containerPtr = (TkWindow *)TkGetGeomMaster(containerPtr);
+	containerPtr = (TkWindow *)TkGetContainer(containerPtr);
     }
     if (containerPtr && containerPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
