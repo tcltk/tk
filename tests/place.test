@@ -11,6 +11,7 @@ tcltest::loadTestedCommands
 
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
@@ -197,7 +198,7 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} {
 } {30 60}
 
 
-test place-8.1 {MasterStructureProc, mapping and unmapping slaves} {
+test place-8.1 {MasterStructureProc, mapping and unmapping slaves} failsOnUbuntu {
     place forget .t.f2
     place forget .t.f
     place .t.f2 -relx 1.0 -rely 1.0 -anchor sw
@@ -213,7 +214,7 @@ test place-8.1 {MasterStructureProc, mapping and unmapping slaves} {
     update
     lappend result [winfo ismapped .t.f2]
 } {1 0 40 30 0 1}
-test place-8.2 {MasterStructureProc, mapping and unmapping slaves} {
+test place-8.2 {MasterStructureProc, mapping and unmapping slaves} failsOnUbuntu {
     place forget .t.f2
     place forget .t.f
     place .t.f -x 0 -y 0 -width 200 -height 100

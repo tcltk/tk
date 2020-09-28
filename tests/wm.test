@@ -27,6 +27,8 @@ proc stdWindow {} {
     update
 }
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 # [raise] and [lower] may return before the window manager has completed the
 # operation. The raiseDelay procedure idles for a while to give the operation
 # a chance to complete.
@@ -805,7 +807,7 @@ test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
     destroy .t2 .r.f
 } -result {can't iconify .t2: it is an embedded window}
 
-test wm-iconify-3.1 {iconify behavior} -body {
+test wm-iconify-3.1 {iconify behavior} -constraints failsOnUbuntu -body {
     toplevel .t2
     wm geom .t2 -0+0
     update
@@ -1404,7 +1406,7 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
 
 deleteWindows
 
-test wm-stackorder-3.1 {unmapped toplevel} -body {
+test wm-stackorder-3.1 {unmapped toplevel} -constraints failsOnUbuntu -body {
     toplevel .t1 ; update
     toplevel .t2 ; update
     wm iconify .t1
@@ -1690,7 +1692,7 @@ test wm-transient-3.3 {withdraw/deiconify on the master
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-4.1 {transient toplevel is withdrawn
-        when mapped if master is iconic} -body {
+        when mapped if master is iconic} -constraints failsOnUbuntu -body {
     toplevel .master
     wm iconify .master
     update
@@ -1702,7 +1704,7 @@ test wm-transient-4.1 {transient toplevel is withdrawn
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.2 {already mapped transient toplevel
-        is withdrawn if master is iconic} -body {
+        is withdrawn if master is iconic} -constraints failsOnUbuntu -body {
     toplevel .master
     wm iconify .master
     update
@@ -1715,7 +1717,7 @@ test wm-transient-4.2 {already mapped transient toplevel
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.3 {iconify/deiconify on the master
-        does a withdraw/deiconify on the transient} -setup {
+        does a withdraw/deiconify on the transient} -constraints failsOnUbuntu -setup {
     set results [list]
 } -body {
     toplevel .master
@@ -1891,7 +1893,7 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints failsOnUbuntu -setup {
     deleteWindows
     set result {}
 } -body {
@@ -1968,7 +1970,7 @@ test wm-state-2.7 {state change before map} -body {
 } -cleanup {
     deleteWindows
 } -result {iconic}
-test wm-state-2.8 {state change after map} -body {
+test wm-state-2.8 {state change after map} -constraints failsOnUbuntu -body {
     toplevel .t
     update
     wm state .t iconic
@@ -1976,7 +1978,7 @@ test wm-state-2.8 {state change after map} -body {
 } -cleanup {
     deleteWindows
 } -result {iconic}
-test wm-state-2.9 {state change after map} -body {
+test wm-state-2.9 {state change after map} -constraints failsOnUbuntu -body {
     toplevel .t
     update
     wm iconify .t

@@ -10,22 +10,22 @@ test labelframe-2.1 "Can't use indirect descendant as labelwidget" -body {
     ttk::frame .lf.t
     ttk::checkbutton .lf.t.cb
     .lf configure -labelwidget .lf.t.cb
-} -returnCodes 1 -result "can't *" -match glob \
+} -returnCodes error -result "can't *" -match glob \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.2 "Can't use toplevel as labelwidget" -body {
     toplevel .lf.t
     .lf configure -labelwidget .lf.t
-} -returnCodes 1 -result "can't *" -match glob \
+} -returnCodes error -result "can't *" -match glob \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.3 "Can't use non-windows as -labelwidget" -body {
     .lf configure -labelwidget BogusWindowName
-} -returnCodes 1 -result {bad window path name "BogusWindowName"}
+} -returnCodes error -result {bad window path name "BogusWindowName"}
 
 test labelframe-2.4 "Can't use nonexistent-windows as -labelwidget" -body {
     .lf configure -labelwidget .nosuchwindow
-} -returnCodes 1 -result {bad window path name ".nosuchwindow"}
+} -returnCodes error -result {bad window path name ".nosuchwindow"}
 
 
 ###
