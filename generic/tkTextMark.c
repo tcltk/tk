@@ -501,16 +501,12 @@ TkTextMarkNameToIndex(
 
 static int
 MarkDeleteProc(
-    TkTextSegment *segPtr,	/* Segment being deleted. */
-    TkTextLine *linePtr,	/* Line containing segment. */
-    int treeGone)		/* Non-zero means the entire tree is being
+    TCL_UNUSED(TkTextSegment *),	/* Segment being deleted. */
+    TCL_UNUSED(TkTextLine *),	/* Line containing segment. */
+    TCL_UNUSED(int))		/* Non-zero means the entire tree is being
 				 * deleted, so everything must get cleaned
 				 * up. */
 {
-    (void)segPtr;
-    (void)linePtr;
-    (void)treeGone;
-
     return 1;
 }
 
@@ -562,29 +558,22 @@ MarkCleanupProc(
 static int
 MarkLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
-    TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
+    TCL_UNUSED(TkTextIndex *),	/* Identifies first character in chunk. */
     TkTextSegment *segPtr,	/* Segment corresponding to indexPtr. */
-    TkSizeT offset,			/* Offset within segPtr corresponding to
+    TCL_UNUSED(TkSizeT),		/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
-    int maxX,			/* Chunk must not occupy pixels at this
+    TCL_UNUSED(int),			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    TkSizeT maxChars,		/* Chunk must not include more than this many
+    TCL_UNUSED(TkSizeT),		/* Chunk must not include more than this many
 				 * characters. */
-    int noCharsYet,		/* Non-zero means no characters have been
+    TCL_UNUSED(int),		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
-    TkWrapMode wrapMode,	/* Not used. */
+    TCL_UNUSED(TkWrapMode),	/* Not used. */
     TkTextDispChunk *chunkPtr)
 				/* Structure to fill in with information about
 				 * this chunk. The x field has already been
 				 * set by the caller. */
 {
-    (void)indexPtr;
-    (void)offset;
-    (void)maxX;
-    (void)maxChars;
-    (void)noCharsYet;
-    (void)wrapMode;
-
     if (segPtr != textPtr->insertMarkPtr) {
 	return -1;
     }
@@ -628,15 +617,15 @@ MarkLayoutProc(
 void
 TkTextInsertDisplayProc(
     TkText *textPtr,		/* The current text widget. */
-    TkTextDispChunk *chunkPtr,	/* Chunk that is to be drawn. */
+    TCL_UNUSED(TkTextDispChunk *),	/* Chunk that is to be drawn. */
     int x,			/* X-position in dst at which to draw this
 				 * chunk (may differ from the x-position in
 				 * the chunk because of scrolling). */
     int y,			/* Y-position at which to draw this chunk in
 				 * dst (x-position is in the chunk itself). */
     int height,			/* Total height of line. */
-    int baseline,		/* Offset of baseline from y. */
-    Display *display,		/* Display to use for drawing. */
+    TCL_UNUSED(int),		/* Offset of baseline from y. */
+    TCL_UNUSED(Display *),		/* Display to use for drawing. */
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
     int screenY)		/* Y-coordinate in text window that
 				 * corresponds to y. */
@@ -650,9 +639,6 @@ TkTextInsertDisplayProc(
     int halfWidth = textPtr->insertWidth/2;
     int rightSideWidth;
     int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
-    (void)chunkPtr;
-    (void)baseline;
-    (void)display;
 
     if (textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
@@ -735,12 +721,9 @@ TkTextInsertDisplayProc(
 
 static void
 InsertUndisplayProc(
-    TkText *textPtr,		/* Overall information about text widget. */
-    TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
+    TCL_UNUSED(TkText *),		/* Overall information about text widget. */
+    TCL_UNUSED(TkTextDispChunk *))	/* Chunk that is about to be freed. */
 {
-    (void)textPtr;
-    (void)chunkPtr;
-
     return;
 }
 

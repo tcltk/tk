@@ -1877,20 +1877,20 @@ GetObjectForOption(
 	switch (optionPtr->specPtr->type) {
 	case TK_OPTION_BOOLEAN:
 	case TK_OPTION_INT:
-	    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+	    objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    break;
 	case TK_OPTION_DOUBLE:
 	    objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
 	    break;
 	case TK_OPTION_STRING:
-	    objPtr = Tcl_NewStringObj(*((char **) internalPtr), -1);
+	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), -1);
 	    break;
 	case TK_OPTION_STRING_TABLE:
 	    objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
 		    *((int *) internalPtr)], -1);
 	    break;
 	case TK_OPTION_COLOR: {
-	    XColor *colorPtr = *((XColor **) internalPtr);
+	    XColor *colorPtr = *((XColor **)internalPtr);
 
 	    if (colorPtr != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_NameOfColor(colorPtr), -1);
@@ -1898,7 +1898,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_FONT: {
-	    Tk_Font tkfont = *((Tk_Font *) internalPtr);
+	    Tk_Font tkfont = *((Tk_Font *)internalPtr);
 
 	    if (tkfont != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_NameOfFont(tkfont), -1);
@@ -1906,7 +1906,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_STYLE: {
-	    Tk_Style style = *((Tk_Style *) internalPtr);
+	    Tk_Style style = *((Tk_Style *)internalPtr);
 
 	    if (style != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_NameOfStyle(style), -1);
@@ -1914,7 +1914,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_BITMAP: {
-	    Pixmap pixmap = *((Pixmap *) internalPtr);
+	    Pixmap pixmap = *((Pixmap *)internalPtr);
 
 	    if (pixmap != None) {
 		objPtr = Tcl_NewStringObj(
@@ -1923,7 +1923,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_BORDER: {
-	    Tk_3DBorder border = *((Tk_3DBorder *) internalPtr);
+	    Tk_3DBorder border = *((Tk_3DBorder *)internalPtr);
 
 	    if (border != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_NameOf3DBorder(border), -1);
@@ -1931,10 +1931,10 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_RELIEF:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *) internalPtr)), -1);
+	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_CURSOR: {
-	    Tk_Cursor cursor = *((Tk_Cursor *) internalPtr);
+	    Tk_Cursor cursor = *((Tk_Cursor *)internalPtr);
 
 	    if (cursor != NULL) {
 		objPtr = Tcl_NewStringObj(
@@ -1944,17 +1944,17 @@ GetObjectForOption(
 	}
 	case TK_OPTION_JUSTIFY:
 	    objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
-		    *((Tk_Justify *) internalPtr)), -1);
+		    *((Tk_Justify *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_ANCHOR:
 	    objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
-		    *((Tk_Anchor *) internalPtr)), -1);
+		    *((Tk_Anchor *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_PIXELS:
-	    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+	    objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    break;
 	case TK_OPTION_WINDOW: {
-	    Tk_Window tkwin = *((Tk_Window *) internalPtr);
+	    tkwin = *((Tk_Window *) internalPtr);
 
 	    if (tkwin != NULL) {
 		objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
