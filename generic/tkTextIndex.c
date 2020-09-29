@@ -62,7 +62,7 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
 #define GET_INDEXEPOCH(objPtr) \
 	(PTR2INT((objPtr)->internalRep.twoPtrValue.ptr2))
 #define SET_TEXTINDEX(objPtr, indexPtr) \
-	((objPtr)->internalRep.twoPtrValue.ptr1 = (void *) (indexPtr))
+	((objPtr)->internalRep.twoPtrValue.ptr1 = (void *)(indexPtr))
 #define SET_INDEXEPOCH(objPtr, epoch) \
 	((objPtr)->internalRep.twoPtrValue.ptr2 = (void *) (size_t) (epoch))
 
