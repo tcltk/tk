@@ -5824,7 +5824,7 @@ test text-22.217.1 {elide up to match, with UTF-8 chars before the match} -setup
 } -body {
     .t tag configure e -elide 0
     .t insert end A {} xyz e bb\n
-    .t insert end \u00c4 {} xyz e bb
+    .t insert end \xC4 {} xyz e bb
     set res {}
     lappend res [.t search bb 1.0 "1.0 lineend"]
     lappend res [.t search bb 2.0 "2.0 lineend"]
@@ -7034,12 +7034,12 @@ test text-27.28 {edit undo and edit redo do not leave \
     .t edit separator
     .t insert end "Again hello.\n"
     .t edit undo
-    lappend res [lsearch [.t mark names] tk::undoMark*]
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
     .t edit redo
-    lappend res [lsearch [.t mark names] tk::undoMark*]
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
 } -cleanup {
     destroy .t
-} -result [list -1 -1]
+} -result {1 1}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {

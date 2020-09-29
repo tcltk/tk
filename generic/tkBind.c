@@ -2170,7 +2170,7 @@ Tk_BindEvent(
     TkDisplay *dispPtr;
     TkDisplay *oldDispPtr;
     Event *curEvent;
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     BindInfo *bindInfoPtr;
     Tcl_InterpState interpState;
     LookupTables *physTables;
@@ -2460,7 +2460,6 @@ Tk_BindEvent(
 		LookupTables *virtTables = &bindInfoPtr->virtualEventTable.lookupTables;
 		PatSeq *matchPtr = matchPtrArr[k];
 		PatSeq *mPtr;
-		PSList *psl[2];
 
 		/*
 		 * Note that virtual events cannot promote.
@@ -2763,11 +2762,11 @@ CompareModMasks(
 	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
 
 	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
-	    unsigned fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
-	    unsigned sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+	    unsigned fstiModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    unsigned sndiModMask = *PSModMaskArr_Get(sndModMaskArr, i);
 
-	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
-	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
+	    if (IsSubsetOf(fstiModMask, sndiModMask)) { ++sndCount; }
+	    if (IsSubsetOf(sndiModMask, fstiModMask)) { ++fstCount; }
 	}
     }
 

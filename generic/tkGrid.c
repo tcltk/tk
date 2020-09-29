@@ -3361,7 +3361,7 @@ ConfigureContent(
 	 */
 
 	for (container = (TkWindow *)containerPtr->tkwin; container != NULL;
-	     container = (TkWindow *)TkGetGeomMaster(container)) {
+	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put \"%s\" inside \"%s\": would cause management loop",
