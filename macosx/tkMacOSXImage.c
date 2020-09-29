@@ -25,7 +25,7 @@ static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
 
 int
 _XInitImageFuncPtrs(
-    TCL_UNUSED(XImage *)) /* image */ 
+    TCL_UNUSED(XImage *)) /* image */
 {
     return 0;
 }
