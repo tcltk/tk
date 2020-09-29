@@ -296,11 +296,11 @@ TkTextImageCmd(
 	    Tcl_SetObjResult(interp, resultObj);
 	    return TCL_OK;
 	}
-	break;
     }
     default:
 	Tcl_Panic("unexpected switch fallthrough");
     }
+    return TCL_ERROR;
 }
 
 /*
