@@ -2048,7 +2048,7 @@ test bind-16.35 {ExpandPercents procedure} -constraints {
     set x
 } -cleanup {
     destroy .t.f
-} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \u00e9}
+} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \xE9}
 test bind-16.36 {ExpandPercents procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f

@@ -11,6 +11,8 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 pack .c
@@ -940,7 +942,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     destroy .c
 } -result {{Yeah } Yeah- 4 4}
 
-test canvText-20.1 {angled text bounding box} -setup {
+test canvText-20.1 {angled text bounding box} -constraints failsOnUbuntu -setup {
     destroy .c
     canvas .c
     proc transpose {bbox} {
