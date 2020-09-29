@@ -11,6 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 namespace eval ::_test_tmp {}
 
 # ------------------------------------------------------------------------------
@@ -1086,7 +1088,7 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
-    unix notAqua
+    unix notAqua failsOnUbuntu
 } -setup {
 	deleteWindows
 } -body {
@@ -1188,9 +1190,9 @@ test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} -constraints 
 	deleteWindows
 } -result {{{XXX .f4 {} {}} {XXX .f3 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f4 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}}} {}}
 test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraints {
-	unix testembed notAqua
+    unix testembed notAqua
 } -setup {
-	deleteWindows
+    deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -1233,9 +1235,9 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
 
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-	unix
+    unix failsOnUbuntu
 } -setup {
-	deleteWindows
+    deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -1249,9 +1251,9 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 	deleteWindows
 } -result {150x80+0+0}
 test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-	unix
+    unix failsOnUbuntu
 } -setup {
-	deleteWindows
+    deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -1266,9 +1268,9 @@ test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 } -result {70x300+0+0}
 
 test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
-	unix
+    unix
 } -setup {
-	deleteWindows
+    deleteWindows
 } -body {
     toplevel .t
     pack [frame .t.f -container 1 -width 200 -height 200] -fill both
@@ -1282,9 +1284,9 @@ test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
     deleteWindows
 } -result .embed
 test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
-	unix pressbutton
+    unix pressbutton
 } -setup {
-	deleteWindows
+    deleteWindows
 } -body {
     toplevel .main
     set result {}

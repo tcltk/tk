@@ -374,7 +374,7 @@ typedef struct TkDisplay {
 				 * by that container. */
     int geomInit;
 
-#define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+#define TkGetContainer(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
     ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
 
     /*
