@@ -104,8 +104,7 @@ if {[usePresentationFormsFor Arabic]} {
 addSample $w "Trad. Chinese"  "中國的漢字"
 addSample $w "Simpl. Chinese" "汉语"
 addSample $w French "Langue française"
-addSample $w Greek \
-	"Ελληνική γλώσσα"
+addSample $w Greek "Ελληνική γλώσσα"
 if {[usePresentationFormsFor Hebrew]} {
     # Visual order (pre-layouted)
     addSample $w Hebrew "תירבע בתכ"
