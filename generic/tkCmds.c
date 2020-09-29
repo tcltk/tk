@@ -1623,7 +1623,12 @@ Tk_WinfoObjCmd(
 	}
 	tkwin = Tk_CoordsToWindow(x, y, tkwin);
 	if (tkwin != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin),-1));
+            string = Tk_PathName(tkwin);
+            winPtr = (TkWindow *) Tk_NameToWindow(interp, string, tkwin);
+            Tcl_ResetResult(interp);
+            if (winPtr && !(winPtr->flags & TK_ALREADY_DEAD)) {
+                Tcl_SetObjResult(interp, Tcl_NewStringObj(string, -1));
+            }
 	}
 	break;
     case WIN_INTERPS:
