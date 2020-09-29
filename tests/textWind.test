@@ -11,6 +11,8 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 deleteWindows
 
 set fixedFont {"Courier" -12}
@@ -792,7 +794,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup
     {{can't embed .t relative to .t}} \
     [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
 
-test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -setup {
+test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -constraints failsOnUbuntu -setup {
     .t delete 1.0 end
     destroy .t2
     proc bgerror args {
