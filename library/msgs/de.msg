@@ -52,7 +52,7 @@ namespace eval ::tk {
     ::msgcat::mcset de "Ok"
     ::msgcat::mcset de "Open" "Öffnen"
     ::msgcat::mcset de "&Open" "Ö&ffnen"
-    ::msgcat::mcset de "Open Multiple Files" "Mehrere Dateien \u00F6ffnen"
+    ::msgcat::mcset de "Open Multiple Files" "Mehrere Dateien Öffnen"
     ::msgcat::mcset de "P&aste" "E&infügen"
     ::msgcat::mcset de "&Quit" "&Beenden"
     ::msgcat::mcset de "&Red" "&Rot"
