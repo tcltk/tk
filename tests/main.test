@@ -55,7 +55,7 @@ test main-2.2 {Tk_MainEx: -encoding option} -constraints stdio -setup {
 	removeFile script
 } -result "script {} 0\n0\n"
 
-    # Procedure to simulate interactive typing of commands, line by line, 
+    # Procedure to simulate interactive typing of commands, line by line,
 	# for test 2.3
     proc type {chan script} {
         foreach line [split $script \n] {
