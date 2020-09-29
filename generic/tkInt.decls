@@ -1030,7 +1030,7 @@ declare 47 aqua {
     Tk_Window TkpGetCapture(void)
 }
 declare 49 aqua {
-    Tk_Window TkGetTransientMaster(TkWindow *winPtr)
+    Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
 declare 50 aqua {
     int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)

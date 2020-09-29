@@ -638,7 +638,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpIsWindowFloating, /* 46 */
     TkpGetCapture, /* 47 */
     0, /* 48 */
-    TkGetTransientMaster, /* 49 */
+    TkMacOSXGetContainer, /* 49 */
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
     TkMacOSXSetDrawingEnabled, /* 52 */

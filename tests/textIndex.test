@@ -909,7 +909,7 @@ test textIndex-21.9 {text index wordend} {
     text_test_word worde "x.y" end-1
 } 2
 test textIndex-21.10 {text index wordend, unicode} {
-    text_test_word wordend "xyz\u00c7de fg" 0
+    text_test_word wordend "xyz\xC7de fg" 0
 } 6
 test textIndex-21.11 {text index wordend, unicode} {
     text_test_word wordend "xyz\uc700de fg" 0
@@ -943,7 +943,7 @@ test textIndex-22.10 {text index wordstart} {
     text_test_word wordstart "one two three" end-5
 } 7
 test textIndex-22.11 {text index wordstart, unicode} {
-    text_test_word wordstart "one tw\u00c7o three" 7
+    text_test_word wordstart "one tw\xC7o three" 7
 } 4
 test textIndex-22.12 {text index wordstart, unicode} {
     text_test_word wordstart "ab\uc700\uc700 cdef ghi" 12
@@ -954,8 +954,8 @@ test textIndex-22.13 {text index wordstart, unicode} {
 test textIndex-22.14 {text index wordstart, unicode, start index at internal segment start} {
     catch {destroy .t}
     text .t
-    .t insert end "C'est du texte en fran\u00e7ais\n"
-    .t insert end "\u042D\u0442\u043E\u0020\u0442\u0435\u043A\u0441\u0442\u0020\u043D\u0430\u0020\u0440\u0443\u0441\u0441\u043A\u043E\u043C"
+    .t insert end "C'est du texte en fran\xE7ais\n"
+    .t insert end "\u042D\u0442\u043E \u0442\u0435\u043A\u0441\u0442 \u043D\u0430 \u0440\u0443\u0441\u0441\u043A\u043E\u043C"
     .t mark set insert 1.23
     set res [.t index "1.23 wordstart"]
     .t mark set insert 2.16
