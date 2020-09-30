@@ -11,6 +11,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || ([catch {tk::pkgconfig get fontsystem} fs] || ($fs ne "xft"))}]
+
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -2618,7 +2621,7 @@ test spinbox-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test spinbox-8.18 {DeleteChars procedure} -setup {
+test spinbox-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
     spinbox .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
     focus .e
