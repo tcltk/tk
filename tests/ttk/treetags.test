@@ -191,7 +191,7 @@ test treetags-3.2 "tag configure - enumerate" -body {
 } -cleanup {
     treeConstraints $tv
 } -result [list \
-    -text {} -image {} -anchor {} -background red -color blue -font {} \
+    -text {} -image {} -anchor {} -background red -color blue -foreground blue -font {} \
 ]
 
 # The next test exercises tag resource management.

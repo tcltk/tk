@@ -45,7 +45,7 @@ test grid-1.1 {basic argument checking} -body {
 } -returnCodes error -result {wrong # args: should be "grid option arg ?arg ...?"}
 test grid-1.2 {basic argument checking} -body {
     grid foo bar
-} -returnCodes error -match glob -result {bad option "foo": must be anchor, bbox, columnconfigure, configure, content, forget, info, location, propagate, remove, rowconfigure, *size*}
+} -returnCodes error -result {bad option "foo": must be anchor, bbox, columnconfigure, configure, content, forget, info, location, propagate, remove, rowconfigure, or size}
 test grid-1.3 {basic argument checking} -body {
     button .b
     grid .b -row 0 -column
