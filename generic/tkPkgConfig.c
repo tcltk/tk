@@ -100,6 +100,9 @@ static const Tcl_Config cfg[] = {
     {"profiled",		CFG_PROFILED},
     {"64bit",			CFG_64},
     {"optimized",		CFG_OPTIMIZED},
+#ifdef TK_NO_DEPRECATED
+    {"nodeprecated",	"1"},
+#endif
     {"mem_debug",		CFG_MEMDEBUG},
     {"fontsystem",		CFG_FONTSYSTEM},
 
