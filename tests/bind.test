@@ -13,6 +13,9 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 tk useinputmethods 0
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
+
 toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update idletasks
@@ -6002,7 +6005,7 @@ test bind-28.9 {keysym names, \uD0} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-\uD0>
-test bind-28.10 {keysym names, \uD8} -body {
+test bind-28.10 {keysym names, \uD8} -constraints nodeprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <\uD8> foo
     bind .t.f

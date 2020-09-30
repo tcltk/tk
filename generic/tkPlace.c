@@ -216,6 +216,9 @@ Tk_PlaceObjCmd(
     static const char *const optionStrings[] = {
 	"configure", "content", "forget", "info", "slaves", NULL
     };
+    static const char *const optionStringsNoDep[] = {
+	"configure", "content", "forget", "info", NULL
+    };
     enum options { PLACE_CONFIGURE, PLACE_CONTENT, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
     int index;
 
@@ -278,6 +281,14 @@ Tk_PlaceObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	/*
+	 * Call it again without the deprecated ones to get a proper error
+	 * message. This works well since there can't be any ambiguity between
+	 * deprecated and new options.
+	 */
+
+	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
+		sizeof(char *), "option", 0, &index);
 	return TCL_ERROR;
     }
 
