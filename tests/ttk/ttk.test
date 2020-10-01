@@ -62,10 +62,10 @@ test ttk-6.5 "Clean up -textvariable traces" -body {
 
 test ttk-6.6 "Bad color spec in styles" -body {
     pack [ttk::button .b1 -text Hi!]
-    ttk::style configure TButton -foreground badColor
+    ttk::style configure TButton -color badColor
     event generate .b1 <Expose>
     update
-    ttk::style configure TButton -foreground black
+    ttk::style configure TButton -color black
     destroy .b1
     set ::bgerror
 } -result {unknown color name "badColor"}

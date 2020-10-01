@@ -480,7 +480,7 @@ typedef struct {
 static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-background", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
-    { "-foreground", TK_OPTION_COLOR,
+    { "-color", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,foregroundObj), DEFAULT_FOREGROUND },
     { "-indicatorcolor", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,colorObj), "#FFFFFF" },
@@ -1103,7 +1103,7 @@ typedef struct {
 } TreeitemIndicator;
 
 static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
-    { "-foreground", TK_OPTION_COLOR,
+    { "-color", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-diameter", TK_OPTION_PIXELS,
 	offsetof(TreeitemIndicator,diameterObj), "9" },
