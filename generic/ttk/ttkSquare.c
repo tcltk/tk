@@ -181,7 +181,7 @@ static const Ttk_ElementOptionSpec SquareElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER, offsetof(SquareElement,borderObj),
     	DEFAULT_BACKGROUND },
-    { "-foreground", TK_OPTION_BORDER, offsetof(SquareElement,foregroundObj),
+    { "-color", TK_OPTION_BORDER, offsetof(SquareElement,foregroundObj),
     	DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, offsetof(SquareElement,borderWidthObj),
     	DEFAULT_BORDERWIDTH },

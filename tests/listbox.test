@@ -523,7 +523,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} -body {
 } -result 0
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} -body {
     llength [.l configure]
-} -result 30
+} -result 31
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} -body {
     .l configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}

@@ -2840,7 +2840,7 @@ test button-3.14 {ButtonWidgetCmd procedure, "configure" option} -body {
     llength [.c configure]
 } -cleanup {
     destroy .c
-} -result 42
+} -result 44
 test button-3.15 {ButtonWidgetCmd procedure, "configure" option} -body {
     button .b
     .b configure -gorp

@@ -299,7 +299,7 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	offsetof(IndicatorElement,marginObj), "1" },
     { "-indicatorbackground", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,backgroundObj), "white" },
-    { "-indicatorforeground", TK_OPTION_COLOR,
+    { "-indicatorcolor", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,foregroundObj), "black" },
     { "-upperbordercolor", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,upperColorObj), DARKEST_COLOR },

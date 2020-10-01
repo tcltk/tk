@@ -202,10 +202,12 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
-    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
-        "PlaceholderForeground", NULL,
+    {TK_OPTION_COLOR, "-placeholdercolor", "placeholderColor",
+        "PlaceholderColor", NULL,
         offsetof(Entry, entry.styleData.placeholderForegroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
+    {TK_OPTION_SYNONYM, "-placeholderforeground", "placeholdercolor", NULL,
+	NULL, 0, TCL_INDEX_NONE, 0, "-placeholdercolor", 0},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -264,11 +266,11 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 #   define INIT(member, name) \
     if ((tmp=Ttk_QueryOption(entryPtr->core.layout,name,state))) \
     	es->member=tmp;
-    INIT(placeholderForegroundObj, "-placeholderforeground");
+    INIT(placeholderForegroundObj, "-placeholdercolor");
     INIT(foregroundObj, "-color");
     INIT(selBorderObj, "-selectbackground")
     INIT(selBorderWidthObj, "-selectborderwidth")
-    INIT(selForegroundObj, "-selectforeground")
+    INIT(selForegroundObj, "-selectcolor")
     INIT(insertColorObj, "-insertcolor")
     INIT(insertWidthObj, "-insertwidth")
 #undef INIT
