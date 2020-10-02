@@ -410,7 +410,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
 	tkMacOSXServices.o tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
-	tkMacOSXWm.o tkMacOSXXStubs.o \
+	tkMacOSXWm.o tkMacOSXXStubs.o tkMacOSXSysTray.o\
 	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
 	xcolors.o xdraw.o xgc.o ximage.o xutil.o \
 	ttkMacOSXTheme.o
@@ -1378,6 +1378,9 @@ tkMacOSXWm.o: $(MAC_OSX_DIR)/tkMacOSXWm.c
 
 tkMacOSXXStubs.o: $(MAC_OSX_DIR)/tkMacOSXXStubs.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXXStubs.c
+
+tkMacOSXSysTray.o: $(MAC_OSX_DIR)/tkMacOSXXStubs.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSysTray.c
 
 tkFileFilter.o: $(GENERIC_DIR)/tkFileFilter.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkFileFilter.c
