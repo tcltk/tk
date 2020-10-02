@@ -531,7 +531,7 @@ TkpGetShadows(
  *----------------------------------------------------------------------
  */
 
-COLORREF
+unsigned
 TkWinGetBorderPixels(
     Tk_Window tkwin,
     Tk_3DBorder border,

@@ -11,6 +11,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -1534,7 +1537,7 @@ test entry-3.79 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -4
+    .e xview -1
     .e index @0
 } -cleanup {
     destroy .e
@@ -1618,7 +1621,7 @@ test entry-5.3 {ConfigureEntry procedure, -textvariable} -setup {
 } -body {
     .e insert 0 "Some text"
     .e configure -textvariable x
-    return $x
+    set x
 } -cleanup {
     destroy .e
 } -result {Some text}
@@ -1653,7 +1656,7 @@ test entry-5.5 {ConfigureEntry procedure} -setup {
     lappend x [selection get]
     .e1 configure -exportselection 1
     lappend x [selection get]
-    return $x
+    set x
 } -cleanup {
     destroy .e1 .e2
 } -result {{This is so} {This is so} 1234}
@@ -2104,7 +2107,7 @@ test entry-8.2 {DeleteChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
-    .e delete -2 2
+    .e delete -1 2
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2328,7 +2331,7 @@ test entry-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test entry-8.18 {DeleteChars procedure} -setup {
+test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
     entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
     focus .e
@@ -2835,7 +2838,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -10
+    .e index -1
 } -cleanup {
     destroy .e
 } -result 0
@@ -3052,7 +3055,7 @@ test entry-19.1 {entry widget validation} -setup {
         -background red -foreground white
     pack .e
     .e insert 0 a
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 1 0 a {} a all key}
@@ -3084,7 +3087,7 @@ test entry-19.3 {entry widget validation} -setup {
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 1 2 abc ab c all key}
@@ -3116,7 +3119,7 @@ test entry-19.5 {entry widget validation} -setup {
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 0 2 a13bc a123bc 2 all key}
@@ -3133,7 +3136,7 @@ test entry-19.6 {entry widget validation} -setup {
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
     .e delete 1 3
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 0 1 abc a13bc 13 key key}
@@ -3150,7 +3153,7 @@ test entry-19.7 {entry widget validation} -setup {
     .e insert end abc                 ;# previous settings
     set ::vVals {}
     .e insert end d
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3169,7 +3172,7 @@ test entry-19.8 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusin}
@@ -3190,7 +3193,7 @@ test entry-19.9 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusout}
@@ -3208,7 +3211,7 @@ test entry-19.10 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusin}
@@ -3229,7 +3232,7 @@ test entry-19.11 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusout}
@@ -3247,7 +3250,7 @@ test entry-19.12 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
@@ -3266,7 +3269,7 @@ test entry-19.13 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3285,7 +3288,7 @@ test entry-19.14 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3307,7 +3310,7 @@ test entry-19.15 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusout focusout}

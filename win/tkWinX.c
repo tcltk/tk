@@ -165,7 +165,7 @@ TkGetServerInfo(
  *----------------------------------------------------------------------
  */
 
-HINSTANCE
+void *
 Tk_GetHINSTANCE(void)
 {
     if (tkInstance == NULL) {
@@ -193,9 +193,9 @@ Tk_GetHINSTANCE(void)
 
 void
 TkWinSetHINSTANCE(
-    HINSTANCE hInstance)
+    void *hInstance)
 {
-    tkInstance = hInstance;
+    tkInstance = (HINSTANCE)hInstance;
 }
 
 /*
@@ -216,7 +216,7 @@ TkWinSetHINSTANCE(
 
 void
 TkWinXInit(
-    HINSTANCE hInstance)
+    void *hInstance)
 {
     INITCOMMONCONTROLSEX comctl;
     CHARSETINFO lpCs;
@@ -245,7 +245,7 @@ TkWinXInit(
      */
 
     childClass.lpszClassName = TK_WIN_CHILD_CLASS_NAME;
-    childClass.lpfnWndProc = TkWinChildProc;
+    childClass.lpfnWndProc = (void *)TkWinChildProc;
     childClass.hIcon = NULL;
     childClass.hCursor = NULL;
 
@@ -349,12 +349,12 @@ TkWinGetPlatformTheme(void)
 	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
 	 * windows classic theme was selected.
 	 */
-	if ((os.dwMajorVersion == 5) && (os.dwMinorVersion == 1)) {
+	if (os.dwMajorVersion == 5 && os.dwMinorVersion >= 1) {
 	    HKEY hKey;
 	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
 	    LPCWSTR szCurrent = L"Current";
 	    DWORD dwSize = 200;
-	    char pBuffer[200];
+	    WCHAR pBuffer[200];
 
 	    memset(pBuffer, 0, dwSize);
 	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
@@ -363,7 +363,7 @@ TkWinGetPlatformTheme(void)
 	    } else {
 		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
 		RegCloseKey(hKey);
-		if (strcmp(pBuffer, "Windows Standard") == 0) {
+		if (wcscmp(pBuffer, L"Windows Standard") == 0) {
 		    tkWinTheme = TK_THEME_WIN_CLASSIC;
 		} else {
 		    tkWinTheme = TK_THEME_WIN_XP;
@@ -743,12 +743,12 @@ XBell(
  *----------------------------------------------------------------------
  */
 
-LRESULT CALLBACK
+ptrdiff_t CALLBACK
 TkWinChildProc(
-    HWND hwnd,
-    UINT message,
-    WPARAM wParam,
-    LPARAM lParam)
+    void *hwnd,
+    unsigned int message,
+    size_t wParam,
+    ptrdiff_t lParam)
 {
     LRESULT result;
 
@@ -850,11 +850,11 @@ TkWinChildProc(
 
 int
 TkTranslateWinEvent(
-    void *hwnd,
-    unsigned int message,
-    size_t wParam,
-    ptrdiff_t lParam,
-    ptrdiff_t *resultPtr)
+    HWND hwnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam,
+    LRESULT *resultPtr)
 {
     *resultPtr = 0;
     switch (message) {
@@ -1719,10 +1719,10 @@ HandleIMEComposition(
  *----------------------------------------------------------------------
  */
 
-LRESULT
+ptrdiff_t
 TkWinResendEvent(
-    WNDPROC wndproc,
-    HWND hwnd,
+    void *wndproc,
+    void *hwnd,
     XEvent *eventPtr)
 {
     UINT msg;

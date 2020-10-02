@@ -419,12 +419,12 @@ TkpMakeContainer(
  *----------------------------------------------------------------------
  */
 
-LRESULT
+ptrdiff_t
 TkWinEmbeddedEventProc(
-    HWND hwnd,
-    UINT message,
-    WPARAM wParam,
-    LPARAM lParam)
+    void *hwnd,
+    unsigned int message,
+    size_t wParam,
+    ptrdiff_t lParam)
 {
     int result = 1;
     Container *containerPtr;

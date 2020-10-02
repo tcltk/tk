@@ -772,8 +772,8 @@ XChangeWindowAttributes(
 
 void
 TkWinSetWindowPos(
-    HWND hwnd,			/* Window to restack. */
-    HWND siblingHwnd,		/* Sibling window. */
+    void *hwnd,			/* Window to restack. */
+    void *siblingHwnd,		/* Sibling window. */
     int pos)			/* One of Above or Below. */
 {
     HWND temp;

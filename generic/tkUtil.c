@@ -1130,7 +1130,7 @@ TkMakeEnsemble(
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
-	Tcl_Obj *nameObj, *fqdnObj;
+	Tcl_Obj *fqdnObj;
 
 	nameObj = Tcl_NewStringObj(map[i].name, -1);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -1157,7 +1157,7 @@ TkMakeEnsemble(
 /*
  *----------------------------------------------------------------------
  *
- * TkSendVirtualEvent --
+ * Tk_SendVirtualEvent --
  *
  * 	Send a virtual event notification to the specified target window.
  * 	Equivalent to:
@@ -1170,7 +1170,7 @@ TkMakeEnsemble(
  */
 
 void
-TkSendVirtualEvent(
+Tk_SendVirtualEvent(
     Tk_Window target,
     const char *eventName,
     Tcl_Obj *detail)

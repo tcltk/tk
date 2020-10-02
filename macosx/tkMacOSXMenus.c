@@ -373,29 +373,6 @@ TkMacOSXHandleMenuSelect(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXInitMenus --
- *
- *	This procedure initializes the Macintosh menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXInitMenus(
-    TCL_UNUSED(Tcl_Interp *))
-{
-    [NSApp _setupMenus];
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * GenerateEditEvent --
  *
  *	Takes an edit menu item and posts the corasponding a virtual event to
@@ -422,7 +399,7 @@ GenerateEditEvent(
     if (!winPtr) {
 	return;
     }
-    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    tkwin = (Tk_Window)winPtr->dispPtr->focusPtr;
     if (!tkwin) {
 	return;
     }

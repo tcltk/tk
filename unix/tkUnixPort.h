@@ -149,11 +149,15 @@
 
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
-#define TkpWillDrawWidget(tkwin) 0
-#define TkpRedrawWidget(tkwin)
 #define TkSelUpdateClipboard(a,b) {}
 #ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}
 #endif
+
+/*
+ * Used by tkWindow.c
+ */
+
+#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
 
 #endif /* _UNIXPORT */

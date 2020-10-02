@@ -632,8 +632,8 @@ $(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real: ${TK_STUB_LIB_FILE}
-	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) ${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
+	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ $(WISH_LIBS) \
+		${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # # FIXME: This xttest rule seems to be broken in a number of ways.  It should
 # # use CC_SEARCH_FLAGS, it does not include the shared lib location logic from
@@ -1505,9 +1505,9 @@ $(TTK_DIR)/ttkStubInit.c: $(TTK_DIR)/ttk.decls
 	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
-	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
+	$(TCL_EXE) $(GENERIC_DIR)/genStubs.tcl $(GENERIC_DIR) \
 		$(GENERIC_DIR)/tk.decls $(GENERIC_DIR)/tkInt.decls
-	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(TTK_DIR) $(TTK_DIR)/ttk.decls
+	$(TCL_EXE) $(GENERIC_DIR)/genStubs.tcl $(TTK_DIR) $(TTK_DIR)/ttk.decls
 
 #
 # Target to check that all exported functions have an entry in the stubs
@@ -1561,7 +1561,7 @@ rpm: all
 
 #
 # Target to create a proper Tk distribution from information in the
-# master source directory.  DISTDIR must be defined to indicate where
+# source directory.  DISTDIR must be defined to indicate where
 # to put the distribution.  DISTDIR must be an absolute path name.
 #
 

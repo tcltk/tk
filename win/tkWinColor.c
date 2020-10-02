@@ -58,6 +58,7 @@ static const SystemColorEntry sysColors[] = {
     {"InfoText",		COLOR_INFOTEXT},
     {"Menu",			COLOR_MENU},
     {"MenuText",		COLOR_MENUTEXT},
+    {"PlaceHolderText",		COLOR_GRAYTEXT},
     {"Scrollbar",		COLOR_SCROLLBAR},
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},
@@ -574,17 +575,17 @@ XFreeColormap(
  *----------------------------------------------------------------------
  */
 
-HPALETTE
+void *
 TkWinSelectPalette(
-    HDC dc,
+    void *dc,
     Colormap colormap)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     HPALETTE oldPalette;
 
-    oldPalette = SelectPalette(dc, cmap->palette,
+    oldPalette = SelectPalette((HDC)dc, cmap->palette,
 	    (cmap->palette == TkWinGetSystemPalette()) ? FALSE : TRUE);
-    RealizePalette(dc);
+    RealizePalette((HDC)dc);
     return oldPalette;
 }
 

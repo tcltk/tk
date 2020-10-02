@@ -26,9 +26,9 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const *objv);
 
@@ -126,7 +126,7 @@ MenuBarHeightObjCmd(
     if (height == 0) {
 	height = (int) [[NSApp mainMenu] menuBarHeight];
     }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(height));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
     return TCL_OK;
 }
 
@@ -152,7 +152,7 @@ MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     NSWindow *win = nil;
     if (macWin->toplevel && macWin->toplevel->winPtr &&
 	macWin->toplevel->winPtr->wmInfoPtr &&
@@ -175,9 +175,11 @@ TkTestLogDisplay(
  * PressButtonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
- *      location.  It injects NSEvents into the NSApplication event queue,
- *      as opposed to adding events to the Tcl queue as event generate
- *      would do.  One application is for testing the grab command.
+ *      location.  It injects NSEvents into the NSApplication event queue, as
+ *      opposed to adding events to the Tcl queue as event generate would do.
+ *      One application is for testing the grab command. These events have
+ *      their unused context property set to 1 as a signal indicating that they
+ *      should not be ignored by [NSApp tkProcessMouseEvent].
  *
  * Results:
  *	A standard Tcl result.
@@ -190,19 +192,19 @@ TkTestLogDisplay(
 
 static int
 PressButtonObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value, wNum;
+    int x = 0, y = 0, i, value;
+    NSInteger signal = -1;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;
     NSArray *screens = [NSScreen screens];
     CGFloat ScreenHeight = 0;
     enum {X=1, Y};
-    (void)dummy;
 
     if (screens && [screens count]) {
 	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
@@ -230,15 +232,20 @@ PressButtonObjCmd(
     pt.x = loc.x = x;
     pt.y = y;
     loc.y = ScreenHeight - y;
-    wNum = 0;
+
+    /*
+     *  We set the window number and the eventNumber to -1 as a signal to
+     *  processMouseEvent.
+     */
+
     CGWarpMouseCursorPosition(pt);
     motion = [NSEvent mouseEventWithType:NSMouseMoved
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
+	windowNumber:signal
 	context:nil
-	eventNumber:0
+	eventNumber:signal
 	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:motion atStart:NO];
@@ -246,9 +253,9 @@ PressButtonObjCmd(
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
+	windowNumber:signal
 	context:nil
-	eventNumber:1
+	eventNumber:signal
 	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:press atStart:NO];
@@ -256,18 +263,18 @@ PressButtonObjCmd(
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
+	windowNumber:signal
 	context:nil
-	eventNumber:2
+	eventNumber:signal
 	clickCount:1
-	pressure:0.0];
+	pressure:-1.0];
     [NSApp postEvent:release atStart:NO];
     return TCL_OK;
 }
 
 static int
 InjectKeyEventObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -284,7 +291,6 @@ InjectKeyEventObjCmd(
     NSEvent *keyEvent;
     NSUInteger type;
     MacKeycode macKC;
-    (void)dummy;
 
     if (objc < 3) {
     wrongArgs:

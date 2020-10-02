@@ -290,8 +290,12 @@ TkTextImageCmd(
 		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
 		    -1));
 	}
-	Tcl_SetObjResult(interp, resultObj);
-	return TCL_OK;
+	if (resultObj == NULL) {
+	    return TCL_ERROR;
+	} else {
+	    Tcl_SetObjResult(interp, resultObj);
+	    return TCL_OK;
+	}
     }
     default:
 	Tcl_Panic("unexpected switch fallthrough");
@@ -447,14 +451,12 @@ EmbImageConfigure(
 static int
 EmbImageDeleteProc(
     TkTextSegment *eiPtr,	/* Segment being deleted. */
-    TkTextLine *linePtr,	/* Line containing segment. */
-    int treeGone)		/* Non-zero means the entire tree is being
+    TCL_UNUSED(TkTextLine *),	/* Line containing segment. */
+    TCL_UNUSED(int))		/* Non-zero means the entire tree is being
 				 * deleted, so everything must get cleaned
 				 * up. */
 {
     Tcl_HashEntry *hPtr;
-    (void)linePtr;
-    (void)treeGone;
 
     if (eiPtr->body.ei.image != NULL) {
 	hPtr = Tcl_FindHashEntry(&eiPtr->body.ei.sharedTextPtr->imageTable,
@@ -531,17 +533,17 @@ EmbImageCleanupProc(
 static int
 EmbImageLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
-    TkTextIndex *indexPtr,	/* Identifies first character in chunk. */
+    TCL_UNUSED(TkTextIndex *),	/* Identifies first character in chunk. */
     TkTextSegment *eiPtr,	/* Segment corresponding to indexPtr. */
     TkSizeT offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    TkSizeT maxChars,		/* Chunk must not include more than this many
+    TCL_UNUSED(TkSizeT),	/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
-    TkWrapMode wrapMode,	/* Wrap mode to use for line:
+    TCL_UNUSED(TkWrapMode),	/* Wrap mode to use for line:
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
 				 * TEXT_WRAPMODE_WORD. */
     TkTextDispChunk *chunkPtr)
@@ -550,9 +552,6 @@ EmbImageLayoutProc(
 				 * set by the caller. */
 {
     int width, height;
-    (void)indexPtr;
-    (void)maxChars;
-    (void)wrapMode;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbImageLayoutProc");
@@ -622,10 +621,8 @@ EmbImageLayoutProc(
 static void
 EmbImageCheckProc(
     TkTextSegment *eiPtr,	/* Segment to check. */
-    TkTextLine *linePtr)	/* Line containing segment. */
+    TCL_UNUSED(TkTextLine *))	/* Line containing segment. */
 {
-    (void)linePtr;
-
     if (eiPtr->nextPtr == NULL) {
 	Tcl_Panic("EmbImageCheckProc: embedded image is last segment in line");
     }
@@ -665,16 +662,14 @@ EmbImageDisplayProc(
 				 * (x-position is in the chunk itself). */
     int lineHeight,		/* Total height of line. */
     int baseline,		/* Offset of baseline from y. */
-    Display *display,		/* Display to use for drawing. */
+    TCL_UNUSED(Display *),	/* Display to use for drawing. */
     Drawable dst,		/* Pixmap or window in which to draw */
-    int screenY)		/* Y-coordinate in text window that
+    TCL_UNUSED(int))	/* Y-coordinate in text window that
 				 * corresponds to y. */
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     int lineX, imageX, imageY, width, height;
     Tk_Image image;
-    (void)display;
-    (void)screenY;
 
     image = eiPtr->body.ei.image;
     if (image == NULL) {
@@ -720,9 +715,9 @@ EmbImageDisplayProc(
 
 static void
 EmbImageBboxProc(
-    TkText *textPtr,
+    TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    int index,			/* Index of desired character within the
+    TCL_UNUSED(int),			/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -738,8 +733,6 @@ EmbImageBboxProc(
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     Tk_Image image;
-    (void)textPtr;
-    (void)index;
 
     image = eiPtr->body.ei.image;
     if (image != NULL) {
@@ -830,21 +823,18 @@ TkTextImageIndex(
 static void
 EmbImageProc(
     ClientData clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
+    TCL_UNUSED(int),		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (may be
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),	/* Dimensions of area to redisplay (may be
 				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),/* New dimensions of image. */
+    TCL_UNUSED(int))
 
 {
     TkTextSegment *eiPtr = (TkTextSegment *)clientData;
     TkTextIndex index;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
     index.tree = eiPtr->body.ei.sharedTextPtr->tree;
     index.linePtr = eiPtr->body.ei.linePtr;
