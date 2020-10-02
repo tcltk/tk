@@ -31,7 +31,7 @@ static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
 #endif
 static NSColorSpace* sRGB = NULL;
-static CGFloat windowBackground[4] =
+static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 void initColorTable()
@@ -297,7 +297,7 @@ GetRGBA(
 
 	if ([NSApp macOSVersion] < 101400) {
 	    for (int i = 0; i < 3; i++) {
-		rgba[i] = windowBackground[i];
+		rgba[i] = WINDOWBACKGROUND[i];
 	    }
 	} else {
 	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
