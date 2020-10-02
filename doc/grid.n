@@ -301,7 +301,7 @@ The size is determined either by the \fIcontent\fR occupying the largest
 row or column, or the largest column or row with a \fB\-minsize\fR,
 \fB\-weight\fR, or \fB\-pad\fR that is non-zero.
 .TP
-\fBgrid content fI\window\fR ?\fI\-option value\fR?
+\fBgrid content \fIwindow\fR ?\fI\-option value\fR?
 .
 If no options are supplied, a list of all of the content in \fIwindow\fR
 is returned, most recently managed first.
