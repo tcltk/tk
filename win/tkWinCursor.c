@@ -263,6 +263,33 @@ TkpSetCursor(
     }
 }
 
+void
+TkpCursorBlinkFromSystem (int *blinkon, int *blinkoff)
+{
+    HKEY hKey;
+    LPCWSTR szSubKey = L"Control Panel\\Desktop";
+    LPCWSTR szCursorBlink = L"CursorBlinkRate";
+    DWORD dwSize = 40;
+    WCHAR lBuffer[40];
+    LSTATUS status;
+
+    status =  RegOpenKeyExW (HKEY_CURRENT_USER, szSubKey, 0L, KEY_READ, &hKey);
+    if (status == ERROR_SUCCESS) {
+      memset (lBuffer, '\0', (size_t) (dwSize * sizeof (WCHAR)));
+      status = RegQueryValueExW (hKey, szCursorBlink, 
+          NULL, NULL, (LPBYTE) lBuffer, &dwSize);
+      if (status == ERROR_SUCCESS) {
+        if (wcscmp (lBuffer, L"-1") == 0) {
+           *blinkoff = 0;
+        } else {
+           *blinkon = _wtoi (lBuffer);
+           *blinkoff = _wtoi (lBuffer);
+        }
+      }
+      RegCloseKey (hKey);
+    }
+}
+
 /*
  * Local Variables:
  * mode: c

@@ -145,6 +145,8 @@ EXTERN int		TkpTestsendCmd(ClientData clientData,
 /* Slot 46 is reserved */
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
+/* 48 */
+EXTERN void		TkpCursorBlinkFromSystem(int *, int *);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -260,6 +262,8 @@ EXTERN void *		TkMacOSXDrawable(Drawable drawable);
 /* 55 */
 EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
+/* 56 */
+EXTERN void		TkpCursorBlinkFromSystem(int *, int *);
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
@@ -334,6 +338,8 @@ EXTERN void		TkSendCleanup_(TkDisplay *dispPtr);
 EXTERN int		TkpTestsendCmd_(ClientData clientData,
 				Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[]);
+/* 46 */
+EXTERN void		TkpCursorBlinkFromSystem(int *, int *);
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {

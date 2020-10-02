@@ -594,6 +594,20 @@ Tk_MacOSXTkOwnsCursor(
     gTkOwnsCursor = tkOwnsIt;
 }
 
+void
+TkpCursorBlinkFromSystem (int *blinkon, int *blinkoff)
+{
+  NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+  NSString *nsblinkon = [preferences stringForKey:@"NSTextInsertionPointBlinkPeriodOn"];
+  if (nsblinkon != NULL) {
+    *blinkon = atoi ([nsblinkon UTF8String]);
+  }
+  NSString *nsblinkoff = [preferences stringForKey:@"NSTextInsertionPointBlinkPeriodOff"];
+  if (nsblinkoff != NULL) {
+    *blinkoff = atoi ([nsblinkoff UTF8String]);
+  }
+}
+
 /*
  * Local Variables:
  * mode: objc
