@@ -103,11 +103,11 @@
  * debug message in case of failure.
  */
 #define ChkErr(f, ...) ({ \
-	OSStatus err = f(__VA_ARGS__); \
-	if (err != noErr) { \
-	    TkMacOSXDbgOSErr(f, err); \
+	OSStatus err_ = f(__VA_ARGS__); \
+	if (err_ != noErr) { \
+	    TkMacOSXDbgOSErr(f, err_); \
 	} \
-	err;})
+	err_;})
 
 #else /* TK_MAC_DEBUG */
 #define TKLog(f, ...)
