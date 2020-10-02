@@ -365,7 +365,7 @@ XResizeWindow(
 	    r.origin.y += r.size.height - height;
 	    r.size.width = width;
 	    r.size.height = height;
-	    [w setFrame:[w frameRectForContentRect:r] display:YES];
+	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
     } else {
 	MoveResizeWindow(macWin);
@@ -421,7 +421,7 @@ XMoveResizeWindow(
 		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
 	    	    Width, Height);
 
-	    [w setFrame:[w frameRectForContentRect:r] display:YES];
+	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
     } else {
 	MoveResizeWindow(macWin);
