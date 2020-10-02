@@ -641,6 +641,11 @@ TkpFreeCursor(
     XFreeCursor(unixCursorPtr->display, (Cursor) unixCursorPtr->info.cursor);
 }
 
+void
+TkpCursorBlinkFromSystem (int *blinkon, int *blinkoff)
+{
+}
+
 /*
  * Local Variables:
  * mode: c
