@@ -1689,7 +1689,10 @@ Tk_WinfoObjCmd(
 	winPtr = (TkWindow *) Tk_NameToWindow(interp, string, tkwin);
 	Tcl_ResetResult(interp);
 
-        alive = (winPtr != NULL);
+	alive = 1;
+	if ((winPtr == NULL) || (winPtr->flags & TK_ALREADY_DEAD)) {
+	    alive = 0;
+	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(alive));
 	break;
     }
