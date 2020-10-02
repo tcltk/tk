@@ -663,6 +663,7 @@ TkUnixDoOneXEvent(
  *----------------------------------------------------------------------
  */
 
+#undef TkpSync
 void
 TkpSync(
     Display *display)		/* Display to sync. */

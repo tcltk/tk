@@ -272,7 +272,7 @@ Tk_GrabObjCmd(
 	    }
 	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    if (dispPtr->eventualGrabWinPtr != NULL) {
-		Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+		Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window)
 			dispPtr->eventualGrabWinPtr));
 	    }
 	} else {
@@ -281,7 +281,7 @@ Tk_GrabObjCmd(
 	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		    dispPtr = dispPtr->nextPtr) {
 		if (dispPtr->eventualGrabWinPtr != NULL) {
-		    Tcl_ListObjAppendElement(NULL, resultObj, TkNewWindowObj(
+		    Tcl_ListObjAppendElement(NULL, resultObj, Tk_NewWindowObj(
 			    (Tk_Window) dispPtr->eventualGrabWinPtr));
 		}
 	    }
@@ -898,7 +898,7 @@ TkPointerEvent(
 	} else {
 	    if (eventPtr->xbutton.button != AnyButton &&
 		    ((eventPtr->xbutton.state & ALL_BUTTONS)
-		    == TkGetButtonMask(eventPtr->xbutton.button))) {
+		    == Tk_GetButtonMask(eventPtr->xbutton.button))) {
 		ReleaseButtonGrab(dispPtr);			/* Note 4. */
 	    }
 	}
@@ -1397,12 +1397,11 @@ QueueGrabWindowChange(
 static int
 GrabWinEventProc(
     Tcl_Event *evPtr,		/* Event of type NewGrabWinEvent. */
-    int flags)			/* Flags argument to Tcl_DoOneEvent: indicates
+    TCL_UNUSED(int))			/* Flags argument to Tcl_DoOneEvent: indicates
 				 * what kinds of events are being processed
 				 * right now. */
 {
     NewGrabWinEvent *grabEvPtr = (NewGrabWinEvent *) evPtr;
-    (void)flags;
 
     grabEvPtr->dispPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(
 	    grabEvPtr->dispPtr->display, grabEvPtr->grabWindow);

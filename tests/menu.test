@@ -1858,6 +1858,14 @@ test menu-3.70 {MenuWidgetCmd procedure, "xposition" option} -setup {
 } -cleanup {
     destroy .m1
 } -result {}
+test menu-3.71 {MenuWidgetCmd procedure, "index end" option, bug [f3cd942e9e]} -setup {
+    destroy .m1
+} -body {
+    menu .m1
+    list [.m1 index "end"]
+} -cleanup {
+    destroy .m1
+} -result none
 
 
 test menu-4.1 {TkInvokeMenu: disabled} -setup {
@@ -2060,7 +2068,7 @@ test menu-5.8 {DestroyMenuInstance - multiple clones} -setup {
     set tearoff2 [tk::TearOffMenu .m1]
     list [destroy $tearoff1] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-test menu-5.9 {DestroyMenuInstace - master menu} -setup {
+test menu-5.9 {DestroyMenuInstace - main menu} -setup {
     destroy .m1
 } -body {
     menu .m1

@@ -627,8 +627,8 @@ proc ::tk::FindAltKeyTarget {path char} {
 	    [string index [$path cget -text] [$path cget -underline]]]} {
 	return $path
     }
-    set subwins [concat [grid slaves $path] [pack slaves $path] \
-	    [place slaves $path]]
+    set subwins [concat [grid content $path] [pack content $path] \
+	    [place content $path]]
     if {$class eq "Canvas"} {
 	foreach item [$path find all] {
 	    if {[$path type $item] eq "window"} {
@@ -687,9 +687,11 @@ if {[tk windowingsystem] eq "aqua"} {
 if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
+	uplevel #0 $file
     	source $file
     }
     proc ::tk::mac::DoScriptText {script} {
+	uplevel #0 $script
     	eval $script
     }
 }

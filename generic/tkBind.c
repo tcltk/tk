@@ -949,11 +949,10 @@ ClearList(
 
 static PSEntry *
 FreePatSeqEntry(
-    PSList *pool,
+    TCL_UNUSED(PSList *),
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
-    (void)pool;
 
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
@@ -2165,7 +2164,7 @@ Tk_BindEvent(
     TkDisplay *dispPtr;
     TkDisplay *oldDispPtr;
     Event *curEvent;
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     BindInfo *bindInfoPtr;
     Tcl_InterpState interpState;
     LookupTables *physTables;
@@ -2455,7 +2454,6 @@ Tk_BindEvent(
 		LookupTables *virtTables = &bindInfoPtr->virtualEventTable.lookupTables;
 		PatSeq *matchPtr = matchPtrArr[k];
 		PatSeq *mPtr;
-		PSList *psl[2];
 
 		/*
 		 * Note that virtual events cannot promote.
@@ -2758,11 +2756,11 @@ CompareModMasks(
 	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
 
 	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
-	    unsigned fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
-	    unsigned sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+	    unsigned fstiModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    unsigned sndiModMask = *PSModMaskArr_Get(sndModMaskArr, i);
 
-	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
-	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
+	    if (IsSubsetOf(fstiModMask, sndiModMask)) { ++sndCount; }
+	    if (IsSubsetOf(sndiModMask, fstiModMask)) { ++fstCount; }
 	}
     }
 
@@ -5003,7 +5001,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modMask |= TkGetButtonMask(button);
+		    patPtr->modMask |= Tk_GetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -5013,7 +5011,7 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modMask |= TkGetButtonMask(button);
+			patPtr->modMask |= Tk_GetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
@@ -5192,15 +5190,15 @@ GetPatternObj(
 		case ButtonPress:
 		case ButtonRelease:
 		    assert(patPtr->info <= Button9);
-		    Tcl_AppendPrintfToObj(patternObj, "-%d", (int) patPtr->info);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned)patPtr->info);
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
 		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
-			int button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%d", button);
-			mask &= ~TkGetButtonMask(button);
+			unsigned button = ButtonNumberFromState(mask);
+			Tcl_AppendPrintfToObj(patternObj, "-%u", button);
+			mask &= ~Tk_GetButtonMask(button);
 		    }
 		    break;
 		}

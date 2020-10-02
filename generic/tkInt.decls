@@ -636,10 +636,10 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 aqua {
+declare 185 macosx {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 aqua {
+declare 186 macosx {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
@@ -772,7 +772,7 @@ declare 14 win {
     void TkWinFillRect(void *dc, int x, int y, int width, int height, int pixel)
 }
 declare 15 win {
-    void *TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
+    unsigned TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
 	    int which)
 }
 declare 16 win {
@@ -788,7 +788,7 @@ declare 19 win {
     void *TkWinGetWrapperWindow(Tk_Window tkwin)
 }
 declare 20 win {
-    int TkWinHandleMenuEvent(void *phwnd, void *pMessage, void *pwParam,
+    int TkWinHandleMenuEvent(void *phwnd, unsigned *pMessage, void *pwParam,
 	    ptrdiff_t *plParam, ptrdiff_t *plResult)
 }
 declare 21 win {
@@ -918,9 +918,10 @@ declare 9 aqua {
 declare 10 aqua {
     int TkMacOSXDispatchMenuEvent(int menuID, int index)
 }
-declare 11 aqua {
-    void TkMacOSXInstallCursor(int resizeOverride)
-}
+# Now a static function
+# declare 11 aqua {
+#     void TkMacOSXInstallCursor(int resizeOverride)
+# }
 declare 12 aqua {
     void TkMacOSXHandleTearoffMenu(void)
 }
@@ -962,9 +963,10 @@ declare 24 aqua {
 declare 25 aqua {
     void TkMacOSXMenuClick(void)
 }
-declare 26 aqua {
-    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
-}
+# The corresponding Unregister was not a stub, and this should be static.
+#declare 26 aqua {
+#    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
+#}
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
 }
@@ -983,9 +985,10 @@ declare 31 aqua {
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
-declare 33 aqua {
-    void TkMacOSXUnregisterMacWindow(void *portPtr)
-}
+# This was not implemented.  Perhaps meant to be OffScreen ?
+#declare 33 aqua {
+#    void TkMacOSXUnregisterMacWindow(void *portPtr)
+#}
 declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }
@@ -1027,7 +1030,7 @@ declare 47 aqua {
     Tk_Window TkpGetCapture(void)
 }
 declare 49 aqua {
-    Tk_Window TkGetTransientMaster(TkWindow *winPtr)
+    Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
 declare 50 aqua {
     int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
@@ -1930,6 +1933,10 @@ declare 104 macosx {
 }
 declare 105 macosx {
     XHostAddress *XListHosts(Display *d, int *i, Bool *b)
+}
+declare 106 macosx {
+    int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
+       int clip_y_origin, XRectangle rectangles[], int n, int ordering)
 }
 declare 107 macosx {
     int XFlush(Display *display)

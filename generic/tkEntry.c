@@ -574,7 +574,7 @@ Tk_EntryObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(entryPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(entryPtr->tkwin));
     return TCL_OK;
 }
 
@@ -737,7 +737,7 @@ EntryWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
 
@@ -1684,7 +1684,7 @@ DisplayEntry(
      * Hide the selection whenever we don't have the focus, unless we
      * always want to show selection.
      */
-    if (TkpAlwaysShowSelection(entryPtr->tkwin)) {
+    if (Tk_AlwaysShowSelection(entryPtr->tkwin)) {
 	showSelection = 1;
     } else {
 	showSelection = (entryPtr->flags & GOT_FOCUS);
@@ -1786,7 +1786,7 @@ DisplayEntry(
 	     * Draw the selected and unselected portions separately.
 	     */
 
-	    int selFirst;
+	    TkSizeT selFirst;
 
 	    if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
 	        selFirst = entryPtr->leftIndex;
@@ -2978,7 +2978,7 @@ EntryLostSelection(
      * This is controlled by ::tk::AlwaysShowSelection.
      */
 
-    if (TkpAlwaysShowSelection(entryPtr->tkwin)
+    if (Tk_AlwaysShowSelection(entryPtr->tkwin)
 	    && (entryPtr->selectFirst != TCL_INDEX_NONE) && entryPtr->exportSelection
 	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	entryPtr->selectFirst = TCL_INDEX_NONE;
@@ -3807,7 +3807,7 @@ Tk_SpinboxObjCmd(
 	goto error;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(entryPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(entryPtr->tkwin));
     return TCL_OK;
 
   error:
@@ -3995,7 +3995,7 @@ SpinboxWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj((int)index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
 

@@ -403,7 +403,7 @@ declare 97 {
 	    Tk_ImageChangedProc *changeProc, ClientData clientData)
 }
 declare 98 {
-    ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
+    ClientData Tk_GetImageModelData(Tcl_Interp *interp,
 	    const char *name, const Tk_ImageType **typePtrPtr)
 }
 declare 99 {
@@ -472,7 +472,7 @@ declare 116 {
     Tk_Window Tk_IdToWindow(Display *display, Window window)
 }
 declare 117 {
-    void Tk_ImageChanged(Tk_ImageMaster master, int x, int y,
+    void Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 	    int width, int height, int imageWidth, int imageHeight)
 }
 declare 118 {
@@ -486,8 +486,8 @@ declare 120 {
 	    int width, int height)
 }
 declare 121 {
-    void Tk_MaintainGeometry(Tk_Window slave,
-	    Tk_Window master, int x, int y, int width, int height)
+    void Tk_MaintainGeometry(Tk_Window window,
+	    Tk_Window container, int x, int y, int width, int height)
 }
 declare 122 {
     Tk_Window Tk_MainWindow(Tcl_Interp *interp)
@@ -539,7 +539,7 @@ declare 136 {
     const char *Tk_NameOfFont(Tk_Font font)
 }
 declare 137 {
-    const char *Tk_NameOfImage(Tk_ImageMaster imageMaster)
+    const char *Tk_NameOfImage(Tk_ImageModel model)
 }
 declare 138 {
     const char *Tk_NameOfJoinStyle(int join)
@@ -692,7 +692,7 @@ declare 180 {
     void Tk_Ungrab(Tk_Window tkwin)
 }
 declare 181 {
-    void Tk_UnmaintainGeometry(Tk_Window slave, Tk_Window master)
+    void Tk_UnmaintainGeometry(Tk_Window window, Tk_Window container)
 }
 declare 182 {
     void Tk_UnmapWindow(Tk_Window tkwin)
@@ -1069,6 +1069,28 @@ declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
+# TIP#580
+declare 274 {
+    int Tk_AlwaysShowSelection(Tk_Window tkwin)
+}
+declare 275 {
+    unsigned Tk_GetButtonMask(unsigned button)
+}
+declare 276 {
+    int Tk_GetDoublePixelsFromObj(Tcl_Interp *interp, Tk_Window tkwin,
+	    Tcl_Obj *objPtr, double *doublePtr)
+}
+declare 277 {
+    Tcl_Obj *Tk_NewWindowObj(Tk_Window tkwin)
+}
+declare 278 {
+    void Tk_SendVirtualEvent(Tk_Window tkwin, const char *eventName,
+	    Tcl_Obj *detail)
+}
+declare 279 {
+    Tcl_Obj *Tk_FontGetDescription(Tk_Font tkfont)
+}
+
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
 
@@ -1112,53 +1134,21 @@ declare 10 win {
     int Tk_MacOSXIsAppInFront(void)
 }
 declare 11 win {
-    void Tk_MacOSXSetEmbedHandler(
-	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacOSXEmbedGetClipProc *getClipProc,
-	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
-}
-
-declare 12 win {
-    void Tk_MacOSXTurnOffMenus(void)
-}
-declare 13 win {
-    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
-}
-declare 14 win {
-    void TkMacOSXInitMenus(Tcl_Interp *interp)
-}
-declare 15 win {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
-declare 16 win {
-    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
+declare 12 win {
+    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
 
 ################################
 # Aqua specific functions
-
-declare 0 aqua {
-    void Tk_MacOSXSetEmbedHandler_(
-	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacOSXEmbedGetClipProc *getClipProc,
-	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
-}
-declare 1 aqua {
-    void Tk_MacOSXTurnOffMenus_(void)
-}
-declare 2 aqua {
-    void Tk_MacOSXTkOwnsCursor_(int tkOwnsIt)
-}
-declare 3 aqua {
-    void TkMacOSXInitMenus_(Tcl_Interp *interp)
-}
+# Stub removed because the function no longer exists.
+#declare 3 aqua {
+#    void TkMacOSXInitMenus(Tcl_Interp *interp)
+#}
 declare 4 aqua {
-    void TkMacOSXInitAppleEvents_(Tcl_Interp *interp)
+    void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
 }
 declare 5 aqua {
     void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
@@ -1167,9 +1157,10 @@ declare 5 aqua {
 declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
-declare 7 aqua {
-    void *TkMacOSXGetDrawablePort(Drawable drawable)
-}
+# Stub removed because it just returned NULL.
+#declare 7 aqua {
+#    void *TkMacOSXGetDrawablePort(Drawable drawable)
+#}
 declare 8 aqua {
     void *TkMacOSXGetRootControl(Drawable drawable)
 }
@@ -1180,24 +1171,14 @@ declare 10 aqua {
     int Tk_MacOSXIsAppInFront(void)
 }
 declare 11 aqua {
-    void Tk_MacOSXSetEmbedHandler(
-	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacOSXEmbedGetClipProc *getClipProc,
-	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
+    Tk_Window Tk_MacOSXGetTkWindow(void *w)
 }
 declare 12 aqua {
-    void Tk_MacOSXTurnOffMenus(void)
+    void *Tk_MacOSXGetCGContextForDrawable(Drawable drawable)
 }
+# Replaces TkMacOSXDrawable
 declare 13 aqua {
-    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
-}
-declare 14 aqua {
-    void TkMacOSXInitMenus(Tcl_Interp *interp)
-}
-declare 15 aqua {
-    void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
+    void *Tk_MacOSXGetNSWindowForDrawable(Drawable drawable)
 }
 declare 16 aqua {
     void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,

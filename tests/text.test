@@ -1252,7 +1252,7 @@ bOy GIrl .#@? x_yz
 Line 7"
     .t configure -state disabled
     .t delete 2.3
-    .t g 2.0 2.end
+    .t get 2.0 2.end
 } -cleanup {
     destroy .t
 } -result {abcdefghijklm}
@@ -1514,9 +1514,9 @@ Line 7"
     # Ensure that undo (even composite undo like 'replace')
     # works when the widget shows nothing useful.
     .t replace 2.1 2.3 foo
-    .t configure -start 1 -end 1
+    .t configure -startline 1 -endline 1
     .t edit undo
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     .t configure -undo 0
     string equal [.t get 1.0 end-1c] $prevtext
 } -cleanup {
@@ -1540,10 +1540,10 @@ Line 7"
 # works when the the event took place in one peer, which
 # is then deleted, before the undo takes place in another peer.
     .tt replace 2.1 2.3 foo
-    .tt configure -start 1 -end 1
+    .tt configure -startline 1 -endline 1
     destroy .tt
     .t edit undo
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     .t configure -undo 0
     string equal [.t get 1.0 end-1c] $prevtext
 } -cleanup {
@@ -1569,14 +1569,14 @@ Line 7"
 # which isn't showing everything.
     .tt replace 2.1 2.3 foo
     set res [.tt get 2.1 2.4]
-    .tt configure -start 1 -end 1
+    .tt configure -startline 1 -endline 1
     destroy .tt
-    .t configure -start 3 -end 4
+    .t configure -startline 3 -endline 4
 # msg will actually be set to a silently ignored error message here,
 # (that the .tt command doesn't exist), but that is not important.
     lappend res [catch {.t edit undo}]
     .t configure -undo 0
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     lappend res [string equal [.t get 1.0 end-1c] $prevtext]
 } -cleanup {
     destroy .t
@@ -2068,7 +2068,7 @@ test text-10.2 {TextWidgetCmd procedure, "count" option} -setup {
     .t count blah 1.0 2.0
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad option "blah" must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
+} -returnCodes {error} -result {bad option "blah": must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
 test text-10.3 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2103,7 +2103,7 @@ Line 7"
     .t count 5.7 5.3
 } -cleanup {
     destroy .t
-} -result {-4}
+} -result -4
 test text-10.7 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2598,7 +2598,7 @@ test text-10.31 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines end 1.0
 } -cleanup {
     destroy .t
-} -result {-3}
+} -result -3
 test text-10.32 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2608,7 +2608,7 @@ test text-10.32 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 1.0 2.0 3.0
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad option "1.0" must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
+} -returnCodes {error} -result {bad option "1.0": must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
 test text-10.33 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2648,7 +2648,7 @@ test text-10.36 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 2.7 "1.0 lineend"
 } -cleanup {
     destroy .t
-} -result {-1}
+} -result -1
 test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2691,7 +2691,7 @@ test text-10.39 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result {2 6 1 5}
-test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.40 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     pack .t
     update
@@ -2707,7 +2707,7 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result 0
-test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.41 {TextWidgetCmd procedure, "count" option} -setup {
     toplevel .mytop
     pack [text .mytop.t -font TkFixedFont -bd 0 -padx 0 -wrap char]
     set spec [font measure TkFixedFont "Line 1+++Line 1---Li"]  ; # 20 chars
@@ -2729,7 +2729,7 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .mytop
 } -result {1 3}
-test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.42 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     pack .t
     update
@@ -3122,7 +3122,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
-test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+test text-11a.51 {<<WidgetViewSync>> calls Tk_SendVirtualEvent(),
                   NOT Tk_HandleEvent().
                   Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
     destroy .top.t .top
@@ -5824,7 +5824,7 @@ test text-22.217.1 {elide up to match, with UTF-8 chars before the match} -setup
 } -body {
     .t tag configure e -elide 0
     .t insert end A {} xyz e bb\n
-    .t insert end \u00c4 {} xyz e bb
+    .t insert end \xC4 {} xyz e bb
     set res {}
     lappend res [.t search bb 1.0 "1.0 lineend"]
     lappend res [.t search bb 2.0 "2.0 lineend"]
@@ -6759,7 +6759,7 @@ test text-27.15g {No <<Selection>> virtual event on <<Cut>> without widget selec
     destroy .t
 } -result {no_<<Selection>>_event_fired}
 test text-27.16 {-maxundo configuration option} -body {
-    text .t -undo 1  -autoseparators 1 -maxundo 2
+    text .t -undo 1 -autoseparators 1 -maxundo 2
     pack .t
     .t insert end "line 1\n"
     .t delete 1.4 1.6
@@ -7034,12 +7034,12 @@ test text-27.28 {edit undo and edit redo do not leave \
     .t edit separator
     .t insert end "Again hello.\n"
     .t edit undo
-    lappend res [lsearch [.t mark names] tk::undoMark*]
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
     .t edit redo
-    lappend res [lsearch [.t mark names] tk::undoMark*]
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
 } -cleanup {
     destroy .t
-} -result [list -1 -1]
+} -result {1 1}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
@@ -7052,13 +7052,13 @@ test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
 
 test text-29.1 {tabs - must be positive and must be increasing} -body {
     pack [text .t -wrap none]
-    .t configure -tabs {0}
+    .t configure -tabs 0
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {tab stop "0" is not at a positive distance}
 test text-29.2 {tabs - must be positive and must be increasing} -body {
     pack [text .t -wrap none]
-    .t configure -tabs {-5}
+    .t configure -tabs -5
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {tab stop "-5" is not at a positive distance}
@@ -7172,7 +7172,7 @@ test text-31.4 {peer widgets} -body {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
+    pack [.t peer create .top.t -startline 5 -endline 11]
     update
     destroy .t .top
 } -result {}
@@ -7182,7 +7182,7 @@ test text-31.5 {peer widgets} -body {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
+    pack [.t peer create .top.t -startline 5 -endline 11]
     pack [.top.t peer create .top.t2]
     set res [list [.top.t index end] [.top.t2 index end]]
     update
@@ -7196,8 +7196,8 @@ test text-31.6 {peer widgets} -body {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
-    pack [.top.t peer create .top.t2 -start {} -end {}]
+    pack [.t peer create .top.t -startline 5 -endline 11]
+    pack [.top.t peer create .top.t2 -startline {} -endline {}]
     set res [list [.top.t index end] [.top.t2 index end]]
     update
     return $res
@@ -7210,7 +7210,7 @@ test text-31.7 {peer widgets} -body {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
+    pack [.t peer create .top.t -startline 5 -endline 11]
     update ; update
     set p1 [.top.t count -update -ypixels 1.0 end]
     set p2 [.t count -update -ypixels 5.0 11.0]
@@ -7224,7 +7224,7 @@ test text-31.8 {peer widgets} -body {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
+    pack [.t peer create .top.t -startline 5 -endline 11]
     update ; update
     .t delete 3.0 6.0
     .top.t index end
@@ -7237,7 +7237,7 @@ test text-31.9 {peer widgets} -body {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
+    pack [.t peer create .top.t -startline 5 -endline 11]
     update ; update
     .t delete 8.0 12.0
     .top.t index end
@@ -7250,7 +7250,7 @@ test text-31.10 {peer widgets} -body {
         for {set i 1} {$i < 20} {incr i} {
         .t insert end "Line $i\n"
     }
-    pack [.t peer create .top.t -start 5 -end 11]
+    pack [.t peer create .top.t -startline 5 -endline 11]
     update ; update
     .t delete 3.0 13.0
     .top.t index end
@@ -7266,7 +7266,7 @@ test text-31.11 {peer widgets} -setup {
     }
     .t tag add sel 1.0 end-1c
     lappend res [.t tag ranges sel]
-    .t configure -start 10 -end 20
+    .t configure -startline 10 -endline 20
     lappend res [.t tag ranges sel]
     return $res
 } -cleanup {
@@ -7281,7 +7281,7 @@ test text-31.12 {peer widgets} -setup {
     }
     .t tag add sel 1.0 end-1c
     lappend res [.t tag ranges sel]
-    .t configure -start 11
+    .t configure -startline 11
     lappend res [.t tag ranges sel]
     return $res
 } -cleanup {
@@ -7296,7 +7296,7 @@ test text-31.13 {peer widgets} -setup {
     }
     .t tag add sel 1.0 end-1c
     lappend res [.t tag ranges sel]
-    .t configure -end 90
+    .t configure -endline 90
     lappend res [.t tag ranges sel]
     destroy .t
     return $res
@@ -7312,7 +7312,7 @@ test text-31.14 {peer widgets} -setup {
     }
     .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     lappend res [.t tag prevrange sel 1.0]
-    .t configure -start 6 -end 12
+    .t configure -startline 6 -endline 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
       [.t tag nextrange sel 5.0] [.t tag nextrange sel 6.0] \
@@ -7332,7 +7332,7 @@ test text-31.15 {peer widgets} -setup {
 	   .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0
-    .t configure -start 6 -end 12
+    .t configure -startline 6 -endline 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
       [.t tag nextrange sel 5.0] [.t tag nextrange sel 6.0] \
@@ -7352,7 +7352,7 @@ test text-31.16 {peer widgets} -setup {
 	.t insert end "Line $i\n"
     }
     .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
-    .t configure -start 6 -end 12
+    .t configure -startline 6 -endline 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
       [.t tag nextrange sel 5.0] [.t tag nextrange sel 6.0] \
@@ -7373,11 +7373,11 @@ test text-31.17 {peer widgets} -setup {
     }
     .t tag add sel 1.0 11.0
     lappend res [.t tag ranges sel]
-    lappend res [catch {.t configure -start 15 -end 10}]
+    lappend res [catch {.t configure -startline 15 -endline 10}]
     lappend res [.t tag ranges sel]
-    .t configure -start 6 -end 12
+    .t configure -startline 6 -endline 12
     lappend res [.t tag ranges sel]
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     lappend res [.t tag ranges sel]
     return $res
 } -cleanup {
@@ -7446,7 +7446,7 @@ test text-32.1 {line heights on creation} -setup {
     destroy .t
 } -result 1
 
-test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+test text-32.2 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
     destroy .t .pt
     set res {}
 } -body {
@@ -7476,7 +7476,7 @@ test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     destroy .pt
 } -result 1
 
-test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+test text-32.3 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
     destroy .t .pt
     set res {}
 } -body {
@@ -7497,101 +7497,7 @@ test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
     destroy .pt
 } -result {4 3}
 
-test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5 -endline 15
-    .pt configure -startline 8 -endline 12
-    # .pt now shows a range entirely inside the range of .pt
-    # from .t, delete lines located after [.pt cget -end]
-    .t delete 9.0 10.0
-    # from .t, delete lines straddling [.pt cget -end]
-    .t delete 6.0 9.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 5 -endline 12
-    .pt configure -startline 8 -endline 12
-    # .pt now shows again a range entirely inside the range of .pt
-    # from .t, delete lines located before [.pt cget -start]
-    .t delete 2.0 3.0
-    # from .t, delete lines straddling [.pt cget -start]
-    .t delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 22 -endline 31
-    .pt configure -startline 42 -endline 51
-    # .t now shows a range entirely before the range of .pt
-    # from .t, delete some lines, then do it from .pt
-    .t delete 2.0 3.0
-    .t delete 2.0 5.0
-    .pt delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 55 -endline 75
-    .pt configure -startline 60 -endline 70
-    # .pt now shows a range entirely inside the range of .t
-    # from .t, delete a range straddling the entire range of .pt
-    .t delete 3.0 18.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-} -cleanup {
-    destroy .pt .t
-} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
-
-test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    # none of the following delete shall crash
-    # (all did before fixing bug 1630262)
-    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
-    #    and resetView is true neither for .t not for .pt
-    .pt delete 2.0 2.2
-    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 3.0
-    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 5.0
-    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 end
-    # this test succeeds provided there is no crash
-    set res 1
-} -cleanup {
-    destroy .pt
-} -result 1
-
-test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    .pt configure -startline 3
-    # the following delete shall not crash
-    # (it did before fixing bug 1630262)
-    .pt delete 2.0 3.0
-    # moreover -startline shall be correct
-    # (was wrong before fixing bug 1630262)
-    lappend res [.t cget -start] [.pt cget -start]
-} -cleanup {
-    destroy .pt
-} -result {4 3}
-
-test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+test text-32.4 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
     destroy .t .pt
     set res {}
 } -body {
@@ -7652,7 +7558,7 @@ test text-33.2 {TextWidgetCmd procedure, "peer" option} -setup {
 test text-33.3 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
 } -body {
-    .t pee names
+    .t peer names
 } -cleanup {
     destroy .t
 } -returnCodes {ok} -result {}
@@ -7684,17 +7590,17 @@ test text-33.6 {TextWidgetCmd procedure, "peer" option} -setup {
 } -result {.t2 .t {}}
 test text-33.7 {peer widget -start, -end} -body {
     text .t
-    set res [.t configure -start 10 -end 5]
+    set res [.t configure -startline 10 -endline 5]
     return $res
 } -cleanup {
     destroy .t
-} -returnCodes {2} -result {}
+} -returnCodes 2 -result {}
 test text-33.8 {peer widget -start, -end} -body {
     text .t
     for {set i 1} {$i < 100} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t configure -start 10 -end 5
+    .t configure -startline 10 -endline 5
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {-startline must be less than or equal to -endline}
@@ -7703,7 +7609,7 @@ test text-33.9 {peer widget -start, -end} -body {
     for {set i 1} {$i < 100} {incr i} {
 	.t insert end "Line $i\n"
     }
-    .t configure -start 5 -end 10
+    .t configure -startline 5 -endline 10
 } -cleanup {
     destroy .t
 } -returnCodes {ok} -result {}
@@ -7713,11 +7619,11 @@ test text-33.10 {peer widget -start, -end} -body {
 	   .t insert end "Line $i\n"
     }
     set res [.t index end]
-    lappend res [catch {.t configure -start 5 -end 10 -tab foo}]
+    lappend res [catch {.t configure -startline 5 -endline 10 -tab foo}]
     lappend res [.t index end]
-    lappend res [catch {.t configure -tab foo -start 15 -end 20}]
+    lappend res [catch {.t configure -tab foo -startline 15 -endline 20}]
     lappend res [.t index end]
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     lappend res [.t index end]
     return $res
 } -cleanup {
@@ -7729,18 +7635,18 @@ test text-33.11 {peer widget -start, -end} -body {
 	   .t insert end "Line $i\n"
     }
     set res [.t index end]
-    lappend res [catch {.t configure -start 5 -end 15}]
+    lappend res [catch {.t configure -startline 5 -endline 15}]
     lappend res [.t index end]
-    lappend res [catch {.t configure -start 10 -end 40}]
+    lappend res [catch {.t configure -startline 10 -endline 40}]
     lappend res [.t index end]
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     lappend res [.t index end]
     return $res
 } -cleanup {
     destroy .t
 } -result {101.0 0 11.0 0 31.0 101.0}
 
-test text-34.1 {peer widget -start, -end and selection} -setup {
+test text-34.1 {peer widget -start, -endline and selection} -setup {
     text .t
     set res {}
 } -body {
@@ -7749,17 +7655,17 @@ test text-34.1 {peer widget -start, -end and selection} -setup {
     }
     .t tag add sel 10.0 20.0
     lappend res [.t tag ranges sel]
-    .t configure -start 5 -end 30
+    .t configure -startline 5 -endline 30
     lappend res [.t tag ranges sel]
-    .t configure -start 5 -end 15
+    .t configure -startline 5 -endline 15
     lappend res [.t tag ranges sel]
-    .t configure -start 15 -end 30
+    .t configure -startline 15 -endline 30
     lappend res [.t tag ranges sel]
-    .t configure -start 15 -end 16
+    .t configure -startline 15 -endline 16
     lappend res [.t tag ranges sel]
-    .t configure -start 25 -end 30
+    .t configure -startline 25 -endline 30
     lappend res [.t tag ranges sel]
-    .t configure -start {} -end {}
+    .t configure -startline {} -endline {}
     lappend res [.t tag ranges sel]
     return $res
 } -cleanup {
@@ -7768,7 +7674,6 @@ test text-34.1 {peer widget -start, -end and selection} -setup {
 
 test text-35.1 {widget dump -command alters tags} -setup {
      proc Dumpy {key value index} {
-#puts "KK: $key, $value"
       .t tag add $value [list $index linestart] [list $index lineend]
     }
     text .t
@@ -7782,7 +7687,6 @@ test text-35.1 {widget dump -command alters tags} -setup {
 } -result {ok}
 test text-35.2 {widget dump -command makes massive changes} -setup {
     proc Dumpy {key value index} {
-#puts "KK: $key, $value"
       .t delete 1.0 end
     }
     text .t
@@ -7796,7 +7700,6 @@ test text-35.2 {widget dump -command makes massive changes} -setup {
 } -result {ok}
 test text-35.3 {widget dump -command destroys widget} -setup {
     proc Dumpy {key value index} {
-#puts "KK: $key, $value"
         destroy .t
     }
     text .t

@@ -357,7 +357,7 @@ Tk_ScaleObjCmd(
 
     scalePtr->flags &= ~INVOKE_COMMAND;
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(scalePtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(scalePtr->tkwin));
     return TCL_OK;
 }
 
@@ -659,13 +659,11 @@ ConfigureScale(
 	    }
 	}
 
-	/*
-	 * Several options need special processing, such as parsing the
-	 * orientation and creating GCs.
-	 */
+        /*
+         * The fromValue shall not be rounded to the resolution, but the
+         * toValue and tickInterval do.
+         */
 
-	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
-		scalePtr->fromValue);
 	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
 	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);

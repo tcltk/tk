@@ -136,15 +136,13 @@ PixmapFromImage(
     Pixmap pixmap;
 
     pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
-    if (TkMacOSXSetupDrawingContext(pixmap, NULL, 1, &dc)) {
+    if (TkMacOSXSetupDrawingContext(pixmap, NULL, &dc)) {
 	if (dc.context) {
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1,
 				    .tx = 0, .ty = size.height};
 	    CGContextConcatCTM(dc.context, t);
 	    [NSGraphicsContext saveGraphicsState];
-	    [NSGraphicsContext setCurrentContext:[NSGraphicsContext
-		graphicsContextWithGraphicsPort:dc.context
-		flipped:NO]];
+	    [NSGraphicsContext setCurrentContext:GET_NSCONTEXT(dc.context, NO)];
 	    [image drawAtPoint:NSZeroPoint fromRect:NSZeroRect
 		operation:NSCompositeCopy fraction:1.0];
 	    [NSGraphicsContext restoreGraphicsState];
@@ -343,7 +341,7 @@ TkpGetNativeAppBitmap(
 
 int
 TkMacOSXIconBitmapObjCmd(
-    ClientData dummy,	/* Unused. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -352,7 +350,6 @@ TkMacOSXIconBitmapObjCmd(
     int i = 1, len, isNew, result = TCL_ERROR;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
-    (void)dummy;
 
     if (objc != 6) {
 	Tcl_WrongNumArgs(interp, 1, objv, "name width height "

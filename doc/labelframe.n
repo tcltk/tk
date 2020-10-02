@@ -95,7 +95,7 @@ name is the same as the path name of the labelframe's window.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as
 the labelframe widget's path name.  \fIOption\fR and the \fIarg\fRs
@@ -108,7 +108,7 @@ by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBlabelframe\fR
 command.
 .TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? \fI?value option value ...\fR?
+\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 Query or modify the configuration options of the widget.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR (see \fBTk_ConfigureInfo\fR for

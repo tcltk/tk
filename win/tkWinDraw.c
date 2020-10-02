@@ -141,15 +141,16 @@ static HPEN		SetUpGraphicsPort(GC gc);
  *----------------------------------------------------------------------
  */
 
-HDC
+void *
 TkWinGetDrawableDC(
     Display *display,
     Drawable d,
-    TkWinDCState *state)
+    void *st)
 {
     HDC dc;
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
     Colormap cmap;
+    TkWinDCState *state = (TkWinDCState *)st;
 
     if (twdPtr->type == TWD_WINDOW) {
 	TkWindow *winPtr = twdPtr->window.winPtr;
@@ -192,18 +193,19 @@ TkWinGetDrawableDC(
 void
 TkWinReleaseDrawableDC(
     Drawable d,
-    HDC dc,
-    TkWinDCState *state)
+    void *dc,
+    void *st)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
+    TkWinDCState *state = (TkWinDCState *)st;
 
-    SetBkMode(dc, state->bkmode);
-    SelectPalette(dc, state->palette, TRUE);
-    RealizePalette(dc);
+    SetBkMode((HDC)dc, state->bkmode);
+    SelectPalette((HDC)dc, state->palette, TRUE);
+    RealizePalette((HDC)dc);
     if (twdPtr->type == TWD_WINDOW) {
-	ReleaseDC(TkWinGetHWND(d), dc);
+	ReleaseDC(TkWinGetHWND(d), (HDC)dc);
     } else if (twdPtr->type == TWD_BITMAP) {
-	DeleteDC(dc);
+	DeleteDC((HDC)dc);
     }
 }
 
@@ -1438,7 +1440,7 @@ TkScrollWindow(
 
 void
 TkWinFillRect(
-    HDC dc,
+    void *dc,
     int x, int y, int width, int height,
     int pixel)
 {
@@ -1449,10 +1451,10 @@ TkWinFillRect(
     rect.top = y;
     rect.right = x + width;
     rect.bottom = y + height;
-    oldColor = SetBkColor(dc, (COLORREF)pixel);
-    SetBkMode(dc, OPAQUE);
-    ExtTextOutW(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
-    SetBkColor(dc, oldColor);
+    oldColor = SetBkColor((HDC)dc, (COLORREF)pixel);
+    SetBkMode((HDC)dc, OPAQUE);
+    ExtTextOutW((HDC)dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+    SetBkColor((HDC)dc, oldColor);
 }
 
 /*
