@@ -232,11 +232,11 @@ static CGRect NormalizeButtonBounds(
  * support Dark Mode anyway.
  */
 
-static CGFloat windowBackground[4] = {
+static const CGFloat WINDOWBACKGROUND[4] = {
     235.0 / 255, 235.0 / 255, 235.0 / 255, 1.0
 };
-static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
-static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
+static const CGFloat WHITERGBA[4] = {1.0, 1.0, 1.0, 1.0};
+static const CGFloat BLACKRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 
 /*----------------------------------------------------------------------
  * GetBackgroundColor --
@@ -256,13 +256,13 @@ static void GetBackgroundColor(
     CGFloat *rgba)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
-    TkWindow *containerPtr = (TkWindow *)TkGetGeomMaster(tkwin);
+    TkWindow *containerPtr = (TkWindow *)TkGetContainer(tkwin);
 
     while (containerPtr && containerPtr->privatePtr) {
 	if (containerPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	containerPtr = (TkWindow *)TkGetGeomMaster(containerPtr);
+	containerPtr = (TkWindow *)TkGetContainer(containerPtr);
     }
     if (containerPtr && containerPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
@@ -276,7 +276,7 @@ static void GetBackgroundColor(
 	    [windowColor getComponents: rgba];
 	} else {
 	    for (int i = 0; i < 4; i++) {
-		rgba[i] = windowBackground[i];
+		rgba[i] = WINDOWBACKGROUND[i];
 	    }
 	}
     }
@@ -314,7 +314,7 @@ static void DrawDownArrow(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    CGFloat *rgba)
+    const CGFloat *rgba)
 {
     CGFloat x, y;
 
@@ -336,7 +336,7 @@ static void DrawUpArrow(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    CGFloat *rgba)
+    const CGFloat *rgba)
 {
     CGFloat x, y;
 
@@ -406,7 +406,7 @@ static void DrawUpDownArrows(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    CGFloat *rgba)
+    const CGFloat *rgba)
 {
     CGFloat x, y;
 
@@ -633,9 +633,9 @@ static void DrawListHeader(
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
-	    DrawUpArrow(context, arrowBounds, 3, 8, blackRGBA);
+	    DrawUpArrow(context, arrowBounds, 3, 8, BLACKRGBA);
 	} else if (state & TTK_STATE_SELECTED) {
-	    DrawDownArrow(context, arrowBounds, 3, 8, blackRGBA);
+	    DrawDownArrow(context, arrowBounds, 3, 8, BLACKRGBA);
 	}
     }
 }
@@ -757,9 +757,9 @@ static void DrawDarkButton(
 		darkSelectedGradient, 2);
 	}
 	if (kind == kThemePopupButton) {
-	    DrawUpDownArrows(context, arrowBounds, 3, 7, whiteRGBA);
+	    DrawUpDownArrows(context, arrowBounds, 3, 7, WHITERGBA);
 	} else {
-	    DrawDownArrow(context, arrowBounds, 4, 8, whiteRGBA);
+	    DrawDownArrow(context, arrowBounds, 4, 8, WHITERGBA);
 	}
     }
 
@@ -818,7 +818,7 @@ static void DrawDarkIncDecButton(
 	    darkSelectedGradient, 2);
 	CGContextRestoreGState(context);
     }
-    DrawUpDownArrows(context, bounds, 3, 5, whiteRGBA);
+    DrawUpDownArrows(context, bounds, 3, 5, WHITERGBA);
     HighlightButtonBorder(context, bounds);
 }
 
@@ -1245,9 +1245,9 @@ static void DrawDarkListHeader(
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
-	    DrawUpArrow(context, arrowBounds, 3, 8, whiteRGBA);
+	    DrawUpArrow(context, arrowBounds, 3, 8, WHITERGBA);
 	} else if (state & TTK_STATE_SELECTED) {
-	    DrawDownArrow(context, arrowBounds, 3, 8, whiteRGBA);
+	    DrawDownArrow(context, arrowBounds, 3, 8, WHITERGBA);
 	}
     }
 }
@@ -2137,6 +2137,7 @@ static void TrackElementDraw(
     TrackElement *elem = elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
+    CGRect bounds;
 
     TtkGetOrientFromObj(NULL, elem->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
@@ -2149,7 +2150,7 @@ static void TrackElementDraw(
      * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
      */
 
-    CGRect bounds = BoxToRect(d, b);
+    bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
@@ -2175,7 +2176,7 @@ static void TrackElementDraw(
     }
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
-	CGRect bounds = BoxToRect(d, b);
+	bounds = BoxToRect(d, b);
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
 	    components: darkTrack
@@ -2282,6 +2283,7 @@ static void PbarElementDraw(
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     int phase = 0;
     double value = 0, maximum = 100, factor;
+    CGRect bounds;
 
     TtkGetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
@@ -2294,7 +2296,7 @@ static void PbarElementDraw(
      * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
      */
 
-    CGRect bounds = BoxToRect(d, b);
+    bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind =
@@ -2314,7 +2316,7 @@ static void PbarElementDraw(
 
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
-	CGRect bounds = BoxToRect(d, b);
+	bounds = BoxToRect(d, b);
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
 	    components: darkTrack

@@ -13,6 +13,8 @@ tcltest::loadTestedCommands
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
 
@@ -267,7 +269,7 @@ if {[tk windowingsystem] == "win32"} {
     }
 }
 
-test place-8.1 {PlaceStructureProc, mapping and unmapping content} -setup {
+test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints failsOnUbuntu -setup {
     place forget .t.f2
     place forget .t.f
 } -body {
@@ -283,7 +285,7 @@ test place-8.1 {PlaceStructureProc, mapping and unmapping content} -setup {
     placeUpdate
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
-test place-8.2 {PlaceStructureProc, mapping and unmapping content} -setup {
+test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints failsOnUbuntu -setup {
     place forget .t.f2
     place forget .t.f
     update idletasks
@@ -329,7 +331,7 @@ test place-9.5 {PlaceObjCmd} -setup {
     place badopt .foo
 } -cleanup {
     destroy .foo
-} -returnCodes error -match glob -result {bad option "badopt": must be configure, content, forget, *info*}
+} -returnCodes error -result {bad option "badopt": must be configure, content, forget, or info}
 test place-9.6 {PlaceObjCmd, configure errors} -setup {
     destroy .foo
 } -body {

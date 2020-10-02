@@ -244,7 +244,7 @@ EXTERN int		TkpIsWindowFloating(void *window);
 EXTERN Tk_Window	TkpGetCapture(void);
 /* Slot 48 is reserved */
 /* 49 */
-EXTERN Tk_Window	TkGetTransientMaster(TkWindow *winPtr);
+EXTERN Tk_Window	TkMacOSXGetContainer(TkWindow *winPtr);
 /* 50 */
 EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
 				unsigned int state);
@@ -439,7 +439,7 @@ typedef struct TkIntPlatStubs {
     int (*tkpIsWindowFloating) (void *window); /* 46 */
     Tk_Window (*tkpGetCapture) (void); /* 47 */
     void (*reserved48)(void);
-    Tk_Window (*tkGetTransientMaster) (TkWindow *winPtr); /* 49 */
+    Tk_Window (*tkMacOSXGetContainer) (TkWindow *winPtr); /* 49 */
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
     void (*tkMacOSXSetDrawingEnabled) (TkWindow *winPtr, int flag); /* 52 */
@@ -694,8 +694,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpGetCapture \
 	(tkIntPlatStubsPtr->tkpGetCapture) /* 47 */
 /* Slot 48 is reserved */
-#define TkGetTransientMaster \
-	(tkIntPlatStubsPtr->tkGetTransientMaster) /* 49 */
+#define TkMacOSXGetContainer \
+	(tkIntPlatStubsPtr->tkMacOSXGetContainer) /* 49 */
 #define TkGenerateButtonEvent \
 	(tkIntPlatStubsPtr->tkGenerateButtonEvent) /* 50 */
 #define TkGenWMDestroyEvent \

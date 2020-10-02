@@ -13,6 +13,9 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 tk useinputmethods 0
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
+
 toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update idletasks
@@ -2048,7 +2051,7 @@ test bind-16.35 {ExpandPercents procedure} -constraints {
     set x
 } -cleanup {
     destroy .t.f
-} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \u00e9}
+} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \xE9}
 test bind-16.36 {ExpandPercents procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6017,7 +6020,7 @@ test bind-28.9 {keysym names, Eth -> ETH} -body {
 } -cleanup {
     destroy .t.f
 } -result {<Key-ETH>}
-test bind-28.10 {keysym names, Ooblique -> Oslash} -body {
+test bind-28.10 {keysym names, Ooblique -> Oslash} -constraints nodeprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Ooblique> foo
     bind .t.f

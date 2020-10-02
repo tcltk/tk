@@ -203,6 +203,8 @@ Tk_PackObjCmd(
 	"after", "append", "before", "unpack",
 #endif /* !TK_NO_DEPRECATED */
 	"configure", "content", "forget", "info", "propagate", "slaves", NULL };
+    static const char *const optionStringsNoDep[] = {
+	"configure", "content", "forget", "info", "propagate", NULL };
     enum options {
 #ifndef TK_NO_DEPRECATED
 	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
@@ -222,19 +224,16 @@ Tk_PackObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+    if (Tcl_GetIndexFromObjStruct(NULL, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
-#ifndef TK_NO_DEPRECATED
 	/*
 	 * Call it again without the deprecated ones to get a proper error
 	 * message. This works well since there can't be any ambiguity between
 	 * deprecated and new options.
 	 */
 
-	Tcl_ResetResult(interp);
-	Tcl_GetIndexFromObjStruct(interp, objv[1], &optionStrings[4],
+	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
 		sizeof(char *), "option", 0, &index);
-#endif /* TK_NO_DEPRECATED */
 	return TCL_ERROR;
     }
 
@@ -1821,7 +1820,7 @@ ConfigureContent(
 	 */
 
 	for (container = (TkWindow *)containerPtr->tkwin; container != NULL;
-	     container = (TkWindow *)TkGetGeomMaster(container)) {
+	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put \"%s\" inside \"%s\": would cause management loop",

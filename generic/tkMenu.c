@@ -1630,7 +1630,6 @@ ConfigureMenu(
 	    }
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
-	    int i;
 
 	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
 
@@ -1825,7 +1824,6 @@ PostProcessEntry(
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
 	Tcl_Obj *valuePtr;
-	const char *name;
 
 	if (mePtr->namePtr == NULL) {
 	    if (mePtr->labelPtr == NULL) {
@@ -2735,7 +2733,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int i, numElements;
+	int numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance

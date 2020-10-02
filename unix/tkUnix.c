@@ -16,7 +16,7 @@
 #   include <X11/extensions/scrnsaver.h>
 #   ifdef __APPLE__
 /* Support for weak-linked libXss. */
-#	define HaveXSSLibrary()	(XScreenSaverQueryInfo != NULL)
+#	define HaveXSSLibrary()	(&XScreenSaverQueryInfo != NULL)
 #   else
 /* Other platforms always link libXss. */
 #	define HaveXSSLibrary()	(1)

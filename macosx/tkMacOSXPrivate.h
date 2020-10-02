@@ -103,11 +103,11 @@
  * debug message in case of failure.
  */
 #define ChkErr(f, ...) ({ \
-	OSStatus err = f(__VA_ARGS__); \
-	if (err != noErr) { \
-	    TkMacOSXDbgOSErr(f, err); \
+	OSStatus err_ = f(__VA_ARGS__); \
+	if (err_ != noErr) { \
+	    TkMacOSXDbgOSErr(f, err_); \
 	} \
-	err;})
+	err_;})
 
 #else /* TK_MAC_DEBUG */
 #define TKLog(f, ...)
@@ -295,6 +295,8 @@ MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
+MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
+
 
 #pragma mark Private Objective-C Classes
 

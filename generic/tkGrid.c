@@ -341,6 +341,11 @@ Tk_GridObjCmd(
 	"content", "forget", "info", "location", "propagate",
 	"remove", "rowconfigure", "size", "slaves", NULL
     };
+    static const char *const optionStringsNoDep[] = {
+	"anchor", "bbox", "columnconfigure", "configure",
+	"content", "forget", "info", "location", "propagate",
+	"remove", "rowconfigure", "size", NULL
+    };
     enum options {
 	GRID_ANCHOR, GRID_BBOX, GRID_COLUMNCONFIGURE, GRID_CONFIGURE,
 	GRID_CONTENT, GRID_FORGET, GRID_INFO, GRID_LOCATION, GRID_PROPAGATE,
@@ -361,8 +366,16 @@ Tk_GridObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+    if (Tcl_GetIndexFromObjStruct(NULL, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	/*
+	 * Call it again without the deprecated ones to get a proper error
+	 * message. This works well since there can't be any ambiguity between
+	 * deprecated and new options.
+	 */
+
+	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
+		sizeof(char *), "option", 0, &index);
 	return TCL_ERROR;
     }
 
@@ -3361,7 +3374,7 @@ ConfigureContent(
 	 */
 
 	for (container = (TkWindow *)containerPtr->tkwin; container != NULL;
-	     container = (TkWindow *)TkGetGeomMaster(container)) {
+	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put \"%s\" inside \"%s\": would cause management loop",
