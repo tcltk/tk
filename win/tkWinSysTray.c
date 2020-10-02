@@ -1,7 +1,7 @@
 /*
  * 	tkWinSysTray.c implements a "systray" Tcl command which permits to
  * 	change the system tray/taskbar icon of a Tk toplevel window and
- * 	a "systray" command to post system notifications.
+ * 	a "sysnotify" command to post system notifications.
  *
  * Copyright (c) 1995-1996 Microsoft Corp.
  * Copyright (c) 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
