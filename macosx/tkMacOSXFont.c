@@ -56,25 +56,25 @@ struct SystemFontMapEntry {
 #define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
 static const struct SystemFontMapEntry systemFontMap[] = {
     ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
-    ThemeFont(EmphasizedSystem,		"TkCaptionFont"),
+    ThemeFont(EmphasizedSystem,		"TkCaptionFont", NULL),
     ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
-    ThemeFont(SmallEmphasizedSystem),
-    ThemeFont(Application,		"TkTextFont"),
-    ThemeFont(Label,			"TkSmallCaptionFont"),
-    ThemeFont(Views),
-    ThemeFont(MenuTitle),
-    ThemeFont(MenuItem,			"TkMenuFont"),
-    ThemeFont(MenuItemMark),
-    ThemeFont(MenuItemCmdKey),
-    ThemeFont(WindowTitle),
-    ThemeFont(PushButton),
-    ThemeFont(UtilityWindowTitle),
-    ThemeFont(AlertHeader),
-    ThemeFont(Toolbar),
-    ThemeFont(MiniSystem),
-    { kThemeSystemFontDetail,		"systemDetailSystemFont" },
-    { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont" },
-    { -1, NULL }
+    ThemeFont(SmallEmphasizedSystem, NULL, NULL),
+    ThemeFont(Application,		"TkTextFont", NULL),
+    ThemeFont(Label,			"TkSmallCaptionFont", NULL),
+    ThemeFont(Views, NULL, NULL),
+    ThemeFont(MenuTitle, NULL, NULL),
+    ThemeFont(MenuItem,			"TkMenuFont", NULL),
+    ThemeFont(MenuItemMark, NULL, NULL),
+    ThemeFont(MenuItemCmdKey, NULL, NULL),
+    ThemeFont(WindowTitle, NULL, NULL),
+    ThemeFont(PushButton, NULL, NULL),
+    ThemeFont(UtilityWindowTitle, NULL, NULL),
+    ThemeFont(AlertHeader, NULL, NULL),
+    ThemeFont(Toolbar, NULL, NULL),
+    ThemeFont(MiniSystem, NULL, NULL),
+    { kThemeSystemFontDetail,		"systemDetailSystemFont", NULL, NULL },
+    { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont", NULL, NULL },
+    { -1, NULL, NULL, NULL }
 };
 #undef ThemeFont
 
@@ -162,7 +162,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 	 * our string's unicode characters.
 	 */
 	char *p;
-	unsigned int index;
+	NSUInteger index;
 
 	Tcl_DStringInit(&_ds);
 	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
@@ -550,7 +550,7 @@ TkpFontPkgInit(
 
 TkFont *
 TkpGetNativeFont(
-    Tk_Window tkwin,		/* For display where font will be used. */
+    TCL_UNUSED(Tk_Window),		/* For display where font will be used. */
     const char *name)		/* Platform-specific font name. */
 {
     MacFont *fontPtr = NULL;
@@ -569,7 +569,7 @@ TkpGetNativeFont(
     ctFont = CTFontCreateUIFontForLanguage(
 	    HIThemeGetUIFontType(themeFontId), 0, NULL);
     if (ctFont) {
-	fontPtr = ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
     }
 
@@ -637,7 +637,7 @@ TkpGetFontFromAttributes(
 	Tcl_Panic("Could not determine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
-	fontPtr = ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
 	fontPtr = (MacFont *) tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
@@ -699,7 +699,7 @@ TkpDeleteFont(
 void
 TkpGetFontFamilies(
     Tcl_Interp *interp,		/* Interp to hold result. */
-    Tk_Window tkwin)		/* For display to query. */
+    TCL_UNUSED(Tk_Window))		/* For display to query. */
 {
     Tcl_Obj *resultPtr = Tcl_NewListObj(0, NULL);
     NSArray *list = [[NSFontManager sharedFontManager] availableFontFamilies];
@@ -772,7 +772,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
+    TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,         		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
@@ -1162,7 +1162,7 @@ TkpDrawCharsInContext(
 
 void
 TkpDrawAngledCharsInContext(
-    Display *display,		/* Display on which to draw. */
+    TCL_UNUSED(Display *),		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn; must
@@ -1206,6 +1206,7 @@ TkpDrawAngledCharsInContext(
     if (!string) {
 	return;
     }
+
     context = drawingContext.context;
     fg = TkMacOSXCreateCGColor(gc, gc->foreground);
     attributes = [fontPtr->nsAttributes mutableCopy];
@@ -1325,8 +1326,8 @@ TkMacOSXNSFontAttributesForFont(
 
 int
 TkMacOSXIsCharacterMissing(
-    Tk_Font tkfont,		/* The font we are looking in. */
-    unsigned int searchChar)	/* The character we are looking for. */
+    TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
+    TCL_UNUSED(unsigned int))	/* The character we are looking for. */
 {
     return 0;
 }
@@ -1365,8 +1366,8 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewIntObj([nsFont pointSize]);
-#define S(s)    Tcl_NewStringObj(STRINGIFY(s),(int)(sizeof(STRINGIFY(s))-1))
+	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+#define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
 	if ([underline respondsToSelector:@selector(intValue)] &&
