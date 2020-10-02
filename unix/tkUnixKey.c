@@ -12,6 +12,13 @@
 
 #include "tkInt.h"
 
+#ifdef __GNUC__
+/*
+ * We know that XKeycodeToKeysym is deprecated, nothing we can do about it.
+ */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 /*
 ** Bug [3607830]: Before using Xkb, it must be initialized.  TkpOpenDisplay
 **                does this and sets the USE_XKB flag if xkb is supported.

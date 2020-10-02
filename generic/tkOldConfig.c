@@ -863,8 +863,6 @@ FormatConfigValue(
 	result = buffer;
 	break;
     case TK_CONFIG_WINDOW: {
-	Tk_Window tkwin;
-
 	tkwin = *((Tk_Window *) ptr);
 	if (tkwin != NULL) {
 	    result = Tk_PathName(tkwin);
