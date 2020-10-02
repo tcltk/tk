@@ -970,6 +970,14 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
+    /*
+     * See ticket [1fa8c3ed8d].
+     */
+    
+    if(![NSApp isDrawing]) {
+	return;
+    }
+
     if (![self inLiveResize] &&
 	[w respondsToSelector: @selector (tkLayoutChanged)]) {
 	[(TKWindow *)w tkLayoutChanged];
@@ -1017,7 +1025,6 @@ ConfigureRestrictProc(
 	  */
 
 	[self generateExposeEvents: [self bounds]];
-	[w displayIfNeeded];
 
 	/*
 	 * Finally, unlock the main autoreleasePool.
@@ -1080,7 +1087,7 @@ ConfigureRestrictProc(
 	 * So to run any display procs which were scheduled by the expose
 	 * events we process all idle events before returning.
 	 */
-
+	
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
