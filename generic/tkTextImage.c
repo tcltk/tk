@@ -290,8 +290,12 @@ TkTextImageCmd(
 		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
 		    -1));
 	}
-	Tcl_WrongNumArgs(interp, 3, objv, NULL);
-	break;
+	if (resultObj == NULL) {
+	    return TCL_ERROR;
+	} else {
+	    Tcl_SetObjResult(interp, resultObj);
+	    return TCL_OK;
+	}
     }
     default:
 	Tcl_Panic("unexpected switch fallthrough");

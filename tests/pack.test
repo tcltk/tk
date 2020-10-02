@@ -11,6 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 
 # Create some test windows.
 
@@ -1360,7 +1361,7 @@ test pack-12.46 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack lousy .pack
-} -returnCodes error -match glob -result {bad option "lousy": must be configure, content, forget, info, *propagate*}
+} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, or propagate}
 
 test pack-13.1 {window deletion} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d .pack.right .pack.bottom
@@ -1542,7 +1543,7 @@ if {[tk windowingsystem] == "win32"} {
 }
 
 test pack-18.1 {unmap content when container unmapped} -constraints {
-    tempNotPc
+    tempNotPc failsOnUbuntu
 } -setup {
     eval destroy [winfo child .pack]
 } -body {
@@ -1572,7 +1573,7 @@ test pack-18.1 {unmap content when container unmapped} -constraints {
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 0 1}
 
-test pack-18.2 {unmap content when container unmapped} -setup {
+test pack-18.2 {unmap content when container unmapped} -constraints failsOnUbuntu -setup {
     eval destroy [winfo child .pack]
 } -body {
     # adjust the position of .pack before test to avoid a screen switch

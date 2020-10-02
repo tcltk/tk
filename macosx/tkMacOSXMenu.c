@@ -36,7 +36,7 @@
 #define SPECIALMENU(n, f) {.name = "." #n, .len = sl(#n) + 1, \
 	.flag = ENTRY_##f##_MENU }
 static const struct {
-    const char *name; const size_t len; const int flag;
+    const char *name; size_t len; int flag;
 } specialMenus[] = {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
@@ -47,8 +47,8 @@ static const struct {
 
 #define MODIFIER(n, f) {.name = #n, .len = sl(#n), .mask = f }
 static const struct {
-    const char *name; const size_t len; const NSUInteger mask;
-} modifiers[] = {
+    const char *name; size_t len; NSUInteger mask;
+} allModifiers[] = {
     MODIFIER(Control,	NSControlKeyMask),
     MODIFIER(Ctrl,	NSControlKeyMask),
     MODIFIER(Option,	NSAlternateKeyMask),
@@ -64,7 +64,7 @@ static const struct {
 
 #define ACCEL(n, c) {.name = #n, .len = sl(#n), .ch = c }
 static const struct {
-    const char *name; const size_t len; const UniChar ch;
+    const char *name; size_t len; UniChar ch;
 } specialAccelerators[] = {
     ACCEL(PageUp,	NSPageUpFunctionKey),
     ACCEL(PageDown,	NSPageDownFunctionKey),
@@ -1230,18 +1230,18 @@ ParseAccelerator(
     *maskPtr = 0;
     while (1) {
 	i = 0;
-	while (modifiers[i].name) {
-	    int l = modifiers[i].len;
+	while (allModifiers[i].name) {
+	    int l = allModifiers[i].len;
 
-	    if (!strncasecmp(accel, modifiers[i].name, l) &&
+	    if (!strncasecmp(accel, allModifiers[i].name, l) &&
 		    (accel[l] == '-' || accel[l] == '+')) {
-		*maskPtr |= modifiers[i].mask;
+		*maskPtr |= allModifiers[i].mask;
 		accel += l+1;
 		break;
 	    }
 	    i++;
 	}
-	if (!modifiers[i].name || !*accel) {
+	if (!allModifiers[i].name || !*accel) {
 	    break;
 	}
     }
@@ -1465,14 +1465,14 @@ TkpComputeStandardMenuGeometry(
 		}
 	    } else {
 		NSUInteger modifMask = [menuItem keyEquivalentModifierMask];
-		int i = 0;
+		int j = 0;
 
-		while (modifiers[i].name) {
-		    if (modifMask & modifiers[i].mask) {
-			modifMask &= ~modifiers[i].mask;
+		while (allModifiers[j].name) {
+		    if (modifMask & allModifiers[j].mask) {
+			modifMask &= ~allModifiers[j].mask;
 			modifierWidth += modifierCharWidth;
 		    }
-		    i++;
+		    j++;
 		}
 		accelWidth = [[menuItem keyEquivalent] sizeWithAttributes:
 			TkMacOSXNSFontAttributesForFont(tkfont)].width;
