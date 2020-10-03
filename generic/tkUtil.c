@@ -1133,7 +1133,7 @@ TkMakeEnsemble(
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
-	Tcl_Obj *nameObj, *fqdnObj;
+	Tcl_Obj *fqdnObj;
 
 	nameObj = Tcl_NewStringObj(map[i].name, -1);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
