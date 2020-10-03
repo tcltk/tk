@@ -103,8 +103,6 @@ wm positionfrom . user
 wm deiconify .
 updateText
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
-
 # Some window managers (like olwm under SunOS 4.1.3) misbehave in a way
 # that tends to march windows off the top and left of the screen.  If
 # this happens, some tests will fail because parts of the window will

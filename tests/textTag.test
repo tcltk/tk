@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || ([catch {tk::pkgconfig get fontsystem} fs] || ($fs ne "xft"))}]
+testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 destroy .t
 text .t -width 20 -height 10
@@ -1602,7 +1602,7 @@ test textTag-16.1 {TkTextPickCurrent procedure} -constraints {
 } -result {2.1 3.2 3.2 3.2 3.2 3.2 4.3}
 
 test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12
+    haveCourier12 failsOnUbuntuNoXft
 } -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update

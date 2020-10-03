@@ -666,10 +666,10 @@ ConfigureContent(
 	goto scheduleLayout;
     } else if (mask & IN_MASK) {
 	/* -in changed */
-	Tk_Window tkwin;
+	Tk_Window win;
 	Tk_Window ancestor;
 
-	tkwin = contentPtr->inTkwin;
+	win = contentPtr->inTkwin;
 
 	/*
 	 * Make sure that the new container is either the logical parent of the
@@ -677,19 +677,19 @@ ConfigureContent(
 	 * aren't the same.
 	 */
 
-	for (ancestor = tkwin; ; ancestor = Tk_Parent(ancestor)) {
+	for (ancestor = win; ; ancestor = Tk_Parent(ancestor)) {
 	    if (ancestor == Tk_Parent(contentPtr->tkwin)) {
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't place %s relative to %s",
-			Tk_PathName(contentPtr->tkwin), Tk_PathName(tkwin)));
+			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		goto error;
 	    }
 	}
-	if (contentPtr->tkwin == tkwin) {
+	if (contentPtr->tkwin == win) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't place %s relative to itself",
 		    Tk_PathName(contentPtr->tkwin)));
@@ -701,22 +701,22 @@ ConfigureContent(
 	 * Check for management loops.
 	 */
 
-	for (container = (TkWindow *)tkwin; container != NULL;
+	for (container = (TkWindow *)win; container != NULL;
 	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)contentPtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
-	            Tk_PathName(contentPtr->tkwin), Tk_PathName(tkwin)));
+	            Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		goto error;
 	    }
 	}
-	if (tkwin != Tk_Parent(contentPtr->tkwin)) {
-	    ((TkWindow *)contentPtr->tkwin)->maintainerPtr = (TkWindow *)tkwin;
+	if (win != Tk_Parent(contentPtr->tkwin)) {
+	    ((TkWindow *)contentPtr->tkwin)->maintainerPtr = (TkWindow *)win;
 	}
 
 	if ((contentPtr->containerPtr != NULL)
-		&& (contentPtr->containerPtr->tkwin == tkwin)) {
+		&& (contentPtr->containerPtr->tkwin == win)) {
 	    /*
 	     * Re-using same old container. Nothing to do.
 	     */
@@ -729,7 +729,7 @@ ConfigureContent(
 	    Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
 	}
 	UnlinkContent(contentPtr);
-	containerWin = tkwin;
+	containerWin = win;
     }
 
     /*
