@@ -235,7 +235,7 @@ proc ::tk::systray {args} {
 }
 	
 # ::tk::sysnotify --
-# This procedure a platform-specific system notification alert.
+# This procedure implments a platform-specific system notification alert.
 #   
 #   Arguments: 
 #       title - main text of alert. 
