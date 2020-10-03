@@ -188,6 +188,11 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	return TCL_OK;
     }
 
+       if ((strcmp argv[1], "destroy") == 0) {
+	MacSystrayDestroy(clientData);
+	return TCL_OK;
+    }
+
     if (argc < 5) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"systray create image ? text? callback?\"", (char * ) NULL);
 	return TCL_ERROR;
@@ -248,8 +253,8 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
 		    int argc,
 		    const char * argv[]) {
 
-   if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"systray modify object?\"", (char * ) NULL);
+   if (argc < 4) {
+	Tcl_AppendResult(interp, "wrong # args: should be \"systray modify object item?\"", (char * ) NULL);
 	return TCL_ERROR;
     }
 
@@ -429,9 +434,9 @@ MacSystrayInit(Tcl_Interp * interp) {
     TkNotifyItem *notify_item = [[TkNotifyItem alloc] init];
     
 
-    Tcl_CreateCommand(interp, "::tk::systray", MacSystrayCmd, (ClientData)interp,
+    Tcl_CreateCommand(interp, "_systray", MacSystrayCmd, (ClientData)interp,
 		      (Tcl_CmdDeleteProc *) MacSystrayDestroy);
-    Tcl_CreateCommand(interp, "::tk::sysnotify", SysNotifyCmd, NULL, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
+    Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, NULL, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
     
     return TCL_OK;
 }
