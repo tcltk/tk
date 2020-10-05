@@ -2,9 +2,9 @@
 # commands plus the procedures in tkBind.c.  It is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -2231,11 +2231,11 @@ test bind-16.47 {ExpandPercents procedure} -constraints aquaOrWin32 -setup {
 } -body {
     bind .t.f <Key> {set x "%K"}
     set x none
-    event generate .t.f <Key> -keysym \u20AC
+    event generate .t.f <Key> -keysym €
     set x
 } -cleanup {
     destroy .t.f
-} -result \u20AC
+} -result €
 
 test bind-17.1 {event command} -body {
     event
@@ -5998,20 +5998,20 @@ test bind-28.8 {keysym names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
-test bind-28.9 {keysym names, \uD0} -body {
+test bind-28.9 {keysym names, Ð} -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <\uD0> foo
+    bind .t.f <Ð> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Key-\uD0>
-test bind-28.10 {keysym names, \uD8} -constraints nodeprecated -body {
+} -result <Key-Ð>
+test bind-28.10 {keysym names, Ø} -constraints nodeprecated -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <\uD8> foo
+    bind .t.f <Ø> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Key-\uD8>
+} -result <Key-Ø>
 test bind-28.11 {keysym names, gcedilla} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <gcedilla> foo
@@ -6028,18 +6028,18 @@ test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body 
 } -result <Key-Greek_IOTAdieresis>
 test bind-28.13 {keysym names, Unicode} -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <\u20AC> foo
+    bind .t.f <€> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result "<Key-\u20AC>"
+} -result "<Key-€>"
 test bind-28.14 {keysym names, Emoji} -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <\U1F44D> foo
+    bind .t.f <👍> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result "<Key-\U1F44D>"
+} -result "<Key-👍>"
 
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
