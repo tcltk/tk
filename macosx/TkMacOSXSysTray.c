@@ -46,9 +46,10 @@ char * callbackproc;
 - (id) init {
     [super init];
     statusBar = [NSStatusBar systemStatusBar];
-    statusItem = [statusBar statusItemWithLength: NSSquareStatusItemLength];
+    statusItem = [statusBar statusItemWithLength:NSVariableStatusItemLength];
     statusItem.button.target = self;
     statusItem.button.action = @selector(clickOnStatusItem: );
+    statusItem.visible = YES;
     return self;
 }
 
@@ -143,8 +144,6 @@ char * callbackproc;
 TkStatusItem *tk_item;
 TkNotifyItem *notify_item;
 
-
-
 /*
  * Forward declarations for procedures defined in this file.
  */
@@ -202,8 +201,6 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	return TCL_ERROR;
     }
 
-    NSLog(@"creating the icon");
-
     /*
      * Create the icon.
      */
@@ -219,7 +216,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     Tk_Image tk_image;
     tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
     if (tk_image == NULL) {
-	Tcl_AppendResult(interp, "unable to obtain image for systray icon", (char * ) NULL);
+	Tcl_AppendResult(interp, " unable to obtain image for systray icon", (char * ) NULL);
 	return TCL_ERROR;
     }
 
@@ -236,7 +233,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 
     NSString * tooltip = [NSString stringWithUTF8String: argv[3]];
     if (tooltip == nil) {
-	Tcl_AppendResult(interp, "unable to set tooltip for systray icon", (char * ) NULL);
+	Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char * ) NULL);
 	return TCL_ERROR;
     }
 
@@ -248,7 +245,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 
     callbackproc = (char*) argv[4];
     if (callbackproc == NULL) {
-	Tcl_AppendResult(interp, "unable to get the callback for systray icon", (char * ) NULL);
+	Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 	return TCL_ERROR;
     }
 
@@ -284,7 +281,7 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
 	Tk_Image tk_image;
 	tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
 	if (tk_image == NULL) {
-	    Tcl_AppendResult(interp, "unable to obtain image for systray icon", (char * ) NULL);
+	    Tcl_AppendResult(interp, " unable to obtain image for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -304,7 +301,7 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
 
 	NSString * tooltip = [NSString stringWithUTF8String:argv[2]];
 	if (tooltip == nil) {
-	    Tcl_AppendResult(interp, "unable to set tooltip for systray icon", (char * ) NULL);
+	    Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -318,7 +315,7 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
     if (strcmp (modifyitem, "callback") == 0) {
 	callbackproc = (char*) argv[2];
 	if (callbackproc == NULL) {
-	    Tcl_AppendResult(interp, "unable to get the callback for systray icon", (char * ) NULL);
+	    Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
     }
