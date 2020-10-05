@@ -146,8 +146,6 @@ void
 TkpDestroyMenu(
     TCL_UNUSED(TkMenu *))
 {
-    (void)menuPtr;
-
     /*
      * Nothing to do.
      */
@@ -174,8 +172,6 @@ void
 TkpDestroyMenuEntry(
     TCL_UNUSED(TkMenuEntry *))
 {
-    (void)mEntryPtr;
-
     /*
      * Nothing to do.
      */
@@ -244,8 +240,6 @@ int
 TkpMenuNewEntry(
     TCL_UNUSED(TkMenuEntry *))
 {
-    (void)mePtr;
-
     return TCL_OK;
 }
 
@@ -301,10 +295,6 @@ TkpSetMainMenubar(
     TCL_UNUSED(Tk_Window),
     TCL_UNUSED(const char *))
 {
-    (void)interp;
-    (void)tkwin;
-    (void)menuName;
-
     /*
      * Nothing to do.
      */
@@ -338,8 +328,6 @@ GetMenuIndicatorGeometry(
     int *heightPtr)		/* The resulting height */
 {
     int borderWidth;
-    (void)tkfont;
-    (void)fmPtr;
 
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
@@ -571,10 +559,6 @@ DrawMenuEntryIndicator(
     TCL_UNUSED(int),			/* Width of menu entry */
     int height)			/* Height of menu entry */
 {
-    (void)tkfont;
-    (void)fmPtr;
-    (void)width;
-
     /*
      * Draw check-button indicator.
      */
@@ -647,11 +631,6 @@ DrawMenuSeparator(
 {
     XPoint points[2];
     Tk_3DBorder border;
-    (void)mePtr;
-    (void)gc;
-    (void)tkfont;
-    (void)fmPtr;
-
     if (menuPtr->menuType == MENUBAR) {
 	return;
     }
@@ -872,8 +851,6 @@ DrawMenuUnderline(
     int x, int y,
     TCL_UNUSED(int), int height)
 {
-    (void)width;
-
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
@@ -1048,10 +1025,6 @@ GetMenuSeparatorGeometry(
     int *widthPtr,		/* The resulting width */
     int *heightPtr)		/* The resulting height */
 {
-    (void)menuPtr;
-    (void)mePtr;
-    (void)tkfont;
-
     *widthPtr = 0;
     *heightPtr = fmPtr->linespace;
 }
@@ -1081,8 +1054,6 @@ GetTearoffEntryGeometry(
     int *widthPtr,		/* The resulting width */
     int *heightPtr)		/* The resulting height */
 {
-    (void)mePtr;
-
     if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
 	*widthPtr = 0;
@@ -1304,10 +1275,6 @@ DrawTearoffEntry(
     XPoint points[2];
     int segmentWidth, maxX;
     Tk_3DBorder border;
-    (void)mePtr;
-    (void)gc;
-    (void)tkfont;
-    (void)fmPtr;
 
     if (menuPtr->menuType != MAIN_MENU) {
 	return;
@@ -1356,9 +1323,6 @@ TkpInitializeMenuBindings(
     TCL_UNUSED(Tk_BindingTable))
 				/* The table to add to. */
 {
-    (void)interp;
-    (void)bindingTable;
-
     /*
      * Nothing to do.
      */

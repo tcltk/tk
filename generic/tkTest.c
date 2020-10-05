@@ -1387,7 +1387,6 @@ ImageCreate(
     TImageModel *timPtr;
     const char *varName;
     int i;
-    (void)typePtr;
 
     varName = "log";
     for (i = 0; i < objc; i += 2) {

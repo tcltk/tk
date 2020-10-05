@@ -1528,9 +1528,6 @@ SelCvtFromX8(
     TCL_UNUSED(Tk_Window),		/* Window to use for atom conversion. */
     Tcl_DString *dsPtr)		/* Where to store the converted string. */
 {
-    (void)type;
-    (void)tkwin;
-
     /*
      * Convert each long in the property to a string value, which is a
      * hexadecimal string. We build the list in a Tcl_DString because this is
