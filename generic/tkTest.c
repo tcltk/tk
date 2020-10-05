@@ -334,13 +334,11 @@ Tktest_Init(
 
 static int
 TestbitmapObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    (void)clientData;
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "bitmap");
 	return TCL_ERROR;
@@ -369,13 +367,11 @@ TestbitmapObjCmd(
 
 static int
 TestborderObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    TCL_UNUSED(ClientData),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    (void)clientData;
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "border");
 	return TCL_ERROR;
@@ -404,13 +400,11 @@ TestborderObjCmd(
 
 static int
 TestcolorObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    (void)clientData;
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "color");
 	return TCL_ERROR;
@@ -439,13 +433,11 @@ TestcolorObjCmd(
 
 static int
 TestcursorObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    (void)clientData;
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "cursor");
 	return TCL_ERROR;
@@ -475,16 +467,12 @@ TestcursorObjCmd(
 
 static int
 TestdeleteappsObjCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])		/* Argument strings. */
+    TCL_UNUSED(void *),	/* Main window for application. */
+    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    TCL_UNUSED(int),			/* Number of arguments. */
+    TCL_UNUSED(Tcl_Obj *const *))		/* Argument strings. */
 {
     NewApp *nextPtr;
-    (void)clientData;
-    (void)interp;
-    (void)objc;
-    (void)objv;
 
     while (newAppPtr != NULL) {
 	nextPtr = newAppPtr->nextPtr;
@@ -651,7 +639,6 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
-	Tk_Window tkwin;
 
 	optionTable = Tk_CreateOptionTable(interp, typesSpecs);
 	tables[index] = optionTable;
@@ -707,7 +694,6 @@ TestobjconfigObjCmd(
 
     case CHAIN1: {
 	ExtensionWidgetRecord *recordPtr;
-	Tk_Window tkwin;
 	Tk_OptionTable optionTable;
 
 	tkwin = Tk_CreateWindowFromPath(interp, (Tk_Window)clientData,
@@ -760,7 +746,6 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 		(ClientData) baseSpecs, 0}
 	};
-	Tk_Window tkwin;
 	Tk_OptionTable optionTable;
 
 	tkwin = Tk_CreateWindowFromPath(interp, (Tk_Window)clientData,
@@ -929,7 +914,6 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
-	Tk_Window tkwin;
 
 	optionTable = Tk_CreateOptionTable(interp, internalSpecs);
 	tables[index] = optionTable;
@@ -1084,7 +1068,7 @@ TestobjconfigObjCmd(
 		offsetof(ContentRecord, windowPtr), TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
-	Tk_Window tkwin = Tk_CreateWindowFromPath(interp,
+	tkwin = Tk_CreateWindowFromPath(interp,
 		(Tk_Window)clientData, Tcl_GetString(objv[2]), NULL);
 
 	if (tkwin == NULL) {
@@ -1394,7 +1378,7 @@ ImageCreate(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument strings for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
+    TCL_UNUSED(const Tk_ImageType *),	/* Pointer to our type record (not used). */
 	Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
@@ -1820,14 +1804,13 @@ TestmenubarObjCmd(
 #if defined(_WIN32)
 static int
 TestmetricsObjCmd(
-    ClientData dummy,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     char buf[TCL_INTEGER_SPACE];
     int val;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -2057,9 +2040,9 @@ TestwrapperObjCmd(
 
 static int
 CustomOptionSet(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     Tcl_Obj **value,
     char *recordPtr,
     TkSizeT internalOffset,
@@ -2068,8 +2051,6 @@ CustomOptionSet(
 {
     int objEmpty;
     char *newStr, *string, *internalPtr;
-    (void)dummy;
-    (void)tkwin;
 
     objEmpty = 0;
 
@@ -2120,14 +2101,11 @@ CustomOptionSet(
 
 static Tcl_Obj *
 CustomOptionGet(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *recordPtr,
     TkSizeT internalOffset)
 {
-    (void)dummy;
-    (void)tkwin;
-
     return (Tcl_NewStringObj(*(char **)(recordPtr + internalOffset), -1));
 }
 
