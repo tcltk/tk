@@ -160,7 +160,6 @@ TkTextWindowCmd(
     switch ((enum windOptions) optionIndex) {
     case WIND_CGET: {
 	TkTextIndex index;
-	TkTextSegment *ewPtr;
 	Tcl_Obj *objPtr;
 	TkTextEmbWindowClient *client;
 
@@ -201,7 +200,6 @@ TkTextWindowCmd(
     }
     case WIND_CONFIGURE: {
 	TkTextIndex index;
-	TkTextSegment *ewPtr;
 
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index ?-option value ...?");
