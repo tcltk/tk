@@ -595,7 +595,10 @@ Tk_MacOSXTkOwnsCursor(
 }
 
 void
-TkpCursorBlinkFromSystem (int *blinkon, int *blinkoff)
+TkpCursorBlinkFromSystem (
+    Tcl_Interp *interp,
+    int *blinkon,
+    int *blinkoff)
 {
   NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
   NSString *nsblinkon = [preferences stringForKey:@"NSTextInsertionPointBlinkPeriodOn"];
