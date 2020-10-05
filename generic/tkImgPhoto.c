@@ -216,10 +216,10 @@ static const char *	GetExtension(const char *path);
 
 static void
 PhotoFormatThreadExitProc(
-    ClientData clientData)	/* not used */
+    TCL_UNUSED(void *))	/* not used */
 {
     Tk_PhotoImageFormat *freePtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     while (tsdPtr->oldFormatList != NULL) {
@@ -262,14 +262,14 @@ Tk_CreateOldPhotoImageFormat(
 				 * by caller. */
 {
     Tk_PhotoImageFormat *copyPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
-    copyPtr = ckalloc(sizeof(Tk_PhotoImageFormat));
+    copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     copyPtr->nextPtr = tsdPtr->oldFormatList;
     tsdPtr->oldFormatList = copyPtr;
@@ -283,21 +283,21 @@ Tk_CreatePhotoImageFormat(
 				 * by caller. */
 {
     Tk_PhotoImageFormat *copyPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
-    copyPtr = ckalloc(sizeof(Tk_PhotoImageFormat));
+    copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     if (isupper((unsigned char) *formatPtr->name)) {
 	copyPtr->nextPtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = copyPtr;
     } else {
 	/* for compatibility with aMSN: make a copy of formatPtr->name */
-	char *name = ckalloc(strlen(formatPtr->name) + 1);
+	char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
 	strcpy(name, formatPtr->name);
 	copyPtr->name = name;
 	copyPtr->nextPtr = tsdPtr->formatList;
@@ -330,7 +330,7 @@ ImgPhotoCreate(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
+    TCL_UNUSED(const Tk_ImageType *),/* Pointer to our type record (not used). */
 	Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
@@ -342,7 +342,7 @@ ImgPhotoCreate(
      * Allocate and initialize the photo image model record.
      */
 
-    modelPtr = ckalloc(sizeof(PhotoModel));
+    modelPtr = (PhotoModel *)ckalloc(sizeof(PhotoModel));
     memset(modelPtr, 0, sizeof(PhotoModel));
     modelPtr->tkMaster = model;
     modelPtr->interp = interp;
@@ -413,7 +413,7 @@ ImgPhotoCmd(
     int imageWidth, imageHeight, matched, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
@@ -818,7 +818,7 @@ ImgPhotoCmd(
 	}
 
 	/*
-	 * Extract the value of the desired pixel and format it as a string.
+	 * Extract the value of the desired pixel and format it as a list.
 	 */
 
 	pixelPtr = modelPtr->pix32 + (y * modelPtr->width + x) * 4;
@@ -1797,7 +1797,7 @@ ImgPhotoConfigureModel(
     Tk_PhotoImageFormat *imageFormat;
     const char **args;
 
-    args = ckalloc((objc + 1) * sizeof(char *));
+    args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
 	args[j] = Tcl_GetString(objv[i]);
 	length = objv[i]->length;
@@ -2138,7 +2138,7 @@ ImgPhotoDelete(
     ClientData modelData)	/* Pointer to PhotoModel structure for image.
 				 * Must not have any more instances. */
 {
-    PhotoModel *modelPtr = modelData;
+    PhotoModel *modelPtr = (PhotoModel *)modelData;
     PhotoInstance *instancePtr;
 
     while ((instancePtr = modelPtr->instancePtr) != NULL) {
@@ -2190,7 +2190,7 @@ ImgPhotoCmdDeletedProc(
     ClientData clientData)	/* Pointer to PhotoModel structure for
 				 * image. */
 {
-    PhotoModel *modelPtr = clientData;
+    PhotoModel *modelPtr = (PhotoModel *)clientData;
 
     modelPtr->imageCmd = NULL;
     if (modelPtr->tkMaster != NULL) {
@@ -2263,7 +2263,7 @@ ImgPhotoSetSize(
 	if (newPixSize == 0) {
 	    newPix32 = NULL;
 	} else {
-	    newPix32 = attemptckalloc(newPixSize);
+	    newPix32 = (unsigned char *)attemptckalloc(newPixSize);
 	    if (newPix32 == NULL) {
 		return TCL_ERROR;
 	    }
@@ -2426,7 +2426,7 @@ MatchFileFormat(
 {
     int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *formatString = NULL;
 
@@ -2566,7 +2566,7 @@ MatchStringFormat(
 {
     int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *formatString = NULL;
 
@@ -2724,7 +2724,7 @@ Tk_PhotoPutBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    register PhotoModel *modelPtr = (PhotoModel *) handle;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
     Tk_PhotoImageBlock sourceBlock;
     unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
@@ -2786,7 +2786,7 @@ Tk_PhotoPutBlock(
 	unsigned int cpyLen = (sourceBlock.height - 1) * sourceBlock.pitch +
 		sourceBlock.width * sourceBlock.pixelSize;
 
-	sourceBlock.pixelPtr = attemptckalloc(cpyLen);
+	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(cpyLen);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3077,10 +3077,10 @@ Tk_PhotoPutBlock(
 	 */
 
 	if (!(modelPtr->flags & COMPLEX_ALPHA)) {
-	    register int x1;
+	    int x1;
 
 	    for (x1=x ; x1<x+width ; x1++) {
-		register unsigned char newAlpha;
+		unsigned char newAlpha;
 
 		destLinePtr = modelPtr->pix32 + (y*modelPtr->width + x1)*4;
 		newAlpha = destLinePtr[3];
@@ -3162,8 +3162,8 @@ Tk_PhotoPutZoomedBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    register PhotoModel *modelPtr = (PhotoModel *) handle;
-    register Tk_PhotoImageBlock sourceBlock;
+    PhotoModel *modelPtr = (PhotoModel *) handle;
+    Tk_PhotoImageBlock sourceBlock;
     unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, blockWid, blockHt;
@@ -3232,7 +3232,7 @@ Tk_PhotoPutZoomedBlock(
 	unsigned int cpyLen = (sourceBlock.height - 1) * sourceBlock.pitch +
 		sourceBlock.width * sourceBlock.pixelSize;
 
-	sourceBlock.pixelPtr = attemptckalloc(cpyLen);
+	sourceBlock.pixelPtr = (unsigned char *)attemptckalloc(cpyLen);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3837,7 +3837,7 @@ ImgGetPhoto(
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
     if (((optPtr->options & OPT_BACKGROUND) && alphaOffset) ||
 	    ((optPtr->options & OPT_GRAYSCALE) && (greenOffset||blueOffset))) {
-	int newPixelSize,x,y;
+	int newPixelSize;
 	unsigned char *srcPtr, *destPtr;
 	char *data;
 
@@ -3850,7 +3850,7 @@ ImgGetPhoto(
 	if (blockPtr->height > (int)((UINT_MAX/newPixelSize)/blockPtr->width)) {
 	    return NULL;
 	}
-	data = attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
+	data = (char *)attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
 	if (data == NULL) {
 	    return NULL;
 	}
@@ -4058,7 +4058,7 @@ Tk_PhotoGetImage(
 /*
  *--------------------------------------------------------------
  *
- * TkPostscriptPhoto --
+ * ImgPostscriptPhoto --
  *
  *	This function is called to output the contents of a photo image in
  *	Postscript by calling the Tk_PostscriptPhoto function.
@@ -4076,11 +4076,11 @@ static int
 ImgPhotoPostscript(
     ClientData clientData,	/* Handle for the photo image. */
     Tcl_Interp *interp,		/* Interpreter. */
-    Tk_Window tkwin,		/* (unused) */
+    TCL_UNUSED(Tk_Window),		/* (unused) */
     Tk_PostscriptInfo psInfo,	/* Postscript info. */
     int x, int y,		/* First pixel to output. */
     int width, int height,	/* Width and height of area. */
-    int prepass)		/* (unused) */
+    TCL_UNUSED(int))		/* (unused) */
 {
     Tk_PhotoImageBlock block;
 
@@ -4195,5 +4195,6 @@ Tk_PhotoSetSize_Panic(
  * mode: c
  * c-basic-offset: 4
  * fill-column: 78
+ * tab-width: 8
  * End:
  */
