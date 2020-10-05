@@ -30,19 +30,18 @@ char * callbackproc;
     NSStatusBar * statusBar;
     NSImage * icon;
     NSString * tooltip;
-
-
--  (id) init; 
--  (void) setImage: withImage: (NSImage * ) image; 
--  (void) setText: withString: (NSString * ) string; 
--  (void) clickOnStatusItem: (id) sender; 
--  (void) dealloc;
-
 }
+
+-(id) init; 
+- (void) setImagewithImage : (NSImage * ) image; 
+- (void) setTextwithString : (NSString * ) string; 
+- (void) clickOnStatusItem: (id) sender; 
+- (void) dealloc;
+
 
 @end
 
-@implementation TkStatusItem
+@implementation TkStatusItem : NSObject
 
 - (id) init {
     [super init];
@@ -53,17 +52,17 @@ char * callbackproc;
     return self;
 }
 
-- (void) setImage: withImage: (NSImage * ) image
+- (void) setImagewithImage : (NSImage * ) image
 {
     icon = image;
     icon.template = YES;
     statusItem.button.image = icon;
 }
 
-- (void) setText: withString: (NSString * ) string
+- (void) setTextwithString : (NSString * ) string
 {
     tooltip = string;
-    statusItem.button.tooltip = tooltip;
+    statusItem.button.toolTip = tooltip;
 }
 
 - (void) clickOnStatusItem: (id) sender
@@ -95,18 +94,19 @@ char * callbackproc;
 
     NSUserNotification *tk_notification;
     NSString *header;
-    NSString *info
+    NSString *info;
+}
 
 - (id) init;
-- (void) postNotification: withTitle: (NSString *) title andDetail: (NSString *) detail;
+- (void) postNotificationWithTitle : (NSString *) title message: (NSString *) detail;
 - (BOOL) userNotificationCenter:(NSUserNotificationCenter *)center
 	  shouldPresentNotification:(NSUserNotification *)notification;
 - (void) dealloc;
-}
+
 
 @end
 
-@implementation: TkNotifyItem
+@implementation TkNotifyItem : NSObject
 
 -  (id) init 
 {
@@ -115,7 +115,7 @@ char * callbackproc;
     return self;
 }
 
--  (void) postNotification: withTitle: (NSString * ) title andDetail: (NSString * ) detail
+-  (void) postNotificationWithTitle : (NSString * ) title message: (NSString * ) detail
 {
     header = title;
     tk_notification.title = header;
@@ -139,6 +139,10 @@ char * callbackproc;
 }
 
 @end
+
+TkStatusItem *tk_item;
+TkNotifyItem *notify_item;
+
 
 
 /*
@@ -183,12 +187,12 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]) {
 
-    if ((strcmp argv[1], "modify") == 0) {
+    if (strcmp (argv[1], "modify") == 0) {
 	MacSystrayModifyCmd(clientData, interp, argc, argv);
 	return TCL_OK;
     }
 
-       if ((strcmp argv[1], "destroy") == 0) {
+    if (strcmp (argv[1], "destroy") == 0) {
 	MacSystrayDestroy(clientData);
 	return TCL_OK;
     }
@@ -198,17 +202,20 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	return TCL_ERROR;
     }
 
+    NSLog(@"creating the icon");
+
     /*
      * Create the icon.
      */
 
+    int width, height;
     Tk_Window tkwin = Tk_MainWindow(interp);
-    TkWindow winPtr = (TkWindow) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     Display * d;
     d = winPtr -> display;
     NSImage * icon;
 
-    char * tk_imagename = Tcl_GetString(argv[2]);
+    char * tk_imagename = (char*) argv[2];
     Tk_Image tk_image;
     tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
     if (tk_image == NULL) {
@@ -218,28 +225,28 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 
     Tk_SizeOfImage(tk_image, & width, & height);
     if (width != 0 && height != 0) {
-	icon = TkMacOSXGetNSImageFromTkImage(d, tk_icon,
+	icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
 					     width, height);
-	[tk_item setImage: withImage: icon];
+	[tk_item setImagewithImage: icon];
     }
 
     /*
      * Set the text for the tooltip.
      */
 
-    NSString * tooltip = [NSString stringWithUTF8String: Tcl_GetString(argv[3])];
+    NSString * tooltip = [NSString stringWithUTF8String: argv[3]];
     if (tooltip == nil) {
 	Tcl_AppendResult(interp, "unable to set tooltip for systray icon", (char * ) NULL);
 	return TCL_ERROR;
     }
 
-    [tk_item setText: withString: tooltip];
+    [tk_item setTextwithString: tooltip];
 
     /*
      * Set the proc for the callback.
      */
 
-    callbackproc = Tcl_GetString(argv[4]);
+    callbackproc = (char*) argv[4];
     if (callbackproc == NULL) {
 	Tcl_AppendResult(interp, "unable to get the callback for systray icon", (char * ) NULL);
 	return TCL_ERROR;
@@ -258,21 +265,22 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
 	return TCL_ERROR;
     }
 
-    char * modifyitem = Tcl_GetString(argv[2]);
+   char * modifyitem = (char*) argv[2];
 
     /*
      * Modify the icon.
      */
 
-    if ((strcmp modifyitem, "image") == 0) {
+    if (strcmp (modifyitem, "image") == 0) {
 
 	Tk_Window tkwin = Tk_MainWindow(interp);
-	TkWindow winPtr = (TkWindow) tkwin;
+	TkWindow *winPtr = (TkWindow*) tkwin;
 	Display * d;
 	d = winPtr -> display;
 	NSImage * icon;
+	int width, height;
 
-	char * tk_imagename = Tcl_GetString(argv[3]);
+	char * tk_imagename = (char*) argv[3];
 	Tk_Image tk_image;
 	tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
 	if (tk_image == NULL) {
@@ -282,9 +290,9 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
 
 	Tk_SizeOfImage(tk_image, & width, & height);
 	if (width != 0 && height != 0) {
-	    icon = TkMacOSXGetNSImageFromTkImage(d, tk_icon,
+	    icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
 						 width, height);
-	    [tk_item setImage: withImage: icon];
+	    [tk_item setImagewithImage: icon];
 	}
     }
 
@@ -292,23 +300,23 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
      * Modify the text for the tooltip.
      */
 
-    if ((strcmp modifyitem, "text") == 0) {
+    if (strcmp (modifyitem, "text") == 0) {
 
-	NSString * tooltip = [NSString stringWithUTF8String: Tcl_GetString(argv[2])];
+	NSString * tooltip = [NSString stringWithUTF8String:argv[2]];
 	if (tooltip == nil) {
 	    Tcl_AppendResult(interp, "unable to set tooltip for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
 
-	[tk_item setText: withString: tooltip];
+	[tk_item setTextwithString: tooltip];
     }
 
     /*
      * Modify the proc for the callback.
      */
 
-    if ((strcmp modifyitem, "callback") == 0) {
-	callbackproc = Tcl_GetString(argv[2]);
+    if (strcmp (modifyitem, "callback") == 0) {
+	callbackproc = (char*) argv[2];
 	if (callbackproc == NULL) {
 	    Tcl_AppendResult(interp, "unable to get the callback for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
@@ -336,6 +344,8 @@ MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
 
 static void
 MacSystrayDestroy(ClientData clientData) {
+
+    (void) clientData;
 
     [tk_item dealloc];
 
@@ -394,9 +404,9 @@ static int SysNotifyCmd(ClientData clientData, Tcl_Interp * interp,
 	return TCL_ERROR;
     }
 
-    NSString *title = [NSString stringWithUTF8String: Tcl_GetString(argv[1])];
-    NSString *message = [NSString stringWithUTF8String: Tcl_GetString(argv[2])];
-    [notify_item postNotification: withTitle: title andDetail: message];
+    NSString *title = [NSString stringWithUTF8String: argv[1]];
+    NSString *message = [NSString stringWithUTF8String: argv[2]];
+    [notify_item postNotificationWithTitle : title message: message];
 
     return TCL_OK;
 }
@@ -425,14 +435,14 @@ MacSystrayInit(Tcl_Interp * interp) {
      * Initialize TkStatusItem and TkNotifyItem.
      */
 
+    tk_item = [[TkStatusItem alloc] init];
+    notify_item = [[TkNotifyItem alloc] init];
+
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10",  (char * ) NULL);
 	return TCL_OK;
     }
-    
-    TkStatusItem *tk_item = [[TkStatusItem alloc] init];
-    TkNotifyItem *notify_item = [[TkNotifyItem alloc] init];
-    
+     
 
     Tcl_CreateCommand(interp, "_systray", MacSystrayCmd, (ClientData)interp,
 		      (Tcl_CmdDeleteProc *) MacSystrayDestroy);
@@ -441,8 +451,6 @@ MacSystrayInit(Tcl_Interp * interp) {
     return TCL_OK;
 }
      
-/
-
 /*
  * Local Variables:
  * mode: objc
