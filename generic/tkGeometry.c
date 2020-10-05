@@ -426,7 +426,6 @@ Tk_MaintainGeometry(
 
     ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
 
-    ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
     if (container == Tk_Parent(window)) {
 	/*
 	 * If the window is a direct descendant of the container, don't bother
@@ -574,7 +573,6 @@ Tk_UnmaintainGeometry(
 
     ((TkWindow *)window)->maintainerPtr = NULL;
 
-    ((TkWindow *)window)->maintainerPtr = NULL;
     if (container == Tk_Parent(window)) {
 	/*
 	 * If the window is a direct descendant of the container,

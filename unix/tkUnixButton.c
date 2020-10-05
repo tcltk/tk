@@ -326,10 +326,8 @@ TkpDrawCheckIndicator(
 
 TkButton *
 TkpCreateButton(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    (void)tkwin;
-
     return (TkButton *)ckalloc(sizeof(UnixButton));
 }
 
@@ -807,8 +805,6 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (butPtr->highlightWidth > 0) {
-	GC gc;
-
 	if (butPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
 	} else {

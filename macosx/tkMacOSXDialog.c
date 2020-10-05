@@ -870,15 +870,15 @@ Tk_GetOpenFileObjCmd(
 		selectedFilterIndex = filterInfo.fileTypeIndex;  // The preselection from the typevariable
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
-		NSUInteger i;
+		NSUInteger j;
 
-		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
-		    if (filterCompatible(extension, i)) {
-			selectedFilterIndex = i;
+		for (j = 0; j < [filterInfo.fileTypeNames count]; j++) {
+		    if (filterCompatible(extension, j)) {
+			selectedFilterIndex = j;
 			break;
 		    }
 		}
-		if (i == selectedFilterIndex) {
+		if (j == selectedFilterIndex) {
 		    selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 		} else {
 		    selectedFilter = @"";
