@@ -264,7 +264,10 @@ TkpSetCursor(
 }
 
 void
-TkpCursorBlinkFromSystem (int *blinkon, int *blinkoff)
+TkpCursorBlinkFromSystem (
+    Tcl_Interp *interp,
+    int *blinkon,
+    int *blinkoff)
 {
     HKEY hKey;
     LPCWSTR szSubKey = L"Control Panel\\Desktop";
@@ -276,7 +279,7 @@ TkpCursorBlinkFromSystem (int *blinkon, int *blinkoff)
     status =  RegOpenKeyExW (HKEY_CURRENT_USER, szSubKey, 0L, KEY_READ, &hKey);
     if (status == ERROR_SUCCESS) {
       memset (lBuffer, '\0', (size_t) (dwSize * sizeof (WCHAR)));
-      status = RegQueryValueExW (hKey, szCursorBlink, 
+      status = RegQueryValueExW (hKey, szCursorBlink,
           NULL, NULL, (LPBYTE) lBuffer, &dwSize);
       if (status == ERROR_SUCCESS) {
         if (wcscmp (lBuffer, L"-1") == 0) {
