@@ -76,7 +76,7 @@ proc _notifywindow {msg} {
 }
 
 #Fade and destroy window.
-proc fade_out {w} {
+proc _fade_out {w} {
     catch {
         set prev_degree [wm attributes $w -alpha]
         set new_degree [expr $prev_degree - 0.05]
@@ -159,7 +159,7 @@ proc systray {args} {
 		_systray create $img $txt $cb
 	    }
 	}
-	#Modify the system tray icon properties. Call into Windows and X11 C commands.
+	#Modify the system tray icon properties. 
 	if {[lindex $args 0] eq "modify"} {
 	    switch -- [tk windowingsystem] {
 		"win32" {
@@ -218,6 +218,7 @@ proc systray {args} {
 		    }
 		}     
 	    }
+	    #Remove the systray icon.
 	    if {[lindex $args 0] eq "destroy"} {
 		switch -- [tk windowingsystem] {
 		    "win32" { 
@@ -235,7 +236,7 @@ proc systray {args} {
     }
 }
 	
-# ::tk::sysnotify --
+# sysnotify --
 # This procedure implments a platform-specific system notification alert.
 #   
 #   Arguments: 
