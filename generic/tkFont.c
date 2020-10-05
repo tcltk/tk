@@ -741,7 +741,7 @@ Tk_FontObjCmd(
     }
     case FONT_METRICS: {
 	Tk_Font tkfont;
-	int skip, index, i;
+	int skip, i;
 	const TkFontMetrics *fmPtr;
 	static const char *const switches[] = {
 	    "-ascent", "-descent", "-linespace", "-fixed", NULL
@@ -1968,7 +1968,7 @@ Tk_ComputeTextLayout(
     int *heightPtr)		/* Filled with height of string. */
 {
     TkFont *fontPtr = (TkFont *) tkfont;
-    const char *start, *end, *special;
+    const char *start, *endp, *special;
     int n, y, bytesThisChunk, maxChunks, curLine, layoutHeight;
     int baseline, height, curX, newX, maxWidth, *lineLengths;
     TextLayout *layoutPtr;
@@ -2016,12 +2016,12 @@ Tk_ComputeTextLayout(
 
     curX = 0;
 
-    end = Tcl_UtfAtIndex(string, numChars);
+    endp = Tcl_UtfAtIndex(string, numChars);
     special = string;
 
     flags &= TK_IGNORE_TABS | TK_IGNORE_NEWLINES;
     flags |= TK_WHOLE_WORDS | TK_AT_LEAST_ONE;
-    for (start = string; start < end; ) {
+    for (start = string; start < endp; ) {
 	if (start >= special) {
 	    /*
 	     * Find the next special character in the string.
@@ -2032,7 +2032,7 @@ Tk_ComputeTextLayout(
 	     * whitespace set.
 	     */
 
-	    for (special = start; special < end; special++) {
+	    for (special = start; special < endp; special++) {
 		if (!(flags & TK_IGNORE_NEWLINES)) {
 		    if ((*special == '\n') || (*special == '\r')) {
 			break;
@@ -2066,7 +2066,7 @@ Tk_ComputeTextLayout(
 	    }
 	}
 
-	if ((start == special) && (special < end)) {
+	if ((start == special) && (special < endp)) {
 	    /*
 	     * Handle the special character.
 	     *
@@ -2083,7 +2083,7 @@ Tk_ComputeTextLayout(
 		start++;
 		curX = newX;
 		flags &= ~TK_AT_LEAST_ONE;
-		if ((start < end) &&
+		if ((start < endp) &&
 			((wrapLength <= 0) || (newX <= wrapLength))) {
 		    /*
 		     * More chars can still fit on this line.
@@ -2105,7 +2105,7 @@ Tk_ComputeTextLayout(
 	 * Consume all extra spaces at end of line.
 	 */
 
-	while ((start < end) && isspace(UCHAR(*start))) { /* INTL: ISO space */
+	while ((start < endp) && isspace(UCHAR(*start))) { /* INTL: ISO space */
 	    if (!(flags & TK_IGNORE_NEWLINES)) {
 		if ((*start == '\n') || (*start == '\r')) {
 		    break;

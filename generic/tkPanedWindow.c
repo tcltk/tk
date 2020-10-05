@@ -604,7 +604,6 @@ PanedWindowWidgetObjCmd(
 	break;
 
     case PW_FORGET: {
-	int i;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "widget ?widget ...?");

@@ -8,8 +8,8 @@
 # fonts having or not having certain properties, which may not be valid
 # at all sites.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -17,7 +17,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || ([catch {tk::pkgconfig get fontsystem} fs] || ($fs ne "xft"))}]
+testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 if {[tk windowingsystem] eq "x11"} {
     set xlsf [auto_execok xlsfonts]
@@ -258,7 +258,7 @@ test unixfont-8.3 {AllocFont procedure: can't parse info from name} x11 {
 } {-family -overstrike -size -slant -underline -weight}
 test unixfont-8.4 {AllocFont procedure: classify characters} {x11 failsOnUbuntu} {
     set x 0
-    incr x [font measure $courier "\u4000"]   ;# 6
+    incr x [font measure $courier "䀀"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
     incr x [font measure $courier "\012"]   ;# 2
     incr x [font measure $courier "\101"]   ;# 1
