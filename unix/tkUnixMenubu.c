@@ -25,16 +25,16 @@
  *	Returns a newly allocated TkMenuButton structure.
  *
  * Side effects:
- *	Registers an event handler for the widget.
+ *	None
  *
  *----------------------------------------------------------------------
  */
 
 TkMenuButton *
 TkpCreateMenuButton(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    return ckalloc(sizeof(TkMenuButton));
+    return (TkMenuButton *)ckalloc(sizeof(TkMenuButton));
 }
 
 /*
@@ -280,8 +280,6 @@ TkpDisplayMenuButton(
 		mbPtr->borderWidth, mbPtr->relief);
     }
     if (mbPtr->highlightWidth != 0) {
-	GC gc;
-
 	if (mbPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(mbPtr->highlightColorPtr, pixmap);
 	} else {
