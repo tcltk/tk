@@ -14,7 +14,7 @@
 # Pure-Tcl system tooltip window for use with system tray icon if native implementation not available. 
 
 proc _balloon {w help} {
-    bind $w <Any-Enter> "after 1000 [list _ballon_show %W [list $help]]"
+    bind $w <Any-Enter> "after 1000 [list _balloon_show %W [list $help]]"
     bind $w <Any-Leave> "destroy %W._balloon"
 }
 
