@@ -13,11 +13,13 @@ namespace eval ::ttk::cursorblink {
     switch -exact $ds {
       xfce {
         try {
-          set cursorenabled [exec \
-              xfconf-query -c xsettings -p /Net/CursorBlink]
+          set cursorenabled [exec -ignorestderr \
+              xfconf-query -c xsettings -p /Net/CursorBlink \
+              2>/dev/null ]
           if { $cursorenabled } {
-            set cursoron [exec \
-                xfconf-query -c xsettings -p /Net/CursorBlinkTime]
+            set cursoron [exec -ignorestderr \
+                xfconf-query -c xsettings -p /Net/CursorBlinkTime \
+                2>/dev/null ]
             set cursoroff $cursoron
           } else {
             set cursoroff 0
@@ -43,11 +45,13 @@ namespace eval ::ttk::cursorblink {
           }
         }
         try {
-          set cursorenabled [exec \
-              gsettings get $schema cursor-blink]
+          set cursorenabled [exec -ignorestderr \
+              gsettings get $schema cursor-blink \
+              2>/dev/null ]
           if { $cursorenabled } {
-            set cursoron [exec \
-                gsettings get $schema cursor-blink-time]
+            set cursoron [exec -ignorestderr \
+                gsettings get $schema cursor-blink-time \
+                2>/dev/null ]
             set cursoroff $cursoron
             # gnome also has an inactivity timeout for the cursor, but Tk
             # does not support that.
@@ -75,12 +79,15 @@ namespace eval ::ttk::cursorblink {
           }
         }
 
-        # may not exist in the configuration file.
-        try {
-          set cursortm [exec \
-            egrep ^cursorFlashTime $conffn | \
-            sed s,.*=,,]
-        } on error { err res } {
+        if { [file exists $conffn] } {
+          try {
+            # may not exist in the configuration file.
+            set cursortm [exec -ignorestderr \
+              egrep ^cursorFlashTime $conffn | \
+              sed s,.*=,, \
+              2>/dev/null ]
+          } on error { err res } {
+          }
         }
         if { $cursortm != -1 } {
           # cursorFlashTime claims to be in ms, but the timing is highly suspect.
