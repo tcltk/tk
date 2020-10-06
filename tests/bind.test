@@ -14,6 +14,7 @@ tcltest::loadTestedCommands
 tk useinputmethods 0
 
 testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7]
 
 
 toplevel .t -width 100 -height 50
@@ -6034,6 +6035,13 @@ test bind-28.13 {keysym names, Unicode} -body {
     destroy .t.f
 } -result "<Key-€>"
 test bind-28.14 {keysym names, Emoji} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <\U1F44D> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result "<Key-\U1F44D>"
+test bind-28.15 {keysym names, Emoji} -constraints needsTcl87 -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <👍> foo
     bind .t.f
