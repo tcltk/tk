@@ -16,13 +16,13 @@
 #include "tkMacOSXPrivate.h"
 
 /*
- * Script callback when status icon is clicked.
+ * Script callback when status icon is clicked. 
  */
 
 char * callbackproc;
 
 /*
- * Class declaratons and implementations for TkStatusItem.
+ * Class declaratons and implementations for TkStatusItem. 
  */
 
 @interface TkStatusItem: NSObject {
@@ -32,10 +32,10 @@ char * callbackproc;
     NSString * tooltip;
 }
 
--(id) init;
-- (void) setImagewithImage : (NSImage * ) image;
-- (void) setTextwithString : (NSString * ) string;
-- (void) clickOnStatusItem: (id) sender;
+- (id) init; 
+- (void) setImagewithImage : (NSImage * ) image; 
+- (void) setTextwithString : (NSString * ) string; 
+- (void) clickOnStatusItem: (id) sender; 
 - (void) dealloc;
 
 
@@ -46,7 +46,7 @@ char * callbackproc;
 - (id) init {
     [super init];
     statusBar = [NSStatusBar systemStatusBar];
-    statusItem = [statusBar statusItemWithLength:NSVariableStatusItemLength];
+    statusItem = [[statusBar statusItemWithLength:NSVariableStatusItemLength] retain];
     statusItem.button.target = self;
     statusItem.button.action = @selector(clickOnStatusItem: );
     statusItem.visible = YES;
@@ -55,19 +55,21 @@ char * callbackproc;
 
 - (void) setImagewithImage : (NSImage * ) image
 {
+    icon = nil;
     icon = image;
-    icon.template = YES;
     statusItem.button.image = icon;
 }
 
 - (void) setTextwithString : (NSString * ) string
 {
+    tooltip = nil;
     tooltip = string;
     statusItem.button.toolTip = tooltip;
 }
 
 - (void) clickOnStatusItem: (id) sender
 {
+    
     if (NSApp.currentEvent.clickCount == 1) {
 	TkMainInfo * info = TkGetMainInfoList();
 	Tcl_GlobalEval(info -> interp, callbackproc);
@@ -77,18 +79,18 @@ char * callbackproc;
 - (void) dealloc
 {
     [statusBar removeStatusItem: statusItem];
-    [icon release];
-    [tooltip release];
+    icon = nil;
+    tooltip = nil;
     [statusItem release];
-    [statusBar release];
-
+    statusItem = nil;
+    
     [super dealloc];
 }
 
 @end
 
 /*
- * Class declaratons and implementations for TkNotifyItem.
+ * Class declaratons and implementations for TkNotifyItem. 
  */
 
 @interface TkNotifyItem: NSObject {
@@ -109,7 +111,7 @@ char * callbackproc;
 
 @implementation TkNotifyItem : NSObject
 
--  (id) init
+-  (id) init 
 {
     [super init];
     tk_notification = [[NSUserNotification alloc] init];
@@ -124,15 +126,18 @@ char * callbackproc;
     tk_notification.informativeText = info;
     tk_notification.soundName = NSUserNotificationDefaultSoundName;
 
+    NSUserNotificationCenter *center = [NSUserNotificationCenter defaultUserNotificationCenter];
+    [center scheduleNotification:tk_notification];
+
 }
 
 - (BOOL) userNotificationCenter: (NSUserNotificationCenter * ) center
-      shouldPresentNotification: (NSUserNotification * ) notification
+      shouldPresentNotification: (NSUserNotification * ) notification 
 {
     return YES;
 }
 
--  (void) dealloc
+-  (void) dealloc	
 {
     [header release];
     [info release];
@@ -152,12 +157,8 @@ static int
 MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]);
-static int
-MacSystrayModifyCmd(ClientData clientData, Tcl_Interp * interp,
-		    int argc,
-		    const char * argv[]);
 static void
-MacSystrayDestroy(ClientData clientData);
+MacSystrayDestroy();
 static void SysNotifyDeleteCmd ( ClientData cd );
 static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 			 int argc, const char * argv[]);
@@ -186,100 +187,28 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]) {
 
-    if (strcmp (argv[1], "modify") == 0) {
-	MacSystrayModifyCmd(clientData, interp, argc, argv);
-	return TCL_OK;
-    }
+    (void) clientData;
+    int length;
+    length = strlen(argv[1]);
+    if ((strncmp(argv[1], "create", length) == 0) && (length >= 2)) {
 
-    if (strcmp (argv[1], "destroy") == 0) {
-	MacSystrayDestroy(clientData);
-	return TCL_OK;
-    }
+	if (argc < 5) {
+	    Tcl_AppendResult(interp, "wrong # args: should be \"systray create image ? text? callback?\"", (char * ) NULL);
+	    return TCL_ERROR;
+	}
+    
+	/*
+	 * Create the icon.
+	 */
 
-    if (argc < 5) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"systray create image ? text? callback?\"", (char * ) NULL);
-	return TCL_ERROR;
-    }
-
-    /*
-     * Create the icon.
-     */
-
-    int width, height;
-    Tk_Window tkwin = Tk_MainWindow(interp);
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    Display * d;
-    d = winPtr -> display;
-    NSImage * icon;
-
-    char * tk_imagename = (char*) argv[2];
-    Tk_Image tk_image;
-    tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
-    if (tk_image == NULL) {
-	Tcl_AppendResult(interp, " unable to obtain image for systray icon", (char * ) NULL);
-	return TCL_ERROR;
-    }
-
-    Tk_SizeOfImage(tk_image, & width, & height);
-    if (width != 0 && height != 0) {
-	icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
-					     width, height);
-	[tk_item setImagewithImage: icon];
-    }
-
-    /*
-     * Set the text for the tooltip.
-     */
-
-    NSString * tooltip = [NSString stringWithUTF8String: argv[3]];
-    if (tooltip == nil) {
-	Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char * ) NULL);
-	return TCL_ERROR;
-    }
-
-    [tk_item setTextwithString: tooltip];
-
-    /*
-     * Set the proc for the callback.
-     */
-
-    callbackproc = (char*) argv[4];
-    if (callbackproc == NULL) {
-	Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
-	return TCL_ERROR;
-    }
-
-    return TCL_OK;
-}
-
-static int
-MacSystrayModifyCmd(
-    TCL_UNUSED(void *),
-    Tcl_Interp * interp,
-    int argc,
-    const char * argv[])
-{
-   if (argc < 4) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"systray modify object item?\"", (char * ) NULL);
-	return TCL_ERROR;
-    }
-
-   char * modifyitem = (char*) argv[2];
-
-    /*
-     * Modify the icon.
-     */
-
-    if (strcmp (modifyitem, "image") == 0) {
-
+	int width, height;
 	Tk_Window tkwin = Tk_MainWindow(interp);
-	TkWindow *winPtr = (TkWindow*) tkwin;
+	TkWindow *winPtr = (TkWindow *) tkwin;
 	Display * d;
 	d = winPtr -> display;
 	NSImage * icon;
-	int width, height;
 
-	char * tk_imagename = (char*) argv[3];
+	char * tk_imagename = (char*) argv[2];
 	Tk_Image tk_image;
 	tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
 	if (tk_image == NULL) {
@@ -292,38 +221,104 @@ MacSystrayModifyCmd(
 	    icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
 						 width, height);
 	    [tk_item setImagewithImage: icon];
+	    Tk_FreeImage(tk_image);
 	}
-    }
 
-    /*
-     * Modify the text for the tooltip.
-     */
+	/*
+	 * Set the text for the tooltip.
+	 */
 
-    if (strcmp (modifyitem, "text") == 0) {
-
-	NSString * tooltip = [NSString stringWithUTF8String:argv[2]];
+	NSString * tooltip = [NSString stringWithUTF8String: argv[3]];
 	if (tooltip == nil) {
 	    Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
 
 	[tk_item setTextwithString: tooltip];
-    }
 
-    /*
-     * Modify the proc for the callback.
-     */
+	/*
+	 * Set the proc for the callback.
+	 */
 
-    if (strcmp (modifyitem, "callback") == 0) {
-	callbackproc = (char*) argv[2];
+	callbackproc = (char*) argv[4];
 	if (callbackproc == NULL) {
 	    Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
+
+    } else if ((strncmp(argv[1], "modify",  length) == 0) &&
+	       (length >= 2)) {
+	if (argc < 4) {
+	    Tcl_AppendResult(interp, "wrong # args: should be \"systray modify object item?\"", (char * ) NULL);
+	    return TCL_ERROR;
+	}
+
+	char * modifyitem = (char*) argv[2];
+
+	/*
+	 * Modify the icon.
+	 */
+
+	if (strcmp (modifyitem, "image") == 0) {
+ 
+	    Tk_Window tkwin = Tk_MainWindow(interp);
+	    TkWindow *winPtr = (TkWindow*) tkwin;
+	    Display * d;
+	    d = winPtr -> display;
+	    NSImage * icon;
+	    int width, height;
+
+	    char * tk_imagename = (char*) argv[3];
+	    Tk_Image tk_image;
+	    tk_image = Tk_GetImage(interp, tkwin, tk_imagename, NULL, NULL);
+	    if (tk_image == NULL) {
+		Tcl_AppendResult(interp, " unable to obtain image for systray icon", (char * ) NULL);
+		return TCL_ERROR;
+	    }
+
+	    Tk_SizeOfImage(tk_image, & width, & height);
+	    if (width != 0 && height != 0) {
+		icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
+						     width, height);
+		[tk_item setImagewithImage: icon];
+	    }
+	    Tk_FreeImage(tk_image);
+	}
+
+	/*
+	 * Modify the text for the tooltip.
+	 */
+
+	if (strcmp (modifyitem, "text") == 0) {
+
+	    NSString * tooltip = [NSString stringWithUTF8String:argv[3]];
+	    if (tooltip == nil) {
+		Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char * ) NULL);
+		return TCL_ERROR;
+	    }
+
+	    [tk_item setTextwithString: tooltip];
+	}
+
+	/*
+	 * Modify the proc for the callback.
+	 */
+
+	if (strcmp (modifyitem, "callback") == 0) {
+	    callbackproc = (char*) argv[3];
+	    if (callbackproc == NULL) {
+		Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
+		return TCL_ERROR;
+	    }
+	}
+
+    } else if ((strncmp(argv[1], "destroy", length) == 0) && (length >= 2)) {
+	[tk_item dealloc];
     }
 
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -342,9 +337,7 @@ MacSystrayModifyCmd(
  */
 
 static void
-MacSystrayDestroy(ClientData clientData) {
-
-    (void) clientData;
+MacSystrayDestroy() {
 
     [tk_item dealloc];
 
@@ -441,15 +434,14 @@ MacSystrayInit(Tcl_Interp * interp) {
 	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10",  (char * ) NULL);
 	return TCL_OK;
     }
-
-
+     
     Tcl_CreateCommand(interp, "_systray", MacSystrayCmd, (ClientData)interp,
 		      (Tcl_CmdDeleteProc *) MacSystrayDestroy);
     Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, NULL, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
-
+    
     return TCL_OK;
 }
-
+     
 /*
  * Local Variables:
  * mode: objc

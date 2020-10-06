@@ -130,7 +130,7 @@ set ico ""
 proc systray {args} {
 
     global ico
-    
+
     #Create dict for system tray icon properties.
     set icondata [dict create]
     
@@ -159,82 +159,83 @@ proc systray {args} {
 		_systray create $img $txt $cb
 	    }
 	}
-	#Modify the system tray icon properties. 
-	if {[lindex $args 0] eq "modify"} {
-	    switch -- [tk windowingsystem] {
-		"win32" {
-		    if [lindex $args 1] eq "image" {
-			set img [lindex $args 2]
-			_systray taskbar delete $ico   
-			set ico [_systray createfrom $img]
-			dict set icondata image $img
-			_systray taskbar add $ico -text [dict get $icondata text] -callback [list \
-												 _win_callback %m %i [dict get $icondata callback]]
-		    } 
-		    if {[lindex $args 1] eq "text"} {
-			set txt [lindex $args 2]
-			dict set icondata text $txt
-			_systray taskbar modify $ico -text $txt
-		    }
-		    if {[lindex $args 1 ] eq "callback"} {
-			set cb [lindex $args 2]
-			dict set icondata callback $cb
-			_systray taskbar modify $ico -callback [list \
-								    _win_callback %m %i [dict get $icondata callback]]
-		    }
+    }
+    #Modify the system tray icon properties. 
+    if {[lindex $args 0] eq "modify"} {
+	switch -- [tk windowingsystem] {
+	    "win32" {
+		if {[lindex $args 1] eq "image"} {
+		    set img [lindex $args 2]
+		    _systray taskbar delete $ico   
+		    set ico [_systray createfrom $img]
+		    dict set icondata image $img
+		    _systray taskbar add $ico -text [dict get $icondata text] -callback [list \
+											     _win_callback %m %i [dict get $icondata callback]]
+		} 
+		if {[lindex $args 1] eq "text"} {
+		    set txt [lindex $args 2]
+		    dict set icondata text $txt
+		    _systray taskbar modify $ico -text $txt
 		}
-		"x11" {
-		    if [lindex $args 1] eq "image" {
-			set img [lindex $args 2]
-			dict set icondata image $img
-			._tray configure -image $img 
-		    } 
-		    if {[lindex $args 1] eq "text"} {
-			set txt [lindex $args 2]
-			dict set icondata text $txt
-			_balloon ._tray $text
-		    }
-		    if {[lindex $args 1 ] eq "callback"} {
-			set cb [lindex $args 2]
-			dict set icondata callback $cb
-			bind [._tray bbox] <Button-1> [list $cb]
-		    }
+		if {[lindex $args 1 ] eq "callback"} {
+		    set cb [lindex $args 2]
+		    dict set icondata callback $cb
+		    _systray taskbar modify $ico -callback [list \
+								_win_callback %m %i [dict get $icondata callback]]
 		}
-		"aqua" {
-		    if [lindex $args 1] eq "image" {
-			set img [lindex $args 2]
-			dict set icondata image $img
-			_systray modify image $img 
-		    } 
-		    if {[lindex $args 1] eq "text"} {
-			set txt [lindex $args 2]
-			dict set icondata text $txt
-			_systray modify text $txt
-		    }
-		    if {[lindex $args 1 ] eq "callback"} {
-			set cb [lindex $args 2]
-			dict set icondata callback $cb
-			_systray modify callback $cb
-		    }
-		}     
 	    }
-	    #Remove the systray icon.
-	    if {[lindex $args 0] eq "destroy"} {
-		switch -- [tk windowingsystem] {
-		    "win32" { 
-			_systray taskbar delete $ico 
-		    }
-		    "x11" {
-			destroy ._tray
-		    }
-		    "aqua" {
-			_systray destroy
-		    }
+	    "x11" {
+		if {[lindex $args 1] eq "image"} {
+		    set img [lindex $args 2]
+		    dict set icondata image $img
+		    ._tray configure -image $img 
+		} 
+		if {[lindex $args 1] eq "text"} {
+		    set txt [lindex $args 2]
+		    dict set icondata text $txt
+		    _balloon ._tray $text
 		}
+		if {[lindex $args 1 ] eq "callback"} {
+		    set cb [lindex $args 2]
+		    dict set icondata callback $cb
+		    bind [._tray bbox] <Button-1> [list $cb]
+		}
+	    }
+	    "aqua" {
+		if {[lindex $args 1] eq "image"} {
+		    set img [lindex $args 2]
+		    dict set icondata image $img
+		    _systray modify image $img 
+		} 
+		if {[lindex $args 1] eq "text"} {
+		    set txt [lindex $args 2]
+		    dict set icondata text $txt
+		    _systray modify text $txt
+		}
+		if {[lindex $args 1 ] eq "callback"} {
+		    set cb [lindex $args 2]
+		    dict set icondata callback $cb
+		    _systray modify callback $cb
+		}
+	    }     
+	}
+    }
+    #Remove the systray icon.
+    if {[lindex $args 0] eq "destroy"} {
+	switch -- [tk windowingsystem] {
+	    "win32" { 
+		_systray taskbar delete $ico 
+	    }
+	    "x11" {
+		destroy ._tray
+	    }
+	    "aqua" {
+		_systray destroy
 	    }
 	}
     }
 }
+
 	
 # sysnotify --
 # This procedure implments a platform-specific system notification alert.
