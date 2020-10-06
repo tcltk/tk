@@ -8805,7 +8805,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 int
 main ()
 {
-struct passwd pwd; pwd.pw_gecos;
+struct passwd pwd; (void)pwd.pw_gecos;
   ;
   return 0;
 }
