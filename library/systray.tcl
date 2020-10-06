@@ -197,6 +197,7 @@ proc systray {args} {
 		    _balloon ._tray $txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
+		    bind ._tray <Button-1> ""
 		    set cb [lindex $args 2]
 		    dict set icondata callback $cb
 		    bind ._tray <Button-1>  $cb
