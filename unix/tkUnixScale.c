@@ -50,10 +50,8 @@ static void		DisplayVerticalValue(TkScale *scalePtr,
 
 TkScale *
 TkpCreateScale(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    (void)tkwin;
-
     return (TkScale *)ckalloc(sizeof(TkScale));
 }
 

@@ -44,7 +44,7 @@ static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 #endif
 static int		IsValidPalette(PhotoInstance *instancePtr,
 			    const char *palette);
-static int		CountBits(pixel mask);
+static int		CountBits(unsigned mask);
 static void		GetColorTable(PhotoInstance *instancePtr);
 static void		FreeColorTable(ColorTable *colorPtr, int force);
 static void		AllocateColors(ColorTable *colorPtr);
@@ -999,7 +999,7 @@ IsValidPalette(
 
 static int
 CountBits(
-    pixel mask)			/* Value to count the 1 bits in. */
+    unsigned mask)			/* Value to count the 1 bits in. */
 {
     int n;
 
@@ -1649,7 +1649,7 @@ TkImgDitherInstance(
     int bitsPerPixel, bytesPerLine, lineLength;
     unsigned char *srcLinePtr;
     schar *errLinePtr;
-    pixel firstBit, word, mask;
+    unsigned firstBit, word, mask;
 
     /*
      * Turn dithering off in certain cases where it is not needed (TrueColor,
@@ -1722,7 +1722,7 @@ TkImgDitherInstance(
 	    unsigned char *srcPtr = srcLinePtr;
 	    schar *errPtr = errLinePtr;
 	    unsigned char *destBytePtr = dstLinePtr;
-	    pixel *destLongPtr = (pixel *) dstLinePtr;
+	    unsigned *destLongPtr = (unsigned *) dstLinePtr;
 
 	    if (colorPtr->flags & COLOR_WINDOW) {
 		/*
@@ -1813,7 +1813,7 @@ TkImgDitherInstance(
 			 * sizes.
 			 */
 
-		    case NBBY * sizeof(pixel):
+		    case NBBY * sizeof(unsigned):
 			*destLongPtr++ = i;
 			break;
 #endif
@@ -1875,7 +1875,7 @@ TkImgDitherInstance(
 			 * sizes.
 			 */
 
-		    case NBBY * sizeof(pixel):
+		    case NBBY * sizeof(unsigned):
 			*destLongPtr++ = i;
 			break;
 #endif
