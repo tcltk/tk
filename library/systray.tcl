@@ -192,11 +192,13 @@ proc systray {args} {
 		    ._tray configure -image $img 
 		} 
 		if {[lindex $args 1] eq "text"} {
+		    set txt ""
 		    set txt [lindex $args 2]
 		    dict set icondata text $txt
 		    _balloon ._tray $txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
+		    set cb ""
 		    bind ._tray <Button-1> ""
 		    set cb [lindex $args 2]
 		    dict set icondata callback $cb
