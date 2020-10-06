@@ -152,7 +152,7 @@ proc systray {args} {
 	    }
             "x11" {
 		_systray ._tray -image $img -visible true
-		_balloon ._tray $text
+		_balloon ._tray $txt
 		bind [._tray bbox] <Button-1> [list $cb]
 	    }
 	    "aqua" {
