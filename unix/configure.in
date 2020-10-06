@@ -244,7 +244,7 @@ AC_CHECK_TYPE([uintptr_t], [
 
 AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
     AC_TRY_COMPILE([#include <pwd.h>],
-	    [struct passwd pwd; pwd.pw_gecos;],
+	    [struct passwd pwd; (void)pwd.pw_gecos;],
 	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
 if test $tcl_cv_pwd_pw_gecos = yes; then
     AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
