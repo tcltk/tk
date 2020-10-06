@@ -153,7 +153,7 @@ proc systray {args} {
             "x11" {
 		_systray ._tray -image $img -visible true
 		_balloon ._tray $txt
-		bind ._tray <Button-1> [list $cb]
+		bind ._tray <Button-1> $cb
 	    }
 	    "aqua" {
 		_systray create $img $txt $cb
@@ -199,7 +199,7 @@ proc systray {args} {
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb [lindex $args 2]
 		    dict set icondata callback $cb
-		    bind ._tray <Button-1> [list $cb]
+		    bind ._tray <Button-1>  $cb
 		}
 	    }
 	    "aqua" {
