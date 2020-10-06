@@ -652,12 +652,6 @@ TkpCursorBlinkFromSystem (
   Tcl_Obj *conObj;
   Tcl_Obj *coffObj;
 
-#if 0
-/* This is not working.  Do not know why.
- * The result codes are good, and the correct values get
- * back to CursorManager().
- * But Tk stops working.
- */
   result = Tcl_EvalEx (interp, "source $tk_library/ttk/cursorblink.tcl",
       -1, TCL_EVAL_GLOBAL);
   if (result == TCL_OK) {
@@ -672,8 +666,8 @@ TkpCursorBlinkFromSystem (
         result = Tcl_GetIntFromObj (interp, coffObj, blinkoff);
       }
     }
+    Tcl_ResetResult (interp);
   }
-#endif
 }
 
 /*

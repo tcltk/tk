@@ -75,15 +75,17 @@ CursorBlinkProc(ClientData clientData)
     CursorManager *cm = (CursorManager*)clientData;
     int blinkTime;
 
-    if (cm->owner->flags & CURSOR_ON) {
-	cm->owner->flags &= ~CURSOR_ON;
-	blinkTime = cm->offTime;
-    } else {
-	cm->owner->flags |= CURSOR_ON;
-	blinkTime = cm->onTime;
+    if (cm->offTime != 0) {
+      if (cm->owner->flags & CURSOR_ON) {
+  	cm->owner->flags &= ~CURSOR_ON;
+  	blinkTime = cm->offTime;
+      } else {
+  	cm->owner->flags |= CURSOR_ON;
+  	blinkTime = cm->onTime;
+      }
+      cm->timer = Tcl_CreateTimerHandler(blinkTime, CursorBlinkProc, clientData);
+      TtkRedisplayWidget(cm->owner);
     }
-    cm->timer = Tcl_CreateTimerHandler(blinkTime, CursorBlinkProc, clientData);
-    TtkRedisplayWidget(cm->owner);
 }
 
 /* LoseCursor --
