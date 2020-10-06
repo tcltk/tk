@@ -193,7 +193,7 @@ proc systray {args} {
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
 		    dict set icondata text $txt
-		    _balloon ._tray $text
+		    _balloon ._tray $txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb [lindex $args 2]
