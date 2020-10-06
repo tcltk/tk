@@ -4169,7 +4169,7 @@ Rebalance(
 	    Node *otherPtr;
 	    Node *halfwayNodePtr = NULL;       /* Initialization needed only */
 	    TkTextLine *halfwayLinePtr = NULL; /* to prevent cc warnings. */
-	    int totalChildren, firstChildren, i;
+	    int totalChildren, firstChildren;
 
 	    /*
 	     * Too few children for this node. If this is the root then, it's
@@ -4230,8 +4230,6 @@ Rebalance(
 		otherPtr->children.linePtr = NULL;
 	    }
 	    if (nodePtr->level == 0) {
-		TkTextLine *linePtr;
-
 		for (linePtr = nodePtr->children.linePtr, i = 1;
 			linePtr->nextPtr != NULL;
 			linePtr = linePtr->nextPtr, i++) {
@@ -4246,8 +4244,6 @@ Rebalance(
 		    i++;
 		}
 	    } else {
-		Node *childPtr;
-
 		for (childPtr = nodePtr->children.nodePtr, i = 1;
 			childPtr->nextPtr != NULL;
 			childPtr = childPtr->nextPtr, i++) {

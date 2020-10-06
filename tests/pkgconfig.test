@@ -18,7 +18,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-test pkgconfig-1.1 {query keys} nonwin {
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
+test pkgconfig-1.1 {query keys} nodeprecated {
     lsort [::tk::pkgconfig list]
 } [list \
     64bit bindir,install bindir,runtime debug demodir,install demodir,runtime \

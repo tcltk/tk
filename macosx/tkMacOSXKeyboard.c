@@ -663,7 +663,7 @@ XKeysymToKeycode(
 	macKC.x.keychar = (unsigned int) data;
 	hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.x.keychar));
 	if (hPtr != NULL) {
-	    unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	    data = (unsigned long) Tcl_GetHashValue(hPtr);
 	    macKC.x.xvirtual = (unsigned int) data;
 	}
     }
