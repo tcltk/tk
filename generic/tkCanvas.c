@@ -839,8 +839,8 @@ CanvasWidgetCmd(
     TagSearch *searchPtr = NULL;/* Allocated by first TagSearchScan, freed by
 				 * TagSearchDestroy */
 
-    int index;
-    static const char *const optionStrings[] = {
+    int idx;
+    static const char *const canvasOptionStrings[] = {
 	"addtag",	"bbox",		"bind",		"canvasx",
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
@@ -869,14 +869,14 @@ CanvasWidgetCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], canvasOptionStrings, "option", 0,
+	    &idx) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(canvasPtr);
 
     result = TCL_OK;
-    switch ((enum options)index) {
+    switch ((enum options)idx) {
     case CANV_ADDTAG:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tag searchCommand ?arg ...?");
@@ -1925,10 +1925,10 @@ CanvasWidgetCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x y ?dragGain?");
 	    result = TCL_ERROR;
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
-		"scan option", 0, &index) != TCL_OK) {
+		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 5+index)) {
-	    Tcl_WrongNumArgs(interp, 3, objv, index?"x y ?gain?":"x y");
+	} else if ((objc != 5) && (objc != 5+idx)) {
+	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y ?gain?":"x y");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)){
@@ -1936,7 +1936,7 @@ CanvasWidgetCmd(
 	} else if ((objc == 6) &&
 		(Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK)) {
 	    result = TCL_ERROR;
-	} else if (!index) {
+	} else if (!idx) {
 	    canvasPtr->scanX = x;
 	    canvasPtr->scanXOrigin = canvasPtr->xOrigin;
 	    canvasPtr->scanY = y;
