@@ -37,7 +37,7 @@ set hidden_cmds [list bell cd clipboard encoding exec exit \
 	fconfigure glob grab load menu open pwd selection \
 	socket source toplevel unload wm]
 if {[package vsatisfies [package provide Tcl] 8.6.7-]} {
-    lappend hidden_cmds tcl:encoding:dirs 
+    lappend hidden_cmds tcl:encoding:dirs
 }
 if {[package vsatisfies [package provide Tcl] 8.7-]} {
     lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir

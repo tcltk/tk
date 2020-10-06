@@ -24,8 +24,8 @@
  * Based extensively on the winico extension and sample code from Microsoft.
  * Some of the code was adapted into tkWinWM.c to implement the "wm iconphoto"
  * command (TIP 159), and here we are borrowing that code to use Tk images
- * to create system tray icons instead of ico files. Additionally, we are 
- * removing obsolete parts of the winico extension, and implementing 
+ * to create system tray icons instead of ico files. Additionally, we are
+ * removing obsolete parts of the winico extension, and implementing
  * more of the Shell_Notification API to add balloon/system notifications.
  */
 
