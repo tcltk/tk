@@ -53,15 +53,24 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
     CursorManager *cm = Tcl_GetAssocData(interp, cm_key,0);
 
     if (!cm) {
-	cm = ckalloc(sizeof(*cm));
-	cm->timer = 0;
-	cm->owner = 0;
-	cm->onTime = DEF_CURSOR_ON_TIME;
-	cm->offTime = DEF_CURSOR_OFF_TIME;
+      int   ontime;  /* temporary */
+      int   offtime;
 
-        TkpCursorBlinkFromSystem (interp, &cm->onTime, &cm->offTime);
+      cm = ckalloc(sizeof(*cm));
+      cm->timer = 0;
+      cm->owner = 0;
+      cm->onTime = DEF_CURSOR_ON_TIME;
+      cm->offTime = DEF_CURSOR_OFF_TIME;
 
-	Tcl_SetAssocData(interp, cm_key, CursorManagerDeleteProc, cm);
+      TkpCursorBlinkFromSystem (interp, &ontime, &offtime);
+      if (ontime != -1) {
+        cm->onTime = ontime;
+      }
+      if (offtime != -1) {
+        cm->offTime = offtime;
+      }
+
+      Tcl_SetAssocData(interp, cm_key, CursorManagerDeleteProc, cm);
     }
     return cm;
 }

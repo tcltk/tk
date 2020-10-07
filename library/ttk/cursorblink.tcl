@@ -65,28 +65,55 @@ namespace eval ::ttk::cursorblink {
       lxqt {
         set cursortm -1
 
+        set confsearch [list]
+
         switch -exact $ds {
           plasma {
+            # in KDE 5 the QT setting no longer works.
+            # it is a manual setting in .config/kdeglobals
+            if { ! [info exists ::env(KDE_SESSION_VERSION)] ||
+                $::env(KDE_SESSION_VERSION) eq "5" } {
+              lappend confsearch \
+                  [file join $::env(HOME) .config kdeglobals] \
+                  CursorBlinkRate
+            }
+            # KDE 4
             # kde's cursor blink is controlled by qt.
             # it has the same cursorFlashTime setting as lxqt, but
             # in a different configuration file.
             # qt4-qtconfig does not allow a setting of 0.  Presumably
             # a manual update would be necessary.
-            set conffn [file join $::env(HOME) .config Trolltech.conf]
+            if { ! [info exists ::env(KDE_SESSION_VERSION)] ||
+                $::env(KDE_SESSION_VERSION) eq "4" } {
+              lappend confsearch \
+                  [file join $::env(HOME) .config Trolltech.conf] \
+                  cursorFlashTime
+            }
           }
           lxqt {
-            set conffn [file join $::env(HOME) .config lxqt lxqt.conf]
+            lappend confsearch \
+                [file join $::env(HOME) .config lxqt lxqt.conf] \
+                cursorFlashTime
           }
         }
 
-        if { [file exists $conffn] } {
-          try {
-            # may not exist in the configuration file.
-            set cursortm [exec -ignorestderr \
-              egrep ^cursorFlashTime $conffn | \
-              sed s,.*=,, \
-              2>/dev/null ]
-          } on error { err res } {
+        foreach {conffn conftag} $confsearch {
+          if { [file exists $conffn] } {
+            set found false
+            try {
+              # may not exist in the configuration file.
+              set cursortm [exec -ignorestderr \
+                egrep ^${conftag} $conffn | \
+                sed s,.*=,, \
+                2>/dev/null ]
+              if { $cursortm ne {} } {
+                set found true
+              }
+            } on error { err res } {
+            }
+            if { $found } {
+              break
+            }
           }
         }
         if { $cursortm != -1 } {
