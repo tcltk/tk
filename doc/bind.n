@@ -283,8 +283,8 @@ it is destroyed.
 When the \fBDestroy\fR event is delivered
 to a widget, it is in a
 .QW half-dead
-state: the widget still exists, but most operations on it will behave
-in an undefined manner, and/or return arbitrary results.
+state: the widget still exists, but operations that involve it
+may return invalid results, or return an error.
 .RE
 .IP "\fBFocusIn\fR, \fBFocusOut\fR" 5
 The \fBFocusIn\fR and \fBFocusOut\fR events are generated
