@@ -129,10 +129,16 @@ set ico ""
 #             none.
 proc systray {args} {
 
+	#Set variables for icon properties.
     global ico
-
-    #Create dict for system tray icon properties.
-    set icondata [dict create]
+	global img
+	global txt
+	global cb
+	
+	set img ""
+	set txt ""
+	set cb ""
+   
     
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
@@ -140,10 +146,6 @@ proc systray {args} {
         set img [lindex $args 1]
         set txt [lindex $args 2]
         set cb [lindex $args 3]
-
-        dict set icondata text $txt
-        dict set icondata image $img
-        dict set icondata callback $cb
 
         switch -- [tk windowingsystem] {
             "win32" {
@@ -168,57 +170,49 @@ proc systray {args} {
 		    set img [lindex $args 2]
 		    _systray taskbar delete $ico   
 		    set ico [_systray createfrom $img]
-		    dict set icondata image $img
-		    _systray taskbar add $ico -text [dict get $icondata text] -callback [list \
-											     _win_callback %m %i [dict get $icondata callback]]
+		    _systray taskbar add $ico -text $txt -callback [list \
+											     _win_callback %m %i $cb]
 		} 
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
-		    dict set icondata text $txt
 		    _systray taskbar modify $ico -text $txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb [lindex $args 2]
-		    dict set icondata callback $cb
 		    _systray taskbar modify $ico -callback [list \
-								_win_callback %m %i [dict get $icondata callback]]
+								_win_callback %m %i $cb]
 		}
 	    }
 	    "x11" {
 		if {[lindex $args 1] eq "image"} {
+			set img ""
 		    set img [lindex $args 2]
 		    ._tray configure -image ""
-		    dict set icondata image $img
 		    ._tray configure -image $img 
 		} 
 		if {[lindex $args 1] eq "text"} {
-		    set txt ""
+			set txt ""
 		    set txt [lindex $args 2]
-		    dict set icondata text $txt
 		    _balloon ._tray $txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb ""
 		    bind ._tray <Button-1> ""
 		    set cb [lindex $args 2]
-		    dict set icondata callback $cb
 		    bind ._tray <Button-1>  $cb
 		}
 	    }
 	    "aqua" {
 		if {[lindex $args 1] eq "image"} {
 		    set img [lindex $args 2]
-		    dict set icondata image $img
 		    _systray modify image $img 
 		} 
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
-		    dict set icondata text $txt
 		    _systray modify text $txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb [lindex $args 2]
-		    dict set icondata callback $cb
 		    _systray modify callback $cb
 		}
 	    }     
