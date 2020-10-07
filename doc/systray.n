@@ -28,7 +28,7 @@ Here is an example of the \fBsystray\fP code:
 Here is an example of modifying the \fBsystray\fP icon:
 .CS
     image create book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
-    systray modify -image book_page 
+    systray modify -image book_page
     systray modify -text "Updated sample"
     systray modify -callback {puts "Different output from the systray"}
 .CE

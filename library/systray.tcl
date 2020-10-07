@@ -3,15 +3,15 @@
 # This file defines the ::tk::systray command for icon display and manipulation
 # in the system tray on X11, Windows, and macOS, and the ::tk::systnotify command
 # for system alerts on each platform. It implements an abstraction layer that
-# presents a consistent API across the three platforms. 
+# presents a consistent API across the three platforms.
 
-# Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC. 
+# Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 
-# Pure-Tcl system tooltip window for use with system tray icon if native implementation not available. 
+# Pure-Tcl system tooltip window for use with system tray icon if native implementation not available.
 
 proc _balloon {w help} {
     bind $w <Any-Enter> "after 1000 [list _balloon_show %W [list $help]]"
@@ -26,7 +26,7 @@ proc _balloon_show {w arg} {
     wm overrideredirect $top 1
     if {[string equal [tk windowingsystem] aqua]}  {
         ::tk::unsupported::MacWindowStyle style $top help none
-    }   
+    }
     pack [message $top.txt -aspect 10000  \
 	      -text $arg]
     set wmx [winfo rootx $w]
@@ -43,9 +43,9 @@ proc _win_callback {msg icn script} {
             eval $script
 	}
     }
-}      
+}
 
-# Pure-Tcl system notification window for use if native implementation not available. 
+# Pure-Tcl system notification window for use if native implementation not available.
 
 image create photo _info -data {R0lGODlhIAAgAIQWAEWCtEaCtEeCtEWDtUuFtU6FtlGGtlSIt1KJuHCXvnKYv36ewoGhw52zzp+1z7DB1rHB1rzK3MDN3eTp8Ojs8v7+/////////////////////////////////////////yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAEKAB8ALAAAAAAgACAAAAWO4CeOZGmeaKqubOuOQSzHrznfd/3hvPz2AUGv1YtULJKhqqewOC0J5Qm4eFoYQBQwMHFSANkpsOBoGLbirdpX2hIgjwdEbQMirAN0247Xk7Z3T3lhf3yCfjCGToNSiT2Bi4iOOJAWjDhaj32NhTyVlzmZlJuYS6OHpSs8B6wHPD9rbLBrOp2htbi5ursmIQA7}
 
@@ -53,7 +53,7 @@ proc _notifywindow {msg} {
     catch {destroy ._notify}
     set w [toplevel ._notify]
     if {[tk windowingsystem] eq "aqua"} {
-        ::tk::unsupported::MacWindowStyle style $w utility {hud 
+        ::tk::unsupported::MacWindowStyle style $w utility {hud
             closeBox resizable}
         wm title $w "Alert"
     }
@@ -110,12 +110,12 @@ global ico
 set ico ""
 
 # systray --
-# This procedure creates an icon display in the platform-specific system tray. 
+# This procedure creates an icon display in the platform-specific system tray.
 #
 # Subcommands:
 #
 #     create - create systray icon.
-#         Arguments:   
+#         Arguments:
 #             image - Tk image to display.
 #             text - string to display in tooltip over image.
 #             callback - Tcl proc to invoke on <Button-1> event.
@@ -134,12 +134,12 @@ proc systray {args} {
     global img
     global txt
     global cb
-    
+
     set img ""
     set txt ""
     set cb ""
-    
-    
+
+
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
 
@@ -149,7 +149,7 @@ proc systray {args} {
 
         switch -- [tk windowingsystem] {
             "win32" {
-		set ico [_systray createfrom $img]    
+		set ico [_systray createfrom $img]
 		_systray taskbar add $ico -text $txt -callback [list _win_callback %m %i $cb]
 	    }
             "x11" {
@@ -162,16 +162,16 @@ proc systray {args} {
 	    }
 	}
     }
-    #Modify the system tray icon properties. 
+    #Modify the system tray icon properties.
     if {[lindex $args 0] eq "modify"} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[lindex $args 1] eq "image"} {
 		    set img [lindex $args 2]
-		    _systray taskbar delete $ico   
+		    _systray taskbar delete $ico
 		    set ico [_systray createfrom $img]
 		    _systray taskbar add $ico -text $txt -callback [list _win_callback %m %i $cb]
-		} 
+		}
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
 		    _systray taskbar modify $ico -text $txt
@@ -186,8 +186,8 @@ proc systray {args} {
 		    set img ""
 		    set img [lindex $args 2]
 		    ._tray configure -image ""
-		    ._tray configure -image $img 
-		} 
+		    ._tray configure -image $img
+		}
 		if {[lindex $args 1] eq "text"} {
 		    set txt ""
 		    set txt [lindex $args 2]
@@ -203,8 +203,8 @@ proc systray {args} {
 	    "aqua" {
 		if {[lindex $args 1] eq "image"} {
 		    set img [lindex $args 2]
-		    _systray modify image $img 
-		} 
+		    _systray modify image $img
+		}
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
 		    _systray modify text $txt
@@ -213,14 +213,14 @@ proc systray {args} {
 		    set cb [lindex $args 2]
 		    _systray modify callback $cb
 		}
-	    }     
+	    }
 	}
     }
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy"} {
 	switch -- [tk windowingsystem] {
-	    "win32" { 
-		_systray taskbar delete $ico 
+	    "win32" {
+		_systray taskbar delete $ico
 	    }
 	    "x11" {
 		destroy ._tray
@@ -232,12 +232,12 @@ proc systray {args} {
     }
 }
 
-	
+
 # sysnotify --
 # This procedure implments a platform-specific system notification alert.
-#   
-#   Arguments: 
-#       title - main text of alert. 
+#
+#   Arguments:
+#       title - main text of alert.
 #       message - body text of alert.
 
 proc sysnotify {title message} {
@@ -257,7 +257,7 @@ proc sysnotify {title message} {
 	}
 	"aqua" {
 	    _sysnotify $title $message
-	}    
+	}
     }
 }
 

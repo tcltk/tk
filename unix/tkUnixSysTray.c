@@ -11,8 +11,7 @@
 
 */
 
-#include <tcl.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "tkUnixInt.h"
 
 /*

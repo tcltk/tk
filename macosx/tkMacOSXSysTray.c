@@ -16,13 +16,13 @@
 #include "tkMacOSXPrivate.h"
 
 /*
- * Script callback when status icon is clicked. 
+ * Script callback when status icon is clicked.
  */
 
 char * callbackproc;
 
 /*
- * Class declaratons and implementations for TkStatusItem. 
+ * Class declaratons and implementations for TkStatusItem.
  */
 
 @interface TkStatusItem: NSObject {
@@ -32,10 +32,10 @@ char * callbackproc;
     NSString * tooltip;
 }
 
-- (id) init; 
-- (void) setImagewithImage : (NSImage * ) image; 
-- (void) setTextwithString : (NSString * ) string; 
-- (void) clickOnStatusItem: (id) sender; 
+- (id) init;
+- (void) setImagewithImage : (NSImage * ) image;
+- (void) setTextwithString : (NSString * ) string;
+- (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
 
@@ -69,7 +69,7 @@ char * callbackproc;
 
 - (void) clickOnStatusItem: (id) sender
 {
-    
+
     if (NSApp.currentEvent.clickCount == 1) {
 	TkMainInfo * info = TkGetMainInfoList();
 	Tcl_GlobalEval(info -> interp, callbackproc);
@@ -83,14 +83,14 @@ char * callbackproc;
     tooltip = nil;
     [statusItem release];
     statusItem = nil;
-    
+
     [super dealloc];
 }
 
 @end
 
 /*
- * Class declaratons and implementations for TkNotifyItem. 
+ * Class declaratons and implementations for TkNotifyItem.
  */
 
 @interface TkNotifyItem: NSObject {
@@ -111,7 +111,7 @@ char * callbackproc;
 
 @implementation TkNotifyItem : NSObject
 
--  (id) init 
+-  (id) init
 {
     [super init];
     tk_notification = [[NSUserNotification alloc] init];
@@ -132,12 +132,12 @@ char * callbackproc;
 }
 
 - (BOOL) userNotificationCenter: (NSUserNotificationCenter * ) center
-      shouldPresentNotification: (NSUserNotification * ) notification 
+      shouldPresentNotification: (NSUserNotification * ) notification
 {
     return YES;
 }
 
--  (void) dealloc	
+-  (void) dealloc
 {
     [header release];
     [info release];
@@ -196,7 +196,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	    Tcl_AppendResult(interp, " wrong # args: should be \"systray create image ? text? callback?\"", (char * ) NULL);
 	    return TCL_ERROR;
 	}
-    
+
 	/*
 	 * Create the icon.
 	 */
@@ -260,7 +260,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	 */
 
 	if (strcmp (modifyitem, "image") == 0) {
- 
+
 	    Tk_Window tkwin = Tk_MainWindow(interp);
 	    TkWindow *winPtr = (TkWindow*) tkwin;
 	    Display * d;
@@ -434,14 +434,14 @@ MacSystrayInit(Tcl_Interp * interp) {
 	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10",  (char * ) NULL);
 	return TCL_OK;
     }
-     
+
     Tcl_CreateCommand(interp, "_systray", MacSystrayCmd, (ClientData)interp,
 		      (Tcl_CmdDeleteProc *) MacSystrayDestroy);
     Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, NULL, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
-    
+
     return TCL_OK;
 }
-     
+
 /*
  * Local Variables:
  * mode: objc

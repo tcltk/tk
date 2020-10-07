@@ -13,10 +13,10 @@
 */
 
 
+#include "tkInt.h"
 #include <windows.h>
 #include <shellapi.h>
-#include <tk.h>
-#include <tkPlatDecls.h>
+#include "tkWin.h"
 #include "tkWinIco.h"
 #include "tkWinInt.h"
 
