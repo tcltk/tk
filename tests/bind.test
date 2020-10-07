@@ -6774,7 +6774,7 @@ test bind-33.19 {simulate use of the keyboard to trigger a pattern sequence with
     set x {}
 } -body {
     bind .t.f <Escape><Control-c> { lappend x "Esc_Control-c" }
-    bind .t.f <Escape><KeyPress><KeyPress><Control-c> { lappend x "Esc_Key(2)_Control-c" }
+    bind .t.f <Escape><Key><Key><Control-c> { lappend x "Esc_Key(2)_Control-c" }
     event generate .t.f <Escape>
     event generate .t.f <Alt_L>
     event generate .t.f <Control_L>
@@ -6893,7 +6893,7 @@ proc testKey {window event type mods} {
     global keyInfo numericKeysym
     set keyInfo {}
     set numericKeysym {}
-    bind $window <KeyPress> {
+    bind $window <Key> {
 	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
 	set numericKeysym %N
     }
@@ -6967,8 +6967,8 @@ test bind-35.1 {Key events agree for entry widgets} -constraints {aqua} -setup {
 
 test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
     global keyInfo numericKeysym
-    bind . <KeyPress> {}
-    bind . <KeyPress> {
+    bind . <Key> {}
+    bind . <Key> {
 	lappend keyInfo %K
 	set numericKeysym %N
     }
@@ -6986,7 +6986,7 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 } -body {
     global keyInfo numericalKeysym
     set result {}
-    bind . <KeyPress> {
+    bind . <Key> {
     	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
     	set numericalKeysym [format "0x%x" %N]
     }
