@@ -193,7 +193,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     if ((strncmp(argv[1], "create", length) == 0) && (length >= 2)) {
 
 	if (argc < 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"systray create image ? text? callback?\"", (char * ) NULL);
+	    Tcl_AppendResult(interp, " wrong # args: should be \"systray create image ? text? callback?\"", (char * ) NULL);
 	    return TCL_ERROR;
 	}
     
@@ -325,7 +325,7 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
  *
  * MacSystrayDestroy --
  *
- * 	Deletes icon and hidden window from display.
+ * 	Deletes icon from display.
  *
  * Results:
  *	Icon/window removed and memory freed.
