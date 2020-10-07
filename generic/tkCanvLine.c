@@ -831,9 +831,9 @@ DisplayLine(
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
     TCL_UNUSED(int),		/* Describes region of canvas that must be */
-    TCL_UNUSED(int),      /* redisplayed (not used). */
+    TCL_UNUSED(int),		/* redisplayed (not used). */
     TCL_UNUSED(int),
-    TCL_UNUSED(int))	 
+    TCL_UNUSED(int))
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     XPoint staticPoints[MAX_STATIC_POINTS*3];
@@ -1949,7 +1949,7 @@ PrintArrowShape(
 				 * string here. */
 {
     LineItem *linePtr = (LineItem *) recordPtr;
-    char *buffer = ckalloc(120);
+    char *buffer = (char *)ckalloc(120);
 
     sprintf(buffer, "%.5g %.5g %.5g", linePtr->arrowShapeA,
 	    linePtr->arrowShapeB, linePtr->arrowShapeC);
