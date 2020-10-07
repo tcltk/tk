@@ -147,8 +147,8 @@
 
 @end
 
-TkStatusItem *tk_item;
-TkNotifyItem *notify_item;
+static TkStatusItem *tk_item;
+static TkNotifyItem *notify_item;
 
 /*
  * Forward declarations for procedures defined in this file.
