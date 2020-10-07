@@ -643,7 +643,7 @@ declare 186 macosx {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
-declare 187 macosx {
+declare 187 {
     void TkpCursorBlinkFromSystem(Tcl_Interp *interp, int *blinkon, int *blinkoff)
 }
 

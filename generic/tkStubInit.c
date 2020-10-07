@@ -520,15 +520,7 @@ static const TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
 #endif /* MACOSX */
-#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    0, /* 187 */
-#endif /* UNIX */
-#if defined(_WIN32) /* WIN */
-    0, /* 187 */
-#endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
     TkpCursorBlinkFromSystem, /* 187 */
-#endif /* MACOSX */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
