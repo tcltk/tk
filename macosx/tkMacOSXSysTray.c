@@ -140,15 +140,13 @@
 
 -  (void) dealloc
 {
-    [header release];
-    [info release];
+    header = nil;
+    info = nil;
+    [tk_notification release];
     [super dealloc];
 }
 
 @end
-
-static TkStatusItem *tk_item;
-static TkNotifyItem *notify_item;
 
 /*
  * Forward declarations for procedures defined in this file.
@@ -159,8 +157,8 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]);
 static void
-MacSystrayDestroy();
-static void SysNotifyDeleteCmd ( ClientData cd );
+MacSystrayDestroy(TkStatusItem *item);
+static void SysNotifyDeleteCmd (TkNotifyItem *item);
 static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 			 int argc, const char * argv[]);
 int
@@ -188,6 +186,8 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]) {
 
+    TkStatusItem *tk_item = [[TkStatusItem alloc] init];
+    
     (void) clientData;
     int length;
     length = strlen(argv[1]);
@@ -341,9 +341,9 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
  */
 
 static void
-MacSystrayDestroy() {
+MacSystrayDestroy(TkStatusItem *item) {
 
-    [tk_item dealloc];
+    [item dealloc];
 
 }
 
@@ -365,10 +365,9 @@ MacSystrayDestroy() {
  */
 
 
-static void SysNotifyDeleteCmd ( ClientData cd )
+static void SysNotifyDeleteCmd ( TkNotifyItem *item)
 {
-    (void) cd;
-    [notify_item dealloc];
+    [item dealloc];
 }
 
 
@@ -393,6 +392,8 @@ static int SysNotifyCmd(ClientData clientData, Tcl_Interp * interp,
 			int argc, const char * argv[])
 {
     (void)clientData;
+
+     TkNotifyItem *notify_item = [[TkNotifyItem alloc] init];
 
     if (argc < 3) {
 	Tcl_AppendResult(interp, "wrong # args,must be:",
@@ -431,8 +432,8 @@ MacSystrayInit(Tcl_Interp * interp) {
      * Initialize TkStatusItem and TkNotifyItem.
      */
 
-    tk_item = [[TkStatusItem alloc] init];
-    notify_item = [[TkNotifyItem alloc] init];
+  
+  
 
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10",  (char * ) NULL);
@@ -441,7 +442,7 @@ MacSystrayInit(Tcl_Interp * interp) {
 
     Tcl_CreateCommand(interp, "_systray", MacSystrayCmd, (ClientData)interp,
 		      (Tcl_CmdDeleteProc *) MacSystrayDestroy);
-    Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, NULL, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
+    Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, (ClientData)interp, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
 
     return TCL_OK;
 }
