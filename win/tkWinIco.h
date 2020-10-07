@@ -11,11 +11,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWin.h"
 #include <windows.h>
 #include <shellapi.h>
-
-#include <tk.h>
-#include <tkPlatDecls.h>
 
 /*
  * These structures represent the contents of a icon, in terms of its image

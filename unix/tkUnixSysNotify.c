@@ -9,8 +9,7 @@
 
  */
 
-#include <tcl.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "tkUnixInt.h"
 
 #ifdef HAVE_LIBNOTIFY
