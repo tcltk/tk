@@ -290,7 +290,7 @@ static void ActivateTab(Notebook *nb, TkSizeT index)
 static Ttk_State TabState(Notebook *nb, TkSizeT index)
 {
     Ttk_State state = nb->core.state;
-    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
+    Tab *itab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
     TkSizeT i = 0;
 
     if (index == nb->notebook.currentIndex) {
@@ -322,7 +322,7 @@ static Ttk_State TabState(Notebook *nb, TkSizeT index)
 	}
 	break;
     }
-    if (tab->state == TAB_STATE_DISABLED) {
+    if (itab->state == TAB_STATE_DISABLED) {
 	state |= TTK_STATE_DISABLED;
     }
 

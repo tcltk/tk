@@ -336,7 +336,7 @@ ParseSVGWithOptions(
     static const char *const fmtOptions[] = {
         "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
     };
-    enum fmtOptions {
+    enum fmtOptionsEnum {
 	OPT_DPI, OPT_SCALE, OPT_SCALE_TO_HEIGHT, OPT_SCALE_TO_WIDTH
     };
 
@@ -394,7 +394,7 @@ ParseSVGWithOptions(
 	/*
 	 * check that only one scale option is given
 	 */
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum)optIndex) {
 	case OPT_SCALE:
 	case OPT_SCALE_TO_HEIGHT:
 	case OPT_SCALE_TO_WIDTH:
@@ -414,7 +414,7 @@ ParseSVGWithOptions(
 	/*
 	 * Decode parameters
 	 */
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum) optIndex) {
 	case OPT_DPI:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0], &dpi) == TCL_ERROR) {
 	        goto error;
