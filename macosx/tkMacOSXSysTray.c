@@ -16,12 +16,6 @@
 #include "tkMacOSXPrivate.h"
 
 /*
- * Script callback when status icon is clicked.
- */
-
-char * callbackproc;
-
-/*
  * Class declaratons and implementations for TkStatusItem.
  */
 
@@ -30,11 +24,13 @@ char * callbackproc;
     NSStatusBar * statusBar;
     NSImage * icon;
     NSString * tooltip;
+    char * callback;
 }
 
 - (id) init;
 - (void) setImagewithImage : (NSImage * ) image;
 - (void) setTextwithString : (NSString * ) string;
+- (void) setCallback : (char *) callback;
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
@@ -67,12 +63,17 @@ char * callbackproc;
     statusItem.button.toolTip = tooltip;
 }
 
+- (void) setCallback : (char *) callbackproc
+{
+    callback = callbackproc;
+}    
+
 - (void) clickOnStatusItem: (id) sender
 {
 
     if (NSApp.currentEvent.clickCount == 1) {
 	TkMainInfo * info = TkGetMainInfoList();
-	Tcl_GlobalEval(info -> interp, callbackproc);
+	Tcl_GlobalEval(info -> interp, callback);
     }
 }
 
@@ -240,12 +241,13 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	 * Set the proc for the callback.
 	 */
 
-	callbackproc = (char*) argv[4];
-	if (callbackproc == NULL) {
+	char *cb;
+	cb = (char*) argv[4];
+	if (cb == NULL) {
 	    Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
-
+	[tk_item setCallback: cb];
     } else if ((strncmp(argv[1], "modify",  length) == 0) &&
 	       (length >= 2)) {
 	if (argc < 4) {
@@ -305,11 +307,13 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	 */
 
 	if (strcmp (modifyitem, "callback") == 0) {
-	    callbackproc = (char*) argv[3];
-	    if (callbackproc == NULL) {
+	    char *cb;
+	    cb = (char*) argv[3];
+	    if (cb == NULL) {
 		Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 		return TCL_ERROR;
 	    }
+	    [tk_item setCallback: cb];
 	}
 
     } else if ((strncmp(argv[1], "destroy", length) == 0) && (length >= 2)) {
