@@ -1338,7 +1338,7 @@ test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
 # This testcase fails with Tcl < 8.6.7, due to [25842c]
 test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     results in same image as orignial } -constraints {
-        hasTeapotPhoto hasTranspTeapotPhoto needsTcl867 
+        hasTeapotPhoto hasTranspTeapotPhoto needsTcl867
 } -setup {
     image create photo teapot -file $teapotPhotoFile
     teapot copy teapot -from 50 60 70 80 -shrink

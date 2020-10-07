@@ -5282,7 +5282,7 @@ TkStringToKeysym(
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
     if (((unsigned)(name[0]-1) < 0x7F) && !name[1]) {
-	KeySym keysym = (KeySym) (unsigned char) name[0];
+	keysym = (unsigned char) name[0];
 
 	if (TkKeysymToString(keysym)) {
 	    return keysym;
