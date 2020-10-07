@@ -17,7 +17,6 @@
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
-#include "tkIntPlatDecls.h"
 
 #define DEF_CURSOR_ON_TIME	600		/* milliseconds */
 #define DEF_CURSOR_OFF_TIME	300		/* milliseconds */
@@ -62,7 +61,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
       cm->onTime = DEF_CURSOR_ON_TIME;
       cm->offTime = DEF_CURSOR_OFF_TIME;
 
-      TkpCursorBlinkFromSystem (interp, &ontime, &offtime);
+      TkpCursorBlinkFromSystem(interp, &ontime, &offtime);
       if (ontime != -1) {
         cm->onTime = ontime;
       }

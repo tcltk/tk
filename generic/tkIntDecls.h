@@ -558,6 +558,11 @@ EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
 /* 186 */
 EXTERN int		TkpWillDrawWidget(Tk_Window tkwin);
 #endif /* MACOSX */
+#ifdef MAC_OSX_TCL /* MACOSX */
+/* 187 */
+EXTERN void		TkpCursorBlinkFromSystem(Tcl_Interp *interp,
+				int *blinkon, int *blinkoff);
+#endif /* MACOSX */
 
 typedef struct TkIntStubs {
     int magic;
@@ -792,6 +797,15 @@ typedef struct TkIntStubs {
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
+#endif /* MACOSX */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
+    void (*reserved187)(void);
+#endif /* UNIX */
+#if defined(_WIN32) /* WIN */
+    void (*reserved187)(void);
+#endif /* WIN */
+#ifdef MAC_OSX_TCL /* MACOSX */
+    void (*tkpCursorBlinkFromSystem) (Tcl_Interp *interp, int *blinkon, int *blinkoff); /* 187 */
 #endif /* MACOSX */
 } TkIntStubs;
 
@@ -1172,6 +1186,10 @@ extern const TkIntStubs *tkIntStubsPtr;
 #ifdef MAC_OSX_TCL /* MACOSX */
 #define TkpWillDrawWidget \
 	(tkIntStubsPtr->tkpWillDrawWidget) /* 186 */
+#endif /* MACOSX */
+#ifdef MAC_OSX_TCL /* MACOSX */
+#define TkpCursorBlinkFromSystem \
+	(tkIntStubsPtr->tkpCursorBlinkFromSystem) /* 187 */
 #endif /* MACOSX */
 
 #endif /* defined(USE_TK_STUBS) */

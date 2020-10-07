@@ -2,10 +2,10 @@
  * Copyright (c) 2004, Joe English
  */
 
+#include "tkInt.h"
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
-#include "tkInt.h"
 
 #include "ttkTheme.h"
 #include "ttkWidget.h"
@@ -294,7 +294,7 @@ static void ActivateTab(Notebook *nb, int index)
 static Ttk_State TabState(Notebook *nb, int index)
 {
     Ttk_State state = nb->core.state;
-    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
+    Tab *itab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
     int i = 0;
 
     if (index == nb->notebook.currentIndex) {
@@ -326,7 +326,7 @@ static Ttk_State TabState(Notebook *nb, int index)
 	}
 	break;
     }
-    if (tab->state == TAB_STATE_DISABLED) {
+    if (itab->state == TAB_STATE_DISABLED) {
 	state |= TTK_STATE_DISABLED;
     }
 
@@ -968,8 +968,8 @@ static int NotebookInsertCommand(
     /* Move existing content window:
      */
     if (ConfigureTab(interp, nb,
-	     (Tab *)Ttk_ContentData(nb->notebook.mgr,srcIndex),
-		 Ttk_ContentWindow(nb->notebook.mgr,srcIndex),
+	     (Tab *)Ttk_ContentData(nb->notebook.mgr, srcIndex),
+		 Ttk_ContentWindow(nb->notebook.mgr, srcIndex),
 	     objc-4,objv+4) != TCL_OK)
     {
 	return TCL_ERROR;
