@@ -361,8 +361,6 @@ Tk_ImageObjCmd(
 	objc -= firstOption;
 	args = (Tcl_Obj **) objv;
 	if (oldimage) {
-	    int i;
-
 	    args = (Tcl_Obj **)ckalloc((objc+1) * sizeof(Tcl_Obj *));
 	    for (i = 0; i < objc; i++) {
 		args[i] = (Tcl_Obj *) Tcl_GetString(objv[i]);
