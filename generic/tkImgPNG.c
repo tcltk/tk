@@ -2295,7 +2295,7 @@ ParseFormat(
     static const char *const fmtOptions[] = {
 	"-alpha", NULL
     };
-    enum fmtOptions {
+    enum fmtOptionsEnum {
 	OPT_ALPHA
     };
 
@@ -2332,7 +2332,7 @@ ParseFormat(
 	objc--;
 	objv++;
 
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum) optIndex) {
 	case OPT_ALPHA:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0],
 		    &pngPtr->alpha) == TCL_ERROR) {

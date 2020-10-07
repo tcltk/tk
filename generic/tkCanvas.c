@@ -852,7 +852,7 @@ CanvasWidgetCmd(
 	"scan",		"select",	"type",		"xview",
 	"yview",	NULL
     };
-    enum options {
+    enum canvasOptionStringsEnum {
 	CANV_ADDTAG,	CANV_BBOX,	CANV_BIND,	CANV_CANVASX,
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
@@ -876,7 +876,7 @@ CanvasWidgetCmd(
     Tcl_Preserve(canvasPtr);
 
     result = TCL_OK;
-    switch ((enum options)idx) {
+    switch ((enum canvasOptionStringsEnum)idx) {
     case CANV_ADDTAG:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tag searchCommand ?arg ...?");
