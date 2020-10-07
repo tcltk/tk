@@ -14,6 +14,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXWm.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -357,15 +358,19 @@ XResizeWindow(
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
+	TKWindow *w = (TKWindow *)macWin->winPtr->wmInfoPtr->window;
 
 	if (w) {
-	    NSRect r = [w contentRectForFrameRect:[w frame]];
+	    if ([w styleMask] & NSFullScreenWindowMask) {
+		[w tkLayoutChanged];
+	    } else {
+		NSRect r = [w contentRectForFrameRect:[w frame]];
 
-	    r.origin.y += r.size.height - height;
-	    r.size.width = width;
-	    r.size.height = height;
-	    [w setFrame:[w frameRectForContentRect:r] display:YES];
+		r.origin.y += r.size.height - height;
+		r.size.width = width;
+		r.size.height = height;
+		[w setFrame:[w frameRectForContentRect:r] display:NO];
+	    }
 	}
     } else {
 	MoveResizeWindow(macWin);
@@ -421,7 +426,7 @@ XMoveResizeWindow(
 		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
 	    	    Width, Height);
 
-	    [w setFrame:[w frameRectForContentRect:r] display:YES];
+	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
     } else {
 	MoveResizeWindow(macWin);

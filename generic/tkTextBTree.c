@@ -1070,7 +1070,7 @@ TkBTreeInsertChars(
 	    curPtr->nextPtr = segPtr;
 	}
 	segPtr->size = chunkSize;
-	memcpy(segPtr->body.chars, string, (size_t)chunkSize);
+	memcpy(segPtr->body.chars, string, chunkSize);
 	segPtr->body.chars[chunkSize] = 0;
 
 	if (eol[-1] != '\n') {
@@ -4169,7 +4169,7 @@ Rebalance(
 	    Node *otherPtr;
 	    Node *halfwayNodePtr = NULL;       /* Initialization needed only */
 	    TkTextLine *halfwayLinePtr = NULL; /* to prevent cc warnings. */
-	    int totalChildren, firstChildren, i;
+	    int totalChildren, firstChildren;
 
 	    /*
 	     * Too few children for this node. If this is the root then, it's
@@ -4230,8 +4230,6 @@ Rebalance(
 		otherPtr->children.linePtr = NULL;
 	    }
 	    if (nodePtr->level == 0) {
-		TkTextLine *linePtr;
-
 		for (linePtr = nodePtr->children.linePtr, i = 1;
 			linePtr->nextPtr != NULL;
 			linePtr = linePtr->nextPtr, i++) {
@@ -4246,8 +4244,6 @@ Rebalance(
 		    i++;
 		}
 	    } else {
-		Node *childPtr;
-
 		for (childPtr = nodePtr->children.nodePtr, i = 1;
 			childPtr->nextPtr != NULL;
 			childPtr = childPtr->nextPtr, i++) {
@@ -4559,7 +4555,7 @@ CharSplitProc(
     newPtr1->typePtr = &tkTextCharType;
     newPtr1->nextPtr = newPtr2;
     newPtr1->size = index;
-    memcpy(newPtr1->body.chars, segPtr->body.chars, (size_t)index);
+    memcpy(newPtr1->body.chars, segPtr->body.chars, index);
     newPtr1->body.chars[index] = 0;
     newPtr2->typePtr = &tkTextCharType;
     newPtr2->nextPtr = segPtr->nextPtr;
@@ -4660,7 +4656,7 @@ CharDeleteProc(
 static void
 CharCheckProc(
     TkTextSegment *segPtr,	/* Segment to check. */
-    TkTextLine *linePtr)	/* Line containing segment. */
+    TCL_UNUSED(TkTextLine *))	/* Line containing segment. */
 {
     /*
      * Make sure that the segment contains the number of characters indicated

@@ -5066,11 +5066,11 @@ test text-22.132 {TextSearchCmd, multiline regexp matching} -body {
 
 void
 Tcl_SetObjLength(objPtr, length)
-    register Tcl_Obj *objPtr;	/* Pointer to object.  This object must
-                                * not currently be shared. */
-    register int length;	/* Number of bytes desired for string
+    Tcl_Obj *objPtr;		/* Pointer to object.  This object must
+				 * not currently be shared. */
+    int length;			/* Number of bytes desired for string
 				 * representation of object, not including
-                            * terminating null byte. */
+				 * terminating null byte. */
 \{
     char *new;
 }
