@@ -662,7 +662,7 @@ UpdateControlValues(
  *
  * ScrollbarEvent --
  *
- *	This procedure is invoked in response to <ButtonPress>,
+ *	This procedure is invoked in response to <Button>,
  *      <ButtonRelease>, <EnterNotify>, and <LeaveNotify> events.  The
  *      Scrollbar appearance is modified for each event.
  *
