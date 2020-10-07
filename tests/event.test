@@ -46,7 +46,6 @@ proc _init_keypress_lookup {} {
 
     # Most punctuation
     array set keypress_lookup {
-        ! exclam
         % percent
         & ampersand
         ( parenleft
@@ -56,7 +55,6 @@ proc _init_keypress_lookup {} {
         , comma
         - minus
         . period
-        / slash
         : colon
         < less
         = equal
@@ -89,7 +87,6 @@ proc _init_keypress_lookup {} {
 # For example:
 # Q -> Q
 # . -> period
-# / -> slash
 # Delete -> Delete
 # Escape -> Escape
 
