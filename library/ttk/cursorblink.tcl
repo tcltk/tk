@@ -12,25 +12,34 @@ namespace eval ::ttk::cursorblink {
 
     switch -exact $ds {
       xfce {
+        set cursortm -1
         try {
           set cursorenabled [exec -ignorestderr \
               xfconf-query -c xsettings -p /Net/CursorBlink \
               2>/dev/null ]
           if { $cursorenabled } {
-            set cursoron [exec -ignorestderr \
+            set cursortm [exec -ignorestderr \
                 xfconf-query -c xsettings -p /Net/CursorBlinkTime \
                 2>/dev/null ]
-            set cursoroff $cursoron
           } else {
-            set cursoroff 0
+            set cursortm 0
           }
         } on error {err res} {
+        }
+        # GTK 3 divides the blink time by 3.
+        # Two parts on-time and one part off-time.
+        if { $cursortm != -1 } {
+          set cursoron [expr {round(double($cursortm)*2.0/3.0)}]
+          set cursoroff [expr {round(double($cursortm)/3.0)}]
         }
       }
       gnome -
       ubuntu -
       mate -
       cinnamon {
+        # gnome also has an inactivity timeout for the cursor, but Tk
+        # does not support that.
+
         set schema org.gnome.desktop.interface
         # they all use gsettings, but somehow have the need to create
         # their own schema for the same settings...
@@ -44,21 +53,26 @@ namespace eval ::ttk::cursorblink {
           default {
           }
         }
+
+        set cursortm -1
         try {
           set cursorenabled [exec -ignorestderr \
               gsettings get $schema cursor-blink \
               2>/dev/null ]
           if { $cursorenabled } {
-            set cursoron [exec -ignorestderr \
+            set cursortm [exec -ignorestderr \
                 gsettings get $schema cursor-blink-time \
                 2>/dev/null ]
-            set cursoroff $cursoron
-            # gnome also has an inactivity timeout for the cursor, but Tk
-            # does not support that.
           } else {
-            set cursoroff 0
+            set cursortm 0
           }
         } on error {err res} {
+        }
+        # GTK 3 divides the blink time by 3.
+        # Two parts on-time and one part off-time.
+        if { $cursortm != -1 } {
+          set cursoron [expr {round(double($cursortm)*2.0/3.0)}]
+          set cursoroff [expr {round(double($cursortm)/3.0)}]
         }
       }
       plasma -
@@ -117,11 +131,10 @@ namespace eval ::ttk::cursorblink {
           }
         }
         if { $cursortm != -1 } {
-          # cursorFlashTime claims to be in ms, but the timing is highly suspect.
-          # A setting of 1000 ms is far less than 1 second, and 10000 ms is
-          # more than 1 second.
-          # It is set to 0 for no blink.
-          set cursoron [expr {$cursortm/10}]
+          # The QT source code seems to split the blink time into two.
+          # The timing is highly suspect based on empirical testing.
+          # Try dividing by 4.
+          set cursoron [expr {$cursortm/4}]
           set cursoroff $cursoron
         }
       }
