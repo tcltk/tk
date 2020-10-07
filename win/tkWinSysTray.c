@@ -517,20 +517,20 @@ TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
         if (hmod == NULL)
             hmod = LoadLibrary("SHELL32.DLL");
         if (hmod == NULL) {
-            Tcl_AppendResult(icoPtr -> interp, "Could not Load SHELL32.DLL", (char * ) NULL);
+            Tcl_AppendResult(icoPtr -> interp, " Could not Load SHELL32.DLL", (char * ) NULL);
             return TCL_ERROR;
         }
         notify_funcW = (LPFN_SHELLNOTIFYICONW) GetProcAddress(hmod, "Shell_NotifyIconW");
         notify_funcA = (LPFN_SHELLNOTIFYICONA) GetProcAddress(hmod, "Shell_NotifyIconA");
         if (notify_funcW == NULL && notify_funcA == NULL) {
             Tcl_AppendResult(icoPtr -> interp,
-                "Could not get address of Shell_NotifyIconW or Shell_NotifyIconA",
+                " Could not get address of Shell_NotifyIconW or Shell_NotifyIconA",
                 (char * ) NULL);
             return TCL_ERROR;
         }
     } else if (notify_funcA == NULL && notify_funcW == NULL) {
         Tcl_AppendResult(icoPtr -> interp,
-            "You probably don't have a Windows shell", (char * ) NULL);
+            " You probably don't have a Windows shell", (char * ) NULL);
         return TCL_ERROR;
     }
 
@@ -681,7 +681,7 @@ static IcoInfo * GetIcoPtr(Tcl_Interp * interp, char * string) {
             return icoPtr;
         }
     }
-    Tcl_AppendResult(interp, "icon \"", string,
+    Tcl_AppendResult(interp, " icon \"", string,
         "\" doesn't exist", (char * ) NULL);
     return NULL;
 }
@@ -1431,7 +1431,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     IcoInfo * icoPtr;
     BlockOfIconImagesPtr lpIR = NULL;
     if (argc < 2) {
-        Tcl_AppendResult(interp, "wrong # args: should be \"",
+        Tcl_AppendResult(interp, " wrong # args: should be \"",
             argv[0], " option ?arg arg ...?\"", (char * ) NULL);
         return TCL_ERROR;
     }
@@ -1441,7 +1441,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
 
         int pos = 0;
         if (argc < 3) {
-            Tcl_AppendResult(interp, "wrong # args,must be:",
+            Tcl_AppendResult(interp, " wrong # args,must be:",
                 argv[0], " createfrom <Tk image> ", (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1450,7 +1450,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         lpIR = iconBits;
 
         if (lpIR == NULL) {
-            Tcl_AppendResult(interp, "reading of ", argv[2], " failed!", (char * ) NULL);
+            Tcl_AppendResult(interp, " reading of ", argv[2], " failed!", (char * ) NULL);
             return TCL_ERROR;
         }
         hIcon = NULL;
@@ -1465,14 +1465,14 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         }
         if (hIcon == NULL) {
 			FreeIconResource(lpIR);
-            Tcl_AppendResult(interp, "Could not find an icon in ", argv[2], (char * ) NULL);
+            Tcl_AppendResult(interp, " Could not find an icon in ", argv[2], (char * ) NULL);
             return TCL_ERROR;
         }
         NewIcon(interp, hIcon, ICO_FILE, lpIR, pos);
     } else if ((strncmp(argv[1], "delete", length) == 0) &&
         (length >= 2)) {
         if (argc != 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
+            Tcl_AppendResult(interp, " wrong # args: should be \"",
                 argv[0], " delete ?id?\"", (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1485,7 +1485,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         return TCL_OK;
     } else if ((strncmp(argv[1], "text", length) == 0) && (length >= 2)) {
         if (argc < 3) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
+            Tcl_AppendResult(interp, " wrong # args: should be \"",
                 argv[0], " text <id> ?newtext?\"", (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1509,7 +1509,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         int count;
         char * txt;
         if (argc < 4) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
+            Tcl_AppendResult(interp, " wrong # args: should be \"",
                 argv[0], " taskbar <add/delete/modify> <id> ?-callback <callback>? \"", (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1520,7 +1520,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         } else if (strncmp(argv[2], "mod", 3) == 0) {
             oper = NIM_MODIFY;
         } else {
-            Tcl_AppendResult(interp, "bad argument ", argv[2], "should be add, delete or modify", (char * ) NULL);
+            Tcl_AppendResult(interp, " bad argument ", argv[2], "should be add, delete or modify", (char * ) NULL);
             return TCL_ERROR;
         }
         if ((icoPtr = GetIcoPtr(interp, (char * ) argv[3])) == NULL)
@@ -1556,11 +1556,11 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         }
         return TaskbarOperation(icoPtr, oper, hIcon, txt);
         wrongargs2:
-            Tcl_AppendResult(interp, "unknown option \"", args[0], "\",valid are:",
+            Tcl_AppendResult(interp, " unknown option \"", args[0], "\",valid are:",
                 "-callback <tcl-callback>  -text <tooltiptext>", (char * ) NULL);
         return TCL_ERROR;
     } else {
-        Tcl_AppendResult(interp, "bad argument \"", argv[1],
+        Tcl_AppendResult(interp, " bad argument \"", argv[1],
             "\": must be  createfrom, info, hicon, pos, text, taskbar",
             (char * ) NULL);
         return TCL_ERROR;
@@ -1614,7 +1614,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	ni.dwInfoFlags = NIIF_INFO;
 
     if (argc < 2) {
-        Tcl_AppendResult(interp, "wrong # args: should be \"",
+        Tcl_AppendResult(interp, " wrong # args: should be \"",
             argv[0], " option ?arg arg ...?\"", (char * ) NULL);
         return TCL_ERROR;
     }
@@ -1623,7 +1623,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
     if ((strncmp(argv[1], "notify", length) == 0) &&
         (length >= 2)) {
         if (argc != 5) {
-            Tcl_AppendResult(interp, "wrong # args: should be \"",
+            Tcl_AppendResult(interp, " wrong # args: should be \"",
                 argv[0], " notify ?id? ?title? ?detail?\"", (char * ) NULL);
             return TCL_ERROR;
         }

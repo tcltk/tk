@@ -129,16 +129,16 @@ set ico ""
 #             none.
 proc systray {args} {
 
-	#Set variables for icon properties.
+    #Set variables for icon properties.
     global ico
-	global img
-	global txt
-	global cb
-	
-	set img ""
-	set txt ""
-	set cb ""
-   
+    global img
+    global txt
+    global cb
+    
+    set img ""
+    set txt ""
+    set cb ""
+    
     
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
@@ -170,8 +170,7 @@ proc systray {args} {
 		    set img [lindex $args 2]
 		    _systray taskbar delete $ico   
 		    set ico [_systray createfrom $img]
-		    _systray taskbar add $ico -text $txt -callback [list \
-											     _win_callback %m %i $cb]
+		    _systray taskbar add $ico -text $txt -callback [list _win_callback %m %i $cb]
 		} 
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
@@ -179,19 +178,18 @@ proc systray {args} {
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb [lindex $args 2]
-		    _systray taskbar modify $ico -callback [list \
-								_win_callback %m %i $cb]
+		    _systray taskbar modify $ico -callback [list _win_callback %m %i $cb]
 		}
 	    }
 	    "x11" {
 		if {[lindex $args 1] eq "image"} {
-			set img ""
+		    set img ""
 		    set img [lindex $args 2]
 		    ._tray configure -image ""
 		    ._tray configure -image $img 
 		} 
 		if {[lindex $args 1] eq "text"} {
-			set txt ""
+		    set txt ""
 		    set txt [lindex $args 2]
 		    _balloon ._tray $txt
 		}
