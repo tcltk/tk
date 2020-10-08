@@ -1,9 +1,9 @@
 /*
  * tkMacOSXSysTray.c --
  *
- *	tkMacOSXSysTray.c implements a "systray" Tcl command which allows one to
- * 	change the system tray/taskbar icon of a Tk toplevel window and
- * 	a "sysnotify" command to post system notifications.
+ *	tkMacOSXSysTray.c implements a "systray" Tcl command which allows 
+ *      one to change the system tray/taskbar icon of a Tk toplevel 
+ *      window and a "sysnotify" command to post system notifications.
  *
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
  *
@@ -16,7 +16,13 @@
 #include "tkMacOSXPrivate.h"
 
 /*
- * Class declaratons and implementations for TkStatusItem.
+ * Script callback when status icon is clicked.
+ */
+
+char * callbackproc;
+
+/*
+ * Class declarations and implementations for TkStatusItem.
  */
 
 @interface TkStatusItem: NSObject {
@@ -24,13 +30,11 @@
     NSStatusBar * statusBar;
     NSImage * icon;
     NSString * tooltip;
-    char * callback;
 }
 
 - (id) init;
 - (void) setImagewithImage : (NSImage * ) image;
 - (void) setTextwithString : (NSString * ) string;
-- (void) setCallback : (char *) callback;
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
@@ -63,35 +67,23 @@
     statusItem.button.toolTip = tooltip;
 }
 
-- (void) setCallback : (char *) callbackproc
-{
-    callback = callbackproc;
-}    
-
 - (void) clickOnStatusItem: (id) sender
 {
-
     if (NSApp.currentEvent.clickCount == 1) {
 	TkMainInfo * info = TkGetMainInfoList();
-	Tcl_GlobalEval(info -> interp, callback);
+	Tcl_GlobalEval(info -> interp, callbackproc);
     }
 }
 
 - (void) dealloc
 {
     [statusBar removeStatusItem: statusItem];
-    icon = nil;
-    tooltip = nil;
-    [statusItem release];
-    statusItem = nil;
-
-    [super dealloc];
 }
 
 @end
 
 /*
- * Class declaratons and implementations for TkNotifyItem.
+ * Class declarations and implementations for TkNotifyItem.
  */
 
 @interface TkNotifyItem: NSObject {
@@ -128,7 +120,8 @@
     tk_notification.soundName = NSUserNotificationDefaultSoundName;
 
     NSUserNotificationCenter *center = [NSUserNotificationCenter defaultUserNotificationCenter];
-    [center scheduleNotification:tk_notification];
+    [center setDelegate: self];
+    [center deliverNotification:tk_notification];
 
 }
 
@@ -140,13 +133,16 @@
 
 -  (void) dealloc
 {
-    header = nil;
-    info = nil;
-    [tk_notification release];
-    [super dealloc];
+    tk_notification = nil;
 }
 
 @end
+
+/*
+ * Main objects of this file.
+ */
+TkStatusItem *tk_item;
+TkNotifyItem *notify_item;
 
 /*
  * Forward declarations for procedures defined in this file.
@@ -157,8 +153,8 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]);
 static void
-MacSystrayDestroy(TkStatusItem *item);
-static void SysNotifyDeleteCmd (TkNotifyItem *item);
+MacSystrayDestroy();
+static void SysNotifyDeleteCmd ( ClientData cd );
 static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
 			 int argc, const char * argv[]);
 int
@@ -186,8 +182,6 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	      int argc,
 	      const char * argv[]) {
 
-    TkStatusItem *tk_item = [[TkStatusItem alloc] init];
-    
     (void) clientData;
     int length;
     length = strlen(argv[1]);
@@ -241,13 +235,12 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	 * Set the proc for the callback.
 	 */
 
-	char *cb;
-	cb = (char*) argv[4];
-	if (cb == NULL) {
+	callbackproc = (char*) argv[4];
+	if (callbackproc == NULL) {
 	    Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 	    return TCL_ERROR;
 	}
-	[tk_item setCallback: cb];
+
     } else if ((strncmp(argv[1], "modify",  length) == 0) &&
 	       (length >= 2)) {
 	if (argc < 4) {
@@ -307,13 +300,11 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 	 */
 
 	if (strcmp (modifyitem, "callback") == 0) {
-	    char *cb;
-	    cb = (char*) argv[3];
-	    if (cb == NULL) {
+	    callbackproc = (char*) argv[3];
+	    if (callbackproc == NULL) {
 		Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
 		return TCL_ERROR;
 	    }
-	    [tk_item setCallback: cb];
 	}
 
     } else if ((strncmp(argv[1], "destroy", length) == 0) && (length >= 2)) {
@@ -341,9 +332,9 @@ MacSystrayCmd(ClientData clientData, Tcl_Interp * interp,
  */
 
 static void
-MacSystrayDestroy(TkStatusItem *item) {
+MacSystrayDestroy() {
 
-    [item dealloc];
+    [tk_item dealloc];
 
 }
 
@@ -365,9 +356,10 @@ MacSystrayDestroy(TkStatusItem *item) {
  */
 
 
-static void SysNotifyDeleteCmd ( TkNotifyItem *item)
+static void SysNotifyDeleteCmd ( ClientData cd )
 {
-    [item dealloc];
+    (void) cd;
+    [notify_item dealloc];
 }
 
 
@@ -392,8 +384,6 @@ static int SysNotifyCmd(ClientData clientData, Tcl_Interp * interp,
 			int argc, const char * argv[])
 {
     (void)clientData;
-
-     TkNotifyItem *notify_item = [[TkNotifyItem alloc] init];
 
     if (argc < 3) {
 	Tcl_AppendResult(interp, "wrong # args,must be:",
@@ -432,8 +422,8 @@ MacSystrayInit(Tcl_Interp * interp) {
      * Initialize TkStatusItem and TkNotifyItem.
      */
 
-  
-  
+    tk_item = [[TkStatusItem alloc] init];
+    notify_item = [[TkNotifyItem alloc] init];
 
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10",  (char * ) NULL);
@@ -442,7 +432,7 @@ MacSystrayInit(Tcl_Interp * interp) {
 
     Tcl_CreateCommand(interp, "_systray", MacSystrayCmd, (ClientData)interp,
 		      (Tcl_CmdDeleteProc *) MacSystrayDestroy);
-    Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, (ClientData)interp, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
+    Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, NULL, (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
 
     return TCL_OK;
 }
