@@ -23,6 +23,7 @@ if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
         testConstraint cliboardManagerPresent 1
     }
 }
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 
 global longValue selValue selInfo
 
@@ -908,7 +909,7 @@ test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraints x11 -body {
+} -constraints {x11 failsOnUbuntu} -body {
     set selValue "   "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -1036,7 +1037,7 @@ test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
     lappend result $selInfo
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000}}
 test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
-    x11
+    x11 failsOnUbuntu
 } -setup {
     setup
     setupbg

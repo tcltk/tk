@@ -448,6 +448,8 @@ Some themes use a graphical background and their field background colors cannot 
 .RE
 \fB\-foreground\fP \fIcolor\fP
 .br
+\fB\-insertcolor\fP \fIcolor\fP
+.br
 \fB\-insertwidth\fP \fIamount\fP
 .br
 \fB\-lightcolor\fP \fIcolor\fP
