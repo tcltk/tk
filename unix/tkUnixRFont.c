@@ -208,7 +208,7 @@ GetTkFontAttributes(
 	slant = XFT_SLANT_ROMAN;
     }
 
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     printf("family %s size %d weight %d slant %d\n",
 	    family, (int)size, weight, slant);
 #endif /* DEBUG_FONTSEL */
@@ -453,7 +453,7 @@ TkpGetNativeFont(
 {
     UnixFtFont *fontPtr;
     FcPattern *pattern;
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     printf("TkpGetNativeFont %s\n", name);
 #endif /* DEBUG_FONTSEL */
 
@@ -491,7 +491,7 @@ TkpGetFontFromAttributes(
     int weight, slant;
     UnixFtFont *fontPtr;
 
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
 	    faPtr->size, faPtr->weight, faPtr->slant);
 #endif /* DEBUG_FONTSEL */
@@ -671,7 +671,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
+    TCL_UNUSED(Tk_Window),	/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
@@ -682,7 +682,6 @@ TkpGetFontAttrsForChar(
 				/* UCS-4 character to map */
     XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
 				/* Actual font used to render the character */
-    (void)tkwin;
 
     GetTkFontAttributes(ftFont, faPtr);
     faPtr->underline = fontPtr->font.fa.underline;
@@ -719,7 +718,7 @@ Tk_MeasureChars(
     int clen, curX, newX, curByte, newByte, sawNonSpace;
     int termByte = 0, termX = 0, errorFlag = 0;
     Tk_ErrorHandler handler;
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     char string[256];
     int len = 0;
 #endif /* DEBUG_FONTSEL */
@@ -756,7 +755,7 @@ Tk_MeasureChars(
 	    sawNonSpace = 1;
 	}
 
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	string[len++] = (char) c;
 #endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c, 0.0);
@@ -796,7 +795,7 @@ Tk_MeasureChars(
 	curByte = newByte;
     }
     Tk_DeleteErrorHandler(handler);
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     string[len] = '\0';
     printf("MeasureChars %s length %d bytes %d\n", string, curX, curByte);
 #endif /* DEBUG_FONTSEL */
@@ -936,7 +935,7 @@ Tk_DrawChars(
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (fontPtr->ftDraw == 0) {
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
@@ -1071,7 +1070,7 @@ TkDrawAngledChars(
     int originX, originY;
 
     if (fontPtr->ftDraw == 0) {
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
@@ -1180,7 +1179,7 @@ TkDrawAngledChars(
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
 
     if (fontPtr->ftDraw == 0) {
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
