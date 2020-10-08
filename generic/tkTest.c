@@ -538,7 +538,7 @@ TestobjconfigObjCmd(
      * "chain2" subcommand:
      */
 
-    typedef struct ExtensionWidgetRecord {
+    typedef struct {
 	TrivialCommandHeader header;
 	Tcl_Obj *base1ObjPtr;
 	Tcl_Obj *base2ObjPtr;
@@ -566,7 +566,7 @@ TestobjconfigObjCmd(
 
     switch (index) {
     case ALL_TYPES: {
-	typedef struct TypesRecord {
+	typedef struct {
 	    TrivialCommandHeader header;
 	    Tcl_Obj *booleanPtr;
 	    Tcl_Obj *integerPtr;
@@ -784,7 +784,7 @@ TestobjconfigObjCmd(
     }
 
     case CONFIG_ERROR: {
-	typedef struct ErrorWidgetRecord {
+	typedef struct {
 	    Tcl_Obj *intPtr;
 	} ErrorWidgetRecord;
 	ErrorWidgetRecord widgetRecord;
@@ -838,7 +838,7 @@ TestobjconfigObjCmd(
 	 * objects.
 	 */
 
-	typedef struct InternalRecord {
+	typedef struct {
 	    TrivialCommandHeader header;
 	    int boolean;
 	    int integer;
@@ -969,7 +969,7 @@ TestobjconfigObjCmd(
     }
 
     case NEW: {
-	typedef struct FiveRecord {
+	typedef struct {
 	    TrivialCommandHeader header;
 	    Tcl_Obj *one;
 	    Tcl_Obj *two;
@@ -1028,7 +1028,7 @@ TestobjconfigObjCmd(
 	break;
     }
     case NOT_ENOUGH_PARAMS: {
-	typedef struct NotEnoughRecord {
+	typedef struct {
 	    Tcl_Obj *fooObjPtr;
 	} NotEnoughRecord;
 	NotEnoughRecord record;
@@ -1058,7 +1058,7 @@ TestobjconfigObjCmd(
     }
 
     case TWO_WINDOWS: {
-	typedef struct ContentRecord {
+	typedef struct {
 	    TrivialCommandHeader header;
 	    Tcl_Obj *windowPtr;
 	} ContentRecord;
