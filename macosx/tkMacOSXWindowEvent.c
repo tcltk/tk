@@ -970,6 +970,14 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
+    /*
+     * See ticket [1fa8c3ed8d].  This may not be needed for macOSX 11.
+     */
+
+    if(![NSApp isDrawing]) {
+	return;
+    }
+
     if (![self inLiveResize] &&
 	[w respondsToSelector: @selector (tkLayoutChanged)]) {
 	[(TKWindow *)w tkLayoutChanged];
@@ -1017,7 +1025,6 @@ ConfigureRestrictProc(
 	  */
 
 	[self generateExposeEvents: [self bounds]];
-	[w displayIfNeeded];
 
 	/*
 	 * Finally, unlock the main autoreleasePool.
