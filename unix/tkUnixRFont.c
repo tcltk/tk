@@ -671,7 +671,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
+    TCL_UNUSED(Tk_Window),	/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
@@ -682,7 +682,6 @@ TkpGetFontAttrsForChar(
 				/* UCS-4 character to map */
     XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
 				/* Actual font used to render the character */
-    (void)tkwin;
 
     GetTkFontAttributes(ftFont, faPtr);
     faPtr->underline = fontPtr->font.fa.underline;
