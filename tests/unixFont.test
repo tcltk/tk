@@ -18,6 +18,7 @@ tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 if {[tk windowingsystem] eq "x11"} {
     set xlsf [auto_execok xlsfonts]
@@ -256,7 +257,7 @@ test unixfont-8.3 {AllocFont procedure: can't parse info from name} x11 {
     catch {unset fontArray}
     set result
 } {-family -overstrike -size -slant -underline -weight}
-test unixfont-8.4 {AllocFont procedure: classify characters} {x11 failsOnUbuntu} {
+test unixfont-8.4 {AllocFont procedure: classify characters} {x11 failsOnUbuntu failsOnXQuarz} {
     set x 0
     incr x [font measure $courier "䀀"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
@@ -267,7 +268,7 @@ test unixfont-8.4 {AllocFont procedure: classify characters} {x11 failsOnUbuntu}
 test unixfont-8.5 {AllocFont procedure: setup widths of normal chars} x11 {
     font metrics $courier -fixed
 } 1
-test unixfont-8.6 {AllocFont procedure: setup widths of special chars} {x11 failsOnUbuntu} {
+test unixfont-8.6 {AllocFont procedure: setup widths of special chars} {x11 failsOnUbuntu failsOnXQuarz} {
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
     incr x [font measure $courier "\002"]   ;# 4
@@ -295,7 +296,7 @@ test unixfont-8.11 {AllocFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbuntu} {
+test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbuntu failsOnXQuarz} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -304,7 +305,7 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbu
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 failsOnUbuntu} {
+test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 failsOnUbuntu failsOnXQuarz} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
