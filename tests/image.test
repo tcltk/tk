@@ -313,11 +313,9 @@ test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
 } -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
-test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
-    testOldImageType
-} -body {
+test image-6.2 {Tk_ImageCmd procedure, "types" option} -body {
     lsort [image types]
-} -result {bitmap nsimage oldtest photo test}
+} -match glob -result {bitmap*photo test}
 
 
 test image-7.1 {Tk_ImageCmd procedure, "width" option} -body {
