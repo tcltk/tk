@@ -21,7 +21,7 @@
 
 #include <tcl.h>
 
-#if TK_VALGRIND /* ===========================================================*/
+#ifdef TK_VALGRIND /* ===========================================================*/
 
 /*
  * Ensure that the Tcl allocation suite will not be used, because a mix

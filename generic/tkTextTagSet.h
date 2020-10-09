@@ -156,7 +156,7 @@ inline unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
 void TkTextTagSetPrint(const TkTextTagSet *set);
 # endif
 
-# if TK_UNUSED_TAGSET_FUNCTIONS
+# ifdef TK_UNUSED_TAGSET_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes

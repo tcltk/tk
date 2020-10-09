@@ -50,13 +50,6 @@ typedef struct PhotoModel	PhotoModel;
 #endif
 
 /*
- * An unsigned 32-bit integral type, used for pixel values. We use int rather
- * than long here to accommodate those systems where longs are 64 bits.
- */
-
-typedef unsigned int pixel;
-
-/*
  * The maximum number of pixels to transmit to the server in a single
  * XPutImage call.
  */
@@ -110,10 +103,10 @@ struct ColorTable {
     XVisualInfo	visualInfo;	/* Information about the visual for windows
 				 * using this color table. */
 
-    pixel redValues[256];	/* Maps 8-bit values of red intensity to a
+    unsigned redValues[256];	/* Maps 8-bit values of red intensity to a
 				 * pixel value or index in pixelMap. */
-    pixel greenValues[256];	/* Ditto for green intensity. */
-    pixel blueValues[256];	/* Ditto for blue intensity. */
+    unsigned greenValues[256];	/* Ditto for green intensity. */
+    unsigned blueValues[256];	/* Ditto for blue intensity. */
     unsigned long *pixelMap;	/* Actual pixel values allocated. */
 
     unsigned char colorQuant[3][256];

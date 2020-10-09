@@ -6839,7 +6839,7 @@ ApplyWindowAttributeFlagChanges(
 	     * after 10.10.
 	     */
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101000)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
 		/*
 		 * Exclude overrideredirect, transient, and "help"-styled
@@ -6861,11 +6861,10 @@ ApplyWindowAttributeFlagChanges(
 		     * window. To work around this we make the max size equal
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
-		    if ([NSApp macOSVersion] > 101000) {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED > 101000)
+
+		    if (@available(macOS 10.11, *)) {
 			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
-#endif
 		    }
 		}
 	    }

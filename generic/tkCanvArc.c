@@ -707,12 +707,11 @@ ComputeArcParametersFromHeight(
 
 static void
 DeleteArc(
-    Tk_Canvas canvas,		/* Info about overall canvas. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
-    ArcItem *arcPtr = (ArcItem *) itemPtr;
-    (void)canvas;
+    ArcItem *arcPtr = (ArcItem *)itemPtr;
 
     Tk_DeleteOutline(display, &(arcPtr->outline));
     if (arcPtr->numOutlinePoints != 0) {
@@ -794,13 +793,13 @@ ComputeArcBbox(
      */
 
     if (arcPtr->bbox[1] > arcPtr->bbox[3]) {
-	double tmp = arcPtr->bbox[3];
+	tmp = arcPtr->bbox[3];
 
 	arcPtr->bbox[3] = arcPtr->bbox[1];
 	arcPtr->bbox[1] = tmp;
     }
     if (arcPtr->bbox[0] > arcPtr->bbox[2]) {
-	double tmp = arcPtr->bbox[2];
+	tmp = arcPtr->bbox[2];
 
 	arcPtr->bbox[2] = arcPtr->bbox[0];
 	arcPtr->bbox[0] = tmp;
@@ -900,8 +899,10 @@ DisplayArc(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y,		/* Describes region of canvas that must be */
-    int width, int height)	/* redisplayed (not used). */
+    TCL_UNUSED(int),		/* Describes region of canvas that must be */
+    TCL_UNUSED(int),	/* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
     short x1, y1, x2, y2;
@@ -909,10 +910,6 @@ DisplayArc(
     double lineWidth;
     Tk_State state = itemPtr->state;
     Pixmap stipple;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1648,7 +1645,7 @@ ComputeArcOutline(
      * curved arc segment, which are marked with X's in the figure below:
      *
      *
-     *				  * * *
+     *			          * * *
      *			      *          *
      *			   *      * *      *
      *			 *    *         *    *
@@ -2001,7 +1998,7 @@ ArcToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))		/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -2014,7 +2011,6 @@ ArcToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
-    (void)prepass;
 
     y1 = Tk_CanvasPsY(canvas, arcPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, arcPtr->bbox[3]);
@@ -2197,9 +2193,9 @@ ArcToPostscript(
 
 static int
 StyleParseProc(
-    ClientData dummy,	/* some flags.*/
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     TkSizeT offset)			/* Offset into item. */
@@ -2207,8 +2203,6 @@ StyleParseProc(
     int c;
     size_t length;
     Style *stylePtr = (Style *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*stylePtr = PIESLICE_STYLE;
@@ -2262,18 +2256,15 @@ StyleParseProc(
 
 static const char *
 StylePrintProc(
-    ClientData dummy,	/* Ignored. */
-    Tk_Window tkwin,		/* Ignored. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Ignored. */
     char *widgRec,		/* Pointer to record for item. */
     TkSizeT offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
     Style *stylePtr = (Style *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
-    (void)freeProcPtr;
 
     if (*stylePtr == ARC_STYLE) {
 	return "arc";

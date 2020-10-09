@@ -914,7 +914,7 @@ PerfStatistic()
 }
 #endif /* NDEBUG */
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 
 /*
  * Some stuff for memory checks, and allocation statistic.
@@ -1695,7 +1695,7 @@ TkTextCreateDInfo(
 	InvokeAsyncUpdateYScrollbar(textPtr);
     }
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
     if (hookStatFunc) {
 	atexit(AllocStatistic);
 	hookStatFunc = 0;
@@ -6459,7 +6459,7 @@ DisplayDLine(
 	    cxMin += cOffs;
 	    cxMax = cxMin + cWidth;
 
-#if CLIPPING_IS_WORKING
+#ifdef CLIPPING_IS_WORKING
 	    /*
 	     * This is the right implementation if XSetClipRectangles would work; still untested.
 	     */

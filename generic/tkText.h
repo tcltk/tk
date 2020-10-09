@@ -33,7 +33,7 @@
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 # define DEBUG_ALLOC(expr) expr
 #else
 # define DEBUG_ALLOC(expr)
@@ -1499,7 +1499,7 @@ typedef struct TkText {
 
     Tcl_Obj *afterSyncCmd;	/* Commands to be executed when lines are up to date */
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
     unsigned widgetNumber;
 #endif
 } TkText;

@@ -609,7 +609,7 @@ static const Tk_ClassProcs textClass = {
     NULL			/* modalProc */
 };
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 
 /*
  * Some stuff for memory checks, and allocation statistic.
@@ -1002,7 +1002,7 @@ CreateWidget(
 	sharedTextPtr->mainPeer->endMarker = sharedTextPtr->endMarker;
 	sharedTextPtr->mainPeer->sharedTextPtr = sharedTextPtr;
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 	if (tkTextCountNewShared++ == 0) {
 	    atexit(AllocStatistic);
 	}
@@ -3628,7 +3628,7 @@ DestroyText(
 	textPtr->sharedIsReleased = 1;
 	textPtr->refCount -= 1;
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 	/*
 	 * Remove this shared resource from global list.
 	 */
