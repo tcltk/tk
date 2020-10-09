@@ -795,7 +795,7 @@ static const Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
 
 /*
  *----------------------------------------------------------------------
@@ -1046,12 +1046,10 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
     	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
 #endif
-
     { 0,0,0,0,0,NOPAD,0 }
 };
 #undef PAD
