@@ -77,6 +77,14 @@ char * callbackproc;
 
 - (void) dealloc
 {
+     /*
+     * We are only doing the minimal amount of deallocation that
+     * the superclass cannot handle when it is deallocated, per 
+     * https://developer.apple.com/documentation/objectivec/nsobject/
+     * 1571947-dealloc. The compiler may offer warnings, but disregard.
+     * Putting too much here can cause unpredictable crashes, especially
+     * in the Tk test suite.
+     */
     [statusBar removeStatusItem: statusItem];
 }
 
@@ -120,9 +128,16 @@ char * callbackproc;
     tk_notification.soundName = NSUserNotificationDefaultSoundName;
 
     NSUserNotificationCenter *center = [NSUserNotificationCenter defaultUserNotificationCenter];
+    
+    /*
+     * This API requires an app delegate to function correctly. 
+     * The compiler may complain that setting TkNotificationItem is an 
+     * incompatible type, but disregard. Setting to something else will
+     * either cause Wish not to build, or the notification not to display.
+     */
     [center setDelegate: self];
+    
     [center deliverNotification:tk_notification];
-
 }
 
 - (BOOL) userNotificationCenter: (NSUserNotificationCenter * ) center
@@ -133,6 +148,14 @@ char * callbackproc;
 
 -  (void) dealloc
 {
+    /*
+     * We are only doing the minimal amount of deallocation that
+     * the superclass cannot handle when it is deallocated, per 
+     * https://developer.apple.com/documentation/objectivec/nsobject/
+     * 1571947-dealloc. The compiler may offer warnings, but disregard.
+     * Putting too much here can cause unpredictable crashes, especially
+     * in the Tk test suite.
+     */
     tk_notification = nil;
 }
 
