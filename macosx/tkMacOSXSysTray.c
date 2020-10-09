@@ -19,7 +19,7 @@
  * Script callback when status icon is clicked.
  */
 
-Tcl_Obj *callbackproc;
+static Tcl_Obj *callbackproc = NULL;
 
 /*
  * Class declarations and implementations for TkStatusItem.
@@ -33,8 +33,8 @@ Tcl_Obj *callbackproc;
 }
 
 - (id) init;
-- (void) setImagewithImage : (NSImage * ) image;
-- (void) setTextwithString : (NSString * ) string;
+- (void) setImagewithImage : (NSImage *) image;
+- (void) setTextwithString : (NSString *) string;
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
@@ -53,14 +53,14 @@ Tcl_Obj *callbackproc;
     return self;
 }
 
-- (void) setImagewithImage : (NSImage * ) image
+- (void) setImagewithImage : (NSImage *) image
 {
     icon = nil;
     icon = image;
     statusItem.button.image = icon;
 }
 
-- (void) setTextwithString : (NSString * ) string
+- (void) setTextwithString : (NSString *) string
 {
     tooltip = nil;
     tooltip = string;
@@ -69,9 +69,9 @@ Tcl_Obj *callbackproc;
 
 - (void) clickOnStatusItem: (id) sender
 {
-    if (NSApp.currentEvent.clickCount == 1) {
+    if ((NSApp.currentEvent.clickCount == 1) && (callbackproc != NULL)) {
 	TkMainInfo *info = TkGetMainInfoList();
-	Tcl_EvalObjEx(info -> interp, callbackproc, TCL_EVAL_GLOBAL);
+	Tcl_EvalObjEx(info->interp, callbackproc, TCL_EVAL_GLOBAL);
     }
 }
 
@@ -164,8 +164,8 @@ Tcl_Obj *callbackproc;
 /*
  * Main objects of this file.
  */
-TkStatusItem *tk_item;
-TkNotifyItem *notify_item;
+static TkStatusItem *tk_item;
+static TkNotifyItem *notify_item;
 
 /*
  * Forward declarations for procedures defined in this file.
@@ -217,7 +217,7 @@ MacSystrayObjCmd(
 	int width, height;
 	Tk_Window tkwin = Tk_MainWindow(interp);
 	TkWindow *winPtr = (TkWindow *)tkwin;
-	Display *d = winPtr -> display;
+	Display *d = winPtr->display;
 	NSImage *icon;
 
 	arg = TkGetStringFromObj(objv[2], &length);
@@ -240,7 +240,7 @@ MacSystrayObjCmd(
 
 	NSString *tooltip = [NSString stringWithUTF8String: Tcl_GetString(objv[3])];
 	if (tooltip == nil) {
-	    Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char * ) NULL);
+	    Tcl_AppendResult(interp, " unable to set tooltip for systray icon", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -250,13 +250,11 @@ MacSystrayObjCmd(
 	 * Set the proc for the callback.
 	 */
 
-	callbackproc = objv[4];
-	Tcl_IncrRefCount(callbackproc);
-	if (callbackproc == NULL) {
-	    Tcl_AppendResult(interp, " unable to get the callback for systray icon", (char * ) NULL);
-	    return TCL_ERROR;
+	Tcl_IncrRefCount(objv[4]);
+	if (callbackproc != NULL) {
+	    Tcl_DecrRefCount(callbackproc);
 	}
-
+	callbackproc = objv[4];
     } else if ((strncmp(arg, "modify",  length) == 0) &&
 	       (length >= 2)) {
 	if (objc < 4) {
@@ -271,7 +269,6 @@ MacSystrayObjCmd(
 	 */
 
 	if (strcmp (modifyitem, "image") == 0) {
-
 	    Tk_Window tkwin = Tk_MainWindow(interp);
 	    TkWindow *winPtr = (TkWindow *)tkwin;
 	    Display *d = winPtr -> display;
@@ -299,7 +296,6 @@ MacSystrayObjCmd(
 	 */
 
 	if (strcmp (modifyitem, "text") == 0) {
-
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
 	    if (tooltip == nil) {
 		Tcl_AppendResult(interp, " unable to set tooltip for systray icon", NULL);
@@ -314,12 +310,11 @@ MacSystrayObjCmd(
 	 */
 
 	if (strcmp (modifyitem, "callback") == 0) {
-	    callbackproc = objv[3];
-	    Tcl_IncrRefCount(callbackproc);
-	    if (callbackproc == NULL) {
-		Tcl_AppendResult(interp, " unable to get the callback for systray icon", NULL);
-		return TCL_ERROR;
+	    Tcl_IncrRefCount(objv[3]);
+	    if (callbackproc != NULL) {
+		Tcl_DecrRefCount(callbackproc);
 	    }
+	    callbackproc = objv[3];
 	}
 
     } else if ((strncmp(arg, "destroy", length) == 0) && (length >= 2)) {
