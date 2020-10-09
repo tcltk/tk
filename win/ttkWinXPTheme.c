@@ -15,13 +15,13 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
+#define WINVER 0x0501	/* Requires Windows XP APIs */
+
+#include <tkWinInt.h>
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
-#include <tkWinInt.h>
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
-
-#define WINVER 0x0501	/* Requires Windows XP APIs */
 
 #include <windows.h>
 #include <uxtheme.h>
@@ -30,8 +30,6 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
 #   include <tmschema.h>
 #endif
-
-#include <tkWinInt.h>
 
 #include "ttk/ttkTheme.h"
 
@@ -397,7 +395,7 @@ typedef struct
     /*
      * Static data, initialized when element is registered:
      */
-    ElementInfo	*info;
+    const ElementInfo	*info;
     XPThemeProcs *procs;	/* Pointer to theme procedure table */
 
     /*
@@ -413,7 +411,7 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(XPThemeProcs *procs, ElementInfo *info)
+NewElementData(XPThemeProcs *procs, const ElementInfo *info)
 {
     ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
 
@@ -799,7 +797,7 @@ static Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
 
 /*
  *----------------------------------------------------------------------
@@ -1050,12 +1048,10 @@ static ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
     	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
 #endif
-
     { 0,0,0,0,0,NOPAD,0 }
 };
 #undef PAD
@@ -1288,7 +1284,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     XPThemeProcs *procs;
     HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
-    ElementInfo *infoPtr;
+    const ElementInfo *infoPtr;
 
     procs = LoadXPThemeProcs(&hlibrary);
     if (!procs)
