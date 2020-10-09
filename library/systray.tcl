@@ -124,9 +124,6 @@ set ico ""
 #             image - Tk image to update.
 #             text - string to update.
 #             callback - Tcl proc to change.
-#     destroy - destroy systray icon.
-#         Arguments:
-#             none.
 proc systray {args} {
 
     #Set variables for icon properties.
@@ -213,20 +210,6 @@ proc systray {args} {
 		    set cb [lindex $args 2]
 		    _systray modify callback $cb
 		}
-	    }
-	}
-    }
-    #Remove the systray icon.
-    if {[lindex $args 0] eq "destroy"} {
-	switch -- [tk windowingsystem] {
-	    "win32" {
-		_systray taskbar delete $ico
-	    }
-	    "x11" {
-		destroy ._tray
-	    }
-	    "aqua" {
-		_systray destroy
 	    }
 	}
     }
