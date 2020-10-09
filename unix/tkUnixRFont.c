@@ -262,9 +262,9 @@ FinishedWithFont(
 static int
 InitFontErrorProc(
     ClientData clientData,
-    XErrorEvent *errorPtr)
+    TCL_UNUSED(XErrorEvent *))
 {
-    int *errorFlagPtr = (int *) clientData;
+    int *errorFlagPtr = (int *)clientData;
 
     if (errorFlagPtr != NULL) {
 	*errorFlagPtr = 1;
@@ -286,7 +286,7 @@ InitFont(
     Tk_ErrorHandler handler;
 
     if (!fontPtr) {
-	fontPtr = ckalloc(sizeof(UnixFtFont));
+	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -304,7 +304,7 @@ InitFont(
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
-    fontPtr->faces = ckalloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->faces = (UnixFtFace *)ckalloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
 
     /*
@@ -666,7 +666,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
+    TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,			/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
@@ -945,7 +945,7 @@ Tk_DrawChars(
     }
     XGetGCValues(display, gc, GCForeground, &values);
     xftcolor = LookUpColor(display, fontPtr, values.foreground);
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
@@ -995,7 +995,7 @@ Tk_DrawChars(
     }
 
   doUnderlineStrikeout:
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
     if (fontPtr->font.fa.underline != 0) {
@@ -1087,7 +1087,7 @@ TkDrawAngledChars(
 
     nglyph = 0;
     currentFtFont = NULL;
-    originX = originY = 0;		/* lint */
+    originX = originY = 0;
 
     while (numBytes > 0) {
 	XftFont *ftFont;
@@ -1189,7 +1189,7 @@ TkDrawAngledChars(
     }
     XGetGCValues(display, gc, GCForeground, &values);
     xftcolor = LookUpColor(display, fontPtr, values.foreground);
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
@@ -1241,7 +1241,7 @@ TkDrawAngledChars(
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 
   doUnderlineStrikeout:
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {

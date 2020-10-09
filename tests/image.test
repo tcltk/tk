@@ -307,19 +307,12 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
     imageCleanup
 } -returnCodes error -result {image "myimage" doesn't exist}
 
-if {[tk windowingsystem] == "aqua"} {
-    set imagetypes {bitmap nsimage oldtest photo test}
-} else {
-    set imagetypes {bitmap oldtest photo test}
-}
 test image-6.1 {Tk_ImageCmd procedure, "types" option} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
-test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
-    testImageType
-} -body {
+test image-6.2 {Tk_ImageCmd procedure, "types" option} -body {
     lsort [image types]
-} -result $imagetypes
+} -match glob -result {bitmap*photo test}
 
 
 test image-7.1 {Tk_ImageCmd procedure, "width" option} -body {
