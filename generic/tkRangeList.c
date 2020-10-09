@@ -26,7 +26,7 @@
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 # define DEBUG_ALLOC(expr) expr
 #else
 # define DEBUG_ALLOC(expr)

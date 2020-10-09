@@ -26,7 +26,7 @@
 # define MIN(a,b) (((int) a) < ((int) b) ? a : b)
 #endif
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 # define DEBUG_ALLOC(expr) expr
 #else
 # define DEBUG_ALLOC(expr)
@@ -185,7 +185,7 @@ PopCount(uint32_t x)
 #endif /* !TK_IS_64_BIT_ARCH */
 
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 /*
  * Some useful functions for finding memory leaks.
  */
@@ -1197,7 +1197,7 @@ TkBitPrint(
 
 #endif /* NDEBUG */
 
-#if TK_UNUSED_BITFIELD_FUNCTIONS
+#ifdef TK_UNUSED_BITFIELD_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes

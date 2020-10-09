@@ -943,7 +943,7 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData dummy,	/* Information about sender (only dispPtr
+    TCL_UNUSED(void *),	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -971,7 +971,6 @@ Tk_SendObjCmd(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_Interp *localInterp;	/* Used when the interpreter to send the
 				 * command to is within the same process. */
-    (void)dummy;
 
     /*
      * Process options, if any.
@@ -1357,13 +1356,12 @@ TkSendCleanup(
 
 static int
 SendInit(
-    Tcl_Interp *dummy,		/* Interpreter to use for error reporting (no
+    TCL_UNUSED(Tcl_Interp *),	/* Interpreter to use for error reporting (no
 				 * errors are ever returned, but the
 				 * interpreter is needed anyway). */
     TkDisplay *dispPtr)		/* Display to initialize. */
 {
     XSetWindowAttributes atts;
-    (void)dummy;
 
     /*
      * Create the window used for communication, and set up an event handler
@@ -1779,13 +1777,12 @@ AppendPropCarefully(
 static int
 AppendErrorProc(
     ClientData clientData,	/* Command to mark complete, or NULL. */
-    XErrorEvent *errorPtr)	/* Information about error. */
+    TCL_UNUSED(XErrorEvent *))	/* Information about error. */
 {
     PendingCommand *pendingPtr = (PendingCommand *)clientData;
     PendingCommand *pcPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)errorPtr;
 
     if (pendingPtr == NULL) {
 	return 0;
@@ -1878,11 +1875,10 @@ DeleteProc(
 
 static Tk_RestrictAction
 SendRestrictProc(
-    ClientData dummy,		/* Not used. */
+    TCL_UNUSED(void *),		/* Not used. */
     XEvent *eventPtr)		/* Event that just arrived. */
 {
     TkDisplay *dispPtr;
-    (void)dummy;
 
     if (eventPtr->type != PropertyNotify) {
 	return TK_DEFER_EVENT;

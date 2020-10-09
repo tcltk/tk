@@ -310,7 +310,7 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_DELTA: {
-	int xDelta, yDelta, pixels, length;
+	int xDelta, yDelta, pixels;
 	double fraction;
 
 	if (objc != 4) {
@@ -339,7 +339,7 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_FRACTION: {
-	int x, y, pos, length;
+	int x, y, pos;
 	double fraction;
 
 	if (objc != 4) {

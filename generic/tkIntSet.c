@@ -30,7 +30,7 @@
 # define MAX(a,b) (((int) a) < ((int) b) ? b : a)
 #endif
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 # define DEBUG_ALLOC(expr) expr
 #else
 # define DEBUG_ALLOC(expr)
@@ -1551,7 +1551,7 @@ TkIntSetPrint(
 
 #endif /* NDEBUG */
 
-#if TK_UNUSED_INTSET_FUNCTIONS
+#ifdef TK_UNUSED_INTSET_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes

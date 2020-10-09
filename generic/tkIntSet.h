@@ -135,7 +135,7 @@ void TkIntSetPrint(const TkIntSet *set);
 #endif
 
 
-#if TK_UNUSED_INTSET_FUNCTIONS
+#ifdef TK_UNUSED_INTSET_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes

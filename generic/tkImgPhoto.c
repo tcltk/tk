@@ -221,12 +221,11 @@ static const char *	GetExtension(const char *path);
 
 static void
 PhotoFormatThreadExitProc(
-    ClientData dummy)	/* not used */
+    TCL_UNUSED(void *))	/* not used */
 {
     Tk_PhotoImageFormat *freePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
 #if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     while (tsdPtr->oldFormatList != NULL) {
@@ -343,14 +342,13 @@ ImgPhotoCreate(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
+    TCL_UNUSED(const Tk_ImageType *),/* Pointer to our type record (not used). */
     Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
     PhotoModel *modelPtr;
-    (void)typePtr;
 
     /*
      * Allocate and initialize the photo image model record.
@@ -3877,7 +3875,7 @@ ImgGetPhoto(
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
     if (((optPtr->options & OPT_BACKGROUND) && alphaOffset) ||
 	    ((optPtr->options & OPT_GRAYSCALE) && (greenOffset||blueOffset))) {
-	int newPixelSize,x,y;
+	int newPixelSize;
 	unsigned char *srcPtr, *destPtr;
 	char *data;
 
@@ -4065,15 +4063,13 @@ static int
 ImgPhotoPostscript(
     ClientData clientData,	/* Handle for the photo image. */
     Tcl_Interp *interp,		/* Interpreter. */
-    Tk_Window tkwin,		/* (unused) */
+    TCL_UNUSED(Tk_Window),		/* (unused) */
     Tk_PostscriptInfo psInfo,	/* Postscript info. */
     int x, int y,		/* First pixel to output. */
     int width, int height,	/* Width and height of area. */
-    int prepass)		/* (unused) */
+    TCL_UNUSED(int))		/* (unused) */
 {
     Tk_PhotoImageBlock block;
-    (void)tkwin;
-    (void)prepass;
 
     Tk_PhotoGetImage(clientData, &block);
     block.pixelPtr += y * block.pitch + x * block.pixelSize;

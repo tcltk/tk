@@ -40,7 +40,7 @@ typedef struct TkBitField {
     uint32_t refCount:31;
     uint32_t isSetFlag:1;
     size_t size;
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
     struct TkBitField *next;
     struct TkBitField *prev;
     unsigned number;
@@ -126,12 +126,12 @@ inline unsigned TkBitAdjustSize(unsigned size);
 void TkBitPrint(const TkBitField *bf);
 #endif
 
-#if TK_CHECK_ALLOCS
+#ifdef TK_CHECK_ALLOCS
 void TkBitCheckAllocs();
 #endif
 
 
-#if TK_UNUSED_BITFIELD_FUNCTIONS
+#ifdef TK_UNUSED_BITFIELD_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes

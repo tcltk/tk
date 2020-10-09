@@ -618,7 +618,7 @@ GenerateButtonEvent(
     int dummy;
     TkDisplay *dispPtr;
 
-#if UNUSED
+#ifdef UNUSED
 
     /*
      * ButtonDown events will always occur in the front window. ButtonUp

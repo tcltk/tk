@@ -129,7 +129,9 @@ testConstraint hasTeapotPhoto [file exists $teapotPhotoFile]
 # let's see if we have the semi-transparent one as well
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
 testConstraint hasTranspTeapotPhoto [file exists $transpTeapotPhotoFile]
-
+testConstraint needsTcl867 [package vsatisfies [package provide Tcl] 8.6.7-]
+
+
 test imgPhoto-1.1 {options for photo images} -body {
     image create photo photo1 -width 79 -height 83
     list [photo1 cget -width] [photo1 cget -height] \
@@ -264,8 +266,9 @@ test imgPhoto-3.4 {ImgPhotoConfigureModel: -data <ppm>} -constraints {
 } -cleanup {
     imageCleanup
 } -result {20 20}
+# This testcase fails with Tcl < 8.6.7, due to [25842c]
 test imgPhoto-3.5 {ImgPhotoConfigureModel: -data <png>} -constraints {
-    hasTeapotPhoto
+    hasTeapotPhoto needsTcl867
 } -setup {
     image create photo photo1 -file $teapotPhotoFile
     image create photo photo2
@@ -1332,10 +1335,10 @@ test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
 } -body {
     photo1 data -format {default -colorformat list}
 } -result {{{255 0 0 170} {0 128 0 255}} {{0 0 255 204} {255 255 255 221}}}
+# This testcase fails with Tcl < 8.6.7, due to [25842c]
 test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     results in same image as orignial } -constraints {
-        hasTeapotPhoto
-        hasTranspTeapotPhoto
+        hasTeapotPhoto hasTranspTeapotPhoto needsTcl867
 } -setup {
     image create photo teapot -file $teapotPhotoFile
     teapot copy teapot -from 50 60 70 80 -shrink
