@@ -1179,7 +1179,10 @@ TkSendVirtualEvent(
     Tcl_Obj *detail)
 {
     union {XEvent general; XVirtualEvent virt;} event;
-
+    
+    if (target == 0) {
+	return;
+    }
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
     event.general.xany.serial = NextRequest(Tk_Display(target));
