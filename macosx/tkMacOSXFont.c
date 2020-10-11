@@ -245,34 +245,19 @@ FindNSFont(
     NSFont *nsFont, *dflt = nil;
     #define defaultFont (dflt ? dflt : (dflt = [NSFont systemFontOfSize:0]))
     NSString *family = [defaultFont familyName];
+    NSArray *availableFamilies = [fm availableFontFamilies];
 
     if (familyName) {
 	NSString *requestedFamily = [[NSString alloc] initWithUTF8String:familyName];
-	for (NSString *availableFamily in [fm availableFontFamilies]) {
-	    if ([requestedFamily isEqual:availableFamily]) {
-		family = availableFamily;
-		break;
-	    }
+	if ([availableFamilies containsObject: requestedFamily]) {
+	    family = requestedFamily;
 	}
     }
     if (size == 0.0) {
 	size = [defaultFont pointSize];
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
-
-    /*
-     * A second bug in NSFontManager that Apple created for the Catalina OS
-     * causes requests as above to sometimes return fonts with additional
-     * traits that were not requested, even though fonts without those unwanted
-     * traits exist on the system.  See bug [90d555e088].  As a workaround
-     * we ask the font manager to remove any unrequested traits.
-     */
-
-    if (nsFont) {
-	nsFont = [fm convertFont:nsFont toNotHaveTrait:~traits];
-    }
     if (!nsFont) {
-	NSArray *availableFamilies = [fm availableFontFamilies];
 	NSString *caseFamily = nil;
 
 	for (NSString *f in availableFamilies) {
@@ -288,6 +273,18 @@ FindNSFont(
     }
     if (!nsFont) {
 	nsFont = [NSFont fontWithName:family size:size];
+    }
+
+    /*
+     * A bug in NSFontManager that Apple created for the Catalina OS causes
+     * requests as above to sometimes return fonts with additional traits that
+     * were not requested, even though fonts without those unwanted traits
+     * exist on the system.  See bug [90d555e088].  As a workaround we ask the
+     * font manager to remove any unrequested traits.
+     */
+
+    if (nsFont) {
+	nsFont = [fm convertFont:nsFont toNotHaveTrait:~traits];
     }
     if (!nsFont && fallbackToDefault) {
 	nsFont = [fm convertFont:defaultFont toFamily:family];
@@ -492,11 +489,11 @@ TkpFontPkgInit(
 #if 0
 
     /*
-     * In macOS 10.15.1 Apple introduced a bug in NSFontManager which caused
-     * it to not recognize the familyName ".SF NSMono" which is the familyName
-     * of the default fixed pitch system fault on that system.  See bug [855049e799].
-     * As a workaround we call [NSFont userFixedPitchFontOfSize:11] instead.
-     * This returns a user font in the "Menlo" family.
+     * In macOS 10.15.1 Apple introduced a bug in NSFontManager which caused it
+     * to not recognize the familyName ".SF NS Mono" which is the familyName of
+     * the default fixed pitch system font.  See bug [855049e799].  As a
+     * workaround we call [NSFont userFixedPitchFontOfSize:11] instead.  This
+     * returns a user font in the "Menlo" family.
      */
 
     nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
@@ -505,9 +502,6 @@ TkpFontPkgInit(
 #endif
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
-#if 0
-	CFRelease(nsFont);
-#endif
     } else {
 	fa.family = Tk_GetUid("Monaco");
 	fa.size = 11;

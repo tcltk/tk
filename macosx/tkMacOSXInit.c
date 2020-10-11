@@ -254,20 +254,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #pragma mark -
 
 
-
-static void closeSharedPanels(void) {
-    if ([NSFontPanel sharedFontPanelExists]) {
-	NSFontPanel *fp = [NSFontPanel sharedFontPanel];
-	fprintf(stderr, "Closing font panel.\n");
-	[fp orderOut:nil];
-    }
-    if ([NSColorPanel sharedColorPanelExists]) {
-	NSColorPanel *cp = [NSColorPanel sharedColorPanel];
-	fprintf(stderr, "Closing color panel.\n");
-	[cp orderOut:nil];
-    }
-}
-
 /*
  *----------------------------------------------------------------------
  *
