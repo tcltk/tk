@@ -54,6 +54,7 @@ bind TCombobox <Double-Button-1> 	{ ttk::combobox::Press "2" %W %x %y }
 bind TCombobox <Triple-Button-1> 	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
 bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
+bind TCombobox <Visibility>		{ ttk::combobox::CheckVisibility %W %s }
 
 ttk::bindMouseWheel TCombobox [list ttk::combobox::Scroll %W]
 
@@ -105,6 +106,13 @@ switch -- [tk windowingsystem] {
 
 ### Binding procedures.
 #
+
+proc ttk::combobox::CheckVisibility { w visState } {
+  if { $visState eq "VisibilityPartiallyObscured" ||
+       $visState eq "VisibilityFullyObscured" } {
+    ::ttk::combobox::Unpost $w
+  }
+}
 
 ## Press $mode $x $y -- Button binding for comboboxes.
 #	Either post/unpost the listbox, or perform Entry widget binding,
