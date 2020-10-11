@@ -61,10 +61,6 @@ static Tcl_ThreadDataKey dataKey;
  * 	the TIP 59 configuration database.
  */
 
-#ifndef TCL_CFGVAL_ENCODING
-#define TCL_CFGVAL_ENCODING "ascii"
-#endif
-
 static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
 {
     if (numBytes >= 6) {
@@ -82,7 +78,7 @@ TkpFontPkgInit(
 	{ 0,0 }
     };
 
-    Tcl_RegisterConfig(mainPtr->interp, "tk", cfg, TCL_CFGVAL_ENCODING);
+    Tcl_RegisterConfig(mainPtr->interp, "tk", cfg, "utf-8");
 }
 
 static XftFont *
