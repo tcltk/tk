@@ -1021,7 +1021,7 @@ ConfigureRestrictProc(
 	if([NSApp isDrawing] || [self inLiveResize]) {
 	    [self generateExposeEvents: [self bounds]];
 	}
-	
+
 	/*
 	 * Finally, unlock the main autoreleasePool.
 	 */
