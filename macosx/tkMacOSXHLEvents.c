@@ -63,9 +63,27 @@ static const char *scriptTextProc = "::tk::mac::DoScriptText";
 #pragma mark TKApplication(TKHLEvents)
 
 @implementation TKApplication(TKHLEvents)
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+    /*
+     * If there is an open fontchooser or colorchooser, close
+     * it so that it will not reappear the next time that the
+     * app is run.
+     */
+
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+}
+
 - (void) terminate: (id) sender
 {
     [self handleQuitApplicationEvent:Nil withReplyEvent:Nil];
+    [super terminate: sender];
 }
 
 - (void) preferences: (id) sender

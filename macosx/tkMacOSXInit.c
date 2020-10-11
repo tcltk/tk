@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -252,6 +253,21 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
 #pragma mark -
 
+
+
+static void closeSharedPanels(void) {
+    if ([NSFontPanel sharedFontPanelExists]) {
+	NSFontPanel *fp = [NSFontPanel sharedFontPanel];
+	fprintf(stderr, "Closing font panel.\n");
+	[fp orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+	NSColorPanel *cp = [NSColorPanel sharedColorPanel];
+	fprintf(stderr, "Closing color panel.\n");
+	[cp orderOut:nil];
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -269,6 +285,10 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *
  *----------------------------------------------------------------------
  */
+   
+static void sigintHandler(int signal) {
+    [NSApp terminate:nil];
+}
 
 int
 TkpInit(
@@ -298,6 +318,7 @@ TkpInit(
 	initialized = 1;
 
 #ifdef TK_FRAMEWORK
+
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
 	 * framework scripts directory.
@@ -439,8 +460,18 @@ TkpInit(
 		break;
 	    }
 	}
+
     }
 
+    /*
+     * When Wish is run from a terminal, create a sigint handler to try to make
+     * sure that the usual cleanup takes place if the app is killed with ^C.
+     */
+
+    if (isatty(0)) {
+    	signal(SIGINT, sigintHandler);
+    }
+    
     /*
      * Initialization steps that are needed for all interpreters.
      */
