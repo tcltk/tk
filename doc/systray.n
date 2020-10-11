@@ -10,12 +10,14 @@
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBsystray\fP \fIcreate\fP \fIimage\fP? \fItext\fP? \fIcallback\fR?
-\fBsystray\fP \fImodify\fP \fIoption\fR?
+\fBsystray create\fP \fIimage\fP? \fItext\fP? \fIcallback\fR?
+\fBsystray modify\fP \fIoption\fR?
 .BE
 .SH DESCRIPTION
 .PP
-The \fBsystray\fP command creates an icon in the platform-specific tray. The widget is configured with a Tk \fIimage?\fP for the icon display, a string for display in a tooltip, and a \fIcallback?\fP is bound to <Button-1>.
+The \fBsystray\fP command creates an icon in the platform-specific tray. 
+The widget is configured with a Tk image for the icon display, a string 
+for display in a tooltip, and a callback is bound to <Button-1>.
 .SH EXAMPLE
 .PP
 Here is an example of the \fBsystray\fP code:
