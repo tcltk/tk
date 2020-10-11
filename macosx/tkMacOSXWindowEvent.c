@@ -1018,7 +1018,7 @@ ConfigureRestrictProc(
 	  * ticket [1fa8c3ed8d].
 	  */
 
-	if([NSApp isDrawing]) {
+	if([NSApp isDrawing] || [self inLiveResize]) {
 	    [self generateExposeEvents: [self bounds]];
 	}
 	
