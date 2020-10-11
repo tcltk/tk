@@ -244,12 +244,16 @@ FindNSFont(
     NSFontManager *fm = [NSFontManager sharedFontManager];
     NSFont *nsFont, *dflt = nil;
     #define defaultFont (dflt ? dflt : (dflt = [NSFont systemFontOfSize:0]))
-    NSString *family;
+    NSString *family = [defaultFont familyName];
 
     if (familyName) {
-	family = [[[NSString alloc] initWithUTF8String:familyName] autorelease];
-    } else {
-	family = [defaultFont familyName];
+	NSString *requestedFamily = [[NSString alloc] initWithUTF8String:familyName];
+	for (NSString *availableFamily in [fm availableFontFamilies]) {
+	    if ([requestedFamily isEqual:availableFamily]) {
+		family = availableFamily;
+		break;
+	    }
+	}
     }
     if (size == 0.0) {
 	size = [defaultFont pointSize];
