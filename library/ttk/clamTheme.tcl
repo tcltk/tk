@@ -7,7 +7,7 @@
 namespace eval ttk::theme::clam {
     variable colors
     array set colors {
-	-disabledfg		"#999999"
+	-disabledcolor		"#999999"
 	-frame  		"#dcdad5"
 	-window  		"#ffffff"
 	-dark			"#cfcdc8"
@@ -15,8 +15,8 @@ namespace eval ttk::theme::clam {
 	-darkest		"#9e9a91"
 	-lighter		"#eeebe7"
 	-lightest 		"#ffffff"
-	-selectbg		"#4a6984"
-	-selectfg		"#ffffff"
+	-selectbackground		"#4a6984"
+	-selectcolor		"#ffffff"
 	-altindicator		"#5895bc"
 	-disabledaltindicator	"#a0a0a0"
     }
@@ -25,13 +25,13 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure "." \
 	    -background $colors(-frame) \
-	    -foreground black \
+	    -color black \
 	    -bordercolor $colors(-darkest) \
 	    -darkcolor $colors(-dark) \
 	    -lightcolor $colors(-lighter) \
 	    -troughcolor $colors(-darker) \
-	    -selectbackground $colors(-selectbg) \
-	    -selectforeground $colors(-selectfg) \
+	    -selectbackground $colors(-selectbackground) \
+	    -selectcolor $colors(-selectcolor) \
 	    -selectborderwidth 0 \
 	    -font TkDefaultFont \
 	    ;
@@ -39,9 +39,9 @@ namespace eval ttk::theme::clam {
 	ttk::style map "." \
 	    -background [list disabled $colors(-frame) \
 			     active $colors(-lighter)] \
-	    -foreground [list disabled $colors(-disabledfg)] \
+	    -color [list disabled $colors(-disabledcolor)] \
 	    -selectbackground [list  !focus $colors(-darkest)] \
-	    -selectforeground [list  !focus white] \
+	    -selectcolor [list  !focus white] \
 	    ;
 	# -selectbackground [list  !focus "#847d73"]
 
@@ -98,7 +98,7 @@ namespace eval ttk::theme::clam {
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
 	    -background [list  readonly $colors(-frame)] \
-	    -bordercolor [list  focus $colors(-selectbg)] \
+	    -bordercolor [list  focus $colors(-selectbackground)] \
 	    -lightcolor [list  focus "#6f9dc6"] \
 	    -darkcolor [list  focus "#6f9dc6"] \
 	    ;
@@ -107,17 +107,17 @@ namespace eval ttk::theme::clam {
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
-	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
+	    -fieldbackground [list {readonly focus} $colors(-selectbackground) \
 				  readonly $colors(-frame)] \
-	    -foreground [list {readonly focus} $colors(-selectfg)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -color [list {readonly focus} $colors(-selectcolor)] \
+	    -arrowcolor [list disabled $colors(-disabledcolor)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox \
 	    -background [list  readonly $colors(-frame)] \
-            -arrowcolor [list disabled $colors(-disabledfg)]
+            -arrowcolor [list disabled $colors(-disabledcolor)]
 
 	ttk::style configure TNotebook.Tab -padding {6 2 6 2}
 	ttk::style map TNotebook.Tab \
@@ -132,9 +132,9 @@ namespace eval ttk::theme::clam {
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectbackground)] \
+	    -color [list disabled $colors(-disabledcolor) \
+				selected $colors(-selectcolor)]
 
     	ttk::style configure TLabelframe \
 	    -labeloutside true -labelmargins {0 0 0 4} \

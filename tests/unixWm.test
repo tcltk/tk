@@ -14,6 +14,7 @@ tcltest::loadTestedCommands
 namespace import -force ::tk::test:loadTkCommand
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 proc sleep ms {
     global x
@@ -1552,7 +1553,7 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
 } {100 1}
 destroy .t
 toplevel .t -width 80 -height 60
-test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} unix {
+test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix failsOnXQuarz} {
     tkwait visibility .t
     wm overrideredirect .t 1
     update
@@ -1562,7 +1563,7 @@ test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} unix {
 } [list 5 [expr [winfo screenheight .t] - 70]]
 destroy .t
 toplevel .t -width 80 -height 60
-test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} unix {
+test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} {unix failsOnXQuarz} {
     tkwait visibility .t
     wm overrideredirect .t 1
     update
@@ -1612,7 +1613,7 @@ test unixWm-45.1 {UpdateSizeHints procedure, grid information} {unix testwrapper
 	    [expr [lindex $property 7]] [expr [lindex $property 8]] \
 	    [expr [lindex $property 9]] [expr [lindex $property 10]]
 } {40 30 320 210 10 5}
-test unixWm-45.2 {UpdateSizeHints procedure} {unix testwrapper failsOnUbuntu} {
+test unixWm-45.2 {UpdateSizeHints procedure} {unix testwrapper failsOnUbuntu failsOnXQuarz} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm minsize .t 30 40
@@ -1640,7 +1641,7 @@ test unixWm-45.3 {UpdateSizeHints procedure, grid with menu} {testmenubar testwr
 	    [expr [lindex $property 7]] [expr [lindex $property 8]] \
 	    [expr [lindex $property 9]] [expr [lindex $property 10]]
 } {60 40 53 320 233 10 5}
-test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenubar testwrapper failsOnUbuntu} {
+test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenubar testwrapper failsOnUbuntu failsOnXQuarz} {
     destroy .t
     toplevel .t -width 80 -height 60
     frame .t.menu -height 23 -width 50
@@ -1794,7 +1795,7 @@ if {[tk windowingsystem] == "aqua"} {
     # Windows are assumed to have a border (invisible in Gnome 3).
     set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
 }
-test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu} {
+test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu failsOnXQuarz} {
     update
     toplevel .t -width 300 -height 400 -background green
     wm geom .t +100+100
@@ -2051,7 +2052,7 @@ test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapp
     wm geometry .t2 +0+0
     winfo containing 100 100
 } {.t}
-test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} unix {
+test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuarz} {
     foreach w {.t .t2 .t3} {
 	destroy $w
 	update

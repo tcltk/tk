@@ -2329,13 +2329,13 @@ TkpInitializeMenuBindings(
 	    "<KeyRelease-Alt_R>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
-	    "<Alt-KeyPress>", "tk::WinMenuKey %W %N", 0);
+	    "<Alt-Key>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<Alt-KeyRelease>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
-	    "<KeyPress-F10>", "tk::WinMenuKey %W %N", 0);
+	    "<Key-F10>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<KeyRelease-F10>", "tk::WinMenuKey %W %N", 0);

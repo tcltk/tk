@@ -11,6 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 set fixed {Courier -12}
 
 proc record {name args} {
@@ -121,13 +123,13 @@ test listbox-1.12 {configuration options} -body {
     .l configure -cursor badValue
 } -returnCodes error -result {bad cursor spec "badValue"}
 test listbox-1.13 {configuration options} -body {
-    .l configure -disabledforeground #110022
-    list [lindex [.l configure -disabledforeground] 4] [.l cget -disabledforeground]
+    .l configure -disabledcolor #110022
+    list [lindex [.l configure -disabledcolor] 4] [.l cget -disabledcolor]
 } -cleanup {
-    .l configure -disabledforeground [lindex [.l configure -disabledforeground] 3]
+    .l configure -disabledcolor [lindex [.l configure -disabledcolor] 3]
 } -result {{#110022} #110022}
 test listbox-1.14 {configuration options} -body {
-    .l configure -disabledforeground bogus
+    .l configure -disabledcolor bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-1.15 {configuration options} -body {
     .l configure -exportselection yes
@@ -139,13 +141,13 @@ test listbox-1.16 {configuration options} -body {
     .l configure -exportselection xyzzy
 } -returnCodes error -result {expected boolean value but got "xyzzy"}
 test listbox-1.17 {configuration options} -body {
-    .l configure -fg #110022
-    list [lindex [.l configure -fg] 4] [.l cget -fg]
+    .l configure -color #110022
+    list [lindex [.l configure -color] 4] [.l cget -color]
 } -cleanup {
-    .l configure -fg [lindex [.l configure -fg] 3]
+    .l configure -color [lindex [.l configure -color] 3]
 } -result {{#110022} #110022}
 test listbox-1.18 {configuration options} -body {
-    .l configure -fg bogus
+    .l configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-1.19 {configuration options} -body {
     .l configure -font {Helvetica 12}
@@ -154,13 +156,13 @@ test listbox-1.19 {configuration options} -body {
     .l configure -font [lindex [.l configure -font] 3]
 } -result {{Helvetica 12} {Helvetica 12}}
 test listbox-1.21 {configuration options} -body {
-    .l configure -foreground #110022
-    list [lindex [.l configure -foreground] 4] [.l cget -foreground]
+    .l configure -color #110022
+    list [lindex [.l configure -color] 4] [.l cget -color]
 } -cleanup {
-    .l configure -foreground [lindex [.l configure -foreground] 3]
+    .l configure -color [lindex [.l configure -color] 3]
 } -result {{#110022} #110022}
 test listbox-1.22 {configuration options} -body {
-    .l configure -foreground bogus
+    .l configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-1.23 {configuration options} -body {
     .l configure -height 30
@@ -247,13 +249,13 @@ test listbox-1.38 {configuration options} -body {
     .l configure -selectborderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test listbox-1.39 {configuration options} -body {
-    .l configure -selectforeground #654321
-    list [lindex [.l configure -selectforeground] 4] [.l cget -selectforeground]
+    .l configure -selectcolor #654321
+    list [lindex [.l configure -selectcolor] 4] [.l cget -selectcolor]
 } -cleanup {
-    .l configure -selectforeground [lindex [.l configure -selectforeground] 3]
+    .l configure -selectcolor [lindex [.l configure -selectcolor] 3]
 } -result {{#654321} #654321}
 test listbox-1.40 {configuration options} -body {
-    .l configure -selectforeground bogus
+    .l configure -selectcolor bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-1.41 {configuration options} -body {
     .l configure -selectmode string
@@ -521,7 +523,7 @@ test listbox-3.21 {ListboxWidgetCmd procedure, "cget" option} -body {
 test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} -body {
     .l cget -setgrid
 } -result 0
-test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} -body {
+test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} -constraints nodeprecated -body {
     llength [.l configure]
 } -result 31
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} -body {
@@ -1361,7 +1363,7 @@ test listbox-4.8 {ConfigureListbox procedure} -setup {
 	    -yscrollcommand "record y"
     pack .l2
     update
-    .l2 configure -fg black
+    .l2 configure -color black
     set log {}
     update
     set log
@@ -2709,10 +2711,10 @@ test listbox-21.12 {ListboxListVarProc, cleanup item attributes} -setup {
 } -body {
     set x [list a b c d e f g]
     listbox .l -listvar x
-    .l itemconfigure end -fg red
+    .l itemconfigure end -color red
     set x [list a b c d]
     set x [list 0 1 2 3 4 5 6]
-    .l itemcget end -fg
+    .l itemcget end -color
 } -cleanup {
     destroy .l
 } -result {}
@@ -2721,10 +2723,10 @@ test listbox-21.12a {ListboxListVarProc, cleanup item attributes} -setup {
 } -body {
     set x [list a b c d e f g]
     listbox .l -listvar x
-    .l itemconfigure end -fg red
+    .l itemconfigure end -color red
     set x [list a b c d]
     set x [list 0 1 2 3 4 5 6]
-    .l itemcget end -fg
+    .l itemcget end -color
 } -cleanup {
     destroy .l
 } -result {}
@@ -2734,9 +2736,9 @@ test listbox-21.13 {listbox item configurations and listvar based deletions} -se
     catch {unset x}
     listbox .l -listvar x
     .l insert end a b c
-    .l itemconfigure 1 -fg red
+    .l itemconfigure 1 -color red
     set x [list b c]
-    .l itemcget 1 -fg
+    .l itemcget 1 -color
 } -cleanup {
     destroy .l
 } -result red
@@ -2746,9 +2748,9 @@ test listbox-21.14 {listbox item configurations and listvar based inserts} -setu
     catch {unset x}
     listbox .l -listvar x
     .l insert end a b c
-    .l itemconfigure 0 -fg red
+    .l itemconfigure 0 -color red
     set x [list 1 2 3 4 a b c]
-    .l itemcget 0 -fg
+    .l itemcget 0 -color
 } -cleanup {
     destroy .l
 } -result red
@@ -2822,7 +2824,7 @@ test listbox-23.1 {ConfigureListboxItem} -setup {
 } -cleanup {
     destroy .l
 } -result {item number "0" out of range}
-test listbox-23.2 {ConfigureListboxItem} -setup {
+test listbox-23.2 {ConfigureListboxItem} -constraints nodeprecated -setup {
     destroy .l
 } -body {
     listbox .l
@@ -2900,22 +2902,22 @@ test listbox-23.9 {configuration options} -body {
     .l configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test listbox-23.10 {configuration options} -body {
-    .l itemconfigure 0 -fg #110022
-    list [lindex [.l itemconfigure 0 -fg] 4] [.l itemcget 0 -fg]
+    .l itemconfigure 0 -color #110022
+    list [lindex [.l itemconfigure 0 -color] 4] [.l itemcget 0 -color]
 } -cleanup {
-    .l configure -fg #000000
+    .l configure -color #000000
 } -result {{#110022} #110022}
 test listbox-23.11 {configuration options} -body {
-    .l configure -fg bogus
+    .l configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-23.12 {configuration options} -body {
-    .l itemconfigure 0 -foreground #110022
-    list [lindex [.l itemconfigure 0 -foreground] 4] [.l itemcget 0 -foreground]
+    .l itemconfigure 0 -color #110022
+    list [lindex [.l itemconfigure 0 -color] 4] [.l itemcget 0 -color]
 } -cleanup {
-    .l configure -foreground #000000
+    .l configure -color #000000
 } -result {{#110022} #110022}
 test listbox-23.13 {configuration options} -body {
-    .l configure -foreground bogus
+    .l configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-23.14 {configuration options} -body {
     .l itemconfigure 0 -selectbackground #110022
@@ -2927,13 +2929,13 @@ test listbox-23.15 {configuration options} -body {
     .l configure -selectbackground bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-23.16 {configuration options} -body {
-    .l itemconfigure 0 -selectforeground #654321
-    list [lindex [.l itemconfigure 0 -selectforeground] 4] [.l itemcget 0 -selectforeground]
+    .l itemconfigure 0 -selectcolor #654321
+    list [lindex [.l itemconfigure 0 -selectcolor] 4] [.l itemcget 0 -selectcolor]
 } -cleanup {
-    .l configure -selectforeground #000000
+    .l configure -selectcolor #000000
 } -result {{#654321} #654321}
 test listbox-23.17 {configuration options} -body {
-    .l configure -selectforeground bogus
+    .l configure -selectcolor bogus
 } -returnCodes error -result {unknown color name "bogus"}
 
 
@@ -2943,7 +2945,7 @@ test listbox-24.1 {itemcget} -setup {
 } -body {
     listbox .l
     .l insert end a b c d
-    .l itemcget 0 -fg
+    .l itemcget 0 -color
 } -cleanup {
     destroy .l
 } -result {}
@@ -2952,8 +2954,8 @@ test listbox-24.2 {itemcget} -setup {
 } -body {
     listbox .l
     .l insert end a b c d
-    .l itemconfigure 0 -fg red
-    .l itemcget 0 -fg
+    .l itemconfigure 0 -color red
+    .l itemcget 0 -color
 } -cleanup {
     destroy .l
 } -result red
@@ -2985,10 +2987,10 @@ test listbox-25.1 {listbox item configurations and widget based deletions} -setu
 } -body {
     listbox .l
     .l insert end a
-    .l itemconfigure 0 -fg red
+    .l itemconfigure 0 -color red
     .l delete 0 end
     .l insert end a
-    .l itemcget 0 -fg
+    .l itemcget 0 -color
 } -cleanup {
     destroy .l
 } -result {}
@@ -2997,9 +2999,9 @@ test listbox-25.2 {listbox item configurations and widget based inserts} -setup 
 } -body {
     listbox .l
     .l insert end a b c
-    .l itemconfigure 0 -fg red
+    .l itemconfigure 0 -color red
     .l insert 0 1 2 3 4
-    list [.l itemcget 0 -fg] [.l itemcget 4 -fg]
+    list [.l itemcget 0 -color] [.l itemcget 4 -color]
 } -cleanup {
     destroy .l
 } -result {{} red}

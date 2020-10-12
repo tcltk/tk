@@ -69,7 +69,7 @@ foreach l { monochrome gray color } {
 
 set BitmapImage [image create bitmap \
 	-file [file join [file dirname [info script]] face.xbm] \
-	-background white -foreground black]
+	-background white -color black]
 set PhotoImage [image create photo \
 	-file [file join [file dirname [info script]] teapot.ppm]]
 

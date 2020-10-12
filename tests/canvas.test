@@ -154,11 +154,11 @@ test canvas-1.38 {configuration options: bad value for "selectborderwidth"} -bod
     .c configure -selectborderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test canvas-1.39 {configuration options: good value for "selectforeground"} -body {
-    .c configure -selectforeground #654321
-    .c cget -selectforeground
+    .c configure -selectcolor #654321
+    .c cget -selectcolor
 } -result {#654321}
 test canvas-1.40 {configuration options: bad value for "selectforeground"} -body {
-    .c configure -selectforeground bogus
+    .c configure -selectcolor bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test canvas-1.41 {configuration options: good value for "takefocus"} -body {
     .c configure -takefocus "any string"

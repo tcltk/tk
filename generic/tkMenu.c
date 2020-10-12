@@ -126,8 +126,10 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_COLOR, "-activecolor", "activeColor", "ActiveColor",
 	DEF_MENU_ENTRY_ACTIVE_FG,
 	offsetof(TkMenuEntry, activeFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", NULL , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-activecolor", 0},
+#endif
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_ENTRY_BG,
 	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -149,8 +151,10 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_COLOR, "-color", "color", "Color",
 	DEF_MENU_ENTRY_FG,
 	offsetof(TkMenuEntry, fgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_BOOLEAN, "-hidemargin", NULL, NULL,
 	DEF_MENU_ENTRY_HIDE_MARGIN,
 	TCL_INDEX_NONE, offsetof(TkMenuEntry, hideMargin), 0, NULL, 0},
@@ -263,18 +267,22 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	"ActiveColor", DEF_MENU_ACTIVE_FG_COLOR,
 	offsetof(TkMenu, activeFgPtr), TCL_INDEX_NONE, 0,
 	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", NULL , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-activecolor", 0},
+#endif
     {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
 	DEF_MENU_ACTIVE_RELIEF, offsetof(TkMenu, activeReliefPtr),
 	TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, offsetof(TkMenu, borderPtr), TCL_INDEX_NONE, 0,
 	(ClientData) DEF_MENU_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_MENU_BORDER_WIDTH,
 	offsetof(TkMenu, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
@@ -287,10 +295,12 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	"DisabledColor", DEF_MENU_DISABLED_FG_COLOR,
 	offsetof(TkMenu, disabledFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK,
 	(ClientData) DEF_MENU_DISABLED_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", NULL , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MENU_FONT, offsetof(TkMenu, fontPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
@@ -1640,7 +1650,6 @@ ConfigureMenu(
 	    }
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
-	    int i;
 
 	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
 
@@ -1835,7 +1844,6 @@ PostProcessEntry(
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
 	Tcl_Obj *valuePtr;
-	const char *name;
 
 	if (mePtr->namePtr == NULL) {
 	    if (mePtr->labelPtr == NULL) {
@@ -2745,7 +2753,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int i, numElements;
+	int numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance

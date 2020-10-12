@@ -11,6 +11,8 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
 
@@ -102,13 +104,13 @@ test scale-1.18 {configuration options} -body {
         .s configure -digits badValue
 } -returnCodes error -result {expected integer but got "badValue"}
 test scale-1.19 {configuration options} -body {
-    .s configure -fg #00ff00
-    .s cget -fg
+    .s configure -color #00ff00
+    .s cget -color
 } -cleanup {
-    .s configure -fg [lindex [.s configure -fg] 3]
+    .s configure -color [lindex [.s configure -color] 3]
 } -result {#00ff00}
 test scale-1.20 {configuration options} -body {
-        .s configure -fg badValue
+        .s configure -color badValue
 } -returnCodes error -result {unknown color name "badValue"}
 test scale-1.21 {configuration options} -body {
     .s configure -font fixed
@@ -117,13 +119,13 @@ test scale-1.21 {configuration options} -body {
     .s configure -font [lindex [.s configure -font] 3]
 } -result {fixed}
 test scale-1.23 {configuration options} -body {
-    .s configure -foreground green
-    .s cget -foreground
+    .s configure -color green
+    .s cget -color
 } -cleanup {
-    .s configure -foreground [lindex [.s configure -foreground] 3]
+    .s configure -color [lindex [.s configure -color] 3]
 } -result {green}
 test scale-1.24 {configuration options} -body {
-        .s configure -foreground badValue
+        .s configure -color badValue
 } -returnCodes error -result {unknown color name "badValue"}
 test scale-1.25 {configuration options} -body {
     .s configure -from -15.0
@@ -360,7 +362,7 @@ test scale-3.5 {ScaleWidgetCmd procedure, cget option} -body {
     .s configure -highlightthickness 2
     .s cget -highlightthickness
 } -result 2
-test scale-3.6 {ScaleWidgetCmd procedure, configure option} -body {
+test scale-3.6 {ScaleWidgetCmd procedure, configure option} -constraints nodeprecated -body {
     list [llength [.s configure]] [lindex [.s configure] 7]
 } -result {34 {-command command Command {} {}}}
 test scale-3.7 {ScaleWidgetCmd procedure, configure option} -body {

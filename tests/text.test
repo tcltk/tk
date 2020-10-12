@@ -185,8 +185,8 @@ test text-1.17 {configuration option: "fg"} -setup {
     pack .t
     update
 } -body {
-    .t configure -fg red
-    .t cget -fg
+    .t configure -color red
+    .t cget -color
 } -cleanup {
     destroy .t
 } -result {red}
@@ -195,7 +195,7 @@ test text-1.18 {configuration option: "fg"} -setup {
     pack .t
     update
 } -body {
-    .t configure -fg stupid
+    .t configure -color stupid
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
@@ -895,13 +895,13 @@ test text-2.4 {Tk_TextCmd procedure} -body {
     destroy .t
 } -result 0
 test text-2.5 {Tk_TextCmd procedure} -body {
-    text .t -borderwidth 2 -fg red
+    text .t -borderwidth 2 -color red
 } -cleanup {
     destroy .t
 } -returnCodes ok -result {.t}
 test text-2.6 {Tk_TextCmd procedure} -body {
-    text .t -borderwidth 2 -fg red
-	list [lindex [.t config -borderwidth] 4] [lindex [.t config -fg] 4]
+    text .t -borderwidth 2 -color red
+	list [lindex [.t config -borderwidth] 4] [lindex [.t config -color] 4]
 } -cleanup {
     destroy .t
 } -result {2 red}
@@ -5078,11 +5078,11 @@ test text-22.132 {TextSearchCmd, multiline regexp matching} -body {
 
 void
 Tcl_SetObjLength(objPtr, length)
-    register Tcl_Obj *objPtr;	/* Pointer to object.  This object must
-                                * not currently be shared. */
-    register int length;	/* Number of bytes desired for string
+    Tcl_Obj *objPtr;		/* Pointer to object.  This object must
+				 * not currently be shared. */
+    int length;			/* Number of bytes desired for string
 				 * representation of object, not including
-                            * terminating null byte. */
+				 * terminating null byte. */
 \{
     char *new;
 }

@@ -4239,7 +4239,7 @@ fi
     if test "$GCC" = yes; then :
 
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall -Wextra -Wwrite-strings -Wpointer-arith"
+	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith"
 	case "${CC}" in
 	    *++|*++-*)
 		;;
@@ -6924,7 +6924,7 @@ else
 int
 main ()
 {
-struct passwd pwd; pwd.pw_gecos;
+struct passwd pwd; (void)pwd.pw_gecos;
   ;
   return 0;
 }

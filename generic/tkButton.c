@@ -75,17 +75,21 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_COLOR, "-activecolor", "activeColor", "ActiveColor",
 	DEF_BUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", "activecolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-activecolor", 0},
+#endif
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
 	DEF_BUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -104,14 +108,18 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	"DisabledColor", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
 	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, TCL_INDEX_NONE, offsetof(TkButton, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, offsetof(TkButton, heightPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -166,17 +174,21 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-activecolor", "activeColor", "ActiveColor",
 	DEF_BUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", "activecolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-activecolor", 0},
+#endif
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
 	DEF_BUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -201,14 +213,18 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	"DisabledColor", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
 	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, TCL_INDEX_NONE, offsetof(TkButton, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, offsetof(TkButton, heightPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -273,17 +289,21 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-activecolor", "activeColor", "ActiveColor",
 	DEF_CHKRAD_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", "activecolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-activecolor", 0},
+#endif
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
 	DEF_BUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -305,14 +325,18 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	"DisabledColor", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
 	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, TCL_INDEX_NONE, offsetof(TkButton, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, offsetof(TkButton, heightPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -392,17 +416,21 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-activecolor", "activeColor", "ActiveColor",
 	DEF_CHKRAD_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", "activecolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-activecolor", 0},
+#endif
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
 	DEF_BUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -424,14 +452,18 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	"DisabledColor", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
 	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, TCL_INDEX_NONE, offsetof(TkButton, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, offsetof(TkButton, heightPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",

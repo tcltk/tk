@@ -244,10 +244,12 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_LISTBOX_BG_COLOR, TCL_INDEX_NONE, offsetof(Listbox, normalBorder),
 	0, DEF_LISTBOX_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_LISTBOX_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Listbox, borderWidth),
 	0, 0, 0},
@@ -259,8 +261,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledcolor", "disabledColor",
 	"DisabledColor", DEF_LISTBOX_DISABLED_FG, TCL_INDEX_NONE,
 	offsetof(Listbox, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
+#endif
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, TCL_INDEX_NONE,
 	offsetof(Listbox, exportSelection), 0, 0, 0},
@@ -268,8 +272,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_LISTBOX_FONT, TCL_INDEX_NONE, offsetof(Listbox, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_INT, "-height", "height", "Height",
 	DEF_LISTBOX_HEIGHT, TCL_INDEX_NONE, offsetof(Listbox, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
@@ -294,8 +300,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "SelectColor",
 	DEF_LISTBOX_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_LISTBOX_SELECT_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-selectforeground", "selectcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
+#endif
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
 	DEF_LISTBOX_SELECT_MODE, TCL_INDEX_NONE, offsetof(Listbox, selectMode),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -331,15 +339,19 @@ static const Tk_OptionSpec itemAttrOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(ItemAttr, border),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
 	DEF_LISTBOX_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_COLOR, "-color", "color", "Color",
 	NULL, TCL_INDEX_NONE, offsetof(ItemAttr, fgColor),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "SelectBackground",
 	NULL, TCL_INDEX_NONE, offsetof(ItemAttr, selBorder),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
@@ -348,10 +360,12 @@ static const Tk_OptionSpec itemAttrOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(ItemAttr, selFgColor),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
 	DEF_LISTBOX_SELECT_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-selectfg", "selectcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
     {TK_OPTION_SYNONYM, "-selectforeground", "selectcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
+#endif
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 

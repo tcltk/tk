@@ -432,7 +432,7 @@ Async(
 
 static HRESULT
 Send(
-    TkWinSendCom *obj,
+    TkWinSendCom *comobj,
     VARIANT vCmd,
     VARIANT *pvResult,
     EXCEPINFO *pExcepInfo,
@@ -441,7 +441,7 @@ Send(
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
-    Tcl_Interp *interp = obj->interp;
+    Tcl_Interp *interp = comobj->interp;
     Tcl_Obj *scriptPtr;
     Tcl_DString ds;
     (void)puArgErr;

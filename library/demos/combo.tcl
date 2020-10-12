@@ -44,7 +44,7 @@ set ozCity Sydney
 
 ttk::labelframe $w.c1 -text "Fully Editable"
 ttk::combobox $w.c1.c -textvariable firstValue -placeholder {Enter text here}
-ttk::style configure TEntry -placeholderforeground gray50
+ttk::style configure TEntry -placeholdercolor gray50
 ttk::labelframe $w.c2 -text Disabled
 ttk::combobox $w.c2.c -textvariable secondValue -state disabled
 ttk::labelframe $w.c3 -text "Defined List Only"

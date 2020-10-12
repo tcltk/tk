@@ -402,8 +402,8 @@ static const char *const button_images[] = {
     "D c #000000008080 s window",
     "E c #808000008080 s 3ddark",
     "F c #000080808080 s frame",
-    "G c #000000000000 s foreground",
-    "H c #000080800000 s disabledfg",
+    "G c #000000000000 s color",
+    "H c #000080800000 s disabledcolor",
 };
 #endif
 

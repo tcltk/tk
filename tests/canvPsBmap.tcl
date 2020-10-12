@@ -27,47 +27,47 @@ set canvPsBmapImageDir [file join [file dirname [info script]] images]
 
 $c create bitmap 0.5i 0.5i \
     -bitmap @[file join $canvPsBmapImageDir flagdown.xbm] \
-    -background {} -foreground black -anchor nw
+    -background {} -color black -anchor nw
 $c create rect 0.47i 0.47i 0.53i 0.53i -fill {} -outline black
 
 $c create bitmap 3.0i 0.5i \
     -bitmap @[file join $canvPsBmapImageDir flagdown.xbm] \
-    -background {} -foreground black -anchor n
+    -background {} -color black -anchor n
 $c create rect 2.97i 0.47i 3.03i 0.53i -fill {} -outline black
 
 $c create bitmap 5.5i 0.5i \
     -bitmap @[file join $canvPsBmapImageDir flagdown.xbm] \
-    -background black -foreground white -anchor ne
+    -background black -color white -anchor ne
 $c create rect 5.47i 0.47i 5.53i 0.53i -fill {} -outline black
 
 $c create bitmap 0.5i 3.0i \
     -bitmap @[file join $canvPsBmapImageDir face.xbm] \
-    -background {} -foreground black -anchor w
+    -background {} -color black -anchor w
 $c create rect 0.47i 2.97i 0.53i 3.03i -fill {} -outline black
 
 $c create bitmap 3.0i 3.0i \
     -bitmap @[file join $canvPsBmapImageDir face.xbm] \
-    -background {} -foreground black -anchor center
+    -background {} -color black -anchor center
 $c create rect 2.97i 2.97i 3.03i 3.03i -fill {} -outline black
 
 $c create bitmap 5.5i 3.0i \
     -bitmap @[file join $canvPsBmapImageDir face.xbm] \
-    -background blue -foreground black -anchor e
+    -background blue -color black -anchor e
 $c create rect 5.47i 2.97i 5.53i 3.03i -fill {} -outline black
 
 $c create bitmap 0.5i 5.5i \
     -bitmap @[file join $canvPsBmapImageDir flagup.xbm] \
-    -background black -foreground white -anchor sw
+    -background black -color white -anchor sw
 $c create rect 0.47i 5.47i 0.53i 5.53i -fill {} -outline black
 
 $c create bitmap 3.0i 5.5i \
     -bitmap @[file join $canvPsBmapImageDir flagup.xbm] \
-    -background green -foreground white -anchor s
+    -background green -color white -anchor s
 $c create rect 2.97i 5.47i 3.03i 5.53i -fill {} -outline black
 
 $c create bitmap 5.5i 5.5i \
     -bitmap @[file join $canvPsBmapImageDir flagup.xbm] \
-    -background {} -foreground black -anchor se
+    -background {} -color black -anchor se
 $c create rect 5.47i 5.47i 5.53i 5.53i -fill {} -outline black
 
 

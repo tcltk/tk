@@ -817,7 +817,7 @@ test unixMenu-23.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} 
     destroy .m1
 } -body {
     menu .m1
-    .m1 add command -label foo -activeforeground red
+    .m1 add command -label foo -activecolor red
     set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
@@ -839,7 +839,7 @@ test unixMenu-23.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custo
 } -setup {
     destroy .m1
 } -body {
-    menu .m1 -disabledforeground blue
+    menu .m1 -disabledcolor blue
     .m1 add command -label foo -state disabled -background red
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
@@ -849,7 +849,7 @@ test unixMenu-23.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -constra
 } -setup {
     destroy .m1
 } -body {
-    menu .m1 -disabledforeground blue
+    menu .m1 -disabledcolor blue
     .m1 add command -label foo -state disabled
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
@@ -859,7 +859,7 @@ test unixMenu-23.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -constra
 } -setup {
     destroy .m1
 } -body {
-    menu .m1 -disabledforeground ""
+    menu .m1 -disabledcolor ""
     .m1 add command -label foo -state disabled
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
@@ -870,7 +870,7 @@ test unixMenu-23.7 {TkpDrawMenuEntry - gc for normal - custom entry} -constraint
     destroy .m1
 } -body {
     menu .m1
-    .m1 add command -label foo -foreground red
+    .m1 add command -label foo -color red
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
@@ -942,7 +942,7 @@ test unixMenu-23.14 {TkpDrawMenuEntry - active border - custom entry} -constrain
     destroy .m1
 } -body {
     menu .m1
-    .m1 add command -label foo -activeforeground yellow
+    .m1 add command -label foo -activecolor yellow
     set tearoff [tk::TearOffMenu .m1 40 40]
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]

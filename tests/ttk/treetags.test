@@ -4,6 +4,8 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 ### treeview tag invariants:
 #
 
@@ -174,19 +176,19 @@ test treetags-2.4 "Bad events" -body {
 } -returnCodes error -result "unsupported event <Enter>*" -match glob
 
 test treetags-3.0 "tag configure - set" -body {
-    $tv tag configure tag1 -foreground blue -background red
+    $tv tag configure tag1 -color blue -background red
 } -cleanup {
     treeConstraints $tv
 } -result {}
 
 test treetags-3.1 "tag configure - get" -body {
-    $tv tag configure tag1 -foreground
+    $tv tag configure tag1 -color
 } -cleanup {
     treeConstraints $tv
 } -result blue
 
 # @@@ fragile test
-test treetags-3.2 "tag configure - enumerate" -body {
+test treetags-3.2 "tag configure - enumerate" -constraints nodeprecated -body {
     $tv tag configure tag1
 } -cleanup {
     treeConstraints $tv

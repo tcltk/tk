@@ -186,8 +186,10 @@ static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_FRAME_BG_COLOR, TCL_INDEX_NONE, offsetof(Frame, border),
 	TK_OPTION_NULL_OK, DEF_FRAME_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_STRING, "-colormap", "colormap", "Colormap",
 	DEF_FRAME_COLORMAP, TCL_INDEX_NONE, offsetof(Frame, colormapName),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -232,10 +234,12 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_STRING, "-backgroundimage", "backgroundImage", "BackgroundImage",
 	DEF_FRAME_BG_IMAGE, offsetof(Frame, bgimgPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundimage", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
@@ -252,10 +256,12 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_STRING, "-backgroundimage", "backgroundImage", "BackgroundImage",
 	DEF_FRAME_BG_IMAGE, offsetof(Frame, bgimgPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundimage", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
@@ -287,12 +293,16 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
 	DEF_LABELFRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_COLOR, "-color", "color", "Color",
 	DEF_LABELFRAME_FG, TCL_INDEX_NONE, offsetof(Labelframe, textColorPtr), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_LABELFRAME_FONT, TCL_INDEX_NONE, offsetof(Labelframe, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING_TABLE, "-labelanchor", "labelAnchor", "LabelAnchor",
 	DEF_LABELFRAME_LABELANCHOR, TCL_INDEX_NONE, offsetof(Labelframe, labelAnchor),
 	0, labelAnchorStrings, 0},
@@ -830,7 +840,7 @@ FrameWidgetObjCmd(
 		c = arg[1];
 		if (((c == 'c') && (length >= 2)
 			&& (strncmp(arg, "-class", length) == 0))
-		    || ((c == 'c') && (length >= 3)
+		    || ((c == 'c') && (length >= 7)
 			&& (strncmp(arg, "-colormap", length) == 0))
 		    || ((c == 'c') && (length >= 3)
 			&& (strncmp(arg, "-container", length) == 0))

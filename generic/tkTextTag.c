@@ -57,8 +57,10 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-stipple", 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tkfont), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_STRING, "-lmargin1", NULL, NULL,
@@ -75,8 +77,10 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_SYNONYM, "-overstrikefg", NULL, NULL,
+#ifndef TK_NO_DEPRECATED
+    {TK_OPTION_SYNONYM, "-overstrikefg", "overstrikecolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-overstrikecolor", 0},
+#endif
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
@@ -87,8 +91,10 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-selectcolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-selectforeground", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
+#endif
     {TK_OPTION_STRING, "-spacing1", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, spacing1String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-spacing2", NULL, NULL,
@@ -108,8 +114,10 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_SYNONYM, "-underlinefg", NULL, NULL,
+#ifndef TK_NO_DEPRECATED
+    {TK_OPTION_SYNONYM, "-underlinefg", "underlinecolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-underlinecolor", 0},
+#endif
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode),
 	TK_OPTION_NULL_OK, wrapStrings, 0},

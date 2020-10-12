@@ -86,7 +86,7 @@ extern "C" {
 #endif
 
 // float emulation for MS VC6++ compiler
-#if (_MSC_VER == 1200)
+#if defined(_MSC_VER) && (_MSC_VER == 1200)
 #define tanf(a) (float)tan(a)
 #define cosf(a) (float)cos(a)
 #define sinf(a) (float)sin(a)
@@ -99,7 +99,7 @@ extern "C" {
 #define floorf(a) (float)floor(a)
 #endif
 // float emulation for MS VC8++ compiler
-#if (_MSC_VER == 1400)
+#if defined(_MSC_VER) && (_MSC_VER == 1400)
 #define fabsf(a) (float)fabs(a)
 #endif
 
@@ -284,7 +284,7 @@ static void nsvg__parseElement(char* s,
 {
 	const char* attr[NSVG_XML_MAX_ATTRIBS];
 	int nattr = 0;
-	char* name;
+	char* cbname;
 	int start = 0;
 	int end = 0;
 	char quote;
@@ -305,7 +305,7 @@ static void nsvg__parseElement(char* s,
 		return;
 
 	// Get tag name
-	name = s;
+	cbname = s;
 	while (*s && !nsvg__isspace(*s)) s++;
 	if (*s) { *s++ = '\0'; }
 
@@ -348,9 +348,9 @@ static void nsvg__parseElement(char* s,
 
 	// Call callbacks.
 	if (start && startelCb)
-		(*startelCb)(ud, name, attr);
+		(*startelCb)(ud, cbname, attr);
 	if (end && endelCb)
-		(*endelCb)(ud, name);
+		(*endelCb)(ud, cbname);
 }
 
 NANOSVG_SCOPE
@@ -1157,7 +1157,7 @@ static double nsvg__atof(const char* s)
 	char* cur = (char*)s;
 	char* end = NULL;
 	double res = 0.0, sign = 1.0;
-#if (_MSC_VER == 1200)
+#if defined(_MSC_VER) && (_MSC_VER == 1200)
 	__int64 intPart = 0, fracPart = 0;
 #else
 	long long intPart = 0, fracPart = 0;
@@ -1175,7 +1175,7 @@ static double nsvg__atof(const char* s)
 	// Parse integer part
 	if (nsvg__isdigit(*cur)) {
 		// Parse digit sequence
-#if (_MSC_VER == 1200)
+#if defined(_MSC_VER) && (_MSC_VER == 1200)
 		intPart = strtol(cur, &end, 10);
 #else
 		intPart = strtoll(cur, &end, 10);
@@ -1192,7 +1192,7 @@ static double nsvg__atof(const char* s)
 		cur++; // Skip '.'
 		if (nsvg__isdigit(*cur)) {
 			// Parse digit sequence
-#if (_MSC_VER == 1200)
+#if defined(_MSC_VER) && (_MSC_VER == 1200)
 			fracPart = strtol(cur, &end, 10);
 #else
 			fracPart = strtoll(cur, &end, 10);

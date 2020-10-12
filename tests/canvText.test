@@ -12,6 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
@@ -464,7 +465,7 @@ test canvText-7.7 {DisplayText procedure: selected text different color} -setup 
     focus .c
     .c focus test
 } -body {
-    .c config -selectforeground blue
+    .c config -selectcolor blue
     .c itemconfig test -anchor n
     update
 } -cleanup {
@@ -942,7 +943,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     destroy .c
 } -result {{Yeah } Yeah- 4 4}
 
-test canvText-20.1 {angled text bounding box} -constraints failsOnUbuntu -setup {
+test canvText-20.1 {angled text bounding box} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     destroy .c
     canvas .c
     proc transpose {bbox} {
@@ -968,7 +969,7 @@ test canvText-20.1 {angled text bounding box} -constraints failsOnUbuntu -setup 
 
 test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712f43f6e} -setup {
     destroy .c
-    canvas .c -background bisque -selectforeground green2
+    canvas .c -background bisque -selectcolor green2
     grid .c
     set id [.c create text 50 150 -anchor w -text "Angled text" \
 	    -angle 30 -font {Helvetica 32} -fill darkblue]

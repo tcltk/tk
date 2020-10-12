@@ -11,6 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 # find the earth.gif file for use in these tests (tests 2.*)
 set earthPhotoFile [file join [file dirname [info script]] earth.gif]
 testConstraint hasEarthPhoto [file exists $earthPhotoFile]
@@ -167,12 +169,12 @@ test menu-2.4 {configuration options -activeborderwidth badValue} -body {
     .m1 configure -activeborderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 
-test menu-2.5 {configuration options -activeforeground #ff0000} -body {
-    .m1 configure -activeforeground #ff0000
-    .m1 cget -activeforeground
+test menu-2.5 {configuration options -activecolor #ff0000} -body {
+    .m1 configure -activecolor #ff0000
+    .m1 cget -activecolor
 } -result {#ff0000}
-test menu-2.6 {configuration options -activeforeground non-existent} -body {
-    .m1 configure -activeforeground non-existent
+test menu-2.6 {configuration options -activecolor non-existent} -body {
+    .m1 configure -activecolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
 test menu-2.6a {configuration options -activerelief sunken} -body {
@@ -215,32 +217,32 @@ test menu-2.14 {configuration options -cursor badValue} -body {
     .m1 configure -cursor badValue
 } -returnCodes error -result {bad cursor spec "badValue"}
 
-test menu-2.15 {configuration options -disabledforeground #00ff00} -body {
-    .m1 configure -disabledforeground #00ff00
-    .m1 cget -disabledforeground
+test menu-2.15 {configuration options -disabledcolor #00ff00} -body {
+    .m1 configure -disabledcolor #00ff00
+    .m1 cget -disabledcolor
 } -result {#00ff00}
-test menu-2.16 {configuration options -disabledforeground xyzzy} -body {
-    .m1 configure -disabledforeground xyzzy
+test menu-2.16 {configuration options -disabledcolor xyzzy} -body {
+    .m1 configure -disabledcolor xyzzy
 } -returnCodes error -result {unknown color name "xyzzy"}
 
-test menu-2.17 {configuration options -fg #110022} -body {
-    .m1 configure -fg #110022
-    .m1 cget -fg
+test menu-2.17 {configuration options -color #110022} -body {
+    .m1 configure -color #110022
+    .m1 cget -color
 } -result {#110022}
-test menu-2.18 {configuration options -fg bogus} -body {
-    .m1 configure -fg bogus
+test menu-2.18 {configuration options -color bogus} -body {
+    .m1 configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 
 test menu-2.19 {configuration options -font -Adobe-Helvetica-Medium-R-Normal--*-120-*-*-*-*-*-*} -body {
     .m1 configure -font -Adobe-Helvetica-Medium-R-Normal--*-120-*-*-*-*-*-*
     .m1 cget -font
 } -result {-Adobe-Helvetica-Medium-R-Normal--*-120-*-*-*-*-*-*}
-test menu-2.20 {configuration options -foreground #110022} -body {
-    .m1 configure -foreground #110022
-    .m1 cget -foreground
+test menu-2.20 {configuration options -color #110022} -body {
+    .m1 configure -color #110022
+    .m1 cget -color
 } -result {#110022}
-test menu-2.21 {configuration options -foreground bogus} -body {
-    .m1 configure -foreground bogus
+test menu-2.21 {configuration options -color bogus} -body {
+    .m1 configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 
 test menu-2.22 {configuration options -postcommand {any old string}} -body {
@@ -352,56 +354,56 @@ test menu-2.42 {entry configuration options 5 -activebackground non-existent rad
     .m1 entryconfigure 5 -activebackground non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.43 {entry configuration options 0 -activeforeground #ff0000 tearoff} -body {
-    .m1 entryconfigure 0 -activeforeground #ff0000
-} -returnCodes error -result {unknown option "-activeforeground"}
+test menu-2.43 {entry configuration options 0 -activecolor #ff0000 tearoff} -body {
+    .m1 entryconfigure 0 -activecolor #ff0000
+} -returnCodes error -result {unknown option "-activecolor"}
 
-test menu-2.44 {entry configuration options 1 -activeforeground #ff0000 command} -body {
-    .m1 entryconfigure 1 -activeforeground #ff0000
-    lindex [.m1 entryconfigure 1 -activeforeground] 4
+test menu-2.44 {entry configuration options 1 -activecolor #ff0000 command} -body {
+    .m1 entryconfigure 1 -activecolor #ff0000
+    lindex [.m1 entryconfigure 1 -activecolor] 4
 } -result {#ff0000}
 
-test menu-2.45 {entry configuration options 2 -activeforeground #ff0000 cascade} -body {
-    .m1 entryconfigure 2 -activeforeground #ff0000
-    lindex [.m1 entryconfigure 2 -activeforeground] 4
+test menu-2.45 {entry configuration options 2 -activecolor #ff0000 cascade} -body {
+    .m1 entryconfigure 2 -activecolor #ff0000
+    lindex [.m1 entryconfigure 2 -activecolor] 4
 } -result {#ff0000}
 
-test menu-2.46 {entry configuration options 3 -activeforeground #ff0000 separator} -body {
-    .m1 entryconfigure 3 -activeforeground #ff0000
-} -returnCodes error -result {unknown option "-activeforeground"}
+test menu-2.46 {entry configuration options 3 -activecolor #ff0000 separator} -body {
+    .m1 entryconfigure 3 -activecolor #ff0000
+} -returnCodes error -result {unknown option "-activecolor"}
 
-test menu-2.47 {entry configuration options 4 -activeforeground #ff0000 checkbutton} -body {
-    .m1 entryconfigure 4 -activeforeground #ff0000
-    lindex [.m1 entryconfigure 4 -activeforeground] 4
+test menu-2.47 {entry configuration options 4 -activecolor #ff0000 checkbutton} -body {
+    .m1 entryconfigure 4 -activecolor #ff0000
+    lindex [.m1 entryconfigure 4 -activecolor] 4
 } -result {#ff0000}
 
-test menu-2.48 {entry configuration options 5 -activeforeground #ff0000 radiobutton} -body {
-    .m1 entryconfigure 5 -activeforeground #ff0000
-    lindex [.m1 entryconfigure 5 -activeforeground] 4
+test menu-2.48 {entry configuration options 5 -activecolor #ff0000 radiobutton} -body {
+    .m1 entryconfigure 5 -activecolor #ff0000
+    lindex [.m1 entryconfigure 5 -activecolor] 4
 } -result {#ff0000}
 
-test menu-2.49 {entry configuration options 0 -activeforeground non-existent tearoff} -body {
-    .m1 entryconfigure 0 -activeforeground non-existent
-} -returnCodes error -result {unknown option "-activeforeground"}
+test menu-2.49 {entry configuration options 0 -activecolor non-existent tearoff} -body {
+    .m1 entryconfigure 0 -activecolor non-existent
+} -returnCodes error -result {unknown option "-activecolor"}
 
-test menu-2.50 {entry configuration options 1 -activeforeground non-existent command} -body {
-    .m1 entryconfigure 1 -activeforeground non-existent
+test menu-2.50 {entry configuration options 1 -activecolor non-existent command} -body {
+    .m1 entryconfigure 1 -activecolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.51 {entry configuration options 2 -activeforeground non-existent cascade} -body {
-    .m1 entryconfigure 2 -activeforeground non-existent
+test menu-2.51 {entry configuration options 2 -activecolor non-existent cascade} -body {
+    .m1 entryconfigure 2 -activecolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.52 {entry configuration options 3 -activeforeground non-existent separator} -body {
-    .m1 entryconfigure 3 -activeforeground non-existent
-} -returnCodes error -result {unknown option "-activeforeground"}
+test menu-2.52 {entry configuration options 3 -activecolor non-existent separator} -body {
+    .m1 entryconfigure 3 -activecolor non-existent
+} -returnCodes error -result {unknown option "-activecolor"}
 
-test menu-2.53 {entry configuration options 4 -activeforeground non-existent checkbutton} -body {
-    .m1 entryconfigure 4 -activeforeground non-existent
+test menu-2.53 {entry configuration options 4 -activecolor non-existent checkbutton} -body {
+    .m1 entryconfigure 4 -activecolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.54 {entry configuration options 5 -activeforeground non-existent radiobutton} -body {
-    .m1 entryconfigure 5 -activeforeground non-existent
+test menu-2.54 {entry configuration options 5 -activecolor non-existent radiobutton} -body {
+    .m1 entryconfigure 5 -activecolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
 test menu-2.55 {entry configuration options 0 -accelerator Ctrl+S tearoff} -body {
@@ -646,56 +648,56 @@ test menu-2.108 {entry configuration options 5 -font {kill rock stars} radiobutt
     .m1 entryconfigure 5 -font {kill rock stars}
 } -returnCodes error -result {expected integer but got "rock"}
 
-test menu-2.109 {entry configuration options 0 -foreground #110022 tearoff} -body {
-    .m1 entryconfigure 0 -foreground #110022
-} -returnCodes error -result {unknown option "-foreground"}
+test menu-2.109 {entry configuration options 0 -color #110022 tearoff} -body {
+    .m1 entryconfigure 0 -color #110022
+} -returnCodes error -result {unknown option "-color"}
 
-test menu-2.110 {entry configuration options 1 -foreground #110022 command} -body {
-    .m1 entryconfigure 1 -foreground #110022
-    lindex [.m1 entryconfigure 1 -foreground] 4
+test menu-2.110 {entry configuration options 1 -color #110022 command} -body {
+    .m1 entryconfigure 1 -color #110022
+    lindex [.m1 entryconfigure 1 -color] 4
 } -result {#110022}
 
-test menu-2.111 {entry configuration options 2 -foreground #110022 cascade} -body {
-    .m1 entryconfigure 2 -foreground #110022
-    lindex [.m1 entryconfigure 2 -foreground] 4
+test menu-2.111 {entry configuration options 2 -color #110022 cascade} -body {
+    .m1 entryconfigure 2 -color #110022
+    lindex [.m1 entryconfigure 2 -color] 4
 } -result {#110022}
 
-test menu-2.112 {entry configuration options 3 -foreground #110022 separator} -body {
-    .m1 entryconfigure 3 -foreground #110022
-} -returnCodes error -result {unknown option "-foreground"}
+test menu-2.112 {entry configuration options 3 -color #110022 separator} -body {
+    .m1 entryconfigure 3 -color #110022
+} -returnCodes error -result {unknown option "-color"}
 
-test menu-2.113 {entry configuration options 4 -foreground #110022 checkbutton} -body {
-    .m1 entryconfigure 4 -foreground #110022
-    lindex [.m1 entryconfigure 4 -foreground] 4
+test menu-2.113 {entry configuration options 4 -color #110022 checkbutton} -body {
+    .m1 entryconfigure 4 -color #110022
+    lindex [.m1 entryconfigure 4 -color] 4
 } -result {#110022}
 
-test menu-2.114 {entry configuration options 5 -foreground #110022 radiobutton} -body {
-    .m1 entryconfigure 5 -foreground #110022
-    lindex [.m1 entryconfigure 5 -foreground] 4
+test menu-2.114 {entry configuration options 5 -color #110022 radiobutton} -body {
+    .m1 entryconfigure 5 -color #110022
+    lindex [.m1 entryconfigure 5 -color] 4
 } -result {#110022}
 
-test menu-2.115 {entry configuration options 0 -foreground non-existent tearoff} -body {
-    .m1 entryconfigure 0 -foreground non-existent
-} -returnCodes error -result {unknown option "-foreground"}
+test menu-2.115 {entry configuration options 0 -color non-existent tearoff} -body {
+    .m1 entryconfigure 0 -color non-existent
+} -returnCodes error -result {unknown option "-color"}
 
-test menu-2.116 {entry configuration options 1 -foreground non-existent command} -body {
-    .m1 entryconfigure 1 -foreground non-existent
+test menu-2.116 {entry configuration options 1 -color non-existent command} -body {
+    .m1 entryconfigure 1 -color non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.117 {entry configuration options 2 -foreground non-existent cascade} -body {
-    .m1 entryconfigure 2 -foreground non-existent
+test menu-2.117 {entry configuration options 2 -color non-existent cascade} -body {
+    .m1 entryconfigure 2 -color non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.118 {entry configuration options 3 -foreground non-existent separator} -body {
-    .m1 entryconfigure 3 -foreground non-existent
-} -returnCodes error -result {unknown option "-foreground"}
+test menu-2.118 {entry configuration options 3 -color non-existent separator} -body {
+    .m1 entryconfigure 3 -color non-existent
+} -returnCodes error -result {unknown option "-color"}
 
-test menu-2.119 {entry configuration options 4 -foreground non-existent checkbutton} -body {
-    .m1 entryconfigure 4 -foreground non-existent
+test menu-2.119 {entry configuration options 4 -color non-existent checkbutton} -body {
+    .m1 entryconfigure 4 -color non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.120 {entry configuration options 5 -foreground non-existent radiobutton} -body {
-    .m1 entryconfigure 5 -foreground non-existent
+test menu-2.120 {entry configuration options 5 -color non-existent radiobutton} -body {
+    .m1 entryconfigure 5 -color non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
 test menu-2.121 {entry configuration options 0 -image image1 tearoff} -constraints {
@@ -1360,7 +1362,7 @@ test menu-3.17 {MenuWidgetCmd procedure, "clone" option} -setup {
 } -cleanup {
 	destroy .m1
 } -result {}
-test menu-3.18 {MenuWidgetCmd procedure, "configure" option} -setup {
+test menu-3.18 {MenuWidgetCmd procedure, "configure" option} -constraints nodeprecated -setup {
 	destroy .m1
 } -body {
     menu .m1
@@ -1511,7 +1513,7 @@ test menu-3.35 {MenuWidgetCmd procedure, "entryconfigure" option} -setup {
     menu .m1
     .m1 entryconfigure foo
 } -returnCodes error -result {bad menu entry index "foo"}
-test menu-3.36 {MenuWidgetCmd procedure, "entryconfigure" option} -setup {
+test menu-3.36 {MenuWidgetCmd procedure, "entryconfigure" option} -constraints nodeprecated -setup {
 	destroy .m1
 } -body {
     menu .m1
@@ -2424,7 +2426,7 @@ test menu-9.4 {ConfigureMenu}  -setup {
 } -body {
     menu .m1
     .m1 add command -label "test"
-    .m1 configure -fg red
+    .m1 configure -color red
 } -cleanup {
     deleteWindows
 } -result {}
@@ -2434,7 +2436,7 @@ test menu-9.5 {ConfigureMenu}  -setup {
     menu .m1
     .m1 add command -label "test"
     .m1 add command -label "two"
-    .m1 configure -fg red
+    .m1 configure -color red
 } -cleanup {
     deleteWindows
 } -result {}
@@ -2445,7 +2447,7 @@ test menu-9.6 {ConfigureMenu}  -setup {
     .m1 add command -label "test"
     .m1 add command -label "two"
     .m1 add command -label "three"
-    .m1 configure -fg red
+    .m1 configure -color red
 } -cleanup {
     deleteWindows
 } -result {}
@@ -2454,7 +2456,7 @@ test menu-9.7 {ConfigureMenu} -setup {
 } -body {
     menu .m1
     .m1 clone .m2 tearoff
-    list [.m1 configure -fg red] [.m2 cget -fg]
+    list [.m1 configure -color red] [.m2 cget -color]
 } -cleanup {
     deleteWindows
 } -result {{} red}
@@ -2463,7 +2465,7 @@ test menu-9.8 {ConfigureMenu} -setup {
 } -body {
     menu .m1
     .m1 clone .m2 tearoff
-    list [.m2 configure -fg red] [.m1 cget -fg]
+    list [.m2 configure -color red] [.m1 cget -color]
 } -cleanup {
     deleteWindows
 } -result {{} red}

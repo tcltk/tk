@@ -27,7 +27,7 @@ button $w.back -text "Set background color ..." \
     "setColor $w $w.back background {-background -highlightbackground}"
 button $w.fore -text "Set foreground color ..." \
     -command \
-    "setColor $w $w.back foreground -foreground"
+    "setColor $w $w.back foreground -color"
 
 pack $w.back $w.fore -side top -anchor c -pady 2m
 

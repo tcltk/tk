@@ -55,7 +55,9 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-activecolor", "activecolor", "Activecolor",
 	NULL, offsetof(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
     {TK_CONFIG_SYNONYM, "-activeforeground", "activecolor", NULL, NULL, 0, 0, NULL},
+#endif
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
 	"center", offsetof(BitmapItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-background", "background", "Background",
@@ -73,8 +75,10 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-disabledcolor", "disabledcolor", "Disabledcolor",
 	NULL, offsetof(BitmapItem, disabledFgColor),
 	TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
     {TK_CONFIG_SYNONYM, "-disabledforeground", "disabledcolor", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-foreground", "color", NULL, NULL, 0, 0, NULL},
+#endif
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK,
 	&stateOption},

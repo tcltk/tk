@@ -96,8 +96,10 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BORDER, "-background", "background", "Background",
 	DEF_CANVAS_BG_MONO, offsetof(TkCanvas, bgBorder),
 	TK_CONFIG_MONO_ONLY, NULL},
+#ifndef TK_NO_DEPRECATED
     {TK_CONFIG_SYNONYM, "-bd", "borderWidth", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-bg", "background", NULL, NULL, 0, 0, NULL},
+#endif
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_CANVAS_BORDER_WIDTH, offsetof(TkCanvas, borderWidth), 0, NULL},
     {TK_CONFIG_DOUBLE, "-closeenough", "closeEnough", "CloseEnough",
@@ -156,7 +158,9 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-selectcolor", "selectColor", "SelectColor",
 	DEF_CANVAS_SELECT_FG_MONO, offsetof(TkCanvas, textInfo.selFgColorPtr),
 	TK_CONFIG_MONO_ONLY|TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
     {TK_CONFIG_SYNONYM, "-selectforeground", "selectColor", NULL, NULL, 0, 0, NULL},
+#endif
     {TK_CONFIG_CUSTOM, "-state", "state", "State",
 	"normal", offsetof(TkCanvas, canvas_state), TK_CONFIG_DONT_SET_DEFAULT,
 	&stateOption},
@@ -840,8 +844,8 @@ CanvasWidgetCmd(
     TagSearch *searchPtr = NULL;/* Allocated by first TagSearchScan, freed by
 				 * TagSearchDestroy */
 
-    int index;
-    static const char *const optionStrings[] = {
+    int idx;
+    static const char *const canvasOptionStrings[] = {
 	"addtag",	"bbox",		"bind",		"canvasx",
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
@@ -853,7 +857,7 @@ CanvasWidgetCmd(
 	"scan",		"select",	"type",		"xview",
 	"yview",	NULL
     };
-    enum options {
+    enum canvasOptionStringsEnum {
 	CANV_ADDTAG,	CANV_BBOX,	CANV_BIND,	CANV_CANVASX,
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
@@ -870,14 +874,14 @@ CanvasWidgetCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], canvasOptionStrings, "option", 0,
+	    &idx) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(canvasPtr);
 
     result = TCL_OK;
-    switch ((enum options) index) {
+    switch ((enum canvasOptionStringsEnum)idx) {
     case CANV_ADDTAG:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tag searchCommand ?arg ...?");
@@ -1248,7 +1252,6 @@ CanvasWidgetCmd(
     case CANV_CREATE: {
 	Tk_ItemType *typePtr;
 	Tk_ItemType *matchPtr = NULL;
-	Tk_Item *itemPtr;
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
@@ -1664,7 +1667,6 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_LOWER: {
-	Tk_Item *itemPtr;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?belowThis?");
@@ -1928,10 +1930,10 @@ CanvasWidgetCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x y ?dragGain?");
 	    result = TCL_ERROR;
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
-		"scan option", 0, &index) != TCL_OK) {
+		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 5+index)) {
-	    Tcl_WrongNumArgs(interp, 3, objv, index?"x y ?gain?":"x y");
+	} else if ((objc != 5) && (objc != 5+idx)) {
+	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y ?gain?":"x y");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)){
@@ -1939,7 +1941,7 @@ CanvasWidgetCmd(
 	} else if ((objc == 6) &&
 		(Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK)) {
 	    result = TCL_ERROR;
-	} else if (!index) {
+	} else if (!idx) {
 	    canvasPtr->scanX = x;
 	    canvasPtr->scanXOrigin = canvasPtr->xOrigin;
 	    canvasPtr->scanY = y;
@@ -3764,7 +3766,7 @@ TagSearchScan(
 	 */
 
 	searchPtr->rewritebufferAllocated = 100;
-	searchPtr->rewritebuffer =(char *) ckalloc(searchPtr->rewritebufferAllocated);
+	searchPtr->rewritebuffer = (char *)ckalloc(searchPtr->rewritebufferAllocated);
     }
     TagSearchExprInit(&searchPtr->expr);
 
@@ -4597,7 +4599,7 @@ DoItem(
 	Tk_Uid *newTagPtr;
 
 	itemPtr->tagSpace += 5;
-	newTagPtr = (Tk_Uid*)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
+	newTagPtr = (Tk_Uid *)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
 	memcpy((void *) newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {

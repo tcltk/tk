@@ -200,15 +200,18 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_COLOR, "-color", "color", "Color",
 	NULL, offsetof(Entry, entry.styleData.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_COLOR, "-placeholdercolor", "placeholderColor",
         "PlaceholderColor", NULL,
         offsetof(Entry, entry.styleData.placeholderForegroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-placeholderforeground", "placeholdercolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-placeholdercolor", 0},
-
+#endif
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };

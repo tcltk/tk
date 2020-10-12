@@ -56,8 +56,10 @@ static const Tk_OptionSpec SquareOptionSpecs[] =
     {TK_OPTION_BORDER, "-color", "color", "Color",
 	DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
 	TCL_INDEX_NONE, 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	"50", offsetof(Square,square.widthObj), TCL_INDEX_NONE, 0, 0,
 	GEOMETRY_CHANGED},

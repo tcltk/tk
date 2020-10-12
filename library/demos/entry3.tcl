@@ -50,12 +50,12 @@ pack $btns -side bottom -fill x
 proc focusAndFlash {W fg bg {count 9}} {
     focus -force $W
     if {$count<1} {
-	$W configure -foreground $fg -background $bg
+	$W configure -color $fg -background $bg
     } else {
 	if {$count%2} {
-	    $W configure -foreground $bg -background $fg
+	    $W configure -color $bg -background $fg
 	} else {
-	    $W configure -foreground $fg -background $bg
+	    $W configure -color $fg -background $bg
 	}
 	after 200 [list focusAndFlash $W $fg $bg [expr {$count-1}]]
     }

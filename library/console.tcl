@@ -158,10 +158,10 @@ proc ::tk::ConsoleInit {} {
 
     ConsoleBind $con
 
-    $con tag configure stderr	-foreground red
-    $con tag configure stdin	-foreground blue
-    $con tag configure prompt	-foreground \#8F4433
-    $con tag configure proc	-foreground \#008800
+    $con tag configure stderr	-color red
+    $con tag configure stdin	-color blue
+    $con tag configure prompt	-color \#8F4433
+    $con tag configure proc	-color \#008800
     $con tag configure var	-background \#FFC0D0
     $con tag raise sel
     $con tag configure blink	-background \#FFFF00

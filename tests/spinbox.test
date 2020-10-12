@@ -11,6 +11,7 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
@@ -259,8 +260,8 @@ test spinbox-1.20 {configuration option: "disabledforeground"} -setup {
     pack .e
     update
 } -body {
-    .e configure -disabledforeground #110022
-    .e cget -disabledforeground
+    .e configure -disabledcolor #110022
+    .e cget -disabledcolor
 } -cleanup {
     destroy .e
 } -result {#110022}
@@ -270,7 +271,7 @@ test spinbox-1.21 {configuration option: "disabledforeground" for spinbox} -setu
     pack .e
     update
 } -body {
-    .e configure -disabledforeground bogus
+    .e configure -disabledcolor bogus
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "bogus"}
@@ -303,8 +304,8 @@ test spinbox-1.24 {configuration option: "fg"} -setup {
     pack .e
     update
 } -body {
-    .e configure -fg #110022
-    .e cget -fg
+    .e configure -color #110022
+    .e cget -color
 } -cleanup {
     destroy .e
 } -result {#110022}
@@ -314,7 +315,7 @@ test spinbox-1.25 {configuration option: "fg" for spinbox} -setup {
     pack .e
     update
 } -body {
-    .e configure -fg bogus
+    .e configure -color bogus
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "bogus"}
@@ -347,8 +348,8 @@ test spinbox-1.28 {configuration option: "foreground"} -setup {
     pack .e
     update
 } -body {
-    .e configure -foreground #110022
-    .e cget -foreground
+    .e configure -color #110022
+    .e cget -color
 } -cleanup {
     destroy .e
 } -result {#110022}
@@ -358,7 +359,7 @@ test spinbox-1.29 {configuration option: "foreground" for spinbox} -setup {
     pack .e
     update
 } -body {
-    .e configure -foreground bogus
+    .e configure -color bogus
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "bogus"}
@@ -779,8 +780,8 @@ test spinbox-1.67 {configuration option: "selectforeground"} -setup {
     pack .e
     update
 } -body {
-    .e configure -selectforeground #654321
-    .e cget -selectforeground
+    .e configure -selectcolor #654321
+    .e cget -selectcolor
 } -cleanup {
     destroy .e
 } -result {#654321}
@@ -790,7 +791,7 @@ test spinbox-1.68 {configuration option: "selectforeground" for spinbox} -setup 
     pack .e
     update
 } -body {
-    .e configure -selectforeground bogus
+    .e configure -selectcolor bogus
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "bogus"}
@@ -1159,7 +1160,7 @@ test spinbox-3.14 {SpinboxWidgetCmd procedure, "cget" widget command} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test spinbox-3.15 {SpinboxWidgetCmd procedure, "configure" widget command} -setup {
+test spinbox-3.15 {SpinboxWidgetCmd procedure, "configure" widget command} -constraints nodeprecated -setup {
     spinbox .e
     pack .e
     update
@@ -2787,10 +2788,10 @@ test spinbox-11.1 {SpinboxEventProc procedure} -setup {
 test spinbox-11.2 {SpinboxEventProc procedure} -setup {
     set x {}
 } -body {
-    spinbox .e1 -fg #112233
+    spinbox .e1 -color #112233
     rename .e1 .e2
     lappend x [winfo children .]
-    lappend x [.e2 cget -fg]
+    lappend x [.e2 cget -color]
     destroy .e1
     lappend x [info command .e*] [winfo children .]
 } -cleanup {
@@ -3297,7 +3298,7 @@ test spinbox-19.1 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a
     set ::vVals
@@ -3312,7 +3313,7 @@ test spinbox-19.2 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a   ;# previous settings
     .e insert 1 b
@@ -3328,7 +3329,7 @@ test spinbox-19.3 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
@@ -3344,7 +3345,7 @@ test spinbox-19.4 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
@@ -3360,7 +3361,7 @@ test spinbox-19.5 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
@@ -3376,7 +3377,7 @@ test spinbox-19.6 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
@@ -3393,7 +3394,7 @@ test spinbox-19.7 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abc                 ;# previous settings
     set ::vVals {}
@@ -3410,7 +3411,7 @@ test spinbox-19.8 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e configure -validate focus    ;# previous settings
     .e insert end abcd              ;# previous settings
@@ -3429,7 +3430,7 @@ test spinbox-19.9 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd      ;# previous settings
     focus -force .e         ;# previous settings
@@ -3450,7 +3451,7 @@ test spinbox-19.10 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd          ;# previous settings
     focus -force .e
@@ -3468,7 +3469,7 @@ test spinbox-19.11 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd          ;# previous settings
     focus -force .e             ;# previous settings
@@ -3489,7 +3490,7 @@ test spinbox-19.12 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 abcd              ;# previous settings
     focus -force .e
@@ -3507,7 +3508,7 @@ test spinbox-19.13 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}
@@ -3526,7 +3527,7 @@ test spinbox-19.14 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3545,7 +3546,7 @@ test spinbox-19.15 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3568,7 +3569,7 @@ test spinbox-19.16 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3591,7 +3592,7 @@ test spinbox-19.17 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::e newdata
@@ -3609,7 +3610,7 @@ test spinbox-19.18 {spinbox widget validation} -setup {
         -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     set ::e newdata                 ;# previous settings
     .e configure -validate all
@@ -3630,7 +3631,7 @@ test spinbox-19.19 {spinbox widget validation} -setup {
         -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     set ::e nextdata                 ;# previous settings
 
@@ -3653,7 +3654,7 @@ test spinbox-19.20 {spinbox widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     set ::e nextdata                 ;# previous settings
     .e configure -validatecommand [list doval2 %W %d %i %P %s %S %v %V] ;# prev

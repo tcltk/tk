@@ -32,7 +32,7 @@ set colorList {Red Orange Yellow Green Blue Violet}
 ttk::label $w.frame.label
 ttk::scale $w.frame.scale -from 0 -to 5 -command [list apply {{w idx} {
     set c [lindex $::colorList [tcl::mathfunc::int $idx]]
-    $w.frame.label configure -foreground $c -text "Color: $c"
+    $w.frame.label configure -color $c -text "Color: $c"
 }} $w]
 # Trigger the setting of the label's text
 $w.frame.scale set 0

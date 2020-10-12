@@ -118,12 +118,12 @@ pack $w.text -expand yes -fill both
 
 if {[winfo depth $w] > 1} {
     textToggle "$w.text tag configure search -background \
-	    #ce5555 -foreground white" 800 "$w.text tag configure \
-	    search -background {} -foreground {}" 200
+	    #ce5555 -color white" 800 "$w.text tag configure \
+	    search -background {} -color {}" 200
 } else {
     textToggle "$w.text tag configure search -background \
-	    black -foreground white" 800 "$w.text tag configure \
-	    search -background {} -foreground {}" 200
+	    black -color white" 800 "$w.text tag configure \
+	    search -background {} -color {}" 200
 }
 $w.text insert 1.0 \
 {This window demonstrates how to use the tagging facilities in text

@@ -407,9 +407,9 @@ proc Draw2 {w} {
     for {set y 0} {$y < 3} {incr y} {
 	set yy [expr {335+$y*16}]
 	$w.c create bitmap 628 $yy -bitmap gray25 -anchor nw \
-		-foreground $::C(fg)
+		-color $::C(fg)
 	$w.c create bitmap 644 $yy -bitmap gray25 -anchor nw \
-		-foreground $::C(fg)
+		-color $::C(fg)
     }
 
     set xy {702 366 798 366}			;# Lever

@@ -380,7 +380,7 @@ package require Tk
 	$canvas itemconfigure selectionText -fill black
 	$canvas dtag selectionText
 	set cbg [ttk::style lookup TEntry -selectbackground focus]
-	set cfg [ttk::style lookup TEntry -selectforeground focus]
+	set cfg [ttk::style lookup TEntry -selectcolor focus]
 	foreach item $selection {
 	    set rTag [lindex $list $item 2]
 	    foreach {iTag tTag text serial} $itemList($rTag) {

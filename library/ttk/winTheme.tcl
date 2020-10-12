@@ -7,8 +7,8 @@ namespace eval ttk::theme::winnative {
 
 	ttk::style configure "." \
 	    -background SystemButtonFace \
-	    -foreground SystemWindowText \
-	    -selectforeground SystemHighlightText \
+	    -color SystemWindowText \
+	    -selectcolor SystemHighlightText \
 	    -selectbackground SystemHighlight \
 	    -fieldbackground SystemWindow \
 	    -insertcolor SystemWindowText \
@@ -16,7 +16,7 @@ namespace eval ttk::theme::winnative {
 	    -font TkDefaultFont \
 	    ;
 
-	ttk::style map "." -foreground [list disabled SystemGrayText] ;
+	ttk::style map "." -color [list disabled SystemGrayText] ;
         ttk::style map "." -embossed [list disabled 1] ;
 
 	ttk::style configure TButton \
@@ -34,17 +34,17 @@ namespace eval ttk::theme::winnative {
 	    -fieldbackground \
 	    	[list readonly SystemButtonFace disabled SystemButtonFace] \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
+	    -selectcolor [list !focus SystemWindowText] \
 	    ;
 
 	ttk::style configure TCombobox -padding 2
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
+	    -selectcolor [list !focus SystemWindowText] \
 	    -fieldbackground [list \
 	    	readonly SystemButtonFace \
 		disabled SystemButtonFace] \
-	    -foreground	[list \
+	    -color	[list \
 		disabled		SystemGrayText \
 	    	{readonly focus}	SystemHighlightText \
 	    ] \
@@ -75,7 +75,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
-	    -foreground [list   disabled SystemGrayText \
+	    -color [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
         ttk::style configure TProgressbar \

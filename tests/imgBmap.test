@@ -13,6 +13,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 set data1 {#define foo_width 16
 #define foo_height 16
 #define foo_x_hot 3
@@ -81,8 +83,8 @@ test imageBmap-1.6 {options for bitmap images} -body {
     list [catch {image create bitmap i1 -file bogus} msg] [string tolower $msg]
 } -result {1 {couldn't read bitmap file "bogus": no such file or directory}}
 test imageBmap-1.7 {options for bitmap images} -body {
-    image create bitmap i1 -foreground #00ff00
-    lindex [i1 configure -foreground] 4
+    image create bitmap i1 -color #00ff00
+    lindex [i1 configure -color] 4
 } -cleanup {
 	image delete i1
 } -result {#00ff00}
@@ -92,7 +94,7 @@ test imageBmap-1.8 {options for bitmap images} -setup {
     update
 } -body {
     set errMsg {}
-    image create bitmap i1 -foreground bad_color
+    image create bitmap i1 -color bad_color
     .c create image 200 100 -image i1
     update
     list $errMsg $errorInfo
@@ -130,7 +132,7 @@ test imageBmap-2.2 {ImgBmapCreate procedure} -setup {
     image create bitmap image1
     list [info commands image1] [imageNames] \
 	    [image width image1] [image height image1] \
-	    [lindex [image1 configure -foreground] 4] \
+	    [lindex [image1 configure -color] 4] \
 	    [lindex [image1 configure -background] 4]
 } -cleanup {
     image delete image1
@@ -210,7 +212,7 @@ test imageBmap-4.1 {ImgBmapConfigureInstance procedure: check error handling} -s
     image create bitmap i1 -file foo.bm
     .c create image 100 100 -image i1
     update
-    i1 configure -foreground bogus
+    i1 configure -color bogus
     update
 } -cleanup {
 	image delete i1
@@ -358,13 +360,13 @@ test imageBmap-7.3 {ImgBmapCmd procedure, "cget" option} -body {
     i1 cget a b
 } -returnCodes error -result {wrong # args: should be "i1 cget option"}
 test imageBmap-7.4 {ImgBmapCmd procedure, "cget" option} -body {
-    i1 co -foreground #123456
-    i1 cget -foreground
+    i1 co -color #123456
+    i1 cget -color
 } -result {#123456}
 test imageBmap-7.5 {ImgBmapCmd procedure, "cget" option} -body {
     i1 cget -stupid
 } -returnCodes error -result {unknown option "-stupid"}
-test imageBmap-7.6 {ImgBmapCmd procedure} -body {
+test imageBmap-7.6 {ImgBmapCmd procedure} -constraints nodeprecated -body {
     llength [i1 configure]
 } -result 7
 test imageBmap-7.7 {ImgBmapCmd procedure} -body {
@@ -375,7 +377,7 @@ test imageBmap-7.8 {ImgBmapCmd procedure} -body {
     i1 configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
 test imageBmap-7.9 {ImgBmapCmd procedure} -body {
-    i1 configure -foreground #221100 -background
+    i1 configure -color #221100 -background
 } -returnCodes error -result {value for "-background" missing}
 test imageBmap-7.10 {ImgBmapCmd procedure} -body {
     i1 gorp
@@ -433,7 +435,7 @@ test imageBmap-9.2 {ImgBmapDisplay procedure, nothing to display} -setup {
     .c delete all
     image create bitmap i1 -data $data1
     .c create image 50 100 -image i1 -tags i1.1
-    i1 configure -foreground bogus
+    i1 configure -color bogus
     update
 } -cleanup {
     image delete i1
@@ -450,7 +452,7 @@ test imageBmap-10.1 {ImgBmapFree procedure, resource freeing} -setup {
     update
 } -body {
     imageCleanup
-    image create bitmap i1 -data $data1 -maskdata $data2 -foreground #112233 \
+    image create bitmap i1 -data $data1 -maskdata $data2 -color #112233 \
 	    -background #445566
     .c create image 100 100 -image i1
     update
@@ -465,7 +467,7 @@ test imageBmap-10.2 {ImgBmapFree procedures, unlinking} -setup {
     update
 } -body {
     imageCleanup
-    image create bitmap i1 -data $data1 -maskdata $data2 -foreground #112233 \
+    image create bitmap i1 -data $data1 -maskdata $data2 -color #112233 \
 	    -background #445566
     .c create image 100 100 -image i1
     button .b1 -image i1
