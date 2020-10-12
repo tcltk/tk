@@ -1862,7 +1862,7 @@ test menu-3.71 {MenuWidgetCmd procedure, "index end" option, bug [f3cd942e9e]} -
     destroy .m1
 } -body {
     menu .m1
-    list [.m1 index "end"]
+    .m1 index "end"
 } -cleanup {
     destroy .m1
 } -result {}
