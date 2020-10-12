@@ -311,10 +311,15 @@ getFileURL(
 
 	[openpanel setAllowedFileTypes:nil];
     } else {
-	NSMutableArray *allowedtypes =
-		[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
-	[openpanel setAllowedFileTypes:allowedtypes];
-	[openpanel setAllowsOtherFileTypes:NO];
+	NSMutableArray *allowedExtensions = [filterInfo.fileTypeExtensions
+						objectAtIndex:filterInfo.fileTypeIndex];
+	if ([allowedExtensions count] > 0) {
+	    [openpanel setAllowedFileTypes:allowedExtensions];
+	    [openpanel setAllowsOtherFileTypes:NO];
+	} else {
+	    [openpanel setAllowedFileTypes:nil];
+	    [openpanel setAllowsOtherFileTypes:YES];
+	}
     }
 
     filterInfo.userHasSelectedFilter = true;
@@ -328,10 +333,15 @@ getFileURL(
 	[savepanel setAllowsOtherFileTypes:YES];
 	[savepanel setAllowedFileTypes:nil];
     } else {
-	NSMutableArray *allowedtypes =
-		[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
-	[savepanel setAllowedFileTypes:allowedtypes];
-	[savepanel setAllowsOtherFileTypes:NO];
+	NSMutableArray *allowedExtensions = [filterInfo.fileTypeExtensions
+						objectAtIndex:filterInfo.fileTypeIndex];
+	if ([allowedExtensions count] > 0) {
+	    [savepanel setAllowedFileTypes:allowedExtensions];
+	    [savepanel setAllowsOtherFileTypes:NO];
+	} else {
+	    [savepanel setAllowedFileTypes:nil];
+	    [savepanel setAllowsOtherFileTypes:NO];
+	}
     }
 
     filterInfo.userHasSelectedFilter = true;
@@ -609,8 +619,8 @@ filterCompatible(
     NSString *extension,
     int filterIndex)
 {
-    NSMutableArray *allowedExtensions =
-	    [filterInfo.fileTypeExtensions objectAtIndex: filterIndex];
+    NSMutableArray *allowedExtensions = [filterInfo.fileTypeExtensions
+					    objectAtIndex: filterIndex];
 
     /*
      * If this contains the all pattern, accept any extension.
@@ -778,21 +788,18 @@ Tk_GetOpenFileObjCmd(
 	     */
 
 	    [popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
-
-	    /*
-	     * On OSX > 10.11, the options are not visible by default. Ergo
-	     * allow all file types
-	    [openpanel setAllowedFileTypes:filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex]];
-	    */
-
-	    [openpanel setAllowedFileTypes:filterInfo.allowedExtensions];
-	} else {
-	    [openpanel setAllowedFileTypes:filterInfo.allowedExtensions];
 	}
-	if (filterInfo.allowedExtensionsAllowAll) {
-	    [openpanel setAllowsOtherFileTypes:YES];
+	NSMutableArray *allowedExtensions = filterInfo.allowedExtensions; 
+	if ([allowedExtensions count] > 0) {
+	    [openpanel setAllowedFileTypes: allowedExtensions];
+	    if (filterInfo.allowedExtensionsAllowAll) {
+		[openpanel setAllowsOtherFileTypes:YES];
+	    } else {
+		[openpanel setAllowsOtherFileTypes:NO];
+	    }
 	} else {
-	    [openpanel setAllowsOtherFileTypes:NO];
+	    [openpanel setAllowedFileTypes: nil];
+	    [openpanel setAllowsOtherFileTypes:YES];
 	}
 	[openpanel setAccessoryView:accessoryView];
     } else {
@@ -1059,8 +1066,15 @@ Tk_GetSaveFileObjCmd(
 
 	[savepanel setAccessoryView:accessoryView];
 
-	[savepanel setAllowedFileTypes:[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]];
-	[savepanel setAllowsOtherFileTypes:filterInfo.allowedExtensionsAllowAll];
+	NSMutableArray *allowedExtensions = [filterInfo.fileTypeExtensions
+						objectAtIndex: filterInfo.fileTypeIndex];
+	if ([allowedExtensions count] > 0) {
+	    [savepanel setAllowedFileTypes:allowedExtensions];
+	    [savepanel setAllowsOtherFileTypes:filterInfo.allowedExtensionsAllowAll];
+	} else {
+	    [savepanel setAllowedFileTypes:nil];
+	    [savepanel setAllowsOtherFileTypes:YES];
+	}
     } else if (defaultType) {
 	/*
 	 * If no filetypes are given, defaultextension is an alternative way to
@@ -1068,10 +1082,10 @@ Tk_GetSaveFileObjCmd(
 	 * don't display an accessory view.
 	 */
 
-	NSMutableArray *AllowedFileTypes = [NSMutableArray array];
+	NSMutableArray *allowedExtensions = [NSMutableArray array];
 
-	[AllowedFileTypes addObject:defaultType];
-	[savepanel setAllowedFileTypes:AllowedFileTypes];
+	[allowedExtensions addObject:defaultType];
+	[savepanel setAllowedFileTypes:allowedExtensions];
 	[savepanel setAllowsOtherFileTypes:YES];
     }
 
