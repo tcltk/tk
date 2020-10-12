@@ -124,7 +124,19 @@ set ico ""
 #             image - Tk image to update.
 #             text - string to update.
 #             callback - Tcl proc to change.
+#     destroy - destroy systray icon.
+#         Arguments:
+#             none.
 proc systray {args} {
+
+    if {[llength $args] == 0} {
+	error "Missing command: should be systray create | modify | destroy"
+    }
+
+    set name [lindex $args 0]
+    if {![string equal $name "create"]  && ![string equal $name "modify"]  && ![string equal $name "destroy"]} {
+	error "Invalid command: should be systray create | modify | destroy"
+    }
 
     #Set variables for icon properties.
     global ico
@@ -136,14 +148,33 @@ proc systray {args} {
     set txt ""
     set cb ""
 
+    #Remove the systray icon.
+    if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
+	switch -- [tk windowingsystem] {
+	    "win32" {
+		_systray taskbar delete $ico
+	    }
+	    "x11" {
+		destroy ._tray
+	    }
+	    "aqua" {
+		_systray destroy
+	    }
+	}
+    }
+
+    if {[lindex $args 0] eq "destroy" && [llength $args] > 1} {
+	error "Wrong # of args: systray destroy"
+    }
 
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
-
+	if {[llength $args] != 4} {
+	    error "Wrong # of arguments: systray create image? text? callback?"
+	}
         set img [lindex $args 1]
         set txt [lindex $args 2]
         set cb [lindex $args 3]
-
         switch -- [tk windowingsystem] {
             "win32" {
 		set ico [_systray createfrom $img]
@@ -161,6 +192,9 @@ proc systray {args} {
     }
     #Modify the system tray icon properties.
     if {[lindex $args 0] eq "modify"} {
+	if {[llength $args] != 3} {
+	    error "Wrong # of arguments: systray modify image | text | callback option?"
+	}
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[lindex $args 1] eq "image"} {
