@@ -200,7 +200,7 @@ MacSystrayObjCmd(
     int objc,
 	Tcl_Obj *const *objv)
 {
-	Tk_Image tk_image;
+    Tk_Image tk_image;
     TkSizeT length;
     const char *arg = TkGetStringFromObj(objv[1], &length);
     if ((strncmp(arg, "create", length) == 0) && (length >= 2)) {
