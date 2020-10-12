@@ -1464,7 +1464,7 @@ TranslateText(
 static int
 GetTextIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
@@ -1477,7 +1477,6 @@ GetTextIndex(
     int c;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string;
-    (void)canvas;
 
     if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
@@ -1515,7 +1514,7 @@ GetTextIndex(
 	*indexPtr = textInfoPtr->selectLast;
     } else if (c == '@') {
 	int x, y;
-	double tmp, c = textPtr->cosine, s = textPtr->sine;
+	double tmp, cs = textPtr->cosine, s = textPtr->sine;
 	char *end;
 	const char *p;
 
@@ -1534,7 +1533,7 @@ GetTextIndex(
 	x -= (int) textPtr->drawOrigin[0];
 	y -= (int) textPtr->drawOrigin[1];
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
-		(int) (x*c - y*s), (int) (y*c + x*s));
+		(int) (x*cs - y*s), (int) (y*cs + x*s));
     } else {
 	/*
 	 * Some of the paths here leave messages in the interp's result, so we
@@ -1567,14 +1566,13 @@ GetTextIndex(
 
 static void
 SetTextCursor(
-    Tk_Canvas canvas,		/* Record describing canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Record describing canvas widget. */
     Tk_Item *itemPtr,		/* Text item in which cursor position is to be
 				 * set. */
     TkSizeT index)			/* Character index of character just before
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    (void)canvas;
 
     if (index == TCL_INDEX_NONE) {
 	textPtr->insertPos = 0;
@@ -1607,7 +1605,7 @@ SetTextCursor(
 
 static TkSizeT
 GetSelText(
-    Tk_Canvas canvas,		/* Canvas containing selection. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing selection. */
     Tk_Item *itemPtr,		/* Text item containing selection. */
     TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
@@ -1621,7 +1619,6 @@ GetSelText(
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    (void)canvas;
 
     if (((int)textInfoPtr->selectFirst < 0) ||
 	    (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1)) {

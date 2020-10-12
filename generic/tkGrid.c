@@ -341,6 +341,11 @@ Tk_GridObjCmd(
 	"content", "forget", "info", "location", "propagate",
 	"remove", "rowconfigure", "size", "slaves", NULL
     };
+    static const char *const optionStringsNoDep[] = {
+	"anchor", "bbox", "columnconfigure", "configure",
+	"content", "forget", "info", "location", "propagate",
+	"remove", "rowconfigure", "size", NULL
+    };
     enum options {
 	GRID_ANCHOR, GRID_BBOX, GRID_COLUMNCONFIGURE, GRID_CONFIGURE,
 	GRID_CONTENT, GRID_FORGET, GRID_INFO, GRID_LOCATION, GRID_PROPAGATE,
@@ -361,8 +366,16 @@ Tk_GridObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+    if (Tcl_GetIndexFromObjStruct(NULL, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	/*
+	 * Call it again without the deprecated ones to get a proper error
+	 * message. This works well since there can't be any ambiguity between
+	 * deprecated and new options.
+	 */
+
+	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
+		sizeof(char *), "option", 0, &index);
 	return TCL_ERROR;
     }
 
@@ -1236,7 +1249,7 @@ GridRowColumnConfigureCommand(
 
     if (slotPtr != NULL) {
 	if (slotType == ROW) {
-	    int last = containerPtr->containerDataPtr->rowMax - 1;
+	    last = containerPtr->containerDataPtr->rowMax - 1;
 
 	    while ((last >= 0) && (slotPtr[last].weight == 0)
 		    && (slotPtr[last].pad == 0) && (slotPtr[last].minSize == 0)
@@ -1245,7 +1258,7 @@ GridRowColumnConfigureCommand(
 	    }
 	    containerPtr->containerDataPtr->rowMax = last+1;
 	} else {
-	    int last = containerPtr->containerDataPtr->columnMax - 1;
+	    last = containerPtr->containerDataPtr->columnMax - 1;
 
 	    while ((last >= 0) && (slotPtr[last].weight == 0)
 		    && (slotPtr[last].pad == 0) && (slotPtr[last].minSize == 0)
@@ -1819,7 +1832,6 @@ ArrangeGrid(
     for (contentPtr = containerPtr->contentPtr; contentPtr != NULL && !abort;
 	    contentPtr = contentPtr->nextPtr) {
 	int x, y;			/* Top left coordinate */
-	int width, height;		/* Slot or content size */
 	int col = contentPtr->column;
 	int row = contentPtr->row;
 
@@ -1930,7 +1942,7 @@ ResolveConstraints(
     int uniformGroups;		/* Number of currently used uniform groups. */
     int uniformGroupsAlloced;	/* Size of allocated space for uniform
 				 * groups. */
-    int weight, minSize;
+    int minSize;
     int prevGrow, accWeight, grow;
 
     /*
@@ -2059,6 +2071,7 @@ ResolveConstraints(
 
     for (slot = 0; slot < gridCount; slot++) {
 	if (layoutPtr[slot].uniform != NULL) {
+		int weight;
 	    for (start = 0; start < uniformGroups; start++) {
 		if (uniformGroupPtr[start].group == layoutPtr[slot].uniform) {
 		    break;
@@ -2111,7 +2124,7 @@ ResolveConstraints(
 		for (start = 0; start < uniformGroups; start++) {
 		    if (uniformGroupPtr[start].group ==
 			    layoutPtr[slot].uniform) {
-			weight = layoutPtr[slot].weight;
+			int weight = layoutPtr[slot].weight;
 			weight = weight > 0 ? weight : 1;
 			layoutPtr[slot].minSize =
 				uniformGroupPtr[start].minSize * weight;
@@ -2992,7 +3005,7 @@ ConfigureContent(
 		 * If the stored container does not exist, just ignore it.
 		 */
 
-		struct Gridder *contentPtr = GetGrid(content);
+		contentPtr = GetGrid(content);
 		if (contentPtr->in != NULL) {
 		    if (TkGetWindowFromObj(interp, content, contentPtr->in, &parent)
 			    == TCL_OK) {
@@ -3132,7 +3145,7 @@ ConfigureContent(
 
 	for (defaultColumnSpan = 1; j + defaultColumnSpan < numWindows;
 		defaultColumnSpan++) {
-	    const char *string = Tcl_GetString(objv[j + defaultColumnSpan]);
+	    string = Tcl_GetString(objv[j + defaultColumnSpan]);
 
 	    if (*string != REL_HORIZ) {
 		break;
@@ -3434,9 +3447,9 @@ ConfigureContent(
 	int lastRow, lastColumn;	/* Implied end of table. */
 
 	string = Tcl_GetString(objv[j]);
-    	firstChar = string[0];
+	firstChar = string[0];
 
-    	if (firstChar == '.') {
+	if (firstChar == '.') {
 	    lastWindow = string;
 	    numSkip = 0;
 	}
@@ -3459,7 +3472,7 @@ ConfigureContent(
 	 */
 
 	for (width = 1; width + j < numWindows; width++) {
-	    const char *string = Tcl_GetString(objv[j+width]);
+	    string = Tcl_GetString(objv[j+width]);
 
 	    if (*string != REL_VERT) {
 		break;

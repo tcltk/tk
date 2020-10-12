@@ -366,14 +366,13 @@ FindCursorByName(
 TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
+    TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
     Tk_Uid string)		/* Description of cursor. See manual entry
 				 * for details on legal syntax. */
 {
     TkMacOSXCursor *macCursorPtr = NULL;
     const char **argv = NULL;
     int argc;
-    (void)tkwin;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -421,24 +420,16 @@ TkGetCursorByName(
 
 TkCursor *
 TkCreateCursorFromData(
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
-    const char *source,		/* Bitmap data for cursor shape. */
-    const char *mask,		/* Bitmap data for cursor mask. */
-    int width, int height,	/* Dimensions of cursor. */
-    int xHot, int yHot,		/* Location of hot-spot in cursor. */
-    XColor fgColor,		/* Foreground color for cursor. */
-    XColor bgColor)		/* Background color for cursor. */
+    TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
+    TCL_UNUSED(const char *),		/* Bitmap data for cursor shape. */
+    TCL_UNUSED(const char *),		/* Bitmap data for cursor mask. */
+    TCL_UNUSED(int),	/* Dimensions of cursor. */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),		/* Location of hot-spot in cursor. */
+    TCL_UNUSED(int),
+    TCL_UNUSED(XColor),		/* Foreground color for cursor. */
+    TCL_UNUSED(XColor))		/* Background color for cursor. */
 {
-    (void)tkwin;
-    (void)source;
-    (void)mask;
-    (void)width;
-    (void)height;
-    (void)xHot;
-    (void)yHot;
-    (void)fgColor;
-    (void)bgColor;
-
     return NULL;
 }
 

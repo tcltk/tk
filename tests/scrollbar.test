@@ -12,6 +12,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
 proc scroll args {
     global scrollInfo
@@ -272,13 +274,13 @@ test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
 } [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
        /([getTroughSize .s] - 1)}]]
-test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu} {
+test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu failsOnXQuarz} {
     format {%.6g} [.s fraction 4 179]
 } 1
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
 } 1
-test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu} {
+test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu failsOnXQuarz} {
     format {%.6g} [.s fraction 4 178]
 } {0.993711}
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
@@ -316,7 +318,7 @@ destroy .t
 test scrollbar-3.43 {ScrollbarWidgetCmd procedure, "get" option} {
     list [catch {.s get a} msg] $msg
 } {1 {wrong # args: should be ".s get"}}
-test scrollbar-3.44 {ScrollbarWidgetCmd procedure, "get" option} {
+test scrollbar-3.44 {ScrollbarWidgetCmd procedure, "get" option} nodeprecated {
     .s set 100 10 13 14
     .s get
 } {100 10 13 14}
@@ -401,27 +403,27 @@ test scrollbar-3.63 {ScrollbarWidgetCmd procedure, "set" option} {
     }
     set result
 } {0.4 0.4}
-test scrollbar-3.64 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.64 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     list [catch {.s set abc def ghi jkl} msg] $msg
 } {1 {expected integer but got "abc"}}
-test scrollbar-3.65 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.65 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     list [catch {.s set 1 def ghi jkl} msg] $msg
 } {1 {expected integer but got "def"}}
-test scrollbar-3.66 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.66 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     list [catch {.s set 1 2 ghi jkl} msg] $msg
 } {1 {expected integer but got "ghi"}}
-test scrollbar-3.67 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.67 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     list [catch {.s set 1 2 3 jkl} msg] $msg
 } {1 {expected integer but got "jkl"}}
-test scrollbar-3.68 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.68 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     .s set -10 50 20 30
     .s get
 } {0 50 0 0}
-test scrollbar-3.69 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.69 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     .s set 100 -10 20 30
     .s get
 } {100 0 20 30}
-test scrollbar-3.70 {ScrollbarWidgetCmd procedure, "set" option} {
+test scrollbar-3.70 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
     .s set 100 50 30 20
     .s get
 } {100 50 30 30}
@@ -493,7 +495,7 @@ test scrollbar-6.11.2 {ScrollbarPosition procedure} aqua {
     # macOS scrollbars have no arrows nowadays
     .s identify 8 4
 } {trough1}
-test scrollbar-6.12.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu} {
+test scrollbar-6.12.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu failsOnXQuarz} {
     .s identify 8 19
 } {arrow1}
 test scrollbar-6.12.2 {ScrollbarPosition procedure} aqua {
@@ -551,7 +553,7 @@ test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr {[winfo width .s] / 2}] [expr {[winfo height .s]
 						 - [testmetrics cyvscroll .s] - 1}]
 } {trough2}
-test scrollbar-6.29.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu} {
+test scrollbar-6.29.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu failsOnXQuarz} {
     .s identify 8 180
 } {arrow2}
 test scrollbar-6.29.2 {ScrollbarPosition procedure} aqua {
@@ -575,7 +577,7 @@ test scrollbar-6.33 {ScrollbarPosition procedure} win {
 test scrollbar-6.34 {ScrollbarPosition procedure} unix {
     .s identify 4 100
 } {trough2}
-test scrollbar-6.35 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
+test scrollbar-6.35 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnXQuarz} {
     .s identify 18 100
 } {trough2}
 test scrollbar-6.37 {ScrollbarPosition procedure} win {
@@ -614,7 +616,7 @@ test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics win} {
     .t.s identify [expr {int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s]
 		       - 1}] [expr {[winfo height .t.s] / 2}]
 } {slider}
-test scrollbar-6.44 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
+test scrollbar-6.44 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnXQuarz} {
     .t.s identify 100 18
 } {trough2}
 test scrollbar-6.46 {ScrollbarPosition procedure} win {
