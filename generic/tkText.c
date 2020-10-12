@@ -1968,7 +1968,7 @@ TextWidgetObjCmd(
 
 	    TkTextIndex *indices, *ixStart, *ixEnd, *lastStart;
 	    char *useIdx;
-	    int lastUsed, i;
+	    int lastUsed;
 
 	    objc -= 2;
 	    objv += 2;
@@ -5377,7 +5377,7 @@ TextUndoRedoCallback(
 
     if (eventuallyRepick) {
 	for (k = 0; k < countPeers; ++k) {
-	    TkText *tPtr = peers[k];
+	    tPtr = peers[k];
 
 	    if (!(tPtr->flags & DESTROYED)) {
 		TkTextEventuallyRepick(tPtr);
@@ -5399,7 +5399,7 @@ TextUndoRedoCallback(
 
     if (sharedTextPtr->triggerWatchCmd) {
 	for (i = 0; i < countPeers; ++i) {
-	    TkText *tPtr = peers[i];
+	    tPtr = peers[i];
 
 	    if (!(tPtr->flags & DESTROYED)) {
 		TkTextIndexClear(&tPtr->insertIndex, tPtr);
@@ -6302,16 +6302,16 @@ TextInsertCmd(
 		if (Tcl_ListObjGetElements(interp, tagPtr, &numTags, &tagNamePtrs) != TCL_OK) {
 		    rc = TCL_ERROR;
 		} else if (numTags > 0) {
-		    TkTextTag *tagPtr;
+		    TkTextTag *tTagPtr;
 
 		    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 
 		    for (i = 0; i < numTags; ++i) {
-			tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(tagNamePtrs[i]), NULL);
-			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
+			tTagPtr = TkTextCreateTag(textPtr, Tcl_GetString(tagNamePtrs[i]), NULL);
+			if (tTagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
 			    tagInfoPtr = TkTextTagSetResize(tagInfoPtr, sharedTextPtr->tagInfoSize);
 			}
-			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tagPtr->index);
+			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tTagPtr->index);
 		    }
 		}
 	    }
@@ -7303,7 +7303,7 @@ GetDumpFlags(
     };
 
     int arg;
-    unsigned i;
+    size_t i;
     unsigned flags = 0;
     const char *myOptStrings[sizeof(optStrings)/sizeof(optStrings[0])];
     int myOptIndices[sizeof(optStrings)/sizeof(optStrings[0])];
@@ -7421,7 +7421,6 @@ GetDumpFlags(
 wrongArgs:
     {
 	char result[500];
-	unsigned i;
 
 	result[0] = 0;
 	AppendOption(result, "?", NULL);
@@ -7613,7 +7612,6 @@ DumpLine(
 	 * then we need the preceding tag information.
 	 */
 
-	TkTextIndex index;
 	TkTextTag *tagPtr, *tPtr;
 	unsigned epoch = sharedTextPtr->inspectEpoch;
 
@@ -8472,7 +8470,7 @@ TextInspectCmd(
 	unsigned i;
 
 	for (i = 0; i < n; ++i) {
-	    TkTextTag *tagPtr = tags[i];
+	    tagPtr = tags[i];
 
 	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || !tagPtr->isSelTag)) {
 		assert(tagPtr->optionTable);
@@ -8494,7 +8492,7 @@ TextInspectCmd(
 	unsigned i;
 
 	for (i = 0; i < n; ++i) {
-	    TkTextTag *tagPtr = tags[i];
+	    tagPtr = tags[i];
 
 	    if (tagPtr
 		    && sharedTextPtr->tagBindingTable
@@ -9601,7 +9599,7 @@ TriggerWatchEdit(
     }
 
     for (i = 0; i < sharedTextPtr->numPeers; ++i) {
-	TkText *tPtr = peers[i];
+	tPtr = peers[i];
 
 	if (tPtr->watchCmd && (userFlag || tPtr->triggerAlways) && !(tPtr->flags & DESTROYED)) {
 	    TkTextIndex index[4];
@@ -11883,11 +11881,11 @@ TkpTextDump(
 	fprintf(stdout, "%s ", type);
 
 	if (strcmp(type, "text") == 0) {
-	    int len = strlen(text), i;
+	    int len = strlen(text), j;
 
 	    fprintf(stdout, "\"");
-	    for (i = 0; i < len; ++i) {
-		char c = text[i];
+	    for (j = 0; j < len; ++j) {
+		char c = text[j];
 
 		switch (c) {
 		case '\t': fprintf(stdout, "\\t"); break;
