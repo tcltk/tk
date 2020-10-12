@@ -80,10 +80,14 @@ static const char *scriptTextProc = "::tk::mac::DoScriptText";
     }
 }
 
+- (void) reallyTerminate: (id) sender
+{
+    [super terminate: nil];
+}
+
 - (void) terminate: (id) sender
 {
     [self handleQuitApplicationEvent:Nil withReplyEvent:Nil];
-    [super terminate: sender];
 }
 
 - (void) preferences: (id) sender
@@ -95,7 +99,6 @@ static const char *scriptTextProc = "::tk::mac::DoScriptText";
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     KillEvent *eventPtr;
-
     if (_eventInterp) {
 	/*
 	 * Call the exit command from the event loop, since you are not
@@ -587,9 +590,14 @@ ReallyKillMe(
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     int quit = Tcl_FindCommand(interp, "::tk::mac::Quit", NULL, 0)!=NULL;
+    if (isatty(0)) {
+	Tcl_Finalize();
+    }
+    [NSApp reallyTerminate:nil];
     int code = Tcl_EvalEx(interp, quit ? "::tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
 
     if (code != TCL_OK) {
+
 	/*
 	 * Should be never reached...
 	 */
