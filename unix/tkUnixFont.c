@@ -705,7 +705,7 @@ TkpGetNativeFont(
 
 	if (name[0] == '-') {
 	    if (name[1] != '*') {
-		char *dash;
+		const char *dash;
 
 		dash = strchr(name + 1, '-');
 		if ((dash == NULL) || (isspace(UCHAR(dash[-1])))) {
@@ -1713,7 +1713,7 @@ InitFont(
 	 * 1/3 the width of a capital I.
 	 */
 
-	fontPtr->barHeight = fontPtr->widths['I'] / 3;
+	fontPtr->barHeight = fontPtr->widths[(unsigned char)'I'] / 3;
 	if (fontPtr->barHeight == 0) {
 	    fontPtr->barHeight = 1;
 	}
@@ -2109,10 +2109,10 @@ FindSubFontForChar(
 
     nameList = ListFonts(fontPtr->display, "*", &numNames);
     for (i = 0; i < numNames; i++) {
-	fallback = strchr(nameList[i] + 1, '-') + 1;
-	strchr(fallback, '-')[0] = '\0';
-	if (SeenName(fallback, &ds) == 0) {
-	    subFontPtr = CanUseFallback(fontPtr, fallback, ch,
+	char *fallbck = strchr(nameList[i] + 1, '-') + 1;
+	strchr(fallbck, '-')[0] = '\0';
+	if (SeenName(fallbck, &ds) == 0) {
+	    subFontPtr = CanUseFallback(fontPtr, fallbck, ch,
 		    fixSubFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		XFreeFontNames(nameList);
