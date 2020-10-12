@@ -92,6 +92,8 @@ LPSTR            FindDIBBits(LPSTR lpbi);
 WORD             PaletteSize(LPSTR lpbi);
 WORD             DIBNumColors(LPSTR lpbi);
 int              ReadICOHeader(Tcl_Channel channel);
+BOOL             AdjustIconImagePointers(LPICONIMAGE lpImage);
+
 
 /*
  * Local Variables:

@@ -240,6 +240,7 @@ static int IconGenericHandler(ClientData cd, XEvent *ev);
 int Tktray_Init ( Tcl_Interp* interp );
 
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -269,7 +270,9 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
     int msgid;
 
     enum {XWC_CONFIGURE=0, XWC_CGET, XWC_BALLOON, XWC_CANCEL, XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION};
+    if 0
     const char *st_wcmd[]={"configure","cget","balloon","cancel","bbox","docked","orientation",NULL};
+    end if
 
     long timeout = 0;
     Tcl_Obj* optionValue;
@@ -370,7 +373,7 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
     }
     return TCL_OK;
 }
-
+#end if
 /*
  *----------------------------------------------------------------------
  *

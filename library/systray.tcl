@@ -1,6 +1,6 @@
 # systray.tcl --
 
-# This file defines the ::tk::systray command for icon display and manipulation
+# This file defines the systray command for icon display and manipulation
 # in the system tray on X11, Windows, and macOS, and the ::tk::systnotify command
 # for system alerts on each platform. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
