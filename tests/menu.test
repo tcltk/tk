@@ -1865,7 +1865,7 @@ test menu-3.71 {MenuWidgetCmd procedure, "index end" option, bug [f3cd942e9e]} -
     list [.m1 index "end"]
 } -cleanup {
     destroy .m1
-} -result none
+} -result {}
 
 
 test menu-4.1 {TkInvokeMenu: disabled} -setup {
