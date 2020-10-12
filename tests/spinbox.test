@@ -608,7 +608,7 @@ test spinbox-1.51 {configuration option: "invalidcommand"} -setup {
     destroy .e
 } -result {a command}
 
-test spinbox-1.52 {configuration option: "invcmd"} -setup {
+test spinbox-1.52 {configuration option: "invcmd"} -constraints nodeprecated -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
     pack .e
@@ -920,7 +920,7 @@ test spinbox-1.79 {configuration option: "values" for spinbox} -setup {
     destroy .e
 } -returnCodes {error} -result {list element in braces followed by "list" instead of space}
 
-test spinbox-1.80 {configuration option: "vcmd"} -setup {
+test spinbox-1.80 {configuration option: "vcmd"} -constraints nodeprecated -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
     pack .e

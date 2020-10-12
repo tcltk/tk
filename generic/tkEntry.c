@@ -126,8 +126,10 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
 	DEF_ENTRY_INVALIDCMD, TCL_INDEX_NONE, offsetof(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
+#endif
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), 0, 0, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
@@ -177,8 +179,10 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	0, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand","ValidateCommand",
 	NULL, TCL_INDEX_NONE, offsetof(Entry, validateCmd), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-validatecommand", 0},
+#endif
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -292,8 +296,10 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
 	DEF_ENTRY_INVALIDCMD, TCL_INDEX_NONE, offsetof(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
+#endif
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), 0, 0, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
@@ -351,8 +357,10 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_STRING, "-values", "values", "Values",
 	DEF_SPINBOX_VALUES, TCL_INDEX_NONE, offsetof(Spinbox, valueStr),
 	TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-validatecommand", 0},
+#endif
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
@@ -3362,8 +3370,8 @@ EntryTextVarProc(
  * Results:
 
  *	TCL_OK if the validatecommand passes the new string. TCL_BREAK if the
- *	vcmd executed OK, but rejects the string. TCL_ERROR if an error
- *	occurred while executing the vcmd or a valid Tcl_Bool is not returned.
+ *	validatecommand executed OK, but rejects the string. TCL_ERROR if an error
+ *	occurred while executing the validatecommand or a valid Tcl_Bool is not returned.
  *
  * Side effects:
  *	An error condition may arise

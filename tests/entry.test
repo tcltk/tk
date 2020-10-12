@@ -427,7 +427,7 @@ test entry-1.38 {configuration option: "invalidcommand" for entry} -setup {
     destroy .e
 } -result {any string}
 
-test entry-1.39 {configuration option: "invcmd" for entry} -setup {
+test entry-1.39 {configuration option: "invcmd" for entry} -constraints nodeprecated -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
     update
@@ -3507,7 +3507,7 @@ test entry-20.7 {widget deletion with textvariable active} -body {
 # SF bugs 607390 and 617446
     set FOO init
     entry .e -textvariable FOO -validate all \
-	    -vcmd {%W configure -background white; format 1}
+	    -validatecommand {%W configure -background white; format 1}
     bind .e <Destroy> { set FOO hello }
     destroy .e
     winfo exists .e

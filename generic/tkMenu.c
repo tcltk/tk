@@ -303,8 +303,10 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 #endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MENU_FONT, offsetof(TkMenu, fontPtr), TCL_INDEX_NONE, 0, NULL, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-postcommand", "postCommand", "Command",
 	DEF_MENU_POST_COMMAND,
 	offsetof(TkMenu, postCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
