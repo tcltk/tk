@@ -38,12 +38,12 @@ $w.text tag configure verybig -font "Helvetica 24 bold"
 $w.text tag configure tiny -font "Times 8 bold"
 if {[winfo depth $w] > 1} {
     $w.text tag configure color1 -background #a0b7ce
-    $w.text tag configure color2 -foreground red
+    $w.text tag configure color2 -color red
     $w.text tag configure raised -relief raised -borderwidth 1
     $w.text tag configure sunken -relief sunken -borderwidth 1
 } else {
-    $w.text tag configure color1 -background black -foreground white
-    $w.text tag configure color2 -background black -foreground white
+    $w.text tag configure color1 -background black -color white
+    $w.text tag configure color2 -background black -color white
     $w.text tag configure raised -background white -relief raised \
 	    -borderwidth 1
     $w.text tag configure sunken -background white -relief sunken \

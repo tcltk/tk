@@ -115,10 +115,12 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MESSAGE_BG_COLOR, TCL_INDEX_NONE, offsetof(Message, border), 0,
 	DEF_MESSAGE_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL,
 	0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
 	0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_MESSAGE_BORDER_WIDTH, TCL_INDEX_NONE,
 	offsetof(Message, borderWidth), 0, 0, 0},
@@ -127,12 +129,16 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL, NULL,
 	0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MESSAGE_FONT, TCL_INDEX_NONE, offsetof(Message, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, TCL_INDEX_NONE,
 	offsetof(Message, highlightBgColorPtr), 0, 0, 0},

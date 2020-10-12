@@ -46,8 +46,10 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BORDER, "-background", "background", "Background",
 	DEF_SCROLLBAR_BG_MONO, offsetof(TkScrollbar, bgBorder),
 	TK_CONFIG_MONO_ONLY, NULL},
+#ifndef TK_NO_DEPRECATED
     {TK_CONFIG_SYNONYM, "-bd", "borderWidth", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-bg", "background", NULL, NULL, 0, 0, NULL},
+#endif
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_SCROLLBAR_BORDER_WIDTH, offsetof(TkScrollbar, borderWidth), 0, NULL},
     {TK_CONFIG_STRING, "-command", "command", "Command",
@@ -310,7 +312,7 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_DELTA: {
-	int xDelta, yDelta, pixels, length;
+	int xDelta, yDelta, pixels;
 	double fraction;
 
 	if (objc != 4) {
@@ -339,7 +341,7 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_FRACTION: {
-	int x, y, pos, length;
+	int x, y, pos;
 	double fraction;
 
 	if (objc != 4) {

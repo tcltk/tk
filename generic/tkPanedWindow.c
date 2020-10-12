@@ -277,10 +277,12 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_PANEDWINDOW_BG_COLOR, TCL_INDEX_NONE, offsetof(PanedWindow, background), 0,
 	 DEF_PANEDWINDOW_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	 NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	 NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_PANEDWINDOW_BORDERWIDTH, TCL_INDEX_NONE, offsetof(PanedWindow, borderWidth),
 	 0, 0, GEOMETRY},
@@ -604,7 +606,6 @@ PanedWindowWidgetObjCmd(
 	break;
 
     case PW_FORGET: {
-	int i;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "widget ?widget ...?");

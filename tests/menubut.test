@@ -16,6 +16,8 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 imageInit
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
 
@@ -40,13 +42,13 @@ test menubutton-1.2 {configuration options} -body {
     .mb configure -activebackground non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test menubutton-1.3 {configuration options} -body {
-    .mb configure -activeforeground #ff0000
-    .mb cget -activeforeground
+    .mb configure -activecolor #ff0000
+    .mb cget -activecolor
 } -cleanup {
-    .mb configure -activeforeground [lindex [.mb configure -activeforeground] 3]
+    .mb configure -activecolor [lindex [.mb configure -activecolor] 3]
 } -result {#ff0000}
 test menubutton-1.4 {configuration options} -body {
-    .mb configure -activeforeground non-existent
+    .mb configure -activecolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test menubutton-1.5 {configuration options} -body {
     .mb configure -anchor nw
@@ -121,22 +123,22 @@ test menubutton-1.20 {configuration options} -body {
     .mb configure -direction badValue
 } -returnCodes error -result {bad direction "badValue": must be above, below, flush, left, or right}
 test menubutton-1.21 {configuration options} -body {
-    .mb configure -disabledforeground #00ff00
-    .mb cget -disabledforeground
+    .mb configure -disabledcolor #00ff00
+    .mb cget -disabledcolor
 } -cleanup {
-    .mb configure -disabledforeground [lindex [.mb configure -disabledforeground] 3]
+    .mb configure -disabledcolor [lindex [.mb configure -disabledcolor] 3]
 } -result {#00ff00}
 test menubutton-1.22 {configuration options} -body {
-    .mb configure -disabledforeground xyzzy
+    .mb configure -disabledcolor xyzzy
 } -returnCodes error -result {unknown color name "xyzzy"}
 test menubutton-1.23 {configuration options} -body {
-    .mb configure -fg #110022
-    .mb cget -fg
+    .mb configure -color #110022
+    .mb cget -color
 } -cleanup {
-    .mb configure -fg [lindex [.mb configure -fg] 3]
+    .mb configure -color [lindex [.mb configure -color] 3]
 } -result {#110022}
 test menubutton-1.24 {configuration options} -body {
-    .mb configure -fg bogus
+    .mb configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test menubutton-1.25 {configuration options} -body {
     .mb configure -font {Helvetica 12}
@@ -145,13 +147,13 @@ test menubutton-1.25 {configuration options} -body {
     .mb configure -font [lindex [.mb configure -font] 3]
 } -result {Helvetica 12}
 test menubutton-1.26 {configuration options} -body {
-    .mb configure -foreground #110022
-    .mb cget -foreground
+    .mb configure -color #110022
+    .mb cget -color
 } -cleanup {
-    .mb configure -foreground [lindex [.mb configure -foreground] 3]
+    .mb configure -color [lindex [.mb configure -color] 3]
 } -result {#110022}
 test menubutton-1.27 {configuration options} -body {
-    .mb configure -foreground bogus
+    .mb configure -color bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test menubutton-1.28 {configuration options} -body {
     .mb configure -height 18
@@ -365,19 +367,19 @@ test menubutton-3.6 {ButtonWidgetCmd procedure, "cget" option} -body {
     .mb configure -highlightthickness 3
     .mb cget -highlightthickness
 } -result 3
-test menubutton-3.7 {ButtonWidgetCmd procedure, "configure" option} -body {
+test menubutton-3.7 {ButtonWidgetCmd procedure, "configure" option} -constraints nodeprecated -body {
     llength [.mb configure]
 } -result 36
 test menubutton-3.8 {ButtonWidgetCmd procedure, "configure" option} -body {
     .mb configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
 test menubutton-3.9 {ButtonWidgetCmd procedure, "configure" option} -body {
-    .mb co -background #ffffff -fg
-} -returnCodes error -result {value for "-fg" missing}
+    .mb co -background #ffffff -color
+} -returnCodes error -result {value for "-color" missing}
 test menubutton-3.10 {ButtonWidgetCmd procedure, "configure" option} -body {
-    .mb configure -fg #123456
+    .mb configure -color #123456
     .mb configure -background #654321
-    lindex [.mb configure -fg] 4
+    lindex [.mb configure -color] 4
 } -result {#123456}
 test menubutton-3.11 {ButtonWidgetCmd procedure, "configure" option} -body {
     .mb foobar

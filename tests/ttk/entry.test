@@ -266,12 +266,12 @@ test entry-6.2 {-textvariable tests} -body {
 
 test entry-7.1 {Bad style options} -body {
     ttk::style theme create entry-7.1 -settings {
-	ttk::style configure TEntry -foreground BadColor
-	ttk::style map TEntry -foreground {readonly AnotherBadColor}
+	ttk::style configure TEntry -color BadColor
+	ttk::style map TEntry -color {readonly AnotherBadColor}
 	ttk::style map TEntry -font {readonly ABadFont}
 	ttk::style map TEntry \
 	    -selectbackground {{} BadColor} \
-	    -selectforeground {{} BadColor} \
+	    -selectcolor {{} BadColor} \
 	    -insertcolor {{} BadColor}
     }
     pack [ttk::entry .e -text "Don't crash"]
@@ -336,22 +336,22 @@ test entry-10.1 {configuration option: "-placeholder"} -setup {
     destroy .e
 } -result {Some text}
 
-test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
+test entry-10.2 {configuration option: "-placeholdercolor"} -setup {
     pack [ttk::entry .e]
 } -body {
-    .e configure -placeholder {Some text} -placeholderforeground red
-    .e cget -placeholderforeground
+    .e configure -placeholder {Some text} -placeholdercolor red
+    .e cget -placeholdercolor
 } -cleanup {
     destroy .e
 } -result {red}
 
-test entry-10.3 {styling option: "-placeholderforeground"} -setup {
+test entry-10.3 {styling option: "-placeholdercolor"} -setup {
     pack [ttk::entry .e]
 } -body {
-    set current [ttk::style configure TEntry -placeholderforeground]
-    ttk::style configure TEntry -placeholderforeground blue
-    set res [ttk::style configure TEntry -placeholderforeground]
-    ttk::style configure TEntry -placeholderforeground $current
+    set current [ttk::style configure TEntry -placeholdercolor]
+    ttk::style configure TEntry -placeholdercolor blue
+    set res [ttk::style configure TEntry -placeholdercolor]
+    ttk::style configure TEntry -placeholdercolor $current
     set res
 } -cleanup {
     destroy .e

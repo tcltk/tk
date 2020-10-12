@@ -10,10 +10,10 @@ namespace eval ttk::theme::alt {
 	-window		"#ffffff"
 	-darker 	"#c3c3c3"
 	-border		"#414141"
-	-activebg 	"#ececec"
-	-disabledfg	"#a3a3a3"
-	-selectbg	"#4a6984"
-	-selectfg	"#ffffff"
+	-activebackground	"#ececec"
+	-disabledcolor	"#a3a3a3"
+	-selectbackground	"#4a6984"
+	-selectcolor	"#ffffff"
 	-altindicator	"#aaaaaa"
     }
 
@@ -21,17 +21,17 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure "." \
 	    -background 	$colors(-frame) \
-	    -foreground 	black \
+	    -color 	black \
 	    -troughcolor	$colors(-darker) \
 	    -bordercolor	$colors(-border) \
-	    -selectbackground 	$colors(-selectbg) \
-	    -selectforeground 	$colors(-selectfg) \
+	    -selectbackground 	$colors(-selectbackground) \
+	    -selectcolor 	$colors(-selectcolor) \
 	    -font 		TkDefaultFont \
 	    ;
 
 	ttk::style map "." -background \
-	    [list disabled $colors(-frame)  active $colors(-activebg)] ;
-	ttk::style map "." -foreground [list disabled $colors(-disabledfg)] ;
+	    [list disabled $colors(-frame)  active $colors(-activebackground)] ;
+	ttk::style map "." -color [list disabled $colors(-disabledcolor)] ;
         ttk::style map "." -embossed [list disabled 1] ;
 
 	ttk::style configure TButton \
@@ -64,20 +64,20 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TCombobox -padding 1
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)] \
-		-arrowcolor [list disabled $colors(-disabledfg)]
+		-arrowcolor [list disabled $colors(-disabledcolor)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledcolor)]
 
 	ttk::style configure Toolbutton -relief flat -padding 2
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \
-	    [list pressed $colors(-darker)  active $colors(-activebg)]
+	    [list pressed $colors(-darker)  active $colors(-activebackground)]
 
 	ttk::style configure TScrollbar -relief raised
 
@@ -96,14 +96,14 @@ namespace eval ttk::theme::alt {
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectbackground)] \
+	    -color [list disabled $colors(-disabledcolor) \
+				selected $colors(-selectcolor)]
 
 	ttk::style configure TScale \
 	    -groovewidth 4 -troughrelief sunken \
 	    -sliderwidth raised -borderwidth 2
 	ttk::style configure TProgressbar \
-	    -background $colors(-selectbg) -borderwidth 0
+	    -background $colors(-selectbackground) -borderwidth 0
     }
 }

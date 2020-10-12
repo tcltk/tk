@@ -15,7 +15,6 @@ tk useinputmethods 0
 
 testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
-
 toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update idletasks
@@ -5544,13 +5543,13 @@ test bind-26.6 {event names: ButtonPress} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <ButtonPress> "set x {event ButtonPress}"
+    bind .t.f <Button> "set x {event Button}"
     set x xyzzy
-    event generate .t.f <ButtonPress>
+    event generate .t.f <Button>
     list $x [bind .t.f]
 } -cleanup {
     destroy .t.f
-} -result {{event ButtonPress} <Button>}
+} -result {{event Button} <Button>}
 
 test bind-26.7 {event names: ButtonRelease} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5642,9 +5641,9 @@ test bind-26.13 {event names: KeyPress} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <KeyPress> "set x {event KeyPress}"
+    bind .t.f <Key> "set x {event KeyPress}"
     set x xyzzy
-    event generate .t.f <KeyPress>
+    event generate .t.f <Key>
     list $x [bind .t.f]
 } -cleanup {
     destroy .t.f
@@ -6767,7 +6766,7 @@ test bind-33.19 {simulate use of the keyboard to trigger a pattern sequence with
     set x {}
 } -body {
     bind .t.f <Escape><Control-c> { lappend x "Esc_Control-c" }
-    bind .t.f <Escape><KeyPress><KeyPress><Control-c> { lappend x "Esc_Key(2)_Control-c" }
+    bind .t.f <Escape><Key><Key><Control-c> { lappend x "Esc_Key(2)_Control-c" }
     event generate .t.f <Escape>
     event generate .t.f <Alt_L>
     event generate .t.f <Control_L>
@@ -6886,7 +6885,7 @@ proc testKey {window event type mods} {
     global keyInfo numericKeysym
     set keyInfo {}
     set numericKeysym {}
-    bind $window <KeyPress> {
+    bind $window <Key> {
 	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
 	set numericKeysym %N
     }
@@ -6960,8 +6959,8 @@ test bind-35.1 {Key events agree for entry widgets} -constraints {aqua} -setup {
 
 test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
     global keyInfo numericKeysym
-    bind . <KeyPress> {}
-    bind . <KeyPress> {
+    bind . <Key> {}
+    bind . <Key> {
 	lappend keyInfo %K
 	set numericKeysym %N
     }
@@ -6979,7 +6978,7 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 } -body {
     global keyInfo numericalKeysym
     set result {}
-    bind . <KeyPress> {
+    bind . <Key> {
     	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
     	set numericalKeysym [format "0x%x" %N]
     }

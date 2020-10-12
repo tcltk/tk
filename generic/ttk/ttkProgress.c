@@ -59,8 +59,10 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
     {TK_OPTION_COLOR, "-color", "color", "Color",
 	"black", offsetof(Progressbar,progress.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", offsetof(Progressbar,progress.justifyObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },

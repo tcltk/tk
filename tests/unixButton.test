@@ -240,17 +240,17 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     checkbutton .cb1 -anchor w -state disabled \
         -text Selected -variable on
     checkbutton .cb2 -anchor w -state disabled \
-        -text Unselected -variable off -disabledforeground ""
+        -text Unselected -variable off -disabledcolor ""
     checkbutton .cb3 -anchor w -state disabled \
-        -text Selected -variable on -disabledforeground ""
+        -text Selected -variable on -disabledcolor ""
     radiobutton .rb0 -anchor w -state disabled \
         -text Unselected -variable off
     radiobutton .rb1 -anchor w -state disabled \
         -text Selected -variable on -value 1
     radiobutton .rb2 -anchor w -state disabled \
-        -text Unselected -variable off -disabledforeground ""
+        -text Unselected -variable off -disabledcolor ""
     radiobutton .rb3 -anchor w -state disabled \
-        -text Selected -variable on -value 1 -disabledforeground ""
+        -text Selected -variable on -value 1 -disabledcolor ""
     pack .l .cb0 .cb1 .cb2 .cb3 .rb0 .rb1 .rb2 .rb3 -side top -fill x
     after 400
     set on

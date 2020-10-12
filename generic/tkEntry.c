@@ -65,10 +65,12 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_ENTRY_BG_COLOR, TCL_INDEX_NONE, offsetof(Entry, normalBorder),
 	0, DEF_ENTRY_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-color", "color", "Color",
@@ -83,17 +85,23 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-disabledcolor", "disabledColor",
 	"DisabledColor", DEF_ENTRY_DISABLED_FG, TCL_INDEX_NONE,
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
+#endif
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
 	offsetof(Entry, exportSelection), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_ENTRY_FONT, TCL_INDEX_NONE, offsetof(Entry, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_ENTRY_HIGHLIGHT_BG,
 	TCL_INDEX_NONE, offsetof(Entry, highlightBgColorPtr), 0, 0, 0},
@@ -128,8 +136,10 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-placeholdercolor", "placeholderColor",
 	"PlaceholderColor", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
 	offsetof(Entry, placeholderColorPtr), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-placeholderforeground", "placeholdercolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-placeholdercolor", 0},
+#endif
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
 	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, readonlyBorder), TK_OPTION_NULL_OK,
@@ -146,8 +156,10 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "SelectColor",
 	DEF_ENTRY_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Entry, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-selectforeground", "selectcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
+#endif
     {TK_OPTION_STRING, "-show", "show", "Show",
 	DEF_ENTRY_SHOW, TCL_INDEX_NONE, offsetof(Entry, showChar),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -199,10 +211,12 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_ENTRY_BG_COLOR, TCL_INDEX_NONE, offsetof(Entry, normalBorder),
 	0, DEF_ENTRY_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_BORDER, "-buttonbackground", "buttonBackground", "Background",
@@ -230,17 +244,23 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_COLOR, "-disabledcolor", "disabledColor",
 	"DisabledColor", DEF_ENTRY_DISABLED_FG, TCL_INDEX_NONE,
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", "disabledcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-disabledcolor", 0},
+#endif
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
 	offsetof(Entry, exportSelection), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_ENTRY_FONT, TCL_INDEX_NONE, offsetof(Entry, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_STRING, "-format", "format", "Format",
 	DEF_SPINBOX_FORMAT, TCL_INDEX_NONE, offsetof(Spinbox, reqFormat),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -282,8 +302,10 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_COLOR, "-placeholdercolor", "placeholderColor",
 	"PlaceholderColor", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
 	offsetof(Entry, placeholderColorPtr), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-placeholderforeground", "placeholdercolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-placeholdercolor", 0},
+#endif
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_ENTRY_RELIEF, TCL_INDEX_NONE, offsetof(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
@@ -306,8 +328,10 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "SelectColor",
 	DEF_ENTRY_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Entry, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-selectforeground", "selectcolor", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
+#endif
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_ENTRY_STATE, TCL_INDEX_NONE, offsetof(Entry, state),
 	0, stateStrings, 0},

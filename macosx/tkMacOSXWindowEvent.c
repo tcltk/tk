@@ -1013,11 +1013,14 @@ ConfigureRestrictProc(
 	TkMacOSXUpdateClipRgn(winPtr);
 
 	 /*
-	  * Generate and process expose events to redraw the window.
+	  * Generate and process expose events to redraw the window.  To avoid
+	  * crashes, only do this if we are being called from drawRect.  See
+	  * ticket [1fa8c3ed8d].
 	  */
 
-	[self generateExposeEvents: [self bounds]];
-	[w displayIfNeeded];
+	if([NSApp isDrawing] || [self inLiveResize]) {
+	    [self generateExposeEvents: [self bounds]];
+	}
 
 	/*
 	 * Finally, unlock the main autoreleasePool.

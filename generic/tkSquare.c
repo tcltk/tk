@@ -68,10 +68,12 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	    "#d9d9d9", offsetof(Square, bgBorderPtr), TCL_INDEX_NONE, 0,
 	    "white", 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	    "2", offsetof(Square, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BORDER, "-color", "color", "Color",
@@ -79,10 +81,12 @@ static const Tk_OptionSpec optionSpecs[] = {
 	    "black", 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
 	    "1", offsetof(Square, doubleBufferPtr), TCL_INDEX_NONE, 0 , NULL, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-color", 0},
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
 	    NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_PIXELS, "-posx", "posx", "PosX", "0",
 	    offsetof(Square, xPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-posy", "posy", "PosY", "0",

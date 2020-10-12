@@ -9,11 +9,11 @@ namespace eval ttk::theme::classic {
     variable colors; array set colors {
 	-frame		"#d9d9d9"
 	-window		"#ffffff"
-	-activebg	"#ececec"
-	-troughbg	"#c3c3c3"
-	-selectbg	"#c3c3c3"
-	-selectfg	"#000000"
-	-disabledfg	"#a3a3a3"
+	-activebackground	"#ececec"
+	-troughbackground	"#c3c3c3"
+	-selectbackground	"#c3c3c3"
+	-selectcolor	"#000000"
+	-disabledcolor	"#a3a3a3"
 	-indicator	"#b03060"
 	-altindicator	"#b05e5e"
     }
@@ -22,10 +22,10 @@ namespace eval ttk::theme::classic {
 	ttk::style configure "." \
 	    -font		TkDefaultFont \
 	    -background		$colors(-frame) \
-	    -foreground		black \
-	    -selectbackground	$colors(-selectbg) \
-	    -selectforeground	$colors(-selectfg) \
-	    -troughcolor	$colors(-troughbg) \
+	    -color		black \
+	    -selectbackground	$colors(-selectbackground) \
+	    -selectcolor	$colors(-selectcolor) \
+	    -troughcolor	$colors(-troughbackground) \
 	    -indicatorcolor	$colors(-frame) \
 	    -highlightcolor	$colors(-frame) \
 	    -highlightthickness	1 \
@@ -37,9 +37,9 @@ namespace eval ttk::theme::classic {
 	#	ttk::style configure . -font {Helvetica 12 bold}
 
 	ttk::style map "." -background \
-	    [list disabled $colors(-frame) active $colors(-activebg)]
-	ttk::style map "." -foreground \
-	    [list disabled $colors(-disabledfg)]
+	    [list disabled $colors(-frame) active $colors(-activebackground)]
+	ttk::style map "." -color \
+	    [list disabled $colors(-disabledcolor)]
 
 	ttk::style map "." -highlightcolor [list focus black]
 
@@ -91,7 +91,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TProgressbar -background SteelBlue
 	ttk::style configure TNotebook.Tab \
 	    -padding {3m 1m} \
-	    -background $colors(-troughbg)
+	    -background $colors(-troughbackground)
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
 	# Treeview:
@@ -99,9 +99,9 @@ namespace eval ttk::theme::classic {
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectbackground)] \
+	    -color [list disabled $colors(-disabledcolor) \
+				selected $colors(-selectcolor)]
 
 	#
 	# Toolbar buttons:
@@ -110,6 +110,6 @@ namespace eval ttk::theme::classic {
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \
-	    [list pressed $colors(-troughbg)  active $colors(-activebg)]
+	    [list pressed $colors(-troughbackground)  active $colors(-activebackground)]
     }
 }

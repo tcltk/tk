@@ -127,11 +127,13 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_TEXT_BG_COLOR, TCL_INDEX_NONE, offsetof(TkText, border),
 	0, DEF_TEXT_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth",
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_BOOLEAN, "-blockcursor", "blockCursor",
 	"BlockCursor", DEF_TEXT_BLOCK_CURSOR, TCL_INDEX_NONE,
 	offsetof(TkText, insertCursorType), 0, 0, 0},
@@ -150,13 +152,17 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_TEXT_EXPORT_SELECTION, TCL_INDEX_NONE,
 	offsetof(TkText, exportSelection), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color" , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_TEXT_FONT, TCL_INDEX_NONE, offsetof(TkText, tkfont), 0, 0,
 	TK_TEXT_LINE_GEOMETRY},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TEXT_HEIGHT, TCL_INDEX_NONE, offsetof(TkText, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
@@ -216,8 +222,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "SelectColor",
 	DEF_TEXT_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-selectforeground", NULL , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-selectcolor", 0},
+#endif
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	DEF_TEXT_SET_GRID, TCL_INDEX_NONE, offsetof(TkText, setGrid), 0, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
@@ -705,7 +713,7 @@ TextWidgetObjCmd(
 {
     TkText *textPtr = (TkText *)clientData;
     int result = TCL_OK;
-    int index;
+    int idx;
 
     static const char *const optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
@@ -728,12 +736,12 @@ TextWidgetObjCmd(
     }
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	    sizeof(char *), "option", 0, &idx) != TCL_OK) {
 	return TCL_ERROR;
     }
     textPtr->refCount++;
 
-    switch ((enum options) index) {
+    switch ((enum options) idx) {
     case TEXT_BBOX: {
 	int x, y, width, height;
 	const TkTextIndex *indexPtr;
@@ -3177,7 +3185,7 @@ DeleteIndexRange(
     line2 = TkBTreeLinesTo(textPtr, index2.linePtr);
     if (line2 == TkBTreeNumLines(sharedTextPtr->tree, textPtr)) {
 	TkTextTag **arrayPtr;
-	int arraySize, i;
+	int arraySize;
 	TkTextIndex oldIndex2;
 
 	oldIndex2 = index2;

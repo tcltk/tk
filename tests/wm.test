@@ -28,6 +28,7 @@ proc stdWindow {} {
 }
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # [raise] and [lower] may return before the window manager has completed the
 # operation. The raiseDelay procedure idles for a while to give the operation
@@ -1527,7 +1528,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
-    overrideredirect toplevel on unix} -constraints {x11 failsOnUbuntu} -body {
+    overrideredirect toplevel on unix} -constraints {x11 failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t
     tkwait visibility .t
     wm overrideredirect .t 1
@@ -1551,7 +1552,7 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     destroy .t
 } -result 1
 test wm-stackorder-5.3 {An overrideredirect window\
-        can be explicitly lowered} -body {
+        can be explicitly lowered} -constraints failsOnXQuarz -body {
     toplevel .t
     tkwait visibility .t
     wm overrideredirect .t 1
@@ -1726,7 +1727,7 @@ test wm-transient-3.3 {withdraw/deiconify on the toplevel
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-4.1 {transient toplevel is withdrawn
-        when mapped if toplevel is iconic} -constraints failsOnUbuntu -body {
+        when mapped if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .top
     wm iconify .top
     update
@@ -1928,7 +1929,7 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints failsOnUbuntu -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     deleteWindows
     set result {}
 } -body {

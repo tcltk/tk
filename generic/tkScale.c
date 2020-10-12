@@ -53,10 +53,12 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-bigincrement", "bigIncrement", "BigIncrement",
 	DEF_SCALE_BIG_INCREMENT, TCL_INDEX_NONE, offsetof(TkScale, bigIncrement),
 	0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_SCALE_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(TkScale, borderWidth),
 	0, 0, 0},
@@ -72,12 +74,16 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-digits", "digits", "Digits",
 	DEF_SCALE_DIGITS, TCL_INDEX_NONE, offsetof(TkScale, digits),
 	0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_SCALE_FONT, TCL_INDEX_NONE, offsetof(TkScale, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color" , NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, TCL_INDEX_NONE,
 	offsetof(TkScale, fromValue), 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",

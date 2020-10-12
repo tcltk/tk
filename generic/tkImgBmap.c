@@ -115,7 +115,9 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(BitmapModel, dataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	NULL, offsetof(BitmapModel, fileString), TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
     {TK_CONFIG_SYNONYM, "-foreground", "color", NULL, NULL, 0, 0, NULL},
+#endif
     {TK_CONFIG_STRING, "-maskdata", NULL, NULL,
 	NULL, offsetof(BitmapModel, maskDataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-maskfile", NULL, NULL,

@@ -8,15 +8,15 @@ namespace eval ttk::theme::xpnative {
 
 	ttk::style configure . \
 	    -background SystemButtonFace \
-	    -foreground SystemWindowText \
-	    -selectforeground SystemHighlightText \
+	    -color SystemWindowText \
+	    -selectcolor SystemHighlightText \
 	    -selectbackground SystemHighlight \
 	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont \
 	    ;
 
 	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText] \
+	    -color [list disabled SystemGrayText] \
 	    ;
 
 	ttk::style configure TButton -anchor center -padding {1 1} -width -11
@@ -28,19 +28,19 @@ namespace eval ttk::theme::xpnative {
 	ttk::style map TNotebook.Tab \
 	    -expand [list selected {2 2 2 2}]
 
-	ttk::style configure TLabelframe.Label -foreground "#0046d5"
+	ttk::style configure TLabelframe.Label -color "#0046d5"
 
 	# OR: -padding {3 3 3 6}, which some apps seem to use.
 	ttk::style configure TEntry -padding {2 2 2 4}
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
+	    -selectcolor [list !focus SystemWindowText] \
 	    ;
 	ttk::style configure TCombobox -padding 2
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    -foreground	[list \
+	    -selectcolor [list !focus SystemWindowText] \
+	    -color	[list \
 		disabled		SystemGrayText \
 	    	{readonly focus}	SystemHighlightText \
 	    ] \
@@ -50,7 +50,7 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure TSpinbox -padding {2 0 14 0}
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
+	    -selectcolor [list !focus SystemWindowText] \
 	    ;
 
 	ttk::style configure Toolbutton -padding {4 4}
@@ -61,7 +61,7 @@ namespace eval ttk::theme::xpnative {
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
-	    -foreground [list   disabled SystemGrayText \
+	    -color [list   disabled SystemGrayText \
 				selected SystemHighlightText];
     }
 }

@@ -6,14 +6,14 @@ namespace eval ttk::theme::default {
     variable colors
     array set colors {
 	-frame			"#d9d9d9"
-	-foreground		"#000000"
+	-color		"#000000"
 	-window			"#ffffff"
 	-text   		"#000000"
-	-activebg		"#ececec"
-	-selectbg		"#4a6984"
-	-selectfg		"#ffffff"
+	-activebackground		"#ececec"
+	-selectbackground		"#4a6984"
+	-selectcolor		"#ffffff"
 	-darker 		"#c3c3c3"
-	-disabledfg		"#a3a3a3"
+	-disabledcolor		"#a3a3a3"
 	-indicator		"#4a6984"
 	-disabledindicator	"#a3a3a3"
 	-altindicator		"#9fbdd8"
@@ -25,20 +25,20 @@ namespace eval ttk::theme::default {
 	ttk::style configure "." \
 	    -borderwidth 	1 \
 	    -background 	$colors(-frame) \
-	    -foreground 	$colors(-foreground) \
+	    -color 	$colors(-color) \
 	    -troughcolor 	$colors(-darker) \
 	    -font 		TkDefaultFont \
 	    -selectborderwidth	1 \
-	    -selectbackground	$colors(-selectbg) \
-	    -selectforeground	$colors(-selectfg) \
+	    -selectbackground	$colors(-selectbackground) \
+	    -selectcolor	$colors(-selectcolor) \
 	    -insertwidth 	1 \
 	    -indicatordiameter	10 \
 	    ;
 
 	ttk::style map "." -background \
-	    [list disabled $colors(-frame)  active $colors(-activebg)]
-	ttk::style map "." -foreground \
-	    [list disabled $colors(-disabledfg)]
+	    [list disabled $colors(-frame)  active $colors(-activebackground)]
+	ttk::style map "." -color \
+	    [list disabled $colors(-disabledcolor)]
 
 	ttk::style configure TButton \
 	    -anchor center -padding "3 3" -width -9 \
@@ -48,7 +48,7 @@ namespace eval ttk::theme::default {
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
 	ttk::style map TCheckbutton -indicatorcolor \
-	    [list pressed $colors(-activebg)  \
+	    [list pressed $colors(-activebackground)  \
 			{!disabled alternate} $colors(-altindicator) \
 			{disabled alternate} $colors(-disabledaltindicator) \
 			{!disabled selected} $colors(-indicator) \
@@ -59,7 +59,7 @@ namespace eval ttk::theme::default {
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
 	ttk::style map TRadiobutton -indicatorcolor \
-	    [list pressed $colors(-activebg)  \
+	    [list pressed $colors(-activebackground)  \
 			{!disabled alternate} $colors(-altindicator) \
 			{disabled alternate} $colors(-disabledaltindicator) \
 			{!disabled selected} $colors(-indicator) \
@@ -78,12 +78,12 @@ namespace eval ttk::theme::default {
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledcolor)]
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledcolor)]
 
 	ttk::style configure TLabelframe \
 	    -relief groove -borderwidth 2
@@ -91,12 +91,12 @@ namespace eval ttk::theme::default {
 	ttk::style configure TScrollbar \
 	    -width 12 -arrowsize 12
 	ttk::style map TScrollbar \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledcolor)]
 
 	ttk::style configure TScale \
 	    -sliderrelief raised
 	ttk::style configure TProgressbar \
-	    -background $colors(-selectbg)
+	    -background $colors(-selectbackground)
 
 	ttk::style configure TNotebook.Tab \
 	    -padding {4 2} -background $colors(-darker)
@@ -108,12 +108,12 @@ namespace eval ttk::theme::default {
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
-	    -foreground $colors(-text) ;
+	    -color $colors(-text) ;
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectbackground)] \
+	    -color [list disabled $colors(-disabledcolor) \
+				selected $colors(-selectcolor)]
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {
@@ -138,6 +138,6 @@ namespace eval ttk::theme::default {
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
-	    [list pressed $colors(-darker)  active $colors(-activebg)]
+	    [list pressed $colors(-darker)  active $colors(-activebackground)]
     }
 }

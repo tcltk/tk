@@ -50,7 +50,7 @@ test menuDraw-4.2 {TkMenuEntryFreeDrawOptions} -setup {
 } -body {
     menu .m1
     .m1 add checkbutton -label "This is a test." -font "Courier 12" \
-        -activeforeground red -background green -selectcolor purple
+        -activecolor red -background green -selectcolor purple
     destroy .m1
 } -result {}
 
@@ -66,14 +66,14 @@ test menuDraw-5.2 {TkMenuConfigureDrawOptions - old menu} -setup {
     deleteWindows
 } -body {
     menu .m1
-    .m1 configure -fg red
+    .m1 configure -color red
 } -cleanup {
     deleteWindows
 } -result {}
 test menuDraw-5.3 {TkMenuConfigureDrawOptions - no disabledFg} -setup {
     deleteWindows
 } -body {
-    menu .m1 -disabledforeground ""
+    menu .m1 -disabledcolor ""
 } -cleanup {
     deleteWindows
 } -result {.m1}
@@ -153,7 +153,7 @@ test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setu
     deleteWindows
 } -body {
     menu .m1
-    .m1 add command -label "foo" -foreground "red"
+    .m1 add command -label "foo" -color "red"
 } -cleanup {
     deleteWindows
 } -result {}
@@ -169,7 +169,7 @@ test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified
     deleteWindows
 } -body {
     menu .m1
-    .m1 add command -label "foo" -activeforeground "red"
+    .m1 add command -label "foo" -activecolor "red"
 } -cleanup {
     deleteWindows
 } -result {}
@@ -194,17 +194,17 @@ test menuDraw-6.14 {TkMenuConfigureEntryDrawOptions - activeGC disposal} -setup 
     deleteWindows
 } -body {
     menu .m1
-    .m1 add command -label "foo" -activeforeground "red"
-    .m1 entryconfigure 1 -activeforeground "green"
+    .m1 add command -label "foo" -activecolor "red"
+    .m1 entryconfigure 1 -activecolor "green"
 } -cleanup {
     deleteWindows
 } -result {}
 test menuDraw-6.15 {TkMenuConfigureEntryDrawOptions - disabledGC disposal} -setup {
     deleteWindows
 } -body {
-    menu .m1 -disabledforeground "red"
+    menu .m1 -disabledcolor "red"
     .m1 add command -label "foo"
-    .m1 configure -disabledforeground "green"
+    .m1 configure -disabledcolor "green"
 } -cleanup {
     deleteWindows
 } -result {}

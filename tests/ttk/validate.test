@@ -215,7 +215,7 @@ catch {unset ::e ::vVals}
 
 test validate-2.2 "configure in -validatecommand" -body {
     proc validate-2.2 {win str} {
-	$win configure -foreground black
+	$win configure -color black
 	return 1
     }
     ttk::entry .e -textvariable var -validatecommand {validate-2.2 %W %P}

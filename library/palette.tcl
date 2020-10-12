@@ -19,7 +19,7 @@
 # will be used as the new background color (all other colors will
 # be computed from this) or an even number of values consisting of
 # option names and values.  The name for an option is the one used
-# for the option database, such as activeForeground, not -activeforeground.
+# for the option database, such as activeColor, not -activecolor.
 
 proc ::tk_setPalette {args} {
     if {[winfo depth .] == 1} {

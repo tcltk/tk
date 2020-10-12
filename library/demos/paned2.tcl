@@ -53,7 +53,7 @@ set f [frame $w.pane.top]
 listbox $f.list -listvariable paneList -yscrollcommand "$f.scr set"
 # Invert the first item to highlight it
 $f.list itemconfigure 0 \
-	-background [$f.list cget -fg] -foreground [$f.list cget -background]
+	-background [$f.list cget -fg] -color [$f.list cget -background]
 ttk::scrollbar $f.scr -orient vertical -command "$f.list yview"
 pack $f.scr -side right -fill y
 pack $f.list -fill both -expand 1

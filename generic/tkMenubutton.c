@@ -66,18 +66,22 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE,
 	 offsetof(TkMenuButton, activeFg),
 	 0, DEF_MENUBUTTON_ACTIVE_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-activeforeground", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	(ClientData) "-activecolor", 0},
+#endif
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_MENUBUTTON_ANCHOR, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENUBUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkMenuButton, normalBorder),
 	0, DEF_MENUBUTTON_BG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	(ClientData) "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	(ClientData) "-background", 0},
+#endif
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
 	DEF_MENUBUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkMenuButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -96,14 +100,18 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"DisabledColor", DEF_MENUBUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
 	(ClientData) DEF_MENUBUTTON_DISABLED_FG_MONO, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-disabledforeground", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	(ClientData) "-disabledcolor", 0},
     {TK_OPTION_SYNONYM, "-fg", "color", NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	(ClientData) "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MENUBUTTON_FONT, TCL_INDEX_NONE, offsetof(TkMenuButton, tkfont), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-foreground", "color", NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	(ClientData) "-color", 0},
+#endif
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_MENUBUTTON_HEIGHT, TCL_INDEX_NONE, offsetof(TkMenuButton, heightString),
 	0, 0, 0},

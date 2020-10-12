@@ -12,6 +12,7 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+tcltest::testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 tcltest::testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 
 # eatColors --
@@ -912,7 +913,7 @@ test frame-5.7 {FrameWidgetCommand procedure, cget option} -setup {
 } -cleanup {
     destroy .t
 } -returnCodes ok -match glob -result *
-test frame-5.8 {FrameWidgetCommand procedure, configure option} -body {
+test frame-5.8 {FrameWidgetCommand procedure, configure option} -constraints nodeprecated -body {
     optnames [.f configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -padx -pady -relief -takefocus -tile -visual -width}
 test frame-5.9 {FrameWidgetCommand procedure, configure option} -body {
@@ -927,7 +928,7 @@ test frame-5.11 {FrameWidgetCommand procedure, configure option} -body {
 test frame-5.12 {FrameWidgetCommand procedure} -body {
     .f swizzle
 } -returnCodes error -result {bad option "swizzle": must be cget or configure}
-test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
+test frame-5.13 {FrameWidgetCommand procedure, configure option} -constraints nodeprecated -body {
     optnames [. configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -tile -use -visual -width}
 destroy .f
@@ -1283,14 +1284,14 @@ test frame-13.18 {labelframe configuration options} -body {
 test frame-13.19 {labelframe configuration options} -body {
     .f configure -cursor badValue
 } -returnCodes error -result {bad cursor spec "badValue"}
-test frame-13.20 {labelframe configuration options} -body {
-    .f configure -fg #0000ff
-    lindex [.f configure -fg] 4
+test frame-13.20 {labelframe configuration options} -constraints nodeprecated -body {
+    .f configure -color #0000ff
+    lindex [.f configure -color] 4
 } -cleanup {
-    .f configure -fg [lindex [.f configure -fg] 3]
+    .f configure -color [lindex [.f configure -color] 3]
 } -result "#0000ff"
-test frame-13.21 {labelframe configuration options} -body {
-    .f configure -fg non-existent
+test frame-13.21 {labelframe configuration options} -constraints nodeprecated -body {
+    .f configure -color non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-13.22 {labelframe configuration options} -body {
     .f configure -font {courier 8}
@@ -1299,13 +1300,13 @@ test frame-13.22 {labelframe configuration options} -body {
     .f configure -font [lindex [.f configure -font] 3]
 } -result {courier 8}
 test frame-13.23 {labelframe configuration options} -body {
-    .f configure -foreground #ff0000
-    lindex [.f configure -foreground] 4
+    .f configure -color #ff0000
+    lindex [.f configure -color] 4
 } -cleanup {
-    .f configure -foreground [lindex [.f configure -foreground] 3]
+    .f configure -color [lindex [.f configure -color] 3]
 } -result "#ff0000"
 test frame-13.24 {labelframe configuration options} -body {
-    .f configure -foreground non-existent
+    .f configure -color non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test frame-13.25 {labelframe configuration options} -body {
     .f configure -height 100

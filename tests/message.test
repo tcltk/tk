@@ -11,6 +11,7 @@ namespace import ::tcltest::*
 tcltest::loadTestedCommands
 eval tcltest::configure $argv
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
 test message-1.1 {configuration option: "anchor"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -157,8 +158,8 @@ test message-1.15 {configuration option: "fg"} -setup {
     pack .m
     update
 } -body {
-    .m configure -fg #00ff00
-    .m cget -fg
+    .m configure -color #00ff00
+    .m cget -color
 } -cleanup {
     destroy .m
 } -result {#00ff00}
@@ -167,7 +168,7 @@ test message-1.16 {configuration option: "fg"} -setup {
     pack .m
     update
 } -body {
-    .m configure -fg badValue
+    .m configure -color badValue
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {unknown color name "badValue"}
@@ -192,22 +193,22 @@ test message-1.18 {configuration option: "font"} -setup {
     destroy .m
 } -returnCodes {error} -result {font "" doesn't exist}
 
-test message-1.19 {configuration option: "-foreground"} -setup {
+test message-1.19 {configuration option: "-color"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
     update
 } -body {
-    .m configure -foreground  green
-    .m cget -foreground
+    .m configure -color  green
+    .m cget -color
 } -cleanup {
     destroy .m
 } -result {green}
-test message-1.20 {configuration option: "-foreground"} -setup {
+test message-1.20 {configuration option: "-color"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
     update
 } -body {
-    .m configure -foreground  badValue
+    .m configure -color  badValue
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {unknown color name "badValue"}
@@ -446,7 +447,7 @@ test message-3.4 {MessageWidgetObjCmd procedure, "configure"} -setup {
 } -cleanup {
     destroy .m
 } -result {foobar}
-test message-3.5 {MessageWidgetObjCmd procedure, "configure"} -setup {
+test message-3.5 {MessageWidgetObjCmd procedure, "configure"} -constraints nodeprecated -setup {
     message .m
 } -body {
     llength [.m configure]

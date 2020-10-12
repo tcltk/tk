@@ -32,8 +32,8 @@ if {[winfo depth $w] > 1} {
     set bold "-background #43ce80 -relief raised -borderwidth 1"
     set normal "-background {} -relief flat"
 } else {
-    set bold "-foreground white -background black"
-    set normal "-foreground {} -background {}"
+    set bold "-color white -background black"
+    set normal "-color {} -background {}"
 }
 
 # Add text to widget.

@@ -8,28 +8,28 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure . \
 	    -font TkDefaultFont \
 	    -background systemWindowBackgroundColor \
-	    -foreground systemLabelColor \
+	    -color systemLabelColor \
 	    -selectbackground systemSelectedTextBackgroundColor \
-	    -selectforeground systemSelectedTextColor \
+	    -selectcolor systemSelectedTextColor \
 	    -selectborderwidth 0 \
 	    -insertwidth 1
 
 	ttk::style map . \
-	    -foreground {
+	    -color {
 		disabled systemDisabledControlTextColor
 		background systemLabelColor} \
 	    -selectbackground {
 		background systemSelectedTextBackgroundColor
 		!focus systemSelectedTextBackgroundColor} \
-	    -selectforeground {
+	    -selectcolor {
 		background systemSelectedTextColor
 		!focus systemSelectedTextColor}
 
 	# Button
 	ttk::style configure TButton -anchor center -width -6 \
-	    -foreground systemControlTextColor
+	    -color systemControlTextColor
 	ttk::style map TButton \
-	    -foreground {
+	    -color {
 		pressed white
 	        {alternate !pressed !background} white}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
@@ -37,13 +37,13 @@ namespace eval ttk::theme::aqua {
 
 	# Entry
 	ttk::style configure TEntry \
-	    -foreground systemTextColor \
+	    -color systemTextColor \
 	    -background systemTextBackgroundColor
 	ttk::style map TEntry \
-	    -foreground {
+	    -color {
 		disabled systemDisabledControlTextColor
 	    } \
-	    -selectforeground {
+	    -selectcolor {
 		background systemTextColor
 	    } \
 	    -selectbackground {
@@ -60,22 +60,22 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
 	ttk::style configure TNotebook -padding {18 8 18 17}
 	ttk::style configure TNotebook.Tab -padding {12 3 12 2}
-	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
+	ttk::style configure TNotebook.Tab -color systemControlTextColor
 	ttk::style map TNotebook.Tab \
-	    -foreground {
+	    -color {
 		background systemControlTextColor
 		disabled systemDisabledControlTextColor
 		selected systemSelectedTabTextColor}
 
 	# Combobox:
 	ttk::style configure TCombobox \
-	    -foreground systemTextColor \
+	    -color systemTextColor \
 	    -background systemTransparent
 	ttk::style map TCombobox \
-	    -foreground {
+	    -color {
 		disabled systemDisabledControlTextColor
 	    } \
-	    -selectforeground {
+	    -selectcolor {
 		background systemTextColor
 	    } \
 	    -selectbackground {
@@ -84,15 +84,15 @@ namespace eval ttk::theme::aqua {
 
 	# Spinbox
 	ttk::style configure TSpinbox \
-	    -foreground systemTextColor \
+	    -color systemTextColor \
 	    -background systemTextBackgroundColor \
-	    -selectforeground systemSelectedTextColor \
+	    -selectcolor systemSelectedTextColor \
 	    -selectbackground systemSelectedTextBackgroundColor
 	ttk::style map TSpinbox \
-	    -foreground {
+	    -color {
 		disabled systemDisabledControlTextColor
 	    } \
-	    -selectforeground {
+	    -selectcolor {
 		!active systemTextColor
 	    } \
 	    -selectbackground {
@@ -104,11 +104,11 @@ namespace eval ttk::theme::aqua {
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont \
-	    -foreground systemTextColor \
+	    -color systemTextColor \
 	    -background systemWindowBackgroundColor
 	ttk::style configure Treeview -rowheight 18 \
 	    -background systemTextBackgroundColor \
-	    -foreground systemTextColor \
+	    -color systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \
 	    -background {

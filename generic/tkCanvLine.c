@@ -605,12 +605,11 @@ ConfigureLine(
 
 static void
 DeleteLine(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    (void)canvas;
 
     Tk_DeleteOutline(display, &linePtr->outline);
     if (linePtr->coordPtr != NULL) {
@@ -710,7 +709,7 @@ ComputeLineBbox(
 
     tsoffset = &linePtr->outline.tsoffset;
     if (tsoffset->flags & TK_OFFSET_INDEX) {
-	double *coordPtr = linePtr->coordPtr
+	coordPtr = linePtr->coordPtr
 		+ (tsoffset->flags & ~TK_OFFSET_INDEX);
 
 	if (tsoffset->flags <= 0) {
@@ -834,20 +833,17 @@ DisplayLine(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y, int width, int height)
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
+    TCL_UNUSED(int),		/* Describes region of canvas that must be */
+    TCL_UNUSED(int),		/* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    LineItem *linePtr = (LineItem *) itemPtr;
+    LineItem *linePtr = (LineItem *)itemPtr;
     XPoint staticPoints[MAX_STATIC_POINTS*3];
     XPoint *pointPtr;
     double linewidth;
     int numPoints;
     Tk_State state = itemPtr->state;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
 
     if (!linePtr->numPoints || (linePtr->outline.gc == NULL)) {
 	return;
@@ -1701,8 +1697,6 @@ ScaleLine(
 	linePtr->firstArrowPtr = NULL;
     }
     if (linePtr->lastArrowPtr != NULL) {
-	int i;
-
 	i = 2*(linePtr->numPoints-1);
 	linePtr->coordPtr[i] = linePtr->lastArrowPtr[0];
 	linePtr->coordPtr[i+1] = linePtr->lastArrowPtr[1];
@@ -1931,9 +1925,9 @@ RotateLine(
 
 static int
 ParseArrowShape(
-    ClientData dummy,	/* Not used. */
+    TCL_UNUSED(void *),	/* Not used. */
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Window tkwin,		/* Not used. */
+    TCL_UNUSED(Tk_Window),		/* Not used. */
     const char *value,		/* Textual specification of arrow shape. */
     char *recordPtr,		/* Pointer to item record in which to store
 				 * arrow information. */
@@ -1944,8 +1938,6 @@ ParseArrowShape(
     double a, b, c;
     int argc;
     const char **argv = NULL;
-    (void)dummy;
-    (void)tkwin;
 
     if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {
 	Tcl_Panic("ParseArrowShape received bogus offset");
@@ -2001,19 +1993,16 @@ ParseArrowShape(
 
 static const char *
 PrintArrowShape(
-    ClientData dummy,	/* Not used. */
-    Tk_Window tkwin,		/* Window associated with linePtr's widget. */
+    TCL_UNUSED(void *),	/* Not used. */
+    TCL_UNUSED(Tk_Window),		/* Window associated with linePtr's widget. */
     char *recordPtr,		/* Pointer to item record containing current
 				 * shape information. */
-    TkSizeT offset,			/* Offset of arrow information in record. */
+    TCL_UNUSED(TkSizeT),			/* Offset of arrow information in record. */
     Tcl_FreeProc **freeProcPtr)	/* Store address of function to call to free
 				 * string here. */
 {
     LineItem *linePtr = (LineItem *) recordPtr;
     char *buffer = (char *)ckalloc(120);
-    (void)dummy;
-    (void)tkwin;
-    (void)offset;
 
     sprintf(buffer, "%.5g %.5g %.5g", linePtr->arrowShapeA,
 	    linePtr->arrowShapeB, linePtr->arrowShapeC);
@@ -2041,9 +2030,9 @@ PrintArrowShape(
 
 static int
 ArrowParseProc(
-    ClientData dummy,	/* some flags.*/
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     TkSizeT offset)			/* Offset into item. */
@@ -2051,8 +2040,6 @@ ArrowParseProc(
     int c;
     size_t length;
     Arrows *arrowPtr = (Arrows *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*arrowPtr = ARROWS_NONE;
@@ -2110,18 +2097,15 @@ ArrowParseProc(
 
 static const char *
 ArrowPrintProc(
-    ClientData dummy,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     TkSizeT offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
     Arrows *arrowPtr = (Arrows *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
-    (void)freeProcPtr;
 
     switch (*arrowPtr) {
     case ARROWS_FIRST:
@@ -2316,7 +2300,7 @@ LineToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))		/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -2328,7 +2312,6 @@ LineToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
-    (void)prepass;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;

@@ -13,6 +13,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
+
 proc bogusTrace args {
     error "trace aborted"
 }
@@ -99,8 +101,8 @@ test button-1.9 {configuration option: "activeforeground" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -activeforeground #ff0000
-    .l cget -activeforeground
+    .l configure -activecolor #ff0000
+    .l cget -activecolor
 } -cleanup {
     destroy .l
 } -result {#ff0000}
@@ -109,7 +111,7 @@ test button-1.10 {configuration option: "activeforeground" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -activeforeground non-existent
+    .l configure -activecolor non-existent
 } -cleanup {
     destroy .l
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -118,8 +120,8 @@ test button-1.11 {configuration option: "activeforeground" for button} -setup {
     pack .b
     update
 } -body {
-    .b configure -activeforeground #ff0000
-    .b cget -activeforeground
+    .b configure -activecolor #ff0000
+    .b cget -activecolor
 } -cleanup {
     destroy .b
 } -result {#ff0000}
@@ -128,7 +130,7 @@ test button-1.12 {configuration option: "activeforeground" for button} -setup {
     pack .b
     update
 } -body {
-    .b configure -activeforeground non-existent
+    .b configure -activecolor non-existent
 } -cleanup {
     destroy .b
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -137,8 +139,8 @@ test button-1.13 {configuration option: "activeforeground" for checkbutton} -set
     pack .c
     update
 } -body {
-    .c configure -activeforeground #ff0000
-    .c cget -activeforeground
+    .c configure -activecolor #ff0000
+    .c cget -activecolor
 } -cleanup {
     destroy .c
 } -result {#ff0000}
@@ -147,7 +149,7 @@ test button-1.14 {configuration option: "activeforeground" for checkbutton} -set
     pack .c
     update
 } -body {
-    .c configure -activeforeground non-existent
+    .c configure -activecolor non-existent
 } -cleanup {
     destroy .c
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -156,8 +158,8 @@ test button-1.15 {configuration option: "activeforeground" for radiobutton} -set
     pack .r
     update
 } -body {
-    .r configure -activeforeground #ff0000
-    .r cget -activeforeground
+    .r configure -activecolor #ff0000
+    .r cget -activecolor
 } -cleanup {
     destroy .r
 } -result {#ff0000}
@@ -166,7 +168,7 @@ test button-1.16 {configuration option: "activeforeground" for radiobutton} -set
     pack .r
     update
 } -body {
-    .r configure -activeforeground non-existent
+    .r configure -activecolor non-existent
 } -cleanup {
     destroy .r
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -853,8 +855,8 @@ test button-1.87 {configuration option: "disabledforeground" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -disabledforeground #00ff00
-    .l cget -disabledforeground
+    .l configure -disabledcolor #00ff00
+    .l cget -disabledcolor
 } -cleanup {
     destroy .l
 } -result {#00ff00}
@@ -863,7 +865,7 @@ test button-1.88 {configuration option: "disabledforeground" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -disabledforeground non-existent
+    .l configure -disabledcolor non-existent
 } -cleanup {
     destroy .l
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -872,8 +874,8 @@ test button-1.89 {configuration option: "disabledforeground" for button} -setup 
     pack .b
     update
 } -body {
-    .b configure -disabledforeground #00ff00
-    .b cget -disabledforeground
+    .b configure -disabledcolor #00ff00
+    .b cget -disabledcolor
 } -cleanup {
     destroy .b
 } -result {#00ff00}
@@ -882,7 +884,7 @@ test button-1.90 {configuration option: "disabledforeground" for button} -setup 
     pack .b
     update
 } -body {
-    .b configure -disabledforeground non-existent
+    .b configure -disabledcolor non-existent
 } -cleanup {
     destroy .b
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -891,8 +893,8 @@ test button-1.91 {configuration option: "disabledforeground" for checkbutton} -s
     pack .c
     update
 } -body {
-    .c configure -disabledforeground #00ff00
-    .c cget -disabledforeground
+    .c configure -disabledcolor #00ff00
+    .c cget -disabledcolor
 } -cleanup {
     destroy .c
 } -result {#00ff00}
@@ -901,7 +903,7 @@ test button-1.92 {configuration option: "disabledforeground" for checkbutton} -s
     pack .c
     update
 } -body {
-    .c configure -disabledforeground non-existent
+    .c configure -disabledcolor non-existent
 } -cleanup {
     destroy .c
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -910,8 +912,8 @@ test button-1.93 {configuration option: "disabledforeground" for radiobutton} -s
     pack .r
     update
 } -body {
-    .r configure -disabledforeground #00ff00
-    .r cget -disabledforeground
+    .r configure -disabledcolor #00ff00
+    .r cget -disabledcolor
 } -cleanup {
     destroy .r
 } -result {#00ff00}
@@ -920,7 +922,7 @@ test button-1.94 {configuration option: "disabledforeground" for radiobutton} -s
     pack .r
     update
 } -body {
-    .r configure -disabledforeground non-existent
+    .r configure -disabledcolor non-existent
 } -cleanup {
     destroy .r
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -930,8 +932,8 @@ test button-1.95 {configuration option: "fg" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -fg #110022
-    .l cget -fg
+    .l configure -color #110022
+    .l cget -color
 } -cleanup {
     destroy .l
 } -result {#110022}
@@ -940,7 +942,7 @@ test button-1.96 {configuration option: "fg" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -fg non-existent
+    .l configure -color non-existent
 } -cleanup {
     destroy .l
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -949,8 +951,8 @@ test button-1.97 {configuration option: "fg" for button} -setup {
     pack .b
     update
 } -body {
-    .b configure -fg #110022
-    .b cget -fg
+    .b configure -color #110022
+    .b cget -color
 } -cleanup {
     destroy .b
 } -result {#110022}
@@ -959,7 +961,7 @@ test button-1.98 {configuration option: "fg" for button} -setup {
     pack .b
     update
 } -body {
-    .b configure -fg non-existent
+    .b configure -color non-existent
 } -cleanup {
     destroy .b
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -968,8 +970,8 @@ test button-1.99 {configuration option: "fg" for checkbutton} -setup {
     pack .c
     update
 } -body {
-    .c configure -fg #110022
-    .c cget -fg
+    .c configure -color #110022
+    .c cget -color
 } -cleanup {
     destroy .c
 } -result {#110022}
@@ -978,7 +980,7 @@ test button-1.100 {configuration option: "fg" for checkbutton} -setup {
     pack .c
     update
 } -body {
-    .c configure -fg non-existent
+    .c configure -color non-existent
 } -cleanup {
     destroy .c
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -987,8 +989,8 @@ test button-1.101 {configuration option: "fg" for radiobutton} -setup {
     pack .r
     update
 } -body {
-    .r configure -fg #110022
-    .r cget -fg
+    .r configure -color #110022
+    .r cget -color
 } -cleanup {
     destroy .r
 } -result {#110022}
@@ -997,7 +999,7 @@ test button-1.102 {configuration option: "fg" for radiobutton} -setup {
     pack .r
     update
 } -body {
-    .r configure -fg non-existent
+    .r configure -color non-existent
 } -cleanup {
     destroy .r
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -1084,8 +1086,8 @@ test button-1.111 {configuration option: "foreground" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -foreground #110022
-    .l cget -foreground
+    .l configure -color #110022
+    .l cget -color
 } -cleanup {
     destroy .l
 } -result {#110022}
@@ -1094,7 +1096,7 @@ test button-1.112 {configuration option: "foreground" for label} -setup {
     pack .l
     update
 } -body {
-    .l configure -foreground non-existent
+    .l configure -color non-existent
 } -cleanup {
     destroy .l
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -1103,8 +1105,8 @@ test button-1.113 {configuration option: "foreground" for button} -setup {
     pack .b
     update
 } -body {
-    .b configure -foreground #110022
-    .b cget -foreground
+    .b configure -color #110022
+    .b cget -color
 } -cleanup {
     destroy .b
 } -result {#110022}
@@ -1113,7 +1115,7 @@ test button-1.114 {configuration option: "foreground" for button} -setup {
     pack .b
     update
 } -body {
-    .b configure -foreground non-existent
+    .b configure -color non-existent
 } -cleanup {
     destroy .b
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -1122,8 +1124,8 @@ test button-1.115 {configuration option: "foreground" for checkbutton} -setup {
     pack .c
     update
 } -body {
-    .c configure -foreground #110022
-    .c cget -foreground
+    .c configure -color #110022
+    .c cget -color
 } -cleanup {
     destroy .c
 } -result {#110022}
@@ -1132,7 +1134,7 @@ test button-1.116 {configuration option: "foreground" for checkbutton} -setup {
     pack .c
     update
 } -body {
-    .c configure -foreground non-existent
+    .c configure -color non-existent
 } -cleanup {
     destroy .c
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -1141,8 +1143,8 @@ test button-1.117 {configuration option: "foreground" for radiobutton} -setup {
     pack .r
     update
 } -body {
-    .r configure -foreground #110022
-    .r cget -foreground
+    .r configure -color #110022
+    .r cget -color
 } -cleanup {
     destroy .r
 } -result {#110022}
@@ -1151,7 +1153,7 @@ test button-1.118 {configuration option: "foreground" for radiobutton} -setup {
     pack .r
     update
 } -body {
-    .r configure -foreground non-existent
+    .r configure -color non-existent
 } -cleanup {
     destroy .r
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -2785,13 +2787,13 @@ test button-3.5 {ButtonWidgetCmd procedure, "cget" option} -body {
 #ex 4.7
 test button-3.6 {ButtonWidgetCmd procedure, "cget" option} -body {
     label .l
-    .l cget -disabledforeground
+    .l cget -disabledcolor
 } -cleanup {
     destroy .l
 } -returnCodes {ok} -match {glob} -result {*}
 test button-3.7 {ButtonWidgetCmd procedure, "cget" option} -body {
     button .b
-    .b cget -disabledforeground
+    .b cget -disabledcolor
 } -cleanup {
     destroy .b
 } -returnCodes {ok} -match {glob} -result {*}
@@ -2835,7 +2837,7 @@ test button-3.13 {ButtonWidgetCmd procedure, "configure" option} -body {
 } -cleanup {
     destroy .b
 }  -result 3
-test button-3.14 {ButtonWidgetCmd procedure, "configure" option} -body {
+test button-3.14 {ButtonWidgetCmd procedure, "configure" option} -constraints nodeprecated -body {
     checkbutton .c
     llength [.c configure]
 } -cleanup {
@@ -2850,16 +2852,16 @@ test button-3.15 {ButtonWidgetCmd procedure, "configure" option} -body {
 test button-3.16 {ButtonWidgetCmd procedure, "configure" option} -setup {
     button .b
 } -body {
-    .b co -background #ffffff -fg
+    .b co -background #ffffff -color
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {value for "-fg" missing}
+} -returnCodes {error} -result {value for "-color" missing}
 test button-3.17 {ButtonWidgetCmd procedure, "configure" option} -setup {
     button .b
 } -body {
-    .b configure -fg #123456
+    .b configure -color #123456
     .b configure -background #654321
-    lindex [.b configure -fg] 4
+    lindex [.b configure -color] 4
 } -cleanup {
     destroy .b
 } -result {#123456}
@@ -3203,9 +3205,9 @@ test button-4.1 {DestroyButton procedure} -constraints {
     unset -nocomplain x
 } -body {
     button .b1 -image image1
-    button .b2 -fg #ff0000 -text "Button 2"
+    button .b2 -color #ff0000 -text "Button 2"
     button .b3 -state active -text "Button 3"
-    button .b4 -disabledforeground #0000ff -state disabled -text "Button 4"
+    button .b4 -disabledcolor #0000ff -state disabled -text "Button 4"
     checkbutton .b5 -variable x -text "Checkbutton 5"
     set x 1
     pack .b1 .b2 .b3 .b4 .b5
@@ -3218,13 +3220,13 @@ test button-4.1 {DestroyButton procedure} -constraints {
 
 test button-5.1 {ConfigureButton - textvariable trace} -body {
     button .b -borderwidth 4 -background green
-    .b configure -borderwidth 7 -background red -fg bogus
+    .b configure -borderwidth 7 -background red -color bogus
 } -cleanup {
     destroy .b
 } -returnCodes {error} -result {unknown color name "bogus"}
 test button-5.2 {ConfigureButton - textvariable trace} -body {
     button .b -borderwidth 4 -background green
-    catch {.b configure -borderwidth 7 -background red -fg bogus}
+    catch {.b configure -borderwidth 7 -background red -color bogus}
     list [.b cget -borderwidth] [.b cget -background]
 } -cleanup {
     destroy .b

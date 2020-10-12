@@ -11,8 +11,10 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # For xscrollcommand
 set scrollInfo {}
@@ -169,8 +171,8 @@ test entry-1.13 {configuration option: "disabledforeground" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -disabledforeground blue
-    .e cget -disabledforeground
+    .e configure -disabledcolor blue
+    .e cget -disabledcolor
 } -cleanup {
     destroy .e
 } -result {blue}
@@ -179,7 +181,7 @@ test entry-1.14 {configuration option: "disabledforeground" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -disabledforeground non-existent
+    .e configure -disabledcolor non-existent
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -209,8 +211,8 @@ test entry-1.17 {configuration option: "fg" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -fg #110022
-    .e cget -fg
+    .e configure -color #110022
+    .e cget -color
 } -cleanup {
     destroy .e
 } -result {#110022}
@@ -219,7 +221,7 @@ test entry-1.18 {configuration option: "fg" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -fg non-existent
+    .e configure -color non-existent
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -249,8 +251,8 @@ test entry-1.21 {configuration option: "foreground" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -foreground #110022
-    .e cget -foreground
+    .e configure -color #110022
+    .e cget -color
 } -cleanup {
     destroy .e
 } -result {#110022}
@@ -259,7 +261,7 @@ test entry-1.22 {configuration option: "foreground" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -foreground non-existent
+    .e configure -color non-existent
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -532,8 +534,8 @@ test entry-1.49 {configuration option: "selectforeground" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -selectforeground #110022
-    .e cget -selectforeground
+    .e configure -selectcolor #110022
+    .e cget -selectcolor
 } -cleanup {
     destroy .e
 } -result {#110022}
@@ -542,7 +544,7 @@ test entry-1.50 {configuration option: "selectforeground" for entry} -setup {
     pack .e
     update
 } -body {
-    .e configure -selectforeground non-existent
+    .e configure -selectcolor non-existent
 } -cleanup {
     destroy .e
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -640,11 +642,11 @@ test entry-1.59 {configuration option: "-placeholder"} -setup {
     destroy .e
 } -result {Some text}
 
-test entry-1.60 {configuration option: "-placeholderforeground"} -setup {
+test entry-1.60 {configuration option: "-placeholdercolor"} -setup {
     pack [entry .e]
 } -body {
-    .e configure -placeholder {Some text} -placeholderforeground red
-    .e cget -placeholderforeground
+    .e configure -placeholder {Some text} -placeholdercolor red
+    .e cget -placeholdercolor
 } -cleanup {
     destroy .e
 } -result {red}
@@ -821,7 +823,7 @@ test entry-3.14 {EntryWidgetCmd procedure, "cget" widget command} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
+test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -constraints nodeprecated -setup {
     entry .e
     pack .e
     update
@@ -1704,7 +1706,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 
 
 test entry-5.8 {ConfigureEntry procedure} -constraints {
-    fonts
+    fonts failsOnXQuarz
 } -setup {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e
@@ -2493,10 +2495,10 @@ test entry-11.1 {EntryEventProc procedure} -setup {
 test entry-11.2 {EntryEventProc procedure} -setup {
     set x {}
 } -body {
-    entry .e1 -fg #112233
+    entry .e1 -color #112233
     rename .e1 .e2
     lappend x [winfo children .]
-    lappend x [.e2 cget -fg]
+    lappend x [.e2 cget -color]
     destroy .e1
     lappend x [info command .e*] [winfo children .]
 } -cleanup {
@@ -3052,7 +3054,7 @@ test entry-19.1 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a
     set ::vVals
@@ -3067,7 +3069,7 @@ test entry-19.2 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a   ;# previous settings
     .e insert 1 b
@@ -3083,7 +3085,7 @@ test entry-19.3 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
@@ -3099,7 +3101,7 @@ test entry-19.4 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
@@ -3115,7 +3117,7 @@ test entry-19.5 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
@@ -3131,7 +3133,7 @@ test entry-19.6 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
@@ -3148,7 +3150,7 @@ test entry-19.7 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abc                 ;# previous settings
     set ::vVals {}
@@ -3165,7 +3167,7 @@ test entry-19.8 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e configure -validate focus    ;# previous settings
     .e insert end abcd              ;# previous settings
@@ -3184,7 +3186,7 @@ test entry-19.9 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd      ;# previous settings
     focus -force .e         ;# previous settings
@@ -3205,7 +3207,7 @@ test entry-19.10 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd          ;# previous settings
     focus -force .e
@@ -3223,7 +3225,7 @@ test entry-19.11 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd          ;# previous settings
     focus -force .e             ;# previous settings
@@ -3244,7 +3246,7 @@ test entry-19.12 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert 0 abcd              ;# previous settings
     focus -force .e
@@ -3262,7 +3264,7 @@ test entry-19.13 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}
@@ -3281,7 +3283,7 @@ test entry-19.14 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3300,7 +3302,7 @@ test entry-19.15 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3323,7 +3325,7 @@ test entry-19.16 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3346,7 +3348,7 @@ test entry-19.17 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::e newdata
@@ -3364,7 +3366,7 @@ test entry-19.18 {entry widget validation} -setup {
         -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     set ::e newdata                 ;# previous settings
     .e configure -validate all
@@ -3384,7 +3386,7 @@ test entry-19.19 {entry widget validation} -setup {
         -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     set ::e nextdata                 ;# previous settings
 
@@ -3407,7 +3409,7 @@ test entry-19.20 {entry widget validation} -setup {
         -validatecommand [list doval %W %d %i %P %s %S %v %V] \
         -invalidcommand bell \
         -textvariable ::e \
-        -background red -foreground white
+        -background red -color white
     pack .e
     set ::e nextdata                 ;# previous settings
     .e configure -validatecommand [list doval2 %W %d %i %P %s %S %v %V] ;# prev
