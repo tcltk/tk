@@ -266,7 +266,7 @@ proc sysnotify {title message} {
 	    _sysnotify notify $ico $title $message
 	}
 	"x11" {
-	    if {![info exists _sysnotify]} {
+	    if {[info commands _sysnotify] eq ""} {
 		_notifywindow "$title\n\n$message"
 	    } else {
 		_sysnotify $title $message
