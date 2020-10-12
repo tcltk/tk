@@ -50,7 +50,6 @@ static int isWin32s = -1;
 # define snprintf _snprintf
 #endif
 
-static BOOL AdjustICONIMAGEPointers(LPICONIMAGE lpImage);
 static int CreateIcoFromTkImage(Tcl_Interp *interp, const char * image);
 
 typedef struct IcoInfo {
