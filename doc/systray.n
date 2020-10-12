@@ -11,7 +11,15 @@
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
 \fBsystray create\fP \fIimage\fP? \fItext\fP? \fIcallback\fR?
-\fBsystray modify\fP \fIoption\fR?
+.sp
+\fBsystray modify image\fI image\fR?
+.sp
+\fBsystray modify text \fI text\fR?
+.sp
+\fBsystray modify callback \fIcallback\fR?
+.sp
+\fBsystray destroy\fR
+.BE
 .BE
 .SH DESCRIPTION
 .PP
@@ -23,19 +31,23 @@ for display in a tooltip, and a callback is bound to <Button-1>.
 Here is an example of the \fBsystray\fP code:
 .CS
     image create photo book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
-    systray create -image book -text "Systray sample" -callback {puts "Here is the systray output"}
+    systray create book  "Systray sample" {puts "Here is the systray output"}
 .CE
 .PP
 Here is an example of modifying the \fBsystray\fP icon:
 .CS
     image create book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
-    systray modify -image book_page
-    systray modify -text "Updated sample"
-    systray modify -callback {puts "Different output from the systray"}
+    systray modify image book_page
+    systray modify text "Updated sample"
+    systray modify callback {puts "Different output from the systray"}
 .CE
 .PP
-From a user-interface standpoint, only one systray icon per app instance
+ The \fBsystray\fP destroy command removes the icon from display and 
+deallocates it.
+.PP
+From a user-interface standpoint, only one systray icon per interpreter
 should be displayed, although it can be modified with different images and
-strings to indicate app state.
+strings to indicate app state. Loading additional interpreters into a 
+running instance of Wish will allow additional icons to be displayed.
 .SH KEYWORDS
 image, callback
