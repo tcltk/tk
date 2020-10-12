@@ -603,7 +603,7 @@ typedef struct LayoutData {
     				 * with right tabs. */
     int tabApplied;		/* Current tab has been already applied? */
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
      * Support for context drawing.
      */
@@ -828,7 +828,7 @@ static int		MeasureChars(Tk_Font tkfont, const char *source, int maxBytes, int r
 			    int rangeLength, int startX, int maxX, int flags, int *nextXPtr);
 static CharInfo *	AllocCharInfo(TkText *textPtr);
 static void		FreeCharInfo(TkText *textPtr, CharInfo *ciPtr);
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
@@ -934,7 +934,7 @@ static unsigned tkTextCountNewDLine = 0;
 static unsigned tkTextCountDestroyDLine = 0;
 static unsigned tkTextCountNewDispInfo = 0;
 unsigned tkTextCountDestroyDispInfo = 0; /* referenced in tkTextBTree.c */
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 unsigned tkTextCountNewBaseChars = 0;
 unsigned tkTextCountDestroyBaseChars = 0;
 #endif
@@ -960,7 +960,7 @@ AllocStatistic()
     fprintf(stderr, "CharInfo:    %8u - %8u\n", tkTextCountNewCharInfo, tkTextCountDestroyCharInfo);
     fprintf(stderr, "DispInfo:    %8u - %8u\n", tkTextCountNewDispInfo, tkTextCountDestroyDispInfo);
     fprintf(stderr, "BreakInfo:   %8u - %8u\n", tkTextCountNewBreakInfo, tkTextCountDestroyBreakInfo);
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     fprintf(stderr, "BaseChars:   %8u - %8u\n", tkTextCountNewBaseChars, tkTextCountDestroyBaseChars);
 #endif
     fprintf(stderr, "Style:       %8u - %8u\n", tkTextCountNewStyle, tkTextCountDestroyStyle);
@@ -971,7 +971,7 @@ AllocStatistic()
 	    || tkTextCountNewSection != tkTextCountDestroySection
 	    || tkTextCountNewCharInfo != tkTextCountDestroyCharInfo
 	    || tkTextCountNewDispInfo != tkTextCountDestroyDispInfo
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    || tkTextCountNewBaseChars != tkTextCountDestroyBaseChars
 #endif
 	    || tkTextCountNewStyle != tkTextCountDestroyStyle
@@ -2374,7 +2374,7 @@ IsStartOfNotMergedLine(
  *----------------------------------------------------------------------
  */
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
 static int
 IsSameFGStyle(
@@ -2929,7 +2929,7 @@ LayoutMakeCharInfo(
 	}
     }
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
     if (data->baseChunkPtr
 	    && (!IsSameFGStyle(data->baseChunkPtr->stylePtr, data->chunkPtr->stylePtr)
@@ -2988,7 +2988,7 @@ LayoutFinalizeCharInfo(
 	ciPtr->numBytes -= 1;
     }
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
     assert(data->chunkPtr->baseChunkPtr);
 
@@ -3021,7 +3021,7 @@ LayoutUndisplay(
     if (chunkPtr->layoutProcs->undisplayProc) {
 	chunkPtr->layoutProcs->undisplayProc(data->textPtr, chunkPtr);
     }
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chunkPtr == data->baseChunkPtr) {
 	data->baseChunkPtr = NULL;
     }
@@ -3079,7 +3079,7 @@ static void
 LayoutDoWidthAdjustmentForContextDrawing(
     LayoutData *data)
 {
-#if TK_LAYOUT_WITH_BASE_CHUNKS && TK_DRAW_IN_CONTEXT
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS && TK_DRAW_IN_CONTEXT
     TkTextDispChunk *chunkPtr = data->chunkPtr;
 
     if (chunkPtr->prevPtr) {
@@ -3797,7 +3797,7 @@ LayoutEmbedded(
 	return 0;
     }
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     data->baseChunkPtr = NULL;
 #endif
     LayoutSetupChunk(data, segPtr);
@@ -4141,7 +4141,7 @@ LayoutDestroyChunks(
     data->lastChunkPtr = data->breakChunkPtr;
     data->chunkPtr = NULL;
     data->x = data->lastChunkPtr->x + data->lastChunkPtr->width;
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     data->baseChunkPtr = data->breakChunkPtr->baseChunkPtr;
 #endif
 }
@@ -14316,7 +14316,7 @@ CharChunkMeasureChars(
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int fit, rangeStart;
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
     const TkTextDispChunk *baseChunkPtr = chunkPtr->baseChunkPtr;
 
@@ -14642,7 +14642,7 @@ CharUndisplayProc(
 	return;
     }
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     {
 	TkTextDispChunk *baseChunkPtr = chunkPtr->baseChunkPtr;
 

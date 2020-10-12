@@ -631,7 +631,7 @@ struct TkTextDispChunk {
     				 * line symbol. */
     int integralPart;		/* This chunk contains the start of the integral part of a numeric. */
 
-#if TK_LAYOUT_WITH_BASE_CHUNKS
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
     /*
      * Support of context drawing (Mac):
