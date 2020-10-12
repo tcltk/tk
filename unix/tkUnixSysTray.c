@@ -271,7 +271,6 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
 
     enum {XWC_CONFIGURE=0, XWC_CGET, XWC_BALLOON, XWC_CANCEL, XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION};
     const char *st_wcmd[]={"configure","cget","balloon","cancel","bbox","docked","orientation",NULL};
-    end if
 
     long timeout = 0;
     Tcl_Obj* optionValue;
