@@ -43,8 +43,10 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-backgroundstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-bgstipple", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundstipple", 0},
+#endif
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
 	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
@@ -53,8 +55,10 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-elide", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elideString),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fgstipple", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-stipple", 0},
+#endif
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tkfont), TK_OPTION_NULL_OK, 0, 0},
 #ifndef TK_NO_DEPRECATED

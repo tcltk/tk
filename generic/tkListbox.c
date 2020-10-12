@@ -268,8 +268,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, TCL_INDEX_NONE,
 	offsetof(Listbox, exportSelection), 0, 0, 0},
+#ifndef TK_NO_DEPRECATED
     {TK_OPTION_SYNONYM, "-fg", "color", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-color", 0},
+#endif
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_LISTBOX_FONT, TCL_INDEX_NONE, offsetof(Listbox, tkfont), 0, 0, 0},
 #ifndef TK_NO_DEPRECATED
