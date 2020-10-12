@@ -240,7 +240,6 @@ static int IconGenericHandler(ClientData cd, XEvent *ev);
 int Tktray_Init ( Tcl_Interp* interp );
 
 
-#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -371,7 +370,6 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
     }
     return TCL_OK;
 }
-#end if
 /*
  *----------------------------------------------------------------------
  *
