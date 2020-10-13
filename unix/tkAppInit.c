@@ -100,8 +100,16 @@ main(
 
 void sampleExitHandler(ClientData clientdata) {
     Tcl_Interp *interp = (Tcl_Interp *)clientdata;
-    Tcl_EvalEx(interp, "tk_messageBox -type ok -message \"Really quit?\"", -1,
-			      TCL_EVAL_GLOBAL);
+
+    /*
+     * Don't do anything if the interpreter has already been destroyed
+     * because the mainloop ended.
+     */
+
+    if (Tk_GetNumMainWindows() > 0) {
+	Tcl_EvalEx(interp, "tk_messageBox -type ok -message \"Really quit?\"", -1,
+		   TCL_EVAL_GLOBAL);
+    }
 }
 
 int
