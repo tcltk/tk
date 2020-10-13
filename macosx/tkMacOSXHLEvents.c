@@ -64,22 +64,6 @@ static const char *scriptTextProc = "::tk::mac::DoScriptText";
 
 @implementation TKApplication(TKHLEvents)
 
-- (void)applicationWillTerminate:(NSNotification *)notification
-{
-    /*
-     * If there is an open fontchooser or colorchooser, close
-     * it so that it will not reappear the next time that the
-     * app is run.
-     */
-
-    if ([NSFontPanel sharedFontPanelExists]) {
-	[[NSFontPanel sharedFontPanel] orderOut:nil];
-    }
-    if ([NSColorPanel sharedColorPanelExists]) {
-        [[NSColorPanel sharedColorPanel] orderOut:nil];
-    }
-}
-
 - (void) reallyTerminate: (id) sender
 {
     [super terminate: nil];
@@ -589,21 +573,27 @@ ReallyKillMe(
     int flags)
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
-    int quit = Tcl_FindCommand(interp, "::tk::mac::Quit", NULL, 0)!=NULL;
-    if (isatty(0)) {
-	Tcl_Finalize();
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
     }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+
+    if (Tcl_FindCommand(interp, "::tk::mac::Quit", NULL, 0)) {
+	int code = Tcl_EvalEx(interp, "::tk::mac::Quit", -1,
+			      TCL_EVAL_GLOBAL);
+	if (code != TCL_OK) {
+
+	    /*
+	     * Should be never reached...
+	     */
+
+	    Tcl_BackgroundException(interp, code);
+	}
+    }
+    Tcl_Finalize();
     [NSApp reallyTerminate:nil];
-    int code = Tcl_EvalEx(interp, quit ? "::tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
-
-    if (code != TCL_OK) {
-
-	/*
-	 * Should be never reached...
-	 */
-
-	Tcl_BackgroundException(interp, code);
-    }
     return 1;
 }
 

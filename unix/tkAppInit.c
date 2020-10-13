@@ -98,6 +98,12 @@ main(
  *----------------------------------------------------------------------
  */
 
+void sampleExitHandler(ClientData clientdata) {
+    Tcl_Interp *interp = (Tcl_Interp *)clientdata;
+    Tcl_EvalEx(interp, "tk_messageBox -type ok -message \"Really quit?\"", -1,
+			      TCL_EVAL_GLOBAL);
+}
+
 int
 Tcl_AppInit(
     Tcl_Interp *interp)		/* Interpreter for application. */
@@ -144,6 +150,9 @@ Tcl_AppInit(
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/.wishrc", -1), TCL_GLOBAL_ONLY);
+
+    Tcl_CreateExitHandler(sampleExitHandler, interp);
+
     return TCL_OK;
 }
 
