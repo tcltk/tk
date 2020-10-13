@@ -10,7 +10,6 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-
 # Pure-Tcl system tooltip window for use with system tray icon if native implementation not available.
 
 proc _balloon {w help} {
@@ -106,6 +105,7 @@ proc _fade_in {w} {
     }
 }
 
+
 global _ico
 set _ico ""
 
@@ -130,12 +130,12 @@ set _ico ""
 proc systray {args} {
 
     if {[llength $args] == 0} {
-	error "Missing command: should be systray create | modify | destroy"
+	error "Missing command: should be \"tk systray create | modify | destroy\""
     }
 
     set name [lindex $args 0]
     if {![string equal $name "create"]  && ![string equal $name "modify"]  && ![string equal $name "destroy"]} {
-	error "Invalid command: should be systray create | modify | destroy"
+	error "Invalid command: should be \"tk systray create | modify | destroy\""
     }
 
     #Set variables for icon properties.
@@ -164,13 +164,13 @@ proc systray {args} {
     }
 
     if {[lindex $args 0] eq "destroy" && [llength $args] > 1} {
-	error "Wrong # of args: systray destroy"
+	error "Wrong # of args: \"tk systray destroy\""
     }
 
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
 	if {[llength $args] != 4} {
-	    error "Wrong # of arguments: systray create image? text? callback?"
+	    error "Wrong # of arguments: \"tk systray create image? text? callback?\""
 	}
         set img [lindex $args 1]
         set txt [lindex $args 2]
@@ -193,7 +193,7 @@ proc systray {args} {
     #Modify the system tray icon properties.
     if {[lindex $args 0] eq "modify"} {
 	if {[llength $args] != 3} {
-	    error "Wrong # of arguments: systray modify image | text | callback option?"
+	    error "Wrong # of arguments: \"tk systray modify image | text | callback option?\""
 	}
 	switch -- [tk windowingsystem] {
 	    "win32" {
