@@ -193,18 +193,15 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-    if (Tk_GetNumMainWindows() == 1 &&
-    	winPtr == (TkWindow *) Tk_MainWindow(_eventInterp)) {
+    if (winPtr == (TkWindow *) Tk_MainWindow(_eventInterp)) {
 
 	/*
-	 * The user is closing the main window of the main interpreter and
-	 * there are no other main windows.  This means that TkMainLoop will
-	 * return, the main interpreter will be deleted and TkMain will return.
-	 * We want to terminate our NSApplication before that happens.  This
-	 * allows, for example, running exit handlers that need to use the
-	 * interpreter.
+	 * The user is closing the main window of the main interpreter.  This
+	 * means that the main interpreter will be deleted.  We want to
+	 * terminate our NSApplication before that happens.  Doing this allows,
+	 * for example, running exit handlers that need to use the interpreter.
 	 */
-	
+
     	[NSApp terminate:nil];
     } else if (winPtr) {
 	TkGenWMDestroyEvent((Tk_Window)winPtr);
@@ -1034,7 +1031,7 @@ ConfigureRestrictProc(
 	if([NSApp isDrawing] || [self inLiveResize]) {
 	    [self generateExposeEvents: [self bounds]];
 	}
-	
+
 	/*
 	 * Finally, unlock the main autoreleasePool.
 	 */
