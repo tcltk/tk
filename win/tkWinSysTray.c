@@ -31,8 +31,6 @@
 
 
 #define GETHINSTANCE Tk_GetHINSTANCE()
-static int isWin32s = -1;
-#define ISWIN32S isWin32s
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -1337,7 +1335,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     IcoInfo * icoPtr;
     BlockOfIconImagesPtr lpIR = NULL;
     if (argc < 2) {
-        Tcl_AppendResult(interp, " wrong # args: should be \"",
+        Tcl_AppendResult(interp, "wrong # args: should be \"",
             argv[0], " option ?arg arg ...?\"", (char * ) NULL);
         return TCL_ERROR;
     }
@@ -1347,7 +1345,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
 
         int pos = 0;
         if (argc < 3) {
-            Tcl_AppendResult(interp, " wrong # args,must be:",
+            Tcl_AppendResult(interp, "wrong # args: should be:",
                 argv[0], " createfrom <Tk image> ", (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1378,7 +1376,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     } else if ((strncmp(argv[1], "delete", length) == 0) &&
         (length >= 2)) {
         if (argc != 3) {
-            Tcl_AppendResult(interp, " wrong # args: should be \"",
+            Tcl_AppendResult(interp, "wrong # args: should be \"",
                 argv[0], " delete ?id?\"", (char * ) NULL);
             return TCL_ERROR;
         }
@@ -1573,7 +1571,6 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 
 int
 WinIcoInit(Tcl_Interp * interp) {
-    OSVERSIONINFO info;
     #ifdef USE_TCL_STUBS
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
         return TCL_ERROR;
@@ -1584,10 +1581,6 @@ WinIcoInit(Tcl_Interp * interp) {
         return TCL_ERROR;
     }
     #endif
-
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx( & info);
-    isWin32s = (info.dwPlatformId == VER_PLATFORM_WIN32s);
 
     Tcl_CreateCommand(interp, "_systray", WinIcoCmd, (ClientData)interp,
         (Tcl_CmdDeleteProc *) WinIcoDestroy);
