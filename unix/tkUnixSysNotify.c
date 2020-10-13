@@ -20,10 +20,9 @@
  * Forward declarations for procedures defined in this file.
  */
 
-static void SysNotifyDeleteCmd ( ClientData cd );
-static int SysNotifyCmd (ClientData clientData, Tcl_Interp * interp,
-			 int argc, const char * argv[]);
-int SysNotify_Init ( Tcl_Interp* interp );
+static void SysNotifyDeleteCmd (void *);
+static int SysNotifyCmd(void *, Tcl_Interp *, int, Tcl_Obj * const*);
+int SysNotify_Init(Tcl_Interp *);
 
 /*
  *----------------------------------------------------------------------
@@ -42,10 +41,10 @@ int SysNotify_Init ( Tcl_Interp* interp );
  */
 
 
-static void SysNotifyDeleteCmd ( ClientData cd )
+static void SysNotifyDeleteCmd (
+    TCL_UNUSED(void *))
 {
-  (void) cd;
-  notify_uninit();
+    notify_uninit();
 }
 
 
@@ -66,22 +65,23 @@ static void SysNotifyDeleteCmd ( ClientData cd )
  */
 
 
-static int SysNotifyCmd(ClientData clientData, Tcl_Interp * interp,
-			 int argc, const char * argv[])
+static int SysNotifyCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const *objv)
 {
-    char *title;
-    char *message;
+    const char *title;
+    const char *message;
     NotifyNotification *notif;
-    (void)clientData;
 
-    if (argc < 3) {
-	Tcl_AppendResult(interp, "wrong # args,must be:",
-			 argv[0], " title  message ", (char * ) NULL);
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "title  message ");
 	return TCL_ERROR;
     }
 
-    title = (char *) argv[1];
-    message = (char *) argv[2];
+    title = Tcl_GetString(objv[1]);
+    message = Tcl_GetString(objv[2]);
 
     notif = notify_notification_new(title, message, NULL);
     notify_notification_show(notif, NULL);
@@ -105,14 +105,15 @@ static int SysNotifyCmd(ClientData clientData, Tcl_Interp * interp,
  *-------------------------------z---------------------------------------
  */
 
-int SysNotify_Init ( Tcl_Interp* interp )
+int
+SysNotify_Init(
+    Tcl_Interp *interp)
 {
+    notify_init("Wish");
 
-  notify_init("Wish");
-
-  Tcl_CreateCommand(interp, "_sysnotify", SysNotifyCmd, (ClientData)interp,
-		    (Tcl_CmdDeleteProc *) SysNotifyDeleteCmd);
-  return TCL_OK;
+    Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyCmd, interp,
+	    SysNotifyDeleteCmd);
+    return TCL_OK;
 }
 
 #endif /* HAVE_LIBNOTIFY */

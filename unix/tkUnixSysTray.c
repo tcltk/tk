@@ -63,13 +63,12 @@ static Tk_Window TKU_GetWrapper(Tk_Window winPtr);
 void TKU_AddInput( Display* dpy, Window win, long add_to_mask);
 static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp);
 static Window TKU_XID(Tk_Window w);
-static void TKU_VirtualEvent(Tk_Window tkwin, Tk_Uid eventid);
 
 /* Customized window withdraw */
-static void TKU_WmWithdraw(Tk_Window winPtr, Tcl_Interp* interp)
+static void TKU_WmWithdraw(
+    Tk_Window winPtr,
+    TCL_UNUSED(Tcl_Interp *))
 {
-    /*Silence compiler warning.*/
-    (void) interp;
     TkpWmSetState((TkWindow*)winPtr, WithdrawnState);
 }
 
@@ -93,7 +92,7 @@ void TKU_AddInput( Display* dpy, Window win, long add_to_mask)
 /* Get Tk Window wrapper (make it exist if ny) */
 static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp)
 {
-  Tk_Window wrapper = TKU_GetWrapper(w);
+    Tk_Window wrapper = TKU_GetWrapper(w);
     if (!wrapper) {
 	Tk_MakeWindowExist(w);
 	TKU_WmWithdraw(w, interp);
@@ -113,22 +112,6 @@ static Window TKU_XID(Tk_Window w)
     }
     return xid;
 }
-
-static void TKU_VirtualEvent(Tk_Window tkwin, Tk_Uid eventid)
-{
-    union {XEvent general; XVirtualEvent virt;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(tkwin);
-    event.general.xany.display = Tk_Display(tkwin);
-    event.virt.name = eventid;
-
-    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
-}
-
 
 /* Data structure representing dock widget */
 typedef struct {
@@ -650,12 +633,12 @@ static void CreateTrayIconWindow(DockIcon *icon)
 static void DockToManager(DockIcon *icon)
 {
     icon->myManager = icon->trayManager;
-    TKU_VirtualEvent(icon->tkwin,Tk_GetUid("IconCreate"));
+    Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconCreate"), NULL);
     XembedSetState(icon, icon->visible ? XEMBED_MAPPED : 0);
     XembedRequestDock(icon);
 }
 
-static
+static const
 Tk_OptionSpec IconOptionSpec[]={
     {TK_OPTION_STRING,"-image","image","Image",
      (char *) NULL, -1, offsetof(DockIcon, imageString),
@@ -781,18 +764,15 @@ static void TrayIconImageChanged(ClientData cd,
  */
 
 
-static void IgnoreImageChange(ClientData cd,
-			      int x, int y, int w, int h,
-			      int imgw, int imgh)
+static void IgnoreImageChange(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-	/*Silence compiler warnings.*/
-	(void)cd;
-	(void)x;
-	(void)y;
-	(void)w;
-	(void)h;
-	(void)imgw;
-	(void)imgh;
 }
 
 /*
@@ -1085,7 +1065,7 @@ static void TrayIconWrapperEvent(ClientData cd, XEvent* ev)
 		    /* we were sent away to root */
 		    TKU_WmWithdraw(icon->drawingWin,icon->interp);
 		    if (icon->myManager)
-			TKU_VirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"));
+			Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"), NULL);
 		    icon->myManager = None;
 
 		}
@@ -1132,7 +1112,7 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
 	   is the only thing to do.
 	*/
 	if (icon->myManager) {
-	    TKU_VirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"));
+	    Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"), NULL);
 	}
 	Tcl_CancelIdleCall(DisplayIcon,(ClientData)icon);
 	icon->flags &= ~ICON_FLAG_REDRAW_PENDING;
@@ -1145,7 +1125,7 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
 	break;
 
     case ConfigureNotify:
-	TKU_VirtualEvent(icon->tkwin,Tk_GetUid("IconConfigure"));
+	Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconConfigure"), NULL);
 	if (icon->width != ev->xconfigure.width ||
 	    icon->height != ev->xconfigure.height) {
 	    icon->width = ev->xconfigure.width;
@@ -1542,7 +1522,7 @@ static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
 
 static void TrayIconDeleteProc( ClientData cd )
 {
-    DockIcon *icon = (DockIcon*) cd;
+    DockIcon *icon = (DockIcon *)cd;
     Tk_DestroyWindow(icon->tkwin);
 }
 
@@ -1683,7 +1663,7 @@ handleErrors:
  *-------------------------------z---------------------------------------
  */
 
-int Tktray_Init ( Tcl_Interp* interp )
+int Tktray_Init(Tcl_Interp* interp)
 {
 
     Tcl_CreateObjCommand(interp, "_systray",
