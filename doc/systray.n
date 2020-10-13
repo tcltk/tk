@@ -5,47 +5,47 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-.TH systray n "" Tk "Tk Built-In Commands"
+.TH tk systray n "" Tk "Tk Built-In Commands"
 .so man.macros
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBsystray create\fP \fIimage\fP? \fItext\fP? \fIcallback\fR?
+\fBtk systray create\fP \fIimage\fP? \fItext\fP? \fIcallback\fR?
 .sp
-\fBsystray modify image\fI image\fR?
+\fBtk systray modify image\fI image\fR?
 .sp
-\fBsystray modify text \fI text\fR?
+\fBtk systray modify text \fI text\fR?
 .sp
-\fBsystray modify callback \fIcallback\fR?
+\fBtk systray modify callback \fIcallback\fR?
 .sp
-\fBsystray destroy\fR
+\fBtk systray destroy\fR
 .BE
 .BE
 .SH DESCRIPTION
 .PP
-The \fBsystray\fP command creates an icon in the platform-specific tray.
+The \fBtk systray\fP command creates an icon in the platform-specific tray.
 The widget is configured with a Tk image for the icon display, a string
 for display in a tooltip, and a callback is bound to <Button-1>.
 .SH EXAMPLE
 .PP
-Here is an example of the \fBsystray\fP code:
+Here is an example of the \fBtk systray\fP code:
 .CS
     image create photo book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
-    systray create book  "Systray sample" {puts "Here is the systray output"}
+    tk systray create book  "tk systray sample" {puts "Here is the tk systray output"}
 .CE
 .PP
-Here is an example of modifying the \fBsystray\fP icon:
+Here is an example of modifying the \fBtk systray\fP icon:
 .CS
     image create book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
-    systray modify image book_page
-    systray modify text "Updated sample"
-    systray modify callback {puts "Different output from the systray"}
+    tk systray modify image book_page
+    tk systray modify text "Updated sample"
+    tk systray modify callback {puts "Different output from the tk systray"}
 .CE
 .PP
- The \fBsystray\fP destroy command removes the icon from display and 
+ The \fBtk systray\fP destroy command removes the icon from display and 
 deallocates it.
 .PP
-From a user-interface standpoint, only one systray icon per interpreter
+From a user-interface standpoint, only one icon per interpreter
 should be displayed, although it can be modified with different images and
 strings to indicate app state. Loading additional interpreters into a 
 running instance of Wish will allow additional icons to be displayed.

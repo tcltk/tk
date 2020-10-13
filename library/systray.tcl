@@ -249,7 +249,6 @@ proc systray {args} {
     }
 }
 
-
 # sysnotify --
 # This procedure implments a platform-specific system notification alert.
 #
@@ -278,6 +277,11 @@ proc sysnotify {title message} {
     }
 }
 
+#Thanks to Christian Gollwitzer for the guidance here 
+set map [namespace ensemble configure tk -map]
+dict set map systray  ::systray
+dict set map sysnotify ::sysnotify
+namespace ensemble configure tk -map $map
 
 
 
