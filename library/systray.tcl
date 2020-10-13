@@ -106,8 +106,8 @@ proc _fade_in {w} {
     }
 }
 
-global ico
-set ico ""
+global _ico
+set _ico ""
 
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
@@ -139,7 +139,7 @@ proc systray {args} {
     }
 
     #Set variables for icon properties.
-    global ico
+    global _ico
     global img
     global txt
     global cb
@@ -152,7 +152,7 @@ proc systray {args} {
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		_systray taskbar delete $ico
+		_systray taskbar delete $_ico
 	    }
 	    "x11" {
 		destroy ._tray
@@ -177,8 +177,8 @@ proc systray {args} {
         set cb [lindex $args 3]
         switch -- [tk windowingsystem] {
             "win32" {
-		set ico [_systray createfrom $img]
-		_systray taskbar add $ico -text $txt -callback [list _win_callback %m %i $cb]
+		set _ico [_systray createfrom $img]
+		_systray taskbar add $_ico -text $txt -callback [list _win_callback %m %i $cb]
 	    }
             "x11" {
 		_systray ._tray -image $img -visible true
@@ -199,9 +199,9 @@ proc systray {args} {
 	    "win32" {
 		if {[lindex $args 1] eq "image"} {
 		    set img [lindex $args 2]
-		    _systray taskbar delete $ico
-		    set ico [_systray createfrom $img]
-		    _systray taskbar add $ico -text $txt -callback [list _win_callback %m %i $cb]
+		    _systray taskbar delete $_ico
+		    set _ico [_systray createfrom $img]
+		    _systray taskbar add $_ico -text $txt -callback [list _win_callback %m %i $cb]
 		}
 		if {[lindex $args 1] eq "text"} {
 		    set txt [lindex $args 2]
@@ -209,7 +209,7 @@ proc systray {args} {
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set cb [lindex $args 2]
-		    _systray taskbar modify $ico -callback [list _win_callback %m %i $cb]
+		    _systray taskbar modify $_ico -callback [list _win_callback %m %i $cb]
 		}
 	    }
 	    "x11" {
@@ -258,11 +258,11 @@ proc systray {args} {
 
 proc sysnotify {title message} {
 
-    global ico
+    global _ico
 
     switch -- [tk windowingsystem] {
 	"win32" {
-	    _sysnotify notify $ico $title $message
+	    _sysnotify notify $_ico $title $message
 	}
 	"x11" {
 	    if {[info commands _sysnotify] eq ""} {
