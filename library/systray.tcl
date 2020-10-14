@@ -168,7 +168,7 @@ proc systray {args} {
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
 	if {[llength $args] != 4} {
-	    error "wrong # args: \"tk systray create image? text? callback?\""
+	    error "wrong # args: should be \"tk systray create image ?text? ?callback?\""
 	}
         set img [lindex $args 1]
         set txt [lindex $args 2]
@@ -272,6 +272,7 @@ proc sysnotify {title message} {
 	    _sysnotify $title $message
 	}
     }
+    return
 }
 
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
