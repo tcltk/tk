@@ -672,7 +672,7 @@ int TtkWidgetConfigureCommand(
 	}
 
 	TtkRedisplayWidget(corePtr);
-	result = Tcl_NewObj();
+	TclNewObj(result);
     }
 
     if (result == 0) {
