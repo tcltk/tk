@@ -706,8 +706,8 @@ EvaluateActionList(
 	} else if (action->command != NULL) {
 	    Tcl_Obj *cmdNameObj, *evalObj;
 
-	    cmdNameObj = Tcl_NewObj();
-	    evalObj = Tcl_NewObj();
+	    TclNewObj(cmdNameObj);
+	    TclNewObj(evalObj);
 	    Tcl_IncrRefCount(evalObj);
 	    Tcl_GetCommandFullName(interp, action->command, cmdNameObj);
 	    Tcl_ListObjAppendElement(NULL, evalObj, cmdNameObj);

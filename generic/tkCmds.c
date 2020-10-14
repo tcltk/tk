@@ -363,7 +363,7 @@ Tk_BindtagsObjCmd(
 	return TCL_ERROR;
     }
     if (objc == 2) {
-	listPtr = Tcl_NewObj();
+	TclNewObj(listPtr);
 	if (winPtr->numTags == 0) {
 	    Tcl_ListObjAppendElement(NULL, listPtr,
 		    Tcl_NewStringObj(winPtr->pathName, -1));
@@ -740,7 +740,7 @@ CaretCmd(
 	 * Return all the current values
 	 */
 
-	objPtr = Tcl_NewObj();
+	TclNewObj(objPtr);
 	Tcl_ListObjAppendElement(interp, objPtr,
 		Tcl_NewStringObj("-height", 7));
 	Tcl_ListObjAppendElement(interp, objPtr,
@@ -1353,8 +1353,9 @@ Tk_WinfoObjCmd(
 		Tcl_NewWideIntObj(Tk_Visual(tkwin)->map_entries));
 	break;
     case WIN_CHILDREN: {
-	Tcl_Obj *strPtr, *resultPtr = Tcl_NewObj();
+	Tcl_Obj *strPtr, *resultPtr;
 
+	TclNewObj(resultPtr);
 	winPtr = winPtr->childList;
 	for ( ; winPtr != NULL; winPtr = winPtr->nextPtr) {
 	    if (!(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
@@ -1791,7 +1792,7 @@ Tk_WinfoObjCmd(
 	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", NULL);
 	    return TCL_ERROR;
 	}
-	resultPtr = Tcl_NewObj();
+	TclNewObj(resultPtr);
 	for (i = 0; i < count; i++) {
 	    string = TkFindStateString(visualMap, visInfoPtr[i].c_class);
 	    if (string == NULL) {
