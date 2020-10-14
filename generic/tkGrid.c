@@ -751,7 +751,7 @@ GridInfoCommand(
 	return TCL_OK;
     }
 
-    TclNewObj(infoObj);
+    infoObj = Tcl_NewObj();
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
 	    Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
     Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-column", -1),

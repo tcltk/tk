@@ -1128,7 +1128,7 @@ TkMakeEnsemble(
     }
     Tcl_DStringAppend(&ds, name, -1);
 
-    TclNewObj(dictObj);
+    dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
 	Tcl_Obj *fqdnObj;
 

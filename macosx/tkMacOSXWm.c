@@ -1630,9 +1630,8 @@ WmAttributesCmd(
     macWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
     if (objc == 3) {		/* wm attributes $win */
-	Tcl_Obj *result;
+	Tcl_Obj *result = Tcl_NewObj();
 
-	TclNewObj(result);
 	for (attribute = 0; attribute < _WMATT_LAST_ATTRIBUTE; ++attribute) {
 	    Tcl_ListObjAppendElement(NULL, result,
 		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
@@ -1758,7 +1757,7 @@ WmColormapwindowsCmd(
     }
     if (objc == 3) {
 	Tk_MakeWindowExist((Tk_Window)winPtr);
-	TclNewObj(resultObj);
+	resultObj = Tcl_NewObj();
 	for (i = 0; i < wmPtr->cmapCount; i++) {
 	    if ((i == (wmPtr->cmapCount-1))
 		    && (wmPtr->flags & WM_ADDED_TOPLEVEL_COLORMAP)) {
@@ -3179,7 +3178,7 @@ WmProtocolCmd(
 	 * Return a list of all defined protocols for the window.
 	 */
 
-	TclNewObj(resultObj);
+	resultObj = Tcl_NewObj();
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
@@ -3426,7 +3425,7 @@ WmStackorderCmd(
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
 	if (windows != NULL) {
-	    TclNewObj(resultObj);
+	    resultObj = Tcl_NewObj();
 	    for (windowPtr = windows; *windowPtr ; windowPtr++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
 			Tk_NewWindowObj((Tk_Window)*windowPtr));
