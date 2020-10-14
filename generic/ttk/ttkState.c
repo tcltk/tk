@@ -161,9 +161,8 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
 
 Tcl_Obj *Ttk_NewStateSpecObj(unsigned int onbits, unsigned int offbits)
 {
-    Tcl_Obj *objPtr;
+    Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_NewObj(objPtr);
     Tcl_InvalidateStringRep(objPtr);
     objPtr->typePtr = &StateSpecObjType;
     objPtr->internalRep.longValue = (onbits << 16) | offbits;

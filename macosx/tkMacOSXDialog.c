@@ -1779,14 +1779,14 @@ FontchooserCget(
 	resObj = TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		fontPanelFont, fontPanelFontAttributes);
 	if (!resObj) {
-	    TclNewObj(resObj);
+	    resObj = Tcl_NewObj();
 	}
 	break;
     case FontchooserCmd:
 	if (fcdPtr->cmdObj) {
 	    resObj = fcdPtr->cmdObj;
 	} else {
-	    TclNewObj(resObj);
+	    resObj = Tcl_NewObj();
 	}
 	break;
     case FontchooserVisible:
@@ -1794,7 +1794,7 @@ FontchooserCget(
 		fontPanel:NO] isVisible] != 0);
 	break;
     default:
-	TclNewObj(resObj);
+	resObj = Tcl_NewObj();
     }
     return resObj;
 }

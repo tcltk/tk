@@ -16,12 +16,6 @@
 #include "tkMacOSXPrivate.h"
 
 /*
- * Script callback when status icon is clicked.
- */
-
-static Tcl_Obj *callbackproc = NULL;
-
-/*
  * Class declarations and implementations for TkStatusItem.
  */
 
@@ -30,11 +24,14 @@ static Tcl_Obj *callbackproc = NULL;
     NSStatusBar * statusBar;
     NSImage * icon;
     NSString * tooltip;
+    Tcl_Interp * interp;
+    Tcl_Obj * callback;
 }
 
-- (id) init;
+- (id) init : (Tcl_Interp *) interp;
 - (void) setImagewithImage : (NSImage *) image;
 - (void) setTextwithString : (NSString *) string;
+- (void) setCallback : (Tcl_Obj *) callback;
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
@@ -43,13 +40,15 @@ static Tcl_Obj *callbackproc = NULL;
 
 @implementation TkStatusItem : NSObject
 
-- (id) init {
+- (id) init : (Tcl_Interp *) interpreter {
     [super init];
     statusBar = [NSStatusBar systemStatusBar];
     statusItem = [[statusBar statusItemWithLength:NSVariableStatusItemLength] retain];
     statusItem.button.target = self;
     statusItem.button.action = @selector(clickOnStatusItem: );
     statusItem.visible = YES;
+    interp = interpreter;
+    callback = NULL;
     return self;
 }
 
@@ -67,11 +66,21 @@ static Tcl_Obj *callbackproc = NULL;
     statusItem.button.toolTip = tooltip;
 }
 
+- (void) setCallback : (Tcl_Obj *) obj
+{
+    if (obj != NULL) {
+	Tcl_IncrRefCount(obj);
+    }
+    if (callback != NULL) {
+	Tcl_DecrRefCount(callback);
+    }
+    callback = obj;
+}
+
 - (void) clickOnStatusItem: (id) sender
 {
-    if ((NSApp.currentEvent.clickCount == 1) && (callbackproc != NULL)) {
-	TkMainInfo *info = TkGetMainInfoList();
-	Tcl_EvalObjEx(info->interp, callbackproc, TCL_EVAL_GLOBAL);
+    if ((NSApp.currentEvent.clickCount == 1) && (callback != NULL)) {
+	Tcl_EvalObjEx(interp, callback, TCL_EVAL_GLOBAL);
     }
 }
 
@@ -86,6 +95,9 @@ static Tcl_Obj *callbackproc = NULL;
      * in the Tk test suite.
      */
     [statusBar removeStatusItem: statusItem];
+    if (callback != NULL) {
+	Tcl_DecrRefCount(callback);
+    }
 }
 
 @end
@@ -250,11 +262,8 @@ MacSystrayObjCmd(
 	 * Set the proc for the callback.
 	 */
 
-	Tcl_IncrRefCount(objv[4]);
-	if (callbackproc != NULL) {
-	    Tcl_DecrRefCount(callbackproc);
-	}
-	callbackproc = objv[4];
+    [tk_item setCallback : objv[4]];
+
     } else if ((strncmp(arg, "modify",  length) == 0) &&
 	       (length >= 2)) {
 	if (objc < 4) {
@@ -310,11 +319,7 @@ MacSystrayObjCmd(
 	 */
 
 	if (strcmp (modifyitem, "callback") == 0) {
-	    Tcl_IncrRefCount(objv[3]);
-	    if (callbackproc != NULL) {
-		Tcl_DecrRefCount(callbackproc);
-	    }
-	    callbackproc = objv[3];
+	    [tk_item setCallback : objv[3]];
 	}
 
     } else if ((strncmp(arg, "destroy", length) == 0) && (length >= 2)) {
@@ -430,7 +435,7 @@ MacSystrayInit(Tcl_Interp *interp) {
      * Initialize TkStatusItem and TkNotifyItem.
      */
 
-    tk_item = [[TkStatusItem alloc] init];
+    tk_item = [[TkStatusItem alloc] init: interp];
     notify_item = [[TkNotifyItem alloc] init];
 
     if ([NSApp macOSVersion] < 101000) {
