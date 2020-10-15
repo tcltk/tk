@@ -271,7 +271,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *
  *----------------------------------------------------------------------
  */
-   
+
 static void sigintHandler(int signal) {
     [NSApp terminate:nil];
 }
@@ -457,7 +457,7 @@ TkpInit(
     if (isatty(0)) {
     	signal(SIGINT, sigintHandler);
     }
-    
+
     /*
      * Initialization steps that are needed for all interpreters.
      */

@@ -1179,7 +1179,7 @@ TkSendVirtualEvent(
     Tcl_Obj *detail)
 {
     union {XEvent general; XVirtualEvent virt;} event;
-    
+
     if (target == 0) {
 	return;
     }
