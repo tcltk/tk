@@ -291,21 +291,15 @@ static void closePanels(
  * NSApplication class (superTerminate for a TKApplication).  The purpose of
  * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
  * before the process exits, and that the application state is recorded
- * correctly for all termination scenarios.  If this is called a second time
- * (as can happen) call the C runtime exit function.
+ * correctly for all termination scenarios.
  */
 
 TCL_NORETURN void TkMacOSXExitProc(
     ClientData clientdata)
 {
-    static bool calledBefore = NO;
-    if (!calledBefore) {
-	calledBefore = YES;
-	closePanels();
-	Tcl_Finalize();
-	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
-    }
-    exit((int)clientdata);
+    closePanels();
+    [(TKApplication *)NSApp superTerminate:nil]; /* Does not return. */
+    exit((int)clientdata); /* Convince the compiler that we don't return. */
 }
 
 /*
