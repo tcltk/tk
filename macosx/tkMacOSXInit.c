@@ -270,6 +270,55 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *----------------------------------------------------------------------
  */
 
+/*
+ * Helper function which closes the shared NSFontPanel and NSColorPanel.
+ */
+
+static void closePanels(
+    void)
+{
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+}
+
+/*
+ * This custom exit procedure is called by Tcl_Exit in place of the exit
+ * function from the C runtime.  It calls the terminate method of the
+ * NSApplication class (superTerminate for a TKApplication).  The purpose of
+ * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
+ * before the process exits, and that the application state is recorded
+ * correctly for all termination scenarios.  If this is called a second time
+ * (as can happen) call the C runtime exit function.
+ */
+
+TCL_NORETURN void TkMacOSXExitProc(
+    ClientData clientdata)
+{
+    static bool calledBefore = NO;
+    if (!calledBefore) {
+	calledBefore = YES;
+	closePanels();
+	Tcl_Finalize();
+	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
+    }
+    exit((int)clientdata);
+}
+
+/*
+ * This SIGINT handler is installed when Wish is run in a shell to make sure
+ * that normal finalization occurs when SIGINT is received (i.e. when ^C is
+ * pressed in the shell).  It calls Tcl_Exit instead of the C runtime exit
+ * function called by the default handler.
+ */
+
+static void sigintHandler(int signal) {
+    Tcl_Exit(1);
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -438,6 +487,21 @@ TkpInit(
 		[window makeKeyAndOrderFront:NSApp];
 		break;
 	    }
+	}
+
+	/*
+	 * Install our custom exit proc, which terminates the NSApplication.
+	 */
+
+	Tcl_SetExitProc(TkMacOSXExitProc);
+
+	/*
+	 * When Wish is run from a terminal, install a sigint handler to make
+	 * sure that normal cleanup takes place if the app is killed with ^C.
+	 */
+
+	if (isatty(0)) {
+	    signal(SIGINT, sigintHandler);
 	}
     }
 
