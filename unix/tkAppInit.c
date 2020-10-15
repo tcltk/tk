@@ -98,11 +98,13 @@ main(
  *----------------------------------------------------------------------
  */
 
-void sampleExitHandler(ClientData clientdata) {
+static void sampleExitHandler(ClientData clientdata) {
+#ifdef MAC_OSX_TK
     Tcl_Interp *interp = (Tcl_Interp *)clientdata;
 
     Tcl_EvalEx(interp, "tk_messageBox -type ok -message \"Really quit?\"", -1,
 		   TCL_EVAL_GLOBAL);
+#endif
 }
 
 int
