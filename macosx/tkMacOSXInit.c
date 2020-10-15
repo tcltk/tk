@@ -303,13 +303,15 @@ TCL_NORETURN void TkMacOSXExitProc(
 }
 
 /*
- * This SIGINT handler is installed when Wish is run in a shell to make sure
- * that normal finalization occurs when SIGINT is received (i.e. when ^C is
- * pressed in the shell).  It calls Tcl_Exit instead of the C runtime exit
- * function called by the default handler.
+ * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
+ * so that normal finalization occurs when a Tk app is killed by one of these
+ * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
+ * Tcl_Exit instead of the C runtime exit function called by the default handler.
+ * This is consistent with the Tcl_Exit manual page, which says that Tcl_Exit
+ * should always be called instead of exit.
  */
 
-static void sigintHandler(int signal) {
+static void TkMacOSXSignalHandler(int signal) {
     Tcl_Exit(1);
 }
 
@@ -490,13 +492,14 @@ TkpInit(
 	Tcl_SetExitProc(TkMacOSXExitProc);
 
 	/*
-	 * When Wish is run from a terminal, install a sigint handler to make
-	 * sure that normal cleanup takes place if the app is killed with ^C.
+	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
+	 * Tcl_Exit instead of exit so that normal cleanup takes place if a TK
+	 * application is killed with one of these signals.
 	 */
 
-	if (isatty(0)) {
-	    signal(SIGINT, sigintHandler);
-	}
+	signal(SIGINT, TkMacOSXSignalHandler);
+	signal(SIGHUP, TkMacOSXSignalHandler);
+	signal(SIGTERM, TkMacOSXSignalHandler);
     }
 
     /*
