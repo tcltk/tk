@@ -154,8 +154,6 @@ static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
-#else
-    (void)notification;
 #endif
     keyboardChanged = YES;
     UpdateKeymaps();
