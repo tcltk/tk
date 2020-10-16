@@ -308,7 +308,8 @@ TCL_NORETURN void TkMacOSXExitProc(
  * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
  * Tcl_Exit instead of the C runtime exit function called by the default handler.
  * This is consistent with the Tcl_Exit manual page, which says that Tcl_Exit
- * should always be called instead of exit.
+ * should always be called instead of exit.  When Tk is killed by a signal we
+ * return exit status 1.
  */
 
 static void TkMacOSXSignalHandler(int signal) {
@@ -329,6 +330,7 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
+	Bool isLaunched = NO;
         Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
@@ -343,6 +345,7 @@ TkpInit(
 	initialized = 1;
 
 #ifdef TK_FRAMEWORK
+
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
 	 * framework scripts directory.
@@ -449,6 +452,7 @@ TkpInit(
 	    FILE *null = fopen("/dev/null", "w");
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
+	    isLaunched = YES;
 	}
 
 	/*
@@ -486,10 +490,15 @@ TkpInit(
 	}
 
 	/*
-	 * Install our custom exit proc, which terminates the NSApplication.
+	 * Install our custom exit proc, which terminates the process by
+	 * calling [NSApplication terminate].  This does not work correctly if
+	 * we are part of an exec pipeline, so only use it if this process
+	 * was launched by the launcher or if both stdin and stdout are tttys.
 	 */
 
-	Tcl_SetExitProc(TkMacOSXExitProc);
+	if (isLaunched || (isatty(0) && isatty(1))) {
+	    Tcl_SetExitProc(TkMacOSXExitProc);
+	}
 
 	/*
 	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
