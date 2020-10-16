@@ -312,7 +312,7 @@ TCL_NORETURN void TkMacOSXExitProc(
  * return exit status 1.
  */
 
-static void TkMacOSXSignalHandler(int signal) {
+static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
     Tcl_Exit(1);
 }
 
