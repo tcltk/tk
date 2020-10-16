@@ -111,10 +111,11 @@ static void ScaleVariableChanged(void *recordPtr, const char *value)
 /* ScaleInitialize --
  * 	Scale widget initialization hook.
  */
-static void ScaleInitialize(Tcl_Interp *dummy, void *recordPtr)
+static void ScaleInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Scale *scalePtr = (Scale *)recordPtr;
-    (void)dummy;
 
     TtkTrackElementState(&scalePtr->core);
 }
@@ -164,12 +165,12 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * 	Post-configuration hook.
  */
 static int ScalePostConfigure(
-    Tcl_Interp *dummy, void *recordPtr, int mask)
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr,
+    TCL_UNUSED(int))
 {
     Scale *scale = (Scale *)recordPtr;
     int status = TCL_OK;
-    (void)dummy;
-    (void)mask;
 
     if (scale->scale.variableTrace) {
 	status = Ttk_FireTrace(scale->scale.variableTrace);
