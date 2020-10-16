@@ -54,11 +54,11 @@ static void ProcessAppleEvent(ClientData clientData);
  * Names of the procedures which can be used to process AppleEvents.
  */
 
-static const char* openDocumentProc = "::tk::mac::OpenDocument";
-static const char* launchURLProc = "::tk::mac::LaunchURL";
-static const char* printDocProc = "::tk::mac::PrintDocument";
-static const char* scriptFileProc = "::tk::mac::DoScriptFile";
-static const char* scriptTextProc = "::tk::mac::DoScriptText";
+static const char openDocumentProc[] = "::tk::mac::OpenDocument";
+static const char launchURLProc[] = "::tk::mac::LaunchURL";
+static const char printDocProc[] = "::tk::mac::PrintDocument";
+static const char scriptFileProc[] = "::tk::mac::DoScriptFile";
+static const char scriptTextProc[] = "::tk::mac::DoScriptText";
 
 #pragma mark TKApplication(TKHLEvents)
 
@@ -67,6 +67,11 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 {
     (void)sender;
     [self handleQuitApplicationEvent:Nil withReplyEvent:Nil];
+}
+
+- (void) superTerminate: (id) sender
+{
+    [super terminate:nil];
 }
 
 - (void) preferences: (id) sender
@@ -338,10 +343,10 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
 		data[actual] = '\0';
-                AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
-                Tcl_DString *scriptTextCommand = &AEInfo->command;
-                Tcl_DStringInit(scriptTextCommand);
-                Tcl_DStringAppend(scriptTextCommand, scriptTextProc, -1);
+		AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+		Tcl_DString *scriptTextCommand = &AEInfo->command;
+		Tcl_DStringInit(scriptTextCommand);
+		Tcl_DStringAppend(scriptTextCommand, scriptTextProc, -1);
 		Tcl_DStringAppendElement(scriptTextCommand, data);
 		AEInfo->interp = _eventInterp;
 		AEInfo->procedure = scriptTextProc;
@@ -351,8 +356,8 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                     ProcessAppleEvent(AEInfo);
                 } else {
                     AEInfo->replyEvent = nil;
-                    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
-                    ProcessAppleEvent((ClientData)AEInfo);
+                    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
+                    ProcessAppleEvent(AEInfo);
                 }
 	    }
 	}
@@ -477,11 +482,10 @@ static void ProcessAppleEvent(
 
 void
 TkMacOSXInitAppleEvents(
-    Tcl_Interp *dummy)   /* not used */
+    TCL_UNUSED(Tcl_Interp *))
 {
     NSAppleEventManager *aeManager = [NSAppleEventManager sharedAppleEventManager];
     static Boolean initialized = FALSE;
-    (void)dummy;
 
     if (!initialized) {
 	initialized = TRUE;
@@ -588,12 +592,11 @@ TkMacOSXDoHLEvent(
 static int
 ReallyKillMe(
     Tcl_Event *eventPtr,
-    int flags)
+    TCL_UNUSED(int))
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     int quit = Tcl_FindCommand(interp, "::tk::mac::Quit", NULL, 0)!=NULL;
     int code = Tcl_EvalEx(interp, quit ? "::tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
-    (void)flags;
 
     if (code != TCL_OK) {
 	/*
