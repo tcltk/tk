@@ -69,6 +69,11 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     [self handleQuitApplicationEvent:Nil withReplyEvent:Nil];
 }
 
+- (void) superTerminate: (id) sender
+{
+    [super terminate:nil];
+}
+
 - (void) preferences: (id) sender
 {
     (void)sender;
