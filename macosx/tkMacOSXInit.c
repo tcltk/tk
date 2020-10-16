@@ -270,6 +270,52 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *----------------------------------------------------------------------
  */
 
+/*
+ * Helper function which closes the shared NSFontPanel and NSColorPanel.
+ */
+
+static void closePanels(
+    void)
+{
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+}
+
+/*
+ * This custom exit procedure is called by Tcl_Exit in place of the exit
+ * function from the C runtime.  It calls the terminate method of the
+ * NSApplication class (superTerminate for a TKApplication).  The purpose of
+ * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
+ * before the process exits, and that the application state is recorded
+ * correctly for all termination scenarios.
+ */
+
+TCL_NORETURN void TkMacOSXExitProc(
+    ClientData clientdata)
+{
+    closePanels();
+    [(TKApplication *)NSApp superTerminate:nil]; /* Does not return. */
+    exit((int)clientdata); /* Convince the compiler that we don't return. */
+}
+
+/*
+ * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
+ * so that normal finalization occurs when a Tk app is killed by one of these
+ * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
+ * Tcl_Exit instead of the C runtime exit function called by the default handler.
+ * This is consistent with the Tcl_Exit manual page, which says that Tcl_Exit
+ * should always be called instead of exit.  When Tk is killed by a signal we
+ * return exit status 1.
+ */
+
+static void TkMacOSXSignalHandler(int signal) {
+    Tcl_Exit(1);
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -284,6 +330,7 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
+	Bool isLaunched = NO;
         Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
@@ -298,6 +345,7 @@ TkpInit(
 	initialized = 1;
 
 #ifdef TK_FRAMEWORK
+
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
 	 * framework scripts directory.
@@ -404,6 +452,7 @@ TkpInit(
 	    FILE *null = fopen("/dev/null", "w");
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
+	    isLaunched = YES;
 	}
 
 	/*
@@ -439,6 +488,32 @@ TkpInit(
 		break;
 	    }
 	}
+
+	/*
+	 * Install our custom exit proc, which terminates the process by
+	 * calling [NSApplication terminate].  This does not work correctly if
+	 * the process is part of an exec pipeline, so it is only used if the
+	 * process was launched by the launcher or if both stdin and stdout are
+	 * ttys.
+	 */
+
+# if !defined(USE_SYSTEM_EXIT)
+
+	if (isLaunched || (isatty(0) && isatty(1))) {
+	    Tcl_SetExitProc(TkMacOSXExitProc);
+	}
+
+# endif
+
+	/*
+	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
+	 * Tcl_Exit instead of exit so that normal cleanup takes place if a TK
+	 * application is killed with one of these signals.
+	 */
+
+	signal(SIGINT, TkMacOSXSignalHandler);
+	signal(SIGHUP, TkMacOSXSignalHandler);
+	signal(SIGTERM, TkMacOSXSignalHandler);
     }
 
     /*
