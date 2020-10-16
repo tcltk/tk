@@ -492,13 +492,18 @@ TkpInit(
 	/*
 	 * Install our custom exit proc, which terminates the process by
 	 * calling [NSApplication terminate].  This does not work correctly if
-	 * we are part of an exec pipeline, so only use it if this process
-	 * was launched by the launcher or if both stdin and stdout are tttys.
+	 * the process is part of an exec pipeline, so it is only used if the
+	 * process was launched by the launcher or if both stdin and stdout are
+	 * ttys.
 	 */
+
+# if !defined(USE_SYSTEM_EXIT)
 
 	if (isLaunched || (isatty(0) && isatty(1))) {
 	    Tcl_SetExitProc(TkMacOSXExitProc);
 	}
+
+# endif
 
 	/*
 	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
