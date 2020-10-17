@@ -125,7 +125,7 @@ set _ico ""
 #     destroy - destroy systray icon.
 #         Arguments:
 #             none.
-proc systray {args} {
+proc ::tk::systray {args} {
 
     if {[llength $args] == 0} {
 	error "wrong # args: should be \"tk systray create | modify | destroy\""
@@ -261,7 +261,7 @@ proc systray {args} {
 #       title - main text of alert.
 #       message - body text of alert.
 
-proc sysnotify {title message} {
+proc ::tk::sysnotify {title message} {
 
     global _ico
 
@@ -286,6 +286,6 @@ proc sysnotify {title message} {
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
 #Thanks to Christian Gollwitzer for the guidance here 
 set map [namespace ensemble configure tk -map]
-dict set map systray  systray
-dict set map sysnotify sysnotify
+dict set map systray  ::tk::systray
+dict set map sysnotify ::tk::sysnotify
 namespace ensemble configure tk -map $map
