@@ -45,8 +45,9 @@ Here is an example of modifying the \fBtk systray\fP icon:
  The \fBtk systray\fP destroy command removes the icon from display and 
 deallocates it.
 .PP
-From a user-interface standpoint, only one icon per interpreter
-should be displayed, although it can be modified with different images and
+From a user-interface standpoint, only one icon per interpreter is 
+supported; attempts to create additional icons will return an error. The 
+existing tray icon can be modified with different images and
 strings to indicate app state. Loading additional interpreters into a 
 running instance of Wish will allow additional icons to be displayed.
 .SH PLATFORM NOTES

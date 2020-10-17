@@ -175,10 +175,18 @@ proc systray {args} {
         set cb [lindex $args 3]
         switch -- [tk windowingsystem] {
             "win32" {
+		if [info exists "ico#1"] {
+		    error "Only one system tray \
+		    icon supported per interpeter"
+		}
 		set _ico [_systray createfrom $img]
 		_systray taskbar add $_ico -text $txt -callback [list _win_callback %m %i $cb]
 	    }
             "x11" {
+		if [winfo exists ._tray] {
+		    error  "Only one system tray \
+		    icon supported per interpeter"
+		}
 		_systray ._tray -image $img -visible true
 		_balloon ._tray $txt
 		bind ._tray <Button-1> $cb
@@ -278,6 +286,6 @@ proc sysnotify {title message} {
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
 #Thanks to Christian Gollwitzer for the guidance here 
 set map [namespace ensemble configure tk -map]
-dict set map systray  ::systray
-dict set map sysnotify ::sysnotify
+dict set map systray  ::tk::systray
+dict set map sysnotify ::tk::sysnotify
 namespace ensemble configure tk -map $map
