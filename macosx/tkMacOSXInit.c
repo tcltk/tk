@@ -516,7 +516,7 @@ TkpInit(
 	if (isLaunched || (isatty(0) && isatty(1))) {
 	    Tcl_ExitProc *prevExitProc = Tcl_SetExitProc(TkMacOSXExitProc);
 	    if (prevExitProc) {
-		Tcl_SetExitProc(prevExitProc);
+		Tcl_SetExitProc((TCL_NORETURN Tcl_ExitProc *)prevExitProc);
 	    }
 	}
 
