@@ -212,27 +212,30 @@ MacSystrayObjCmd(
 	Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
-	TrayInfo *info = (TrayInfo *)clientData;
-	int result, idx;
-	static const char *options[] =
-	    {"create",	"modify",		"destroy", NULL};
+    TrayInfo *info = (TrayInfo *)clientData;
+    int result, idx;
+    static const char *options[] =
+	{"create",	"modify",		"destroy", NULL};
     typedef enum {TRAY_CREATE, TRAY_MODIFY, TRAY_DESTROY} optionsEnum;
 
     static const char *modifyOptions[] =
-	    {"image",	"text",		"callback", NULL};
+	{"image",	"text",		"callback", NULL};
     typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_CALLBACK} modifyOptionsEnum;
 
     if (info->tk_item == NULL) {
 	info->tk_item = [[TkStatusItem alloc] init: interp];
+    } else {
+	Tcl_AppendResult(interp, "Only one system tray icon supported per interpeter", NULL);
+	return TCL_ERROR;
     }
 
-	if (objc < 2) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
-	    return TCL_ERROR;
-	}
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
+	return TCL_ERROR;
+    }
 
-	result = Tcl_GetIndexFromObjStruct(interp, objv[1], options,
-		    sizeof(char *), "command", 0, &idx);
+    result = Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+				       sizeof(char *), "command", 0, &idx);
 
     if (result != TCL_OK) {
     	return TCL_ERROR;
@@ -287,7 +290,7 @@ MacSystrayObjCmd(
 	[info->tk_item setCallback : objv[4]];
 	break;
 
-	}
+    }
     case TRAY_MODIFY: {
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "modify object item");
@@ -299,11 +302,11 @@ MacSystrayObjCmd(
 	 */
 
 	result = Tcl_GetIndexFromObjStruct(interp, objv[2], modifyOptions,
-		    sizeof(char *), "option", 0, &idx);
+					   sizeof(char *), "option", 0, &idx);
 
-    if (result != TCL_OK) {
-    	return TCL_ERROR;
-    }
+	if (result != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	switch ((modifyOptionsEnum)idx) {
 	case TRAY_IMAGE: {
 	    Tk_Window tkwin = Tk_MainWindow(interp);
@@ -325,14 +328,14 @@ MacSystrayObjCmd(
 		[info->tk_item setImagewithImage: icon];
 	    }
 	    Tk_FreeImage(tk_image);
-	break;
+	    break;
 	}
 
-	/*
-	 * Modify the text for the tooltip.
-	 */
+	    /*
+	     * Modify the text for the tooltip.
+	     */
 
-    case TRAY_TEXT: {
+	case TRAY_TEXT: {
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
 	    if (tooltip == nil) {
 		Tcl_AppendResult(interp, "unable to set tooltip for systray icon", NULL);
@@ -343,14 +346,14 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-	/*
-	 * Modify the proc for the callback.
-	 */
+	    /*
+	     * Modify the proc for the callback.
+	     */
 
 	case TRAY_CALLBACK: {
 	    [info->tk_item setCallback : objv[3]];
 	}
-	break;
+	    break;
 	}
 	break;
     }
