@@ -26,12 +26,12 @@ proc _balloon_show {w arg} {
     if {[tk windowingsystem] eq "aqua"}  {
 	::tk::unsupported::MacWindowStyle style $top help none
     }
-    pack [message $top.txt -aspect 10000  \
+    pack [message $top._txt -aspect 10000  \
 	      -text $arg]
     set wmx [winfo rootx $w]
     set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
-    wm geometry $top [winfo reqwidth $top.txt]x[
-						winfo reqheight $top.txt]+$wmx+$wmy
+    wm geometry $top [winfo reqwidth $top._txt]x[
+						winfo reqheight $top._txt]+$wmx+$wmy
     raise $top
 }
 
@@ -46,7 +46,9 @@ proc _win_callback {msg icn script} {
 
 # Pure-Tcl system notification window for use if native implementation not available.
 
-image create photo _info -data {R0lGODlhIAAgAIQWAEWCtEaCtEeCtEWDtUuFtU6FtlGGtlSIt1KJuHCXvnKYv36ewoGhw52zzp+1z7DB1rHB1rzK3MDN3eTp8Ojs8v7+/////////////////////////////////////////yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAEKAB8ALAAAAAAgACAAAAWO4CeOZGmeaKqubOuOQSzHrznfd/3hvPz2AUGv1YtULJKhqqewOC0J5Qm4eFoYQBQwMHFSANkpsOBoGLbirdpX2hIgjwdEbQMirAN0247Xk7Z3T3lhf3yCfjCGToNSiT2Bi4iOOJAWjDhaj32NhTyVlzmZlJuYS6OHpSs8B6wHPD9rbLBrOp2htbi5ursmIQA7}
+image create photo _info -data {
+R0lGODlhIAAgAKUAAERq5KS29HSS7NTe/Fx+5Iym7Ozy/LzK9Ex25ISe7OTq/GyK5JSu7Pz6/Mza9Exy5Ky+9ISa7GSG5Fx65Exu5Hya7OTm/GSC5PTy/MTS9FR25Ozu/Jyu7ERu5KS69HyW7Nzi/FyC5JSq7MTO9Iyi7OTu/HSO7Pz+/NTa9LTC9PT2/FR65Jyy7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAC0ALAAAAAAgACAAAAb9wJZwSDw5WAKCBkEwMTINonQ6xLA0gKx2+xBtqNQT5LEtlzusKFioEpjfZckXbLjA71qNhaqS4P8ACHNDJx94Cw4ODHghakIpeCsnQwV4DEMqZHcFRA5/CkIBfwlEB6MtJyuADkIGIYAqA4BZAglYgAces7taCRGzIRLCCIDBgAtEEIAdBIAmycvNf89DyoB+09B/HRXO2oy62dWACbLiQtZ4KannLel3Bi2ieNTofx9sHfTfcCBDkHfqucNDosiCOw8qKKyA7Y0GR61e8XoDasoGaRO1+KNzMKOGEmuEnAi3qwDEkAYK6MOToGLIKQ0yiFigQR8CCQUOqAgZBAA7
+}
 
 proc _notifywindow {title msg} {
     catch {destroy ._notify}
@@ -106,6 +108,8 @@ proc _fade_in {w} {
 
 global _ico
 set _ico ""
+global _iconlist
+set _iconlist {}
 
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
@@ -138,18 +142,17 @@ proc ::tk::systray {args} {
 
     #Set variables for icon properties.
     global _ico
-    global img
-    global txt
-    global cb
+	global _iconlist
 
-    set img ""
-    set txt ""
-    set cb ""
+    set _img ""
+    set _txt ""
+    set _cb ""
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
+		set _iconlist {}
 		_systray taskbar delete $_ico
 	    }
 	    "x11" {
@@ -170,29 +173,30 @@ proc ::tk::systray {args} {
 	if {[llength $args] != 4} {
 	    error "wrong # args: should be \"tk systray create image ?text? ?callback?\""
 	}
-        set img [lindex $args 1]
-        set txt [lindex $args 2]
-        set cb [lindex $args 3]
+        set _img [lindex $args 1]
+        set _txt [lindex $args 2]
+        set _cb [lindex $args 3]
         switch -- [tk windowingsystem] {
             "win32" {
-		if [info exists "ico#1"] {
+		if {[llength $_iconlist] > 0} {
 		    error "Only one system tray \
 		    icon supported per interpeter"
 		}
-		set _ico [_systray createfrom $img]
-		_systray taskbar add $_ico -text $txt -callback [list _win_callback %m %i $cb]
+		set _ico [_systray createfrom $_img]
+		_systray taskbar add $_ico -text $_txt -callback [list _win_callback %m %i $_cb]
+		lappend _iconlist "ico#[llength _iconlist]"
 	    }
             "x11" {
 		if [winfo exists ._tray] {
 		    error  "Only one system tray \
 		    icon supported per interpeter"
 		}
-		_systray ._tray -image $img -visible true
-		_balloon ._tray $txt
-		bind ._tray <Button-1> $cb
+		_systray ._tray -image $_img -visible true
+		_balloon ._tray $_txt
+		bind ._tray <Button-1> $_cb
 	    }
 	    "aqua" {
-		_systray create $img $txt $cb
+		_systray create $_img $_txt $_cb
 	    }
 	}
     }
@@ -204,50 +208,50 @@ proc ::tk::systray {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[lindex $args 1] eq "image"} {
-		    set img [lindex $args 2]
+		    set _img [lindex $args 2]
 		    _systray taskbar delete $_ico
-		    set _ico [_systray createfrom $img]
-		    _systray taskbar add $_ico -text $txt -callback [list _win_callback %m %i $cb]
+		    set _ico [_systray createfrom $_img]
+		    _systray taskbar add $_ico -text $_txt -callback [list _win_callback %m %i $_cb]
 		}
 		if {[lindex $args 1] eq "text"} {
-		    set txt [lindex $args 2]
-		    _systray taskbar modify $ico -text $txt
+		    set _txt [lindex $args 2]
+		    _systray taskbar modify $ico -text $_txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
-		    set cb [lindex $args 2]
-		    _systray taskbar modify $_ico -callback [list _win_callback %m %i $cb]
+		    set _cb [lindex $args 2]
+		    _systray taskbar modify $_ico -callback [list _win_callback %m %i $_cb]
 		}
 	    }
 	    "x11" {
 		if {[lindex $args 1] eq "image"} {
-		    set img [lindex $args 2]
+		    set _img [lindex $args 2]
 		    ._tray configure -image ""
-		    ._tray configure -image $img
+		    ._tray configure -image $_img
 		}
 		if {[lindex $args 1] eq "text"} {
-		    set txt ""
-		    set txt [lindex $args 2]
-		    _balloon ._tray $txt
+		    set _txt ""
+		    set _txt [lindex $args 2]
+		    _balloon ._tray $_txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
-		    set cb ""
+		    set _cb ""
 		    bind ._tray <Button-1> ""
-		    set cb [lindex $args 2]
-		    bind ._tray <Button-1>  $cb
+		    set _cb [lindex $args 2]
+		    bind ._tray <Button-1>  $_cb
 		}
 	    }
 	    "aqua" {
 		if {[lindex $args 1] eq "image"} {
-		    set img [lindex $args 2]
-		    _systray modify image $img
+		    set _img [lindex $args 2]
+		    _systray modify image $_img
 		}
 		if {[lindex $args 1] eq "text"} {
-		    set txt [lindex $args 2]
-		    _systray modify text $txt
+		    set _txt [lindex $args 2]
+		    _systray modify text $_txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
-		    set cb [lindex $args 2]
-		    _systray modify callback $cb
+		    set _cb [lindex $args 2]
+		    _systray modify callback $_cb
 		}
 	    }
 	}
