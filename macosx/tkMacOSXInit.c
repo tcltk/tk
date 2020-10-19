@@ -271,51 +271,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  */
 
 /*
- * Helper function which closes the shared NSFontPanel and NSColorPanel.
- */
-
-static void closePanels(
-    void)
-{
-    if ([NSFontPanel sharedFontPanelExists]) {
-	[[NSFontPanel sharedFontPanel] orderOut:nil];
-    }
-    if ([NSColorPanel sharedColorPanelExists]) {
-        [[NSColorPanel sharedColorPanel] orderOut:nil];
-    }
-}
-
-/*
- * This custom exit procedure is called by Tcl_Exit in place of the exit
- * function from the C runtime.  It calls the terminate method of the
- * NSApplication class (superTerminate for a TKApplication).  The purpose of
- * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
- * before the process exits, and that the application state is recorded
- * correctly for all termination scenarios.
- */
-
-TCL_NORETURN void TkMacOSXExitProc(
-    ClientData clientdata)
-{
-    closePanels();
-
-    /*
-     * Make sure we don't get called again.  This can happen, e.g. with
-     * fossil diff -tk.
-     */
-    
-    Tcl_SetExitProc(NULL);
-
-    /*
-     * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
-     */
-    
-    Tcl_Finalize();
-    [(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
-    exit((int)clientdata); /* Convince the compiler that we don't return. */
-}
-
-/*
  * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
  * so that normal finalization occurs when a Tk app is killed by one of these
  * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
@@ -502,25 +457,6 @@ TkpInit(
 		break;
 	    }
 	}
-
-	/*
-	 * Install our custom exit proc, which terminates the process by
-	 * calling [NSApplication terminate].  This does not work correctly if
-	 * the process is part of an exec pipeline, so it is only used if the
-	 * process was launched by the launcher or if both stdin and stdout are
-	 * ttys.  If an exit proc was already installed we leave it in place.
-	 */
-
-# if !defined(USE_SYSTEM_EXIT)
-
-	if (isLaunched || (isatty(0) && isatty(1))) {
-	    Tcl_ExitProc *prevExitProc = Tcl_SetExitProc(TkMacOSXExitProc);
-	    if (prevExitProc) {
-		Tcl_SetExitProc((TCL_NORETURN Tcl_ExitProc *)prevExitProc);
-	    }
-	}
-
-# endif
 
 	/*
 	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
