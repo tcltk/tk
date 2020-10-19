@@ -279,7 +279,7 @@ proc ::tk::sysnotify {title message} {
 	    if {[info commands _sysnotify] eq ""} {
 		_notifywindow $title $message
 	    } else {
-		_sysnotify $title $message $_ico
+		_sysnotify $title $message
 	    }
 	}
 	"aqua" {
