@@ -73,6 +73,7 @@ static int SysNotifyCmd(
 {
     const char *title;
     const char *message;
+    GBytes *data;
     
     NotifyNotification *notif;
 
@@ -89,7 +90,8 @@ static int SysNotifyCmd(
     
     tk_image = Tk_FindPhoto(interp, Tcl_GetString(objv[3]));
     Tk_PhotoGetSize(tk_image, &width, &height);
-    Tk_PhotoGetImage(tk_image, &imgData); 
+    Tk_PhotoGetImage(tk_image, &imgData);
+    data = GLib.Bytes.get_data(imgData);
 
      GdkPixbuf * notifyimage = gdk_pixbuf_new_from_bytes(imgData, GdkPixbuf.Colorspace.RGB, True, 8, width, height, NULL);
     notif = notify_notification_new(title, message, notifyimage);
