@@ -467,7 +467,7 @@ directory where the frameworks will be written.  For example, running the comman
 	make -C macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Python.framework/Versions/3.9/Frameworks/Tk
 will produce a Tcl.framework and a Tk.framework usable as subframeworks of the
-Python.framework.  The frameworks will be found in /tmp/tcl/Library/Frameworks/
+Python.framework.  The frameworks will be found in /tmp/tcltk/Frameworks/
 
 5. Details regarding the macOS port of Tk.
 -------------------------------------------
