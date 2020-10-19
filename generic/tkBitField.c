@@ -952,7 +952,7 @@ unsigned
 TkBitFindFirstNot(
     const TkBitField *bf)
 {
-    unsigned words, mask, bits, i;
+    TkSizeT words, mask, bits, i;
 
     assert(bf);
 
@@ -960,9 +960,9 @@ TkBitFindFirstNot(
 	words = NWORDS(bf->size) - 1;
 
 	for (i = 0; i < words; ++i) {
-	    size_t bits = bf->bits[i];
+	    bits = bf->bits[i];
 
-	    if (bits != ~((size_t) 0)) {
+	    if (bits != ~((TkSizeT) 0)) {
 		return NBITS*i + LsbIndex(~bits);
 	    }
 	}

@@ -545,18 +545,18 @@ TkRangeListRemove(
 		curr->high = h;
 	    } else if (curr->low <= high) {
 		/* Example: cur:{1,4} - arg:{1,3} -> {4,4} */
-		int low = high + 1;
-		ranges->count -= low - curr->low;
-		curr->low = low;
+		int tmp = high + 1;
+		ranges->count -= tmp - curr->low;
+		curr->low = tmp;
 	    }
 	} else {
 	    if (curr->low < low && low <= curr->high) {
 		/* Example: cur:{1,7} - arg:{2,5} -> {1,1} */
 		/* Example: cur:{1,3} - arg:{3,6} -> {1,2} */
 		/* Example: cur:{1,1} - arg:{2,5} -> {1,1} */
-		int high = low - 1;
-		ranges->count -= curr->high - high;
-		curr->high = high;
+		int tmp = low - 1;
+		ranges->count -= curr->high - tmp;
+		curr->high = tmp;
 		curr += 1;
 	    } else if (curr->high < low) {
 		curr += 1;
