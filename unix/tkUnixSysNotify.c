@@ -74,8 +74,11 @@ static int SysNotifyCmd(
     const char *title;
     const char *message;
     GBytes *data;
-    
+    Tk_PhotoHandle tk_image;
+    int width, height;
+    Tk_PhotoImageBlock * imgData;
     NotifyNotification *notif;
+    GdkPixbuf * notifyimage;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 1, objv, "title  message image");
@@ -84,17 +87,17 @@ static int SysNotifyCmd(
 
     title = Tcl_GetString(objv[1]);
     message = Tcl_GetString(objv[2]);
-    Tk_PhotoHandle tk_image;
-    int width, height;
-    Tk_PhotoImageBlock imgData;
+ 
     
     tk_image = Tk_FindPhoto(interp, Tcl_GetString(objv[3]));
     Tk_PhotoGetSize(tk_image, &width, &height);
     Tk_PhotoGetImage(tk_image, &imgData);
-    data = GLib.Bytes.get_data(imgData);
+    data = g_bytes_new_take(&imgData, sizeof(imgData));
+   // data = GBytes.get_data(&imgData);
 
-     GdkPixbuf * notifyimage = gdk_pixbuf_new_from_bytes(imgData, GdkPixbuf.Colorspace.RGB, True, 8, width, height, NULL);
-    notif = notify_notification_new(title, message, notifyimage);
+    notifyimage = gdk_pixbuf_new_from_bytes(data, GDK_COLORSPACE_RGB, True, 8, width, height, 0);
+    notif = notify_notification_new(title, message, NULL);
+    notify_notification_set_image_from_pixbuf(notif, notifyimage);
     notify_notification_show(notif, NULL);
 
     return TCL_OK;
