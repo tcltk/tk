@@ -73,17 +73,27 @@ static int SysNotifyCmd(
 {
     const char *title;
     const char *message;
+    
     NotifyNotification *notif;
 
-    if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "title  message ");
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "title  message image");
 	return TCL_ERROR;
     }
 
     title = Tcl_GetString(objv[1]);
     message = Tcl_GetString(objv[2]);
+    Tk_PhotoHandle tk_image;
+    int width, height;
+    Tk_PhotoImageBlock imgData;
 
-    notif = notify_notification_new(title, message, NULL);
+
+    tk_image = Tk_FindPhoto(interp, Tcl_GetString(objv[3]);
+    Tk_PhotoGetSize(tk_image, &width, &height);
+    Tk_PhotoGetImage(tk_image, &imgData); 
+
+     GdkPixbuf * notifyimage = gdk_pixbuf_new_from_bytes(imgData, GdkPixbuf.Colorspace.RGB, True, 8, width, height, NULL);
+    notif = notify_notification_new(title, message, notifyimage);
     notify_notification_show(notif, NULL);
 
     return TCL_OK;

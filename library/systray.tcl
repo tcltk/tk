@@ -191,6 +191,7 @@ proc ::tk::systray {args} {
 		    error  "Only one system tray \
 		    icon supported per interpeter"
 		}
+		set _ico $_img
 		_systray ._tray -image $_img -visible true
 		_balloon ._tray $_txt
 		bind ._tray <Button-1> $_cb
@@ -215,7 +216,7 @@ proc ::tk::systray {args} {
 		}
 		if {[lindex $args 1] eq "text"} {
 		    set _txt [lindex $args 2]
-		    _systray taskbar modify $ico -text $_txt
+		    _systray taskbar modify $_ico -text $_txt
 		}
 		if {[lindex $args 1 ] eq "callback"} {
 		    set _cb [lindex $args 2]
@@ -227,6 +228,7 @@ proc ::tk::systray {args} {
 		    set _img [lindex $args 2]
 		    ._tray configure -image ""
 		    ._tray configure -image $_img
+		    set _ico $_img
 		}
 		if {[lindex $args 1] eq "text"} {
 		    set _txt ""
@@ -277,7 +279,7 @@ proc ::tk::sysnotify {title message} {
 	    if {[info commands _sysnotify] eq ""} {
 		_notifywindow $title $message
 	    } else {
-		_sysnotify $title $message
+		_sysnotify $title $message $_ico
 	    }
 	}
 	"aqua" {
