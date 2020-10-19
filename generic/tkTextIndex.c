@@ -4005,7 +4005,7 @@ StartEnd(
 
 			if (segPtr->typePtr == &tkTextCharType) {
 			    Tcl_UniChar ch;
-			    const char *p = segPtr->body.chars + offset;
+			    const char *q = segPtr->body.chars + offset;
 
 #if 0 && TCL_UTF_MAX > 4
 			    /*
@@ -4016,14 +4016,14 @@ StartEnd(
 			     */
 
 			    int c;
-			    TkUtfToUniChar(p, &c);
+			    TkUtfToUniChar(q, &c);
 			    ch = c;
 #else
 			    /*
 			     * Proper implementation for UTF-8 strings:
 			     */
 
-			    Tcl_UtfToUniChar(p, &ch);
+			    Tcl_UtfToUniChar(q, &ch);
 #endif
 
 #if 0 && TCL_UTF_MAX > 4
