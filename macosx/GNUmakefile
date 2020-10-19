@@ -211,8 +211,14 @@ install-${PROJECT}: build-${PROJECT}
 ifeq (${EMBEDDED_BUILD}_${INSTALL_ROOT},1_)
 	@echo "Cannot install-embedded with empty INSTALL_ROOT !" && false
 endif
+ifeq (${SUBFRAMEWORK}_${DYLIB_INSTALL_DIR},1_)
+	@echo "Cannot install-subframework with empty DYLIB_INSTALL_DIR !" && false
+endif
 ifeq (${EMBEDDED_BUILD},1)
-	@rm -rf "${INSTALL_ROOT}/${LIBDIR}/Tk.framework"
+	@rm -rf "${INSTALL_ROOT}${LIBDIR}/Tk.framework"
+endif
+ifeq (${SUBFRAMEWORK},1)
+	@rm -rf "${INSTALL_ROOT}/Frameworks/Tk.framework"
 endif
 	${DO_MAKE}
 ifeq (${EMBEDDED_BUILD}_${TK_X11},1_)
@@ -239,7 +245,8 @@ ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 	ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"
 endif
 ifeq (${TK_X11},)
-ifeq (${EMBEDDED_BUILD},)
+ifeq (${SUBFRAMEWORK},)
+ifeq (${EMBEDDED_BUILD},1)
 # install Wish.app link in APPLICATION_INSTALL_PATH and setup 'Wish Shell' compatibility links
 	@cd "${TOP_DIR}" && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && rm -rf "./${APP_DIR}/Wish.app" && \
 	ln -fsh "./$$(echo "${APP_DIR}" | sed -e 's#/[^/][^/]*#/..#g')/${FMWK_DIR}/${PRODUCT_NAME}.framework/Resources/Wish.app" "./${APP_DIR}" && \
@@ -270,9 +277,15 @@ else
 	} && \
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
-ifeq (${INSTALL_BUILD},1)
+ifeq (${INSTALL_BUILD},)
 	@cd "${TOP_DIR}" && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
 endif
+endif
+else
+# Clean up the destination directory
+	@rm -rf ${INSTALL_ROOT}/Frameworks
+	@mv "${INSTALL_ROOT}/Library/Frameworks" "${INSTALL_ROOT}"
+	@rm -rf ${INSTALL_ROOT}/Library
 endif
 endif
 
