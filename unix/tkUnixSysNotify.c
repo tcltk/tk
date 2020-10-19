@@ -86,9 +86,8 @@ static int SysNotifyCmd(
     Tk_PhotoHandle tk_image;
     int width, height;
     Tk_PhotoImageBlock imgData;
-
-
-    tk_image = Tk_FindPhoto(interp, Tcl_GetString(objv[3]);
+    
+    tk_image = Tk_FindPhoto(interp, Tcl_GetString(objv[3]));
     Tk_PhotoGetSize(tk_image, &width, &height);
     Tk_PhotoGetImage(tk_image, &imgData); 
 
