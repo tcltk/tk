@@ -293,6 +293,13 @@ static void closePanels(
  * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
  * before the process exits, and that the application state is recorded
  * correctly for all termination scenarios.
+ *
+ * TkpWantsExitProc tells Tcl_AppInit whether to install our custom exit proc,
+ * which terminates the process by calling [NSApplication terminate].  This
+ * does not work correctly if the process is part of an exec pipeline, so it is
+ * only done if the process was launched by the launcher or if both stdin and
+ * stdout are ttys.  To disable using the custom exit proc altogether, undefine
+ * USE_CUSTOM_EXIT_PROC.
  */
 
 #if defined(USE_CUSTOM_EXIT_PROC)
@@ -517,14 +524,6 @@ TkpInit(
 		break;
 	    }
 	}
-
-	/*
-	 * Install our custom exit proc, which terminates the process by
-	 * calling [NSApplication terminate].  This does not work correctly if
-	 * the process is part of an exec pipeline, so it is only used if the
-	 * process was launched by the launcher or if both stdin and stdout are
-	 * ttys.
-	 */
 
 # if defined(USE_CUSTOM_EXIT_PROC)
 
