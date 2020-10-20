@@ -42,10 +42,10 @@ proc _win_callback {msg icn script} {
     
     switch -exact -- $msg {
 	WM_LBUTTONDOWN {
-	    eval $_cb2
+	    eval $_cb_2
 	}
 	WM_RBUTTONDOWN {
-	    eval $cb_1
+	    eval $_cb_1
 	}
     }
 }
