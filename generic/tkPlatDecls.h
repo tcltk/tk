@@ -193,6 +193,11 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
+#if !defined(USE_SYSTEM_EXIT) && defined(MAC_OSX_TK)
+EXTERN int TkMacOSXIsLaunched(void);
+EXTERN TCL_NORETURN void TkMacOSXExitProc(void *);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
