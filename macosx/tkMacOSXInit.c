@@ -113,6 +113,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     /*
      * Initialize event processing.
      */
+
     TkMacOSXInitAppleEvents(_eventInterp);
 
     /*
@@ -294,26 +295,33 @@ static void closePanels(
  * correctly for all termination scenarios.
  */
 
-TCL_NORETURN void TkMacOSXExitProc(
-    ClientData clientdata)
-{
-    closePanels();
+#if defined(USE_CUSTOM_EXIT_PROC)
+static Bool doCleanupFromExit = NO;
 
-    /*
-     * Make sure we don't get called again.  This can happen, e.g. with
-     * fossil diff -tk.
-     */
-    
-    Tcl_SetExitProc(NULL);
+int TkpWantsExitProc(void) {
+    return doCleanupFromExit == YES;
+}
+
+TCL_NORETURN void TkpExitProc(
+    void *clientdata)
+{
+    Bool doCleanup = doCleanupFromExit;
+    if (doCleanupFromExit) {
+	doCleanupFromExit = NO; /* prevent possible recursive call. */
+	closePanels();
+    }
 
     /*
      * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
      */
     
     Tcl_Finalize();
-    [(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
-    exit((int)clientdata); /* Convince the compiler that we don't return. */
+    if (doCleanup == YES) {
+	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
+    }
+    exit((long)clientdata); /* Convince the compiler that we don't return. */
 }
+#endif
 
 /*
  * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
@@ -326,6 +334,8 @@ TCL_NORETURN void TkMacOSXExitProc(
  */
 
 static void TkMacOSXSignalHandler(int signal) {
+    (void)signal;
+
     Tcl_Exit(1);
 }
 
@@ -343,7 +353,6 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
-	Bool isLaunched = NO;
         Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
@@ -443,7 +452,11 @@ TkpInit(
 		Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 			    TCL_GLOBAL_ONLY);
 	    }
-	    isLaunched = YES;
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
+
 	    shouldOpenConsole = YES;
 	}
 	if (shouldOpenConsole) {
@@ -466,7 +479,9 @@ TkpInit(
 	    FILE *null = fopen("/dev/null", "w");
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
-	    isLaunched = YES;
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
 	}
 
 	/*
@@ -508,16 +523,13 @@ TkpInit(
 	 * calling [NSApplication terminate].  This does not work correctly if
 	 * the process is part of an exec pipeline, so it is only used if the
 	 * process was launched by the launcher or if both stdin and stdout are
-	 * ttys.  If an exit proc was already installed we leave it in place.
+	 * ttys.
 	 */
 
-# if !defined(USE_SYSTEM_EXIT)
+# if defined(USE_CUSTOM_EXIT_PROC)
 
-	if (isLaunched || (isatty(0) && isatty(1))) {
-	    Tcl_ExitProc *prevExitProc = Tcl_SetExitProc(TkMacOSXExitProc);
-	    if (prevExitProc) {
-		Tcl_SetExitProc((TCL_NORETURN Tcl_ExitProc *)prevExitProc);
-	    }
+	if ((isatty(0) && isatty(1))) {
+	    doCleanupFromExit = YES;
 	}
 
 # endif
