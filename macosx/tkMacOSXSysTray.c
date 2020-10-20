@@ -27,13 +27,15 @@ static const char ASSOC_KEY[] = "tk::tktray";
     NSImage * icon;
     NSString * tooltip;
     Tcl_Interp * interp;
-    Tcl_Obj * callback;
+    Tcl_Obj * b1_callback;
+    Tcl_Obj * b2_callback;
 }
 
 - (id) init : (Tcl_Interp *) interp;
 - (void) setImagewithImage : (NSImage *) image;
 - (void) setTextwithString : (NSString *) string;
-- (void) setCallback : (Tcl_Obj *) callback;
+- (void) setB1Callback : (Tcl_Obj *) callback;
+- (void) setB2Callback : (Tcl_Obj *) callback;
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
@@ -48,9 +50,11 @@ static const char ASSOC_KEY[] = "tk::tktray";
     statusItem = [[statusBar statusItemWithLength:NSVariableStatusItemLength] retain];
     statusItem.button.target = self;
     statusItem.button.action = @selector(clickOnStatusItem: );
+    [statusItem.button sendActionOn : NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp];
     statusItem.visible = YES;
     interp = interpreter;
-    callback = NULL;
+    b1_callback = NULL;
+    b2_callback = NULL;
     return self;
 }
 
@@ -68,30 +72,48 @@ static const char ASSOC_KEY[] = "tk::tktray";
     statusItem.button.toolTip = tooltip;
 }
 
-- (void) setCallback : (Tcl_Obj *) obj
+- (void) setB1Callback : (Tcl_Obj *) obj
 {
     if (obj != NULL) {
 	Tcl_IncrRefCount(obj);
     }
-    if (callback != NULL) {
-	Tcl_DecrRefCount(callback);
+    if (b1_callback != NULL) {
+	Tcl_DecrRefCount(b1_callback);
     }
-    callback = obj;
+    b1_callback = obj;
+}
+
+- (void) setB2Callback : (Tcl_Obj *) obj
+{
+    if (obj != NULL) {
+	Tcl_IncrRefCount(obj);
+    }
+    if (b2_callback != NULL) {
+	Tcl_DecrRefCount(b1_callback);
+    }
+    b2_callback = obj;
 }
 
 - (void) clickOnStatusItem: (id) sender
 {
-    if ((NSApp.currentEvent.clickCount == 1) && (callback != NULL)) {
-	int result = Tcl_EvalObjEx(interp, callback, TCL_EVAL_GLOBAL);
+    NSEvent *event = [NSApp currentEvent];
+    if (([event type] == NSEventTypeLeftMouseUp) && (b1_callback != NULL)) {
+	int result = Tcl_EvalObjEx(interp, b1_callback, TCL_EVAL_GLOBAL);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);
 	}
-    }
+    } else {
+	if (([event type] == NSEventTypeRightMouseUp) && (b2_callback != NULL)) {
+	int result = Tcl_EvalObjEx(interp, b2_callback, TCL_EVAL_GLOBAL);
+	if (result != TCL_OK) {
+	    Tcl_BackgroundException(interp, result);
+	}
+    }  
 }
-
+}
 - (void) dealloc
 {
-     /*
+    /*
      * We are only doing the minimal amount of deallocation that
      * the superclass cannot handle when it is deallocated, per 
      * https://developer.apple.com/documentation/objectivec/nsobject/
@@ -100,8 +122,11 @@ static const char ASSOC_KEY[] = "tk::tktray";
      * in the Tk test suite.
      */
     [statusBar removeStatusItem: statusItem];
-    if (callback != NULL) {
-	Tcl_DecrRefCount(callback);
+    if (b1_callback != NULL) {
+	Tcl_DecrRefCount(b1_callback);
+    }
+    if (b2_callback != NULL) {
+	Tcl_DecrRefCount(b2_callback);
     }
 }
 
@@ -121,7 +146,7 @@ static const char ASSOC_KEY[] = "tk::tktray";
 - (id) init;
 - (void) postNotificationWithTitle : (NSString *) title message: (NSString *) detail;
 - (BOOL) userNotificationCenter:(NSUserNotificationCenter *)center
-	  shouldPresentNotification:(NSUserNotification *)notification;
+      shouldPresentNotification:(NSUserNotification *)notification;
 - (void) dealloc;
 
 
@@ -206,28 +231,21 @@ typedef struct {
 
 static int
 MacSystrayObjCmd(
-    void *clientData,
-    Tcl_Interp * interp,
-    int objc,
-	Tcl_Obj *const *objv)
+		 void *clientData,
+		 Tcl_Interp * interp,
+		 int objc,
+		 Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
     TrayInfo *info = (TrayInfo *)clientData;
     int result, idx;
     static const char *options[] =
-	{"create",	"modify",		"destroy", NULL};
+	{"create",	"modify", "destroy", NULL};
     typedef enum {TRAY_CREATE, TRAY_MODIFY, TRAY_DESTROY} optionsEnum;
 
     static const char *modifyOptions[] =
-	{"image",	"text",		"callback", NULL};
-    typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_CALLBACK} modifyOptionsEnum;
-
-    if (info->tk_item == NULL) {
-	info->tk_item = [[TkStatusItem alloc] init: interp];
-    } else {
-	Tcl_AppendResult(interp, "Only one system tray icon supported per interpeter", NULL);
-	return TCL_ERROR;
-    }
+	{"image",  "text", "b1_callback", "b2_callback", NULL};
+    typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B2_CALLBACK} modifyOptionsEnum;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
@@ -243,8 +261,15 @@ MacSystrayObjCmd(
     switch((optionsEnum)idx) {
     case TRAY_CREATE: {
 
-	if (objc < 5) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "create image ?text? ?callback?");
+	if (objc < 6) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "create image ?text? ?b1_callback? b2_callback?");
+	    return TCL_ERROR;
+	}
+
+	if (info->tk_item == NULL) {
+	    info->tk_item = [[TkStatusItem alloc] init: interp];
+	} else {
+	    Tcl_AppendResult(interp, "Only one system tray icon supported per interpeter", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -287,12 +312,13 @@ MacSystrayObjCmd(
 	 * Set the proc for the callback.
 	 */
 
-	[info->tk_item setCallback : objv[4]];
+	[info->tk_item setB1Callback : objv[4]];
+	[info->tk_item setB2Callback : objv[5]];
 	break;
 
     }
     case TRAY_MODIFY: {
-	if (objc < 4) {
+	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "modify object item");
 	    return TCL_ERROR;
 	}
@@ -350,24 +376,30 @@ MacSystrayObjCmd(
 	     * Modify the proc for the callback.
 	     */
 
-	case TRAY_CALLBACK: {
-	    [info->tk_item setCallback : objv[3]];
+	case TRAY_B1_CALLBACK: {
+	    [info->tk_item setB1Callback : objv[3]];
+	    break;
+	}
+	case TRAY_B2_CALLBACK: {
+	    [info->tk_item setB2Callback : objv[4]];
+	    break; 
 	}
 	    break;
 	}
-	break;
-    }
-    case TRAY_DESTROY: {
-	/* we don't really distroy, just reset the image, text and callback */
-	[info->tk_item setImagewithImage: nil];
-	[info->tk_item setTextwithString: nil];
-	[info->tk_item setCallback : NULL];
-	/* do nothing */
-	break;
-    }
-    }
 
-    return TCL_OK;
+	case TRAY_DESTROY: {
+	    /* we don't really distroy, just reset the image, text and callback */
+	    [info->tk_item setImagewithImage: nil];
+	    [info->tk_item setTextwithString: nil];
+	    [info->tk_item setB1Callback : NULL];
+	    [info->tk_item setB2Callback : NULL];
+	    // /* do nothing */
+	    break;
+	}
+	    break;
+    }
+	return TCL_OK;
+    }
 }
 
 
@@ -389,18 +421,18 @@ MacSystrayObjCmd(
 
 static void
 MacSystrayDestroy(
-    void *clientData,
-    TCL_UNUSED(Tcl_Interp *))
+		  void *clientData,
+		  TCL_UNUSED(Tcl_Interp *))
 {
     TrayInfo *info = (TrayInfo *)clientData;
 
     if (info->tk_item != NULL) {
-    [info->tk_item dealloc];
-    info->tk_item = NULL;
+	[info->tk_item dealloc];
+	info->tk_item = NULL;
     }
     if (info->notify_item != NULL) {
-    [info->notify_item dealloc];
-    info->notify_item = NULL;
+	[info->notify_item dealloc];
+	info->notify_item = NULL;
     }
     ckfree(info);
 }
@@ -424,12 +456,12 @@ MacSystrayDestroy(
 
 
 static int SysNotifyObjCmd(
-    void *clientData,
-    Tcl_Interp * interp,
-    int objc,
-    Tcl_Obj *const *objv)
+			   void *clientData,
+			   Tcl_Interp * interp,
+			   int objc,
+			   Tcl_Obj *const *objv)
 {
-	TrayInfo *info = (TrayInfo *) clientData;
+    TrayInfo *info = (TrayInfo *) clientData;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "title message");
@@ -465,16 +497,17 @@ static int SysNotifyObjCmd(
  */
 
 int
-MacSystrayInit(Tcl_Interp *interp) {
+MacSystrayInit(Tcl_Interp *interp)
+{
 
     /*
      * Initialize TkStatusItem and TkNotifyItem.
      */
 
-	TrayInfo *info = (TrayInfo *)ckalloc(sizeof(TrayInfo));
+    TrayInfo *info = (TrayInfo *)ckalloc(sizeof(TrayInfo));
 
     memset(info, 0, sizeof(TrayInfo));
-	Tcl_SetAssocData(interp, ASSOC_KEY, MacSystrayDestroy, info);
+    Tcl_SetAssocData(interp, ASSOC_KEY, MacSystrayDestroy, info);
 
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10", NULL);
