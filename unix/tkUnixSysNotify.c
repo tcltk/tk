@@ -73,9 +73,8 @@ static int SysNotifyCmd(
 {
     const char *title;
     const char *message;
-    char *icon;
+    const char *icon;
     NotifyNotification *notif;
-    GdkPixbuf * notifyimage;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "title  message");

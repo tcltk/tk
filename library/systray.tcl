@@ -38,11 +38,11 @@ proc _balloon_show {w arg} {
 # Additional infrastructure for Windows callbacks.
 proc _win_callback {msg icn script} {
     global _cb_1
-    global _cb_2
+    global _cb_3
     
     switch -exact -- $msg {
 	WM_LBUTTONDOWN {
-	    eval $_cb_2
+	    eval $_cb_3
 	}
 	WM_RBUTTONDOWN {
 	    eval $_cb_1
@@ -118,8 +118,8 @@ global _iconlist
 set _iconlist {}
 global _cb_1
 set _cb_1 ""
-global _cb_2
-set _cb_2 ""
+global _cb_3
+set _cb_3 ""
 
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
@@ -131,14 +131,14 @@ set _cb_2 ""
 #             image - Tk image to display.
 #             text - string to display in tooltip over image.
 #             b1_callback - Tcl proc to invoke on <Button-1> event.
-#             b2_callback - Tcl proc to invoke on <Button-2> event.
+#             b3_callback - Tcl proc to invoke on <Button-3> event.
 
 #     modify - change one of the systray properties.
 #         Arguments (only one required):
 #             image - Tk image to update.
 #             text - string to update.
 #             b1_callback - Tcl proc to change.
-#             b2_callback - Tcl proc to change.
+#             b3_callback - Tcl proc to change.
 #     destroy - destroy systray icon.
 #         Arguments:
 #             none.
@@ -157,12 +157,12 @@ proc ::tk::systray {args} {
     global _ico
     global _iconlist
     global _cb_1
-    global _cb_2
+    global _cb_3
 
     set _img ""
     set _txt ""
     set _cb_1 ""
-    set _cb_2 ""
+    set _cb_3 ""
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
@@ -187,14 +187,14 @@ proc ::tk::systray {args} {
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
 	if {[llength $args] != 5} {
-	    error "wrong # args: should be \"tk systray create image ?text? ?b1_callback? b2_callback?\""
+	    error "wrong # args: should be \"tk systray create image ?text? ?b1_callback? b3_callback?\""
 	}
-        set _img [lindex $args 1]
-        set _txt [lindex $args 2]
-        set _cb_1 [lindex $args 3]
-	set _cb_2 [lindex $args 4]
-        switch -- [tk windowingsystem] {
-            "win32" {
+	set _img [lindex $args 1]
+	set _txt [lindex $args 2]
+	set _cb_1 [lindex $args 3]
+	set _cb_3 [lindex $args 4]
+	switch -- [tk windowingsystem] {
+	    "win32" {
 		if {[llength $_iconlist] > 0} {
 		    error "Only one system tray \
 		    icon supported per interpeter"
@@ -203,7 +203,7 @@ proc ::tk::systray {args} {
 		_systray taskbar add $_ico -text $_txt -callback [list _win_callback %m %i]
 		lappend _iconlist "ico#[llength _iconlist]"
 	    }
-            "x11" {
+	    "x11" {
 		if [winfo exists ._tray] {
 		    error  "Only one system tray \
 		    icon supported per interpeter"
@@ -212,17 +212,17 @@ proc ::tk::systray {args} {
 		_systray ._tray -image $_img -visible true
 		_balloon ._tray $_txt
 		bind ._tray <Button-1> $_cb_1
-		bind ._tray <Button-2> $_cb_2
+		bind ._tray <Button-3> $_cb_3
 	    }
 	    "aqua" {
-		_systray create $_img $_txt $_cb_1 $_cb_2
+		_systray create $_img $_txt $_cb_1 $_cb_3
 	    }
 	}
     }
     #Modify the system tray icon properties.
     if {[lindex $args 0] eq "modify"} {
 	if {[llength $args] != 3} {
-	    error "wrong # args: \"tk systray modify image | text | b1_callback | b2_callback option?\""
+	    error "wrong # args: \"tk systray modify image | text | b1_callback | b3_callback option?\""
 	}
 	switch -- [tk windowingsystem] {
 	    "win32" {
@@ -240,8 +240,8 @@ proc ::tk::systray {args} {
 		    set _cb_1 [lindex $args 2]
 		    _systray taskbar modify $_ico -callback [list _win_callback %m %i]
 		}
-		if {[lindex $args 1 ] eq "b2_callback"} {
-		    set _cb_2 [lindex $args 2]
+		if {[lindex $args 1 ] eq "b3_callback"} {
+		    set _cb_3 [lindex $args 2]
 		    _systray taskbar modify $_ico -callback [list _win_callback %m %i]
 		}
 		
@@ -264,11 +264,11 @@ proc ::tk::systray {args} {
 		    set _cb_1 [lindex $args 2]
 		    bind ._tray <Button-1>  $_cb_1
 		}
-		if {[lindex $args 1 ] eq "b2_callback"} {
-		    set _cb_2 ""
+		if {[lindex $args 1 ] eq "b3_callback"} {
+		    set _cb_3 ""
 		    bind ._tray <Button-1> ""
-		    set _cb_2 [lindex $args 2]
-		    bind ._tray <Button-1>  $_cb_2
+		    set _cb_3 [lindex $args 2]
+		    bind ._tray <Button-1>  $_cb_3
 		}
 	    }
 	    "aqua" {
@@ -281,12 +281,12 @@ proc ::tk::systray {args} {
 		    _systray modify text $_txt
 		}
 		if {[lindex $args 1 ] eq "b1_callback"} {
-		    set _cb [lindex $args 2]
-		    _systray modify callback $_cb_1
+		    set _cb_1 [lindex $args 2]
+		    _systray modify b1_callback $_cb_1
 		}
-		if {[lindex $args 1 ] eq "b2_callback"} {
-		    set _cb [lindex $args 2]
-		    _systray modify callback $_cb_2
+		if {[lindex $args 1 ] eq "b3_callback"} {
+		    set _cb_3 [lindex $args 2]
+		    _systray modify b3_callback $_cb_3
 		}
 	    }
 	}

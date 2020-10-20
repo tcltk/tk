@@ -28,14 +28,14 @@ static const char ASSOC_KEY[] = "tk::tktray";
     NSString * tooltip;
     Tcl_Interp * interp;
     Tcl_Obj * b1_callback;
-    Tcl_Obj * b2_callback;
+    Tcl_Obj * b3_callback;
 }
 
 - (id) init : (Tcl_Interp *) interp;
 - (void) setImagewithImage : (NSImage *) image;
 - (void) setTextwithString : (NSString *) string;
 - (void) setB1Callback : (Tcl_Obj *) callback;
-- (void) setB2Callback : (Tcl_Obj *) callback;
+- (void) setB3Callback : (Tcl_Obj *) callback;
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
@@ -54,7 +54,7 @@ static const char ASSOC_KEY[] = "tk::tktray";
     statusItem.visible = YES;
     interp = interpreter;
     b1_callback = NULL;
-    b2_callback = NULL;
+    b3_callback = NULL;
     return self;
 }
 
@@ -83,15 +83,15 @@ static const char ASSOC_KEY[] = "tk::tktray";
     b1_callback = obj;
 }
 
-- (void) setB2Callback : (Tcl_Obj *) obj
+- (void) setB3Callback : (Tcl_Obj *) obj
 {
     if (obj != NULL) {
 	Tcl_IncrRefCount(obj);
     }
-    if (b2_callback != NULL) {
-	Tcl_DecrRefCount(b1_callback);
+    if (b3_callback != NULL) {
+	Tcl_DecrRefCount(b3_callback);
     }
-    b2_callback = obj;
+    b3_callback = obj;
 }
 
 - (void) clickOnStatusItem: (id) sender
@@ -103,8 +103,8 @@ static const char ASSOC_KEY[] = "tk::tktray";
 	    Tcl_BackgroundException(interp, result);
 	}
     } else {
-	if (([event type] == NSEventTypeRightMouseUp) && (b2_callback != NULL)) {
-	int result = Tcl_EvalObjEx(interp, b2_callback, TCL_EVAL_GLOBAL);
+	if (([event type] == NSEventTypeRightMouseUp) && (b3_callback != NULL)) {
+	int result = Tcl_EvalObjEx(interp, b3_callback, TCL_EVAL_GLOBAL);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);
 	}
@@ -125,8 +125,8 @@ static const char ASSOC_KEY[] = "tk::tktray";
     if (b1_callback != NULL) {
 	Tcl_DecrRefCount(b1_callback);
     }
-    if (b2_callback != NULL) {
-	Tcl_DecrRefCount(b2_callback);
+    if (b3_callback != NULL) {
+	Tcl_DecrRefCount(b3_callback);
     }
 }
 
@@ -244,8 +244,8 @@ MacSystrayObjCmd(
     typedef enum {TRAY_CREATE, TRAY_MODIFY, TRAY_DESTROY} optionsEnum;
 
     static const char *modifyOptions[] =
-	{"image",  "text", "b1_callback", "b2_callback", NULL};
-    typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B2_CALLBACK} modifyOptionsEnum;
+	{"image",  "text", "b1_callback", "b3_callback", NULL};
+    typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B3_CALLBACK} modifyOptionsEnum;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
@@ -261,15 +261,15 @@ MacSystrayObjCmd(
     switch((optionsEnum)idx) {
     case TRAY_CREATE: {
 
-	if (objc < 6) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "create image ?text? ?b1_callback? b2_callback?");
+	if (objc < 3 ||  objc > 6) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "create image ?text? ?b1_callback? b3_callback?");
 	    return TCL_ERROR;
 	}
 
 	if (info->tk_item == NULL) {
 	    info->tk_item = [[TkStatusItem alloc] init: interp];
 	} else {
-	    Tcl_AppendResult(interp, "Only one system tray icon supported per interpeter", NULL);
+	    Tcl_AppendResult(interp, "Only one system tray icon supported per interpreter", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -312,13 +312,13 @@ MacSystrayObjCmd(
 	 * Set the proc for the callback.
 	 */
 
-	[info->tk_item setB1Callback : objv[4]];
-	[info->tk_item setB2Callback : objv[5]];
+	[info->tk_item setB1Callback : (objc > 4) ? objv[4] : NULL];
+	[info->tk_item setB3Callback : (objc > 5) ? objv[5] : NULL];
 	break;
 
     }
     case TRAY_MODIFY: {
-	if (objc < 5) {
+	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "modify object item");
 	    return TCL_ERROR;
 	}
@@ -380,26 +380,24 @@ MacSystrayObjCmd(
 	    [info->tk_item setB1Callback : objv[3]];
 	    break;
 	}
-	case TRAY_B2_CALLBACK: {
-	    [info->tk_item setB2Callback : objv[4]];
+	case TRAY_B3_CALLBACK: {
+	    [info->tk_item setB3Callback : objv[3]];
 	    break; 
 	}
-	    break;
-	}
+    }
+    break;
+    }
 
-	case TRAY_DESTROY: {
+    case TRAY_DESTROY: {
 	    /* we don't really distroy, just reset the image, text and callback */
 	    [info->tk_item setImagewithImage: nil];
 	    [info->tk_item setTextwithString: nil];
 	    [info->tk_item setB1Callback : NULL];
-	    [info->tk_item setB2Callback : NULL];
-	    // /* do nothing */
+	    [info->tk_item setB3Callback : NULL];
 	    break;
 	}
-	    break;
     }
-	return TCL_OK;
-    }
+    return TCL_OK;
 }
 
 
