@@ -212,10 +212,10 @@ ifeq (${EMBEDDED_BUILD}_${INSTALL_ROOT},1_)
 	@echo "Cannot install-embedded with empty INSTALL_ROOT !" && false
 endif
 ifeq (${SUBFRAMEWORK}_${DYLIB_INSTALL_DIR},1_)
-	@echo "Cannot install-subframework with empty DYLIB_INSTALL_DIR !" && false
+	@echo "Cannot install subframework with empty DYLIB_INSTALL_DIR !" && false
 endif
 ifeq (${EMBEDDED_BUILD},1)
-	@rm -rf "${INSTALL_ROOT}${LIBDIR}/Tk.framework"
+	@rm -rf "${INSTALL_ROOT}/${LIBDIR}/Tk.framework"
 endif
 ifeq (${SUBFRAMEWORK},1)
 	@rm -rf "${INSTALL_ROOT}/Frameworks/Tk.framework"
@@ -234,8 +234,8 @@ ifeq (${EMBEDDED_BUILD},1)
 else
 # install wish symbolic link
 	@ln -fs ${WISH} "${INSTALL_ROOT}${BINDIR}/${wish}"
-endif
-endif
+endif # embedded
+endif # install
 ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 # keep copy of debug library around, so that
 # Deployment build can be installed on top
@@ -243,10 +243,10 @@ ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 # the debug library
 	@cd "${INSTALL_ROOT}${LIBDIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}" && \
 	ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"
-endif
+endif # Development, not embedded
 ifeq (${TK_X11},)
 ifeq (${SUBFRAMEWORK},)
-ifeq (${EMBEDDED_BUILD},1)
+ifeq (${EMBEDDED_BUILD},)
 # install Wish.app link in APPLICATION_INSTALL_PATH and setup 'Wish Shell' compatibility links
 	@cd "${TOP_DIR}" && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && rm -rf "./${APP_DIR}/Wish.app" && \
 	ln -fsh "./$$(echo "${APP_DIR}" | sed -e 's#/[^/][^/]*#/..#g')/${FMWK_DIR}/${PRODUCT_NAME}.framework/Resources/Wish.app" "./${APP_DIR}" && \
@@ -277,17 +277,17 @@ else
 	} && \
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
-ifeq (${INSTALL_BUILD},)
+ifeq (${INSTALL_BUILD},1)
 	@cd "${TOP_DIR}" && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
-endif
-endif
+endif # install
+endif # embedded
 else
-# Clean up the destination directory
+# Clean up the destination directory if this is a subframework
 	@rm -rf ${INSTALL_ROOT}/Frameworks
 	@mv "${INSTALL_ROOT}/Library/Frameworks" "${INSTALL_ROOT}"
 	@rm -rf ${INSTALL_ROOT}/Library
-endif
-endif
+endif # not subframework
+endif # not X11
 
 clean-${PROJECT}: %-${PROJECT}:
 	${DO_MAKE}
