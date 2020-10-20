@@ -463,7 +463,7 @@ directory where the frameworks will be written. Since the install_name is writte
 at compile time, this build requires starting with an empty build directory.
 Also, the build will leave frameworks in the build directory that cannot be
 installed in the standard /Library/Frameworks directory.  To avoid surprises,
-delete the build directory after the frameworks are built. 
+delete the build directory after the frameworks are built.
 For example, running the commands:
 	rm -rf build
 	cd Tcl_src
