@@ -185,4 +185,12 @@ MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
 
 #define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
 
+/*
+ * Used by tkAppInit
+ */
+
+#define USE_CUSTOM_EXIT_PROC
+EXTERN int TkpWantsExitProc(void);
+EXTERN TCL_NORETURN void TkpExitProc(void *);
+
 #endif /* _TKMACPORT */
