@@ -15,9 +15,7 @@
 #undef BUILD_tk
 #undef STATIC_BUILD
 #include "tk.h"
-#if !defined(USE_SYSTEM_EXIT) && defined(MAC_OSX_TK)
-#   include "tkMacOSX.h"
-#endif
+#include "tkPort.h"
 
 #ifdef TK_TEST
 extern Tcl_PackageInitProc Tktest_Init;
@@ -113,9 +111,11 @@ Tcl_AppInit(
 	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
-#if !defined(USE_SYSTEM_EXIT) && defined(MAC_OSX_TK)
-    if (TkMacOSXIsLaunched()) {
-	Tcl_SetExitProc(TkMacOSXExitProc);
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+    if (TkpWantsExitProc()) {
+	/* The cast below avoids warnings from old gcc compilers. */
+	Tcl_SetExitProc((void *)TkpExitProc);
     }
 #endif
 

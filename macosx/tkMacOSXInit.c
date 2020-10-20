@@ -113,6 +113,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     /*
      * Initialize event processing.
      */
+
     TkMacOSXInitAppleEvents(_eventInterp);
 
     /*
@@ -294,14 +295,14 @@ static void closePanels(
  * correctly for all termination scenarios.
  */
 
-#if !defined(USE_SYSTEM_EXIT)
+#if defined(USE_CUSTOM_EXIT_PROC)
 static Bool doCleanupFromExit = NO;
 
-int TkMacOSXIsLaunched(void) {
+int TkpWantsExitProc(void) {
     return doCleanupFromExit == YES;
 }
 
-TCL_NORETURN void TkMacOSXExitProc(
+TCL_NORETURN void TkpExitProc(
     void *clientdata)
 {
     Bool doCleanup = doCleanupFromExit;
@@ -318,7 +319,7 @@ TCL_NORETURN void TkMacOSXExitProc(
     if (doCleanup == YES) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
-    exit((int)clientdata); /* Convince the compiler that we don't return. */
+    exit((long)clientdata); /* Convince the compiler that we don't return. */
 }
 #endif
 
@@ -451,9 +452,11 @@ TkpInit(
 		Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 			    TCL_GLOBAL_ONLY);
 	    }
-#if !defined(USE_SYSTEM_EXIT)
+
+#if defined(USE_CUSTOM_EXIT_PROC)
 	    doCleanupFromExit = YES;
 #endif
+
 	    shouldOpenConsole = YES;
 	}
 	if (shouldOpenConsole) {
@@ -476,7 +479,7 @@ TkpInit(
 	    FILE *null = fopen("/dev/null", "w");
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
-#if !defined(USE_SYSTEM_EXIT)
+#if defined(USE_CUSTOM_EXIT_PROC)
 	    doCleanupFromExit = YES;
 #endif
 	}
@@ -520,10 +523,10 @@ TkpInit(
 	 * calling [NSApplication terminate].  This does not work correctly if
 	 * the process is part of an exec pipeline, so it is only used if the
 	 * process was launched by the launcher or if both stdin and stdout are
-	 * ttys.  If an exit proc was already installed we leave it in place.
+	 * ttys.
 	 */
 
-# if !defined(USE_SYSTEM_EXIT)
+# if defined(USE_CUSTOM_EXIT_PROC)
 
 	if ((isatty(0) && isatty(1))) {
 	    doCleanupFromExit = YES;
