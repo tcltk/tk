@@ -266,9 +266,9 @@ proc ::tk::systray {args} {
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
 		    set _cb_3 ""
-		    bind ._tray <Button-1> ""
+		    bind ._tray <Button-3> ""
 		    set _cb_3 [lindex $args 2]
-		    bind ._tray <Button-1>  $_cb_3
+		    bind ._tray <Button-3>  $_cb_3
 		}
 	    }
 	    "aqua" {
