@@ -321,7 +321,7 @@ TCL_NORETURN void TkpExitProc(
     /*
      * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
      */
-    
+
     Tcl_Finalize();
     if (doCleanup == YES) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
@@ -340,8 +340,7 @@ TCL_NORETURN void TkpExitProc(
  * return exit status 1.
  */
 
-static void TkMacOSXSignalHandler(int signal) {
-    (void)signal;
+static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 
     Tcl_Exit(1);
 }
