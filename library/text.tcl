@@ -429,107 +429,29 @@ bind Text <Control-h> {
 	%W see insert
     }
 }
-if {[tk windowingsystem] ne "aqua"} {
-    bind Text <Button-2> {
-        if {!$tk_strictMotif} {
-        tk::TextScanMark %W %x %y
-        }
+bind Text <Button-2> {
+    if {!$tk_strictMotif} {
+	tk::TextScanMark %W %x %y
     }
-    bind Text <B2-Motion> {
-        if {!$tk_strictMotif} {
-        tk::TextScanDrag %W %x %y
-        }
-    }
-} else {
-    bind Text <Button-3> {
-        if {!$tk_strictMotif} {
-        tk::TextScanMark %W %x %y
-        }
-    }
-    bind Text <B3-Motion> {
-        if {!$tk_strictMotif} {
-        tk::TextScanDrag %W %x %y
-        }
+}
+bind Text <B2-Motion> {
+    if {!$tk_strictMotif} {
+	tk::TextScanDrag %W %x %y
     }
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows and MacOS X.
-# However, someone could use the "event generate" command to produce one
-# on other platforms.  We must be careful not to round -ve values of %D
-# down to zero.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <MouseWheel> {
-        %W yview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Option-MouseWheel> {
-        %W yview scroll [expr {-150 * (%D)}] pixels
-    }
-    bind Text <Shift-MouseWheel> {
-        %W xview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-150 * (%D)}] pixels
-    }
-} else {
-    # We must make sure that positive and negative movements are rounded
-    # equally to integers, avoiding the problem that
-    #     (int)1/3 = 0,
-    # but
-    #     (int)-1/3 = -1
-    # The following code ensure equal +/- behaviour.
-    bind Text <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W yview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
-    bind Text <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W xview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
+bind Text <MouseWheel> {
+    tk::MouseWheel y %D -3.0 pixels
 }
-
-if {[tk windowingsystem] eq "x11"} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Text <Button-4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -50 pixels
-	}
-    }
-    bind Text <Button-5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 50 pixels
-	}
-    }
-    bind Text <Shift-Button-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Shift-Button-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
-    bind Text <Button-6> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Button-7> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
+bind Text <Option-MouseWheel> {
+    tk::MouseWheel y %D -0.3 pixels
+}
+bind Text <Shift-MouseWheel> {
+    tk::MouseWheel x %D -3.0 pixels
+}
+bind Text <Shift-Option-MouseWheel> {
+    tk::MouseWheel x %D -0.3 pixels
 }
 
 # ::tk::TextClosestGap --
