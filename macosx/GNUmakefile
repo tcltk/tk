@@ -44,6 +44,18 @@ INSTALL_MANPAGES	?=
 # set to non-empty value to build TkX11 instead of TkAqua:
 TK_X11			?=
 
+# Checks and overrides for subframework builds
+ifeq (${SUBFRAMEWORK}_${TK_X11},1_)
+ifeq (${DYLIB_INSTALL_DIR},)
+	@echo "Cannot install subframework with empty DYLIB_INSTALL_DIR !" && false
+endif
+ifeq (${DESTDIR},)
+	@echo "Cannot install subframework with empty DESTDIR !" && false
+endif
+override BUILD_DIR = ${DESTDIR}/build
+override INSTALL_PATH = /Frameworks
+endif
+
 #-------------------------------------------------------------------------------------------------------
 # meta targets
 
@@ -277,15 +289,10 @@ else
 	} && \
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
-ifeq (${INSTALL_BUILD},1)
+ifeq (${INSTALL_BUILD})
 	@cd "${TOP_DIR}" && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
-endif # install
+endif # install not subframework
 endif # embedded
-else
-# Clean up the destination directory if this is a subframework
-	@rm -rf ${INSTALL_ROOT}/Frameworks
-	@mv "${INSTALL_ROOT}/Library/Frameworks" "${INSTALL_ROOT}"
-	@rm -rf ${INSTALL_ROOT}/Library
 endif # not subframework
 endif # not X11
 
