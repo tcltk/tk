@@ -69,6 +69,11 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     [self handleQuitApplicationEvent:Nil withReplyEvent:Nil];
 }
 
+- (void) superTerminate: (id) sender
+{
+    [super terminate:nil];
+}
+
 - (void) preferences: (id) sender
 {
     (void)sender;
@@ -591,9 +596,14 @@ ReallyKillMe(
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     int quit = Tcl_FindCommand(interp, "::tk::mac::Quit", NULL, 0)!=NULL;
-    int code = Tcl_EvalEx(interp, quit ? "::tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
 
+    if (!quit) {
+	Tcl_Exit(0);
+    }
+
+    int code = Tcl_EvalEx(interp, "::tk::mac::Quit", -1, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
+
 	/*
 	 * Should be never reached...
 	 */

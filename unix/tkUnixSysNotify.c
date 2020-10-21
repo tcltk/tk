@@ -89,7 +89,7 @@ static int SysNotifyCmd(
     title = Tcl_GetString(objv[1]);
     message = Tcl_GetString(objv[2]);
     icon = "dialog-information";
- 
+
     notif = notify_notification_new(title, message, icon);
     notify_notification_show(notif, NULL);
 

@@ -56,7 +56,7 @@ namespace eval ::winicoprops {
 }
 
 proc _win_callback {msg icn} {
-   
+
     switch -exact -- $msg {
 	WM_LBUTTONDOWN {
 	    eval $::winicoprops::cb1
@@ -168,7 +168,7 @@ proc ::tk::systray {args} {
 
     #Set variables for icon properties.
     global _iconlist
-    
+
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
@@ -199,11 +199,11 @@ proc ::tk::systray {args} {
 	set _txt [lindex $args 2]
 	set _cb_1 [lindex $args 3]
 	set _cb_3 [lindex $args 4]
-	
+
 	set ::winicoprops::img $_img
 	set ::winicoprops::txt $_txt
 	set ::winicoprops::cb1 $_cb_1
-	set ::winicoprops::cb3 $_cb_3 
+	set ::winicoprops::cb3 $_cb_3
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[llength $_iconlist] > 0} {
@@ -257,7 +257,7 @@ proc ::tk::systray {args} {
 		    set ::winicoprops::cb3 $_cb_3
 		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		}
-		
+
 	    }
 	    "x11" {
 		if {[lindex $args 1] eq "image"} {
@@ -335,7 +335,7 @@ proc ::tk::sysnotify {title message} {
 }
 
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
-#Thanks to Christian Gollwitzer for the guidance here 
+#Thanks to Christian Gollwitzer for the guidance here
 set map [namespace ensemble configure tk -map]
 dict set map systray  ::tk::systray
 dict set map sysnotify ::tk::sysnotify

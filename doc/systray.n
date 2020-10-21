@@ -42,18 +42,18 @@ Here is an example of modifying the \fBtk systray\fP icon:
     tk systray modify callback {puts "Different output from the tk systray"}
 .CE
 .PP
- The \fBtk systray\fP destroy command removes the icon from display and 
+ The \fBtk systray\fP destroy command removes the icon from display and
 deallocates it.
 .PP
-From a user-interface standpoint, only one icon per interpreter is 
-supported; attempts to create additional icons will return an error. The 
+From a user-interface standpoint, only one icon per interpreter is
+supported; attempts to create additional icons will return an error. The
 existing tray icon can be modified with different images and
-strings to indicate app state. Loading additional interpreters into a 
+strings to indicate app state. Loading additional interpreters into a
 running instance of Wish will allow additional icons to be displayed.
 .SH PLATFORM NOTES
 .PP
-The X11 implementation is dependent on the window manager. The "text" 
-flag, which is implemented as a tooltip, does not always display if the WM 
-does not support such features. 
+The X11 implementation is dependent on the window manager. The "text"
+flag, which is implemented as a tooltip, does not always display if the WM
+does not support such features.
 .SH KEYWORDS
 image, callback
