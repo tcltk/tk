@@ -290,6 +290,7 @@ else
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
 ifeq (${INSTALL_BUILD})
+	echo removing frameworks
 	@cd "${TOP_DIR}" && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
 endif # install not subframework
 endif # embedded
