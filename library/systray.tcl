@@ -31,7 +31,7 @@ proc _balloon_show {w arg} {
     set wmx [winfo rootx $w]
     set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
     wm geometry $top [winfo reqwidth $top._txt]x[
-						winfo reqheight $top._txt]+$wmx+$wmy
+						 winfo reqheight $top._txt]+$wmx+$wmy
     raise $top
 }
 
@@ -39,25 +39,24 @@ proc _balloon_show {w arg} {
 
 namespace eval ::winicoprops {
 
-variable ico
-variable img
-variable txt
-variable cb1
-variable cb3
+    variable ico
+    variable img
+    variable txt
+    variable cb1
+    variable cb3
 
-set ico ""
-set img ""
-set txt ""
-set cb1 ""
-set cb3 ""
+    set ico ""
+    set img ""
+    set txt ""
+    set cb1 ""
+    set cb3 ""
 
-namespace export *
+    namespace export *
 
 }
 
 proc _win_callback {msg icn} {
    
-    
     switch -exact -- $msg {
 	WM_LBUTTONDOWN {
 	    eval $::winicoprops::cb1
@@ -71,7 +70,7 @@ proc _win_callback {msg icn} {
 # Pure-Tcl system notification window for use if native implementation not available.
 
 image create photo _info -data {
-R0lGODlhIAAgAKUAAERq5KS29HSS7NTe/Fx+5Iym7Ozy/LzK9Ex25ISe7OTq/GyK5JSu7Pz6/Mza9Exy5Ky+9ISa7GSG5Fx65Exu5Hya7OTm/GSC5PTy/MTS9FR25Ozu/Jyu7ERu5KS69HyW7Nzi/FyC5JSq7MTO9Iyi7OTu/HSO7Pz+/NTa9LTC9PT2/FR65Jyy7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAC0ALAAAAAAgACAAAAb9wJZwSDw5WAKCBkEwMTINonQ6xLA0gKx2+xBtqNQT5LEtlzusKFioEpjfZckXbLjA71qNhaqS4P8ACHNDJx94Cw4ODHghakIpeCsnQwV4DEMqZHcFRA5/CkIBfwlEB6MtJyuADkIGIYAqA4BZAglYgAces7taCRGzIRLCCIDBgAtEEIAdBIAmycvNf89DyoB+09B/HRXO2oy62dWACbLiQtZ4KannLel3Bi2ieNTofx9sHfTfcCBDkHfqucNDosiCOw8qKKyA7Y0GR61e8XoDasoGaRO1+KNzMKOGEmuEnAi3qwDEkAYK6MOToGLIKQ0yiFigQR8CCQUOqAgZBAA7
+    R0lGODlhIAAgAKUAAERq5KS29HSS7NTe/Fx+5Iym7Ozy/LzK9Ex25ISe7OTq/GyK5JSu7Pz6/Mza9Exy5Ky+9ISa7GSG5Fx65Exu5Hya7OTm/GSC5PTy/MTS9FR25Ozu/Jyu7ERu5KS69HyW7Nzi/FyC5JSq7MTO9Iyi7OTu/HSO7Pz+/NTa9LTC9PT2/FR65Jyy7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAC0ALAAAAAAgACAAAAb9wJZwSDw5WAKCBkEwMTINonQ6xLA0gKx2+xBtqNQT5LEtlzusKFioEpjfZckXbLjA71qNhaqS4P8ACHNDJx94Cw4ODHghakIpeCsnQwV4DEMqZHcFRA5/CkIBfwlEB6MtJyuADkIGIYAqA4BZAglYgAces7taCRGzIRLCCIDBgAtEEIAdBIAmycvNf89DyoB+09B/HRXO2oy62dWACbLiQtZ4KannLel3Bi2ieNTofx9sHfTfcCBDkHfqucNDosiCOw8qKKyA7Y0GR61e8XoDasoGaRO1+KNzMKOGEmuEnAi3qwDEkAYK6MOToGLIKQ0yiFigQR8CCQUOqAgZBAA7
 }
 
 proc _notifywindow {title msg} {
@@ -79,7 +78,7 @@ proc _notifywindow {title msg} {
     set w [toplevel ._notify]
     if {[tk windowingsystem] eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w utility {hud
-		closeBox resizable}
+	    closeBox resizable}
 	wm title $w "Alert"
     }
     if {[tk windowingsystem] eq "win32"} {
@@ -169,7 +168,7 @@ proc ::tk::systray {args} {
 
     #Set variables for icon properties.
     global _iconlist
- 
+    
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
@@ -245,17 +244,17 @@ proc ::tk::systray {args} {
 		}
 		if {[lindex $args 1] eq "text"} {
 		    set _txt [lindex $args 2]
-			set ::winicoprops::txt $_txt
+		    set ::winicoprops::txt $_txt
 		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
 		}
 		if {[lindex $args 1 ] eq "b1_callback"} {
 		    set _cb_1 [lindex $args 2]
-			set ::winicoprops::cb1 $_cb_1
+		    set ::winicoprops::cb1 $_cb_1
 		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
 		    set _cb_3 [lindex $args 2]
-			set ::winicoprops::cb3 $_cb_3
+		    set ::winicoprops::cb3 $_cb_3
 		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		}
 		
