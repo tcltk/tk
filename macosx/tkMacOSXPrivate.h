@@ -384,6 +384,7 @@ VISIBILITY_HIDDEN
 @end
 @interface TKApplication(TKHLEvents)
 - (void) terminate: (id) sender;
+- (void) superTerminate: (id) sender;
 - (void) preferences: (id) sender;
 - (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event
 		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;

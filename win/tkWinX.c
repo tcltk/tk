@@ -1746,11 +1746,11 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
-    case Button4:
+    case Button8:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
 	break;
-    case Button5:
+    case Button9:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
 	break;

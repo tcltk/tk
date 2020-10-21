@@ -113,6 +113,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     /*
      * Initialize event processing.
      */
+
     TkMacOSXInitAppleEvents(_eventInterp);
 
     /*
@@ -270,6 +271,80 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *----------------------------------------------------------------------
  */
 
+/*
+ * Helper function which closes the shared NSFontPanel and NSColorPanel.
+ */
+
+static void closePanels(
+    void)
+{
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+}
+
+/*
+ * This custom exit procedure is called by Tcl_Exit in place of the exit
+ * function from the C runtime.  It calls the terminate method of the
+ * NSApplication class (superTerminate for a TKApplication).  The purpose of
+ * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
+ * before the process exits, and that the application state is recorded
+ * correctly for all termination scenarios.
+ *
+ * TkpWantsExitProc tells Tcl_AppInit whether to install our custom exit proc,
+ * which terminates the process by calling [NSApplication terminate].  This
+ * does not work correctly if the process is part of an exec pipeline, so it is
+ * only done if the process was launched by the launcher or if both stdin and
+ * stdout are ttys.  To disable using the custom exit proc altogether, undefine
+ * USE_CUSTOM_EXIT_PROC.
+ */
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+static Bool doCleanupFromExit = NO;
+
+int TkpWantsExitProc(void) {
+    return doCleanupFromExit == YES;
+}
+
+TCL_NORETURN void TkpExitProc(
+    void *clientdata)
+{
+    Bool doCleanup = doCleanupFromExit;
+    if (doCleanupFromExit) {
+	doCleanupFromExit = NO; /* prevent possible recursive call. */
+	closePanels();
+    }
+
+    /*
+     * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
+     */
+
+    Tcl_Finalize();
+    if (doCleanup == YES) {
+	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
+    }
+    exit((long)clientdata); /* Convince the compiler that we don't return. */
+}
+#endif
+
+/*
+ * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
+ * so that normal finalization occurs when a Tk app is killed by one of these
+ * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
+ * Tcl_Exit instead of the C runtime exit function called by the default handler.
+ * This is consistent with the Tcl_Exit manual page, which says that Tcl_Exit
+ * should always be called instead of exit.  When Tk is killed by a signal we
+ * return exit status 1.
+ */
+
+static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
+
+    Tcl_Exit(1);
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -298,6 +373,7 @@ TkpInit(
 	initialized = 1;
 
 #ifdef TK_FRAMEWORK
+
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
 	 * framework scripts directory.
@@ -382,6 +458,11 @@ TkpInit(
 		Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 			    TCL_GLOBAL_ONLY);
 	    }
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
+
 	    shouldOpenConsole = YES;
 	}
 	if (shouldOpenConsole) {
@@ -404,6 +485,9 @@ TkpInit(
 	    FILE *null = fopen("/dev/null", "w");
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
 	}
 
 	/*
@@ -439,6 +523,24 @@ TkpInit(
 		break;
 	    }
 	}
+
+# if defined(USE_CUSTOM_EXIT_PROC)
+
+	if ((isatty(0) && isatty(1))) {
+	    doCleanupFromExit = YES;
+	}
+
+# endif
+
+	/*
+	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
+	 * Tcl_Exit instead of exit so that normal cleanup takes place if a TK
+	 * application is killed with one of these signals.
+	 */
+
+	signal(SIGINT, TkMacOSXSignalHandler);
+	signal(SIGHUP, TkMacOSXSignalHandler);
+	signal(SIGTERM, TkMacOSXSignalHandler);
     }
 
     /*

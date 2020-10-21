@@ -1,8 +1,8 @@
 /*
  * tkMacOSXSysTray.c --
  *
- *	tkMacOSXSysTray.c implements a "systray" Tcl command which allows 
- *      one to change the system tray/taskbar icon of a Tk toplevel 
+ *	tkMacOSXSysTray.c implements a "systray" Tcl command which allows
+ *      one to change the system tray/taskbar icon of a Tk toplevel
  *      window and a "sysnotify" command to post system notifications.
  *
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
@@ -108,14 +108,14 @@ static const char ASSOC_KEY[] = "tk::tktray";
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);
 	}
-    }  
+    }
 }
 }
 - (void) dealloc
 {
     /*
      * We are only doing the minimal amount of deallocation that
-     * the superclass cannot handle when it is deallocated, per 
+     * the superclass cannot handle when it is deallocated, per
      * https://developer.apple.com/documentation/objectivec/nsobject/
      * 1571947-dealloc. The compiler may offer warnings, but disregard.
      * Putting too much here can cause unpredictable crashes, especially
@@ -170,15 +170,15 @@ static const char ASSOC_KEY[] = "tk::tktray";
     tk_notification.soundName = NSUserNotificationDefaultSoundName;
 
     NSUserNotificationCenter *center = [NSUserNotificationCenter defaultUserNotificationCenter];
-    
+
     /*
-     * This API requires an app delegate to function correctly. 
-     * The compiler may complain that setting TkNotificationItem is an 
+     * This API requires an app delegate to function correctly.
+     * The compiler may complain that setting TkNotificationItem is an
      * incompatible type, but disregard. Setting to something else will
      * either cause Wish not to build, or the notification not to display.
      */
     [center setDelegate: self];
-    
+
     [center deliverNotification:tk_notification];
 }
 
@@ -192,7 +192,7 @@ static const char ASSOC_KEY[] = "tk::tktray";
 {
     /*
      * We are only doing the minimal amount of deallocation that
-     * the superclass cannot handle when it is deallocated, per 
+     * the superclass cannot handle when it is deallocated, per
      * https://developer.apple.com/documentation/objectivec/nsobject/
      * 1571947-dealloc. The compiler may offer warnings, but disregard.
      * Putting too much here can cause unpredictable crashes, especially
@@ -382,7 +382,7 @@ MacSystrayObjCmd(
 	}
 	case TRAY_B3_CALLBACK: {
 	    [info->tk_item setB3Callback : objv[3]];
-	    break; 
+	    break;
 	}
     }
     break;
