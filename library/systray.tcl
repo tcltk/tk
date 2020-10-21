@@ -35,17 +35,35 @@ proc _balloon_show {w arg} {
     raise $top
 }
 
-# Additional infrastructure for Windows callbacks.
-proc _win_callback {msg icn script} {
-    global _cb_1
-    global _cb_3
+# Additional infrastructure for Windows variables and callbacks.
+
+namespace eval ::winicoprops {
+
+variable ico
+variable img
+variable txt
+variable cb1
+variable cb3
+
+set ico ""
+set img ""
+set txt ""
+set cb1 ""
+set cb3 ""
+
+namespace export *
+
+}
+
+proc _win_callback {msg icn} {
+   
     
     switch -exact -- $msg {
 	WM_LBUTTONDOWN {
-	    eval $_cb_3
+	    eval $::winicoprops::cb1
 	}
 	WM_RBUTTONDOWN {
-	    eval $_cb_1
+	    eval $::winicoprops::cb3
 	}
     }
 }
@@ -112,14 +130,10 @@ proc _fade_in {w} {
 }
 
 
-global _ico
-set _ico ""
+
 global _iconlist
 set _iconlist {}
-global _cb_1
-set _cb_1 ""
-global _cb_3
-set _cb_3 ""
+
 
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
@@ -154,22 +168,15 @@ proc ::tk::systray {args} {
     }
 
     #Set variables for icon properties.
-    global _ico
     global _iconlist
-    global _cb_1
-    global _cb_3
-
-    set _img ""
-    set _txt ""
-    set _cb_1 ""
-    set _cb_3 ""
+ 
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		set _iconlist {}
-		_systray taskbar delete $_ico
+		_systray taskbar delete $::winicoprops::ico
 	    }
 	    "x11" {
 		destroy ._tray
@@ -193,14 +200,19 @@ proc ::tk::systray {args} {
 	set _txt [lindex $args 2]
 	set _cb_1 [lindex $args 3]
 	set _cb_3 [lindex $args 4]
+	
+	set ::winicoprops::img $_img
+	set ::winicoprops::txt $_txt
+	set ::winicoprops::cb1 $_cb_1
+	set ::winicoprops::cb3 $_cb_3 
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[llength $_iconlist] > 0} {
 		    error "Only one system tray \
 		    icon supported per interpeter"
 		}
-		set _ico [_systray createfrom $_img]
-		_systray taskbar add $_ico -text $_txt -callback [list _win_callback %m %i]
+		set ::winicoprops::ico [_systray createfrom $_img]
+		_systray taskbar add $::winicoprops::ico  -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		lappend _iconlist "ico#[llength _iconlist]"
 	    }
 	    "x11" {
@@ -208,7 +220,6 @@ proc ::tk::systray {args} {
 		    error  "Only one system tray \
 		    icon supported per interpeter"
 		}
-		set _ico $_img
 		_systray ._tray -image $_img -visible true
 		_balloon ._tray $_txt
 		bind ._tray <Button-1> $_cb_1
@@ -228,21 +239,24 @@ proc ::tk::systray {args} {
 	    "win32" {
 		if {[lindex $args 1] eq "image"} {
 		    set _img [lindex $args 2]
-		    _systray taskbar delete $_ico
-		    set _ico [_systray createfrom $_img]
-		    _systray taskbar add $_ico -text $_txt -callback [list _win_callback %m %i]
+		    _systray taskbar delete $::winicoprops::ico
+		    set ::winicoprops::ico [_systray createfrom $_img]
+		    _systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		}
 		if {[lindex $args 1] eq "text"} {
 		    set _txt [lindex $args 2]
-		    _systray taskbar modify $_ico -text $_txt
+			set ::winicoprops::txt $_txt
+		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
 		}
 		if {[lindex $args 1 ] eq "b1_callback"} {
 		    set _cb_1 [lindex $args 2]
-		    _systray taskbar modify $_ico -callback [list _win_callback %m %i]
+			set ::winicoprops::cb1 $_cb_1
+		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
 		    set _cb_3 [lindex $args 2]
-		    _systray taskbar modify $_ico -callback [list _win_callback %m %i]
+			set ::winicoprops::cb3 $_cb_3
+		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		}
 		
 	    }
@@ -251,7 +265,7 @@ proc ::tk::systray {args} {
 		    set _img [lindex $args 2]
 		    ._tray configure -image ""
 		    ._tray configure -image $_img
-		    set _ico $_img
+
 		}
 		if {[lindex $args 1] eq "text"} {
 		    set _txt ""
@@ -302,11 +316,10 @@ proc ::tk::systray {args} {
 
 proc ::tk::sysnotify {title message} {
 
-    global _ico
 
     switch -- [tk windowingsystem] {
 	"win32" {
-	    _sysnotify notify $_ico $title $message
+	    _sysnotify notify $::winicoprops::ico $title $message
 	}
 	"x11" {
 	    if {[info commands _sysnotify] eq ""} {
