@@ -346,23 +346,25 @@ static NSInteger showOpenSavePanel(
     NSWindow *parent,
     FilePanelCallbackInfo *callbackInfo)
 {
-    NSInteger modalReturnCode;
+    __block NSInteger modalReturnCode = modalOther;
 
     if (parent && ![parent attachedSheet]) {
 	[panel beginSheetModalForWindow:parent
-	       completionHandler:^(NSModalResponse returnCode) {
-	    [NSApp tkFilePanelDidEnd:panel
-		       returnCode:returnCode
-		       contextInfo:callbackInfo ];
+		      completionHandler:^(NSModalResponse result) {
+		[NSApp tkFilePanelDidEnd:panel
+			      returnCode:result
+			     contextInfo:callbackInfo ];
+		modalReturnCode = result;
 	    }];
-
-	modalReturnCode = callbackInfo->cmdObj ? modalOther :
-	    [panel runModal];
     } else {
-	modalReturnCode = [panel runModal];
-	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
-		     contextInfo:callbackInfo];
+	[panel beginWithCompletionHandler:^(NSModalResponse result) {
+		[NSApp tkFilePanelDidEnd:panel
+			      returnCode:result
+			     contextInfo:callbackInfo ];
+		modalReturnCode = result;
+	    }];
     }
+    [panel runModal];
     return modalReturnCode;
 }
 

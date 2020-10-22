@@ -179,11 +179,15 @@ proc ttk::combobox::SelectEntry {cb index} {
 
 ## Scroll -- Mousewheel binding
 #
-proc ttk::combobox::Scroll {cb dir} {
+proc ttk::combobox::Scroll {cb dir {factor 1.0}} {
     $cb instate disabled { return }
     set max [llength [$cb cget -values]]
     set current [$cb current]
-    incr current $dir
+    set d [expr {round($dir/factor)}]
+    if {$d == 0 && $dir != 0} {
+	if {$dir > 0} {set d 1} else {set d -1}
+    }
+    incr current $d
     if {$max != 0 && $current == $current % $max} {
 	SelectEntry $cb $current
     }

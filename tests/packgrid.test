@@ -2,7 +2,7 @@
 # "grid" commands.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 2008 Peter Spjuth
+# Copyright © 2008 Peter Spjuth
 # All rights reserved.
 
 package require tcltest 2.2
