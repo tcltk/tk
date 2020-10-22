@@ -56,29 +56,29 @@ for {set i 0} {$i < 20} {incr i} {
 $c bind all <Enter> "scrollEnter $c"
 $c bind all <Leave> "scrollLeave $c"
 $c bind all <Button-1> "scrollButton $c"
-if {[tk windowingsystem] eq "aqua"} {
+if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk] 8.7-]} {
     bind $c <Button-3> "$c scan mark %x %y"
     bind $c <B3-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
-	%W yview scroll [expr {-(%D)}] units
+	%W yview scroll [expr {-%D}] units
     }
     bind $c <Option-MouseWheel> {
-	%W yview scroll [expr {-10 * (%D)}] units
+	%W yview scroll [expr {-10*%D}] units
     }
     bind $c <Shift-MouseWheel> {
-	%W xview scroll [expr {-(%D)}] units
+	%W xview scroll [expr {-%D}] units
     }
     bind $c <Shift-Option-MouseWheel> {
-	%W xview scroll [expr {-10 * (%D)}] units
+	%W xview scroll [expr {-10*%D}] units
     }
 } else {
     bind $c <Button-2> "$c scan mark %x %y"
     bind $c <B2-Motion> "$c scan dragto %x %y"
     # We must make sure that positive and negative movements are rounded
     # equally to integers, avoiding the problem that
-    #     (int)1/30 = 0,
+    #     (int)1/-30 = -1,
     # but
-    #     (int)-1/30 = -1
+    #     (int)-1/-30 = 0
     # The following code ensure equal +/- behaviour.
     bind $c <MouseWheel> {
 	if {%D >= 0} {
@@ -88,7 +88,11 @@ if {[tk windowingsystem] eq "aqua"} {
 	}
     }
     bind $c <Option-MouseWheel> {
-	%W yview scroll [expr {%D/-3}] units
+	if {%D >= 0} {
+	    %W yview scroll [expr {%D/-3}] units
+	} else {
+	    %W yview scroll [expr {(%D-2)/-3}] units
+	}
     }
     bind $c <Shift-MouseWheel> {
 	if {%D >= 0} {
@@ -98,11 +102,15 @@ if {[tk windowingsystem] eq "aqua"} {
 	}
     }
     bind $c <Shift-Option-MouseWheel> {
-	%W xview scroll [expr {%D/-3}] units
+	if {%D >= 0} {
+	    %W xview scroll [expr {%D/-3}] units
+	} else {
+	    %W xview scroll [expr {(%D-2)/-3}] units
+	}
     }
 }
 
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide Tk] 8.7-]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
