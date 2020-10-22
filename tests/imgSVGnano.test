@@ -2,7 +2,7 @@
 # and write SVG-format image files for photo widgets. The files is organized
 # in the standard fashion for Tcl tests.
 #
-# Copyright (c) 2018 Rene Zaumseil
+# Copyright © 2018 Rene Zaumseil
 # All rights reserved.
 
 package require tcltest 2.2
