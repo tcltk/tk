@@ -50,10 +50,11 @@ static const Tk_OptionSpec ScrollbarOptionSpecs[] =
  */
 
 static void
-ScrollbarInitialize(Tcl_Interp *dummy, void *recordPtr)
+ScrollbarInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
-    (void)dummy;
 
     sb->scrollbar.first = 0.0;
     sb->scrollbar.last = 1.0;

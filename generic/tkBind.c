@@ -798,8 +798,10 @@ static unsigned
 GetButtonNumber(
     const char *field)
 {
+    unsigned button;
     assert(field);
-    return (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
+    button = (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
+    return (button > 3) ? (button + 4) : button;
 }
 
 static Time
@@ -4044,6 +4046,9 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & BUTTON) {
+		if (number >= Button4) {
+		    number += (Button8 - Button4);
+		}
 		event.general.xbutton.button = number;
 	    } else {
 		badOpt = 1;
@@ -5195,15 +5200,15 @@ GetPatternObj(
 		}
 		case ButtonPress:
 		case ButtonRelease:
-		    assert(patPtr->info <= Button9);
-		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned)patPtr->info);
+		    assert(patPtr->info <= 13);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) ((patPtr->info > 7) ? (patPtr->info - 4) : patPtr->info));
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
 		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
 			unsigned button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%u", button);
+			Tcl_AppendPrintfToObj(patternObj, "-%u", (button > 7) ? (button - 4) : button);
 			mask &= ~Tk_GetButtonMask(button);
 		    }
 		    break;
