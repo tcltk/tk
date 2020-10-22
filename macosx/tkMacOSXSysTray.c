@@ -168,17 +168,9 @@ static const char ASSOC_KEY[] = "tk::tktray";
     info = detail;
     tk_notification.informativeText = info;
     tk_notification.soundName = NSUserNotificationDefaultSoundName;
-
     NSUserNotificationCenter *center = [NSUserNotificationCenter defaultUserNotificationCenter];
 
-    /*
-     * This API requires an app delegate to function correctly.
-     * The compiler may complain that setting TkNotificationItem is an
-     * incompatible type, but disregard. Setting to something else will
-     * either cause Wish not to build, or the notification not to display.
-     */
-    [center setDelegate: self];
-
+    [center setDelegate: (id) self];
     [center deliverNotification:tk_notification];
 }
 
@@ -187,6 +179,7 @@ static const char ASSOC_KEY[] = "tk::tktray";
 {
     return YES;
 }
+
 
 -  (void) dealloc
 {
