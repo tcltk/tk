@@ -10,7 +10,7 @@
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBtk systray create\fP \fIimage\fP? \fItext\fP? \fIcallback\fR?
+\fBtk systray create\fP \fIimage\fP? \fItext\fP? \fIb1_callback\fR? \fIb3_callback\fR?
 .sp
 \fBtk systray modify image\fI image\fR?
 .sp
@@ -25,13 +25,14 @@ systray \- Creates an icon display in the platform-specific system tray.
 .PP
 The \fBtk systray\fP command creates an icon in the platform-specific tray.
 The widget is configured with a Tk image for the icon display, a string
-for display in a tooltip, and a callback is bound to <Button-1>.
+for display in a tooltip, and callbacks that are bound to <Button-1> and 
+<Button-3>.
 .SH EXAMPLE
 .PP
 Here is an example of the \fBtk systray\fP code:
 .CS
     image create photo book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
-    tk systray create book  "tk systray sample" {puts "Here is the tk systray output"}
+    tk systray create book  "tk systray sample" {puts "Here is the tk systray output"} {puts "here is alternate output"}
 .CE
 .PP
 Here is an example of modifying the \fBtk systray\fP icon:
@@ -39,7 +40,8 @@ Here is an example of modifying the \fBtk systray\fP icon:
     image create book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
     tk systray modify image book_page
     tk systray modify text "Updated sample"
-    tk systray modify callback {puts "Different output from the tk systray"}
+    tk systray modify b1_callback {puts "Different output from the tk systray"}
+	tk systray modify b3_callback {puts "and more different output from the tk systray"}
 .CE
 .PP
  The \fBtk systray\fP destroy command removes the icon from display and

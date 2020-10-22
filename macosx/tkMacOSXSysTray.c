@@ -104,12 +104,12 @@ static const char ASSOC_KEY[] = "tk::tktray";
 	}
     } else {
 	if (([event type] == NSEventTypeRightMouseUp) && (b3_callback != NULL)) {
-	int result = Tcl_EvalObjEx(interp, b3_callback, TCL_EVAL_GLOBAL);
-	if (result != TCL_OK) {
-	    Tcl_BackgroundException(interp, result);
+	    int result = Tcl_EvalObjEx(interp, b3_callback, TCL_EVAL_GLOBAL);
+	    if (result != TCL_OK) {
+		Tcl_BackgroundException(interp, result);
+	    }
 	}
     }
-}
 }
 - (void) dealloc
 {
