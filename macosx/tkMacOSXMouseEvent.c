@@ -89,6 +89,9 @@ enum {
     }
 
     button = [theEvent buttonNumber] + Button1;
+    if ((button & -2) == Button2) {
+	button ^= 1; /* Swap buttons 2/3 */
+    }
     switch (eventType) {
     case NSRightMouseUp:
     case NSOtherMouseUp:
@@ -305,7 +308,6 @@ enum {
 	Tk_UpdatePointer(target, global.x, global.y, state);
     } else {
 	CGFloat delta;
-	int coarseDelta;
 	XEvent xEvent;
 
 	/*
@@ -321,21 +323,17 @@ enum {
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
 
-	delta = [theEvent deltaY];
+	delta = [theEvent deltaY] * 120;
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		    (signbit(delta) ? -1 : 1) : lround(delta);
 	    xEvent.xbutton.state = state;
-	    xEvent.xkey.keycode = coarseDelta;
+	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
-	delta = [theEvent deltaX];
+	delta = [theEvent deltaX] * 120;
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		    (signbit(delta) ? -1 : 1) : lround(delta);
 	    xEvent.xbutton.state = state | ShiftMask;
-	    xEvent.xkey.keycode = coarseDelta;
+	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
@@ -405,8 +403,15 @@ ButtonModifiers2State(
      * Tk on OSX supports at most 9 buttons.
      */
 
-    state = (buttonState & 0x7F) * Button1Mask;
-    /* Handle buttons 8/9 */
+    state = (buttonState & 0x079) * Button1Mask;
+	/* Handle swapped buttons 2/3 */
+	if (buttonState & 0x02) {
+	    state |= Button3Mask;
+	}
+	if (buttonState & 0x04) {
+	    state |= Button2Mask;
+	}
+	/* Handle buttons 8/9 */
     state |= (buttonState & 0x180) * (Button8Mask >> 7);
 
     if (keyModifiers & alphaLock) {

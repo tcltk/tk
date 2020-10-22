@@ -403,7 +403,7 @@ Tk_MainEx(
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
-    int mask)			/* Not used. */
+    TCL_UNUSED(int))
 {
     char *cmd;
     int code;
@@ -411,7 +411,6 @@ StdinProc(
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
-    (void)mask;
 
     count = Tcl_Gets(chan, &isPtr->line);
 

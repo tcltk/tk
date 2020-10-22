@@ -388,13 +388,13 @@ test bind-10.2 {Tk_GetBinding procedure} -body {
 
 test bind-11.1 {Tk_GetAllBindings procedure} -body {
     frame .t.f
-    foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <Key-<> <Meta-a> <\xC2>" {
+    foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <Key-<> <Meta-a> <Â>" {
         bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
     destroy .t.f
-} -result "! <<Paste>> <Key-<> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-space> <Key-\xC2> <Meta-Key-a> a \\\{ ~"
+} -result "! <<Paste>> <Key-<> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-space> <Key-Â> <Meta-Key-a> a \\\{ ~"
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Button-1> <Triple-Button-1> <Meta-Control-a> <Double-Alt-Enter> <Button-1>" {
@@ -2052,7 +2052,7 @@ test bind-16.35 {ExpandPercents procedure} -constraints {
     set x
 } -cleanup {
     destroy .t.f
-} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \xE9}
+} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} é}
 test bind-16.36 {ExpandPercents procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f

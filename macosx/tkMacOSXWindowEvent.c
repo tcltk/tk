@@ -970,14 +970,6 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
-    /*
-     * See ticket [1fa8c3ed8d].  This may not be needed for macOSX 11.
-     */
-
-    if(![NSApp isDrawing]) {
-	return;
-    }
-
     if (![self inLiveResize] &&
 	[w respondsToSelector: @selector (tkLayoutChanged)]) {
 	[(TKWindow *)w tkLayoutChanged];
@@ -1021,10 +1013,14 @@ ConfigureRestrictProc(
 	TkMacOSXUpdateClipRgn(winPtr);
 
 	 /*
-	  * Generate and process expose events to redraw the window.
+	  * Generate and process expose events to redraw the window.  To avoid
+	  * crashes, only do this if we are being called from drawRect.  See
+	  * ticket [1fa8c3ed8d].
 	  */
 
-	[self generateExposeEvents: [self bounds]];
+	if([NSApp isDrawing] || [self inLiveResize]) {
+	    [self generateExposeEvents: [self bounds]];
+	}
 
 	/*
 	 * Finally, unlock the main autoreleasePool.
@@ -1240,7 +1236,8 @@ static const char *const accentNames[] = {
 
 - (void) keyDown: (NSEvent *) theEvent
 {
-	(void)theEvent;
+    (void)theEvent;
+
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
