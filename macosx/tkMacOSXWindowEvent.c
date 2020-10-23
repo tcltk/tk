@@ -1236,7 +1236,8 @@ static const char *const accentNames[] = {
 
 - (void) keyDown: (NSEvent *) theEvent
 {
-	(void)theEvent;
+    (void)theEvent;
+
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif

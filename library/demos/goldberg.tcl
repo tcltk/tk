@@ -113,9 +113,9 @@ proc DoDisplay {w} {
     DoCtrlFrame $w
     DoDetailFrame $w
     if {[tk windowingsystem] ne "aqua"} {
-	ttk::button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2
+	ttk::button $w.show -text "»" -command [list ShowCtrl $w] -width 2
     } else {
-	button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2 -highlightbackground $C(bg)
+	button $w.show -text "»" -command [list ShowCtrl $w] -width 2 -highlightbackground $C(bg)
     }
     place $w.show -in $w.c -relx 1 -rely 0 -anchor ne
     update
@@ -204,10 +204,10 @@ proc DoDetailFrame {w} {
 proc ShowCtrl {w} {
     if {[winfo ismapped $w.ctrl]} {
 	pack forget $w.ctrl
-	$w.show config -text "\u00bb"
+	$w.show config -text "»"
     } else {
 	pack $w.ctrl -side right -fill both -ipady 5
-	$w.show config -text "\u00ab"
+	$w.show config -text "»"
     }
 }
 
