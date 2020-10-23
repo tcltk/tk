@@ -442,16 +442,16 @@ bind Text <B2-Motion> {
 set ::tk::Priv(prevPos) {}
 
 bind Text <MouseWheel> {
-    tk::MouseWheel y %D -3.0 pixels
+    tk::MouseWheel %W y %D -3.0 pixels
 }
 bind Text <Option-MouseWheel> {
-    tk::MouseWheel y %D -0.3 pixels
+    tk::MouseWheel %W y %D -0.3 pixels
 }
 bind Text <Shift-MouseWheel> {
-    tk::MouseWheel x %D -3.0 pixels
+    tk::MouseWheel %W x %D -3.0 pixels
 }
 bind Text <Shift-Option-MouseWheel> {
-    tk::MouseWheel x %D -0.3 pixels
+    tk::MouseWheel %W x %D -0.3 pixels
 }
 
 # ::tk::TextClosestGap --
