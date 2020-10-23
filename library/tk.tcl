@@ -3,9 +3,9 @@
 # Initialization script normally executed in the interpreter for each Tk-based
 # application.  Arranges class bindings for widgets.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
 #
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -366,15 +366,16 @@ if {![llength [info command tk_chooseDirectory]]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
+event add <<ContextMenu>>	<Button-3>
+event add <<PasteSelection>>	<ButtonRelease-2>
+
 switch -exact -- [tk windowingsystem] {
     "x11" {
 	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
 	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-Z> <Control-Lock-z>
-	event add <<ContextMenu>>	<Button-3>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
@@ -422,10 +423,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
   	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-y> <Control-Lock-Y>
-	event add <<ContextMenu>>	<Button-3>
 
 	event add <<SelectAll>>		<Control-slash> <Control-a> <Control-Lock-A>
 	event add <<SelectNone>>	<Control-backslash>
@@ -455,9 +454,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X>
 	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C>
 	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V>
-	event add <<PasteSelection>>	<ButtonRelease-3>
 	event add <<Clear>>		<Clear>
-	event add <<ContextMenu>>	<Button-2>
 
 	# Official bindings
 	# See http://support.apple.com/kb/HT1343
@@ -536,6 +533,13 @@ proc ::tk::CancelRepeat {} {
     set Priv(afterId) {}
 }
 
+## ::tk::MouseWheel $w $dir $amount $factor $units
+
+proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
+    $w ${dir}view scroll [expr {$amount/$factor}] $units
+}
+
+
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
 # It sends a <<TraverseOut>> virtual event to the previous focus window,

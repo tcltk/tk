@@ -8787,6 +8787,7 @@ TextGetScrollInfoObj(
 	VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
     };
     int index;
+    double d;
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], subcommands,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
@@ -8814,25 +8815,35 @@ TextGetScrollInfoObj(
 	}
 	switch ((enum viewUnits) index) {
 	case VIEW_SCROLL_PAGES:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) == TCL_OK) {
-		return TKTEXT_SCROLL_PAGES;
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
+		return TKTEXT_SCROLL_ERROR;
 	    }
-	    break;
+	    *intPtr = (d > 0) ? ceil(d) : floor(d);
+	    if (dblPtr) {
+		*dblPtr = d;
+	    }
+	    return TKTEXT_SCROLL_PAGES;
 	case VIEW_SCROLL_PIXELS:
 	    if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[3],
-		    intPtr) == TCL_OK) {
-		return TKTEXT_SCROLL_PIXELS;
+		    intPtr) != TCL_OK) {
+		return TKTEXT_SCROLL_ERROR;
 	    }
-	    break;
+	    if (dblPtr) {
+		*dblPtr = (double)*intPtr;
+	    }
+	    return TKTEXT_SCROLL_PIXELS;
 	case VIEW_SCROLL_UNITS:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) == TCL_OK) {
-		return TKTEXT_SCROLL_UNITS;
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
+		return TKTEXT_SCROLL_ERROR;
 	    }
-	    break;
-	default:
-	    Tcl_Panic("unexpected switch fallthrough");
+	    *intPtr = (d > 0) ? ceil(d) : floor(d);
+	    if (dblPtr) {
+		*dblPtr = d;
+	    }
+	    return TKTEXT_SCROLL_UNITS;
 	}
     }
+    Tcl_Panic("unexpected switch fallthrough");
     return TKTEXT_SCROLL_ERROR;
 }
 

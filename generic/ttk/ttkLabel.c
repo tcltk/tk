@@ -582,13 +582,15 @@ static void LabelCleanup(LabelElement *c)
 }
 
 static void LabelElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     LabelElement *label = (LabelElement *)elementRecord;
     int textReqWidth = 0;
-    (void)dummy;
-    (void)paddingPtr;
 
     LabelSetup(label, tkwin, 0);
 
@@ -641,12 +643,15 @@ static void DrawCompound(
 }
 
 static void LabelElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     LabelElement *l = (LabelElement *)elementRecord;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
-    (void)dummy;
 
     LabelSetup(l, tkwin, state);
 
