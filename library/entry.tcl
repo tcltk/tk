@@ -3,8 +3,8 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -293,28 +293,15 @@ bind Entry <<TkAccentBackspace>> {
 
 # A few additional bindings of my own.
 
-if {[tk windowingsystem] ne "aqua"} {
-    bind Entry <Button-2> {
-        if {!$tk_strictMotif} {
+bind Entry <Button-2> {
+    if {!$tk_strictMotif} {
         ::tk::EntryScanMark %W %x
-        }
     }
-    bind Entry <B2-Motion> {
-        if {!$tk_strictMotif} {
+}
+bind Entry <B2-Motion> {
+    if {!$tk_strictMotif} {
         ::tk::EntryScanDrag %W %x
-        }
-    }
-} else {
-    bind Entry <Button-3> {
-        if {!$tk_strictMotif} {
-        ::tk::EntryScanMark %W %x
-        }
-    }
-    bind Entry <B3-Motion> {
-        if {!$tk_strictMotif} {
-        ::tk::EntryScanDrag %W %x
-        }
-    }
+     }
 }
 
 # ::tk::EntryClosestGap --

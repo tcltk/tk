@@ -15,6 +15,7 @@
 #undef BUILD_tk
 #undef STATIC_BUILD
 #include "tk.h"
+#include "tkPort.h"
 
 #ifdef TK_TEST
 #ifdef __cplusplus
@@ -119,6 +120,13 @@ Tcl_AppInit(
 	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+    if (TkpWantsExitProc()) {
+	/* The cast below avoids warnings from old gcc compilers. */
+	Tcl_SetExitProc((void *)TkpExitProc);
+    }
+#endif
 
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
