@@ -2,8 +2,8 @@
 # especially the "selection" command. It is organized in the standard fashion
 # for Tcl tests.
 #
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 #
@@ -1132,7 +1132,7 @@ test select-12.6 {DefaultSelection procedure} -body {
 } -result {{Targets value} {TARGETS.f1 0 4000} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 
 test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
-    x11
+    x11 failsOnUbuntu
 } -setup {
     setup
     setupbg
