@@ -3079,7 +3079,7 @@ static void
 LayoutDoWidthAdjustmentForContextDrawing(
     LayoutData *data)
 {
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS && TK_DRAW_IN_CONTEXT
+#if defined(TK_LAYOUT_WITH_BASE_CHUNKS) && TK_DRAW_IN_CONTEXT
     TkTextDispChunk *chunkPtr = data->chunkPtr;
 
     if (chunkPtr->prevPtr) {
@@ -13742,6 +13742,7 @@ TextGetScrollInfoObj(
 	VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
     };
     int index;
+    double d;
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], subcommands, sizeof(char *), "option", 0, &index)
 	    != TCL_OK) {
@@ -13769,8 +13770,12 @@ TextGetScrollInfoObj(
 	}
 	switch ((enum viewUnits) index) {
 	case VIEW_SCROLL_PAGES:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
 		return SCROLL_ERROR;
+	    }
+	    *intPtr = (d > 0) ? ceil(d) : floor(d);
+	    if (dblPtr) {
+		*dblPtr = d;
 	    }
 	    return SCROLL_PAGES;
 	case VIEW_SCROLL_PIXELS:
@@ -13779,8 +13784,12 @@ TextGetScrollInfoObj(
 	    }
 	    return SCROLL_PIXELS;
 	case VIEW_SCROLL_UNITS:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
 		return SCROLL_ERROR;
+	    }
+	    *intPtr = (d > 0) ? ceil(d) : floor(d);
+	    if (dblPtr) {
+		*dblPtr = d;
 	    }
 	    return SCROLL_UNITS;
 	}
