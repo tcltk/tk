@@ -432,12 +432,12 @@ MacSystrayDestroy(
 /*
  *----------------------------------------------------------------------
  *
- * SysNotifyCreateCmd --
+ * SysNotifyObjCmd --
  *
- *      Create tray command and (unreal) window.
+ *      Create system notification. 
  *
  * Results:
- *	Icon tray and hidden window created.
+ *      System notification created.
  *
  * Side effects:
  *	None.
