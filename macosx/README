@@ -472,7 +472,7 @@ build/My App.app which is a working app, ready to be expanded into something
 useful by editing its AppMain.tcl startup script.
 
   make -C tcl8.6/macosx install-embedded APP_NAME="My App" BUNDLE_ID="my.app.com"
-  make -C Tk8.6/macosx install-embedded APP_NAME="My App" BUNDLE_ID="my.app.com"
+  make -C tk8.6/macosx install-embedded APP_NAME="My App" BUNDLE_ID="my.app.com"
 
 5. Details regarding the macOS port of Tk.
 -------------------------------------------
