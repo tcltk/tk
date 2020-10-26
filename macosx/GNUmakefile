@@ -1,6 +1,6 @@
 ########################################################################################################
 #
-# Makefile wrapper to build tk on Mac OS X in a way compatible with the tk/macosx Xcode buildsystem
+# MAKEFILE wrapper to build tk on Mac OS X in a way compatible with the tk/macosx Xcode buildsystem
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
@@ -14,7 +14,7 @@
 #-------------------------------------------------------------------------------------------------------
 # customizable settings
 
-DESTDIR			?=
+DESTDIR			?= ${CURDIR}/../../build
 INSTALL_ROOT		?= ${DESTDIR}
 
 BUILD_DIR		?= ${CURDIR}/../../build
@@ -26,7 +26,12 @@ EXTRA_MAKE_ARGS		?=
 
 INSTALL_PATH		?= /Library/Frameworks
 TCL_INSTALL_PATH	?= ${INSTALL_PATH}/Tcl.framework
-APPLICATION_INSTALL_PATH ?= /Applications/Utilities
+APPLICATION_INSTALL_PATH ?=
+APP_NAME		?= Wish
+CONTENTS		= ${INSTALL_ROOT}/${APP_NAME}.app/Contents
+INFO_PLIST		= ${CONTENTS}/Info.plist
+RESOURCES		= ${CONTENTS}/Resources
+MACOS_DIR		= ${CONTENTS}/MacOS
 PREFIX			?= /usr/local
 BINDIR			?= ${PREFIX}/bin
 LIBDIR			?= ${INSTALL_PATH}
@@ -51,6 +56,12 @@ ifeq (${DYLIB_INSTALL_DIR},)
 endif
 ifeq (${DESTDIR},)
 	@echo "Cannot install subframework with empty DESTDIR !" && false
+endif
+ifneq (${APP_NAME},Wish)
+asdfasdf
+ifeq {${BUNDLE_ID},)
+	@echo "The app template requires a BUNDLE_ID" && false
+endif
 endif
 override BUILD_DIR = ${DESTDIR}/build
 override INSTALL_PATH = /Frameworks
@@ -204,7 +215,7 @@ endif
 build-${PROJECT}: ${objdir}/Makefile
 	${DO_MAKE}
 ifeq (${INSTALL_BUILD},)
-# symolic link hackery to trick
+# symbolic link hackery to trick
 # 'make install INSTALL_ROOT=${OBJ_DIR}'
 # into building Tk.framework and wish in ${SYMROOT}
 	@cd "${OBJ_DIR}" && mkdir -p $(dir $(subst ${space},\ ,./${LIBDIR})) $(dir $(subst ${space},\ ,./${BINDIR})) "${SYMROOT}" && \
@@ -212,7 +223,7 @@ ifeq (${INSTALL_BUILD},)
 	ln -fs "${SYMROOT}" "./${BINDIR}" && ln -fs "${OBJ_DIR}/tktest" "${SYMROOT}"
 ifeq (${TK_X11},)
 	@rm -f "${OBJ_DIR}/${BINDIR}" && \
-	ln -fs Wish.app/Contents/MacOS/Wish "${SYMROOT}/${WISH}"
+	ln -fs "Wish.app/Contents/MacOS/Wish "${SYMROOT}/${WISH}"
 endif
 # Create symbolic link to Tcl.framework in ${SYMROOT}if necessary
 	@cd "${SYMROOT}" && if [ ! -e Tcl.framework -o -L Tcl.framework ]; then \
@@ -261,16 +272,15 @@ ifeq (${SUBFRAMEWORK},)
 ifeq (${EMBEDDED_BUILD},)
 # install Wish.app link in APPLICATION_INSTALL_PATH and setup 'Wish Shell' compatibility links
 	@cd "${TOP_DIR}" && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && rm -rf "./${APP_DIR}/Wish.app" && \
-	ln -fsh "./$$(echo "${APP_DIR}" | sed -e 's#/[^/][^/]*#/..#g')/${FMWK_DIR}/${PRODUCT_NAME}.framework/Resources/Wish.app" "./${APP_DIR}" && \
-	ln -fsh Wish.app "./${APP_DIR}/Wish Shell.app"; fi && \
-	ln -fsh Wish.app "./${TK_FMWK_DIR}/Resources/Wish Shell.app" && \
+	ln -fsh "./$$(echo "${APP_DIR}" | sed -e 's#/[^/][^/]*#/..#g')/${FMWK_DIR}/${PRODUCT_NAME}.framework/Resources/${APP_NAME}.app" "./${APP_DIR}" && \
+	ln -fsh "Wish.app" "./${APP_DIR}/Wish Shell.app"; fi && \
+	ln -fsh "Wish.app" "./${TK_FMWK_DIR}/Resources/Wish Shell.app" && \
 	ln -fsh Wish "./${TK_FMWK_DIR}/Resources/Wish.app/Contents/MacOS/Wish Shell"
 else
 # if we are embedding frameworks, move them into the app and fix their install names
 	@cd "${TOP_DIR}" && \
 	rm -rf "./${APP_DIR}/Wish.app" && mkdir -p "./${APP_DIR}" && \
-	mv -f "./${TK_FMWK_DIR}/Resources/Wish.app" "./${APP_DIR}" && \
-	ln -fsh Wish.app "./${APP_DIR}/Wish Shell.app" && \
+	mv -f "./${TK_FMWK_DIR}/Resources/Wish.app" "./${APP_DIR}/Wish.app" && \
 	rm -rf "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
 	mkdir -p "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
 	${CPPROG} -RH "./${FMWK_DIR}"/T{cl,k}.framework "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
@@ -289,6 +299,25 @@ else
 	} && \
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
+ifeq (${APP_NAME},Wish)
+	ln -fsh "Wish.app" "./${APP_DIR}/Wish Shell.app" || true
+else
+	@echo Naming template app as ${APP_NAME}.app.
+	@mv "${INSTALL_ROOT}/Wish.app" "${INSTALL_ROOT}/${APP_NAME}.app" && \
+	mv "${RESOURCES}/Wish.sdef" "${RESOURCES}/${APP_NAME}.sdef" && \
+	mv "${RESOURCES}/Wish.icns" "${RESOURCES}/${APP_NAME}.icns" && \
+	mv "${MACOS_DIR}/Wish" "${MACOS_DIR}/${APP_NAME}" && \
+	sed -i "" -e "s/Wish Shell/Using Tk/g" "${INFO_PLIST}" && \
+	sed -i "" -e "s/Wish/${APP_NAME}/g" "${INFO_PLIST}" && \
+	sed -i "" -e "s/com.tcltk.wish/${BUNDLE_ID}/g" "${INFO_PLIST}" && \
+	sed -i "" -e "s/WiSH/\?\?\?\?/g" "${INFO_PLIST}" && \
+	sed -i "" -e "s/<string>${VERSION}\.[0-9]*/<string>1.0.0/g" "${INFO_PLIST}" && \
+	mkdir "${RESOURCES}/Scripts" && \
+	printf '%s\n%s\n' \
+	"package require Tk" \
+	"pack [label .l -text \"Now edit AppMain.tcl\"] -padx 10 -pady 10" > \
+	"${RESOURCES}/Scripts/AppMain.tcl"
+endif
 ifeq (${INSTALL_BUILD},1)
 	@cd "${TOP_DIR}" && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
 endif # install not subframework

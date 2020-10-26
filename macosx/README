@@ -429,15 +429,10 @@ frameworks embedded in its application package. This allows for standalone
 deployment of the application with no installation required, e.g. from read-only
 media. To build & install in this manner, use the 'embedded' variants of
 the GNUmakefile targets.
-For example, to build a standalone 'Wish.app' in ./emb/Applications/Utilities:
-	make -C tcl${ver}/macosx embedded
-	make -C tk${ver}/macosx embedded
-	sudo make -C tcl${ver}/macosx install-embedded INSTALL_ROOT=`pwd`/emb/
-	sudo make -C tk${ver}/macosx  install-embedded INSTALL_ROOT=`pwd`/emb/
+For example, to build a standalone 'Wish.app' in the build directory:
+	make -C tcl${ver}/macosx install-embedded
+	make -C tk${ver}/macosx  install-embedded
 Notes:
-  * if you've already built standard TclTkAqua, building embedded does not
-  require any new compiling or linking, so you can skip the first two makes.
-  (making relinking unnecessary was added with 8.4.2)
   * the embedded frameworks include only optimized builds and no documentation.
   * the standalone Wish has the directory Wish.app/Contents/lib in its
   auto_path. Thus you can place tcl extensions in this directory (i.e. embed
@@ -461,13 +456,23 @@ DYLIB_INSTALL_DIR variable to the path which should be the install_name path of
 the shared library and set the DESTDIR variable to the pathname of a staging
 directory where the frameworks will be written.  The Tcl framework must be
 built first.
-For example, running the commands:
-	make -C ../tcl8.6/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
-	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tcl.framework
-	make -C macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
-	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tk.framework
+For example, assuming that the Tcl and Tk source directories are named tcl8.6
+and tk8.6, running the following commands from their parent directory:
+  make -C tcl8.6/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
+    DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tcl.framework
+  make -C tk8.6 macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
+    DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tk.framework
 will produce a Tcl.framework and a Tk.framework usable as subframeworks of
 Some.framework.  The frameworks will be found in /tmp/tcltk/Frameworks/
+
+- It is possible to create a template for a bundled macOS app. Assuming that
+the Tcl and Tk source directories are named tcl8.6 and tk8.6, running the
+following commands from their parent directory will create a bundle named
+build/My App.app which is a working app, ready to be expanded into something
+useful by editing its AppMain.tcl startup script.
+
+  make -C tcl8.6/macosx install-embedded APP_NAME="My App" BUNDLE_ID="my.app.com"
+  make -C Tk8.6/macosx install-embedded APP_NAME="My App" BUNDLE_ID="my.app.com"
 
 5. Details regarding the macOS port of Tk.
 -------------------------------------------
