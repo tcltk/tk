@@ -362,9 +362,11 @@
 { "space", 0x20 },
 #ifndef TK_NO_DEPRECATED
 { "exclam", 0x21 },
+#endif
 { "quotedbl", 0x22 },
 { "numbersign", 0x23 },
 { "dollar", 0x24 },
+#ifndef TK_NO_DEPRECATED
 { "percent", 0x25 },
 { "ampersand", 0x26 },
 { "apostrophe", 0x27 },
@@ -390,7 +392,9 @@
 { "8", 0x38 },
 { "9", 0x39 },
 { "colon", 0x3A },
+#endif
 { "semicolon", 0x3B },
+#ifndef TK_NO_DEPRECATED
 { "less", 0x3C },
 { "equal", 0x3D },
 #endif
@@ -424,9 +428,11 @@
 { "X", 0x58 },
 { "Y", 0x59 },
 { "Z", 0x5A },
+#endif
 { "bracketleft", 0x5B },
 { "backslash", 0x5C },
 { "bracketright", 0x5D },
+#ifndef TK_NO_DEPRECATED
 { "asciicircum", 0x5E },
 { "underscore", 0x5F },
 { "grave", 0x60 },
@@ -457,9 +463,13 @@
 { "x", 0x78 },
 { "y", 0x79 },
 { "z", 0x7A },
+#endif
 { "braceleft", 0x7B },
+#ifndef TK_NO_DEPRECATED
 { "bar", 0x7C },
+#endif
 { "braceright", 0x7D },
+#ifndef TK_NO_DEPRECATED
 { "asciitilde", 0x7E },
 #endif
 { "nobreakspace", 0xA0 },
