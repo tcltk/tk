@@ -173,9 +173,9 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB\-darkcolor\fP \fIcolor\fP (color of the dark part of the 3D relief)
+\fB\-color\fP \fIcolor\fP
 .br
-\fB\-foreground\fP \fIcolor\fP
+\fB\-darkcolor\fP \fIcolor\fP (color of the dark part of the 3D relief)
 .br
 \fB\-gripcount\fP \fIcount\fP (number of lines on the thumb)
 .br

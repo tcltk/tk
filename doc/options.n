@@ -26,10 +26,10 @@ In the descriptions below,
 refers to the
 switch used in class commands and \fBconfigure\fR widget commands to
 set this value.  For example, if an option's command-line switch is
-\fB\-foreground\fR and there exists a widget \fB.a.b.c\fR, then the
+\fB\-color\fR and there exists a widget \fB.a.b.c\fR, then the
 command
 .CS
-\&\fB.a.b.c\0\0configure\0\0\-foreground black\fR
+\&\fB.a.b.c\0\0configure\0\0\-color black\fR
 .CE
 may be used to specify the value \fBblack\fR for the option in
 the widget \fB.a.b.c\fR.  Command-line switches may be abbreviated,
@@ -55,8 +55,8 @@ definition of active elements.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 This option is typically only available in widgets displaying more
 than one element at a time (e.g. menus but not buttons).
-.OP \-activeforeground activeForeground Background
-Specifies foreground color to use when drawing active elements.
+.OP \-activecolor activeColor ActiveColor
+Specifies color to use when drawing active elements.
 See above for definition of active elements.
 .OP \-activerelief activeRelief Relief
 Specifies the 3-D effect desired for the active item of the widget.
@@ -105,11 +105,11 @@ to the text.  Must be one of the values \fBnone\fR, \fBbottom\fR,
 specifies that the bitmap or image should be displayed to the left of
 the text, and the value \fBcenter\fR specifies that the bitmap or
 image should be displayed on top of the text.
-.OP \-disabledforeground disabledForeground DisabledForeground
-Specifies foreground color to use when drawing a disabled element.
+.OP \-disabledcolor disabledColor DisabledColor
+Specifies color to use when drawing a disabled element.
 If the option is specified as an empty string (which is typically the
 case on monochrome displays), disabled elements are drawn with the
-normal foreground color but they are dimmed by drawing them
+normal color but they are dimmed by drawing them
 with a stippled fill pattern.
 .OP \-exportselection exportSelection ExportSelection
 Specifies whether or not a selection in the widget should also be
@@ -125,8 +125,8 @@ to export selections.
 Specifies the font to use when drawing text inside the widget.
 The value may have any of the forms described in the \fBfont\fR manual
 page under \fBFONT DESCRIPTION\fR.
-.OP "\-foreground or \-fg" foreground Foreground
-Specifies the normal foreground color to use when displaying the widget.
+.OP \-color color Color
+Specifies the normal color to use when displaying the widget.
 .OP \-highlightbackground highlightBackground HighlightBackground
 Specifies the color to display in the traversal highlight region when
 the widget does not have the input focus.
@@ -228,8 +228,8 @@ options.
 Specifies a help text string to display if no text is otherwise displayed,
 that is when the widget is empty. The placeholder text is displayed using
 the values of the \fB\-font\fR and \fB\-justify\fR options.
-.OP \-placeholderforeground placeholderForeground PlaceholderForeground
-Specifies the foreground color to use when the placeholder text is
+.OP \-placeholdercolor placeholderColor PlaceholderColor
+Specifies the color to use when the placeholder text is
 displayed. The default color is platform-specific.
 .OP \-relief relief Relief
 Specifies the 3-D effect desired for the widget.  Acceptable
@@ -255,8 +255,8 @@ items.
 Specifies a non-negative value indicating the width
 of the 3-D border to draw around selected items.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
-.OP \-selectforeground selectForeground Background
-Specifies the foreground color to use when displaying selected
+.OP \-selectcolor selectColor SelectColor
+Specifies the color to use when displaying selected
 items.
 .OP \-setgrid setGrid SetGrid
 Specifies a boolean value that determines whether this widget controls the

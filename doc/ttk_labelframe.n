@@ -97,9 +97,9 @@ are:
 .PP
 \fB\-background\fP \fIcolor\fP
 .br
-\fB\-font\fP \fIfont\fP
+\fB\-color\fP \fIcolor\fP
 .br
-\fB\-foreground\fP \fIcolor\fP
+\fB\-font\fP \fIfont\fP
 .PP
 Some options are only available for specific themes.
 .PP

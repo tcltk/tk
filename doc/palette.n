@@ -33,10 +33,10 @@ argument is the new value to use for that option.  The following
 database names are currently supported:
 .DS
 .ta 4c 8c
-\fBactiveBackground\fR	\fBforeground\fR	\fBselectColor\fR
-\fBactiveForeground\fR	\fBhighlightBackground\fR	\fBselectBackground\fR
-\fBbackground\fR	\fBhighlightColor\fR	\fBselectForeground\fR
-\fBdisabledForeground\fR	\fBinsertBackground\fR	\fBtroughColor\fR
+\fBactiveBackground\fR	\fBcolor\fR	\fBselectColor\fR
+\fBactiveColor\fR	\fBhighlightBackground\fR	\fBselectBackground\fR
+\fBbackground\fR	\fBhighlightColor\fR	\fBselectColor\fR
+\fBdisabledColor\fR	\fBinsertBackground\fR	\fBtroughColor\fR
 .DE
 \fBtk_setPalette\fR tries to compute reasonable defaults for any
 options that you do not specify.  You can specify options other

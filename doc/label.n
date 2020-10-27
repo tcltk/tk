@@ -14,9 +14,9 @@ label \- Create and manipulate 'label' non-interactive text or image widgets
 .SH SYNOPSIS
 \fBlabel\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-disabledforeground	\-padx
-\-activeforeground	\-font	\-pady
-\-anchor	\-foreground	\-relief
+\-activebackground	\-disabledcolor	\-padx
+\-activecolor	\-font	\-pady
+\-anchor	\-color	\-relief
 \-background	\-highlightbackground	\-takefocus
 \-bitmap	\-highlightcolor	\-text
 \-borderwidth	\-highlightthickness	\-textvariable
@@ -34,10 +34,10 @@ from the size of the image or bitmap or text being displayed in it.
 .OP \-state state State
 Specifies one of three states for the label:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the button is displayed using the
-\fB\-foreground\fR and \fB\-background\fR options.  In active state
-the label is displayed using the \fB\-activeforeground\fR and
+\fB\-color\fR and \fB\-background\fR options.  In active state
+the label is displayed using the \fB\-activecolor\fR and
 \fB\-activebackground\fR options.  In the disabled state the
-\fB\-disabledforeground\fR and \fB\-background\fR options determine how
+\fB\-disabledcolor\fR and \fB\-background\fR options determine how
 the button is displayed.
 .OP \-width width Width
 Specifies a desired width for the label.

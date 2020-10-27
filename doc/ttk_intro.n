@@ -58,7 +58,7 @@ Like widgets, elements have \fIoptions\fR which
 specify what to display and how to display it.
 For example, the \fBtext\fR element
 (which displays a text string) has
-\fB\-text\fR, \fB\-font\fR, \fB\-foreground\fR, \fB\-background\fR,
+\fB\-text\fR, \fB\-font\fR, \fB\-color\fR, \fB\-background\fR,
 \fB\-underline\fR, and \fB\-width\fR options.
 The value of an element option is taken from (in precedence order):
 .IP \(bu
@@ -152,21 +152,21 @@ For example:
 .CS
 ttk::\fBstyle configure\fR TButton \e
 	\-background #d9d9d9 \e
-	\-foreground black \e
+	\-color black \e
 	\-relief raised \e
 	;
 .CE
 .PP
 Many elements are displayed differently depending on the widget state.
 For example, buttons have a different background when they are active,
-a different foreground when disabled, and a different relief when pressed.
+a different color when disabled, and a different relief when pressed.
 The \fBstyle map\fR command specifies dynamic option settings
 for a particular style:
 .PP
 .CS
 ttk::\fBstyle map\fR TButton \e
 	\-background [list disabled #d9d9d9  active #ececec] \e
-	\-foreground [list disabled #a3a3a3] \e
+	\-color [list disabled #a3a3a3] \e
 	\-relief [list {pressed !disabled} sunken] \e
 	;
 .CE

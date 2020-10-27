@@ -24,9 +24,9 @@ Entry widgets support horizontal scrolling with the
 standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 .SO ttk_widget
 \-class	\-cursor
-\-font	\-foreground
+\-font	\-color
 \-style
-\-takefocus	\-xscrollcommand	\-placeholder	\-placeholderforeground
+\-takefocus	\-xscrollcommand	\-placeholder	\-placeholdercolor
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -46,7 +46,7 @@ Specifies how the text is aligned within the entry widget.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
-.\" MAYBE: .OP \-selectforeground selectForeground Background
+.\" MAYBE: .OP \-selectcolor selectForeground Background
 .OP \-show show Show
 If this option is specified, then the true contents of the entry
 are not displayed in the window.
@@ -446,7 +446,7 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 .RS
 Some themes use a graphical background and their field background colors cannot be changed.
 .RE
-\fB\-foreground\fP \fIcolor\fP
+\fB\-color\fP \fIcolor\fP
 .br
 \fB\-insertcolor\fP \fIcolor\fP
 .br
@@ -456,7 +456,7 @@ Some themes use a graphical background and their field background colors cannot 
 .br
 \fB\-padding\fP \fIpadding\fP
 .br
-\fB\-placeholderforeground\fP \fIcolor\fP
+\fB\-placeholdercolor\fP \fIcolor\fP
 .br
 \fB\-relief\fP \fIrelief\fP
 .br
@@ -464,7 +464,7 @@ Some themes use a graphical background and their field background colors cannot 
 .br
 \fB\-selectborderwidth\fP \fIamount\fP
 .br
-\fB\-selectforeground\fP \fIcolor\fP
+\fB\-selectcolor\fP \fIcolor\fP
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.

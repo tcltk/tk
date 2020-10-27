@@ -14,14 +14,14 @@ checkbutton \- Create and manipulate 'checkbutton' boolean selection widgets
 .SH SYNOPSIS
 \fBcheckbutton\fI pathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-disabledforeground	\-padx
-\-activeforeground	\-font	\-pady
-\-anchor	\-foreground	\-relief
+\-activebackground	\-cursor	\-padx
+\-activecolor	\-disabledcolor	\-pady
+\-anchor	\-font	\-relief
 \-background	\-highlightbackground	\-takefocus
 \-bitmap	\-highlightcolor	\-text
 \-borderwidth	\-highlightthickness	\-textvariable
-\-compound	\-image	\-underline
-\-cursor	\-justify	\-wraplength
+\-color	\-image	\-underline
+\-compound	\-justify	\-wraplength
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
@@ -86,13 +86,13 @@ specified.
 .OP \-state state State
 Specifies one of three states for the checkbutton:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the checkbutton is displayed using the
-\fB\-foreground\fR and \fB\-background\fR options.  The active state is
+\fB\-color\fR and \fB\-background\fR options.  The active state is
 typically used when the pointer is over the checkbutton.  In active state
-the checkbutton is displayed using the \fB\-activeforeground\fR and
+the checkbutton is displayed using the \fB\-activecolor\fR and
 \fB\-activebackground\fR options.  Disabled state means that the checkbutton
 should be insensitive:  the default bindings will refuse to activate
 the widget and will ignore mouse button presses.
-In this state the \fB\-disabledforeground\fR and
+In this state the \fB\-disabledcolor\fR and
 \fB\-background\fR options determine how the checkbutton is displayed.
 .OP \-tristateimage tristateImage TristateImage
 Specifies an image to display (in place of the \fB\-image\fR option)

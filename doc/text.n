@@ -21,9 +21,9 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hype
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
 \-cursor	\-insertborderwidth	\-selectborderwidth
-\-exportselection	\-insertofftime	\-selectforeground
+\-exportselection	\-insertofftime	\-selectcolor
 \-font	\-insertontime	\-setgrid
-\-foreground	\-insertwidth	\-takefocus
+\-color	\-insertwidth	\-takefocus
 \-highlightbackground	\-padx	\-xscrollcommand
 \-highlightcolor	\-pady	\-yscrollcommand
 .SE

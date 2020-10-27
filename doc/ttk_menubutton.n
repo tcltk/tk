@@ -58,9 +58,9 @@ are:
 .br
 \fB\-background\fP \fIcolor\fP
 .br
-\fB\-compound\fP \fIcompound\fP
+\fB\-color\fP \fIcolor\fP
 .br
-\fB\-foreground\fP \fIcolor\fP
+\fB\-compound\fP \fIcompound\fP
 .br
 \fB\-font\fP \fIfont\fP
 .br

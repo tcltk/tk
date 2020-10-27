@@ -19,7 +19,7 @@ the user may select the value of the text field from among the
 values in the list.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
-\-style	\-placeholder	\-placeholderforeground
+\-style	\-placeholder	\-placeholdercolor
 .SE
 .\" ALSO: Other entry widget options
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -132,11 +132,11 @@ are:
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
+\fB\-color\fP \fIcolor\fP
+.br
 \fB\-darkcolor\fP \fIcolor\fP
 .br
 \fB\-focusfill\fP \fIcolor\fP
-.br
-\fB\-foreground\fP \fIcolor\fP
 .br
 \fB\-fieldbackground\fP \fIcolor\fP
 .RS
@@ -150,7 +150,7 @@ Can only be changed when using non-native and non-graphical themes.
 .br
 \fB\-padding\fP \fIpadding\fP
 .br
-\fB\-placeholderforeground\fP \fIcolor\fP
+\fB\-placeholdercolor\fP \fIcolor\fP
 .br
 \fB\-postoffset\fP \fIpadding\fP
 .br
@@ -158,9 +158,9 @@ Can only be changed when using non-native and non-graphical themes.
 .RS
 Text entry select background.
 .RE
-\fB\-selectforeground\fP \fIcolor\fP
+\fB\-selectcolor\fP \fIcolor\fP
 .RS
-Text entry select foreground.
+Text entry select color.
 .RE
 .PP
 The \fBttk::combobox\fP popdown listbox cannot be configured using
@@ -171,11 +171,11 @@ option add *TCombobox*Listbox.background \fIcolor\fP
 .br
 option add *TCombobox*Listbox.font \fIfont\fP
 .br
-option add *TCombobox*Listbox.foreground \fIcolor\fP
+option add *TCombobox*Listbox.color \fIcolor\fP
 .br
 option add *TCombobox*Listbox.selectBackground \fIcolor\fP
 .br
-option add *TCombobox*Listbox.selectForeground \fIcolor\fP
+option add *TCombobox*Listbox.selectColor \fIcolor\fP
 .PP
 To configure a specific listbox (subject to future change):
 .CS

@@ -17,13 +17,13 @@ spinbox \- Create and manipulate 'spinbox' value spinner widgets
 \-activebackground	\-highlightthickness	\-repeatinterval
 \-background	\-insertbackground	\-selectbackground
 \-borderwidth	\-insertborderwidth	\-selectborderwidth
-\-cursor	\-insertontime	\-selectforeground
+\-cursor	\-insertontime	\-selectcolor
 \-exportselection	\-insertwidth	\-takefocus
 \-font	\-insertofftime	\-textvariable
-\-foreground	\-justify	\-xscrollcommand
+\-color	\-justify	\-xscrollcommand
 \-highlightbackground	\-relief
 \-highlightcolor	\-repeatdelay
-\-placeholder	\-placeholderforeground
+\-placeholder	\-placeholdercolor
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-buttonbackground buttonBackground Background
@@ -43,9 +43,9 @@ the widget path, \fB%s\fR for the current value of the widget, and
 .OP \-disabledbackground disabledBackground DisabledBackground
 Specifies the background color to use when the spinbox is disabled.  If
 this option is the empty string, the normal background color is used.
-.OP \-disabledforeground disabledForeground DisabledForeground
-Specifies the foreground color to use when the spinbox is disabled.  If
-this option is the empty string, the normal foreground color is used.
+.OP \-disabledcolor disabledColor DisabledColor
+Specifies the color to use when the spinbox is disabled.  If
+this option is the empty string, the normal color is used.
 .OP \-format format Format
 Specifies an alternate format to use when setting the string value
 when using the \fB\-from\fR and \fB\-to\fR range.
@@ -80,7 +80,7 @@ contents of the widget may still be selected.  If the spinbox is
 disabled, the value may not be changed, no insertion cursor will be
 displayed, the contents will not be selectable, and the spinbox may
 be displayed in a different color, depending on the values of the
-\fB\-disabledforeground\fR and \fB\-disabledbackground\fR options.
+\fB\-disabledcolor\fR and \fB\-disabledbackground\fR options.
 .OP \-to to To
 A floating-point value corresponding to the highest value for the spinbox,
 to be used in conjunction with \fB\-from\fR and \fB\-increment\fR.  When

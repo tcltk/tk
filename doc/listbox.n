@@ -15,10 +15,10 @@ listbox \- Create and manipulate 'listbox' item list widgets
 \fBlistbox\fR \fIpathName \fR?\fIoptions\fR?
 .SO
 \-background	\-borderwidth	\-cursor
-\-disabledforeground	\-exportselection	\-font
-\-foreground	\-highlightbackground	\-highlightcolor
+\-disabledcolor	\-exportselection	\-font
+\-color	\-highlightbackground	\-highlightcolor
 \-highlightthickness	\-justify	\-relief
-\-selectbackground	\-selectborderwidth	\-selectforeground
+\-selectbackground	\-selectborderwidth	\-selectcolor
 \-setgrid	\-takefocus	\-xscrollcommand
 \-yscrollcommand
 .SE
@@ -48,7 +48,7 @@ or \fBextended\fR;  the default value is \fBbrowse\fR.
 .OP \-state state State
 Specifies one of two states for the listbox:  \fBnormal\fR or \fBdisabled\fR.
 If the listbox is disabled then items may not be inserted or deleted,
-items are drawn in the \fB\-disabledforeground\fR color, and selection
+items are drawn in the \fB\-disabledcolor\fR color, and selection
 cannot be modified and is not shown (though selection information is retained).
 .OP \-width width Width
 Specifies the desired width for the window in characters.
@@ -252,9 +252,9 @@ are currently supported for items:
 \fIColor\fR specifies the background color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
 .TP
-\fB\-foreground \fIcolor\fR
+\fB\-color \fIcolor\fR
 .
-\fIColor\fR specifies the foreground color to use when displaying the
+\fIColor\fR specifies the color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
 .TP
 \fB\-selectbackground \fIcolor\fR
@@ -263,9 +263,9 @@ item. It may have any of the forms accepted by \fBTk_GetColor\fR.
 item while it is selected. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
 .TP
-\fB\-selectforeground \fIcolor\fR
+\fB\-selectcolor \fIcolor\fR
 .
-\fIcolor\fR specifies the foreground color to use when displaying the
+\fIcolor\fR specifies the color to use when displaying the
 item while it is selected. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
 .RE

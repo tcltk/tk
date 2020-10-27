@@ -101,8 +101,8 @@ Display the image if present, otherwise the text.
 .RE
 .OP \-font font Font
 Font to use for the text displayed by the widget.
-.OP \-foreground textColor TextColor
-The widget's foreground color.
+.OP \-color textColor TextColor
+The widget's color.
 If unspecified, the theme default is used.
 .OP \-image image Image
 Specifies an image to display.
@@ -157,9 +157,9 @@ The following options are supported by entry, spinbox and combobox:
 Specifies a help text string to display if no text is otherwise displayed,
 that is when the widget is empty. The placeholder text is displayed using
 the values of the \fB\-font\fR, \fB\-justify\fR and
-\fB\-placeholderforeground\fR options.
-.OP \-placeholderforeground placeHolderForeground PlaceHolderForeground
-Specifies the foreground color of the placeholder text.
+\fB\-placeholdercolor\fR options.
+.OP \-placeholdercolor placeHolderForeground PlaceHolderForeground
+Specifies the color of the placeholder text.
 .SH "COMPATIBILITY OPTIONS"
 This option is only available for themed widgets that have
 .QW corresponding

@@ -16,9 +16,9 @@ menu, tk_menuSetFocus \- Create and manipulate 'menu' widgets and menubars
 \fBmenu\fR \fIpathName \fR?\fIoptions\fR?
 \fBtk_menuSetFocus\fR \fIpathName\fR
 .SO
-\-activebackground	\-borderwidth	\-foreground
+\-activebackground	\-borderwidth	\-color
 \-activeborderwidth	\-cursor	\-relief
-\-activeforeground	\-disabledforeground	\-takefocus
+\-activecolor	\-disabledcolor	\-takefocus
 \-background	\-font	\-activerelief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -531,12 +531,12 @@ Motif compliance, then this option is ignored and the \fB\-background\fR
 option is used in its place.
 This option is not available for separator or tear-off entries.
 .TP
-\fB\-activeforeground \fIvalue\fR
+\fB\-activecolor \fIvalue\fR
 .
-Specifies a foreground color to use for displaying this entry when it
+Specifies a color to use for displaying this entry when it
 is active.
 If this option is specified as an empty string (the default), then the
-\fB\-activeforeground\fR option for the overall menu is used.
+\fB\-activecolor\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
 \fB\-accelerator \fIvalue\fR
@@ -599,12 +599,12 @@ If this option is specified as an empty string (the default) then
 the \fB\-font\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
-\fB\-foreground \fIvalue\fR
+\fB\-color \fIvalue\fR
 .
-Specifies a foreground color to use for displaying this entry when it
+Specifies a color to use for displaying this entry when it
 is in the normal state (neither active nor disabled).
 If this option is specified as an empty string (the default), then the
-\fB\-foreground\fR option for the overall menu is used.
+\fB\-color\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
 \fB\-hidemargin \fIvalue\fR
@@ -676,16 +676,16 @@ been specified.
 .
 Specifies one of three states for the entry:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the entry is displayed using the
-\fB\-foreground\fR option for the menu and the \fB\-background\fR
+\fB\-color\fR option for the menu and the \fB\-background\fR
 option from the entry or the menu.
 The active state is typically used when the pointer is over the entry.
-In active state the entry is displayed using the \fB\-activeforeground\fR
+In active state the entry is displayed using the \fB\-activecolor\fR
 option for the menu along with the \fB\-activebackground\fR option from
 the entry.  Disabled state means that the entry
 should be insensitive:  the default bindings will refuse to activate
 or invoke the entry.
 In this state the entry is displayed according to the
-\fB\-disabledforeground\fR option for the menu and the
+\fB\-disabledcolor\fR option for the menu and the
 \fB\-background\fR option from the entry.
 This option is not available for separator entries.
 .TP

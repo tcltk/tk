@@ -19,7 +19,7 @@ canvas \- Create and manipulate 'canvas' hypergraphics drawing surface widgets
 \-highlightbackground	\-highlightcolor	\-highlightthickness
 \-insertbackground	\-insertborderwidth	\-insertofftime
 \-insertontime	\-insertwidth	\-relief
-\-selectbackground	\-selectborderwidth	\-selectforeground
+\-selectbackground	\-selectborderwidth	\-selectcolor
 \-takefocus	\-xscrollcommand	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -1259,7 +1259,7 @@ Specifies the color to be used to fill item's area.
 in its normal, active, and disabled states,
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
 For the line item, it specifies the color of the line drawn.
-For the text item, it specifies the foreground color of the text.
+For the text item, it specifies the color of the text.
 If \fIcolor\fR is an empty string (the default for all canvas items
 except line and text), then the item will not be filled.
 .TP
@@ -1503,11 +1503,11 @@ Specifies the bitmaps to display in the item in its normal, active and
 disabled states.
 \fIBitmap\fR may have any of the forms accepted by \fBTk_GetBitmap\fR.
 .TP
-\fB\-foreground \fIcolor\fR
+\fB\-colord \fIcolor\fR
 .TP
-\fB\-activeforeground \fIcolor\fR
+\fB\-activecolor \fIcolor\fR
 .TP
-\fB\-disabledforeground \fIcolor\fR
+\fB\-disabledcolor \fIcolor\fR
 Specifies the color to use for each of the bitmap's
 .QW 1
 valued pixels in its normal, active and disabled states.
