@@ -19,7 +19,7 @@ The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
 \-anchor	\-class	\-compound	\-cursor
-\-font	\-foreground
+\-font	\-color
 \-image	\-justify	\-padding	\-state	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width	\-wraplength
@@ -56,9 +56,9 @@ are:
 .PP
 \fB\-background\fP \fIcolor\fP
 .br
-\fB\-compound\fP \fIcompound\fP
+\fB\-color\fP \fIcolor\fP
 .br
-\fB\-foreground\fP \fIcolor\fP
+\fB\-compound\fP \fIcompound\fP
 .br
 \fB\-font\fP \fIfont\fP
 .PP

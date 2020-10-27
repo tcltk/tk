@@ -14,15 +14,15 @@ button \- Create and manipulate 'button' action widgets
 .SH SYNOPSIS
 \fBbutton\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-font	\-relief
-\-activeforeground	\-foreground	\-repeatdelay
+\-activebackground	\-disabledcolor	\-relief
+\-activecolor	\-font	\-repeatdelay
 \-anchor	\-highlightbackground	\-repeatinterval
 \-background	\-highlightcolor	\-takefocus
 \-bitmap	\-highlightthickness	\-text
 \-borderwidth	\-image	\-textvariable
-\-compound	\-justify	\-underline
-\-cursor	\-padx	\-wraplength
-\-disabledforeground	\-pady
+\-color	\-justify	\-underline
+\-compound	\-padx	\-wraplength
+-cursor	\-pady
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
@@ -57,13 +57,13 @@ The empty string is the default value.
 .OP \-state state State
 Specifies one of three states for the button:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the button is displayed using the
-\fB\-foreground\fR and \fB\-background\fR options.  The active state is
+\fB\-color\fR and \fB\-background\fR options.  The active state is
 typically used when the pointer is over the button.  In active state
-the button is displayed using the \fB\-activeforeground\fR and
+the button is displayed using the \fB\-activecolor\fR and
 \fB\-activebackground\fR options.  Disabled state means that the button
 should be insensitive:  the default bindings will refuse to activate
 the widget and will ignore mouse button presses.
-In this state the \fB\-disabledforeground\fR and
+In this state the \fB\-disabledcolor\fR and
 \fB\-background\fR options determine how the button is displayed.
 .OP \-width width Width
 Specifies a desired width for the button.

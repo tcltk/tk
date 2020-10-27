@@ -15,7 +15,7 @@ message \- Create and manipulate 'message' non-interactive text widgets
 \fBmessage\fR \fIpathName \fR?\fIoptions\fR?
 .SO
 \-anchor	\-background	\-borderwidth
-\-cursor	\-font	\-foreground
+\-cursor	\-font	\-color
 \-highlightbackground	\-highlightcolor	\-highlightthickness
 \-padx	\-pady	\-relief
 \-takefocus	\-text	\-textvariable

@@ -14,7 +14,7 @@ scale \- Create and manipulate 'scale' value-controlled slider widgets
 .SH SYNOPSIS
 \fBscale\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-foreground	\-relief
+\-activebackground	\-color	\-relief
 \-background	\-highlightbackground	\-repeatdelay
 \-borderwidth	\-highlightcolor	\-repeatinterval
 \-cursor	\-highlightthickness	\-takefocus

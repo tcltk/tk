@@ -224,7 +224,7 @@ are:
 .br
 \fB\-darkcolor\fP \fIcolor\fP
 .br
-\fB\-foreground\fP \fIcolor\fP
+\fB\-color\fP \fIcolor\fP
 .br
 \fB\-lightcolor\fP \fIcolor\fP
 .br
@@ -242,6 +242,8 @@ are:
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
+\fB\-color\fP \fIcolor\fP
+.br
 \fB\-compound\fP \fIcompound\fP
 .br
 \fB\-expand\fP \fIpadding\fP
@@ -251,8 +253,6 @@ Defines how much the tab grows in size.  Usually used with the
 set appropriately so that there is room for the tab growth.
 .RE
 \fB\-font\fP \fIfont\fP
-.br
-\fB\-foreground\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
 .PP

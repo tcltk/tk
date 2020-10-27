@@ -24,7 +24,7 @@ Tk_Cursor
 \fBTk_GetCursorFromObj(\fItkwin, objPtr\fB)\fR
 .sp
 Tk_Cursor
-\fBTk_GetCursorFromData(\fIinterp, tkwin, source, mask, width, height, xHot, yHot, fg, bg\fB)\fR
+\fBTk_GetCursorFromData(\fIinterp, tkwin, source, mask, width, height, xHot, yHot, color, background\fB)\fR
 .sp
 const char *
 \fBTk_NameOfCursor(\fIdisplay, cursor\fB)\fR
@@ -56,9 +56,9 @@ Height of \fIsource\fR and \fImask\fR.
 X-location of cursor hot-spot.
 .AP "int" yHot in
 Y-location of cursor hot-spot.
-.AP Tk_Uid fg in
-Textual description of foreground color for cursor.
-.AP Tk_Uid bg in
+.AP Tk_Uid color in
+Textual description of color for cursor.
+.AP Tk_Uid background in
 Textual description of background color for cursor.
 .AP Display *display in
 Display for which \fIcursor\fR was allocated.
@@ -86,17 +86,17 @@ is returned and an error message will be stored in \fIinterp\fR's result
 if \fIinterp\fR is not NULL.  \fIObjPtr\fR must contain a standard Tcl
 list with one of the following forms:
 .TP
-\fIname\fR\0[\fIfgColor\fR\0[\fIbgColor\fR]]
+\fIname\fR\0[\fIcolor\fR\0[\fIbackground\fR]]
 \fIName\fR is the name of a cursor in the standard X cursor cursor,
 i.e., any of the names defined in \fBcursorcursor.h\fR, without
 the \fBXC_\fR.  Some example values are \fBX_cursor\fR, \fBhand2\fR,
 or \fBleft_ptr\fR.  Appendix B of
 .QW "The X Window System"
 by Scheifler & Gettys has illustrations showing what each of these
-cursors looks like.  If \fIfgColor\fR and \fIbgColor\fR are both
+cursors looks like.  If \fIcolor\fR and \fIbackground\fR are both
 specified, they give the foreground and background colors to use
 for the cursor (any of the forms acceptable to \fBTk_GetColor\fR
-may be used).  If only \fIfgColor\fR is specified, then there
+may be used).  If only \fIcolor\fR is specified, then there
 will be no background color:  the background will be transparent.
 If no colors are specified, then the cursor
 will use black for its foreground color and white for its background
@@ -114,16 +114,16 @@ cursor.  If there are conflicts color cursors will always be loaded
 in preference to black and white cursors.
 .RE
 .TP
-\fB@\fIsourceName\0maskName\0fgColor\0bgColor\fR
+\fB@\fIsourceName\0maskName\0color\0background\fR
 In this form, \fIsourceName\fR and \fImaskName\fR are the names of
 files describing cursors for the cursor's source bits and mask.
 Each file must be in standard X11 cursor format.
-\fIFgColor\fR and \fIbgColor\fR
+\fIColor\fR and \fIbackground\fR
 indicate the colors to use for the
 cursor, in any of the forms acceptable to \fBTk_GetColor\fR.  This
 form of the command will not work on Macintosh or Windows computers.
 .TP
-\fB@\fIsourceName\0fgColor\fR
+\fB@\fIsourceName\0color\fR
 This form is similar to the one above, except that the source is
 used as mask also.  This means that the cursor's background is
 transparent.  This form of the command will not work on Macintosh
@@ -157,7 +157,7 @@ which pixels of \fIsource\fR are to be drawn and which are to be
 considered transparent.  \fIWidth\fR and \fIheight\fR give the
 dimensions of the cursor, \fIxHot\fR and \fIyHot\fR indicate the
 location of the cursor's hot-spot (the point that is reported when
-an event occurs), and \fIfg\fR and \fIbg\fR describe the cursor's
+an event occurs), and \fIcolor\fR and \fIbackground\fR describe the cursor's
 foreground and background colors textually (any of the forms
 suitable for \fBTk_GetColor\fR may be used).  Typically, the
 arguments to \fBTk_GetCursorFromData\fR are created by including

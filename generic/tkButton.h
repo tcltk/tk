@@ -145,14 +145,14 @@ typedef struct {
 				 * borders. */
     Tk_Font tkfont;		/* Value of -font option: specifies font to
 				 * use for display text. */
-    XColor *normalFg;		/* Value of -font option: specifies foreground
+    XColor *normalFg;		/* Value of -font option: specifies
 				 * color in normal mode. */
-    XColor *activeFg;		/* Value of -activeforeground option:
-				 * foreground color in active mode. NULL means
-				 * use -foreground instead. */
-    XColor *disabledFg;		/* Value of -disabledforeground option:
-				 * foreground color when disabled. NULL means
-				 * use normalFg with a 50% stipple instead. */
+    XColor *activeFg;		/* Value of -activecolor option:
+				 * color in active mode. NULL means
+				 * use -color instead. */
+    XColor *disabledFg;		/* Value of -disabledcolor option:
+				 * color when disabled. NULL means
+				 * use -color with a 50% stipple instead. */
     GC normalTextGC;		/* GC for drawing text in normal mode. Also
 				 * used to copy from off-screen pixmap onto
 				 * screen. */

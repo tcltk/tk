@@ -40,30 +40,30 @@ proc ::tk_setPalette {args} {
 	    "must specify a background color"
     }
     set bg [winfo rgb . $new(background)]
-    if {![info exists new(foreground)]} {
+    if {![info exists new(color)]} {
 	# Note that the range of each value in the triple returned by
 	# [winfo rgb] is 0-65535, and your eyes are more sensitive to
 	# green than to red, and more to red than to blue.
 	foreach {r g b} $bg {break}
 	if {$r+1.5*$g+0.5*$b > 100000} {
-	    set new(foreground) black
+	    set new(color) black
 	} else {
-	    set new(foreground) white
+	    set new(color) white
 	}
     }
-    lassign [winfo rgb . $new(foreground)] fg_r fg_g fg_b
+    lassign [winfo rgb . $new(color)] fg_r fg_g fg_b
     lassign $bg bg_r bg_g bg_b
     set darkerBg [format #%02x%02x%02x [expr {(9*$bg_r)/2560}] \
 	    [expr {(9*$bg_g)/2560}] [expr {(9*$bg_b)/2560}]]
 
-    foreach i {activeForeground insertBackground selectForeground \
+    foreach i {activeColor insertBackground selectColor \
 	    highlightColor} {
 	if {![info exists new($i)]} {
-	    set new($i) $new(foreground)
+	    set new($i) $new(color)
 	}
     }
-    if {![info exists new(disabledForeground)]} {
-	set new(disabledForeground) [format #%02x%02x%02x \
+    if {![info exists new(disabledColor)]} {
+	set new(disabledColor) [format #%02x%02x%02x \
 		[expr {(3*$bg_r + $fg_r)/1024}] \
 		[expr {(3*$bg_g + $fg_g)/1024}] \
 		[expr {(3*$bg_b + $fg_b)/1024}]]
@@ -235,10 +235,10 @@ proc ::tk::Darken {color percent} {
 # None.
 
 proc ::tk_bisque {} {
-    tk_setPalette activeBackground #e6ceb1 activeForeground black \
-	    background #ffe4c4 disabledForeground #b0b0b0 foreground black \
+    tk_setPalette activeBackground #e6ceb1 activeColor black \
+	    background #ffe4c4 disabledColor #b0b0b0 color black \
 	    highlightBackground #ffe4c4 highlightColor black \
 	    insertBackground black \
-	    selectBackground #e6ceb1 selectForeground black \
+	    selectBackground #e6ceb1 selectColor black \
 	    troughColor #cdb79e
 }

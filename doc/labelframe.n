@@ -17,7 +17,7 @@ labelframe \- Create and manipulate 'labelframe' labelled container widgets
 \-borderwidth	\-highlightbackground	\-pady
 \-cursor	\-highlightcolor	\-relief
 \-font	\-highlightthickness	\-takefocus
-\-foreground	\-padx	\-text
+\-color	\-padx	\-text
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-background background Background

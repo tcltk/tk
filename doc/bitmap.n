@@ -24,14 +24,14 @@ bitmap \- Images that display two colors
 A bitmap is an image whose pixels can display either of two colors
 or be transparent.
 A bitmap image is defined by four things:  a background color,
-a foreground color, and two bitmaps, called the \fIsource\fR
+a color, and two bitmaps, called the \fIsource\fR
 and the \fImask\fR.
 Each of the bitmaps specifies 0/1 values for a rectangular
 array of pixels, and the two bitmaps must have the same
 dimensions.
 For pixels where the mask is zero, the image displays nothing,
 producing a transparent effect.
-For other pixels, the image displays the foreground color if
+For other pixels, the image displays the color if
 the source data is one and the background color if the source
 data is zero.
 .SH "CREATING BITMAPS"
@@ -63,9 +63,9 @@ source bitmap.
 The file must adhere to X11 bitmap format (e.g., as generated
 by the \fBbitmap\fR program).
 .TP
-\fB\-foreground \fIcolor\fR
+\fB\-color \fIcolor\fR
 .
-Specifies a foreground color for the image in any of the standard
+Specifies a color for the image in any of the standard
 ways accepted by Tk.
 .TP
 \fB\-maskdata \fIstring\fR

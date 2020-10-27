@@ -14,9 +14,9 @@ menubutton \- Create and manipulate 'menubutton' pop-up menu indicator widgets
 .SH SYNOPSIS
 \fBmenubutton\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-disabledforeground	\-padx
-\-activeforeground	\-font	\-pady
-\-anchor	\-foreground	\-relief
+\-activebackground	\-disabledcolor	\-padx
+\-activecolor	\-font	\-pady
+\-anchor	\-color	\-relief
 \-background	\-highlightbackground	\-takefocus
 \-bitmap	\-highlightcolor	\-text
 \-borderwidth	\-highlightthickness	\-textvariable
@@ -51,13 +51,13 @@ The menu must be a child of the menubutton.
 .OP \-state state State
 Specifies one of three states for the menubutton:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the menubutton is displayed using the
-\fBforeground\fR and \fBbackground\fR options.  The active state is
+\fBcolor\fR and \fBbackground\fR options.  The active state is
 typically used when the pointer is over the menubutton.  In active state
-the menubutton is displayed using the \fB\-activeforeground\fR and
+the menubutton is displayed using the \fB\-activecolor\fR and
 \fB\-activebackground\fR options.  Disabled state means that the menubutton
 should be insensitive:  the default bindings will refuse to activate
 the widget and will ignore mouse button presses.
-In this state the \fB\-disabledforeground\fR and
+In this state the \fB\-disabledcolor\fR and
 \fB\-background\fR options determine how the button is displayed.
 .OP \-width width Width
 Specifies a desired width for the menubutton.
