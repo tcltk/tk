@@ -380,7 +380,7 @@ switch -exact -- [tk windowingsystem] {
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
 	event add <<SelectAll>>		<Control-/>
-	event add <<SelectNone>>	<Control-\\>
+	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>
@@ -427,7 +427,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Redo>>		<Control-y> <Control-Lock-Y>
 
 	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>
-	event add <<SelectNone>>	<Control-\\>
+	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>

@@ -394,8 +394,8 @@
 { "colon", 0x3A },
 #endif
 { "semicolon", 0x3B },
-#ifndef TK_NO_DEPRECATED
 { "less", 0x3C },
+#ifndef TK_NO_DEPRECATED
 { "equal", 0x3D },
 #endif
 { "greater", 0x3E },
