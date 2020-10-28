@@ -338,7 +338,7 @@ CreateNamedSystemLogFont(
 {
     HFONT hFont;
     int r;
-    
+
     hFont = CreateFontIndirect(logFontPtr);
     r = CreateNamedSystemFont(interp, tkwin, name, hFont);
     DeleteObject((HGDIOBJ)hFont);
@@ -368,7 +368,7 @@ CreateNamedSystemFont(
 {
     WinFont winfont;
     int r;
-    
+
     TkDeleteNamedFont(NULL, tkwin, name);
     InitFont(tkwin, hFont, 0, &winfont);
     r = TkCreateNamedFont(interp, tkwin, name, &winfont.font.fa);
@@ -446,7 +446,7 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
     {
 	LOGFONTA lfFixed = {
 	    0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "" 
+	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, ""
 	};
 	long pointSize, dpi;
 	HDC hdc = GetDC(NULL);
@@ -457,7 +457,7 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
 	CreateNamedSystemLogFont(interp, tkwin, "TkFixedFont", &lfFixed);
     }
 
-    /* 
+    /*
      * Setup the remaining standard Tk font names as named fonts.
      */
 

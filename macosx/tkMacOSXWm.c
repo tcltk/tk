@@ -1568,7 +1568,7 @@ WmColormapwindowsCmd(
     wmPtr->cmapCount = windowObjc;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 
@@ -4677,7 +4677,7 @@ TkWmAddToColormapWindows(
     topPtr->wmInfoPtr->cmapCount = count+1;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 }
@@ -5965,7 +5965,7 @@ TkpChangeFocus(
 	    [win makeKeyAndOrderFront:NSApp];
 	}
     }
-	
+
     /*
      * Remember the current serial number for the X server and issue a dummy
      * server request. This marks the position at which we changed the focus,
@@ -6447,7 +6447,7 @@ TkMacOSXMakeFullscreen(
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
 	     | NSApplicationPresentationAutoHideMenuBar];
-        
+
 #endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;

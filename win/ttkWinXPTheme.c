@@ -106,7 +106,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	 * We have successfully loaded the library. Proceed in storing the
 	 * addresses of the functions we want to use.
 	 */
-	XPThemeProcs *procs = (XPThemeProcs*)ckalloc(sizeof(XPThemeProcs));
+	XPThemeProcs *procs = (XPThemeProcs *)ckalloc(sizeof(XPThemeProcs));
 #define LOADPROC(name) \
 	(0 != (procs->name = (name ## Proc *)(void *)GetProcAddress(handle, #name) ))
 
@@ -138,7 +138,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 static void
 XPThemeDeleteProc(void *clientData)
 {
-    XPThemeData *themeData = clientData;
+    XPThemeData *themeData = (XPThemeData *)clientData;
     FreeLibrary(themeData->hlibrary);
     ckfree(clientData);
 }
@@ -146,9 +146,11 @@ XPThemeDeleteProc(void *clientData)
 static int
 XPThemeEnabled(Ttk_Theme theme, void *clientData)
 {
-    XPThemeData *themeData = clientData;
+    XPThemeData *themeData = (XPThemeData *)clientData;
     int active = themeData->procs->IsThemeActive();
     int themed = themeData->procs->IsAppThemed();
+    (void)theme;
+
     return (active && themed);
 }
 
@@ -411,7 +413,7 @@ typedef struct
 static ElementData *
 NewElementData(XPThemeProcs *procs, ElementInfo *info)
 {
-    ElementData *elementData = (ElementData*)ckalloc(sizeof(ElementData));
+    ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
 
     elementData->procs = procs;
     elementData->info = info;
@@ -427,7 +429,7 @@ NewElementData(XPThemeProcs *procs, ElementInfo *info)
  */
 static void DestroyElementData(void *clientData)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
 	ckfree((char *)elementData->info->statemap);
 	ckfree((char *)elementData->info->className);
@@ -453,7 +455,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
 
-    if (win != None) {
+    if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
     } else  {
 	elementData->hwnd = elementData->procs->stubWindow;
@@ -495,9 +497,10 @@ static void GenericElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     HRESULT result;
     SIZE size;
+    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -531,8 +534,9 @@ static void GenericElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     RECT rc;
+    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d)) {
 	return;
@@ -576,7 +580,7 @@ GenericSizedElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -612,7 +616,7 @@ SpinboxArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -641,9 +645,10 @@ static void ThumbElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
+    (void)elementRecord;
 
     /*
      * Don't draw the thumb if we are disabled.
@@ -680,7 +685,7 @@ static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     int nBars = 3;
 
     GenericElementSize(clientData, elementRecord, tkwin,
@@ -720,9 +725,10 @@ static void TabElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ElementData *elementData = clientData;
+    ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
     RECT rc = BoxToRect(b);
+    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
@@ -791,7 +797,7 @@ static Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
 
 /*
  *----------------------------------------------------------------------
@@ -838,7 +844,7 @@ static void TextElementSize(
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
 	    Tcl_GetUnicode(element->textObj),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    NULL,
 	    &rc);
 
@@ -871,7 +877,7 @@ static void TextElementDraw(
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
 	    Tcl_GetUnicode(element->textObj),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
 	    &rc);
     FreeElementData(elementData);
@@ -1029,12 +1035,10 @@ static ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
     	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
 #endif
-
     { 0,0,0,0,0,NOPAD,0 }
 };
 #undef PAD
@@ -1096,7 +1100,7 @@ Ttk_CreateVsapiElement(
     int objc,
     Tcl_Obj *const objv[])
 {
-    XPThemeData *themeData = clientData;
+    XPThemeData *themeData = (XPThemeData *)clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
     Tcl_UniChar *className;
@@ -1227,7 +1231,7 @@ Ttk_CreateVsapiElement(
     elementPtr->flags = HEAP_ELEMENT | flags;
 
     /* set the element name to an allocated copy */
-    name = ckalloc(strlen(elementName) + 1);
+    name = (char *)ckalloc(strlen(elementName) + 1);
     strcpy(name, elementName);
     elementPtr->elementName = name;
 
