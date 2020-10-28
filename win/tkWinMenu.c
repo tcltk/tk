@@ -217,7 +217,7 @@ GetNewID(
     TkMenuEntry *mePtr,		/* The menu we are working with. */
     WORD *menuIDPtr)		/* The resulting id. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     WORD curID = tsdPtr->lastCommandID;
 

@@ -243,8 +243,8 @@ int			TkpWmGetState(TkWindow *winPtr);
 
 /*
  * The following functions are not present in old versions of Windows
- * API headers but are used in the Tk source to ensure 64bit 
- * compatability.
+ * API headers but are used in the Tk source to ensure 64bit
+ * compatibility.
  */
 
 #ifndef GetClassLongPtr
