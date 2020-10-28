@@ -774,7 +774,7 @@ TkSmoothParseProc(
     }
 
     /*
-     * Backward compatability hack.
+     * Backward compatibility hack.
      */
 
     if (strncmp(value, "bezier", length) == 0) {
