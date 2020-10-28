@@ -23,7 +23,7 @@
 #define modalOK     NSModalResponseOK
 #define modalCancel NSModalResponseCancel
 #endif // MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-#define modalOther  -1
+#define modalOther  -1 // indicates that the -command option was used.
 #define modalError  -2
 
 /*
@@ -51,6 +51,10 @@ typedef struct {
     NSUInteger fileTypeIndex;		/* Index of currently selected
 					 * filter. */
 } filepanelFilterInfo;
+
+/*
+ * Only one of these is needed for the application, so they can be static.
+ */
 
 static filepanelFilterInfo filterInfo;
 static NSOpenPanel *openpanel;
@@ -250,13 +254,13 @@ getFileURL(
     } else if (returnCode == modalCancel) {
 	Tcl_ResetResult(callbackInfo->interp);
     }
-    if (panel == [NSApp modalWindow]) {
-	[NSApp stopModalWithCode:returnCode];
-    }
     if (callbackInfo->cmdObj) {
 	Tcl_DecrRefCount(callbackInfo->cmdObj);
+    }
+    if (callbackInfo) {
 	ckfree(callbackInfo);
     }
+    [NSApp stopModalWithCode:returnCode];
 }
 
 - (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
@@ -346,26 +350,52 @@ static NSInteger showOpenSavePanel(
     NSWindow *parent,
     FilePanelCallbackInfo *callbackInfo)
 {
-    __block NSInteger modalReturnCode = modalOther;
+    NSInteger modalReturnCode;
 
     if (parent && ![parent attachedSheet]) {
 	[panel beginSheetModalForWindow:parent
-		      completionHandler:^(NSModalResponse result) {
-		[NSApp tkFilePanelDidEnd:panel
-			      returnCode:result
-			     contextInfo:callbackInfo ];
-		modalReturnCode = result;
+	       completionHandler:^(NSModalResponse returnCode) {
+	    [NSApp tkFilePanelDidEnd:panel
+		       returnCode:returnCode
+		       contextInfo:callbackInfo ];
 	    }];
+
+	/*
+	 * The sheet has been prepared, so now we have to run it as a modal
+	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or later
+	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
+	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
+	 * completion handler to run when the panel is closed.
+	 */
+
+	if ([NSApp macOSVersion] > 101400) {
+	    modalReturnCode = [panel runModal];
+	} else {
+	    modalReturnCode = [NSApp runModalForWindow:panel];
+	}
     } else {
-	[panel beginWithCompletionHandler:^(NSModalResponse result) {
-		[NSApp tkFilePanelDidEnd:panel
-			      returnCode:result
-			     contextInfo:callbackInfo ];
-		modalReturnCode = result;
+
+	/*
+	 * For the standalone file dialog, completion handlers do not work
+	 * at all on macOS 10.14 and earlier.
+	 */
+
+	if ([NSApp macOSVersion] > 101400) {
+	    [panel beginWithCompletionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+			          returnCode:returnCode
+			         contextInfo:callbackInfo ];
 	    }];
+	    modalReturnCode = [panel runModal];
+	} else {
+	    modalReturnCode = [panel runModal];
+	    [NSApp tkFilePanelDidEnd:panel
+		   	  returnCode:modalReturnCode
+		         contextInfo:callbackInfo ];
+	    [panel close];
+	}
     }
-    [panel runModal];
-    return modalReturnCode;
+    return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
 
 /*
