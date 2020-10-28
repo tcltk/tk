@@ -103,7 +103,7 @@ TkGetCursorByName(
 
     /*
      * All cursor names are valid lists of one element (for
-     * Unix-compatability), even unadorned system cursor names.
+     * Unix-compatibility), even unadorned system cursor names.
      */
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
