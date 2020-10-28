@@ -1803,7 +1803,7 @@ WmColormapwindowsCmd(
     wmPtr->cmapCount = windowObjc;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 
@@ -5184,7 +5184,7 @@ TkWmAddToColormapWindows(
     topPtr->wmInfoPtr->cmapCount = count+1;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 }
