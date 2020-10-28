@@ -434,7 +434,7 @@ MacSystrayDestroy(
  *
  * SysNotifyObjCmd --
  *
- *      Create system notification. 
+ *      Create system notification.
  *
  * Results:
  *      System notification created.

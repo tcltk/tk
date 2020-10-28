@@ -25,7 +25,7 @@ systray \- Creates an icon display in the platform-specific system tray.
 .PP
 The \fBtk systray\fP command creates an icon in the platform-specific tray.
 The widget is configured with a Tk image for the icon display, a string
-for display in a tooltip, and callbacks that are bound to <Button-1> and 
+for display in a tooltip, and callbacks that are bound to <Button-1> and
 <Button-3>.
 .SH EXAMPLE
 .PP
