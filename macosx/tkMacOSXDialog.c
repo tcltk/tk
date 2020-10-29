@@ -23,7 +23,7 @@
 #define modalOK     NSModalResponseOK
 #define modalCancel NSModalResponseCancel
 #endif // MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-#define modalOther  -1 // indicates that the -command option was used. 
+#define modalOther  -1 // indicates that the -command option was used.
 #define modalError  -2
 
 /*
@@ -375,7 +375,7 @@ static NSInteger showOpenSavePanel(
 	}
     } else {
 
-	/* 
+	/*
 	 * For the standalone file dialog, completion handlers do not work
 	 * at all on macOS 10.14 and earlier.
 	 */
