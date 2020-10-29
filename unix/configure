@@ -7175,6 +7175,9 @@ if test $tk_aqua = yes; then
 $as_echo "#define MAC_OSX_TK 1" >>confdefs.h
 
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    if test -d /System/Library/Frameworks/UserNotifications.framework; then
+        LIBS="$LIBS -framework UserNotifications"
+    fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
