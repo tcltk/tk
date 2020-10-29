@@ -1086,7 +1086,7 @@ ParseOFNOptions(
     }
 
     ZeroMemory(optsPtr, sizeof(*optsPtr));
-    // optsPtr->forceXPStyle = 1;
+    /* optsPtr->forceXPStyle = 1; */
     optsPtr->tkwin = (Tk_Window)clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
     Tcl_DStringInit(&optsPtr->utfDirString);
@@ -2711,10 +2711,10 @@ ChooseDirectoryValidateProc(
 
 	if (SHGetPathFromIDListW((LPITEMIDLIST) lParam, selDir)) {
 	    SendMessageW(hwnd, BFFM_SETSTATUSTEXTW, 0, (LPARAM) selDir);
-	    // enable the OK button
+	    /* enable the OK button */
 	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	} else {
-	    // disable the OK button
+	    /* disable the OK button */
 	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
 	}
 	UpdateWindow(hwnd);

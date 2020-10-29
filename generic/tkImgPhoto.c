@@ -4095,7 +4095,7 @@ ImgPhotoPostscript(
  *
  * Tk_PhotoPutBlock_NoComposite, Tk_PhotoPutZoomedBlock_NoComposite --
  *
- * These backward-compatability functions just exist to fill slots in stubs
+ * These backward-compatibility functions just exist to fill slots in stubs
  * table. For the behaviour of *_NoComposite, refer to the corresponding
  * function without the extra suffix, except that the compositing rule is
  * always "overlay" and the function always panics on memory-allocation
@@ -4136,7 +4136,7 @@ Tk_PhotoPutZoomedBlock_NoComposite(
  * Tk_PhotoExpand_Panic, Tk_PhotoPutBlock_Panic,
  * Tk_PhotoPutZoomedBlock_Panic, Tk_PhotoSetSize_Panic
  *
- * Backward compatability functions for preserving the old behaviour (i.e.
+ * Backward compatibility functions for preserving the old behaviour (i.e.
  * panic on memory allocation failure) so that extensions do not need to be
  * significantly updated to take account of TIP #116. These call the new
  * interface (i.e. the interface without the extra suffix), but panic if an
