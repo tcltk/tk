@@ -4,6 +4,7 @@
  *	tkMacOSXSysTray.c implements a "systray" Tcl command which allows
  *      one to change the system tray/taskbar icon of a Tk toplevel
  *      window and a "sysnotify" command to post system notifications.
+ *      In macOS the icon appears on the right hand side of the menu bar.
  *
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
  *
@@ -15,10 +16,43 @@
 #include <tkMacOSXInt.h>
 #include "tkMacOSXPrivate.h"
 
-static const char ASSOC_KEY[] = "tk::tktray";
+/*
+ * Prior to macOS 10.14 user notifications were handled by the NSApplication's
+ * NSUserNotificationCenter via a NSUserNotificationCenterDelegate object.
+ * These classes were defined in the CoreFoundation framework.  In macOS 10.14
+ * a separate UserNotifications framework was introduced which adds some
+ * additional functionality, primarily allowing users to opt out of receiving
+ * notifications on a per app basis.  This framework uses a different class,
+ * the UNUserNotificationCenter and its delegate follows a different protocol,
+ * named UNUserNotificationCenterDelegate.
+ *
+ * In macOS 11.0 the NSUserNotificationCenter and its delegate protocol were
+ * deprecated.  So in this file we implemented both protocols, with the intent
+ * of using the UserNotifications.framework on systems which provide it.
+ * Unfortunately, however, this does not work.  The UNUserNotificationCenter
+ * never authorizes Wish to send notifications, regardless of how the settings
+ * in the user's Notification preferences are configured.  Consequently, until
+ * this is fixed, we must disable using the framework and put up with many
+ * deprecations when building Tk for a minimum target of 11.0.
+ *
+ * To disable using the UserNotifications.framework on systems that support it,
+ * define DISABLE_NOTIFICATION_FRAMEWORK.  To test the broken new framework
+ * remove the following directive.
+ */
+
+#define DISABLE_NOTIFICATION_FRAMEWORK
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+
+#import <UserNotifications/UserNotifications.h>
+static NSString *TkNotificationCategory;
+
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 
 /*
- * Class declarations and implementations for TkStatusItem.
+ * Class declaration for TkStatusItem.
  */
 
 @interface TkStatusItem: NSObject {
@@ -39,8 +73,79 @@ static const char ASSOC_KEY[] = "tk::tktray";
 - (void) clickOnStatusItem: (id) sender;
 - (void) dealloc;
 
+@end
+
+/*
+ * Class declaration for TkUserNotifier. A TkUserNotifier object has no
+ * attributes but implements the NSUserNotificationCenterDelegate protocol or
+ * the UNNotificationCenterDelegate protocol, as appropriate for the runtime
+ * environment.  It also has one additional method which posts a user
+ * notification. There is one TkUserNotifier for the application, shared by all
+ * interpreters.
+ */
+
+@interface TkUserNotifier: NSObject {
+}
+
+/*
+ * This method is used to post a notification.
+ */
+
+- (void) postNotificationWithTitle : (NSString *) title message: (NSString *) detail;
+
+/*
+ * The following methods comprise the NSUserNotificationCenterDelegate protocol.
+ */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+
+- (void) userNotificationCenter:(NSUserNotificationCenter *)center
+    didDeliverNotification:(NSUserNotification *)notification;
+
+- (void) userNotificationCenter:(NSUserNotificationCenter *)center
+    didActivateNotification:(NSUserNotification *)notification;
+
+- (BOOL) userNotificationCenter:(NSUserNotificationCenter *)center
+    shouldPresentNotification:(NSUserNotification *)notification;
+
+#endif
+
+/*
+ * The following methods comprise the UNNotificationCenterDelegate protocol:
+ */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+    didReceiveNotificationResponse:(UNNotificationResponse *)response
+    withCompletionHandler:(void (^)(void))completionHandler;
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+    willPresentNotification:(UNNotification *)notification
+    withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler;
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+   openSettingsForNotification:(UNNotification *)notification;
+
+#endif
 
 @end
+
+/*
+ * The singleton instance of TkUserNotifier for the application is stored in
+ * this static variable.
+ */
+
+static TkUserNotifier *notifier = nil;
+
+/*
+ * Class declaration for TkStatusItem. A TkStatusItem represents an icon posted
+ * on the status bar located on the right side of the MenuBar.  Each interpreter
+ * may have at most one TkStatusItem.  A pointer to the TkStatusItem belonging
+ * to an interpreter is stored as the clientData of the MacSystrayObjCmd instance
+ * in that interpreter.  It will be NULL until the tk systray command is executed
+ * in the interpreter.
+ */
 
 @implementation TkStatusItem : NSObject
 
@@ -113,14 +218,6 @@ static const char ASSOC_KEY[] = "tk::tktray";
 }
 - (void) dealloc
 {
-    /*
-     * We are only doing the minimal amount of deallocation that
-     * the superclass cannot handle when it is deallocated, per
-     * https://developer.apple.com/documentation/objectivec/nsobject/
-     * 1571947-dealloc. The compiler may offer warnings, but disregard.
-     * Putting too much here can cause unpredictable crashes, especially
-     * in the Tk test suite.
-     */
     [statusBar removeStatusItem: statusItem];
     if (b1_callback != NULL) {
 	Tcl_DecrRefCount(b1_callback);
@@ -128,117 +225,217 @@ static const char ASSOC_KEY[] = "tk::tktray";
     if (b3_callback != NULL) {
 	Tcl_DecrRefCount(b3_callback);
     }
+    [super dealloc];
 }
 
 @end
 
 /*
- * Class declarations and implementations for TkNotifyItem.
+ * Type used for the ClientData of a MacSystrayObjCmd instance.
  */
 
-@interface TkNotifyItem: NSObject {
+typedef TkStatusItem** StatusItemInfo;
 
-    NSUserNotification *tk_notification;
-    NSString *header;
-    NSString *info;
-}
+@implementation TkUserNotifier : NSObject
 
-- (id) init;
-- (void) postNotificationWithTitle : (NSString *) title message: (NSString *) detail;
-- (BOOL) userNotificationCenter:(NSUserNotificationCenter *)center
-      shouldPresentNotification:(NSUserNotification *)notification;
-- (void) dealloc;
-
-
-@end
-
-@implementation TkNotifyItem : NSObject
-
--  (id) init
+-  (void) postNotificationWithTitle : (NSString * ) title
+			     message: (NSString * ) detail
 {
-    [super init];
-    tk_notification = [[NSUserNotification alloc] init];
-    return self;
+
+#if !defined(DISABLE_NOTIFICATION_FRAMEWORK)
+
+    if (@available(macOS 10.14, *)) {
+	UNUserNotificationCenter *center;
+	UNMutableNotificationContent* content;
+	UNNotificationRequest *request;
+	__block Bool authorized = NO;
+
+	center = [UNUserNotificationCenter currentNotificationCenter];
+	[center requestAuthorizationWithOptions: UNAuthorizationOptionProvisional
+		completionHandler: ^(BOOL granted, NSError* _Nullable error)
+		{
+		    authorized = granted;
+		    if (error) {
+			fprintf(stderr,
+				"Authorization failed with error: %s\n",
+				[NSString stringWithFormat:@"%@",
+					  error.userInfo].UTF8String);
+		    }
+		}];
+	if (authorized) {
+	    content = [[UNMutableNotificationContent alloc] init];
+	    content.title = title;
+	    content.body = detail;
+	    content.sound = [UNNotificationSound defaultSound];
+	    content.categoryIdentifier = TkNotificationCategory;
+	    request = [UNNotificationRequest
+			  requestWithIdentifier:@"TkNotificationID"
+					content:content
+					trigger:nil
+		       ];
+	    center.delegate = (id) self;
+	    fprintf(stderr, "Adding notification after authorization\n");
+	    [center addNotificationRequest: request
+		     withCompletionHandler: ^(NSError* _Nullable error) {
+		    if (error) {
+			fprintf(stderr,
+				"addNotificationRequest: error = %s\n",
+				[NSString stringWithFormat:@"%@",
+					  error.userInfo].UTF8String);
+		    }
+		}];
+	}
+    } else {
+
+#else
+
+    {
+
+#endif
+	NSUserNotification *notification;
+	NSUserNotificationCenter *center;
+
+	center = [NSUserNotificationCenter defaultUserNotificationCenter];
+	notification = [[NSUserNotification alloc] init];
+	notification.title = title;
+	notification.informativeText = detail;
+	notification.soundName = NSUserNotificationDefaultSoundName;
+	[center setDelegate: (id) self];
+	[center deliverNotification:notification];
+    }
 }
 
--  (void) postNotificationWithTitle : (NSString * ) title message: (NSString * ) detail
-{
-    header = title;
-    tk_notification.title = header;
-    info = detail;
-    tk_notification.informativeText = info;
-    tk_notification.soundName = NSUserNotificationDefaultSoundName;
-    NSUserNotificationCenter *center = [NSUserNotificationCenter defaultUserNotificationCenter];
+/*
+ * Implementation of the NSUserNotificationDelegate protocol.
+ */
 
-    [center setDelegate: (id) self];
-    [center deliverNotification:tk_notification];
-}
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000 || defined(DISABLE_NOTIFICATION_FRAMEWORK)
 
-- (BOOL) userNotificationCenter: (NSUserNotificationCenter * ) center
-      shouldPresentNotification: (NSUserNotification * ) notification
+- (BOOL) userNotificationCenter: (NSUserNotificationCenter *) center
+         shouldPresentNotification: (NSUserNotification *)notification
 {
     return YES;
 }
 
-
--  (void) dealloc
+- (void) userNotificationCenter:(NSUserNotificationCenter *)center
+         didDeliverNotification:(NSUserNotification *)notification
 {
-    /*
-     * We are only doing the minimal amount of deallocation that
-     * the superclass cannot handle when it is deallocated, per
-     * https://developer.apple.com/documentation/objectivec/nsobject/
-     * 1571947-dealloc. The compiler may offer warnings, but disregard.
-     * Putting too much here can cause unpredictable crashes, especially
-     * in the Tk test suite.
-     */
-    tk_notification = nil;
 }
 
+- (void) userNotificationCenter:(NSUserNotificationCenter *)center
+	 didActivateNotification:(NSUserNotification *)notification
+{
+}
+
+#endif
+
+/*
+ * Implementation of the UNUserNotificationDelegate protocol.
+ */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+
+- (void) userNotificationCenter:(UNUserNotificationCenter *)center
+         didReceiveNotificationResponse:(UNNotificationResponse *)response
+	 withCompletionHandler:(void (^)(void))completionHandler
+{
+    fprintf(stderr, "Received Notification.\n");
+    completionHandler();
+}
+
+- (void) userNotificationCenter:(UNUserNotificationCenter *)center
+    willPresentNotification:(UNNotification *)notification
+    withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+    fprintf(stderr, "Will present notification.\n");
+    completionHandler(UNNotificationPresentationOptionNone);
+}
+
+- (void) userNotificationCenter:(UNUserNotificationCenter *)center
+   openSettingsForNotification:(UNNotification *)notification
+{
+    fprintf(stderr, "Open notification settings.\n");
+}
+
+#endif
 @end
 
 /*
- * Main objects of this file.
+ *----------------------------------------------------------------------
+ *
+ * MacSystrayDestroy --
+ *
+ * 	Removes an intepreters icon from the status bar.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The icon is removed and memory is freed.
+ *
+ *----------------------------------------------------------------------
  */
 
-typedef struct {
-    TkStatusItem *tk_item;
-    TkNotifyItem *notify_item;
-} TrayInfo;
+static void
+MacSystrayDestroy(
+    ClientData clientData,
+    TCL_UNUSED(Tcl_Interp *))
+{
+    StatusItemInfo info = (StatusItemInfo)clientData;
+    if (info) {
+	[*info release];
+	ckfree(info);
+    }
+}
+
+#endif // if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 
 /*
  *----------------------------------------------------------------------
  *
  * MacSystrayObjCmd --
  *
- * 	Main command for creating, displaying, and removing icons from status menu.
+ * 	Main command for creating, displaying, and removing icons from the
+ * 	status bar.
  *
  * Results:
- *	Management of icon display in status menu.
+ *
+ *      A standard Tcl result.
  *
  * Side effects:
- *	None.
+ *
+ *	Management of icon display in the status bar.
  *
  *----------------------------------------------------------------------
  */
 
-
 static int
 MacSystrayObjCmd(
-		 void *clientData,
-		 Tcl_Interp * interp,
-		 int objc,
-		 Tcl_Obj *const *objv)
+    void *clientData,
+    Tcl_Interp * interp,
+    int objc,
+    Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
-    TrayInfo *info = (TrayInfo *)clientData;
+    StatusItemInfo info = (StatusItemInfo)clientData;
+    TkStatusItem *statusItem = *info;
     int result, idx;
     static const char *options[] =
-	{"create",	"modify", "destroy", NULL};
+	{"create", "modify", "destroy", NULL};
     typedef enum {TRAY_CREATE, TRAY_MODIFY, TRAY_DESTROY} optionsEnum;
-
     static const char *modifyOptions[] =
-	{"image",  "text", "b1_callback", "b3_callback", NULL};
-    typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B3_CALLBACK} modifyOptionsEnum;
+	{"image", "text", "b1_callback", "b3_callback", NULL};
+    typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B3_CALLBACK
+        } modifyOptionsEnum;
+
+    if ([NSApp macOSVersion] < 101000) {
+	Tcl_AppendResult(interp,
+	    "StatusItem icons not supported on macOS versions lower than 10.10",
+	    NULL);
+	return TCL_OK;
+    }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
@@ -259,8 +456,9 @@ MacSystrayObjCmd(
 	    return TCL_ERROR;
 	}
 
-	if (info->tk_item == NULL) {
-	    info->tk_item = [[TkStatusItem alloc] init: interp];
+	if (statusItem == NULL) {
+	    statusItem = [[TkStatusItem alloc] init: interp];
+	    *info = statusItem;
 	} else {
 	    Tcl_AppendResult(interp, "Only one system tray icon supported per interpreter", NULL);
 	    return TCL_ERROR;
@@ -285,7 +483,7 @@ MacSystrayObjCmd(
 	if (width != 0 && height != 0) {
 	    icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
 						 width, height);
-	    [info->tk_item setImagewithImage: icon];
+	    [statusItem setImagewithImage: icon];
 	    Tk_FreeImage(tk_image);
 	}
 
@@ -299,14 +497,14 @@ MacSystrayObjCmd(
 	    return TCL_ERROR;
 	}
 
-	[info->tk_item setTextwithString: tooltip];
+	[statusItem setTextwithString: tooltip];
 
 	/*
 	 * Set the proc for the callback.
 	 */
 
-	[info->tk_item setB1Callback : (objc > 4) ? objv[4] : NULL];
-	[info->tk_item setB3Callback : (objc > 5) ? objv[5] : NULL];
+	[statusItem setB1Callback : (objc > 4) ? objv[4] : NULL];
+	[statusItem setB3Callback : (objc > 5) ? objv[5] : NULL];
 	break;
 
     }
@@ -344,7 +542,7 @@ MacSystrayObjCmd(
 	    if (width != 0 && height != 0) {
 		icon = TkMacOSXGetNSImageFromTkImage(d, tk_image,
 						     width, height);
-		[info->tk_item setImagewithImage: icon];
+		[statusItem setImagewithImage: icon];
 	    }
 	    Tk_FreeImage(tk_image);
 	    break;
@@ -361,7 +559,7 @@ MacSystrayObjCmd(
 		return TCL_ERROR;
 	    }
 
-	    [info->tk_item setTextwithString: tooltip];
+	    [statusItem setTextwithString: tooltip];
 	    break;
 	}
 
@@ -370,11 +568,11 @@ MacSystrayObjCmd(
 	     */
 
 	case TRAY_B1_CALLBACK: {
-	    [info->tk_item setB1Callback : objv[3]];
+	    [statusItem setB1Callback : objv[3]];
 	    break;
 	}
 	case TRAY_B3_CALLBACK: {
-	    [info->tk_item setB3Callback : objv[3]];
+	    [statusItem setB3Callback : objv[3]];
 	    break;
 	}
     }
@@ -383,50 +581,19 @@ MacSystrayObjCmd(
 
     case TRAY_DESTROY: {
 	    /* we don't really distroy, just reset the image, text and callback */
-	    [info->tk_item setImagewithImage: nil];
-	    [info->tk_item setTextwithString: nil];
-	    [info->tk_item setB1Callback : NULL];
-	    [info->tk_item setB3Callback : NULL];
+	    [statusItem setImagewithImage: nil];
+	    [statusItem setTextwithString: nil];
+	    [statusItem setB1Callback : NULL];
+	    [statusItem setB3Callback : NULL];
 	    break;
 	}
     }
+
+#endif //if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+
     return TCL_OK;
 }
 
-
-/*
- *----------------------------------------------------------------------
- *
- * MacSystrayDestroy --
- *
- * 	Deletes icon from display.
- *
- * Results:
- *	Icon/window removed and memory freed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-MacSystrayDestroy(
-		  void *clientData,
-		  TCL_UNUSED(Tcl_Interp *))
-{
-    TrayInfo *info = (TrayInfo *)clientData;
-
-    if (info->tk_item != NULL) {
-	[info->tk_item dealloc];
-	info->tk_item = NULL;
-    }
-    if (info->notify_item != NULL) {
-	[info->notify_item dealloc];
-	info->notify_item = NULL;
-    }
-    ckfree(info);
-}
 
 
 /*
@@ -437,39 +604,43 @@ MacSystrayDestroy(
  *      Create system notification.
  *
  * Results:
- *      System notification created.
+ *
+ *      A standard Tcl result.
  *
  * Side effects:
- *	None.
+ *
+ *      System notifications are posted.
  *
  *-------------------------------z---------------------------------------
  */
 
-
 static int SysNotifyObjCmd(
-			   void *clientData,
-			   Tcl_Interp * interp,
-			   int objc,
-			   Tcl_Obj *const *objv)
+    TCL_UNUSED(void *),
+    Tcl_Interp * interp,
+    int objc,
+    Tcl_Obj *const *objv)
 {
-    TrayInfo *info = (TrayInfo *) clientData;
-
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "title message");
 	return TCL_ERROR;
     }
 
-    if (info->notify_item == NULL) {
-	info->notify_item = [[TkNotifyItem alloc] init];
+    if ([NSApp macOSVersion] < 101000) {
+	Tcl_AppendResult(interp,
+	    "Notifications not supported on macOS versions lower than 10.10",
+	     NULL);
+	return TCL_OK;
     }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 
     NSString *title = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
     NSString *message = [NSString stringWithUTF8String: Tcl_GetString(objv[2])];
-    [info->notify_item postNotificationWithTitle : title message: message];
+    [notifier postNotificationWithTitle : title message: message];
 
+#endif
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -477,12 +648,16 @@ static int SysNotifyObjCmd(
  * MacSystrayInit --
  *
  * 	Initialize this package and create script-level commands.
+ *      This is called from TkpInit for each interpreter.
  *
  * Results:
- *	Initialization of code.
+ *
+ *      A standard Tcl result.
  *
  * Side effects:
- *	None.
+ *
+ *	The tk systray and tk sysnotify commands are installed in an
+ *	interpreter
  *
  *----------------------------------------------------------------------
  */
@@ -492,22 +667,38 @@ MacSystrayInit(Tcl_Interp *interp)
 {
 
     /*
-     * Initialize TkStatusItem and TkNotifyItem.
+     * Initialize the TkStatusItem for this interpreter, and the shared
+     * TkUserNotifier, if it has not been initialized yet.
      */
 
-    TrayInfo *info = (TrayInfo *)ckalloc(sizeof(TrayInfo));
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 
-    memset(info, 0, sizeof(TrayInfo));
-    Tcl_SetAssocData(interp, ASSOC_KEY, MacSystrayDestroy, info);
+    StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
+    *info = 0;
+    if (notifier == nil) {
+	notifier = [[TkUserNotifier alloc] init];
+    }
 
-    if ([NSApp macOSVersion] < 101000) {
-	Tcl_AppendResult(interp, "Statusitem icons not supported on versions of macOS lower than 10.10", NULL);
-	return TCL_OK;
+#endif
+
+    if (@available(macOS 10.14, *)) {
+	UNUserNotificationCenter *center;
+	UNNotificationCategory *category;
+	NSSet *categories;
+
+	TkNotificationCategory = @"Basic Tk Notification";
+	center = [UNUserNotificationCenter currentNotificationCenter];
+	category = [UNNotificationCategory
+		       categoryWithIdentifier:TkNotificationCategory
+		       actions:@[]
+		       intentIdentifiers:@[]
+		       options: UNNotificationCategoryOptionNone];
+	categories = [NSSet setWithObjects:category, nil];
+	[center setNotificationCategories: categories];
     }
 
     Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info, NULL);
-    Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyObjCmd, info, NULL);
-
+    Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
