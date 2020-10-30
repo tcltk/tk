@@ -7,6 +7,8 @@
  *      In macOS the icon appears on the right hand side of the menu bar.
  *
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2020 Jan Nijtmans.
+ * Copyright (c) 2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -40,7 +42,7 @@
  * remove the following directive.
  */
 
-#define DISABLE_NOTIFICATION_FRAMEWORK
+//#define DISABLE_NOTIFICATION_FRAMEWORK
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 
@@ -115,6 +117,8 @@ static NSString *TkNotificationCategory;
  */
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+
+
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
     didReceiveNotificationResponse:(UNNotificationResponse *)response
@@ -245,24 +249,11 @@ typedef TkStatusItem** StatusItemInfo;
 #if !defined(DISABLE_NOTIFICATION_FRAMEWORK)
 
     if (@available(macOS 10.14, *)) {
-	UNUserNotificationCenter *center;
+	    		UNUserNotificationCenter *center;
 	UNMutableNotificationContent* content;
 	UNNotificationRequest *request;
-	__block Bool authorized = NO;
-
-	center = [UNUserNotificationCenter currentNotificationCenter];
-	[center requestAuthorizationWithOptions: UNAuthorizationOptionProvisional
-		completionHandler: ^(BOOL granted, NSError* _Nullable error)
-		{
-		    authorized = granted;
-		    if (error) {
-			fprintf(stderr,
-				"Authorization failed with error: %s\n",
-				[NSString stringWithFormat:@"%@",
-					  error.userInfo].UTF8String);
-		    }
-		}];
-	if (authorized) {
+		center = [UNUserNotificationCenter currentNotificationCenter];
+		center.delegate = (id) self;
 	    content = [[UNMutableNotificationContent alloc] init];
 	    content.title = title;
 	    content.body = detail;
@@ -273,7 +264,6 @@ typedef TkStatusItem** StatusItemInfo;
 					content:content
 					trigger:nil
 		       ];
-	    center.delegate = (id) self;
 	    fprintf(stderr, "Adding notification after authorization\n");
 	    [center addNotificationRequest: request
 		     withCompletionHandler: ^(NSError* _Nullable error) {
@@ -284,7 +274,6 @@ typedef TkStatusItem** StatusItemInfo;
 					  error.userInfo].UTF8String);
 		    }
 		}];
-	}
     } else {
 
 #else
@@ -681,8 +670,19 @@ MacSystrayInit(Tcl_Interp *interp)
 
 #endif
 
+    /*
+     * Per Apple's docs at https://developer.apple.com/library/archive/
+     * documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/
+     * SupportingNotificationsinYourApp.html, the authorization component of 
+     * the UNUserNotificationCenter API must be executed on app launch.
+     *
+     */
+
     if (@available(macOS 10.14, *)) {
+
+	__block Bool authorized = NO;
 	UNUserNotificationCenter *center;
+	center = [UNUserNotificationCenter currentNotificationCenter];
 	UNNotificationCategory *category;
 	NSSet *categories;
 
@@ -695,6 +695,17 @@ MacSystrayInit(Tcl_Interp *interp)
 		       options: UNNotificationCategoryOptionNone];
 	categories = [NSSet setWithObjects:category, nil];
 	[center setNotificationCategories: categories];
+	UNAuthorizationOptions options = UNAuthorizationOptionAlert | UNAuthorizationOptionSound | UNAuthorizationOptionBadge |  UNAuthorizationOptionProvidesAppNotificationSettings;
+	[center requestAuthorizationWithOptions: options  completionHandler: ^(BOOL granted, NSError* _Nullable error)
+		{
+		    authorized = granted;
+		    if (error) {
+			fprintf(stderr,
+				"Authorization failed with error: %s\n",
+				[NSString stringWithFormat:@"%@",
+					  error.userInfo].UTF8String);
+		    }
+		}];
     }
 
     Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info, NULL);
