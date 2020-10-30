@@ -23,35 +23,49 @@
  * NSUserNotificationCenter via a NSUserNotificationCenterDelegate object.
  * These classes were defined in the CoreFoundation framework.  In macOS 10.14
  * a separate UserNotifications framework was introduced which adds some
- * additional functionality, primarily allowing users to opt out of receiving
- * notifications on a per app basis.  This framework uses a different class,
- * the UNUserNotificationCenter and its delegate follows a different protocol,
- * named UNUserNotificationCenterDelegate.
+ * additional features, including custom controls on the notification window
+ * but primarily a requirement that an application must be authorized before
+ * being allowed to post a notification.  This framework uses a different
+ * class, the UNUserNotificationCenter, and its delegate follows a different
+ * protocol, named UNUserNotificationCenterDelegate.
  *
  * In macOS 11.0 the NSUserNotificationCenter and its delegate protocol were
- * deprecated.  So in this file we implemented both protocols, with the intent
+ * deprecated.  So in this file we implement both protocols, with the intent
  * of using the UserNotifications.framework on systems which provide it.
- * Unfortunately, however, this does not work.  The UNUserNotificationCenter
- * never authorizes Wish to send notifications, regardless of how the settings
- * in the user's Notification preferences are configured.  Consequently, until
- * this is fixed, we must disable using the framework and put up with many
- * deprecations when building Tk for a minimum target of 11.0.
+ * Unfortunately, however, there is a catch.  Although it does not seem to be
+ * documented anywhere, experiment indicates that the UNNotificationCenter
+ * will not authorize an app to post notifications unless the app code has been
+ * signed by XCode or by the codesign utility.  (As of 11.0, it appears that
+ * it is sufficient to sign the app with a self-signed certificate.)
  *
- * To disable using the UserNotifications.framework on systems that support it,
- * define DISABLE_NOTIFICATION_FRAMEWORK.  To test the broken new framework
- * remove the following directive.
+ * Consequently, developers using this module on macOS 11.0 or newer have two
+ * choices.  Either use the deprecated NSUserNotificationCenter to get
+ * notifications which work with unsigned apps but tolerate lots of deprecation
+ * messages during compilation, or use the UNUserNotificationCenter on newer
+ * systems, but be forced to sign the application in order to make the
+ * notifications work. The former is the default.
+ *
+ * The mechanism for disabling use of the UserNotifications.framework, even on
+ * systems that support it, is to define DISABLE_NOTIFICATION_FRAMEWORK.
  */
 
-//#define DISABLE_NOTIFICATION_FRAMEWORK
+#define DISABLE_NOTIFICATION_FRAMEWORK
+//#define DEBUG
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000 || defined(DISABLE_NOTIFICATION_FRAMEWORK)
+#define USE_NS_NOTIFICATION 1
+#else
+#define USE_NS_NOTIFICATION 0
+#endif
+#define BUILD_TARGET_HAS_NOTIFICATION (MAC_OS_X_VERSION_MAX_ALLOWED >= 101000)
+#define BUILD_TARGET_HAS_UN_FRAMEWORK (MAC_OS_X_VERSION_MAX_ALLOWED >= 101400)
 
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
 #import <UserNotifications/UserNotifications.h>
 static NSString *TkNotificationCategory;
-
 #endif
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if BUILD_TARGET_HAS_NOTIFICATION
 
 /*
  * Class declaration for TkStatusItem.
@@ -99,7 +113,7 @@ static NSString *TkNotificationCategory;
  * The following methods comprise the NSUserNotificationCenterDelegate protocol.
  */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+#if USE_NS_NOTIFICATION
 
 - (void) userNotificationCenter:(NSUserNotificationCenter *)center
     didDeliverNotification:(NSUserNotification *)notification;
@@ -116,7 +130,7 @@ static NSString *TkNotificationCategory;
  * The following methods comprise the UNNotificationCenterDelegate protocol:
  */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
 
 
 
@@ -252,8 +266,8 @@ typedef TkStatusItem** StatusItemInfo;
 	    		UNUserNotificationCenter *center;
 	UNMutableNotificationContent* content;
 	UNNotificationRequest *request;
-		center = [UNUserNotificationCenter currentNotificationCenter];
-		center.delegate = (id) self;
+	    center = [UNUserNotificationCenter currentNotificationCenter];
+	    center.delegate = (id) self;
 	    content = [[UNMutableNotificationContent alloc] init];
 	    content.title = title;
 	    content.body = detail;
@@ -264,23 +278,27 @@ typedef TkStatusItem** StatusItemInfo;
 					content:content
 					trigger:nil
 		       ];
-	    fprintf(stderr, "Adding notification after authorization\n");
 	    [center addNotificationRequest: request
 		     withCompletionHandler: ^(NSError* _Nullable error) {
 		    if (error) {
-			fprintf(stderr,
+#if defined(DEBUG)
+			FILE *logfile = fopen("/tmp/tklog", "a");
+			fprintf(logfile,
 				"addNotificationRequest: error = %s\n",
 				[NSString stringWithFormat:@"%@",
 					  error.userInfo].UTF8String);
+			fflush(logfile);
+			fclose(logfile);
+#endif
 		    }
 		}];
-    } else {
-
-#else
-
-    {
+    }  else {
 
 #endif
+
+#if USE_NS_NOTIFICATION
+
+     {
 	NSUserNotification *notification;
 	NSUserNotificationCenter *center;
 
@@ -289,8 +307,10 @@ typedef TkStatusItem** StatusItemInfo;
 	notification.title = title;
 	notification.informativeText = detail;
 	notification.soundName = NSUserNotificationDefaultSoundName;
-	[center setDelegate: (id) self];
 	[center deliverNotification:notification];
+
+#endif
+
     }
 }
 
@@ -298,7 +318,7 @@ typedef TkStatusItem** StatusItemInfo;
  * Implementation of the NSUserNotificationDelegate protocol.
  */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000 || defined(DISABLE_NOTIFICATION_FRAMEWORK)
+#if USE_NS_NOTIFICATION
 
 - (BOOL) userNotificationCenter: (NSUserNotificationCenter *) center
          shouldPresentNotification: (NSUserNotification *)notification
@@ -322,13 +342,12 @@ typedef TkStatusItem** StatusItemInfo;
  * Implementation of the UNUserNotificationDelegate protocol.
  */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
          didReceiveNotificationResponse:(UNNotificationResponse *)response
 	 withCompletionHandler:(void (^)(void))completionHandler
 {
-    fprintf(stderr, "Received Notification.\n");
     completionHandler();
 }
 
@@ -336,14 +355,14 @@ typedef TkStatusItem** StatusItemInfo;
     willPresentNotification:(UNNotification *)notification
     withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
 {
-    fprintf(stderr, "Will present notification.\n");
-    completionHandler(UNNotificationPresentationOptionAlert);
+    completionHandler(UNNotificationPresentationOptionList |
+		      UNNotificationPresentationOptionBanner);
 }
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
    openSettingsForNotification:(UNNotification *)notification
 {
-    fprintf(stderr, "Open notification settings.\n");
+    // Does something need to be done here?
 }
 
 #endif
@@ -377,7 +396,7 @@ MacSystrayDestroy(
     }
 }
 
-#endif // if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#endif // if BUILD_TARGET_HAS_NOTIFICATION
 
 /*
  *----------------------------------------------------------------------
@@ -424,7 +443,7 @@ MacSystrayObjCmd(
 	return TCL_OK;
     }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if BUILD_TARGET_HAS_NOTIFICATION
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
@@ -523,7 +542,8 @@ MacSystrayObjCmd(
 
 	    tk_image = Tk_GetImage(interp, tkwin, Tcl_GetString(objv[3]), NULL, NULL);
 	    if (tk_image == NULL) {
-		Tcl_AppendResult(interp, " unable to obtain image for systray icon", (char * ) NULL);
+		Tcl_AppendResult(interp, " unable to obtain image for systray icon",
+				 NULL);
 		return TCL_ERROR;
 	    }
 
@@ -544,7 +564,8 @@ MacSystrayObjCmd(
 	case TRAY_TEXT: {
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
 	    if (tooltip == nil) {
-		Tcl_AppendResult(interp, "unable to set tooltip for systray icon", NULL);
+		Tcl_AppendResult(interp, "unable to set tooltip for systray icon",
+				 NULL);
 		return TCL_ERROR;
 	    }
 
@@ -578,12 +599,10 @@ MacSystrayObjCmd(
 	}
     }
 
-#endif //if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#endif // if BUILD_TARGET_HAS_NOTIFICATION
 
     return TCL_OK;
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -621,13 +640,14 @@ static int SysNotifyObjCmd(
 	return TCL_OK;
     }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if BUILD_TARGET_HAS_NOTIFICATION
 
     NSString *title = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
     NSString *message = [NSString stringWithUTF8String: Tcl_GetString(objv[2])];
     [notifier postNotificationWithTitle : title message: message];
 
 #endif
+
     return TCL_OK;
 }
 
@@ -660,7 +680,7 @@ MacSystrayInit(Tcl_Interp *interp)
      * TkUserNotifier, if it has not been initialized yet.
      */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+#if BUILD_TARGET_HAS_NOTIFICATION
 
     StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
     *info = 0;
@@ -668,18 +688,14 @@ MacSystrayInit(Tcl_Interp *interp)
 	notifier = [[TkUserNotifier alloc] init];
     }
 
-#endif
-
     /*
      * Per Apple's docs at https://developer.apple.com/library/archive/
      * documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/
-     * SupportingNotificationsinYourApp.html, the authorization component of 
+     * SupportingNotificationsinYourApp.html, the authorization component of
      * the UNUserNotificationCenter API must be executed on app launch.
-     *
      */
 
     if (@available(macOS 10.14, *)) {
-
 	__block Bool authorized = NO;
 	UNUserNotificationCenter *center;
 	center = [UNUserNotificationCenter currentNotificationCenter];
@@ -695,20 +711,31 @@ MacSystrayInit(Tcl_Interp *interp)
 		       options: UNNotificationCategoryOptionNone];
 	categories = [NSSet setWithObjects:category, nil];
 	[center setNotificationCategories: categories];
-	UNAuthorizationOptions options = UNAuthorizationOptionAlert | UNAuthorizationOptionSound | UNAuthorizationOptionBadge |  UNAuthorizationOptionProvidesAppNotificationSettings;
-	[center requestAuthorizationWithOptions: options  completionHandler: ^(BOOL granted, NSError* _Nullable error)
+	UNAuthorizationOptions options = UNAuthorizationOptionAlert |
+	    UNAuthorizationOptionSound | UNAuthorizationOptionBadge |
+	    UNAuthorizationOptionProvidesAppNotificationSettings;
+	[center requestAuthorizationWithOptions: options
+	     completionHandler: ^(BOOL granted, NSError* _Nullable error)
 		{
 		    authorized = granted;
 		    if (error) {
-			fprintf(stderr,
+#if defined(DEBUG)
+			FILE *logfile = open("/tmp/tklog", "a");
+			fprintf(logfile,
 				"Authorization failed with error: %s\n",
 				[NSString stringWithFormat:@"%@",
 					  error.userInfo].UTF8String);
+			fflush(logfile);
+			fclose(logfile);
+#endif
 		    }
 		}];
     }
 
-    Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info, NULL);
+#endif // BUILD_TARGET_HAS_NOTIFICATION
+
+    Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info,
+			 (Tcl_CmdDeleteProc *)MacSystrayDestroy);
     Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
