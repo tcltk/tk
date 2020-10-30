@@ -337,7 +337,7 @@ typedef TkStatusItem** StatusItemInfo;
     withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
 {
     fprintf(stderr, "Will present notification.\n");
-    completionHandler(UNNotificationPresentationOptionNone);
+    completionHandler(UNNotificationPresentationOptionAlert);
 }
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
