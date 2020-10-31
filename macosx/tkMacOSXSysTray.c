@@ -30,35 +30,42 @@
  * protocol, named UNUserNotificationCenterDelegate.
  *
  * In macOS 11.0 the NSUserNotificationCenter and its delegate protocol were
- * deprecated.  So in this file we implement both protocols, with the intent
- * of using the UserNotifications.framework on systems which provide it.
- * Unfortunately, however, there is a catch.  Although it does not seem to be
- * documented anywhere, experiment indicates that the UNNotificationCenter
- * will not authorize an app to post notifications unless the app code has been
- * signed by XCode or by the codesign utility.  (As of 11.0, it appears that
- * it is sufficient to sign the app with a self-signed certificate.)
+ * deprecated.  To make matters more complicated, it turns out that there is a
+ * secret undocumented additional requirement that an app which is not signed
+ * can never be authorized to send notifications via the UNNotificationCenter.
+ * (As of 11.0, it appears that it is sufficient to sign the app with a
+ * self-signed certificate, however.)
  *
- * Consequently, developers using this module on macOS 11.0 or newer have two
- * choices.  Either use the deprecated NSUserNotificationCenter to get
- * notifications which work with unsigned apps but tolerate lots of deprecation
- * messages during compilation, or use the UNUserNotificationCenter on newer
- * systems, but be forced to sign the application in order to make the
- * notifications work. The former is the default.
- *
- * The mechanism for disabling use of the UserNotifications.framework, even on
- * systems that support it, is to define DISABLE_NOTIFICATION_FRAMEWORK.
+ * The workaround implemented here is to define two classes, TkNSNotifier and
+ * TkUNNotifier, each of which provides one of these protocols on macOS 10.14
+ * and newer.  If the TkUSNotifier is able to obtain authorization it is used.
+ * Otherwise, TkNSNotifier is used.  Building TkNSNotifier on 11.0 or later
+ * produces deprecation warnings which are suppressed by enclosing the
+ * interface and implementation in #pragma blocks.  The first time that the tk
+ * systray command in initialized in an interpreter an attempt is made to
+ * obtain authorization for sending notifications with the UNNotificationCenter
+ * on systems and the result is saved in a static variable.
  */
 
-#define DISABLE_NOTIFICATION_FRAMEWORK
 //#define DEBUG
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000 || defined(DISABLE_NOTIFICATION_FRAMEWORK)
-#define USE_NS_NOTIFICATION 1
+#ifdef DEBUG
+#define DEBUG_LOG(format, ...) { \
+    FILE* logfile = fopen("/tmp/tklog", "a"); \
+    fprintf(logfile, format, ##__VA_ARGS__);   \
+    fflush(logfile); \
+    fclose(logfile); }
 #else
-#define USE_NS_NOTIFICATION 0
+#define DEBUG_LOG
 #endif
+
 #define BUILD_TARGET_HAS_NOTIFICATION (MAC_OS_X_VERSION_MAX_ALLOWED >= 101000)
 #define BUILD_TARGET_HAS_UN_FRAMEWORK (MAC_OS_X_VERSION_MAX_ALLOWED >= 101400)
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101500
+#define ALERT_OPTION  UNNotificationPresentationOptionList | \
+    		      UNNotificationPresentationOptionBanner
+#else
+#define ALERT_OPTION  UNNotificationPresentationOptionAlert
+#endif
 
 #if BUILD_TARGET_HAS_UN_FRAMEWORK
 #import <UserNotifications/UserNotifications.h>
@@ -66,6 +73,14 @@ static NSString *TkNotificationCategory;
 #endif
 
 #if BUILD_TARGET_HAS_NOTIFICATION
+
+/*
+ * Flag indicating whether the app is authorized to send notifications via the
+ * UserNotification framework.  A YES value means that the app is signed AND
+ * the user has approved notifications.
+ */
+
+static Bool canUseUNNotifications = NO;
 
 /*
  * Class declaration for TkStatusItem.
@@ -92,19 +107,21 @@ static NSString *TkNotificationCategory;
 @end
 
 /*
- * Class declaration for TkUserNotifier. A TkUserNotifier object has no
+ * Class declaration for TkNSNotifier. A TkNSNotifier object has no
  * attributes but implements the NSUserNotificationCenterDelegate protocol or
  * the UNNotificationCenterDelegate protocol, as appropriate for the runtime
  * environment.  It also has one additional method which posts a user
- * notification. There is one TkUserNotifier for the application, shared by all
+ * notification. There is one TkNSNotifier for the application, shared by all
  * interpreters.
  */
 
-@interface TkUserNotifier: NSObject {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+@interface TkNSNotifier: NSObject {
 }
 
 /*
- * This method is used to post a notification.
+ * Post a notification.
  */
 
 - (void) postNotificationWithTitle : (NSString *) title message: (NSString *) detail;
@@ -112,8 +129,6 @@ static NSString *TkNotificationCategory;
 /*
  * The following methods comprise the NSUserNotificationCenterDelegate protocol.
  */
-
-#if USE_NS_NOTIFICATION
 
 - (void) userNotificationCenter:(NSUserNotificationCenter *)center
     didDeliverNotification:(NSUserNotification *)notification;
@@ -124,15 +139,41 @@ static NSString *TkNotificationCategory;
 - (BOOL) userNotificationCenter:(NSUserNotificationCenter *)center
     shouldPresentNotification:(NSUserNotification *)notification;
 
-#endif
+@end
+#pragma clang diagnostic pop
+
+/*
+ * The singleton instance of TkNSNotifier shared by all interpreters in this
+ * application.
+ */
+
+static TkNSNotifier *NSnotifier = nil;
+
+/*
+ * Class declaration for TkUNNotifier. A TkNSNotifier object has no
+ * attributes but implements the UNUserNotificationCenterDelegate protocol It
+ * also has one additional method which posts a user notification. There is at
+ * most one TkUNNotifier for the application, shared by all interpreters.
+ */
+
+@interface TkUNNotifier: NSObject {
+}
+
+ /*
+ * Request authorization to post a notification.
+ */
+
+- (void) requestAuthorization;
+
+/*
+ * Post a notification.
+ */
+
+- (void) postNotificationWithTitle : (NSString *) title message: (NSString *) detail;
 
 /*
  * The following methods comprise the UNNotificationCenterDelegate protocol:
  */
-
-#if BUILD_TARGET_HAS_UN_FRAMEWORK
-
-
 
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
     didReceiveNotificationResponse:(UNNotificationResponse *)response
@@ -145,16 +186,14 @@ static NSString *TkNotificationCategory;
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
    openSettingsForNotification:(UNNotification *)notification;
 
-#endif
-
 @end
 
 /*
- * The singleton instance of TkUserNotifier for the application is stored in
- * this static variable.
+ * The singleton instance of TkUNNotifier shared by all interpeters in this
+ * application.
  */
 
-static TkUserNotifier *notifier = nil;
+static TkUNNotifier *UNnotifier = nil;
 
 /*
  * Class declaration for TkStatusItem. A TkStatusItem represents an icon posted
@@ -254,71 +293,29 @@ static TkUserNotifier *notifier = nil;
 
 typedef TkStatusItem** StatusItemInfo;
 
-@implementation TkUserNotifier : NSObject
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+@implementation TkNSNotifier : NSObject
 
 -  (void) postNotificationWithTitle : (NSString * ) title
 			     message: (NSString * ) detail
 {
+    NSUserNotification *notification;
+    NSUserNotificationCenter *center;
 
-#if !defined(DISABLE_NOTIFICATION_FRAMEWORK)
-
-    if (@available(macOS 10.14, *)) {
-	    		UNUserNotificationCenter *center;
-	UNMutableNotificationContent* content;
-	UNNotificationRequest *request;
-	    center = [UNUserNotificationCenter currentNotificationCenter];
-	    center.delegate = (id) self;
-	    content = [[UNMutableNotificationContent alloc] init];
-	    content.title = title;
-	    content.body = detail;
-	    content.sound = [UNNotificationSound defaultSound];
-	    content.categoryIdentifier = TkNotificationCategory;
-	    request = [UNNotificationRequest
-			  requestWithIdentifier:@"TkNotificationID"
-					content:content
-					trigger:nil
-		       ];
-	    [center addNotificationRequest: request
-		     withCompletionHandler: ^(NSError* _Nullable error) {
-		    if (error) {
-#if defined(DEBUG)
-			FILE *logfile = fopen("/tmp/tklog", "a");
-			fprintf(logfile,
-				"addNotificationRequest: error = %s\n",
-				[NSString stringWithFormat:@"%@",
-					  error.userInfo].UTF8String);
-			fflush(logfile);
-			fclose(logfile);
-#endif
-		    }
-		}];
-    }  else {
-
-#endif
-
-#if USE_NS_NOTIFICATION
-
-     {
-	NSUserNotification *notification;
-	NSUserNotificationCenter *center;
-
-	center = [NSUserNotificationCenter defaultUserNotificationCenter];
-	notification = [[NSUserNotification alloc] init];
-	notification.title = title;
-	notification.informativeText = detail;
-	notification.soundName = NSUserNotificationDefaultSoundName;
-	[center deliverNotification:notification];
-
-#endif
-
-    }
+    center = [NSUserNotificationCenter defaultUserNotificationCenter];
+    DEBUG_LOG("Center is %p\n", center);
+    notification = [[NSUserNotification alloc] init];
+    notification.title = title;
+    notification.informativeText = detail;
+    notification.soundName = NSUserNotificationDefaultSoundName;
+    DEBUG_LOG("Delivering NSNotification now\n")
+    [center deliverNotification:notification];
 }
 
 /*
  * Implementation of the NSUserNotificationDelegate protocol.
  */
-
-#if USE_NS_NOTIFICATION
 
 - (BOOL) userNotificationCenter: (NSUserNotificationCenter *) center
          shouldPresentNotification: (NSUserNotification *)notification
@@ -336,18 +333,71 @@ typedef TkStatusItem** StatusItemInfo;
 {
 }
 
-#endif
+@end
+#pragma clang diagnostic pop
+
+/*
+ * Static variable which records whether the app is authorized to send
+ * notifications via the UNUserNotificationCenter.
+ */
+
+@implementation TkUNNotifier : NSObject
+
+- (void) requestAuthorization
+{
+    UNUserNotificationCenter *center;
+    UNAuthorizationOptions options = UNAuthorizationOptionAlert |
+				     UNAuthorizationOptionSound |
+				     UNAuthorizationOptionBadge |
+	    UNAuthorizationOptionProvidesAppNotificationSettings;
+    center = [UNUserNotificationCenter currentNotificationCenter];
+    [center requestAuthorizationWithOptions: options
+	  completionHandler: ^(BOOL granted, NSError* _Nullable error)
+	    {
+		canUseUNNotifications = granted;
+		if (error || granted == NO) {
+		    DEBUG_LOG("Authorization for UNUserNotifications denied\n")
+		}
+	    }];
+}
+
+-  (void) postNotificationWithTitle: (NSString * ) title
+			     message: (NSString * ) detail
+{
+    UNUserNotificationCenter *center;
+    UNMutableNotificationContent* content;
+    UNNotificationRequest *request;
+    center = [UNUserNotificationCenter currentNotificationCenter];
+    center.delegate = (id) self;
+    content = [[UNMutableNotificationContent alloc] init];
+    content.title = title;
+    content.body = detail;
+    content.sound = [UNNotificationSound defaultSound];
+    content.categoryIdentifier = TkNotificationCategory;
+    request = [UNNotificationRequest
+		  requestWithIdentifier:[[NSUUID UUID] UUIDString]
+				content:content
+				trigger:nil
+	       ];
+    [center addNotificationRequest: request
+	withCompletionHandler: ^(NSError* _Nullable error) {
+	    if (error) {
+		DEBUG_LOG("addNotificationRequest: error = %s\n", \
+			  [NSString stringWithFormat:@"%@", \
+			  error.userInfo].UTF8String)
+	    }
+	}];
+}
 
 /*
  * Implementation of the UNUserNotificationDelegate protocol.
  */
 
-#if BUILD_TARGET_HAS_UN_FRAMEWORK
-
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
          didReceiveNotificationResponse:(UNNotificationResponse *)response
 	 withCompletionHandler:(void (^)(void))completionHandler
 {
+    DEBUG_LOG("didReceiveNotification\n")
     completionHandler();
 }
 
@@ -355,22 +405,22 @@ typedef TkStatusItem** StatusItemInfo;
     willPresentNotification:(UNNotification *)notification
     withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
 {
-    #if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000 
-	completionHandler(UNNotificationPresentationOptionList |
-			  UNNotificationPresentationOptionBanner);
-    #endif
-    #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000 
-	completionHandler(UNNotificationPresentationOptionAlert);
-    #endif  
+
+    /*
+     * This is called even when the user has turned off notifications.
+     */
+
+    DEBUG_LOG("willPresentNotification\n")
+    completionHandler(ALERT_OPTION);
 }
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
    openSettingsForNotification:(UNNotification *)notification
 {
+    DEBUG_LOG("openSettingsForNotification\n")
     // Does something need to be done here?
 }
 
-#endif
 @end
 
 /*
@@ -649,9 +699,40 @@ static int SysNotifyObjCmd(
 
     NSString *title = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
     NSString *message = [NSString stringWithUTF8String: Tcl_GetString(objv[2])];
-    [notifier postNotificationWithTitle : title message: message];
 
-#endif
+    /*
+     * Update the authorization status in case the user enabled or disabled
+     * notifications after the app started up.
+     */
+
+    if (UNnotifier) {
+	UNUserNotificationCenter *center;
+
+	center = [UNUserNotificationCenter currentNotificationCenter];
+        [center getNotificationSettingsWithCompletionHandler:
+	    ^(UNNotificationSettings *settings)
+	    {
+		NSInteger status = settings.authorizationStatus;
+		DEBUG_LOG("Reported authorization status is %ld\n", status)
+		if (status == UNAuthorizationStatusAuthorized) {
+		    canUseUNNotifications = YES;
+		    DEBUG_LOG("Set canUseUNNotifications to YES\n");
+		} else {
+		    canUseUNNotifications = NO;
+		    DEBUG_LOG("Set canUseUNNotifications to NO\n");
+		}
+	    }];
+           }
+
+    if (canUseUNNotifications) {
+	DEBUG_LOG("Using the UNUserNotificationCenter\n")
+	[UNnotifier postNotificationWithTitle : title message: message];
+    } else {
+	DEBUG_LOG("Using the NSUserNotificationCenter\n")
+	[NSnotifier postNotificationWithTitle : title message: message];
+    }
+
+#endif //#if BUILD_TARGET_HAS_NOTIFICATION
 
     return TCL_OK;
 }
@@ -681,33 +762,39 @@ MacSystrayInit(Tcl_Interp *interp)
 {
 
     /*
-     * Initialize the TkStatusItem for this interpreter, and the shared
-     * TkUserNotifier, if it has not been initialized yet.
+     * Initialize the TkStatusItem for this interpreter and, if necessary,
+     * the shared TkNSNotifier and TkUNNotifier.
      */
-
-#if BUILD_TARGET_HAS_NOTIFICATION
 
     StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
     *info = 0;
-    if (notifier == nil) {
-	notifier = [[TkUserNotifier alloc] init];
+
+#if BUILD_TARGET_HAS_NOTIFICATION
+
+    if (NSnotifier == nil) {
+	NSnotifier = [[TkNSNotifier alloc] init];
     }
-
-    /*
-     * Per Apple's docs at https://developer.apple.com/library/archive/
-     * documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/
-     * SupportingNotificationsinYourApp.html, the authorization component of
-     * the UNUserNotificationCenter API must be executed on app launch.
-     */
-
     if (@available(macOS 10.14, *)) {
-	__block Bool authorized = NO;
 	UNUserNotificationCenter *center;
-	center = [UNUserNotificationCenter currentNotificationCenter];
 	UNNotificationCategory *category;
 	NSSet *categories;
 
+	if (UNnotifier == nil) {
+	    UNnotifier = [[TkUNNotifier alloc] init];
+
+	    /*
+	     * Request authorization to use the UserNotification framework.
+	     * The answer is stored in canUseUNNotifications.  If the app code
+	     * is signed and there are no notification preferences settings for
+	     * this app, a dialog will be opened to prompt the user to choose
+	     * settings.  Note that the request is asynchronous, so even if the
+	     * preferences setting exists the result is not available immediately.
+	     */
+	    
+	    [UNnotifier requestAuthorization];
+	}
 	TkNotificationCategory = @"Basic Tk Notification";
+	center = [UNUserNotificationCenter currentNotificationCenter];
 	center = [UNUserNotificationCenter currentNotificationCenter];
 	category = [UNNotificationCategory
 		       categoryWithIdentifier:TkNotificationCategory
@@ -716,25 +803,6 @@ MacSystrayInit(Tcl_Interp *interp)
 		       options: UNNotificationCategoryOptionNone];
 	categories = [NSSet setWithObjects:category, nil];
 	[center setNotificationCategories: categories];
-	UNAuthorizationOptions options = UNAuthorizationOptionAlert |
-	    UNAuthorizationOptionSound | UNAuthorizationOptionBadge |
-	    UNAuthorizationOptionProvidesAppNotificationSettings;
-	[center requestAuthorizationWithOptions: options
-	     completionHandler: ^(BOOL granted, NSError* _Nullable error)
-		{
-		    authorized = granted;
-		    if (error) {
-#if defined(DEBUG)
-			FILE *logfile = open("/tmp/tklog", "a");
-			fprintf(logfile,
-				"Authorization failed with error: %s\n",
-				[NSString stringWithFormat:@"%@",
-					  error.userInfo].UTF8String);
-			fflush(logfile);
-			fclose(logfile);
-#endif
-		    }
-		}];
     }
 
 #endif // BUILD_TARGET_HAS_NOTIFICATION
