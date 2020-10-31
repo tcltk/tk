@@ -36,7 +36,7 @@
 #define SPECIALMENU(n, f) {.name = "." #n, .len = sl(#n) + 1, \
 	.flag = ENTRY_##f##_MENU }
 static const struct {
-    const char *name; const size_t len; const int flag;
+    const char *name; size_t len; int flag;
 } specialMenus[] = {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
@@ -47,8 +47,8 @@ static const struct {
 
 #define MODIFIER(n, f) {.name = #n, .len = sl(#n), .mask = f }
 static const struct {
-    const char *name; const size_t len; const NSUInteger mask;
-} modifiers[] = {
+    const char *name; size_t len; NSUInteger mask;
+} allModifiers[] = {
     MODIFIER(Control,	NSControlKeyMask),
     MODIFIER(Ctrl,	NSControlKeyMask),
     MODIFIER(Option,	NSAlternateKeyMask),
@@ -64,7 +64,7 @@ static const struct {
 
 #define ACCEL(n, c) {.name = #n, .len = sl(#n), .ch = c }
 static const struct {
-    const char *name; const size_t len; const UniChar ch;
+    const char *name; size_t len; UniChar ch;
 } specialAccelerators[] = {
     ACCEL(PageUp,	NSPageUpFunctionKey),
     ACCEL(PageDown,	NSPageDownFunctionKey),
@@ -91,9 +91,6 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
-				 * the flag that Tk is not to draw any
-				 * menus. */
 static int inPostMenu = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
@@ -493,10 +490,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkSetMainMenu: (TKMenu *) menu
 {
-    if (gNoTkMenus) {
-	return;
-    }
-
     TKMenu *applicationMenu = nil;
 
     if (menu) {
@@ -711,7 +704,7 @@ TkpConfigureMenuEntry(
 
     if (mePtr->image) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
-	image = TkMacOSXGetNSImageWithTkImage(mePtr->menuPtr->display,
+	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != None) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
@@ -719,7 +712,7 @@ TkpConfigureMenuEntry(
 
 	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, &imageWidth,
 		&imageHeight);
-	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
+	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
 	if (gc->foreground == defaultFg) {
 	    [image setTemplate:YES];
@@ -901,7 +894,7 @@ TkpPostMenu(
 	 * rather than the appearance of the root window.
 	 */
 	realWinPtr = (TkWindow*) realWin;
-	realWinView = TkMacOSXDrawableView(realWinPtr->privatePtr);
+	realWinView = TkMacOSXGetNSViewForDrawable(realWinPtr->privatePtr);
 	if (realWinView != nil) {
 	    break;
 	}
@@ -1237,18 +1230,18 @@ ParseAccelerator(
     *maskPtr = 0;
     while (1) {
 	i = 0;
-	while (modifiers[i].name) {
-	    int l = modifiers[i].len;
+	while (allModifiers[i].name) {
+	    int l = allModifiers[i].len;
 
-	    if (!strncasecmp(accel, modifiers[i].name, l) &&
+	    if (!strncasecmp(accel, allModifiers[i].name, l) &&
 		    (accel[l] == '-' || accel[l] == '+')) {
-		*maskPtr |= modifiers[i].mask;
+		*maskPtr |= allModifiers[i].mask;
 		accel += l+1;
 		break;
 	    }
 	    i++;
 	}
-	if (!modifiers[i].name || !*accel) {
+	if (!allModifiers[i].name || !*accel) {
 	    break;
 	}
     }
@@ -1472,14 +1465,14 @@ TkpComputeStandardMenuGeometry(
 		}
 	    } else {
 		NSUInteger modifMask = [menuItem keyEquivalentModifierMask];
-		int i = 0;
+		int j = 0;
 
-		while (modifiers[i].name) {
-		    if (modifMask & modifiers[i].mask) {
-			modifMask &= ~modifiers[i].mask;
+		while (allModifiers[j].name) {
+		    if (modifMask & allModifiers[j].mask) {
+			modifMask &= ~allModifiers[j].mask;
 			modifierWidth += modifierCharWidth;
 		    }
-		    i++;
+		    j++;
 		}
 		accelWidth = [[menuItem keyEquivalent] sizeWithAttributes:
 			TkMacOSXNSFontAttributesForFont(tkfont)].width;
@@ -1660,30 +1653,6 @@ TkMacOSXClearMenubarActive(void)
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MacOSXTurnOffMenus --
- *
- *	Turns off all the menu drawing code. This is more than just disabling
- *	the "menu" command, this means that Tk will NEVER touch the menubar.
- *	It is needed in the Plugin, where Tk does not own the menubar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A flag is set which will disable all menu drawing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_MacOSXTurnOffMenus(void)
-{
-    gNoTkMenus = 1;
 }
 
 /*

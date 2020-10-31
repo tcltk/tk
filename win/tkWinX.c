@@ -349,12 +349,12 @@ TkWinGetPlatformTheme(void)
 	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
 	 * windows classic theme was selected.
 	 */
-	if ((os.dwMajorVersion == 5) && (os.dwMinorVersion == 1)) {
+	if (os.dwMajorVersion == 5 && os.dwMinorVersion >= 1) {
 	    HKEY hKey;
 	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
 	    LPCWSTR szCurrent = L"Current";
 	    DWORD dwSize = 200;
-	    char pBuffer[200];
+	    WCHAR pBuffer[200];
 
 	    memset(pBuffer, 0, dwSize);
 	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
@@ -363,7 +363,7 @@ TkWinGetPlatformTheme(void)
 	    } else {
 		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
 		RegCloseKey(hKey);
-		if (strcmp(pBuffer, "Windows Standard") == 0) {
+		if (wcscmp(pBuffer, L"Windows Standard") == 0) {
 		    tkWinTheme = TK_THEME_WIN_CLASSIC;
 		} else {
 		    tkWinTheme = TK_THEME_WIN_XP;
@@ -1746,11 +1746,11 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
-    case Button4:
+    case Button8:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
 	break;
-    case Button5:
+    case Button9:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
 	break;

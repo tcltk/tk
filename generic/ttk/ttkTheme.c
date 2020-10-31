@@ -291,13 +291,12 @@ static void FreeElementClass(Ttk_ElementClass *elementClass)
  * +++ Themes.
  */
 
-static int ThemeEnabled(Ttk_Theme theme, void *dummy)
+static int ThemeEnabled(
+    TCL_UNUSED(Ttk_Theme),
+    TCL_UNUSED(void *))
 {
-    (void)theme;
-    (void)dummy;
-
     /* Default ThemeEnabledProc -- always return true */
-	return 1;
+    return 1;
 }
 
 typedef struct Ttk_Theme_
@@ -390,7 +389,7 @@ typedef struct CleanupStruct {
 } Cleanup;
 
 /*------------------------------------------------------------------------
- * +++ Master style package data structure.
+ * +++ Style package data structure.
  */
 typedef struct
 {
@@ -404,18 +403,19 @@ typedef struct
     int themeChangePending;		/* scheduled ThemeChangedProc call? */
 } StylePackageData;
 
-static void ThemeChangedProc(ClientData);	/* Forward */
+static void ThemeChangedProc(void *);	/* Forward */
 
 /* Ttk_StylePkgFree --
  *	Cleanup procedure for StylePackageData.
  */
-static void Ttk_StylePkgFree(ClientData clientData, Tcl_Interp *dummy)
+static void Ttk_StylePkgFree(
+    ClientData clientData,
+    TCL_UNUSED(Tcl_Interp *))
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Tcl_HashSearch search;
     Tcl_HashEntry *entryPtr;
     Cleanup *cleanup;
-    (void)dummy;
 
     /*
      * Cancel any pending ThemeChanged calls:
@@ -590,7 +590,7 @@ void Ttk_SetThemeEnabledProc(
 
 static Ttk_Theme LookupTheme(
     Tcl_Interp *interp,		/* where to leave error messages */
-    StylePackageData *pkgPtr,	/* style package master record */
+    StylePackageData *pkgPtr,	/* style package record */
     const char *name)		/* theme name */
 {
     Tcl_HashEntry *entryPtr;
@@ -827,13 +827,12 @@ int Ttk_RegisterElementFactory(
  * 	(style element create $name) "from" $theme ?$element?
  */
 static int Ttk_CloneElement(
-    Tcl_Interp *interp, void *dummy,
+    Tcl_Interp *interp, TCL_UNUSED(void *),
     Ttk_Theme theme, const char *elementName,
     int objc, Tcl_Obj *const objv[])
 {
     Ttk_Theme fromTheme;
     Ttk_ElementClass *fromElement;
-    (void)dummy;
 
     if (objc <= 0 || objc > 2) {
 	Tcl_WrongNumArgs(interp, 0, objv, "theme ?element?");
@@ -1179,7 +1178,7 @@ static Tcl_Obj* HashTableToDict(Tcl_HashTable *ht)
  */
 static int
 StyleMapCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1441,11 +1440,12 @@ static int StyleThemeCreateCmd(
  * 	Return list of registered themes.
  */
 static int StyleThemeNamesCmd(
-    ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    ClientData clientData,
+    Tcl_Interp *interp,
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
-    (void)objc;
-    (void)objv;
 
     return TtkEnumerateHashTable(interp, &pkgPtr->themeTable);
 }
@@ -1457,7 +1457,7 @@ static int StyleThemeNamesCmd(
  */
 static int
 StyleThemeSettingsCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1640,7 +1640,7 @@ static int StyleThemeStylesCmd(
  */
 static int
 StyleThemeUseCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1698,7 +1698,7 @@ static const Ttk_Ensemble StyleEnsemble[] = {
 
 static int
 StyleObjCmd(
-    ClientData clientData,		/* Master StylePackageData pointer */
+    ClientData clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */

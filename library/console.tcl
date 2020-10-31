@@ -4,9 +4,9 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1995-1997 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -131,7 +131,7 @@ proc ::tk::ConsoleInit {} {
         default { set preferred {} }
     }
     foreach {family size} $preferred {
-        if {[lsearch -exact $families $family] != -1} {
+        if {$family in $families} {
             font configure TkConsoleFont -family $family -size $size
             break
         }
@@ -215,7 +215,7 @@ proc ::tk::ConsoleSource {} {
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
     if {$filename ne ""} {
-    	set cmd [list source $filename]
+    	set cmd [list source -encoding utf-8 $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
 	}
@@ -592,7 +592,7 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <F9> {
 	eval destroy [winfo child .]
-	source [file join $tk_library console.tcl]
+	source -encoding utf-8 [file join $tk_library console.tcl]
     }
     if {[tk windowingsystem] eq "aqua"} {
 	bind Console <Command-q> {

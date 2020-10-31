@@ -16,7 +16,6 @@
 
 #if !defined(MAC_OSX_TK)
 #   include <X11/Xlib.h>
-#   define gcCacheSize 0
 #   define TkpInitGCCache(gc)
 #   define TkpFreeGCCache(gc)
 #   define TkpGetGCCache(gc)
@@ -24,10 +23,18 @@
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
 #   include <X11/X.h>
-#   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
 
+#define MAX_DASH_LIST_SIZE 10
+typedef struct {
+    XGCValues gc;
+    char dash[MAX_DASH_LIST_SIZE];
+#ifdef MAC_OSX_TK
+    TkpGCCache cache;
+#endif
+} XGCValuesWithCache;
+
 /*
  *----------------------------------------------------------------------
  *
@@ -50,10 +57,6 @@ static TkpClipMask *AllocClipMask(GC gc) {
     if (clip_mask == NULL) {
 	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
-#ifdef MAC_OSX_TK
-    } else if (clip_mask->type == TKP_CLIP_REGION) {
-	TkpReleaseRegion(clip_mask->value.region);
-#endif
     }
     return clip_mask;
 }
@@ -76,11 +79,6 @@ static TkpClipMask *AllocClipMask(GC gc) {
 
 static void FreeClipMask(GC gc) {
     if (gc->clip_mask != None) {
-#ifdef MAC_OSX_TK
-	if (((TkpClipMask*) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	    TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
-	}
-#endif
 	ckfree((char *)gc->clip_mask);
 	gc->clip_mask = None;
     }
@@ -119,9 +117,7 @@ XCreateGC(
      * initialization.
      */
 
-#define MAX_DASH_LIST_SIZE 10
-
-    gp = (GC)ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE + gcCacheSize);
+    gp = (GC)ckalloc(sizeof(XGCValuesWithCache));
     if (!gp) {
 	return NULL;
     }
@@ -184,8 +180,7 @@ XCreateGC(
 
 TkpGCCache*
 TkpGetGCCache(GC gc) {
-    return (gc ? (TkpGCCache*)(((char*) gc) + sizeof(XGCValues) +
-	    MAX_DASH_LIST_SIZE) : NULL);
+    return (gc ? &((XGCValuesWithCache *)gc)->cache : NULL);
 }
 #endif
 
@@ -496,9 +491,6 @@ TkSetRegion(
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
-#ifdef MAC_OSX_TK
-	TkpRetainRegion(r);
-#endif
     }
     return Success;
 }

@@ -2,8 +2,8 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -153,7 +153,7 @@ proc ::tk::MenuDup {src dst type} {
 
     # Copy tags to x, replacing each substring of src with dst.
 
-    while {[set index [string first $src $tags]] != -1} {
+    while {[set index [string first $src $tags]] >= 0} {
 	if {$index > 0} {
 	    append x [string range $tags 0 $index-1]$dst
 	}
@@ -170,7 +170,7 @@ proc ::tk::MenuDup {src dst type} {
 
 	# Copy script to x, replacing each substring of event with dst.
 
-	while {[set index [string first $event $script]] != -1} {
+	while {[set index [string first $event $script]] >= 0} {
 	    if {$index > 0} {
 		append x [string range $script 0 $index-1]
 	    }

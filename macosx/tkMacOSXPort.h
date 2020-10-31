@@ -135,11 +135,34 @@
 #define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
+ * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
+ * alpha channel directly into a window.
+ */
+
+#define TKPUTIMAGE_CAN_BLEND
+
+/*
  * Used by xcolor.c
  */
 
 MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
 					    unsigned long blue);
 #define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
+
+/*
+ * Used by tkWindow.c
+ */
+
+MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
+
+#define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
+
+/*
+ * Used by tkAppInit
+ */
+
+#define USE_CUSTOM_EXIT_PROC
+EXTERN int TkpWantsExitProc(void);
+EXTERN TCL_NORETURN void TkpExitProc(void *);
 
 #endif /* _TKMACPORT */

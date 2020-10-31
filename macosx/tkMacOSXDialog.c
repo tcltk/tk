@@ -23,7 +23,7 @@
 #define modalOK     NSModalResponseOK
 #define modalCancel NSModalResponseCancel
 #endif // MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-#define modalOther  -1
+#define modalOther  -1 // indicates that the -command option was used.
 #define modalError  -2
 
 /*
@@ -51,6 +51,10 @@ typedef struct {
     NSUInteger fileTypeIndex;		/* Index of currently selected
 					 * filter. */
 } filepanelFilterInfo;
+
+/*
+ * Only one of these is needed for the application, so they can be static.
+ */
 
 static filepanelFilterInfo filterInfo;
 static NSOpenPanel *openpanel;
@@ -250,13 +254,13 @@ getFileURL(
     } else if (returnCode == modalCancel) {
 	Tcl_ResetResult(callbackInfo->interp);
     }
-    if (panel == [NSApp modalWindow]) {
-	[NSApp stopModalWithCode:returnCode];
-    }
     if (callbackInfo->cmdObj) {
 	Tcl_DecrRefCount(callbackInfo->cmdObj);
+    }
+    if (callbackInfo) {
 	ckfree(callbackInfo);
     }
+    [NSApp stopModalWithCode:returnCode];
 }
 
 - (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
@@ -356,14 +360,42 @@ static NSInteger showOpenSavePanel(
 		       contextInfo:callbackInfo ];
 	    }];
 
-	modalReturnCode = callbackInfo->cmdObj ? modalOther :
-	    [panel runModal];
+	/*
+	 * The sheet has been prepared, so now we have to run it as a modal
+	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or later
+	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
+	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
+	 * completion handler to run when the panel is closed.
+	 */
+
+	if ([NSApp macOSVersion] > 101400) {
+	    modalReturnCode = [panel runModal];
+	} else {
+	    modalReturnCode = [NSApp runModalForWindow:panel];
+	}
     } else {
-	modalReturnCode = [panel runModal];
-	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
-		     contextInfo:callbackInfo];
+
+	/*
+	 * For the standalone file dialog, completion handlers do not work
+	 * at all on macOS 10.14 and earlier.
+	 */
+
+	if ([NSApp macOSVersion] > 101400) {
+	    [panel beginWithCompletionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+			          returnCode:returnCode
+			         contextInfo:callbackInfo ];
+	    }];
+	    modalReturnCode = [panel runModal];
+	} else {
+	    modalReturnCode = [panel runModal];
+	    [NSApp tkFilePanelDidEnd:panel
+		   	  returnCode:modalReturnCode
+		         contextInfo:callbackInfo ];
+	    [panel close];
+	}
     }
-    return modalReturnCode;
+    return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
 
 /*
@@ -818,7 +850,7 @@ Tk_GetOpenFileObjCmd(
 	[openpanel setDirectoryURL:fileURL];
     }
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -870,15 +902,15 @@ Tk_GetOpenFileObjCmd(
 		selectedFilterIndex = filterInfo.fileTypeIndex;  // The preselection from the typevariable
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
-		NSUInteger i;
+		NSUInteger j;
 
-		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
-		    if (filterCompatible(extension, i)) {
-			selectedFilterIndex = i;
+		for (j = 0; j < [filterInfo.fileTypeNames count]; j++) {
+		    if (filterCompatible(extension, j)) {
+			selectedFilterIndex = j;
 			break;
 		    }
 		}
-		if (i == selectedFilterIndex) {
+		if (j == selectedFilterIndex) {
 		    selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 		} else {
 		    selectedFilter = @"";
@@ -917,7 +949,7 @@ Tk_GetSaveFileObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int confirmOverwrite = 1;
@@ -1104,7 +1136,7 @@ Tk_GetSaveFileObjCmd(
 	[savepanel setNameFieldStringValue:@""];
     }
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1159,7 +1191,7 @@ Tk_ChooseDirectoryObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, len, mustexist = 0;
@@ -1246,10 +1278,10 @@ Tk_ChooseDirectoryObjCmd(
     if (!directory) {
 	directory = @"/";
     }
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+    parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
     [panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
     if (haveParentOption) {
-	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
@@ -1359,13 +1391,11 @@ TkAboutDlg(void)
 
 int
 TkMacOSXStandardAboutPanelObjCmd(
-    ClientData dummy,	/* Unused. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    (void)dummy;
-
     if (objc > 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
@@ -1397,7 +1427,7 @@ Tk_MessageBoxObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
@@ -1535,7 +1565,7 @@ Tk_MessageBoxObjCmd(
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+    parent = TkMacOSXGetNSWindowForDrawable(((TkWindow *)tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
 	parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
@@ -1656,7 +1686,7 @@ enum FontchooserOption {
     }
 }
 
-- (NSUInteger) validModesForFontPanel: (NSFontPanel *) fontPanel
+- (NSUInteger) validModesForFontPanel: (NSFontPanel *)fontPanel
 {
     (void)fontPanel;
 
@@ -1665,7 +1695,7 @@ enum FontchooserOption {
 	    NSFontPanelStrikethroughEffectModeMask;
 }
 
-- (void) windowDidOrderOffScreen: (NSNotification *) notification
+- (void) windowDidOrderOffScreen: (NSNotification *)notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
@@ -1708,7 +1738,7 @@ FontchooserEvent(
     switch (kind) {
     case FontchooserClosed:
 	if (fcdPtr->parent != None) {
-	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
+	    Tk_SendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
 	    fontchooserInterp = NULL;
 	}
 	break;
@@ -1731,7 +1761,7 @@ FontchooserEvent(
 		    ckfree(tmpv);
 		}
 	    }
-	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
+	    Tk_SendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
 	}
 	break;
     }
@@ -1765,7 +1795,7 @@ FontchooserCget(
     case FontchooserParent:
 	if (fcdPtr->parent != None) {
 	    resObj = Tcl_NewStringObj(
-		    ((TkWindow *) fcdPtr->parent)->pathName, -1);
+		    ((TkWindow *)fcdPtr->parent)->pathName, -1);
 	} else {
 	    resObj = Tcl_NewStringObj(".", 1);
 	}
@@ -1940,7 +1970,7 @@ FontchooserConfigureCmd(
 	    [fm setSelectedAttributes:fontPanelFontAttributes
 		    isMultiple:NO];
 	    if ([fp isVisible]) {
-		TkSendVirtualEvent(fcdPtr->parent,
+		Tk_SendVirtualEvent(fcdPtr->parent,
 			"TkFontchooserFontChanged", NULL);
 	    }
 	    break;
@@ -1986,16 +2016,14 @@ static int
 FontchooserShowCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     FontchooserData *fcdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
-    (void)objc;
-    (void)objv;
 
     if (fcdPtr->parent == None) {
-	fcdPtr->parent = (Tk_Window) clientData;
+	fcdPtr->parent = (Tk_Window)clientData;
 	Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
     }
@@ -2008,7 +2036,7 @@ FontchooserShowCmd(
     }
     if (![fp isVisible]) {
 	[fm orderFrontFontPanel:NSApp];
-	TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
+	Tk_SendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
     }
     fontchooserInterp = interp;
 
@@ -2034,16 +2062,12 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData dummy,	/* Main window */
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(void *),	/* Main window */
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
-    (void)dummy;
-    (void)interp;
-    (void)objc;
-    (void)objv;
 
     if ([fp isVisible]) {
 	[fp orderOut:NSApp];
@@ -2140,10 +2164,9 @@ DeleteFontchooserData(
 MODULE_SCOPE int
 TkInitFontchooser(
     Tcl_Interp *interp,
-    ClientData dummy)
+    TCL_UNUSED(void *))
 {
     FontchooserData *fcdPtr = (FontchooserData *)ckalloc(sizeof(FontchooserData));
-    (void)dummy;
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

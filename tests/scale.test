@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the "scale" command
 # of Tk.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -1135,26 +1135,26 @@ test scale-14.5 {RoundValueToResolution procedure} -body {
         -orient horizontal -resolution 4.0
     update
     .s get 84 152
-} -result {-28}
+} -result -28
 test scale-14.6 {RoundValueToResolution procedure} -body {
     .s configure -from -100 -to 0 -sliderlength 10 -length 114 -bd 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 86 152
-} -result {-24}
+} -result -24
 
 test scale-14.7 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to -100 -sliderlength 10 -length 114 -bd 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 84 152
-} -result {-72}
+} -result -72
 test scale-14.8 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to -100 -sliderlength 10 -length 114 -bd 2 \
         -orient horizontal -resolution 4.0
     update
     .s get 86 152
-} -result {-76}
+} -result -76
 
 test scale-14.9 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -bd 2 \
@@ -1226,7 +1226,7 @@ test scale-15.1 {ScaleVarProc procedure} -setup {
     scale .s -from 0 -to -200 -variable y -orient horizontal -length 150
     pack .s
     return $y
-} -result {-130}
+} -result -130
 test scale-15.2 {ScaleVarProc procedure} -setup {
     deleteWindows
 } -body {
@@ -1235,7 +1235,7 @@ test scale-15.2 {ScaleVarProc procedure} -setup {
     pack .s
     set y -87
     .s get
-} -result {-87}
+} -result -87
 test scale-15.3 {ScaleVarProc procedure} -setup {
     deleteWindows
 } -body {
@@ -1256,7 +1256,7 @@ test scale-15.4 {ScaleVarProc procedure} -setup {
     .s get
 } -cleanup {
     deleteWindows
-} -result {-130}
+} -result -130
 test scale-15.5 {ScaleVarProc procedure} -setup {
     deleteWindows
 } -body {
