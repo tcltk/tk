@@ -355,12 +355,13 @@ typedef TkStatusItem** StatusItemInfo;
     willPresentNotification:(UNNotification *)notification
     withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
 {
-    if (@available(macOS 11.0, *)) {
+    #if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000 
 	completionHandler(UNNotificationPresentationOptionList |
 			  UNNotificationPresentationOptionBanner);
-    } else {
+    #endif
+    #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000 
 	completionHandler(UNNotificationPresentationOptionAlert);
-    }
+    #endif  
 }
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
