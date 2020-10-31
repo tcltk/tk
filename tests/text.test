@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkText.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -1252,7 +1252,7 @@ bOy GIrl .#@? x_yz
 Line 7"
     .t configure -state disabled
     .t delete 2.3
-    .t g 2.0 2.end
+    .t get 2.0 2.end
 } -cleanup {
     destroy .t
 } -result {abcdefghijklm}
@@ -2103,7 +2103,7 @@ Line 7"
     .t count 5.7 5.3
 } -cleanup {
     destroy .t
-} -result {-4}
+} -result -4
 test text-10.7 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2598,7 +2598,7 @@ test text-10.31 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines end 1.0
 } -cleanup {
     destroy .t
-} -result {-3}
+} -result -3
 test text-10.32 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2691,7 +2691,7 @@ test text-10.39 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result {2 6 1 5}
-test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.40 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     pack .t
     update
@@ -2707,7 +2707,7 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result 0
-test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.41 {TextWidgetCmd procedure, "count" option} -setup {
     toplevel .mytop
     pack [text .mytop.t -font TkFixedFont -bd 0 -padx 0 -wrap char]
     set spec [font measure TkFixedFont "Line 1+++Line 1---Li"]  ; # 20 chars
@@ -2729,7 +2729,7 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .mytop
 } -result {1 3}
-test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.42 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     pack .t
     update
@@ -3122,7 +3122,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
-test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+test text-11a.51 {<<WidgetViewSync>> calls Tk_SendVirtualEvent(),
                   NOT Tk_HandleEvent().
                   Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
     destroy .top.t .top
@@ -4581,25 +4581,25 @@ test text-22.68 {TextSearchCmd, freeing copy of pattern} -body {
 } -result {}
 test text-22.69 {TextSearchCmd, unicode} -body {
     text .t
-    .t insert end "foo\u30c9\u30cabar"
-    .t search \u30c9\u30ca 1.0
+    .t insert end "fooドナbar"
+    .t search ドナ 1.0
 } -cleanup {
     destroy .t
 } -result {1.3}
 test text-22.70 {TextSearchCmd, unicode} -body {
     text .t
-    .t insert end "foo\u30c9\u30cabar"
-    list [.t search -count n \u30c9\u30ca 1.0] $n
+    .t insert end "fooドナbar"
+    list [.t search -count n ドナ 1.0] $n
 } -cleanup {
     destroy .t
 } -result {1.3 2}
 test text-22.71 {TextSearchCmd, unicode with non-text segments} -body {
     text .t
     button .b1 -text baz
-    .t insert end "foo\u30c9"
+    .t insert end "fooド"
     .t window create end -window .b1
-    .t insert end "\u30cabar"
-    list [.t search -count n \u30c9\u30ca 1.0] $n
+    .t insert end "ナbar"
+    list [.t search -count n ドナ 1.0] $n
 } -cleanup {
     destroy .t .b1
 } -result {1.3 3}
@@ -5078,11 +5078,11 @@ test text-22.132 {TextSearchCmd, multiline regexp matching} -body {
 
 void
 Tcl_SetObjLength(objPtr, length)
-    register Tcl_Obj *objPtr;	/* Pointer to object.  This object must
-                                * not currently be shared. */
-    register int length;	/* Number of bytes desired for string
+    Tcl_Obj *objPtr;		/* Pointer to object.  This object must
+				 * not currently be shared. */
+    int length;			/* Number of bytes desired for string
 				 * representation of object, not including
-                            * terminating null byte. */
+				 * terminating null byte. */
 \{
     char *new;
 }
@@ -5824,7 +5824,7 @@ test text-22.217.1 {elide up to match, with UTF-8 chars before the match} -setup
 } -body {
     .t tag configure e -elide 0
     .t insert end A {} xyz e bb\n
-    .t insert end \u00c4 {} xyz e bb
+    .t insert end Ä {} xyz e bb
     set res {}
     lappend res [.t search bb 1.0 "1.0 lineend"]
     lappend res [.t search bb 2.0 "2.0 lineend"]
@@ -6431,19 +6431,19 @@ test text-24.24 {TextDumpCmd procedure, command script} -setup {
 } -result {mark 1.0 current mark 1.0 insert mark 2.4 m}
 test text-24.25 {TextDumpCmd procedure, unicode characters} -body {
     text .t
-    .t insert 1.0 \xb1\xb1\xb1
+    .t insert 1.0 ±±±
     .t dump -all 1.0 2.0
 } -cleanup {
     destroy .t
-} -result "text \xb1\xb1\xb1 1.0 mark insert 1.3 mark current 1.3 text {\n} 1.3"
+} -result "text ±±± 1.0 mark insert 1.3 mark current 1.3 text {\n} 1.3"
 test text-24.26 {TextDumpCmd procedure, unicode characters} -body {
     text .t
     .t delete 1.0 end
-    .t insert 1.0 abc\xb1\xb1\xb1
+    .t insert 1.0 abc±±±
     .t dump -all 1.0 2.0
 } -cleanup {
     destroy .t
-} -result "text abc\xb1\xb1\xb1 1.0 mark insert 1.6 mark current 1.6 text {\n} 1.6"
+} -result "text abc±±± 1.0 mark insert 1.6 mark current 1.6 text {\n} 1.6"
 test text-24.27 {TextDumpCmd procedure, peer present} -body {
     text .t
     .t peer create .t.t
@@ -6759,7 +6759,7 @@ test text-27.15g {No <<Selection>> virtual event on <<Cut>> without widget selec
     destroy .t
 } -result {no_<<Selection>>_event_fired}
 test text-27.16 {-maxundo configuration option} -body {
-    text .t -undo 1  -autoseparators 1 -maxundo 2
+    text .t -undo 1 -autoseparators 1 -maxundo 2
     pack .t
     .t insert end "line 1\n"
     .t delete 1.4 1.6
@@ -7034,12 +7034,12 @@ test text-27.28 {edit undo and edit redo do not leave \
     .t edit separator
     .t insert end "Again hello.\n"
     .t edit undo
-    lappend res [lsearch [.t mark names] tk::undoMark*]
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
     .t edit redo
-    lappend res [lsearch [.t mark names] tk::undoMark*]
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
 } -cleanup {
     destroy .t
-} -result [list -1 -1]
+} -result {1 1}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
@@ -7540,100 +7540,6 @@ test text-32.4 {peer widget -start, -endline and deletion (bug 1630262)} -setup 
     destroy .pt .t
 } -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
 
-test text-32.2 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    # none of the following delete shall crash
-    # (all did before fixing bug 1630262)
-    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
-    #    and resetView is true neither for .t not for .pt
-    .pt delete 2.0 2.2
-    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 3.0
-    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 5.0
-    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 end
-    # this test succeeds provided there is no crash
-    set res 1
-} -cleanup {
-    destroy .pt
-} -result 1
-
-test text-32.3 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    .pt configure -startline 3
-    # the following delete shall not crash
-    # (it did before fixing bug 1630262)
-    .pt delete 2.0 3.0
-    # moreover -startline shall be correct
-    # (was wrong before fixing bug 1630262)
-    lappend res [.t cget -start] [.pt cget -start]
-} -cleanup {
-    destroy .pt
-} -result {4 3}
-
-test text-32.4 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5 -endline 15
-    .pt configure -startline 8 -endline 12
-    # .pt now shows a range entirely inside the range of .pt
-    # from .t, delete lines located after [.pt cget -end]
-    .t delete 9.0 10.0
-    # from .t, delete lines straddling [.pt cget -end]
-    .t delete 6.0 9.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 5 -endline 12
-    .pt configure -startline 8 -endline 12
-    # .pt now shows again a range entirely inside the range of .pt
-    # from .t, delete lines located before [.pt cget -start]
-    .t delete 2.0 3.0
-    # from .t, delete lines straddling [.pt cget -start]
-    .t delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 22 -endline 31
-    .pt configure -startline 42 -endline 51
-    # .t now shows a range entirely before the range of .pt
-    # from .t, delete some lines, then do it from .pt
-    .t delete 2.0 3.0
-    .t delete 2.0 5.0
-    .pt delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 55 -endline 75
-    .pt configure -startline 60 -endline 70
-    # .pt now shows a range entirely inside the range of .t
-    # from .t, delete a range straddling the entire range of .pt
-    .t delete 3.0 18.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-} -cleanup {
-    destroy .pt .t
-} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
-
 
 test text-33.1 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
@@ -7652,7 +7558,7 @@ test text-33.2 {TextWidgetCmd procedure, "peer" option} -setup {
 test text-33.3 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
 } -body {
-    .t pee names
+    .t peer names
 } -cleanup {
     destroy .t
 } -returnCodes {ok} -result {}
@@ -7768,7 +7674,6 @@ test text-34.1 {peer widget -start, -endline and selection} -setup {
 
 test text-35.1 {widget dump -command alters tags} -setup {
      proc Dumpy {key value index} {
-#puts "KK: $key, $value"
       .t tag add $value [list $index linestart] [list $index lineend]
     }
     text .t
@@ -7782,7 +7687,6 @@ test text-35.1 {widget dump -command alters tags} -setup {
 } -result {ok}
 test text-35.2 {widget dump -command makes massive changes} -setup {
     proc Dumpy {key value index} {
-#puts "KK: $key, $value"
       .t delete 1.0 end
     }
     text .t
@@ -7796,7 +7700,6 @@ test text-35.2 {widget dump -command makes massive changes} -setup {
 } -result {ok}
 test text-35.3 {widget dump -command destroys widget} -setup {
     proc Dumpy {key value index} {
-#puts "KK: $key, $value"
         destroy .t
     }
     text .t

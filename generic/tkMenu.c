@@ -593,7 +593,7 @@ Tk_MenuObjCmd(
     	}
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(menuPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(menuPtr->tkwin));
     return TCL_OK;
 }
 
@@ -1630,7 +1630,6 @@ ConfigureMenu(
 	    }
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
-	    int i;
 
 	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
 
@@ -1825,7 +1824,6 @@ PostProcessEntry(
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
 	Tcl_Obj *valuePtr;
-	const char *name;
 
 	if (mePtr->namePtr == NULL) {
 	    if (mePtr->labelPtr == NULL) {
@@ -2128,7 +2126,8 @@ GetMenuIndex(
     const char *string;
 
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
-	if (*indexPtr != TCL_INDEX_NONE) {
+	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
+	if (*indexPtr != TCL_INDEX_NONE || Tcl_GetString(objPtr)[0] != '-') {
 	    if (*indexPtr >= menuPtr->numEntries) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	    }
@@ -2360,7 +2359,7 @@ MenuAddOrInsert(
     }
     if (index == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\"", Tcl_GetString(indexPtr)));
+		"bad menu entry index \"%s\"", Tcl_GetString(indexPtr)));
 	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
 	return TCL_ERROR;
     }
@@ -2734,7 +2733,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int i, numElements;
+	int numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance

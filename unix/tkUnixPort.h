@@ -149,8 +149,6 @@
 
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
-#define TkpWillDrawWidget(tkwin) 0
-#define TkpRedrawWidget(tkwin)
 #define TkSelUpdateClipboard(a,b) {}
 #ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}
@@ -174,5 +172,11 @@
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
 #endif
+
+/*
+ * Used by tkWindow.c
+ */
+
+#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
 
 #endif /* _UNIXPORT */

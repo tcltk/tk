@@ -213,7 +213,7 @@ DestroyWidget(WidgetCore *corePtr)
     corePtr->widgetSpec->cleanupProc(corePtr);
 
     Tk_FreeConfigOptions(
-	(ClientData)corePtr, corePtr->optionTable, corePtr->tkwin);
+	    corePtr, corePtr->optionTable, corePtr->tkwin);
 
     if (corePtr->layout) {
 	Ttk_FreeLayout(corePtr->layout);

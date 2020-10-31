@@ -545,7 +545,6 @@ TkSelEventProc(
 	Atom type;
 	int format, result;
 	unsigned long numItems, bytesAfter;
-	Tcl_DString ds;
 
 	for (retrPtr = pendingRetrievals; ; retrPtr = retrPtr->nextPtr) {
 	    if (retrPtr == NULL) {
@@ -591,6 +590,7 @@ TkSelEventProc(
 	if ((type == XA_STRING) || (type == dispPtr->textAtom)
 		|| (type == dispPtr->compoundTextAtom)) {
 	    Tcl_Encoding encoding;
+		Tcl_DString ds;
 
 	    if (format != 8) {
 		Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
@@ -1522,15 +1522,12 @@ static void
 SelCvtFromX8(
     char *propPtr,	/* Property value from X. */
     int numValues,		/* Number of 8-bit values in property. */
-    Atom type,			/* Type of property Should not be XA_STRING
+    TCL_UNUSED(Atom),			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function
 				 * at all). */
-    Tk_Window tkwin,		/* Window to use for atom conversion. */
+    TCL_UNUSED(Tk_Window),		/* Window to use for atom conversion. */
     Tcl_DString *dsPtr)		/* Where to store the converted string. */
 {
-    (void)type;
-    (void)tkwin;
-
     /*
      * Convert each long in the property to a string value, which is a
      * hexadecimal string. We build the list in a Tcl_DString because this is

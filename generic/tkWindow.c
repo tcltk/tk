@@ -13,7 +13,7 @@
  */
 
 #include "tkInt.h"
-
+#include "tkPort.h"
 #ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
@@ -1642,7 +1642,7 @@ Tk_MapWindow(
     event.xmap.event = winPtr->window;
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    Tk_HandleEvent(&event);
+    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
 }
 
 /*
@@ -1804,7 +1804,7 @@ Tk_UnmapWindow(
 	event.xunmap.event = winPtr->window;
 	event.xunmap.window = winPtr->window;
 	event.xunmap.from_configure = False;
-	Tk_HandleEvent(&event);
+	TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
     }
 }
 
@@ -2692,7 +2692,7 @@ Tk_GetNumMainWindows(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkpAlwaysShowSelection --
+ * Tk_AlwaysShowSelection --
  *
  *	Indicates whether text/entry widgets should always display
  *	their selection, regardless of window focus.
@@ -2710,7 +2710,7 @@ Tk_GetNumMainWindows(void)
  */
 
 int
-TkpAlwaysShowSelection(
+Tk_AlwaysShowSelection(
     Tk_Window tkwin)		/* Window whose application is to be
 				 * checked. */
 {
@@ -3092,7 +3092,7 @@ Initialize(
 	Tcl_Interp *parent = interp;
 
 	while (Tcl_IsSafe(parent)) {
-	    parent = Tcl_GetMaster(parent);
+	    parent = Tcl_GetParent(parent);
 	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"no controlling parent interpreter", -1));

@@ -182,11 +182,15 @@ proc ttk::combobox::SelectEntry {cb index} {
 
 ## Scroll -- Mousewheel binding
 #
-proc ttk::combobox::Scroll {cb dir} {
+proc ttk::combobox::Scroll {cb dir {factor 1.0}} {
     $cb instate disabled { return }
     set max [llength [$cb cget -values]]
     set current [$cb current]
-    incr current $dir
+    set d [expr {round($dir/factor)}]
+    if {$d == 0 && $dir != 0} {
+	if {$dir > 0} {set d 1} else {set d -1}
+    }
+    incr current $d
     if {$max != 0 && $current == $current % $max} {
 	SelectEntry $cb $current
     }
@@ -197,7 +201,7 @@ proc ttk::combobox::Scroll {cb dir} {
 #	and unpost the listbox.
 #
 proc ttk::combobox::LBSelected {lb} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     LBSelect $lb
     Unpost $cb
     focus $cb
@@ -207,14 +211,14 @@ proc ttk::combobox::LBSelected {lb} {
 #	Unpost the listbox.
 #
 proc ttk::combobox::LBCancel {lb} {
-    Unpost [LBMaster $lb]
+    Unpost [LBMain $lb]
 }
 
 ## LBTab -- Tab key binding for combobox listbox.
 #	Set the selection, and navigate to next/prev widget.
 #
 proc ttk::combobox::LBTab {lb dir} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     switch -- $dir {
 	next	{ set newFocus [tk_focusNext $cb] }
 	prev	{ set newFocus [tk_focusPrev $cb] }
@@ -414,10 +418,10 @@ proc ttk::combobox::Unpost {cb} {
     grab release $cb.popdown ;# in case of stuck or unexpected grab [#1239190]
 }
 
-## LBMaster $lb --
+## LBMain $lb --
 #	Return the combobox main widget that owns the listbox.
 #
-proc ttk::combobox::LBMaster {lb} {
+proc ttk::combobox::LBMain {lb} {
     winfo parent [winfo parent [winfo parent $lb]]
 }
 
@@ -425,7 +429,7 @@ proc ttk::combobox::LBMaster {lb} {
 #	Transfer listbox selection to combobox value.
 #
 proc ttk::combobox::LBSelect {lb} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     set selection [$lb curselection]
     if {[llength $selection] == 1} {
 	SelectEntry $cb [lindex $selection 0]
@@ -442,7 +446,7 @@ proc ttk::combobox::LBSelect {lb} {
 #
 proc ttk::combobox::LBCleanup {lb} {
     variable Values
-    unset Values([LBMaster $lb])
+    unset Values([LBMain $lb])
 }
 
 #*EOF*

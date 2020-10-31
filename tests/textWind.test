@@ -1,15 +1,17 @@
 # This file is a Tcl script to test the code in the file tkTextWind.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 
 deleteWindows
 
@@ -582,7 +584,7 @@ test textWind-6.1 {EmbWinRequestProc procedure} -setup {
     [list [expr {$padx+2*$fixedWidth+25}] [expr {$pady+((30-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
 
 
-test textWind-7.1 {EmbWinLostSlaveProc procedure} -setup {
+test textWind-7.1 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
     destroy .f
 } -body {
@@ -599,7 +601,7 @@ test textWind-7.1 {EmbWinLostSlaveProc procedure} -setup {
     10x20+[expr {$padx+100}]+[expr {$pady+50}] \
     [list [expr {$padx+2*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
 
-test textWind-7.2 {EmbWinLostSlaveProc procedure} -setup {
+test textWind-7.2 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
     destroy .t.f
 } -body {
@@ -773,7 +775,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup
     .t delete 1.0 end
     proc bgerror args {
         global msg
-        if {[lsearch -exact $msg $args] == -1} {
+        if {[lsearch -exact $msg $args] < 0} {
             lappend msg $args
         }
     }
@@ -792,7 +794,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup
     {{can't embed .t relative to .t}} \
     [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
 
-test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -setup {
+test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -constraints failsOnUbuntu -setup {
     .t delete 1.0 end
     destroy .t2
     proc bgerror args {
@@ -860,7 +862,7 @@ test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 125 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth-1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
@@ -875,7 +877,7 @@ test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 126 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -891,15 +893,15 @@ test textWind-10.12 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width 127 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list $padx [expr {$pady+$fixedHeight}] 127 20] \
-    [list [expr {$padx+127}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
+    [list $padx [expr {$pady+$fixedHeight}] [expr {($tWidth-12)*$fixedWidth+1}] 20] \
+    [list [expr {$padx+($tWidth-12)*$fixedWidth+1}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
 
 test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
     .t delete 1.0 end
@@ -907,7 +909,7 @@ test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width 130 -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
@@ -923,7 +925,7 @@ test textWind-10.14 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width 130 -height 220 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 220 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]

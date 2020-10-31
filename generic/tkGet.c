@@ -493,11 +493,10 @@ Tk_NameOfJustify(
 
 static void
 FreeUidThreadExitProc(
-    ClientData dummy)		/* Not used. */
+    TCL_UNUSED(void *))
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     Tcl_DeleteHashTable(&tsdPtr->uidTable);
     tsdPtr->initialized = 0;

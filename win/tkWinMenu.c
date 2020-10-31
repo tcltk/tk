@@ -1280,7 +1280,7 @@ TkWinHandleMenuEvent(
 		    Tcl_DStringFree(&ds);
 		    Tcl_DStringInit(&ds);
 		    wlabel = Tcl_UtfToWCharDString(src, len, &ds);
-		    if ((underline + 1 < len + 1) && (menuChar ==
+		    if (((TkSizeT)underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
 			returnResult = 1;
@@ -2329,13 +2329,13 @@ TkpInitializeMenuBindings(
 	    "<KeyRelease-Alt_R>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
-	    "<Alt-KeyPress>", "tk::WinMenuKey %W %N", 0);
+	    "<Alt-Key>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<Alt-KeyRelease>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
-	    "<KeyPress-F10>", "tk::WinMenuKey %W %N", 0);
+	    "<Key-F10>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<KeyRelease-F10>", "tk::WinMenuKey %W %N", 0);

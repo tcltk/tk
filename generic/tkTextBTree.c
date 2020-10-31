@@ -4169,7 +4169,7 @@ Rebalance(
 	    Node *otherPtr;
 	    Node *halfwayNodePtr = NULL;       /* Initialization needed only */
 	    TkTextLine *halfwayLinePtr = NULL; /* to prevent cc warnings. */
-	    int totalChildren, firstChildren, i;
+	    int totalChildren, firstChildren;
 
 	    /*
 	     * Too few children for this node. If this is the root then, it's
@@ -4230,8 +4230,6 @@ Rebalance(
 		otherPtr->children.linePtr = NULL;
 	    }
 	    if (nodePtr->level == 0) {
-		TkTextLine *linePtr;
-
 		for (linePtr = nodePtr->children.linePtr, i = 1;
 			linePtr->nextPtr != NULL;
 			linePtr = linePtr->nextPtr, i++) {
@@ -4246,8 +4244,6 @@ Rebalance(
 		    i++;
 		}
 	    } else {
-		Node *childPtr;
-
 		for (childPtr = nodePtr->children.nodePtr, i = 1;
 			childPtr->nextPtr != NULL;
 			childPtr = childPtr->nextPtr, i++) {
@@ -4592,10 +4588,9 @@ static TkTextSegment *
 CharCleanupProc(
     TkTextSegment *segPtr,	/* Pointer to first of two adjacent segments
 				 * to join. */
-    TkTextLine *linePtr)	/* Line containing segments (not used). */
+    TCL_UNUSED(TkTextLine *))	/* Line containing segments (not used). */
 {
     TkTextSegment *segPtr2, *newPtr;
-    (void)linePtr;
 
     segPtr2 = segPtr->nextPtr;
     if ((segPtr2 == NULL) || (segPtr2->typePtr != &tkTextCharType)) {
@@ -4632,14 +4627,11 @@ CharCleanupProc(
 static int
 CharDeleteProc(
     TkTextSegment *segPtr,	/* Segment to delete. */
-    TkTextLine *linePtr,	/* Line containing segment. */
-    int treeGone)		/* Non-zero means the entire tree is being
+    TCL_UNUSED(TkTextLine *),	/* Line containing segment. */
+    TCL_UNUSED(int))		/* Non-zero means the entire tree is being
 				 * deleted, so everything must get cleaned
 				 * up. */
 {
-    (void)linePtr;
-    (void)treeGone;
-
     ckfree(segPtr);
     return 0;
 }
@@ -4664,10 +4656,8 @@ CharDeleteProc(
 static void
 CharCheckProc(
     TkTextSegment *segPtr,	/* Segment to check. */
-    TkTextLine *linePtr)	/* Line containing segment. */
+    TCL_UNUSED(TkTextLine *))	/* Line containing segment. */
 {
-    (void)linePtr;
-
     /*
      * Make sure that the segment contains the number of characters indicated
      * by its header, and that the last segment in a line ends in a newline.
