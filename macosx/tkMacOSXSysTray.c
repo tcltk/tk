@@ -309,7 +309,7 @@ typedef TkStatusItem** StatusItemInfo;
     notification.title = title;
     notification.informativeText = detail;
     notification.soundName = NSUserNotificationDefaultSoundName;
-    DEBUG_LOG("Delivering NSNotification now\n")
+    DEBUG_LOG("Delivering NSNotification now\n");
     [center deliverNotification:notification];
 }
 
@@ -356,7 +356,7 @@ typedef TkStatusItem** StatusItemInfo;
 	    {
 		canUseUNNotifications = granted;
 		if (error || granted == NO) {
-		    DEBUG_LOG("Authorization for UNUserNotifications denied\n")
+		    DEBUG_LOG("Authorization for UNUserNotifications denied\n");
 		}
 	    }];
 }
@@ -384,7 +384,7 @@ typedef TkStatusItem** StatusItemInfo;
 	    if (error) {
 		DEBUG_LOG("addNotificationRequest: error = %s\n", \
 			  [NSString stringWithFormat:@"%@", \
-			  error.userInfo].UTF8String)
+				    error.userInfo].UTF8String);
 	    }
 	}];
 }
@@ -397,7 +397,7 @@ typedef TkStatusItem** StatusItemInfo;
          didReceiveNotificationResponse:(UNNotificationResponse *)response
 	 withCompletionHandler:(void (^)(void))completionHandler
 {
-    DEBUG_LOG("didReceiveNotification\n")
+    DEBUG_LOG("didReceiveNotification\n");
     completionHandler();
 }
 
@@ -410,14 +410,14 @@ typedef TkStatusItem** StatusItemInfo;
      * This is called even when the user has turned off notifications.
      */
 
-    DEBUG_LOG("willPresentNotification\n")
+    DEBUG_LOG("willPresentNotification\n");
     completionHandler(ALERT_OPTION);
 }
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
    openSettingsForNotification:(UNNotification *)notification
 {
-    DEBUG_LOG("openSettingsForNotification\n")
+    DEBUG_LOG("openSettingsForNotification\n");
     // Does something need to be done here?
 }
 
@@ -713,7 +713,7 @@ static int SysNotifyObjCmd(
 	    ^(UNNotificationSettings *settings)
 	    {
 		NSInteger status = settings.authorizationStatus;
-		DEBUG_LOG("Reported authorization status is %ld\n", status)
+		DEBUG_LOG("Reported authorization status is %ld\n", status);
 		if (status == UNAuthorizationStatusAuthorized) {
 		    canUseUNNotifications = YES;
 		    DEBUG_LOG("Set canUseUNNotifications to YES\n");
@@ -725,10 +725,10 @@ static int SysNotifyObjCmd(
            }
 
     if (canUseUNNotifications) {
-	DEBUG_LOG("Using the UNUserNotificationCenter\n")
+	DEBUG_LOG("Using the UNUserNotificationCenter\n");
 	[UNnotifier postNotificationWithTitle : title message: message];
     } else {
-	DEBUG_LOG("Using the NSUserNotificationCenter\n")
+	DEBUG_LOG("Using the NSUserNotificationCenter\n");
 	[NSnotifier postNotificationWithTitle : title message: message];
     }
 
