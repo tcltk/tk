@@ -335,6 +335,7 @@ VISIBILITY_HIDDEN
     int _macOSVersion;  /* 10000 * major + 100*minor */
     Bool _isDrawing;
     Bool _needsToDraw;
+    Bool _isSigned;
 #endif
 
 }
@@ -342,6 +343,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool isDrawing;
 @property Bool needsToDraw;
+@property Bool isSigned;
 
 @end
 @interface TKApplication(TKInit)

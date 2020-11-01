@@ -47,7 +47,7 @@
  * on systems and the result is saved in a static variable.
  */
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
 /*
@@ -82,14 +82,6 @@ static NSString *TkNotificationCategory;
 #endif
 
 #if BUILD_TARGET_HAS_NOTIFICATION
-
-/*
- * Flag indicating whether the app is authorized to send notifications via the
- * UserNotification framework.  A YES value means that the app is signed AND
- * the user has approved notifications.
- */
-
-static Bool canUseUNNotifications = NO;
 
 /*
  * Class declaration for TkStatusItem.
@@ -361,7 +353,6 @@ typedef TkStatusItem** StatusItemInfo;
     [center requestAuthorizationWithOptions: options
 	  completionHandler: ^(BOOL granted, NSError* _Nullable error)
 	    {
-		canUseUNNotifications = granted;
 		if (error || granted == NO) {
 		    DEBUG_LOG("Authorization for UNUserNotifications denied\n");
 		}
@@ -721,22 +712,14 @@ static int SysNotifyObjCmd(
 	    {
 		NSInteger status = settings.authorizationStatus;
 		DEBUG_LOG("Reported authorization status is %ld\n", status);
-		if (status == UNAuthorizationStatusAuthorized) {
-		    canUseUNNotifications = YES;
-		    DEBUG_LOG("Set canUseUNNotifications to YES\n");
-		} else {
-		    canUseUNNotifications = NO;
-		    DEBUG_LOG("Set canUseUNNotifications to NO\n");
-		}
 	    }];
            }
-
-    if (canUseUNNotifications) {
-	DEBUG_LOG("Using the UNUserNotificationCenter\n");
-	[UNnotifier postNotificationWithTitle : title message: message];
-    } else {
+    if ([NSApp macOSVersion] < 101400 || ![NSApp isSigned]) {
 	DEBUG_LOG("Using the NSUserNotificationCenter\n");
 	[NSnotifier postNotificationWithTitle : title message: message];
+    } else {
+	DEBUG_LOG("Using the UNUserNotificationCenter\n");
+	[UNnotifier postNotificationWithTitle : title message: message];
     }
 
 #endif //#if BUILD_TARGET_HAS_NOTIFICATION
@@ -790,14 +773,14 @@ MacSystrayInit(Tcl_Interp *interp)
 	    UNnotifier = [[TkUNNotifier alloc] init];
 
 	    /*
-	     * Request authorization to use the UserNotification framework.
-	     * The answer is stored in canUseUNNotifications.  If the app code
-	     * is signed and there are no notification preferences settings for
-	     * this app, a dialog will be opened to prompt the user to choose
-	     * settings.  Note that the request is asynchronous, so even if the
-	     * preferences setting exists the result is not available immediately.
+	     * Request authorization to use the UserNotification framework.  If
+	     * the app code is signed and there are no notification preferences
+	     * settings for this app, a dialog will be opened to prompt the
+	     * user to choose settings.  Note that the request is asynchronous,
+	     * so even if the preferences setting exists the result is not
+	     * available immediately.
 	     */
-	    
+
 	    [UNnotifier requestAuthorization];
 	}
 	TkNotificationCategory = @"Basic Tk Notification";
