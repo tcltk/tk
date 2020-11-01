@@ -97,7 +97,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     (void)aNotification;
     CFURLRef mainBundleURL;
     OSStatus errorCode;
-    SecStaticCodeRef *staticCode = nil;
+    SecStaticCodeRef staticCode = nil;
 
     /*
      * Initialize notifications.
