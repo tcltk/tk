@@ -47,7 +47,7 @@
  * on systems and the result is saved in a static variable.
  */
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
 /*
@@ -349,6 +349,16 @@ typedef TkStatusItem** StatusItemInfo;
 				     UNAuthorizationOptionSound |
 				     UNAuthorizationOptionBadge |
 	    UNAuthorizationOptionProvidesAppNotificationSettings;
+    if (![NSApp isSigned]) {
+
+	/*
+	 * No point in even asking.
+	 */
+
+	DEBUG_LOG("Unsigned app: UNUserNotifications are not available.\n");
+	return;
+    }
+
     center = [UNUserNotificationCenter currentNotificationCenter];
     [center requestAuthorizationWithOptions: options
 	  completionHandler: ^(BOOL granted, NSError* error)
@@ -395,6 +405,10 @@ typedef TkStatusItem** StatusItemInfo;
          didReceiveNotificationResponse:(UNNotificationResponse *)response
 	 withCompletionHandler:(void (^)(void))completionHandler
 {
+    /*
+     * Called when the user dismisses a notification.
+     */
+
     DEBUG_LOG("didReceiveNotification\n");
     completionHandler();
 }
@@ -405,7 +419,8 @@ typedef TkStatusItem** StatusItemInfo;
 {
 
     /*
-     * This is called even when the user has turned off notifications.
+     * This is called before presenting a notification, even when the user has
+     * turned off notifications.
      */
 
     DEBUG_LOG("willPresentNotification\n");
@@ -696,7 +711,7 @@ static int SysNotifyObjCmd(
      * notifications after the app started up.
      */
 
-    if (UNnotifier) {
+    if (UNnotifier && [NSApp isSigned]) {
 	UNUserNotificationCenter *center;
 
 	center = [UNUserNotificationCenter currentNotificationCenter];
