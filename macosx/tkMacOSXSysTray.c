@@ -351,7 +351,7 @@ typedef TkStatusItem** StatusItemInfo;
 	    UNAuthorizationOptionProvidesAppNotificationSettings;
     center = [UNUserNotificationCenter currentNotificationCenter];
     [center requestAuthorizationWithOptions: options
-	  completionHandler: ^(BOOL granted, NSError* _Nullable error)
+	  completionHandler: ^(BOOL granted, NSError* error)
 	    {
 		if (error || granted == NO) {
 		    DEBUG_LOG("Authorization for UNUserNotifications denied\n");
@@ -378,7 +378,7 @@ typedef TkStatusItem** StatusItemInfo;
 				trigger:nil
 	       ];
     [center addNotificationRequest: request
-	withCompletionHandler: ^(NSError* _Nullable error) {
+	withCompletionHandler: ^(NSError* error) {
 	    if (error) {
 		DEBUG_LOG("addNotificationRequest: error = %s\n", \
 			  [NSString stringWithFormat:@"%@", \
