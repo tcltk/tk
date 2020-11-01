@@ -449,8 +449,6 @@ MacSystrayDestroy(
     }
 }
 
-#endif // if BUILD_TARGET_HAS_NOTIFICATION
-
 /*
  *----------------------------------------------------------------------
  *
@@ -478,8 +476,6 @@ MacSystrayObjCmd(
     Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
-    StatusItemInfo info = (StatusItemInfo)clientData;
-    TkStatusItem *statusItem = *info;
     int result, idx;
     static const char *options[] =
 	{"create", "modify", "destroy", NULL};
@@ -496,7 +492,8 @@ MacSystrayObjCmd(
 	return TCL_OK;
     }
 
-#if BUILD_TARGET_HAS_NOTIFICATION
+    StatusItemInfo info = (StatusItemInfo)clientData;
+    TkStatusItem *statusItem = *info;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "create | modify | destroy");
@@ -652,8 +649,6 @@ MacSystrayObjCmd(
 	}
     }
 
-#endif // if BUILD_TARGET_HAS_NOTIFICATION
-
     return TCL_OK;
 }
 
@@ -693,8 +688,6 @@ static int SysNotifyObjCmd(
 	return TCL_OK;
     }
 
-#if BUILD_TARGET_HAS_NOTIFICATION
-
     NSString *title = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
     NSString *message = [NSString stringWithUTF8String: Tcl_GetString(objv[2])];
 
@@ -722,10 +715,11 @@ static int SysNotifyObjCmd(
 	[UNnotifier postNotificationWithTitle : title message: message];
     }
 
-#endif //#if BUILD_TARGET_HAS_NOTIFICATION
-
     return TCL_OK;
 }
+
+#endif // if BUILD_TARGET_HAS_NOTIFICATION
+
 
 /*
  *----------------------------------------------------------------------
@@ -747,6 +741,8 @@ static int SysNotifyObjCmd(
  *----------------------------------------------------------------------
  */
 
+#if BUILD_TARGET_HAS_NOTIFICATION
+
 int
 MacSystrayInit(Tcl_Interp *interp)
 {
@@ -758,8 +754,6 @@ MacSystrayInit(Tcl_Interp *interp)
 
     StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
     *info = 0;
-
-#if BUILD_TARGET_HAS_NOTIFICATION
 
     if (NSnotifier == nil) {
 	NSnotifier = [[TkNSNotifier alloc] init];
@@ -795,13 +789,21 @@ MacSystrayInit(Tcl_Interp *interp)
 	[center setNotificationCategories: categories];
     }
 
-#endif // BUILD_TARGET_HAS_NOTIFICATION
-
     Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info,
 			 (Tcl_CmdDeleteProc *)MacSystrayDestroy);
     Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
+
+#else
+
+int
+MacSystrayInit(TCL_UNUSED(Tcl_Interp *))
+{
+    return TCL_OK;
+}
+
+#endif // BUILD_TARGET_HAS_NOTIFICATION
 
 /*
  * Local Variables:
