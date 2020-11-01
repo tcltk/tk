@@ -49,13 +49,22 @@
 
 //#define DEBUG
 #ifdef DEBUG
-#define DEBUG_LOG(format, ...) { \
+
+/*
+ * This macro uses the do ... while(0) trick to swallow semicolons.  It logs to
+ * a temp file because apps launched from an icon have no stdout or stderr and
+ * because NSLog has a tendency to not produce any console messages at certain
+ * stages of launching an app.
+ */
+
+#define DEBUG_LOG(format, ...)                \
+    do {				      \
     FILE* logfile = fopen("/tmp/tklog", "a"); \
-    fprintf(logfile, format, ##__VA_ARGS__);   \
-    fflush(logfile); \
-    fclose(logfile); }
+    fprintf(logfile, format, ##__VA_ARGS__);  \
+    fflush(logfile);                          \
+    fclose(logfile); } while (0)
 #else
-#define DEBUG_LOG
+#define DEBUG_LOG(format, ...)
 #endif
 
 #define BUILD_TARGET_HAS_NOTIFICATION (MAC_OS_X_VERSION_MAX_ALLOWED >= 101000)
@@ -107,12 +116,10 @@ static Bool canUseUNNotifications = NO;
 @end
 
 /*
- * Class declaration for TkNSNotifier. A TkNSNotifier object has no
- * attributes but implements the NSUserNotificationCenterDelegate protocol or
- * the UNNotificationCenterDelegate protocol, as appropriate for the runtime
- * environment.  It also has one additional method which posts a user
- * notification. There is one TkNSNotifier for the application, shared by all
- * interpreters.
+ * Class declaration for TkNSNotifier. A TkNSNotifier object has no attributes
+ * but implements the NSUserNotificationCenterDelegate protocol.  It also has
+ * one additional method which posts a user notification. There is one
+ * TkNSNotifier for the application, shared by all interpreters.
  */
 
 #pragma clang diagnostic push
@@ -150,10 +157,11 @@ static Bool canUseUNNotifications = NO;
 static TkNSNotifier *NSnotifier = nil;
 
 /*
- * Class declaration for TkUNNotifier. A TkNSNotifier object has no
- * attributes but implements the UNUserNotificationCenterDelegate protocol It
- * also has one additional method which posts a user notification. There is at
- * most one TkUNNotifier for the application, shared by all interpreters.
+ * Class declaration for TkUNNotifier. A TkUNNotifier object has no attributes
+ * but implements the UNUserNotificationCenterDelegate protocol It also has two
+ * additional methods.  One requests authorization to post notification via the
+ * UserNotification framework and the other posts a user notification. There is
+ * at most one TkUNNotifier for the application, shared by all interpreters.
  */
 
 @interface TkUNNotifier: NSObject {
@@ -189,8 +197,8 @@ static TkNSNotifier *NSnotifier = nil;
 @end
 
 /*
- * The singleton instance of TkUNNotifier shared by all interpeters in this
- * application.
+ * The singleton instance of TkUNNotifier shared by all interpeters is stored
+ * in this static variable.
  */
 
 static TkUNNotifier *UNnotifier = nil;
@@ -201,7 +209,7 @@ static TkUNNotifier *UNnotifier = nil;
  * may have at most one TkStatusItem.  A pointer to the TkStatusItem belonging
  * to an interpreter is stored as the clientData of the MacSystrayObjCmd instance
  * in that interpreter.  It will be NULL until the tk systray command is executed
- * in the interpreter.
+ * by the interpreter.
  */
 
 @implementation TkStatusItem : NSObject
@@ -304,12 +312,11 @@ typedef TkStatusItem** StatusItemInfo;
     NSUserNotificationCenter *center;
 
     center = [NSUserNotificationCenter defaultUserNotificationCenter];
-    DEBUG_LOG("Center is %p\n", center);
     notification = [[NSUserNotification alloc] init];
     notification.title = title;
     notification.informativeText = detail;
     notification.soundName = NSUserNotificationDefaultSoundName;
-    DEBUG_LOG("Delivering NSNotification now\n");
+    DEBUG_LOG("Sending NSNotification.\n");
     [center deliverNotification:notification];
 }
 
