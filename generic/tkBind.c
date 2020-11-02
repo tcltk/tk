@@ -458,7 +458,11 @@ static const ModInfo modArray[] = {
     {"Command",		Mod1Mask,	0},
     {"Mod2",		Mod2Mask,	0},
     {"M2",		Mod2Mask,	0},
+#ifdef MAC_OSX_TK
     {"Option",		Mod2Mask,	0},
+#else
+    {"Option",		ALT_MASK,	0},
+#endif
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
     {"Mod4",		Mod4Mask,	0},
