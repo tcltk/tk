@@ -29,13 +29,25 @@ falls back to a Tcl-only implementation if libnotify is not installed. On
 each platform the notification includes a platform-specific default image to
 accompany the text.
 .PP
-The macOS version has two separate under-the-hood implementations, depending on 
-which version of the OS is being run. The newer version, introduced in 
-10.14, requires that the application accessing the API be 
-code-signed with an SSL certificate, or the notification will not display. (A self-signed certifcate seems to be 
-sufficient.) Additionally, if a developer installs an unsigned version of 
-Wish over a signed version, Wish (or an application derived from it) must 
-be deleted from Apple's System Preferences notification section or the 
-notification will not display. 
+
+The macOS version embeds two separate under-the-hood implementations
+using different notification APIs.  The choice of which one to use
+depends on which version of the OS is being run and the state of the
+Tk application code. The newer API, introduced in macOS 10.14,
+requires that the application accessing the API be code-signed, or the
+notification will not display.  (A self-signed certificate seems to be
+sufficient.) The older API was deprecated but not removed in macOS
+11.0. Tk uses the newer API only for signed applications running on
+macOS 10.14 or newer.  Otherwise it falls back to the older API.  A
+quirk which developers should be aware of is that if an unsigned
+version of Wish (or an application derived from it) is installed on
+top of a signed version after the signed version has been registered
+with System Preferences then neither API will be allowed to show
+notifications, making Tk's automatic fallback to the older API
+ineffective.  To re-enable notifications the application must be
+deleted from Apple's System Preferences Notifications section. (There
+is no removal button, so this is done by selecting the application and
+pressing the Delete key.)
+
 .SH KEYWORDS
 notify, alert
