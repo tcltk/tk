@@ -26,7 +26,16 @@ Here is an example of the \fBtk sysnotify\fP code:
 The macOS and Windows versions are native implmentations using system
 API's. The X11 version has a conditional dependency on libnotify, and
 falls back to a Tcl-only implementation if libnotify is not installed. On
-each platform the notification includes a platform-specific default to
+each platform the notification includes a platform-specific default image to
 accompany the text.
+.PP
+The macOS version has two separate under-the-hood implementations, depending on 
+which version of the OS is being run. The newer version, introduced in 
+10.14, requires that the application accessing the API be 
+code-signed with an SSL certificate, or the notification will not display. (A self-signed certifcate seems to be 
+sufficient.) Additionally, if a developer installs an unsigned version of 
+Wish over a signed version, Wish (or an application derived from it) must 
+be deleted from Apple's System Preferences notification section or the 
+notification will not display. 
 .SH KEYWORDS
 notify, alert
