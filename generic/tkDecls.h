@@ -1796,4 +1796,6 @@ extern const TkStubs *tkStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#undef TkUnusedStubEntry
+
 #endif /* _TKDECLS */
