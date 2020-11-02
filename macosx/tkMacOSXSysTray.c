@@ -712,15 +712,15 @@ static int SysNotifyObjCmd(
      */
 
     if (UNnotifier && [NSApp isSigned]) {
-	UNUserNotificationCenter *center;
+    	UNUserNotificationCenter *center;
 
-	center = [UNUserNotificationCenter currentNotificationCenter];
+    	center = [UNUserNotificationCenter currentNotificationCenter];
         [center getNotificationSettingsWithCompletionHandler:
-	    ^(UNNotificationSettings *settings)
-	    {
-		NSInteger status = settings.authorizationStatus;
-		DEBUG_LOG("Reported authorization status is %ld\n", status);
-	    }];
+    	    ^(UNNotificationSettings *settings)
+    	    {
+    		NSInteger status = settings.authorizationStatus;
+    		DEBUG_LOG("Reported authorization status is %ld\n", status);
+    	    }];
            }
     if ([NSApp macOSVersion] < 101400 || ![NSApp isSigned]) {
 	DEBUG_LOG("Using the NSUserNotificationCenter\n");
