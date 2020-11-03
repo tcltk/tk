@@ -306,9 +306,7 @@ bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-Key> {# nothing}
-}
+bind Text <Command-Key> {# nothing}
 
 # Additional emacs-like bindings:
 
