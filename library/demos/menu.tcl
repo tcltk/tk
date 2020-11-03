@@ -16,7 +16,7 @@ wm title $w "Menu Demonstration"
 wm iconname $w "menu"
 positionWindow $w
 
-label $w.msg -font $font -wraplength 4i -justify left 
+label $w.msg -font $font -wraplength 4i -justify left
 if {[tk windowingsystem] eq "aqua"} {
     catch {set origUseCustomMDEF $::tk::mac::useCustomMDEF; set ::tk::mac::useCustomMDEF 1}
     $w.msg configure -text "This window has a menubar with cascaded menus.  You can invoke entries with an accelerator by typing Command+x, where \"x\" is the character next to the command key symbol. The rightmost menu can be torn off into a palette by selecting the first item in the menu."
@@ -63,7 +63,7 @@ if {[tk windowingsystem] eq "aqua"} {
 }
 foreach i {A B C D E F} {
     $m add command -label "Print letter \"$i\"" -underline 14 \
-	    -accelerator Meta+$i -command "puts $i" -accelerator $modifier+$i
+	    -accelerator $modifier+$i -command "puts $i"
     bind $w <$modifier-[string tolower $i]> "puts $i"
 }
 
