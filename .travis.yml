@@ -131,12 +131,12 @@ jobs:
         - BUILD_DIR=unix
         - CFGOPT="--enable-symbols"
 # Testing on Mac, various styles
-    - name: "macOS/Xcode 12/Shared/XQuartz"
-      os: osx
-      osx_image: xcode12
-      env:
-        - BUILD_DIR=unix
-        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
+#   - name: "macOS/Xcode 12/Shared/XQuartz"
+#     os: osx
+#     osx_image: xcode12
+#     env:
+#       - BUILD_DIR=unix
+#       - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
 # Test on Windows with MSVC native
 #   - name: "Windows/MSVC/Shared"
 #     os: windows
