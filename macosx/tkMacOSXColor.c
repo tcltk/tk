@@ -398,7 +398,7 @@ SetCGColorComponents(
  */
 
 MODULE_SCOPE Bool
-TkMacOSXInDarkMode(TCL_UNUSED(Tk_Window))
+TkMacOSXInDarkMode(Tk_Window tkwin)
 {
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -416,6 +416,8 @@ TkMacOSXInDarkMode(TCL_UNUSED(Tk_Window))
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
+#else
+    (void) tkwin;
 #endif
     return false;
 }
