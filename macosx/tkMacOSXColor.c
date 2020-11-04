@@ -398,7 +398,7 @@ SetCGColorComponents(
  */
 
 MODULE_SCOPE Bool
-TkMacOSXInDarkMode(Tk_Window tkwin)
+TkMacOSXInDarkMode(TCL_UNUSED(Tk_Window))
 {
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400

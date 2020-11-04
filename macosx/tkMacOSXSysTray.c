@@ -102,7 +102,7 @@ static NSString *TkNotificationCategory;
 - (void) setTextwithString : (NSString *) string;
 - (void) setB1Callback : (Tcl_Obj *) callback;
 - (void) setB3Callback : (Tcl_Obj *) callback;
-- (void) clickOnStatusItem: (id) sender;
+- (void) clickOnStatusItem;
 - (void) dealloc;
 
 @end
@@ -147,6 +147,8 @@ static NSString *TkNotificationCategory;
  */
 
 static TkNSNotifier *NSnotifier = nil;
+
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
 
 /*
  * Class declaration for TkUNNotifier. A TkUNNotifier object has no attributes
@@ -195,6 +197,8 @@ static TkNSNotifier *NSnotifier = nil;
 
 static TkUNNotifier *UNnotifier = nil;
 
+#endif
+
 /*
  * Class declaration for TkStatusItem. A TkStatusItem represents an icon posted
  * on the status bar located on the right side of the MenuBar.  Each interpreter
@@ -211,7 +215,7 @@ static TkUNNotifier *UNnotifier = nil;
     statusBar = [NSStatusBar systemStatusBar];
     statusItem = [[statusBar statusItemWithLength:NSVariableStatusItemLength] retain];
     statusItem.button.target = self;
-    statusItem.button.action = @selector(clickOnStatusItem: );
+    statusItem.button.action = @selector(clickOnStatusItem);
     [statusItem.button sendActionOn : NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp];
     statusItem.visible = YES;
     interp = interpreter;
@@ -256,7 +260,7 @@ static TkUNNotifier *UNnotifier = nil;
     b3_callback = obj;
 }
 
-- (void) clickOnStatusItem: (id) sender
+- (void) clickOnStatusItem
 {
     NSEvent *event = [NSApp currentEvent];
     if (([event type] == NSEventTypeLeftMouseUp) && (b1_callback != NULL)) {
@@ -319,17 +323,24 @@ typedef TkStatusItem** StatusItemInfo;
 - (BOOL) userNotificationCenter: (NSUserNotificationCenter *) center
          shouldPresentNotification: (NSUserNotification *)notification
 {
+    (void) center;
+    (void) notification;
+
     return YES;
 }
 
 - (void) userNotificationCenter:(NSUserNotificationCenter *)center
          didDeliverNotification:(NSUserNotification *)notification
 {
+    (void) center;
+    (void) notification;
 }
 
 - (void) userNotificationCenter:(NSUserNotificationCenter *)center
 	 didActivateNotification:(NSUserNotification *)notification
 {
+    (void) center;
+    (void) notification;
 }
 
 @end
@@ -339,6 +350,8 @@ typedef TkStatusItem** StatusItemInfo;
  * Static variable which records whether the app is authorized to send
  * notifications via the UNUserNotificationCenter.
  */
+
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
 
 @implementation TkUNNotifier : NSObject
 
@@ -435,6 +448,8 @@ typedef TkStatusItem** StatusItemInfo;
 }
 
 @end
+
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -711,6 +726,8 @@ static int SysNotifyObjCmd(
      * notifications after the app started up.
      */
 
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
+
     if (UNnotifier && [NSApp isSigned]) {
     	UNUserNotificationCenter *center;
 
@@ -722,12 +739,19 @@ static int SysNotifyObjCmd(
     		DEBUG_LOG("Reported authorization status is %ld\n", status);
     	    }];
            }
+
+#endif
+
     if ([NSApp macOSVersion] < 101400 || ![NSApp isSigned]) {
 	DEBUG_LOG("Using the NSUserNotificationCenter\n");
 	[NSnotifier postNotificationWithTitle : title message: message];
     } else {
+
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
+
 	DEBUG_LOG("Using the UNUserNotificationCenter\n");
 	[UNnotifier postNotificationWithTitle : title message: message];
+#endif
     }
 
     return TCL_OK;
@@ -773,6 +797,9 @@ MacSystrayInit(Tcl_Interp *interp)
     if (NSnotifier == nil) {
 	NSnotifier = [[TkNSNotifier alloc] init];
     }
+
+#if BUILD_TARGET_HAS_UN_FRAMEWORK
+
     if (@available(macOS 10.14, *)) {
 	UNUserNotificationCenter *center;
 	UNNotificationCategory *category;
@@ -803,6 +830,7 @@ MacSystrayInit(Tcl_Interp *interp)
 	categories = [NSSet setWithObjects:category, nil];
 	[center setNotificationCategories: categories];
     }
+#endif
 
     Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info,
 			 (Tcl_CmdDeleteProc *)MacSystrayDestroy);
