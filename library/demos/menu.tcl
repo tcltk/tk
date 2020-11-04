@@ -63,7 +63,7 @@ if {[tk windowingsystem] eq "aqua"} {
 }
 foreach i {A B C D E F} {
     $m add command -label "Print letter \"$i\"" -underline 14 \
-	    -accelerator Meta+$i -command "puts $i" -accelerator $modifier+$i
+	    -accelerator $modifier+$i -command "puts $i"
     bind $w <$modifier-[string tolower $i]> "puts $i"
 }
 
