@@ -735,8 +735,11 @@ static int SysNotifyObjCmd(
         [center getNotificationSettingsWithCompletionHandler:
     	    ^(UNNotificationSettings *settings)
     	    {
-    		NSInteger status = settings.authorizationStatus;
-    		DEBUG_LOG("Reported authorization status is %ld\n", status);
+#if !defined(DEBUG)
+		(void) settings;
+#endif
+    		DEBUG_LOG("Reported authorization status is %ld\n",
+			  settings.authorizationStatus);
     	    }];
            }
 

@@ -25,7 +25,9 @@
 #endif
 
 #define TextStyle MacTextStyle
+#define Cursor QDCursor
 #import <ApplicationServices/ApplicationServices.h>
+#undef Cursor
 #import <Cocoa/Cocoa.h>
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
