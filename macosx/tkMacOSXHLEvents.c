@@ -71,6 +71,7 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
 
 - (void) superTerminate: (id) sender
 {
+    (void) sender;
     [super terminate:nil];
 }
 
