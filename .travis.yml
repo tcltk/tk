@@ -17,8 +17,8 @@ addons:
   homebrew:
     packages:
       - tcl-tk
-    casks:
-      - xquartz
+#   casks:
+#     - xquartz
 jobs:
   include:
 # Testing on Linux GCC
@@ -221,7 +221,15 @@ install:
 script:
   - make binaries libraries tktest
   - make install
+before_cache:
+  - |-
+      case $TRAVIS_OS_NAME in
+        osx)
+          brew cleanup
+          ;;
+      esac
 cache:
   directories:
+  - $HOME/Library/Caches/Homebrew
   - $HOME/AppData/Local/Temp/chocolatey
   - $HOME/AppData/Local/Apps/Tcl86
