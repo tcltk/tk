@@ -457,10 +457,20 @@ static const ModInfo modArray[] = {
     {"Button9",		Button9Mask,	0},
     {"Mod1",		Mod1Mask,	0},
     {"M1",		Mod1Mask,	0},
+#ifdef MAC_OSX_TK
     {"Command",		Mod1Mask,	0},
+#elif defined (_WIN32)
+    {"Command",		ControlMask,	0},
+#else
+    {"Command",		META_MASK,	0},
+#endif
     {"Mod2",		Mod2Mask,	0},
     {"M2",		Mod2Mask,	0},
+#ifdef MAC_OSX_TK
     {"Option",		Mod2Mask,	0},
+#else
+    {"Option",		ALT_MASK,	0},
+#endif
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
     {"Mod4",		Mod4Mask,	0},
