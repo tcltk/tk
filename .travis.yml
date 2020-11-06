@@ -17,8 +17,8 @@ addons:
   homebrew:
     packages:
       - tcl-tk
-    casks:
-      - xquartz
+#   casks:
+#     - xquartz
 jobs:
   include:
 # Testing on Linux GCC
@@ -149,12 +149,12 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CFLAGS=-I/usr/local/opt/tcl-tk/include"
-    - name: "macOS/Xcode 12/Shared/XQuartz"
-      os: osx
-      osx_image: xcode12
-      env:
-        - BUILD_DIR=unix
-        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
+#   - name: "macOS/Xcode 12/Shared/XQuartz"
+#     os: osx
+#     osx_image: xcode12
+#     env:
+#       - BUILD_DIR=unix
+#       - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
 # Older MacOS versions
     - name: "macOS/Xcode 11/Shared"
       os: osx
@@ -221,7 +221,15 @@ install:
 script:
   - make binaries libraries tktest
   - make install
+before_cache:
+  - |-
+      case $TRAVIS_OS_NAME in
+        osx)
+          brew cleanup
+          ;;
+      esac
 cache:
   directories:
+  - $HOME/Library/Caches/Homebrew
   - $HOME/AppData/Local/Temp/chocolatey
   - $HOME/AppData/Local/Apps/Tcl86

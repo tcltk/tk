@@ -302,10 +302,10 @@ proc ttk::bindMouseWheel {bindtag callback} {
 	bind $bindtag <Button-5> "$callback +1"
     }
     if {[tk windowingsystem] eq "aqua"} {
-	bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
-	bind $bindtag <Option-MouseWheel> [append callback { [expr {-10 *(%D)}]} ]
+	bind $bindtag <MouseWheel> "$callback \[expr {-%D}\]"
+	bind $bindtag <Option-MouseWheel> "$callback \[expr {-10*%D}\]"
     } else {
-	bind $bindtag <MouseWheel> [append callback { [expr {-(%D / 120)}]}]
+	bind $bindtag <MouseWheel> "$callback \[expr {-%D/120)}\]"
     }
 }
 
