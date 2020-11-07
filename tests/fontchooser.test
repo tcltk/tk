@@ -11,7 +11,7 @@ testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![ca
 
 # the following helper functions are related to the functions used
 # in winDialog.test where they are used to send messages to the win32
-# dialog (hence the wierdness).
+# dialog (hence the weirdness).
 
 proc start {cmd} {
     set ::tk_dialog {}
@@ -192,6 +192,12 @@ test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl failsOnUbuntuN
     }
     lrange $::testfont 1 end
 } -result {14 bold}
+
+test fontchooser-5.1 {fontchooser multiple configure} -constraints {scriptImpl} -body {
+    tk fontchooser configure -title TestTitle -command foo
+    tk fontchooser configure -command bar
+    tk fontchooser configure -title
+} -result {TestTitle}
 
 # -------------------------------------------------------------------------
 
