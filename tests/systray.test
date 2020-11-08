@@ -1,33 +1,33 @@
-# If you save this source as, for example, "my_first.test", then execute
-# "tclsh my_first.test", the output will be something like
-#    "==== intro-2 This illustrates how something goes wrong. FAILED
-#    ==== Contents of test case:
-
-#        expr 3 * 5
-
-#    ---- Result was:
-#    15
-#    ---- Result should have been (exact matching):
-#    16
-#    ==== intro-2 FAILED"
+# This file is a Tcl script to test systray and sysnotify features in Tk.
+# It is organized in the standard fashion for Tcl tests.
+#
+# Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
+# All rights reserved.
 
 package require tcltest 2.0
 namespace import ::tcltest::*
 
-test systray-1 {Create a systray icon.} {
+test systray-1 {Create a systray icon} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
     tk systray create _book "Systray sample" {puts "button 1 click"} {puts "button 3 click""}
-} {}
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {}
 
-test systray-2 {Argument checking.}  {
+test systray-2 {Argument checking} -body {
     tk systray create
-}  error "wrong # args: should be \"tk systray create image ?text? ?b1_callback? b3_callback?"
+} -returnCodes {error} -result {wrong # args: should be "tk systray create image ?text? ?b1_callback? b3_callback?"}
 
-test sysnotify-1 {System notification dialog.} {
-    tk sysnotify  {Alert} {This is an alert}
-} {}
+test sysnotify-1 {System notification dialog} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+    tk systray create _book "Systray sample" {} {}
+} -body {
+    tk sysnotify {Alert} {This is an alert}
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {}
 
-# To see test statistics (Total/Passed/Skipped/Failed), best putthis line in the end:
-tk systray destroy
-image delete _book
 cleanupTests
