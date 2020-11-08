@@ -1127,7 +1127,10 @@ WinIcoDestroy(ClientData clientData) {
     IcoInfo * icoPtr;
     IcoInfo * nextPtr;
     Tcl_Interp * interp = (Tcl_Interp * ) clientData;
+    BlockOfIconImagesPtr lpIR = NULL;
+    lpIR = iconBits;
     DestroyHandlerWindow();
+    FreeIconResource(lpIR);
     for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
         nextPtr = icoPtr -> nextPtr;
         FreeIcoPtr(interp, icoPtr);
