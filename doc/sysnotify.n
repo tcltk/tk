@@ -23,7 +23,7 @@ Here is an example of the \fBtk sysnotify\fP code:
 .CE
 .SH PLATFORM NOTES
 .PP
-The macOS and Windows versions are native implmentations using system
+The macOS and Windows versions are native implementations using system
 API's. The X11 version has a conditional dependency on libnotify, and
 falls back to a Tcl-only implementation if libnotify is not installed. On
 each platform the notification includes a platform-specific default image to
