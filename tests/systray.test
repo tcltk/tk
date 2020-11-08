@@ -10,25 +10,24 @@
 #    ---- Result should have been (exact matching):
 #    16
 #    ==== intro-2 FAILED"
-    package require tcltest 2.0
-    namespace import ::tcltest::*
 
-    test systray-1 {Create a systray icon.} {
+package require tcltest 2.0
+namespace import ::tcltest::*
+
+test systray-1 {Create a systray icon.} {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
     tk systray create _book "Systray sample" {puts "button 1 click"} {puts "button 3 click""}
-    } {}
+} {}
 
-    test systray-2 {Argument checking.}  {
-        tk systray create
-    }  error "wrong # args: should be \"tk systray create image ?text? ?b1_callback? b3_callback?"
+test systray-2 {Argument checking.}  {
+    tk systray create
+}  error "wrong # args: should be \"tk systray create image ?text? ?b1_callback? b3_callback?"
 
+test sysnotify-1 {System notification dialog.} {
+    tk sysnotify  {Alert} {This is an alert}
+} {}
 
-   test sysnotify-1 {System notification dialog.} {
-   	 tk sysnotify  {Alert} {This is an alert}
-	 } {}
-
-
-    # To see test statistics (Total/Passed/Skipped/Failed), best putthis line in the end:
-      tk systray destroy
-      image delete _book
-    cleanupTests
+# To see test statistics (Total/Passed/Skipped/Failed), best putthis line in the end:
+tk systray destroy
+image delete _book
+cleanupTests
