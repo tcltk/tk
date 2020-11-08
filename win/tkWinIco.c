@@ -187,61 +187,6 @@ AdjustIconImagePointers(
 	    lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
     return TRUE;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * ReadICOHeader --
- *
- *	Reads the header from an ICO file, as specfied by channel.
- *
- * Results:
- *	UINT - Number of images in file, -1 for failure. If this succeeds,
- *	there is a decent chance this is a valid icon file.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-ReadICOHeader(
-    Tcl_Channel channel)
-{
-    union {
-	WORD word;
-	char bytes[sizeof(WORD)];
-    } input;
-
-    /*
-     * Read the 'reserved' WORD, which should be a zero word.
-     */
-
-    if (Tcl_Read(channel, input.bytes, sizeof(WORD)) != sizeof(WORD)) {
-	return -1;
-    }
-    if (input.word != 0) {
-	return -1;
-    }
-
-    /*
-     * Read the type WORD, which should be of type 1.
-     */
-
-    if (Tcl_Read(channel, input.bytes, sizeof(WORD)) != sizeof(WORD)) {
-	return -1;
-    }
-    if (input.word != 1) {
-	return -1;
-    }
-
-    /*
-     * Get and return the count of images.
-     */
-
-    if (Tcl_Read(channel, input.bytes, sizeof(WORD)) != sizeof(WORD)) {
-	return -1;
-    }
-    return (int) input.word;
-}
 
 /*
  * Local Variables:
