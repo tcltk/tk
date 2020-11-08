@@ -300,27 +300,6 @@ DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
 /*
  *----------------------------------------------------------------------
  *
- * FindDIBBits --
- *
- * 	Locate the image bits in a CF_DIB format DIB.
- *
- * Results:
- *	Icon is rendered.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static LPSTR
-FindDIBBits(LPSTR lpbi) {
-    return (lpbi + * (LPDWORD) lpbi + PaletteSize(lpbi));
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * NotifyA --
  *
  * 	Display icon in system tray on older ANSI-encoded systems.
