@@ -193,7 +193,7 @@ proc ::tk::systray {args} {
     #Create the system tray icon.
     if {[lindex $args 0] eq "create"} {
 	if {[llength $args] != 5} {
-	    error "wrong # args: should be \"tk systray create image ?text? ?b1_callback? b3_callback?\""
+	    error "wrong # args: should be \"tk systray create image text b1_callback b3_callback\""
 	}
 	set _img [lindex $args 1]
 	set _txt [lindex $args 2]
