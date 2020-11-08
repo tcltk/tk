@@ -10,13 +10,15 @@
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBtk systray create\fP \fIimage\fP? \fItext\fP? \fIb1_callback\fR? \fIb3_callback\fR?
+\fBtk systray create \fIimage text b1_callback b3_callback\fR
 .sp
-\fBtk systray modify image\fI image\fR?
+\fBtk systray modify image\fI image\fR
 .sp
-\fBtk systray modify text \fI text\fR?
+\fBtk systray modify text \fI text\fR
 .sp
-\fBtk systray modify callback \fIcallback\fR?
+\fBtk systray modify b1_callback \fIcallback\fR
+.sp
+\fBtk systray modify b3_callback \fIcallback\fR
 .sp
 \fBtk systray destroy\fR
 .BE
