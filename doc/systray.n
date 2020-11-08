@@ -37,7 +37,7 @@ Here is an example of the \fBtk systray\fP code:
 .PP
 Here is an example of modifying the \fBtk systray\fP icon:
 .CS
-    image create book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
+    image create photo book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
     tk systray modify image book_page
     tk systray modify text "Updated sample"
     tk systray modify b1_callback {puts "Different output from the tk systray"}
