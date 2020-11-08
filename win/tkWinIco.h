@@ -74,25 +74,21 @@ typedef struct {
     ICONDIRENTRY idEntries[1];	/* The entries for each image */
 } ICONDIR, *LPICONDIR;
 
-
 /*
  * Used in BytesPerLine
  */
 
 #define WIDTHBYTES(bits)	((((bits) + 31)>>5)<<2)
 
-
 /*
  * The following are implemented in tkWinIco.c and also used in tkWinWm.c and tkWinSysTray.c.
  */
-
 
 DWORD            BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
 LPSTR            FindDIBBits(LPSTR lpbi);
 WORD             PaletteSize(LPSTR lpbi);
 WORD             DIBNumColors(LPSTR lpbi);
 int              ReadICOHeader(Tcl_Channel channel);
-
 
 /*
  * Local Variables:
