@@ -90,6 +90,10 @@ static int SysNotifyCmd(
     message = Tcl_GetString(objv[2]);
     icon = "dialog-information";
 
+/*
+ * Call to notify_init should go here to prevent test suite failure.
+ */
+    notify_init("Wish");
     notif = notify_notification_new(title, message, icon);
     notify_notification_show(notif, NULL);
 
@@ -116,8 +120,7 @@ int
 SysNotify_Init(
     Tcl_Interp *interp)
 {
-    notify_init("Wish");
-
+ 
     Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyCmd, interp,
 	    SysNotifyDeleteCmd);
     return TCL_OK;
