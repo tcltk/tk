@@ -517,7 +517,8 @@ FreeIcoPtr(Tcl_Interp * interp, IcoInfo * icoPtr) {
         TaskbarOperation(icoPtr, NIM_DELETE, NULL, "");
         Tcl_ResetResult(interp);
     }
-    if (icoPtr -> itype == ICO_FILE) {
+    if (icoPtr -> itype != ICO_FILE) {
+		FreeIconResource(icoPtr->lpIR);
 		ckfree(icoPtr->lpIR);
     }
     if (icoPtr -> taskbar_txt != NULL) {
@@ -1127,10 +1128,7 @@ WinIcoDestroy(ClientData clientData) {
     IcoInfo * icoPtr;
     IcoInfo * nextPtr;
     Tcl_Interp * interp = (Tcl_Interp * ) clientData;
-    BlockOfIconImagesPtr lpIR = NULL;
-    lpIR = iconBits;
     DestroyHandlerWindow();
-    FreeIconResource(lpIR);
     for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
         nextPtr = icoPtr -> nextPtr;
         FreeIcoPtr(interp, icoPtr);
