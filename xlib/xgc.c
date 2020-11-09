@@ -13,13 +13,8 @@
  */
 
 #include "tkInt.h"
-
-#if !defined(MAC_OSX_TK)
-#   include <X11/Xlib.h>
-#else
-#   include <tkMacOSXInt.h>
-#   include <X11/Xlib.h>
-#   include <X11/X.h>
+#include <X11/Xlib.h>
+#if defined(MAC_OSX_TK)
 #   define Cursor XCursor
 #   define Region XRegion
 #endif
