@@ -6604,10 +6604,10 @@ fi
 if test "$TCL_PREFIX" != "$prefix"; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
         Different --prefix selected for Tk and Tcl!
-        [package require Tk] may not work correctly in tclsh." >&5
+        [package require tk] may not work correctly in tclsh." >&5
 $as_echo "$as_me: WARNING:
         Different --prefix selected for Tk and Tcl!
-        [package require Tk] may not work correctly in tclsh." >&2;}
+        [package require tk] may not work correctly in tclsh." >&2;}
 fi
 
 #--------------------------------------------------------------------
