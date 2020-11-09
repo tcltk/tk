@@ -114,7 +114,7 @@ XCreateGC(
      * initialization.
      */
 
-    gp = (GC)ckalloc(sizeof(XGCValuesWithCache));
+    gp = (GC)ckalloc(sizeof(XGCValuesWithDash));
     if (!gp) {
 	return NULL;
     }
