@@ -1,6 +1,6 @@
 ########################################################################################################
 #
-# MAKEFILE wrapper to build tk on Mac OS X in a way compatible with the tk/macosx Xcode buildsystem
+# Makefile wrapper to build tk on Mac OS X in a way compatible with the tk/macosx Xcode buildsystem
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
@@ -222,11 +222,11 @@ ifeq (${INSTALL_BUILD},)
 	rm -rf "./${LIBDIR}" "./${BINDIR}" && ln -fs "${SYMROOT}" "./${LIBDIR}" && \
 	ln -fs "${SYMROOT}" "./${BINDIR}" && ln -fs "${OBJ_DIR}/tktest" "${SYMROOT}"
 ifeq (${TK_X11},)
-	@rm -f "${OBJ_DIR}/${BINDIR}" && \
-	ln -fs "Wish.app/Contents/MacOS/Wish "${SYMROOT}/${WISH}"
+	rm -f "${OBJ_DIR}/${BINDIR}" && \
+	ln -fs "Wish.app/Contents/MacOS/Wish" "${SYMROOT}/${WISH}"
 endif
 # Create symbolic link to Tcl.framework in ${SYMROOT}if necessary
-	@cd "${SYMROOT}" && if [ ! -e Tcl.framework -o -L Tcl.framework ]; then \
+	@cd "${SYMROOT}" && if [ ! -e Tcl.framework -o -L Tcl.framework ] ; then \
 	rm -f Tcl.framework && ln -s "${TCL_FRAMEWORK_DIR}/Tcl.framework" . ; fi
 endif
 
