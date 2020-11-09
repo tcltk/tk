@@ -304,11 +304,11 @@ proc ::tk::systray {args} {
 	    }
 	}
     }
-	if {[tk windowingsystem] eq "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	if {$::winicoprops::ico ne ""} {
-	 bind . <Destroy> {catch {_systray taskbar delete $::winicoprops::ico}}
-	   }
-	   }
+	    bind . <Destroy> {catch {_systray taskbar delete $::winicoprops::ico}}
+	}
+    }
 }
 
 # sysnotify --

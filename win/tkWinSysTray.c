@@ -1316,7 +1316,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     BlockOfIconImagesPtr lpIR = NULL;
     if (argc < 2) {
         Tcl_AppendResult(interp, "wrong # args: should be \"",
-            argv[0], " option ?arg arg ...?\"", (char * ) NULL);
+            argv[0], " option arg arg ...\"", (char * ) NULL);
         return TCL_ERROR;
     }
 
@@ -1357,7 +1357,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         (length >= 2)) {
         if (argc != 3) {
             Tcl_AppendResult(interp, "wrong # args: should be \"",
-                argv[0], " delete ?id?\"", (char * ) NULL);
+                argv[0], " delete id\"", (char * ) NULL);
             return TCL_ERROR;
         }
         icoPtr = GetIcoPtr(interp, (char * ) argv[2]);
@@ -1370,7 +1370,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
     } else if ((strncmp(argv[1], "text", length) == 0) && (length >= 2)) {
         if (argc < 3) {
             Tcl_AppendResult(interp, " wrong # args: should be \"",
-                argv[0], " text <id> ?newtext?\"", (char * ) NULL);
+                argv[0], " text <id> newtext\"", (char * ) NULL);
             return TCL_ERROR;
         }
         if ((icoPtr = GetIcoPtr(interp, (char * ) argv[2])) == NULL) return TCL_ERROR;
@@ -1394,7 +1394,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         char * txt;
         if (argc < 4) {
             Tcl_AppendResult(interp, " wrong # args: should be \"",
-                argv[0], " taskbar <add/delete/modify> <id> ?-callback <callback>? \"", (char * ) NULL);
+                argv[0], " taskbar <add/delete/modify> <id> -callback <callback> \"", (char * ) NULL);
             return TCL_ERROR;
         }
         if (strcmp(argv[2], "add") == 0) {
@@ -1499,7 +1499,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
 
     if (argc < 2) {
         Tcl_AppendResult(interp, " wrong # args: should be \"",
-            argv[0], " option ?arg arg ...?\"", (char * ) NULL);
+            argv[0], " option arg arg ...\"", (char * ) NULL);
         return TCL_ERROR;
     }
 
@@ -1508,7 +1508,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
         (length >= 2)) {
         if (argc != 5) {
             Tcl_AppendResult(interp, " wrong # args: should be \"",
-                argv[0], " notify ?id? ?title? ?detail?\"", (char * ) NULL);
+                argv[0], " notify id title detail\"", (char * ) NULL);
             return TCL_ERROR;
         }
 
