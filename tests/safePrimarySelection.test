@@ -63,7 +63,7 @@ proc ::_test_tmp::unsafeInterp {name} {
 
 
 set ::_test_tmp::script {
-    package require Tk
+    package require tk
     namespace eval ::_test_tmp {}
 
     proc ::_test_tmp::getPrimarySelection {} {

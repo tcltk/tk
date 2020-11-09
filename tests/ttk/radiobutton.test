@@ -2,7 +2,7 @@
 # ttk::radiobutton widget tests.
 #
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
