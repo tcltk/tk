@@ -1,7 +1,7 @@
 # This file is a Tcl script to test systray and sysnotify features in Tk.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
 # All rights reserved.
 
 package require tcltest 2.0
@@ -18,7 +18,7 @@ test systray-1 {Create a systray icon} -setup {
 
 test systray-2 {Argument checking} -body {
     tk systray create
-} -returnCodes {error} -result {wrong # args: should be "tk systray create image ?text? ?b1_callback? b3_callback?"}
+} -returnCodes {error} -result {wrong # args: should be "tk systray create image text b1_callback b3_callback"}
 
 test sysnotify-1 {System notification dialog} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -31,3 +31,4 @@ test sysnotify-1 {System notification dialog} -setup {
 } -result {}
 
 cleanupTests
+
