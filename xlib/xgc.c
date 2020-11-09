@@ -16,9 +16,6 @@
 
 #if !defined(MAC_OSX_TK)
 #   include <X11/Xlib.h>
-#   define TkpInitGCCache(gc)
-#   define TkpFreeGCCache(gc)
-#   define TkpGetGCCache(gc)
 #else
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
@@ -33,10 +30,7 @@
 typedef struct {
     XGCValues gc;
     char dash[MAX_DASH_LIST_SIZE];
-#ifdef MAC_OSX_TK
-    TkpGCCache cache;
-#endif
-} XGCValuesWithCache;
+} XGCValuesWithDash;
 
 /*
  *----------------------------------------------------------------------
@@ -161,31 +155,8 @@ XCreateGC(
 	clip_mask->type = TKP_CLIP_PIXMAP;
 	clip_mask->value.pixmap = values->clip_mask;
     }
-    TkpInitGCCache(gp);
-
     return gp;
 }
-
-#ifdef MAC_OSX_TK
-/*
- *----------------------------------------------------------------------
- *
- * TkpGetGCCache --
- *
- * Results:
- *	Pointer to the TkpGCCache at the end of the GC.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-TkpGCCache*
-TkpGetGCCache(GC gc) {
-    return (gc ? &((XGCValuesWithCache *)gc)->cache : NULL);
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -268,7 +239,6 @@ int XFreeGC(
 
     if (gc != NULL) {
 	FreeClipMask(gc);
-	TkpFreeGCCache(gc);
 	ckfree(gc);
     }
     return Success;

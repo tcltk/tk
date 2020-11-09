@@ -485,89 +485,6 @@ TkSetMacColor(
 /*
  *----------------------------------------------------------------------
  *
- * TkpInitGCCache, TkpFreeGCCache, CopyCachedColor, SetCachedColor --
- *
- *	Maintain a per-GC cache of previously converted CGColorRefs
- *
- * Results:
- *	None resp. retained CGColorRef for CopyCachedColor()
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpInitGCCache(
-    GC gc)
-{
-    bzero(TkpGetGCCache(gc), sizeof(TkpGCCache));
-}
-
-void
-TkpFreeGCCache(
-    GC gc)
-{
-    TkpGCCache *gcCache = TkpGetGCCache(gc);
-
-    if (gcCache->cachedForegroundColor) {
-	CFRelease(gcCache->cachedForegroundColor);
-    }
-    if (gcCache->cachedBackgroundColor) {
-	CFRelease(gcCache->cachedBackgroundColor);
-    }
-}
-
-static CGColorRef
-CopyCachedColor(
-    GC gc,
-    unsigned long pixel)
-{
-    TkpGCCache *gcCache = TkpGetGCCache(gc);
-    CGColorRef cgColor = NULL;
-
-    if (gcCache) {
-	if (gcCache->cachedForeground == pixel) {
-	    cgColor = gcCache->cachedForegroundColor;
-	} else if (gcCache->cachedBackground == pixel) {
-	    cgColor = gcCache->cachedBackgroundColor;
-	}
-	if (cgColor) {
-	    CFRetain(cgColor);
-	}
-    }
-    return cgColor;
-}
-
-static void
-SetCachedColor(
-    GC gc,
-    unsigned long pixel,
-    CGColorRef cgColor)
-{
-    TkpGCCache *gcCache = TkpGetGCCache(gc);
-
-    if (gcCache && cgColor) {
-	if (gc->foreground == pixel) {
-	    if (gcCache->cachedForegroundColor) {
-		CFRelease(gcCache->cachedForegroundColor);
-	    }
-	    gcCache->cachedForegroundColor = (CGColorRef) CFRetain(cgColor);
-	    gcCache->cachedForeground = pixel;
-	} else if (gc->background == pixel) {
-	    if (gcCache->cachedBackgroundColor) {
-		CFRelease(gcCache->cachedBackgroundColor);
-	    }
-	    gcCache->cachedBackgroundColor = (CGColorRef) CFRetain(cgColor);
-	    gcCache->cachedBackground = pixel;
-	}
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXCreateCGColor --
  *
  *	Creates a CGColorRef from a X style pixel value.
@@ -586,11 +503,8 @@ TkMacOSXCreateCGColor(
     GC gc,
     unsigned long pixel)		/* Pixel value to convert. */
 {
-    CGColorRef cgColor = CopyCachedColor(gc, pixel);
-
-    if (!cgColor && TkSetMacColor(pixel, &cgColor)) {
-	SetCachedColor(gc, pixel, cgColor);
-    }
+    CGColorRef cgColor;
+    TkSetMacColor(pixel, &cgColor);
     return cgColor;
 }
 
@@ -683,9 +597,7 @@ TkMacOSXSetColorInContext(
 		    context, kHIThemeOrientationNormal);
 	    break;
 	default:
-	    if (SetCGColorComponents(entry, pixel, &cgColor)){
-		SetCachedColor(gc, pixel, cgColor);
-	    }
+	    SetCGColorComponents(entry, pixel, &cgColor);
 	    break;
 	}
     }
