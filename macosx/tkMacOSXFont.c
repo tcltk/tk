@@ -149,12 +149,12 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     return [_string characterAtIndex:index];
 }
 
-- (NSUInteger)startOfGlyphCluster:(NSUInteger)index
+- (NSUInteger)startOfCluster:(NSUInteger)index
 {
     NSRange range = [_string rangeOfComposedCharacterSequenceAtIndex:index];
     return range.location;
 }
-- (NSUInteger)endOfGlyphCluster:(NSUInteger)index
+- (NSUInteger)endOfCluster:(NSUInteger)index
 {
     NSRange range = [_string rangeOfComposedCharacterSequenceAtIndex:index];
     return range.location + range.length;
@@ -436,14 +436,14 @@ CreateNamedSystemFont(
 
 #pragma mark -
 
-#pragma mark Glyph indexing
+#pragma mark Grapheme Cluster indexing
 
 /*
  *----------------------------------------------------------------------
  *
- * startOfGlyphObjCmd --
+ * startOfClusterObjCmd --
  *
- *      This function is invoked to process the startOfGlyph command.
+ *      This function is invoked to process the startOfCluster command.
  *
  * Results:
  *      A standard Tcl result.
@@ -455,7 +455,7 @@ CreateNamedSystemFont(
  */
 
 static int
-startOfGlyphObjCmd(
+startOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
     int objc,                   /* Number of arguments. */
@@ -467,7 +467,7 @@ startOfGlyphObjCmd(
     Tcl_WideInt indexArg;
     Tcl_WideInt result;
     if ((objc != 3)) {
-        Tcl_WrongNumArgs(interp, 1, objv, "string index"); 
+        Tcl_WrongNumArgs(interp, 1, objv, "string index");
         return TCL_ERROR;
     }
     stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
@@ -482,13 +482,13 @@ startOfGlyphObjCmd(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj([S length]));
 	return TCL_OK;
     }
-    result = indexArg >= 0 ? [S startOfGlyphCluster:indexArg] : -1;
+    result = indexArg >= 0 ? [S startOfCluster:indexArg] : -1;
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
     return TCL_OK;
-}	
+}
 
 static int
-endOfGlyphObjCmd(
+endOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
     int objc,                   /* Number of arguments. */
@@ -499,7 +499,7 @@ endOfGlyphObjCmd(
     int numBytes;
     Tcl_WideInt indexArg;
     Tcl_WideInt result;
-    
+
     if ((objc != 3)) {
         Tcl_WrongNumArgs(interp, 1, objv, "string index");
         return TCL_ERROR;
@@ -517,10 +517,10 @@ endOfGlyphObjCmd(
     }
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
     result = (unsigned long long) indexArg < [S length] ?
-	[S endOfGlyphCluster:indexArg] : [S length];
+	[S endOfCluster:indexArg] : [S length];
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
     return TCL_OK;
-}	
+}
 
 #pragma mark -
 #pragma mark Font handling:
@@ -618,8 +618,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand(interp, "startOfGlyph", startOfGlyphObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "endOfGlyph", endOfGlyphObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*

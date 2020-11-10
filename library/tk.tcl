@@ -701,14 +701,14 @@ if {[tk windowingsystem] eq "aqua"} {
 }
 
 if {[tk windowingsystem] eq "aqua"} {
-    proc ::tk::endOfGlyphCluster {str index} {
-	return [endOfGlyph $str $index]
+    namespace eval :: {
+	namespace export endOfCluster startOfCluster
     }
-    proc ::tk::startOfGlyphCluster {str index} {
-	return [startOfGlyph $str $index]
+    namespace eval ::tk:: {
+	namespace import ::endOfCluster ::startOfCluster
     }
 } else {
-    proc ::tk::endOfGlyphCluster {str start} {
+    proc ::tk::endOfCluster {str start} {
 	if {$start >= [string length $str]} {
 	    return -1;
 	}
@@ -720,9 +720,8 @@ if {[tk windowingsystem] eq "aqua"} {
 	    set start [expr {$start+1}];# For demo purposes only
 	}
 	return $start
-}
-
-    proc ::tk::startOfGlyphCluster {str start} {
+    }
+    proc ::tk::startOfCluster {str start} {
 	if {$start eq "end"} {
 	    set start [expr {[string length $str]-1}]
 	}
