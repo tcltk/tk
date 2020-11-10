@@ -172,6 +172,7 @@ proc ::tk::systray {args} {
 	    "win32" {
 		set _iconlist {}
 		_systray taskbar delete $::winicoprops::ico
+		set ::winicoprops::ico ""
 	    }
 	    "x11" {
 		destroy ._tray
@@ -206,7 +207,7 @@ proc ::tk::systray {args} {
 		    error "Only one system tray icon supported per interpeter"
 		}
 		set ::winicoprops::ico [_systray createfrom $_img]
-		_systray taskbar add $::winicoprops::ico  -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		_systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		lappend _iconlist "ico#[llength _iconlist]"
 	    }
 	    "x11" {
@@ -301,7 +302,7 @@ proc ::tk::systray {args} {
     }
     if {[tk windowingsystem] eq "win32"} {
 	if {$::winicoprops::ico ne ""} {
-	    bind . <Destroy> {catch {_systray taskbar delete $::winicoprops::ico}}
+	    bind . <Destroy> {catch {_systray taskbar delete $::winicoprops::ico ; set ::winicoprops::ico ""}}
 	}
     }
 }
