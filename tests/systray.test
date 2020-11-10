@@ -46,4 +46,21 @@ test sysnotify-1 {system notification popup} -setup {
     image delete _book
 } -result {}
 
+test sysnotify-2.1 {system notification stems from a systray icon on Windows} -constraints {
+    win
+} -setup {
+    catch {tk systray destroy}
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+    tk systray create _book "Systray sample" {} {}
+    tk systray destroy
+} -body {
+    tk sysnotify {Alert} {This is an alert}
+} -returnCodes {error} -result {Must create a system tray icon with the "tk systray" command}
+test sysnotify-2.2 {system notification is not linked to any systray icon on X11 or aqua} -constraints {
+    nonwin
+} -body {
+    tk sysnotify {Alert} {This is an alert}
+} -result {}
+
+
 cleanupTests
