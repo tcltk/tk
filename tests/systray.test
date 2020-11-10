@@ -7,20 +7,36 @@
 package require tcltest 2.0
 namespace import ::tcltest::*
 
-test systray-1 {Create a systray icon} -setup {
+test systray-1 {systray icon creation} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
-    tk systray create _book "Systray sample" {puts "button 1 click"} {puts "button 3 click""}
+    tk systray create _book "Systray sample" {puts "button 1 click"} {puts "button 3 click"}
 } -cleanup {
     tk systray destroy
     image delete _book
 } -result {}
 
-test systray-2 {Argument checking} -body {
+test systray-2 {systray argument checking} -body {
     tk systray create
 } -returnCodes {error} -result {wrong # args: should be "tk systray create image text b1_callback b3_callback"}
 
-test sysnotify-1 {System notification dialog} -setup {
+test systray-3 {systray icon parameters modification} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+    image create photo _page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
+} -body {
+    tk systray create _book "Systray icon text" {} {}
+    tk systray modify image _page
+    tk systray modify text "Another text for my icon"
+    tk systray modify b1_callback {set a 1}
+    tk systray modify b2_callback {set b 2}
+} -cleanup {
+    tk systray destroy
+    image delete _book
+    image delete _page
+} -result {}
+
+
+test sysnotify-1 {system notification popup} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
     tk systray create _book "Systray sample" {} {}
 } -body {
@@ -31,4 +47,3 @@ test sysnotify-1 {System notification dialog} -setup {
 } -result {}
 
 cleanupTests
-
