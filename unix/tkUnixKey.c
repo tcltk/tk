@@ -305,6 +305,14 @@ TkpGetKeySym(
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
     /*
+     * X11 keycodes always lie in the inclusive range [8,255].
+     */
+
+    if (eventPtr->xkey.keycode > 0xff) {
+        return NoSymbol;
+    }
+
+    /*
      * Refresh the mapping information if it's stale. This must happen before
      * we do any input method processing. [Bug 3599312]
      */
@@ -360,11 +368,15 @@ TkpGetKeySym(
      * alphabetic, then switch back to the unshifted keysym.
      */
 
+#ifndef XK_Oslash
+    /* XK_Oslash is the official name, but might not be present in older X11 headers */
+#   define XK_Oslash XK_Ooblique
+#endif
     if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
 	    && (dispPtr->lockUsage == LU_CAPS)) {
 	if (!(((sym >= XK_A) && (sym <= XK_Z))
 		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
-		|| ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
+		|| ((sym >= XK_Oslash) && (sym <= XK_Thorn)))) {
 	    index &= ~1;
 	    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		    0, index);

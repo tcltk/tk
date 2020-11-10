@@ -117,7 +117,7 @@ extern const struct TclIntStubs *tclIntStubsPtr;
 	tclIntStubsPtr->tclGetIntForIndex((interp), (obj), (max), (ptr)))
 #elif TCL_MINOR_VERSION < 7
 extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
-# define Tcl_GetIntForIndex TclGetIntForIndex
+# define Tcl_GetIntForIndex(interp, obj, max, ptr) TclGetIntForIndex(interp, obj, max, ptr)
 #endif
 #endif
 
@@ -965,12 +965,11 @@ TkGetWindowFromObj(
 
 static int
 SetWindowFromAny(
-    Tcl_Interp *dummy,		/* Used for error reporting if not NULL. */
+    TCL_UNUSED(Tcl_Interp *),
     Tcl_Obj *objPtr)	/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
     WindowRep *winPtr;
-    (void)dummy;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -1057,7 +1056,7 @@ FreeWindowInternalRep(
 /*
  *----------------------------------------------------------------------
  *
- * TkNewWindowObj --
+ * Tk_NewWindowObj --
  *
  *	This function allocates a new Tcl_Obj that refers to a particular to a
  *	particular Tk window.
@@ -1072,7 +1071,7 @@ FreeWindowInternalRep(
  */
 
 Tcl_Obj *
-TkNewWindowObj(
+Tk_NewWindowObj(
     Tk_Window tkwin)
 {
     Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);

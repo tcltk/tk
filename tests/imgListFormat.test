@@ -2,7 +2,7 @@
 # ("list format") implementend in the file tkImgListFormat.c.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 2017 Simon Bachmann
+# Copyright © 2017 Simon Bachmann
 # All rights reserved.
 #
 # Author: Simon Bachmann (simonbachmann@bluewin.ch)
@@ -187,7 +187,7 @@ test imgListFormat-4.4 {StringReadDef: normal use case} -constraints {
 } -cleanup {
     imageCleanup
     unset imgData
-} -result {1}
+} -result 1
 test imgListFormat-4.5 {StringReadDef: correct compositing rule} -constraints {
     hasTranspTeapotPhoto
 } -setup {

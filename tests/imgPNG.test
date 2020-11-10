@@ -2,10 +2,10 @@
 # and write PNG-format image files for photo widgets. The files is organized
 # in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
-# Copyright (c) 1998 Willem van Schaik (images only)
-# Copyright (c) 2008 Donal K. Fellows
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
+# Copyright © 1998 Willem van Schaik (images only)
+# Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
 package require tcltest 2.2
@@ -1113,7 +1113,7 @@ test imgPNG-3.1 {reading image with unknown ancillary chunk - bug [1c659ef0f1]} 
     catch {set i [image create photo -file $fileName]}
 } -cleanup {
     image delete $i
-} -result {0}
+} -result 0
 
 }
 namespace delete png

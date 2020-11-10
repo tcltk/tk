@@ -112,7 +112,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
      * On OS X 10.12 we get duplicate tab control items if we create them here.
      */
 
-    if ([NSApp macMinorVersion] > 12) {
+    if ([NSApp macOSVersion] > 101200) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
@@ -203,7 +203,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
-	TkAboutDlg();
+	[super orderFrontStandardAboutPanel:nil];
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", -1,
 		TCL_EVAL_GLOBAL);
@@ -373,29 +373,6 @@ TkMacOSXHandleMenuSelect(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXInitMenus --
- *
- *	This procedure initializes the Macintosh menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXInitMenus(
-    TCL_UNUSED(Tcl_Interp *))
-{
-    [NSApp _setupMenus];
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * GenerateEditEvent --
  *
  *	Takes an edit menu item and posts the corasponding a virtual event to
@@ -422,7 +399,7 @@ GenerateEditEvent(
     if (!winPtr) {
 	return;
     }
-    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    tkwin = (Tk_Window)winPtr->dispPtr->focusPtr;
     if (!tkwin) {
 	return;
     }

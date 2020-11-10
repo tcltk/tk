@@ -50,10 +50,8 @@ static void		DisplayVerticalValue(TkScale *scalePtr,
 
 TkScale *
 TkpCreateScale(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    (void)tkwin;
-
     return (TkScale *)ckalloc(sizeof(TkScale));
 }
 
@@ -577,7 +575,7 @@ TkpDisplayScale(
 	Tcl_DStringAppend(&buf, scalePtr->command, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, string, -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");

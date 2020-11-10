@@ -230,7 +230,7 @@ AC_CHECK_TYPE([uintptr_t], [
 
 AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
     AC_TRY_COMPILE([#include <pwd.h>],
-	    [struct passwd pwd; pwd.pw_gecos;],
+	    [struct passwd pwd; (void)pwd.pw_gecos;],
 	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
 if test $tcl_cv_pwd_pw_gecos = yes; then
     AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
@@ -617,8 +617,9 @@ if test "`uname -s`" = "Darwin" ; then
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
+    EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
-    AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in])
+    AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
 fi
@@ -655,6 +656,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
     EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
@@ -664,6 +666,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA_DIR) "$(BIN_INSTALL_DIR)/../Resources"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
+	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
     # Don't use AC_DEFINE for the following as the framework version define

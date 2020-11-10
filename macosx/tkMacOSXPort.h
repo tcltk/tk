@@ -131,29 +131,38 @@
  */
 
 #define TK_NO_DOUBLE_BUFFERING 1
+#define TK_HAS_DYNAMIC_COLORS 1
+#define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
- * Magic pixel code values for system colors.
- *
- * NOTE: values must be kept in sync with indices into the
- *	 systemColorMap array in tkMacOSXColor.c !
+ * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
+ * alpha channel directly into a window.
  */
 
-#define TRANSPARENT_PIXEL		30
-#define APPEARANCE_PIXEL		52
-#define PIXEL_MAGIC ((unsigned char) 0x69)
+#define TKPUTIMAGE_CAN_BLEND
 
 /*
- * The following macro returns the pixel value that corresponds to the
- * 16-bit RGB values in the given XColor structure.
- * The format is: (PIXEL_MAGIC << 24) | (R << 16) | (G << 8) | B
- * where each of R, G and B is the high order byte of a 16-bit component.
+ * Used by xcolor.c
  */
 
-#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
+MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
+					    unsigned long blue);
+#define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
 
+/*
+ * Used by tkWindow.c
+ */
+
+MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
+
+#define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
+
+/*
+ * Used by tkAppInit
+ */
+
+#define USE_CUSTOM_EXIT_PROC
+EXTERN int TkpWantsExitProc(void);
+EXTERN TCL_NORETURN void TkpExitProc(void *);
 
 #endif /* _TKMACPORT */

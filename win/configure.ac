@@ -134,8 +134,6 @@ AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
 
 SC_ENABLE_SYMBOLS
 
-TK_DBGX=${DBGX}
-
 #--------------------------------------------------------------------
 # Embed the manifest if we can determine how
 #--------------------------------------------------------------------
@@ -162,7 +160,11 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
+if test ${SHARED_BUILD} = 0 ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
@@ -194,18 +196,10 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 #--------------------------------------------------------------------
 
 if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
-    fi
+    RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES=""
-    fi
+    RC_DEFINES=""
     TK_RES='tk.$(RES)'
 fi
 
@@ -226,7 +220,6 @@ AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
-AC_SUBST(TK_DBGX)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
 AC_SUBST(TK_STUB_LIB_FILE)
@@ -242,7 +235,6 @@ AC_SUBST(TCL_PATCH_LEVEL)
 
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
-AC_SUBST(TCL_DBGX)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)

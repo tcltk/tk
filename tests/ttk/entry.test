@@ -2,9 +2,12 @@
 # Tile package: entry widget tests
 #
 
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require Tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
 
 variable scrollInfo
 proc scroll args {
@@ -74,7 +77,7 @@ test entry-2.1 "Create entry before scrollbar" -body {
     	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
-test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
+test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints failsOnUbuntu -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     .te insert end [string repeat "abc" 50]
@@ -84,7 +87,7 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
     	-expand false -fill x
     update ; # no error
     lappend res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
-} -result {1} -cleanup {destroy .te .tsb}
+} -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
     ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
@@ -106,7 +109,7 @@ test entry-3.0 "Series 3 setup" -body {
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
     variable bd 2	;# border + padding
-    variable ux [font measure $fixed \u4e4e]
+    variable ux [font measure $fixed 乎]
 
     pack [ttk::entry .e -font $fixed -width 20]
     update
@@ -128,28 +131,28 @@ test entry-3.3 "xview" -body {
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview end
     set result [.e index @0]
-} -result {7}
+} -result 7
 
 test entry-3.4 "xview" -body {
     .e delete 0 end;
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview moveto 1.0
     set result [.e index @0]
-} -result {7}
+} -result 7
 
 test entry-3.5 "xview" -body {
     .e delete 0 end;
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview scroll 5 units
     set result [.e index @0]
-} -result {5}
+} -result 5
 
 test entry-3.6 "xview" -body {
     .e delete 0 end;
     .e insert end [string repeat abcdefghijklmnopqrstuvwxyz 5]
     .e xview scroll 2 pages
     set result [.e index @0]
-} -result {40}
+} -result 40
 
 test entry-3.last "Series 3 cleanup" -body {
     destroy .e
@@ -341,6 +344,18 @@ test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
 } -cleanup {
     destroy .e
 } -result {red}
+
+test entry-10.3 {styling option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    set current [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground blue
+    set res [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground $current
+    set res
+} -cleanup {
+    destroy .e
+} -result {blue}
 
 test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
     pack [ttk::entry .e]

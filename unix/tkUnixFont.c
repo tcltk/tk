@@ -705,7 +705,7 @@ TkpGetNativeFont(
 
 	if (name[0] == '-') {
 	    if (name[1] != '*') {
-		char *dash;
+		const char *dash;
 
 		dash = strchr(name + 1, '-');
 		if ((dash == NULL) || (isspace(UCHAR(dash[-1])))) {
@@ -1373,6 +1373,9 @@ Tk_DrawChars(
  *	with access to all the characters on the line for context. On X11 this
  *	context isn't consulted, so we just call Tk_DrawChars().
  *
+ *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
+ *            function is unused (and possibly unfinished). See [7655f65ae7].
+ *
  * Results:
  *	None.
  *
@@ -1408,6 +1411,38 @@ TkpDrawCharsInContext(
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
 	    rangeLength, x+widthUntilStart, y);
+}
+
+void
+TkpDrawAngledCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that is
+				 * passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    int widthUntilStart;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    (void) numBytes; /*unused*/
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
 }
 
 /*
@@ -1678,7 +1713,7 @@ InitFont(
 	 * 1/3 the width of a capital I.
 	 */
 
-	fontPtr->barHeight = fontPtr->widths['I'] / 3;
+	fontPtr->barHeight = fontPtr->widths[(unsigned char)'I'] / 3;
 	if (fontPtr->barHeight == 0) {
 	    fontPtr->barHeight = 1;
 	}
@@ -2074,10 +2109,10 @@ FindSubFontForChar(
 
     nameList = ListFonts(fontPtr->display, "*", &numNames);
     for (i = 0; i < numNames; i++) {
-	fallback = strchr(nameList[i] + 1, '-') + 1;
-	strchr(fallback, '-')[0] = '\0';
-	if (SeenName(fallback, &ds) == 0) {
-	    subFontPtr = CanUseFallback(fontPtr, fallback, ch,
+	char *fallbck = strchr(nameList[i] + 1, '-') + 1;
+	strchr(fallbck, '-')[0] = '\0';
+	if (SeenName(fallbck, &ds) == 0) {
+	    subFontPtr = CanUseFallback(fontPtr, fallbck, ch,
 		    fixSubFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		XFreeFontNames(nameList);

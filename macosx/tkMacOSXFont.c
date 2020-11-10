@@ -93,10 +93,6 @@ static void		InitFont(NSFont *nsFont,
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name,
 			    TkFontAttributes *faPtr);
-static void		DrawCharsInContext(Display *display, Drawable drawable,
-			    GC gc, Tk_Font tkfont, const char *source,
-			    int numBytes, int rangeStart, int rangeLength,
-			    int x, int y, double angle);
 
 #pragma mark -
 #pragma mark Font Helpers:
@@ -455,7 +451,7 @@ TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
     Tcl_Interp *interp = mainPtr->interp;
-    Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
+    Tk_Window tkwin = (Tk_Window)mainPtr->winPtr;
     const struct SystemFontMapEntry *systemFont = systemFontMap;
     NSFont *nsFont;
     TkFontAttributes fa;
@@ -554,13 +550,12 @@ TkpFontPkgInit(
 
 TkFont *
 TkpGetNativeFont(
-    Tk_Window tkwin,		/* For display where font will be used. */
+    TCL_UNUSED(Tk_Window),		/* For display where font will be used. */
     const char *name)		/* Platform-specific font name. */
 {
     MacFont *fontPtr = NULL;
     ThemeFontID themeFontId;
     CTFontRef ctFont;
-    (void)tkwin;
 
     if (strcmp(name, SYSTEMFONT_NAME) == 0) {
 	themeFontId = kThemeSystemFont;
@@ -704,11 +699,10 @@ TkpDeleteFont(
 void
 TkpGetFontFamilies(
     Tcl_Interp *interp,		/* Interp to hold result. */
-    Tk_Window tkwin)		/* For display to query. */
+    TCL_UNUSED(Tk_Window))		/* For display to query. */
 {
     Tcl_Obj *resultPtr = Tcl_NewListObj(0, NULL);
     NSArray *list = [[NSFontManager sharedFontManager] availableFontFamilies];
-    (void)tkwin;
 
     for (NSString *family in list) {
 	Tcl_ListObjAppendElement(NULL, resultPtr,
@@ -778,7 +772,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
+    TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,         		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
@@ -788,7 +782,6 @@ TkpGetFontAttrsForChar(
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
 	UTF16Char ch = (UTF16Char) c;
-    (void)tkwin;
 
 	nsFont = [nsFont bestMatchingFontForCharacters:&ch
 		length:1 attributes:nil actualCoveredLength:NULL];
@@ -1066,7 +1059,7 @@ done:
  *	Draw a string of characters on the screen.
  *
  *	With ATSUI we need the line context to do this right, so we have the
- *	actual implementation in TkpDrawCharsInContext().
+ *	actual implementation in TkpDrawAngledCharsInContext().
  *
  * Results:
  *	None.
@@ -1095,7 +1088,7 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    0, numBytes, x, y, 0.0);
 }
 
@@ -1118,7 +1111,7 @@ TkDrawAngledChars(
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    0, numBytes, x, y, angle);
 }
 
@@ -1164,13 +1157,13 @@ TkpDrawCharsInContext(
 				 * drawing. */
 {
     (void)display;
-    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+    TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    rangeStart, rangeLength, x, y, 0.0);
 }
 
-static void
-DrawCharsInContext(
-    Display *display,		/* Display on which to draw. */
+void
+TkpDrawAngledCharsInContext(
+    TCL_UNUSED(Display *),		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn; must
@@ -1185,10 +1178,10 @@ DrawCharsInContext(
     int numBytes,		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
-    int x, int y,		/* Coordinates at which to place origin of the
+    double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
-    double angle)
+    double angle)		/* What angle to put text at, in degrees. */
 {
     const MacFont *fontPtr = (const MacFont *) tkfont;
     NSString *string;
@@ -1197,18 +1190,17 @@ DrawCharsInContext(
     CTTypesetterRef typesetter;
     CFIndex start, length;
     CTLineRef line, full=nil;
-    MacDrawable *macWin = (MacDrawable *) drawable;
+    MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
     CGColorRef fg;
     NSFont *nsFont;
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
-    (void)display;
 
     if (rangeStart < 0 || rangeLength <= 0  ||
 	rangeStart + rangeLength > numBytes ||
-	!TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
+	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
@@ -1222,8 +1214,7 @@ DrawCharsInContext(
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
     CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
-    [nsFont setInContext:[NSGraphicsContext graphicsContextWithGraphicsPort:
-	    context flipped:NO]];
+    [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     attributedString = [[NSAttributedString alloc] initWithString:string
 	    attributes:attributes];
@@ -1336,12 +1327,9 @@ TkMacOSXNSFontAttributesForFont(
 
 int
 TkMacOSXIsCharacterMissing(
-    Tk_Font tkfont,		/* The font we are looking in. */
-    unsigned int searchChar)	/* The character we are looking for. */
+    TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
+    TCL_UNUSED(unsigned int))	/* The character we are looking for. */
 {
-    (void)tkfont;
-    (void)searchChar;
-
     return 0;
 }
 
@@ -1380,7 +1368,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
 	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
-#define S(s)    Tcl_NewStringObj(STRINGIFY(s), (int)(sizeof(STRINGIFY(s))-1))
+#define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
 	if ([underline respondsToSelector:@selector(intValue)] &&

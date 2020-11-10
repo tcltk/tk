@@ -14,6 +14,8 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
+
 
 /*
  * Forward declarations of procedures defined later in this file:
@@ -24,9 +26,11 @@ static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
 static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
 static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const *objv);
+static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const *objv);
 
 
 /*
@@ -59,7 +63,7 @@ TkplatformtestInit(
 #endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-
+    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -96,21 +100,48 @@ DebuggerObjCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * MenuBarHeightObjCmd --
+ *
+ *	This procedure calls [NSMenu menuBarHeight] and returns the result
+ *      as an integer.  Windows can never be placed to overlap the MenuBar,
+ *      so tests need to be aware of its size.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+MenuBarHeightObjCmd(
+    TCL_UNUSED(void *),		/* Not used. */
+    Tcl_Interp *interp,			/* Not used. */
+    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
+{
+    static int height = 0;
+    if (height == 0) {
+	height = (int) [[NSApp mainMenu] menuBarHeight];
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTestLogDisplay --
  *
  *      The test image display procedure calls this to determine whether it
- *      should write a log message recording that it has being run.  On OSX
- *      10.14 and later, only calls to the display procedure which occur inside
- *      of the drawRect method should be logged, since those are the only ones
- *      which actually draw anything.  On earlier systems the opposite is true.
- *      The calls from within the drawRect method are redundant, since the
- *      first time the display procedure is run it will do the drawing and that
- *      first call will usually not occur inside of drawRect.
+ *      should write a log message recording that it has being run.
  *
  * Results:
- *      On OSX 10.14 and later, returns true if and only if called from
- *      within [NSView drawRect].  On earlier systems returns false if
- *      and only if called from with [NSView drawRect].
+ *      Returns true if and only if the NSView of the drawable is the
+ *      current focusView, which on 10.14 and newer systems can only be the
+ *      case when within [NSView drawRect].
  *
  * Side effects:
  *	None
@@ -118,11 +149,23 @@ DebuggerObjCmd(
  *----------------------------------------------------------------------
  */
 MODULE_SCOPE Bool
-TkTestLogDisplay(void) {
-    if ([NSApp macMinorVersion] >= 14) {
-	return [NSApp isDrawing];
+TkTestLogDisplay(
+    Drawable drawable)
+{
+    MacDrawable *macWin = (MacDrawable *)drawable;
+    NSWindow *win = nil;
+    if (macWin->toplevel && macWin->toplevel->winPtr &&
+	macWin->toplevel->winPtr->wmInfoPtr &&
+	macWin->toplevel->winPtr->wmInfoPtr->window) {
+	win = macWin->toplevel->winPtr->wmInfoPtr->window;
+    } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
+	       macWin->winPtr->wmInfoPtr->window) {
+	win = macWin->winPtr->wmInfoPtr->window;
+    }
+    if (win) {
+	return ([win contentView] == [NSView focusView]);
     } else {
-	return ![NSApp isDrawing];
+	return True;
     }
 }
 
@@ -132,9 +175,11 @@ TkTestLogDisplay(void) {
  * PressButtonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
- *      location.  It injects NSEvents into the NSApplication event queue,
- *      as opposed to adding events to the Tcl queue as event generate
- *      would do.  One application is for testing the grab command.
+ *      location.  It injects NSEvents into the NSApplication event queue, as
+ *      opposed to adding events to the Tcl queue as event generate would do.
+ *      One application is for testing the grab command. These events have
+ *      their unused context property set to 1 as a signal indicating that they
+ *      should not be ignored by [NSApp tkProcessMouseEvent].
  *
  * Results:
  *	A standard Tcl result.
@@ -147,19 +192,19 @@ TkTestLogDisplay(void) {
 
 static int
 PressButtonObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value, wNum;
+    int x = 0, y = 0, i, value;
+    NSInteger signal = -1;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;
     NSArray *screens = [NSScreen screens];
     CGFloat ScreenHeight = 0;
     enum {X=1, Y};
-    (void)dummy;
 
     if (screens && [screens count]) {
 	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
@@ -187,15 +232,20 @@ PressButtonObjCmd(
     pt.x = loc.x = x;
     pt.y = y;
     loc.y = ScreenHeight - y;
-    wNum = 0;
+
+    /*
+     *  We set the window number and the eventNumber to -1 as a signal to
+     *  processMouseEvent.
+     */
+
     CGWarpMouseCursorPosition(pt);
     motion = [NSEvent mouseEventWithType:NSMouseMoved
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
+	windowNumber:signal
 	context:nil
-	eventNumber:0
+	eventNumber:signal
 	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:motion atStart:NO];
@@ -203,9 +253,9 @@ PressButtonObjCmd(
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
+	windowNumber:signal
 	context:nil
-	eventNumber:1
+	eventNumber:signal
 	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:press atStart:NO];
@@ -213,18 +263,18 @@ PressButtonObjCmd(
 	location:loc
 	modifierFlags:0
 	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
+	windowNumber:signal
 	context:nil
-	eventNumber:2
+	eventNumber:signal
 	clickCount:1
-	pressure:0.0];
+	pressure:-1.0];
     [NSApp postEvent:release atStart:NO];
     return TCL_OK;
 }
 
 static int
 InjectKeyEventObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -241,7 +291,6 @@ InjectKeyEventObjCmd(
     NSEvent *keyEvent;
     NSUInteger type;
     MacKeycode macKC;
-    (void)dummy;
 
     if (objc < 3) {
     wrongArgs:
