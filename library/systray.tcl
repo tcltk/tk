@@ -1,7 +1,7 @@
 # systray.tcl --
 
 # This file defines the systray command for icon display and manipulation
-# in the system tray on X11, Windows, and macOS, and the ::tk::systnotify command
+# in the system tray on X11, Windows, and macOS, and the ::tk::sysnotify command
 # for system alerts on each platform. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
 
@@ -10,7 +10,8 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-# Pure-Tcl system tooltip window for use with system tray icon if native implementation not available.
+# Pure-Tcl system tooltip window for use with system tray icon if native
+# implementation not available.
 
 proc _balloon {w help} {
     bind $w <Any-Enter> "after 1000 [list _balloon_show %W [list $help]]"
@@ -30,8 +31,7 @@ proc _balloon_show {w arg} {
 	      -text $arg]
     set wmx [winfo rootx $w]
     set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
-    wm geometry $top [winfo reqwidth $top._txt]x[
-						 winfo reqheight $top._txt]+$wmx+$wmy
+    wm geometry $top [winfo reqwidth $top._txt]x[winfo reqheight $top._txt]+$wmx+$wmy
     raise $top
 }
 
@@ -128,11 +128,8 @@ proc _fade_in {w} {
     }
 }
 
-
-
 global _iconlist
 set _iconlist {}
-
 
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
@@ -168,7 +165,6 @@ proc ::tk::systray {args} {
 
     #Set variables for icon properties.
     global _iconlist
-
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
@@ -207,8 +203,7 @@ proc ::tk::systray {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[llength $_iconlist] > 0} {
-		    error "Only one system tray\
-		    icon supported per interpeter"
+		    error "Only one system tray icon supported per interpeter"
 		}
 		set ::winicoprops::ico [_systray createfrom $_img]
 		_systray taskbar add $::winicoprops::ico  -text $::winicoprops::txt -callback [list _win_callback %m %i]
@@ -216,8 +211,7 @@ proc ::tk::systray {args} {
 	    }
 	    "x11" {
 		if [winfo exists ._tray] {
-		    error  "Only one system tray\
-		    icon supported per interpeter"
+		    error  "Only one system tray icon supported per interpeter"
 		}
 		_systray ._tray -image $_img -visible true
 		_balloon ._tray $_txt
@@ -229,6 +223,7 @@ proc ::tk::systray {args} {
 	    }
 	}
     }
+
     #Modify the system tray icon properties.
     if {[lindex $args 0] eq "modify"} {
 	if {[llength $args] != 3} {
@@ -319,7 +314,6 @@ proc ::tk::systray {args} {
 #       message - body text of alert.
 
 proc ::tk::sysnotify {title message} {
-
 
     switch -- [tk windowingsystem] {
 	"win32" {
