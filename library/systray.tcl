@@ -207,7 +207,7 @@ proc ::tk::systray {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[llength $_iconlist] > 0} {
-		    error "Only one system tray \
+		    error "Only one system tray\
 		    icon supported per interpeter"
 		}
 		set ::winicoprops::ico [_systray createfrom $_img]
@@ -216,7 +216,7 @@ proc ::tk::systray {args} {
 	    }
 	    "x11" {
 		if [winfo exists ._tray] {
-		    error  "Only one system tray \
+		    error  "Only one system tray\
 		    icon supported per interpeter"
 		}
 		_systray ._tray -image $_img -visible true
