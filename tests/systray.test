@@ -4,8 +4,10 @@
 # Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
 # All rights reserved.
 
-package require tcltest 2.0
+package require tcltest 2.2
 namespace import ::tcltest::*
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
 
 test systray-1 {systray icon creation} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
