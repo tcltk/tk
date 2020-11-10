@@ -168,7 +168,7 @@ static int		PolygonCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		PolygonDeleteCoords(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last);
+			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		PolygonInsert(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		PolygonToArea(Tk_Canvas canvas,
@@ -876,12 +876,10 @@ DisplayPolygon(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
+    TCL_UNUSED(int),	/* Describes region of canvas that must be */
+    TCL_UNUSED(int),	/* redisplayed (not used). */
     TCL_UNUSED(int),
     TCL_UNUSED(int))
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     Tk_State state = itemPtr->state;
@@ -1172,23 +1170,23 @@ static void
 PolygonDeleteCoords(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    int first,			/* Index of first character to delete. */
-    int last)			/* Index of last character to delete. */
+    TkSizeT first,			/* Index of first character to delete. */
+    TkSizeT last)			/* Index of last character to delete. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int count, i;
     int length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
-    while (first >= length) {
+    while ((int)first >= length) {
 	first -= length;
     }
-    while (first < 0) {
+    while ((int)first < 0) {
 	first += length;
     }
-    while (last >= length) {
+    while ((int)last >= length) {
 	last -= length;
     }
-    while (last < 0) {
+    while ((int)last < 0) {
 	last += length;
     }
 
@@ -1215,7 +1213,7 @@ PolygonDeleteCoords(
 	    polyPtr->coordPtr[i-count] = polyPtr->coordPtr[i];
 	}
     } else {
-	for (i=last; i<=first; i++) {
+	for (i=last; i<=(int)first; i++) {
 	    polyPtr->coordPtr[i-last] = polyPtr->coordPtr[i];
 	}
     }

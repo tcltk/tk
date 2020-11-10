@@ -34,12 +34,12 @@ typedef struct
 static const Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	offsetof(Scrollbar,scrollbar.commandObj), TCL_INDEX_NONE, 0,0,0},
+	offsetof(Scrollbar, scrollbar.commandObj), TCL_INDEX_NONE, 0, 0, 0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	offsetof(Scrollbar,scrollbar.orientObj),
-	offsetof(Scrollbar,scrollbar.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	offsetof(Scrollbar, scrollbar.orientObj),
+	offsetof(Scrollbar, scrollbar.orient),
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -50,10 +50,11 @@ static const Tk_OptionSpec ScrollbarOptionSpecs[] =
  */
 
 static void
-ScrollbarInitialize(Tcl_Interp *dummy, void *recordPtr)
+ScrollbarInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
-    (void)dummy;
 
     sb->scrollbar.first = 0.0;
     sb->scrollbar.last = 1.0;
@@ -316,16 +317,14 @@ TTK_BEGIN_LAYOUT(VerticalScrollbarLayout)
     TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
 	TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_TOP)
 	TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
-	TTK_NODE(
-	    "Vertical.Scrollbar.thumb", TTK_PACK_TOP|TTK_EXPAND|TTK_FILL_BOTH))
+	TTK_NODE("Vertical.Scrollbar.thumb", TTK_FILL_BOTH))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalScrollbarLayout)
     TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
 	TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_LEFT)
 	TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
-	TTK_NODE(
-	"Horizontal.Scrollbar.thumb", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH))
+	TTK_NODE("Horizontal.Scrollbar.thumb", TTK_FILL_BOTH))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------

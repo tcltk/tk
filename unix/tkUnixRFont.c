@@ -208,7 +208,7 @@ GetTkFontAttributes(
 	slant = XFT_SLANT_ROMAN;
     }
 
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     printf("family %s size %d weight %d slant %d\n",
 	    family, (int)size, weight, slant);
 #endif /* DEBUG_FONTSEL */
@@ -453,7 +453,7 @@ TkpGetNativeFont(
 {
     UnixFtFont *fontPtr;
     FcPattern *pattern;
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     printf("TkpGetNativeFont %s\n", name);
 #endif /* DEBUG_FONTSEL */
 
@@ -491,7 +491,7 @@ TkpGetFontFromAttributes(
     int weight, slant;
     UnixFtFont *fontPtr;
 
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
 	    faPtr->size, faPtr->weight, faPtr->slant);
 #endif /* DEBUG_FONTSEL */
@@ -671,7 +671,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
+    TCL_UNUSED(Tk_Window),	/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
@@ -682,7 +682,6 @@ TkpGetFontAttrsForChar(
 				/* UCS-4 character to map */
     XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
 				/* Actual font used to render the character */
-    (void)tkwin;
 
     GetTkFontAttributes(ftFont, faPtr);
     faPtr->underline = fontPtr->font.fa.underline;
@@ -719,7 +718,7 @@ Tk_MeasureChars(
     int clen, curX, newX, curByte, newByte, sawNonSpace;
     int termByte = 0, termX = 0, errorFlag = 0;
     Tk_ErrorHandler handler;
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     char string[256];
     int len = 0;
 #endif /* DEBUG_FONTSEL */
@@ -756,7 +755,7 @@ Tk_MeasureChars(
 	    sawNonSpace = 1;
 	}
 
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	string[len++] = (char) c;
 #endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c, 0.0);
@@ -796,7 +795,7 @@ Tk_MeasureChars(
 	curByte = newByte;
     }
     Tk_DeleteErrorHandler(handler);
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
     string[len] = '\0';
     printf("MeasureChars %s length %d bytes %d\n", string, curX, curByte);
 #endif /* DEBUG_FONTSEL */
@@ -936,7 +935,7 @@ Tk_DrawChars(
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (fontPtr->ftDraw == 0) {
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
@@ -1071,7 +1070,7 @@ TkDrawAngledChars(
     int originX, originY;
 
     if (fontPtr->ftDraw == 0) {
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
@@ -1180,7 +1179,7 @@ TkDrawAngledChars(
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
 
     if (fontPtr->ftDraw == 0) {
-#if DEBUG_FONTSEL
+#ifdef DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
@@ -1304,6 +1303,89 @@ TkDrawAngledChars(
 	    }
 	}
     }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpDrawCharsInContext --
+ *
+ *	Draw a string of characters on the screen like Tk_DrawChars(), but
+ *	with access to all the characters on the line for context. On X11 this
+ *	context isn't consulted, so we just call Tk_DrawChars().
+ *
+ *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
+ *            function is unused (and possibly unfinished). See [7655f65ae7].
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information gets drawn on the screen.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkpDrawCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    int x, int y)		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+{
+    int widthUntilStart;
+
+    (void) numBytes; /*unused*/
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+widthUntilStart, y);
+}
+
+void
+TkpDrawAngledCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that is
+				 * passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    int widthUntilStart;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    (void) numBytes; /*unused*/
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
 }
 
 void

@@ -32,6 +32,9 @@ static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
  * to strcmp here.
  */
 #ifdef _WIN32
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
@@ -41,7 +44,10 @@ typedef struct TclIntPlatStubs {
     void (*dummy[16]) (void); /* dummy entries 0-15, not used */
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
-const TclIntPlatStubs *tclIntPlatStubsPtr;
+extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#ifdef __cplusplus
+}
+#endif
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -397,19 +403,18 @@ Tk_MainEx(
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
-    int mask)			/* Not used. */
+    TCL_UNUSED(int))
 {
     char *cmd;
     int code;
-    size_t count;
+    TkSizeT count;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
-    (void)mask;
 
-    count = (size_t)Tcl_Gets(chan, &isPtr->line);
+    count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count == (size_t)-1 && !isPtr->gotPartial) {
+    if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {

@@ -1,9 +1,9 @@
 # This file is a Tcl script to test entry widgets in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -11,7 +11,12 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+
 # For xscrollcommand
+set scrollInfo {}
 proc scroll args {
         global scrollInfo
         set scrollInfo $args
@@ -69,7 +74,7 @@ test entry-1.3 {configuration option: "bd" for entry} -setup {
     .e cget -bd
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-1.4 {configuration option: "bd" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -109,7 +114,7 @@ test entry-1.7 {configuration option: "borderwidth" for entry} -setup {
     .e cget -borderwidth
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-1.8 {configuration option: "borderwidth" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -189,7 +194,7 @@ test entry-1.15 {configuration option: "exportselection" for entry} -setup {
     .e cget -exportselection
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-1.16 {configuration option: "exportselection" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -309,7 +314,7 @@ test entry-1.27 {configuration option: "highlightthickness" for entry} -setup {
     .e cget -highlightthickness
 } -cleanup {
     destroy .e
-} -result {6}
+} -result 6
 test entry-1.28 {configuration option: "highlightthickness" for entry} -setup {
     entry .e -borderwidth 2 -font {Helvetica -12 bold}
     pack .e
@@ -319,7 +324,7 @@ test entry-1.28 {configuration option: "highlightthickness" for entry} -setup {
     .e cget -highlightthickness
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 test entry-1.29 {configuration option: "highlightthickness" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -359,7 +364,7 @@ test entry-1.32 {configuration option: "insertborderwidth" for entry} -setup {
     .e cget -insertborderwidth
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-1.33 {configuration option: "insertborderwidth" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -379,7 +384,7 @@ test entry-1.34 {configuration option: "insertofftime" for entry} -setup {
     .e cget -insertofftime
 } -cleanup {
     destroy .e
-} -result {100}
+} -result 100
 test entry-1.35 {configuration option: "insertofftime" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -399,7 +404,7 @@ test entry-1.36 {configuration option: "insertontime" for entry} -setup {
     .e cget -insertontime
 } -cleanup {
     destroy .e
-} -result {100}
+} -result 100
 test entry-1.37 {configuration option: "insertontime" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -512,7 +517,7 @@ test entry-1.47 {configuration option: "selectborderwidth" for entry} -setup {
     .e cget -selectborderwidth
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-1.48 {configuration option: "selectborderwidth" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -605,7 +610,7 @@ test entry-1.56 {configuration option: "width" for entry} -setup {
     .e cget -width
 } -cleanup {
     destroy .e
-} -result {402}
+} -result 402
 test entry-1.57 {configuration option: "width" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
@@ -748,7 +753,7 @@ test entry-3.7 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     update
 } -body {
 # Tcl_UtfAtIndex(): utf at end
-    .e insert 0 "ab\u4e4e"
+    .e insert 0 "ab乎"
     .e bbox end
 } -cleanup {
     destroy .e
@@ -761,7 +766,7 @@ test entry-3.8 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     update
 } -body {
 # Tcl_UtfAtIndex(): utf before index
-    .e insert 0 "ab\u4e4ec"
+    .e insert 0 "ab乎c"
     .e bbox 3
 } -cleanup {
     destroy .e
@@ -783,7 +788,7 @@ test entry-3.10 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     pack .e
     update
 } -body {
-    .e insert 0 "abcdefghij\u4e4eklmnop"
+    .e insert 0 "abcdefghij乎klmnop"
     list [.e bbox 0] [.e bbox 1] [.e bbox 10] [.e bbox end]
 } -cleanup {
     destroy .e
@@ -816,7 +821,7 @@ test entry-3.14 {EntryWidgetCmd procedure, "cget" widget command} -setup {
     .e cget -bd
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
     pack .e
@@ -825,7 +830,7 @@ test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result {38}
+} -result 38
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {
@@ -841,7 +846,7 @@ test entry-3.17 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     lindex [.e configure -bd] 4
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-3.18 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
 } -body {
@@ -880,7 +885,7 @@ test entry-3.22 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {014567890}
+} -result 014567890
 test entry-3.23 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
 } -body {
@@ -889,7 +894,7 @@ test entry-3.23 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {0123457890}
+} -result 0123457890
 test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e
@@ -897,20 +902,20 @@ test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     set x {}
 } -body {
 # UTF
-    .e insert end "01234\u4e4e67890"
+    .e insert end "01234乎67890"
     .e delete 6
     lappend x [.e get]
     .e delete 0 end
-    .e insert end "012345\u4e4e7890"
+    .e insert end "012345乎7890"
     .e delete 6
     lappend x [.e get]
     .e delete 0 end
-    .e insert end "0123456\u4e4e890"
+    .e insert end "0123456乎890"
     .e delete 6
     lappend x [.e get]
 } -cleanup {
     destroy .e
-} -result [list "01234\u4e4e7890" "0123457890" "012345\u4e4e890"]
+} -result [list "01234乎7890" "0123457890" "012345乎890"]
 test entry-3.25 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e
@@ -921,7 +926,7 @@ test entry-3.25 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {01234567890}
+} -result 01234567890
 test entry-3.26 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e
@@ -934,7 +939,7 @@ test entry-3.26 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {01234567890}
+} -result 01234567890
 test entry-3.26a {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e
@@ -947,7 +952,7 @@ test entry-3.26a {EntryWidgetCmd procedure, "delete" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {01234567890}
+} -result 01234567890
 test entry-3.27 {EntryWidgetCmd procedure, "get" widget command} -setup {
     entry .e
 } -body {
@@ -977,7 +982,7 @@ test entry-3.30 {EntryWidgetCmd procedure, "icursor" widget command} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-3.31 {EntryWidgetCmd procedure, "index" widget command} -setup {
     entry .e
 } -body {
@@ -1014,7 +1019,7 @@ test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -setup {
     update
 } -body {
 # UTF
-    .e insert 0 abc\u4e4e\u0153def
+    .e insert 0 abc乎œdef
     list [.e index 3] [.e index 4] [.e index end]
 } -cleanup {
     destroy .e
@@ -1063,7 +1068,7 @@ test entry-3.40 {EntryWidgetCmd procedure, "insert" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {01234567890}
+} -result 01234567890
 test entry-3.40a {EntryWidgetCmd procedure, "insert" widget command} -setup {
     entry .e
     pack .e
@@ -1076,7 +1081,7 @@ test entry-3.40a {EntryWidgetCmd procedure, "insert" widget command} -setup {
     .e get
 } -cleanup {
     destroy .e
-} -result {01234567890}
+} -result 01234567890
 test entry-3.41 {EntryWidgetCmd procedure, "insert" widget command} -setup {
     entry .e
 } -body {
@@ -1136,7 +1141,7 @@ test entry-3.46 {EntryWidgetCmd procedure, "scan" widget command} -constraints {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {2}
+} -result 2
 test entry-3.47 {EntryWidgetCmd procedure, "select" widget command} -setup {
     entry .e
 } -body {
@@ -1205,7 +1210,7 @@ test entry-3.52 {EntryWidgetCmd procedure, "selection present" widget command} -
     .e selection present
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-3.53 {EntryWidgetCmd procedure, "selection present" widget command} -setup {
     entry .e
     pack .e
@@ -1218,7 +1223,7 @@ test entry-3.53 {EntryWidgetCmd procedure, "selection present" widget command} -
     .e selection present
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-3.54 {EntryWidgetCmd procedure, "selection present" widget command} -setup {
     entry .e
     pack .e
@@ -1231,7 +1236,7 @@ test entry-3.54 {EntryWidgetCmd procedure, "selection present" widget command} -
     .e selection present
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 test entry-3.55 {EntryWidgetCmd procedure, "selection adjust" widget command} -setup {
     entry .e
 } -body {
@@ -1259,7 +1264,7 @@ test entry-3.57 {EntryWidgetCmd procedure, "selection adjust" widget command} -s
     selection get
 } -cleanup {
     destroy .e
-} -result {123}
+} -result 123
 test entry-3.58 {EntryWidgetCmd procedure, "selection adjust" widget command} -setup {
     entry .e
     pack .e
@@ -1273,7 +1278,7 @@ test entry-3.58 {EntryWidgetCmd procedure, "selection adjust" widget command} -s
     selection get
 } -cleanup {
     destroy .e
-} -result {234}
+} -result 234
 test entry-3.59 {EntryWidgetCmd procedure, "selection from" widget command} -setup {
     entry .e
 } -body {
@@ -1446,7 +1451,7 @@ test entry-3.72 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll gorp units
 } -cleanup {
     destroy .e
-} -returnCodes error -result {expected integer but got "gorp"}
+} -returnCodes error -result {expected floating-point number but got "gorp"}
 test entry-3.73 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1487,7 +1492,7 @@ test entry-3.75 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {32}
+} -result 32
 test entry-3.76 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1501,7 +1506,7 @@ test entry-3.76 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {29}
+} -result 29
 test entry-3.77 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1533,11 +1538,11 @@ test entry-3.79 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -4
+    .e xview -1
     .e index @0
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 test entry-3.80 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1549,14 +1554,14 @@ test entry-3.80 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {73}
+} -result 73
 test entry-3.86 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
 } -body {
     .e insert end "This is quite a long text string, so long that it "
     .e insert end "runs off the end of the window quite a bit."
-    .e insert 10 \u4e4e
+    .e insert 10 乎
     update
 # UTF
 # If Tcl_NumUtfChars wasn't used, wrong answer would be:
@@ -1600,7 +1605,7 @@ test entry-5.1 {ConfigureEntry procedure, -textvariable} -body {
     .e get
 } -cleanup {
     destroy .e
-} -result {12345}
+} -result 12345
 test entry-5.2 {ConfigureEntry procedure, -textvariable} -body {
     set x 12345
     entry .e -textvariable x
@@ -1617,7 +1622,7 @@ test entry-5.3 {ConfigureEntry procedure, -textvariable} -setup {
 } -body {
     .e insert 0 "Some text"
     .e configure -textvariable x
-    return $x
+    set x
 } -cleanup {
     destroy .e
 } -result {Some text}
@@ -1652,7 +1657,7 @@ test entry-5.5 {ConfigureEntry procedure} -setup {
     lappend x [selection get]
     .e1 configure -exportselection 1
     lappend x [selection get]
-    return $x
+    set x
 } -cleanup {
     destroy .e1 .e2
 } -result {{This is so} {This is so} 1234}
@@ -1688,9 +1693,10 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    set timeout [after 500 {set $scrollInfo "timeout"}]
-    vwait scrollInfo
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e configure -width 5
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -1699,7 +1705,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 
 
 test entry-5.8 {ConfigureEntry procedure} -constraints {
-    fonts
+    fonts failsOnXQuarz
 } -setup {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1806,7 +1812,7 @@ test entry-6.4 {EntryComputeGeometry procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {6}
+} -result 6
 test entry-6.5 {EntryComputeGeometry procedure} -setup {
     entry .e -highlightthickness 2
     pack .e
@@ -1818,7 +1824,7 @@ test entry-6.5 {EntryComputeGeometry procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {6}
+} -result 6
 test entry-6.6 {EntryComputeGeometry procedure} -constraints {
     fonts
 } -setup {
@@ -1933,9 +1939,9 @@ test entry-7.1 {InsertChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e insert 2 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -1950,9 +1956,9 @@ test entry-7.2 {InsertChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e insert 500 XXX
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2026,7 +2032,7 @@ test entry-7.7 {InsertChars procedure} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {7}
+} -result 7
 test entry-7.8 {InsertChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2037,7 +2043,7 @@ test entry-7.8 {InsertChars procedure} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-7.9 {InsertChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2049,7 +2055,7 @@ test entry-7.9 {InsertChars procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {7}
+} -result 7
 test entry-7.10 {InsertChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2061,7 +2067,7 @@ test entry-7.10 {InsertChars procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 
 test entry-7.11 {InsertChars procedure} -constraints {
     fonts
@@ -2075,7 +2081,7 @@ test entry-7.11 {InsertChars procedure} -constraints {
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result {59}
+} -result 59
 
 test entry-8.1 {DeleteChars procedure} -setup {
     unset -nocomplain contents
@@ -2084,9 +2090,9 @@ test entry-8.1 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e delete 2 4
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2100,9 +2106,9 @@ test entry-8.2 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
-    .e delete -2 2
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    .e delete -1 2
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2116,9 +2122,9 @@ test entry-8.3 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcde
     .e delete 3 1000
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2260,7 +2266,7 @@ test entry-8.12 {DeleteChars procedure} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-8.13 {DeleteChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2273,7 +2279,7 @@ test entry-8.13 {DeleteChars procedure} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-8.14 {DeleteChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2286,7 +2292,7 @@ test entry-8.14 {DeleteChars procedure} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-8.15 {DeleteChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2299,7 +2305,7 @@ test entry-8.15 {DeleteChars procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-8.16 {DeleteChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2312,7 +2318,7 @@ test entry-8.16 {DeleteChars procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-8.17 {DeleteChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2325,8 +2331,8 @@ test entry-8.17 {DeleteChars procedure} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {4}
-test entry-8.18 {DeleteChars procedure} -setup {
+} -result 4
+test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
     entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
     focus .e
@@ -2347,7 +2353,7 @@ test entry-8.18 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
     unset XPAD expected
-} -result {1}
+} -result 1
 
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
@@ -2428,7 +2434,7 @@ test entry-10.5 {EntrySetValue procedure, updating display position} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 test entry-10.6 {EntrySetValue procedure, updating display position} -setup {
     unset -nocomplain x
     entry .e -highlightthickness 2 -bd 2
@@ -2444,7 +2450,7 @@ test entry-10.6 {EntrySetValue procedure, updating display position} -setup {
     .e index @0
 } -cleanup {
     destroy .e
-} -result {10}
+} -result 10
 test entry-10.7 {EntrySetValue procedure, updating insertion cursor} -setup {
     unset -nocomplain x
     entry .e -highlightthickness 2 -bd 2
@@ -2459,7 +2465,7 @@ test entry-10.7 {EntrySetValue procedure, updating insertion cursor} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {3}
+} -result 3
 test entry-10.8 {EntrySetValue procedure, updating insertion cursor} -setup {
     unset -nocomplain x
     entry .e -highlightthickness 2 -bd 2
@@ -2473,7 +2479,7 @@ test entry-10.8 {EntrySetValue procedure, updating insertion cursor} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {5}
+} -result 5
 
 test entry-11.1 {EntryEventProc procedure} -setup {
     entry .e -highlightthickness 2 -bd 2 -font {Helvetica -12}
@@ -2517,7 +2523,7 @@ test entry-13.1 {GetEntryIndex procedure} -setup {
     .e index end
 } -cleanup {
     destroy .e
-} -result {21}
+} -result 21
 test entry-13.2 {GetEntryIndex procedure} -body {
     entry .e
     .e index abogus
@@ -2536,7 +2542,7 @@ test entry-13.3 {GetEntryIndex procedure} -setup {
     .e index anchor
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 test entry-13.4 {GetEntryIndex procedure} -setup {
     entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
     pack .e
@@ -2549,7 +2555,7 @@ test entry-13.4 {GetEntryIndex procedure} -setup {
     .e index anchor
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-13.5 {GetEntryIndex procedure} -setup {
     entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
     pack .e
@@ -2563,7 +2569,7 @@ test entry-13.5 {GetEntryIndex procedure} -setup {
     .e index anchor
 } -cleanup {
     destroy .e
-} -result {15}
+} -result 15
 test entry-13.6 {GetEntryIndex procedure} -setup {
     entry .e
 } -body {
@@ -2582,7 +2588,7 @@ test entry-13.7 {GetEntryIndex procedure} -setup {
     .e index insert
 } -cleanup {
     destroy .e
-} -result {2}
+} -result 2
 test entry-13.8 {GetEntryIndex procedure} -setup {
     entry .e
 } -body {
@@ -2647,7 +2653,7 @@ test entry-13.11 {GetEntryIndex procedure} -constraints aquaOrWin32 -body {
     .e index sel.first
 } -cleanup {
     destroy .e
-} -result {1}
+} -result 1
 
 test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 # Previous settings:
@@ -2761,7 +2767,7 @@ test entry-13.16 {GetEntryIndex procedure} -constraints fonts -body {
     .e index @4
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-13.17 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2772,7 +2778,7 @@ test entry-13.17 {GetEntryIndex procedure} -constraints fonts -body {
     .e index @11
 } -cleanup {
     destroy .e
-} -result {4}
+} -result 4
 test entry-13.18 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2783,7 +2789,7 @@ test entry-13.18 {GetEntryIndex procedure} -constraints fonts -body {
     .e index @12
 } -cleanup {
     destroy .e
-} -result {5}
+} -result 5
 test entry-13.19 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2794,7 +2800,7 @@ test entry-13.19 {GetEntryIndex procedure} -constraints fonts -body {
     .e index @[expr {[winfo width .e] - 6}]
 } -cleanup {
     destroy .e
-} -result {8}
+} -result 8
 test entry-13.20 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2805,7 +2811,7 @@ test entry-13.20 {GetEntryIndex procedure} -constraints fonts -body {
     .e index @[expr {[winfo width .e] - 5}]
 } -cleanup {
     destroy .e
-} -result {9}
+} -result 9
 test entry-13.21 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2816,7 +2822,7 @@ test entry-13.21 {GetEntryIndex procedure} -body {
     .e index @1000
 } -cleanup {
     destroy .e
-} -result {9}
+} -result 9
 test entry-13.22 {GetEntryIndex procedure} -setup {
     entry .e
     pack .e
@@ -2833,10 +2839,10 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -10
+    .e index -1
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 test entry-13.24 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2847,7 +2853,7 @@ test entry-13.24 {GetEntryIndex procedure} -body {
     .e index 12
 } -cleanup {
     destroy .e
-} -result {12}
+} -result 12
 test entry-13.25 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
         -font {Courier -12}
@@ -2858,7 +2864,7 @@ test entry-13.25 {GetEntryIndex procedure} -body {
     .e index 49
 } -cleanup {
     destroy .e
-} -result {21}
+} -result 21
 test entry-13.26 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -highlightthickness 2 -bd 2 -font {Helvetica -12}
     selection clear .e
@@ -2905,7 +2911,7 @@ test entry-14.3 {EntryFetchSelection procedure} -setup {
     string compare [selection get] $x
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-15.1 {EntryLostSelection} -body {
     entry .e
@@ -2964,9 +2970,10 @@ test entry-16.4 {EntryVisibleRange procedure} -body {
 test entry-17.1 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e delete 0 end
     .e insert 0 123
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -2976,9 +2983,9 @@ test entry-17.1 {EntryUpdateScrollbar procedure} -body {
 test entry-17.2 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 0123456789abcdef
     .e xview 3
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -2988,9 +2995,9 @@ test entry-17.2 {EntryUpdateScrollbar procedure} -body {
 test entry-17.3 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
-    set timeout [after 500 {set $scrollInfo "timeout"}]
     vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3003,8 +3010,10 @@ test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
 	set x $msg
 }
 } -body {
-    entry .e -width 5 -xscrollcommand thisisnotacommand
+    entry .e -width 5
     pack .e
+    update idletasks
+    .e configure -xscrollcommand thisisnotacommand
     vwait x
     list $x $errorInfo
 } -cleanup {
@@ -3025,7 +3034,7 @@ test entry-18.1 {Entry widget vs hiding} -setup {
     set res1 [list [winfo children .] [interp hidden]]
     set res2 [list {} $l]
     expr {$res1 == $res2}
-} -result {1}
+} -result 1
 
 ##
 ## Entry widget VALIDATION tests
@@ -3047,7 +3056,7 @@ test entry-19.1 {entry widget validation} -setup {
         -background red -foreground white
     pack .e
     .e insert 0 a
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 1 0 a {} a all key}
@@ -3079,7 +3088,7 @@ test entry-19.3 {entry widget validation} -setup {
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 1 2 abc ab c all key}
@@ -3111,7 +3120,7 @@ test entry-19.5 {entry widget validation} -setup {
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 0 2 a13bc a123bc 2 all key}
@@ -3128,7 +3137,7 @@ test entry-19.6 {entry widget validation} -setup {
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
     .e delete 1 3
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e 0 1 abc a13bc 13 key key}
@@ -3145,7 +3154,7 @@ test entry-19.7 {entry widget validation} -setup {
     .e insert end abc                 ;# previous settings
     set ::vVals {}
     .e insert end d
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3164,7 +3173,7 @@ test entry-19.8 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusin}
@@ -3185,7 +3194,7 @@ test entry-19.9 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusout}
@@ -3203,7 +3212,7 @@ test entry-19.10 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusin}
@@ -3224,7 +3233,7 @@ test entry-19.11 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusout}
@@ -3242,7 +3251,7 @@ test entry-19.12 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
@@ -3261,7 +3270,7 @@ test entry-19.13 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3280,7 +3289,7 @@ test entry-19.14 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {}
@@ -3302,7 +3311,7 @@ test entry-19.15 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    return $::vVals
+    set ::vVals
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusout focusout}
@@ -3385,7 +3394,7 @@ test entry-19.19 {entry widget validation} -setup {
     list [.e cget -validate] [.e get] $::vVals
 } -cleanup {
     destroy .e
-} -result {none mydata {.e -1 -1 nextdata nextdata {} all forced}}
+} -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
 
 ## This leaves validate alone because we trigger validation through the
 ## textvar (a write trace), and the write during validation triggers
@@ -3411,6 +3420,26 @@ test entry-19.20 {entry widget validation} -setup {
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
+
+## This leaves validate alone because we trigger validation through the
+## textvar (a write trace), and the write during validation triggers
+## nothing (by definition of avoiding loops on var traces).  This is
+## one of those "dangerous" conditions where the user will have a
+## different value in the entry widget shown as is in the textvar.
+test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
+    unset -nocomplain ::e ::vVals
+} -body {
+    entry .e -validate key \
+        -validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+        -textvariable ::e
+    pack .e
+    set ::e origdata
+    .e insert 0 A
+    list [.e cget -validate] [.e get] $::e $::vVals
+} -cleanup {
+    destroy .e
+} -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
+
 ##
 ## End validation tests
 ##
@@ -3424,7 +3453,7 @@ test entry-20.1 {widget deletion while active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-20.2 {widget deletion while active} -body {
     entry .e -validate all \
@@ -3434,7 +3463,7 @@ test entry-20.2 {widget deletion while active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-20.3 {widget deletion while active} -body {
     entry .e -validate all \
@@ -3443,7 +3472,7 @@ test entry-20.3 {widget deletion while active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-20.4 {widget deletion while active} -body {
     entry .e -validate all \
@@ -3453,7 +3482,7 @@ test entry-20.4 {widget deletion while active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-20.5 {widget deletion while active} -body {
     entry .e -validatecommand { destroy .e ; return 0 }
@@ -3461,7 +3490,7 @@ test entry-20.5 {widget deletion while active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-20.6 {widget deletion while active} -body {
     pack [entry .e]
@@ -3471,7 +3500,7 @@ test entry-20.6 {widget deletion while active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 test entry-20.7 {widget deletion with textvariable active} -body {
 # SF bugs 607390 and 617446
@@ -3483,7 +3512,7 @@ test entry-20.7 {widget deletion with textvariable active} -body {
     winfo exists .e
 } -cleanup {
     destroy .e
-} -result {0}
+} -result 0
 
 
 test entry-21.1 {selection present while disabled, bug 637828} -body {

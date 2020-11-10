@@ -26,7 +26,7 @@ standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 \-class	\-cursor
 \-font	\-foreground
 \-style
-\-takefocus	\-xscrollcommand	\-placeholder
+\-takefocus	\-xscrollcommand	\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -448,11 +448,15 @@ Some themes use a graphical background and their field background colors cannot 
 .RE
 \fB\-foreground\fP \fIcolor\fP
 .br
+\fB\-insertcolor\fP \fIcolor\fP
+.br
 \fB\-insertwidth\fP \fIamount\fP
 .br
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-relief\fP \fIrelief\fP
 .br

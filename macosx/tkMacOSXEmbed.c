@@ -43,11 +43,6 @@ typedef struct Container {
 static Container *firstContainerPtr = NULL;
 				/* First in list of all containers managed by
 				 * this process. */
-/*
- * Globals defined in this file:
- */
-
-TkMacOSXEmbedHandler *tkMacOSXEmbedHandler = NULL;
 
 /*
  * Prototypes for static procedures defined in this file:
@@ -62,42 +57,6 @@ static void	EmbedGeometryRequest(Container *containerPtr, int width,
 static void	EmbedSendConfigure(Container *containerPtr);
 static void	EmbedStructureProc(ClientData clientData, XEvent *eventPtr);
 static void	EmbedWindowDeleted(TkWindow *winPtr);
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MacOSXSetEmbedHandler --
- *
- *	Registers a handler for an in process form of embedding, like Netscape
- *	plugins, where Tk is loaded into the process, but does not control the
- *	main window
- *
- * Results:
- *	None
- *
- * Side effects:
- *	The embed handler is set.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_MacOSXSetEmbedHandler(
-    Tk_MacOSXEmbedRegisterWinProc *registerWinProc,
-    Tk_MacOSXEmbedGetGrafPortProc *getPortProc,
-    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProc,
-    Tk_MacOSXEmbedGetClipProc *getClipProc,
-    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
-{
-    if (tkMacOSXEmbedHandler == NULL) {
-	tkMacOSXEmbedHandler = (TkMacOSXEmbedHandler *)ckalloc(sizeof(TkMacOSXEmbedHandler));
-    }
-    tkMacOSXEmbedHandler->registerWinProc = registerWinProc;
-    tkMacOSXEmbedHandler->getPortProc = getPortProc;
-    tkMacOSXEmbedHandler->containerExistProc = containerExistProc;
-    tkMacOSXEmbedHandler->getClipProc = getClipProc;
-    tkMacOSXEmbedHandler->getOffsetProc = getOffsetProc;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -447,7 +406,7 @@ TkMacOSXContainerId(
     for (containerPtr = firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->embeddedPtr == winPtr) {
-	    return (MacDrawable *) containerPtr->parent;
+	    return (MacDrawable *)containerPtr->parent;
 	}
     }
     Tcl_Panic("TkMacOSXContainerId couldn't find window");
@@ -859,7 +818,7 @@ ContainerEventProc(
 	 * Here we are following unix, by destroying the container.
 	 */
 
-	Tk_DestroyWindow((Tk_Window) winPtr);
+	Tk_DestroyWindow((Tk_Window)winPtr);
     }
     Tk_DeleteErrorHandler(errHandler);
 }
@@ -908,8 +867,8 @@ EmbedStructureProc(
 
 	    errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
 		    -1, -1, NULL, NULL);
-	    Tk_MoveResizeWindow((Tk_Window) containerPtr->embeddedPtr, 0, 0,
-		    (unsigned) Tk_Width((Tk_Window) containerPtr->parentPtr),
+	    Tk_MoveResizeWindow((Tk_Window)containerPtr->embeddedPtr, 0, 0,
+		    (unsigned) Tk_Width((Tk_Window)containerPtr->parentPtr),
 		    (unsigned) Tk_Height((Tk_Window)containerPtr->parentPtr));
 	    Tk_DeleteErrorHandler(errHandler);
 	}
@@ -1054,10 +1013,8 @@ EmbedGeometryRequest(
      * if the window's size didn't change then generate a configure event.
      */
 
-    Tk_GeometryRequest((Tk_Window) winPtr, width, height);
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {
-	/* Empty loop body. */
-    }
+    Tk_GeometryRequest((Tk_Window)winPtr, width, height);
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {}
     if ((winPtr->changes.width != width)
 	    || (winPtr->changes.height != height)) {
 	EmbedSendConfigure(containerPtr);

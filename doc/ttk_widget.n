@@ -152,13 +152,14 @@ to zero, then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "ENTRY OPTIONS"
-The following option is supported by entry, spinbox and combobox:
+The following options are supported by entry, spinbox and combobox:
 .OP \-placeholder placeHolder PlaceHolder
 Specifies a help text string to display if no text is otherwise displayed,
 that is when the widget is empty. The placeholder text is displayed using
-the values of the \fB\-font\fR and \fB\-justify\fR options. The foreground
-color of the placeholder text can be changed using the
-\fB\-placeholderforeground\fR style option.
+the values of the \fB\-font\fR, \fB\-justify\fR and
+\fB\-placeholderforeground\fR options.
+.OP \-placeholderforeground placeHolderForeground PlaceHolderForeground
+Specifies the foreground color of the placeholder text.
 .SH "COMPATIBILITY OPTIONS"
 This option is only available for themed widgets that have
 .QW corresponding
@@ -256,7 +257,8 @@ way through the content appears at the left edge of the window.
 \fIpathName \fBxview scroll \fInumber what\fR
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 '\" or an abbreviation of one of these, but we don't document that.
 If \fIwhat\fR is

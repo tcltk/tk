@@ -579,7 +579,7 @@ Tk_ListboxObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(listPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(listPtr->tkwin));
     return TCL_OK;
 }
 
@@ -842,7 +842,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	result = TCL_OK;
 	break;
 
@@ -906,7 +906,7 @@ ListboxWidgetObjCmd(
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "index ?-option? ?value? ?-option value ...?");
+		    "index ?-option value ...?");
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -2742,7 +2742,7 @@ GetListboxIndex(
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
-    	if (idx + 1 > (TkSizeT)listPtr->nElements + 1) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > (TkSizeT)listPtr->nElements)) {
     	    idx = listPtr->nElements;
     	}
     	*indexPtr = (int)idx;
@@ -3229,7 +3229,7 @@ static void
 GenerateListboxSelectEvent(
     Listbox *listPtr)		/* Information about widget. */
 {
-    TkSendVirtualEvent(listPtr->tkwin, "ListboxSelect", NULL);
+    Tk_SendVirtualEvent(listPtr->tkwin, "ListboxSelect", NULL);
 }
 
 /*
@@ -3324,7 +3324,7 @@ ListboxUpdateVScrollbar(
 
     /*
      * We must hold onto the interpreter from the listPtr because the data at
-     * listPtr might be freed as a result of the Tcl_VarEval.
+     * listPtr might be freed as a result of the Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3335,7 +3335,7 @@ ListboxUpdateVScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
@@ -3396,7 +3396,7 @@ ListboxUpdateHScrollbar(
 
     /*
      * We must hold onto the interpreter because the data referred to at
-     * listPtr might be freed as a result of the call to Tcl_VarEval.
+     * listPtr might be freed as a result of the call to Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3407,7 +3407,7 @@ ListboxUpdateHScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,

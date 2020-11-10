@@ -513,9 +513,12 @@ RefreshKeyboardMappingIfNeeded(
 /*
  *----------------------------------------------------------------------
  *
- * TkGetButtonMask --
+ * Tk_GetButtonMask --
  *
- *	Return the proper Button${n}Mask for the button.
+ *	Return the proper Button${n}Mask for the button. Don't care about
+ *	Button4 - Button7, because those are not actually buttons: Those
+ *	are used for the horizontal or vertical mouse wheels. Button4Mask
+ *	and higher is actually used for Button 8 and higher.
  *
  * Results:
  *	A button mask.
@@ -526,14 +529,14 @@ RefreshKeyboardMappingIfNeeded(
  *----------------------------------------------------------------------
  */
 
-static const unsigned long buttonMasks[] = {
-    0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask,
-    Button6Mask, Button7Mask, Button8Mask, Button9Mask
+static const unsigned buttonMasks[] = {
+    0, Button1Mask, Button2Mask, Button3Mask, 0, 0, 0, 0, Button4Mask, \
+	    Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
-unsigned long
-TkGetButtonMask(
-    unsigned int button)
+unsigned
+Tk_GetButtonMask(
+    unsigned button)
 {
     return (button > Button9) ? 0 : buttonMasks[button];
 }
@@ -691,7 +694,7 @@ Tk_CreateEventHandler(
     ClientData clientData)	/* Arbitrary data to pass to proc. */
 {
     TkEventHandler *handlerPtr;
-    TkWindow *winPtr = (TkWindow *) token;
+    TkWindow *winPtr = (TkWindow *)token;
 
     /*
      * Skim through the list of existing handlers to (a) compute the overall
@@ -1040,10 +1043,9 @@ TkEventInit(void)
 static int
 TkXErrorHandler(
     ClientData clientData,	/* Pointer to flag we set. */
-    XErrorEvent *errEventPtr)	/* X error info. */
+    TCL_UNUSED(XErrorEvent *))	/* X error info. */
 {
     int *error = (int *)clientData;
-    (void)errEventPtr;
 
     *error = 1;
     return 0;
@@ -1137,6 +1139,23 @@ Tk_HandleEvent(
     Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+    if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
+	if (eventPtr->type == ButtonRelease) {
+	    return;
+	} else if (eventPtr->type == ButtonPress) {
+	    int but = eventPtr->xbutton.button;
+	    eventPtr->type = MouseWheelEvent;
+	    eventPtr->xany.send_event = -1;
+	    eventPtr->xkey.keycode = (but & 1) ? -120 : 120;
+	    if (but > Button5) {
+		eventPtr->xkey.state ^= ShiftMask;
+	    }
+	}
+    }
+#endif
 
     /*
      * If the generic handler processed this event we are done and can return.
@@ -2003,10 +2022,9 @@ TkDeleteThreadExitHandler(
 
 void
 TkFinalize(
-    ClientData dummy)	/* Arbitrary value to pass to proc. */
+    TCL_UNUSED(void *))	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
-    (void)dummy;
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
     if (!tclStubsPtr) {
@@ -2056,12 +2074,11 @@ TkFinalize(
 
 void
 TkFinalizeThread(
-    ClientData dummy)	/* Arbitrary value to pass to proc. */
+    TCL_UNUSED(void *))	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     Tcl_DeleteThreadExitHandler(TkFinalizeThread, NULL);
 

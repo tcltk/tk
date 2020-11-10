@@ -122,13 +122,14 @@ extern "C" {
  * Dummy types that are used by clients:
  */
 
+#define Tk_ImageMaster Tk_ImageModel
 typedef struct Tk_BindingTable_ *Tk_BindingTable;
 typedef struct Tk_Canvas_ *Tk_Canvas;
 typedef struct Tk_Cursor_ *Tk_Cursor;
 typedef struct Tk_ErrorHandler_ *Tk_ErrorHandler;
 typedef struct Tk_Font_ *Tk_Font;
 typedef struct Tk_Image__ *Tk_Image;
-typedef struct Tk_ImageMaster_ *Tk_ImageMaster;
+typedef struct Tk_ImageModel_ *Tk_ImageModel;
 typedef struct Tk_OptionTable_ *Tk_OptionTable;
 typedef struct Tk_PostscriptInfo_ *Tk_PostscriptInfo;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
@@ -650,21 +651,22 @@ typedef struct Tk_ClassProcs {
  * the geometry manager to carry out certain functions.
  */
 
+#define Tk_GeomLostSlaveProc Tk_GeomLostContentProc
 typedef void (Tk_GeomRequestProc) (ClientData clientData, Tk_Window tkwin);
-typedef void (Tk_GeomLostSlaveProc) (ClientData clientData, Tk_Window tkwin);
+typedef void (Tk_GeomLostContentProc) (ClientData clientData, Tk_Window tkwin);
 
 typedef struct Tk_GeomMgr {
     const char *name;		/* Name of the geometry manager (command used
 				 * to invoke it, or name of widget class that
 				 * allows embedded widgets). */
     Tk_GeomRequestProc *requestProc;
-				/* Procedure to invoke when a slave's
+				/* Procedure to invoke when a content's
 				 * requested geometry changes. */
-    Tk_GeomLostSlaveProc *lostSlaveProc;
-				/* Procedure to invoke when a slave is taken
+    Tk_GeomLostContentProc *lostContentProc;
+				/* Procedure to invoke when content is taken
 				 * away from one geometry manager by another.
 				 * NULL means geometry manager doesn't care
-				 * when slaves are lost. */
+				 * when content lost. */
 } Tk_GeomMgr;
 
 /*
@@ -1047,13 +1049,17 @@ typedef struct Tk_Item {
  * lines, circles, etc.) that can form part of a canvas widget.
  */
 
-#ifdef USE_OLD_CANVAS
+#if defined(USE_OLD_CANVAS) && TCL_MAJOR_VERSION < 9
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv, int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, char *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
 #else
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[]);
@@ -1062,6 +1068,17 @@ typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const argv[]);
+#if TCL_MAJOR_VERSION > 8
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t beforeThis, Tcl_Obj *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, size_t *indexPtr);
+#else
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, Tcl_Obj *string);
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
+#endif
 #endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDeleteProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Display *display);
@@ -1081,39 +1098,21 @@ typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double scaleY);
 typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double deltaX, double deltaY);
-#ifdef USE_OLD_CANVAS
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
-#elif TCL_MAJOR_VERSION > 8
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Obj *indexString, size_t *indexPtr);
-#else
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
-#endif /* USE_OLD_CANVAS */
 #if TCL_MAJOR_VERSION > 8
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    size_t index);
 typedef size_t	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    size_t offset, char *buffer, size_t maxBytes);
+typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    size_t first, size_t last);
 #else
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
 typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
-#endif
-#ifdef USE_OLD_CANVAS
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, char *string);
-#elif TCL_MAJOR_VERSION > 8
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    size_t beforeThis, Tcl_Obj *string);
-#else
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, Tcl_Obj *string);
-#endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int first, int last);
+#endif
 
 #ifndef __NO_OLD_CONFIG
 
@@ -1304,21 +1303,21 @@ typedef struct Tk_Outline {
  */
 
 typedef struct Tk_ImageType Tk_ImageType;
-#ifdef USE_OLD_IMAGE
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
-	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
+	ClientData *clientDataPtr);
 #else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, int objc,
-	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageModel model,
+	ClientData *clientDataPtr);
 #endif /* USE_OLD_IMAGE */
-typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData masterData);
-typedef void (Tk_ImageDisplayProc) (ClientData instanceData, Display *display,
+typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData clientData);
+typedef void (Tk_ImageDisplayProc) (ClientData clientData, Display *display,
 	Drawable drawable, int imageX, int imageY, int width, int height,
 	int drawableX, int drawableY);
-typedef void (Tk_ImageFreeProc) (ClientData instanceData, Display *display);
-typedef void (Tk_ImageDeleteProc) (ClientData masterData);
+typedef void (Tk_ImageFreeProc) (ClientData clientData, Display *display);
+typedef void (Tk_ImageDeleteProc) (ClientData clientData);
 typedef void (Tk_ImageChangedProc) (ClientData clientData, int x, int y,
 	int width, int height, int imageWidth, int imageHeight);
 typedef int (Tk_ImagePostscriptProc) (ClientData clientData,

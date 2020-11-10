@@ -42,7 +42,7 @@ ttk::copyBindings TButton TRadiobutton
 bind TRadiobutton <Up>  		{ ttk::button::RadioTraverse %W -1 }
 bind TRadiobutton <Down> 		{ ttk::button::RadioTraverse %W +1 }
 
-# bind TCheckbutton <plus> { %W select }
+# bind TCheckbutton <+> { %W select }
 # bind TCheckbutton <minus> { %W deselect }
 
 # activate --
