@@ -39,11 +39,9 @@ proc _balloon_show {w arg} {
 
 namespace eval ::winicoprops {
     variable ico
-    variable img
     variable cb1
     variable cb3
     set ico ""
-    set img ""
     set cb1 ""
     set cb3 ""
 }
@@ -184,7 +182,6 @@ proc ::tk::systray {args} {
 	if {[llength $args] != 5} {
 	    error "wrong # args: should be \"tk systray create image text b1_callback b3_callback\""
 	}
-	set ::winicoprops::img [lindex $args 1]
 	set ::winicoprops::cb1 [lindex $args 3]
 	set ::winicoprops::cb3 [lindex $args 4]
 	switch -- [tk windowingsystem] {
@@ -192,7 +189,7 @@ proc ::tk::systray {args} {
 		if {[llength $_iconlist] > 0} {
 		    error "Only one system tray icon supported per interpeter"
 		}
-		set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
+		set ::winicoprops::ico [_systray createfrom [lindex $args 1]]
 		_systray taskbar add $::winicoprops::ico -text [lindex $args 2] -callback [list _win_callback %m %i]
 		lappend _iconlist "ico#[llength _iconlist]"
 	    }
@@ -200,13 +197,13 @@ proc ::tk::systray {args} {
 		if [winfo exists ._tray] {
 		    error  "Only one system tray icon supported per interpeter"
 		}
-		_systray ._tray -image $::winicoprops::img -visible true
+		_systray ._tray -image [lindex $args 1] -visible true
 		_balloon ._tray [lindex $args 2]
 		bind ._tray <Button-1> $::winicoprops::cb1
 		bind ._tray <Button-3> $::winicoprops::cb3
 	    }
 	    "aqua" {
-		_systray create $::winicoprops::img [lindex $args 2] $::winicoprops::cb1 $::winicoprops::cb3
+		_systray create [lindex $args 1] [lindex $args 2] $::winicoprops::cb1 $::winicoprops::cb3
 	    }
 	}
     }
@@ -222,8 +219,7 @@ proc ::tk::systray {args} {
 		    image {
 		        set txt [_systray text $::winicoprops::ico]
 		        _systray taskbar delete $::winicoprops::ico
-		        set ::winicoprops::img [lindex $args 2]
-		        set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
+		        set ::winicoprops::ico [_systray createfrom [lindex $args 2]]
 		        _systray taskbar add $::winicoprops::ico -text $txt -callback [list _win_callback %m %i]
 		    }
 		    text {
