@@ -228,71 +228,50 @@ proc ::tk::systray {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[lindex $args 1] eq "image"} {
-		    set _img [lindex $args 2]
 		    _systray taskbar delete $::winicoprops::ico
-		    set ::winicoprops::ico [_systray createfrom $_img]
+		    set ::winicoprops::img [lindex $args 2]
+		    set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
 		    _systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		}
 		if {[lindex $args 1] eq "text"} {
-		    set _txt [lindex $args 2]
-		    set ::winicoprops::txt $_txt
+		    set ::winicoprops::txt $[lindex $args 2]
 		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
 		}
 		if {[lindex $args 1 ] eq "b1_callback"} {
-		    set _cb_1 [lindex $args 2]
-		    set ::winicoprops::cb1 $_cb_1
-		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
-			_systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
+		    set ::winicoprops::cb1 [lindex $args 2]
+		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
-		    set _cb_3 [lindex $args 2]
-		    set ::winicoprops::cb3 $_cb_3
-		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
-			_systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
+		    set ::winicoprops::cb3 [lindex $args 2]
+		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		}
-
 	    }
 	    "x11" {
 		if {[lindex $args 1] eq "image"} {
-		    set _img [lindex $args 2]
-		    ._tray configure -image ""
-		    ._tray configure -image $_img
-
+		    ._tray configure -image [lindex $args 2]
 		}
 		if {[lindex $args 1] eq "text"} {
-		    set _txt ""
-		    set _txt [lindex $args 2]
-		    _balloon ._tray $_txt
+		    _balloon ._tray [lindex $args 2]
 		}
 		if {[lindex $args 1 ] eq "b1_callback"} {
-		    set _cb_1 ""
-		    bind ._tray <Button-1> ""
-		    set _cb_1 [lindex $args 2]
-		    bind ._tray <Button-1>  $_cb_1
+		    bind ._tray <Button-1> [lindex $args 2]
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
-		    set _cb_3 ""
-		    bind ._tray <Button-3> ""
-		    set _cb_3 [lindex $args 2]
-		    bind ._tray <Button-3>  $_cb_3
+		    bind ._tray <Button-3> [lindex $args 2]
 		}
 	    }
 	    "aqua" {
 		if {[lindex $args 1] eq "image"} {
-		    set _img [lindex $args 2]
-		    _systray modify image $_img
+		    _systray modify image [lindex $args 2]
 		}
 		if {[lindex $args 1] eq "text"} {
-		    set _txt [lindex $args 2]
-		    _systray modify text $_txt
+		    _systray modify text [lindex $args 2]
 		}
 		if {[lindex $args 1 ] eq "b1_callback"} {
-		    set _cb_1 [lindex $args 2]
-		    _systray modify b1_callback $_cb_1
+		    _systray modify b1_callback [lindex $args 2]
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
-		    set _cb_3 [lindex $args 2]
-		    _systray modify b3_callback $_cb_3
+		    _systray modify b3_callback [lindex $args 2]
 		}
 	    }
 	}
@@ -337,6 +316,6 @@ proc ::tk::sysnotify {title message} {
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
 #Thanks to Christian Gollwitzer for the guidance here
 set map [namespace ensemble configure tk -map]
-dict set map systray  ::tk::systray
+dict set map systray ::tk::systray
 dict set map sysnotify ::tk::sysnotify
 namespace ensemble configure tk -map $map
