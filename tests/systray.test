@@ -30,7 +30,7 @@ test systray-3 {systray icon parameters modification} -setup {
     tk systray modify image _page
     tk systray modify text "Another text for my icon"
     tk systray modify b1_callback {set a 1}
-    tk systray modify b2_callback {set b 2}
+    tk systray modify b3_callback {set b 2}
 } -cleanup {
     tk systray destroy
     image delete _book
