@@ -1450,7 +1450,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         return TCL_ERROR;
     } else {
         Tcl_AppendResult(interp, " bad argument \"", argv[1],
-            "\": must be  createfrom, info, hicon, pos, text, taskbar",
+            "\": must be  createfrom, delete, text, taskbar",
             (char * ) NULL);
         return TCL_ERROR;
     }
