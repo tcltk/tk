@@ -231,7 +231,7 @@ proc ::tk::systray {args} {
 		        _systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		    }
 		    text {
-		        set ::winicoprops::txt $[lindex $args 2]
+		        set ::winicoprops::txt [lindex $args 2]
 		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
 		    }
 		    b1_callback {
