@@ -339,12 +339,6 @@ proc ::tk::sysnotify {title message} {
     return
 }
 
-if {[tk windowingsystem] eq "win32"} {
-	proc systray {} {
-	error "invalid command name \"systray\""
-	}
-}
-
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
 #Thanks to Christian Gollwitzer for the guidance here
 set map [namespace ensemble configure tk -map]
