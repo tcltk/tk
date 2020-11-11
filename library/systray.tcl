@@ -160,7 +160,7 @@ proc ::tk::systray {args} {
 
     set name [lindex $args 0]
     if {![string equal $name "create"]  && ![string equal $name "modify"]  && ![string equal $name "destroy"]} {
-	error "wrong # args: should be \"tk systray create | modify | destroy\""
+	error "bad option \"$name\": must be create, modify, or destroy"
     }
 
     #Set variables for icon properties.
