@@ -247,11 +247,13 @@ proc ::tk::systray {args} {
 		    set _cb_1 [lindex $args 2]
 		    set ::winicoprops::cb1 $_cb_1
 		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
+			_systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
 		}
 		if {[lindex $args 1 ] eq "b3_callback"} {
 		    set _cb_3 [lindex $args 2]
 		    set ::winicoprops::cb3 $_cb_3
 		    _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
+			_systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
 		}
 
 	    }
