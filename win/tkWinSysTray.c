@@ -1438,7 +1438,11 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
             icoPtr -> taskbar_command = ckalloc((int) strlen(callback) + 1);
             strcpy(icoPtr -> taskbar_command, callback);
         }
-        icoPtr -> taskbar_txt = txt;
+        if (icoPtr -> taskbar_txt != NULL) {
+            ckfree(icoPtr -> taskbar_txt);
+        }
+        icoPtr -> taskbar_txt = ckalloc((int) strlen(txt) + 1);
+        strcpy(icoPtr -> taskbar_txt, txt);
         return TaskbarOperation(icoPtr, oper, hIcon, txt);
         wrongargs2:
             Tcl_AppendResult(interp, " unknown option \"", args[0], "\",valid are:",
