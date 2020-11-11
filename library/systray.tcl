@@ -40,19 +40,15 @@ proc _balloon_show {w arg} {
 namespace eval ::winicoprops {
     variable ico
     variable img
-    variable txt
     variable cb1
     variable cb3
-
     set ico ""
     set img ""
-    set txt ""
     set cb1 ""
     set cb3 ""
 }
 
 proc _win_callback {msg icn} {
-
     switch -exact -- $msg {
 	WM_LBUTTONDOWN {
 	    eval $::winicoprops::cb1
@@ -189,7 +185,6 @@ proc ::tk::systray {args} {
 	    error "wrong # args: should be \"tk systray create image text b1_callback b3_callback\""
 	}
 	set ::winicoprops::img [lindex $args 1]
-	set ::winicoprops::txt [lindex $args 2]
 	set ::winicoprops::cb1 [lindex $args 3]
 	set ::winicoprops::cb3 [lindex $args 4]
 	switch -- [tk windowingsystem] {
@@ -198,7 +193,7 @@ proc ::tk::systray {args} {
 		    error "Only one system tray icon supported per interpeter"
 		}
 		set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
-		_systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		_systray taskbar add $::winicoprops::ico -text [lindex $args 2] -callback [list _win_callback %m %i]
 		lappend _iconlist "ico#[llength _iconlist]"
 	    }
 	    "x11" {
@@ -206,12 +201,12 @@ proc ::tk::systray {args} {
 		    error  "Only one system tray icon supported per interpeter"
 		}
 		_systray ._tray -image $::winicoprops::img -visible true
-		_balloon ._tray $::winicoprops::txt
+		_balloon ._tray [lindex $args 2]
 		bind ._tray <Button-1> $::winicoprops::cb1
 		bind ._tray <Button-3> $::winicoprops::cb3
 	    }
 	    "aqua" {
-		_systray create $::winicoprops::img $::winicoprops::txt $::winicoprops::cb1 $::winicoprops::cb3
+		_systray create $::winicoprops::img [lindex $args 2] $::winicoprops::cb1 $::winicoprops::cb3
 	    }
 	}
     }
@@ -225,14 +220,14 @@ proc ::tk::systray {args} {
 	    "win32" {
 		switch -- [lindex $args 1] {
 		    image {
+		        set txt [_systray text $::winicoprops::ico]
 		        _systray taskbar delete $::winicoprops::ico
 		        set ::winicoprops::img [lindex $args 2]
 		        set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
-		        _systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		        _systray taskbar add $::winicoprops::ico -text $txt -callback [list _win_callback %m %i]
 		    }
 		    text {
-		        set ::winicoprops::txt [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
+		        _systray taskbar modify $::winicoprops::ico -text [lindex $args 2]
 		    }
 		    b1_callback {
 		        set ::winicoprops::cb1 [lindex $args 2]

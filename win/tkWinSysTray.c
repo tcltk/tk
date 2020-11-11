@@ -1368,9 +1368,9 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         FreeIcoPtr(interp, icoPtr);
         return TCL_OK;
     } else if ((strncmp(argv[1], "text", length) == 0) && (length >= 2)) {
-        if (argc < 3) {
+        if (argc < 2) {
             Tcl_AppendResult(interp, " wrong # args: should be \"",
-                argv[0], " text <id> newtext\"", (char * ) NULL);
+                argv[0], " text <id> ?newtext?\"", (char * ) NULL);
             return TCL_ERROR;
         }
         if ((icoPtr = GetIcoPtr(interp, (char * ) argv[2])) == NULL) return TCL_ERROR;
@@ -1404,7 +1404,7 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
         } else if (strncmp(argv[2], "mod", 3) == 0) {
             oper = NIM_MODIFY;
         } else {
-            Tcl_AppendResult(interp, " bad argument ", argv[2], "should be add, delete or modify", (char * ) NULL);
+            Tcl_AppendResult(interp, " bad argument ", argv[2], " should be add, delete or modify", (char * ) NULL);
             return TCL_ERROR;
         }
         if ((icoPtr = GetIcoPtr(interp, (char * ) argv[3])) == NULL)
