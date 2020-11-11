@@ -184,7 +184,7 @@ proc ::tk::systray {args} {
     }
 
     if {[lindex $args 0] eq "destroy" && [llength $args] > 1} {
-	error "wrong # args: \"tk systray destroy\""
+	error "wrong # args: should be \"tk systray destroy\""
     }
 
     #Create the system tray icon.
@@ -228,7 +228,7 @@ proc ::tk::systray {args} {
     #Modify the system tray icon properties.
     if {[lindex $args 0] eq "modify"} {
 	if {[llength $args] != 3} {
-	    error "wrong # args: \"tk systray modify image | text | b1_callback | b3_callback option?\""
+	    error "wrong # args: should be \"tk systray modify image | text | b1_callback | b3_callback option\""
 	}
 	switch -- [tk windowingsystem] {
 	    "win32" {
