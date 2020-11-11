@@ -236,11 +236,11 @@ proc ::tk::systray {args} {
 		    }
 		    b1_callback {
 		        set ::winicoprops::cb1 [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		        _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		    }
 		    b3_callback {
 		        set ::winicoprops::cb3 [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		        _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
 		    }
 		    default {
 		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
