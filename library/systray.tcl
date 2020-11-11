@@ -38,7 +38,6 @@ proc _balloon_show {w arg} {
 # Additional infrastructure for Windows variables and callbacks.
 
 namespace eval ::winicoprops {
-
     variable ico
     variable img
     variable txt
@@ -50,9 +49,6 @@ namespace eval ::winicoprops {
     set txt ""
     set cb1 ""
     set cb3 ""
-
-    namespace export *
-
 }
 
 proc _win_callback {msg icn} {
