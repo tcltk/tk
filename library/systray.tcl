@@ -304,7 +304,7 @@ proc ::tk::sysnotify {title message} {
     switch -- [tk windowingsystem] {
 	"win32" {
 	    if {$::winicoprops::ico eq ""} {
-		error "Must create a system tray icon with the \"tk systray\" command"
+		error "Must create a system tray icon with the \"tk systray\" command first"
 	    }
 	    _sysnotify notify $::winicoprops::ico $title $message
 	}
