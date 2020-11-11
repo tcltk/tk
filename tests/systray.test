@@ -57,7 +57,7 @@ test sysnotify-2.1 {system notification stems from a systray icon on Windows} -c
     tk systray destroy
 } -body {
     tk sysnotify {Alert} {This is an alert}
-} -returnCodes {error} -result {Must create a system tray icon with the "tk systray" command}
+} -returnCodes {error} -result {Must create a system tray icon with the "tk systray" command first}
 test sysnotify-2.2 {system notification is not linked to any systray icon on X11 or aqua} -constraints {
     nonwin
 } -body {
