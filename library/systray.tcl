@@ -227,51 +227,60 @@ proc ::tk::systray {args} {
 	}
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		if {[lindex $args 1] eq "image"} {
-		    _systray taskbar delete $::winicoprops::ico
-		    set ::winicoprops::img [lindex $args 2]
-		    set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
-		    _systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
-		}
-		if {[lindex $args 1] eq "text"} {
-		    set ::winicoprops::txt $[lindex $args 2]
-		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
-		}
-		if {[lindex $args 1 ] eq "b1_callback"} {
-		    set ::winicoprops::cb1 [lindex $args 2]
-		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
-		}
-		if {[lindex $args 1 ] eq "b3_callback"} {
-		    set ::winicoprops::cb3 [lindex $args 2]
-		    _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		switch -- [lindex $args 1] {
+		    image {
+		        _systray taskbar delete $::winicoprops::ico
+		        set ::winicoprops::img [lindex $args 2]
+		        set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
+		        _systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		    }
+		    text {
+		        set ::winicoprops::txt $[lindex $args 2]
+		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt
+		    }
+		    b1_callback {
+		        set ::winicoprops::cb1 [lindex $args 2]
+		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		    }
+		    b3_callback {
+		        set ::winicoprops::cb3 [lindex $args 2]
+		        _systray taskbar modify $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
+		    }
+		    default {
+		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
+		    }
 		}
 	    }
 	    "x11" {
-		if {[lindex $args 1] eq "image"} {
-		    ._tray configure -image [lindex $args 2]
-		}
-		if {[lindex $args 1] eq "text"} {
-		    _balloon ._tray [lindex $args 2]
-		}
-		if {[lindex $args 1 ] eq "b1_callback"} {
-		    bind ._tray <Button-1> [lindex $args 2]
-		}
-		if {[lindex $args 1 ] eq "b3_callback"} {
-		    bind ._tray <Button-3> [lindex $args 2]
+		switch -- [lindex $args 1] {
+		    image {
+		        ._tray configure -image [lindex $args 2]
+		    }
+		    text {
+		        _balloon ._tray [lindex $args 2]
+		    }
+		    b1_callback {
+		        bind ._tray <Button-1> [lindex $args 2]
+		    }
+		    b3_callback {
+		        bind ._tray <Button-3> [lindex $args 2]
+		    }
+		    default {
+		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
+		    }
 		}
 	    }
 	    "aqua" {
-		if {[lindex $args 1] eq "image"} {
-		    _systray modify image [lindex $args 2]
-		}
-		if {[lindex $args 1] eq "text"} {
-		    _systray modify text [lindex $args 2]
-		}
-		if {[lindex $args 1 ] eq "b1_callback"} {
-		    _systray modify b1_callback [lindex $args 2]
-		}
-		if {[lindex $args 1 ] eq "b3_callback"} {
-		    _systray modify b3_callback [lindex $args 2]
+		switch -- [lindex $args 1] {
+		    image       -
+		    text        -
+		    b1_callback -
+		    b3_callback {
+		        _systray modify [lindex $args 1] [lindex $args 2]
+		    }
+		    default {
+		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
+		    }
 		}
 	    }
 	}
