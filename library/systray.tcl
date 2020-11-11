@@ -192,21 +192,16 @@ proc ::tk::systray {args} {
 	if {[llength $args] != 5} {
 	    error "wrong # args: should be \"tk systray create image text b1_callback b3_callback\""
 	}
-	set _img [lindex $args 1]
-	set _txt [lindex $args 2]
-	set _cb_1 [lindex $args 3]
-	set _cb_3 [lindex $args 4]
-
-	set ::winicoprops::img $_img
-	set ::winicoprops::txt $_txt
-	set ::winicoprops::cb1 $_cb_1
-	set ::winicoprops::cb3 $_cb_3
+	set ::winicoprops::img [lindex $args 1]
+	set ::winicoprops::txt [lindex $args 2]
+	set ::winicoprops::cb1 [lindex $args 3]
+	set ::winicoprops::cb3 [lindex $args 4]
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[llength $_iconlist] > 0} {
 		    error "Only one system tray icon supported per interpeter"
 		}
-		set ::winicoprops::ico [_systray createfrom $_img]
+		set ::winicoprops::ico [_systray createfrom $::winicoprops::img]
 		_systray taskbar add $::winicoprops::ico -text $::winicoprops::txt -callback [list _win_callback %m %i]
 		lappend _iconlist "ico#[llength _iconlist]"
 	    }
@@ -214,13 +209,13 @@ proc ::tk::systray {args} {
 		if [winfo exists ._tray] {
 		    error  "Only one system tray icon supported per interpeter"
 		}
-		_systray ._tray -image $_img -visible true
-		_balloon ._tray $_txt
-		bind ._tray <Button-1> $_cb_1
-		bind ._tray <Button-3> $_cb_3
+		_systray ._tray -image $::winicoprops::img -visible true
+		_balloon ._tray $::winicoprops::txt
+		bind ._tray <Button-1> $::winicoprops::cb1
+		bind ._tray <Button-3> $::winicoprops::cb3
 	    }
 	    "aqua" {
-		_systray create $_img $_txt $_cb_1 $_cb_3
+		_systray create $::winicoprops::img $::winicoprops::txt $::winicoprops::cb1 $::winicoprops::cb3
 	    }
 	}
     }
