@@ -285,8 +285,8 @@ proc ttk::copyBindings {from to} {
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
-    bind $bindtag <MouseWheel> [append callback { %D -120.0}]
-    bind $bindtag <Option-MouseWheel> [append callback { %D -12.0}]
+    bind $bindtag <MouseWheel> "$callback %D -120.0"
+    bind $bindtag <Option-MouseWheel> "$callback %D -12.0"
 }
 
 ## Mousewheel bindings for standard scrollable widgets.

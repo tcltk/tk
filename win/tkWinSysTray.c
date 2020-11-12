@@ -76,69 +76,8 @@ static IcoInfo * firstIcoPtr = NULL;
 #define HANDLER_CLASS "Wtk_TaskbarHandler"
 static HWND CreateTaskbarHandlerWindow(void);
 
-typedef BOOL(FAR WINAPI * LPFN_SHELLNOTIFYICONW)(DWORD, PNOTIFYICONDATAW);
-typedef BOOL(FAR WINAPI * LPFN_SHELLNOTIFYICONA)(DWORD, PNOTIFYICONDATAA);
-
-static LPFN_SHELLNOTIFYICONA notify_funcA = NULL;
-static LPFN_SHELLNOTIFYICONW notify_funcW = NULL;
-static HMODULE hmod = NULL;
 static HWND handlerWindow = NULL;
 static BlockOfIconImagesPtr iconBits = NULL;
-
-/*
- *----------------------------------------------------------------------
- *
- * swaplines --
- *
- *	This function tries to swap the lines of the bitmap in various formats.
- *
- * Results:
- *	Swaps lines as needed.
- *
- * Side effects:
- *	Accurate rendering of bitmap.
- *
- *----------------------------------------------------------------------
- *
- */
-
-static void
-swaplines(unsigned char * bits, int width, int height, int bpp) {
-    #define MAX_LINE 512
-    unsigned char line[MAX_LINE];
-    unsigned char * pline;
-    int i, BytesPerLine, middle, end;
-    if (bpp > 8) {
-        BytesPerLine = width * (bpp / 8);
-        /* for size 16  bpp 16 BytesPerLine 32 */
-        /* for size 32  bpp 16 BytesPerLine 64 */
-        /* for size 16  bpp 24 BytesPerLine 48 */
-        /* for size 32  bpp 24 BytesPerLine 96 */
-    } else {
-        BytesPerLine = width / (8 / bpp);
-        /* for size 16  bpp 8  BytesPerLine 16 */
-        /* for size 32  bpp 8  BytesPerLine 32 */
-        /* for size 16  bpp 4  BytesPerLine 8 */
-        /* for size 32  bpp 4  BytesPerLine 16 */
-        /* for size 16  bpp 1  BytesPerLine 2 */
-        /* for size 32  bpp 1  BytesPerLine 4 */
-    }
-    if (BytesPerLine < MAX_LINE)
-        pline = line;
-    else
-        pline = (unsigned char * ) ckalloc(BytesPerLine);
-    middle = (height * BytesPerLine) / 2;
-    end = (height - 1) * BytesPerLine;
-    for (i = 0; i < middle; i += BytesPerLine) {
-        memcpy(pline, bits + i, BytesPerLine);
-        memcpy(bits + i, bits + (end - i), BytesPerLine);
-        memcpy(bits + (end - i), pline, BytesPerLine);
-    }
-    if (pline != line) {
-        ckfree((char * ) pline);
-    }
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -300,45 +239,6 @@ DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
 /*
  *----------------------------------------------------------------------
  *
- * NotifyA --
- *
- * 	Display icon in system tray on older ANSI-encoded systems.
- *
- * Results:
- *	Icon is displayed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-static BOOL
-NotifyA(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
-    NOTIFYICONDATAA ni;
-    Tcl_DString dst;
-    CHAR * str;
-
-    ni.cbSize = sizeof(NOTIFYICONDATAA);
-    ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = icoPtr -> id;
-    ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
-    ni.uCallbackMessage = ICON_MESSAGE;
-    ni.hIcon = (HICON) hIcon;
-
-    /* Tooltip text for system tray icon.*/
-    str = (CHAR * ) Tcl_UtfToExternalDString(NULL, txt, -1, & dst);
-    strncpy(ni.szTip, str, 63);
-    ni.szTip[63] = 0;
-    Tcl_DStringFree( & dst);
-
-    return notify_funcA(oper, & ni);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * NotifyW --
  *
  * 	Display icon in system tray on more recent systems supporting Unicode.
@@ -353,11 +253,10 @@ NotifyA(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
  */
 
 static BOOL
-NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
+NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, const char *txt) {
     NOTIFYICONDATAW ni;
     Tcl_DString dst;
     WCHAR * str;
-    Tcl_Encoding Encoding;
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
@@ -366,13 +265,11 @@ NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = (HICON) hIcon;
 
-    Encoding = Tcl_GetEncoding(NULL, "unicode");
-    str = (WCHAR * ) Tcl_UtfToExternalDString(Encoding, txt, -1, & dst);
-    wcsncpy(ni.szTip, str, 63);
-    ni.szTip[63] = 0;
-    Tcl_DStringFree( & dst);
-    Tcl_FreeEncoding(Encoding);
-    return notify_funcW(oper, & ni);
+    Tcl_DStringInit(&dst);
+    str = (WCHAR *)Tcl_UtfToWCharDString(txt, -1, &dst);
+    wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
+    Tcl_DStringFree( &dst);
+    return Shell_NotifyIconW(oper, &ni);
 }
 
 /*
@@ -392,37 +289,10 @@ NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
  */
 
 static int
-TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, char * txt) {
+TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, const char * txt) {
     int result;
 
-    if (notify_funcA == NULL && notify_funcW == NULL && hmod == NULL) {
-        hmod = GetModuleHandle("SHELL32.DLL");
-        if (hmod == NULL)
-            hmod = LoadLibrary("SHELL32.DLL");
-        if (hmod == NULL) {
-            Tcl_AppendResult(icoPtr -> interp, " Could not Load SHELL32.DLL", (char * ) NULL);
-            return TCL_ERROR;
-        }
-        notify_funcW = (LPFN_SHELLNOTIFYICONW) GetProcAddress(hmod, "Shell_NotifyIconW");
-        notify_funcA = (LPFN_SHELLNOTIFYICONA) GetProcAddress(hmod, "Shell_NotifyIconA");
-        if (notify_funcW == NULL && notify_funcA == NULL) {
-            Tcl_AppendResult(icoPtr -> interp,
-                " Could not get address of Shell_NotifyIconW or Shell_NotifyIconA",
-                (char * ) NULL);
-            return TCL_ERROR;
-        }
-    } else if (notify_funcA == NULL && notify_funcW == NULL) {
-        Tcl_AppendResult(icoPtr -> interp,
-            " You probably don't have a Windows shell", (char * ) NULL);
-        return TCL_ERROR;
-    }
-
-    if (notify_funcW != NULL) {
-        result = NotifyW(icoPtr, oper, hIcon, txt) ||
-            NotifyA(icoPtr, oper, hIcon, txt);
-    } else {
-        result = NotifyA(icoPtr, oper, hIcon, txt);
-    }
+    result = NotifyW(icoPtr, oper, hIcon, txt);
 
     Tcl_SetObjResult(icoPtr -> interp, Tcl_NewIntObj(result));
     if (result == 1) {
@@ -632,7 +502,7 @@ GetIntDec(long theint, char * buffer, size_t len) {
  */
 
 static char*
-TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
+TaskbarExpandPercents(IcoInfo *icoPtr, const char *msgstring,
     WPARAM wParam, LPARAM lParam, char *before, char *after, int *aftersize)
 {
 #define SPACELEFT (*aftersize-(dst-after)-1)
@@ -642,7 +512,7 @@ TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
     char* dst;
     dst = after;
     while (*before) {
-        char *ptr=before;
+        const char *ptr=before;
         int len=1;
         if(*before=='%') {
             switch(before[1]){
@@ -719,7 +589,7 @@ TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
                 }
                 case 'H': {
                     before++;
-                    len = GetInt((long)icoPtr->hwndFocus, buffer, sizeof(buffer));
+                    len = GetInt(PTR2INT(icoPtr->hwndFocus), buffer, sizeof(buffer));
                     ptr = buffer;
                     break;
                 }
@@ -774,7 +644,7 @@ TaskbarExpandPercents(IcoInfo *icoPtr, char *msgstring,
 
 static void
 TaskbarEval(IcoInfo * icoPtr, WPARAM wParam, LPARAM lParam) {
-    char * msgstring = "none";
+    const char *msgstring = "none";
     char evalspace[200];
     int evalsize = 200;
     char * expanded;
@@ -1012,104 +882,6 @@ DestroyHandlerWindow(void) {
 /*
  *----------------------------------------------------------------------
  *
- * StandardIcon --
- *
- * 	Returns standard Windows icons.
- *
- * Results:
- *	Icons displayed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static char *
-StandardIcon(char * arg) {
-	if (!stricmp(arg, "application"))
-		return IDI_APPLICATION;
-	if (!stricmp(arg, "asterisk"))
-		return IDI_ASTERISK;
-	if (!stricmp(arg, "error"))
-		return IDI_ERROR;
-	if (!stricmp(arg, "exclamation"))
-		return IDI_EXCLAMATION;
-	if (!stricmp(arg, "hand"))
-		return IDI_HAND;
-	if (!stricmp(arg, "question"))
-		return IDI_QUESTION;
-	if (!stricmp(arg, "information"))
-		return IDI_INFORMATION;
-	if (!stricmp(arg, "warning"))
-		return IDI_WARNING;
-	if (!stricmp(arg, "winlogo"))
-		return IDI_WINLOGO;
-	return NULL;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * NameOrHandle --
- *
- * 	Tries to get a valid window handle from a Tk-pathname for a toplevel.
- *
- * Results:
- *	Window handle obtained.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-NameOrHandle(Tcl_Interp * interp, char * arg, HWND * hwndPtr) {
-    #define WINFO_FRAME "wm frame "
-    Tk_Window tkwin;
-    size_t limit = 0;
-    char * cmd;
-
-    if (Tcl_GetInt(interp, arg, (int * ) hwndPtr) == TCL_OK) {
-        return TCL_OK;
-    }
-    Tcl_ResetResult(interp);
-    tkwin = Tk_NameToWindow(interp, arg, Tk_MainWindow(interp));
-    if (tkwin == NULL) {
-        Tcl_AppendResult(interp, arg, " is no valid windowpath", (char * ) NULL);
-        return TCL_ERROR;
-    }
-    if (!Tk_IsTopLevel(tkwin)) {
-        Tcl_AppendResult(interp, arg,
-            " is not a toplevel valid windowpath", (char * ) NULL);
-        return TCL_ERROR;
-    }
-    limit = strlen(arg) + strlen(WINFO_FRAME);
-    cmd = ckalloc((int) limit + 1);
-    strcpy(cmd, WINFO_FRAME);
-    strcat(cmd, arg);
-    if (Tcl_Eval(interp, cmd) == TCL_ERROR) {
-        return TCL_ERROR;
-    }
-    strncpy(cmd, Tcl_GetStringResult(interp), limit);
-    cmd[limit] = 0;
-    if (sscanf(cmd, "0x%x", (int * ) hwndPtr) != 1) {
-        Tcl_AppendResult(interp, "couldn't scan ", cmd, (char * ) NULL);
-        return TCL_ERROR;
-    }
-    if ( * hwndPtr == NULL) {
-        Tcl_AppendResult(interp, "couldn't get windowid from ",
-            cmd, (char * ) NULL);
-        return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * WinIcoDestroy --
  *
  * 	Deletes icon and hidden window from display.
@@ -1161,7 +933,7 @@ CreateIcoFromTkImage(
 
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int width, height, idx, bufferSize, startObj = 3;
+    int width, height, idx, bufferSize;
     union {unsigned char *ptr; void *voidPtr;} bgraPixel;
     union {unsigned char *ptr; void *voidPtr;} bgraMask;
     HICON hIcon;
@@ -1307,7 +1079,9 @@ CreateIcoFromTkImage(
  */
 
 static int
-WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
+WinIcoCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp * interp,
     int argc, const char * argv[]) {
     size_t length;
     HICON hIcon;
@@ -1475,10 +1249,13 @@ WinIcoCmd(ClientData clientData, Tcl_Interp * interp,
  */
 
 static int
-WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
-    int argc, const char * argv[]) {
+WinSystrayCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp * interp,
+    int argc,
+    const char *argv[])
+{
     size_t length;
-    HICON hIcon = NULL;
     IcoInfo * icoPtr;
     Tcl_DString infodst;
     Tcl_DString titledst;
@@ -1532,7 +1309,7 @@ WinSystrayCmd(ClientData clientData, Tcl_Interp * interp,
             Tcl_DStringFree( & infodst);
         }
 
-        Shell_NotifyIcon(NIM_MODIFY, & ni);
+        Shell_NotifyIconA(NIM_MODIFY, & ni);
         return TCL_OK;
     }
 	return TCL_OK;
