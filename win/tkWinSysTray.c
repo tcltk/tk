@@ -102,13 +102,13 @@ FreeIconResource(BlockOfIconImagesPtr lpIR) {
     if (lpIR == NULL)
         return;
     /* Free all the bits */
-    for (i = 0; i < lpIR -> nNumImages; i++) {
-        if (lpIR -> IconImages[i].lpBits != NULL)
-            ckfree((char * ) lpIR -> IconImages[i].lpBits);
-        if (lpIR -> IconImages[i].hIcon != NULL)
-            DestroyIcon(lpIR -> IconImages[i].hIcon);
+    for (i = 0; i < lpIR->nNumImages; i++) {
+        if (lpIR->IconImages[i].lpBits != NULL)
+            ckfree(lpIR->IconImages[i].lpBits);
+        if (lpIR->IconImages[i].hIcon != NULL)
+            DestroyIcon(lpIR->IconImages[i].hIcon);
     }
-    ckfree((char * ) lpIR);
+    ckfree(lpIR);
 }
 
 
@@ -150,25 +150,25 @@ DrawXORMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
     /* Sanity checks */
     if (lpIcon == NULL)
         return FALSE;
-    if (lpIcon -> lpBits == NULL)
+    if (lpIcon->lpBits == NULL)
         return FALSE;
 
     /* Account for height*2 thing */
-    lpIcon -> lpbi -> bmiHeader.biHeight /= 2;
+    lpIcon->lpbi->bmiHeader.biHeight /= 2;
 
     /* Locate it */
-    x = Rect.left + ((RectWidth(Rect) - lpIcon -> lpbi -> bmiHeader.biWidth) / 2);
-    y = Rect.top + ((RectHeight(Rect) - lpIcon -> lpbi -> bmiHeader.biHeight) / 2);
+    x = Rect.left + ((RectWidth(Rect) - lpIcon->lpbi->bmiHeader.biWidth) / 2);
+    y = Rect.top + ((RectHeight(Rect) - lpIcon->lpbi->bmiHeader.biHeight) / 2);
 
     /* Blast it to the screen */
     SetDIBitsToDevice(hDC, x, y,
-        lpIcon -> lpbi -> bmiHeader.biWidth,
-        lpIcon -> lpbi -> bmiHeader.biHeight,
-        0, 0, 0, lpIcon -> lpbi -> bmiHeader.biHeight,
-        lpIcon -> lpXOR, lpIcon -> lpbi, DIB_RGB_COLORS);
+        lpIcon->lpbi->bmiHeader.biWidth,
+        lpIcon->lpbi->bmiHeader.biHeight,
+        0, 0, 0, lpIcon->lpbi->bmiHeader.biHeight,
+        lpIcon->lpXOR, lpIcon->lpbi, DIB_RGB_COLORS);
 
     /* UnAccount for height*2 thing */
-    lpIcon -> lpbi -> bmiHeader.biHeight *= 2;
+    lpIcon->lpbi->bmiHeader.biHeight *= 2;
 
     return TRUE;
 }
@@ -197,37 +197,37 @@ DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
     /* Sanity checks */
     if (lpIcon == NULL)
         return FALSE;
-    if (lpIcon -> lpBits == NULL)
+    if (lpIcon->lpBits == NULL)
         return FALSE;
 
     /* Need a bitmap header for the mono mask */
     lpbi = ckalloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
-    lpbi -> bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    lpbi -> bmiHeader.biWidth = lpIcon -> lpbi -> bmiHeader.biWidth;
-    lpbi -> bmiHeader.biHeight = lpIcon -> lpbi -> bmiHeader.biHeight / 2;
-    lpbi -> bmiHeader.biPlanes = 1;
-    lpbi -> bmiHeader.biBitCount = 1;
-    lpbi -> bmiHeader.biCompression = BI_RGB;
-    lpbi -> bmiHeader.biSizeImage = 0;
-    lpbi -> bmiHeader.biXPelsPerMeter = 0;
-    lpbi -> bmiHeader.biYPelsPerMeter = 0;
-    lpbi -> bmiHeader.biClrUsed = 0;
-    lpbi -> bmiHeader.biClrImportant = 0;
-    lpbi -> bmiColors[0].rgbRed = 0;
-    lpbi -> bmiColors[0].rgbGreen = 0;
-    lpbi -> bmiColors[0].rgbBlue = 0;
-    lpbi -> bmiColors[0].rgbReserved = 0;
-    lpbi -> bmiColors[1].rgbRed = 255;
-    lpbi -> bmiColors[1].rgbGreen = 255;
-    lpbi -> bmiColors[1].rgbBlue = 255;
-    lpbi -> bmiColors[1].rgbReserved = 0;
+    lpbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    lpbi->bmiHeader.biWidth = lpIcon->lpbi->bmiHeader.biWidth;
+    lpbi->bmiHeader.biHeight = lpIcon->lpbi->bmiHeader.biHeight / 2;
+    lpbi->bmiHeader.biPlanes = 1;
+    lpbi->bmiHeader.biBitCount = 1;
+    lpbi->bmiHeader.biCompression = BI_RGB;
+    lpbi->miHeader.biSizeImage = 0;
+    lpbi->bmiHeader.biXPelsPerMeter = 0;
+    lpbi->bmiHeader.biYPelsPerMeter = 0;
+    lpbi->bmiHeader.biClrUsed = 0;
+    lpbi->bmiHeader.biClrImportant = 0;
+    lpbi->bmiColors[0].rgbRed = 0;
+    lpbi->bmiColors[0].rgbGreen = 0;
+    lpbi->bmiColors[0].rgbBlue = 0;
+    lpbi->bmiColors[0].rgbReserved = 0;
+    lpbi->bmiColors[1].rgbRed = 255;
+    lpbi->bmiColors[1].rgbGreen = 255;
+    lpbi->bmiColors[1].rgbBlue = 255;
+    lpbi->bmiColors[1].rgbReserved = 0;
 
     /* Locate it */
-    x = Rect.left + ((RectWidth(Rect) - lpbi -> bmiHeader.biWidth) / 2);
-    y = Rect.top + ((RectHeight(Rect) - lpbi -> bmiHeader.biHeight) / 2);
+    x = Rect.left + ((RectWidth(Rect) - lpbi->bmiHeader.biWidth) / 2);
+    y = Rect.top + ((RectHeight(Rect) - lpbi->bmiHeader.biHeight) / 2);
 
     /* Blast it to the screen */
-    SetDIBitsToDevice(hDC, x, y, lpbi -> bmiHeader.biWidth, lpbi -> bmiHeader.biHeight, 0, 0, 0, lpbi -> bmiHeader.biHeight, lpIcon -> lpAND, lpbi, DIB_RGB_COLORS);
+    SetDIBitsToDevice(hDC, x, y, lpbi->bmiHeader.biWidth, lpbi->bmiHeader.biHeight, 0, 0, 0, lpbi->bmiHeader.biHeight, lpIcon->lpAND, lpbi, DIB_RGB_COLORS);
 
     /* clean up */
     ckfree((char * ) lpbi);
@@ -260,7 +260,7 @@ NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, const char *txt) {
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = icoPtr -> id;
+    ni.uID = icoPtr->id;
     ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = (HICON) hIcon;
@@ -294,13 +294,13 @@ TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, const char * txt) {
 
     result = NotifyW(icoPtr, oper, hIcon, txt);
 
-    Tcl_SetObjResult(icoPtr -> interp, Tcl_NewIntObj(result));
+    Tcl_SetObjResult(icoPtr->interp, Tcl_NewIntObj(result));
     if (result == 1) {
         if (oper == NIM_ADD || oper == NIM_MODIFY) {
-            icoPtr -> taskbar_flags |= TASKBAR_ICON;
+            icoPtr->taskbar_flags |= TASKBAR_ICON;
         }
         if (oper == NIM_DELETE) {
-            icoPtr -> taskbar_flags &= ~TASKBAR_ICON;
+            icoPtr->taskbar_flags &= ~TASKBAR_ICON;
         }
     }
     return TCL_OK;
@@ -330,27 +330,27 @@ static IcoInfo *
         char buffer[5 + TCL_INTEGER_SPACE];
         IcoInfo * icoPtr;
 
-        icoPtr = (IcoInfo * ) ckalloc((unsigned)(sizeof(IcoInfo)));
+        icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
         memset(icoPtr, 0, sizeof(IcoInfo));
-        icoPtr -> id = nextId;
-        icoPtr -> hIcon = hIcon;
-        icoPtr -> itype = itype;
-        icoPtr -> lpIR = lpIR;
-        icoPtr -> iconpos = iconpos;
-        n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr -> id);
+        icoPtr->id = nextId;
+        icoPtr->hIcon = hIcon;
+        icoPtr->itype = itype;
+        icoPtr->lpIR = lpIR;
+        icoPtr->iconpos = iconpos;
+        n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
         buffer[n] = 0;
-        icoPtr -> taskbar_txt = ckalloc((int) strlen(buffer) + 1);
-        strcpy(icoPtr -> taskbar_txt, buffer);
-        icoPtr -> interp = interp;
-        icoPtr -> taskbar_command = NULL;
-        icoPtr -> taskbar_flags = 0;
-        icoPtr -> hwndFocus = NULL;
+        icoPtr->taskbar_txt = (char *)ckalloc(strlen(buffer) + 1);
+        strcpy(icoPtr->taskbar_txt, buffer);
+        icoPtr->interp = interp;
+        icoPtr->taskbar_command = NULL;
+        icoPtr->taskbar_flags = 0;
+        icoPtr->hwndFocus = NULL;
         if (itype == ICO_LOAD) {
-            icoPtr -> lpIR = (BlockOfIconImagesPtr) NULL;
-            icoPtr -> iconpos = 0;
+            icoPtr->lpIR = (BlockOfIconImagesPtr) NULL;
+            icoPtr->iconpos = 0;
         }
         nextId += 1;
-        icoPtr -> nextPtr = firstIcoPtr;
+        icoPtr->nextPtr = firstIcoPtr;
         firstIcoPtr = icoPtr;
         Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
         return icoPtr;
@@ -373,32 +373,32 @@ static IcoInfo *
  */
 
 static void
-FreeIcoPtr(Tcl_Interp * interp, IcoInfo * icoPtr) {
-    IcoInfo * prevPtr;
+FreeIcoPtr(Tcl_Interp *interp, IcoInfo *icoPtr) {
+    IcoInfo *prevPtr;
     if (firstIcoPtr == icoPtr) {
-        firstIcoPtr = icoPtr -> nextPtr;
+        firstIcoPtr = icoPtr->nextPtr;
     } else {
-        for (prevPtr = firstIcoPtr; prevPtr -> nextPtr != icoPtr; prevPtr = prevPtr -> nextPtr) {
+        for (prevPtr = firstIcoPtr; prevPtr->nextPtr != icoPtr; prevPtr = prevPtr->nextPtr) {
             /* Empty loop body. */
         }
-        prevPtr -> nextPtr = icoPtr -> nextPtr;
+        prevPtr->nextPtr = icoPtr->nextPtr;
     }
-    if (icoPtr -> taskbar_flags & TASKBAR_ICON) {
+    if (icoPtr->taskbar_flags & TASKBAR_ICON) {
         TaskbarOperation(icoPtr, NIM_DELETE, NULL, "");
         Tcl_ResetResult(interp);
     }
-    if (icoPtr -> itype != ICO_FILE) {
+    if (icoPtr->itype != ICO_FILE) {
 		FreeIconResource(icoPtr->lpIR);
 		ckfree(icoPtr->lpIR);
     }
-    if (icoPtr -> taskbar_txt != NULL) {
-        ckfree((char * ) icoPtr -> taskbar_txt);
+    if (icoPtr->taskbar_txt != NULL) {
+        ckfree(icoPtr->taskbar_txt);
     }
 
-    if (icoPtr -> taskbar_command != NULL) {
-        ckfree((char * ) icoPtr -> taskbar_command);
+    if (icoPtr->taskbar_command != NULL) {
+        ckfree(icoPtr->taskbar_command);
     }
-    ckfree((char * ) icoPtr);
+    ckfree(icoPtr);
 }
 
 /*
@@ -430,8 +430,8 @@ static IcoInfo * GetIcoPtr(Tcl_Interp * interp, const char *string) {
     if ((end == string) || ( * end != 0)) {
         return NULL;
     }
-    for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr -> nextPtr) {
-        if (icoPtr -> id == id) {
+    for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+        if (icoPtr->id == id) {
             return icoPtr;
         }
     }
@@ -646,17 +646,17 @@ TaskbarExpandPercents(IcoInfo *icoPtr, const char *msgstring,
  */
 
 static void
-TaskbarEval(IcoInfo * icoPtr, WPARAM wParam, LPARAM lParam) {
+TaskbarEval(IcoInfo *icoPtr, WPARAM wParam, LPARAM lParam) {
     const char *msgstring = "none";
     char evalspace[200];
     int evalsize = 200;
-    char * expanded;
+    char *expanded;
     int fixup = 0;
 
     switch (lParam) {
     case WM_MOUSEMOVE:
         msgstring = "WM_MOUSEMOVE";
-        icoPtr -> hwndFocus = GetFocus();
+        icoPtr->hwndFocus = GetFocus();
         break;
     case WM_LBUTTONDOWN:
         msgstring = "WM_LBUTTONDOWN";
@@ -699,33 +699,33 @@ TaskbarEval(IcoInfo * icoPtr, WPARAM wParam, LPARAM lParam) {
         fixup = 0;
     }
     expanded = TaskbarExpandPercents(icoPtr, msgstring, wParam, lParam,
-        icoPtr -> taskbar_command, evalspace, & evalsize);
-    if (icoPtr -> interp != NULL) {
+        icoPtr->taskbar_command, evalspace, &evalsize);
+    if (icoPtr->interp != NULL) {
         int result;
         HWND hwnd = NULL;
 
         /* See http//:support.microsoft.com/kb/q135788 */
         if (fixup) {
-            if (icoPtr -> hwndFocus != NULL && IsWindow(icoPtr -> hwndFocus)) {
-                hwnd = icoPtr -> hwndFocus;
+            if (icoPtr->hwndFocus != NULL && IsWindow(icoPtr->hwndFocus)) {
+                hwnd = icoPtr->hwndFocus;
             } else {
-                Tk_Window tkwin = Tk_MainWindow(icoPtr -> interp);
+                Tk_Window tkwin = Tk_MainWindow(icoPtr->interp);
                 hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
             }
             SetForegroundWindow(hwnd);
         }
 
-        result = Tcl_GlobalEval(icoPtr -> interp, expanded);
+        result = Tcl_GlobalEval(icoPtr->interp, expanded);
 
         if (hwnd != NULL) {
             /* See http:/ /support.microsoft.com/kb/q135788/ */
-            PostMessage(hwnd, WM_NULL, 0, 0);
+            PostMessageW(hwnd, WM_NULL, 0, 0);
         }
         if (result != TCL_OK) {
             char buffer[100];
-            sprintf(buffer, "\n  (command bound to taskbar-icon ico#%d)", icoPtr -> id);
-            Tcl_AddErrorInfo(icoPtr -> interp, buffer);
-            Tcl_BackgroundError(icoPtr -> interp);
+            sprintf(buffer, "\n  (command bound to taskbar-icon ico#%d)", icoPtr->id);
+            Tcl_AddErrorInfo(icoPtr->interp, buffer);
+            Tcl_BackgroundError(icoPtr->interp);
         }
     }
     if (expanded != evalspace) {
@@ -763,9 +763,9 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
         break;
 
     case ICON_MESSAGE:
-        for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr -> nextPtr) {
-            if (wParam == (WPARAM) icoPtr -> id) {
-                if (icoPtr -> taskbar_command != NULL) {
+        for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+            if (wParam == (WPARAM) icoPtr->id) {
+                if (icoPtr->taskbar_command != NULL) {
                     TaskbarEval(icoPtr, wParam, lParam);
                 }
             }
@@ -778,13 +778,13 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
          * re-add our icons.
          */
         if (message == msgTaskbarCreated) {
-            for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr -> nextPtr) {
-                if (icoPtr -> taskbar_flags & TASKBAR_ICON) {
-                    HICON hIcon = icoPtr -> hIcon;
-                    if (icoPtr -> iconpos != 0 && icoPtr -> lpIR != NULL) {
-                        hIcon = icoPtr -> lpIR -> IconImages[icoPtr -> iconpos].hIcon;
+            for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+                if (icoPtr->taskbar_flags & TASKBAR_ICON) {
+                    HICON hIcon = icoPtr->hIcon;
+                    if (icoPtr->iconpos != 0 && icoPtr->lpIR != NULL) {
+                        hIcon = icoPtr->lpIR->IconImages[icoPtr->iconpos].hIcon;
                     }
-                    TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr -> taskbar_txt);
+                    TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr->taskbar_txt);
                 }
             }
         }
@@ -905,7 +905,7 @@ WinIcoDestroy(ClientData clientData) {
     Tcl_Interp * interp = (Tcl_Interp * ) clientData;
     DestroyHandlerWindow();
     for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
-        nextPtr = icoPtr -> nextPtr;
+        nextPtr = icoPtr->nextPtr;
         FreeIcoPtr(interp, icoPtr);
     }
 }
@@ -1115,12 +1115,12 @@ WinSystrayCmd(
             return TCL_ERROR;
         }
         hIcon = NULL;
-        for (i = 0; i < lpIR -> nNumImages; i++) {
+        for (i = 0; i < lpIR->nNumImages; i++) {
             /*take the first or a 32x32 16 color icon*/
             if (i == 0 ||
-                (lpIR -> IconImages[i].Height == 32 && lpIR -> IconImages[i].Width == 32 &&
-                    lpIR -> IconImages[i].Colors == 4)) {
-                hIcon = lpIR -> IconImages[i].hIcon;
+                (lpIR->IconImages[i].Height == 32 && lpIR->IconImages[i].Width == 32 &&
+                    lpIR->IconImages[i].Colors == 4)) {
+                hIcon = lpIR->IconImages[i].hIcon;
                 pos = i;
             }
         }
@@ -1151,13 +1151,13 @@ WinSystrayCmd(
         if ((icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[2]))) == NULL) return TCL_ERROR;
         if (objc > 3) {
             const char * newtxt = Tcl_GetString(objv[3]);
-            if (icoPtr -> taskbar_txt != NULL) {
-                ckfree(icoPtr -> taskbar_txt);
+            if (icoPtr->taskbar_txt != NULL) {
+                ckfree(icoPtr->taskbar_txt);
             }
-            icoPtr -> taskbar_txt = ckalloc(strlen(newtxt) + 1);
-            strcpy(icoPtr -> taskbar_txt, newtxt);
+            icoPtr->taskbar_txt = (char *)ckalloc(strlen(newtxt) + 1);
+            strcpy(icoPtr->taskbar_txt, newtxt);
         }
-        Tcl_AppendResult(interp, icoPtr -> taskbar_txt, (char * ) NULL);
+        Tcl_AppendResult(interp, icoPtr->taskbar_txt, (char * ) NULL);
         return TCL_OK;
     } else if ((strncmp(Tcl_GetString(objv[1]), "taskbar", length) == 0) && (length >= 2)) {
         char * callback = NULL;
@@ -1182,8 +1182,8 @@ WinSystrayCmd(
         }
         if ((icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[3]))) == NULL)
             return TCL_ERROR;
-        hIcon = icoPtr -> hIcon;
-        txt = icoPtr -> taskbar_txt;
+        hIcon = icoPtr->hIcon;
+        txt = icoPtr->taskbar_txt;
         if (objc > 4) {
             for (count = objc - 4, args = objv + 4; count > 1; count -= 2, args += 2) {
                 if (Tcl_GetString(args[0])[0] != '-')
@@ -1205,17 +1205,17 @@ WinSystrayCmd(
                 goto wrongargs2;
         }
         if (callback != NULL) {
-            if (icoPtr -> taskbar_command != NULL) {
-                ckfree((char * ) icoPtr -> taskbar_command);
+            if (icoPtr->taskbar_command != NULL) {
+                ckfree(icoPtr->taskbar_command);
             }
-            icoPtr -> taskbar_command = ckalloc((int) strlen(callback) + 1);
-            strcpy(icoPtr -> taskbar_command, callback);
+            icoPtr->taskbar_command = (char *)ckalloc(strlen(callback) + 1);
+            strcpy(icoPtr->taskbar_command, callback);
         }
-        if (icoPtr -> taskbar_txt != NULL) {
-            ckfree(icoPtr -> taskbar_txt);
+        if (icoPtr->taskbar_txt != NULL) {
+            ckfree(icoPtr->taskbar_txt);
         }
-        icoPtr -> taskbar_txt = ckalloc((int) strlen(txt) + 1);
-        strcpy(icoPtr -> taskbar_txt, txt);
+        icoPtr->taskbar_txt = (char *)ckalloc(strlen(txt) + 1);
+        strcpy(icoPtr->taskbar_txt, txt);
         return TaskbarOperation(icoPtr, oper, hIcon, txt);
         wrongargs2:
             Tcl_AppendResult(interp, "unknown option \"", args[0], "\",valid are:",
@@ -1270,10 +1270,10 @@ WinSysNotifyCmd(
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = icoPtr -> id;
+    ni.uID = icoPtr->id;
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
-    ni.hIcon = icoPtr -> hIcon;
+    ni.hIcon = icoPtr->hIcon;
     ni.dwInfoFlags = NIIF_INFO; /*Use a sane platform-specific icon here.*/
 
     if (objc < 2) {
