@@ -15,9 +15,9 @@
 
 namespace eval ::tk::systray:: {
 
-	variable ::tk::systray::_iconlist
+    variable ::tk::systray::_iconlist
     set ::tk::systray::_iconlist {}
-	
+    
     proc _balloon {w help} {
 	bind $w <Any-Enter> "after 1000 [list ::tk::systray::_balloon_show %W [list $help]]"
 	bind $w <Any-Leave> "destroy %W._balloon"
@@ -249,7 +249,7 @@ proc ::tk::systray {args} {
 		        ._tray configure -image [lindex $args 2]
 		    }
 		    text {
-		      ::tk::systray::_balloon ._tray [lindex $args 2]
+			::tk::systray::_balloon ._tray [lindex $args 2]
 		    }
 		    b1_callback {
 		        bind ._tray <Button-1> [lindex $args 2]
