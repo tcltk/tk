@@ -10,34 +10,27 @@
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBtk systray create \fI-image \fR?\fIimage\fR?\fI -text \fR?\fItext\fR?\fI -button1 \fR?\fIcallback\fR?\fI -button3 \fR?\fIcallback\fR? 
+\fBtk systray create \fI-image image\fR \fI?-text text\fR? \fI?-button1 callback?\fR \fI?-button3 callback?\fR
 .sp
-\fBtk systray configure \fI option \fR?\fIoption\fR?
+\fBtk systray configure \fI?option? ?value option value ...?\fR
 .sp
 \fBtk systray destroy\fR
 .BE
 .BE
 .SH DESCRIPTION
 .PP
-The \fBtk systray\fP command creates an icon in the platform-specific tray.
-The widget is configured with a Tk image for the icon display, a string
-for display in a tooltip, and callbacks that are bound to <Button-1> and
-<Button-3>.
-.SH EXAMPLE
+The \fBtk systray create\fR command creates an icon in the platform-specific
+tray. The widget is configured with a Tk image for the icon display, an
+optional string for display in a tooltip, and optional callbacks that are
+bound to <Button-1> and <Button-3>.
 .PP
-Here is an example of the \fBtk systray\fP code:
-.CS
-    image create photo book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
-    tk systray create -image book -text "tk systray sample" -button1 {puts "Here is the tk systray output"} -button3 {puts "here is alternate output"}
-.CE
+The \fBtk systray configure\fR command sets one or more options of the systray
+icon. Configurable options are the same as for the \fBcreate\fR subcommand. When
+a single option name is given, the command returns the current valus of this
+option. When no option is given this command returns the list of all options and
+their current value.
 .PP
-Here is an example of modifying the \fBtk systray\fP icon:
-.CS
-    image create photo book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
-    tk systray configure -image book_page -text "Updated sample" -button1 {puts "Different output from the tk systray"} -button3 {puts "and more different output from the tk systray"}
-.CE
-.PP
- The \fBtk systray\fP destroy command removes the icon from display and
+ The \fBtk systray destroy\fR command removes the icon from display and
 deallocates it.
 .PP
 From a user-interface standpoint, only one icon per interpreter is
@@ -45,6 +38,19 @@ supported; attempts to create additional icons will return an error. The
 existing tray icon can be modified with different images and
 strings to indicate app state. Loading additional interpreters into a
 running instance of Wish will allow additional icons to be displayed.
+.SH EXAMPLE
+.PP
+Here is an example of the \fBtk systray\fR code:
+.CS
+    image create photo book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+    tk systray create -image book -text "tk systray sample" -button1 {puts "Here is the tk systray output"} -button3 {puts "here is alternate output"}
+.CE
+.PP
+Here is an example of modifying the \fBtk systray\fR icon:
+.CS
+    image create photo book_page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
+    tk systray configure -image book_page -text "Updated sample" -button1 {puts "Different output from the tk systray"} -button3 {puts "and more different output from the tk systray"}
+.CE
 .SH PLATFORM NOTES
 .PP
 The X11 implementation is supported on a "best efforts" basis because it is dependent on the window manager. The "text"
