@@ -159,7 +159,8 @@ proc ::tk::systray::create {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		set _ico [_systray createfrom [dict get $values -image]]
-		_systray taskbar add $_ico -text [dict get $values -text] -callback [list ::tk::systray::_win_callback %m %i]
+		_systray taskbar add $_ico -text [dict get $values -text] \
+		        -callback [list ::tk::systray::_win_callback %m %i]
 	    }
 	    "x11" {
 		_systray ._tray -image [dict get $values -image] -visible true
@@ -169,7 +170,7 @@ proc ::tk::systray::create {args} {
 	    }
 	    "aqua" {
 		_systray create [dict get $values -image] [dict get $values -text] \
-		    [dict get $values -button1] [dict get $values -button3]
+		        [dict get $values -button1] [dict get $values -button3]
 	    }
 	}
     } on ok {} {
@@ -205,7 +206,8 @@ proc ::tk::systray::configure {args} {
 		    set new_ico [_systray createfrom [dict get $args -image]]
 		    _systray taskbar delete $_ico
 		    set _ico $new_ico
-		    _systray taskbar add $_ico -text [dict get $values -text] -callback [list ::tk::systray::_win_callback %m %i]
+		    _systray taskbar add $_ico -text [dict get $values -text] \
+		            -callback [list ::tk::systray::_win_callback %m %i]
 		} elseif {[dict exists $args -text]} {
 		    _systray taskbar modify $_ico -text [dict get $args -text]
 		}
@@ -225,7 +227,8 @@ proc ::tk::systray::configure {args} {
 		}
 	    }
 	    "aqua" {
-		foreach {key opt} {image -image text -text b1_callback -button1 b3_callback -button3} {
+		foreach {key opt} {image -image text \
+		        -text b1_callback -button1 b3_callback -button3} {
 		    if {[dict exists $args $opt]} {
 		        _systray modify $key [dict get $args $opt]
 		    }
