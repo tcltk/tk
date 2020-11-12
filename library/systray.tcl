@@ -259,7 +259,7 @@ proc ::tk::systray::destroy {} {
 	    set _ico ""
 	}
 	"x11" {
-	    destroy ._tray
+	    ::destroy ._tray
 	}
 	"aqua" {
 	    _systray destroy
