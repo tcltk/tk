@@ -251,7 +251,7 @@ proc ::tk::systray::destroy {} {
     variable _ico
 
     if {!$_created} {
-	return -code error "systray not created"
+	return -code error -errorcode {TK SYSTRAY DESTROY} "systray not created"
     }
     switch -- [tk windowingsystem] {
 	"win32" {
@@ -300,10 +300,10 @@ proc ::tk::sysnotify {title message} {
 
     switch -- [tk windowingsystem] {
 	"win32" {
-	    if {$::winicoprops::ico eq ""} {
-		error "Must create a system tray icon with the \"tk systray\" command first"
+	    if {!$::tk::systray::_created} {
+		error "must create a system tray icon with the \"tk systray\" command first"
 	    }
-	    _sysnotify notify $::winicoprops::ico $title $message
+	    _sysnotify notify $::tk::systray::_ico $title $message
 	}
 	"x11" {
 	    if {[info commands _sysnotify] eq ""} {
