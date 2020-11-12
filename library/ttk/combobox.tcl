@@ -190,7 +190,7 @@ proc ttk::combobox::Scroll {cb dir {factor 1.0}} {
     set d [expr {$current + ($d > 0 ? ceil($d) : floor($d))}]
     if {$d >= $max} {set d [expr {$max - 1}]}
     if {$d < 0} {set d 0}
-    if {$d != $current} {
+    if {$max != 0 && $d != $current} {
 	SelectEntry $cb $d
     }
 }
