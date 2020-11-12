@@ -14,6 +14,10 @@
 # implementation not available.
 
 namespace eval ::tk::systray:: {
+
+	variable ::tk::systray::_iconlist
+    set ::tk::systray::_iconlist {}
+	
     proc _balloon {w help} {
 	bind $w <Any-Enter> "after 1000 [list ::tk::systray::_balloon_show %W [list $help]]"
 	bind $w <Any-Leave> "destroy %W._balloon"
@@ -65,10 +69,6 @@ namespace eval ::winicoprops {
 # Pure-Tcl system notification window for use if native implementation not available.
 namespace eval ::tk::sysnotify:: {
 
-    variable _iconlist
-    set _iconlist {}
-
-  
     proc _notifywindow {title msg} {
 	catch {destroy ._notify}
 	set w [toplevel ._notify]
@@ -160,14 +160,12 @@ proc ::tk::systray {args} {
 	error "bad option \"$name\": must be create, modify, or destroy"
     }
 
-    #Set variables for icon properties.
-    global _iconlist
 
     #Remove the systray icon.
     if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		set _iconlist {}
+		set ::tk::systray::_iconlist {}
 		_systray taskbar delete $::winicoprops::ico
 		set ::winicoprops::ico ""
 	    }
@@ -193,12 +191,12 @@ proc ::tk::systray {args} {
 	set ::winicoprops::cb3 [lindex $args 4]
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		if {[llength $_iconlist] > 0} {
+		if {[llength $::tk::systray::_iconlist] > 0} {
 		    error "Only one system tray icon supported per interpeter"
 		}
 		set ::winicoprops::ico [_systray createfrom [lindex $args 1]]
-		_systray taskbar add $::winicoprops::ico -text [lindex $args 2] -callback [list _win_callback %m %i]
-		lappend _iconlist "ico#[llength _iconlist]"
+		_systray taskbar add $::winicoprops::ico -text [lindex $args 2] -callback [list ::tk::systray::_win_callback %m %i]
+		lappend ::tk::systray::__iconlist "ico#[llength ::tk::systray::_iconlist]"
 	    }
 	    "x11" {
 		if [winfo exists ._tray] {
@@ -227,18 +225,18 @@ proc ::tk::systray {args} {
 		        set txt [_systray text $::winicoprops::ico]
 		        _systray taskbar delete $::winicoprops::ico
 		        set ::winicoprops::ico [_systray createfrom [lindex $args 2]]
-		        _systray taskbar add $::winicoprops::ico -text $txt -callback [list _win_callback %m %i]
+		        _systray taskbar add $::winicoprops::ico -text $txt -callback [list ::tk::systray::_win_callback %m %i]
 		    }
 		    text {
 		        _systray taskbar modify $::winicoprops::ico -text [lindex $args 2]
 		    }
 		    b1_callback {
 		        set ::winicoprops::cb1 [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
+		        _systray taskbar modify $::winicoprops::ico -callback [list ::tk::systray::_win_callback %m %i]
 		    }
 		    b3_callback {
 		        set ::winicoprops::cb3 [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -callback [list _win_callback %m %i]
+		        _systray taskbar modify $::winicoprops::ico -callback [list ::tk::systray::_win_callback %m %i]
 		    }
 		    default {
 		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
