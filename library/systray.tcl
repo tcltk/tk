@@ -6,6 +6,7 @@
 # presents a consistent API across the three platforms.
 
 # Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2020 Eric Boudaillier.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,10 +14,11 @@
 # Pure-Tcl system tooltip window for use with system tray icon if native
 # implementation not available.
 
-namespace eval ::tk::systray:: {
-
-    variable ::tk::systray::_iconlist
-    set ::tk::systray::_iconlist {}
+namespace eval ::tk::systray {
+    variable _created 0
+    variable _options {-image "" -text "" -button1 "" -button3 ""}
+    variable _current {}
+    variable _ico
 
     proc _balloon {w help} {
 	bind $w <Any-Enter> "after 1000 [list ::tk::systray::_balloon_show %W [list $help]]"
@@ -41,30 +43,21 @@ namespace eval ::tk::systray:: {
     }
 
     proc _win_callback {msg icn} {
-
+	variable _current
 	switch -exact -- $msg {
 	    WM_LBUTTONDOWN {
-		eval $::winicoprops::cb1
+		uplevel #0 [dict get $_current -button1]
 	    }
 	    WM_RBUTTONDOWN {
-		eval $::winicoprops::cb3
+		uplevel #0 [dict get $_current -button3]
 	    }
 	}
     }
-    namespace export *
+
+    namespace export create configure destroy
+    namespace ensemble create
 }
 
-
-# Additional infrastructure for Windows variables and callbacks.
-
-namespace eval ::winicoprops {
-    variable ico
-    variable cb1
-    variable cb3
-    set ico ""
-    set cb1 ""
-    set cb3 ""
-}
 
 # Pure-Tcl system notification window for use if native implementation not available.
 namespace eval ::tk::sysnotify:: {
@@ -127,7 +120,6 @@ namespace eval ::tk::sysnotify:: {
 }
 
 
-
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
 #
@@ -135,152 +127,162 @@ namespace eval ::tk::sysnotify:: {
 #
 #     create - create systray icon.
 #         Arguments:
-#             image - Tk image to display.
-#             text - string to display in tooltip over image.
-#             b1_callback - Tcl proc to invoke on <Button-1> event.
-#             b3_callback - Tcl proc to invoke on <Button-3> event.
+#             -image - Tk image to display.
+#             -text - string to display in tooltip over image.
+#             -button1 - Tcl proc to invoke on <Button-1> event.
+#             -button3 - Tcl proc to invoke on <Button-3> event.
 
-#     modify - change one of the systray properties.
-#         Arguments (only one required):
-#             image - Tk image to update.
-#             text - string to update.
-#             b1_callback - Tcl proc to change.
-#             b3_callback - Tcl proc to change.
+#     configure - change one of the systray properties.
+#         Arguments (Any or all can be called):
+#             -image - Tk image to update.
+#             -text - string to update.
+#             -button1 - Tcl proc to change for <Button-1> event.
+#             -button3  - Tcl proc to change for <Button-3> event.
 #     destroy - destroy systray icon.
 #         Arguments:
 #             none.
-proc ::tk::systray {args} {
+proc ::tk::systray::create {args} {
+    variable _created
+    variable _options
+    variable _current
+    variable _ico
 
+    if {$_created} {
+	return -code error -errorcode {TK SYSTRAY CREATE} "only one system tray icon supported per interpeter"
+    }
+    _check_options $args 0
+    if {![dict exists $args -image]} {
+	return -code error -errorcode {TK SYSTRAY CREATE} "missing required option \"-image\""
+    }
+    set values [dict merge $_options $args]
+    try {
+	switch -- [tk windowingsystem] {
+	    "win32" {
+		set _ico [_systray createfrom [dict get $values -image]]
+		_systray taskbar add $_ico -text [dict get $values -text] -callback [list ::tk::systray::_win_callback %m %i]
+	    }
+	    "x11" {
+		_systray ._tray -image [dict get $values -image] -visible true
+		::tk::systray::_balloon ._tray [dict get $values -text]
+		bind ._tray <Button-1> [dict get $values -button1]
+		bind ._tray <Button-3> [dict get $values -button3]
+	    }
+	    "aqua" {
+		_systray create [dict get $values -image] [dict get $values -text] \
+		    [dict get $values -button1] [dict get $values -button3]
+	    }
+	}
+    } on ok {} {
+	set _current $values
+	set _created 1
+	return
+    } on error {msg opts} {
+	return -code error -errorcode [dict get $opts -errorcode] $msg
+    }
+}
+
+# Modify the systray icon.
+proc ::tk::systray::configure {args} {
+    variable _created
+    variable _options
+    variable _current
+    variable _ico
+
+    if {!$_created} {
+	return -code error -errorcode {TK SYSTRAY CREATE} "systray not created"
+    }
+    _check_options $args 1
     if {[llength $args] == 0} {
-	error "wrong # args: should be \"tk systray create | modify | destroy\""
+	return $_current
+    } elseif {[llength $args] == 1} {
+	return [dict get $_current [lindex $args 0]]
     }
-
-    set name [lindex $args 0]
-    if {![string equal $name "create"]  && ![string equal $name "modify"]  && ![string equal $name "destroy"]} {
-	error "bad option \"$name\": must be create, modify, or destroy"
-    }
-
-
-    #Remove the systray icon.
-    if {[lindex $args 0] eq "destroy" && [llength $args] == 1} {
+    set values [dict merge $_current $args]
+    try {
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		set ::tk::systray::_iconlist {}
-		_systray taskbar delete $::winicoprops::ico
-		set ::winicoprops::ico ""
-	    }
-	    "x11" {
-		destroy ._tray
-	    }
-	    "aqua" {
-		_systray destroy
-	    }
-	}
-    }
-
-    if {[lindex $args 0] eq "destroy" && [llength $args] > 1} {
-	error "wrong # args: should be \"tk systray destroy\""
-    }
-
-    #Create the system tray icon.
-    if {[lindex $args 0] eq "create"} {
-	if {[llength $args] != 5} {
-	    error "wrong # args: should be \"tk systray create image text b1_callback b3_callback\""
-	}
-	set ::winicoprops::cb1 [lindex $args 3]
-	set ::winicoprops::cb3 [lindex $args 4]
-	switch -- [tk windowingsystem] {
-	    "win32" {
-		if {[llength $::tk::systray::_iconlist] > 0} {
-		    error "Only one system tray icon supported per interpeter"
-		}
-		set ::winicoprops::ico [_systray createfrom [lindex $args 1]]
-		_systray taskbar add $::winicoprops::ico -text [lindex $args 2] -callback [list ::tk::systray::_win_callback %m %i]
-		lappend ::tk::systray::__iconlist "ico#[llength ::tk::systray::_iconlist]"
-	    }
-	    "x11" {
-		if [winfo exists ._tray] {
-		    error  "Only one system tray icon supported per interpeter"
-		}
-		_systray ._tray -image $::winicoprops::img -visible true
-		::tk::systray::_balloon ._tray $::winicoprops::txt
-		bind ._tray <Button-1> $::winicoprops::cb1
-		bind ._tray <Button-3> $::winicoprops::cb3
-	    }
-	    "aqua" {
-		_systray create [lindex $args 1] [lindex $args 2] $::winicoprops::cb1 $::winicoprops::cb3
-	    }
-	}
-    }
-
-    #Modify the system tray icon properties.
-    if {[lindex $args 0] eq "modify"} {
-	if {[llength $args] != 3} {
-	    error "wrong # args: should be \"tk systray modify image | text | b1_callback | b3_callback option\""
-	}
-	switch -- [tk windowingsystem] {
-	    "win32" {
-		switch -- [lindex $args 1] {
-		    image {
-		        set txt [_systray text $::winicoprops::ico]
-		        _systray taskbar delete $::winicoprops::ico
-		        set ::winicoprops::ico [_systray createfrom [lindex $args 2]]
-		        _systray taskbar add $::winicoprops::ico -text $txt -callback [list ::tk::systray::_win_callback %m %i]
-		    }
-		    text {
-		        _systray taskbar modify $::winicoprops::ico -text [lindex $args 2]
-		    }
-		    b1_callback {
-		        set ::winicoprops::cb1 [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -callback [list ::tk::systray::_win_callback %m %i]
-		    }
-		    b3_callback {
-		        set ::winicoprops::cb3 [lindex $args 2]
-		        _systray taskbar modify $::winicoprops::ico -callback [list ::tk::systray::_win_callback %m %i]
-		    }
-		    default {
-		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
-		    }
+		if {[dict exists $args -image]} {
+		    set new_ico [_systray createfrom [dict get $args -image]]
+		    _systray taskbar delete $_ico
+		    set _ico $new_ico
+		    _systray taskbar add $_ico -text [dict get $values -text] -callback [list ::tk::systray::_win_callback %m %i]
+		} elseif {[dict exists $args -text]} {
+		    _systray taskbar modify $_ico -text [dict get $args -text]
 		}
 	    }
 	    "x11" {
-		switch -- [lindex $args 1] {
-		    image {
-		        ._tray configure -image [lindex $args 2]
-		    }
-		    text {
-			::tk::systray::_balloon ._tray [lindex $args 2]
-		    }
-		    b1_callback {
-		        bind ._tray <Button-1> [lindex $args 2]
-		    }
-		    b3_callback {
-		        bind ._tray <Button-3> [lindex $args 2]
-		    }
-		    default {
-		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
-		    }
+		if {[dict exists $args -image]} {
+		    ._tray configure -image [dict get $args -image]
+		}
+		if {[dict exists $args -text]} {
+		    ::tk::systray::_balloon ._tray [dict get $args -text]
+		}
+		if {[dict exists $args -button1]} {
+		    bind ._tray <Button-1> [dict get $args -button1]
+		}
+		if {[dict exists $args -button3]} {
+		    bind ._tray <Button-3> [dict get $args -button3]
 		}
 	    }
 	    "aqua" {
-		switch -- [lindex $args 1] {
-		    image       -
-		    text        -
-		    b1_callback -
-		    b3_callback {
-		        _systray modify [lindex $args 1] [lindex $args 2]
-		    }
-		    default {
-		        error "unknown option \"[lindex $args 1]\": must be image, text, b1_callback, or b3_callback"
+		foreach {key opt} {image -image text -text b1_callback -button1 b3_callback -button3} {
+		    if {[dict exists $args $opt]} {
+		        _systray modify $key [dict get $args $opt]
 		    }
 		}
 	    }
 	}
+    } on ok {} {
+	set _current $values
+	return
+    } on error {msg opts} {
+	return -code error -errorcode [dict get $opts -errorcode] $msg
     }
-    if {[tk windowingsystem] eq "win32"} {
-	if {$::winicoprops::ico ne ""} {
-	    bind . <Destroy> {catch {_systray taskbar delete $::winicoprops::ico ; set ::winicoprops::ico ""}}
+}
+
+
+# Remove the systray icon.
+proc ::tk::systray::destroy {} {
+    variable _created
+    variable _current
+    variable _ico
+
+    if {!$_created} {
+	return -code error "systray not created"
+    }
+    switch -- [tk windowingsystem] {
+	"win32" {
+	    _systray taskbar delete $_ico
+	    set _ico ""
 	}
+	"x11" {
+	    destroy ._tray
+	}
+	"aqua" {
+	    _systray destroy
+	}
+    }
+    set _created 0
+    set _current {}
+    return
+}
+
+# Check systray options
+proc ::tk::systray::_check_options {argsList singleOk} {
+    variable _options
+
+    set len [llength $argsList]
+    while {[llength $argsList] > 0} {
+        set opt [lindex $argsList 0]
+        if {![dict exists $_options $opt]} {
+            tailcall return -code error -errorcode {TK SYSTRAY OPTION} \
+		"unknown option \"$opt\": must be -image, -text, -button1 or -button3"
+        }
+        if {[llength $argsList] == 1 && !($len == 1 && $singleOk)} {
+            tailcall return -code error -errorcode {TK SYSTRAY OPTION} \
+		"missing value for option \"$opt\""
+        }
+        set argsList [lrange $argsList 2 end]
     }
 }
 
