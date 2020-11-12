@@ -13,27 +13,43 @@
 # Pure-Tcl system tooltip window for use with system tray icon if native
 # implementation not available.
 
-proc _balloon {w help} {
-    bind $w <Any-Enter> "after 1000 [list _balloon_show %W [list $help]]"
-    bind $w <Any-Leave> "destroy %W._balloon"
+namespace eval ::tk::systray:: {
+    proc _balloon {w help} {
+	bind $w <Any-Enter> "after 1000 [list ::tk::systray::_balloon_show %W [list $help]]"
+	bind $w <Any-Leave> "destroy %W._balloon"
+    }
+
+    proc _balloon_show {w arg} {
+	if {[eval winfo containing  [winfo pointerxy .]]!=$w} {return}
+	set top $w._balloon
+	catch {destroy $top}
+	toplevel $top -bg black
+	wm overrideredirect $top 1
+	if {[tk windowingsystem] eq "aqua"}  {
+	    ::tk::unsupported::MacWindowStyle style $top help none
+	}
+	pack [message $top._txt -aspect 10000  \
+		  -text $arg]
+	set wmx [winfo rootx $w]
+	set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
+	wm geometry $top [winfo reqwidth $top._txt]x[winfo reqheight $top._txt]+$wmx+$wmy
+	raise $top
+    }
+
+    proc _win_callback {msg icn} {
+
+	switch -exact -- $msg {
+	    WM_LBUTTONDOWN {
+		eval $::winicoprops::cb1
+	    }
+	    WM_RBUTTONDOWN {
+		eval $::winicoprops::cb3
+	    }
+	}
+    }
+    namespace export *
 }
 
-proc _balloon_show {w arg} {
-    if {[eval winfo containing  [winfo pointerxy .]]!=$w} {return}
-    set top $w._balloon
-    catch {destroy $top}
-    toplevel $top -bg black
-    wm overrideredirect $top 1
-    if {[tk windowingsystem] eq "aqua"}  {
-	::tk::unsupported::MacWindowStyle style $top help none
-    }
-    pack [message $top._txt -aspect 10000  \
-	      -text $arg]
-    set wmx [winfo rootx $w]
-    set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
-    wm geometry $top [winfo reqwidth $top._txt]x[winfo reqheight $top._txt]+$wmx+$wmy
-    raise $top
-}
 
 # Additional infrastructure for Windows variables and callbacks.
 
@@ -46,80 +62,71 @@ namespace eval ::winicoprops {
     set cb3 ""
 }
 
-proc _win_callback {msg icn} {
-    switch -exact -- $msg {
-	WM_LBUTTONDOWN {
-	    eval $::winicoprops::cb1
-	}
-	WM_RBUTTONDOWN {
-	    eval $::winicoprops::cb3
-	}
-    }
-}
-
 # Pure-Tcl system notification window for use if native implementation not available.
+namespace eval ::tk::sysnotify:: {
 
-image create photo _info -data {
-    R0lGODlhIAAgAKUAAERq5KS29HSS7NTe/Fx+5Iym7Ozy/LzK9Ex25ISe7OTq/GyK5JSu7Pz6/Mza9Exy5Ky+9ISa7GSG5Fx65Exu5Hya7OTm/GSC5PTy/MTS9FR25Ozu/Jyu7ERu5KS69HyW7Nzi/FyC5JSq7MTO9Iyi7OTu/HSO7Pz+/NTa9LTC9PT2/FR65Jyy7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAC0ALAAAAAAgACAAAAb9wJZwSDw5WAKCBkEwMTINonQ6xLA0gKx2+xBtqNQT5LEtlzusKFioEpjfZckXbLjA71qNhaqS4P8ACHNDJx94Cw4ODHghakIpeCsnQwV4DEMqZHcFRA5/CkIBfwlEB6MtJyuADkIGIYAqA4BZAglYgAces7taCRGzIRLCCIDBgAtEEIAdBIAmycvNf89DyoB+09B/HRXO2oy62dWACbLiQtZ4KannLel3Bi2ieNTofx9sHfTfcCBDkHfqucNDosiCOw8qKKyA7Y0GR61e8XoDasoGaRO1+KNzMKOGEmuEnAi3qwDEkAYK6MOToGLIKQ0yiFigQR8CCQUOqAgZBAA7
-}
+    variable _iconlist
+    set _iconlist {}
 
-proc _notifywindow {title msg} {
-    catch {destroy ._notify}
-    set w [toplevel ._notify]
-    if {[tk windowingsystem] eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $w utility {hud
-	    closeBox resizable}
-	wm title $w "Alert"
+  
+    proc _notifywindow {title msg} {
+	catch {destroy ._notify}
+	set w [toplevel ._notify]
+	if {[tk windowingsystem] eq "aqua"} {
+	    ::tk::unsupported::MacWindowStyle style $w utility {hud
+		closeBox resizable}
+	    wm title $w "Alert"
+	}
+	if {[tk windowingsystem] eq "win32"} {
+	    wm attributes $w -toolwindow true
+	    wm title $w "Alert"
+	}
+	label $w.l -bg gray30 -fg white -image ::tk::icons::information
+	pack $w.l -fill both -expand yes -side left
+	message $w.message -aspect 150 -bg gray30 -fg white -aspect 150 -text $title\n\n$msg -width 280
+	pack $w.message -side right -fill both -expand yes
+	if {[tk windowingsystem] eq "x11"} {
+	    wm overrideredirect $w true
+	}
+	wm attributes $w -alpha 0.0
+	set xpos [expr {[winfo screenwidth $w] - 325}]
+	wm geometry $w +$xpos+30
+	::tk::sysnotify::_fade_in $w
+	after 3000 ::tk::sysnotify::_fade_out $w
     }
-    if {[tk windowingsystem] eq "win32"} {
-	wm attributes $w -toolwindow true
-	wm title $w "Alert"
-    }
-    label $w.l -bg gray30 -fg white -image _info
-    pack $w.l -fill both -expand yes -side left
-    message $w.message -aspect 150 -bg gray30 -fg white -aspect 150 -text $title\n\n$msg -width 280
-    pack $w.message -side right -fill both -expand yes
-    if {[tk windowingsystem] eq "x11"} {
-	wm overrideredirect $w true
-    }
-    wm attributes $w -alpha 0.0
-    set xpos [expr {[winfo screenwidth $w] - 325}]
-    wm geometry $w +$xpos+30
-    _fade_in $w
-    after 3000 _fade_out $w
-}
 
-#Fade and destroy window.
-proc _fade_out {w} {
-    catch {
-	set prev_degree [wm attributes $w -alpha]
-	set new_degree [expr {$prev_degree - 0.05}]
-	set current_degree [wm attributes $w -alpha $new_degree]
-	if {$new_degree > 0.0 && $new_degree != $prev_degree} {
-	    after 10 [list _fade_out $w]
-	} else {
-	    destroy $w
+    #Fade and destroy window.
+    proc _fade_out {w} {
+	catch {
+	    set prev_degree [wm attributes $w -alpha]
+	    set new_degree [expr {$prev_degree - 0.05}]
+	    set current_degree [wm attributes $w -alpha $new_degree]
+	    if {$new_degree > 0.0 && $new_degree != $prev_degree} {
+		after 10 [list ::tk::sysnotify::_fade_out $w]
+	    } else {
+		destroy $w
+	    }
 	}
     }
-}
 
-#Fade the window into view.
-proc _fade_in {w} {
-    catch {
-	raise $w
-	wm attributes $w -topmost 1
-	set prev_degree [wm attributes $w -alpha]
-	set new_degree [expr {$prev_degree + 0.05}]
-	set current_degree [wm attributes $w -alpha $new_degree]
-	focus -force $w
-	if {$new_degree < 0.9 && $new_degree != $prev_degree} {
-	    after 10 [list _fade_in $w]
+    #Fade the window into view.
+    proc _fade_in {w} {
+	catch {
+	    raise $w
+	    wm attributes $w -topmost 1
+	    set prev_degree [wm attributes $w -alpha]
+	    set new_degree [expr {$prev_degree + 0.05}]
+	    set current_degree [wm attributes $w -alpha $new_degree]
+	    focus -force $w
+	    if {$new_degree < 0.9 && $new_degree != $prev_degree} {
+		after 10 [list ::tk::sysnotify::_fade_in $w]
+	    }
 	}
     }
+    namespace export *
 }
 
-global _iconlist
-set _iconlist {}
+
 
 # systray --
 # This procedure creates an icon display in the platform-specific system tray.
@@ -197,8 +204,8 @@ proc ::tk::systray {args} {
 		if [winfo exists ._tray] {
 		    error  "Only one system tray icon supported per interpeter"
 		}
-		_systray ._tray -image [lindex $args 1] -visible true
-		_balloon ._tray [lindex $args 2]
+		_systray ._tray -image $::winicoprops::img -visible true
+		::tk::systray::_balloon ._tray $::winicoprops::txt
 		bind ._tray <Button-1> $::winicoprops::cb1
 		bind ._tray <Button-3> $::winicoprops::cb3
 	    }
@@ -244,7 +251,7 @@ proc ::tk::systray {args} {
 		        ._tray configure -image [lindex $args 2]
 		    }
 		    text {
-		        _balloon ._tray [lindex $args 2]
+		      ::tk::systray::_balloon ._tray [lindex $args 2]
 		    }
 		    b1_callback {
 		        bind ._tray <Button-1> [lindex $args 2]
@@ -297,7 +304,7 @@ proc ::tk::sysnotify {title message} {
 	}
 	"x11" {
 	    if {[info commands _sysnotify] eq ""} {
-		_notifywindow $title $message
+		::tk::sysnotify::_notifywindow $title $message
 	    } else {
 		_sysnotify $title $message
 	    }
