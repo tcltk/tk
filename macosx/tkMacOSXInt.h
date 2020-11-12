@@ -101,21 +101,6 @@ typedef struct TkWindowPrivate MacDrawable;
  */
 
 /*
- * GC CGColorRef cache for tkMacOSXColor.c
- */
-
-typedef struct {
-    unsigned long cachedForeground;
-    CGColorRef cachedForegroundColor;
-    unsigned long cachedBackground;
-    CGColorRef cachedBackgroundColor;
-} TkpGCCache;
-
-MODULE_SCOPE TkpGCCache *TkpGetGCCache(GC gc);
-MODULE_SCOPE void TkpInitGCCache(GC gc);
-MODULE_SCOPE void TkpFreeGCCache(GC gc);
-
-/*
  * Undef compatibility platform types defined above.
  */
 

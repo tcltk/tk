@@ -500,29 +500,6 @@ static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
 #define WIDTHBYTES(bits)	((((bits) + 31)>>5)<<2)
 
-
-/*
- *----------------------------------------------------------------------
- *
- * PaletteSize --
- *
- *	Calculates the number of bytes in the color table, as given by LPSTR
- *	lpbi - pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	Number of bytes in the color table
- *
- *----------------------------------------------------------------------
- */
-static WORD
-PaletteSize(
-    LPSTR lpbi)
-{
-    return (WORD) (DIBNumColors(lpbi) * sizeof(RGBQUAD));
-}
-
-
-
 /*
  *----------------------------------------------------------------------
  *

@@ -120,7 +120,7 @@ int
 SysNotify_Init(
     Tcl_Interp *interp)
 {
- 
+
     Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyCmd, interp,
 	    SysNotifyDeleteCmd);
     return TCL_OK;

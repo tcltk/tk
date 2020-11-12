@@ -17,7 +17,7 @@ namespace eval ::tk::systray:: {
 
     variable ::tk::systray::_iconlist
     set ::tk::systray::_iconlist {}
-    
+
     proc _balloon {w help} {
 	bind $w <Any-Enter> "after 1000 [list ::tk::systray::_balloon_show %W [list $help]]"
 	bind $w <Any-Leave> "destroy %W._balloon"
