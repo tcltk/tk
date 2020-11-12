@@ -493,12 +493,6 @@ static int		WmWithdrawCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
-
-/*
- * Used in BytesPerLine
- */
-
-#define WIDTHBYTES(bits)	((((bits) + 31)>>5)<<2)
 
 /*
  *----------------------------------------------------------------------
