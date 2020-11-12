@@ -111,22 +111,6 @@ test systray-12 {systray icon creation, attempt to create more than one in an in
     image delete _book
 } -returnCodes {error} -result {only one system tray icon supported per interpeter}
 
-test systray-13 {systray icon creation, create one per interp} -setup {
-    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
-} -body {
-    tk systray create -image _book
-    interp create childInterp
-    childInterp eval {
-        package require Tk
-        image create photo _page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
-        tk systray create -image page
-    }
-} -cleanup {
-    tk systray destroy
-    image delete _book
-    interp delete childInterp
-} -result {}
-
 
 test sysnotify-1 {system notification popup} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
