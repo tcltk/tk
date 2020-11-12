@@ -101,7 +101,15 @@ test systray-11 {destroy non-existing systray icon} -setup {
     tk systray destroy
 } -returnCodes {error} -result {systray not created}
 
-test systray-12 {systray icon creation, attempt to create more than one in an interp} -setup {
+test systray-12 {destroy systray icon works}  -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book
+    tk systray destroy
+    tk systray create -image _book
+} -result {}
+
+test systray-13 {systray icon creation, attempt to create more than one in an interp} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
     tk systray create -image _book
