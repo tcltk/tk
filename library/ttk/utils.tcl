@@ -280,8 +280,8 @@ proc ttk::copyBindings {from to} {
 
 ## ttk::bindMouseWheel $bindtag $command...
 #	Adds basic mousewheel support to $bindtag.
-#	$command will be passed one additional argument
-#	specifying the mousewheel direction (-1: up, +1: down).
+#	$command will be passed two additional arguments
+#	specifying the mousewheel change and a factor.
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
