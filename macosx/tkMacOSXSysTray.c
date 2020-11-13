@@ -540,7 +540,7 @@ MacSystrayObjCmd(
     case TRAY_CREATE: {
 
 	if (objc < 3 ||  objc > 6) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "create image ?text? ?b1_callback? b3_callback?");
+	    Tcl_WrongNumArgs(interp, 1, objv, "create -image -text -button1 -button3");
 	    return TCL_ERROR;
 	}
 
@@ -670,11 +670,16 @@ MacSystrayObjCmd(
     }
 
     case TRAY_DESTROY: {
-	    /* we don't really distroy, just reset the image, text and callback */
+	/*
+	 * Set all properties to nil, and release statusItem.
+	 */
 	    [statusItem setImagewithImage: nil];
 	    [statusItem setTextwithString: nil];
 	    [statusItem setB1Callback : NULL];
 	    [statusItem setB3Callback : NULL];
+	    [statusItem release];
+	    *info = NULL;
+	    statusItem == NULL;
 	    break;
 	}
     }
