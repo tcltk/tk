@@ -55,7 +55,7 @@ Here is an example of modifying the \fBtk systray\fR icon:
 .PP
 The X11 implementation is supported on a "best efforts" basis because it is dependent on the window manager. The "text"
 flag, which is implemented as a tooltip, does not always display if the WM
-does not support such features; the systray icon itself may not even 
+does not support such features; the systray icon itself may not even
 display with some window managers.
 .SH KEYWORDS
 image, callback
