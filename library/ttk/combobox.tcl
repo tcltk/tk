@@ -186,13 +186,16 @@ proc ttk::combobox::Scroll {cb dir {factor 1.0}} {
     $cb instate disabled { return }
     set max [llength [$cb cget -values]]
     set current [$cb current]
-    set d [expr {round($dir/factor)}]
-    if {$d == 0 && $dir != 0} {
-	if {$dir > 0} {set d 1} else {set d -1}
+    if {$current < 0} {
+	set index 0
+    } else {
+	set d [expr {$dir/$factor}]
+	set index [expr {$current + int($d > 0 ? ceil($d) : floor($d))}]
+	if {$index >= $max} {set index [expr {$max - 1}]}
+	if {$index < 0} {set index 0}
     }
-    incr current $d
-    if {$max != 0 && $current == $current % $max} {
-	SelectEntry $cb $current
+    if {$max != 0 && $index != $current} {
+	SelectEntry $cb $index
     }
 }
 
