@@ -224,7 +224,7 @@ Also, the \fB-validate\fR option will set itself to \fBnone\fR when the
 spinbox value gets changed because of adjustment of \fB-from\fR or \fB-to\fR
 and the \fB-validatecommand\fR returns false. For instance
 .CS
-     \fIspinbox pathName \-from 1 \-to 10 \-validate all \-vcmd {return 0}\fR
+     \fIspinbox pathName \-from 1 \-to 10 \-validate all \-validatecommand {return 0}\fR
 .CE
 will in fact set the \fB-validate\fR option to \fBnone\fR because the default
 value for the spinbox gets changed (due to the \fB-from\fR and \fB-to\fR
