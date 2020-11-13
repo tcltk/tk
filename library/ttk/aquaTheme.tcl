@@ -67,6 +67,16 @@ namespace eval ttk::theme::aqua {
 		disabled systemDisabledControlTextColor
 		selected systemSelectedTabTextColor}
 
+	#Update appearance for Big Sur and later
+	if {[expr [lindex [split [exec sw_vers -productVersion] .] 0] >= 11]} {
+	    	ttk::style map TNotebook.Tab \
+	    -foreground {
+		background systemControlTextColor
+		disabled systemDisabledControlTextColor
+		selected systemTextColor}
+	}
+	    
+
 	# Combobox:
 	ttk::style configure TCombobox \
 	    -foreground systemTextColor \
