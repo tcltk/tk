@@ -1208,10 +1208,9 @@ TkpDrawAngledCharsInContext(
     }
 
     context = drawingContext.context;
-    fg = TkMacOSXCreateCGColor(gc, gc->foreground);
+    TkSetMacColor(gc->foreground, &fg);
     attributes = [fontPtr->nsAttributes mutableCopy];
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
-    CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
     [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);

@@ -111,7 +111,7 @@ proc ::tk::fontchooser::Configure {args} {
 
     set cache [dict create -parent $S(-parent) -title $S(-title) \
                    -font $S(-font) -command $S(-command)]
-    set r [tclParseConfigSpec [namespace which -variable S] $specs "" $args]
+    set r [tclParseConfigSpec [namespace which -variable S] $specs DONTSETDEFAULTS $args]
     if {![winfo exists $S(-parent)]} {
 	set code [list TK LOOKUP WINDOW $S(-parent)]
         set err "bad window path name \"$S(-parent)\""
