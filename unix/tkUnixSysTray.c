@@ -1666,8 +1666,8 @@ handleErrors:
 int Tktray_Init(Tcl_Interp* interp)
 {
 
-    Tcl_CreateObjCommand(interp, "_systray",
-			 TrayIconCreateCmd, Tk_MainWindow(interp), NULL );
+    Tcl_CreateObjCommand(interp, "::tk::systray::_systray",
+            TrayIconCreateCmd, Tk_MainWindow(interp), NULL );
 
     return TCL_OK;
 }

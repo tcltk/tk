@@ -158,18 +158,18 @@ proc ::tk::systray::create {args} {
     try {
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		set _ico [_systray createfrom [dict get $values -image]]
-		_systray taskbar add $_ico -text [dict get $values -text] \
+		set _ico [::tk::systray::_systray createfrom [dict get $values -image]]
+		::tk::systray::_systray taskbar add $_ico -text [dict get $values -text] \
 		        -callback [list ::tk::systray::_win_callback %m %i]
 	    }
 	    "x11" {
-		_systray ._tray -image [dict get $values -image] -visible true
+		::tk::systray::_systray ._tray -image [dict get $values -image] -visible true
 		::tk::systray::_balloon ._tray [dict get $values -text]
 		bind ._tray <Button-1> [dict get $values -button1]
 		bind ._tray <Button-3> [dict get $values -button3]
 	    }
 	    "aqua" {
-		_systray create [dict get $values -image] [dict get $values -text] \
+		::tk::systray::_systray create [dict get $values -image] [dict get $values -text] \
 		        [dict get $values -button1] [dict get $values -button3]
 	    }
 	}
@@ -203,13 +203,13 @@ proc ::tk::systray::configure {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[dict exists $args -image]} {
-		    set new_ico [_systray createfrom [dict get $args -image]]
-		    _systray taskbar delete $_ico
+		    set new_ico [::tk::systray::_systray createfrom [dict get $args -image]]
+		    ::tk::systray::_systray taskbar delete $_ico
 		    set _ico $new_ico
-		    _systray taskbar add $_ico -text [dict get $values -text] \
+		    ::tk::systray::_systray taskbar add $_ico -text [dict get $values -text] \
 		            -callback [list ::tk::systray::_win_callback %m %i]
 		} elseif {[dict exists $args -text]} {
-		    _systray taskbar modify $_ico -text [dict get $args -text]
+		    ::tk::systray::_systray taskbar modify $_ico -text [dict get $args -text]
 		}
 	    }
 	    "x11" {
@@ -230,7 +230,7 @@ proc ::tk::systray::configure {args} {
 		foreach {key opt} {image -image text \
 		        -text b1_callback -button1 b3_callback -button3} {
 		    if {[dict exists $args $opt]} {
-		        _systray modify $key [dict get $args $opt]
+		        ::tk::systray::_systray modify $key [dict get $args $opt]
 		    }
 		}
 	    }
@@ -255,14 +255,14 @@ proc ::tk::systray::destroy {} {
     }
     switch -- [tk windowingsystem] {
 	"win32" {
-	    _systray taskbar delete $_ico
+	    ::tk::systray::_systray taskbar delete $_ico
 	    set _ico ""
 	}
 	"x11" {
 	    ::destroy ._tray
 	}
 	"aqua" {
-	    _systray destroy
+	    ::tk::systray::_systray destroy
 	}
     }
     set _created 0
@@ -303,17 +303,17 @@ proc ::tk::sysnotify {title message} {
 	    if {!$::tk::systray::_created} {
 		error "must create a system tray icon with the \"tk systray\" command first"
 	    }
-	    _sysnotify notify $::tk::systray::_ico $title $message
+	    ::tk::sysnotify::_sysnotify notify $::tk::systray::_ico $title $message
 	}
 	"x11" {
-	    if {[info commands _sysnotify] eq ""} {
+	    if {[info commands ::tk::sysnotify::_sysnotify] eq ""} {
 		::tk::sysnotify::_notifywindow $title $message
 	    } else {
-		_sysnotify $title $message
+		::tk::sysnotify::_sysnotify $title $message
 	    }
 	}
 	"aqua" {
-	    _sysnotify $title $message
+	    ::tk::sysnotify::_sysnotify $title $message
 	}
     }
     return
