@@ -679,7 +679,7 @@ MacSystrayObjCmd(
 	    [statusItem setB3Callback : NULL];
 	    [statusItem release];
 	    *info = NULL;
-	    statusItem == NULL;
+	    statusItem = NULL;
 	    break;
 	}
     }
