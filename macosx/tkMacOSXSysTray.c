@@ -840,9 +840,9 @@ MacSystrayInit(Tcl_Interp *interp)
     }
 #endif
 
-    Tcl_CreateObjCommand(interp, "_systray", MacSystrayObjCmd, info,
-			 (Tcl_CmdDeleteProc *)MacSystrayDestroy);
-    Tcl_CreateObjCommand(interp, "_sysnotify", SysNotifyObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
+            (Tcl_CmdDeleteProc *)MacSystrayDestroy);
+    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
