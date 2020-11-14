@@ -324,6 +324,8 @@ GetRGBA(
 	    int OSVersion = [NSApp macOSVersion];
 	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
+	    } else {
+		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
 	    }
 	} else {
 	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
