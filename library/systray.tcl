@@ -1,7 +1,7 @@
 # systray.tcl --
 
-# This file defines the tk systray command for icon display and manipulation
-# in the system tray on X11, Windows, and macOS, and the ::tk::sysnotify command
+# This file defines the 'tk systray' command for icon display and manipulation
+# in the system tray on X11, Windows, and macOS, and the 'tk sysnotify' command
 # for system alerts on each platform. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
 
@@ -26,7 +26,9 @@ namespace eval ::tk::systray {
     }
 
     proc _balloon_show {w arg} {
-	if {[eval winfo containing  [winfo pointerxy .]]!=$w} {return}
+	if {[winfo containing [winfo pointerxy .]] ne $w} {
+	    return
+	}
 	set top $w._balloon
 	catch {destroy $top}
 	toplevel $top -bg black
@@ -34,8 +36,7 @@ namespace eval ::tk::systray {
 	if {[tk windowingsystem] eq "aqua"}  {
 	    ::tk::unsupported::MacWindowStyle style $top help none
 	}
-	pack [message $top._txt -aspect 10000  \
-		  -text $arg]
+	pack [message $top._txt -aspect 10000 -text $arg]
 	set wmx [winfo rootx $w]
 	set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
 	wm geometry $top [winfo reqwidth $top._txt]x[winfo reqheight $top._txt]+$wmx+$wmy
@@ -66,8 +67,7 @@ namespace eval ::tk::sysnotify:: {
 	catch {destroy ._notify}
 	set w [toplevel ._notify]
 	if {[tk windowingsystem] eq "aqua"} {
-	    ::tk::unsupported::MacWindowStyle style $w utility {hud
-		closeBox resizable}
+	    ::tk::unsupported::MacWindowStyle style $w utility {hud closeBox resizable}
 	    wm title $w "Alert"
 	}
 	if {[tk windowingsystem] eq "win32"} {
@@ -120,7 +120,7 @@ namespace eval ::tk::sysnotify:: {
 }
 
 
-# systray --
+# tk systray --
 # This procedure creates an icon display in the platform-specific system tray.
 #
 # Subcommands:
@@ -131,13 +131,14 @@ namespace eval ::tk::sysnotify:: {
 #             -text - string to display in tooltip over image.
 #             -button1 - Tcl proc to invoke on <Button-1> event.
 #             -button3 - Tcl proc to invoke on <Button-3> event.
-
+#
 #     configure - change one of the systray properties.
 #         Arguments (Any or all can be called):
 #             -image - Tk image to update.
 #             -text - string to update.
 #             -button1 - Tcl proc to change for <Button-1> event.
 #             -button3  - Tcl proc to change for <Button-3> event.
+#
 #     destroy - destroy systray icon.
 #         Arguments:
 #             none.
@@ -289,7 +290,7 @@ proc ::tk::systray::_check_options {argsList singleOk} {
     }
 }
 
-# sysnotify --
+# tk sysnotify --
 # This procedure implements a platform-specific system notification alert.
 #
 #   Arguments:
