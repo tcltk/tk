@@ -63,7 +63,13 @@ typedef struct IcoInfo {
     struct IcoInfo *nextPtr;
 } IcoInfo;
 
-static IcoInfo *firstIcoPtr = NULL;
+/* Per-interp struture */
+typedef struct IcoInterpInfo {
+    int counter;                /* Counter for IcoInfo id generation */
+    IcoInfo *firstIcoPtr;       /* List of created IcoInfo */
+    struct IcoInterpInfo *nextPtr;
+} IcoInterpInfo;
+
 #define ICO_LOAD 1
 #define ICO_FILE 2
 
@@ -75,6 +81,9 @@ static HWND CreateTaskbarHandlerWindow(void);
 
 static HWND handlerWindow = NULL;
 static BlockOfIconImagesPtr iconBits = NULL;
+
+static IcoInterpInfo *firstIcoInterpPtr = NULL;
+static Tcl_ExitProc WinIcoDestroy;
 
 /*
  *----------------------------------------------------------------------
@@ -272,7 +281,7 @@ NotifyW(
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = icoPtr->id;
+    ni.uID = (unsigned int) icoPtr;
     ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = (HICON) hIcon;
@@ -340,17 +349,17 @@ TaskbarOperation(
 static IcoInfo *
 NewIcon(
     Tcl_Interp *interp,
+    IcoInterpInfo *icoInterpPtr,
     HICON hIcon,
     int itype, BlockOfIconImagesPtr lpIR, int iconpos)
 {
-    static int nextId = 1;
     int n;
     char buffer[5 + TCL_INTEGER_SPACE];
     IcoInfo *icoPtr;
 
     icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
     memset(icoPtr, 0, sizeof(IcoInfo));
-    icoPtr->id = nextId;
+    icoPtr->id = ++icoInterpPtr->counter;
     icoPtr->hIcon = hIcon;
     icoPtr->itype = itype;
     icoPtr->lpIR = lpIR;
@@ -367,9 +376,8 @@ NewIcon(
         icoPtr->lpIR = (BlockOfIconImagesPtr) NULL;
         icoPtr->iconpos = 0;
     }
-    nextId += 1;
-    icoPtr->nextPtr = firstIcoPtr;
-    firstIcoPtr = icoPtr;
+    icoPtr->nextPtr = icoInterpPtr->firstIcoPtr;
+    icoInterpPtr->firstIcoPtr = icoPtr;
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
     return icoPtr;
 }
@@ -392,25 +400,24 @@ NewIcon(
 
 static void
 FreeIcoPtr(
-    Tcl_Interp *interp,
+    IcoInterpInfo *icoInterpPtr,
     IcoInfo *icoPtr)
 {
     IcoInfo *prevPtr;
-    if (firstIcoPtr == icoPtr) {
-        firstIcoPtr = icoPtr->nextPtr;
+    if (icoInterpPtr->firstIcoPtr == icoPtr) {
+        icoInterpPtr->firstIcoPtr = icoPtr->nextPtr;
     } else {
-        for (prevPtr = firstIcoPtr; prevPtr->nextPtr != icoPtr; prevPtr = prevPtr->nextPtr) {
+        for (prevPtr = icoInterpPtr->firstIcoPtr; prevPtr->nextPtr != icoPtr; prevPtr = prevPtr->nextPtr) {
             /* Empty loop body. */
         }
         prevPtr->nextPtr = icoPtr->nextPtr;
     }
     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
         TaskbarOperation(icoPtr, NIM_DELETE, NULL, "");
-        Tcl_ResetResult(interp);
     }
     if (icoPtr->itype != ICO_FILE) {
-		FreeIconResource(icoPtr->lpIR);
-		ckfree(icoPtr->lpIR);
+        FreeIconResource(icoPtr->lpIR);
+        ckfree(icoPtr->lpIR);
     }
     if (icoPtr->taskbar_txt != NULL) {
         ckfree(icoPtr->taskbar_txt);
@@ -441,25 +448,29 @@ FreeIcoPtr(
 static IcoInfo *
 GetIcoPtr(
     Tcl_Interp *interp,
+    IcoInterpInfo *icoInterpPtr,
     const char *string)
 {
     IcoInfo *icoPtr;
     int id;
+    const char *start;
     char *end;
 
     if (strncmp(string, "ico#", 4) != 0) {
-        return NULL;
+        goto notfound;
     }
-    string += 4;
-    id = strtoul(string, &end, 10);
-    if ((end == string) || (*end != 0)) {
-        return NULL;
+    start = string + 4;
+    id = strtoul(start, &end, 10);
+    if ((end == start) || (*end != 0)) {
+        goto notfound;
     }
-    for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+    for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
         if (icoPtr->id == id) {
             return icoPtr;
         }
     }
+
+notfound:
     Tcl_AppendResult(interp, "icon \"", string,
         "\" doesn't exist", (char *) NULL);
     return NULL;
@@ -801,7 +812,8 @@ TaskbarHandlerProc(
     LPARAM lParam)
 {
     static UINT msgTaskbarCreated = 0;
-    IcoInfo *icoPtr = NULL;
+    IcoInterpInfo *icoInterpPtr;
+    IcoInfo *icoPtr;
 
     switch (message) {
     case WM_CREATE:
@@ -809,28 +821,27 @@ TaskbarHandlerProc(
         break;
 
     case ICON_MESSAGE:
-        for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
-            if (wParam == (WPARAM) icoPtr->id) {
-                if (icoPtr->taskbar_command != NULL) {
-                    TaskbarEval(icoPtr, wParam, lParam);
-                }
-            }
+        icoPtr = (IcoInfo*) wParam;
+        if (icoPtr->taskbar_command != NULL) {
+            TaskbarEval(icoPtr, wParam, lParam);
         }
         break;
 
     default:
         /*
-         * Check to see if explorer has been restarted and we ned to
+         * Check to see if explorer has been restarted and we need to
          * re-add our icons.
          */
         if (message == msgTaskbarCreated) {
-            for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
-                if (icoPtr->taskbar_flags & TASKBAR_ICON) {
-                    HICON hIcon = icoPtr->hIcon;
-                    if (icoPtr->iconpos != 0 && icoPtr->lpIR != NULL) {
-                        hIcon = icoPtr->lpIR->IconImages[icoPtr->iconpos].hIcon;
+            for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
+                for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+                    if (icoPtr->taskbar_flags & TASKBAR_ICON) {
+                        HICON hIcon = icoPtr->hIcon;
+                        if (icoPtr->iconpos != 0 && icoPtr->lpIR != NULL) {
+                            hIcon = icoPtr->lpIR->IconImages[icoPtr->iconpos].hIcon;
+                        }
+                        TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr->taskbar_txt);
                     }
-                    TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr->taskbar_txt);
                 }
             }
         }
@@ -947,14 +958,28 @@ static void
 WinIcoDestroy(
     ClientData clientData)
 {
+    IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
+    IcoInterpInfo *prevIcoInterpPtr;
     IcoInfo *icoPtr;
     IcoInfo *nextPtr;
-    Tcl_Interp *interp = (Tcl_Interp *) clientData;
-    DestroyHandlerWindow();
-    for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
-        nextPtr = icoPtr->nextPtr;
-        FreeIcoPtr(interp, icoPtr);
+
+    Tcl_DeleteThreadExitHandler(WinIcoDestroy, clientData);
+    
+    if (firstIcoInterpPtr == icoInterpPtr) {
+        firstIcoInterpPtr = icoInterpPtr->nextPtr;
+    } else {
+        for (prevIcoInterpPtr = firstIcoInterpPtr; prevIcoInterpPtr->nextPtr != icoInterpPtr;
+             prevIcoInterpPtr = prevIcoInterpPtr->nextPtr) {
+            /* Empty loop body. */
+        }
+        prevIcoInterpPtr->nextPtr = icoInterpPtr->nextPtr;
     }
+
+    for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
+        nextPtr = icoPtr->nextPtr;
+        FreeIcoPtr(icoInterpPtr, icoPtr);
+    }
+    ckfree((char *) icoInterpPtr);
 }
 
 /*
@@ -992,7 +1017,7 @@ CreateIcoFromTkImage(
     photo = Tk_FindPhoto(interp, image);
     if (photo == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "image \"%s\" doesn't exist", image));
+                "image \"%s\" doesn't exist", image));
         return TCL_ERROR;
     }
 
@@ -1003,7 +1028,7 @@ CreateIcoFromTkImage(
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE));
     iconBits = (BlockOfIconImagesPtr)attemptckalloc(size);
     if (iconBits == NULL) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     ZeroMemory(iconBits, size);
 
@@ -1036,12 +1061,11 @@ CreateIcoFromTkImage(
     bmInfo.bmiHeader.biCompression = BI_RGB;
 
     iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-	    &bgraPixel.voidPtr, NULL, 0);
+            &bgraPixel.voidPtr, NULL, 0);
     if (!iconInfo.hbmColor) {
         FreeIconResource(iconBits);
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "failed to create an iconphoto with image \"%s\"",
-	        image));
+                "failed to create an iconphoto with image \"%s\"", image));
         return TCL_ERROR;
     }
 
@@ -1066,13 +1090,12 @@ CreateIcoFromTkImage(
     bmInfo.bmiHeader.biBitCount = 1;
 
     iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-	    &bgraMask.voidPtr, NULL, 0);
+            &bgraMask.voidPtr, NULL, 0);
     if (!iconInfo.hbmMask) {
         DeleteObject(iconInfo.hbmColor);
         FreeIconResource(iconBits);
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "failed to create mask bitmap for \"%s\"",
-	        image));
+                "failed to create mask bitmap for \"%s\"", image));
         return TCL_ERROR;
     }
 
@@ -1122,7 +1145,7 @@ CreateIcoFromTkImage(
 
 static int
 WinSystrayCmd(
-    TCL_UNUSED(void *),
+    ClientData clientData,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -1130,11 +1153,12 @@ WinSystrayCmd(
     size_t length;
     HICON hIcon;
     int i;
+    IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
     BlockOfIconImagesPtr lpIR = NULL;
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option arg arg ...");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 1, objv, "option arg arg ...");
+        return TCL_ERROR;
     }
 
     length = strlen(Tcl_GetString(objv[1]));
@@ -1164,30 +1188,32 @@ WinSystrayCmd(
             }
         }
         if (hIcon == NULL) {
-			FreeIconResource(lpIR);
+            FreeIconResource(lpIR);
             Tcl_AppendResult(interp, "Could not find an icon in ", Tcl_GetString(objv[2]), NULL);
             return TCL_ERROR;
         }
-        NewIcon(interp, hIcon, ICO_FILE, lpIR, pos);
+        NewIcon(interp, icoInterpPtr, hIcon, ICO_FILE, lpIR, pos);
     } else if ((strncmp(Tcl_GetString(objv[1]), "delete", length) == 0) &&
         (length >= 2)) {
         if (objc != 3) {
             Tcl_WrongNumArgs(interp, 1, objv, "delete id");
             return TCL_ERROR;
         }
-        icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[2]));
+        icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
         if (icoPtr == NULL) {
-            Tcl_ResetResult(interp);
-            return TCL_OK;
+            return TCL_ERROR;
         }
-        FreeIcoPtr(interp, icoPtr);
+        FreeIcoPtr(icoInterpPtr, icoPtr);
         return TCL_OK;
     } else if ((strncmp(Tcl_GetString(objv[1]), "text", length) == 0) && (length >= 2)) {
         if (objc < 2) {
             Tcl_WrongNumArgs(interp, 1, objv, "text <id> ?newtext?");
             return TCL_ERROR;
         }
-        if ((icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[2]))) == NULL) return TCL_ERROR;
+        icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
+        if (icoPtr == NULL) {
+            return TCL_ERROR;
+        }
         if (objc > 3) {
             const char *newtxt = Tcl_GetString(objv[3]);
             if (icoPtr->taskbar_txt != NULL) {
@@ -1219,7 +1245,7 @@ WinSystrayCmd(
             Tcl_AppendResult(interp, "bad argument ", Tcl_GetString(objv[2]), " should be add, delete or modify", (char *) NULL);
             return TCL_ERROR;
         }
-        if ((icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[3]))) == NULL)
+        if ((icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[3]))) == NULL)
             return TCL_ERROR;
         hIcon = icoPtr->hIcon;
         txt = icoPtr->taskbar_txt;
@@ -1287,12 +1313,12 @@ WinSystrayCmd(
 
 static int
 WinSysNotifyCmd(
-    TCL_UNUSED(void *),
+    ClientData clientData,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    size_t length;
+    IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
     Tcl_DString infodst;
     Tcl_DString titledst;
@@ -1300,55 +1326,53 @@ WinSysNotifyCmd(
     char *msgtitle;
     char *msginfo;
 
-    icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[2]));
+    if (objc < 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "command ...");
+        return TCL_ERROR;
+    }
+    if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
+        Tcl_AppendResult(interp, "unknown subcommand \"", Tcl_GetString(objv[1]),
+            "\": must be notify", NULL);
+        return TCL_ERROR;
+    }
+    if (objc != 5) {
+        Tcl_WrongNumArgs(interp, 2, objv, "id title detail");
+        return TCL_ERROR;
+    }
+
+    icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
     if (icoPtr == NULL) {
-        Tcl_ResetResult(interp);
-        return TCL_OK;
+        return TCL_ERROR;
     }
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = icoPtr->id;
+    ni.uID = (unsigned int) icoPtr;
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = icoPtr->hIcon;
     ni.dwInfoFlags = NIIF_INFO; /*Use a sane platform-specific icon here.*/
 
-    if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "option arg arg ...");
-        return TCL_ERROR;
+    msgtitle = Tcl_GetString(objv[3]);
+    msginfo = Tcl_GetString(objv[4]);
+
+    /* Balloon notification for system tray icon. */
+    if (msgtitle != NULL) {
+        WCHAR *title;
+        Tcl_DStringInit(&titledst);
+        title = Tcl_UtfToWCharDString(msgtitle, -1, &titledst);
+        wcsncpy(ni.szInfoTitle, title, (Tcl_DStringLength(&titledst) + 2) / 2);
+        Tcl_DStringFree(&titledst);
+    }
+    if (msginfo != NULL) {
+        WCHAR *info;
+        Tcl_DStringInit(&infodst);
+        info = Tcl_UtfToWCharDString(msginfo, -1, &infodst);
+        wcsncpy(ni.szInfo, info, (Tcl_DStringLength(&infodst) + 2) / 2);
+        Tcl_DStringFree(&infodst);
     }
 
-    length = strlen(Tcl_GetString(objv[1]));
-    if ((strncmp(Tcl_GetString(objv[1]), "notify", length) == 0) &&
-        (length >= 2)) {
-        if (objc != 5) {
-            Tcl_WrongNumArgs(interp, 1, objv, "notify id title detail");
-            return TCL_ERROR;
-        }
-
-        msgtitle = Tcl_GetString(objv[3]);
-        msginfo = Tcl_GetString(objv[4]);
-
-        /* Balloon notification for system tray icon. */
-        if (msgtitle != NULL) {
-            WCHAR *title;
-            Tcl_DStringInit(&titledst);
-            title = Tcl_UtfToWCharDString(msgtitle, -1, &titledst);
-            wcsncpy(ni.szInfoTitle, title, (Tcl_DStringLength(&titledst) + 2) / 2);
-            Tcl_DStringFree(&titledst);
-        }
-        if (msginfo != NULL) {
-            WCHAR *info;
-            Tcl_DStringInit(&infodst);
-            info = Tcl_UtfToWCharDString(msginfo, -1, &infodst);
-            wcsncpy(ni.szInfo, info, (Tcl_DStringLength(&infodst) + 2) / 2);
-            Tcl_DStringFree(&infodst);
-        }
-
-        Shell_NotifyIconW(NIM_MODIFY, &ni);
-        return TCL_OK;
-    }
+    Shell_NotifyIconW(NIM_MODIFY, &ni);
     return TCL_OK;
 }
 
@@ -1372,20 +1396,32 @@ int
 WinIcoInit(
     Tcl_Interp *interp)
 {
-    #ifdef USE_TCL_STUBS
+    IcoInterpInfo *icoInterpPtr;
+
+#ifdef USE_TCL_STUBS
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }
-    #endif
-    #ifdef USE_TK_STUBS
+#endif
+#ifdef USE_TK_STUBS
     if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }
-    #endif
+#endif
 
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", WinSystrayCmd, (ClientData)interp,
-        (Tcl_CmdDeleteProc *) WinIcoDestroy);
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd, NULL, NULL);
+    icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
+    icoInterpPtr->counter = 0;
+    icoInterpPtr->firstIcoPtr = NULL;
+    icoInterpPtr->nextPtr = firstIcoInterpPtr;
+    firstIcoInterpPtr = icoInterpPtr;
+    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", WinSystrayCmd,
+        (ClientData) icoInterpPtr, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
+        (ClientData) icoInterpPtr, NULL);
+
+    Tcl_CallWhenDeleted(interp, (Tcl_InterpDeleteProc*) WinIcoDestroy, (ClientData) icoInterpPtr);
+    Tcl_CreateThreadExitHandler(WinIcoDestroy, (ClientData) icoInterpPtr);
+    
     return TCL_OK;
 }
 
