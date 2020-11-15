@@ -159,19 +159,19 @@ proc ::tk::systray::create {args} {
     try {
 	switch -- [tk windowingsystem] {
 	    "win32" {
-		set _ico [::tk::systray::_systray createfrom [dict get $values -image]]
-		::tk::systray::_systray taskbar add $_ico -text [dict get $values -text] \
-		        -callback [list ::tk::systray::_win_callback %m %i]
+		set _ico [_systray add -image [dict get $values -image] \
+			-text [dict get $values -text] \
+			-callback [list ::tk::systray::_win_callback %m %i]]
 	    }
 	    "x11" {
-		::tk::systray::_systray ._tray -image [dict get $values -image] -visible true
-		::tk::systray::_balloon ._tray [dict get $values -text]
+		_systray ._tray -image [dict get $values -image] -visible true
+		_balloon ._tray [dict get $values -text]
 		bind ._tray <Button-1> [dict get $values -button1]
 		bind ._tray <Button-3> [dict get $values -button3]
 	    }
 	    "aqua" {
-		::tk::systray::_systray create [dict get $values -image] [dict get $values -text] \
-		        [dict get $values -button1] [dict get $values -button3]
+		_systray create [dict get $values -image] [dict get $values -text] \
+			[dict get $values -button1] [dict get $values -button3]
 	    }
 	}
     } on ok {} {
@@ -204,13 +204,10 @@ proc ::tk::systray::configure {args} {
 	switch -- [tk windowingsystem] {
 	    "win32" {
 		if {[dict exists $args -image]} {
-		    set new_ico [::tk::systray::_systray createfrom [dict get $args -image]]
-		    ::tk::systray::_systray taskbar delete $_ico
-		    set _ico $new_ico
-		    ::tk::systray::_systray taskbar add $_ico -text [dict get $values -text] \
-		            -callback [list ::tk::systray::_win_callback %m %i]
-		} elseif {[dict exists $args -text]} {
-		    ::tk::systray::_systray taskbar modify $_ico -text [dict get $args -text]
+		    _systray modify $_ico -image [dict get $args -image]
+		}
+		if {[dict exists $args -text]} {
+		    _systray modify $_ico -text [dict get $args -text]
 		}
 	    }
 	    "x11" {
@@ -218,7 +215,7 @@ proc ::tk::systray::configure {args} {
 		    ._tray configure -image [dict get $args -image]
 		}
 		if {[dict exists $args -text]} {
-		    ::tk::systray::_balloon ._tray [dict get $args -text]
+		    _balloon ._tray [dict get $args -text]
 		}
 		if {[dict exists $args -button1]} {
 		    bind ._tray <Button-1> [dict get $args -button1]
@@ -229,9 +226,9 @@ proc ::tk::systray::configure {args} {
 	    }
 	    "aqua" {
 		foreach {key opt} {image -image text \
-		        -text b1_callback -button1 b3_callback -button3} {
+			-text b1_callback -button1 b3_callback -button3} {
 		    if {[dict exists $args $opt]} {
-		        ::tk::systray::_systray modify $key [dict get $args $opt]
+			_systray modify $key [dict get $args $opt]
 		    }
 		}
 	    }
@@ -256,14 +253,14 @@ proc ::tk::systray::destroy {} {
     }
     switch -- [tk windowingsystem] {
 	"win32" {
-	    ::tk::systray::_systray taskbar delete $_ico
+	    _systray delete $_ico
 	    set _ico ""
 	}
 	"x11" {
 	    ::destroy ._tray
 	}
 	"aqua" {
-	    ::tk::systray::_systray destroy
+	    _systray destroy
 	}
     }
     set _created 0
@@ -304,17 +301,17 @@ proc ::tk::sysnotify {title message} {
 	    if {!$::tk::systray::_created} {
 		error "must create a system tray icon with the \"tk systray\" command first"
 	    }
-	    ::tk::sysnotify::_sysnotify notify $::tk::systray::_ico $title $message
+	    _sysnotify notify $::tk::systray::_ico $title $message
 	}
 	"x11" {
 	    if {[info commands ::tk::sysnotify::_sysnotify] eq ""} {
-		::tk::sysnotify::_notifywindow $title $message
+		_notifywindow $title $message
 	    } else {
-		::tk::sysnotify::_sysnotify $title $message
+		_sysnotify $title $message
 	    }
 	}
 	"aqua" {
-	    ::tk::sysnotify::_sysnotify $title $message
+	    _sysnotify $title $message
 	}
     }
     return
