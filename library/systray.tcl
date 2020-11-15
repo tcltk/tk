@@ -294,7 +294,7 @@ proc ::tk::systray::_check_options {argsList singleOk} {
 #       title - main text of alert.
 #       message - body text of alert.
 
-proc ::tk::sysnotify {title message} {
+proc ::tk::sysnotify::sysnotify {title message} {
 
     switch -- [tk windowingsystem] {
 	"win32" {
@@ -321,5 +321,5 @@ proc ::tk::sysnotify {title message} {
 #Thanks to Christian Gollwitzer for the guidance here
 set map [namespace ensemble configure tk -map]
 dict set map systray ::tk::systray
-dict set map sysnotify ::tk::sysnotify
+dict set map sysnotify ::tk::sysnotify::sysnotify
 namespace ensemble configure tk -map $map
