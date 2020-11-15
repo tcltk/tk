@@ -996,8 +996,7 @@ CreateIcoFromTkImage(
     photo = Tk_FindPhoto(interp, image);
     if (photo == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "can't use \"%s\" as icon: not a photo image",
-	        image));
+	        "image \"%s\" doesn't exist", image));
         return TCL_ERROR;
     }
 
@@ -1145,25 +1144,13 @@ WinSystrayCmd(
     length = strlen(Tcl_GetString(objv[1]));
     if ((strncmp(Tcl_GetString(objv[1]), "createfrom", length) == 0) && (length >= 2)) {
         int pos = 0;
-	Tk_Window tkwin;
-	TkWindow *winPtr;
-	Display *d;
-	Tk_Image tk_image;
         if (objc < 3) {
             Tcl_WrongNumArgs(interp, 1, objv, "createfrom <Tk image>");
             return TCL_ERROR;
         }
-        /*
-        * Check for image.
-        */
-        tkwin = Tk_MainWindow(interp);
-        winPtr = (TkWindow *)tkwin;
-        d = winPtr->display;
-        tk_image = Tk_GetImage(interp, tkwin, Tcl_GetString(objv[2]), NULL, NULL);
-        if (tk_image == NULL) {
+        if (CreateIcoFromTkImage(interp, Tcl_GetString(objv[2])) != TCL_OK) {
             return TCL_ERROR;
         }
-        CreateIcoFromTkImage(interp, Tcl_GetString(objv[2]));
         lpIR = iconBits;
 
         if (lpIR == NULL) {
