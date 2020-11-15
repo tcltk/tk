@@ -42,7 +42,7 @@
 #define ACTIVE_FG		"systemTextColor"
 #define SELECT_BG		"systemSelectedTextBackgroundColor"
 #define SELECT_FG		"systemSelectedTextColor"
-#define INACTIVE_SELECT_BG	"systemSelectedTextBackgroundColor"
+#define INACTIVE_SELECT_BG	"systemUnemphasizedSelectedTextBackgroundColor"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
 #define DISABLED		"#a3a3a3"
@@ -88,19 +88,9 @@
 #define DEF_BUTTON_ON_VALUE		"1"
 #define DEF_BUTTON_TRISTATE_VALUE	""
 #define DEF_BUTTON_OVER_RELIEF		""
-//#if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
-//#define DEF_BUTTON_PADX			"12"
-//#define DEF_BUTTON_PADX_NOCM		"1"
-//#else
 #define DEF_BUTTON_PADX			"1"
-//#endif
 #define DEF_LABCHKRAD_PADX		"1"
-//#if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
-//#define DEF_BUTTON_PADY			"3"
-//#define DEF_BUTTON_PADY_NOCM		"1"
-//#else
 #define DEF_BUTTON_PADY			"1"
-//#endif
 #define DEF_LABCHKRAD_PADY		"1"
 #define DEF_BUTTON_RELIEF		"flat"
 #define DEF_LABCHKRAD_RELIEF		"flat"
