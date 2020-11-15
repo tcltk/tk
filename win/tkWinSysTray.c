@@ -1106,7 +1106,18 @@ WinSystrayCmd(
             Tcl_WrongNumArgs(interp, 1, objv, "createfrom <Tk image>");
             return TCL_ERROR;
         }
-
+		
+		/*
+		* Check for image.
+		*/
+		Tk_Window tkwin = Tk_MainWindow(interp);
+		TkWindow *winPtr = (TkWindow *)tkwin;
+		Display *d = winPtr->display;
+		Tk_Image tk_image;
+		tk_image = Tk_GetImage(interp, tkwin, Tcl_GetString(objv[2]), NULL, NULL);
+		if (tk_image == NULL) {
+	    return TCL_ERROR;
+		}
         CreateIcoFromTkImage(interp, Tcl_GetString(objv[2]));
         lpIR = iconBits;
 
