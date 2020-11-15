@@ -9,9 +9,7 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-
 */
-
 
 #include "tkInt.h"
 #include <windows.h>
@@ -77,7 +75,7 @@ static HWND CreateTaskbarHandlerWindow(void);
 
 static HWND handlerWindow = NULL;
 static BlockOfIconImagesPtr iconBits = NULL;
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -110,7 +108,7 @@ FreeIconResource(
     }
     ckfree(lpIR);
 }
-
+
 /*
  * If someone wants to see the several masks somewhere on the screen...
  * set the ICO_DRAW define and feel free to make some Tcl commands
@@ -123,7 +121,6 @@ FreeIconResource(
 #ifdef ICO_DRAW
 #define RectWidth(r)((r).right - (r).left + 1)
 #define RectHeight(r)((r).bottom - (r).top + 1)
-
 
 /*
  *----------------------------------------------------------------------
@@ -244,8 +241,8 @@ DrawANDMask(
 
     return TRUE;
 }
-#endif
-
+#endif /* ICO_DRAW */
+
 /*
  *----------------------------------------------------------------------
  *
@@ -286,7 +283,7 @@ NotifyW(
     Tcl_DStringFree(&dst);
     return Shell_NotifyIconW(oper, &ni);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -323,7 +320,7 @@ TaskbarOperation(
     }
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -376,7 +373,7 @@ NewIcon(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
     return icoPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -424,7 +421,7 @@ FreeIcoPtr(
     }
     ckfree(icoPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -467,7 +464,7 @@ GetIcoPtr(
         "\" doesn't exist", (char *) NULL);
     return NULL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -494,7 +491,7 @@ GetInt(
     buffer[len - 1] = 0;
     return (int) strlen(buffer);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -521,7 +518,7 @@ GetIntDec(
     buffer[len - 1] = 0;
     return (int) strlen(buffer);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -670,8 +667,7 @@ TaskbarExpandPercents(
     *dst = 0;
     return after;
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -779,7 +775,7 @@ TaskbarEval(
         ckfree(expanded);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -842,7 +838,7 @@ TaskbarHandlerProc(
     }
     return 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -877,7 +873,7 @@ RegisterHandlerClass(
     wndclass.lpszClassName = HANDLER_CLASS;
     return RegisterClass(&wndclass);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -908,7 +904,7 @@ CreateTaskbarHandlerWindow(void) {
     return (handlerWindow = CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
             CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL));
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -930,7 +926,7 @@ DestroyHandlerWindow(void) {
     if (handlerWindow)
         DestroyWindow(handlerWindow);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -960,7 +956,7 @@ WinIcoDestroy(
         FreeIcoPtr(interp, icoPtr);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1107,7 +1103,7 @@ CreateIcoFromTkImage(
 
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1272,7 +1268,7 @@ WinSystrayCmd(
     }
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1355,7 +1351,7 @@ WinSysNotifyCmd(
     }
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1392,7 +1388,7 @@ WinIcoInit(
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd, NULL, NULL);
     return TCL_OK;
 }
-
+
 /*
  * Local variables:
  * mode: c
