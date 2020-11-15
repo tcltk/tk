@@ -6,6 +6,8 @@
  * Copyright (c) 1995-1996 Microsoft Corp.
  * Copyright (c) 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2020 Eric Boudaillier.
+ * Copyright (c) 2020 Francois Vogel.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

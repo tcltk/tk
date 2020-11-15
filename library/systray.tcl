@@ -5,8 +5,10 @@
 # for system alerts on each platform. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
 
-# Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
-# Copyright © 2020 Eric Boudaillier.
+# Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
+# Copyright (c) 2020 Eric Boudaillier.
+# Copyright (c) 2020 Francois Vogel.
+# 
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
