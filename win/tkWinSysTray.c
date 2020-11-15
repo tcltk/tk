@@ -1102,22 +1102,25 @@ WinSystrayCmd(
     if ((strncmp(Tcl_GetString(objv[1]), "createfrom", length) == 0) && (length >= 2)) {
 
         int pos = 0;
+	Tk_Window tkwin;
+	TkWindow *winPtr;
+	Display *d;
+	Tk_Image tk_image;
         if (objc < 3) {
             Tcl_WrongNumArgs(interp, 1, objv, "createfrom <Tk image>");
             return TCL_ERROR;
         }
 		
-		/*
-		* Check for image.
-		*/
-		Tk_Window tkwin = Tk_MainWindow(interp);
-		TkWindow *winPtr = (TkWindow *)tkwin;
-		Display *d = winPtr->display;
-		Tk_Image tk_image;
-		tk_image = Tk_GetImage(interp, tkwin, Tcl_GetString(objv[2]), NULL, NULL);
-		if (tk_image == NULL) {
-	    return TCL_ERROR;
-		}
+        /*
+        * Check for image.
+        */
+        tkwin = Tk_MainWindow(interp);
+        winPtr = (TkWindow *)tkwin;
+        d = winPtr->display;
+        tk_image = Tk_GetImage(interp, tkwin, Tcl_GetString(objv[2]), NULL, NULL);
+        if (tk_image == NULL) {
+            return TCL_ERROR;
+        }
         CreateIcoFromTkImage(interp, Tcl_GetString(objv[2]));
         lpIR = iconBits;
 
