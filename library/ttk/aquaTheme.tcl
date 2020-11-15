@@ -75,21 +75,38 @@ namespace eval ttk::theme::aqua {
 		pressed RecessedFont
 	    }
 
+	# For Entry, Combobox and Spinbox widgets the selected text background
+	# is the "Highlight color" selected in preferences when the widget
+	# has focus.  It is a gray color when the widget does not have focus or
+	# the window does not have focus. (The background state implies !focus
+	# so we only need to specify !focus.)
+
 	# Entry
-	ttk::style configure TEntry \
-	    -foreground systemTextColor \
-	    -background systemTextBackgroundColor
 	ttk::style map TEntry \
 	    -foreground {
 		disabled systemDisabledControlTextColor
 	    } \
-	    -selectforeground {
-		background systemTextColor
-	    } \
 	    -selectbackground {
-		background systemTextBackgroundColor
+		!focus systemUnemphasizedSelectedTextBackgroundColor
 	    }
 
+	# Combobox:
+	ttk::style map TCombobox \
+	    -foreground {
+		disabled systemDisabledControlTextColor
+	    } \
+	    -selectbackground {
+		!focus systemUnemphasizedSelectedTextBackgroundColor
+	    }
+
+	# Spinbox
+	ttk::style map TSpinbox \
+	    -foreground {
+		disabled systemDisabledControlTextColor
+	    } \
+	    -selectbackground {
+		!focus systemUnemphasizedSelectedTextBackgroundColor
+	    }
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -107,40 +124,6 @@ namespace eval ttk::theme::aqua {
 		{background selected} black
 		{!background selected} systemSelectedTabTextColor
 		disabled systemDisabledControlTextColor}
-
-	# Combobox:
-	ttk::style configure TCombobox \
-	    -foreground systemTextColor \
-	    -background systemTransparent
-	ttk::style map TCombobox \
-	    -foreground {
-		disabled systemDisabledControlTextColor
-	    } \
-	    -selectforeground {
-		background systemTextColor
-	    } \
-	    -selectbackground {
-		background systemTransparent
-	    }
-
-	# Spinbox
-	ttk::style configure TSpinbox \
-	    -foreground systemTextColor \
-	    -background systemTextBackgroundColor \
-	    -selectforeground systemSelectedTextColor \
-	    -selectbackground systemSelectedTextBackgroundColor
-	ttk::style map TSpinbox \
-	    -foreground {
-		disabled systemDisabledControlTextColor
-	    } \
-	    -selectforeground {
-		!active systemTextColor
-	    } \
-	    -selectbackground {
-		!active systemTextBackgroundColor
-		!focus systemTextBackgroundColor
-		focus systemSelectedTextBackgroundColor
-	    }
 
 	# Treeview:
 	ttk::style configure Heading \
