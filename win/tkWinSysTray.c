@@ -977,11 +977,11 @@ CreateIcoFromTkImage(
     unsigned size;
     BITMAPINFO bmInfo;
     ICONINFO iconInfo;
+    Tk_Image tk_image;
+    Tk_Window tkwin = Tk_MainWindow(interp);
 
-    photo = Tk_FindPhoto(interp, image);
-    if (photo == NULL) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "image \"%s\" doesn't exist or is not a photo image", image));
+    tk_image = Tk_GetImage(interp, tkwin, image, NULL, NULL);
+    if (tk_image == NULL) {
         return NULL;
     }
 
@@ -998,6 +998,7 @@ CreateIcoFromTkImage(
 
     iconBits->nNumImages = 1;
 
+    photo = Tk_FindPhoto(interp, image);
     Tk_PhotoGetSize(photo, &width, &height);
     Tk_PhotoGetImage(photo, &block);
 
