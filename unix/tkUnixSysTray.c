@@ -8,7 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-
 */
 
 #include "tkInt.h"
@@ -26,7 +25,6 @@
 #include <X11/X.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
-
 
 /* XEmbed definitions
  * See http://www.freedesktop.org/wiki/Standards_2fxembed_2dspec
@@ -51,7 +49,6 @@
 #define ICON_FLAG_ARGB32 (1<<1)
 #define ICON_FLAG_DIRTY_EDGES (1<<2)
 
-
 #define TKU_NO_BAD_WINDOW_BEGIN(display) \
     { Tk_ErrorHandler error__handler = \
 	Tk_CreateErrorHandler(display, BadWindow, -1, -1, NULL, NULL);
@@ -65,7 +62,8 @@ static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp);
 static Window TKU_XID(Tk_Window w);
 
 /* Customized window withdraw */
-static void TKU_WmWithdraw(
+static void
+TKU_WmWithdraw(
     Tk_Window winPtr,
     TCL_UNUSED(Tcl_Interp *))
 {
@@ -73,14 +71,20 @@ static void TKU_WmWithdraw(
 }
 
 /* The wrapper should exist */
-static Tk_Window TKU_GetWrapper(Tk_Window winPtr)
+static Tk_Window
+TKU_GetWrapper(
+    Tk_Window winPtr)
 {
     return (Tk_Window)
 	TkpGetWrapperWindow((TkWindow*)winPtr);
 }
 
 /* Subscribe for extra X11 events (needed for MANAGER selection) */
-void TKU_AddInput( Display* dpy, Window win, long add_to_mask)
+void
+TKU_AddInput(
+    Display* dpy,
+    Window win,
+    long add_to_mask)
 {
     XWindowAttributes xswa;
     TKU_NO_BAD_WINDOW_BEGIN(dpy)
@@ -90,7 +94,10 @@ void TKU_AddInput( Display* dpy, Window win, long add_to_mask)
 }
 
 /* Get Tk Window wrapper (make it exist if ny) */
-static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp)
+static Tk_Window
+TKU_Wrapper(
+    Tk_Window w,
+    Tcl_Interp* interp)
 {
     Tk_Window wrapper = TKU_GetWrapper(w);
     if (!wrapper) {
@@ -103,7 +110,9 @@ static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp)
 }
 
 /* Return X window id for Tk window (make it exist if ny) */
-static Window TKU_XID(Tk_Window w)
+static Window
+TKU_XID(
+    Tk_Window w)
 {
     Window xid = Tk_WindowId(w);
     if (xid == None) {
@@ -133,7 +142,7 @@ typedef struct {
      * invalidated by any "whole image" type change. */
 
     Tk_Image imageVisualInstance; /* image instance for use with argb32 */
-    Tk_PhotoHandle photo;	/* !null if it's really a photo */
+    Tk_PhotoHandle photo;	  /* !null if it's really a photo */
 
     /* Offscreen pixmap is created for a given imageWidth,
      * imageHeight, drawingWin, and invalidated (and freed) on image
@@ -183,7 +192,6 @@ typedef struct {
 	*classString; /* option: -class as string */
 } DockIcon;
 
-
 /*
  * Forward declarations for procedures defined in this file.
  */
@@ -199,7 +207,6 @@ static int PostBalloon(DockIcon* icon, const char * utf8msg,
 		       long timeout);
 static void CancelBalloon(DockIcon* icon, int msgid);
 static int QueryTrayOrientation(DockIcon* icon);
-
 
 static void TrayIconDeleteProc( ClientData cd );
 static Atom DockSelectionAtomFor(Tk_Window tkwin);
@@ -221,8 +228,7 @@ static void TrayIconWrapperEvent(ClientData cd, XEvent* ev);
 static int IconGenericHandler(ClientData cd, XEvent *ev);
 
 int Tktray_Init ( Tcl_Interp* interp );
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -236,11 +242,15 @@ int Tktray_Init ( Tcl_Interp* interp );
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc,  Tcl_Obj *const objv[])
+static int
+TrayIconObjectCmd(
+    ClientData cd,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
     DockIcon *icon = (DockIcon*)cd;
     int bbox[4] = {0,0,0,0};
@@ -251,8 +261,10 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
     Window bogus;
     int msgid;
 
-    enum {XWC_CONFIGURE=0, XWC_CGET, XWC_BALLOON, XWC_CANCEL, XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION};
-    const char *st_wcmd[]={"configure","cget","balloon","cancel","bbox","docked","orientation",NULL};
+    enum {XWC_CONFIGURE=0, XWC_CGET, XWC_BALLOON, XWC_CANCEL,
+            XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION};
+    const char *st_wcmd[]={"configure","cget","balloon","cancel",
+            "bbox","docked","orientation",NULL};
 
     long timeout = 0;
     Tcl_Obj* optionValue;
@@ -262,7 +274,7 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObj(interp, objv[1], st_wcmd,
-			    "subcommand",TCL_EXACT,&wcmd)!=TCL_OK) {
+            "subcommand",TCL_EXACT,&wcmd)!=TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -275,7 +287,8 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
 	    Tcl_WrongNumArgs(interp,2,objv,"option");
 	    return TCL_ERROR;
 	}
-	optionValue = Tk_GetOptionValue(interp,(char*)icon,icon->options,objv[2],icon->tkwin);
+	optionValue = Tk_GetOptionValue(interp,(char*)icon,
+                icon->options,objv[2],icon->tkwin);
 	if (optionValue) {
 	    Tcl_SetObjResult(interp,optionValue);
 	    return TCL_OK;
@@ -311,12 +324,11 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
     case XWC_BBOX:
 	if (icon->drawingWin) {
 	    XGetWindowAttributes(Tk_Display(icon->drawingWin),
-				 TKU_XID(icon->drawingWin),
-				 &xwa);
+                    TKU_XID(icon->drawingWin), &xwa);
 
 	    XTranslateCoordinates(Tk_Display(icon->drawingWin),
-				  TKU_XID(icon->drawingWin),
-				  xwa.root, 0,0, &icon->x, &icon->y, &bogus);
+                    TKU_XID(icon->drawingWin), xwa.root, 0,0,
+                    &icon->x, &icon->y, &bogus);
 	    bbox[0] = icon->x;
 	    bbox[1] = icon->y;
 	    bbox[2] = bbox[0] + icon->width - 1;
@@ -325,7 +337,7 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
 	bboxObj = Tcl_NewObj();
 	for (i=0; i<4; ++i) {
 	    Tcl_ListObjAppendElement(interp, bboxObj,
-				     Tcl_NewIntObj(bbox[i]));
+                    Tcl_NewIntObj(bbox[i]));
 	}
 	Tcl_SetObjResult(interp, bboxObj);
 	return TCL_OK;
@@ -353,6 +365,7 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
     }
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -366,10 +379,12 @@ static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static int QueryTrayOrientation(DockIcon* icon)
+static int
+QueryTrayOrientation(
+    DockIcon* icon)
 {
     Atom retType = None;
     int retFormat = 32;
@@ -397,8 +412,7 @@ static int QueryTrayOrientation(DockIcon* icon)
     }
     return result;
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -412,19 +426,19 @@ static int QueryTrayOrientation(DockIcon* icon)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-
-static Atom DockSelectionAtomFor(Tk_Window tkwin)
+static Atom
+DockSelectionAtomFor(
+    Tk_Window tkwin)
 {
     char buf[256];
     /* no snprintf in C89 */
     sprintf(buf,"_NET_SYSTEM_TRAY_S%d",Tk_ScreenNumber(tkwin));
     return Tk_InternAtom(tkwin,buf);
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -438,10 +452,13 @@ static Atom DockSelectionAtomFor(Tk_Window tkwin)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void XembedSetState(DockIcon *icon, long xembedState)
+static void
+XembedSetState(
+    DockIcon *icon,
+    long xembedState)
 {
     long info[] = { 0, 0 };
     info[1] = xembedState;
@@ -453,7 +470,7 @@ static void XembedSetState(DockIcon *icon, long xembedState)
 			PropModeReplace, (unsigned char*)info, 2);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -467,10 +484,12 @@ static void XembedSetState(DockIcon *icon, long xembedState)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void XembedRequestDock(DockIcon *icon)
+static void
+XembedRequestDock(
+    DockIcon *icon)
 {
     Tk_Window tkwin = icon->drawingWin;
     XEvent ev;
@@ -488,7 +507,7 @@ static void XembedRequestDock(DockIcon *icon)
     ev.xclient.data.l[4]=0;
     XSendEvent(dpy, icon->myManager, True, StructureNotifyMask|SubstructureNotifyMask, &ev);
  }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -502,16 +521,18 @@ static void XembedRequestDock(DockIcon *icon)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void CheckArgbVisual(DockIcon *icon)
+static void
+CheckArgbVisual(
+    DockIcon *icon)
 {
     /* Find out if a visual is recommended and if it looks like argb32.
-       For such visuals we should:
-       Recreate a window if it's created but the depth is wrong;
-       Don't use ParentRelative but blank background.
-       For photo images, draw into a window by XPutImage.
+     * For such visuals we should:
+     * Recreate a window if it's created but the depth is wrong;
+     * Don't use ParentRelative but blank background.
+     * For photo images, draw into a window by XPutImage.
      */
     Atom retType = None;
     int retFormat = 32;
@@ -523,14 +544,14 @@ static void CheckArgbVisual(DockIcon *icon)
 
     TKU_NO_BAD_WINDOW_BEGIN(Tk_Display(icon->tkwin))
     XGetWindowProperty(Tk_Display(icon->tkwin),
-		       icon->trayManager,
-		       icon->a_NET_SYSTEM_TRAY_VISUAL,
-		       /* offset */ 0,
-		       /* length */ 1,
-		       /* delete */ False,
-		       /* type */ XA_VISUALID,
-		       &retType, &retFormat, &retNitems,
-		       &retBytesAfter, &retProp);
+            icon->trayManager,
+            icon->a_NET_SYSTEM_TRAY_VISUAL,
+            /* offset */ 0,
+            /* length */ 1,
+            /* delete */ False,
+            /* type */ XA_VISUALID,
+            &retType, &retFormat, &retNitems,
+            &retBytesAfter, &retProp);
     TKU_NO_BAD_WINDOW_END
     if (retType == XA_VISUALID &&
 	retNitems == 1 &&
@@ -539,7 +560,7 @@ static void CheckArgbVisual(DockIcon *icon)
 	sprintf(numeric,"%ld",*(long*)retProp);
 	XFree(retProp);
 	match = Tk_GetVisual(icon->interp, icon->tkwin,
-			     numeric, &depth, &cmap);
+                numeric, &depth, &cmap);
     }
     if (match&& depth==32 &&
 	match->red_mask == 0xFF0000UL &&
@@ -552,7 +573,7 @@ static void CheckArgbVisual(DockIcon *icon)
 	icon->bestColormap = None;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -566,9 +587,12 @@ static void CheckArgbVisual(DockIcon *icon)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
-static void CreateTrayIconWindow(DockIcon *icon)
+
+static void
+CreateTrayIconWindow(
+    DockIcon *icon)
 {
     Tcl_SavedResult oldResult;
     Tk_Window tkwin;
@@ -577,18 +601,19 @@ static void CreateTrayIconWindow(DockIcon *icon)
 
     Tcl_SaveResult(icon->interp, &oldResult);
     /* Use the same name (tail) as the widget name, to enable
-       name-based icon management for supporting trays, as promised by
-       the docs */
+     * name-based icon management for supporting trays, as promised by
+     * the docs.
+     */
     tkwin = icon->drawingWin = Tk_CreateWindow(icon->interp, icon->tkwin,
-					       Tk_Name(icon->tkwin), "");
+            Tk_Name(icon->tkwin), "");
     if (tkwin) {
 	Tk_SetClass(icon->drawingWin,icon->classString);
 	Tk_CreateEventHandler(icon->drawingWin,ExposureMask|StructureNotifyMask|ButtonPressMask|ButtonReleaseMask|
-			      EnterWindowMask|LeaveWindowMask|PointerMotionMask,
-			      TrayIconEvent,(ClientData)icon);
+                EnterWindowMask|LeaveWindowMask|PointerMotionMask,
+                TrayIconEvent,(ClientData)icon);
 	if(icon->bestVisual) {
 	    Tk_SetWindowVisual(icon->drawingWin,icon->bestVisual,
-			       32,icon->bestColormap);
+                    32,icon->bestColormap);
 	    icon->flags |= ICON_FLAG_ARGB32;
 	    Tk_SetWindowBackground(tkwin, 0);
 	} else {
@@ -614,7 +639,7 @@ static void CreateTrayIconWindow(DockIcon *icon)
     }
     Tcl_RestoreResult(icon->interp, &oldResult);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -628,16 +653,19 @@ static void CreateTrayIconWindow(DockIcon *icon)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
-static void DockToManager(DockIcon *icon)
+
+static void
+DockToManager(
+    DockIcon *icon)
 {
     icon->myManager = icon->trayManager;
     Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconCreate"), NULL);
     XembedSetState(icon, icon->visible ? XEMBED_MAPPED : 0);
     XembedRequestDock(icon);
 }
-
+
 static const
 Tk_OptionSpec IconOptionSpec[]={
     {TK_OPTION_STRING,"-image","image","Image",
@@ -662,7 +690,7 @@ Tk_OptionSpec IconOptionSpec[]={
      ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -676,10 +704,14 @@ Tk_OptionSpec IconOptionSpec[]={
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void TrayIconRequestSize(DockIcon* icon, int w, int h)
+static void
+TrayIconRequestSize(
+    DockIcon* icon,
+    int w,
+    int h)
 {
     if (icon->drawingWin) {
 	if (icon->requestedWidth != w ||
@@ -696,7 +728,7 @@ static void TrayIconRequestSize(DockIcon* icon, int w, int h)
 	icon->requestedHeight = 0;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -710,12 +742,18 @@ static void TrayIconRequestSize(DockIcon* icon, int w, int h)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void TrayIconImageChanged(ClientData cd,
-		     int x, int y, int w, int h,
-		     int imgw, int imgh)
+static void
+TrayIconImageChanged(
+    ClientData cd,
+    int x,
+    int y,
+    int w,
+    int h,
+    int imgw,
+    int imgh)
 {
     DockIcon *icon = (DockIcon*) cd;
     if (imgw != icon->imageWidth ||
@@ -727,7 +765,7 @@ static void TrayIconImageChanged(ClientData cd,
 	if (icon->offscreenPixmap) {
 	    /* its size is bad */
 	    Tk_FreePixmap(Tk_Display(icon->tkwin),
-			  icon->offscreenPixmap);
+                    icon->offscreenPixmap);
 	    icon->offscreenPixmap = None;
 	}
 	/* if some image dimension decreases,
@@ -746,7 +784,7 @@ static void TrayIconImageChanged(ClientData cd,
     TrayIconRequestSize(icon,imgw,imgh);
     EventuallyRedrawIcon(icon);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -760,11 +798,11 @@ static void TrayIconImageChanged(ClientData cd,
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-
-static void IgnoreImageChange(
+static void
+IgnoreImageChange(
     TCL_UNUSED(void *),
     TCL_UNUSED(int),
     TCL_UNUSED(int),
@@ -774,7 +812,7 @@ static void IgnoreImageChange(
     TCL_UNUSED(int))
 {
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -788,10 +826,12 @@ static void IgnoreImageChange(
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void TrayIconForceImageChange(DockIcon* icon)
+static void
+TrayIconForceImageChange(
+    DockIcon* icon)
 {
     if (icon->image) {
 	int w,h;
@@ -799,8 +839,7 @@ static void TrayIconForceImageChange(DockIcon* icon)
 	TrayIconImageChanged((ClientData)icon,0,0,w,h,w,h);
     }
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -814,10 +853,13 @@ static void TrayIconForceImageChange(DockIcon* icon)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void EventuallyRedrawIcon(DockIcon* icon) {
+static void
+EventuallyRedrawIcon(
+    DockIcon* icon)
+{
     if (icon->drawingWin && icon->myManager) {	/* don't redraw invisible icon */
 	if (!(icon->flags&ICON_FLAG_REDRAW_PENDING)) { /* don't schedule multiple redraw ops */
 	    icon->flags|=ICON_FLAG_REDRAW_PENDING;
@@ -825,8 +867,7 @@ static void EventuallyRedrawIcon(DockIcon* icon) {
 	}
     }
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -840,10 +881,12 @@ static void EventuallyRedrawIcon(DockIcon* icon) {
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void DisplayIcon(ClientData cd)
+static void
+DisplayIcon(
+    ClientData cd)
 {
     DockIcon *icon = (DockIcon*)cd;
     int w = icon->imageWidth, h = icon->imageHeight;
@@ -865,24 +908,22 @@ static void DisplayIcon(ClientData cd)
 	     */
 	    if (icon->offscreenPixmap == None) {
 		icon->offscreenPixmap = Tk_GetPixmap(Tk_Display(icon->drawingWin),
-						     Tk_WindowId(icon->drawingWin),
-						     w, h, 32);
+                        Tk_WindowId(icon->drawingWin),
+                        w, h, 32);
 	    }
 	    if (!icon->photo) {
-		icon->photo = Tk_FindPhoto(icon->interp,
-					   icon->imageString);
+		icon->photo = Tk_FindPhoto(icon->interp, icon->imageString);
 	    }
 	    if (!icon->photo && !icon->imageVisualInstance) {
 		Tcl_SavedResult saved;
 		Tcl_SaveResult(icon->interp,&saved);
-		icon->imageVisualInstance = Tk_GetImage(icon->interp,icon->drawingWin,icon->imageString,
-							IgnoreImageChange,(ClientData)NULL);
+		icon->imageVisualInstance = Tk_GetImage(icon->interp,icon->drawingWin,
+                        icon->imageString, IgnoreImageChange,(ClientData)NULL);
 		Tcl_RestoreResult(icon->interp,&saved);
 	    }
 	    if (icon->photo && !icon->offscreenImage) {
 		icon->offscreenImage = XGetImage(Tk_Display(icon->drawingWin),
-						 icon->offscreenPixmap,
-						 0, 0, w, h, AllPlanes, ZPixmap);
+                        icon->offscreenPixmap, 0, 0, w, h, AllPlanes, ZPixmap);
 	    }
 	    if (icon->offscreenGC == None) {
 		XGCValues gcv;
@@ -891,13 +932,11 @@ static void DisplayIcon(ClientData cd)
 		gcv.foreground = 0;
 		gcv.background = 0;
 		icon->offscreenGC = Tk_GetGC(icon->drawingWin,
-					     GCFunction|GCPlaneMask|
-					     GCForeground|GCBackground,
-					     &gcv);
+                        GCFunction|GCPlaneMask|GCForeground|GCBackground,
+                        &gcv);
 	    }
 	    if (icon->flags & ICON_FLAG_DIRTY_EDGES) {
-		XClearWindow(Tk_Display(icon->drawingWin),
-			     TKU_XID(icon->drawingWin));
+		XClearWindow(Tk_Display(icon->drawingWin), TKU_XID(icon->drawingWin));
 		icon->flags &= ~ICON_FLAG_DIRTY_EDGES;
 	    }
 	    if (icon->photo) {
@@ -929,27 +968,27 @@ static void DisplayIcon(ClientData cd)
 		    }
 		}
 		XPutImage(Tk_Display(icon->drawingWin),
-			  icon->offscreenPixmap,
-			  icon->offscreenGC,
-			  icon->offscreenImage,
-			  0,0,0,0,w,h);
+			icon->offscreenPixmap,
+			icon->offscreenGC,
+			icon->offscreenImage,
+			0,0,0,0,w,h);
 	    } else {
 		XFillRectangle(Tk_Display(icon->drawingWin),
-			       icon->offscreenPixmap,
-			       icon->offscreenGC,
-			       0,0,w,h);
+			icon->offscreenPixmap,
+			icon->offscreenGC,
+			0,0,w,h);
 		if (icon->imageVisualInstance) {
 		    Tk_RedrawImage(icon->imageVisualInstance,
-				   0,0,w,h,
-				   icon->offscreenPixmap,
-				   0,0);
+                            0,0,w,h,
+                            icon->offscreenPixmap,
+                            0,0);
 		}
 	    }
 	    XCopyArea(Tk_Display(icon->drawingWin),
-	    	      icon->offscreenPixmap,
-	    	      TKU_XID(icon->drawingWin),
-	    	      icon->offscreenGC,
-	    	      imgx,imgy,outw,outh,outx,outy);
+                    icon->offscreenPixmap,
+                    TKU_XID(icon->drawingWin),
+                    icon->offscreenGC,
+                    imgx,imgy,outw,outh,outx,outy);
 	} else {
 	    /* Non-argb redraw: clear window and draw an image over it.
 	       For photos it gives a correct alpha blending with a parent
@@ -957,16 +996,16 @@ static void DisplayIcon(ClientData cd)
 	       work with lxpanel fancy backgrounds).
 	    */
 	    XClearWindow(Tk_Display(icon->drawingWin),
-			 TKU_XID(icon->drawingWin));
+                    TKU_XID(icon->drawingWin));
 	    if (icon->image && icon->visible) {
 		Tk_RedrawImage(icon->image,imgx,imgy,outw,outh,
-			       TKU_XID(icon->drawingWin),
-			       outx, outy);
+                        TKU_XID(icon->drawingWin),
+                        outx, outy);
 	    }
 	}
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -980,10 +1019,13 @@ static void DisplayIcon(ClientData cd)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void RetargetEvent(DockIcon *icon, XEvent *ev)
+static void
+RetargetEvent(
+    DockIcon *icon,
+    XEvent *ev)
 {
     int send = 0;
     Window* saveWin1 = NULL, *saveWin2 = NULL;
@@ -1021,8 +1063,7 @@ static void RetargetEvent(DockIcon *icon, XEvent *ev)
 	Tk_HandleEvent(ev);
     }
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1036,18 +1077,19 @@ static void RetargetEvent(DockIcon *icon, XEvent *ev)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-
-static void TrayIconWrapperEvent(ClientData cd, XEvent* ev)
+static void
+TrayIconWrapperEvent(
+    ClientData cd,
+    XEvent* ev)
 {
-
   /* Some embedders, like Docker, add icon windows to save set
-   (XAddToSaveSet), so when they crash the icon is reparented to root.
-   We have to make sure that automatic mapping in root is done in
-   withdrawn state (no way to prevent it entirely)
- */
+   * (XAddToSaveSet), so when they crash the icon is reparented to root.
+   * We have to make sure that automatic mapping in root is done in
+   * withdrawn state (no way to prevent it entirely)
+   */
     DockIcon *icon = (DockIcon*)cd;
     XWindowAttributes attr;
     if (icon->drawingWin) {
@@ -1057,8 +1099,7 @@ static void TrayIconWrapperEvent(ClientData cd, XEvent* ev)
 	       to check for reparent-to-root is to ask for this root
 	       first */
 	    XGetWindowAttributes(ev->xreparent.display,
-				 ev->xreparent.window,
-				 &attr);
+                    ev->xreparent.window, &attr);
 	    if (attr.root == ev->xreparent.parent) {
 		/* upon reparent to root, */
 		if (icon->drawingWin) {
@@ -1067,16 +1108,15 @@ static void TrayIconWrapperEvent(ClientData cd, XEvent* ev)
 		    if (icon->myManager)
 			Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"), NULL);
 		    icon->myManager = None;
-
 		}
 	    } /* Reparenting into some other embedder is theoretically possible,
-		 and everything would just work in this case */
+	       * and everything would just work in this case.
+               */
 	    break;
 	}
     }
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1090,10 +1130,13 @@ static void TrayIconWrapperEvent(ClientData cd, XEvent* ev)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void TrayIconEvent(ClientData cd, XEvent* ev)
+static void
+TrayIconEvent(
+    ClientData cd,
+    XEvent* ev)
 {
     DockIcon *icon = (DockIcon*)cd;
 
@@ -1105,12 +1148,12 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
 
     case DestroyNotify:
 	/* If anonymous window is destroyed first, then either
-	   something went wrong with a tray (if -visible) or we just
-	   reconfigured to invisibility: nothing to be done in both
-	   cases.
-	   If unreal window is destroyed first, freeing the data structures
-	   is the only thing to do.
-	*/
+	 * something went wrong with a tray (if -visible) or we just
+	 * reconfigured to invisibility: nothing to be done in both
+	 * cases.
+	 * If unreal window is destroyed first, freeing the data structures
+	 * is the only thing to do.
+	 */
 	if (icon->myManager) {
 	    Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"), NULL);
 	}
@@ -1127,7 +1170,7 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
     case ConfigureNotify:
 	Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconConfigure"), NULL);
 	if (icon->width != ev->xconfigure.width ||
-	    icon->height != ev->xconfigure.height) {
+	        icon->height != ev->xconfigure.height) {
 	    icon->width = ev->xconfigure.width;
 	    icon->height = ev->xconfigure.height;
 	    icon->flags |= ICON_FLAG_DIRTY_EDGES;
@@ -1145,7 +1188,7 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
 
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1159,10 +1202,13 @@ static void TrayIconEvent(ClientData cd, XEvent* ev)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void UserIconEvent(ClientData cd, XEvent* ev)
+static void
+UserIconEvent(
+    ClientData cd,
+    XEvent* ev)
 {
     DockIcon *icon = (DockIcon*)cd;
 
@@ -1201,8 +1247,7 @@ static void UserIconEvent(ClientData cd, XEvent* ev)
 	break;
     }
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1216,11 +1261,14 @@ static void UserIconEvent(ClientData cd, XEvent* ev)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static int PostBalloon(DockIcon* icon, const char * utf8msg,
-		       long timeout)
+static int
+PostBalloon(
+    DockIcon *icon,
+    const char *utf8msg,
+    long timeout)
 {
     Tk_Window tkwin = icon -> tkwin;
     Display* dpy = Tk_Display(tkwin);
@@ -1266,8 +1314,7 @@ static int PostBalloon(DockIcon* icon, const char * utf8msg,
     TKU_NO_BAD_WINDOW_END;
     return icon->msgid;
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1281,10 +1328,13 @@ static int PostBalloon(DockIcon* icon, const char * utf8msg,
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void CancelBalloon(DockIcon* icon, int msgid)
+static void
+CancelBalloon(
+    DockIcon *icon,
+    int msgid)
 {
     Tk_Window tkwin = icon -> tkwin;
     Display* dpy = Tk_Display(tkwin);
@@ -1312,7 +1362,7 @@ static void CancelBalloon(DockIcon* icon, int msgid)
 		   StructureNotifyMask|SubstructureNotifyMask, &ev);
     TKU_NO_BAD_WINDOW_END
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1326,10 +1376,13 @@ static void CancelBalloon(DockIcon* icon, int msgid)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static int IconGenericHandler(ClientData cd, XEvent *ev)
+static int
+IconGenericHandler(
+    ClientData cd,
+    XEvent *ev)
 {
     DockIcon *icon = (DockIcon*)cd;
 
@@ -1357,8 +1410,7 @@ static int IconGenericHandler(ClientData cd, XEvent *ev)
     }
     return 0;
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1372,34 +1424,38 @@ static int IconGenericHandler(ClientData cd, XEvent *ev)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-static void TrayIconUpdate(DockIcon* icon, int mask)
+static void
+TrayIconUpdate(
+    DockIcon *icon,
+    int mask)
 {
     /* why should someone need this option?
-       anyway, let's handle it if we provide it */
+     * anyway, let's handle it if we provide it.
+     */
     if (mask & ICON_CONF_CLASS) {
 	if (icon->drawingWin)
 	    Tk_SetClass(icon->drawingWin,Tk_GetUid(icon->classString));
     }
     /*
-       First, ensure right icon visibility.
-       If should be visible and not yet managed,
-       we have to get the tray or wait for it.
-       If should be invisible and managed,
-       real-window is simply destroyed.
-       If should be invisible and not managed,
-       generic handler should be abandoned.
-    */
+     * First, ensure right icon visibility.
+     * If should be visible and not yet managed,
+     * we have to get the tray or wait for it.
+     * If should be invisible and managed,
+     * real-window is simply destroyed.
+     * If should be invisible and not managed,
+     * generic handler should be abandoned.
+     */
     if (mask & ICON_CONF_XEMBED) {
 	if (icon->myManager == None &&
 	    icon->trayManager != None &&
 	    icon->docked) {
 	    CheckArgbVisual(icon);
 	    if (icon->drawingWin &&
-		((icon->bestVisual && !(icon->flags & ICON_FLAG_ARGB32)) ||
-		 (!icon->bestVisual && (icon->flags & ICON_FLAG_ARGB32)))) {
+		    ((icon->bestVisual && !(icon->flags & ICON_FLAG_ARGB32)) ||
+		     (!icon->bestVisual && (icon->flags & ICON_FLAG_ARGB32)))) {
 		icon->myManager = None;
 		icon->wrapper = None;
 		icon->requestedWidth = icon->requestedHeight = 0;
@@ -1414,8 +1470,8 @@ static void TrayIconUpdate(DockIcon* icon, int mask)
 	    }
 	}
 	if (icon->myManager != None &&
-	    icon->drawingWin != NULL &&
-	    !icon->docked) {
+	        icon->drawingWin != NULL &&
+	        !icon->docked) {
 	    Tk_DestroyWindow(icon->drawingWin);
 	    icon->drawingWin = NULL;
 	    icon->myManager = None;
@@ -1432,8 +1488,7 @@ static void TrayIconUpdate(DockIcon* icon, int mask)
 	EventuallyRedrawIcon(icon);
     }
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1448,13 +1503,16 @@ static void TrayIconUpdate(DockIcon* icon, int mask)
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-
-static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
-				   int objc,  Tcl_Obj *const objv[],
-				   int addflags)
+static int
+TrayIconConfigureMethod(
+    DockIcon *icon,
+    Tcl_Interp* interp,
+    int objc,
+    Tcl_Obj *const objv[],
+    int addflags)
 {
     Tk_SavedOptions saved;
     Tk_Image newImage = NULL;
@@ -1502,7 +1560,7 @@ static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
     TrayIconUpdate(icon,mask);
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1516,17 +1574,17 @@ static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-
-static void TrayIconDeleteProc( ClientData cd )
+static void
+TrayIconDeleteProc(
+    ClientData cd )
 {
     DockIcon *icon = (DockIcon *)cd;
     Tk_DestroyWindow(icon->tkwin);
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1540,12 +1598,15 @@ static void TrayIconDeleteProc( ClientData cd )
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-
-static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc,  Tcl_Obj *const objv[])
+static int
+TrayIconCreateCmd(
+    ClientData cd,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
     Tk_Window mainWindow = (Tk_Window)cd;
     DockIcon *icon;
@@ -1563,27 +1624,26 @@ static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
     }
 
     /* It's not a toplevel window by now. It really doesn't matter,
-       because it's not really shown */
+     * because it's not really shown.
+     */
     icon->tkwin =
-	Tk_CreateWindowFromPath(interp,
-				mainWindow,
-				Tcl_GetString(objv[1]),"");
+	    Tk_CreateWindowFromPath(interp, mainWindow, Tcl_GetString(objv[1]),"");
     if (icon->tkwin == NULL) {
 	goto handleErrors;
     }
 
     /* Subscribe to StructureNotify */
     TKU_AddInput(Tk_Display(icon->tkwin),
-		 RootWindowOfScreen(Tk_Screen(icon->tkwin)),StructureNotifyMask);
+            RootWindowOfScreen(Tk_Screen(icon->tkwin)),StructureNotifyMask);
     TKU_AddInput(Tk_Display(icon->tkwin),
-		 RootWindow(Tk_Display(icon->tkwin),0),StructureNotifyMask);
+            RootWindow(Tk_Display(icon->tkwin),0),StructureNotifyMask);
     /* Spec says "screen 0" not "default", but... */
     TKU_AddInput(Tk_Display(icon->tkwin),
-		 DefaultRootWindow(Tk_Display(icon->tkwin)),StructureNotifyMask);
+            DefaultRootWindow(Tk_Display(icon->tkwin)),StructureNotifyMask);
 
     /* Early tracking of DestroyNotify is essential */
     Tk_CreateEventHandler(icon->tkwin,StructureNotifyMask,
-			  UserIconEvent,(ClientData)icon);
+            UserIconEvent,(ClientData)icon);
 
     /* Now try setting options */
     icon->options = Tk_CreateOptionTable(interp,IconOptionSpec);
@@ -1612,15 +1672,14 @@ static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
 
     if (objc>3) {
 	if (TrayIconConfigureMethod(icon, interp, objc-2, objv+2,
-				    ICON_CONF_XEMBED|ICON_CONF_IMAGE|ICON_CONF_FIRST_TIME)!=TCL_OK) {
+                ICON_CONF_XEMBED|ICON_CONF_IMAGE|ICON_CONF_FIRST_TIME) != TCL_OK) {
 	    goto handleErrors;
 	}
     }
 
     icon->widgetCmd =
 	Tcl_CreateObjCommand(interp, Tcl_GetString(objv[1]),
-			     TrayIconObjectCmd, (ClientData)icon, TrayIconDeleteProc);
-
+            TrayIconObjectCmd, (ClientData)icon, TrayIconDeleteProc);
 
     /* Sometimes a command just can't be created... */
     if (!icon->widgetCmd) {
@@ -1645,8 +1704,7 @@ handleErrors:
     }
     return TCL_ERROR;
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1660,18 +1718,19 @@ handleErrors:
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
-int Tktray_Init(Tcl_Interp* interp)
+int
+Tktray_Init(
+    Tcl_Interp *interp)
 {
-
     Tcl_CreateObjCommand(interp, "::tk::systray::_systray",
             TrayIconCreateCmd, Tk_MainWindow(interp), NULL );
 
     return TCL_OK;
 }
-
+
 /*
  * Local Variables:
  * mode: objc
