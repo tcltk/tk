@@ -45,7 +45,7 @@
 # define snprintf _snprintf
 #endif
 
-static int CreateIcoFromTkImage(Tcl_Interp *interp, const char *image);
+static BlockOfIconImagesPtr CreateIcoFromTkImage(Tcl_Interp *interp, const char *image);
 
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
@@ -54,9 +54,9 @@ typedef struct IcoInfo {
                                  * cancel it. */
     BlockOfIconImagesPtr lpIR;  /* IconresourcePtr */
     int iconpos;                /* hIcon is the nth Icon*/
-    char *taskbar_txt;          /* malloced text to display in the taskbar */
+    Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
-    char *taskbar_command;      /* command to eval if events in the taskbar
+    Tcl_Obj *taskbar_command;   /* command to eval if events in the taskbar
                                  * arrive */
     int taskbar_flags;          /* taskbar related flags*/
     HWND hwndFocus;
@@ -255,47 +255,6 @@ DrawANDMask(
 /*
  *----------------------------------------------------------------------
  *
- * NotifyW --
- *
- * 	Display icon in system tray on more recent systems supporting Unicode.
- *
- * Results:
- *	Icon is displayed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static BOOL
-NotifyW(
-    IcoInfo *icoPtr,
-    int oper,
-    HICON hIcon,
-    const char *txt)
-{
-    NOTIFYICONDATAW ni;
-    Tcl_DString dst;
-    WCHAR *str;
-
-    ni.cbSize = sizeof(NOTIFYICONDATAW);
-    ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = (unsigned int) icoPtr;
-    ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
-    ni.uCallbackMessage = ICON_MESSAGE;
-    ni.hIcon = (HICON) hIcon;
-
-    Tcl_DStringInit(&dst);
-    str = (WCHAR *)Tcl_UtfToWCharDString(txt, -1, &dst);
-    wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
-    Tcl_DStringFree(&dst);
-    return Shell_NotifyIconW(oper, &ni);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TaskbarOperation --
  *
  * 	Management of icon display.
@@ -312,14 +271,29 @@ NotifyW(
 static int
 TaskbarOperation(
     IcoInfo *icoPtr,
-    int oper,
-    HICON hIcon,
-    const char *txt)
+    int oper)
 {
-    int result = NotifyW(icoPtr, oper, hIcon, txt);
+    NOTIFYICONDATAW ni;
+    WCHAR *str;
 
-    Tcl_SetObjResult(icoPtr->interp, Tcl_NewIntObj(result));
-    if (result == 1) {
+    ni.cbSize = sizeof(NOTIFYICONDATAW);
+    ni.hWnd = CreateTaskbarHandlerWindow();
+    ni.uID = (unsigned int) icoPtr;
+    ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+    ni.uCallbackMessage = ICON_MESSAGE;
+    ni.hIcon = icoPtr->hIcon;
+
+    if (icoPtr->taskbar_txt != NULL) {
+        Tcl_DString dst;
+        Tcl_DStringInit(&dst);
+        str = (WCHAR *)Tcl_UtfToWCharDString(Tcl_GetString(icoPtr->taskbar_txt), -1, &dst);
+        wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
+        Tcl_DStringFree(&dst);
+    } else {
+        ni.szTip[0] = 0;
+    }
+
+    if (Shell_NotifyIconW(oper, &ni) == 1) {
         if (oper == NIM_ADD || oper == NIM_MODIFY) {
             icoPtr->taskbar_flags |= TASKBAR_ICON;
         }
@@ -327,6 +301,7 @@ TaskbarOperation(
             icoPtr->taskbar_flags &= ~TASKBAR_ICON;
         }
     }
+    /* Silently ignore error? */
     return TCL_OK;
 }
 
@@ -353,8 +328,6 @@ NewIcon(
     HICON hIcon,
     int itype, BlockOfIconImagesPtr lpIR, int iconpos)
 {
-    int n;
-    char buffer[5 + TCL_INTEGER_SPACE];
     IcoInfo *icoPtr;
 
     icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
@@ -364,10 +337,7 @@ NewIcon(
     icoPtr->itype = itype;
     icoPtr->lpIR = lpIR;
     icoPtr->iconpos = iconpos;
-    n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
-    buffer[n] = 0;
-    icoPtr->taskbar_txt = (char *)ckalloc(strlen(buffer) + 1);
-    strcpy(icoPtr->taskbar_txt, buffer);
+    icoPtr->taskbar_txt = NULL;
     icoPtr->interp = interp;
     icoPtr->taskbar_command = NULL;
     icoPtr->taskbar_flags = 0;
@@ -378,7 +348,6 @@ NewIcon(
     }
     icoPtr->nextPtr = icoInterpPtr->firstIcoPtr;
     icoInterpPtr->firstIcoPtr = icoPtr;
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
     return icoPtr;
 }
 
@@ -413,18 +382,17 @@ FreeIcoPtr(
         prevPtr->nextPtr = icoPtr->nextPtr;
     }
     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
-        TaskbarOperation(icoPtr, NIM_DELETE, NULL, "");
+        TaskbarOperation(icoPtr, NIM_DELETE);
     }
     if (icoPtr->itype != ICO_FILE) {
         FreeIconResource(icoPtr->lpIR);
         ckfree(icoPtr->lpIR);
     }
     if (icoPtr->taskbar_txt != NULL) {
-        ckfree(icoPtr->taskbar_txt);
+        Tcl_DecrRefCount(icoPtr->taskbar_txt);
     }
-
     if (icoPtr->taskbar_command != NULL) {
-        ckfree(icoPtr->taskbar_command);
+        Tcl_DecrRefCount(icoPtr->taskbar_command);
     }
     ckfree(icoPtr);
 }
@@ -753,7 +721,7 @@ TaskbarEval(
         fixup = 0;
     }
     expanded = TaskbarExpandPercents(icoPtr, msgstring, wParam, lParam,
-        icoPtr->taskbar_command, evalspace, &evalsize);
+        Tcl_GetString(icoPtr->taskbar_command), evalspace, &evalsize);
     if (icoPtr->interp != NULL) {
         int result;
         HWND hwnd = NULL;
@@ -836,11 +804,7 @@ TaskbarHandlerProc(
             for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
                 for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
                     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
-                        HICON hIcon = icoPtr->hIcon;
-                        if (icoPtr->iconpos != 0 && icoPtr->lpIR != NULL) {
-                            hIcon = icoPtr->lpIR->IconImages[icoPtr->iconpos].hIcon;
-                        }
-                        TaskbarOperation(icoPtr, NIM_ADD, hIcon, icoPtr->taskbar_txt);
+                        TaskbarOperation(icoPtr, NIM_ADD);
                     }
                 }
             }
@@ -999,7 +963,7 @@ WinIcoDestroy(
  *----------------------------------------------------------------------
  */
 
-static int
+static BlockOfIconImagesPtr
 CreateIcoFromTkImage(
     Tcl_Interp *interp,         /* Current interpreter. */
     const char *image)          /* Image to convert. */
@@ -1017,8 +981,8 @@ CreateIcoFromTkImage(
     photo = Tk_FindPhoto(interp, image);
     if (photo == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "image \"%s\" doesn't exist", image));
-        return TCL_ERROR;
+                "image \"%s\" doesn't exist or is not a photo image", image));
+        return NULL;
     }
 
     /*
@@ -1028,13 +992,12 @@ CreateIcoFromTkImage(
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE));
     iconBits = (BlockOfIconImagesPtr)attemptckalloc(size);
     if (iconBits == NULL) {
-        return TCL_ERROR;
+        return NULL;
     }
     ZeroMemory(iconBits, size);
 
     iconBits->nNumImages = 1;
 
-    photo = Tk_FindPhoto(interp, image);
     Tk_PhotoGetSize(photo, &width, &height);
     Tk_PhotoGetImage(photo, &block);
 
@@ -1066,7 +1029,7 @@ CreateIcoFromTkImage(
         FreeIconResource(iconBits);
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                 "failed to create an iconphoto with image \"%s\"", image));
-        return TCL_ERROR;
+        return NULL;
     }
 
     /*
@@ -1096,7 +1059,7 @@ CreateIcoFromTkImage(
         FreeIconResource(iconBits);
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                 "failed to create mask bitmap for \"%s\"", image));
-        return TCL_ERROR;
+        return NULL;
     }
 
     ZeroMemory(bgraMask.ptr, width*height/8);
@@ -1117,14 +1080,14 @@ CreateIcoFromTkImage(
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	        "failed to create icon for \"%s\"",
 	        image));
-        return TCL_ERROR;
+        return NULL;
     }
     iconBits->IconImages[0].Width = width;
     iconBits->IconImages[0].Height = height;
     iconBits->IconImages[0].Colors = 4;
     iconBits->IconImages[0].hIcon = hIcon;
 
-    return TCL_OK;
+    return iconBits;
 }
 
 /*
@@ -1150,147 +1113,127 @@ WinSystrayCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    size_t length;
+    static const char *cmdStrings[] = {
+        "add", "delete", "modify", NULL
+    };
+    enum { CMD_ADD, CMD_DELETE, CMD_MODIFY };
+    static const char *optStrings[] = {
+        "-image", "-text", "-callback", NULL
+    };
+    enum { OPT_IMAGE, OPT_TEXT, OPT_CALLBACK };
+    int cmd, opt;
+
     HICON hIcon;
     int i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
     BlockOfIconImagesPtr lpIR = NULL;
+
     if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "option arg arg ...");
+        Tcl_WrongNumArgs(interp, 1, objv, "command ...");
         return TCL_ERROR;
     }
-
-    length = strlen(Tcl_GetString(objv[1]));
-    if ((strncmp(Tcl_GetString(objv[1]), "createfrom", length) == 0) && (length >= 2)) {
-        int pos = 0;
-        if (objc < 3) {
-            Tcl_WrongNumArgs(interp, 1, objv, "createfrom <Tk image>");
-            return TCL_ERROR;
-        }
-        if (CreateIcoFromTkImage(interp, Tcl_GetString(objv[2])) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        lpIR = iconBits;
-
-        if (lpIR == NULL) {
-            Tcl_AppendResult(interp, "reading of ", Tcl_GetString(objv[2]), " failed!", NULL);
-            return TCL_ERROR;
-        }
-        hIcon = NULL;
-        for (i = 0; i < lpIR->nNumImages; i++) {
-            /*take the first or a 32x32 16 color icon*/
-            if (i == 0 ||
-                (lpIR->IconImages[i].Height == 32 && lpIR->IconImages[i].Width == 32 &&
-                    lpIR->IconImages[i].Colors == 4)) {
-                hIcon = lpIR->IconImages[i].hIcon;
-                pos = i;
-            }
-        }
-        if (hIcon == NULL) {
-            FreeIconResource(lpIR);
-            Tcl_AppendResult(interp, "Could not find an icon in ", Tcl_GetString(objv[2]), NULL);
-            return TCL_ERROR;
-        }
-        NewIcon(interp, icoInterpPtr, hIcon, ICO_FILE, lpIR, pos);
-    } else if ((strncmp(Tcl_GetString(objv[1]), "delete", length) == 0) &&
-        (length >= 2)) {
-        if (objc != 3) {
-            Tcl_WrongNumArgs(interp, 1, objv, "delete id");
-            return TCL_ERROR;
-        }
-        icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
-        if (icoPtr == NULL) {
-            return TCL_ERROR;
-        }
-        FreeIcoPtr(icoInterpPtr, icoPtr);
-        return TCL_OK;
-    } else if ((strncmp(Tcl_GetString(objv[1]), "text", length) == 0) && (length >= 2)) {
-        if (objc < 2) {
-            Tcl_WrongNumArgs(interp, 1, objv, "text <id> ?newtext?");
-            return TCL_ERROR;
-        }
-        icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
-        if (icoPtr == NULL) {
-            return TCL_ERROR;
-        }
-        if (objc > 3) {
-            const char *newtxt = Tcl_GetString(objv[3]);
-            if (icoPtr->taskbar_txt != NULL) {
-                ckfree(icoPtr->taskbar_txt);
-            }
-            icoPtr->taskbar_txt = (char *)ckalloc(strlen(newtxt) + 1);
-            strcpy(icoPtr->taskbar_txt, newtxt);
-        }
-        Tcl_AppendResult(interp, icoPtr->taskbar_txt, (char *) NULL);
-        return TCL_OK;
-    } else if ((strncmp(Tcl_GetString(objv[1]), "taskbar", length) == 0) && (length >= 2)) {
-        char *callback = NULL;
-        int oper;
-        Tcl_Obj *const *args;
-        int c;
-        int count;
-        char *txt;
-        if (objc < 4) {
-            Tcl_WrongNumArgs(interp, 1, objv, "taskbar <add/delete/modify> <id> -callback <callback>");
-            return TCL_ERROR;
-        }
-        if (strcmp(Tcl_GetString(objv[2]), "add") == 0) {
-            oper = NIM_ADD;
-        } else if (strncmp(Tcl_GetString(objv[2]), "del", 3) == 0) {
-            oper = NIM_DELETE;
-        } else if (strncmp(Tcl_GetString(objv[2]), "mod", 3) == 0) {
-            oper = NIM_MODIFY;
-        } else {
-            Tcl_AppendResult(interp, "bad argument ", Tcl_GetString(objv[2]), " should be add, delete or modify", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if ((icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[3]))) == NULL)
-            return TCL_ERROR;
-        hIcon = icoPtr->hIcon;
-        txt = icoPtr->taskbar_txt;
-        if (objc > 4) {
-            for (count = objc - 4, args = objv + 4; count > 1; count -= 2, args += 2) {
-                if (Tcl_GetString(args[0])[0] != '-')
-                    goto wrongargs2;
-                c = Tcl_GetString(args[0])[1];
-                length = strlen(Tcl_GetString(args[0]));
-                if ((c == '-') && (length == 2)) {
-                    break;
+    if (Tcl_GetIndexFromObj(interp, objv[1], cmdStrings, "command",
+            0, &cmd) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+    switch (cmd) {
+        case CMD_ADD:
+        case CMD_MODIFY: {
+            Tcl_Obj *imageObj = NULL, *textObj = NULL, *callbackObj = NULL;
+            int optStart;
+            int oper;
+            if (cmd == CMD_ADD) {
+                optStart = 2;
+                oper = NIM_ADD;
+            } else {
+                optStart = 3;
+                oper = NIM_MODIFY;
+                if (objc != 5) {
+                    Tcl_WrongNumArgs(interp, 2, objv, "id option value");
+                    return TCL_ERROR;
                 }
-                if ((c == 'c') && (strncmp(Tcl_GetString(args[0]), "-callback", length) == 0)) {
-                    callback = Tcl_GetString(args[1]);
-                } else if ((c == 't') && (strncmp(Tcl_GetString(args[0]), "-text", length) == 0)) {
-                    txt = Tcl_GetString(args[1]);
-                } else {
-                    goto wrongargs2;
+                icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
+                if (icoPtr == NULL) {
+                    return TCL_ERROR;
                 }
             }
-            if (count == 1)
-                goto wrongargs2;
-        }
-        if (callback != NULL) {
-            if (icoPtr->taskbar_command != NULL) {
-                ckfree(icoPtr->taskbar_command);
+            for (i=optStart; i<objc; i+=2) {
+                if (Tcl_GetIndexFromObj(interp, objv[i], optStrings, "option",
+                        0, &opt) == TCL_ERROR) {
+                    return TCL_ERROR;
+                }
+                if (i+1 >= objc) {
+                    Tcl_AppendResult(interp,
+                        "missing value for option \"", Tcl_GetString(objv[i]), "\"", NULL);
+                    return TCL_ERROR;
+                }
+                switch (opt) {
+                    case OPT_IMAGE:
+                        imageObj = objv[i+1];
+                        break;
+                    case OPT_TEXT:
+                        textObj = objv[i+1];
+                        break;
+                    case OPT_CALLBACK:
+                        callbackObj = objv[i+1];
+                        break;
+                }
             }
-            icoPtr->taskbar_command = (char *)ckalloc(strlen(callback) + 1);
-            strcpy(icoPtr->taskbar_command, callback);
+            if (cmd == CMD_ADD && imageObj == NULL) {
+                Tcl_SetResult(interp, "missing required option \"-image\"", TCL_STATIC);
+                return TCL_ERROR;
+            }
+            if (imageObj != NULL) {
+                lpIR = CreateIcoFromTkImage(interp, Tcl_GetString(imageObj));
+                if (lpIR == NULL) {
+                    return TCL_ERROR;
+                }
+            }
+            if (cmd == CMD_ADD) {
+                hIcon = lpIR->IconImages[0].hIcon;
+                icoPtr = NewIcon(interp, icoInterpPtr, hIcon, ICO_FILE, lpIR, 0);
+            } else {
+                if (imageObj != NULL) {
+                    DestroyIcon(icoPtr->hIcon);
+                    icoPtr->hIcon = lpIR->IconImages[0].hIcon;
+                }
+            }
+            if (callbackObj != NULL) {
+                if (icoPtr->taskbar_command != NULL) {
+                    Tcl_DecrRefCount(icoPtr->taskbar_command);
+                }
+                icoPtr->taskbar_command = callbackObj;
+                Tcl_IncrRefCount(icoPtr->taskbar_command);
+            }
+            if (textObj != NULL) {
+                if (icoPtr->taskbar_txt != NULL) {
+                    Tcl_DecrRefCount(icoPtr->taskbar_txt);
+                }
+                icoPtr->taskbar_txt = textObj;
+                Tcl_IncrRefCount(icoPtr->taskbar_txt);
+            }
+            TaskbarOperation(icoPtr, oper);
+            if (cmd == CMD_ADD) {
+                char buffer[5 + TCL_INTEGER_SPACE];
+                int n;
+                n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
+                buffer[n] = 0;
+                Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, n));
+            }
+            return TCL_OK;
         }
-        if (icoPtr->taskbar_txt != NULL) {
-            ckfree(icoPtr->taskbar_txt);
-        }
-        icoPtr->taskbar_txt = (char *)ckalloc(strlen(txt) + 1);
-        strcpy(icoPtr->taskbar_txt, txt);
-        return TaskbarOperation(icoPtr, oper, hIcon, txt);
-        wrongargs2:
-            Tcl_AppendResult(interp, "unknown option \"", args[0], "\",valid are:",
-                "-callback <tcl-callback>  -text <tooltiptext>", (char *) NULL);
-        return TCL_ERROR;
-    } else {
-        Tcl_AppendResult(interp, "bad argument \"", Tcl_GetString(objv[1]),
-            "\": must be  createfrom, delete, text, taskbar",
-            (char *) NULL);
-        return TCL_ERROR;
+        case CMD_DELETE:
+            if (objc != 3) {
+                Tcl_WrongNumArgs(interp, 2, objv, "id");
+                return TCL_ERROR;
+            }
+            icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
+            if (icoPtr == NULL) {
+                return TCL_ERROR;
+            }
+            FreeIcoPtr(icoInterpPtr, icoPtr);
+            return TCL_OK;
     }
     return TCL_OK;
 }
