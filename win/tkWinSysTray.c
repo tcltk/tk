@@ -29,7 +29,6 @@
  * more of the Shell_Notification API to add balloon/system notifications.
  */
 
-
 #define GETHINSTANCE Tk_GetHINSTANCE()
 
 #ifdef HAVE_STDLIB_H
@@ -48,25 +47,25 @@
 # define snprintf _snprintf
 #endif
 
-static int CreateIcoFromTkImage(Tcl_Interp *interp, const char * image);
+static int CreateIcoFromTkImage(Tcl_Interp *interp, const char *image);
 
 typedef struct IcoInfo {
-    HICON hIcon; /* icon handle returned by LoadIcon*/
+    HICON hIcon;                /* icon handle returned by LoadIcon. */
     int itype;
-    int id;
-    /* Integer identifier for command;  used to
-                 cancel it. */
-    BlockOfIconImagesPtr lpIR; /* IconresourcePtr*/
-    int iconpos; /* hIcon is the nth Icon*/
-    char * taskbar_txt; /* malloced text to display in the taskbar*/
-    Tcl_Interp * interp; /* interp which created the icon*/
-    char * taskbar_command; /* command to eval if events in the taskbar arrive*/
-    int taskbar_flags; /* taskbar related flags*/
+    int id;                     /* Integer identifier for command;  used to
+                                 * cancel it. */
+    BlockOfIconImagesPtr lpIR;  /* IconresourcePtr */
+    int iconpos;                /* hIcon is the nth Icon*/
+    char *taskbar_txt;          /* malloced text to display in the taskbar */
+    Tcl_Interp *interp;         /* interp which created the icon */
+    char *taskbar_command;      /* command to eval if events in the taskbar
+                                 * arrive */
+    int taskbar_flags;          /* taskbar related flags*/
     HWND hwndFocus;
-    struct IcoInfo * nextPtr;
+    struct IcoInfo *nextPtr;
 } IcoInfo;
 
-static IcoInfo * firstIcoPtr = NULL;
+static IcoInfo *firstIcoPtr = NULL;
 #define ICO_LOAD 1
 #define ICO_FILE 2
 
@@ -95,9 +94,10 @@ static BlockOfIconImagesPtr iconBits = NULL;
  *----------------------------------------------------------------------
  */
 
-
 static void
-FreeIconResource(BlockOfIconImagesPtr lpIR) {
+FreeIconResource(
+    BlockOfIconImagesPtr lpIR)
+{
     int i;
     if (lpIR == NULL)
         return;
@@ -110,7 +110,6 @@ FreeIconResource(BlockOfIconImagesPtr lpIR) {
     }
     ckfree(lpIR);
 }
-
 
 /*
  * If someone wants to see the several masks somewhere on the screen...
@@ -142,9 +141,12 @@ FreeIconResource(BlockOfIconImagesPtr lpIR) {
  *----------------------------------------------------------------------
  */
 
-
 static BOOL
-DrawXORMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
+DrawXORMask(
+    HDC hDC,
+    RECT Rect,
+    LPLPICONIMAGE lpIcon)
+{
     int x, y;
 
     /* Sanity checks */
@@ -162,10 +164,10 @@ DrawXORMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
 
     /* Blast it to the screen */
     SetDIBitsToDevice(hDC, x, y,
-        lpIcon->lpbi->bmiHeader.biWidth,
-        lpIcon->lpbi->bmiHeader.biHeight,
-        0, 0, 0, lpIcon->lpbi->bmiHeader.biHeight,
-        lpIcon->lpXOR, lpIcon->lpbi, DIB_RGB_COLORS);
+            lpIcon->lpbi->bmiHeader.biWidth,
+            lpIcon->lpbi->bmiHeader.biHeight,
+            0, 0, 0, lpIcon->lpbi->bmiHeader.biHeight,
+            lpIcon->lpXOR, lpIcon->lpbi, DIB_RGB_COLORS);
 
     /* UnAccount for height*2 thing */
     lpIcon->lpbi->bmiHeader.biHeight *= 2;
@@ -190,7 +192,11 @@ DrawXORMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
  */
 
 BOOL
-DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
+DrawANDMask(
+    HDC hDC,
+    RECT Rect,
+    LPLPICONIMAGE lpIcon)
+{
     LPBITMAPINFO lpbi;
     int x, y;
 
@@ -227,10 +233,14 @@ DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
     y = Rect.top + ((RectHeight(Rect) - lpbi->bmiHeader.biHeight) / 2);
 
     /* Blast it to the screen */
-    SetDIBitsToDevice(hDC, x, y, lpbi->bmiHeader.biWidth, lpbi->bmiHeader.biHeight, 0, 0, 0, lpbi->bmiHeader.biHeight, lpIcon->lpAND, lpbi, DIB_RGB_COLORS);
+    SetDIBitsToDevice(hDC, x, y,
+            lpbi->bmiHeader.biWidth,
+            lpbi->bmiHeader.biHeight,
+            0, 0, 0, lpbi->bmiHeader.biHeight,
+            lpIcon->lpAND, lpbi, DIB_RGB_COLORS);
 
     /* clean up */
-    ckfree((char * ) lpbi);
+    ckfree((char *) lpbi);
 
     return TRUE;
 }
@@ -253,10 +263,15 @@ DrawANDMask(HDC hDC, RECT Rect, LPLPICONIMAGE lpIcon) {
  */
 
 static BOOL
-NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, const char *txt) {
+NotifyW(
+    IcoInfo *icoPtr,
+    int oper,
+    HICON hIcon,
+    const char *txt)
+{
     NOTIFYICONDATAW ni;
     Tcl_DString dst;
-    WCHAR * str;
+    WCHAR *str;
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
@@ -268,7 +283,7 @@ NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, const char *txt) {
     Tcl_DStringInit(&dst);
     str = (WCHAR *)Tcl_UtfToWCharDString(txt, -1, &dst);
     wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
-    Tcl_DStringFree( &dst);
+    Tcl_DStringFree(&dst);
     return Shell_NotifyIconW(oper, &ni);
 }
 
@@ -289,10 +304,13 @@ NotifyW(IcoInfo * icoPtr, int oper, HICON hIcon, const char *txt) {
  */
 
 static int
-TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, const char * txt) {
-    int result;
-
-    result = NotifyW(icoPtr, oper, hIcon, txt);
+TaskbarOperation(
+    IcoInfo *icoPtr,
+    int oper,
+    HICON hIcon,
+    const char *txt)
+{
+    int result = NotifyW(icoPtr, oper, hIcon, txt);
 
     Tcl_SetObjResult(icoPtr->interp, Tcl_NewIntObj(result));
     if (result == 1) {
@@ -323,38 +341,41 @@ TaskbarOperation(IcoInfo * icoPtr, int oper, HICON hIcon, const char * txt) {
  */
 
 static IcoInfo *
-    NewIcon(Tcl_Interp * interp, HICON hIcon,
-        int itype, BlockOfIconImagesPtr lpIR, int iconpos) {
-        static int nextId = 1;
-        int n;
-        char buffer[5 + TCL_INTEGER_SPACE];
-        IcoInfo * icoPtr;
+NewIcon(
+    Tcl_Interp *interp,
+    HICON hIcon,
+    int itype, BlockOfIconImagesPtr lpIR, int iconpos)
+{
+    static int nextId = 1;
+    int n;
+    char buffer[5 + TCL_INTEGER_SPACE];
+    IcoInfo *icoPtr;
 
-        icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
-        memset(icoPtr, 0, sizeof(IcoInfo));
-        icoPtr->id = nextId;
-        icoPtr->hIcon = hIcon;
-        icoPtr->itype = itype;
-        icoPtr->lpIR = lpIR;
-        icoPtr->iconpos = iconpos;
-        n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
-        buffer[n] = 0;
-        icoPtr->taskbar_txt = (char *)ckalloc(strlen(buffer) + 1);
-        strcpy(icoPtr->taskbar_txt, buffer);
-        icoPtr->interp = interp;
-        icoPtr->taskbar_command = NULL;
-        icoPtr->taskbar_flags = 0;
-        icoPtr->hwndFocus = NULL;
-        if (itype == ICO_LOAD) {
-            icoPtr->lpIR = (BlockOfIconImagesPtr) NULL;
-            icoPtr->iconpos = 0;
-        }
-        nextId += 1;
-        icoPtr->nextPtr = firstIcoPtr;
-        firstIcoPtr = icoPtr;
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
-        return icoPtr;
+    icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
+    memset(icoPtr, 0, sizeof(IcoInfo));
+    icoPtr->id = nextId;
+    icoPtr->hIcon = hIcon;
+    icoPtr->itype = itype;
+    icoPtr->lpIR = lpIR;
+    icoPtr->iconpos = iconpos;
+    n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
+    buffer[n] = 0;
+    icoPtr->taskbar_txt = (char *)ckalloc(strlen(buffer) + 1);
+    strcpy(icoPtr->taskbar_txt, buffer);
+    icoPtr->interp = interp;
+    icoPtr->taskbar_command = NULL;
+    icoPtr->taskbar_flags = 0;
+    icoPtr->hwndFocus = NULL;
+    if (itype == ICO_LOAD) {
+        icoPtr->lpIR = (BlockOfIconImagesPtr) NULL;
+        icoPtr->iconpos = 0;
     }
+    nextId += 1;
+    icoPtr->nextPtr = firstIcoPtr;
+    firstIcoPtr = icoPtr;
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, -1));
+    return icoPtr;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -373,7 +394,10 @@ static IcoInfo *
  */
 
 static void
-FreeIcoPtr(Tcl_Interp *interp, IcoInfo *icoPtr) {
+FreeIcoPtr(
+    Tcl_Interp *interp,
+    IcoInfo *icoPtr)
+{
     IcoInfo *prevPtr;
     if (firstIcoPtr == icoPtr) {
         firstIcoPtr = icoPtr->nextPtr;
@@ -417,8 +441,12 @@ FreeIcoPtr(Tcl_Interp *interp, IcoInfo *icoPtr) {
  *----------------------------------------------------------------------
  */
 
-static IcoInfo * GetIcoPtr(Tcl_Interp * interp, const char *string) {
-    IcoInfo * icoPtr;
+static IcoInfo *
+GetIcoPtr(
+    Tcl_Interp *interp,
+    const char *string)
+{
+    IcoInfo *icoPtr;
     int id;
     char *end;
 
@@ -426,8 +454,8 @@ static IcoInfo * GetIcoPtr(Tcl_Interp * interp, const char *string) {
         return NULL;
     }
     string += 4;
-    id = strtoul(string, & end, 10);
-    if ((end == string) || ( * end != 0)) {
+    id = strtoul(string, &end, 10);
+    if ((end == string) || (*end != 0)) {
         return NULL;
     }
     for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
@@ -436,7 +464,7 @@ static IcoInfo * GetIcoPtr(Tcl_Interp * interp, const char *string) {
         }
     }
     Tcl_AppendResult(interp, "icon \"", string,
-        "\" doesn't exist", (char * ) NULL);
+        "\" doesn't exist", (char *) NULL);
     return NULL;
 }
 
@@ -457,11 +485,16 @@ static IcoInfo * GetIcoPtr(Tcl_Interp * interp, const char *string) {
  */
 
 static int
-GetInt(long theint, char * buffer, size_t len) {
+GetInt(
+    long theint,
+    char *buffer,
+    size_t len)
+{
     snprintf(buffer, len, "0x%lx", theint);
     buffer[len - 1] = 0;
     return (int) strlen(buffer);
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -479,7 +512,11 @@ GetInt(long theint, char * buffer, size_t len) {
  */
 
 static int
-GetIntDec(long theint, char * buffer, size_t len) {
+GetIntDec(
+    long theint,
+    char *buffer,
+    size_t len)
+{
     snprintf(buffer, len - 1, "%ld", theint);
     buffer[len - 1] = 0;
     return (int) strlen(buffer);
@@ -502,8 +539,14 @@ GetIntDec(long theint, char * buffer, size_t len) {
  */
 
 static char*
-TaskbarExpandPercents(IcoInfo *icoPtr, const char *msgstring,
-    WPARAM wParam, LPARAM lParam, char *before, char *after, int *aftersize)
+TaskbarExpandPercents(
+    IcoInfo *icoPtr,
+    const char *msgstring,
+    WPARAM wParam,
+    LPARAM lParam,
+    char *before,
+    char *after,
+    int *aftersize)
 {
 #define SPACELEFT (*aftersize-(dst-after)-1)
 #define AFTERLEN ((*aftersize>0)?(*aftersize*2):1024)
@@ -646,7 +689,11 @@ TaskbarExpandPercents(IcoInfo *icoPtr, const char *msgstring,
  */
 
 static void
-TaskbarEval(IcoInfo *icoPtr, WPARAM wParam, LPARAM lParam) {
+TaskbarEval(
+    IcoInfo *icoPtr,
+    WPARAM wParam,
+    LPARAM lParam)
+{
     const char *msgstring = "none";
     char evalspace[200];
     int evalsize = 200;
@@ -733,7 +780,6 @@ TaskbarEval(IcoInfo *icoPtr, WPARAM wParam, LPARAM lParam) {
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -751,11 +797,15 @@ TaskbarEval(IcoInfo *icoPtr, WPARAM wParam, LPARAM lParam) {
  *----------------------------------------------------------------------
  */
 
-
 static LRESULT CALLBACK
-TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+TaskbarHandlerProc(
+    HWND hwnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
+{
     static UINT msgTaskbarCreated = 0;
-    IcoInfo * icoPtr = NULL;
+    IcoInfo *icoPtr = NULL;
 
     switch (message) {
     case WM_CREATE:
@@ -793,7 +843,6 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     return 0;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -811,9 +860,11 @@ TaskbarHandlerProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
  */
 
 static int
-RegisterHandlerClass(HINSTANCE hInstance) {
+RegisterHandlerClass(
+    HINSTANCE hInstance)
+{
     WNDCLASS wndclass;
-    memset( & wndclass, 0, sizeof(WNDCLASS));
+    memset(&wndclass, 0, sizeof(WNDCLASS));
     wndclass.style = 0;
     wndclass.lpfnWndProc = TaskbarHandlerProc;
     wndclass.cbClsExtra = 0;
@@ -824,7 +875,7 @@ RegisterHandlerClass(HINSTANCE hInstance) {
     wndclass.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
     wndclass.lpszMenuName = NULL;
     wndclass.lpszClassName = HANDLER_CLASS;
-    return RegisterClass( & wndclass);
+    return RegisterClass(&wndclass);
 }
 
 /*
@@ -843,7 +894,6 @@ RegisterHandlerClass(HINSTANCE hInstance) {
  *----------------------------------------------------------------------
  */
 
-
 static HWND
 CreateTaskbarHandlerWindow(void) {
     static int registered = 0;
@@ -856,7 +906,7 @@ CreateTaskbarHandlerWindow(void) {
         registered = 1;
     }
     return (handlerWindow = CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
-        CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL));
+            CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL));
 }
 
 /*
@@ -881,7 +931,6 @@ DestroyHandlerWindow(void) {
         DestroyWindow(handlerWindow);
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -899,10 +948,12 @@ DestroyHandlerWindow(void) {
  */
 
 static void
-WinIcoDestroy(ClientData clientData) {
-    IcoInfo * icoPtr;
-    IcoInfo * nextPtr;
-    Tcl_Interp * interp = (Tcl_Interp * ) clientData;
+WinIcoDestroy(
+    ClientData clientData)
+{
+    IcoInfo *icoPtr;
+    IcoInfo *nextPtr;
+    Tcl_Interp *interp = (Tcl_Interp *) clientData;
     DestroyHandlerWindow();
     for (icoPtr = firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
         nextPtr = icoPtr->nextPtr;
@@ -917,7 +968,7 @@ WinIcoDestroy(ClientData clientData) {
  *
  *	Create ico pointer from Tk image for display in system tray. Adapted
  *      from "wm iconphoto" code in tkWinWm.c.
-
+ *
  * Results:
  *	Icon image is created from a valid Tk photo image.
  *
@@ -929,11 +980,9 @@ WinIcoDestroy(ClientData clientData) {
 
 static int
 CreateIcoFromTkImage(
-    Tcl_Interp *interp,		/* Current interpreter. */
-    const char * image          /* Image to convert. */
-                     )
+    Tcl_Interp *interp,         /* Current interpreter. */
+    const char *image)          /* Image to convert. */
 {
-
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int width, height, idx, bufferSize;
@@ -944,21 +993,16 @@ CreateIcoFromTkImage(
     BITMAPINFO bmInfo;
     ICONINFO iconInfo;
 
-    /*
-     * Iterate over all images to validate their existence.
-     */
-
-	photo = Tk_FindPhoto(interp, image);
-	if (photo == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't use \"%s\" as icon: not a photo image",
-		    image));
-	    return TCL_ERROR;
-	}
+    photo = Tk_FindPhoto(interp, image);
+    if (photo == NULL) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	        "can't use \"%s\" as icon: not a photo image",
+	        image));
+        return TCL_ERROR;
+    }
 
     /*
-     * We have calculated the size of the data. Try to allocate the needed
-     * memory space.
+     * The image exists. Try to allocate the needed memory space.
      */
 
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE));
@@ -970,97 +1014,97 @@ CreateIcoFromTkImage(
 
     iconBits->nNumImages = 1;
 
-	photo = Tk_FindPhoto(interp, image);
-	Tk_PhotoGetSize(photo, &width, &height);
-	Tk_PhotoGetImage(photo, &block);
+    photo = Tk_FindPhoto(interp, image);
+    Tk_PhotoGetSize(photo, &width, &height);
+    Tk_PhotoGetImage(photo, &block);
 
-	/*
-	 * Don't use CreateIcon to create the icon, as it requires color
-	 * bitmap data in device-dependent format. Instead we use
-	 * CreateIconIndirect which takes device-independent bitmaps and
-	 * converts them as required. Initialise icon info structure.
-	 */
+    /*
+     * Don't use CreateIcon to create the icon, as it requires color
+     * bitmap data in device-dependent format. Instead we use
+     * CreateIconIndirect which takes device-independent bitmaps and
+     * converts them as required. Initialise icon info structure.
+     */
 
-	ZeroMemory(&iconInfo, sizeof(iconInfo));
-	iconInfo.fIcon = TRUE;
+    ZeroMemory(&iconInfo, sizeof(iconInfo));
+    iconInfo.fIcon = TRUE;
 
-	/*
-	 * Create device-independent color bitmap.
-	 */
+    /*
+     * Create device-independent color bitmap.
+     */
 
-	ZeroMemory(&bmInfo, sizeof bmInfo);
-	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmInfo.bmiHeader.biWidth = width;
-	bmInfo.bmiHeader.biHeight = -height;
-	bmInfo.bmiHeader.biPlanes = 1;
-	bmInfo.bmiHeader.biBitCount = 32;
-	bmInfo.bmiHeader.biCompression = BI_RGB;
+    ZeroMemory(&bmInfo, sizeof bmInfo);
+    bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmInfo.bmiHeader.biWidth = width;
+    bmInfo.bmiHeader.biHeight = -height;
+    bmInfo.bmiHeader.biPlanes = 1;
+    bmInfo.bmiHeader.biBitCount = 32;
+    bmInfo.bmiHeader.biCompression = BI_RGB;
 
-	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-		&bgraPixel.voidPtr, NULL, 0);
-	if (!iconInfo.hbmColor) {
-	    FreeIconResource(iconBits);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create an iconphoto with image \"%s\"",
-		    image));
-	    return TCL_ERROR;
-	}
+    iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+	    &bgraPixel.voidPtr, NULL, 0);
+    if (!iconInfo.hbmColor) {
+        FreeIconResource(iconBits);
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	        "failed to create an iconphoto with image \"%s\"",
+	        image));
+        return TCL_ERROR;
+    }
 
-	/*
-	 * Convert the photo image data into BGRA format (RGBQUAD).
-	 */
+    /*
+     * Convert the photo image data into BGRA format (RGBQUAD).
+     */
 
-	bufferSize = height * width * 4;
-	for (idx = 0 ; idx < bufferSize ; idx += 4) {
-	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
-	    bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
-	    bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
-	    bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
-	}
+    bufferSize = height * width * 4;
+    for (idx = 0 ; idx < bufferSize ; idx += 4) {
+        bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+        bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+        bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+        bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
+    }
 
-	/*
-	 * Create a dummy mask bitmap. The contents of this don't appear to
-	 * matter, as CreateIconIndirect will setup the icon mask based on the
-	 * alpha channel in our color bitmap.
-	 */
+    /*
+     * Create a dummy mask bitmap. The contents of this don't appear to
+     * matter, as CreateIconIndirect will setup the icon mask based on the
+     * alpha channel in our color bitmap.
+     */
 
-	bmInfo.bmiHeader.biBitCount = 1;
+    bmInfo.bmiHeader.biBitCount = 1;
 
-	iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-		&bgraMask.voidPtr, NULL, 0);
-	if (!iconInfo.hbmMask) {
-	    DeleteObject(iconInfo.hbmColor);
-	    FreeIconResource(iconBits);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create mask bitmap for \"%s\"",
-		    image));
-	    return TCL_ERROR;
-	}
+    iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+	    &bgraMask.voidPtr, NULL, 0);
+    if (!iconInfo.hbmMask) {
+        DeleteObject(iconInfo.hbmColor);
+        FreeIconResource(iconBits);
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	        "failed to create mask bitmap for \"%s\"",
+	        image));
+        return TCL_ERROR;
+    }
 
-	ZeroMemory(bgraMask.ptr, width*height/8);
+    ZeroMemory(bgraMask.ptr, width*height/8);
 
-	/*
-	 * Create an icon from the bitmaps.
-	 */
+    /*
+     * Create an icon from the bitmaps.
+     */
 
-	hIcon = CreateIconIndirect(&iconInfo);
-	DeleteObject(iconInfo.hbmColor);
-	DeleteObject(iconInfo.hbmMask);
-	if (hIcon == NULL) {
-	    /*
-	     * XXX should free up created icons.
-	     */
+    hIcon = CreateIconIndirect(&iconInfo);
+    DeleteObject(iconInfo.hbmColor);
+    DeleteObject(iconInfo.hbmMask);
+    if (hIcon == NULL) {
+        /*
+         * XXX should free up created icons.
+         */
 
-	    FreeIconResource(iconBits);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create icon for \"%s\"",
-		    image));
-	    return TCL_ERROR;
-	}
-	iconBits->IconImages[0].Width = width;
-	iconBits->IconImages[0].Height = height;
-	iconBits->IconImages[0].Colors = 4;
-	iconBits->IconImages[0].hIcon = hIcon;
+        FreeIconResource(iconBits);
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	        "failed to create icon for \"%s\"",
+	        image));
+        return TCL_ERROR;
+    }
+    iconBits->IconImages[0].Width = width;
+    iconBits->IconImages[0].Height = height;
+    iconBits->IconImages[0].Colors = 4;
+    iconBits->IconImages[0].hIcon = hIcon;
 
     return TCL_OK;
 }
@@ -1084,14 +1128,14 @@ CreateIcoFromTkImage(
 static int
 WinSystrayCmd(
     TCL_UNUSED(void *),
-    Tcl_Interp * interp,
+    Tcl_Interp *interp,
     int objc,
-	Tcl_Obj * const objv[])
+    Tcl_Obj *const objv[])
 {
     size_t length;
     HICON hIcon;
     int i;
-    IcoInfo * icoPtr;
+    IcoInfo *icoPtr;
     BlockOfIconImagesPtr lpIR = NULL;
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option arg arg ...");
@@ -1100,7 +1144,6 @@ WinSystrayCmd(
 
     length = strlen(Tcl_GetString(objv[1]));
     if ((strncmp(Tcl_GetString(objv[1]), "createfrom", length) == 0) && (length >= 2)) {
-
         int pos = 0;
 	Tk_Window tkwin;
 	TkWindow *winPtr;
@@ -1110,7 +1153,6 @@ WinSystrayCmd(
             Tcl_WrongNumArgs(interp, 1, objv, "createfrom <Tk image>");
             return TCL_ERROR;
         }
-		
         /*
         * Check for image.
         */
@@ -1164,22 +1206,22 @@ WinSystrayCmd(
         }
         if ((icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[2]))) == NULL) return TCL_ERROR;
         if (objc > 3) {
-            const char * newtxt = Tcl_GetString(objv[3]);
+            const char *newtxt = Tcl_GetString(objv[3]);
             if (icoPtr->taskbar_txt != NULL) {
                 ckfree(icoPtr->taskbar_txt);
             }
             icoPtr->taskbar_txt = (char *)ckalloc(strlen(newtxt) + 1);
             strcpy(icoPtr->taskbar_txt, newtxt);
         }
-        Tcl_AppendResult(interp, icoPtr->taskbar_txt, (char * ) NULL);
+        Tcl_AppendResult(interp, icoPtr->taskbar_txt, (char *) NULL);
         return TCL_OK;
     } else if ((strncmp(Tcl_GetString(objv[1]), "taskbar", length) == 0) && (length >= 2)) {
-        char * callback = NULL;
+        char *callback = NULL;
         int oper;
-        Tcl_Obj * const * args;
+        Tcl_Obj *const *args;
         int c;
         int count;
-        char * txt;
+        char *txt;
         if (objc < 4) {
             Tcl_WrongNumArgs(interp, 1, objv, "taskbar <add/delete/modify> <id> -callback <callback>");
             return TCL_ERROR;
@@ -1191,7 +1233,7 @@ WinSystrayCmd(
         } else if (strncmp(Tcl_GetString(objv[2]), "mod", 3) == 0) {
             oper = NIM_MODIFY;
         } else {
-            Tcl_AppendResult(interp, "bad argument ", Tcl_GetString(objv[2]), " should be add, delete or modify", (char * ) NULL);
+            Tcl_AppendResult(interp, "bad argument ", Tcl_GetString(objv[2]), " should be add, delete or modify", (char *) NULL);
             return TCL_ERROR;
         }
         if ((icoPtr = GetIcoPtr(interp, Tcl_GetString(objv[3]))) == NULL)
@@ -1233,17 +1275,16 @@ WinSystrayCmd(
         return TaskbarOperation(icoPtr, oper, hIcon, txt);
         wrongargs2:
             Tcl_AppendResult(interp, "unknown option \"", args[0], "\",valid are:",
-                "-callback <tcl-callback>  -text <tooltiptext>", (char * ) NULL);
+                "-callback <tcl-callback>  -text <tooltiptext>", (char *) NULL);
         return TCL_ERROR;
     } else {
         Tcl_AppendResult(interp, "bad argument \"", Tcl_GetString(objv[1]),
             "\": must be  createfrom, delete, text, taskbar",
-            (char * ) NULL);
+            (char *) NULL);
         return TCL_ERROR;
     }
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1264,12 +1305,12 @@ WinSystrayCmd(
 static int
 WinSysNotifyCmd(
     TCL_UNUSED(void *),
-    Tcl_Interp * interp,
+    Tcl_Interp *interp,
     int objc,
-	Tcl_Obj * const objv[])
+    Tcl_Obj *const objv[])
 {
     size_t length;
-    IcoInfo * icoPtr;
+    IcoInfo *icoPtr;
     Tcl_DString infodst;
     Tcl_DString titledst;
     NOTIFYICONDATAW ni;
@@ -1312,7 +1353,7 @@ WinSysNotifyCmd(
             Tcl_DStringInit(&titledst);
             title = Tcl_UtfToWCharDString(msgtitle, -1, &titledst);
             wcsncpy(ni.szInfoTitle, title, (Tcl_DStringLength(&titledst) + 2) / 2);
-            Tcl_DStringFree( & titledst);
+            Tcl_DStringFree(&titledst);
         }
         if (msginfo != NULL) {
             WCHAR *info;
@@ -1325,7 +1366,7 @@ WinSysNotifyCmd(
         Shell_NotifyIconW(NIM_MODIFY, &ni);
         return TCL_OK;
     }
-	return TCL_OK;
+    return TCL_OK;
 }
 
 /*
@@ -1345,7 +1386,9 @@ WinSysNotifyCmd(
  */
 
 int
-WinIcoInit(Tcl_Interp * interp) {
+WinIcoInit(
+    Tcl_Interp *interp)
+{
     #ifdef USE_TCL_STUBS
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
         return TCL_ERROR;
@@ -1369,6 +1412,3 @@ WinIcoInit(Tcl_Interp * interp) {
  * indent-tabs-mode: nil
  * End:
  */
-
-
-
