@@ -2,6 +2,7 @@
 # It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2020 Francois Vogel.
 # All rights reserved.
 
 package require tcltest 2.2
