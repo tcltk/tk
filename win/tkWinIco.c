@@ -119,7 +119,105 @@ BytesPerLine(
 {
     return WIDTHBYTES(lpBMIH->biWidth * lpBMIH->biPlanes * lpBMIH->biBitCount);
 }
-
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreateIcoFromPhoto --
+ *
+ *	Create ico pointer from Tk photo block.
+ *
+ * Results:
+ *	Icon image is created from a valid Tk photo image.
+ *
+ * Side effects:
+ *	Icon is created.
+ *
+ *----------------------------------------------------------------------
+ */
+
+HICON
+CreateIcoFromPhoto(
+    int width,                  /* Width of image. */
+    int height,                 /* Height of image. */
+    Tk_PhotoImageBlock block)   /* Image block to convert. */
+{
+    int idx, bufferSize;
+    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
+    union {unsigned char *ptr; void *voidPtr;} bgraMask;
+    HICON hIcon;
+    BITMAPINFO bmInfo;
+    ICONINFO iconInfo;
+
+    /*
+     * Don't use CreateIcon to create the icon, as it requires color
+     * bitmap data in device-dependent format. Instead we use
+     * CreateIconIndirect which takes device-independent bitmaps and
+     * converts them as required. Initialise icon info structure.
+     */
+
+    ZeroMemory(&iconInfo, sizeof(iconInfo));
+    iconInfo.fIcon = TRUE;
+
+    /*
+     * Create device-independent color bitmap.
+     */
+
+    ZeroMemory(&bmInfo, sizeof bmInfo);
+    bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmInfo.bmiHeader.biWidth = width;
+    bmInfo.bmiHeader.biHeight = -height;
+    bmInfo.bmiHeader.biPlanes = 1;
+    bmInfo.bmiHeader.biBitCount = 32;
+    bmInfo.bmiHeader.biCompression = BI_RGB;
+
+    iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+            &bgraPixel.voidPtr, NULL, 0);
+    if (!iconInfo.hbmColor) {
+        return NULL;
+    }
+
+    /*
+     * Convert the photo image data into BGRA format (RGBQUAD).
+     */
+
+    bufferSize = height * width * 4;
+    for (idx = 0 ; idx < bufferSize ; idx += 4) {
+        bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+        bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+        bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+        bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
+    }
+
+    /*
+     * Create a dummy mask bitmap. The contents of this don't appear to
+     * matter, as CreateIconIndirect will setup the icon mask based on the
+     * alpha channel in our color bitmap.
+     */
+
+    bmInfo.bmiHeader.biBitCount = 1;
+
+    iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+            &bgraMask.voidPtr, NULL, 0);
+    if (!iconInfo.hbmMask) {
+        DeleteObject(iconInfo.hbmColor);
+        return NULL;
+    }
+
+    ZeroMemory(bgraMask.ptr, width*height/8);
+
+    /*
+     * Create an icon from the bitmaps.
+     */
+
+    hIcon = CreateIconIndirect(&iconInfo);
+    DeleteObject(iconInfo.hbmColor);
+    DeleteObject(iconInfo.hbmMask);
+    if (hIcon == NULL) {
+        return NULL;
+    }
+
+    return hIcon;
+}
 /*
  * Local Variables:
  * mode: c
