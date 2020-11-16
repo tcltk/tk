@@ -5,7 +5,7 @@
 # generates output for errors.  No output means no errors were found.
 #
 # Copyright © 1997 by Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2

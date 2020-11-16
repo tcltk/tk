@@ -34,7 +34,7 @@ extern Tcl_PackageInitProc Tktest_Init;
 #endif
 #endif /* TK_TEST */
 
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
 extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
@@ -205,16 +205,16 @@ Tcl_AppInit(
 	    return TCL_ERROR;
 	}
     }
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
+    Tcl_StaticPackage(interp, "Registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
+    Tcl_StaticPackage(interp, "Dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
