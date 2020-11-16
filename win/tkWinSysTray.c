@@ -737,9 +737,12 @@ TaskbarHandlerProc(
         break;
 
     case ICON_MESSAGE:
-        icoPtr = (IcoInfo*) wParam;
-        if (icoPtr->taskbar_command != NULL) {
-            TaskbarEval(icoPtr, wParam, lParam);
+        for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
+            for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+                if (icoPtr->taskbar_command != NULL) {
+                    TaskbarEval(icoPtr, wParam, lParam);
+                }
+            }
         }
         break;
 
