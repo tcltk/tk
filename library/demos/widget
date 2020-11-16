@@ -519,7 +519,7 @@ proc invoke index {
     .t configure -cursor [::ttk::cursor busy]
     update
     set demo [string range [lindex $tags $i] 5 end]
-    uplevel 1 [list source [file join $tk_demoDirectory $demo.tcl]]
+    uplevel 1 [list source -encoding utf-8 [file join $tk_demoDirectory $demo.tcl]]
     update
     .t configure -cursor $cursor
 
