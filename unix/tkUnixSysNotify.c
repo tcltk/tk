@@ -129,7 +129,7 @@ SysNotify_Init(
 #endif /* HAVE_LIBNOTIFY */
 /*
  * Local Variables:
- * mode: objc
+ * mode: c
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

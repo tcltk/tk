@@ -379,7 +379,7 @@ switch -exact -- [tk windowingsystem] {
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
-	event add <<SelectAll>>		<Control-slash>
+	event add <<SelectAll>>		<Control-/>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
@@ -426,7 +426,7 @@ switch -exact -- [tk windowingsystem] {
   	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-y> <Control-Lock-Y>
 
-	event add <<SelectAll>>		<Control-slash> <Control-a> <Control-Lock-A>
+	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>

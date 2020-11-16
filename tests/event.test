@@ -20,57 +20,10 @@ namespace import -force tcltest::test
 proc _init_keypress_lookup {} {
     global keypress_lookup
 
-    scan A %c start
-    scan Z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan a %c start
-    scan z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan 0 %c start
-    scan 9 %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    # Most punctuation
-    array set keypress_lookup {
-        ! exclam
-        % percent
-        & ampersand
-        ( parenleft
-        ) parenright
-        * asterisk
-        + plus
-        , comma
-        - minus
-        . period
-        / slash
-        : colon
-        < less
-        = equal
-        > greater
-        ? question
-        @ at
-        ^ asciicircum
-        _ underscore
-        | bar
-        ~ asciitilde
-        ' apostrophe
-    }
     # Characters with meaning to Tcl...
     array set keypress_lookup [list \
+	    -    minus \
+	    >    greater \
 	    \"   quotedbl \
 	    \#   numbersign \
 	    \$   dollar \
@@ -81,6 +34,7 @@ proc _init_keypress_lookup {} {
 	    \{   braceleft \
 	    \}   braceright \
 	    " "  space \
+	    \xA0 nobreakspace \
 	    "\n" Return \
 	    "\t" Tab]
 }
@@ -88,8 +42,8 @@ proc _init_keypress_lookup {} {
 # Lookup an event in the keypress table.
 # For example:
 # Q -> Q
-# . -> period
-# / -> slash
+# ; -> semicolon
+# > -> greater
 # Delete -> Delete
 # Escape -> Escape
 
