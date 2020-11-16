@@ -52,6 +52,8 @@ typedef struct {
     RastOpts ropts;
 } NSVGcache;
 
+static const void *	MemMem(const void *haystack, size_t haysize,
+			       const void *needle, size_t needlen);
 static int		FileMatchSVG(Tcl_Channel chan, const char *fileName,
 			    Tcl_Obj *format, int *widthPtr, int *heightPtr,
 			    Tcl_Interp *interp);
@@ -101,6 +103,46 @@ Tk_PhotoImageFormat tkImgFmtSVGnano = {
 /*
  *----------------------------------------------------------------------
  *
+ * MemMem --
+ *
+ *	Like strstr() but operating on memory buffers with sizes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static const void *
+MemMem(const void *haystack, size_t haylen,
+       const void *needle, size_t needlen)
+{
+    const void *hayend, *second, *p;
+    unsigned char first;
+
+    if ((needlen <= 0) || (haylen < needlen)) {
+	return NULL;
+    }
+    hayend = (const void *) ((char *) haystack + haylen - needlen);
+    first = ((char *) needle)[0];
+    second = (const void *) ((char *) needle + 1);
+    needlen -= 1;
+    while (haystack < hayend) {
+	p = memchr(haystack, first, (char *) hayend - (char *) haystack);
+	if (p == NULL) {
+	    break;
+	}
+	if (needlen == 0) {
+	    return p;
+	}
+	haystack = (const void *) ((char *) p + 1);
+	if (memcmp(second, haystack, needlen) == 0) {
+	    return p;
+	}
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * FileMatchSVG --
  *
  *	This function is invoked by the photo image type to see if a file
@@ -132,12 +174,24 @@ FileMatchSVG(
     (void)fileName;
 
     CleanCache(interp);
-    if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
+    if (Tcl_ReadChars(chan, dataObj, 4096, 0) == TCL_IO_FAILURE) {
 	/* in case of an error reading the file */
 	Tcl_DecrRefCount(dataObj);
 	return 0;
     }
     data = TkGetStringFromObj(dataObj, &length);
+    /* should have a '<svg' and a '>' in the first 4k */
+    if ((memchr(data, '>', length) == NULL) ||
+	(MemMem(data, length, "<svg", 4) == NULL)) {
+	Tcl_DecrRefCount(dataObj);
+	return 0;
+    }
+    if (!Tcl_Eof(chan) && (Tcl_ReadChars(chan, dataObj, -1, 1) == TCL_IO_FAILURE)) {
+	/* in case of an error reading the file */
+	Tcl_DecrRefCount(dataObj);
+	return 0;
+    }
+    data = Tcl_GetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
@@ -237,13 +291,19 @@ StringMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    TkSizeT length;
+    TkSizeT length, testLength;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
 
     CleanCache(interp);
     data = TkGetStringFromObj(dataObj, &length);
+    /* should have a '<svg' and a '>' in the first 4k */
+    testLength = (length > 4096) ? 4096 : length;
+    if ((memchr(data, '>', testLength) == NULL) ||
+	(MemMem(data, testLength, "<svg", 4) == NULL)) {
+	return 0;
+    }
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     if (nsvgImage != NULL) {
         GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
