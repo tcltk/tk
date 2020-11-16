@@ -16,6 +16,8 @@ bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
 }
 bind TNotebook <Destroy>		{ ttk::notebook::Cleanup %W }
 
+ttk::bindMouseWheel TNotebook		[list ttk::notebook::CycleTab %W]
+
 # ActivateTab $nb $tab --
 #	Select the specified tab and set focus.
 #
@@ -56,10 +58,12 @@ proc ttk::notebook::Press {w x y} {
 # CycleTab --
 #	Select the next/previous tab in the list.
 #
-proc ttk::notebook::CycleTab {w dir} {
+proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
     if {[$w index end] != 0} {
 	set current [$w index current]
-	set select [expr {($current + $dir) % [$w index end]}]
+	set d [expr {$dir/$factor}]
+	set d [expr {int($d > 0 ? ceil($d) : floor($d))}]
+	set select [expr {($current + $d) % [$w index end]}]
 	while {[$w tab $select -state] != "normal" && ($select != $current)} {
 	    set select [expr {($select + $dir) % [$w index end]}]
 	}
