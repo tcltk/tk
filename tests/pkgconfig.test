@@ -20,7 +20,7 @@ tcltest::loadTestedCommands
 
 testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
-test pkgconfig-1.1 {query keys} nodeprecated {
+test pkgconfig-1.1 {query keys} {nonwin nodeprecated} {
     lsort [::tk::pkgconfig list]
 } [list \
     64bit bindir,install bindir,runtime debug demodir,install demodir,runtime \
