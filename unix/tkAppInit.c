@@ -93,10 +93,12 @@ Tcl_AppInit(
     if (Tcl_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+
     if (Tk_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
+
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
