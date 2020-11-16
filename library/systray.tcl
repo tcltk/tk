@@ -27,7 +27,7 @@ namespace eval ::tk::systray {
     }
 
     proc _balloon_show {w arg} {
-	if {[winfo containing [winfo pointerxy .]] ne $w} {
+	if {[winfo containing {*}[winfo pointerxy .]] ne $w} {
 	    return
 	}
 	set top $w._balloon
