@@ -28,7 +28,7 @@ int _CRT_glob = 0;
 extern Tcl_PackageInitProc Tktest_Init;
 #endif /* TK_TEST */
 
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
 extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
@@ -176,16 +176,16 @@ Tcl_AppInit(
 	    goto error;
 	}
     }
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
 	goto error;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, NULL);
+    Tcl_StaticPackage(interp, "Registry", Registry_Init, NULL);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	goto error;
     }
-    Tcl_StaticPackage(interp, "dde", Dde_Init, NULL);
+    Tcl_StaticPackage(interp, "Dde", Dde_Init, NULL);
 #endif
 
 #ifdef TK_TEST
