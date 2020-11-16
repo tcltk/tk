@@ -102,7 +102,7 @@ test systray-11 {destroy non-existing systray icon} -setup {
     tk systray destroy
 } -returnCodes {error} -result {systray not created}
 
-test systray-12 {destroy systray icon works}  -setup {
+test systray-12 {destroy systray icon works} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
     tk systray create -image _book
@@ -171,6 +171,26 @@ test systray-15 {systray icon creation, create one per interp} -setup {
     interp delete second
     tk systray destroy
     image delete _book
+} -result {}
+
+test systray-16 {systray icon creation from a bitmap, on Linux and macOS only} -constraints {
+    nonwin
+} -setup {
+    set data1 {
+        #define foo_width 16
+        #define foo_height 16
+        static unsigned char foo_bits[] = {
+           0xff, 0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
+           0x81, 0x81, 0xff, 0xff, 0xff, 0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
+           0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xff, 0xff
+        };
+    }
+    image create bitmap cross -data $data1
+} -body {
+    tk systray create -image cross
+} -cleanup {
+    tk systray destroy
+    image delete cross
 } -result {}
 
 
