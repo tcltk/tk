@@ -289,4 +289,22 @@ test paned-propagation-5 "Pane change after map, on-axis" -body {
 
 test paned-propagation-cleanup "Clean up." -body { destroy .pw }
 
+test panedwindow-6.1 "style command" -body {
+    # Contrary to ttk::scrollbar, ttk::progressbar and ttk::scale,
+    # ttk::panedwindow has same style TPanedwindow whatever -orient is
+    ttk::panedwindow .wv  ; # default is  -orient vertical
+    ttk::panedwindow .wh -orient horizontal
+    list [.wv cget -style] [.wv style] [winfo class .wv]\
+         [.wh cget -style] [.wh style] [winfo class .wh]
+} -cleanup {
+    destroy .wv .wh
+} -result {{} TPanedwindow TPanedwindow {} TPanedwindow TPanedwindow}
+test panedwindow-6.2 "style command" -body {
+    ttk::style configure customStyle.TPanedwindow
+    ttk::panedwindow .w -style customStyle.TPanedwindow
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TPanedwindow customStyle.TPanedwindow TPanedwindow}
+
 tcltest::cleanupTests

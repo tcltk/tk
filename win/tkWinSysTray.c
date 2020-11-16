@@ -930,7 +930,7 @@ WinIcoDestroy(
     IcoInfo *nextPtr;
 
     Tcl_DeleteThreadExitHandler(WinIcoDestroy, clientData);
-    
+
     if (firstIcoInterpPtr == icoInterpPtr) {
         firstIcoInterpPtr = icoInterpPtr->nextPtr;
     } else {
@@ -1366,7 +1366,7 @@ WinIcoInit(
 
     Tcl_CallWhenDeleted(interp, (Tcl_InterpDeleteProc*) WinIcoDestroy, (ClientData) icoInterpPtr);
     Tcl_CreateThreadExitHandler(WinIcoDestroy, (ClientData) icoInterpPtr);
-    
+
     return TCL_OK;
 }
 
