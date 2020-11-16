@@ -84,8 +84,11 @@ typedef struct {
  * The following are implemented in tkWinIco.c and also used in tkWinWm.c and tkWinSysTray.c.
  */
 
-DWORD            BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
-LPSTR            FindDIBBits(LPSTR lpbi);
+MODULE_SCOPE DWORD BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
+MODULE_SCOPE LPSTR FindDIBBits(LPSTR lpbi);
+MODULE_SCOPE HICON CreateIcoFromPhoto(int width, int height,
+                        Tk_PhotoImageBlock block);
+
 
 /*
  * Local Variables:

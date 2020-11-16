@@ -47,15 +47,10 @@
 # define snprintf _snprintf
 #endif
 
-static BlockOfIconImagesPtr CreateIcoFromTkImage(Tcl_Interp *interp, const char *image);
-
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
-    int itype;
     int id;                     /* Integer identifier for command;  used to
                                  * cancel it. */
-    BlockOfIconImagesPtr lpIR;  /* IconresourcePtr */
-    int iconpos;                /* hIcon is the nth Icon*/
     Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
     Tcl_Obj *taskbar_command;   /* command to eval if events in the taskbar
@@ -72,9 +67,6 @@ typedef struct IcoInterpInfo {
     struct IcoInterpInfo *nextPtr;
 } IcoInterpInfo;
 
-#define ICO_LOAD 1
-#define ICO_FILE 2
-
 #define TASKBAR_ICON 1
 #define ICON_MESSAGE WM_USER + 1234
 
@@ -82,43 +74,9 @@ typedef struct IcoInterpInfo {
 static HWND CreateTaskbarHandlerWindow(void);
 
 static HWND handlerWindow = NULL;
-static BlockOfIconImagesPtr iconBits = NULL;
 
 static IcoInterpInfo *firstIcoInterpPtr = NULL;
 static Tcl_ExitProc WinIcoDestroy;
-
-/*
- *----------------------------------------------------------------------
- *
- * FreeIconResource --
- *
- * 	Frees memory from icon.
- *
- * Results:
- *	Memory released.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FreeIconResource(
-    BlockOfIconImagesPtr lpIR)
-{
-    int i;
-    if (lpIR == NULL)
-        return;
-    /* Free all the bits */
-    for (i = 0; i < lpIR->nNumImages; i++) {
-        if (lpIR->IconImages[i].lpBits != NULL)
-            ckfree(lpIR->IconImages[i].lpBits);
-        if (lpIR->IconImages[i].hIcon != NULL)
-            DestroyIcon(lpIR->IconImages[i].hIcon);
-    }
-    ckfree(lpIR);
-}
 
 /*
  * If someone wants to see the several masks somewhere on the screen...
@@ -280,7 +238,7 @@ TaskbarOperation(
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = (unsigned int) icoPtr;
+    ni.uID = PTR2INT(icoPtr);
     ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = icoPtr->hIcon;
@@ -327,8 +285,7 @@ static IcoInfo *
 NewIcon(
     Tcl_Interp *interp,
     IcoInterpInfo *icoInterpPtr,
-    HICON hIcon,
-    int itype, BlockOfIconImagesPtr lpIR, int iconpos)
+    HICON hIcon)
 {
     IcoInfo *icoPtr;
 
@@ -336,18 +293,11 @@ NewIcon(
     memset(icoPtr, 0, sizeof(IcoInfo));
     icoPtr->id = ++icoInterpPtr->counter;
     icoPtr->hIcon = hIcon;
-    icoPtr->itype = itype;
-    icoPtr->lpIR = lpIR;
-    icoPtr->iconpos = iconpos;
     icoPtr->taskbar_txt = NULL;
     icoPtr->interp = interp;
     icoPtr->taskbar_command = NULL;
     icoPtr->taskbar_flags = 0;
     icoPtr->hwndFocus = NULL;
-    if (itype == ICO_LOAD) {
-        icoPtr->lpIR = (BlockOfIconImagesPtr) NULL;
-        icoPtr->iconpos = 0;
-    }
     icoPtr->nextPtr = icoInterpPtr->firstIcoPtr;
     icoInterpPtr->firstIcoPtr = icoPtr;
     return icoPtr;
@@ -385,10 +335,6 @@ FreeIcoPtr(
     }
     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
         TaskbarOperation(icoPtr, NIM_DELETE);
-    }
-    if (icoPtr->itype != ICO_FILE) {
-        FreeIconResource(icoPtr->lpIR);
-        ckfree(icoPtr->lpIR);
     }
     if (icoPtr->taskbar_txt != NULL) {
         Tcl_DecrRefCount(icoPtr->taskbar_txt);
@@ -885,28 +831,6 @@ CreateTaskbarHandlerWindow(void) {
 /*
  *----------------------------------------------------------------------
  *
- * DestroyHandlerWindow --
- *
- * 	Destroys hidden window.
- *
- * Results:
- *	Hidden window deleted.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-DestroyHandlerWindow(void) {
-    if (handlerWindow)
-        DestroyWindow(handlerWindow);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * WinIcoDestroy --
  *
  * 	Deletes icon and hidden window from display.
@@ -951,150 +875,6 @@ WinIcoDestroy(
 /*
  *----------------------------------------------------------------------
  *
- * CreateIcoFromTkImage --
- *
- *	Create ico pointer from Tk image for display in system tray. Adapted
- *      from "wm iconphoto" code in tkWinWm.c.
- *
- * Results:
- *	Icon image is created from a valid Tk photo image.
- *
- * Side effects:
- *	Icon is created.
- *
- *----------------------------------------------------------------------
- */
-
-static BlockOfIconImagesPtr
-CreateIcoFromTkImage(
-    Tcl_Interp *interp,         /* Current interpreter. */
-    const char *image)          /* Image to convert. */
-{
-    Tk_PhotoHandle photo;
-    Tk_PhotoImageBlock block;
-    int width, height, idx, bufferSize;
-    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
-    union {unsigned char *ptr; void *voidPtr;} bgraMask;
-    HICON hIcon;
-    unsigned size;
-    BITMAPINFO bmInfo;
-    ICONINFO iconInfo;
-
-    photo = Tk_FindPhoto(interp, image);
-    if (photo == NULL) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "image \"%s\" doesn't exist", image));
-        return NULL;
-    }
-
-    /*
-     * The image exists. Try to allocate the needed memory space.
-     */
-
-    size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE));
-    iconBits = (BlockOfIconImagesPtr)attemptckalloc(size);
-    if (iconBits == NULL) {
-        return NULL;
-    }
-    ZeroMemory(iconBits, size);
-
-    iconBits->nNumImages = 1;
-
-    Tk_PhotoGetSize(photo, &width, &height);
-    Tk_PhotoGetImage(photo, &block);
-
-    /*
-     * Don't use CreateIcon to create the icon, as it requires color
-     * bitmap data in device-dependent format. Instead we use
-     * CreateIconIndirect which takes device-independent bitmaps and
-     * converts them as required. Initialise icon info structure.
-     */
-
-    ZeroMemory(&iconInfo, sizeof(iconInfo));
-    iconInfo.fIcon = TRUE;
-
-    /*
-     * Create device-independent color bitmap.
-     */
-
-    ZeroMemory(&bmInfo, sizeof bmInfo);
-    bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmInfo.bmiHeader.biWidth = width;
-    bmInfo.bmiHeader.biHeight = -height;
-    bmInfo.bmiHeader.biPlanes = 1;
-    bmInfo.bmiHeader.biBitCount = 32;
-    bmInfo.bmiHeader.biCompression = BI_RGB;
-
-    iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-            &bgraPixel.voidPtr, NULL, 0);
-    if (!iconInfo.hbmColor) {
-        FreeIconResource(iconBits);
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "failed to create an iconphoto with image \"%s\"", image));
-        return NULL;
-    }
-
-    /*
-     * Convert the photo image data into BGRA format (RGBQUAD).
-     */
-
-    bufferSize = height * width * 4;
-    for (idx = 0 ; idx < bufferSize ; idx += 4) {
-        bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
-        bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
-        bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
-        bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
-    }
-
-    /*
-     * Create a dummy mask bitmap. The contents of this don't appear to
-     * matter, as CreateIconIndirect will setup the icon mask based on the
-     * alpha channel in our color bitmap.
-     */
-
-    bmInfo.bmiHeader.biBitCount = 1;
-
-    iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-            &bgraMask.voidPtr, NULL, 0);
-    if (!iconInfo.hbmMask) {
-        DeleteObject(iconInfo.hbmColor);
-        FreeIconResource(iconBits);
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "failed to create mask bitmap for \"%s\"", image));
-        return NULL;
-    }
-
-    ZeroMemory(bgraMask.ptr, width*height/8);
-
-    /*
-     * Create an icon from the bitmaps.
-     */
-
-    hIcon = CreateIconIndirect(&iconInfo);
-    DeleteObject(iconInfo.hbmColor);
-    DeleteObject(iconInfo.hbmMask);
-    if (hIcon == NULL) {
-        /*
-         * XXX should free up created icons.
-         */
-
-        FreeIconResource(iconBits);
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "failed to create icon for \"%s\"",
-	        image));
-        return NULL;
-    }
-    iconBits->IconImages[0].Width = width;
-    iconBits->IconImages[0].Height = height;
-    iconBits->IconImages[0].Colors = 4;
-    iconBits->IconImages[0].hIcon = hIcon;
-
-    return iconBits;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * WinSystrayCmd --
  *
  * 	Main command for creating, displaying, and removing icons from taskbar.
@@ -1115,11 +895,11 @@ WinSystrayCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    static const char *cmdStrings[] = {
+    static const char *const cmdStrings[] = {
         "add", "delete", "modify", NULL
     };
     enum { CMD_ADD, CMD_DELETE, CMD_MODIFY };
-    static const char *optStrings[] = {
+    static const char *const optStrings[] = {
         "-image", "-text", "-callback", NULL
     };
     enum { OPT_IMAGE, OPT_TEXT, OPT_CALLBACK };
@@ -1128,8 +908,7 @@ WinSystrayCmd(
     HICON hIcon;
     int i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
-    IcoInfo *icoPtr;
-    BlockOfIconImagesPtr lpIR = NULL;
+    IcoInfo *icoPtr = NULL;
 
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "command ...");
@@ -1187,18 +966,31 @@ WinSystrayCmd(
                 return TCL_ERROR;
             }
             if (imageObj != NULL) {
-                lpIR = CreateIcoFromTkImage(interp, Tcl_GetString(imageObj));
-                if (lpIR == NULL) {
+                Tk_PhotoHandle photo;
+                int width, height;
+                Tk_PhotoImageBlock block;
+
+                photo = Tk_FindPhoto(interp, Tcl_GetString(imageObj));
+                if (photo == NULL) {
+                    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "image \"%s\" doesn't exist", Tcl_GetString(imageObj)));
+                    return TCL_ERROR;
+                }
+                Tk_PhotoGetSize(photo, &width, &height);
+                Tk_PhotoGetImage(photo, &block);
+                hIcon = CreateIcoFromPhoto(width, height, block);
+                if (hIcon == NULL) {
+                    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "failed to create icon for \"%s\"", Tcl_GetString(imageObj)));
                     return TCL_ERROR;
                 }
             }
             if (cmd == CMD_ADD) {
-                hIcon = lpIR->IconImages[0].hIcon;
-                icoPtr = NewIcon(interp, icoInterpPtr, hIcon, ICO_FILE, lpIR, 0);
+                icoPtr = NewIcon(interp, icoInterpPtr, hIcon);
             } else {
                 if (imageObj != NULL) {
                     DestroyIcon(icoPtr->hIcon);
-                    icoPtr->hIcon = lpIR->IconImages[0].hIcon;
+                    icoPtr->hIcon = hIcon;
                 }
             }
             if (callbackObj != NULL) {
@@ -1292,7 +1084,7 @@ WinSysNotifyCmd(
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
     ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = (unsigned int) icoPtr;
+    ni.uID = PTR2INT(icoPtr);
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = icoPtr->hIcon;
@@ -1364,7 +1156,7 @@ WinIcoInit(
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
         (ClientData) icoInterpPtr, NULL);
 
-    Tcl_CallWhenDeleted(interp, (Tcl_InterpDeleteProc*) WinIcoDestroy, (ClientData) icoInterpPtr);
+    Tcl_CallWhenDeleted(interp, (Tcl_InterpDeleteProc*)(void *)WinIcoDestroy, (ClientData) icoInterpPtr);
     Tcl_CreateThreadExitHandler(WinIcoDestroy, (ClientData) icoInterpPtr);
 
     return TCL_OK;
