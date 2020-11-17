@@ -674,7 +674,8 @@ TaskbarEval(
         int result;
         HWND hwnd = NULL;
 
-        /* See http//:support.microsoft.com/kb/q135788 */
+        /* See http://support.microsoft.com/kb/q135788/ 
+         * Seems to have moved to https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/135788 */
         if (fixup) {
             if (icoPtr->hwndFocus != NULL && IsWindow(icoPtr->hwndFocus)) {
                 hwnd = icoPtr->hwndFocus;
@@ -688,7 +689,8 @@ TaskbarEval(
         result = Tcl_GlobalEval(icoPtr->interp, expanded);
 
         if (hwnd != NULL) {
-            /* See http:/ /support.microsoft.com/kb/q135788/ */
+            /* See http://support.microsoft.com/kb/q135788/ 
+             * Seems to have moved to https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/135788 */
             PostMessageW(hwnd, WM_NULL, 0, 0);
         }
         if (result != TCL_OK) {
