@@ -177,7 +177,7 @@ TkMacOSXRGBPixel(
     unsigned long green,
     unsigned long blue)
 {
-    MacPixel p = 0;
+    MacPixel p = {0};
     p.pixel.colortype = rgbColor;
     p.pixel.value = ((red & 0xff) << 16)  |
 	            ((green & 0xff) << 8) |
@@ -207,7 +207,7 @@ MODULE_SCOPE
 unsigned long TkMacOSXClearPixel(
     void)
 {
-    MacPixel p = 0;
+    MacPixel p = {0};
     p.pixel.value = 0;
     p.pixel.colortype = clearColor;
     return p.ulong;
@@ -236,7 +236,7 @@ SystemColorDatum*
 GetEntryFromPixel(
     unsigned long pixel)
 {
-    MacPixel p = 0;
+    MacPixel p = {0};
     int index = rgbColorIndex;
 
     p.ulong = pixel;
@@ -637,7 +637,7 @@ TkpGetColor(
 
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&systemColors, name + 6);
-	MacPixel p = 0;
+	MacPixel p = {0};
 
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
