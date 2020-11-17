@@ -17,8 +17,8 @@
 #include <windows.h>
 #include <shellapi.h>
 #include "tkWin.h"
-#include "tkWinIco.h"
 #include "tkWinInt.h"
+#include "tkWinIco.h"
 
 /*
  * Based extensively on the winico extension and sample code from Microsoft.
@@ -62,6 +62,7 @@ typedef struct IcoInfo {
 
 /* Per-interp struture */
 typedef struct IcoInterpInfo {
+    HWND hwnd;                  /* Handler window */
     int counter;                /* Counter for IcoInfo id generation */
     IcoInfo *firstIcoPtr;       /* List of created IcoInfo */
     struct IcoInterpInfo *nextPtr;
@@ -72,8 +73,6 @@ typedef struct IcoInterpInfo {
 
 #define HANDLER_CLASS "Wtk_TaskbarHandler"
 static HWND CreateTaskbarHandlerWindow(void);
-
-static HWND handlerWindow = NULL;
 
 static IcoInterpInfo *firstIcoInterpPtr = NULL;
 static Tcl_ExitProc WinIcoDestroy;
@@ -230,6 +229,7 @@ DrawANDMask(
 
 static int
 TaskbarOperation(
+    IcoInterpInfo *icoInterpPtr,
     IcoInfo *icoPtr,
     int oper)
 {
@@ -237,8 +237,8 @@ TaskbarOperation(
     WCHAR *str;
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
-    ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = PTR2INT(icoPtr);
+    ni.hWnd = icoInterpPtr->hwnd;
+    ni.uID = icoPtr->id;
     ni.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = icoPtr->hIcon;
@@ -334,7 +334,7 @@ FreeIcoPtr(
         prevPtr->nextPtr = icoPtr->nextPtr;
     }
     if (icoPtr->taskbar_flags & TASKBAR_ICON) {
-        TaskbarOperation(icoPtr, NIM_DELETE);
+        TaskbarOperation(icoInterpPtr, icoPtr, NIM_DELETE);
     }
     if (icoPtr->taskbar_txt != NULL) {
         Tcl_DecrRefCount(icoPtr->taskbar_txt);
@@ -738,10 +738,16 @@ TaskbarHandlerProc(
 
     case ICON_MESSAGE:
         for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
-            for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
-                if (((PTR2INT(icoPtr) == wParam ) && (icoPtr->taskbar_command != NULL))) {
-                    TaskbarEval(icoPtr, wParam, lParam);
+            if (icoInterpPtr->hwnd == hwnd) {
+                for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+                    if (icoPtr->id == wParam) {
+                        if (icoPtr->taskbar_command != NULL) {
+                            TaskbarEval(icoPtr, wParam, lParam);
+                        }
+                        break;
+                    }
                 }
+                break;
             }
         }
         break;
@@ -753,10 +759,13 @@ TaskbarHandlerProc(
          */
         if (message == msgTaskbarCreated) {
             for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
-                for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
-                    if (icoPtr->taskbar_flags & TASKBAR_ICON) {
-                        TaskbarOperation(icoPtr, NIM_ADD);
+                if (icoInterpPtr->hwnd == hwnd) {
+                    for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
+                        if (icoPtr->taskbar_flags & TASKBAR_ICON) {
+                            TaskbarOperation(icoInterpPtr, icoPtr, NIM_ADD);
+                        }
                     }
+                    break;
                 }
             }
         }
@@ -820,15 +829,13 @@ static HWND
 CreateTaskbarHandlerWindow(void) {
     static int registered = 0;
     HINSTANCE hInstance = GETHINSTANCE;
-    if (handlerWindow)
-        return handlerWindow;
     if (!registered) {
         if (!RegisterHandlerClass(hInstance))
             return 0;
         registered = 1;
     }
-    return (handlerWindow = CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
-            CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL));
+    return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
+                CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
 }
 
 /*
@@ -868,6 +875,7 @@ WinIcoDestroy(
         prevIcoInterpPtr->nextPtr = icoInterpPtr->nextPtr;
     }
 
+    DestroyWindow(icoInterpPtr->hwnd);
     for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
         nextPtr = icoPtr->nextPtr;
         FreeIcoPtr(icoInterpPtr, icoPtr);
@@ -1010,7 +1018,7 @@ WinSystrayCmd(
                 icoPtr->taskbar_txt = textObj;
                 Tcl_IncrRefCount(icoPtr->taskbar_txt);
             }
-            TaskbarOperation(icoPtr, oper);
+            TaskbarOperation(icoInterpPtr, icoPtr, oper);
             if (cmd == CMD_ADD) {
                 char buffer[5 + TCL_INTEGER_SPACE];
                 int n;
@@ -1086,8 +1094,8 @@ WinSysNotifyCmd(
     }
 
     ni.cbSize = sizeof(NOTIFYICONDATAW);
-    ni.hWnd = CreateTaskbarHandlerWindow();
-    ni.uID = PTR2INT(icoPtr);
+    ni.hWnd = icoInterpPtr->hwnd;
+    ni.uID = icoPtr->id;
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = icoPtr->hIcon;
@@ -1152,6 +1160,7 @@ WinIcoInit(
     icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
+    icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();
     icoInterpPtr->nextPtr = firstIcoInterpPtr;
     firstIcoInterpPtr = icoInterpPtr;
     Tcl_CreateObjCommand(interp, "::tk::systray::_systray", WinSystrayCmd,
