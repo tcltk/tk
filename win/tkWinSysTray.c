@@ -669,7 +669,7 @@ TaskbarEval(
         fixup = 0;
     }
     expanded = TaskbarExpandPercents(icoPtr, msgstring, wParam, lParam,
-        Tcl_GetString(icoPtr->taskbar_command), evalspace, &evalsize);
+            Tcl_GetString(icoPtr->taskbar_command), evalspace, &evalsize);
     if (icoPtr->interp != NULL) {
         int result;
         HWND hwnd = NULL;
