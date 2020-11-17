@@ -95,6 +95,12 @@ static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
 				 * the flag that Tk is not to draw any
 				 * menus. */
 static int inPostMenu = 0;
+
+/*
+ * These colors are never used.  We compare current settings with these to
+ * detect whether they have been changed from the default.
+ */ 
+
 static unsigned long defaultBg = 0, defaultFg = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
@@ -320,12 +326,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
 
-	    /*
-	     * Add time for errors to fire if necessary. This is sub-optimal
-	     * but avoids issues with Tcl/Cocoa event loop integration.
-	     */
-
-	    //Tcl_Sleep(100);
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -693,7 +693,8 @@ TkpConfigureMenuEntry(
     NSString *keyEquivalent = @"";
     NSUInteger modifierMask = NSCommandKeyMask;
     NSMenu *submenu = nil;
-    NSDictionary *attributes;
+    NSDictionary *fontAttributes;
+    NSMutableDictionary *attributes;
     int imageWidth, imageHeight;
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ? mePtr->fontPtr :
@@ -711,9 +712,7 @@ TkpConfigureMenuEntry(
 		&imageHeight);
 	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
-	if (gc->foreground == defaultFg) {
-	    [image setTemplate:YES];
-	}
+	[image setTemplate:YES];
     }
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
@@ -727,23 +726,36 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setTitle:title];
-    if (strcmp(Tcl_GetString(fontPtr), "menu") || gc->foreground != defaultFg
-	    || gc->background != defaultBg) {
-	attributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
-		mePtr->menuPtr->tkwin, fontPtr));
-	if (gc->foreground != defaultFg || gc->background != defaultBg) {
-	    NSColor *color = TkMacOSXGetNSColor(gc,
-		    gc->foreground!=defaultFg? gc->foreground:gc->background);
+    fontAttributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
+		     mePtr->menuPtr->tkwin, fontPtr));
+    attributes = [fontAttributes mutableCopy];
+    if (gc->foreground != defaultFg) {
 
-	    attributes = [[attributes mutableCopy] autorelease];
-	    [(NSMutableDictionary *) attributes setObject:color
-		    forKey:NSForegroundColorAttributeName];
-	}
-	if (attributes) {
-	    attributedTitle = [[[NSAttributedString alloc]
-		    initWithString:title attributes:attributes] autorelease];
-	}
+	/*
+	 * Apple's default foreground color changes to white when the menuitem is
+	 * selected.  If a custom foreground color is used then the color will be
+	 * the same for selected and unselected menu items.
+	 */
+
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	[attributes setObject:fgcolor
+		       forKey:NSForegroundColorAttributeName];
     }
+    if (gc->background != defaultBg) {
+
+	/*
+	 * Setting a background color looks awful. But setting the background should
+	 * not be the same as setting the foreground.  As a compromise, if the background
+	 * color is set we draw an underline in that color.
+	 */
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	[attributes setObject:bgcolor
+	 	       forKey:NSUnderlineColorAttributeName];
+	[attributes setObject:[NSNumber numberWithInt:NSUnderlineStyleDouble]
+		       forKey:NSUnderlineStyleAttributeName];
+    }
+    attributedTitle = [[[NSAttributedString alloc]
+	initWithString:title attributes:attributes] autorelease];
     [menuItem setAttributedTitle:attributedTitle];
     [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
@@ -1696,7 +1708,6 @@ void
 TkpMenuInit(void)
 {
     TkColor *tkColPtr;
-
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
 #define observe(n, s) \

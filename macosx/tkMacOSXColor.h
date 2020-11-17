@@ -89,7 +89,7 @@ typedef struct {
 
 static SystemColorDatum systemColorData[] = {
 {"Pixel",				rgbColor, 0, NULL, 0, NULL },
-{"Transparent",				clearColor,   0, NULL, 0, NULL },
+{"Transparent",			       	clearColor,   0, NULL, 0, NULL },
 
 {"Highlight",				HIBrush,  kThemeBrushPrimaryHighlightColor, NULL, 0, NULL },
 {"HighlightSecondary",		    	HIBrush,  kThemeBrushSecondaryHighlightColor, NULL, 0, NULL },
