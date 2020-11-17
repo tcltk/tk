@@ -44,7 +44,7 @@ namespace eval ::tk::systray {
 	raise $top
     }
 
-    proc _win_callback {msg icn} {
+    proc _win_callback {msg} {
 	variable _current
 	switch -exact -- $msg {
 	    WM_LBUTTONDOWN {
@@ -162,7 +162,7 @@ proc ::tk::systray::create {args} {
 	    "win32" {
 		set _ico [_systray add -image [dict get $values -image] \
 			-text [dict get $values -text] \
-			-callback [list ::tk::systray::_win_callback %m %i]]
+			-callback [list ::tk::systray::_win_callback %m]]
 	    }
 	    "x11" {
 		_systray ._tray -image [dict get $values -image] -visible true
