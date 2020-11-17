@@ -144,9 +144,17 @@ $m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
 set m $w.menu.colors
 $w.menu add cascade -label "Colors" -menu $m -underline 1
 menu $m -tearoff 1
-foreach i {red orange yellow green blue} {
-    $m add command -label $i -background $i -command [list \
-	    puts "You invoked \"$i\"" ]
+if {[tk windowingsystem] eq "aqua"} {
+    # In aqua, changing the background actually adds a colored underline.
+    foreach i {red orange yellow green blue} {
+	$m add command -label $i -foreground $i -command [list \
+	puts "You invoked \"$i\"" ]
+    }
+} else {
+    foreach i {red orange yellow green blue} {
+	$m add command -label $i -background $i -command [list \
+	puts "You invoked \"$i\"" ]
+    }
 }
 
 $w configure -menu $w.menu
