@@ -47,10 +47,10 @@ namespace eval ::tk::systray {
     proc _win_callback {msg} {
 	variable _current
 	switch -exact -- $msg {
-	    WM_LBUTTONDOWN {
+	    WM_LBUTTONDOWN - WM_LBUTTONDBLCLK {
 		uplevel #0 [dict get $_current -button1]
 	    }
-	    WM_RBUTTONDOWN {
+	    WM_RBUTTONDOWN - WM_RBUTTONDBLCLK {
 		uplevel #0 [dict get $_current -button3]
 	    }
 	}
