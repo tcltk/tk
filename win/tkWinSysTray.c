@@ -75,7 +75,7 @@ typedef struct IcoInterpInfo {
 static HWND CreateTaskbarHandlerWindow(void);
 
 static IcoInterpInfo *firstIcoInterpPtr = NULL;
-static Tcl_ExitProc WinIcoDestroy;
+static Tk_EventProc WinIcoDestroy;
 
 /*
  * If someone wants to see the several masks somewhere on the screen...
@@ -681,9 +681,13 @@ TaskbarEval(
                 hwnd = icoPtr->hwndFocus;
             } else {
                 Tk_Window tkwin = Tk_MainWindow(icoPtr->interp);
-                hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+                if (tkwin != NULL) {
+                    hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+                }
             }
-            SetForegroundWindow(hwnd);
+            if (hwnd != NULL) {
+                SetForegroundWindow(hwnd);
+            }
         }
 
         result = Tcl_GlobalEval(icoPtr->interp, expanded);
@@ -845,7 +849,9 @@ CreateTaskbarHandlerWindow(void) {
  *
  * WinIcoDestroy --
  *
- * 	Deletes icon and hidden window from display.
+ *	Event handler to delete systray icons when interp main window
+ *	is deleted, either by destroy, interp deletion or application
+ *	exit.
  *
  * Results:
  *	Icon/window removed and memory freed.
@@ -858,14 +864,17 @@ CreateTaskbarHandlerWindow(void) {
 
 static void
 WinIcoDestroy(
-    ClientData clientData)
+    ClientData clientData,
+    XEvent *eventPtr)
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInterpInfo *prevIcoInterpPtr;
     IcoInfo *icoPtr;
     IcoInfo *nextPtr;
 
-    Tcl_DeleteThreadExitHandler(WinIcoDestroy, clientData);
+    if (eventPtr->type != DestroyNotify) {
+        return;
+    }
 
     if (firstIcoInterpPtr == icoInterpPtr) {
         firstIcoInterpPtr = icoInterpPtr->nextPtr;
@@ -1147,6 +1156,7 @@ WinIcoInit(
     Tcl_Interp *interp)
 {
     IcoInterpInfo *icoInterpPtr;
+    Tk_Window mainWindow;
 
 #ifdef USE_TCL_STUBS
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
@@ -1159,6 +1169,12 @@ WinIcoInit(
     }
 #endif
 
+    mainWindow = Tk_MainWindow(interp);
+    if (mainWindow == NULL) {
+        Tcl_SetResult(interp, "main window has been destroyed", TCL_STATIC);
+        return TCL_ERROR;
+    }
+
     icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
@@ -1170,8 +1186,8 @@ WinIcoInit(
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
         (ClientData) icoInterpPtr, NULL);
 
-    Tcl_CallWhenDeleted(interp, (Tcl_InterpDeleteProc*)(void *)WinIcoDestroy, (ClientData) icoInterpPtr);
-    Tcl_CreateThreadExitHandler(WinIcoDestroy, (ClientData) icoInterpPtr);
+    Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
+        WinIcoDestroy, (ClientData) icoInterpPtr);
 
     return TCL_OK;
 }
