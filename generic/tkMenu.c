@@ -1492,7 +1492,6 @@ MenuWorldChanged(
     for (i = 0; i < menuPtr->numEntries; i++) {
     	TkMenuConfigureEntryDrawOptions(menuPtr->entries[i],
 		menuPtr->entries[i]->index);
-	fprintf(stderr, "MenuWorldChanged: calling TkpConfigureMenuEntry %d\n", i);
 	TkpConfigureMenuEntry(menuPtr->entries[i]);
     }
     TkEventuallyRecomputeMenu(menuPtr);
@@ -1874,7 +1873,6 @@ PostProcessEntry(
 	}
     }
 
-    fprintf(stderr, "PostProcessEntry: calling TkpConfigureMenuEntry\n");
     if (TkpConfigureMenuEntry(mePtr) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -2536,7 +2534,6 @@ MenuVarProc(
 	Tcl_TraceVar2(interp, name, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuVarProc, clientData);
-	fprintf(stderr, "MenuVarProc: Calling TkpConfigureMenuEntry\n");
 	TkpConfigureMenuEntry(mePtr);
 	TkEventuallyRedrawMenu(menuPtr, NULL);
 	return NULL;
@@ -2566,7 +2563,6 @@ MenuVarProc(
     } else {
 	return NULL;
     }
-    fprintf(stderr, "MenuVarProc: Calling TkpConfigureMenuEntry (2)\n");
     TkpConfigureMenuEntry(mePtr);
     TkEventuallyRedrawMenu(menuPtr, mePtr);
     return NULL;

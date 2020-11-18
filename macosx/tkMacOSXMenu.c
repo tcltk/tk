@@ -409,7 +409,7 @@ TKBackgroundLoop *backgroundLoop = nil;
     (void)menu;
 
     if (_tkMenu) {
-	//	RecursivelyClearActiveMenu(_tkMenu);
+	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
 		[self itemInSupermenu]);
     }
@@ -472,8 +472,8 @@ TKBackgroundLoop *backgroundLoop = nil;
     }
     backgroundLoop = [[TKBackgroundLoop alloc] init];
     [backgroundLoop start];
-    //    TkMacOSXClearMenubarActive();
-    //    TkMacOSXPreprocessMenu();
+    //TkMacOSXClearMenubarActive();
+    //TkMacOSXPreprocessMenu();
 }
 
 - (void) menuEndTracking: (NSNotification *) notification
@@ -725,49 +725,45 @@ TkpConfigureMenuEntry(
 		    [title substringToIndex:[title length] - 3], 0x2026];
 	}
     }
-    if ([title length]) {
-	fontAttributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
-									   mePtr->menuPtr->tkwin, fontPtr));
-	attributes = [fontAttributes mutableCopy];
-	if (gc->foreground != defaultFg) {
+    [menuItem setTitle:title];
+    fontAttributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
+		     mePtr->menuPtr->tkwin, fontPtr));
+    attributes = [fontAttributes mutableCopy];
+    if (gc->foreground != defaultFg) {
 
-	    /*
-	     * Apple's default foreground color changes to white when the menuitem is
-	     * selected.  If a custom foreground color is used then the color will be
-	     * the same for selected and unselected menu items.
-	     */
+	/*
+	 * Apple's default foreground color changes to white when the menuitem is
+	 * selected.  If a custom foreground color is used then the color will be
+	 * the same for selected and unselected menu items.
+	 */
 
-	    NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
-	    [attributes setObject:fgcolor
-			   forKey:NSForegroundColorAttributeName];
-	}
-	if (gc->background != defaultBg) {
-
-	    /*
-	     * Setting a background color looks awful. But setting the background should
-	     * not be the same as setting the foreground.  As a compromise, if the background
-	     * color is set we draw an underline in that color.
-	     */
-	    NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
-	    [attributes setObject:bgcolor
-			   forKey:NSUnderlineColorAttributeName];
-	    [attributes setObject:[NSNumber numberWithInt:NSUnderlineStyleDouble]
-			   forKey:NSUnderlineStyleAttributeName];
-	}
-	attributedTitle = [[NSAttributedString alloc]
-			       initWithString:title
-				   attributes:attributes];
-	[menuItem setAttributedTitle:attributedTitle];
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	[attributes setObject:fgcolor
+		       forKey:NSForegroundColorAttributeName];
     }
-    fprintf(stderr, "Item %s has tk state %x apple enabled %d\n",
-	    title.UTF8String, mePtr->state, [menuItem isEnabled]);
-    [menuItem setEnabled:(mePtr->state & ENTRY_DISABLED) == 0 || [title length] == 0];
+    if (gc->background != defaultBg) {
+
+	/*
+	 * Setting a background color looks awful. But setting the background should
+	 * not be the same as setting the foreground.  As a compromise, if the background
+	 * color is set we draw an underline in that color.
+	 */
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	[attributes setObject:bgcolor
+	 	       forKey:NSUnderlineColorAttributeName];
+	[attributes setObject:[NSNumber numberWithInt:NSUnderlineStyleDouble]
+		       forKey:NSUnderlineStyleAttributeName];
+    }
+    attributedTitle = [[[NSAttributedString alloc]
+	initWithString:title attributes:attributes] autorelease];
+    [menuItem setAttributedTitle:attributedTitle];
+    [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
-			 mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
-			(mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
+	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
+	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
     if (mePtr->type != CASCADE_ENTRY && mePtr->accelPtr && mePtr->accelLength) {
 	keyEquivalent = ParseAccelerator(Tcl_GetString(mePtr->accelPtr),
-					 &modifierMask);
+		&modifierMask);
     }
     [menuItem setKeyEquivalent:keyEquivalent];
     [menuItem setKeyEquivalentModifierMask:modifierMask];
@@ -780,7 +776,6 @@ TkpConfigureMenuEntry(
 	    CheckForSpecialMenu(menuRefPtr->menuPtr);
 	    submenu = (TKMenu *) menuRefPtr->menuPtr->platformData;
 	    if ([submenu supermenu] && [menuItem submenu] != submenu) {
-
 		/*
 		 * This happens during a clone, where the parent menu is
 		 * cloned before its children, so just ignore this temprary
