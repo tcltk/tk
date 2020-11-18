@@ -46,6 +46,9 @@ namespace eval ::tk::systray {
 
     proc _win_callback {msg} {
 	variable _current
+	# The API at the Tk level does not feature bindings to double clicks. Whatever
+	# the speed the user clicks with, he expects the single click binding to fire.
+	# Therefore we need to bind to both WM_*BUTTONDOWN and to WM_*BUTTONDBLCLK.
 	switch -exact -- $msg {
 	    WM_LBUTTONDOWN - WM_LBUTTONDBLCLK {
 		uplevel #0 [dict get $_current -button1]
