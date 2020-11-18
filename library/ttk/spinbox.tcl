@@ -134,7 +134,7 @@ proc ttk::spinbox::Adjust {w v min max} {
 #	Otherwise cycle through numeric range based on
 #	-from, -to, and -increment.
 #
-proc ttk::spinbox::Spin {w dir {factor 1.0}} {
+proc ttk::spinbox::Spin {w dir {factor -1.0}} {
     variable State
 
     if {[$w instate disabled]} { return }
@@ -146,7 +146,7 @@ proc ttk::spinbox::Spin {w dir {factor 1.0}} {
     set State($w,values) [$w cget -values]
     set State($w,values.length) [llength $State($w,values)]
 
-    set d [expr {($dir/$factor)}]
+    set d [expr {-($dir/$factor)}]
     set d [expr {int($d > 0 ? ceil($d) : floor($d))}]
     if {$State($w,values.length) > 0} {
 	set value [$w get]
