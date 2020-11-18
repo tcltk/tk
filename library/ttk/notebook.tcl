@@ -63,9 +63,11 @@ proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
 	set current [$w index current]
 	set d [expr {$dir/$factor}]
 	set d [expr {int($d > 0 ? ceil($d) : floor($d))}]
-	set select [expr {($current + $d) % [$w index end]}]
-	while {[$w tab $select -state] != "normal" && ($select != $current)} {
-	    set select [expr {($select + $dir) % [$w index end]}]
+	set tabCount [$w index end]
+	set select [expr {($current + $d) % $tabCount}]
+	set step [expr {$dir > 0 ? 1 : -1}]
+	while {[$w tab $select -state] ne "normal" && ($select != $current)} {
+	    set select [expr {($select + $step) % $tabCount}]
 	}
 	if {$select != $current} {
 	    ActivateTab $w $select

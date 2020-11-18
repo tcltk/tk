@@ -60,7 +60,11 @@ static BOOL consoleRequired = TRUE;
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
 #ifndef MODULE_SCOPE
-#   define MODULE_SCOPE extern
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
