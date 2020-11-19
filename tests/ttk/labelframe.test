@@ -128,4 +128,18 @@ test labelframe-6.1 "Stacking order" -body {
     destroy .t
 } -result [list .t.x1 .t.lf .t.lb .t.x2]
 
+test labelframe-7.1 "style command" -body {
+    ttk::labelframe .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TLabelframe TLabelframe}
+test labelframe-7.2 "style command" -body {
+    ttk::style configure customStyle.TLabelframe
+    ttk::labelframe .w -style customStyle.TLabelframe
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TLabelframe customStyle.TLabelframe TLabelframe}
+
 tcltest::cleanupTests

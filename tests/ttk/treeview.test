@@ -835,4 +835,18 @@ test treeview-ce470f20fd-4 "changing -stretch resizes columns" -setup {
     destroy .tv
 } -result {60 50 60 50 60 50 1}
 
+test treeview-11.1 "style command" -body {
+    ttk::treeview .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} Treeview Treeview}
+test treeview-11.2 "style command" -body {
+    ttk::style configure customStyle.Treeview
+    ttk::treeview .w -style customStyle.Treeview
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Treeview customStyle.Treeview Treeview}
+
 tcltest::cleanupTests
