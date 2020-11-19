@@ -28,7 +28,10 @@ API's. The X11 version has a conditional dependency on libnotify, and
 falls back to a Tcl-only implementation if libnotify is not installed. On
 each platform the notification includes a platform-specific default image to
 accompany the text.
-.PP
+.
+.TP
+\fBmacOS\fR
+.
 The macOS version embeds two separate under-the-hood implementations
 using different notification APIs.  The choice of which one to use
 depends on which version of the OS is being run and the state of the
@@ -47,5 +50,12 @@ ineffective.  To re-enable notifications the application must be
 deleted from Apple's System Preferences Notifications section. (There
 is no removal button, so this is done by selecting the application and
 pressing the Delete key.)
+.
+.TP
+\fBWindows\fR
+.
+The image is taken from the systray i.e. a sysnotify can only be
+called when a systray was installed.
+.
 .SH KEYWORDS
 notify, alert
