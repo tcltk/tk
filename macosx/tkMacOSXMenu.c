@@ -745,7 +745,7 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setAttributedTitle:attributedTitle];
-    [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
+    [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
 	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
@@ -778,15 +778,17 @@ TkpConfigureMenuEntry(
     		if ([menuItem isEnabled]) {
 
 		    /*
-		     * This menuItem might have been previously disabled (XXX:
-		     * track this), which would have disabled entries; we must
-		     * re-enable the entries here.
+		     * This menuItem might have been previously disabled which
+		     * would have disabled all of its entries; we must re-enable the
+		     * entries here.  It is important to iterate though the Tk
+		     * entries, not the NSMenuItems, since some NSMenuItems may
+		     * have been added by the system.  See [7185d26cf4].
 		     */
 
 		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 			NSMenuItem *item = (NSMenuItem *) mePtr->platformEntryData;
-			[item setEnabled: submePtr->state != ENTRY_DISABLED];
+			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
 		    }
 		}
 	    }
@@ -1831,13 +1833,15 @@ TkpComputeMenubarGeometry(
  * TkpDrawMenuEntry --
  *
  *	Draws the given menu entry at the given coordinates with the given
- *	attributes.
+ *	attributes.  This is a no-op on macOS since the menus are drawn by
+ *      the Apple window manager, which also handles all events related to
+ *      selecting menu items.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	X Server commands are executed to display the menu entry.
+ *	None
  *
  *----------------------------------------------------------------------
  */
@@ -1857,6 +1861,7 @@ TkpDrawMenuEntry(
     TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
 {
+    fprintf(stderr, "TkpDrawMenuEntry\n");
 }
 
 #pragma mark Obsolete
