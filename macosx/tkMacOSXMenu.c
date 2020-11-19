@@ -1835,7 +1835,9 @@ TkpComputeMenubarGeometry(
  *	Draws the given menu entry at the given coordinates with the given
  *	attributes.  This is a no-op on macOS since the menus are drawn by
  *      the Apple window manager, which also handles all events related to
- *      selecting menu items.
+ *      selecting menu items.  This function is only called for tearoff
+ *      menus, which are not supported on macOS but do get drawn as nearly
+ *      invisible 1 pixel wide windows on macOS
  *
  * Results:
  *	None.
@@ -1861,7 +1863,6 @@ TkpDrawMenuEntry(
     TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
 {
-    fprintf(stderr, "TkpDrawMenuEntry\n");
 }
 
 #pragma mark Obsolete
