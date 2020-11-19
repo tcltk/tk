@@ -783,22 +783,10 @@ TkpConfigureMenuEntry(
 		     * re-enable the entries here.
 		     */
 
-		    int i = 0;
-		    NSArray *itemArray = [submenu itemArray];
-		    for (NSMenuItem *item in itemArray) {
+		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-
-			/*
-			 * if this is a special menu in a menubar, skip the
-			 * first item, which will have been added by the system
-			 * and will be unknown to Tk.
-			 */
-
-			if (mePtr->entryFlags && i == 0) {
-			    continue;
-			}
-			[item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
-			i++;
+			NSMenuItem *item = (NSMenuItem *) mePtr->platformEntryData;
+			[item setEnabled: submePtr->state != ENTRY_DISABLED];
 		    }
 		}
 	    }
