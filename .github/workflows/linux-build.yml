@@ -1,0 +1,47 @@
+name: Linux
+on: [push]
+jobs:
+  gcc:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cfgopt:
+          - ""
+          - "--disable-shared"
+          - "--disable-xft"
+          - "--disable-xss"
+          - "--enable-symbols"
+    defaults:
+      run:
+        shell: bash
+        working-directory: unix
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Prepare
+        run: touch ../doc/man.macros tkStubInit.c;sudo apt-get install tcl8.6-dev libx11-dev libxss-dev
+        working-directory: generic
+      - name: Configure ${{ matrix.cfgopt }}
+        run: |
+          mkdir "${HOME}/install"
+          ./configure ${CFGOPT} "--prefix=$HOME/install" || (cat config.log && exit 1)
+        env:
+          CFGOPT: ${{ matrix.cfgopt }}
+      - name: Build
+        run: |
+          make binaries libraries
+      - name: Build Test Harness
+        run: |
+          make tktest
+#     - name: Run Tests
+#       run: |
+#         make test
+      - name: Test-Drive Installation
+        run: |
+          make install
+      - name: Create Distribution Package
+        run: |
+          make dist
+      - name: Convert Documentation to HTML
+        run: |
+          make html-tk
