@@ -725,38 +725,37 @@ TkpConfigureMenuEntry(
 		    [title substringToIndex:[title length] - 3], 0x2026];
 	}
     }
+
+
     [menuItem setTitle:title];
     fontAttributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
 		     mePtr->menuPtr->tkwin, fontPtr));
     attributes = [fontAttributes mutableCopy];
+
+#if 0
+
+    /*
+     * The -background and -foreground options are now ignored in Aqua.
+     * See ticket [635167af14].
+     */
+
     if (gc->foreground != defaultFg) {
-
-	/*
-	 * Apple's default foreground color changes to white when the menuitem is
-	 * selected.  If a custom foreground color is used then the color will be
-	 * the same for selected and unselected menu items.
-	 */
-
 	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
 	[attributes setObject:fgcolor
 		       forKey:NSForegroundColorAttributeName];
     }
     if (gc->background != defaultBg) {
-
-	/*
-	 * Setting a background color looks awful. But setting the background should
-	 * not be the same as setting the foreground.  As a compromise, if the background
-	 * color is set we draw an underline in that color.
-	 */
 	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
 	[attributes setObject:bgcolor
-	 	       forKey:NSUnderlineColorAttributeName];
-	[attributes setObject:[NSNumber numberWithInt:NSUnderlineStyleDouble]
-		       forKey:NSUnderlineStyleAttributeName];
+	 	       forKey:NSBackgroundColorAttributeName];
     }
-    attributedTitle = [[[NSAttributedString alloc]
-	initWithString:title attributes:attributes] autorelease];
+
+#endif
+
+    attributedTitle = [[NSAttributedString alloc] initWithString:title
+	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
+
     [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
