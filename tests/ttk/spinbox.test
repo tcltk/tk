@@ -358,6 +358,20 @@ test spinbox-dieoctaldie-2 "Cope with general bad input" -body {
     destroy .sb
 }
 
+test spinbox-5.1 "style command" -body {
+    ttk::spinbox .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TSpinbox TSpinbox}
+test spinbox-5.2 "style command" -body {
+    ttk::style configure customStyle.TSpinbox
+    ttk::spinbox .w -style customStyle.TSpinbox
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TSpinbox customStyle.TSpinbox TSpinbox}
+
 tcltest::cleanupTests
 
 # Local variables:
