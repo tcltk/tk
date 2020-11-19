@@ -748,7 +748,7 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setAttributedTitle:attributedTitle];
-    [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
+    [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
 	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
@@ -781,27 +781,17 @@ TkpConfigureMenuEntry(
     		if ([menuItem isEnabled]) {
 
 		    /*
-		     * This menuItem might have been previously disabled (XXX:
-		     * track this), which would have disabled entries; we must
-		     * re-enable the entries here.
+		     * This menuItem might have been previously disabled which
+		     * would have disabled all of its entries; we must re-enable the
+		     * entries here.  It is important to iterate though the Tk
+		     * entries, not the NSMenuItems, since some NSMenuItems may
+		     * have been added by the system.  See [7185d26cf4].
 		     */
 
-		    int i = 0;
-		    NSArray *itemArray = [submenu itemArray];
-
-		    for (NSMenuItem *item in itemArray) {
+		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-
-			/*
-			 * Work around an apparent bug where itemArray can have
-			 * more items than the menu's entries[] array.
-			 */
-
-			if (i >= (int) menuRefPtr->menuPtr->numEntries) {
-			    break;
-			}
-			[item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
-			i++;
+			NSMenuItem *item = (NSMenuItem *) mePtr->platformEntryData;
+			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
 		    }
 		}
 	    }
@@ -1815,13 +1805,17 @@ TkpComputeMenubarGeometry(
  * TkpDrawMenuEntry --
  *
  *	Draws the given menu entry at the given coordinates with the given
- *	attributes.
+ *	attributes.  This is a no-op on macOS since the menus are drawn by
+ *      the Apple window manager, which also handles all events related to
+ *      selecting menu items.  This function is only called for tearoff
+ *      menus, which are not supported on macOS but do get drawn as nearly
+ *      invisible 1 pixel wide windows on macOS
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	X Server commands are executed to display the menu entry.
+ *	None
  *
  *----------------------------------------------------------------------
  */
