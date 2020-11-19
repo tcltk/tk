@@ -145,9 +145,16 @@ set m $w.menu.colors
 $w.menu add cascade -label "Colors" -menu $m -underline 1
 menu $m -tearoff 1
 if {[tk windowingsystem] eq "aqua"} {
-    # In aqua, changing the background actually adds a colored underline.
+    # Aqua ignores the -background and -foreground options, but a compound
+    # button can be used for selecting colors.
     foreach i {red orange yellow green blue} {
-	$m add command -label $i -foreground $i -command [list \
+	image create photo image_$i -height 16 -width 16
+	image_$i put black -to 0 0 16 1
+	image_$i put black -to 0 1 1 16
+	image_$i put black -to 0 15 16 16
+	image_$i put black -to 15 1 16 16
+	image_$i put $i -to 1 1 15 15
+	$m add command -label $i -image image_$i -compound left -command [list \
 	puts "You invoked \"$i\"" ]
     }
 } else {
