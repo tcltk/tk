@@ -103,16 +103,15 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
+}
 
-    /*
-     * Construct the menu bar.
-     */
-    _defaultMainMenu = nil;
-    [self _setupMenus];
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    (void)notification;
 
-    /*
-     * Initialize event processing.
-     */
+   /*
+    * Initialize event processing.
+    */
 
     TkMacOSXInitAppleEvents(_eventInterp);
 
@@ -121,11 +120,20 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
-}
 
--(void)applicationDidFinishLaunching:(NSNotification *)notification
-{
-    (void)notification;
+    /*
+     * Construct the menu bar.
+     */
+
+    _defaultMainMenu = nil;
+    [self _setupMenus];
+
+    /*
+     * Initialize graphics.
+     */
+
+    TkMacOSXUseAntialiasedText(_eventInterp, -1);
+    TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
 
     /*
      * It is not safe to force activation of the NSApp until this method is
