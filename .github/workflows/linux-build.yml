@@ -2,7 +2,7 @@ name: Linux
 on: [push]
 jobs:
   gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         cfgopt:
@@ -19,12 +19,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Prepare
-        run: touch ../doc/man.macros tkStubInit.c;sudo apt-get install tcl8.6-dev libx11-dev libxss-dev
+        run: touch ../doc/man.macros tkStubInit.c;sudo apt-get install tcl8.6-dev libxss-dev
         working-directory: generic
       - name: Configure ${{ matrix.cfgopt }}
         run: |
           mkdir "${HOME}/install"
-          ./configure ${CFGOPT} "--prefix=$HOME/install" || (cat config.log && exit 1)
+          ./configure ${CFGOPT} "--prefix=$HOME/install" -with-tcl=/usr/lib/tcl8.6 || (cat config.log && exit 1)
         env:
           CFGOPT: ${{ matrix.cfgopt }}
       - name: Build
@@ -42,6 +42,6 @@ jobs:
       - name: Create Distribution Package
         run: |
           make dist
-      - name: Convert Documentation to HTML
-        run: |
-          make html-tk
+#     - name: Convert Documentation to HTML
+#       run: |
+#         make html-tk
