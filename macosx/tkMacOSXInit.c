@@ -129,13 +129,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     [self _setupMenus];
 
     /*
-     * Initialize graphics.
-     */
-
-    TkMacOSXUseAntialiasedText(_eventInterp, -1);
-    TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
-
-    /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
      * The call to activateIgnoringOtherApps was moved here to avoid this.
