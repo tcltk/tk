@@ -316,12 +316,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
 
-	    /*
-	     * Add time for errors to fire if necessary. This is sub-optimal
-	     * but avoids issues with Tcl/Cocoa event loop integration.
-	     */
-
-	    //Tcl_Sleep(100);
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -685,7 +679,6 @@ TkpConfigureMenuEntry(
     NSString *keyEquivalent = @"";
     NSUInteger modifierMask = NSCommandKeyMask;
     NSMenu *submenu = nil;
-    NSDictionary *attributes;
     int imageWidth, imageHeight;
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ?
@@ -714,9 +707,7 @@ TkpConfigureMenuEntry(
 		&imageHeight);
 	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
-	if (gc->foreground == defaultFg) {
-	    [image setTemplate:YES];
-	}
+	[image setTemplate:YES];
     }
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
@@ -730,23 +721,48 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setTitle:title];
-    if (strcmp(Tcl_GetString(fontPtr), "menu") || gc->foreground != defaultFg
-	    || gc->background != defaultBg) {
-	attributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
-		mePtr->menuPtr->tkwin, fontPtr));
-	if (gc->foreground != defaultFg || gc->background != defaultBg) {
-	    NSColor *color = TkMacOSXGetNSColor(gc,
-		    gc->foreground!=defaultFg? gc->foreground:gc->background);
 
-	    attributes = [[attributes mutableCopy] autorelease];
-	    [(NSMutableDictionary *) attributes setObject:color
-		    forKey:NSForegroundColorAttributeName];
-	}
-	if (attributes) {
-	    attributedTitle = [[[NSAttributedString alloc]
-		    initWithString:title attributes:attributes] autorelease];
-	}
+#if 0
+
+    /*
+     * The -background and -foreground options are now ignored in Aqua.
+     * See ticket [635167af14].
+     */
+    
+    NSDictionary fontAttributes = TkMacOSXNSFontAttributesForFont(
+	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
+    NSMutableDictionary *attributes = [fontAttributes mutableCopy];
+    static unsigned long defaultBg = 0, defaultFg = 0;
+    if (defaultBg == 0) {
+	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
+	defaultBg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
     }
+    if (defaultFg == 0) {
+	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
+	defaultFg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
+    }
+    if (gc->foreground != defaultFg) {
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	[attributes setObject:fgcolor
+		       forKey:NSForegroundColorAttributeName];
+    }
+    if (gc->background != defaultBg) {
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	[attributes setObject:bgcolor
+	 	       forKey:NSBackgroundColorAttributeName];
+    }
+
+#else
+    
+    NSDictionary *attributes = TkMacOSXNSFontAttributesForFont(
+	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
+    
+#endif
+
+    attributedTitle = [[NSAttributedString alloc] initWithString:title
+	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
     [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
@@ -1664,8 +1680,6 @@ TkMacOSXClearMenubarActive(void)
 void
 TkpMenuInit(void)
 {
-    //    TkColor *tkColPtr;
-
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
 #define observe(n, s) \
