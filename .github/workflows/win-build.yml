@@ -1,0 +1,43 @@
+name: Windows Build and Test
+on: [push]
+env:
+  ERROR_ON_FAILURES: 1
+jobs:
+  MSVC:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: powershell
+        working-directory: win
+    # Using powershell means we need to explicitly stop on failure
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Init MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install Tcl
+        run: |
+          &choco install -y magicsplat-tcl-tk
+          if ($lastexitcode -ne 0) {
+             throw "choco exit code: $lastexitcode"
+          }
+      - name: Build
+        run: |
+          &nmake -f makefile.vc all
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+      - name: Build Test Harness
+        run: |
+          &nmake -f makefile.vc tktest
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+      - name: Run Tests
+        run: |
+          &nmake -f makefile.vc test
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+        env:
+          CI_BUILD_WITH_MSVC: 1
