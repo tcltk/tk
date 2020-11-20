@@ -17,25 +17,28 @@ jobs:
         run: |
           sudo apt-get install tcl8.6-dev libx11-dev xvfb
           mkdir "$HOME/install dir"
+          echo "TEST_INSTALL_DIR=$HOME/install dir" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure (symbols=${{ matrix.symbols }})
         run: |
-            ./configure ${CFGOPT} "--prefix=$HOME/install dir" || (cat config.log && exit 1)
+          ./configure ${CFGOPT} "--prefix=$TEST_INSTALL_DIR"
         env:
           CFGOPT: --enable-symbols=${{ matrix.symbols }}
+      - name: Report Log on Configure Failure
+        if: ${{ failure() }}
+        run: cat config.log
       - name: Build
         run: make binaries libraries
       - name: Build Test Harness
         run: make tktest
       - name: Run Tests
         run: |
-          xvfb-run --auto-servernum bash <<EOF
-          make test-classic >out-classic.txt
-          make test-ttk >out-ttk.txt
-          EOF
-          cat out-classic.txt out-ttk.txt
+          xvfb-run --auto-servernum make test-classic | tee out-classic.txt
+          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt
           cat out-classic.txt out-ttk.txt | grep -q "Failed	0"
+        env:
+          ERROR_ON_FAILURES: 1
       - name: Test-Drive Installation
         run: make install
       - name: Create Distribution Package
@@ -43,5 +46,4 @@ jobs:
       - name: Convert Documentation to HTML
         # Needs a Tcl source checkout
         if: false
-        run: |
-          make html-tk
+        run: make html-tk
