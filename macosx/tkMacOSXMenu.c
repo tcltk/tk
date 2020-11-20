@@ -787,7 +787,7 @@ TkpConfigureMenuEntry(
 
 		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-			NSMenuItem *item = (NSMenuItem *) mePtr->platformEntryData;
+			NSMenuItem *item = (NSMenuItem *) submePtr->platformEntryData;
 			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
 		    }
 		}
