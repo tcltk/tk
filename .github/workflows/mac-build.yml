@@ -1,0 +1,76 @@
+name: macOS Build and Test
+on: [push]
+env:
+  ERROR_ON_FAILURES: 1
+jobs:
+  with-Xcode:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: macosx
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Prepare
+        run: touch tkStubInit.c
+        working-directory: generic
+      - name: Build
+        run: make all
+      - name: Run Tests
+        run: make test styles=develop
+        env:
+          MAC_CI: 1
+  Unix-like:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        symbols:
+          - "no"
+          - "mem"
+        dtrace:
+          - "no"
+          - "yes"
+    defaults:
+      run:
+        shell: bash
+        working-directory: unix
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Prepare
+        run: |
+          touch tkStubInit.c
+          mkdir "$HOME/install dir"
+        working-directory: generic
+      - name: Configure (symbols=${{ matrix.symbols }} dtrace=${{ matrix.dtrace }})
+        # Note that macOS is always a 64 bit platform
+        run: |
+          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" || {
+            cat config.log
+            echo "::error::Failure during Configure"
+            exit 1
+          }
+        env:
+          CFGOPT: --enable-symbols=${{ matrix.symbols }} --enable-dtrace=${{ matrix.dtrace }}
+      - name: Build
+        run: |
+          make all tktest || {
+            echo "::error::Failure during Build"
+            exit 1
+          }
+      - name: Run Tests
+        run: |
+          make test || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+        env:
+          MAC_CI: 1
+      - name: Trial Installation
+        run: |
+          make install || {
+            cat config.log
+            echo "::error::Failure during Install"
+            exit 1
+          }
