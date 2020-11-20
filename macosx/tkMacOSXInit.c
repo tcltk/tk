@@ -130,13 +130,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     [self _setupMenus];
 
     /*
-     * Initialize graphics.
-     */
-
-    TkMacOSXUseAntialiasedText(_eventInterp, -1);
-    TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
-
-    /*
      * Run initialization routines that depend on the OS version.
      */
 
