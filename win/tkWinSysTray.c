@@ -328,7 +328,8 @@ FreeIcoPtr(
     if (icoInterpPtr->firstIcoPtr == icoPtr) {
         icoInterpPtr->firstIcoPtr = icoPtr->nextPtr;
     } else {
-        for (prevPtr = icoInterpPtr->firstIcoPtr; prevPtr->nextPtr != icoPtr; prevPtr = prevPtr->nextPtr) {
+        for (prevPtr = icoInterpPtr->firstIcoPtr; prevPtr->nextPtr != icoPtr;
+                prevPtr = prevPtr->nextPtr) {
             /* Empty loop body. */
         }
         prevPtr->nextPtr = icoPtr->nextPtr;
@@ -841,7 +842,7 @@ CreateTaskbarHandlerWindow(void) {
         registered = 1;
     }
     return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
-                CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
+            CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
 }
 
 /*
@@ -880,7 +881,7 @@ WinIcoDestroy(
         firstIcoInterpPtr = icoInterpPtr->nextPtr;
     } else {
         for (prevIcoInterpPtr = firstIcoInterpPtr; prevIcoInterpPtr->nextPtr != icoInterpPtr;
-             prevIcoInterpPtr = prevIcoInterpPtr->nextPtr) {
+                prevIcoInterpPtr = prevIcoInterpPtr->nextPtr) {
             /* Empty loop body. */
         }
         prevIcoInterpPtr->nextPtr = icoInterpPtr->nextPtr;
@@ -888,7 +889,7 @@ WinIcoDestroy(
 
     DestroyWindow(icoInterpPtr->hwnd);
     for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = nextPtr) {
-        nextPtr = icoPtr->nextPtr;
+            nextPtr = icoPtr->nextPtr;
         FreeIcoPtr(icoInterpPtr, icoPtr);
     }
     ckfree((char *) icoInterpPtr);
@@ -968,7 +969,8 @@ WinSystrayCmd(
                 }
                 if (i+1 >= objc) {
                     Tcl_AppendResult(interp,
-                        "missing value for option \"", Tcl_GetString(objv[i]), "\"", NULL);
+                            "missing value for option \"", Tcl_GetString(objv[i]),
+                            "\"", NULL);
                     return TCL_ERROR;
                 }
                 switch (opt) {
@@ -1091,7 +1093,7 @@ WinSysNotifyCmd(
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
         Tcl_AppendResult(interp, "unknown subcommand \"", Tcl_GetString(objv[1]),
-            "\": must be notify", NULL);
+                "\": must be notify", NULL);
         return TCL_ERROR;
     }
     if (objc != 5) {
@@ -1110,7 +1112,7 @@ WinSysNotifyCmd(
     ni.uFlags = NIF_INFO;
     ni.uCallbackMessage = ICON_MESSAGE;
     ni.hIcon = icoPtr->hIcon;
-    ni.dwInfoFlags = NIIF_INFO; /*Use a sane platform-specific icon here.*/
+    ni.dwInfoFlags = NIIF_INFO; /* Use a sane platform-specific icon here.*/
 
     msgtitle = Tcl_GetString(objv[3]);
     msginfo = Tcl_GetString(objv[4]);
@@ -1182,12 +1184,12 @@ WinIcoInit(
     icoInterpPtr->nextPtr = firstIcoInterpPtr;
     firstIcoInterpPtr = icoInterpPtr;
     Tcl_CreateObjCommand(interp, "::tk::systray::_systray", WinSystrayCmd,
-        (ClientData) icoInterpPtr, NULL);
+            (ClientData) icoInterpPtr, NULL);
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
-        (ClientData) icoInterpPtr, NULL);
+            (ClientData) icoInterpPtr, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
-        WinIcoDestroy, (ClientData) icoInterpPtr);
+            WinIcoDestroy, (ClientData) icoInterpPtr);
 
     return TCL_OK;
 }

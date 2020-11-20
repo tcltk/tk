@@ -6,7 +6,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-
  */
 
 #include "tkInt.h"
@@ -37,17 +36,15 @@ int SysNotify_Init(Tcl_Interp *);
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
-
 
 static void SysNotifyDeleteCmd (
     TCL_UNUSED(void *))
 {
     notify_uninit();
 }
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -61,9 +58,8 @@ static void SysNotifyDeleteCmd (
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
-
 
 static int SysNotifyCmd(
     TCL_UNUSED(void *),
@@ -99,7 +95,7 @@ static int SysNotifyCmd(
 
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -113,19 +109,18 @@ static int SysNotifyCmd(
  * Side effects:
  *	None.
  *
- *-------------------------------z---------------------------------------
+ *----------------------------------------------------------------------
  */
 
 int
 SysNotify_Init(
     Tcl_Interp *interp)
 {
-
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyCmd, interp,
 	    SysNotifyDeleteCmd);
     return TCL_OK;
 }
-
+
 #endif /* HAVE_LIBNOTIFY */
 /*
  * Local Variables:
