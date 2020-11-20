@@ -41,7 +41,7 @@ jobs:
       - name: Create Distribution Package
         run: make dist
       - name: Convert Documentation to HTML
-          # Needs a Tcl source checkout
-          if: false
-          run: |
-            make html-tk
+        # Needs a Tcl source checkout
+        if: false
+        run: |
+          make html-tk
