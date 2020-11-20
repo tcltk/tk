@@ -13,6 +13,7 @@ addons:
       - gcc-multilib
       - tcl8.6-dev
       - libx11-dev
+      - libxss-dev
       - xvfb
   homebrew:
     packages:

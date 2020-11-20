@@ -177,7 +177,7 @@ TkMacOSXRGBPixel(
     unsigned long green,
     unsigned long blue)
 {
-    MacPixel p;
+    MacPixel p = {0};
     p.pixel.colortype = rgbColor;
     p.pixel.value = ((red & 0xff) << 16)  |
 	            ((green & 0xff) << 8) |
@@ -207,7 +207,7 @@ MODULE_SCOPE
 unsigned long TkMacOSXClearPixel(
     void)
 {
-    MacPixel p;
+    MacPixel p = {0};
     p.pixel.value = 0;
     p.pixel.colortype = clearColor;
     return p.ulong;
@@ -236,7 +236,7 @@ SystemColorDatum*
 GetEntryFromPixel(
     unsigned long pixel)
 {
-    MacPixel p;
+    MacPixel p = {0};
     int index = rgbColorIndex;
 
     p.ulong = pixel;
@@ -314,6 +314,10 @@ GetRGBA(
 	    }
 	}
 	break;
+    case clearColor:
+	rgba[0] = rgba[1] = rgba[2] = 1.0;
+	rgba[3] = 0;
+	break;
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
@@ -332,8 +336,6 @@ GetRGBA(
 	}
 	[color getComponents: rgba];
 	break;
-    case clearColor:
-	rgba[3] = 0;
     case HIText:
 #ifdef __LP64__
 	color = [[NSColor textColor] colorUsingColorSpace:sRGB];
@@ -635,7 +637,7 @@ TkpGetColor(
 
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&systemColors, name + 6);
-	MacPixel p;
+	MacPixel p = {0};
 
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
