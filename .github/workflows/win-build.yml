@@ -41,3 +41,47 @@ jobs:
           }
         env:
           CI_BUILD_WITH_MSVC: 1
+  MSYS-gcc:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: win
+    strategy:
+      matrix:
+        symbols:
+          - "no"
+          - "mem"
+          - "all"
+    # Using powershell means we need to explicitly stop on failure
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install MSYS2, Make and Tcl
+        run: choco install -y msys2 make magicsplat-tcl-tk
+      - name: Prepare
+        run: |
+          touch tkStubInit.c
+          mkdir "${HOME}/install dir"
+        working-directory: generic
+      - name: Configure (symbols=${{ matrix.symbols }})
+        run: |
+          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+            cat config.log
+            echo "::error::Failure during Configure"
+            exit 1
+          }
+        env:
+          CFGOPT: --enable-64bit --enable-symbols=${{ matrix.symbols }}
+      - name: Build
+        run: |
+          make all tktest || {
+            echo "::error::Failure during Build"
+            exit 1
+          }
+      - name: Run Tests
+        run: |
+          make test || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
