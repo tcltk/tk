@@ -1,6 +1,8 @@
 /*
+ * tkUnixSysNotify.c --
+ *
  * 	tkUnixSysNotify.c implements a "sysnotify" Tcl command which
- permits one to post system notifications based on the libnotify API.
+ * 	permits one to post system notifications based on the libnotify API.
  *
  * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
  *
@@ -86,9 +88,9 @@ static int SysNotifyCmd(
     message = Tcl_GetString(objv[2]);
     icon = "dialog-information";
 
-/*
- * Call to notify_init should go here to prevent test suite failure.
- */
+    /*
+     * Call to notify_init should go here to prevent test suite failure.
+     */
     notify_init("Wish");
     notif = notify_notification_new(title, message, icon);
     notify_notification_show(notif, NULL);

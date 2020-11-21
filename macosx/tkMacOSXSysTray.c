@@ -637,9 +637,9 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-	    /*
-	     * Modify the text for the tooltip.
-	     */
+        /*
+         * Modify the text for the tooltip.
+         */
 
 	case TRAY_TEXT: {
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
@@ -653,9 +653,9 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-	    /*
-	     * Modify the proc for the callback.
-	     */
+        /*
+         * Modify the proc for the callback.
+         */
 
 	case TRAY_B1_CALLBACK: {
 	    [statusItem setB1Callback : objv[3]];
@@ -673,15 +673,15 @@ MacSystrayObjCmd(
 	/*
 	 * Set all properties to nil, and release statusItem.
 	 */
-	    [statusItem setImagewithImage: nil];
-	    [statusItem setTextwithString: nil];
-	    [statusItem setB1Callback : NULL];
-	    [statusItem setB3Callback : NULL];
-	    [statusItem release];
-	    *info = NULL;
-	    statusItem = NULL;
-	    break;
-	}
+        [statusItem setImagewithImage: nil];
+        [statusItem setTextwithString: nil];
+        [statusItem setB1Callback : NULL];
+        [statusItem setB3Callback : NULL];
+        [statusItem release];
+        *info = NULL;
+        statusItem = NULL;
+        break;
+    }
     }
 
     return TCL_OK;
@@ -766,7 +766,6 @@ static int SysNotifyObjCmd(
 }
 
 #endif // if BUILD_TARGET_HAS_NOTIFICATION
-
 
 /*
  *----------------------------------------------------------------------
