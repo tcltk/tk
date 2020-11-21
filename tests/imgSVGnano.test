@@ -240,14 +240,14 @@ test imgSVGnano-5.1 {bug ea665e08f3 - too many values in parameters of the trans
 } -result {foo}
 
 test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
-    image create photo foo -data\
+    image create photo foo -format svg -data\
 			{<?xml version="1.0"?><!DOCTYPE svg PUBLIC\
 			"-//W3C//DTD SVG 1.0//EN\" \
 			"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\
 			<sERRORvBADFILEg xmlns="http://www.w3.org/2000/svg">\
 			<circle cx="6.5cm" cy="2cm" r="100" transform="skewX(1 1)"/>\
 			</g></svg>}
-} -returnCodes error -result {list element in quotes followed by "http://www.w3.org/TR" instead of space}
+} -returnCodes error -result {couldn't recognize image data}
 
 };# end of namespace svgnano
 
