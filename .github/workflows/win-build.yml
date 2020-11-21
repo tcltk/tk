@@ -51,12 +51,21 @@ jobs:
           }
       - name: Run Tests
         run: |
-          &nmake -f makefile.vc test
-          if ($lastexitcode -ne 0) {
-             throw "nmake exit code: $lastexitcode"
+          nmake -f makefile.vc test-classic | tee out-classic.txt || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+          nmake -f makefile.vc test-ttk | tee out-ttk.txt || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+          cat out-classic.txt out-ttk.txt | grep -q "Failed     [1-9]" && {
+            echo "::error::Failure during Test"
+            exit 1
           }
         env:
           CI_BUILD_WITH_MSVC: 1
+        shell: bash
       - name: Build Help
         run: |
           &nmake -f makefile.vc htmlhelp
