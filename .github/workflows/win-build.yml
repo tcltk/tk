@@ -8,19 +8,35 @@ jobs:
     defaults:
       run:
         shell: powershell
-        working-directory: win
+        working-directory: tk/win
     # Using powershell means we need to explicitly stop on failure
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          path: tk
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: tcltk/tcl
+          ref: core-8-branch
+          path: tcl
+      - name: Make Install Location
+        working-directory: .
+        shell: bash
+        run: |
+          mkdir install
+          cd install
+          echo "INSTALLDIR=`pwd`" >> $GITHUB_ENV
       - name: Init MSVC
         uses: ilammy/msvc-dev-cmd@v1
-      - name: Install Tcl
+      - name: Build Tcl
         run: |
-          &choco install -y magicsplat-tcl-tk
+          &nmake -f makefile.vc release install
           if ($lastexitcode -ne 0) {
-             throw "choco exit code: $lastexitcode"
+             throw "nmake exit code: $lastexitcode"
           }
+        working-directory: tcl/win
       - name: Build
         run: |
           &nmake -f makefile.vc all
@@ -41,6 +57,18 @@ jobs:
           }
         env:
           CI_BUILD_WITH_MSVC: 1
+      - name: Build Help
+        run: |
+          &nmake -f makefile.vc htmlhelp
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
+      - name: Install
+        run: |
+          &nmake -f makefile.vc install
+          if ($lastexitcode -ne 0) {
+             throw "nmake exit code: $lastexitcode"
+          }
   MSYS-gcc:
     runs-on: windows-latest
     defaults:
