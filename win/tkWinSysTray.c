@@ -1,4 +1,6 @@
 /*
+ * tkWinSysTray.c --
+ *
  * 	tkWinSysTray.c implements a "systray" Tcl command which permits to
  * 	change the system tray/taskbar icon of a Tk toplevel window and
  * 	a "sysnotify" command to post system notifications.
@@ -11,7 +13,7 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-*/
+ */
 
 #include "tkInt.h"
 #include <windows.h>
@@ -480,9 +482,9 @@ TaskbarExpandPercents(
     char* dst;
     dst = after;
     while (*before) {
-        const char *ptr=before;
-        int len=1;
-        if(*before=='%') {
+        const char *ptr = before;
+        int len = 1;
+        if(*before == '%') {
             switch(before[1]){
                 case 'M':
                 case 'm': {
@@ -493,8 +495,8 @@ TaskbarExpandPercents(
                 }
                 /* case 'W': {
                    before++;
-                   len=(int)strlen(winstring);
-                   ptr=winstring;
+                   len = (int)strlen(winstring);
+                   ptr = winstring;
                    break;
                    }
                 */
@@ -541,7 +543,7 @@ TaskbarExpandPercents(
                 }
                 case 'X': {
                     DWORD dw;
-                    dw=GetMessagePos();
+                    dw = GetMessagePos();
                     before++;
                     len = GetIntDec((long)LOWORD(dw),buffer, sizeof(buffer));
                     ptr = buffer;
@@ -962,7 +964,7 @@ WinSystrayCmd(
                     return TCL_ERROR;
                 }
             }
-            for (i=optStart; i<objc; i+=2) {
+            for (i = optStart; i < objc; i += 2) {
                 if (Tcl_GetIndexFromObj(interp, objv[i], optStrings, "option",
                         0, &opt) == TCL_ERROR) {
                     return TCL_ERROR;
