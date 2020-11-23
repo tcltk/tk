@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: core-8-5-branch
           path: tcl
       - name: Make Install Location
         working-directory: .
@@ -98,7 +98,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: core-8-5-branch
           path: tcl
       - name: Install MSYS2, Make
         run: choco install -y msys2 make
