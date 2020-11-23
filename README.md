@@ -5,6 +5,10 @@ This is the **Tk 8.6.10** source distribution.
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
 
+Build Status: 8.6.10
+[![Build and Test Status: Linux 8.6](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Acore-8-6-branch)
+[![Build and Test Status: Windows 8.6](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Acore-8-6-branch)
+[![Build and Test Status: macOS 8.6](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-6-branch)
 
 ## <a id="intro">1.</a> Introduction
 
