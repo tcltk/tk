@@ -7,7 +7,7 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 variable scrollInfo
 proc scroll args {

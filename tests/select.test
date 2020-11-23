@@ -23,7 +23,7 @@ if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
         testConstraint cliboardManagerPresent 1
     }
 }
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 global longValue selValue selInfo
 
