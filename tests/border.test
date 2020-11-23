@@ -14,7 +14,7 @@ if {[testConstraint pseudocolor8]} {
     wm geom .t +0+0
 }
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 test border-1.1 {Tk_AllocBorderFromObj - converting internal reps} testborder {
     set x orange

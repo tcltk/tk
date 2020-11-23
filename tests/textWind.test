@@ -45,7 +45,7 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 test textWind-1.1 {basic tests of options} {fonts} {
     .t delete 1.0 end

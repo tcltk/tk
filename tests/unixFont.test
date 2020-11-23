@@ -45,7 +45,7 @@ toplevel .b
 wm geom .b +0+0
 update idletasks
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 # Font should be fixed width and have chars missing below char 32, so can
 # test control char expansion and missing character code.

@@ -11,7 +11,7 @@ tcltest::loadTestedCommands
 
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
