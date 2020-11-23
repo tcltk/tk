@@ -38,7 +38,7 @@ proc getTroughSize {w} {
     }
 }
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 # XXX Note: this test file is woefully incomplete.  Right now there are
 # only bits and pieces of tests.  Please make this file more complete

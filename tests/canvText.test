@@ -21,7 +21,7 @@ set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"
 set ay [font metrics $font -linespace]
 set ax [font measure $font 0]
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 foreach test {
     {-anchor nw nw xyz {bad anchor position "xyz": must be n, ne, e, se, s, sw, w, nw, or center}}
