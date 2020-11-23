@@ -14,7 +14,7 @@ tcltest::loadTestedCommands
 # Some tests require support for 4-byte UTF-8 sequences
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
 testConstraint utfcompat [expr {([string length "\U10000"] == 2) && [package vsatisfies [package provide Tcl] 8]}]
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 set defaultfontlist [font names]
