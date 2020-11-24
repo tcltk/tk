@@ -4,7 +4,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   MSVC:
-    runs-on: windows-latest
+    runs-on: windows-2016
     defaults:
       run:
         shell: powershell
@@ -79,7 +79,7 @@ jobs:
              throw "nmake exit code: $lastexitcode"
           }
   MSYS-gcc:
-    runs-on: windows-latest
+    runs-on: windows-2016
     defaults:
       run:
         shell: bash
