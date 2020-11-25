@@ -50,7 +50,7 @@ test safe-1.2 {Safe Tk loading into an interpreter} -setup {
     lsort [interp hidden a]
 } -cleanup {
     safe::interpDelete a
-} -match glob -result {bell cd clipboard encoding exec exit fconfigure*glob grab load menu open pwd selection send socket source*toplevel unload wm}
+} -match glob -result {bell cd clipboard encoding exec exit fconfigure*glob grab load menu open pwd selection*socket source*toplevel unload wm}
 test safe-1.3 {Safe Tk loading into an interpreter} -setup {
     catch {safe::interpDelete a}
 } -body {

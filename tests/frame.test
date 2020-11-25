@@ -11,6 +11,9 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint notWinCI [expr {
+    ($::tcl_platform(platform) ne "windows") || ![info exists ::env(CI)]}]
+
 # eatColors --
 # Creates a toplevel window and allocates enough colors in it to
 # use up all the slots in the colormap.
@@ -158,7 +161,7 @@ test frame-2.4 {toplevel configuration options} {
 } {1 {bad window path name "bogus"}}
 set default "[winfo visual .] [winfo depth .]"
 if {$tcl_platform(platform) == "windows"} {
-test frame-2.5 {toplevel configuration options} {
+test frame-2.5 {toplevel configuration options} notWinCI {
     catch {destroy .t}
     toplevel .t -width 200 -height 100
     wm geometry .t +0+0
