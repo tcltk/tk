@@ -3,7 +3,7 @@ on: [push]
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  with-Xcode:
+  xcode:
     runs-on: macos-11.0
     defaults:
       run:
@@ -37,19 +37,7 @@ jobs:
             echo "::error::Failure during Build"
             exit 1
           }
-      - name: Run Tests
-        run: |
-          make test styles=develop | tee out-tests.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          cat out-tests.txt | grep -q "Failed[[:space:]][[:space:]]*[1-9]" && {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-        env:
-          MAC_CI: 1
-  Unix-like:
+  clang:
     runs-on: macos-11.0
     strategy:
       matrix:
