@@ -3,53 +3,7 @@ on: [push]
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  with-Xcode:
-    runs-on: macos-10.15
-    defaults:
-      run:
-        shell: bash
-        working-directory: tk/macosx
-    steps:
-      - name: Check out Tk
-        uses: actions/checkout@v2
-        with:
-          path: tk
-      - name: Check out Tcl
-        uses: actions/checkout@v2
-        with:
-          repository: tcltk/tcl
-          ref: core-8-5-branch
-          path: tcl
-      - name: Prepare checked out repositories
-        run: |
-          touch tk/generic/tkStubInit.c
-          mkdir build
-          echo "BUILD_DIR=`cd build && pwd`" >> $GITHUB_ENV
-          echo "DESTDIR=`cd build && pwd`" >> $GITHUB_ENV
-        working-directory: .
-      - name: Build Tcl
-        run: |
-          make all
-        working-directory: tcl/macosx
-      - name: Build
-        run: |
-          make all install || {
-            echo "::error::Failure during Build"
-            exit 1
-          }
-      - name: Run Tests
-        run: |
-          make test styles=develop | tee out-tests.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          cat out-tests.txt | grep -q "Failed[[:space:]][[:space:]]*[1-9]" && {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-        env:
-          MAC_CI: 1
-  Unix-like:
+  clang:
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -57,7 +11,6 @@ jobs:
           - 'no'
           - 'mem'
         options:
-          - '--enable-aqua'
           - '--disable-aqua'
     defaults:
       run:
