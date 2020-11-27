@@ -806,7 +806,7 @@ FrameWidgetObjCmd(
 		    || ((c == 'v')
 			&& (strncmp(arg, "-visual", (unsigned)length) == 0))) {
 
-#ifdef SUPPORT_CONFIG_EMBEDDED
+#ifdef _WIN32
 		    if (c == 'u') {
 			const char *string = Tcl_GetString(objv[i+1]);
 
