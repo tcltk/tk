@@ -106,6 +106,7 @@ jobs:
       - name: Prepare
         run: |
           touch tkStubInit.c
+          touch "${HOME}/forWinDialog-5.12.7"
           mkdir "${HOME}/install_dir"
           echo "INSTALL_DIR=${HOME}/install_dir" >> $GITHUB_ENV
         working-directory: generic
