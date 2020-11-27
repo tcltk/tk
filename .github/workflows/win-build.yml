@@ -3,7 +3,7 @@ on: [push]
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  MSVC:
+  msvc:
     runs-on: windows-2019
     defaults:
       run:
@@ -22,9 +22,10 @@ jobs:
           ref: core-8-6-branch
           path: tcl
       - name: Make Install Location
-        working-directory: .
-        shell: bash
+        working-directory: tcl
         run: |
+          echo "TCLDIR=`pwd`" >> $GITHUB_ENV
+          cd ..
           mkdir install
           cd install
           echo "INSTALLDIR=`pwd`" >> $GITHUB_ENV
@@ -78,7 +79,7 @@ jobs:
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-  MSYS-gcc:
+  gcc:
     runs-on: windows-2019
     defaults:
       run:
@@ -105,6 +106,7 @@ jobs:
       - name: Prepare
         run: |
           touch tkStubInit.c
+          touch "${HOME}/forWinDialog-5.12.7"
           mkdir "${HOME}/install_dir"
           echo "INSTALL_DIR=${HOME}/install_dir" >> $GITHUB_ENV
         working-directory: generic
