@@ -344,7 +344,7 @@ static void		FrameBgImageProc(ClientData clientData,
 static void		FrameCmdDeletedProc(ClientData clientData);
 static void		FrameEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static void		FrameLostSlaveProc(ClientData clientData,
+static void		FrameLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		FrameRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
@@ -376,7 +376,7 @@ static const Tk_ClassProcs frameClass = {
 static const Tk_GeomMgr frameGeomType = {
     "labelframe",		/* name */
     FrameRequestProc,		/* requestProc */
-    FrameLostSlaveProc		/* lostSlaveProc */
+    FrameLostContentProc		/* lostContentProc */
 };
 
 /*
@@ -732,7 +732,7 @@ CreateFrame(
     if (type == TYPE_TOPLEVEL) {
 	Tcl_DoWhenIdle(MapFrame, framePtr);
     }
-    Tcl_SetObjResult(interp, TkNewWindowObj(newWin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(newWin));
     return TCL_OK;
 
   error:
@@ -839,7 +839,7 @@ FrameWidgetObjCmd(
 		    || ((c == 'v')
 			&& (strncmp(arg, "-visual", length) == 0))) {
 
-#ifdef SUPPORT_CONFIG_EMBEDDED
+#ifdef _WIN32
 		    if (c == 'u') {
 			const char *string = Tcl_GetString(objv[i+1]);
 
@@ -2016,25 +2016,25 @@ FrameRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * FrameLostSlaveProc --
+ * FrameLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all frame-related information about the slave.
+ *	Forgets all frame-related information about the content window.
  *
  *--------------------------------------------------------------
  */
 
 static void
-FrameLostSlaveProc(
-    ClientData clientData,	/* Frame structure for slave window that was
+FrameLostContentProc(
+    ClientData clientData,	/* Frame structure for content window window that was
 				 * stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    Tk_Window tkwin)		/* Tk's handle for the content window window. */
 {
     Frame *framePtr = (Frame *)clientData;
     Labelframe *labelframePtr = (Labelframe *)clientData;

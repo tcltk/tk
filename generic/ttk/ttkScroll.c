@@ -130,12 +130,12 @@ static void UpdateScrollbarBG(ClientData clientData)
     int code;
 
     h->flags &= ~SCROLL_UPDATE_PENDING;
-    Tcl_Preserve((ClientData) interp);
+    Tcl_Preserve(interp);
     code = UpdateScrollbar(interp, h);
     if (code == TCL_ERROR && !Tcl_InterpDeleted(interp)) {
 	Tcl_BackgroundException(interp, code);
     }
-    Tcl_Release((ClientData) interp);
+    Tcl_Release(interp);
 }
 
 /* TtkScrolled --
@@ -167,7 +167,7 @@ void TtkScrolled(ScrollHandle h, int first, int last, int total)
 	s->total = total;
 
 	if (!(h->flags & SCROLL_UPDATE_PENDING)) {
-	    Tcl_DoWhenIdle(UpdateScrollbarBG, (ClientData)h);
+	    Tcl_DoWhenIdle(UpdateScrollbarBG, h);
 	    h->flags |= SCROLL_UPDATE_PENDING;
 	}
     }
@@ -274,7 +274,7 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 void TtkFreeScrollHandle(ScrollHandle h)
 {
     if (h->flags & SCROLL_UPDATE_PENDING) {
-	Tcl_CancelIdleCall(UpdateScrollbarBG, (ClientData)h);
+	Tcl_CancelIdleCall(UpdateScrollbarBG, h);
     }
     ckfree(h);
 }

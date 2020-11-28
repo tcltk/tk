@@ -2,8 +2,9 @@
 # ttk::combobox widget tests
 #
 
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require Tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 test combobox-1.0 "Combobox tests -- setup" -body {
@@ -12,7 +13,7 @@ test combobox-1.0 "Combobox tests -- setup" -body {
 
 test combobox-1.1 "Bad -values list" -body {
     .cb configure -values "bad \{list"
-} -result "unmatched open brace in list" -returnCodes 1
+} -result "unmatched open brace in list" -returnCodes error
 
 test combobox-1.end "Combobox tests -- cleanup" -body {
     destroy .cb
@@ -84,5 +85,19 @@ test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
 } -result [list Start 0 {} Post 1 {} Select 0 b Event 0 b] -cleanup {
     destroy .cb
 }
+
+test combobox-4.1 "style command" -body {
+    ttk::combobox .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TCombobox TCombobox}
+test combobox-4.2 "style command" -body {
+    ttk::style configure customStyle.TCombobox
+    ttk::combobox .w -style customStyle.TCombobox
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TCombobox customStyle.TCombobox TCombobox}
 
 tcltest::cleanupTests

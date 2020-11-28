@@ -493,11 +493,10 @@ Tk_NameOfJustify(
 
 static void
 FreeUidThreadExitProc(
-    ClientData dummy)		/* Not used. */
+    TCL_UNUSED(void *))
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     Tcl_DeleteHashTable(&tsdPtr->uidTable);
     tsdPtr->initialized = 0;
@@ -695,6 +694,11 @@ TkGetDoublePixels(
     char *end;
     double d;
 
+    if (!tkwin) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad screen"));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	return TCL_ERROR;
+    }
     d = strtod((char *) string, &end);
     if (end == string) {
 	goto error;

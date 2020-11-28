@@ -333,7 +333,7 @@ same menu.
 4/12/92 (bug fix) Fixed core dump that occurred in tkError.c when
 removing the first error record from the error list.
 
-4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <KeyPress-1>
+4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <Key-1>
 event specifications from being processed correctly:  the "1" was
 treated as a button name rather than a keysym.
 
@@ -3998,7 +3998,7 @@ into account the "-displayof" option.  This problem also existed for the
 command to the Mac.  Also fixed "resource write" when the resource
 was specified by id and already existed. (JI)
 
-9/16/97 (bug fix) Added null bindings to <Command-KeyPress> for the
+9/16/97 (bug fix) Added null bindings to <Command-Key> for the
 text and entry widget on the Macintosh.  This prevents unbound command
 key sequences from having the character echoed to the widget. Also
 fixed Cut & Copy bindings.  (JI) (RJ)
@@ -7527,7 +7527,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2018-01-07 (bug)[fa8de7] Crash [ttk::checkbutton .x -variable {}] (werner)
 
-2018-01-16 (bug)[382712] Crash in [event generate . <KeyPress>] (werner)
+2018-01-16 (bug)[382712] Crash in [event generate . <Key>] (werner)
 
 2018-01-19 (bug)[657c38] Crash in menu destroy with checkbutton entry (werner)
 

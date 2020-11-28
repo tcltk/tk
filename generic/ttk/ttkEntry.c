@@ -181,7 +181,7 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
 	"none", TCL_INDEX_NONE, offsetof(Entry, entry.validate),
-	0, (ClientData) validateStrings, 0},
+	0, (void *) validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
 	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -403,7 +403,7 @@ static void EntryOwnSelection(Entry *entryPtr)
 	&& (!Tcl_IsSafe(entryPtr->core.interp))
 	&& !(entryPtr->core.flags & GOT_SELECTION)) {
 	Tk_OwnSelection(entryPtr->core.tkwin, XA_PRIMARY, EntryLostSelection,
-		(ClientData) entryPtr);
+		entryPtr);
 	entryPtr->core.flags |= GOT_SELECTION;
     }
 }
@@ -958,7 +958,7 @@ EntryInitialize(Tcl_Interp *dummy, void *recordPtr)
     Tk_CreateEventHandler(
 	entryPtr->core.tkwin, EntryEventMask, EntryEventProc, entryPtr);
     Tk_CreateSelHandler(entryPtr->core.tkwin, XA_PRIMARY, XA_STRING,
-	EntryFetchSelection, (ClientData) entryPtr, XA_STRING);
+	EntryFetchSelection, entryPtr, XA_STRING);
     TtkBlinkCursor(&entryPtr->core);
 
     entryPtr->entry.string		= (char *)ckalloc(1);
@@ -1745,6 +1745,7 @@ static const Ttk_Ensemble EntryCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate", 	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -1913,8 +1914,9 @@ static const Ttk_Ensemble ComboboxCommands[] = {
     { "insert", 	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
-    { "state",  	TtkWidgetStateCommand,0 },
     { "set", 		EntrySetCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -2025,8 +2027,9 @@ static const Ttk_Ensemble SpinboxCommands[] = {
     { "insert", 	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
-    { "state",  	TtkWidgetStateCommand,0 },
     { "set", 		EntrySetCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }

@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the "listbox" command
 # of Tk.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1993-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1993-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -2854,7 +2854,7 @@ test listbox-23.4 {ConfigureListboxItem, wrong num args} -setup {
     set result
 } -cleanup {
     destroy .l
-} -result {wrong # args: should be ".l itemconfigure index ?-option? ?value? ?-option value ...?"}
+} -result {wrong # args: should be ".l itemconfigure index ?-option value ...?"}
 test listbox-23.5 {ConfigureListboxItem, multiple calls} -setup {
     destroy .l
 } -body {

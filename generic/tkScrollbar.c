@@ -196,7 +196,7 @@ Tk_ScrollbarObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(scrollPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(scrollPtr->tkwin));
     return TCL_OK;
 }
 
@@ -226,8 +226,8 @@ ScrollbarWidgetObjCmd(
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
-    int result = TCL_OK, cmdIndex;
-    TkSizeT length;
+    int result = TCL_OK, cmdIndex, length;
+    TkSizeT len;
     static const char *const commandNames[] = {
         "activate", "cget", "configure", "delta", "fraction",
         "get", "identify", "set", NULL
@@ -271,13 +271,13 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "activate element");
 	    goto error;
 	}
-	c = TkGetStringFromObj(objv[2], &length)[0];
+	c = TkGetStringFromObj(objv[2], &len)[0];
 	oldActiveField = scrollPtr->activeField;
 	if ((c == 'a') && (strcmp(Tcl_GetString(objv[2]), "arrow1") == 0)) {
 	    scrollPtr->activeField = TOP_ARROW;
 	} else if ((c == 'a') && (strcmp(Tcl_GetString(objv[2]), "arrow2") == 0)) {
 	    scrollPtr->activeField = BOTTOM_ARROW;
-	} else if ((c == 's') && (strncmp(Tcl_GetString(objv[2]), "slider", length) == 0)) {
+	} else if ((c == 's') && (strncmp(Tcl_GetString(objv[2]), "slider", len) == 0)) {
 	    scrollPtr->activeField = SLIDER;
 	} else {
 	    scrollPtr->activeField = OUTSIDE;
@@ -310,7 +310,7 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_DELTA: {
-	int xDelta, yDelta, pixels, length;
+	int xDelta, yDelta, pixels;
 	double fraction;
 
 	if (objc != 4) {
@@ -339,7 +339,7 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_FRACTION: {
-	int x, y, pos, length;
+	int x, y, pos;
 	double fraction;
 
 	if (objc != 4) {

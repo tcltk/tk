@@ -36,7 +36,7 @@
 #define SPECIALMENU(n, f) {.name = "." #n, .len = sl(#n) + 1, \
 	.flag = ENTRY_##f##_MENU }
 static const struct {
-    const char *name; const size_t len; const int flag;
+    const char *name; size_t len; int flag;
 } specialMenus[] = {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
@@ -47,8 +47,8 @@ static const struct {
 
 #define MODIFIER(n, f) {.name = #n, .len = sl(#n), .mask = f }
 static const struct {
-    const char *name; const size_t len; const NSUInteger mask;
-} modifiers[] = {
+    const char *name; size_t len; NSUInteger mask;
+} allModifiers[] = {
     MODIFIER(Control,	NSControlKeyMask),
     MODIFIER(Ctrl,	NSControlKeyMask),
     MODIFIER(Option,	NSAlternateKeyMask),
@@ -64,7 +64,7 @@ static const struct {
 
 #define ACCEL(n, c) {.name = #n, .len = sl(#n), .ch = c }
 static const struct {
-    const char *name; const size_t len; const UniChar ch;
+    const char *name; size_t len; UniChar ch;
 } specialAccelerators[] = {
     ACCEL(PageUp,	NSPageUpFunctionKey),
     ACCEL(PageDown,	NSPageDownFunctionKey),
@@ -91,9 +91,6 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
-				 * the flag that Tk is not to draw any
-				 * menus. */
 static int inPostMenu = 0;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
@@ -319,12 +316,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
 
-	    /*
-	     * Add time for errors to fire if necessary. This is sub-optimal
-	     * but avoids issues with Tcl/Cocoa event loop integration.
-	     */
-
-	    //Tcl_Sleep(100);
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -493,10 +484,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkSetMainMenu: (TKMenu *) menu
 {
-    if (gNoTkMenus) {
-	return;
-    }
-
     TKMenu *applicationMenu = nil;
 
     if (menu) {
@@ -692,7 +679,6 @@ TkpConfigureMenuEntry(
     NSString *keyEquivalent = @"";
     NSUInteger modifierMask = NSCommandKeyMask;
     NSMenu *submenu = nil;
-    NSDictionary *attributes;
     int imageWidth, imageHeight;
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ?
@@ -711,7 +697,7 @@ TkpConfigureMenuEntry(
 
     if (mePtr->image) {
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
-	image = TkMacOSXGetNSImageWithTkImage(mePtr->menuPtr->display,
+	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != None) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
@@ -719,11 +705,9 @@ TkpConfigureMenuEntry(
 
 	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, &imageWidth,
 		&imageHeight);
-	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
+	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
-	if (gc->foreground == defaultFg) {
-	    [image setTemplate:YES];
-	}
+	[image setTemplate:YES];
     }
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
@@ -737,25 +721,50 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setTitle:title];
-    if (strcmp(Tcl_GetString(fontPtr), "menu") || gc->foreground != defaultFg
-	    || gc->background != defaultBg) {
-	attributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
-		mePtr->menuPtr->tkwin, fontPtr));
-	if (gc->foreground != defaultFg || gc->background != defaultBg) {
-	    NSColor *color = TkMacOSXGetNSColor(gc,
-		    gc->foreground!=defaultFg? gc->foreground:gc->background);
 
-	    attributes = [[attributes mutableCopy] autorelease];
-	    [(NSMutableDictionary *) attributes setObject:color
-		    forKey:NSForegroundColorAttributeName];
-	}
-	if (attributes) {
-	    attributedTitle = [[[NSAttributedString alloc]
-		    initWithString:title attributes:attributes] autorelease];
-	}
+#if 0
+
+    /*
+     * The -background and -foreground options are now ignored in Aqua.
+     * See ticket [635167af14].
+     */
+    
+    NSDictionary fontAttributes = TkMacOSXNSFontAttributesForFont(
+	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
+    NSMutableDictionary *attributes = [fontAttributes mutableCopy];
+    static unsigned long defaultBg = 0, defaultFg = 0;
+    if (defaultBg == 0) {
+	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
+	defaultBg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
     }
+    if (defaultFg == 0) {
+	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
+	defaultFg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
+    }
+    if (gc->foreground != defaultFg) {
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	[attributes setObject:fgcolor
+		       forKey:NSForegroundColorAttributeName];
+    }
+    if (gc->background != defaultBg) {
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	[attributes setObject:bgcolor
+	 	       forKey:NSBackgroundColorAttributeName];
+    }
+
+#else
+    
+    NSDictionary *attributes = TkMacOSXNSFontAttributesForFont(
+	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
+    
+#endif
+
+    attributedTitle = [[NSAttributedString alloc] initWithString:title
+	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
-    [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
+    [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
 	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
@@ -788,27 +797,17 @@ TkpConfigureMenuEntry(
     		if ([menuItem isEnabled]) {
 
 		    /*
-		     * This menuItem might have been previously disabled (XXX:
-		     * track this), which would have disabled entries; we must
-		     * re-enable the entries here.
+		     * This menuItem might have been previously disabled which
+		     * would have disabled all of its entries; we must re-enable the
+		     * entries here.  It is important to iterate though the Tk
+		     * entries, not the NSMenuItems, since some NSMenuItems may
+		     * have been added by the system.  See [7185d26cf4].
 		     */
 
-		    int i = 0;
-		    NSArray *itemArray = [submenu itemArray];
-
-		    for (NSMenuItem *item in itemArray) {
+		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-
-			/*
-			 * Work around an apparent bug where itemArray can have
-			 * more items than the menu's entries[] array.
-			 */
-
-			if (i >= (int) menuRefPtr->menuPtr->numEntries) {
-			    break;
-			}
-			[item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
-			i++;
+			NSMenuItem *item = (NSMenuItem *) submePtr->platformEntryData;
+			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
 		    }
 		}
 	    }
@@ -901,7 +900,7 @@ TkpPostMenu(
 	 * rather than the appearance of the root window.
 	 */
 	realWinPtr = (TkWindow*) realWin;
-	realWinView = TkMacOSXDrawableView(realWinPtr->privatePtr);
+	realWinView = TkMacOSXGetNSViewForDrawable(realWinPtr->privatePtr);
 	if (realWinView != nil) {
 	    break;
 	}
@@ -1237,18 +1236,18 @@ ParseAccelerator(
     *maskPtr = 0;
     while (1) {
 	i = 0;
-	while (modifiers[i].name) {
-	    int l = modifiers[i].len;
+	while (allModifiers[i].name) {
+	    int l = allModifiers[i].len;
 
-	    if (!strncasecmp(accel, modifiers[i].name, l) &&
+	    if (!strncasecmp(accel, allModifiers[i].name, l) &&
 		    (accel[l] == '-' || accel[l] == '+')) {
-		*maskPtr |= modifiers[i].mask;
+		*maskPtr |= allModifiers[i].mask;
 		accel += l+1;
 		break;
 	    }
 	    i++;
 	}
-	if (!modifiers[i].name || !*accel) {
+	if (!allModifiers[i].name || !*accel) {
 	    break;
 	}
     }
@@ -1472,14 +1471,14 @@ TkpComputeStandardMenuGeometry(
 		}
 	    } else {
 		NSUInteger modifMask = [menuItem keyEquivalentModifierMask];
-		int i = 0;
+		int j = 0;
 
-		while (modifiers[i].name) {
-		    if (modifMask & modifiers[i].mask) {
-			modifMask &= ~modifiers[i].mask;
+		while (allModifiers[j].name) {
+		    if (modifMask & allModifiers[j].mask) {
+			modifMask &= ~allModifiers[j].mask;
 			modifierWidth += modifierCharWidth;
 		    }
-		    i++;
+		    j++;
 		}
 		accelWidth = [[menuItem keyEquivalent] sizeWithAttributes:
 			TkMacOSXNSFontAttributesForFont(tkfont)].width;
@@ -1665,30 +1664,6 @@ TkMacOSXClearMenubarActive(void)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_MacOSXTurnOffMenus --
- *
- *	Turns off all the menu drawing code. This is more than just disabling
- *	the "menu" command, this means that Tk will NEVER touch the menubar.
- *	It is needed in the Plugin, where Tk does not own the menubar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A flag is set which will disable all menu drawing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_MacOSXTurnOffMenus(void)
-{
-    gNoTkMenus = 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpMenuInit --
  *
  *	Initializes Mac-specific menu data.
@@ -1705,8 +1680,6 @@ Tk_MacOSXTurnOffMenus(void)
 void
 TkpMenuInit(void)
 {
-    //    TkColor *tkColPtr;
-
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
 #define observe(n, s) \
@@ -1846,13 +1819,17 @@ TkpComputeMenubarGeometry(
  * TkpDrawMenuEntry --
  *
  *	Draws the given menu entry at the given coordinates with the given
- *	attributes.
+ *	attributes.  This is a no-op on macOS since the menus are drawn by
+ *      the Apple window manager, which also handles all events related to
+ *      selecting menu items.  This function is only called for tearoff
+ *      menus, which are not supported on macOS but do get drawn as nearly
+ *      invisible 1 pixel wide windows on macOS
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	X Server commands are executed to display the menu entry.
+ *	None
  *
  *----------------------------------------------------------------------
  */

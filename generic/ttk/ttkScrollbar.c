@@ -34,12 +34,12 @@ typedef struct
 static const Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	offsetof(Scrollbar,scrollbar.commandObj), TCL_INDEX_NONE, 0,0,0},
+	offsetof(Scrollbar, scrollbar.commandObj), TCL_INDEX_NONE, 0, 0, 0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	offsetof(Scrollbar,scrollbar.orientObj),
-	offsetof(Scrollbar,scrollbar.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	offsetof(Scrollbar, scrollbar.orientObj),
+	offsetof(Scrollbar, scrollbar.orient),
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -50,10 +50,11 @@ static const Tk_OptionSpec ScrollbarOptionSpecs[] =
  */
 
 static void
-ScrollbarInitialize(Tcl_Interp *dummy, void *recordPtr)
+ScrollbarInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
-    (void)dummy;
 
     sb->scrollbar.first = 0.0;
     sb->scrollbar.last = 1.0;
@@ -281,8 +282,8 @@ ScrollbarFractionCommand(
 }
 
 static const Ttk_Ensemble ScrollbarCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "delta",    	ScrollbarDeltaCommand,0 },
     { "fraction",    	ScrollbarFractionCommand,0 },
     { "get",    	ScrollbarGetCommand,0 },
@@ -290,6 +291,7 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "set",  		ScrollbarSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

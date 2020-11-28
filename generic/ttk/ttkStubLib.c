@@ -6,7 +6,7 @@
 #undef USE_TCL_STUBS
 #define USE_TCL_STUBS
 
-#include "tk.h"
+#include "tkInt.h"
 
 #define USE_TTK_STUBS 1
 #include "ttkTheme.h"

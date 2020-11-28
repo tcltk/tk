@@ -5,14 +5,14 @@
  *
  * Copyright (c) 2013-14 Mikko Mononen memon@inside.org
  * Copyright (c) 2018 Christian Gollwitzer auriocus@gmx.de
+ * Copyright (c) 2018 Christian Werner https://www.androwish.org/
  * Copyright (c) 2018 Rene Zaumseil r.zaumseil@freenet.de
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * This handler is build using the original nanosvg library files from
- * https://github.com/memononen/nanosvg and the tcl extension files from
- * https://github.com/auriocus/tksvg
+ * https://github.com/memononen/nanosvg
  *
  */
 
@@ -336,7 +336,7 @@ ParseSVGWithOptions(
     static const char *const fmtOptions[] = {
         "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
     };
-    enum fmtOptions {
+    enum fmtOptionsEnum {
 	OPT_DPI, OPT_SCALE, OPT_SCALE_TO_HEIGHT, OPT_SCALE_TO_WIDTH
     };
 
@@ -394,7 +394,7 @@ ParseSVGWithOptions(
 	/*
 	 * check that only one scale option is given
 	 */
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum)optIndex) {
 	case OPT_SCALE:
 	case OPT_SCALE_TO_HEIGHT:
 	case OPT_SCALE_TO_WIDTH:
@@ -414,7 +414,7 @@ ParseSVGWithOptions(
 	/*
 	 * Decode parameters
 	 */
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum) optIndex) {
 	case OPT_DPI:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0], &dpi) == TCL_ERROR) {
 	        goto error;

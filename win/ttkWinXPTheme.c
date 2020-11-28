@@ -795,7 +795,7 @@ static const Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
 
 /*
  *----------------------------------------------------------------------
@@ -847,7 +847,7 @@ static void TextElementSize(
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
 	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    NULL,
 	    &rc);
 
@@ -886,7 +886,7 @@ static void TextElementDraw(
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
 	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
 	    &rc);
 
@@ -1046,12 +1046,10 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
     	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
 #endif
-
     { 0,0,0,0,0,NOPAD,0 }
 };
 #undef PAD

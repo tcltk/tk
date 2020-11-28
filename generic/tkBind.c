@@ -432,7 +432,9 @@ static const ModInfo modArray[] = {
     {"Shift",		ShiftMask,	0},
     {"Lock",		LockMask,	0},
     {"Meta",		META_MASK,	0},
+#ifndef TK_NO_DEPRECATED
     {"M",		META_MASK,	0},
+#endif
     {"Alt",		ALT_MASK,	0},
     {"Extended",	EXTENDED_MASK,	0},
     {"B1",		Button1Mask,	0},
@@ -455,10 +457,20 @@ static const ModInfo modArray[] = {
     {"Button9",		Button9Mask,	0},
     {"Mod1",		Mod1Mask,	0},
     {"M1",		Mod1Mask,	0},
+#ifdef MAC_OSX_TK
     {"Command",		Mod1Mask,	0},
+#elif defined (_WIN32)
+    {"Command",		ControlMask,	0},
+#else
+    {"Command",		META_MASK,	0},
+#endif
     {"Mod2",		Mod2Mask,	0},
     {"M2",		Mod2Mask,	0},
+#ifdef MAC_OSX_TK
     {"Option",		Mod2Mask,	0},
+#else
+    {"Option",		ALT_MASK,	0},
+#endif
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
     {"Mod4",		Mod4Mask,	0},
@@ -494,10 +506,14 @@ typedef struct {
 
 static const EventInfo eventArray[] = {
     {"Key",		KeyPress,		KeyPressMask},
+#ifndef TK_NO_DEPRECATED
     {"KeyPress",	KeyPress,		KeyPressMask},
+#endif
     {"KeyRelease",	KeyRelease,		KeyPressMask|KeyReleaseMask},
     {"Button",		ButtonPress,		ButtonPressMask},
+#ifndef TK_NO_DEPRECATED
     {"ButtonPress",	ButtonPress,		ButtonPressMask},
+#endif
     {"ButtonRelease",	ButtonRelease,		ButtonPressMask|ButtonReleaseMask},
     {"Motion",		MotionNotify,		ButtonPressMask|PointerMotionMask},
     {"Enter",		EnterNotify,		EnterWindowMask},
@@ -792,8 +808,10 @@ static unsigned
 GetButtonNumber(
     const char *field)
 {
+    unsigned button;
     assert(field);
-    return (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
+    button = (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
+    return (button > 3) ? (button + 4) : button;
 }
 
 static Time
@@ -949,11 +967,10 @@ ClearList(
 
 static PSEntry *
 FreePatSeqEntry(
-    PSList *pool,
+    TCL_UNUSED(PSList *),
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
-    (void)pool;
 
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
@@ -2165,7 +2182,7 @@ Tk_BindEvent(
     TkDisplay *dispPtr;
     TkDisplay *oldDispPtr;
     Event *curEvent;
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     BindInfo *bindInfoPtr;
     Tcl_InterpState interpState;
     LookupTables *physTables;
@@ -2455,7 +2472,6 @@ Tk_BindEvent(
 		LookupTables *virtTables = &bindInfoPtr->virtualEventTable.lookupTables;
 		PatSeq *matchPtr = matchPtrArr[k];
 		PatSeq *mPtr;
-		PSList *psl[2];
 
 		/*
 		 * Note that virtual events cannot promote.
@@ -2758,11 +2774,11 @@ CompareModMasks(
 	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
 
 	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
-	    unsigned fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
-	    unsigned sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+	    unsigned fstiModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    unsigned sndiModMask = *PSModMaskArr_Get(sndModMaskArr, i);
 
-	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
-	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
+	    if (IsSubsetOf(fstiModMask, sndiModMask)) { ++sndCount; }
+	    if (IsSubsetOf(sndiModMask, fstiModMask)) { ++fstCount; }
 	}
     }
 
@@ -4040,6 +4056,9 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & BUTTON) {
+		if (number >= Button4) {
+		    number += (Button8 - Button4);
+		}
 		event.general.xbutton.button = number;
 	    } else {
 		badOpt = 1;
@@ -5003,7 +5022,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modMask |= TkGetButtonMask(button);
+		    patPtr->modMask |= Tk_GetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -5013,7 +5032,7 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modMask |= TkGetButtonMask(button);
+			patPtr->modMask |= Tk_GetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
@@ -5191,16 +5210,16 @@ GetPatternObj(
 		}
 		case ButtonPress:
 		case ButtonRelease:
-		    assert(patPtr->info <= Button9);
-		    Tcl_AppendPrintfToObj(patternObj, "-%d", (int) patPtr->info);
+		    assert(patPtr->info <= 13);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) ((patPtr->info > 7) ? (patPtr->info - 4) : patPtr->info));
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
 		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
-			int button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%d", button);
-			mask &= ~TkGetButtonMask(button);
+			unsigned button = ButtonNumberFromState(mask);
+			Tcl_AppendPrintfToObj(patternObj, "-%u", (button > 7) ? (button - 4) : button);
+			mask &= ~Tk_GetButtonMask(button);
 		    }
 		    break;
 		}
@@ -5237,14 +5256,48 @@ TkStringToKeysym(
     const char *name)		/* Name of a keysym. */
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
+    Tcl_HashEntry *hPtr;
+#endif /* REDO_KEYSYM_LOOKUP */
+    int keysym;
 
+    size_t len = TkUtfToUniChar(name, &keysym);
+    if (name[len] == '\0') {
+        if (!Tcl_UniCharIsPrint(keysym)) {
+    	/* This form not supported */
+        } else if ((unsigned)(keysym - 0x21) <= 0x5D) {
+		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return 0x20AC;
+	    } else {
+		return keysym + 0x1000000;
+	    }
+    }
+#ifdef REDO_KEYSYM_LOOKUP
+    if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
+	char *p = (char *)name + 1;
+	keysym = strtol(p, &p, 16);
+	if ((p >= name + 5) && (p <= name + 9) && !*p && (keysym >= 0x20)
+		&& ((unsigned)(keysym - 0x7F) > 0x20)) {
+	    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return keysym;
+	    }
+	    return keysym + 0x1000000;
+	}
+    }
+#endif
+#ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
-    assert(name);
-    if (strlen(name) == 1u) {
-	KeySym keysym = (KeySym) (unsigned char) name[0];
+    if (((unsigned)(name[0]-1) < 0x7F) && !name[1]) {
+	keysym = (unsigned char) name[0];
 
 	if (TkKeysymToString(keysym)) {
 	    return keysym;
@@ -5277,16 +5330,37 @@ TkKeysymToString(
     KeySym keysym)
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, (char *)keysym);
+    Tcl_HashEntry *hPtr;
+#endif
+
+    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+	keysym += 0x1000000;
+    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+	keysym += 0x1000000;
+    } else if (keysym == 0x20AC) {
+	keysym += 0x1000000;
+    }
+    if ((keysym >= 0x1000020) && (keysym <= 0x110FFFF)
+	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
+	char buf[10];
+	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
+	    buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	} else if (keysym >= 0x1010000) {
+	    sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
+	} else {
+	    sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
+	}
+	return Tk_GetUid(buf);
+    }
+
+#ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&nameTable, INT2PTR(keysym));
 
     if (hPtr) {
 	return (const char *)Tcl_GetHashValue(hPtr);
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-    if (keysym > (KeySym)0x1008FFFF) {
-	return NULL;
-    }
     return XKeysymToString(keysym);
 }
 

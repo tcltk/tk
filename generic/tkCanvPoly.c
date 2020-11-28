@@ -876,12 +876,10 @@ DisplayPolygon(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
+    TCL_UNUSED(int),	/* Describes region of canvas that must be */
+    TCL_UNUSED(int),	/* redisplayed (not used). */
     TCL_UNUSED(int),
     TCL_UNUSED(int))
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     Tk_State state = itemPtr->state;

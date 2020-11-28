@@ -34,7 +34,7 @@ extern Tcl_PackageInitProc Tktest_Init;
 #endif
 #endif /* TK_TEST */
 
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
 extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
@@ -60,7 +60,11 @@ static BOOL consoleRequired = TRUE;
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
 #ifndef MODULE_SCOPE
-#   define MODULE_SCOPE extern
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
@@ -205,16 +209,16 @@ Tcl_AppInit(
 	    return TCL_ERROR;
 	}
     }
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
+    Tcl_StaticPackage(interp, "Registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
+    Tcl_StaticPackage(interp, "Dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
@@ -278,6 +282,7 @@ main(
     char **dummy)
 {
     TCHAR **argv;
+    (void)dummy;
 #else
 int
 _tmain(

@@ -623,10 +623,10 @@ ReadData(
     }
 
     while (destSz) {
-	size_t blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	TkSizeT blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
-	blockSz = (size_t)Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
-	if (blockSz == (size_t)-1) {
+	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
+	if (blockSz == TCL_IO_FAILURE) {
 	    /* TODO: failure info... */
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel read failed: %s", Tcl_PosixError(interp)));
@@ -2295,7 +2295,7 @@ ParseFormat(
     static const char *const fmtOptions[] = {
 	"-alpha", NULL
     };
-    enum fmtOptions {
+    enum fmtOptionsEnum {
 	OPT_ALPHA
     };
 
@@ -2332,7 +2332,7 @@ ParseFormat(
 	objc--;
 	objv++;
 
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum) optIndex) {
 	case OPT_ALPHA:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0],
 		    &pngPtr->alpha) == TCL_ERROR) {

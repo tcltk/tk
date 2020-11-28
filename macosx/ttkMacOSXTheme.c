@@ -39,7 +39,7 @@
 
 #define BEGIN_DRAWING(d) {	   \
 	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, 1, &dc)) {return;}
+	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
 #define END_DRAWING \
     TkMacOSXRestoreDrawingContext(&dc);}
 
@@ -153,7 +153,7 @@ static inline CGRect BoxToRect(
     Drawable d,
     Ttk_Box b)
 {
-    MacDrawable *md = (MacDrawable *) d;
+    MacDrawable *md = (MacDrawable *)d;
     CGRect rect;
 
     rect.origin.y       = b.y + md->yOff;
@@ -232,21 +232,21 @@ static CGRect NormalizeButtonBounds(
  * support Dark Mode anyway.
  */
 
-static CGFloat windowBackground[4] = {
+static const CGFloat WINDOWBACKGROUND[4] = {
     235.0 / 255, 235.0 / 255, 235.0 / 255, 1.0
 };
-static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
-static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
+static const CGFloat WHITERGBA[4] = {1.0, 1.0, 1.0, 1.0};
+static const CGFloat BLACKRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 
 /*----------------------------------------------------------------------
  * GetBackgroundColor --
  *
  *      Fills the array rgba with the color coordinates for a background color.
- *      Start with the background color of a window's geometry master, or the
- *      standard ttk window background if there is no master. If the contrast
- *      parameter is nonzero, modify this color to be darker, for the aqua
- *      appearance, or lighter for the DarkAqua appearance.  This is primarily
- *      used by the Fill and Background elements.
+ *      Start with the background color of a window's geometry container, or
+ *      the standard ttk window background if there is no container. If the
+ *      contrast parameter is nonzero, modify this color to be darker, for the
+ *      aqua appearance, or lighter for the DarkAqua appearance.  This is
+ *      primarily used by the Fill and Background elements.
  */
 
 static void GetBackgroundColor(
@@ -255,18 +255,18 @@ static void GetBackgroundColor(
     int contrast,
     CGFloat *rgba)
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    TkWindow *containerPtr = (TkWindow *)TkGetContainer(tkwin);
 
-    while (masterPtr && masterPtr->privatePtr) {
-	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
+    while (containerPtr && containerPtr->privatePtr) {
+	if (containerPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	masterPtr = (TkWindow *) TkGetGeomMaster(masterPtr);
+	containerPtr = (TkWindow *)TkGetContainer(containerPtr);
     }
-    if (masterPtr && masterPtr->privatePtr) {
+    if (containerPtr && containerPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
-	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
+	    rgba[i] = containerPtr->privatePtr->fillRGBA[i];
 	}
     } else {
 	if ([NSApp macOSVersion] > 101300) {
@@ -276,7 +276,7 @@ static void GetBackgroundColor(
 	    [windowColor getComponents: rgba];
 	} else {
 	    for (int i = 0; i < 4; i++) {
-		rgba[i] = windowBackground[i];
+		rgba[i] = WINDOWBACKGROUND[i];
 	    }
 	}
     }
@@ -303,9 +303,10 @@ static void GetBackgroundColor(
 
 
 /*----------------------------------------------------------------------
- * +++ Single Arrow Buttons --
+ * +++ Single Arrow Images --
  *
- * Used in ListHeaders and Comboboxes.
+ * Used in ListHeaders and Comboboxes as well as disclosure triangles in
+ * macOS 11.
  */
 
 static void DrawDownArrow(
@@ -313,7 +314,7 @@ static void DrawDownArrow(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    CGFloat *rgba)
+    const CGFloat *rgba)
 {
     CGFloat x, y;
 
@@ -335,7 +336,7 @@ static void DrawUpArrow(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    CGFloat *rgba)
+    const CGFloat *rgba)
 {
     CGFloat x, y;
 
@@ -352,6 +353,48 @@ static void DrawUpArrow(
     CGContextStrokePath(context);
 }
 
+static void DrawClosedDisclosure(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {
+	{x, y - size / 4 - 1}, {x + size / 2, y}, {x, y + size / 4 + 1}
+    };
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
+static void DrawOpenDisclosure(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {
+	{x, y - size / 4}, {x + size / 2, y + size / 2}, {x + size, y - size / 4}
+    };
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
 /*----------------------------------------------------------------------
  * +++ Double Arrow Buttons --
  *
@@ -363,7 +406,7 @@ static void DrawUpDownArrows(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    CGFloat *rgba)
+    const CGFloat *rgba)
 {
     CGFloat x, y;
 
@@ -501,10 +544,13 @@ static void SolidFillRoundedRectangle(
     NSColor *color)
 {
     CGPathRef path;
-    CHECK_RADIUS(radius, bounds)
 
-    CGContextSetFillColorWithColor(context, CGCOLOR(color));
+    CHECK_RADIUS(radius, bounds)
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    if (!path) {
+	return;
+    }
+    CGContextSetFillColorWithColor(context, CGCOLOR(color));
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextFillPath(context);
@@ -547,7 +593,7 @@ static void DrawListHeader(
      * So we have to query the Apple window manager.
      */
 
-    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
     CGFloat *bgRGBA = [win isKeyWindow] ? activeBgRGBA : inactiveBgRGBA;
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
@@ -587,9 +633,9 @@ static void DrawListHeader(
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
-	    DrawUpArrow(context, arrowBounds, 3, 8, blackRGBA);
+	    DrawUpArrow(context, arrowBounds, 3, 8, BLACKRGBA);
 	} else if (state & TTK_STATE_SELECTED) {
-	    DrawDownArrow(context, arrowBounds, 3, 8, blackRGBA);
+	    DrawDownArrow(context, arrowBounds, 3, 8, BLACKRGBA);
 	}
     }
 }
@@ -711,9 +757,9 @@ static void DrawDarkButton(
 		darkSelectedGradient, 2);
 	}
 	if (kind == kThemePopupButton) {
-	    DrawUpDownArrows(context, arrowBounds, 3, 7, whiteRGBA);
+	    DrawUpDownArrows(context, arrowBounds, 3, 7, WHITERGBA);
 	} else {
-	    DrawDownArrow(context, arrowBounds, 4, 8, whiteRGBA);
+	    DrawDownArrow(context, arrowBounds, 4, 8, WHITERGBA);
 	}
     }
 
@@ -772,7 +818,7 @@ static void DrawDarkIncDecButton(
 	    darkSelectedGradient, 2);
 	CGContextRestoreGState(context);
     }
-    DrawUpDownArrows(context, bounds, 3, 5, whiteRGBA);
+    DrawUpDownArrows(context, bounds, 3, 5, WHITERGBA);
     HighlightButtonBorder(context, bounds);
 }
 
@@ -1174,10 +1220,10 @@ static void DrawDarkListHeader(
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint top[2] = {{x, y}, {x + w, y}};
-    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGPoint separator[2] = {{x + w, y + 3}, {x + w, y + h - 3}};
 
+    CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
+    CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
     stroke = [NSColor colorWithColorSpace: deviceRGB
@@ -1199,9 +1245,9 @@ static void DrawDarkListHeader(
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
-	    DrawUpArrow(context, arrowBounds, 3, 8, whiteRGBA);
+	    DrawUpArrow(context, arrowBounds, 3, 8, WHITERGBA);
 	} else if (state & TTK_STATE_SELECTED) {
-	    DrawDownArrow(context, arrowBounds, 3, 8, whiteRGBA);
+	    DrawDownArrow(context, arrowBounds, 3, 8, WHITERGBA);
 	}
     }
 }
@@ -1702,7 +1748,7 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
      offsetof(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
      offsetof(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
-    {0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void EntryElementSize(
@@ -2062,7 +2108,7 @@ static Ttk_ElementOptionSpec TrackElementOptions[] = {
     {"-to", TK_OPTION_DOUBLE, offsetof(TrackElement, toObj), NULL},
     {"-value", TK_OPTION_DOUBLE, offsetof(TrackElement, valueObj), NULL},
     {"-orient", TK_OPTION_STRING, offsetof(TrackElement, orientObj), NULL},
-    {0, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TrackElementSize(
     void *clientData,
@@ -2091,6 +2137,7 @@ static void TrackElementDraw(
     TrackElement *elem = elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
+    CGRect bounds;
 
     TtkGetOrientFromObj(NULL, elem->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
@@ -2098,10 +2145,16 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
     factor = RangeToFactor(to);
 
+    /*
+     * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
+     * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
+     */
+
+    bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = from * factor,
 	.max = to * factor,
 	.value = value * factor,
@@ -2123,7 +2176,7 @@ static void TrackElementDraw(
     }
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
-	CGRect bounds = BoxToRect(d, b);
+	bounds = BoxToRect(d, b);
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
 	    components: darkTrack
@@ -2202,7 +2255,7 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
      offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
      offsetof(PbarElement, modeObj), "determinate"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void PbarElementSize(
     TCL_UNUSED(void *),
@@ -2230,6 +2283,7 @@ static void PbarElementDraw(
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     int phase = 0;
     double value = 0, maximum = 100, factor;
+    CGRect bounds;
 
     TtkGetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
@@ -2237,13 +2291,19 @@ static void PbarElementDraw(
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
     factor = RangeToFactor(maximum);
 
+    /*
+     * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
+     * bounds variable avoids UBSan (-fsanitize=alignment) complaints.
+     */
+
+    bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind =
 	    (!strcmp("indeterminate",
 	    Tcl_GetString(pbar->modeObj)) && value) ?
 	    kThemeIndeterminateBar : kThemeProgressBar,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = 0,
 	.max = maximum * factor,
 	.value = value * factor,
@@ -2256,7 +2316,7 @@ static void PbarElementDraw(
 
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
-	CGRect bounds = BoxToRect(d, b);
+	bounds = BoxToRect(d, b);
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
 	    components: darkTrack
@@ -2292,7 +2352,7 @@ typedef struct
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
      offsetof(ScrollbarElement, orientObj), "horizontal"},
-    {0, 0, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TroughElementSize(
     TCL_UNUSED(void *),
@@ -2449,7 +2509,7 @@ static void ThumbElementDraw(
 	END_DRAWING
     } else {
 	double thumbSize, trackSize, visibleSize, factor, fraction;
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
+	MacDrawable *macWin = (MacDrawable *)Tk_WindowId(tkwin);
 	CGRect troughBounds = {{macWin->xOff, macWin->yOff},
 			       {Tk_Width(tkwin), Tk_Height(tkwin)}};
 
@@ -2810,7 +2870,7 @@ typedef struct {
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
      offsetof(FieldElement, backgroundObj), "white"},
-    {NULL, 0, 0, NULL}
+    {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
 static void FieldElementDraw(
@@ -2999,8 +3059,21 @@ static void DisclosureElementDraw(
 	};
 
 	BEGIN_DRAWING(d)
-	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
+	if ([NSApp macOSVersion] >= 110000) {
+	    CGFloat rgba[4];
+	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	    NSColor *stroke = [[NSColor textColor]
+		colorUsingColorSpace: deviceRGB];
+	    [stroke getComponents: rgba];
+	    if (state & TTK_TREEVIEW_STATE_OPEN) {
+		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
+	    } else {
+		DrawClosedDisclosure(dc.context, bounds, 2, 12, rgba);
+	    }
+	} else {
+	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	    NULL);
+	}
 	END_DRAWING
     }
 }
