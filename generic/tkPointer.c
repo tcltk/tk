@@ -243,15 +243,11 @@ Tk_UpdatePointer(
     /*
      * Generate Enter/Leave events. If the pointer has crossed window
      * boundaries, update the current mouse position so we don't generate
-     * redundant motion events. Do this only if the mouse has moved
-     * since the last time we looked.
+     * redundant motion events.
      */
 
-
-    if (tsdPtr->lastPos.x != x || tsdPtr->lastPos.y != y) {
-        if (GenerateEnterLeave(winPtr, x, y, tsdPtr->lastState)) {
-	    tsdPtr->lastPos = pos;
-        }
+    if (GenerateEnterLeave(winPtr, x, y, tsdPtr->lastState)) {
+	tsdPtr->lastPos = pos;
     }
 
     /*
@@ -499,7 +495,7 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	tsdPtr->lastWinPtr = NULL;
+	tsdPtr->lastWinPtr = winPtr->parentPtr;
     }
     if (winPtr == tsdPtr->grabWinPtr) {
 	tsdPtr->grabWinPtr = NULL;
