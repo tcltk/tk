@@ -26,7 +26,7 @@ static const Tk_OptionSpec SeparatorOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Separator,separator.orientObj),
 	offsetof(Separator,separator.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -48,11 +48,12 @@ static Ttk_Layout SeparatorGetLayout(
  * Widget commands:
  */
 static const Ttk_Ensemble SeparatorCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -89,11 +90,12 @@ static const Tk_OptionSpec SizegripOptionSpecs[] = {
 };
 
 static const Ttk_Ensemble SizegripCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

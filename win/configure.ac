@@ -160,7 +160,11 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
+if test ${SHARED_BUILD} = 0 ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!

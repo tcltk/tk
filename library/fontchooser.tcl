@@ -111,7 +111,7 @@ proc ::tk::fontchooser::Configure {args} {
 
     set cache [dict create -parent $S(-parent) -title $S(-title) \
                    -font $S(-font) -command $S(-command)]
-    set r [tclParseConfigSpec [namespace which -variable S] $specs "" $args]
+    set r [tclParseConfigSpec [namespace which -variable S] $specs DONTSETDEFAULTS $args]
     if {![winfo exists $S(-parent)]} {
 	set code [list TK LOOKUP WINDOW $S(-parent)]
         set err "bad window path name \"$S(-parent)\""
@@ -121,7 +121,7 @@ proc ::tk::fontchooser::Configure {args} {
     if {[string trim $S(-title)] eq ""} {
         set S(-title) [::msgcat::mc "Font"]
     }
-    if {[winfo exists $S(W)] && [lsearch $args -font] != -1} {
+    if {[winfo exists $S(W)] && ("-font" in $args)} {
 	Init $S(-font)
 	event generate $S(-parent) <<TkFontchooserFontChanged>>
     }
@@ -384,7 +384,7 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
         $S(W).l${var}s selection clear 0 end
         set n [lsearch -exact $S(${var}s,lcase) $value]
         $S(W).l${var}s selection set $n
-        if {$n != -1} {
+        if {$n >= 0} {
             set S($var) [lindex $S(${var}s) $n]
             $S(W).e$var icursor end
             $S(W).e$var selection clear

@@ -31,7 +31,7 @@ static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
 #endif
 static NSColorSpace* sRGB = NULL;
-static CGFloat windowBackground[4] =
+static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 void initColorTable()
@@ -92,9 +92,9 @@ void initColorTable()
     for (key in [systemColorList allKeys]) {
 	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = ckalloc(sizeof(SystemColorDatum));
+	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
-	name = ckalloc(length + 1);
+	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = toupper(name[0]);
         if (!strcmp(name, "WindowBackgroundColor")) {
@@ -124,7 +124,7 @@ void initColorTable()
      */
 
     numSystemColors = index;
-    systemColorIndex = ckalloc(numSystemColors * sizeof(SystemColorDatum*));
+    systemColorIndex = (SystemColorDatum **)ckalloc(numSystemColors * sizeof(SystemColorDatum *));
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
@@ -177,7 +177,7 @@ TkMacOSXRGBPixel(
     unsigned long green,
     unsigned long blue)
 {
-    MacPixel p;
+    MacPixel p = {0};
     p.pixel.colortype = rgbColor;
     p.pixel.value = ((red & 0xff) << 16)  |
 	            ((green & 0xff) << 8) |
@@ -207,7 +207,7 @@ MODULE_SCOPE
 unsigned long TkMacOSXClearPixel(
     void)
 {
-    MacPixel p;
+    MacPixel p = {0};
     p.pixel.value = 0;
     p.pixel.colortype = clearColor;
     return p.ulong;
@@ -236,7 +236,7 @@ SystemColorDatum*
 GetEntryFromPixel(
     unsigned long pixel)
 {
-    MacPixel p;
+    MacPixel p = {0};
     int index = rgbColorIndex;
 
     p.ulong = pixel;
@@ -282,6 +282,7 @@ GetRGBA(
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
     }
+
     switch (entry->type) {
     case rgbColor:
 	rgba[0] = ((pixel >> 16) & 0xff) / 255.0;
@@ -297,7 +298,7 @@ GetRGBA(
 
 	if ([NSApp macOSVersion] < 101400) {
 	    for (int i = 0; i < 3; i++) {
-		rgba[i] = windowBackground[i];
+		rgba[i] = WINDOWBACKGROUND[i];
 	    }
 	} else {
 	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
@@ -313,28 +314,28 @@ GetRGBA(
 	    }
 	}
 	break;
+    case clearColor:
+	rgba[0] = rgba[1] = rgba[2] = 1.0;
+	rgba[3] = 0;
+	break;
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101500
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
-	    [color getComponents: rgba];
 #endif
-	    break;
-	}
-	if (entry->index == selectedTabTextIndex) {
+	} else if (entry->index == selectedTabTextIndex) {
 	    int OSVersion = [NSApp macOSVersion];
 	    if (OSVersion > 100600 && OSVersion < 110000) {
-		color = [NSColor whiteColor];
-		[color getComponents: rgba];
-		break;
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
+	    } else {
+		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
 	    }
+	} else {
+	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	}
-	color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
 	[color getComponents: rgba];
 	break;
-    case clearColor:
-	rgba[3] = 0;
     default:
 	break;
     }
@@ -411,7 +412,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXDrawableView(winPtr->privatePtr);
+	    view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 	}
 	if (view) {
 	    name = [[view effectiveAppearance] name];
@@ -432,22 +433,21 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
  *	Sets the components of a CGColorRef from an XColor pixel value.  The
  *      pixel value is used to look up the color in the system color table, and
  *      then SetCGColorComponents is called with the table entry and the pixel
- *      value.
+ *      value.  The parameter macColor should be a pointer to a CGColorRef.
  *
  * Results:
  *      Returns false if the color is not found, true otherwise.
  *
  * Side effects:
- *	The variable macColor is set to a new CGColorRef, the caller is
- *	responsible for releasing it!
+ *	The CGColorRef referenced by the variable macColor may be modified.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkSetMacColor(
-    unsigned long pixel,		/* Pixel value to convert. */
-    void *macColor)			/* CGColorRef to modify. */
+    unsigned long pixel,	/* Pixel value to convert. */
+    void *macColor)		/* CGColorRef to modify. */
 {
     CGColorRef *color = (CGColorRef*)macColor;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
@@ -457,118 +457,6 @@ TkSetMacColor(
     } else {
 	return false;
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpInitGCCache, TkpFreeGCCache, CopyCachedColor, SetCachedColor --
- *
- *	Maintain a per-GC cache of previously converted CGColorRefs
- *
- * Results:
- *	None resp. retained CGColorRef for CopyCachedColor()
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpInitGCCache(
-    GC gc)
-{
-    bzero(TkpGetGCCache(gc), sizeof(TkpGCCache));
-}
-
-void
-TkpFreeGCCache(
-    GC gc)
-{
-    TkpGCCache *gcCache = TkpGetGCCache(gc);
-
-    if (gcCache->cachedForegroundColor) {
-	CFRelease(gcCache->cachedForegroundColor);
-    }
-    if (gcCache->cachedBackgroundColor) {
-	CFRelease(gcCache->cachedBackgroundColor);
-    }
-}
-
-static CGColorRef
-CopyCachedColor(
-    GC gc,
-    unsigned long pixel)
-{
-    TkpGCCache *gcCache = TkpGetGCCache(gc);
-    CGColorRef cgColor = NULL;
-
-    if (gcCache) {
-	if (gcCache->cachedForeground == pixel) {
-	    cgColor = gcCache->cachedForegroundColor;
-	} else if (gcCache->cachedBackground == pixel) {
-	    cgColor = gcCache->cachedBackgroundColor;
-	}
-	if (cgColor) {
-	    CFRetain(cgColor);
-	}
-    }
-    return cgColor;
-}
-
-static void
-SetCachedColor(
-    GC gc,
-    unsigned long pixel,
-    CGColorRef cgColor)
-{
-    TkpGCCache *gcCache = TkpGetGCCache(gc);
-
-    if (gcCache && cgColor) {
-	if (gc->foreground == pixel) {
-	    if (gcCache->cachedForegroundColor) {
-		CFRelease(gcCache->cachedForegroundColor);
-	    }
-	    gcCache->cachedForegroundColor = (CGColorRef) CFRetain(cgColor);
-	    gcCache->cachedForeground = pixel;
-	} else if (gc->background == pixel) {
-	    if (gcCache->cachedBackgroundColor) {
-		CFRelease(gcCache->cachedBackgroundColor);
-	    }
-	    gcCache->cachedBackgroundColor = (CGColorRef) CFRetain(cgColor);
-	    gcCache->cachedBackground = pixel;
-	}
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXCreateCGColor --
- *
- *	Creates a CGColorRef from a X style pixel value.
- *
- * Results:
- *	Returns NULL if not a real pixel, CGColorRef otherwise.
- *
- * Side effects:
- *	None
- *
- *----------------------------------------------------------------------
- */
-
-CGColorRef
-TkMacOSXCreateCGColor(
-    GC gc,
-    unsigned long pixel)		/* Pixel value to convert. */
-{
-    CGColorRef cgColor = CopyCachedColor(gc, pixel);
-
-    if (!cgColor && TkSetMacColor(pixel, &cgColor)) {
-	SetCachedColor(gc, pixel, cgColor);
-    }
-    return cgColor;
 }
 
 /*
@@ -590,22 +478,16 @@ TkMacOSXCreateCGColor(
 
 NSColor*
 TkMacOSXGetNSColor(
-    GC gc,
+    TCL_UNUSED(GC),
     unsigned long pixel)		/* Pixel value to convert. */
 {
-    CGColorRef cgColor = TkMacOSXCreateCGColor(gc, pixel);
+    CGColorRef cgColor;
     NSColor *nsColor = nil;
 
-    if (cgColor) {
-	NSColorSpace *colorSpace = [[NSColorSpace alloc]
-		initWithCGColorSpace:CGColorGetColorSpace(cgColor)];
-
-	nsColor = [NSColor colorWithColorSpace:colorSpace
-		components:CGColorGetComponents(cgColor)
-		count:CGColorGetNumberOfComponents(cgColor)];
-	[colorSpace release];
-	CFRelease(cgColor);
-    }
+    TkSetMacColor(pixel, &cgColor);
+    nsColor = [NSColor colorWithColorSpace:sRGB
+		   components:CGColorGetComponents(cgColor)
+		   count:CGColorGetNumberOfComponents(cgColor)];
     return nsColor;
 }
 
@@ -629,7 +511,7 @@ TkMacOSXGetNSColor(
 
 void
 TkMacOSXSetColorInContext(
-    GC gc,
+    TCL_UNUSED(GC),
     unsigned long pixel,
     CGContextRef context)
 {
@@ -648,9 +530,7 @@ TkMacOSXSetColorInContext(
 	    }
 	    break;
 	default:
-	    if (SetCGColorComponents(entry, pixel, &cgColor)){
-		SetCachedColor(gc, pixel, cgColor);
-	    }
+	    SetCGColorComponents(entry, pixel, &cgColor);
 	    break;
 	}
     }
@@ -708,8 +588,8 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
-	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
-	view = TkMacOSXDrawableView(macWin);
+	Drawable d = Tk_WindowId(tkwin);
+	view = TkMacOSXGetNSViewForDrawable(d);
     }
 
     /*
@@ -718,7 +598,7 @@ TkpGetColor(
 
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&systemColors, name + 6);
-	MacPixel p;
+	MacPixel p = {0};
 
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
@@ -730,19 +610,23 @@ TkpGetColor(
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		NSAppearance *windowAppearance = savedAppearance;
-		if (view) {
-		    windowAppearance = [view effectiveAppearance];
-		}
-		if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
-		    colormap = darkColormap;
+		if (@available(macOS 10.14, *)) {
+		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+		    NSAppearance *windowAppearance = savedAppearance;
+		    if (view) {
+			windowAppearance = [view effectiveAppearance];
+		    }
+		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
+			colormap = darkColormap;
+		    } else {
+			colormap = lightColormap;
+		    }
+		    [NSAppearance setCurrentAppearance:windowAppearance];
+		    GetRGBA(entry, p.ulong, rgba);
+		    [NSAppearance setCurrentAppearance:savedAppearance];
 		} else {
-		    colormap = lightColormap;
+		    GetRGBA(entry, p.ulong, rgba);
 		}
-		[NSAppearance setCurrentAppearance:windowAppearance];
-		GetRGBA(entry, p.ulong, rgba);
-		[NSAppearance setCurrentAppearance:savedAppearance];
 #else
 		GetRGBA(entry, p.ulong, rgba);
 #endif

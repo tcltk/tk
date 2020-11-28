@@ -505,24 +505,24 @@ static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
 static const Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
 	"", offsetof(Treeview,tree.columnsObj), TCL_INDEX_NONE,
-	0,0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
+	0, 0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
     {TK_OPTION_STRING, "-displaycolumns","displayColumns","DisplayColumns",
 	"#all", offsetof(Treeview,tree.displayColumnsObj), TCL_INDEX_NONE,
-	0,0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
+	0, 0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-show", "show", "Show",
 	DEFAULT_SHOW, offsetof(Treeview,tree.showObj), TCL_INDEX_NONE,
-	0,0,SHOW_CHANGED | GEOMETRY_CHANGED },
+	0, 0,SHOW_CHANGED | GEOMETRY_CHANGED },
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
-	0,(ClientData)SelectModeStrings,0 },
+	0, (void *)SelectModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
 	"item", offsetof(Treeview,tree.selectTypeObj), -1,
 	0,(ClientData)SelectTypeStrings,0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
-	0,0,GEOMETRY_CHANGED},
+	0, 0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Treeview,tree.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
@@ -3227,7 +3227,7 @@ static int TreeviewDeleteCommand(
 
     ckfree(items);
     if (selItemDeleted) {
-        TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+        Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     }
     tv->tree.rowPosNeedsUpdate = 1;
     TtkRedisplayWidget(&tv->core);
@@ -3522,7 +3522,7 @@ static int TreeviewSelectionCommand(
     }
 
     ckfree(items);
-    TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;
@@ -3638,7 +3638,7 @@ static int CellSelectionRange(
     
     Tcl_DecrRefCount(columns); 
 
-    TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
 }
@@ -3750,7 +3750,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     ckfree(cells);
-    TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;
@@ -4235,8 +4235,8 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "heading", 	TreeviewHeadingCommand,0 },
     { "identify",  	TreeviewIdentifyCommand,0 },
     { "index",  	TreeviewIndexCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
     { "insert", 	TreeviewInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
     { "item", 		TreeviewItemCommand,0 },
     { "move", 		TreeviewMoveCommand,0 },
     { "next", 		TreeviewNextCommand,0 },
@@ -4246,6 +4246,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "selection" ,	TreeviewSelectionCommand,0 },
     { "set",  		TreeviewSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "tag",    	0,TreeviewTagCommands },
     { "xview",  	TreeviewXViewCommand,0 },
     { "yview",  	TreeviewYViewCommand,0 },

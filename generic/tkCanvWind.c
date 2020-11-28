@@ -87,7 +87,7 @@ static void		TranslateWinItem(Tk_Canvas canvas,
 static int		WinItemCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *const objv[]);
-static void		WinItemLostSlaveProc(ClientData clientData,
+static void		WinItemLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		WinItemRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
@@ -144,7 +144,7 @@ Tk_ItemType tkWindowType = {
 static const Tk_GeomMgr canvasGeomType = {
     "canvas",				/* name */
     WinItemRequestProc,			/* requestProc */
-    WinItemLostSlaveProc,		/* lostSlaveProc */
+    WinItemLostContentProc,		/* lostContentProc */
 };
 
 /*
@@ -1102,25 +1102,25 @@ WinItemRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * WinItemLostSlaveProc --
+ * WinItemLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all canvas-related information about the slave.
+ *	Forgets all canvas-related information about the content window.
  *
  *--------------------------------------------------------------
  */
 
 static void
-WinItemLostSlaveProc(
-    ClientData clientData,	/* WindowItem structure for slave window that
+WinItemLostContentProc(
+    ClientData clientData,	/* WindowItem structure for content window window that
 				 * was stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    Tk_Window tkwin)		/* Tk's handle for the content window. */
 {
     WindowItem *winItemPtr = (WindowItem *)clientData;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(winItemPtr->canvas);

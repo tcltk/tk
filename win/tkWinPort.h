@@ -125,6 +125,12 @@
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 
 /*
+ * Used by tkWindow.c
+ */
+
+#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
+
+/*
  * These calls implement native bitmaps which are not currently
  * supported under Windows.  The macros eliminate the calls.
  */
@@ -132,12 +138,5 @@
 #define TkpDefineNativeBitmaps()
 #define TkpCreateNativeBitmap(display, source) None
 #define TkpGetNativeAppBitmap(display, name, w, h) None
-
-/*
- * Other functions not used under Windows
- */
-
-#define TkpWillDrawWidget(tkwin) 0
-#define TkpRedrawWidget(tkwin)
 
 #endif /* _WINPORT */

@@ -89,15 +89,17 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 
 /* Common widget commands:
  */
+MODULE_SCOPE int TtkWidgetCgetCommand(
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetConfigureCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetCgetCommand(
+MODULE_SCOPE int TtkWidgetIdentifyCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetInstateCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStateCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetIdentifyCommand(
+MODULE_SCOPE int TtkWidgetStyleCommand(
 	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 
 /* Widget constructor:
@@ -163,11 +165,6 @@ MODULE_SCOPE Ttk_TraceHandle *Ttk_TraceVariable(
     Tcl_Interp*, Tcl_Obj *varnameObj, Ttk_TraceProc callback, void *clientData);
 MODULE_SCOPE void Ttk_UntraceVariable(Ttk_TraceHandle *);
 MODULE_SCOPE int Ttk_FireTrace(Ttk_TraceHandle *);
-
-/*
- * Virtual events:
- */
-MODULE_SCOPE void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
 
 /*
  * Helper routines for data accessor commands:

@@ -26,15 +26,13 @@ static char *
 VarTraceProc(
     ClientData clientData,	/* Widget record pointer */
     Tcl_Interp *interp, 	/* Interpreter containing variable. */
-    const char *name1,		/* (unused) */
-    const char *name2,		/* (unused) */
+    TCL_UNUSED(const char *),	/* name1 */
+    TCL_UNUSED(const char *),	/* name2 */
     int flags)			/* Information about what happened. */
 {
     Ttk_TraceHandle *tracePtr = (Ttk_TraceHandle *)clientData;
     const char *name, *value;
     Tcl_Obj *valuePtr;
-    (void)name1;
-    (void)name2;
 
     if (Tcl_InterpDeleted(interp)) {
 	return NULL;
@@ -53,7 +51,7 @@ VarTraceProc(
 	 */
 	if (tracePtr->interp == NULL) {
 	    Tcl_DecrRefCount(tracePtr->varnameObj);
-	    ckfree((ClientData)tracePtr);
+	    ckfree(tracePtr);
 	    return NULL;
 	}
 	Tcl_TraceVar2(interp, name, NULL,
@@ -98,7 +96,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 
     status = Tcl_TraceVar2(interp, Tcl_GetString(varnameObj),
 	    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-	    VarTraceProc, (ClientData)h);
+	    VarTraceProc, h);
 
     if (status != TCL_OK) {
 	Tcl_DecrRefCount(h->varnameObj);
@@ -139,7 +137,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	 */
 	while ((cd = Tcl_VarTraceInfo(h->interp, Tcl_GetString(h->varnameObj),
 		TCL_GLOBAL_ONLY, VarTraceProc, cd)) != NULL) {
-	    if (cd == (ClientData) h) {
+	    if (cd == h) {
 		break;
 	    }
 	}
@@ -154,7 +152,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	}
 	Tcl_UntraceVar2(h->interp, Tcl_GetString(h->varnameObj),
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		VarTraceProc, (ClientData)h);
+		VarTraceProc, h);
 	Tcl_DecrRefCount(h->varnameObj);
 	ckfree(h);
     }

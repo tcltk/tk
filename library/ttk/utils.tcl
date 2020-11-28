@@ -273,18 +273,6 @@ proc ttk::copyBindings {from to} {
 #
 # Platform inconsistencies:
 #
-# On X11, the server typically maps the mouse wheel to Button4 and Button5.
-#
-# On OSX, Tk generates sensible values for the %D field in <MouseWheel> events.
-#
-# On Windows, %D must be scaled by a factor of 120.
-#
-# OSX conventionally uses Shift+MouseWheel for horizontal scrolling,
-# and Option+MouseWheel for accelerated scrolling.
-#
-# The Shift+MouseWheel behavior is not conventional on Windows or most
-# X11 toolkits, but it's useful.
-#
 # MouseWheel scrolling is accelerated on X11, which is conventional
 # for Tk and appears to be conventional for other toolkits (although
 # Gtk+ and Qt do not appear to use as large a factor).
@@ -292,29 +280,13 @@ proc ttk::copyBindings {from to} {
 
 ## ttk::bindMouseWheel $bindtag $command...
 #	Adds basic mousewheel support to $bindtag.
-#	$command will be passed one additional argument
-#	specifying the mousewheel direction (-1: up, +1: down).
+#	$command will be passed two additional arguments
+#	specifying the mousewheel change and a factor.
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
-    if {[tk windowingsystem] eq "x11"} {
-	bind $bindtag <Button-4> "$callback -1"
-	bind $bindtag <Button-5> "$callback +1"
-    }
-    if {[tk windowingsystem] eq "aqua"} {
-	bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
-	bind $bindtag <Option-MouseWheel> [append callback { [expr {-10 *(%D)}]} ]
-    } else {
-	# We must make sure that positive and negative movements are rounded
-	# equally to integers, avoiding the problem that
-	#     (int)1/120 = 0,
-	# but
-	#     (int)-1/120 = -1
-	# The following code ensure equal +/- behaviour.
-	bind $bindtag <MouseWheel> [append callback { [
-	    expr {%D>=0 ? (-%D/120) : ((119-%D)/120)}
-	]}]
-    }
+    bind $bindtag <MouseWheel> "$callback %D -120.0"
+    bind $bindtag <Option-MouseWheel> "$callback %D -12.0"
 }
 
 ## Mousewheel bindings for standard scrollable widgets.
@@ -325,46 +297,13 @@ proc ttk::bindMouseWheel {bindtag callback} {
 # standard scrollbar protocol.
 #
 
-if {[tk windowingsystem] eq "x11"} {
-    bind TtkScrollable <Button-4>       { %W yview scroll -5 units }
-    bind TtkScrollable <Button-5>       { %W yview scroll  5 units }
-    bind TtkScrollable <Shift-Button-4> { %W xview scroll -5 units }
-    bind TtkScrollable <Shift-Button-5> { %W xview scroll  5 units }
-}
-if {[tk windowingsystem] eq "aqua"} {
-    bind TtkScrollable <MouseWheel> {
-	%W yview scroll [expr {-(%D)}] units
-    }
-    bind TtkScrollable <Shift-MouseWheel> {
-	%W xview scroll [expr {-(%D)}] units
-    }
-    bind TtkScrollable <Option-MouseWheel> {
-	%W yview scroll  [expr {-10 * (%D)}] units
-    }
-    bind TtkScrollable <Shift-Option-MouseWheel> {
-	%W xview scroll [expr {-10 * (%D)}] units
-    }
-} else {
-    # We must make sure that positive and negative movements are rounded
-    # equally to integers, avoiding the problem that
-    #     (int)1/120 = 0,
-    # but
-    #     (int)-1/120 = -1
-    # The following code ensure equal +/- behaviour.
-    bind TtkScrollable <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/120}] units
-	} else {
-	    %W yview scroll [expr {(119-%D)/120}] units
-	}
-    }
-    bind TtkScrollable <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/120}] units
-	} else {
-	    %W xview scroll [expr {(119-%D)/120}] units
-	}
-    }
-}
+bind TtkScrollable <MouseWheel> \
+	{ tk::MouseWheel %W y %D -30.0 }
+bind TtkScrollable <Option-MouseWheel> \
+	{ tk::MouseWheel %W y %D -3.0 }
+bind TtkScrollable <Shift-MouseWheel> \
+	{ tk::MouseWheel %W x %D -30.0 }
+bind TtkScrollable <Shift-Option-MouseWheel> \
+	{ tk::MouseWheel %W x %D -3.0 }
 
 #*EOF*

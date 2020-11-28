@@ -108,6 +108,11 @@ the first one that is scrollable. Default is 0.
 Number of items at the top that should not be vertically scrolled. Default is 0.
 .SH "WIDGET COMMAND"
 .PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR, \fBstyle\fR, \fBxview\fR and \fByview\fR
+commands (see \fBttk::widget\fR),
+treeview widgets support the following additional commands:
 .TP
 \fIpathname \fBbbox \fIitem\fR ?\fIcolumn\fR?
 Returns the bounding box (relative to the treeview widget's window)
@@ -155,9 +160,6 @@ Toggle the cell selection state of each item in \fIcellList\fR.
 \fIpathname \fBcellselection toggle \fIfirstCell\fR \fIlastCell\fR
 Toggle the cell selection state of each item in the rectangle defined.
 .RE
-.TP
-\fIpathname \fBcget \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBchildren \fIitem\fR ?\fInewchildren\fR?
 If \fInewchildren\fR is not specified,
@@ -214,9 +216,6 @@ heading column separator.
 .PP
 Use \fIpathname column #0\fR to configure the tree column.
 .RE
-.TP
-\fIpathname \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBdelete \fIitemList\fR
 Deletes each of the items in \fIitemList\fR and all of their descendants.
@@ -332,9 +331,6 @@ newly created item.
 See \fBITEM OPTIONS\fR for the list of available options.
 .RE
 .TP
-\fIpathname \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk::widget(n)\fR.
-.TP
 \fIpathname \fBitem \fIitem\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 Query or modify the options for the specified \fIitem\fR.
 If no \fI\-option\fR is specified,
@@ -399,9 +395,6 @@ With two arguments, returns the current value of the specified \fIcolumn\fR.
 With three arguments, sets the value of column \fIcolumn\fR
 in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
-.TP
-\fIpathname \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBtag \fIargs...\fR
 Manages tags. Tags can be set on items as well as on cells.
@@ -484,13 +477,6 @@ If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .RE
-.PP
-The treeview widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBxview\fR	\fByview\fR
-.DE
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items

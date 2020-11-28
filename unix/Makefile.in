@@ -632,8 +632,8 @@ $(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real: ${TK_STUB_LIB_FILE}
-	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) ${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
+	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ $(WISH_LIBS) \
+		${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # # FIXME: This xttest rule seems to be broken in a number of ways.  It should
 # # use CC_SEARCH_FLAGS, it does not include the shared lib location logic from
@@ -747,8 +747,8 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@if test -f "tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    $(INSTALL_LIBRARY) "tk${MAJOR_VERSION}${MINOR_VERSION}.dll" "$(DLL_INSTALL_DIR)";\
 	    chmod 555 "$(DLL_INSTALL_DIR)/tk${MAJOR_VERSION}${MINOR_VERSION}.dll";\
-	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.a" "$(LIB_INSTALL_DIR)";\
-	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.a";\
+	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a" "$(LIB_INSTALL_DIR)";\
+	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a";\
 	fi
 	@echo "Installing ${WISH_EXE} as $(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
 	@$(INSTALL_PROGRAM) ${WISH_EXE} "$(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
@@ -1561,7 +1561,7 @@ rpm: all
 
 #
 # Target to create a proper Tk distribution from information in the
-# master source directory.  DISTDIR must be defined to indicate where
+# source directory.  DISTDIR must be defined to indicate where
 # to put the distribution.  DISTDIR must be an absolute path name.
 #
 

@@ -125,10 +125,9 @@ SetWindowInstanceData(
 static void
 BusyCustodyProc(
     ClientData clientData,	/* Information about the busy window. */
-    Tk_Window tkwin)		/* Not used. */
+    TCL_UNUSED(Tk_Window))		/* Not used. */
 {
     Busy *busyPtr = (Busy *)clientData;
-    (void)tkwin;
 
     Tk_DeleteEventHandler(busyPtr->tkBusy, StructureNotifyMask, BusyEventProc,
 	    busyPtr);
@@ -158,14 +157,11 @@ BusyCustodyProc(
 
 static void
 BusyGeometryProc(
-    ClientData dummy,	/* Information about window that got new
+    TCL_UNUSED(void *),	/* Information about window that got new
 				 * preferred geometry. */
-    Tk_Window tkwin)		/* Other Tk-related information about the
+    TCL_UNUSED(Tk_Window))		/* Other Tk-related information about the
 				 * window. */
 {
-    (void)dummy;
-    (void)tkwin;
-
     /* Should never get here */
 }
 
@@ -865,7 +861,7 @@ Tk_BusyObjCmd(
 
     case BUSY_CONFIGURE:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-option? ?value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
@@ -900,7 +896,7 @@ Tk_BusyObjCmd(
 	    if (pattern == NULL ||
 		    Tcl_StringCaseMatch(Tk_PathName(busyPtr->tkRef), pattern, 0)) {
 		Tcl_ListObjAppendElement(interp, objPtr,
-			TkNewWindowObj(busyPtr->tkRef));
+			Tk_NewWindowObj(busyPtr->tkRef));
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);

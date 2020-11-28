@@ -96,7 +96,7 @@ typedef struct TextLayout {
 				 * layout. */
     int numChunks;		/* Number of chunks actually used in following
 				 * array. */
-    LayoutChunk chunks[1];	/* Array of chunks. The actual size will be
+    LayoutChunk chunks[TKFLEXARRAY];/* Array of chunks. The actual size will be
 				 * maxChunks. THIS FIELD MUST BE THE LAST IN
 				 * THE STRUCTURE. */
 } TextLayout;
@@ -741,7 +741,7 @@ Tk_FontObjCmd(
     }
     case FONT_METRICS: {
 	Tk_Font tkfont;
-	int skip, index, i;
+	int skip, i;
 	const TkFontMetrics *fmPtr;
 	static const char *const switches[] = {
 	    "-ascent", "-descent", "-linespace", "-fixed", NULL
@@ -1362,11 +1362,10 @@ Tk_GetFontFromObj(
 
 static int
 SetFontFromAny(
-    Tcl_Interp *dummy,		/* Used for error reporting if not NULL. */
+    TCL_UNUSED(Tcl_Interp *),	/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
-    (void)dummy;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -1969,7 +1968,7 @@ Tk_ComputeTextLayout(
     int *heightPtr)		/* Filled with height of string. */
 {
     TkFont *fontPtr = (TkFont *) tkfont;
-    const char *start, *end, *special;
+    const char *start, *endp, *special;
     int n, y, bytesThisChunk, maxChunks, curLine, layoutHeight;
     int baseline, height, curX, newX, maxWidth, *lineLengths;
     TextLayout *layoutPtr;
@@ -2002,8 +2001,8 @@ Tk_ComputeTextLayout(
 
     maxChunks = 1;
 
-    layoutPtr = (TextLayout *)ckalloc(sizeof(TextLayout)
-	    + (maxChunks-1) * sizeof(LayoutChunk));
+    layoutPtr = (TextLayout *)ckalloc(offsetof(TextLayout, chunks)
+	    + maxChunks * sizeof(LayoutChunk));
     layoutPtr->tkfont = tkfont;
     layoutPtr->string = string;
     layoutPtr->numChunks = 0;
@@ -2017,12 +2016,12 @@ Tk_ComputeTextLayout(
 
     curX = 0;
 
-    end = Tcl_UtfAtIndex(string, numChars);
+    endp = Tcl_UtfAtIndex(string, numChars);
     special = string;
 
     flags &= TK_IGNORE_TABS | TK_IGNORE_NEWLINES;
     flags |= TK_WHOLE_WORDS | TK_AT_LEAST_ONE;
-    for (start = string; start < end; ) {
+    for (start = string; start < endp; ) {
 	if (start >= special) {
 	    /*
 	     * Find the next special character in the string.
@@ -2033,7 +2032,7 @@ Tk_ComputeTextLayout(
 	     * whitespace set.
 	     */
 
-	    for (special = start; special < end; special++) {
+	    for (special = start; special < endp; special++) {
 		if (!(flags & TK_IGNORE_NEWLINES)) {
 		    if ((*special == '\n') || (*special == '\r')) {
 			break;
@@ -2067,7 +2066,7 @@ Tk_ComputeTextLayout(
 	    }
 	}
 
-	if ((start == special) && (special < end)) {
+	if ((start == special) && (special < endp)) {
 	    /*
 	     * Handle the special character.
 	     *
@@ -2084,7 +2083,7 @@ Tk_ComputeTextLayout(
 		start++;
 		curX = newX;
 		flags &= ~TK_AT_LEAST_ONE;
-		if ((start < end) &&
+		if ((start < endp) &&
 			((wrapLength <= 0) || (newX <= wrapLength))) {
 		    /*
 		     * More chars can still fit on this line.
@@ -2106,7 +2105,7 @@ Tk_ComputeTextLayout(
 	 * Consume all extra spaces at end of line.
 	 */
 
-	while ((start < end) && isspace(UCHAR(*start))) { /* INTL: ISO space */
+	while ((start < endp) && isspace(UCHAR(*start))) { /* INTL: ISO space */
 	    if (!(flags & TK_IGNORE_NEWLINES)) {
 		if ((*start == '\n') || (*start == '\r')) {
 		    break;
@@ -2333,7 +2332,7 @@ Tk_DrawTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
-#if TK_DRAW_IN_CONTEXT
+#ifdef TK_DRAW_IN_CONTEXT
 	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
 		    chunkPtr->start, chunkPtr->numBytes,
 		    firstByte - chunkPtr->start, lastByte - firstByte,
@@ -2403,7 +2402,7 @@ TkDrawAngledTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
-#if TK_DRAW_IN_CONTEXT
+#ifdef TK_DRAW_IN_CONTEXT
 	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
@@ -3400,7 +3399,7 @@ noMapping:	;
 static int
 ConfigAttributesObj(
     Tcl_Interp *interp,		/* Interp for error return. */
-    Tk_Window tkwin,		/* For display on which font will be used. */
+    TCL_UNUSED(Tk_Window),	/* For display on which font will be used. */
     int objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[],	/* Command line options. */
     TkFontAttributes *faPtr)	/* Font attributes structure whose fields are
@@ -3410,7 +3409,6 @@ ConfigAttributesObj(
     int i, n, index;
     Tcl_Obj *optionPtr, *valuePtr;
     const char *value;
-    (void)tkwin;
 
     for (i = 0; i < objc; i += 2) {
 	optionPtr = objv[i];
@@ -3571,6 +3569,57 @@ GetAttributeInfoObj(
     }
     Tcl_SetObjResult(interp, resultPtr);
     return TCL_OK;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * Tk_FontGetDescription --
+ *
+ *	Return information about the font description as a Tcl list. One
+ *	possible result is "{{DejaVu Sans} -16 bold underline}".
+ *
+ * Results:
+ *	The list of descriptions.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+Tcl_Obj *
+Tk_FontGetDescription(
+    Tk_Font tkfont)		/* Font whose description is desired. */
+{
+    const TkFontAttributes *faPtr = GetFontAttributes(tkfont);
+    Tcl_Obj *resultPtr = Tcl_NewObj();
+    const char *str;
+
+    str = faPtr->family;
+    Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, str ? -1 : 0));
+    if (faPtr->size >= 0.0) {
+    	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewWideIntObj((int)(faPtr->size + 0.5)));
+    } else {
+    	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewWideIntObj(-(int)(-faPtr->size + 0.5)));
+    }
+    if (faPtr->weight != TK_FW_NORMAL) {
+	str = TkFindStateString(weightMap, faPtr->weight);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    if (faPtr->slant != TK_FS_ROMAN) {
+	str = TkFindStateString(slantMap, faPtr->slant);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    if (faPtr->underline) {
+	str = TkFindStateString(underlineMap, faPtr->underline);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    if (faPtr->overstrike) {
+	str = TkFindStateString(overstrikeMap, faPtr->overstrike);
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+    }
+    return resultPtr;
 }
 
 /*
@@ -3776,7 +3825,7 @@ NewChunk(
     maxChunks = *maxPtr;
     if (layoutPtr->numChunks == maxChunks) {
 	maxChunks *= 2;
-	s = sizeof(TextLayout) + ((maxChunks - 1) * sizeof(LayoutChunk));
+	s = offsetof(TextLayout, chunks) + (maxChunks * sizeof(LayoutChunk));
 	layoutPtr = (TextLayout *)ckrealloc(layoutPtr, s);
 
 	*layoutPtrPtr = layoutPtr;

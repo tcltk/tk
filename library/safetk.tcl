@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# Copyright (c) 1997 Sun Microsystems, Inc.
+# Copyright © 1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -220,7 +220,7 @@ proc ::safe::tkTopLevel {child display} {
     set w ".safe$tkSafeId"
     if {[catch {toplevel $w -screen $display -class SafeTk} msg]} {
 	return -code error -errorcode {TK TOPLEVEL SAFE} \
-	    "Unable to create toplevel for safe child \"$child\" ($msg)"
+	    "Unable to create toplevel for \"$child\" ($msg)"
     }
     Log $child "New toplevel $w" NOTICE
 
