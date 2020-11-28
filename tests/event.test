@@ -859,6 +859,25 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-9 {no <Enter> event is generated for the parent window when a
+              child window in which the mouse pointer was inside gets
+              destroyed - bug 9e1312f32c} -setup {
+    set res [list ]
+} -body {
+    toplevel .top
+    pack propagate .top 0
+    bind all <Enter> {lappend res %W}
+    pack [frame .top.f -bg green -width 50 -height 50] -anchor se -side bottom
+    update
+    event generate .top.f <Motion> -warp 1 -x 25 -y 25  ; # <Enter> sent to .top and .top.f
+    update  ; # idletasks not enough
+    destroy .top.f  ; # no <Enter> event sent
+    update
+    set res
+} -cleanup {
+    deleteWindows
+} -result {.top .top.f}
+
 # cleanup
 update
 unset -nocomplain keypress_lookup
