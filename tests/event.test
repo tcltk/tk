@@ -859,8 +859,8 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
-test event-9 {no <Enter> event is generated for the parent window when a
-              child window in which the mouse pointer was inside gets
+test event-9 {no <Enter> event is generated for the container window when its
+              managed window in which the mouse pointer was inside gets
               destroyed - bug 9e1312f32c} -setup {
     set res [list ]
 } -body {
