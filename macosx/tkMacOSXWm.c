@@ -2868,9 +2868,9 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
-    TkWindow *winPtr,           /* Toplevel or Frame to work with */
-    Tcl_Interp *interp,		/* Current interpreter. */
+    TCL_UNUSED(Tk_Window),	        /* Main window of the application. */
+    TkWindow *winPtr,           	/* Toplevel or Frame to work with */
+    Tcl_Interp *interp,			/* Current interpreter. */
     TCL_UNUSED(int),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
@@ -2888,6 +2888,16 @@ WmManageCmd(
 	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", NULL);
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * Draw the managed widget at the top left corner of its toplevel.
+	 * See [4a40c6cace].
+	 */
+
+	winPtr->changes.x -= macWin->xOff;
+	winPtr->changes.y -= macWin->yOff;
+	XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+
 	TkFocusSplit(winPtr);
 	Tk_UnmapWindow(frameWin);
 	if (wmPtr == NULL) {

@@ -6,7 +6,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 # the following helper functions are related to the functions used
