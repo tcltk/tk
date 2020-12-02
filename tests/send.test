@@ -15,7 +15,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint xhost [llength [auto_execok xhost]]
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 # Compute a script that will load Tk into a child interpreter.
 
