@@ -102,7 +102,7 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
-          cat out-classic.txt out-ttk.txt | grep -q "Failed[[:space:]][[:space:]]*[1-9]" && {
+          cat out-classic.txt out-ttk.txt | grep -q "Failed	[1-9]" && {
             echo "::error::Failure during Test"
             exit 1
           }

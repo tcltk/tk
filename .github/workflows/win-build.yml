@@ -60,7 +60,7 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
-          cat out-classic.txt out-ttk.txt | grep -q "Failed     [1-9]" && {
+          cat out-classic.txt out-ttk.txt | grep -q "Failed	[1-9]" && {
             echo "::error::Failure during Test"
             exit 1
           }
@@ -141,15 +141,8 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test-classic | tee out-classic.txt || {
+          make test-classic | tee out-classic.txt || echo "::error::Failure during Test"
+          make test-ttk | tee out-ttk.txt || echo "::error::Failure during Test"
+          cat out-classic.txt out-ttk.txt | grep -q "Failed	[1-9]" && {
             echo "::error::Failure during Test"
-            exit 1
-          }
-          make test-ttk | tee out-ttk.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          cat out-classic.txt out-ttk.txt | grep -q "Failed     [1-9]" && {
-            echo "::error::Failure during Test"
-            exit 1
           }
