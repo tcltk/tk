@@ -247,7 +247,7 @@ Tktest_Init(
      * Create additional commands for testing Tk.
      */
 
-    if (Tcl_PkgProvideEx(interp, "Tktest", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
+    if (Tcl_PkgProvideEx(interp, "tk::test", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

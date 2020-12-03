@@ -75,7 +75,11 @@ Tk_InitStubs(
     const char *version,
     int exact)
 {
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     const char *packageName = "Tk";
+#else
+    const char *packageName = "tk";
+#endif
     const char *errMsg = NULL;
     void *clientData = NULL;
     const char *actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp,
