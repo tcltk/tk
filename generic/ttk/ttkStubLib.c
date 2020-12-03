@@ -34,7 +34,11 @@ TtkInitializeStubs(
     Tcl_Interp *interp, const char *version, int epoch, int revision)
 {
     int exact = 0;
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     const char *packageName = "Ttk";
+#else
+    const char *packageName = "ttk";
+#endif
     const char *errMsg = NULL;
     void *pkgClientData = NULL;
     const char *actualVersion = Tcl_PkgRequireEx(
