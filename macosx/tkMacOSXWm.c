@@ -2894,9 +2894,11 @@ WmManageCmd(
 	 * See [4a40c6cace].
 	 */
 
-	winPtr->changes.x -= macWin->xOff;
-	winPtr->changes.y -= macWin->yOff;
-	XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+	if (macWin) {
+	    winPtr->changes.x -= macWin->xOff;
+	    winPtr->changes.y -= macWin->yOff;
+	    XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+	}
 
 	TkFocusSplit(winPtr);
 	Tk_UnmapWindow(frameWin);
