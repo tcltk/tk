@@ -728,7 +728,7 @@ TkpConfigureMenuEntry(
      * The -background and -foreground options are now ignored in Aqua.
      * See ticket [635167af14].
      */
-    
+
     NSDictionary fontAttributes = TkMacOSXNSFontAttributesForFont(
 	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
     NSMutableDictionary *attributes = [fontAttributes mutableCopy];
@@ -755,10 +755,10 @@ TkpConfigureMenuEntry(
     }
 
 #else
-    
+
     NSDictionary *attributes = TkMacOSXNSFontAttributesForFont(
 	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
-    
+
 #endif
 
     attributedTitle = [[NSAttributedString alloc] initWithString:title

@@ -358,14 +358,6 @@ AC_DEFUN([SC_ENABLE_SHARED], [
     AC_ARG_ENABLE(shared,
 	[  --enable-shared         build and link with shared libraries (default: on)],
 	[tcl_ok=$enableval], [tcl_ok=yes])
-
-    if test "${enable_shared+set}" = set; then
-	enableval="$enable_shared"
-	tcl_ok=$enableval
-    else
-	tcl_ok=yes
-    fi
-
     if test "$tcl_ok" = "yes" ; then
 	AC_MSG_RESULT([shared])
 	SHARED_BUILD=1
@@ -1085,8 +1077,7 @@ AC_DEFUN([SC_TCL_CFG_ENCODING], [
     if test x"${with_tcencoding}" != x ; then
 	AC_DEFINE_UNQUOTED(TCL_CFGVAL_ENCODING,"${with_tcencoding}")
     else
-	# Default encoding on windows is not "iso8859-1"
-	AC_DEFINE(TCL_CFGVAL_ENCODING,"cp1252")
+	AC_DEFINE(TCL_CFGVAL_ENCODING,"utf-8")
     fi
 ])
 
