@@ -667,12 +667,11 @@ install-binaries:
 if {[catch {package present Tcl 8.6-}]} { return }
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
 } else {
-    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)]]
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)]]
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }
+package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"
 !endif
