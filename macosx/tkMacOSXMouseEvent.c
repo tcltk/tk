@@ -676,6 +676,7 @@ TkpWarpPointer(
     }
 
     CGWarpMouseCursorPosition(pt);
+    TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
 }
 
 /*
