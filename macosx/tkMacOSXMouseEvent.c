@@ -680,7 +680,7 @@ TkpWarpPointer(
     if (dispPtr->warpWindow) {
         TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
     } else {
-        TkGenerateButtonEventForXPointer(NULL);
+        TkGenerateButtonEventForXPointer(None);
     }
 }
 
