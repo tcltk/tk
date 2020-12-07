@@ -89,7 +89,7 @@ typedef struct {
 
 static SystemColorDatum systemColorData[] = {
 {"Pixel",				rgbColor, 0, NULL, 0, NULL },
-{"Transparent",				clearColor,   0, NULL, 0, NULL },
+{"Transparent",			       	clearColor,   0, NULL, 0, NULL },
 
 {"Highlight",				HIBrush,  kThemeBrushPrimaryHighlightColor, NULL, 0, NULL },
 {"HighlightSecondary",		    	HIBrush,  kThemeBrushSecondaryHighlightColor, NULL, 0, NULL },
@@ -249,6 +249,7 @@ static SystemColorDatum systemColorData[] = {
 {"LinkColor",			    semantic, 0, "blueColor", 0, NULL },
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
+{"UnemphasizedSelectedTextBackgroundColor", semantic, 0, "grayColor", 0, NULL },
 {NULL,				    0, 0, NULL, 0, NULL }
 };
 
