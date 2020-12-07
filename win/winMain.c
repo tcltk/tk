@@ -25,10 +25,16 @@ int _CRT_glob = 0;
 #endif /* __GNUC__ */
 
 #ifdef TK_TEST
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern Tcl_PackageInitProc Tktest_Init;
+#ifdef __cplusplus
+}
+#endif
 #endif /* TK_TEST */
 
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
 extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
@@ -106,6 +112,10 @@ _tWinMain(
     TCHAR **argv;
     int argc;
     TCHAR *p;
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpszCmdLine;
+    (void)nCmdShow;
 
     /*
      * Create the console channels and install them as the standard channels.
@@ -192,16 +202,16 @@ Tcl_AppInit(
 	    return TCL_ERROR;
 	}
     }
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
+    Tcl_StaticPackage(interp, "Registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
+    Tcl_StaticPackage(interp, "Dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
@@ -265,6 +275,7 @@ main(
     char **dummy)
 {
     TCHAR **argv;
+    (void)dummy;
 #else
 int
 _tmain(
@@ -364,7 +375,7 @@ setargv(
     #undef Tcl_Alloc
     #undef Tcl_DbCkalloc
 
-    argSpace = ckalloc(size * sizeof(char *)
+    argSpace = (TCHAR *)ckalloc(size * sizeof(char *)
 	    + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));

@@ -42,10 +42,11 @@
 #define ACTIVE_FG		"systemTextColor"
 #define SELECT_BG		"systemSelectedTextBackgroundColor"
 #define SELECT_FG		"systemSelectedTextColor"
-#define INACTIVE_SELECT_BG	"systemSelectedTextBackgroundColor"
+#define INACTIVE_SELECT_BG	"systemUnemphasizedSelectedTextBackgroundColor"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
 #define DISABLED		"#a3a3a3"
+#define IGNORED                 "#abcdef"
 
 /*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
@@ -88,19 +89,9 @@
 #define DEF_BUTTON_ON_VALUE		"1"
 #define DEF_BUTTON_TRISTATE_VALUE	""
 #define DEF_BUTTON_OVER_RELIEF		""
-//#if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
-//#define DEF_BUTTON_PADX			"12"
-//#define DEF_BUTTON_PADX_NOCM		"1"
-//#else
 #define DEF_BUTTON_PADX			"1"
-//#endif
 #define DEF_LABCHKRAD_PADX		"1"
-//#if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
-//#define DEF_BUTTON_PADY			"3"
-//#define DEF_BUTTON_PADY_NOCM		"1"
-//#else
 #define DEF_BUTTON_PADY			"1"
-//#endif
 #define DEF_LABCHKRAD_PADY		"1"
 #define DEF_BUTTON_RELIEF		"flat"
 #define DEF_LABCHKRAD_RELIEF		"flat"
@@ -307,23 +298,23 @@
  * Defaults for menus overall:
  */
 
-#define DEF_MENU_ACTIVE_BG_COLOR	"systemMenuActive"
-#define DEF_MENU_ACTIVE_BG_MONO		BLACK
+#define DEF_MENU_ACTIVE_BG_COLOR	IGNORED
+#define DEF_MENU_ACTIVE_BG_MONO		IGNORED
 #define DEF_MENU_ACTIVE_BORDER_WIDTH	"0"
-#define DEF_MENU_ACTIVE_FG_COLOR	"systemMenuActiveText"
-#define DEF_MENU_ACTIVE_FG_MONO		WHITE
-#define DEF_MENU_BG_COLOR		"systemMenu"
-#define DEF_MENU_BG_MONO		WHITE
+#define DEF_MENU_ACTIVE_FG_COLOR	IGNORED
+#define DEF_MENU_ACTIVE_FG_MONO		IGNORED
+#define DEF_MENU_BG_COLOR		"#000001" /* Detects custom bg. */
+#define DEF_MENU_BG_MONO		IGNORED
 #define DEF_MENU_BORDER_WIDTH		"0"
 #define DEF_MENU_CURSOR			"arrow"
-#define DEF_MENU_DISABLED_FG_COLOR	"systemMenuDisabled"
+#define DEF_MENU_DISABLED_FG_COLOR	IGNORED
 #define DEF_MENU_DISABLED_FG_MONO	""
 #define DEF_MENU_FONT			"menu" /* special: see tkMacOSXMenu.c */
-#define DEF_MENU_FG			"systemMenuText"
+#define DEF_MENU_FG			"#010000"  /* Detects custom fg. */
 #define DEF_MENU_POST_COMMAND		""
 #define DEF_MENU_RELIEF			"flat"
-#define DEF_MENU_SELECT_COLOR		"systemMenuActive"
-#define DEF_MENU_SELECT_MONO		BLACK
+#define DEF_MENU_SELECT_COLOR		IGNORED
+#define DEF_MENU_SELECT_MONO		IGNORED
 #define DEF_MENU_TAKE_FOCUS		"0"
 #define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		NULL
