@@ -75,19 +75,19 @@ Tk_InitStubs(
     const char *version,
     int exact)
 {
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    const char *packageName = "Tk";
-#else
     const char *packageName = "tk";
-#endif
     const char *errMsg = NULL;
     void *clientData = NULL;
     const char *actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp,
 	    packageName, version, 0, &clientData);
-    const TkStubs *stubsPtr = (const TkStubs *)clientData;
 
     if (actualVersion == NULL) {
-	return NULL;
+	packageName = "Tk";
+	actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp,
+    	    packageName, version, 0, &clientData);
+	if (actualVersion == NULL) {
+	    return NULL;
+	}
     }
 
     if (exact) {
@@ -117,15 +117,15 @@ Tk_InitStubs(
 	    }
 	}
     }
-    if (stubsPtr == NULL) {
+    if (clientData == NULL) {
 	errMsg = "missing stub table pointer";
     } else {
-	tkStubsPtr = stubsPtr;
-	if (stubsPtr->hooks) {
-	    tkPlatStubsPtr = stubsPtr->hooks->tkPlatStubs;
-	    tkIntStubsPtr = stubsPtr->hooks->tkIntStubs;
-	    tkIntPlatStubsPtr = stubsPtr->hooks->tkIntPlatStubs;
-	    tkIntXlibStubsPtr = stubsPtr->hooks->tkIntXlibStubs;
+	tkStubsPtr = (const TkStubs *)clientData;
+	if (tkStubsPtr->hooks) {
+	    tkPlatStubsPtr = tkStubsPtr->hooks->tkPlatStubs;
+	    tkIntStubsPtr = tkStubsPtr->hooks->tkIntStubs;
+	    tkIntPlatStubsPtr = tkStubsPtr->hooks->tkIntPlatStubs;
+	    tkIntXlibStubsPtr = tkStubsPtr->hooks->tkIntXlibStubs;
 	} else {
 	    tkPlatStubsPtr = NULL;
 	    tkIntStubsPtr = NULL;
