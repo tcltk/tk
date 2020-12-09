@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
+ * Copyright © Joe English, Pat Thoyts, Michael Kirkham
  *
  * ttk::progressbar widget.
  */

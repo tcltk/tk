@@ -1,7 +1,7 @@
 /*
  * Tk widget state utilities.
  *
- * Copyright (c) 2003 Joe English.  Freely redistributable.
+ * Copyright © 2003 Joe English.  Freely redistributable.
  *
  */
 

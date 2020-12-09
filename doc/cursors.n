@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 '\" Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
