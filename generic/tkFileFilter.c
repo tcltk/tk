@@ -4,7 +4,7 @@
  *	Process the -filetypes option for the file dialogs on Windows and the
  *	Mac.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
