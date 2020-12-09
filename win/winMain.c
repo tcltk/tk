@@ -29,9 +29,6 @@ int _CRT_glob = 0;
 extern "C" {
 #endif
 extern Tcl_PackageInitProc Tktest_Init;
-#ifdef __cplusplus
-}
-#endif
 #endif /* TK_TEST */
 
 #if !defined(TCL_USE_STATIC_PACKAGES)
@@ -48,6 +45,9 @@ extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #ifdef TCL_BROKEN_MAINARGS
 static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
