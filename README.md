@@ -5,6 +5,9 @@ This is the **Tk 8.6.10** source distribution.
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
 
+[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Acore-8-6-branch)
+[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Acore-8-6-branch)
+[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-6-branch)
 
 ## <a id="intro">1.</a> Introduction
 
@@ -18,13 +21,13 @@ historical record of all changes to Tk.
 
 Tk is maintained, enhanced, and distributed freely by the Tcl community.
 Source code development and tracking of bug reports and feature requests
-takes place at [core.tcl-lang.org](https://core.tcl-lang.org/).
+take place at [core.tcl-lang.org](https://core.tcl-lang.org/).
 Tcl/Tk release and mailing list services are [hosted by
 SourceForge](https://sourceforge.net/projects/tcl/)
 with the Tcl Developer Xchange hosted at
 [www.tcl-lang.org](https://www.tcl-lang.org).
 
-Tk is a freely available open source package.  You can do virtually
+Tk is a freely available open-source package.  You can do virtually
 anything you like with it, such as modifying it, redistributing it,
 and selling it either in whole or in part.  See the file
 `license.terms` for complete information.

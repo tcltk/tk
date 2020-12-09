@@ -3,8 +3,8 @@ on: [push]
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  MSVC:
-    runs-on: windows-latest
+  msvc:
+    runs-on: windows-2019
     defaults:
       run:
         shell: powershell
@@ -19,12 +19,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: core-8-6-branch
           path: tcl
       - name: Make Install Location
-        working-directory: .
-        shell: bash
+        working-directory: tcl
         run: |
+          echo "TCLDIR=`pwd`" >> $GITHUB_ENV
+          cd ..
           mkdir install
           cd install
           echo "INSTALLDIR=`pwd`" >> $GITHUB_ENV
@@ -78,8 +79,8 @@ jobs:
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-  MSYS-gcc:
-    runs-on: windows-latest
+  gcc:
+    runs-on: windows-2019
     defaults:
       run:
         shell: bash
@@ -98,13 +99,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: core-8-6-branch
           path: tcl
       - name: Install MSYS2, Make
         run: choco install -y msys2 make
       - name: Prepare
         run: |
           touch tkStubInit.c
+          touch "${HOME}/forWinDialog-5.12.7"
           mkdir "${HOME}/install_dir"
           echo "INSTALL_DIR=${HOME}/install_dir" >> $GITHUB_ENV
         working-directory: generic
