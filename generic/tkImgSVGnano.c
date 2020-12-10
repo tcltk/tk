@@ -191,7 +191,7 @@ FileMatchSVG(
 	Tcl_DecrRefCount(dataObj);
 	return 0;
     }
-    data = Tcl_GetStringFromObj(dataObj, &length);
+    data = TkGetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
