@@ -591,7 +591,18 @@ test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints
     string equal $x [file join $dir testfile]
 } -result 1
 
-test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -constraints {
+test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -setup {
+    # Ensure there's at least one file in the home directory in CI environments
+    set makeEmpty [expr {![llength [glob -type f -directory ~ *]]}]
+    if {$makeEmpty} {
+	for {set i 1} {$i < 1000} {incr i} {
+	    # Technically a race condition...
+	    set actualFilename [format "~/tkWinDialog5_12_7_%03d" $i]
+	    if {![file exists $actualFilename]} break
+	}
+	close [open $actualFilename w]
+    }
+} -constraints {
     nt testwinevent
 } -body {
     set fn [file tail [lindex [glob -types f ~/*] 0]]
@@ -603,6 +614,10 @@ test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -constraints {
         Click ok
     }
     string equal $x [file normalize [file join ~ $fn]]
+} -cleanup {
+    if {$makeEmpty} {
+	file delete $actualFilename
+    }
 } -result 1
 
 test winDialog-5.12.8 {tk_getOpenFile: initial directory: .} -constraints {
