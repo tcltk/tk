@@ -593,7 +593,7 @@ test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints
 
 test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -setup {
     # Ensure there's at least one file in the home directory in CI environments
-    set makeEmpty [expr {![llength [glob -type f -directory ~ *]]}]
+    set makeEmpty [expr {![llength [glob -nocomplain -type f -directory ~ *]]}]
     if {$makeEmpty} {
 	for {set i 1} {$i < 1000} {incr i} {
 	    # Technically a race condition...
