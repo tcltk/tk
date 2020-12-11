@@ -547,7 +547,7 @@ CreateFrame(
     className = colormapName = screenName = visualName = useOption = NULL;
     colormap = None;
     for (i = 2; i < objc; i += 2) {
-	arg = TkGetStringFromObj(objv[i], &length);
+	arg = Tcl_GetStringFromObj(objv[i], &length);
 	if (length < 2) {
 	    continue;
 	}
@@ -820,7 +820,7 @@ FrameWidgetObjCmd(
 	     */
 
 	    for (i = 2; i < objc; i++) {
-		const char *arg = TkGetStringFromObj(objv[i], &length);
+		const char *arg = Tcl_GetStringFromObj(objv[i], &length);
 
 		if (length < 2) {
 		    continue;

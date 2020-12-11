@@ -454,7 +454,7 @@ Tk_ClipboardObjCmd(
 	TkSizeT length;
 
 	for (i = 2; i < objc - 1; i++) {
-	    string = TkGetStringFromObj(objv[i], &length);
+	    string = Tcl_GetStringFromObj(objv[i], &length);
 	    if (string[0] != '-') {
 		break;
 	    }

@@ -838,7 +838,7 @@ static void TextElementSize(
     if (!InitElementData(elementData, tkwin, 0))
 	return;
 
-    src = TkGetStringFromObj(element->textObj, &len);
+    src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
@@ -877,7 +877,7 @@ static void TextElementDraw(
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    src = TkGetStringFromObj(element->textObj, &len);
+    src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
@@ -1142,7 +1142,7 @@ Ttk_CreateVsapiElement(
     if (Tcl_GetIntFromObj(interp, objv[1], &partId) != TCL_OK) {
 	return TCL_ERROR;
     }
-    name = TkGetStringFromObj(objv[0], &length);
+    name = Tcl_GetStringFromObj(objv[0], &length);
     Tcl_DStringInit(&classBuf);
     className = Tcl_UtfToWCharDString(name, length, &classBuf);
 

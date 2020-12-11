@@ -6182,7 +6182,7 @@ TkTextYviewCmd(
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
 	const char *switchStr =
-		TkGetStringFromObj(objv[2], &switchLength);
+		Tcl_GetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
 		(unsigned) switchLength) == 0)) {

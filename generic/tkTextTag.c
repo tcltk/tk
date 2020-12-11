@@ -1111,7 +1111,7 @@ FindTag(
     TkSizeT len;
     const char *str;
 
-    str = TkGetStringFromObj(tagName, &len);
+    str = Tcl_GetStringFromObj(tagName, &len);
     if (len == 3 && !strcmp(str, "sel")) {
 	return textPtr->selTagPtr;
     }

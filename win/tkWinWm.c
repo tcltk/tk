@@ -2809,7 +2809,7 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
 
-    argv1 = TkGetStringFromObj(objv[1], &length);
+    argv1 = Tcl_GetStringFromObj(objv[1], &length);
     if ((argv1[0] == 't') && !strncmp(argv1, "tracing", length)
 	    && (length >= 3)) {
 	int wmTracing;
@@ -3074,7 +3074,7 @@ WmAttributesCmd(
 	return TCL_OK;
     }
     for (i = 3; i < objc; i += 2) {
-	string = TkGetStringFromObj(objv[i], &length);
+	string = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length < 2) || (string[0] != '-')) {
 	    goto configArgs;
 	}
@@ -3142,7 +3142,7 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    const char *crefstr = TkGetStringFromObj(objv[i+1], &length);
+		    const char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
 
 		    if (length == 0) {
 			/* reset to no transparent color */
@@ -3335,7 +3335,7 @@ WmClientCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = TkGetStringFromObj(objv[3], &length);
+    argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
 	    ckfree(wmPtr->clientMachine);
@@ -3945,7 +3945,7 @@ WmGroupCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = TkGetStringFromObj(objv[3], &length);
+    argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (*argv3 == '\0') {
 	wmPtr->hints.flags &= ~WindowGroupHint;
 	if (wmPtr->leaderName != NULL) {
@@ -4272,7 +4272,7 @@ WmIconnameCmd(
 	if (wmPtr->iconName != NULL) {
 	    ckfree(wmPtr->iconName);
 	}
-	argv3 = TkGetStringFromObj(objv[3], &length);
+	argv3 = Tcl_GetStringFromObj(objv[3], &length);
 	wmPtr->iconName = (char *)ckalloc(length + 1);
 	memcpy(wmPtr->iconName, argv3, length + 1);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -5031,7 +5031,7 @@ WmProtocolCmd(
 	    break;
 	}
     }
-    cmd = TkGetStringFromObj(objv[4], &cmdLength);
+    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
 	protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
@@ -5507,7 +5507,7 @@ WmTitleCmd(
 	if (wmPtr->title != NULL) {
 	    ckfree(wmPtr->title);
 	}
-	argv3 = TkGetStringFromObj(objv[3], &length);
+	argv3 = Tcl_GetStringFromObj(objv[3], &length);
 	wmPtr->title = (char *)ckalloc(length + 1);
 	memcpy(wmPtr->title, argv3, length + 1);
 
