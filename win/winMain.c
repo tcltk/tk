@@ -30,17 +30,25 @@ int _CRT_glob = 0;
 extern "C" {
 #endif
 extern Tcl_PackageInitProc Tktest_Init;
-#ifdef __cplusplus
-}
-#endif
 #endif /* TK_TEST */
 
-#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
+#if !defined(TCL_USE_STATIC_PACKAGES)
+#   if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 6
+#	define TCL_USE_STATIC_PACKAGES 1
+#   else
+#	define TCL_USE_STATIC_PACKAGES 0
+#   endif
+#endif
+
+#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
 extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #ifdef TCL_BROKEN_MAINARGS
 static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
@@ -61,7 +69,11 @@ static BOOL consoleRequired = TRUE;
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
 #ifndef MODULE_SCOPE
-#   define MODULE_SCOPE extern
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
@@ -208,7 +220,7 @@ Tcl_AppInit(
 	    return TCL_ERROR;
 	}
     }
-#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES) && TCL_USE_STATIC_PACKAGES
+#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }

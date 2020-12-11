@@ -4,8 +4,8 @@
  *	This file contains declarations for icon-manipulation routines
  *      in Windows.
  *
- * Copyright (c) 1995-1996 Microsoft Corp.
- * Copyright (c) 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
+ * Copyright © 1995-1996 Microsoft Corp.
+ * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

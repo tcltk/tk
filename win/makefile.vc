@@ -319,7 +319,6 @@ PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
 		 /DHAVE_STRINGS_H=1 \
-		 /DSUPPORT_CONFIG_EMBEDDED \
 !if $(HAVE_UXTHEME_H)
 		 /DHAVE_UXTHEME_H=1 \
 !endif
@@ -670,10 +669,11 @@ install-binaries:
 if {[catch {package present Tcl 8.6-}]} { return }
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll] Tk]
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
 } else {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk]
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }
+package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"
 !endif

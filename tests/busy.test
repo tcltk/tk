@@ -4,7 +4,7 @@
 # commands. Sourcing this file runs the tests and generates output for errors.
 # No output means no errors were found.
 #
-# Copyright © 1998-2000 by Jos Decoster. All rights reserved.
+# Copyright © 1998-2000 Jos Decoster. All rights reserved.
 
 package require tcltest 2.2
 tcltest::configure {*}$argv

@@ -145,7 +145,7 @@ fi
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
         Different --prefix selected for Tk and Tcl!
-        [[package require Tk]] may not work correctly in tclsh.])
+        [[package require tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------

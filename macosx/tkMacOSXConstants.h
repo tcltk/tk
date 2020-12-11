@@ -6,7 +6,7 @@
  *      operating system.  (Each new OS release seems to come with a new
  *      naming convention for the same old constants.)
  *
- * Copyright (c) 2017 Marc Culler
+ * Copyright © 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.

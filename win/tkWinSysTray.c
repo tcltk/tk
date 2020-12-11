@@ -5,11 +5,11 @@
  * 	change the system tray/taskbar icon of a Tk toplevel window and
  * 	a "sysnotify" command to post system notifications.
  *
- * Copyright (c) 1995-1996 Microsoft Corp.
- * Copyright (c) 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
- * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2020 Eric Boudaillier.
- * Copyright (c) 2020 Francois Vogel.
+ * Copyright © 1995-1996 Microsoft Corp.
+ * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
+ * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2020 Eric Boudaillier.
+ * Copyright © 2020 Francois Vogel.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -677,7 +677,7 @@ TaskbarEval(
         int result;
         HWND hwnd = NULL;
 
-        /* See http://support.microsoft.com/kb/q135788/ 
+        /* See http://support.microsoft.com/kb/q135788/
          * Seems to have moved to https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/135788 */
         if (fixup) {
             if (icoPtr->hwndFocus != NULL && IsWindow(icoPtr->hwndFocus)) {
@@ -696,7 +696,7 @@ TaskbarEval(
         result = Tcl_GlobalEval(icoPtr->interp, expanded);
 
         if (hwnd != NULL) {
-            /* See http://support.microsoft.com/kb/q135788/ 
+            /* See http://support.microsoft.com/kb/q135788/
              * Seems to have moved to https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/135788 */
             PostMessageW(hwnd, WM_NULL, 0, 0);
         }

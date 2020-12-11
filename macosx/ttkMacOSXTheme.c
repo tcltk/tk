@@ -3,12 +3,12 @@
  *
  *      Tk theme engine for Mac OSX, using the Appearance Manager API.
  *
- * Copyright (c) 2004 Joe English
- * Copyright (c) 2005 Neil Madden
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
- * Copyright 2009 Kevin Walzer/WordTech Communications LLC.
- * Copyright 2019 Marc Culler
+ * Copyright © 2004 Joe English
+ * Copyright © 2005 Neil Madden
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
+ * Copyright © 2009 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1872,19 +1872,24 @@ static Ttk_ElementSpec EntryElementSpec = {
  *      1 pixel to account for the fact that the button is not centered.
  */
 
-static Ttk_Padding ComboboxPadding = {4, 2, 20, 2};
+static Ttk_Padding ComboboxPadding = {4, 4, 20, 4};
+static Ttk_Padding DarkComboboxPadding = {6, 6, 22, 6};
 
 static void ComboboxElementSize(
     TCL_UNUSED(void *),
     TCL_UNUSED(void *),
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
     *minWidth = 24;
     *minHeight = 23;
-    *paddingPtr = ComboboxPadding;
+    if (TkMacOSXInDarkMode(tkwin)) {
+	*paddingPtr = DarkComboboxPadding;
+    } else {
+	*paddingPtr = ComboboxPadding;
+    }
 }
 
 static void ComboboxElementDraw(
@@ -1905,19 +1910,24 @@ static void ComboboxElementDraw(
     };
 
     BEGIN_DRAWING(d)
-    bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
-	bounds.size.height += 1;
-	DrawDarkButton(bounds, info.kind, state, dc.context);
-    } else if ([NSApp macOSVersion] > 100800) {
-	if ((state & TTK_STATE_BACKGROUND) &&
-	    !(state & TTK_STATE_DISABLED)) {
-	    NSColor *background = [NSColor textBackgroundColor];
-	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
-	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
+	bounds = CGRectInset(bounds, 3, 3);
+	if (state & TTK_STATE_FOCUS) {
+	    DrawDarkFocusRing(bounds, dc.context);
 	}
+	DrawDarkButton(bounds, info.kind, state, dc.context);
+    } else {
+	if ([NSApp macOSVersion] > 100800) {
+	    if ((state & TTK_STATE_BACKGROUND) &&
+		!(state & TTK_STATE_DISABLED)) {
+		NSColor *background = [NSColor textBackgroundColor];
+		CGRect innerBounds = CGRectInset(bounds, 1, 4);
+		bounds.origin.y += 1;
+		SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
+	    }
+	}
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
 

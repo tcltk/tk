@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 .TH keysyms n 8.3 Tk "Tk Built-In Commands"
@@ -119,101 +119,103 @@ braceleft                          123     0x7B
 braceright                         125     0x7D
 ~ (asciitilde)                     126     0x7E
 nobreakspace                       160     0xA0
-\[r!] (exclamdown)                     161     0xA1
-\[ct] (cent)                           162     0xA2
-\[Po] (sterling)                       163     0xA3
-\[Cs] (currency)                       164     0xA4
-\[Ye] (yen)                            165     0xA5
-\[bb] (brokenbar)                      166     0xA6
-\[sc] (section)                        167     0xA7
-\[ad] (diaeresis)                      168     0xA8
-\[co] (copyright)                      169     0xA9
-\[Of] (ordfeminine)                    170     0xAA
-\[Fo] (guillemotleft)                  171     0xAB
-\[no] (notsign)                        172     0xAC
+\(r! (exclamdown)                     161     0xA1
+\(ct (cent)                           162     0xA2
+\(Po (sterling)                       163     0xA3
+\(Cs (currency)                       164     0xA4
+\(Ye (yen)                            165     0xA5
+\(bb (brokenbar)                      166     0xA6
+\(sc (section)                        167     0xA7
+\(ad (diaeresis)                      168     0xA8
+\(co (copyright)                      169     0xA9
+\(Of (ordfeminine)                    170     0xAA
+\(Fo (guillemotleft)                  171     0xAB
+\(no (notsign)                        172     0xAC
 hyphen                             173     0xAD
-\[rg] (registered)                     174     0xAE
-\[a-] (macron)                         175     0xAF
-\[de] (degree)                         176     0xB0
-\[+-] (plusminus)                      177     0xB1
-[S2] (twosuperior)                    178     0xB2
-\[S3] (threesuperior)                  179     0xB3
-\[aa] (acute)                          180     0xB4
-\[mc] (mu)                             181     0xB5
-\[ps] (paragraph)                      182     0xB6
-\[pc] (periodcentered)                 183     0xB7
-\[ac] (cedilla)                        184     0xB8
-\[S1] (onesuperior)                    185     0xB9
-\[Om] (masculine)                      186     0xBA
-\[Fc] (guillemotright)                 187     0xBB
-\[14] (onequarter)                     188     0xBC
-\[12] (onehalf)                        189     0xBD
-\[34] (threequarters)                  190     0xBE
-\[r?] (questiondown)                   191     0xBF
-\[`A] (Agrave)                         192     0xC0
-\['A] (Aacute)                         193     0xC1
-\[^A] (Acircumflex)                    194     0xC2
-\[~A] (Atilde)                         195     0xC3
-\[:A] (Adiaeresis)                     196     0xC4
-\[oA] (Aring)                          197     0xC5
-\[AE] (AE)                             198     0xC6
-\[,C] (Ccedilla)                       199     0xC7
-\[`E] (Egrave)                         200     0xC8
-\['E] (Eacute)                         201     0xC9
-\[^E] (Ecircumflex)                    202     0xCA
-\[:E] (Ediaeresis)                     203     0xCB
-\[`I] (Igrave)                         204     0xCC
-\['I] (Iacute)                         205     0xCD
-\[^I] (Icircumflex)                    206     0xCE
-\[:I] (Idiaeresis)                     207     0xCF
-\[-D] (ETH)                            208     0xD0
-\[~N] (Ntilde)                         209     0xD1
-\[`O] (Ograve)                         210     0xD2
-\['O] (Oacute)                         211     0xD3
-\[^O] (Ocircumflex)                    212     0xD4
-\[~O] (Otilde)                         213     0xD5
-\[:O] (Odiaeresis)                     214     0xD6
-\[mu] (multiply)                       215     0xD7
-\[/O] (Oslash)                         216     0xD8
-\[`U] (Ugrave)                         217     0xD9
-\['U] (Uacute)                         218     0xDA
-\[^U] (Ucircumflex)                    219     0xDB
-\[:U] (Udiaeresis)                     220     0xDC
-\['Y] (Yacute)                         221     0xDD
-\[TP] (THORN)                          222     0xDE
-\[ss] (ssharp)                         223     0xDF
-\[`a] (agrave)                         224     0xE0
-\['a] (aacute)                         225     0xE1
-\[^a] (acircumflex)                    226     0xE2
-\[~a] (atilde)                         227     0xE3
-\[:a] (adiaeresis)                     228     0xE4
-\[oa] (aring)                          229     0xE5
-\[ae] (ae)                             230     0xE6
-\[,c] (ccedilla)                       231     0xE7
-\[`e] (egrave)                         232     0xE8
-\['e] (eacute)                         233     0xE9
-\[^e] (ecircumflex)                    234     0xEA
-\[:e] (ediaeresis)                     235     0xEB
-\[`i] (igrave)                         236     0xEC
-\['i] (iacute)                         237     0xED
-\[^i] (icircumflex)                    238     0xEE
-\[:i] (idiaeresis)                     239     0xEF
-\[Sd] (eth)                            240     0xF0
-\[~n] (ntilde)                         241     0xF1
-\[`o] (ograve)                         242     0xF2
-\['o] (oacute)                         243     0xF3
-\[^o] (ocircumflex)                    244     0xF4
-\[~o] (otilde)                         245     0xF5
-\[:o] (odiaeresis)                     246     0xF6
-\[di] (division)                       247     0xF7
-\[/o] (oslash)                         248     0xF8
-\[`u] (ugrave)                         249     0xF9
-\['u] (uacute)                         250     0xFA
-\[^u] (ucircumflex)                    251     0xFB
-\[:u] (udiaeresis)                     252     0xFC
-\['y] (yacute)                         253     0xFD
-\[Tp] (thorn)                          254     0xFE
-\[:y] (ydiaeresis)                     255     0xFF
+\(rg (registered)                     174     0xAE
+\(a- (macron)                         175     0xAF
+\(de (degree)                         176     0xB0
+\(+- (plusminus)                      177     0xB1
+\(S2 (twosuperior)                    178     0xB2
+\(S3 (threesuperior)                  179     0xB3
+\(aa (acute)                          180     0xB4
+\(mc (mu)                             181     0xB5
+\(ps (paragraph)                      182     0xB6
+\(pc (periodcentered)                 183     0xB7
+\(ac (cedilla)                        184     0xB8
+\(S1 (onesuperior)                    185     0xB9
+\(Om (masculine)                      186     0xBA
+\(Fc (guillemotright)                 187     0xBB
+\(14 (onequarter)                     188     0xBC
+\(12 (onehalf)                        189     0xBD
+\(34 (threequarters)                  190     0xBE
+\(r? (questiondown)                   191     0xBF
+\(`A (Agrave)                         192     0xC0
+\('A (Aacute)                         193     0xC1
+\(^A (Acircumflex)                    194     0xC2
+\(~A (Atilde)                         195     0xC3
+\(:A (Adiaeresis)                     196     0xC4
+\(oA (Aring)                          197     0xC5
+\(AE (AE)                             198     0xC6
+\(,C (Ccedilla)                       199     0xC7
+\(`E (Egrave)                         200     0xC8
+\('E (Eacute)                         201     0xC9
+\(^E (Ecircumflex)                    202     0xCA
+\(:E (Ediaeresis)                     203     0xCB
+\(`I (Igrave)                         204     0xCC
+\('I (Iacute)                         205     0xCD
+\(^I (Icircumflex)                    206     0xCE
+\(:I (Idiaeresis)                     207     0xCF
+\(-D (ETH)                            208     0xD0
+\(~N (Ntilde)                         209     0xD1
+\(`O (Ograve)                         210     0xD2
+\('O (Oacute)                         211     0xD3
+\(^O (Ocircumflex)                    212     0xD4
+\(~O (Otilde)                         213     0xD5
+\(:O (Odiaeresis)                     214     0xD6
+\(mu (multiply)                       215     0xD7
+\(/O (Oslash)                         216     0xD8
+\(`U (Ugrave)                         217     0xD9
+\('U (Uacute)                         218     0xDA
+\(^U (Ucircumflex)                    219     0xDB
+\(:U (Udiaeresis)                     220     0xDC
+\('Y (Yacute)                         221     0xDD
+\(TP (THORN)                          222     0xDE
+\(ss (ssharp)                         223     0xDF
+\(`a (agrave)                         224     0xE0
+\('a (aacute)                         225     0xE1
+\(^a (acircumflex)                    226     0xE2
+\(~a (atilde)                         227     0xE3
+\(:a (adiaeresis)                     228     0xE4
+\(oa (aring)                          229     0xE5
+\(ae (ae)                             230     0xE6
+\(,c (ccedilla)                       231     0xE7
+\(`e (egrave)                         232     0xE8
+\('e (eacute)                         233     0xE9
+\(^e (ecircumflex)                    234     0xEA
+\(:e (ediaeresis)                     235     0xEB
+\(`i (igrave)                         236     0xEC
+\('i (iacute)                         237     0xED
+\(^i (icircumflex)                    238     0xEE
+\(:i (idiaeresis)                     239     0xEF
+\(Sd (eth)                            240     0xF0
+\(~n (ntilde)                         241     0xF1
+\(`o (ograve)                         242     0xF2
+\('o (oacute)                         243     0xF3
+\(^o (ocircumflex)                    244     0xF4
+\(~o (otilde)                         245     0xF5
+\(:o (odiaeresis)                     246     0xF6
+\(di (division)                       247     0xF7
+\(/o (oslash)                         248     0xF8
+\(`u (ugrave)                         249     0xF9
+\('u (uacute)                         250     0xFA
+\(^u (ucircumflex)                    251     0xFB
+\(:u (udiaeresis)                     252     0xFC
+\('y (yacute)                         253     0xFD
+\(Tp (thorn)                          254     0xFE
+\(:y (ydiaeresis)                     255     0xFF
+.CE
+.CS
 Aogonek                            417     0x1A1
 breve                              418     0x1A2
 Lstroke                            419     0x1A3
@@ -223,8 +225,6 @@ Scaron                             425     0x1A9
 Scedilla                           426     0x1AA
 Tcaron                             427     0x1AB
 Zacute                             428     0x1AC
-.CE
-.CS
 Zcaron                             430     0x1AE
 Zabovedot                          431     0x1AF
 aogonek                            433     0x1B1
@@ -394,6 +394,8 @@ kana_WA                           1244     0x4DC
 kana_N                            1245     0x4DD
 voicedsound                       1246     0x4DE
 semivoicedsound                   1247     0x4DF
+.CE
+.CS
 Arabic_comma                      1452     0x5AC
 Arabic_semicolon                  1467     0x5BB
 Arabic_question_mark              1471     0x5BF
@@ -429,8 +431,6 @@ Arabic_qaf                        1506     0x5E2
 Arabic_kaf                        1507     0x5E3
 Arabic_lam                        1508     0x5E4
 Arabic_meem                       1509     0x5E5
-.CE
-.CS
 Arabic_noon                       1510     0x5E6
 Arabic_ha                         1511     0x5E7
 Arabic_waw                        1512     0x5E8
@@ -610,6 +610,8 @@ Greek_phi                         2038     0x7F6
 Greek_chi                         2039     0x7F7
 Greek_psi                         2040     0x7F8
 Greek_omega                       2041     0x7F9
+.CE
+.CS
 leftradical                       2209     0x8A1
 topleftradical                    2210     0x8A2
 horizconnector                    2211     0x8A3
@@ -633,8 +635,6 @@ botvertsummationconnector         2228     0x8B4
 toprightsummation                 2229     0x8B5
 botrightsummation                 2230     0x8B6
 rightmiddlesummation              2231     0x8B7
-.CE
-.CS
 lessthanequal                     2236     0x8BC
 notequal                          2237     0x8BD
 greaterthanequal                  2238     0x8BE
@@ -816,6 +816,8 @@ hebrew_qoph                       3319     0xCF7
 hebrew_resh                       3320     0xCF8
 hebrew_shin                       3321     0xCF9
 hebrew_taw                        3322     0xCFA
+.CE
+.CS
 Thai_kokai                        3489     0xDA1
 Thai_khokhai                      3490     0xDA2
 Thai_khokhuat                     3491     0xDA3
@@ -994,7 +996,9 @@ Korean_Won                        3839     0xEFF
 OE                                5052     0x13BC
 oe                                5053     0x13BD
 Ydiaeresis                        5054     0x13BE
-€ (EuroSign)                      8364     0x20AC
+\(eu (EuroSign)                      8364     0x20AC
+.CE
+.CS
 3270_Duplicate                   64769     0xFD01
 3270_FieldMark                   64770     0xFD02
 3270_Right2                      64771     0xFD03
@@ -1165,6 +1169,8 @@ Pointer_Accelerate               65274     0xFEFA
 Pointer_DfltBtnNext              65275     0xFEFB
 Pointer_DfltBtnPrev              65276     0xFEFC
 Pointer_Drag5                    65277     0xFEFD
+.CE
+.CS
 BackSpace                        65288     0xFF08
 Tab                              65289     0xFF09
 Linefeed                         65290     0xFF0A
@@ -1217,8 +1223,6 @@ End                              65367     0xFF57
 Begin                            65368     0xFF58
 Win_L                            65371     0xFF5B
 Win_R                            65372     0xFF5C
-.CE
-.CS
 App                              65373     0xFF5D
 Select                           65376     0xFF60
 Print                            65377     0xFF61
@@ -1328,6 +1332,8 @@ braille_dot_8                    65528     0xFFF8
 braille_dot_9                    65529     0xFFF9
 braille_dot_10                   65530     0xFFFA
 Delete                           65535     0xFFFF
+.CE
+.CS
 SunFA_Grave                  268828416     0x1005FF00
 SunFA_Circum                 268828417     0x1005FF01
 SunFA_Tilde                  268828418     0x1005FF02
