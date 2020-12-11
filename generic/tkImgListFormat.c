@@ -781,7 +781,7 @@ ParseColor(
      * Find out which color format we have
      */
 
-    specString = TkGetStringFromObj(specObj, &charCount);
+    specString = Tcl_GetStringFromObj(specObj, &charCount);
 
     if (charCount == 0) {
         /* Empty string */

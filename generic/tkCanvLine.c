@@ -1760,7 +1760,7 @@ GetLineIndex(
 	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(obj, &length);
+    string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == '@') {
 	int i;

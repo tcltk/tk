@@ -319,7 +319,7 @@ InitPNGImage(
 	Tcl_IncrRefCount(objPtr);
 	pngPtr->objDataPtr = objPtr;
 	pngPtr->strDataBuf =
-		TkGetByteArrayFromObj(objPtr, &pngPtr->strDataLen);
+		Tcl_GetByteArrayFromObj(objPtr, &pngPtr->strDataLen);
     }
 
     /*
@@ -1263,7 +1263,7 @@ ReadIHDR(
      */
 
     if (mismatch && pngPtr->strDataBuf) {
-	pngPtr->strDataBuf = TkGetByteArrayFromObj(pngPtr->objDataPtr,
+	pngPtr->strDataBuf = Tcl_GetByteArrayFromObj(pngPtr->objDataPtr,
 		&pngPtr->strDataLen);
 	pngPtr->base64Data = pngPtr->strDataBuf;
 
@@ -2146,12 +2146,12 @@ ReadIDAT(
 	 */
 
     getNextLine:
-	TkGetByteArrayFromObj(pngPtr->thisLineObj, &len1);
+	Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, &len1);
 	if (Tcl_ZlibStreamGet(pngPtr->stream, pngPtr->thisLineObj,
 		pngPtr->phaseSize - len1) == TCL_ERROR) {
 	    return TCL_ERROR;
 	}
-	TkGetByteArrayFromObj(pngPtr->thisLineObj, &len2);
+	Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, &len2);
 
 	if (len2 == (TkSizeT)pngPtr->phaseSize) {
 	    if (pngPtr->phase > 7) {
@@ -2775,7 +2775,7 @@ StringMatchPNG(
 
     InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
-    png.strDataBuf = TkGetByteArrayFromObj(pObjData, &png.strDataLen);
+    png.strDataBuf = Tcl_GetByteArrayFromObj(pObjData, &png.strDataLen);
 
     if (ReadIHDR(interp, &png) == TCL_OK) {
 	*widthPtr = png.block.width;
@@ -2877,7 +2877,7 @@ WriteData(
 	TkSizeT objSz;
 	unsigned char *destPtr;
 
-	TkGetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
+	Tcl_GetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
 
 	if (objSz + srcSz > INT_MAX) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3238,7 +3238,7 @@ WriteIDAT(
 
     outputObj = Tcl_NewObj();
     (void) Tcl_ZlibStreamGet(pngPtr->stream, outputObj, -1);
-    outputBytes = TkGetByteArrayFromObj(outputObj, &outputSize);
+    outputBytes = Tcl_GetByteArrayFromObj(outputObj, &outputSize);
     result = WriteChunk(interp, pngPtr, CHUNK_IDAT, outputBytes, outputSize);
     Tcl_DecrRefCount(outputObj);
     return result;
