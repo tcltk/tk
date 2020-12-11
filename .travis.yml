@@ -15,6 +15,7 @@ addons:
       - libx11-dev
       - libnotify-dev
       - libglib2.0-dev
+      - libxss-dev
       - xvfb
   homebrew:
     packages:

@@ -1,7 +1,7 @@
 # systray.tcl --
 #
 # This demonstration script showcases the tk systray and tk sysnotify commands.
-# 
+#
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

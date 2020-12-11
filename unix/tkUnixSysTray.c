@@ -5,8 +5,8 @@
  * 	change the system tray/taskbar icon of a Tk toplevel window and
  * 	to post system notifications.
  *
- * Copyright (c) 2005 Anton Kovalenko.
- * Copyright (c) 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2005 Anton Kovalenko.
+ * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1168,7 +1168,7 @@ TrayIconEvent(
 	}
 	RetargetEvent(icon,ev);
 	break;
- 
+
     case MotionNotify:  /* fall through */
     case ButtonPress:   /* fall through */
     case ButtonRelease: /* fall through */

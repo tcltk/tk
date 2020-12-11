@@ -4,7 +4,7 @@
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
-# Copyright © 1998-1999 by Scriptics Corporation.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -2224,7 +2224,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind all <Key> $savedBind(All)
     unset savedBind
 } -result {0 1 2}
-test bind-16.47 {ExpandPercents procedure} -constraints aquaOrWin32 -setup {
+test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
