@@ -262,6 +262,7 @@ TK_OBJS = \
 	tkWinDraw.$(OBJEXT) \
 	tkWinEmbed.$(OBJEXT) \
 	tkWinFont.$(OBJEXT) \
+	tkWinIco.$(OBJEXT) \
 	tkWinImage.$(OBJEXT) \
 	tkWinInit.$(OBJEXT) \
 	tkWinKey.$(OBJEXT) \
@@ -272,6 +273,7 @@ TK_OBJS = \
 	tkWinScrlbr.$(OBJEXT) \
 	tkWinSend.$(OBJEXT) \
 	tkWinSendCom.$(OBJEXT) \
+	tkWinSysTray.$(OBJEXT) \
 	tkWinWindow.$(OBJEXT) \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \

@@ -1,4 +1,4 @@
-#! /bin/bash -norc
+! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
@@ -339,7 +339,10 @@ fi
 
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework Security"
+    if test -d /System/Library/Frameworks/UserNotifications.framework; then
+        LIBS="$LIBS -framework UserNotifications"
+    fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
@@ -517,6 +520,55 @@ if test $tk_aqua = no; then
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
     AC_SUBST(UNIX_FONT_OBJS)
+fi
+
+#--------------------------------------------------------------------
+#	Check for libnotify.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = "no" ; then
+    AC_MSG_CHECKING([whether to use libnotify])
+    AC_ARG_ENABLE(libnotify,
+	AC_HELP_STRING([--enable-libnotify],
+	    [use libnotify (default: on)]),
+	[enable_libnotify=$enableval], [enable_libfnotify="default"])
+    LIBNOTIFY_CFLAGS=""
+    LIBNOTIFY_LIBS=""
+    GLIB_CFLAGS=""
+    GLIB_LIBS=""
+    if test "$enable_libnotify" = "no" ; then
+	AC_MSG_RESULT([$enable_libnotify])
+    else
+	found_libnotify="yes"
+	dnl make sure pkg-config says that libnotify is present.
+	LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	if test "$found_libnotify" = "no" ; then
+	    found_libnotify="yes"
+	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	fi
+	AC_MSG_RESULT([$found_libnotify])
+    fi
+    if test "$found_libnotify" = "yes" ; then
+	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $LIBNOTIFY_LIBS $GLIB_LIBS"
+	AC_DEFINE(HAVE_LIBNOTIFY, 1, [Have we turned on libnotify?])
+    else
+	UNIX_LIBNOTIFY_OBJS=""
+    fi
+    AC_SUBST(GLIB_CFLAGS)
+    AC_SUBST(GLIB_LIBS)
+    AC_SUBST(LIBNOTIFY_CFLAGS)
+    AC_SUBST(LIBNOTIFY_LIBS)
+    AC_SUBST(UNIX_LIBNOTIFY_OBJS)
 fi
 
 #--------------------------------------------------------------------

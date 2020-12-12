@@ -421,6 +421,8 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
+#else
+    (void) tkwin;
 #endif
     return false;
 }

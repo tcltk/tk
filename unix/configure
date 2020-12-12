@@ -663,6 +663,11 @@ TK_MAJOR_VERSION
 TK_VERSION
 TK_DEMO_DIR
 DEMO_DIR
+UNIX_LIBNOTIFY_OBJS
+LIBNOTIFY_LIBS
+LIBNOTIFY_CFLAGS
+GLIB_LIBS
+GLIB_CFLAGS
 UNIX_FONT_OBJS
 XFT_LIBS
 XFT_CFLAGS
@@ -778,6 +783,7 @@ enable_symbols
 enable_aqua
 with_x
 enable_xft
+enable_libnotify
 enable_xss
 enable_framework
 '
@@ -1421,6 +1427,7 @@ Optional Features:
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
   --enable-xft            use freetype/fontconfig/xft (default: on)
+  --enable-libnotify      use libnotify (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
@@ -7158,7 +7165,10 @@ if test $tk_aqua = yes; then
 
 $as_echo "#define MAC_OSX_TK 1" >>confdefs.h
 
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework Security"
+    if test -d /System/Library/Frameworks/UserNotifications.framework; then
+        LIBS="$LIBS -framework UserNotifications"
+    fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
@@ -7802,6 +7812,62 @@ $as_echo "#define HAVE_XFT 1" >>confdefs.h
     else
 	UNIX_FONT_OBJS=tkUnixFont.o
     fi
+
+
+
+fi
+
+#--------------------------------------------------------------------
+#	Check for libnotify.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use libnotify" >&5
+$as_echo_n "checking whether to use libnotify... " >&6; }
+    # Check whether --enable-libnotify was given.
+if test "${enable_libnotify+set}" = set; then :
+  enableval=$enable_libnotify; enable_libnotify=$enableval
+else
+  enable_libfnotify="default"
+fi
+
+    LIBNOTIFY_CFLAGS=""
+    LIBNOTIFY_LIBS=""
+    GLIB_CFLAGS=""
+    GLIB_LIBS=""
+    if test "$enable_libnotify" = "no" ; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_libnotify" >&5
+$as_echo "$enable_libnotify" >&6; }
+    else
+	found_libnotify="yes"
+		LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	if test "$found_libnotify" = "no" ; then
+	    found_libnotify="yes"
+	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	fi
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $found_libnotify" >&5
+$as_echo "$found_libnotify" >&6; }
+    fi
+    if test "$found_libnotify" = "yes" ; then
+	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $LIBNOTIFY_LIBS $GLIB_LIBS"
+
+$as_echo "#define HAVE_LIBNOTIFY 1" >>confdefs.h
+
+    else
+	UNIX_LIBNOTIFY_OBJS=""
+    fi
+
+
 
 
 

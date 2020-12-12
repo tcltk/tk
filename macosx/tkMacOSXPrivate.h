@@ -25,7 +25,9 @@
 #endif
 
 #define TextStyle MacTextStyle
+#define Cursor QDCursor
 #import <ApplicationServices/ApplicationServices.h>
+#undef Cursor
 #import <Cocoa/Cocoa.h>
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
@@ -294,6 +296,8 @@ MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
+MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
+
 
 #pragma mark Private Objective-C Classes
 
@@ -332,6 +336,7 @@ VISIBILITY_HIDDEN
     int _macOSVersion;  /* 10000 * major + 100*minor */
     Bool _isDrawing;
     Bool _needsToDraw;
+    Bool _isSigned;
 #endif
 
 }
@@ -339,6 +344,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool isDrawing;
 @property Bool needsToDraw;
+@property Bool isSigned;
 
 @end
 @interface TKApplication(TKInit)

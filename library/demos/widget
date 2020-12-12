@@ -387,6 +387,8 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
+    @@new
+    @@demo systray      System tray icon and notification
 
     @@subtitle	Animation
     @@demo anilabel	Animated labels
