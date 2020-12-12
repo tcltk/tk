@@ -5925,7 +5925,14 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -6004,6 +6011,13 @@ WmWinAppearance(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
     static const char *const appearanceStrings[] = {
 	"aqua", "darkaqua", "auto", NULL

@@ -505,6 +505,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
+	SourceLibFile systray
 	SourceLibFile text
     }
 }

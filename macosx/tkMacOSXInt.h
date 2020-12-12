@@ -24,7 +24,9 @@
 
 #ifndef _TKMAC
 #include "tkMacOSX.h"
+#define Cursor QDCursor
 #import <Cocoa/Cocoa.h>
+#undef Cursor
 #endif
 
 /*

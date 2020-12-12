@@ -41,6 +41,8 @@ TkpInit(
 {
     TkCreateXEventSource();
     GetLibraryPath(interp);
+    Tktray_Init(interp);
+    (void)SysNotify_Init (interp);
     return TCL_OK;
 }
 

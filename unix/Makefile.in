@@ -297,6 +297,13 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
+# support for libnotify
+GLIB_CFLAGS	        = @GLIB_CFLAGS@
+GLIB_LIBS		= @GLIB_LIBS@
+LIBNOTIFY_CFLAGS	= @LIBNOTIFY_CFLAGS@
+LIBNOTIFY_LIBS		= @LIBNOTIFY_LIBS@
+
+
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
 # Makefile is generated from Makefile.in.  You shouldn't normally
@@ -392,7 +399,7 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
-	tkUnixSend.o tkUnixWm.o tkUnixXId.o
+	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
 
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -403,7 +410,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
 	tkMacOSXServices.o tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
-	tkMacOSXWm.o tkMacOSXXStubs.o \
+	tkMacOSXWm.o tkMacOSXXStubs.o tkMacOSXSysTray.o\
 	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
 	xcolors.o xdraw.o xgc.o ximage.o xutil.o \
 	ttkMacOSXTheme.o
@@ -513,9 +520,9 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
-	$(UNIX_DIR)/tkUnixSelect.c \
-	$(UNIX_DIR)/tkUnixSend.c $(UNIX_DIR)/tkUnixWm.c \
-	$(UNIX_DIR)/tkUnixXId.c
+	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
+	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
+	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXBitmap.c $(MAC_OSX_DIR)/tkMacOSXButton.c \
@@ -532,7 +539,7 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
 	$(MAC_OSX_DIR)/tkMacOSXMouseEvent.c $(MAC_OSX_DIR)/tkMacOSXNotify.c \
 	$(MAC_OSX_DIR)/tkMacOSXRegion.c $(MAC_OSX_DIR)/tkMacOSXScrlbr.c \
-	$(MAC_OSX_DIR)/tkMacOSXServices.c \
+	$(MAC_OSX_DIR)/tkMacOSXServices.c $(MAC_OSX_DIR)/tkMacOSXSysTray.c \
 	$(MAC_OSX_DIR)/tkMacOSXSend.c $(MAC_OSX_DIR)/tkMacOSXSubwindows.c \
 	$(MAC_OSX_DIR)/tkMacOSXTest.c $(MAC_OSX_DIR)/tkMacOSXWindowEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXWm.c $(MAC_OSX_DIR)/tkMacOSXXStubs.c \
@@ -1261,6 +1268,12 @@ tkUnixSelect.o: $(UNIX_DIR)/tkUnixSelect.c
 tkUnixSend.o: $(UNIX_DIR)/tkUnixSend.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSend.c
 
+tkUnixSysNotify.o: $(UNIX_DIR)/tkUnixSysNotify.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSysNotify.c
+
+tkUnixSysTray.o: $(UNIX_DIR)/tkUnixSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSysTray.c
+
 tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixWm.c
 
@@ -1366,6 +1379,9 @@ tkMacOSXWm.o: $(MAC_OSX_DIR)/tkMacOSXWm.c
 
 tkMacOSXXStubs.o: $(MAC_OSX_DIR)/tkMacOSXXStubs.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXXStubs.c
+
+tkMacOSXSysTray.o: $(MAC_OSX_DIR)/tkMacOSXSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSysTray.c
 
 tkFileFilter.o: $(GENERIC_DIR)/tkFileFilter.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkFileFilter.c
