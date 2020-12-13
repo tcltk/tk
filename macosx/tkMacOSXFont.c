@@ -127,7 +127,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     self = [self init];
     if (self) {
 	_string = [[NSString alloc] initWithString:aString];
-	self.UTF8String = _string.UTF8String;
+	_UTF8String = _string.UTF8String;
     }
     return self;
 }
@@ -148,10 +148,6 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 {
     return [_string characterAtIndex:index];
 }
-
-# ifndef __clang__
-@synthesize DString = _ds;
-#endif
 
 - (Tcl_DString)DString
 {
@@ -177,6 +173,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 
 #ifndef __clang__
 @synthesize UTF8String = _UTF8String;
+@synthesize DString = _ds;
 #endif
 @end
 
