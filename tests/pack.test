@@ -1551,7 +1551,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     pack info .pack.a
 } -returnCodes error -result {window ".pack.a" isn't packed}
 
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] ne "aqua"} {
     proc packUpdate {} {
 	update
     }
