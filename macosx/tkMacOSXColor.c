@@ -342,13 +342,14 @@ GetRGBA(
 	[color getComponents: rgba];
 #else
 	{
+	    OSStatus err = noErr;
 	    RGBColor rgb;
 	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32,
                     true, &rgb);
 	    if (err == noErr) {
-		rgba[0] = (CGFLoat) rgb.red / 65535;
-		rgba[1] = (CGFLoat) rgb.green / 65535;
-		rgba[2] = (CGFLoat) rgb.blue / 65535;
+		rgba[0] = (CGFloat) rgb.red / 65535;
+		rgba[1] = (CGFloat) rgb.green / 65535;
+		rgba[2] = (CGFloat) rgb.blue / 65535;
 	    }
 	}
 #endif
