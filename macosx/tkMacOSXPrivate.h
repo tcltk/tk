@@ -3,9 +3,9 @@
  *
  *	Macros and declarations that are purely internal & private to TkAqua.
  *
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2008-2009 Apple Inc.
- * Copyright (c) 2020 Marc Culler
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
+ * Copyright © 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,7 +25,9 @@
 #endif
 
 #define TextStyle MacTextStyle
+#define Cursor QDCursor
 #import <ApplicationServices/ApplicationServices.h>
+#undef Cursor
 #import <Cocoa/Cocoa.h>
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
@@ -270,7 +272,6 @@ MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
-MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
 MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
@@ -295,6 +296,8 @@ MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
+MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
+
 
 #pragma mark Private Objective-C Classes
 
@@ -333,6 +336,7 @@ VISIBILITY_HIDDEN
     int _macOSVersion;  /* 10000 * major + 100*minor */
     Bool _isDrawing;
     Bool _needsToDraw;
+    Bool _isSigned;
 #endif
 
 }
@@ -340,6 +344,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool isDrawing;
 @property Bool needsToDraw;
+@property Bool isSigned;
 
 @end
 @interface TKApplication(TKInit)
@@ -559,6 +564,7 @@ VISIBILITY_HIDDEN
 @private
     Tcl_DString _ds;
     NSString *_string;
+    const char *_UTF8String;
 }
 @property const char *UTF8String;
 @property (readonly) Tcl_DString DString;

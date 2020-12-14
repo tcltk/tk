@@ -3,8 +3,8 @@
  *
  *	This file implements the widget styles and themes support.
  *
- * Copyright (c) 2002 Frederic Bonnet
- * Copyright (c) 2003 Joe English
+ * Copyright © 2002 Frederic Bonnet
+ * Copyright © 2003 Joe English
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -95,7 +95,7 @@ Tcl_Obj *Ttk_StyleMap(Ttk_Style style, const char *optionName, Ttk_State state)
 
 /*
  * Ttk_StyleDefault --
- * 	Look up default resource setting the in the specified style.
+ * 	Look up default resource setting in the specified style.
  */
 Tcl_Obj *Ttk_StyleDefault(Ttk_Style style, const char *optionName)
 {
@@ -1262,10 +1262,10 @@ usage:
     styleName = Tcl_GetString(objv[2]);
     stylePtr = Ttk_GetStyle(theme, styleName);
 
-    if (objc == 3) {		/* style default $styleName */
+    if (objc == 3) {		/* style configure $styleName */
 	Tcl_SetObjResult(interp, HashTableToDict(&stylePtr->defaultsTable));
 	return TCL_OK;
-    } else if (objc == 4) {	/* style default $styleName -option */
+    } else if (objc == 4) {	/* style configure $styleName -option */
 	const char *optionName = Tcl_GetString(objv[3]);
 	Tcl_HashEntry *entryPtr =
 	    Tcl_FindHashEntry(&stylePtr->defaultsTable, optionName);
@@ -1315,9 +1315,7 @@ static int StyleLookupCmd(
     }
 
     style = Ttk_GetStyle(theme, Tcl_GetString(objv[2]));
-    if (!style) {
-	return TCL_ERROR;
-    }
+
     optionName = Tcl_GetString(objv[3]);
 
     if (objc >= 5) {
@@ -1612,6 +1610,31 @@ static int StyleLayoutCmd(
     return TCL_OK;
 }
 
+/* + style theme styles ?$theme? --
+ * 	Return list of styles available in $theme.
+ *      Use the current theme if $theme is omitted.
+ */
+static int StyleThemeStylesCmd(
+    TCL_UNUSED(ClientData), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Ttk_Theme themePtr;
+
+    if (objc < 3 || objc > 4) {
+        Tcl_WrongNumArgs(interp, 3, objv, "?theme?");
+        return TCL_ERROR;
+    }
+
+    if (objc == 3) {
+        themePtr = Ttk_GetCurrentTheme(interp);
+    } else {
+        themePtr = Ttk_GetTheme(interp, Tcl_GetString(objv[3]));
+    }
+    if (!themePtr)
+        return TCL_ERROR;
+
+    return TtkEnumerateHashTable(interp, &themePtr->styleTable);
+}
+
 /* + style theme use $theme --
  *  	Sets the current theme to $theme
  */
@@ -1651,6 +1674,7 @@ static const Ttk_Ensemble StyleThemeEnsemble[] = {
     { "create", StyleThemeCreateCmd, 0 },
     { "names", StyleThemeNamesCmd, 0 },
     { "settings", StyleThemeSettingsCmd, 0 },
+    { "styles", StyleThemeStylesCmd, 0 },
     { "use", StyleThemeUseCmd, 0 },
     { NULL, 0, 0 }
 };

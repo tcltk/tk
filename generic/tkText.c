@@ -6,10 +6,10 @@
  *	command interfaces to text widgets. The B-tree representation of text
  *	and its actual display are implemented elsewhere.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1999 by Scriptics Corporation.
- * Copyright (c) 2015-2018 Gregor Cramer
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 1999 Scriptics Corporation.
+ * Copyright © 2015-2018 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

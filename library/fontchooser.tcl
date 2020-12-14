@@ -2,8 +2,8 @@
 #
 #	A themeable Tk font selection dialog. See TIP #324.
 #
-# Copyright (C) 2008 Keith Vetter
-# Copyright (C) 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
+# Copyright © 2008 Keith Vetter
+# Copyright © 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -111,7 +111,7 @@ proc ::tk::fontchooser::Configure {args} {
 
     set cache [dict create -parent $S(-parent) -title $S(-title) \
                    -font $S(-font) -command $S(-command)]
-    set r [tclParseConfigSpec [namespace which -variable S] $specs "" $args]
+    set r [tclParseConfigSpec [namespace which -variable S] $specs DONTSETDEFAULTS $args]
     if {![winfo exists $S(-parent)]} {
 	set code [list TK LOOKUP WINDOW $S(-parent)]
         set err "bad window path name \"$S(-parent)\""

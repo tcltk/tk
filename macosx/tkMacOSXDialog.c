@@ -3,10 +3,10 @@
  *
  *	Contains the Mac implementation of the common dialog boxes.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Christian Gollwitzer.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Christian Gollwitzer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -23,7 +23,7 @@
 #define modalOK     NSModalResponseOK
 #define modalCancel NSModalResponseCancel
 #endif // MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-#define modalOther  -1
+#define modalOther  -1 // indicates that the -command option was used.
 #define modalError  -2
 
 /*
@@ -51,6 +51,10 @@ typedef struct {
     NSUInteger fileTypeIndex;		/* Index of currently selected
 					 * filter. */
 } filepanelFilterInfo;
+
+/*
+ * Only one of these is needed for the application, so they can be static.
+ */
 
 static filepanelFilterInfo filterInfo;
 static NSOpenPanel *openpanel;
@@ -250,13 +254,13 @@ getFileURL(
     } else if (returnCode == modalCancel) {
 	Tcl_ResetResult(callbackInfo->interp);
     }
-    if (panel == [NSApp modalWindow]) {
-	[NSApp stopModalWithCode:returnCode];
-    }
     if (callbackInfo->cmdObj) {
 	Tcl_DecrRefCount(callbackInfo->cmdObj);
+    }
+    if (callbackInfo) {
 	ckfree(callbackInfo);
     }
+    [NSApp stopModalWithCode:returnCode];
 }
 
 - (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
@@ -346,26 +350,52 @@ static NSInteger showOpenSavePanel(
     NSWindow *parent,
     FilePanelCallbackInfo *callbackInfo)
 {
-    __block NSInteger modalReturnCode = modalOther;
+    NSInteger modalReturnCode;
 
     if (parent && ![parent attachedSheet]) {
 	[panel beginSheetModalForWindow:parent
-		      completionHandler:^(NSModalResponse result) {
-		[NSApp tkFilePanelDidEnd:panel
-			      returnCode:result
-			     contextInfo:callbackInfo ];
-		modalReturnCode = result;
+	       completionHandler:^(NSModalResponse returnCode) {
+	    [NSApp tkFilePanelDidEnd:panel
+		       returnCode:returnCode
+		       contextInfo:callbackInfo ];
 	    }];
+
+	/*
+	 * The sheet has been prepared, so now we have to run it as a modal
+	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or later
+	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
+	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
+	 * completion handler to run when the panel is closed.
+	 */
+
+	if ([NSApp macOSVersion] > 101400) {
+	    modalReturnCode = [panel runModal];
+	} else {
+	    modalReturnCode = [NSApp runModalForWindow:panel];
+	}
     } else {
-	[panel beginWithCompletionHandler:^(NSModalResponse result) {
-		[NSApp tkFilePanelDidEnd:panel
-			      returnCode:result
-			     contextInfo:callbackInfo ];
-		modalReturnCode = result;
+
+	/*
+	 * For the standalone file dialog, completion handlers do not work
+	 * at all on macOS 10.14 and earlier.
+	 */
+
+	if ([NSApp macOSVersion] > 101400) {
+	    [panel beginWithCompletionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+			          returnCode:returnCode
+			         contextInfo:callbackInfo ];
 	    }];
+	    modalReturnCode = [panel runModal];
+	} else {
+	    modalReturnCode = [panel runModal];
+	    [NSApp tkFilePanelDidEnd:panel
+		   	  returnCode:modalReturnCode
+		         contextInfo:callbackInfo ];
+	    [panel close];
+	}
     }
-    [panel runModal];
-    return modalReturnCode;
+    return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
 
 /*
@@ -1285,64 +1315,9 @@ Tk_ChooseDirectoryObjCmd(
 void
 TkAboutDlg(void)
 {
-    NSImage *image;
-    NSString *path = [NSApp tkFrameworkImagePath: @"Tk.tiff"];
-
-    if (path) {
-	image = [[[NSImage alloc] initWithContentsOfFile:path] autorelease];
-    } else {
-	image = [NSApp applicationIconImage];
-    }
-
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-
-    [dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
-    [dateFormatter setDateFormat:@"Y"];
-
-    NSString *year = [dateFormatter stringFromDate:[NSDate date]];
-
-    [dateFormatter release];
-
-    /*
-     * This replaces the old about dialog with a standard alert that displays
-     * correctly on 10.14.
-     */
-
-    NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
-    NSString *url = @"www.tcl-lang.org";
-    NSTextView *credits = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,300,300)];
-    NSFont *font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
-    NSDictionary *textAttributes = [NSDictionary dictionaryWithObject:font
-					        forKey:NSFontAttributeName];
-
-    [credits insertText: [[NSAttributedString alloc]
-		 initWithString:[NSString stringWithFormat: @"\n"
-		"Tcl and Tk are distributed under a modified BSD license: "
-		"www.tcl.tk/software/tcltk/license.html\n\n"
-		"%1$C 1987-%2$@ Tcl Core Team and Contributers.\n\n"
-		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC.\n\n"
-		"%1$C 2014-%2$@ Marc Culler.\n\n"
-		"%1$C 2002-2012 Daniel A. Steffen.\n\n"
-		"%1$C 2001-2009 Apple Inc.\n\n"
-		"%1$C 2001-2002 Jim Ingham & Ian Reid\n\n"
-		"%1$C 1998-2000 Jim Ingham & Ray Johnson\n\n"
-		"%1$C 1998-2000 Scriptics Inc.\n\n"
-		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year]
-	    attributes:textAttributes]
-            replacementRange:NSMakeRange(0,0)];
-    [credits setDrawsBackground:NO];
-    [credits setEditable:NO];
-
-    NSAlert *about = [[NSAlert alloc] init];
-
-    [[about window] setTitle:@"About Tcl & Tk"];
-    [about setMessageText: version];
-    [about setInformativeText:url];
-    about.accessoryView = credits;
-    [about runModal];
-    [about release];
+    [NSApp orderFrontStandardAboutPanel:nil];
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1370,7 +1345,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    TkAboutDlg();
+    [NSApp orderFrontStandardAboutPanel:nil];
     return TCL_OK;
 }
 

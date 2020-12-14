@@ -454,23 +454,16 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_Transpose>>		<Control-t>
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
-	<<Console_FontSizeIncr>>	<Control-plus>
+	<<Console_FontSizeIncr>>	<Control-+>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeDecr>>	<Command-minus>
     } {
 	event add $ev $key
 	bind Console $key {}
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	foreach {ev key} {
-	    <<Console_FontSizeIncr>>	<Command-plus>
-	    <<Console_FontSizeDecr>>	<Command-minus>
-	} {
-	    event add $ev $key
-	    bind Console $key {}
-	}
-	if {$::tk::console::useFontchooser} {
-	    bind Console <Command-t> [list ::tk::console::FontchooserToggle]
-	}
+    if {$::tk::console::useFontchooser} {
+	bind Console <Command-t> [list ::tk::console::FontchooserToggle]
     }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {
@@ -594,10 +587,8 @@ proc ::tk::ConsoleBind {w} {
 	eval destroy [winfo child .]
 	source -encoding utf-8 [file join $tk_library console.tcl]
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	bind Console <Command-q> {
-	    exit
-	}
+    bind Console <Command-q> {
+	exit
     }
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }

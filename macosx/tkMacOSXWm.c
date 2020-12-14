@@ -5,11 +5,11 @@
  *	application and the window manager. Among other things, it implements
  *	the "wm" command and passes geometry information to the window manager.
  *
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017-2019 Marc Culler.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1803,7 +1803,7 @@ WmColormapwindowsCmd(
     wmPtr->cmapCount = windowObjc;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 
@@ -2868,9 +2868,9 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
-    TkWindow *winPtr,           /* Toplevel or Frame to work with */
-    Tcl_Interp *interp,		/* Current interpreter. */
+    TCL_UNUSED(Tk_Window),	        /* Main window of the application. */
+    TkWindow *winPtr,           	/* Toplevel or Frame to work with */
+    Tcl_Interp *interp,			/* Current interpreter. */
     TCL_UNUSED(int),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
@@ -2888,6 +2888,18 @@ WmManageCmd(
 	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", NULL);
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * Draw the managed widget at the top left corner of its toplevel.
+	 * See [4a40c6cace].
+	 */
+
+	if (macWin) {
+	    winPtr->changes.x -= macWin->xOff;
+	    winPtr->changes.y -= macWin->yOff;
+	    XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+	}
+
 	TkFocusSplit(winPtr);
 	Tk_UnmapWindow(frameWin);
 	if (wmPtr == NULL) {
@@ -5184,7 +5196,7 @@ TkWmAddToColormapWindows(
     topPtr->wmInfoPtr->cmapCount = count+1;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 }
@@ -5913,7 +5925,14 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -5992,6 +6011,13 @@ WmWinAppearance(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
     static const char *const appearanceStrings[] = {
 	"aqua", "darkaqua", "auto", NULL
@@ -6862,7 +6888,7 @@ ApplyWindowAttributeFlagChanges(
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
 
-		    if (@available(macOS 10.11, *)) {
+		    if ([NSApp macOSVersion] >= 101100) {
 			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
 		    }

@@ -1,4 +1,4 @@
-#! /bin/bash -norc
+! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
@@ -145,7 +145,7 @@ fi
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
         Different --prefix selected for Tk and Tcl!
-        [[package require Tk]] may not work correctly in tclsh.])
+        [[package require tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------
@@ -339,7 +339,10 @@ fi
 
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework Security"
+    if test -d /System/Library/Frameworks/UserNotifications.framework; then
+        LIBS="$LIBS -framework UserNotifications"
+    fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
@@ -520,6 +523,55 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
+#	Check for libnotify.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = "no" ; then
+    AC_MSG_CHECKING([whether to use libnotify])
+    AC_ARG_ENABLE(libnotify,
+	AC_HELP_STRING([--enable-libnotify],
+	    [use libnotify (default: on)]),
+	[enable_libnotify=$enableval], [enable_libfnotify="default"])
+    LIBNOTIFY_CFLAGS=""
+    LIBNOTIFY_LIBS=""
+    GLIB_CFLAGS=""
+    GLIB_LIBS=""
+    if test "$enable_libnotify" = "no" ; then
+	AC_MSG_RESULT([$enable_libnotify])
+    else
+	found_libnotify="yes"
+	dnl make sure pkg-config says that libnotify is present.
+	LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	if test "$found_libnotify" = "no" ; then
+	    found_libnotify="yes"
+	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	fi
+	AC_MSG_RESULT([$found_libnotify])
+    fi
+    if test "$found_libnotify" = "yes" ; then
+	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $LIBNOTIFY_LIBS $GLIB_LIBS"
+	AC_DEFINE(HAVE_LIBNOTIFY, 1, [Have we turned on libnotify?])
+    else
+	UNIX_LIBNOTIFY_OBJS=""
+    fi
+    AC_SUBST(GLIB_CFLAGS)
+    AC_SUBST(GLIB_LIBS)
+    AC_SUBST(LIBNOTIFY_CFLAGS)
+    AC_SUBST(LIBNOTIFY_LIBS)
+    AC_SUBST(UNIX_LIBNOTIFY_OBJS)
+fi
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
@@ -617,8 +669,9 @@ if test "`uname -s`" = "Darwin" ; then
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
+    EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
-    AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in])
+    AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
 fi
@@ -655,6 +708,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
     EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
@@ -664,6 +718,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA_DIR) "$(BIN_INSTALL_DIR)/../Resources"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
+	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
     # Don't use AC_DEFINE for the following as the framework version define

@@ -3655,14 +3655,6 @@ else
   tcl_ok=yes
 fi
 
-
-    if test "${enable_shared+set}" = set; then
-	enableval="$enable_shared"
-	tcl_ok=$enableval
-    else
-	tcl_ok=yes
-    fi
-
     if test "$tcl_ok" = "yes" ; then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: shared" >&5
 $as_echo "shared" >&6; }
@@ -4244,7 +4236,7 @@ $as_echo "using shared flags" >&6; }
 	SHLIB_LD='${CC} -shared'
 	SHLIB_LD_LIBS='${LIBS}'
 	MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \$@ ${extra_ldflags} \
-	    -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
+	    -Wl,--out-implib,\$(patsubst %.dll,lib%.dll.a,\$@)"
 	# DLLSUFFIX is separate because it is the building block for
 	# users of tclConfig.sh that may build shared or static.
 	DLLSUFFIX=".dll"
@@ -4256,7 +4248,7 @@ $as_echo "using shared flags" >&6; }
 
 	CFLAGS_DEBUG=-g
 	CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
-	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith"
+	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith -finput-charset=UTF-8"
 	LDFLAGS_DEBUG=
 	LDFLAGS_OPTIMIZE=
 
@@ -4265,7 +4257,7 @@ $as_echo "using shared flags" >&6; }
 		CFLAGS_WARNING="${CFLAGS_WARNING} -Wno-format"
 		;;
 	    *)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -Wdeclaration-after-statement"
+		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers -Wdeclaration-after-statement"
 		;;
 	esac
 
@@ -4902,7 +4894,11 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
+if test ${SHARED_BUILD} = 0 ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
