@@ -261,7 +261,7 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] ne "aqua"} {
     proc placeUpdate {} {
 	update
     }

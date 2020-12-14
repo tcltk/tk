@@ -1351,7 +1351,7 @@ static void ButtonElementMinSize(
     ThemeButtonParams *params = (ThemeButtonParams *)clientData;
 
     if (params->heightMetric != NoThemeMetric) {
-	ChkErr(GetThemeMetric, params->heightMetric, minHeight);
+	ChkErr(GetThemeMetric, params->heightMetric, (SInt *) minHeight);
 
         /*
          * The theme height does not include the 1-pixel border around

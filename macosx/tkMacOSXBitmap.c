@@ -178,7 +178,7 @@ TkpCreateNativeBitmap(
     NSImage *iconImage = [[NSWorkspace sharedWorkspace]
 			     iconForFileType: iconUTI];
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
-    Pixmap pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
+    Pixmap pixmap = PixmapFromImage(display, iconImage, size);
     return pixmap;
 }
 

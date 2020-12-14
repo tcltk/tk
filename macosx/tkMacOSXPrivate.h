@@ -564,6 +564,7 @@ VISIBILITY_HIDDEN
 @private
     Tcl_DString _ds;
     NSString *_string;
+    const char *_UTF8String;
 }
 @property const char *UTF8String;
 @property (readonly) Tcl_DString DString;
