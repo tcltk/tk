@@ -22,7 +22,7 @@
 # values for the OPTS macro in addition to the ones described there.
 #       noembed  = Embeds Tcl scripts into the wish executable. Currently only
 #                  applicable for static builds. Non-static builds currently
-#                  never embed.  
+#                  never embed.
 #	noxp     = If you do not have the uxtheme.h header then you
 #                  cannot include support for XP themeing.
 #	square   = Include the demo square widget.

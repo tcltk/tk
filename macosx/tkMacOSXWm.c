@@ -6888,7 +6888,7 @@ ApplyWindowAttributeFlagChanges(
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
 
-		    if (@available(macOS 10.11, *)) {
+		    if ([NSApp macOSVersion] >= 101100) {
 			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
 		    }
