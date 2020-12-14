@@ -366,7 +366,6 @@ addFormattedText {
     @@subtitle	Scales and Progress Bars
     @@demo hscale	Horizontal scale
     @@demo vscale	Vertical scale
-    @@new
     @@demo ttkscale	Themed scale linked to a label with traces
     @@demo ttkprogress	Progress bar
 
