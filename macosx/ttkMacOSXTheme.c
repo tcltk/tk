@@ -2290,15 +2290,20 @@ static void PbarElementDraw(
     Ttk_State state)
 {
     PbarElement *pbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL, phase = 0;
-    double value = 0, maximum = 100, factor;
+    int orientation = TTK_ORIENT_HORIZONTAL, phase = 0, kind;
+    double value = 100, maximum = 100, factor = 1;
     CGRect bounds;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
-    Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
-    Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
-    Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
-    factor = RangeToFactor(maximum);
+    kind = !strcmp("indeterminate", Tcl_GetString(pbar->modeObj)) ?
+		   kThemeIndeterminateBar : kThemeProgressBar;
+    if (kind == kThemeIndeterminateBar) {
+	Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
+    } else {
+	Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
+	Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
+	factor = RangeToFactor(maximum);
+    }
 
     /*
      * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
@@ -2308,19 +2313,15 @@ static void PbarElementDraw(
     bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
-	.kind =
-	    (!strcmp("indeterminate",
-	    Tcl_GetString(pbar->modeObj)) && value) ?
-	    kThemeIndeterminateBar : kThemeProgressBar,
+	.kind = kind,
 	.bounds = bounds,
 	.min = 0,
 	.max = maximum * factor,
 	.value = value * factor,
 	.attributes = kThemeTrackShowThumb |
-	    (orientation == TTK_ORIENT_HORIZONTAL ?
-	    kThemeTrackHorizontal : 0),
+	    (orientation == TTK_ORIENT_HORIZONTAL ? kThemeTrackHorizontal : 0),
 	.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state),
-	.trackInfo.progress.phase = phase,
+	.trackInfo.progress.phase = phase
     };
 
     BEGIN_DRAWING(d)
