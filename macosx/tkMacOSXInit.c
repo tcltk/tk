@@ -17,7 +17,6 @@
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
-#import <Security/SecStaticCode.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -95,14 +94,10 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
     (void)aNotification;
-    CFURLRef mainBundleURL;
-    OSStatus errorCode;
-    SecStaticCodeRef staticCode = nil;
 
     /*
      * Initialize notifications.
      */
-
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     [[NSNotificationCenter defaultCenter] addObserver:self
 	    selector:@selector(_postedNotification:) name:nil object:nil];
@@ -124,7 +119,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     /*
      * Initialize the graphics context.
      */
-
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
 
