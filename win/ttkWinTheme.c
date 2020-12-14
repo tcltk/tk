@@ -1,4 +1,4 @@
-/* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
+/* winTheme.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sf.net>
  */
 
 #ifdef _MSC_VER

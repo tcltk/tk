@@ -2,7 +2,7 @@
 # ttk::spinbox widget tests
 #
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -357,6 +357,20 @@ test spinbox-dieoctaldie-2 "Cope with general bad input" -body {
 } -result [list asdfasdf 000 asdfasdf 000] -cleanup {
     destroy .sb
 }
+
+test spinbox-5.1 "style command" -body {
+    ttk::spinbox .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TSpinbox TSpinbox}
+test spinbox-5.2 "style command" -body {
+    ttk::style configure customStyle.TSpinbox
+    ttk::spinbox .w -style customStyle.TSpinbox
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TSpinbox customStyle.TSpinbox TSpinbox}
 
 tcltest::cleanupTests
 

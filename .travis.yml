@@ -13,12 +13,17 @@ addons:
       - gcc-multilib
       - tcl8.6-dev
       - libx11-dev
+      - libnotify-dev
+      - libglib2.0-dev
+      - libxss-dev
       - xvfb
   homebrew:
     packages:
       - tcl-tk
-    casks:
-      - xquartz
+      - libnotify
+      - glib
+#   casks:
+#     - xquartz
 jobs:
   include:
 # Testing on Linux GCC
@@ -58,6 +63,16 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
+      script: *x11gui
+    - name: "Linux/GCC/Shared/no-libnotify"
+      os: linux
+      dist: focal
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="--disable-libnotify"
       script: *x11gui
     - name: "Linux/GCC/Shared/bionic"
       os: linux
@@ -181,43 +196,24 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib CC=clang++ --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-D__private_extern__=extern"
-    - name: "macOS/Xcode 12/Shared"
-      os: osx
-      osx_image: xcode12
-      env:
-        - BUILD_DIR=unix
-        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: &mactest
-        - make all tktest
     - name: "macOS/Xcode 12/Static"
       os: osx
       osx_image: xcode12
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --disable-shared CFLAGS=-I/usr/local/opt/tcl-tk/include"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: *mactest
     - name: "macOS/Xcode 12/Debug"
       os: osx
       osx_image: xcode12
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua --enable-symbols CFLAGS=-I/usr/local/opt/tcl-tk/include"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: *mactest
-    - name: "macOS/Xcode 12/Shared/XQuartz"
-      os: osx
-      osx_image: xcode12
-      env:
-        - BUILD_DIR=unix
-        - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: *mactest
+#   - name: "macOS/Xcode 12/Shared/XQuartz"
+#     os: osx
+#     osx_image: xcode12
+#     env:
+#       - BUILD_DIR=unix
+#       - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include"
 # Older MacOS versions
     - name: "macOS/Xcode 11/Shared"
       os: osx
@@ -225,9 +221,6 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: *mactest
     - name: "macOS/Xcode 10/Shared"
       os: osx
       osx_image: xcode10.3
@@ -239,9 +232,6 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.14"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: *mactest
     - name: "macOS/Xcode 9/Shared"
       os: osx
       osx_image: xcode9.4
@@ -253,9 +243,6 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--with-tcl=/usr/local/opt/tcl-tk/lib --enable-aqua CFLAGS=-I/usr/local/opt/tcl-tk/include CPPFLAGS=-mmacosx-version-min=10.13"
-      install:
-        - ./configure ${CFGOPT} "--prefix=$HOME" || (cat config.log && exit 1)
-      script: *mactest
 # Test on Windows with MSVC native
 #   - name: "Windows/MSVC/Shared"
 #     os: windows
@@ -292,7 +279,15 @@ install:
 script:
   - make all tktest
   - make install
+before_cache:
+  - |-
+      case $TRAVIS_OS_NAME in
+        osx)
+          brew cleanup
+          ;;
+      esac
 cache:
   directories:
+  - $HOME/Library/Caches/Homebrew
   - $HOME/AppData/Local/Temp/chocolatey
   - $HOME/AppData/Local/Apps/Tcl86

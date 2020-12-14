@@ -5,9 +5,9 @@
  * for Tk's text widget and implements the character, hyphen, branch and
  * link segment types.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 2015-2017 Gregor Cramer
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 2015-2017 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

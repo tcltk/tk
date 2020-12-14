@@ -3,7 +3,7 @@
  *
  *	This file contains functions that implement the common Tk object types
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -116,7 +116,13 @@ extern const struct TclIntStubs *tclIntStubsPtr;
     ((int (*)(Tcl_Interp*,  Tcl_Obj *, int, int*))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[645]))((interp), (obj), (max), (ptr)): \
 	tclIntStubsPtr->tclGetIntForIndex((interp), (obj), (max), (ptr)))
 #elif TCL_MINOR_VERSION < 7
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
+#ifdef __cplusplus
+}
+#endif
 # define Tcl_GetIntForIndex(interp, obj, max, ptr) TclGetIntForIndex(interp, obj, max, ptr)
 #endif
 #endif

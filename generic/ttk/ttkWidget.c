@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003, Joe English
  *
  * Core widget utilities.
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 #ifdef MAC_OSX_TK
@@ -793,6 +793,26 @@ int TtkWidgetIdentifyCommand(
 	const char *elementName = Ttk_ElementName(element);
 	Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
     }
+
+    return TCL_OK;
+}
+
+/* $w style
+ * 	Return the style currently applied to the widget.
+ */
+
+int TtkWidgetStyleCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 2, objv, "");
+	return TCL_ERROR;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+            Ttk_StyleName(Ttk_LayoutStyle(corePtr->layout)), -1));
 
     return TCL_OK;
 }

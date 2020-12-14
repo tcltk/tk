@@ -5,10 +5,10 @@
  *	full color (32 bits per pixel including alpha channel) and displayed
  *	using dithering if necessary.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002-2003 Donal K. Fellows
- * Copyright (c) 2003 ActiveState Corporation.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2002-2003 Donal K. Fellows
+ * Copyright © 2003 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -4082,7 +4082,7 @@ ImgPhotoPostscript(
  *
  * Tk_PhotoPutBlock_NoComposite, Tk_PhotoPutZoomedBlock_NoComposite --
  *
- * These backward-compatability functions just exist to fill slots in stubs
+ * These backward-compatibility functions just exist to fill slots in stubs
  * table. For the behaviour of *_NoComposite, refer to the corresponding
  * function without the extra suffix, except that the compositing rule is
  * always "overlay" and the function always panics on memory-allocation
@@ -4123,7 +4123,7 @@ Tk_PhotoPutZoomedBlock_NoComposite(
  * Tk_PhotoExpand_Panic, Tk_PhotoPutBlock_Panic,
  * Tk_PhotoPutZoomedBlock_Panic, Tk_PhotoSetSize_Panic
  *
- * Backward compatability functions for preserving the old behaviour (i.e.
+ * Backward compatibility functions for preserving the old behaviour (i.e.
  * panic on memory allocation failure) so that extensions do not need to be
  * significantly updated to take account of TIP #116. These call the new
  * interface (i.e. the interface without the extra suffix), but panic if an

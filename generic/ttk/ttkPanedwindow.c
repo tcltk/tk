@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Joe English.  Freely redistributable.
+ * Copyright © 2005 Joe English.  Freely redistributable.
  *
  * ttk::panedwindow widget implementation.
  *
@@ -882,8 +882,8 @@ static int PanedSashposCommand(
 
 static const Ttk_Ensemble PanedCommands[] = {
     { "add", 		PanedAddCommand,0 },
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "forget", 	PanedForgetCommand,0 },
     { "identify", 	PanedIdentifyCommand,0 },
     { "insert", 	PanedInsertCommand,0 },
@@ -892,6 +892,7 @@ static const Ttk_Ensemble PanedCommands[] = {
     { "panes",   	PanedPanesCommand,0 },
     { "sashpos",  	PanedSashposCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

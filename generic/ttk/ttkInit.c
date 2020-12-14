@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
  */
@@ -271,7 +271,10 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
+#ifndef TK_NO_DEPRECATED
     Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
+#endif
+    Tcl_PkgProvideEx(interp, "ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
 
     return TCL_OK;
 }

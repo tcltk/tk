@@ -218,9 +218,7 @@ bind Spinbox <KP_Enter> {# nothing}
 bind Spinbox <Tab> {# nothing}
 bind Spinbox <Prior> {# nothing}
 bind Spinbox <Next> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Spinbox <Command-Key> {# nothing}
-}
+bind Spinbox <Command-Key> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.

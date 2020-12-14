@@ -663,6 +663,11 @@ TK_MAJOR_VERSION
 TK_VERSION
 TK_DEMO_DIR
 DEMO_DIR
+UNIX_LIBNOTIFY_OBJS
+LIBNOTIFY_LIBS
+LIBNOTIFY_CFLAGS
+GLIB_LIBS
+GLIB_CFLAGS
 UNIX_FONT_OBJS
 XFT_LIBS
 XFT_CFLAGS
@@ -778,6 +783,7 @@ enable_symbols
 enable_aqua
 with_x
 enable_xft
+enable_libnotify
 enable_xss
 enable_framework
 '
@@ -1421,6 +1427,7 @@ Optional Features:
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
   --enable-xft            use freetype/fontconfig/xft (default: on)
+  --enable-libnotify      use libnotify (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
@@ -1430,8 +1437,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-tcl              directory containing tcl configuration
                           (tclConfig.sh)
-  --with-encoding         encoding for configuration values (default:
-                          iso8859-1)
+  --with-encoding         encoding for configuration values (default: utf-8)
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -3511,7 +3517,7 @@ _ACEOF
 
     else
 
-$as_echo "#define TCL_CFGVAL_ENCODING \"iso8859-1\"" >>confdefs.h
+$as_echo "#define TCL_CFGVAL_ENCODING \"utf-8\"" >>confdefs.h
 
     fi
 
@@ -3525,14 +3531,6 @@ if test "${enable_shared+set}" = set; then :
 else
   tcl_ok=yes
 fi
-
-
-    if test "${enable_shared+set}" = set; then
-	enableval="$enable_shared"
-	tcl_ok=$enableval
-    else
-	tcl_ok=yes
-    fi
 
     if test "$tcl_ok" = "yes" ; then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: shared" >&5
@@ -4239,12 +4237,12 @@ fi
     if test "$GCC" = yes; then :
 
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith"
+	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith -finput-charset=UTF-8"
 	case "${CC}" in
 	    *++|*++-*)
 		;;
 	    *)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -Wdeclaration-after-statement"
+		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers -Wdeclaration-after-statement"
 		;;
 	esac
 
@@ -4513,7 +4511,7 @@ fi
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
-	CYGWIN_*)
+	CYGWIN_*|MINGW32_*|MSYS_*)
 	    SHLIB_CFLAGS="-fno-common"
 	    SHLIB_LD='${CC} -shared'
 	    SHLIB_SUFFIX=".dll"
@@ -5762,7 +5760,7 @@ fi
 	case $system in
 	    AIX-*) ;;
 	    BSD/OS*) ;;
-	    CYGWIN_*) ;;
+	    CYGWIN_*|MINGW32_*|MSYS_*) ;;
 	    HP_UX*) ;;
 	    Darwin-*) ;;
 	    IRIX*) ;;
@@ -6604,10 +6602,10 @@ fi
 if test "$TCL_PREFIX" != "$prefix"; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
         Different --prefix selected for Tk and Tcl!
-        [package require Tk] may not work correctly in tclsh." >&5
+        [package require tk] may not work correctly in tclsh." >&5
 $as_echo "$as_me: WARNING:
         Different --prefix selected for Tk and Tcl!
-        [package require Tk] may not work correctly in tclsh." >&2;}
+        [package require tk] may not work correctly in tclsh." >&2;}
 fi
 
 #--------------------------------------------------------------------
@@ -7167,7 +7165,10 @@ if test $tk_aqua = yes; then
 
 $as_echo "#define MAC_OSX_TK 1" >>confdefs.h
 
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework Security"
+    if test -d /System/Library/Frameworks/UserNotifications.framework; then
+        LIBS="$LIBS -framework UserNotifications"
+    fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
@@ -7817,6 +7818,62 @@ $as_echo "#define HAVE_XFT 1" >>confdefs.h
 fi
 
 #--------------------------------------------------------------------
+#	Check for libnotify.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = "no" ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use libnotify" >&5
+$as_echo_n "checking whether to use libnotify... " >&6; }
+    # Check whether --enable-libnotify was given.
+if test "${enable_libnotify+set}" = set; then :
+  enableval=$enable_libnotify; enable_libnotify=$enableval
+else
+  enable_libfnotify="default"
+fi
+
+    LIBNOTIFY_CFLAGS=""
+    LIBNOTIFY_LIBS=""
+    GLIB_CFLAGS=""
+    GLIB_LIBS=""
+    if test "$enable_libnotify" = "no" ; then
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_libnotify" >&5
+$as_echo "$enable_libnotify" >&6; }
+    else
+	found_libnotify="yes"
+		LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	if test "$found_libnotify" = "no" ; then
+	    found_libnotify="yes"
+	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
+	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
+	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
+	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
+	fi
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $found_libnotify" >&5
+$as_echo "$found_libnotify" >&6; }
+    fi
+    if test "$found_libnotify" = "yes" ; then
+	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $LIBNOTIFY_LIBS $GLIB_LIBS"
+
+$as_echo "#define HAVE_LIBNOTIFY 1" >>confdefs.h
+
+    else
+	UNIX_LIBNOTIFY_OBJS=""
+    fi
+
+
+
+
+
+fi
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
@@ -8084,8 +8141,9 @@ $as_echo "static library" >&6; }
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
+    EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
-    ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in"
+    ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in"
 
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
@@ -8119,6 +8177,7 @@ $as_echo "#define TK_FRAMEWORK 1" >>confdefs.h
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
     EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
@@ -8128,6 +8187,7 @@ $as_echo "#define TK_FRAMEWORK 1" >>confdefs.h
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA_DIR) "$(BIN_INSTALL_DIR)/../Resources"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
+	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
     # Don't use AC_DEFINE for the following as the framework version define
@@ -8967,6 +9027,7 @@ do
   case $ac_config_target in
     "Tk-Info.plist") CONFIG_FILES="$CONFIG_FILES Tk-Info.plist:../macosx/Tk-Info.plist.in" ;;
     "Wish-Info.plist") CONFIG_FILES="$CONFIG_FILES Wish-Info.plist:../macosx/Wish-Info.plist.in" ;;
+    "Credits.html") CONFIG_FILES="$CONFIG_FILES Credits.html:../macosx/Credits.html.in" ;;
     "Tk.framework") CONFIG_COMMANDS="$CONFIG_COMMANDS Tk.framework" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile:../unix/Makefile.in" ;;
     "tkConfig.sh") CONFIG_FILES="$CONFIG_FILES tkConfig.sh:../unix/tkConfig.sh.in" ;;

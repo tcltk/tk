@@ -5,7 +5,7 @@
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
-# Copyright © 1998 by Scriptics Corporation.
+# Copyright © 1998 Scriptics Corporation.
 # Copyright © 2015-2017 Gregor Cramer
 #
 # See the file "license.terms" for information on usage and redistribution
@@ -328,9 +328,7 @@ bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-Key> {# nothing}
-}
+bind Text <Command-Key> {# nothing}
 
 # Additional emacs-like bindings:
 

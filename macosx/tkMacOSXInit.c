@@ -4,10 +4,10 @@
  *	This file contains Mac OS X -specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -41,6 +41,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
 @synthesize needsToDraw = _needsToDraw;
+@synthesize isSigned = _isSigned;
 @end
 
 /*
@@ -103,16 +104,15 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
+}
 
-    /*
-     * Construct the menu bar.
-     */
-    _defaultMainMenu = nil;
-    [self _setupMenus];
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    (void)notification;
 
-    /*
-     * Initialize event processing.
-     */
+   /*
+    * Initialize event processing.
+    */
 
     TkMacOSXInitAppleEvents(_eventInterp);
 
@@ -121,11 +121,13 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
-}
 
--(void)applicationDidFinishLaunching:(NSNotification *)notification
-{
-    (void)notification;
+    /*
+     * Construct the menu bar.
+     */
+
+    _defaultMainMenu = nil;
+    [self _setupMenus];
 
     /*
      * It is not safe to force activation of the NSApp until this method is
@@ -562,6 +564,7 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
+    MacSystrayInit(interp);
 
     return TCL_OK;
 }
