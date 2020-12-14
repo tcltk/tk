@@ -1007,7 +1007,7 @@ WinSystrayCmd(
                 hIcon = CreateIcoFromPhoto(width, height, block);
                 if (hIcon == NULL) {
                     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                            "failed to create icon for \"%s\"", Tcl_GetString(imageObj)));
+                            "failed to create an iconphoto with image \"%s\"", Tcl_GetString(imageObj)));
                     return TCL_ERROR;
                 }
             }
