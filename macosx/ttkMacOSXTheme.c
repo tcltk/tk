@@ -2291,18 +2291,35 @@ static void PbarElementDraw(
 {
     PbarElement *pbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL, phase = 0, kind;
-    double value = 100, maximum = 100, factor = 1;
+ 
+    /*
+     * Using 1000 as the maximum should give better than 1 pixel
+     * resolution for most progress bars.
+     */
+
+    int ivalue, imaximum = 1000;
     CGRect bounds;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
     kind = !strcmp("indeterminate", Tcl_GetString(pbar->modeObj)) ?
-		   kThemeIndeterminateBar : kThemeProgressBar;
+	kThemeIndeterminateBar : kThemeProgressBar;
     if (kind == kThemeIndeterminateBar) {
 	Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
+
+	/*
+	 * On macOS 11 the fraction of an indeterminate progress bar which is
+	 * traversed by the oscillating thumb is value / maximum.  The phase
+	 * determines the position of the moving thumb in that range and is
+	 * apparently expected to vary between 0 and 120.  On earlier systems
+	 * it is unclear how the phase is used in generating the animation.
+	 */
+
+	ivalue = imaximum;
     } else {
+	double value, maximum;
 	Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
 	Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
-	factor = RangeToFactor(maximum);
+	ivalue = (value / maximum)*1000;
     }
 
     /*
@@ -2316,14 +2333,13 @@ static void PbarElementDraw(
 	.kind = kind,
 	.bounds = bounds,
 	.min = 0,
-	.max = maximum * factor,
-	.value = value * factor,
+	.max = imaximum,
+	.value = ivalue,
 	.attributes = kThemeTrackShowThumb |
 	    (orientation == TTK_ORIENT_HORIZONTAL ? kThemeTrackHorizontal : 0),
 	.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state),
 	.trackInfo.progress.phase = phase
     };
-
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	bounds = BoxToRect(d, b);
