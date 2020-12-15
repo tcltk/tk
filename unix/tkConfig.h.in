@@ -25,6 +25,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Have we turned on libnotify? */
+#undef HAVE_LIBNOTIFY
+
 /* Define to 1 if you have the `Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
@@ -169,6 +172,9 @@
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
+
+/* Are we building with zipfs enabled? */
+#undef ZIPFS_BUILD
 
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
