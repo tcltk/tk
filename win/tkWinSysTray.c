@@ -51,7 +51,7 @@
 
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
-    int id;                     /* Integer identifier for command;  used to
+    unsigned id;                /* Identifier for command;  used to
                                  * cancel it. */
     Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
@@ -371,7 +371,7 @@ GetIcoPtr(
     const char *string)
 {
     IcoInfo *icoPtr;
-    int id;
+    unsigned id;
     const char *start;
     char *end;
 
