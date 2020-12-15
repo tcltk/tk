@@ -25,6 +25,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Have we turned on libnotify? */
+#undef HAVE_LIBNOTIFY
+
 /* Define to 1 if you have the `Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
