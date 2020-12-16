@@ -31,7 +31,6 @@
 
 #include "tkMacOSXPrivate.h"
 #include "ttk/ttkTheme.h"
-#include <math.h>
 
 /*
  * Macros for handling drawing contexts.
@@ -2886,7 +2885,7 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
  * +++ Field elements --
  *
  *      Used for the Treeview widget. This is like the BackgroundElement
- *      except that the fieldbackground color is configureable.
+ *      except that the fieldbackground color is configurable.
  */
 
 typedef struct {
