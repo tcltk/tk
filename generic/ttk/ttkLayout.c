@@ -6,7 +6,6 @@
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  */
 
-#include <string.h>
 #include "tkInt.h"
 #include "ttkThemeInt.h"
 
