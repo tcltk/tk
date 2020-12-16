@@ -520,7 +520,6 @@ TkMacOSXSetColorInContext(
     OSStatus err = noErr;
     CGColorRef cgColor = nil;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
-    CGRect rect;
 
     if (entry) {
 	switch (entry->type) {
