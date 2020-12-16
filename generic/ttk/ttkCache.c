@@ -28,7 +28,6 @@
  * but this will be a transient effect.
  */
 
-#include <stdio.h>	/* for sprintf */
 #include "tkInt.h"
 #include "ttkTheme.h"
 
