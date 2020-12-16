@@ -520,6 +520,7 @@ TkMacOSXSetColorInContext(
     OSStatus err = noErr;
     CGColorRef cgColor = nil;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
+    CGRect rect;
 
     if (entry) {
 	switch (entry->type) {
@@ -581,7 +582,7 @@ TkpGetColor(
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
     static Bool initialized = NO;
-    static NSColorSpace* sRGB = NULL;
+    static NSColorSpace* sRGB = nil;
 
     if (!initialized) {
 	initialized = YES;
