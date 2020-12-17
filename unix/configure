@@ -663,11 +663,6 @@ TK_MAJOR_VERSION
 TK_VERSION
 TK_DEMO_DIR
 DEMO_DIR
-UNIX_LIBNOTIFY_OBJS
-LIBNOTIFY_LIBS
-LIBNOTIFY_CFLAGS
-GLIB_LIBS
-GLIB_CFLAGS
 UNIX_FONT_OBJS
 XFT_LIBS
 XFT_CFLAGS
@@ -745,6 +740,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -783,7 +779,6 @@ enable_symbols
 enable_aqua
 with_x
 enable_xft
-enable_libnotify
 enable_xss
 enable_framework
 '
@@ -835,6 +830,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1087,6 +1083,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1224,7 +1229,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1377,6 +1382,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1427,7 +1433,6 @@ Optional Features:
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
   --enable-xft            use freetype/fontconfig/xft (default: on)
-  --enable-libnotify      use libnotify (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
@@ -7812,62 +7817,6 @@ $as_echo "#define HAVE_XFT 1" >>confdefs.h
     else
 	UNIX_FONT_OBJS=tkUnixFont.o
     fi
-
-
-
-fi
-
-#--------------------------------------------------------------------
-#	Check for libnotify.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = "no" ; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to use libnotify" >&5
-$as_echo_n "checking whether to use libnotify... " >&6; }
-    # Check whether --enable-libnotify was given.
-if test "${enable_libnotify+set}" = set; then :
-  enableval=$enable_libnotify; enable_libnotify=$enableval
-else
-  enable_libfnotify="default"
-fi
-
-    LIBNOTIFY_CFLAGS=""
-    LIBNOTIFY_LIBS=""
-    GLIB_CFLAGS=""
-    GLIB_LIBS=""
-    if test "$enable_libnotify" = "no" ; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_libnotify" >&5
-$as_echo "$enable_libnotify" >&6; }
-    else
-	found_libnotify="yes"
-		LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
-	LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
-	GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
-	GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
-	if test "$found_libnotify" = "no" ; then
-	    found_libnotify="yes"
-	    LIBNOTIFY_CFLAGS=`pkg-config --cflags libnotify 2>/dev/null` || found_libnotify="no"
-	    LIBNOTIFY_LIBS=`pkg-config --libs libnotify 2>/dev/null` || found_libnotify="no"
-	     GLIB_CFLAGS=`pkg-config --cflags glib-2.0 2>/dev/null` || found_libnotify="no"
-	    GLIB_LIBS=`pkg-config --libs glib-2.0 2>/dev/null` || found_libnotify="no"
-	fi
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $found_libnotify" >&5
-$as_echo "$found_libnotify" >&6; }
-    fi
-    if test "$found_libnotify" = "yes" ; then
-	UNIX_LIBNOTIFY_OBJS=tkUnixSysNotify.o
-	tk_oldCFlags=$CFLAGS
-	CFLAGS="$tk_oldCFlags $LIBNOTIFY_CFLAGS $GLIB_CFLAGS"
-	tk_oldLibs=$LIBS
-	LIBS="$tk_oldLibs $LIBNOTIFY_LIBS $GLIB_LIBS"
-
-$as_echo "#define HAVE_LIBNOTIFY 1" >>confdefs.h
-
-    else
-	UNIX_LIBNOTIFY_OBJS=""
-    fi
-
-
 
 
 
