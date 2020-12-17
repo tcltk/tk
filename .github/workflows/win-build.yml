@@ -21,6 +21,8 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-6-branch
           path: tcl
+      - name: Init MSVC
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Make Install Location
         working-directory: tcl
         run: |
@@ -29,8 +31,6 @@ jobs:
           mkdir install
           cd install
           echo "INSTALLDIR=`pwd`" >> $GITHUB_ENV
-      - name: Init MSVC
-        uses: ilammy/msvc-dev-cmd@v1
       - name: Build Tcl
         run: |
           &nmake -f makefile.vc release install

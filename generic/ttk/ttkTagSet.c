@@ -4,7 +4,6 @@
  * Copyright (C) 2005, Joe English.  Freely redistributable.
  */
 
-#include <string.h>	/* for memset() */
 #include "tkInt.h"
 
 #include "ttkTheme.h"
