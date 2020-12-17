@@ -297,13 +297,6 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
-# support for libnotify
-GLIB_CFLAGS	        = @GLIB_CFLAGS@
-GLIB_LIBS		= @GLIB_LIBS@
-LIBNOTIFY_CFLAGS	= @LIBNOTIFY_CFLAGS@
-LIBNOTIFY_LIBS		= @LIBNOTIFY_LIBS@
-
-
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
 # Makefile is generated from Makefile.in.  You shouldn't normally
