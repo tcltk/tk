@@ -333,7 +333,7 @@ TkMacOSXNotifyExitHandler(
  *	None.
  *
  * Side effects:
- *	Parts of windows my get redrawn.
+ *	Parts of windows may get redrawn.
  *
  *----------------------------------------------------------------------
  */
