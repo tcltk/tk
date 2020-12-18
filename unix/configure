@@ -7330,38 +7330,6 @@ printf "%s\n" "#define size_t unsigned int" >>confdefs.h
 
 fi
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for uid_t in sys/types.h" >&5
-printf %s "checking for uid_t in sys/types.h... " >&6; }
-if test ${ac_cv_type_uid_t+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <sys/types.h>
-
-_ACEOF
-if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
-  $EGREP "uid_t" >/dev/null 2>&1
-then :
-  ac_cv_type_uid_t=yes
-else $as_nop
-  ac_cv_type_uid_t=no
-fi
-rm -rf conftest*
-
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_type_uid_t" >&5
-printf "%s\n" "$ac_cv_type_uid_t" >&6; }
-if test $ac_cv_type_uid_t = no; then
-
-printf "%s\n" "#define uid_t int" >>confdefs.h
-
-
-printf "%s\n" "#define gid_t int" >>confdefs.h
-
-fi
-
 
 ac_fn_c_check_type "$LINENO" "intptr_t" "ac_cv_type_intptr_t" "
 #include <stdint.h>
