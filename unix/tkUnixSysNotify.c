@@ -140,6 +140,7 @@ SysNotifyCmd(
 	notify_notification_show(notif, NULL);
 	Tcl_DStringFree(&dsm);
 	Tcl_DStringFree(&dst);
+	Tcl_FreeEncoding(enc);
     }
 
     return TCL_OK;
