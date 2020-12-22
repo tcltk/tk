@@ -28,9 +28,9 @@ AC_DEFUN([SC_PATH_TCLCONFIG], [
 	# we reset no_tcl in case something fails here
 	no_tcl=true
 	AC_ARG_WITH(tcl,
-	    AC_HELP_STRING([--with-tcl],
+	    AS_HELP_STRING([--with-tcl],
 		[directory containing tcl configuration (tclConfig.sh)]),
-	    with_tclconfig="${withval}")
+	    [with_tclconfig="${withval}"])
 	AC_MSG_CHECKING([for Tcl configuration])
 	AC_CACHE_VAL(ac_cv_c_tclconfig,[
 
@@ -146,9 +146,9 @@ AC_DEFUN([SC_PATH_TKCONFIG], [
 	# we reset no_tk in case something fails here
 	no_tk=true
 	AC_ARG_WITH(tk,
-	    AC_HELP_STRING([--with-tk],
+	    AS_HELP_STRING([--with-tk],
 		[directory containing tk configuration (tkConfig.sh)]),
-	    with_tkconfig="${withval}")
+	    [with_tkconfig="${withval}"])
 	AC_MSG_CHECKING([for Tk configuration])
 	AC_CACHE_VAL(ac_cv_c_tkconfig,[
 
@@ -358,14 +358,6 @@ AC_DEFUN([SC_ENABLE_SHARED], [
     AC_ARG_ENABLE(shared,
 	[  --enable-shared         build and link with shared libraries (default: on)],
 	[tcl_ok=$enableval], [tcl_ok=yes])
-
-    if test "${enable_shared+set}" = set; then
-	enableval="$enable_shared"
-	tcl_ok=$enableval
-    else
-	tcl_ok=yes
-    fi
-
     if test "$tcl_ok" = "yes" ; then
 	AC_MSG_RESULT([shared])
 	SHARED_BUILD=1
@@ -673,7 +665,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
 	CFLAGS_DEBUG=-g
 	CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
-	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith"
+	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith -finput-charset=UTF-8"
 	LDFLAGS_DEBUG=
 	LDFLAGS_OPTIMIZE=
 
@@ -682,7 +674,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		CFLAGS_WARNING="${CFLAGS_WARNING} -Wno-format"
 		;;
 	    *)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -Wdeclaration-after-statement"
+		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers -Wdeclaration-after-statement"
 		;;
 	esac
 
@@ -1085,8 +1077,7 @@ AC_DEFUN([SC_TCL_CFG_ENCODING], [
     if test x"${with_tcencoding}" != x ; then
 	AC_DEFINE_UNQUOTED(TCL_CFGVAL_ENCODING,"${with_tcencoding}")
     else
-	# Default encoding on windows is not "iso8859-1"
-	AC_DEFINE(TCL_CFGVAL_ENCODING,"cp1252")
+	AC_DEFINE(TCL_CFGVAL_ENCODING,"utf-8")
     fi
 ])
 
@@ -1108,7 +1099,7 @@ AC_DEFUN([SC_TCL_CFG_ENCODING], [
 AC_DEFUN([SC_EMBED_MANIFEST], [
     AC_MSG_CHECKING(whether to embed manifest)
     AC_ARG_ENABLE(embedded-manifest,
-	AC_HELP_STRING([--enable-embedded-manifest],
+	AS_HELP_STRING([--enable-embedded-manifest],
 		[embed manifest if possible (default: yes)]),
 	[embed_ok=$enableval], [embed_ok=yes])
 

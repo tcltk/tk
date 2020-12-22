@@ -3,7 +3,7 @@
  *
  *	This file contains routines for manipulation full-color images.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -277,7 +277,7 @@ XCreateImage(
  *	None.
  *
  * This procedure is adapted from the XGetImage implementation in TkNT. That
- * code is Copyright (c) 1994 Software Research Associates, Inc.
+ * code is Copyright © 1994 Software Research Associates, Inc.
  *
  *----------------------------------------------------------------------
  */

@@ -7,7 +7,7 @@
  * before or after an existing element or at the head/tail of the list.
  * A list may be traversed in the forward or backward direction.
  *
- * Copyright (c) 2018 by Gregor Cramer.
+ * Copyright © 2018 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

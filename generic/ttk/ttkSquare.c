@@ -1,4 +1,4 @@
-/* square.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+/* square.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * Minimal sample ttk widget.
  */
@@ -129,11 +129,12 @@ SquareDoLayout(void *clientData)
  */
 
 static const Ttk_Ensemble SquareCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

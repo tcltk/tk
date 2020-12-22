@@ -3,8 +3,9 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT(../generic/tk.h)
-AC_PREREQ(2.69)
+AC_INIT
+AC_CONFIG_SRCDIR([../generic/tk.h])
+AC_PREREQ([2.69])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
@@ -43,6 +44,7 @@ fi
 AC_PROG_CC
 AC_C_INLINE
 AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
 
 AC_CHECK_TOOL(AR, ar)
 AC_CHECK_TOOL(RANLIB, ranlib)
@@ -96,6 +98,10 @@ fi
 
 SC_CONFIG_CFLAGS
 
+AC_CHECK_TYPES([intptr_t, uintptr_t],,,[[
+#include <stdint.h>
+]])
+
 #--------------------------------------------------------------------
 # man2tcl needs this so that it can use errno.h
 #--------------------------------------------------------------------
@@ -108,9 +114,7 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_TRY_LINK([#include <stdlib.h>],
-	    [_strtoi64(0,0,0)],
-	    tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]], [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
@@ -295,7 +299,8 @@ AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(RES)
 
-AC_OUTPUT(Makefile tkConfig.sh wish.exe.manifest)
+AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
+AC_OUTPUT
 
 dnl Local Variables:
 dnl mode: autoconf;
