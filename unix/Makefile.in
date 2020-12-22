@@ -297,13 +297,6 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
-# support for libnotify
-GLIB_CFLAGS	        = @GLIB_CFLAGS@
-GLIB_LIBS		= @GLIB_LIBS@
-LIBNOTIFY_CFLAGS	= @LIBNOTIFY_CFLAGS@
-LIBNOTIFY_LIBS		= @LIBNOTIFY_LIBS@
-
-
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
 # Makefile is generated from Makefile.in.  You shouldn't normally
@@ -1717,6 +1710,9 @@ dist:	$(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
 	$(INSTALL_DATA_DIR) $(DISTDIR)/tests/ttk
 	$(DIST_INSTALL_DATA) $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk
+	cp -p $(TOP_DIR)/.travis.yml $(DISTDIR)
+	mkdir -p $(DISTDIR)/.github/workflows
+	cp -p $(TOP_DIR)/.github/workflows/*.yml $(DISTDIR)/.github/workflows
 
 alldist: dist
 	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)

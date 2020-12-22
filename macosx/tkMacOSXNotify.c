@@ -334,7 +334,7 @@ TkMacOSXNotifyExitHandler(
  *	None.
  *
  * Side effects:
- *	Parts of windows my get redrawn.
+ *	Parts of windows may get redrawn.
  *
  *----------------------------------------------------------------------
  */
@@ -445,7 +445,7 @@ TkMacOSXEventsSetupProc(
 	 *
  	 * If we have any events waiting or if there is any drawing to be done
 	 * we want Tcl_WaitForEvent to return immediately.  So we set the block
-	 * time to 0 and stop the heatbeat.
+	 * time to 0 and stop the heartbeat.
   	 */
 
 	NSEvent *currentEvent =

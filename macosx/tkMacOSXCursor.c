@@ -262,7 +262,7 @@ FindCursorByName(
 		break;
 	    case IMAGEBITMAP: {
 		unsigned char *bitmap = (unsigned char *)(cursorNames[idx].id1);
-		NSBitmapImageRep *bitmapImageRep = NULL;
+		NSBitmapImageRep *bitmapImageRep = nil;
 		CGImageRef img = NULL, mask = NULL, maskedImg = NULL;
 		static const CGFloat decodeWB[] = {1, 0};
 		CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(
@@ -457,7 +457,7 @@ TkpFreeCursor(
     TkMacOSXCursor *macCursorPtr = (TkMacOSXCursor *) cursorPtr;
 
     [macCursorPtr->macCursor release];
-    macCursorPtr->macCursor = NULL;
+    macCursorPtr->macCursor = nil;
     if (macCursorPtr == gCurrentCursor) {
 	gCurrentCursor = NULL;
     }
