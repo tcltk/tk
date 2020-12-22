@@ -170,7 +170,7 @@ SysNotify_Init(
     if (ln_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
-	static const char const *lnlibs[] = {
+	static const char *lnlibs[] = {
 	    "libnotify.so.4",
 	    "libnotify.so.3",
 	    "libnotify.so.2",
