@@ -2290,7 +2290,7 @@ static void PbarElementDraw(
 {
     PbarElement *pbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL, phase = 0, kind;
- 
+
     /*
      * Using 1000 as the maximum should give better than 1 pixel
      * resolution for most progress bars.
