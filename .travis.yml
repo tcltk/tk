@@ -13,10 +13,15 @@ addons:
       - gcc-multilib
       - tcl8.6-dev
       - libx11-dev
+      - libnotify-dev
+      - libglib2.0-dev
+      - libxss-dev
       - xvfb
   homebrew:
     packages:
       - tcl-tk
+      - libnotify
+      - glib
 #   casks:
 #     - xquartz
 jobs:
@@ -58,6 +63,16 @@ jobs:
       env:
         - BUILD_DIR=unix
         - CFGOPT="--disable-xft"
+      script: *x11gui
+    - name: "Linux/GCC/Shared/no-libnotify"
+      os: linux
+      dist: focal
+      services:
+        - xvfb
+      compiler: gcc
+      env:
+        - BUILD_DIR=unix
+        - CFGOPT="--disable-libnotify"
       script: *x11gui
     - name: "Linux/GCC/Shared/bionic"
       os: linux

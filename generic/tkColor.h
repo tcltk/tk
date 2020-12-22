@@ -3,7 +3,7 @@
  *
  *	Declarations of data types and functions used by the Tk color module.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

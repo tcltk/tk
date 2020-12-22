@@ -2,12 +2,12 @@
 # Tile package: entry widget tests
 #
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 variable scrollInfo
 proc scroll args {
@@ -368,5 +368,19 @@ test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup 
 } -result {invalid invalid} -cleanup {
     destroy .e
 }
+
+test entry-12.1 "style command" -body {
+    ttk::entry .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TEntry TEntry}
+test entry-12.2 "style command" -body {
+    ttk::style configure customStyle.TEntry
+    ttk::entry .w -style customStyle.TEntry
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TEntry customStyle.TEntry TEntry}
 
 tcltest::cleanupTests

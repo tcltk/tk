@@ -4,7 +4,7 @@
  *	This file contains Windows-specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -38,9 +38,11 @@ TkpInit(
     (void)interp;
     /*
      * This is necessary for static initialization, and is ok otherwise
-     * because TkWinXInit flips a static bit to do its work just once.
+     * because TkWinXInit flips a static bit to do its work just once. Also,
+     * initialize the Windows systray command here.
      */
 
+    WinIcoInit(interp);
     TkWinXInit(Tk_GetHINSTANCE());
     return TCL_OK;
 }

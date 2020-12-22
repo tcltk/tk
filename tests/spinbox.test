@@ -3,7 +3,7 @@
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
-# Copyright © 1998-1999 by Scriptics Corporation.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -11,7 +11,7 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 # For xscrollcommand
@@ -919,14 +919,14 @@ test spinbox-1.79 {configuration option: "values" for spinbox} -setup {
     destroy .e
 } -returnCodes {error} -result {list element in braces followed by "list" instead of space}
 
-test spinbox-1.80 {configuration option: "vcmd"} -setup {
+test spinbox-1.80 {configuration option: "validatecommand"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
     pack .e
     update
 } -body {
-    .e configure -vcmd "a command"
-    .e cget -vcmd
+    .e configure -validatecommand "a command"
+    .e cget -validatecommand
 } -cleanup {
     destroy .e
 } -result {a command}

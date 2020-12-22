@@ -13,6 +13,7 @@
  */
 
 #include "tk.h"
+#include "tkWinInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -29,10 +30,15 @@ int _CRT_glob = 0;
 extern "C" {
 #endif
 extern Tcl_PackageInitProc Tktest_Init;
-#ifdef __cplusplus
-}
-#endif
 #endif /* TK_TEST */
+
+#if !defined(TCL_USE_STATIC_PACKAGES)
+#   if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 6
+#	define TCL_USE_STATIC_PACKAGES 1
+#   else
+#	define TCL_USE_STATIC_PACKAGES 0
+#   endif
+#endif
 
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
@@ -40,6 +46,9 @@ extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #ifdef TCL_BROKEN_MAINARGS
 static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
@@ -60,7 +69,11 @@ static BOOL consoleRequired = TRUE;
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
 #ifndef MODULE_SCOPE
-#   define MODULE_SCOPE extern
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
@@ -77,6 +90,8 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 /* Make sure the stubbed variants of those are never used. */
 #undef Tcl_ObjSetVar2
 #undef Tcl_NewStringObj
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -209,12 +224,12 @@ Tcl_AppInit(
     if (Registry_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
+    Tcl_StaticPackage(interp, "Registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
+    Tcl_StaticPackage(interp, "Dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
@@ -250,6 +265,7 @@ Tcl_AppInit(
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
+
     return TCL_OK;
 }
 

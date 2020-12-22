@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -511,5 +511,19 @@ test notebook-1343984-2 "don't autoselect on destroy" -body {
     update
     set ::history
 } -result [list DESTROY .nb.frame1 DESTROY .nb.frame2 DESTROY .nb.frame3]
+
+test notebook-8.1 "style command" -body {
+    ttk::notebook .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TNotebook TNotebook}
+test notebook-8.2 "style command" -body {
+    ttk::style configure customStyle.TNotebook
+    ttk::notebook .w -style customStyle.TNotebook
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TNotebook customStyle.TNotebook TNotebook}
 
 tcltest::cleanupTests

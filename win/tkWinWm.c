@@ -6,14 +6,15 @@
  *	the "wm" command and passes geometry information to the window
  *	manager.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkWinInt.h"
+#include "tkWinIco.h"
 #include <shellapi.h>
 
 /*
@@ -77,58 +78,6 @@ typedef struct TkWmStackorderToplevelPair {
     TkWindow **windowPtr;
 } TkWmStackorderToplevelPair;
 
-/*
- * This structure represents the contents of a icon, in terms of its image.
- * The HICON is an internal Windows format. Most of these icon-specific
- * structures originated with the Winico extension. We stripped out unused
- * parts of that code, and integrated the code more naturally with Tcl.
- */
-
-typedef struct {
-    UINT Width, Height, Colors;	/* Width, Height and bpp */
-    LPBYTE lpBits;		/* Ptr to DIB bits */
-    DWORD dwNumBytes;		/* How many bytes? */
-    LPBITMAPINFO lpbi;		/* Ptr to header */
-    LPBYTE lpXOR;		/* Ptr to XOR image bits */
-    LPBYTE lpAND;		/* Ptr to AND image bits */
-    HICON hIcon;		/* DAS ICON */
-} ICONIMAGE, *LPICONIMAGE;
-
-/*
- * This structure is how we represent a block of the above items. We will
- * reallocate these structures according to how many images they need to
- * contain.
- */
-
-typedef struct {
-    int nNumImages;		/* How many images? */
-    ICONIMAGE IconImages[1];	/* Image entries */
-} BlockOfIconImages, *BlockOfIconImagesPtr;
-
-/*
- * These two structures are used to read in icons from an 'icon directory'
- * (i.e. the contents of a .icr file, say). We only use these structures
- * temporarily, since we copy the information we want into a
- * BlockOfIconImages.
- */
-
-typedef struct {
-    BYTE bWidth;		/* Width of the image */
-    BYTE bHeight;		/* Height of the image (times 2) */
-    BYTE bColorCount;		/* Number of colors in image (0 if >=8bpp) */
-    BYTE bReserved;		/* Reserved */
-    WORD wPlanes;		/* Color Planes */
-    WORD wBitCount;		/* Bits per pixel */
-    DWORD dwBytesInRes;		/* How many bytes in this resource? */
-    DWORD dwImageOffset;	/* Where in the file is this image */
-} ICONDIRENTRY, *LPICONDIRENTRY;
-
-typedef struct {
-    WORD idReserved;		/* Reserved */
-    WORD idType;		/* Resource type (1 for icons) */
-    WORD idCount;		/* How many images? */
-    ICONDIRENTRY idEntries[1];	/* The entries for each image */
-} ICONDIR, *LPICONDIR;
 
 /*
  * A pointer to one of these strucutures is associated with each toplevel.
@@ -436,9 +385,9 @@ static BlockOfIconImagesPtr ReadIconOrCursorFromFile(Tcl_Interp *interp,
 			    Tcl_Obj* fileName, BOOL isIcon);
 static WinIconPtr	ReadIconFromFile(Tcl_Interp *interp,
 			    Tcl_Obj *fileName);
+static BOOL		AdjustIconImagePointers(LPICONIMAGE lpImage);
 static WinIconPtr	GetIconFromPixmap(Display *dsPtr, Pixmap pixmap);
 static int		ReadICOHeader(Tcl_Channel channel);
-static BOOL		AdjustIconImagePointers(LPICONIMAGE lpImage);
 static HICON		MakeIconOrCursorFromResource(LPICONIMAGE lpIcon,
 			    BOOL isIcon);
 static HICON		GetIcon(WinIconPtr titlebaricon, int icon_size);
@@ -544,187 +493,6 @@ static int		WmWithdrawCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
-
-/*
- * Used in BytesPerLine
- */
-
-#define WIDTHBYTES(bits)	((((bits) + 31)>>5)<<2)
-
-/*
- *----------------------------------------------------------------------
- *
- * DIBNumColors --
- *
- *	Calculates the number of entries in the color table, given by LPSTR
- *	lpbi - pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	WORD - Number of entries in the color table.
- *
- *----------------------------------------------------------------------
- */
-
-static WORD
-DIBNumColors(
-    LPSTR lpbi)
-{
-    WORD wBitCount;
-    DWORD dwClrUsed;
-
-    dwClrUsed = ((LPBITMAPINFOHEADER) lpbi)->biClrUsed;
-
-    if (dwClrUsed) {
-	return (WORD) dwClrUsed;
-    }
-
-    wBitCount = ((LPBITMAPINFOHEADER) lpbi)->biBitCount;
-
-    switch (wBitCount) {
-    case 1:
-	return 2;
-    case 4:
-	return 16;
-    case 8:
-	return 256;
-    default:
-	return 0;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PaletteSize --
- *
- *	Calculates the number of bytes in the color table, as given by LPSTR
- *	lpbi - pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	Number of bytes in the color table
- *
- *----------------------------------------------------------------------
- */
-static WORD
-PaletteSize(
-    LPSTR lpbi)
-{
-    return (WORD) (DIBNumColors(lpbi) * sizeof(RGBQUAD));
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FindDIBits --
- *
- *	Locate the image bits in a CF_DIB format DIB, as given by LPSTR lpbi -
- *	pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	pointer to the image bits
- *
- * Side effects: None
- *
- *
- *----------------------------------------------------------------------
- */
-
-static LPSTR
-FindDIBBits(
-    LPSTR lpbi)
-{
-    return lpbi + *((LPDWORD) lpbi) + PaletteSize(lpbi);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * BytesPerLine --
- *
- *	Calculates the number of bytes in one scan line, as given by
- *	LPBITMAPINFOHEADER lpBMIH - pointer to the BITMAPINFOHEADER that
- *	begins the CF_DIB block. Used by titlebar icon code.
- *
- * Results:
- *	number of bytes in one scan line (DWORD aligned)
- *
- *----------------------------------------------------------------------
- */
-
-static DWORD
-BytesPerLine(
-    LPBITMAPINFOHEADER lpBMIH)
-{
-    return WIDTHBYTES(lpBMIH->biWidth * lpBMIH->biPlanes * lpBMIH->biBitCount);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * AdjustIconImagePointers --
- *
- *	Adjusts internal pointers in icon resource struct, as given by
- *	LPICONIMAGE lpImage - the resource to handle. Used by titlebar icon
- *	code.
- *
- * Results:
- *	BOOL - TRUE for success, FALSE for failure
- *
- *----------------------------------------------------------------------
- */
-
-static BOOL
-AdjustIconImagePointers(
-    LPICONIMAGE lpImage)
-{
-    /*
-     * Sanity check.
-     */
-
-    if (lpImage == NULL) {
-	return FALSE;
-    }
-
-    /*
-     * BITMAPINFO is at beginning of bits.
-     */
-
-    lpImage->lpbi = (LPBITMAPINFO) lpImage->lpBits;
-
-    /*
-     * Width - simple enough.
-     */
-
-    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
-
-    /*
-     * Icons are stored in funky format where height is doubled so account for
-     * that.
-     */
-
-    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
-
-    /*
-     * How many colors?
-     */
-
-    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes
-	    * lpImage->lpbi->bmiHeader.biBitCount;
-
-    /*
-     * XOR bits follow the header and color table.
-     */
-
-    lpImage->lpXOR = (LPBYTE) FindDIBBits((LPSTR) lpImage->lpbi);
-
-    /*
-     * AND bits follow the XOR bits.
-     */
-
-    lpImage->lpAND = lpImage->lpXOR +
-	    lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
-    return TRUE;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1298,6 +1066,75 @@ ReadIconFromFile(
     return titlebaricon;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AdjustIconImagePointers --
+ *
+ *	Adjusts internal pointers in icon resource struct, as given by
+ *	LPICONIMAGE lpImage - the resource to handle. Used by titlebar icon
+ *	code.
+ *
+ * Results:
+ *	BOOL - TRUE for success, FALSE for failure
+ *
+ *----------------------------------------------------------------------
+ */
+
+static BOOL
+AdjustIconImagePointers(
+    LPICONIMAGE lpImage)
+{
+    /*
+     * Sanity check.
+     */
+
+    if (lpImage == NULL) {
+	return FALSE;
+    }
+
+    /*
+     * BITMAPINFO is at beginning of bits.
+     */
+
+    lpImage->lpbi = (LPBITMAPINFO) lpImage->lpBits;
+
+    /*
+     * Width - simple enough.
+     */
+
+    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
+
+    /*
+     * Icons are stored in funky format where height is doubled so account for
+     * that.
+     */
+
+    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
+
+    /*
+     * How many colors?
+     */
+
+    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes
+	    * lpImage->lpbi->bmiHeader.biBitCount;
+
+    /*
+     * XOR bits follow the header and color table.
+     */
+
+    lpImage->lpXOR = (LPBYTE) FindDIBBits((LPSTR) lpImage->lpbi);
+
+    /*
+     * AND bits follow the XOR bits.
+     */
+
+    lpImage->lpAND = lpImage->lpXOR +
+	    lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
+    return TRUE;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4310,15 +4147,11 @@ WmIconphotoCmd(
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, width, height, idx, bufferSize, startObj = 3;
-    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
-    union {unsigned char *ptr; void *voidPtr;} bgraMask;
+    int i, width, height, startObj = 3;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
     unsigned size;
-    BITMAPINFO bmInfo;
-    ICONINFO iconInfo;
     (void)tkwin;
 
     if (objc < 4) {
@@ -4363,95 +4196,16 @@ WmIconphotoCmd(
     }
     ZeroMemory(lpIR, size);
 
-    lpIR->nNumImages = objc - startObj;
-
     for (i = startObj; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	Tk_PhotoGetSize(photo, &width, &height);
 	Tk_PhotoGetImage(photo, &block);
 
-	/*
-	 * Don't use CreateIcon to create the icon, as it requires color
-	 * bitmap data in device-dependent format. Instead we use
-	 * CreateIconIndirect which takes device-independent bitmaps and
-	 * converts them as required. Initialise icon info structure.
-	 */
-
-	ZeroMemory(&iconInfo, sizeof(iconInfo));
-	iconInfo.fIcon = TRUE;
-
-	/*
-	 * Create device-independent color bitmap.
-	 */
-
-	ZeroMemory(&bmInfo, sizeof bmInfo);
-	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmInfo.bmiHeader.biWidth = width;
-	bmInfo.bmiHeader.biHeight = -height;
-	bmInfo.bmiHeader.biPlanes = 1;
-	bmInfo.bmiHeader.biBitCount = 32;
-	bmInfo.bmiHeader.biCompression = BI_RGB;
-
-	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-		&bgraPixel.voidPtr, NULL, 0);
-	if (!iconInfo.hbmColor) {
-	    ckfree(lpIR);
+	hIcon = CreateIcoFromPhoto(width, height, block);
+	if (hIcon == NULL) {
+	    FreeIconBlock(lpIR);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an iconphoto with image \"%s\"",
-		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Convert the photo image data into BGRA format (RGBQUAD).
-	 */
-
-	bufferSize = height * width * 4;
-	for (idx = 0 ; idx < bufferSize ; idx += 4) {
-	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
-	    bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
-	    bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
-	    bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
-	}
-
-	/*
-	 * Create a dummy mask bitmap. The contents of this don't appear to
-	 * matter, as CreateIconIndirect will setup the icon mask based on the
-	 * alpha channel in our color bitmap.
-	 */
-
-	bmInfo.bmiHeader.biBitCount = 1;
-
-	iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-		&bgraMask.voidPtr, NULL, 0);
-	if (!iconInfo.hbmMask) {
-	    DeleteObject(iconInfo.hbmColor);
-	    ckfree(lpIR);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create mask bitmap for \"%s\"",
-		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "MASK", NULL);
-	    return TCL_ERROR;
-	}
-
-	ZeroMemory(bgraMask.ptr, width*height/8);
-
-	/*
-	 * Create an icon from the bitmaps.
-	 */
-
-	hIcon = CreateIconIndirect(&iconInfo);
-	DeleteObject(iconInfo.hbmColor);
-	DeleteObject(iconInfo.hbmMask);
-	if (hIcon == NULL) {
-	    /*
-	     * XXX should free up created icons.
-	     */
-
-	    ckfree(lpIR);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create icon for \"%s\"",
 		    Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "ICON", NULL);
 	    return TCL_ERROR;
@@ -4460,6 +4214,7 @@ WmIconphotoCmd(
 	lpIR->IconImages[i-startObj].Height = height;
 	lpIR->IconImages[i-startObj].Colors = 4;
 	lpIR->IconImages[i-startObj].hIcon = hIcon;
+	lpIR->nNumImages++;
     }
 
     titlebaricon = (WinIconPtr)ckalloc(sizeof(WinIconInstance));
