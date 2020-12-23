@@ -4256,6 +4256,7 @@ DisplayText(
 	DLine *dlPtr2;
 	int offset, height, y, oldY;
 	TkRegion damageRgn;
+	DLine *dlPtr_saved;
 
 	/*
 	 * These tests are, in order:
@@ -4360,6 +4361,7 @@ DisplayText(
 	 */
 
 	damageRgn = TkCreateRegion();
+	dlPtr_saved = dInfoPtr->dLinePtr;
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x,
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
@@ -4367,6 +4369,12 @@ DisplayText(
 	}
 	numCopies++;
 	TkDestroyRegion(damageRgn);
+	if (dlPtr_saved != dInfoPtr->dLinePtr) {
+	    /*
+	     * Oops, TkScrollWindow calls something that changed LinePtr, calling dlPtr->nextPtr can segfault, so exit loop now
+	     */
+	    break;
+	}
     }
 
     /*
