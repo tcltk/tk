@@ -1345,7 +1345,7 @@ TkMacOSXSetupDrawingContext(
 	 * will get redrawn in the next call to its drawRect method.
 	 */
 
-	currentBounds = CGContextGetClipBoundingBox(dc.context);
+	currentBounds = NSRectFromCGRect(CGContextGetClipBoundingBox(dc.context));
 	if (!NSContainsRect(currentBounds, drawingBounds)) {
 	    [view addTkDirtyRect:drawingBounds];
 	}

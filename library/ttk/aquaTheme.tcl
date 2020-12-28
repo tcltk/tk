@@ -99,7 +99,7 @@ namespace eval ttk::theme::aqua {
 	    }
 
 	# Enable animation for ttk::progressbar widget:
-	ttk::style configure TProgressbar -period 100 -maxphase 255
+	ttk::style configure TProgressbar -period 100 -maxphase 120
 
 	# For Aqua, labelframe labels should appear outside the border,
 	# with a 14 pixel inset and 4 pixels spacing between border and label

@@ -3,9 +3,6 @@
  */
 
 #include "tkInt.h"
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
 
 #include "ttkTheme.h"
 #include "ttkWidget.h"
