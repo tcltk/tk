@@ -12,7 +12,6 @@
 #include "tkUnixInt.h"
 #include "tkFont.h"
 #include <X11/Xft/Xft.h>
-#include <ctype.h>
 
 #define MAX_CACHED_COLORS 16
 

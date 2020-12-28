@@ -4,8 +4,6 @@
  * ttk::scale widget.
  */
 
-#include <string.h>
-#include <stdio.h>
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"

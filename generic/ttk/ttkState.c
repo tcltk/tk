@@ -5,7 +5,6 @@
  *
  */
 
-#include <string.h>
 #include "tkInt.h"
 #include "ttkTheme.h"
 
