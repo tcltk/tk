@@ -7698,3 +7698,55 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2019-11-19 (new) Partial Emoji support in text displays (nijtmans,culler)
 
 - Released 8.6.10, Nov 21, 2019 - https://core.tcl-lang.org/tk/ for details
+
+2019-11-25 (bug)[a95373] TkKeyEvent platform variations (werner)
+
+2019-11-26 (bug) workaround Win bug so test bind-34.3 passes (nijtmans)
+
+2019-12-03 Aqua: white cursors in dark mode (culler)
+
+2019-12-04 (bug)[749bd9] Aqua: systemControlAccentColor (bll,culler)
+
+2019-12-14 (bug)[b3b56a] ttk respect -cursor option (vogel)
+
+2019-12-14 (bug)[b094cb] Win: $tv -show grows widget width 1 pixel (vogel)
+
+2019-12-14 (bug)[02a694] spinbox options used wrong db names (vogel)
+
+2020-01-11 (bug)[2b8fa6] MouseWheel for ttk::scrollbar (oehlmann)
+
+2020-01-18 (bug)[1771594] icursor and scrollregion, canvText-14.7 (vogel)
+
+2020-01-18 (bug)[587937] tag list ops preserve list order (vogel)
+
+2020-01-18 (bug)[2830360] lose invalid state at focus event, entry-10.1 (vogel)
+
+2020-01-18 (bug)[077d49] string table options support null ok (vogel)
+
+2020-01-18 (bug)[bf93d0] Aqua: unresponsive menubar (culler)
+
+2020-01-31 (bug)[a196fb] restore support for unthreaded Tcl (porter,sebres)
+
+2020-02-09 (bug)[90a4d7] fontconfig crash when no font installed (vogel)
+
+2020-02-24 (bug) Aqua: incomplete floating window display (walzer)
+
+2020-03-11 (bug)[fb2ec3] OSX 10.15+: full screen options (nicolas,walzer)
+
+2020-03-12 (bug)[08e2f8] focus on unmapped windows, focus-7.1 (vogel)
+
+2020-03-12 (bug)[2edd84] [$c postscript] result management (gavilan)
+
+2020-03-22 (bug)[98662d] restore TK_MAC_DEBUG_DRAWING build (chavez)
+
+2020-03-29 (bug)[655fe2] tearoff menu redraw artifacts (vogel)
+
+2020-04-03 (bug)[efbedd] Aqua: compund button-like widget appearance (chavez)
+
+
+
+
+
+
+
+- Released 8.6.11, Dec 31, 2020 - https://core.tcl-lang.org/tk/ for details
