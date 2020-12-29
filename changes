@@ -7743,6 +7743,67 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2020-04-03 (bug)[efbedd] Aqua: compund button-like widget appearance (chavez)
 
+2020-04-14 (bug)[87bade] Aqua: improved dealing with PressAndHold (culler)
+
+2020-04-14 (bug)[376788] X: stop crash w/Noto Color Emoji font (nijtmans)
+
+2020-04-15 (bug)[89354d] Aqua: text color w/o clipping (culler)
+
+2020-04-15 (new) Aqua: assign Button 3 to the middle button (chavez)
+
+2020-04-25 (bug)[3519111] treeview horizontal scroll, entry-2.1.1 (vogel)
+
+2020-04-25 (bug)[141881] treeview vertical scroll, treeview-9.2 (vogel)
+
+2020-05-01 (bug)[2712f4] X: crash angled text w/o Xft, canvText-20.2 (vogel)
+
+2020-05-01 (bug)[cd8714] Win: long angled text (chavez)
+
+2020-05-09 (bug)[88c9e0] treeview -selectmode none focus ring (gavilan)
+
+2020-05-12 (new) Aqua: Rewrite of the Key event system (culler)
+
+2020-05-12 (bug)[411359] Aqua: stop crashes/zombies related to TouchBar (culler)
+
+2020-05-12 (new) Aqua: systemLinkColor (chavez)
+
+2020-05-16 (bug)[40ada9] crash when active button is destroyed (chavez)
+
+2020-05-28 (bug)[3c6660,601cea,4b50b7] Win10: ttk scale (nemethi,lanam)
+
+2020-06-08 (bug)[2790615] Some callbacks not eval'd in global scope (nijtmans)
+
+2020-06-25 Aqua: Update OSX version tests to support Big Sur (culler)
+
+2020-06-27 (bug)[6920b2] dup in spinbox -values causes trouble (lanam)
+
+2020-06-27 (bug)[5c51be] invalid mem read buffer in Tk_PhotoPut* (chavez)
+
+2020-06-27 (bug)[16ef16] restore bind sequence support, bind-33.(16-21) (vogel)
+
+2020-07-02 (bug)[2d2459] default style for combobox (bll)
+
+2020-07-06 (bug)[40c4bf] double free, entry-19.21 (vogel)
+
+2020-07-06 (bug)[e3888d] grab & warp, bind-36.1 (vogel)
+
+2020-07-12 (bug)[2442314] fontchooser i18n (nijtmans)
+
+2020-07-13 (bug)[7655f6] [*entry]: selected text drawing reform (chavez)
+
+2020-07-14 (bug)[09abd7] workaround invalid key codes from Debian 10 (vogel)
+
+2020-07-20 (bug)[cf3853] Aqua: improve bounds on non-Retina displays (chavez)
+
+2020-08-01 Aqua: [winfo rgb] light and dark mode support (culler)
+
+2020-08-15 (bug)[315104] Aqua: appearance change virtual events (culler)
+
+2020-08-21 (bug)[291699] mouse binding for scrollbar grip (bll)
+
+
+
+2020-09-27 (TIP #581) disfavor Master/Slave terminolgy (nijtmans)
 
 
 
