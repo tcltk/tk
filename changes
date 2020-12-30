@@ -7801,13 +7801,44 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2020-08-21 (bug)[291699] mouse binding for scrollbar grip (bll)
 
+2020-09-08 (bug)[6c2425] buffer bounds violation (chavez)
 
+2020-09-08 (bug)[2a6d63] OSX 10.6 crash (hellstrom,culler)
 
-2020-09-27 (TIP #581) disfavor Master/Slave terminolgy (nijtmans)
+2020-09-08 (bug)[420feb] undefined behavior due to alignment (chavez,nijtmans)
 
+2020-09-10 (bug)[ab1fea] Aqua init issues (culler)
 
+2020-09-14 (bug)[71e18c] Aqua: crash in full screen toggle (culler)
 
+2020-09-18 (bug)[4f4f03] Aqua: mouse drags across title bar (nab,culler)
 
+2020-09-21 (bug)[d91e05] select/copy in disabled text (bll)
 
+2020-09-27 (TIP #581) disfavor Master/Slave terminology (nijtmans)
+
+2020-09-30 (bug)[59cba3] win: improve theme detection (bll,nijtmans)
+
+2020-10-06 (bug)[175a6e] Aqua: support tiled windows (culler)
+
+2020-10-07 (bug)[1fa8c3] Aqua: crash on resize during display (nab,culler)
+
+2020-10-16 (bug)[c2483b] Aqua: consistent finalization (culler,nijtmans)
+
+2020-11-06 (bug)[c9ebac] Aqua: use standard about dialog (culler)
+
+2020-11-07 (bug)[4ebcc0] sticky fontchooser options (roseman,vogel)
+
+2020-11-10 (bug)[f9fa92] Aqua: crash in color caching scheme (culler)
+
+2020-11-20 (bug)[7185d2] Aqua: fixes to special menu support (culler)
+
+2020-11-24 (bug)[4a40c6] Aqua: [wm manage] frame offset (chavez)
+
+2020-12-04 (bug)[3ef77f] Aqua dark mode combobox focus ring (walzer,culler)
+
+2020-12-15 (bug)[80e4c6] Aqua: progressbar animation (nab,culler)
+
+2020-12-24 (bug)[6157a8] Aqua: file dialog -filetypes (davis,culler)
 
 - Released 8.6.11, Dec 31, 2020 - https://core.tcl-lang.org/tk/ for details
