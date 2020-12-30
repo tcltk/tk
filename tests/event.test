@@ -874,11 +874,12 @@ test event-9 {no <Enter> event is generated for the container window when its
     pack propagate .top 0
     bind all <Enter> {lappend res %W}
     pack [frame .top.f -bg green -width 50 -height 50] -anchor se -side bottom
-    after 50 ; update
+    update
     event generate .top.f <Motion> -warp 1 -x 25 -y 25  ; # <Enter> sent to .top and .top.f
-    after 50 ; update  ; # idletasks not enough
+    after 50  ; # Win specific - wait for SendInput to be executed
+    update  ; # idletasks not enough
     destroy .top.f  ; # no <Enter> event sent
-    after 50 ; update
+    update
     set res
 } -cleanup {
     deleteWindows
