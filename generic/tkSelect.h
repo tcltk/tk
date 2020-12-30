@@ -4,7 +4,7 @@
  *	Declarations of types shared among the files that implement selection
  *	support.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,14 +25,18 @@
 typedef struct TkSelectionInfo {
     Atom selection;		/* Selection name, e.g. XA_PRIMARY. */
     Tk_Window owner;		/* Current owner of this selection. */
-    int serial;			/* Serial number of last XSelectionSetOwner
+#if TCL_MAJOR_VERSION > 8
+    unsigned long serial;	/* Serial number of last XSelectionSetOwner
 				 * request made to server for this selection
 				 * (used to filter out redundant
 				 * SelectionClear events). */
+#else
+    int serial;
+#endif
     Time time;			/* Timestamp used to acquire selection. */
     Tk_LostSelProc *clearProc;	/* Procedure to call when owner loses
 				 * selection. */
-    ClientData clearData;	/* Info to pass to clearProc. */
+    void *clearData;	/* Info to pass to clearProc. */
     struct TkSelectionInfo *nextPtr;
 				/* Next in list of current selections on this
 				 * display. NULL means end of list. */
@@ -52,8 +56,8 @@ typedef struct TkSelHandler {
 				 * returned, such as STRING or ATOM. */
     Tk_SelectionProc *proc;	/* Procedure to generate selection in this
 				 * format. */
-    ClientData clientData;	/* Argument to pass to proc. */
-    int size;			/* Size of units returned by proc (8 for
+    void *clientData;	/* Argument to pass to proc. */
+    TkSizeT size;			/* Size of units returned by proc (8 for
 				 * STRING, 32 for almost anything else). */
     struct TkSelHandler *nextPtr;
 				/* Next selection handler associated with same
@@ -103,7 +107,7 @@ typedef struct TkSelRetrievalInfo {
 
 typedef struct TkClipboardBuffer {
     char *buffer;		/* Null terminated data buffer. */
-    long length;		/* Length of string in buffer. */
+    TkSizeT length;		/* Length of string in buffer. */
     struct TkClipboardBuffer *nextPtr;
 				/* Next in list of buffers. NULL means end of
 				 * list . */

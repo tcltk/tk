@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"

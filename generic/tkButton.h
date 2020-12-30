@@ -4,7 +4,7 @@
  *	Declarations of types and functions used to implement button-like
  *	widgets.
  *
- * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -306,7 +306,7 @@ MODULE_SCOPE char tkDefLabelPady[TCL_INTEGER_SPACE];
  */
 
 #ifndef TkpButtonSetDefaults
-MODULE_SCOPE void	TkpButtonSetDefaults();
+MODULE_SCOPE void	TkpButtonSetDefaults(void);
 #endif
 MODULE_SCOPE void	TkButtonWorldChanged(ClientData instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);

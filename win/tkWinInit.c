@@ -4,7 +4,7 @@
  *	This file contains Windows-specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -35,11 +35,14 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
+    (void)interp;
     /*
      * This is necessary for static initialization, and is ok otherwise
-     * because TkWinXInit flips a static bit to do its work just once.
+     * because TkWinXInit flips a static bit to do its work just once. Also,
+     * initialize the Windows systray command here.
      */
 
+    WinIcoInit(interp);
     TkWinXInit(Tk_GetHINSTANCE());
     return TCL_OK;
 }
@@ -137,21 +140,21 @@ TkpDisplayWarning(
 
     len = MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
     msgString = &titleString[len + 1];
-    titleString[TK_MAX_WARN_LEN - 1] = L'\0';
+    titleString[TK_MAX_WARN_LEN - 1] = '\0';
     MultiByteToWideChar(CP_UTF8, 0, msg, -1, msgString, (TK_MAX_WARN_LEN - 1) - len);
     /*
      * Truncate MessageBox string if it is too long to not overflow the screen
      * and cause possible oversized window error.
      */
-    if (titleString[TK_MAX_WARN_LEN - 1] != L'\0') {
+    if (titleString[TK_MAX_WARN_LEN - 1] != '\0') {
 	memcpy(titleString + (TK_MAX_WARN_LEN - 5), L" ...", 5 * sizeof(WCHAR));
     }
     if (IsDebuggerPresent()) {
-	titleString[len - 1] = L':';
-	titleString[len] = L' ';
+	titleString[len - 1] = ':';
+	titleString[len] = ' ';
 	OutputDebugStringW(titleString);
     } else {
-	titleString[len - 1] = L'\0';
+	titleString[len - 1] = '\0';
 	MessageBoxW(NULL, msgString, titleString,
 		MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
 		| MB_SETFOREGROUND | MB_TOPMOST);
@@ -196,7 +199,8 @@ TkWin32ErrorObj(
 	*p = '\0';
     }
 
-    Tcl_WinTCharToUtf((LPCTSTR)lpBuffer, -1, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 
@@ -206,7 +210,6 @@ TkWin32ErrorObj(
 
     return errPtr;
 }
-
 
 /*
  * Local Variables:

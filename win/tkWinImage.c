@@ -3,7 +3,7 @@
  *
  *	This file contains routines for manipulation full-color images.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -212,7 +212,10 @@ XCreateImage(
     int bitmap_pad,
     int bytes_per_line)
 {
-    XImage* imagePtr = ckalloc(sizeof(XImage));
+    XImage* imagePtr = (XImage*)ckalloc(sizeof(XImage));
+    (void)display;
+    (void)visual;
+
     imagePtr->width = width;
     imagePtr->height = height;
     imagePtr->xoffset = offset;
@@ -274,7 +277,7 @@ XCreateImage(
  *	None.
  *
  * This procedure is adapted from the XGetImage implementation in TkNT. That
- * code is Copyright (c) 1994 Software Research Associates, Inc.
+ * code is Copyright © 1994 Software Research Associates, Inc.
  *
  *----------------------------------------------------------------------
  */
@@ -300,6 +303,7 @@ XGetImageZPixmap(
     unsigned char *data;
     TkWinDCState state;
     BOOL ret;
+    (void)plane_mask;
 
     if (format != ZPixmap) {
 	TkpDisplayWarning("Only ZPixmap types are implemented",
@@ -315,7 +319,7 @@ XGetImageZPixmap(
 
     hbmp = CreateCompatibleBitmap(hdc, (int) width, (int) height);
     hdcMem = CreateCompatibleDC(hdc);
-    hbmpPrev = SelectObject(hdcMem, hbmp);
+    hbmpPrev = (HBITMAP)SelectObject(hdcMem, hbmp);
     hPal = state.palette;
     if (hPal) {
 	hPalPrev1 = SelectPalette(hdcMem, hPal, FALSE);
@@ -350,7 +354,7 @@ XGetImageZPixmap(
     if (depth <= 8) {
 	size += sizeof(unsigned short) << depth;
     }
-    bmInfo = ckalloc(size);
+    bmInfo = (BITMAPINFO *)ckalloc(size);
 
     bmInfo->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
     bmInfo->bmiHeader.biWidth		= width;
@@ -368,7 +372,7 @@ XGetImageZPixmap(
 	unsigned char *p, *pend;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -404,7 +408,7 @@ XGetImageZPixmap(
 	unsigned char *p;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -435,7 +439,7 @@ XGetImageZPixmap(
 	}
     } else if (depth == 16) {
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
-	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -461,7 +465,7 @@ XGetImageZPixmap(
 	}
     } else {
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
-	data = ckalloc(width * height * 4);
+	data = (unsigned char *)ckalloc(width * height * 4);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -484,7 +488,7 @@ XGetImageZPixmap(
 	    unsigned int byte_width, h, w;
 
 	    byte_width = ((width * 3 + 3) & ~(unsigned)3);
-	    smallBitBase = ckalloc(byte_width * height);
+	    smallBitBase = (unsigned char *)ckalloc(byte_width * height);
 	    if (!smallBitBase) {
 		ckfree(ret_image->data);
 		ckfree(ret_image);
@@ -614,7 +618,7 @@ XGetImage(
 	imagePtr = XCreateImage(display, NULL, 32, format, 0, NULL,
 		width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
-	imagePtr->data = ckalloc(size);
+	imagePtr->data = (char *)ckalloc(size);
 	ZeroMemory(imagePtr->data, size);
 
 	for (yy = 0; yy < height; yy++) {
@@ -661,7 +665,7 @@ XGetImage(
 
 	imagePtr = XCreateImage(display, NULL, 1, XYBitmap, 0, NULL,
 		width, height, 32, 0);
-	imagePtr->data = ckalloc(imagePtr->bytes_per_line * imagePtr->height);
+	imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * imagePtr->height);
 
 	dc = GetDC(NULL);
 

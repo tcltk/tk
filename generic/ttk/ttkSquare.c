@@ -1,9 +1,9 @@
-/* square.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+/* square.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * Minimal sample ttk widget.
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -48,32 +48,32 @@ typedef struct
  * defined for all widgets.
  */
 
-static Tk_OptionSpec SquareOptionSpecs[] =
+static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-     DEFAULT_BORDERWIDTH, Tk_Offset(Square,square.borderWidthObj), -1,
+     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), TCL_INDEX_NONE,
      0,0,GEOMETRY_CHANGED },
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
-     DEFAULT_BACKGROUND, Tk_Offset(Square,square.foregroundObj),
-     -1, 0, 0, 0},
-    
+     DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
+     TCL_INDEX_NONE, 0, 0, 0},
+
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-     "50", Tk_Offset(Square,square.widthObj), -1, 0, 0,
+     "50", offsetof(Square,square.widthObj), TCL_INDEX_NONE, 0, 0,
      GEOMETRY_CHANGED},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-     "50", Tk_Offset(Square,square.heightObj), -1, 0, 0,
+     "50", offsetof(Square,square.heightObj), TCL_INDEX_NONE, 0, 0,
      GEOMETRY_CHANGED},
-    
+
     {TK_OPTION_STRING, "-padding", "padding", "Pad", NULL,
-     Tk_Offset(Square,square.paddingObj), -1, 
+     offsetof(Square,square.paddingObj), TCL_INDEX_NONE,
      TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
-    
+
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-     NULL, Tk_Offset(Square,square.reliefObj), -1, TK_OPTION_NULL_OK, 0, 0},
-    
+     NULL, offsetof(Square,square.reliefObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-     NULL, Tk_Offset(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
-    
+     NULL, offsetof(Square,square.anchorObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
@@ -109,7 +109,7 @@ SquareDoLayout(void *clientData)
      */
 
     if (squareNode) {
-	Square *squarePtr = clientData;
+	Square *squarePtr = (Square *)clientData;
 	Tk_Anchor anchor = TK_ANCHOR_CENTER;
 	Ttk_Box b;
 
@@ -129,21 +129,22 @@ SquareDoLayout(void *clientData)
  */
 
 static const Ttk_Ensemble SquareCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
 /*
- * The Widget specification structure holds all the implementation 
+ * The Widget specification structure holds all the implementation
  * information about this widget and this is what must be registered
  * with Tk in the package initialization code (see bottom).
  */
 
-static WidgetSpec SquareWidgetSpec =
+static const WidgetSpec SquareWidgetSpec =
 {
     "TSquare",			/* className */
     sizeof(Square),		/* recordSize */
@@ -159,7 +160,7 @@ static WidgetSpec SquareWidgetSpec =
     TtkWidgetDisplay		/* displayProc */
 };
 
-/* ---------------------------------------------------------------------- 
+/* ----------------------------------------------------------------------
  * Square element
  *
  * In this section we demonstrate what is required to create a new themed
@@ -176,19 +177,19 @@ typedef struct
     Tcl_Obj *heightObj;
 } SquareElement;
 
-static Ttk_ElementOptionSpec SquareElementOptions[] = 
+static const Ttk_ElementOptionSpec SquareElementOptions[] =
 {
-    { "-background", TK_OPTION_BORDER, Tk_Offset(SquareElement,borderObj),
+    { "-background", TK_OPTION_BORDER, offsetof(SquareElement,borderObj),
     	DEFAULT_BACKGROUND },
-    { "-foreground", TK_OPTION_BORDER, Tk_Offset(SquareElement,foregroundObj),
+    { "-foreground", TK_OPTION_BORDER, offsetof(SquareElement,foregroundObj),
     	DEFAULT_BACKGROUND },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SquareElement,borderWidthObj),
+    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SquareElement,borderWidthObj),
     	DEFAULT_BORDERWIDTH },
-    { "-relief", TK_OPTION_RELIEF, Tk_Offset(SquareElement,reliefObj),
+    { "-relief", TK_OPTION_RELIEF, offsetof(SquareElement,reliefObj),
     	"raised" },
-    { "-width",  TK_OPTION_PIXELS, Tk_Offset(SquareElement,widthObj), "20"},
-    { "-height", TK_OPTION_PIXELS, Tk_Offset(SquareElement,heightObj), "20"},
-    { NULL, 0, 0, NULL }
+    { "-width",  TK_OPTION_PIXELS, offsetof(SquareElement,widthObj), "20"},
+    { "-height", TK_OPTION_PIXELS, offsetof(SquareElement,heightObj), "20"},
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 /*
@@ -198,10 +199,14 @@ static Ttk_ElementOptionSpec SquareElementOptions[] =
  */
 
 static void SquareElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
-    SquareElement *square = elementRecord;
+    SquareElement *square = (SquareElement *)elementRecord;
     int borderWidth = 0;
 
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
@@ -215,10 +220,14 @@ static void SquareElementSize(
  */
 
 static void SquareElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(unsigned int))
 {
-    SquareElement *square = elementRecord;
+    SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
 
@@ -230,7 +239,7 @@ static void SquareElementDraw(
 	b.x, b.y, b.width, b.height, borderWidth, relief);
 }
 
-static Ttk_ElementSpec SquareElementSpec =
+static const Ttk_ElementSpec SquareElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(SquareElement),
@@ -248,7 +257,7 @@ static Ttk_ElementSpec SquareElementSpec =
  * engine is similar to the Tk pack geometry manager. Read the documentation
  * for the details. In this example we just need to have the square element
  * that has been defined for this widget placed on a background. We will
- * also need some padding to keep it away from the edges. 
+ * also need some padding to keep it away from the edges.
  */
 
 TTK_BEGIN_LAYOUT(SquareLayout)
@@ -257,12 +266,12 @@ TTK_BEGIN_LAYOUT(SquareLayout)
 	 TTK_NODE("Square.square", 0))
 TTK_END_LAYOUT
 
-/* ---------------------------------------------------------------------- 
+/* ----------------------------------------------------------------------
  *
  * Widget initialization.
  *
  * This file defines a new element and a new widget. We need to register
- * the element with the themes that will need it. In this case we will 
+ * the element with the themes that will need it. In this case we will
  * register with the default theme that is the root of the theme inheritance
  * tree. This means all themes will find this element.
  * We then need to register the widget class style. This is the layout
@@ -287,10 +296,10 @@ TtkSquareWidget_Init(Tcl_Interp *interp)
 
     /* register the new elements for this theme engine */
     Ttk_RegisterElement(interp, theme, "square", &SquareElementSpec, NULL);
-    
+
     /* register the layout for this theme */
     Ttk_RegisterLayout(theme, "TSquare", SquareLayout);
-    
+
     /* register the widget */
     RegisterWidget(interp, "ttk::square", &SquareWidgetSpec);
 

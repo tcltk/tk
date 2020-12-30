@@ -4,7 +4,7 @@
  *	This file contains the platform specific routines for drawing 3D
  *	borders in the Windows 95 style.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -43,7 +43,7 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    WinBorder *borderPtr = ckalloc(sizeof(WinBorder));
+    WinBorder *borderPtr = (WinBorder *)ckalloc(sizeof(WinBorder));
 
     borderPtr->light2ColorPtr = NULL;
     borderPtr->dark2ColorPtr = NULL;

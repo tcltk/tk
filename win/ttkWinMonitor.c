@@ -22,7 +22,7 @@ typedef struct {
     int index;
 } SystemColorEntry;
 
-static SystemColorEntry sysColors[] = {
+static const SystemColorEntry sysColors[] = {
 	{ "System3dDarkShadow",		COLOR_3DDKSHADOW },
 	{ "System3dLight",		COLOR_3DLIGHT },
 	{ "SystemActiveBorder",		COLOR_ACTIVEBORDER },
@@ -55,7 +55,7 @@ static SystemColorEntry sysColors[] = {
 static void RegisterSystemColors(Tcl_Interp *interp)
 {
     Ttk_ResourceCache cache = Ttk_GetResourceCache(interp);
-    SystemColorEntry *sysColor;
+    const SystemColorEntry *sysColor;
 
     for (sysColor = sysColors; sysColor->name; ++sysColor) {
 	DWORD pixel = GetSysColor(sysColor->index);
@@ -152,7 +152,7 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
     HWND hwnd;
 
     hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
-    Ttk_RegisterCleanup(interp, (ClientData)hwnd, DestroyThemeMonitorWindow);
+    Ttk_RegisterCleanup(interp, hwnd, DestroyThemeMonitorWindow);
 
     TtkWinTheme_Init(interp, hwnd);
     TtkXPTheme_Init(interp, hwnd);

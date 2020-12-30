@@ -333,7 +333,7 @@ same menu.
 4/12/92 (bug fix) Fixed core dump that occurred in tkError.c when
 removing the first error record from the error list.
 
-4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <KeyPress-1>
+4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <Key-1>
 event specifications from being processed correctly:  the "1" was
 treated as a button name rather than a keysym.
 
@@ -3488,7 +3488,7 @@ Macintosh, the menubar is displayed accross the top of the main monitor,
 just like with other applications. Under Windows and Unix, the menu is
 attached to the toplevel window. Also, changed some semantics.
 Tearoff menus will now reflect changes to the menu it was
-torn off from, and are deleted when the master menu is
+torn off from, and are deleted when the main menu is
 deleted. Tearoffs also reflect more look-and-feel of the
 platforms they are running on. (SRP)
 
@@ -3998,7 +3998,7 @@ into account the "-displayof" option.  This problem also existed for the
 command to the Mac.  Also fixed "resource write" when the resource
 was specified by id and already existed. (JI)
 
-9/16/97 (bug fix) Added null bindings to <Command-KeyPress> for the
+9/16/97 (bug fix) Added null bindings to <Command-Key> for the
 text and entry widget on the Macintosh.  This prevents unbound command
 key sequences from having the character echoed to the widget. Also
 fixed Cut & Copy bindings.  (JI) (RJ)
@@ -5099,7 +5099,7 @@ correctly. (hobbs)
 2001-08-28 (bug fix) removed 2 second 'raise' delay seen by some Unix
 window managers. (hobbs, baker)
 
-2001-09-14 (bug fix) fixed memory leaks that occured if errors were
+2001-09-14 (bug fix) fixed memory leaks that occurred if errors were
 thrown while initializing the channel for an image. (darley)
 
 2001-09-20 (new feature) --enable-64bit support was added for HP 11 when
@@ -7416,6 +7416,29 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.6.7, August 9, 2017 --- https://core.tcl-lang.org/tk/ for details
 
+Changes to 8.7a1 include all changes to the 8.6 line through 8.6.7,
+plus the following, which focuses on the high-level feature changes
+in this changeset (new minor version) rather than bug fixes:
+
+2016-03-07 (feature)[841280] spinbox autoswap -to/-from to get ordering (vogel)
+
+2016-03-27 (feature)[38dc27] Support <Button-6> & <Button-7> (nijtmans)
+
+2016-08-29 (TIP 449) [text] undo/redo return character range (vogel)
+
+2016-11-02 (feature) Removed undocumented command [tk_getFileType] (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2017-02-05 (bug)[c0dbdd] Compatibility fonts shadowed system fonts (vogel)
+
+2017-03-21 (TIP 442) display text in a progressbar (zaumseil)
+
+2017-04-13 \u escaped content in msg files converted to true utf-8 (nijtmans)
+
+2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
+
+--- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
+
 2017-08-24 (bug)[f1a3ca] Memory leak in [text] B-tree (edhume3)
 
 2017-08-24 (bug)[ee40fd] Report [console] init errors (the)
@@ -7504,7 +7527,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-01-07 (bug)[fa8de7] Crash [ttk::checkbutton .x -variable {}] (werner)
 
-2018-01-16 (bug)[382712] Crash in [event generate . <KeyPress>] (werner)
+2018-01-16 (bug)[382712] Crash in [event generate . <Key>] (werner)
 
 2018-01-19 (bug)[657c38] Crash in menu destroy with checkbutton entry (werner)
 
@@ -7540,7 +7563,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-07-17 (bug)[1088825] fix frame-2.17,3.9,3.10 on Mac (vogel)
 
-2018-07-27 (bug)[fabed1] GIF photo support for "deferred clear code" (vogel)
+2018-07-27 (bug)[fbaed1] GIF photo support for "deferred clear code" (vogel)
 
 2018-08-08 (feature) Modern full-screen support on Mac OSX (walzer)
 
@@ -7698,3 +7721,40 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2019-11-19 (new) Partial Emoji support in text displays (nijtmans,culler)
 
 - Released 8.6.10, Nov 21, 2019 - https://core.tcl-lang.org/tk/ for details
+
+Changes to 8.7a3 include all changes to the 8.6 line through 8.6.10,
+plus the following, which focuses on the high-level feature changes
+in this changeset (new minor version) rather than bug fixes:
+
+2017-11-25 [TIP 161] $menu -tearoff default changed to false (roseman,vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2017-12-07 [TIP 487] End support for pre-XP Windows (nijtmans)
+
+2018-03-04 [TIP 489] New subcommand [$canvas image] (pitcher,vogel)
+
+2018-05-13 [TIP 496] New options -placeholder* for entries (zaumseil,vogel)
+
+2018-09-23 [TIP 517] New option -activerelief for menus (vogel)
+
+2018-11-03 [TIP 512] Deprecate stub for Tk_MainEx() (nijtmans)
+
+2018-11-06 [TIP 415] New option -height for [$canvas create arc] (geard)
+
+2018-11-06 [TIP 518] New event <<NoMangedChild>> (oehlmann)
+
+2019-04-14 [TIP 164] New subcommand [$canvas rotate] (fellows)
+
+2019-04-14 [TIP 507] New photo image format 'svg' (zaumseil)
+
+2019-04-14 [TIP 483] Record more configuration items (cassoff)
+
+2019-04-14 [TIP 482] Record configured directory for demos (cassoff)
+
+2019-05-25 [TIP 262] New frame options -backgroundimage, -tile (fellows)
+
+2019-06-15 [TIP 528] Deprecate Tk_Offset() (nijtmans)
+
+2019-08-19 [TIP 545] Revised options for photo image format 'svg' (oehlmann)
+
+--- Released 8.7a3, November 25, 2019 --- http://core.tcl.tk/tk/ for details

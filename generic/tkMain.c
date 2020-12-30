@@ -15,14 +15,6 @@
  */
 
 #include "tkInt.h"
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
@@ -40,16 +32,22 @@ static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
  * to strcmp here.
  */
 #ifdef _WIN32
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
-typedef struct {
+typedef struct TclIntPlatStubs {
     int magic;
     void *hooks;
     void (*dummy[16]) (void); /* dummy entries 0-15, not used */
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
 extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#ifdef __cplusplus
+}
+#endif
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -71,7 +69,8 @@ NewNativeObj(
     Tcl_DString ds;
 
 #ifdef UNICODE
-    Tcl_WinTCharToUtf(string, -1, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
     Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
 #endif
@@ -180,7 +179,7 @@ Tk_MainEx(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
 	    abort();
 	} else {
@@ -281,7 +280,7 @@ Tk_MainEx(
     argc--;
     argv++;
 
-    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewIntObj(argc), TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
@@ -308,7 +307,7 @@ Tk_MainEx(
     }
 #endif
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewWideIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -401,21 +400,21 @@ Tk_MainEx(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
-    int mask)			/* Not used. */
+    TCL_UNUSED(int))
 {
     char *cmd;
-    int code, count;
-    InteractiveState *isPtr = clientData;
+    int code;
+    TkSizeT count;
+    InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
     count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count == -1 && !isPtr->gotPartial) {
+    if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {

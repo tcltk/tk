@@ -6,7 +6,7 @@
  *	one application can use as its main window an internal window from
  *	another application).
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -69,7 +69,7 @@ void
 TkWinCleanupContainerList(void)
 {
     Container *nextPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (; tsdPtr->firstContainerPtr != NULL;
@@ -96,14 +96,18 @@ TkWinCleanupContainerList(void)
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkpTestembedCmd(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
+
     return TCL_OK;
 }
 
@@ -173,7 +177,7 @@ void Tk_MapEmbeddedWindow(
 	TkpWmSetState(winPtr, state);
 	TkWmMapWindow(winPtr);
     }
-    Tcl_Release((ClientData)winPtr);
+    Tcl_Release(winPtr);
 }
 
 /*
@@ -331,8 +335,8 @@ TkpUseWindow(
      * window.
      */
 
-    Tcl_Preserve((ClientData) winPtr);
-    Tcl_DoWhenIdle((Tcl_IdleProc*) Tk_MapEmbeddedWindow, (ClientData) winPtr);
+    Tcl_Preserve(winPtr);
+    Tcl_DoWhenIdle((Tcl_IdleProc*) Tk_MapEmbeddedWindow, winPtr);
 
     return TCL_OK;
 }
@@ -371,7 +375,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = ckalloc(sizeof(Container));
+    containerPtr = (Container *)ckalloc(sizeof(Container));
     containerPtr->parentPtr = winPtr;
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
@@ -392,7 +396,7 @@ TkpMakeContainer(
      */
 
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-	    ContainerEventProc, (ClientData) containerPtr);
+	    ContainerEventProc, containerPtr);
 }
 
 /*
@@ -1050,6 +1054,8 @@ TkpRedirectKeyEvent(
     XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
+    (void)winPtr;
+    (void)eventPtr;
     /* not implemented */
 }
 

@@ -3,7 +3,7 @@
  *
  *	Contains the Unix implementation of the common dialog boxes:
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -46,7 +46,7 @@ EvalObjv(
 
     cmdObj = Tcl_NewStringObj(cmdName, -1);
     Tcl_IncrRefCount(cmdObj);
-    objs = ckalloc(sizeof(Tcl_Obj *) * (objc+1));
+    objs = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc+1));
     objs[0] = cmdObj;
     memcpy(objs+1, objv, sizeof(Tcl_Obj *) * (unsigned)objc);
 

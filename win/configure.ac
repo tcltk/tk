@@ -3,18 +3,19 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT(../generic/tk.h)
-AC_PREREQ(2.59)
+AC_INIT
+AC_CONFIG_SRCDIR([../generic/tk.h])
+AC_PREREQ([2.69])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=8.6
+TK_VERSION=8.7
 TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".10"
+TK_MINOR_VERSION=7
+TK_PATCH_LEVEL="a4"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -43,6 +44,7 @@ fi
 AC_PROG_CC
 AC_C_INLINE
 AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
 
 AC_CHECK_TOOL(AR, ar)
 AC_CHECK_TOOL(RANLIB, ranlib)
@@ -62,12 +64,6 @@ AC_OBJEXT
 AC_EXEEXT
 
 #--------------------------------------------------------------------
-# Check whether --enable-threads or --disable-threads was given.
-#--------------------------------------------------------------------
-
-SC_ENABLE_THREADS
-
-#--------------------------------------------------------------------
 # The statements below define a collection of symbols related to
 # building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
@@ -81,15 +77,17 @@ SC_ENABLE_SHARED
 SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
+if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
 fi
-if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt 6; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
+fi
 fi
 
 #--------------------------------------------------------------------
@@ -99,6 +97,10 @@ fi
 #--------------------------------------------------------------------
 
 SC_CONFIG_CFLAGS
+
+AC_CHECK_TYPES([intptr_t, uintptr_t],,,[[
+#include <stdint.h>
+]])
 
 #--------------------------------------------------------------------
 # man2tcl needs this so that it can use errno.h
@@ -112,9 +114,7 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_TRY_LINK([#include <stdlib.h>],
-	    [_strtoi64(0,0,0)],
-	    tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]], [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
@@ -137,8 +137,6 @@ AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
 #--------------------------------------------------------------------
 
 SC_ENABLE_SYMBOLS
-
-TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
 # Embed the manifest if we can determine how
@@ -166,7 +164,11 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
+if test ${SHARED_BUILD} = 0 ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
@@ -198,18 +200,10 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 #--------------------------------------------------------------------
 
 if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
-    fi
+    RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES=""
-    fi
+    RC_DEFINES=""
     TK_RES='tk.$(RES)'
 fi
 
@@ -230,7 +224,6 @@ AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
-AC_SUBST(TK_DBGX)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
 AC_SUBST(TK_STUB_LIB_FILE)
@@ -246,7 +239,6 @@ AC_SUBST(TCL_PATCH_LEVEL)
 
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
-AC_SUBST(TCL_DBGX)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
@@ -307,7 +299,8 @@ AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(RES)
 
-AC_OUTPUT(Makefile tkConfig.sh wish.exe.manifest)
+AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
+AC_OUTPUT
 
 dnl Local Variables:
 dnl mode: autoconf;

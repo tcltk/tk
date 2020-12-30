@@ -14,7 +14,7 @@
  * 	Add script-level access to configure application-wide blink rate.
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -34,9 +34,11 @@ typedef struct
 /* CursorManagerDeleteProc --
  * 	InterpDeleteProc for cursor manager.
  */
-static void CursorManagerDeleteProc(ClientData clientData, Tcl_Interp *interp)
+static void CursorManagerDeleteProc(ClientData clientData, Tcl_Interp *dummy)
 {
     CursorManager *cm = (CursorManager*)clientData;
+    (void)dummy;
+
     if (cm->timer) {
 	Tcl_DeleteTimerHandler(cm->timer);
     }
@@ -49,15 +51,15 @@ static void CursorManagerDeleteProc(ClientData clientData, Tcl_Interp *interp)
 static CursorManager *GetCursorManager(Tcl_Interp *interp)
 {
     static const char *cm_key = "ttk::CursorManager";
-    CursorManager *cm = Tcl_GetAssocData(interp, cm_key,0);
+    CursorManager *cm = (CursorManager *)Tcl_GetAssocData(interp, cm_key,0);
 
     if (!cm) {
-	cm = ckalloc(sizeof(*cm));
+	cm = (CursorManager *)ckalloc(sizeof(*cm));
 	cm->timer = 0;
 	cm->owner = 0;
 	cm->onTime = DEF_CURSOR_ON_TIME;
 	cm->offTime = DEF_CURSOR_OFF_TIME;
-	Tcl_SetAssocData(interp,cm_key,CursorManagerDeleteProc,(ClientData)cm);
+	Tcl_SetAssocData(interp, cm_key, CursorManagerDeleteProc, cm);
     }
     return cm;
 }
@@ -68,7 +70,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
 static void
 CursorBlinkProc(ClientData clientData)
 {
-    CursorManager *cm = (CursorManager*)clientData;
+    CursorManager *cm = (CursorManager *)clientData;
     int blinkTime;
 
     if (cm->owner->flags & CURSOR_ON) {

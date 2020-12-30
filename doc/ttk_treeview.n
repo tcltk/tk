@@ -92,6 +92,11 @@ even if \fB\-show tree\fR is not specified.
 .RE
 .SH "WIDGET COMMAND"
 .PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR, \fBstyle\fR, \fBxview\fR and \fByview\fR
+commands (see \fBttk::widget\fR),
+treeview widgets support the following additional commands:
 .TP
 \fIpathname \fBbbox \fIitem\fR ?\fIcolumn\fR?
 Returns the bounding box (relative to the treeview widget's window)
@@ -101,9 +106,6 @@ If \fIcolumn\fR is specified, returns the bounding box of that cell.
 If the \fIitem\fR is not visible
 (i.e., if it is a descendant of a closed item or is scrolled offscreen),
 returns the empty list.
-.TP
-\fIpathname \fBcget \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBchildren \fIitem\fR ?\fInewchildren\fR?
 If \fInewchildren\fR is not specified,
@@ -159,9 +161,6 @@ column separator.
 .PP
 Use \fIpathname column #0\fR to configure the tree column.
 .RE
-.TP
-\fIpathname \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBdelete \fIitemList\fR
 Deletes each of the items in \fIitemList\fR and all of their descendants.
@@ -272,9 +271,6 @@ newly created item.
 See \fBITEM OPTIONS\fR for the list of available options.
 .RE
 .TP
-\fIpathname \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk::widget(n)\fR.
-.TP
 \fIpathname \fBitem \fIitem\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 Query or modify the options for the specified \fIitem\fR.
 If no \fI\-option\fR is specified,
@@ -338,11 +334,13 @@ With three arguments, sets the value of column \fIcolumn\fR
 in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .TP
-\fIpathname \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk::widget(n)\fR.
-.TP
 \fIpathName \fBtag \fIargs...\fR
 .RS
+.TP
+\fIpathName \fBtag add \fItag items\fR
+Adds the specified \fItag\fR to each of the listed \fIitems\fR.
+If \fItag\fR is already present for a particular item,
+then the \fB\-tags\fR for that item are unchanged.
 .TP
 \fIpathName \fBtag bind \fItagName \fR?\fIsequence\fR? ?\fIscript\fR?
 Add a Tk binding script for the event sequence \fIsequence\fR
@@ -351,9 +349,9 @@ binding scripts for each of the item's \fB\-tags\fR are evaluated
 in order as per \fIbindtags(n)\fR.
 .RS
 .PP
-\fB<KeyPress>\fR, \fB<KeyRelease>\fR, and virtual events
+\fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events
 are sent to the focus item.
-\fB<ButtonPress>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
+\fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
 are sent to the item under the mouse pointer.
 No other event types are supported.
 .PP
@@ -372,6 +370,12 @@ With no additional arguments,
 returns a dictionary of the option settings for \fItagName\fR.
 See \fBTAG OPTIONS\fR for the list of available options.
 .TP
+\fIpathName \fBtag delete \fItagName\fR
+Deletes all tag information for the \fItagName\fR argument. The
+command removes the tag from all items in the widget and also deletes any
+other information associated with the tag, such as bindings and display
+information. The command returns an empty string.
+.TP
 \fIpathName \fBtag has \fItagName\fR ?\fIitem\fR?
 If \fIitem\fR is specified, returns 1 or 0
 depending on whether the specified item has the named tag.
@@ -381,24 +385,12 @@ the specified tag.
 \fIpathName \fBtag names\fR
 Returns a list of all tags used by the widget.
 .TP
-\fIpathName \fBtag add \fItag items\fR
-Adds the specified \fItag\fR to each of the listed \fIitems\fR.
-If \fItag\fR is already present for a particular item,
-then the \fB\-tags\fR for that item are unchanged.
-.TP
 \fIpathName \fBtag remove \fItag\fR ?\fIitems\fR?
 Removes the specified \fItag\fR from each of the listed \fIitems\fR.
 If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .RE
-.PP
-The treeview widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBxview\fR	\fByview\fR
-.DE
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items
