@@ -8,10 +8,10 @@
  *	encoded ascii. Derived from the giftoppm code found in the pbmplus
  *	package and tkImgFmtPPM.c in the tk4.0b2 distribution.
  *
- * Copyright (c) Reed Wade (wade@cs.utk.edu), University of Tennessee
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1997 Australian National University
- * Copyright (c) 2005-2010 Donal K. Fellows
+ * Copyright © Reed Wade (wade@cs.utk.edu), University of Tennessee
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Australian National University
+ * Copyright © 2005-2010 Donal K. Fellows
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -55,7 +55,7 @@ typedef struct mFile {
     unsigned char *data;	/* mmencoded source string */
     int c;			/* bits left over from previous character */
     int state;			/* decoder state (0-4 or GIF_DONE) */
-    int length;			/* Total amount of bytes in data */
+    size_t length;			/* Total amount of bytes in data */
 } MFile;
 
 /*
@@ -111,8 +111,8 @@ typedef struct {
  * serializing in the GIF format.
  */
 
-typedef int (WriteBytesFunc) (ClientData clientData, const char *bytes,
-			    int byteCount);
+typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
+			    size_t byteCount);
 
 /*
  * The format record for the GIF file format:
@@ -187,14 +187,14 @@ static int		ReadImage(GIFImageConfig *gifConfPtr,
  * these are for the BASE64 image reader code only
  */
 
-static int		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
+static size_t		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
 			    size_t size, size_t count, Tcl_Channel chan);
-static int		Mread(unsigned char *dst, size_t size, size_t count,
+static size_t		Mread(unsigned char *dst, size_t size, size_t count,
 			    MFile *handle);
 static int		Mgetc(MFile *handle);
 static int		char64(int c);
 static void		mInit(unsigned char *string, MFile *handle,
-			    int length);
+			    size_t length);
 
 /*
  * Types, defines and variables needed to write and compress a GIF.
@@ -351,9 +351,12 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Interp *interp)		/* not used */
+    Tcl_Interp *dummy)		/* not used */
 {
     GIFImageConfig gifConf;
+    (void)fileName;
+    (void)format;
+    (void)dummy;
 
     memset(&gifConf, 0, sizeof(GIFImageConfig));
     return ReadGIFHeader(&gifConf, chan, widthPtr, heightPtr);
@@ -597,7 +600,7 @@ FileReadGIF(
 		    goto error;
 		}
 		nBytes = fileWidth * fileHeight * 3;
-		trashBuffer = ckalloc(nBytes);
+		trashBuffer = (unsigned char *)ckalloc(nBytes);
 		if (trashBuffer) {
 		    memset(trashBuffer, 0, nBytes);
 		}
@@ -692,7 +695,7 @@ FileReadGIF(
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;
-	block.pixelPtr = ckalloc(nBytes);
+	block.pixelPtr = (unsigned char *)ckalloc(nBytes);
 	if (block.pixelPtr) {
 	    memset(block.pixelPtr, 0, nBytes);
 	}
@@ -754,13 +757,15 @@ StringMatchGIF(
     Tcl_Obj *format,		/* the image format object, or NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
-    Tcl_Interp *interp)		/* not used */
+    Tcl_Interp *dummy)		/* not used */
 {
     unsigned char *data, header[10];
-    int got, length;
+    TkSizeT got, length;
     MFile handle;
+    (void)format;
+    (void)dummy;
 
-    data = Tcl_GetByteArrayFromObj(dataObj, &length);
+    data = TkGetByteArrayFromObj(dataObj, &length);
 
     /*
      * Header is a minimum of 10 bytes.
@@ -826,9 +831,9 @@ StringReadGIF(
     int srcX, int srcY)
 {
     MFile handle, *hdlPtr = &handle;
-    int length;
+    TkSizeT length;
     const char *xferFormat;
-    unsigned char *data = Tcl_GetByteArrayFromObj(dataObj, &length);
+    unsigned char *data = TkGetByteArrayFromObj(dataObj, &length);
 
     mInit(data, hdlPtr, length);
 
@@ -917,7 +922,7 @@ ReadColorMap(
     unsigned char rgb[3];
 
     for (i = 0; i < number; ++i) {
-	if (Fread(gifConfPtr, rgb, sizeof(rgb), 1, chan) <= 0) {
+	if (((size_t)Fread(gifConfPtr, rgb, sizeof(rgb), 1, chan) + 1) < 2) {
 	    return 0;
 	}
 
@@ -983,11 +988,11 @@ GetDataBlock(
 {
     unsigned char count;
 
-    if (Fread(gifConfPtr, &count, 1, 1, chan) <= 0) {
+    if (((size_t)Fread(gifConfPtr, &count, 1, 1, chan) + 1) < 2) {
 	return -1;
     }
 
-    if ((count != 0) && (Fread(gifConfPtr, buf, count, 1, chan) <= 0)) {
+    if ((count != 0) && (((size_t)Fread(gifConfPtr, buf, count, 1, chan) + 1) < 2)) {
 	return -1;
     }
 
@@ -1035,21 +1040,23 @@ ReadImage(
 {
     unsigned char initialCodeSize;
     int xpos = 0, ypos = 0, pass = 0, i, count;
-    register unsigned char *pixelPtr;
+    unsigned char *pixelPtr;
     static const int interlaceStep[] = { 8, 8, 4, 2 };
     static const int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char append[(1 << MAX_LWZ_BITS)];
     unsigned char stack[(1 << MAX_LWZ_BITS)*2];
-    register unsigned char *top;
+    unsigned char *top;
     int codeSize, clearCode, inCode, endCode, oldCode, maxCode;
     int code, firstCode, v;
+    (void)srcX;
+    (void)srcY;
 
     /*
      * Initialize the decoder
      */
 
-    if (Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) <= 0) {
+    if (((size_t)Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) + 1) < 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading GIF image: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;
@@ -1392,7 +1399,7 @@ static void
 mInit(
     unsigned char *string,	/* string containing initial mmencoded data */
     MFile *handle,		/* mmdecode "file" handle */
-    int length)			/* Number of bytes in string */
+    size_t length)			/* Number of bytes in string */
 {
     handle->data = string;
     handle->state = 0;
@@ -1418,15 +1425,15 @@ mInit(
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 Mread(
     unsigned char *dst,		/* where to put the result */
     size_t chunkSize,		/* size of each transfer */
     size_t numChunks,		/* number of chunks */
     MFile *handle)		/* mmdecode "file" handle */
 {
-    register int i, c;
-    int count = chunkSize * numChunks;
+    int c;
+    size_t i, count = chunkSize * numChunks;
 
     for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
 	*dst++ = c;
@@ -1567,7 +1574,7 @@ char64(
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 Fread(
     GIFImageConfig *gifConfPtr,
     unsigned char *dst,		/* where to put the result */
@@ -1581,20 +1588,20 @@ Fread(
     if (gifConfPtr->fromData == INLINE_DATA_BINARY) {
 	MFile *handle = (MFile *) chan;
 
-	if (handle->length <= 0 || (size_t) handle->length < hunk*count) {
-	    return -1;
+	if ((handle->length + 1 < 2) || (handle->length < hunk*count)) {
+	    return (size_t)-1;
 	}
-	memcpy(dst, handle->data, (size_t) (hunk * count));
+	memcpy(dst, handle->data, hunk * count);
 	handle->data += hunk * count;
 	handle->length -= hunk * count;
-	return (int)(hunk * count);
+	return hunk * count;
     }
 
     /*
      * Otherwise we've got a real file to read.
      */
 
-    return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
+    return Tcl_Read(chan, (char *) dst, hunk * count);
 }
 
 /*
@@ -1673,24 +1680,24 @@ StringWriteGIF(
     return result;
 }
 
-static int
+static size_t
 WriteToChannel(
     ClientData clientData,
     const char *bytes,
-    int byteCount)
+    size_t byteCount)
 {
-    Tcl_Channel handle = clientData;
+    Tcl_Channel handle = (Tcl_Channel)clientData;
 
     return Tcl_Write(handle, bytes, byteCount);
 }
 
-static int
+static size_t
 WriteToByteArray(
     ClientData clientData,
     const char *bytes,
-    int byteCount)
+    size_t byteCount)
 {
-    Tcl_Obj *objPtr = clientData;
+    Tcl_Obj *objPtr = (Tcl_Obj *)clientData;
     Tcl_Obj *tmpObj = Tcl_NewByteArrayObj((unsigned char *) bytes, byteCount);
 
     Tcl_IncrRefCount(tmpObj);
@@ -1712,6 +1719,7 @@ CommonWriteGIF(
     long width, height, x;
     unsigned char c;
     unsigned int top, left;
+    (void)format;
 
     top = 0;
     left = 0;
@@ -2157,9 +2165,9 @@ ClearHashTable(			/* Reset code table. */
     GIFState_t *statePtr,
     int hSize)
 {
-    register int *hashTablePtr = statePtr->hashTable + hSize;
-    register long i;
-    register long m1 = -1;
+    int *hashTablePtr = statePtr->hashTable + hSize;
+    long i;
+    long m1 = -1;
 
     i = hSize - 16;
     do {			/* might use Sys V memset(3) here */

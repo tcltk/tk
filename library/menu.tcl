@@ -4,10 +4,10 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
-# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -88,7 +88,7 @@ bind Menubutton <Enter> {
 bind Menubutton <Leave> {
     tk::MbLeave %W
 }
-bind Menubutton <1> {
+bind Menubutton <Button-1> {
     if {$tk::Priv(inMenubutton) ne ""} {
 	tk::MbPost $tk::Priv(inMenubutton) %X %Y
     }
@@ -138,7 +138,7 @@ bind Menu <Leave> {
 bind Menu <Motion> {
     tk::MenuMotion %W %x %y %s
 }
-bind Menu <ButtonPress> {
+bind Menu <Button> {
     tk::MenuButtonDown %W
 }
 bind Menu <ButtonRelease> {
@@ -168,7 +168,7 @@ bind Menu <<PrevLine>> {
 bind Menu <<NextLine>> {
     tk::MenuDownArrow %W
 }
-bind Menu <KeyPress> {
+bind Menu <Key> {
     tk::TraverseWithinMenu %W %A
     break
 }
@@ -177,7 +177,7 @@ bind Menu <KeyPress> {
 # implement keyboard menu traversal.
 
 if {[tk windowingsystem] eq "x11"} {
-    bind all <Alt-KeyPress> {
+    bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
@@ -185,7 +185,7 @@ if {[tk windowingsystem] eq "x11"} {
 	tk::FirstMenu %W
     }
 } else {
-    bind Menubutton <Alt-KeyPress> {
+    bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 

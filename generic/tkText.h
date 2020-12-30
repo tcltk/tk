@@ -165,10 +165,10 @@ typedef struct TkTextSegment {
     struct TkTextSegment *nextPtr;
 				/* Next in list of segments for this line, or
 				 * NULL for end of list. */
-    int size;			/* Size of this segment (# of bytes of index
+    TkSizeT size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[2];		/* Characters that make up character info.
+	char chars[TKFLEXARRAY];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -489,7 +489,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[1];		/* Array of tabs. The actual size will be
+    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;
@@ -532,8 +532,16 @@ typedef enum {
  * that are peers.
  */
 
+#ifndef TkSizeT
+#   if TCL_MAJOR_VERSION > 8
+#	define TkSizeT size_t
+#   else
+#	define TkSizeT int
+#   endif
+#endif
+
 typedef struct TkSharedText {
-    int refCount;		/* Reference count this shared object. */
+    TkSizeT refCount;		/* Reference count this shared object. */
     TkTextBTree tree;		/* B-tree representation of text and tags for
 				 * widget. */
     Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
@@ -562,7 +570,7 @@ typedef struct TkSharedText {
 				 * exist, so the table hasn't been created.
 				 * Each "object" used for this table is the
 				 * name of a tag. */
-    int stateEpoch;		/* This is incremented each time the B-tree's
+    TkSizeT stateEpoch;	/* This is incremented each time the B-tree's
 				 * contents change structurally, or when the
 				 * start/end limits change, and means that any
 				 * cached TkTextIndex objects are no longer
@@ -580,6 +588,8 @@ typedef struct TkSharedText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
+    int undoMarkId;             /* Counts undo marks temporarily used during
+                                   undo and redo operations. */
     int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
 				 * unsaved modifications have been applied to
@@ -781,7 +791,7 @@ typedef struct TkText {
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
-    int refCount;		/* Number of cached TkTextIndex objects
+    TkSizeT refCount;		/* Number of cached TkTextIndex objects
 				 * refering to us. */
     int insertCursorType;	/* 0 = standard insertion cursor, 1 = block
 				 * cursor. */
@@ -837,7 +847,7 @@ typedef struct TkText {
  */
 
 typedef TkTextSegment *	Tk_SegSplitProc(struct TkTextSegment *segPtr,
-			    int index);
+			    TkSizeT index);
 typedef int		Tk_SegDeleteProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 typedef TkTextSegment *	Tk_SegCleanupProc(struct TkTextSegment *segPtr,
@@ -846,8 +856,8 @@ typedef void		Tk_SegLineChangeProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 typedef int		Tk_SegLayoutProc(struct TkText *textPtr,
 			    struct TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, TkSizeT offset, int maxX,
+			    TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    struct TkTextDispChunk *chunkPtr);
 typedef void		Tk_SegCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
@@ -1007,7 +1017,7 @@ MODULE_SCOPE void	TkBTreeRemoveClient(TkTextBTree tree,
 MODULE_SCOPE void	TkBTreeDestroy(TkTextBTree tree);
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkTextBTree tree,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkBTreeEpoch(TkTextBTree tree);
+MODULE_SCOPE TkSizeT	TkBTreeEpoch(TkTextBTree tree);
 MODULE_SCOPE TkTextLine *TkBTreeFindLine(TkTextBTree tree,
 			    const TkText *textPtr, int line);
 MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
@@ -1050,7 +1060,7 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, int noBreakYet,
+			    TkSizeT offset, int maxX, TkSizeT maxChars, int noBreakYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
@@ -1096,7 +1106,7 @@ MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
-			    int *offsetPtr);
+			    TkSizeT *offsetPtr);
 MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex,

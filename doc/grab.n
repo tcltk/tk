@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH grab n "" Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -14,7 +14,7 @@ grab \- Confine pointer and keyboard events to a window sub-tree
 .SH SYNOPSIS
 \fBgrab \fR?\fB\-global\fR? \fIwindow\fR
 .sp
-\fBgrab \fIoption \fR?\fIarg arg \fR...?
+\fBgrab \fIoption \fR?\fIarg \fR...?
 .BE
 .SH DESCRIPTION
 .PP

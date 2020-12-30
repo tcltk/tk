@@ -18,18 +18,15 @@
 #define __UNIX__ 1
 
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <math.h>
 #include <pwd.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -44,18 +41,17 @@
 #   include <time.h>
 #else
 #   if HAVE_SYS_TIME_H
-#       include <sys/time.h>
+#	include <sys/time.h>
 #   else
-#       include <time.h>
+#	include <time.h>
 #   endif
 #endif
 #if HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
-#ifndef NO_UNISTD_H
-#   include <unistd.h>
-#else
-#   include "../compat/unistd.h"
+#include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
@@ -110,32 +106,19 @@
 #   define NBBY 8
 #endif
 
-#ifdef __CYGWIN__
-#   include "tkIntXlibDecls.h"
-#   define UINT unsigned int
-#   define HWND void *
-#   define HDC void *
-#   define HINSTANCE void *
-#   define COLORREF void *
-#   define HMENU void *
-#   define TkWinDCState void
-#   define HPALETTE void *
-#   define WNDPROC void *
-#   define WPARAM void *
-#   define LPARAM void *
-#   define LRESULT void *
-
-#else /* !__CYGWIN__ */
-    /*
-     * The TkPutImage macro strips off the color table information, which isn't
-     * needed for X.
-     */
-
-#   define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
-		desty, width, height);
-
-#endif /* !__CYGWIN__ */
+#include "tkIntXlibDecls.h"
+#define UINT unsigned int
+#define HWND void *
+#define HDC void *
+#define HINSTANCE void *
+#define COLORREF void *
+#define HMENU void *
+#define TkWinDCState void
+#define HPALETTE void *
+#define WNDPROC void *
+#define WPARAM void *
+#define LPARAM void *
+#define LRESULT void *
 
 /*
  * Supply macros for seek offsets, if they're not already provided by
@@ -189,5 +172,11 @@
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
 #endif
+
+/*
+ * Used by tkWindow.c
+ */
+
+#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
 
 #endif /* _UNIXPORT */

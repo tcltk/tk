@@ -4,9 +4,9 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1995-1997 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -131,7 +131,7 @@ proc ::tk::ConsoleInit {} {
         default { set preferred {} }
     }
     foreach {family size} $preferred {
-        if {[lsearch -exact $families $family] != -1} {
+        if {$family in $families} {
             font configure TkConsoleFont -family $family -size $size
             break
         }
@@ -215,7 +215,7 @@ proc ::tk::ConsoleSource {} {
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
     if {$filename ne ""} {
-    	set cmd [list source $filename]
+    	set cmd [list source -encoding utf-8 $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
 	}
@@ -416,61 +416,54 @@ proc ::tk::ConsoleBind {w} {
 	bind Console $ev [bind Text $ev]
     }
     ## We really didn't want the newline insertion...
-    bind Console <Control-Key-o> {}
+    bind Console <Control-o> {}
     ## ...or any Control-v binding (would block <<Paste>>)
-    bind Console <Control-Key-v> {}
+    bind Console <Control-v> {}
 
     # For the moment, transpose isn't enabled until the console
     # gets and overhaul of how it handles input -- hobbs
-    bind Console <Control-Key-t> {}
+    bind Console <Control-t> {}
 
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
     # <Keypress> class binding will also fire and insert the character
     # which is wrong.
 
-    bind Console <Alt-KeyPress> {# nothing }
-    bind Console <Meta-KeyPress> {# nothing}
-    bind Console <Control-KeyPress> {# nothing}
+    bind Console <Alt-Key> {# nothing }
+    bind Console <Meta-Key> {# nothing}
+    bind Console <Control-Key> {# nothing}
 
     foreach {ev key} {
-	<<Console_NextImmediate>>	<Control-Key-n>
-	<<Console_PrevImmediate>>	<Control-Key-p>
-	<<Console_PrevSearch>>		<Control-Key-r>
-	<<Console_NextSearch>>		<Control-Key-s>
+	<<Console_NextImmediate>>	<Control-n>
+	<<Console_PrevImmediate>>	<Control-p>
+	<<Console_PrevSearch>>		<Control-r>
+	<<Console_NextSearch>>		<Control-s>
 
-	<<Console_Expand>>		<Key-Tab>
-	<<Console_Expand>>		<Key-Escape>
-	<<Console_ExpandFile>>		<Control-Shift-Key-F>
-	<<Console_ExpandProc>>		<Control-Shift-Key-P>
-	<<Console_ExpandVar>>		<Control-Shift-Key-V>
-	<<Console_Tab>>			<Control-Key-i>
-	<<Console_Tab>>			<Meta-Key-i>
-	<<Console_Eval>>		<Key-Return>
-	<<Console_Eval>>		<Key-KP_Enter>
+	<<Console_Expand>>		<Tab>
+	<<Console_Expand>>		<Escape>
+	<<Console_ExpandFile>>		<Control-Shift-F>
+	<<Console_ExpandProc>>		<Control-Shift-P>
+	<<Console_ExpandVar>>		<Control-Shift-V>
+	<<Console_Tab>>			<Control-i>
+	<<Console_Tab>>			<Meta-i>
+	<<Console_Eval>>		<Return>
+	<<Console_Eval>>		<KP_Enter>
 
-	<<Console_Clear>>		<Control-Key-l>
-	<<Console_KillLine>>		<Control-Key-k>
-	<<Console_Transpose>>		<Control-Key-t>
-	<<Console_ClearLine>>		<Control-Key-u>
-	<<Console_SaveCommand>>		<Control-Key-z>
-        <<Console_FontSizeIncr>>	<Control-Key-plus>
-        <<Console_FontSizeDecr>>	<Control-Key-minus>
+	<<Console_Clear>>		<Control-l>
+	<<Console_KillLine>>		<Control-k>
+	<<Console_Transpose>>		<Control-t>
+	<<Console_ClearLine>>		<Control-u>
+	<<Console_SaveCommand>>		<Control-z>
+	<<Console_FontSizeIncr>>	<Control-+>
+	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeDecr>>	<Command-minus>
     } {
 	event add $ev $key
 	bind Console $key {}
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	foreach {ev key} {
-	    <<Console_FontSizeIncr>>	<Command-Key-plus>
-	    <<Console_FontSizeDecr>>	<Command-Key-minus>
-	} {
-	    event add $ev $key
-	    bind Console $key {}
-	}
-	if {$::tk::console::useFontchooser} {
-	    bind Console <Command-Key-t> [list ::tk::console::FontchooserToggle]
-	}
+    if {$::tk::console::useFontchooser} {
+	bind Console <Command-t> [list ::tk::console::FontchooserToggle]
     }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {
@@ -587,17 +580,15 @@ proc ::tk::ConsoleBind {w} {
     bind Console <Insert> {
 	catch {tk::ConsoleInsert %W [::tk::GetSelection %W PRIMARY]}
     }
-    bind Console <KeyPress> {
+    bind Console <Key> {
 	tk::ConsoleInsert %W %A
     }
     bind Console <F9> {
 	eval destroy [winfo child .]
-	source [file join $tk_library console.tcl]
+	source -encoding utf-8 [file join $tk_library console.tcl]
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	bind Console <Command-q> {
-	    exit
-	}
+    bind Console <Command-q> {
+	exit
     }
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
@@ -629,28 +620,28 @@ proc ::tk::ConsoleBind {w} {
     ##
     ## Bindings for doing special things based on certain keys
     ##
-    bind PostConsole <Key-parenright> {
+    bind PostConsole <parenright> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \( \) promptEnd
 	}
     }
-    bind PostConsole <Key-bracketright> {
+    bind PostConsole <bracketright> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \[ \] promptEnd
 	}
     }
-    bind PostConsole <Key-braceright> {
+    bind PostConsole <braceright> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \{ \} promptEnd
 	}
     }
-    bind PostConsole <Key-quotedbl> {
+    bind PostConsole <quotedbl> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchQuote %W promptEnd
 	}
     }
 
-    bind PostConsole <KeyPress> {
+    bind PostConsole <Key> {
 	if {"%A" ne ""} {
 	    ::tk::console::TagProc %W
 	}
@@ -740,9 +731,9 @@ proc ::tk::console::FontchooserToggle {} {
 }
 proc ::tk::console::FontchooserVisibility {index} {
     if {[tk fontchooser configure -visible]} {
-	.menubar.edit entryconfigure $index -label [msgcat::mc "Hide Fonts"]
+	.menubar.edit entryconfigure $index -label [::tk::msgcat::mc "Hide Fonts"]
     } else {
-	.menubar.edit entryconfigure $index -label [msgcat::mc "Show Fonts"]
+	.menubar.edit entryconfigure $index -label [::tk::msgcat::mc "Show Fonts"]
     }
 }
 proc ::tk::console::FontchooserFocus {w isFocusIn} {

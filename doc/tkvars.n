@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH tkvars n 4.1 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -50,7 +50,7 @@ it uniquely identifies an official version of Tk.
 .RS
 .PP
 This value is normally the same as the result of
-.QW "\fBpackage require\fR \fBTk\fR" .
+.QW "\fBpackage require\fR \fBtk\fR" .
 .RE
 .TP
 \fBtk_strictMotif\fR

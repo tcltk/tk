@@ -4,7 +4,7 @@
  *	Declarations shared among all of the files that implement menu
  *	widgets.
  *
- * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -64,11 +64,11 @@ typedef struct TkMenuEntry {
     Tk_OptionTable optionTable;	/* Option table for this menu entry. */
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL if
 				 * no label). */
-    int labelLength;		/* Number of non-NULL characters in label. */
+    TkSizeT labelLength;	/* Number of non-NULL characters in label. */
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline (<0 means don't
+				 * of character to underline (-1 means don't
 				 * underline anything). */
     Tcl_Obj *underlinePtr;	/* Index of character to underline. */
     Tcl_Obj *bitmapPtr;		/* Bitmap to display in menu entry, or NULL.
@@ -85,7 +85,7 @@ typedef struct TkMenuEntry {
     Tcl_Obj *accelPtr;		/* Accelerator string displayed at right of
 				 * menu entry. NULL means no such accelerator.
 				 * Malloc'ed. */
-    int accelLength;		/* Number of non-NULL characters in
+    TkSizeT accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
@@ -185,7 +185,7 @@ typedef struct TkMenuEntry {
     				 * the menu. */
 
     /*
-     * Bookeeping for master menus and cascade menus.
+     * Bookeeping for main menus and cascade menus.
      */
 
     struct TkMenuReferences *childMenuRefPtr;
@@ -263,10 +263,10 @@ typedef struct TkMenu {
     Tcl_Command widgetCmd;	/* Token for menu's widget command. */
     TkMenuEntry **entries;	/* Array of pointers to all the entries in the
 				 * menu. NULL means no entries. */
-    int numEntries;		/* Number of elements in entries. */
-    int active;			/* Index of active entry. -1 means nothing
-				 * active. */
-    int menuType;		/* MASTER_MENU, TEAROFF_MENU, or MENUBAR. See
+    TkSizeT numEntries;		/* Number of elements in entries. */
+    TkSizeT active;			/* Index of active entry. TCL_INDEX_NONE means
+				 * nothing active. */
+    int menuType;		/* MAIN_MENU, TEAROFF_MENU, or MENUBAR. See
     				 * below for definitions. */
     Tcl_Obj *menuTypePtr;	/* Used to control whether created tkwin is a
 				 * toplevel or not. "normal", "menubar", or
@@ -351,10 +351,10 @@ typedef struct TkMenu {
     struct TkMenu *nextInstancePtr;
     				/* The next instance of this menu in the
     				 * chain. */
-    struct TkMenu *masterMenuPtr;
+    struct TkMenu *mainMenuPtr;
     				/* A pointer to the original menu for this
     				 * clone chain. Points back to this structure
-    				 * if this menu is a master menu. */
+    				 * if this menu is a main menu. */
     void *reserved1; /* not used any more. */
     Tk_Window parentTopLevelPtr;/* If this menu is a menubar, this is the
     				 * toplevel that owns the menu. Only
@@ -378,6 +378,7 @@ typedef struct TkMenu {
 				/* We actually have to allocate these because
 				 * multiple menus get changed during one
 				 * ConfigureMenu call. */
+    Tcl_Obj *activeReliefPtr;	/* 3-d effect for active element. */
 } TkMenu;
 
 /*
@@ -433,7 +434,7 @@ typedef struct TkMenuReferences {
  * MENU_DELETION_PENDING	Non-zero means that we are currently
  *				destroying this menu's internal structures.
  *				This is useful when we are in the middle of
- *				cleaning this master menu's chain of menus up
+ *				cleaning this main menu's chain of menus up
  *				when TkDestroyMenu was called again on this
  *				menu (via a destroy binding or somesuch).
  * MENU_WIN_DESTRUCTION_PENDING Non-zero means we are in the middle of
@@ -451,16 +452,16 @@ typedef struct TkMenuReferences {
 #define MENU_PLATFORM_FLAG3	(1 << 28)
 
 /*
- * Each menu created by the user is a MASTER_MENU. When a menu is torn off, a
+ * Each menu created by the user is a MAIN_MENU. When a menu is torn off, a
  * TEAROFF_MENU instance is created. When a menu is assigned to a toplevel as
  * a menu bar, a MENUBAR instance is created. All instances have the same
- * configuration information. If the master instance is deleted, all instances
+ * configuration information. If the main instance is deleted, all instances
  * are deleted. If one of the other instances is deleted, only that instance
  * is deleted.
  */
 
 #define UNKNOWN_TYPE		-1
-#define MASTER_MENU 		0
+#define MAIN_MENU 		0
 #define TEAROFF_MENU 		1
 #define MENUBAR 		2
 
@@ -477,7 +478,7 @@ typedef struct TkMenuReferences {
  * the outside world:
  */
 
-MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, int index);
+MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, TkSizeT index);
 MODULE_SCOPE void	TkBindMenu(Tk_Window tkwin, TkMenu *menuPtr);
 MODULE_SCOPE TkMenuReferences*TkCreateMenuReferences(Tcl_Interp *interp,
 			    const char *name);
@@ -490,15 +491,13 @@ MODULE_SCOPE TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
 			    Tcl_Obj *namePtr);
 MODULE_SCOPE int	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
 MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
-MODULE_SCOPE int	TkGetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
-			    Tcl_Obj *objPtr, int lastOK, int *indexPtr);
 MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int index);
+			    TkSizeT index);
 MODULE_SCOPE void	TkMenuConfigureDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
-			    TkMenuEntry *mePtr, int index);
+			    TkMenuEntry *mePtr, TkSizeT index);
 MODULE_SCOPE void	TkMenuFreeDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
 MODULE_SCOPE void	TkMenuEventProc(ClientData clientData,

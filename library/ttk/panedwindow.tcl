@@ -15,7 +15,7 @@ namespace eval ttk::panedwindow {
 
 ## Bindings:
 #
-bind TPanedwindow <ButtonPress-1> 	{ ttk::panedwindow::Press %W %x %y }
+bind TPanedwindow <Button-1> 		{ ttk::panedwindow::Press %W %x %y }
 bind TPanedwindow <B1-Motion>		{ ttk::panedwindow::Drag %W %x %y }
 bind TPanedwindow <ButtonRelease-1> 	{ ttk::panedwindow::Release %W %x %y }
 

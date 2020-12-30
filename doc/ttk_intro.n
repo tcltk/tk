@@ -86,7 +86,7 @@ ttk::\fBstyle layout\fR Horizontal.TScrollbar {
     Scrollbar.trough \-children {
 	Scrollbar.leftarrow \-side left \-sticky w
 	Scrollbar.rightarrow \-side right \-sticky e
-	Scrollbar.thumb \-side left \-expand true \-sticky ew
+	Scrollbar.thumb \-sticky ew
     }
 }
 .CE
@@ -121,7 +121,7 @@ widget are:
 .CS
 bind TButton <Enter>		{ %W state active }
 bind TButton <Leave>		{ %W state !active }
-bind TButton <ButtonPress-1>	{ %W state pressed }
+bind TButton <Button-1>		{ %W state pressed }
 bind TButton <Button1-Leave>	{ %W state !pressed }
 bind TButton <Button1-Enter>	{ %W state pressed }
 bind TButton <ButtonRelease-1>	\e

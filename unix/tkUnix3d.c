@@ -4,7 +4,7 @@
  *	This file contains the platform specific routines for drawing 3d
  *	borders in the Motif style.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -46,7 +46,7 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    UnixBorder *borderPtr = ckalloc(sizeof(UnixBorder));
+    UnixBorder *borderPtr = (UnixBorder *)ckalloc(sizeof(UnixBorder));
 
     borderPtr->solidGC = NULL;
     return (TkBorder *) borderPtr;

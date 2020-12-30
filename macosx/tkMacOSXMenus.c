@@ -3,9 +3,9 @@
  *
  *	These calls set up the default menus for Tk.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -112,7 +112,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
      * On OS X 10.12 we get duplicate tab control items if we create them here.
      */
 
-    if ([NSApp macMinorVersion] > 12) {
+    if ([NSApp macOSVersion] > 101200) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
@@ -199,9 +199,11 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) orderFrontStandardAboutPanel: (id) sender
 {
+    (void)sender;
+
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
-	TkAboutDlg();
+	[super orderFrontStandardAboutPanel:nil];
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", -1,
 		TCL_EVAL_GLOBAL);
@@ -231,6 +233,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkSource: (id) sender
 {
+    (void)sender;
+
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
@@ -256,6 +260,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkDemo: (id) sender
 {
+	(void)sender;
+
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
 
@@ -281,6 +287,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
 {
+    (void)anItem;
+
     return YES;
 }
 
@@ -322,19 +330,18 @@ static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
 {
-    Tcl_Obj *libpath, *result = NULL;
+    Tcl_Obj *result = NULL;
 
-    libpath = Tcl_GetVar2Ex(interp, "tk_library", NULL, TCL_GLOBAL_ONLY);
-    if (libpath) {
-	Tcl_Obj *demo[2] = {	Tcl_NewStringObj("demos", 5),
-				Tcl_NewStringObj("widget", 6) };
+    if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
+		   -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *libpath, *demo[1] = { Tcl_NewStringObj("widget", 6) };
 
+	libpath = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(libpath);
-	result = Tcl_FSJoinToPath(libpath, 2, demo);
+	result = Tcl_FSJoinToPath(libpath, 1, demo);
 	Tcl_DecrRefCount(libpath);
-    } else {
-	Tcl_ResetResult(interp);
     }
+    Tcl_ResetResult(interp);
     return result;
 }
 
@@ -356,34 +363,11 @@ GetWidgetDemoPath(
 
 void
 TkMacOSXHandleMenuSelect(
-    short theMenu,
-    unsigned short theItem,
-    int optionKeyPressed)
+    TCL_UNUSED(short),
+    TCL_UNUSED(unsigned short),
+    TCL_UNUSED(int))
 {
     Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXInitMenus --
- *
- *	This procedure initializes the Macintosh menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXInitMenus(
-    Tcl_Interp *interp)
-{
-    [NSApp _setupMenus];
 }
 
 /*
@@ -415,7 +399,7 @@ GenerateEditEvent(
     if (!winPtr) {
 	return;
     }
-    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    tkwin = (Tk_Window)winPtr->dispPtr->focusPtr;
     if (!tkwin) {
 	return;
     }

@@ -4,8 +4,8 @@
  *	Declarations of types and functions used to implement the scale
  *	widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright (c) 1999-2000 by Scriptics Corporation.
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 1999-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -87,7 +87,7 @@ typedef struct TkScale {
     int repeatInterval;		/* Interval between autorepeats (in ms). */
     char *label;		/* Label to display above or to right of
 				 * scale; NULL means don't display a label. */
-    int labelLength;		/* Number of non-NULL chars. in label. */
+    TkSizeT labelLength;	/* Number of non-NULL chars. in label. */
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when
 				 * disabled. */

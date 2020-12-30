@@ -6,8 +6,8 @@
  *	useful, for example, when communicating with a window that may not
  *	exist.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -107,7 +107,7 @@ Tk_CreateErrorHandler(
      * Create the handler record.
      */
 
-    errorPtr = ckalloc(sizeof(TkErrorHandler));
+    errorPtr = (TkErrorHandler *)ckalloc(sizeof(TkErrorHandler));
     errorPtr->dispPtr = dispPtr;
     errorPtr->firstRequest = NextRequest(display);
     errorPtr->lastRequest = (unsigned) -1;
@@ -164,11 +164,10 @@ Tk_DeleteErrorHandler(
      * there are many handlers that stay around forever).
      */
 
-    dispPtr->deleteCount += 1;
-    if (dispPtr->deleteCount >= 10) {
+    if (dispPtr->deleteCount++ >= 9) {
 	TkErrorHandler *prevPtr;
 	TkErrorHandler *nextPtr;
-	int lastSerial = LastKnownRequestProcessed(dispPtr->display);
+	unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
 
 	/*
 	 * Last chance to catch errors for this handler: if no event/error
@@ -176,7 +175,7 @@ Tk_DeleteErrorHandler(
 	 * we need a round trip with the X server now.
 	 */
 
-	if (errorPtr->lastRequest > (unsigned long) lastSerial) {
+	if (errorPtr->lastRequest > lastSerial) {
 	    XSync(dispPtr->display, False);
 	}
 	dispPtr->deleteCount = 0;
@@ -184,7 +183,7 @@ Tk_DeleteErrorHandler(
 	for (prevPtr = NULL; errorPtr != NULL; errorPtr = nextPtr) {
 	    nextPtr = errorPtr->nextPtr;
 	    if ((errorPtr->lastRequest != (unsigned long) -1)
-		    && (errorPtr->lastRequest <= (unsigned long) lastSerial)) {
+		    && (errorPtr->lastRequest <= lastSerial)) {
 		if (prevPtr == NULL) {
 		    dispPtr->errorPtr = nextPtr;
 		} else {

@@ -2,11 +2,11 @@
 # "tk_getSaveFile" commands. It is organized in the standard fashion
 # for Tcl tests.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -48,7 +48,7 @@ proc ToEnterFileByKey {parent fileName fileDir} {
 
 proc PressButton {btn} {
     event generate $btn <Enter>
-    event generate $btn <1> -x 5 -y 5
+    event generate $btn <Button-1> -x 5 -y 5
     event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
@@ -93,7 +93,7 @@ proc SendButtonPress {parent btn type} {
 	event generate $w <Enter>
 	focus $w
 	event generate $button <Enter>
-	event generate $w <KeyPress> -keysym Return
+	event generate $w <Key> -keysym Return
     }
 }
 
@@ -167,7 +167,7 @@ foreach mode $modes {
     catch {tk_getOpenFile -foo 1} msg
     regsub -all ,      $msg "" options
     regsub \"-foo\" $options "" options
-    
+
     foreach option $options {
         if {[string index $option 0] eq "-"} {
 	    test filebox-1.2-$mode$option "tk_getOpenFile command" -body {

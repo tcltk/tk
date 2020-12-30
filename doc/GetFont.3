@@ -9,7 +9,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_AllocFontFromObj, Tk_GetFont, Tk_GetFontFromObj, Tk_NameOfFont, Tk_FreeFontFromObj, Tk_FreeFont \- maintain database of fonts
+Tk_AllocFontFromObj, Tk_GetFont, Tk_GetFontFromObj, Tk_NameOfFont, Tk_FontGetDescription, Tk_FreeFontFromObj, Tk_FreeFont \- maintain database of fonts
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -22,6 +22,9 @@ Tk_Font
 .sp
 Tk_Font
 \fBTk_GetFontFromObj(\fItkwin, objPtr\fB)\fR
+.sp
+Tcl_Obj *
+\fBTk_FontGetDescription(\fItkfont\fB)\fR
 .sp
 const char *
 \fBTk_NameOfFont(\fItkfont\fB)\fR
@@ -87,6 +90,9 @@ the same font is requested multiple times (e.g. by different
 windows or for different purposes), then a single Tk_Font will be
 shared for all uses.  The underlying resources will be freed automatically
 when no-one is using the font anymore.
+.PP
+The procedure \fBTk_FontGetDescription\fR returns information about the font
+description as a Tcl list. One possible result is "{{DejaVu Sans} -16 bold underline}".
 .PP
 The procedure \fBTk_NameOfFont\fR is roughly the inverse of
 \fBTk_GetFont\fR.  Given a \fItkfont\fR that was created by

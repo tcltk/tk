@@ -13,6 +13,7 @@
  */
 
 #include "tk.h"
+#include "tkWinInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -25,8 +26,19 @@ int _CRT_glob = 0;
 #endif /* __GNUC__ */
 
 #ifdef TK_TEST
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern Tcl_PackageInitProc Tktest_Init;
 #endif /* TK_TEST */
+
+#if !defined(TCL_USE_STATIC_PACKAGES)
+#   if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 6
+#	define TCL_USE_STATIC_PACKAGES 1
+#   else
+#	define TCL_USE_STATIC_PACKAGES 0
+#   endif
+#endif
 
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
 extern Tcl_PackageInitProc Registry_Init;
@@ -34,6 +46,9 @@ extern Tcl_PackageInitProc Dde_Init;
 extern Tcl_PackageInitProc Dde_SafeInit;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #ifdef TCL_BROKEN_MAINARGS
 static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
@@ -54,7 +69,11 @@ static BOOL consoleRequired = TRUE;
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
 #ifndef MODULE_SCOPE
-#   define MODULE_SCOPE extern
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
@@ -71,6 +90,8 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 /* Make sure the stubbed variants of those are never used. */
 #undef Tcl_ObjSetVar2
 #undef Tcl_NewStringObj
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -106,6 +127,10 @@ _tWinMain(
     TCHAR **argv;
     int argc;
     TCHAR *p;
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpszCmdLine;
+    (void)nCmdShow;
 
     /*
      * Create the console channels and install them as the standard channels.
@@ -145,6 +170,9 @@ _tWinMain(
 
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#elif defined(UNICODE) && ((TCL_MAJOR_VERSION > 8) || (TCL_MINOR_VERSION > 6))
+    /* This doesn't work on Windows without UNICODE, neither does it work with Tcl 8.6 */
+    TclZipfs_AppHook(&argc, &argv);
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
@@ -196,12 +224,12 @@ Tcl_AppInit(
     if (Registry_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
+    Tcl_StaticPackage(interp, "Registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
+    Tcl_StaticPackage(interp, "Dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
@@ -237,6 +265,7 @@ Tcl_AppInit(
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
+
     return TCL_OK;
 }
 
@@ -265,6 +294,7 @@ main(
     char **dummy)
 {
     TCHAR **argv;
+    (void)dummy;
 #else
 int
 _tmain(
@@ -364,7 +394,7 @@ setargv(
     #undef Tcl_Alloc
     #undef Tcl_DbCkalloc
 
-    argSpace = ckalloc(size * sizeof(char *)
+    argSpace = (TCHAR *)ckalloc(size * sizeof(char *)
 	    + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));

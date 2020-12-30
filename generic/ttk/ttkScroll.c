@@ -55,7 +55,7 @@ struct ScrollHandleRec
  */
 ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
-    ScrollHandle h = ckalloc(sizeof(*h));
+    ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
 
     h->flags = 0;
     h->corePtr = corePtr;
@@ -104,15 +104,18 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     Tcl_Release(corePtr);
 
     if (code != TCL_OK && !Tcl_InterpDeleted(interp)) {
-	/* Disable the -scrollcommand, add to stack trace:
+	/* Add error to stack trace.
+         * Also set the SCROLL_UPDATE_REQUIRED flag so that a later call to
+         * TtkScrolled has an effect. Indeed, the error in the -scrollcommand
+         * callback may later be gone, for instance the callback proc got
+         * defined in the meantime.
 	 */
-	ckfree(s->scrollCmd);
-	s->scrollCmd = 0;
 
 	Tcl_AddErrorInfo(interp, /* @@@ "horizontal" / "vertical" */
 		"\n    (scrolling command executed by ");
 	Tcl_AddErrorInfo(interp, Tk_PathName(h->corePtr->tkwin));
 	Tcl_AddErrorInfo(interp, ")");
+        TtkScrollbarUpdateRequired(h);
     }
     return code;
 }
@@ -127,12 +130,12 @@ static void UpdateScrollbarBG(ClientData clientData)
     int code;
 
     h->flags &= ~SCROLL_UPDATE_PENDING;
-    Tcl_Preserve((ClientData) interp);
+    Tcl_Preserve(interp);
     code = UpdateScrollbar(interp, h);
     if (code == TCL_ERROR && !Tcl_InterpDeleted(interp)) {
 	Tcl_BackgroundException(interp, code);
     }
-    Tcl_Release((ClientData) interp);
+    Tcl_Release(interp);
 }
 
 /* TtkScrolled --
@@ -164,7 +167,7 @@ void TtkScrolled(ScrollHandle h, int first, int last, int total)
 	s->total = total;
 
 	if (!(h->flags & SCROLL_UPDATE_PENDING)) {
-	    Tcl_DoWhenIdle(UpdateScrollbarBG, (ClientData)h);
+	    Tcl_DoWhenIdle(UpdateScrollbarBG, h);
 	    h->flags |= SCROLL_UPDATE_PENDING;
 	}
     }
@@ -271,7 +274,7 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 void TtkFreeScrollHandle(ScrollHandle h)
 {
     if (h->flags & SCROLL_UPDATE_PENDING) {
-	Tcl_CancelIdleCall(UpdateScrollbarBG, (ClientData)h);
+	Tcl_CancelIdleCall(UpdateScrollbarBG, h);
     }
     ckfree(h);
 }
