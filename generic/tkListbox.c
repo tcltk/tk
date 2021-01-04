@@ -542,13 +542,13 @@ Tk_ListboxObjCmd(
     listPtr->itemAttrTable	 = ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
     listPtr->relief		 = TK_RELIEF_RAISED;
-    listPtr->textGC		 = None;
-    listPtr->selFgColorPtr	 = None;
-    listPtr->selTextGC		 = None;
+    listPtr->textGC		 = NULL;
+    listPtr->selFgColorPtr	 = NULL;
+    listPtr->selTextGC		 = NULL;
     listPtr->fullLines		 = 1;
     listPtr->xScrollUnit	 = 1;
     listPtr->exportSelection	 = 1;
-    listPtr->cursor		 = None;
+    listPtr->cursor		 = NULL;
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
     listPtr->justify             = TK_JUSTIFY_LEFT;
@@ -1488,10 +1488,10 @@ DestroyListbox(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    if (listPtr->textGC != None) {
+    if (listPtr->textGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
-    if (listPtr->selTextGC != None) {
+    if (listPtr->selTextGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     if (listPtr->gray != None) {
@@ -1565,7 +1565,7 @@ ConfigureListbox(
     Tcl_Obj *errorResult = NULL;
     int oldExport, error;
 
-    oldExport = listPtr->exportSelection;
+    oldExport = (listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp));
     if (listPtr->listVarName != NULL) {
 	Tcl_UntraceVar2(interp, listPtr->listVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1607,10 +1607,11 @@ ConfigureListbox(
 
 	/*
 	 * Claim the selection if we've suddenly started exporting it and
-	 * there is a selection to export.
+	 * there is a selection to export and this interp is unsafe.
 	 */
 
-	if (listPtr->exportSelection && !oldExport
+	if (listPtr->exportSelection && (!oldExport)
+		&& (!Tcl_IsSafe(listPtr->interp))
 		&& (listPtr->numSelected != 0)) {
 	    Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		    ListboxLostSelection, listPtr);
@@ -1790,7 +1791,7 @@ ListboxWorldChanged(
 
     gcValues.font = Tk_FontId(listPtr->tkfont);
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->textGC != None) {
+    if (listPtr->textGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
     listPtr->textGC = gc;
@@ -1801,7 +1802,7 @@ ListboxWorldChanged(
     gcValues.font = Tk_FontId(listPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->selTextGC != None) {
+    if (listPtr->selTextGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     listPtr->selTextGC = gc;
@@ -3079,7 +3080,8 @@ ListboxSelect(
 	EventuallyRedrawRange(listPtr, first, last);
     }
     if ((oldCount == 0) && (listPtr->numSelected > 0)
-	    && listPtr->exportSelection) {
+	    && (listPtr->exportSelection)
+	    && (!Tcl_IsSafe(listPtr->interp))) {
 	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		ListboxLostSelection, listPtr);
     }
@@ -3125,7 +3127,7 @@ ListboxFetchSelection(
     const char *stringRep;
     Tcl_HashEntry *entry;
 
-    if (!listPtr->exportSelection) {
+    if ((!listPtr->exportSelection) || Tcl_IsSafe(listPtr->interp)) {
 	return -1;
     }
 
@@ -3196,7 +3198,8 @@ ListboxLostSelection(
 {
     register Listbox *listPtr = clientData;
 
-    if ((listPtr->exportSelection) && (listPtr->nElements > 0)) {
+    if ((listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp))
+	    && (listPtr->nElements > 0)) {
 	ListboxSelect(listPtr, 0, listPtr->nElements-1, 0);
         GenerateListboxSelectEvent(listPtr);
     }
@@ -3315,7 +3318,7 @@ ListboxUpdateVScrollbar(
 
     /*
      * We must hold onto the interpreter from the listPtr because the data at
-     * listPtr might be freed as a result of the Tcl_VarEval.
+     * listPtr might be freed as a result of the Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3326,7 +3329,7 @@ ListboxUpdateVScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
@@ -3387,7 +3390,7 @@ ListboxUpdateHScrollbar(
 
     /*
      * We must hold onto the interpreter because the data referred to at
-     * listPtr might be freed as a result of the call to Tcl_VarEval.
+     * listPtr might be freed as a result of the call to Tcl_EvalEx.
      */
 
     interp = listPtr->interp;
@@ -3398,7 +3401,7 @@ ListboxUpdateHScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
@@ -3442,7 +3445,28 @@ ListboxListVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+
+        if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        listPtr->listVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        ListboxListVarProc, probe);
+                if (probe == (ClientData)listPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * listVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 		    listPtr->listObj, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, listPtr->listVarName,

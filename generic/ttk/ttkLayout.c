@@ -6,8 +6,7 @@
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkThemeInt.h"
 
 #define MAX(a,b) (a > b ? a : b)
@@ -702,6 +701,8 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	if (childSpec) {
 	    tail->child = Ttk_ParseLayoutTemplate(interp, childSpec);
 	    if (!tail->child) {
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid -children value"));
+                Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", NULL);
 		goto error;
 	    }
 	}
@@ -808,7 +809,7 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 	APPENDSTR("-sticky");
 	APPENDOBJ(Ttk_NewStickyObj(flags & _TTK_MASK_STICK));
 
-	/* @@@ Check again: are these necessary? */
+	/* @@@ Check again: are these necessary? Can't see any effect! */
 	if (flags & TTK_BORDER)	{ APPENDSTR("-border"); APPENDSTR("1"); }
 	if (flags & TTK_UNIT) 	{ APPENDSTR("-unit"); APPENDSTR("1"); }
 

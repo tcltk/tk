@@ -134,7 +134,7 @@ DllMain(
 	    "leaq	%[registration], %%rdx"		"\n\t"
 	    "movq	%%gs:0,		%%rax"		"\n\t"
 	    "movq	%%rax,		0x0(%%rdx)"	"\n\t" /* link */
-	    "leaq	1f,		%%rax"		"\n\t"
+	    "leaq	1f(%%rip),	%%rax"		"\n\t"
 	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
 	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* rbp */
 	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* rsp */
@@ -150,7 +150,7 @@ DllMain(
 	     * Call TkFinalize
 	     */
 
-	    "movq	$0x0,		0x0(%%esp)"		"\n\t"
+	    "movq	$0x0,		0x0(%%rsp)"		"\n\t"
 	    "call	TkFinalize"			"\n\t"
 
 	    /*

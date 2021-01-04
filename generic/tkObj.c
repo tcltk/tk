@@ -47,7 +47,7 @@ typedef struct PixelRep {
  * thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
 } ThreadSpecificData;
@@ -96,7 +96,7 @@ static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 /*
  * The following structure defines the implementation of the "pixel" Tcl
  * object, used for measuring distances. The pixel object remembers its
- * initial display-independant settings.
+ * initial display-independent settings.
  */
 
 static const Tcl_ObjType pixelObjType = {
@@ -110,7 +110,7 @@ static const Tcl_ObjType pixelObjType = {
 /*
  * The following structure defines the implementation of the "pixel" Tcl
  * object, used for measuring distances. The pixel object remembers its
- * initial display-independant settings.
+ * initial display-independent settings.
  */
 
 static const Tcl_ObjType mmObjType = {
@@ -149,12 +149,23 @@ static const Tcl_ObjType windowObjType = {
 static ThreadSpecificData *
 GetTypeCache(void)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->doubleTypePtr == NULL) {
-	tsdPtr->doubleTypePtr = Tcl_GetObjType("double");
-	tsdPtr->intTypePtr = Tcl_GetObjType("int");
+	/* Smart initialization of doubleTypePtr/intTypePtr without
+	 * hash-table lookup or creating complete Tcl_Obj's */
+	Tcl_Obj obj;
+	obj.length = 3;
+	obj.bytes = (char *)"0.0";
+	obj.typePtr = NULL;
+	Tcl_GetDoubleFromObj(NULL, &obj, &obj.internalRep.doubleValue);
+	tsdPtr->doubleTypePtr = obj.typePtr;
+	obj.bytes += 2;
+	obj.length = 1;
+	obj.typePtr = NULL;
+	Tcl_GetLongFromObj(NULL, &obj, &obj.internalRep.longValue);
+	tsdPtr->intTypePtr = obj.typePtr;
     }
     return tsdPtr;
 }
@@ -397,8 +408,8 @@ FreePixelInternalRep(
 
 static void
 DupPixelInternalRep(
-    register Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
-    register Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
+    Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
+    Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
 {
     copyPtr->typePtr = srcPtr->typePtr;
 
@@ -408,7 +419,7 @@ DupPixelInternalRep(
 	PixelRep *oldPtr, *newPtr;
 
 	oldPtr = GET_COMPLEXPIXEL(srcPtr);
-	newPtr = ckalloc(sizeof(PixelRep));
+	newPtr = (PixelRep *)ckalloc(sizeof(PixelRep));
 	newPtr->value = oldPtr->value;
 	newPtr->units = oldPtr->units;
 	newPtr->tkwin = oldPtr->tkwin;
@@ -492,7 +503,7 @@ SetPixelFromAny(
     if ((units < 0) && (i == d)) {
 	SET_SIMPLEPIXEL(objPtr, i);
     } else {
-	PixelRep *pixelPtr = ckalloc(sizeof(PixelRep));
+	PixelRep *pixelPtr = (PixelRep *)ckalloc(sizeof(PixelRep));
 
 	pixelPtr->value = d;
 	pixelPtr->units = units;
@@ -553,7 +564,7 @@ Tk_GetMMFromObj(
 	}
     }
 
-    mmPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    mmPtr = (MMRep *)objPtr->internalRep.twoPtrValue.ptr1;
     if (mmPtr->tkwin != tkwin) {
 	d = mmPtr->value;
 	if (mmPtr->units == -1) {
@@ -617,14 +628,14 @@ FreeMMInternalRep(
 
 static void
 DupMMInternalRep(
-    register Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
-    register Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
+    Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
+    Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
 {
     MMRep *oldPtr, *newPtr;
 
     copyPtr->typePtr = srcPtr->typePtr;
-    oldPtr = srcPtr->internalRep.twoPtrValue.ptr1;
-    newPtr = ckalloc(sizeof(MMRep));
+    oldPtr = (MMRep *)srcPtr->internalRep.twoPtrValue.ptr1;
+    newPtr = (MMRep *)ckalloc(sizeof(MMRep));
     newPtr->value = oldPtr->value;
     newPtr->units = oldPtr->units;
     newPtr->tkwin = oldPtr->tkwin;
@@ -653,22 +664,22 @@ DupMMInternalRep(
 
 static void
 UpdateStringOfMM(
-    register Tcl_Obj *objPtr)   /* pixel obj with string rep to update. */
+    Tcl_Obj *objPtr)   /* pixel obj with string rep to update. */
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
-    register int len;
+    size_t len;
 
-    mmPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    mmPtr = (MMRep *)objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
     if ((mmPtr->units != -1) || (objPtr->bytes != NULL)) {
 	Tcl_Panic("UpdateStringOfMM: false precondition");
     }
 
     Tcl_PrintDouble(NULL, mmPtr->value, buffer);
-    len = (int)strlen(buffer);
+    len = strlen(buffer);
 
-    objPtr->bytes = ckalloc(len + 1);
+    objPtr->bytes = (char *)ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
     objPtr->length = len;
 }
@@ -776,7 +787,7 @@ SetMMFromAny(
 
     objPtr->typePtr = &mmObjType;
 
-    mmPtr = ckalloc(sizeof(MMRep));
+    mmPtr = (MMRep *)ckalloc(sizeof(MMRep));
     mmPtr->value = d;
     mmPtr->units = units;
     mmPtr->tkwin = NULL;
@@ -816,7 +827,7 @@ TkGetWindowFromObj(
     Tk_Window *windowPtr)	/* Place to store resulting window. */
 {
     TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
-    register WindowRep *winPtr;
+    WindowRep *winPtr;
 
     if (objPtr->typePtr != &windowObjType) {
 	int result = SetWindowFromAny(interp, objPtr);
@@ -825,7 +836,7 @@ TkGetWindowFromObj(
 	}
     }
 
-    winPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    winPtr = (WindowRep *)objPtr->internalRep.twoPtrValue.ptr1;
     if (winPtr->tkwin == NULL
 	    || winPtr->mainPtr == NULL
 	    || winPtr->mainPtr != mainPtr
@@ -871,8 +882,8 @@ TkGetWindowFromObj(
 
 static int
 SetWindowFromAny(
-    Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
-    register Tcl_Obj *objPtr)	/* The object to convert. */
+    TCL_UNUSED(Tcl_Interp *),
+    Tcl_Obj *objPtr)	/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
     WindowRep *winPtr;
@@ -881,13 +892,13 @@ SetWindowFromAny(
      * Free the old internalRep before setting the new one.
      */
 
-    (void)Tcl_GetString(objPtr);
+    Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
 
-    winPtr = ckalloc(sizeof(WindowRep));
+    winPtr = (WindowRep *)ckalloc(sizeof(WindowRep));
     winPtr->tkwin = NULL;
     winPtr->mainPtr = NULL;
     winPtr->epoch = 0;
@@ -982,7 +993,7 @@ TkNewWindowObj(
 {
     Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
     TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
-    register WindowRep *winPtr;
+    WindowRep *winPtr;
 
     SetWindowFromAny(NULL, objPtr);
 

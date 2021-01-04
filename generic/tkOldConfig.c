@@ -82,7 +82,7 @@ Tk_ConfigureWidget(
 				 * considered. Also, may have
 				 * TK_CONFIG_ARGV_ONLY set. */
 {
-    register Tk_ConfigSpec *specPtr, *staticSpecs;
+    Tk_ConfigSpec *specPtr, *staticSpecs;
     Tk_Uid value;		/* Value of option from database. */
     int needFlags;		/* Specs must contain this set of flags or
 				 * else they are not considered. */
@@ -245,8 +245,8 @@ FindConfigSpec(
     int hateFlags)		/* Flags that must NOT be present in matching
 				 * entry. */
 {
-    register Tk_ConfigSpec *specPtr;
-    register char c;		/* First character of current argument. */
+    Tk_ConfigSpec *specPtr;
+    char c;		/* First character of current argument. */
     Tk_ConfigSpec *matchPtr;	/* Matching spec, or NULL. */
     size_t length;
 
@@ -376,7 +376,7 @@ DoConfig(
 	    if (nullValue) {
 		newStr = NULL;
 	    } else {
-		newStr = ckalloc(strlen(value) + 1);
+		newStr = (char *)ckalloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
 	    oldStr = *((char **) ptr);
@@ -477,16 +477,16 @@ DoConfig(
 	    Tk_Cursor newCursor, oldCursor;
 
 	    if (nullValue) {
-		newCursor = None;
+		newCursor = NULL;
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
 		newCursor = Tk_GetCursor(interp, tkwin, uid);
-		if (newCursor == None) {
+		if (newCursor == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
 	    oldCursor = *((Tk_Cursor *) ptr);
-	    if (oldCursor != None) {
+	    if (oldCursor != NULL) {
 		Tk_FreeCursor(Tk_Display(tkwin), oldCursor);
 	    }
 	    *((Tk_Cursor *) ptr) = newCursor;
@@ -603,7 +603,7 @@ Tk_ConfigureInfo(
 				 * be present in config specs for them to be
 				 * considered. */
 {
-    register Tk_ConfigSpec *specPtr, *staticSpecs;
+    Tk_ConfigSpec *specPtr, *staticSpecs;
     int needFlags, hateFlags;
     char *list;
     const char *leader = "{";
@@ -686,7 +686,7 @@ FormatConfigInfo(
     Tcl_Interp *interp,		/* Interpreter to use for things like
 				 * floating-point precision. */
     Tk_Window tkwin,		/* Window corresponding to widget. */
-    register const Tk_ConfigSpec *specPtr,
+    const Tk_ConfigSpec *specPtr,
 				/* Pointer to information describing
 				 * option. */
     char *widgRec)		/* Pointer to record holding current values of
@@ -837,7 +837,7 @@ FormatConfigValue(
     case TK_CONFIG_ACTIVE_CURSOR: {
 	Tk_Cursor cursor = *((Tk_Cursor *) ptr);
 
-	if (cursor != None) {
+	if (cursor != NULL) {
 	    result = Tk_NameOfCursor(Tk_Display(tkwin), cursor);
 	}
 	break;
@@ -863,8 +863,6 @@ FormatConfigValue(
 	result = buffer;
 	break;
     case TK_CONFIG_WINDOW: {
-	Tk_Window tkwin;
-
 	tkwin = *((Tk_Window *) ptr);
 	if (tkwin != NULL) {
 	    result = Tk_PathName(tkwin);
@@ -971,7 +969,6 @@ Tk_ConfigureValue(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 Tk_FreeOptions(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
@@ -983,7 +980,7 @@ Tk_FreeOptions(
 				 * be present in config specs for them to be
 				 * considered. */
 {
-    register const Tk_ConfigSpec *specPtr;
+    const Tk_ConfigSpec *specPtr;
     char *ptr;
 
     for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
@@ -1022,9 +1019,9 @@ Tk_FreeOptions(
 	    break;
 	case TK_CONFIG_CURSOR:
 	case TK_CONFIG_ACTIVE_CURSOR:
-	    if (*((Tk_Cursor *) ptr) != None) {
+	    if (*((Tk_Cursor *) ptr) != NULL) {
 		Tk_FreeCursor(display, *((Tk_Cursor *) ptr));
-		*((Tk_Cursor *) ptr) = None;
+		*((Tk_Cursor *) ptr) = NULL;
 	    }
 	}
     }
@@ -1071,10 +1068,10 @@ GetCachedSpecs(
      * self-initializing code.
      */
 
-    specCacheTablePtr =
+    specCacheTablePtr = (Tcl_HashTable *)
 	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
     if (specCacheTablePtr == NULL) {
-	specCacheTablePtr = ckalloc(sizeof(Tcl_HashTable));
+	specCacheTablePtr = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
 	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
 		DeleteSpecCacheTable, specCacheTablePtr);
@@ -1088,7 +1085,7 @@ GetCachedSpecs(
     entryPtr = Tcl_CreateHashEntry(specCacheTablePtr, (char *) staticSpecs,
 	    &isNew);
     if (isNew) {
-	unsigned int entrySpace = sizeof(Tk_ConfigSpec);
+	size_t entrySpace = sizeof(Tk_ConfigSpec);
 	const Tk_ConfigSpec *staticSpecPtr;
 	Tk_ConfigSpec *specPtr;
 
@@ -1104,10 +1101,10 @@ GetCachedSpecs(
 
 	/*
 	 * Now allocate our working copy's space and copy over the contents
-	 * from the master copy.
+	 * from the origin.
 	 */
 
-	cachedSpecs = ckalloc(entrySpace);
+	cachedSpecs = (Tk_ConfigSpec *)ckalloc(entrySpace);
 	memcpy(cachedSpecs, staticSpecs, entrySpace);
 	Tcl_SetHashValue(entryPtr, cachedSpecs);
 
@@ -1131,7 +1128,7 @@ GetCachedSpecs(
 	    }
 	}
     } else {
-	cachedSpecs = Tcl_GetHashValue(entryPtr);
+	cachedSpecs = (Tk_ConfigSpec *)Tcl_GetHashValue(entryPtr);
     }
 
     return cachedSpecs;
@@ -1157,9 +1154,9 @@ GetCachedSpecs(
 static void
 DeleteSpecCacheTable(
     ClientData clientData,
-    Tcl_Interp *interp)
+    TCL_UNUSED(Tcl_Interp *))
 {
-    Tcl_HashTable *tablePtr = clientData;
+    Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;
     Tcl_HashEntry *entryPtr;
     Tcl_HashSearch search;
 

@@ -910,7 +910,7 @@ test text-2.7 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -919,7 +919,7 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -928,7 +928,7 @@ test text-2.9 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {raised}
@@ -1587,6 +1587,15 @@ test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
+test text-8.28 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert end "foo\n"
+    .tt tag add sel 1.0 end
+    .tt replace sel.first sel.last "bar"
+} -cleanup {
+    destroy .tt
+} -result {}
 
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} -setup {
@@ -2026,7 +2035,7 @@ Line 7"
     .t tag configure elide -elide 1
     .t tag add elide 5.2 5.4
     .t window create 5.4
-    .t delete 5.4 
+    .t delete 5.4
     .t tag add elide 5.5 5.6
     .t get -displaychars 5.2 5.8
 } -cleanup {
@@ -2677,7 +2686,7 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 5} {incr i} {
-      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .t tag configure hidden -elide true
     .t tag add hidden 2.15 3.10
@@ -2699,7 +2708,7 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
     for {set i 1} {$i < 5} {incr i} {
       #                    0          1          2          3          4
       #                    012345 678901234 567890123 456789012 34567890123456789
-      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .mytop.t tag configure hidden -elide true
     .mytop.t tag add hidden 2.30 3.10
@@ -2908,7 +2917,7 @@ test text-11.9 {counting with tag priority eliding} -setup {
     lappend res [.t index "1.0 +1 indices"]
     lappend res [.t index "1.0 +1 display indices"]
     lappend res [.t index "1.0 +1 display chars"]
-    lappend res [.t index end] 
+    lappend res [.t index end]
     lappend res [.t index "end -1 indices"]
     lappend res [.t index "end -1 display indices"]
     lappend res [.t index "end -1 display chars"]
@@ -2927,11 +2936,13 @@ test text-11a.1 {TextWidgetCmd procedure, "pendingsync" option} -setup {
 } -cleanup {
     destroy .yt
 } -result {1 {wrong # args: should be ".yt pendingsync"}}
+
 test text-11a.2 {TextWidgetCmd procedure, "pendingsync" option} -setup {
     destroy .top.yt .top
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -2969,9 +2980,11 @@ test text-11a.12 {TextWidgetCmd procedure, "sync" option} -setup {
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
+    # Use long lines so the line metrics will need updating.
     for {set i 1} {$i < 30} {incr i} {
-        append content [string repeat "$i " 15] \n
+        append content [string repeat "$i " 200] \n
     }
     .top.yt insert 1.0 $content
     # wait for end of line metrics calculation to get correct $fraction1
@@ -3012,23 +3025,24 @@ test text-11a.22 {TextWidgetCmd procedure, "sync" option with -command} -setup {
     set ::x 0
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 30} {incr i} {
         append content [string repeat "$i " 15] \n
     }
     .top.yt insert 1.0 $content
     # first case: line metrics calculation still running when launching 'sync -command'
-    lappend res [.top.yt pendingsync]
+    lappend res [.top.yt pendingsync]       ; # {1}
     .top.yt sync -command [list set ::x 1]
-    lappend res $::x
+    lappend res $::x                        ; # {1 0}
     # now finish line metrics calculations
     while {[.top.yt pendingsync]} {update}
-    lappend res [.top.yt pendingsync] $::x
+    lappend res [.top.yt pendingsync] $::x  ; # {1 0 0 1}
     # second case: line metrics calculation completed when launching 'sync -command'
     .top.yt sync -command [list set ::x 2]
-    lappend res $::x
+    lappend res $::x                        ; # {1 0 0 1 1}
     vwait ::x
-    lappend res $::x
+    lappend res $::x                        ; # {1 0 0 1 1 2}
 } -cleanup {
     destroy .top.yt .top
 } -result {1 0 0 1 1 2}
@@ -3038,23 +3052,23 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
     }
-    .top.yt insert 1.0 $content
+    # Sync the widget and process <<WidgetViewSync>> events before binding.
+    .top.yt sync
     update
     bind .top.yt <<WidgetViewSync>> { if {%d} {set yud(%W) 1} }
-    # wait for end of line metrics calculation to get correct $fraction1
-    # as a reference
-    if {[.top.yt pendingsync]} {vwait yud(.top.yt)}
+    .top.yt insert 1.0 $content
     .top.yt yview moveto 1
     set fraction1 [lindex [.top.yt yview] 0]
     set res [expr {$fraction1 > 0}]
     .top.yt delete 1.0 end
     .top.yt insert 1.0 $content
     # synchronously wait for completion of line metrics calculation
-    # and ensure the test is relevant
+    # and verify that the fractions agree.
     set waited 0
     if {[.top.yt pendingsync]} {set waited 1 ; vwait yud(.top.yt)}
     lappend res $waited
@@ -3068,22 +3082,28 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
 test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -body {
-    set res {}
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
     }
-    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
-    .top.yt insert 1.0 $content
-    vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
-    # ensure the test is relevant
-    lappend res "Pending:[.top.yt pendingsync]"
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
-    # - there is no more any pending sync after running 'sync'
+    # Sync the widget and process all <<WidgetViewSync>> events before binding.
     .top.yt sync
-    vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
+    update
+    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
+    set res {}
+    # The next line triggers <<WidgetViewSync>> with %d==0 i.e. out of sync.
+    .top.yt insert 1.0 $content
+    vwait res
+    # Verify that the line metrics are not up-to-date (pendingsync is 1).
+    lappend res "Pending:[.top.yt pendingsync]"
+    # Update all line metrics by calling the sync command.
+    .top.yt sync
+    # <<WidgetViewSync>> should fire with %d==1 i.e. back in sync.
+    vwait res
+    # At this time the line metrics should be up-to-date (pendingsync is 0).
     lappend res "Pending:[.top.yt pendingsync]"
     set res
 } -cleanup {
@@ -3098,8 +3118,9 @@ test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
     set res {}
     toplevel .top
     pack [text .top.t]
+    update
     for {set i 1} {$i < 10000} {incr i} {
-        .top.t insert end "Hello world!\n" 
+        .top.t insert end "Hello world!\n"
     }
     bind .top.t <<WidgetViewSync>> {destroy .top.t}
     .top.t tag add mytag 1.5 8000.8    ; # shall not crash
@@ -3302,11 +3323,11 @@ test text-14.5 {ConfigureText procedure} -setup {
     .t configure -tabs {30 foo}
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric} 
+} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric}
 test text-14.6 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    catch {.t configure -tabs {30 foo}} 
+    catch {.t configure -tabs {30 foo}}
     .t configure -tabs {10 20 30}
     return $errorInfo
 } -cleanup {
@@ -3325,7 +3346,7 @@ test text-14.7 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.8 {ConfigureText procedure} -setup {
-   text .t 
+   text .t
 } -body {
     .t configure -wrap bogus
 } -cleanup {
@@ -3351,7 +3372,7 @@ test text-14.10 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.11 {ConfigureText procedure} -setup {
-    text .t 
+    text .t
 } -body {
     .t configure -selectborderwidth foo
 } -cleanup {
@@ -3441,7 +3462,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 
+    .top.t configure -width 20 -height 10
     pack .top.t
     update
     set geom [wm geometry .top]
@@ -3453,6 +3474,12 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # minimum size and it was interfering with the size requested by the -setgrid.
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
+# On macOS, however, there is no way to make the window overlap the menubar.
+if {[tk windowingsystem] == "aqua"} {
+    set minY [expr [menubarheight] + 1]
+} else {
+    set minY 0
+}
 test text-14.19 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3460,16 +3487,17 @@ test text-14.19 {ConfigureText procedure} -setup {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
-    wm geometry .top +0+0
+    wm geometry .top +0+$minY
     update
     wm geometry .top
 } -cleanup {
     destroy .top
-} -result {20x10+0+0}
+} -result "20x10+0+$minY"
 # This test was failing on Windows because the title bar on .t was a certain
 # minimum size and it was interfering with the size requested by the -setgrid.
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
+# On macOS we again use minY as a workaround.
 test text-14.20 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3477,7 +3505,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
-    wm geometry .top +0+0
+    wm geometry .top +0+$minY
     update
     set result [wm geometry .top]
     wm geometry .top 15x8
@@ -3488,7 +3516,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     lappend result [wm geometry .top]
 } -cleanup {
     destroy .top
-} -result {20x10+0+0 15x8+0+0 15x8+0+0}
+} -result "20x10+0+$minY 15x8+0+$minY 15x8+0+$minY"
 
 
 test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {
@@ -3530,7 +3558,7 @@ test text-17.1 {TextCmdDeletedProc procedure} -body {
 test text-17.2 {TextCmdDeletedProc procedure, disabling -setgrid} -constraints {
     fonts
 } -body {
-   toplevel .top 
+   toplevel .top
    text .top.t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold} \
     -setgrid 1 -width 20 -height 10
    pack .top.t
@@ -4922,7 +4950,7 @@ test text-22.118 {TextSearchCmd, multiline matching end of window} -body {
 test text-22.119 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4939,7 +4967,7 @@ test text-22.120 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4953,7 +4981,7 @@ test text-22.121 {TextSearchCmd, multiline regexp matching} -body {
     .t insert 1.0 {
 static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -5038,11 +5066,11 @@ test text-22.132 {TextSearchCmd, multiline regexp matching} -body {
 
 void
 Tcl_SetObjLength(objPtr, length)
-    register Tcl_Obj *objPtr;	/* Pointer to object.  This object must
-                                * not currently be shared. */
-    register int length;	/* Number of bytes desired for string
+    Tcl_Obj *objPtr;		/* Pointer to object.  This object must
+				 * not currently be shared. */
+    int length;			/* Number of bytes desired for string
 				 * representation of object, not including
-                            * terminating null byte. */
+				 * terminating null byte. */
 \{
     char *new;
 }
@@ -5548,9 +5576,7 @@ test text-22.198 {TextSearchCmd, regexp search multi-line} -body {
 } -cleanup {
     destroy .t
 } -result {2.0 19}
-test text-22.199 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.199 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
     set foo {}
@@ -5559,9 +5585,7 @@ test text-22.199 {TextSearchCmd, regexp search multi-line} -constraints {
 } -cleanup {
     destroy .t
 } -result {2.0 19}
-test text-22.200 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.200 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
     set foo {}
@@ -5579,23 +5603,18 @@ test text-22.201 {TextSearchCmd, regexp search multi-line} -body {
 } -cleanup {
     destroy .t
 } -result {1.0 24}
-test text-22.202 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.202 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
     list [.t search -regexp -backward -all -count foo \
-      -- {b+\n|a+\n(b+\n)+} end] $foo
+      -- {(b+\n|a+\n)(b+\n)+} end] $foo
 } -cleanup {
     destroy .t
 } -result {1.0 25}
-test text-22.203 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.203 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
-    .t search -regexp -backward -- {b+\n|a+\n(b+\n)+} end
-# Should match at 1.0 for a true greedy match
+    .t search -regexp -backward -- {(b+\n|a+\n)(b+\n)+} end
 } -cleanup {
     destroy .t
 } -result {1.0}
@@ -5864,7 +5883,219 @@ test text-22.225 {TextSearchCmd, strict limits} -body {
 } -cleanup {
     destroy .t
 } -result {}
-
+test text-22.226 {TextSearchCmd, exact search for the empty string} -body {
+    text .t
+    set res [.t search -count C "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.227 {TextSearchCmd, exact search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 0}
+test text-22.228 {TextSearchCmd, exact search all empty strings} -body {
+    text .t
+    set res [.t search -count C -all "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.229 {TextSearchCmd, exact search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.230 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -all -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.231 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -overlap "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.232 {TextSearchCmd, regexp search for the empty string} -body {
+    text .t
+    set res [.t search -count C -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.233 {TextSearchCmd, regexp search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -regexp "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 0}
+test text-22.234 {TextSearchCmd, regexp search all empty strings} -body {
+    text .t
+    set res [.t search -count C -all -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.235 {TextSearchCmd, regexp search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -regexp "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.236 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -all -regexp -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.237 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -regexp -overlap "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.238 {TextSearchCmd, exact backwards search for the empty string} -body {
+    text .t
+    set res [.t search -count C -backwards "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.239 {TextSearchCmd, exact backwards search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 0}
+test text-22.240 {TextSearchCmd, exact backwards search all empty strings} -body {
+    text .t
+    set res [.t search -count C -backwards -all "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.241 {TextSearchCmd, exact backwards search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.242 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -backwards -all -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.243 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -overlap "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.244 {TextSearchCmd, regexp backwards search for the empty string} -body {
+    text .t
+    set res [.t search -count C -backwards -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.245 {TextSearchCmd, regexpbackwards search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -regexp "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 0}
+test text-22.246 {TextSearchCmd, regexp backwards search all empty strings} -body {
+    text .t
+    set res [.t search -count C -backwards -all -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.247 {TextSearchCmd, regexp backwards search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -regexp "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.248 {TextSearchCmd, regexp backwards search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -backwards -all -regexp -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.249 {TextSearchCmd, regexp backwards search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -regexp -overlap "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.250 {TextSearchCmd, backwards search all matching at start of line} -body {
+    text .t
+    .t insert end "abc"
+    set res [.t search -backwards -all b end]      ; # works
+    lappend res [.t search -backwards a end]       ; # works
+    lappend res [.t search -backwards -all a end]  ; # used to hang
+} -cleanup {
+    destroy .t
+} -result {1.1 1.0 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
@@ -5902,9 +6133,9 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     .t insert end "1\t2\t3\t4\t55.5"
     .t configure -tabs {100 right 200 left 300 center 400 numeric}
     update idletasks
-    list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
+    list [expr {[lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]}] \
 	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2}] \
 	    [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
@@ -5916,9 +6147,9 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     .t insert end "1\t2\t3\t4\t55.5"
     .t configure -tabs {105 r 205 l 305 c 405 n}
     update idletasks
-    list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
+    list [expr {[lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]}] \
 	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2}] \
 	    [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
@@ -5946,7 +6177,7 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
 test text-24.1 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump
 } -cleanup {
     destroy .t
@@ -5954,7 +6185,7 @@ test text-24.1 {TextDumpCmd procedure, bad args} -body {
 test text-24.2 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -all
 } -cleanup {
     destroy .t
@@ -5962,7 +6193,7 @@ test text-24.2 {TextDumpCmd procedure, bad args} -body {
 test text-24.3 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -command
 } -cleanup {
     destroy .t
@@ -5970,7 +6201,7 @@ test text-24.3 {TextDumpCmd procedure, bad args} -body {
 test text-24.4 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -bogus
 } -cleanup {
     destroy .t
@@ -5978,7 +6209,7 @@ test text-24.4 {TextDumpCmd procedure, bad args} -body {
 test text-24.5 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump bogus
 } -cleanup {
     destroy .t
@@ -6015,7 +6246,7 @@ test text-24.9 {TextDumpCmd procedure, same indices} -body {
 test text-24.10 {TextDumpCmd procedure, negative range} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump 1.5 1.0
 } -cleanup {
     destroy .t
@@ -6330,6 +6561,8 @@ test text-27.10 {TextEditCmd procedure, set modified flag} -body {
 test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
+# Make sure the Text is mapped before we start
+    update
     set ::retval {}
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
@@ -6395,9 +6628,9 @@ test text-27.14a {<<Modified>> virtual event - propagation to peers} -body {
 } -cleanup {
     destroy .t .tt
 } -result {4}
-test text-27.15 {<<Selection>> virtual event} -body {
+test text-27.15 {<<Selection>> virtual event on sel tagging} -body {
     set ::retval no_selection
-    pack [text .t -undo 1]
+    pack [text .t]
     bind .t <<Selection>> "set ::retval selection_changed"
     update idletasks
     .t insert end "nothing special\n"
@@ -6407,6 +6640,111 @@ test text-27.15 {<<Selection>> virtual event} -body {
 } -cleanup {
     destroy .t
 } -result {selection_changed}
+test text-27.15a {<<Selection>> virtual event on sel removal} -body {
+    set ::retval no_selection
+    pack [text .t]
+    .t insert end "nothing special\n"
+    .t tag add sel 1.0 1.1
+    bind .t <<Selection>> "set ::retval selection_changed"
+    update idletasks
+    .t tag remove 1.0 end
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {selection_changed}
+test text-27.15b {<<Selection>> virtual event on <<PasteSelection>> inside widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<PasteSelection>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<PasteSelection>> -x 15 -y 3
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15c {No <<Selection>> virtual event on <<PasteSelection>> outside widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "but it will not be impacted by the <<PasteSelection>> event received."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<PasteSelection>> -x 15 -y 80
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
+test text-27.15d {<<Selection>> virtual event on <Delete> with cursor inside selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <Delete> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    .t mark set insert 1.15
+    update idletasks
+    focus -force .t
+    event generate .t <Delete>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15e {No <<Selection>> virtual event on <Delete> with cursor outside selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "but it will not be impacted by the <Delete> event received."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    .t mark set insert 2.15
+    focus .t
+    event generate .t <Delete>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
+test text-27.15f {<<Selection>> virtual event on <<Cut>> with a widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<Cut>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<Cut>>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15g {No <<Selection>> virtual event on <<Cut>> without widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<Cut>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<Cut>>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
 test text-27.16 {-maxundo configuration option} -body {
     text .t -undo 1  -autoseparators 1 -maxundo 2
     pack .t
@@ -6899,7 +7237,7 @@ test text-31.14 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     lappend res [.t tag prevrange sel 1.0]
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
@@ -6920,7 +7258,7 @@ test text-31.15 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6940,7 +7278,7 @@ test text-31.16 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	.t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6985,7 +7323,7 @@ test text-31.18 {peer widgets} -setup {
     return $res
 } -cleanup {
     destroy .t
-} -result {1.0 11.0} 
+} -result {1.0 11.0}
 test text-31.19 {peer widgets} -body {
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
@@ -7030,10 +7368,104 @@ test text-32.1 {line heights on creation} -setup {
     update
     set after [$w count -ypixels 1.0 2.0]
     destroy .g
-    expr {$before eq $after} 
+    expr {$before eq $after}
 } -cleanup {
     destroy .t
 } -result {1}
+
+test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5
+    # none of the following delete shall crash
+    # (all did before fixing bug 1630262)
+    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
+    #    and resetView is true neither for .t not for .pt
+    .pt delete 2.0 2.2
+    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 3.0
+    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 5.0
+    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 end
+    # this test succeeds provided there is no crash
+    set res 1
+} -cleanup {
+    destroy .pt
+} -result {1}
+
+test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5
+    .pt configure -startline 3
+    # the following delete shall not crash
+    # (it did before fixing bug 1630262)
+    .pt delete 2.0 3.0
+    # moreover -startline shall be correct
+    # (was wrong before fixing bug 1630262)
+    lappend res [.t cget -start] [.pt cget -start]
+} -cleanup {
+    destroy .pt
+} -result {4 3}
+
+test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5 -endline 15
+    .pt configure -startline 8 -endline 12
+    # .pt now shows a range entirely inside the range of .pt
+    # from .t, delete lines located after [.pt cget -end]
+    .t delete 9.0 10.0
+    # from .t, delete lines straddling [.pt cget -end]
+    .t delete 6.0 9.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 5 -endline 12
+    .pt configure -startline 8 -endline 12
+    # .pt now shows again a range entirely inside the range of .pt
+    # from .t, delete lines located before [.pt cget -start]
+    .t delete 2.0 3.0
+    # from .t, delete lines straddling [.pt cget -start]
+    .t delete 2.0 5.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 22 -endline 31
+    .pt configure -startline 42 -endline 51
+    # .t now shows a range entirely before the range of .pt
+    # from .t, delete some lines, then do it from .pt
+    .t delete 2.0 3.0
+    .t delete 2.0 5.0
+    .pt delete 2.0 5.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 55 -endline 75
+    .pt configure -startline 60 -endline 70
+    # .pt now shows a range entirely inside the range of .t
+    # from .t, delete a range straddling the entire range of .pt
+    .t delete 3.0 18.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+} -cleanup {
+    destroy .pt .t
+} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
 
 
 test text-33.1 {TextWidgetCmd procedure, "peer" option} -setup {
@@ -7166,100 +7598,6 @@ test text-34.1 {peer widget -start, -end and selection} -setup {
 } -cleanup {
     destroy .t
 } -result {{10.0 20.0} {6.0 16.0} {6.0 11.0} {1.0 6.0} {1.0 2.0} {} {10.0 20.0}}
-
-test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    # none of the following delete shall crash
-    # (all did before fixing bug 1630262)
-    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
-    #    and resetView is true neither for .t not for .pt
-    .pt delete 2.0 2.2
-    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 3.0
-    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 5.0
-    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 end
-    # this test succeeds provided there is no crash
-    set res 1
-} -cleanup {
-    destroy .pt
-} -result {1}
-
-test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    .pt configure -startline 3
-    # the following delete shall not crash
-    # (it did before fixing bug 1630262)
-    .pt delete 2.0 3.0
-    # moreover -startline shall be correct
-    # (was wrong before fixing bug 1630262)
-    lappend res [.t cget -start] [.pt cget -start]
-} -cleanup {
-    destroy .pt
-} -result {4 3}
-
-test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5 -endline 15
-    .pt configure -startline 8 -endline 12
-    # .pt now shows a range entirely inside the range of .pt
-    # from .t, delete lines located after [.pt cget -end]
-    .t delete 9.0 10.0
-    # from .t, delete lines straddling [.pt cget -end]
-    .t delete 6.0 9.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 5 -endline 12
-    .pt configure -startline 8 -endline 12
-    # .pt now shows again a range entirely inside the range of .pt
-    # from .t, delete lines located before [.pt cget -start]
-    .t delete 2.0 3.0
-    # from .t, delete lines straddling [.pt cget -start]
-    .t delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 22 -endline 31
-    .pt configure -startline 42 -endline 51
-    # .t now shows a range entirely before the range of .pt
-    # from .t, delete some lines, then do it from .pt
-    .t delete 2.0 3.0
-    .t delete 2.0 5.0
-    .pt delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 55 -endline 75
-    .pt configure -startline 60 -endline 70
-    # .pt now shows a range entirely inside the range of .t
-    # from .t, delete a range straddling the entire range of .pt
-    .t delete 3.0 18.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-} -cleanup {
-    destroy .pt .t
-} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
 
 test text-35.1 {widget dump -command alters tags} -setup {
      proc Dumpy {key value index} {
