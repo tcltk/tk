@@ -342,13 +342,14 @@ GetRGBA(
 	[color getComponents: rgba];
 #else
 	{
+	    OSStatus err = noErr;
 	    RGBColor rgb;
 	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32,
                     true, &rgb);
 	    if (err == noErr) {
-		rgba[0] = (CGFLoat) rgb.red / 65535;
-		rgba[1] = (CGFLoat) rgb.green / 65535;
-		rgba[2] = (CGFLoat) rgb.blue / 65535;
+		rgba[0] = (CGFloat) rgb.red / 65535;
+		rgba[1] = (CGFloat) rgb.green / 65535;
+		rgba[2] = (CGFloat) rgb.blue / 65535;
 	    }
 	}
 #endif
@@ -546,7 +547,7 @@ TkMacOSXSetColorInContext(
     CGColorRef cgColor = nil;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
     CGRect rect;
-    HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
+    HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};
 
     if (entry) {
 	switch (entry->type) {
@@ -618,7 +619,7 @@ TkpGetColor(
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
     static Bool initialized = NO;
-    static NSColorSpace* sRGB = NULL;
+    static NSColorSpace* sRGB = nil;
 
     if (!initialized) {
 	initialized = YES;
