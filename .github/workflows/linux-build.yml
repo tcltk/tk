@@ -143,15 +143,13 @@ jobs:
           }
       - name: Run Tests
         run: |
-          xvfb-run --auto-servernum make test-classic | tee out-classic.txt || {
+          xvfb-run --auto-servernum make test-classic | tee out-classic.txt
+          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt
+          grep -q "Failed	0" out-classic.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
-          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          cat out-classic.txt out-ttk.txt | grep -q "Failed	0" || {
+          grep -q "Failed	0" out-ttk.txt || {
             echo "::error::Failure during Test"
             exit 1
           }

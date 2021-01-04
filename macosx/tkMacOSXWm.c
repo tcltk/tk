@@ -2894,9 +2894,11 @@ WmManageCmd(
 	 * See [4a40c6cace].
 	 */
 
-	winPtr->changes.x -= macWin->xOff;
-	winPtr->changes.y -= macWin->yOff;
-	XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+	if (macWin) {
+	    winPtr->changes.x -= macWin->xOff;
+	    winPtr->changes.y -= macWin->yOff;
+	    XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+	}
 
 	TkFocusSplit(winPtr);
 	Tk_UnmapWindow(frameWin);
@@ -6898,7 +6900,7 @@ ApplyWindowAttributeFlagChanges(
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
 
-		    if (@available(macOS 10.11, *)) {
+		    if ([NSApp macOSVersion] >= 101100) {
 			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
 		    }
