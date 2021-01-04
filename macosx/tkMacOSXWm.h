@@ -36,6 +36,18 @@ typedef struct ProtocolHandler {
 				 * THE LAST FIELD OF THE STRUCTURE. */
 } ProtocolHandler;
 
+/* The following data structure is used in the TkWmInfo to maintain a list of all of the
+ * transient windows belonging to a given container.
+ */
+
+typedef struct Transient {
+    TkWindow *winPtr;
+    int flags;
+    struct Transient *nextPtr;
+} Transient;
+
+#define WITHDRAWN_BY_CONTAINER 0x1
+#define WITHDRAWN_BY_MASTER 0x1
 
 /*
  * A data structure of the following type holds window-manager-related
@@ -54,22 +66,21 @@ typedef struct TkWmInfo {
     Tk_Uid titleUid;		/* Title to display in window caption. If NULL,
 				 * use name of widget. */
     char *iconName;		/* Name to display in icon. */
-    Window master;		/* Master window for TRANSIENT_FOR property, or
-				 * None. */
+    Tk_Window container;		/* Container window for TRANSIENT_FOR property,
+				 * or None. */
     XWMHints hints;		/* Various pieces of information for window
 				 * manager. */
     char *leaderName;		/* Path name of leader of window group
 				 * (corresponds to hints.window_group).
 				 * Malloc-ed. Note: this field doesn't get
 				 * updated if leader is destroyed. */
-    char *masterWindowName;	/* Path name of window specified as master in
-				 * "wm transient" command, or NULL. Malloc-ed.
-				 * Note: this field doesn't get updated if
-				 * masterWindowName is destroyed. */
     Tk_Window icon;		/* Window to use as icon for this window, or
 				 * NULL. */
     Tk_Window iconFor;		/* Window for which this window is icon, or
 				 * NULL if this isn't an icon for anyone. */
+    Transient *transientPtr;    /* First item in a list of all transient windows
+				 * belonging to this window, or NULL if there
+				 * are no transients. */
 
     /*
      * Information used to construct an XSizeHints structure for the window
@@ -185,6 +196,15 @@ typedef struct TkWmInfo {
     TkWindow *scrollWinPtr;	/* Ptr to scrollbar handling grow widget. */
     TkMenu *menuPtr;
     NSWindow *window;
+
+    /*
+     * Space to cache current window state when window becomes Fullscreen.
+     */
+
+    unsigned long cachedStyle;
+    unsigned long cachedPresentation;
+    NSRect cachedBounds;
+
 } WmInfo;
 
 /*

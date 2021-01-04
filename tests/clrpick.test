@@ -78,7 +78,7 @@ test clrpick-1.7 {tk_chooseColor command} -body {
 # tests 3.1 and 3.2 fail when individually run
 # if there is no catch {tk_chooseColor -foo 1} msg
 # before settin isNative
-catch {tk_chooseColor -foo 1} msg 
+catch {tk_chooseColor -foo 1} msg
 set isNative [expr {[info commands tk::dialog::color::] eq ""}]
 
 proc ToPressButton {parent btn} {

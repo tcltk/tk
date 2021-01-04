@@ -193,7 +193,7 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, 0);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -381,7 +381,7 @@ TkCanvPostscriptCmd(
 	 */
 
 	psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
-	if (psInfo.chan == (Tcl_Channel) NULL) {
+	if (psInfo.chan == NULL) {
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -572,7 +572,6 @@ TkCanvPostscriptCmd(
 	    continue;
 	}
 
-	Tcl_ResetResult(interp);
 	result = itemPtr->typePtr->postscriptProc(interp,
 		(Tk_Canvas) canvasPtr, itemPtr, 0);
 	if (result != TCL_OK) {
@@ -585,6 +584,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendToObj(psObj, "gsave\n", -1);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	Tcl_AppendToObj(psObj, "grestore\n", -1);
+	Tcl_ResetResult(interp);
 
 	if (psInfo.chan != NULL) {
 	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
@@ -1279,7 +1279,7 @@ TkPostscriptImage(
     cdata.colors = ckalloc(sizeof(XColor) * ncolors);
     cdata.ncolors = ncolors;
 
-    if (visual->class == DirectColor || visual->class == TrueColor) {
+    if (visual->c_class == DirectColor || visual->c_class == TrueColor) {
 	cdata.separated = 1;
 	cdata.red_mask = visual->red_mask;
 	cdata.green_mask = visual->green_mask;
@@ -1311,7 +1311,7 @@ TkPostscriptImage(
 	}
     }
 
-    if (visual->class == StaticGray || visual->class == GrayScale) {
+    if (visual->c_class == StaticGray || visual->c_class == GrayScale) {
 	cdata.color = 0;
     } else {
 	cdata.color = 1;
@@ -1601,7 +1601,7 @@ Tk_PostscriptPhoto(
 	    /*
 	     * Generate data for image in monochrome mode. No attempt at
 	     * dithering is made--instead, just set a threshold. To handle
-	     * transparecies we need to output two lines: one for the black
+	     * transparencies we need to output two lines: one for the black
 	     * pixels, one for the white ones.
 	     */
 

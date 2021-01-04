@@ -12,7 +12,6 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
-#include <assert.h>
 
 /*
  * Structures defined only in this file.
@@ -29,14 +28,15 @@ const Tk_SmoothMethod tkBezierSmoothMethod = {
     "true",
     TkMakeBezierCurve,
     (void (*) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr,
-	    int numPoints, int numSteps)) TkMakeBezierPostscript,
+	    int numPoints, int numSteps))(void *)TkMakeBezierPostscript,
 };
 static const Tk_SmoothMethod tkRawSmoothMethod = {
     "raw",
     TkMakeRawCurve,
     (void (*) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr,
-	    int numPoints, int numSteps)) TkMakeRawCurvePostscript,
+	    int numPoints, int numSteps))(void *)TkMakeRawCurvePostscript,
 };
+
 
 /*
  * Function forward-declarations.
@@ -756,7 +756,7 @@ TkSmoothParseProc(
     }
 
     /*
-     * Backward compatability hack.
+     * Backward compatibility hack.
      */
 
     if (strncmp(value, "bezier", length) == 0) {
@@ -961,7 +961,7 @@ void
 Tk_CreateOutline(
     Tk_Outline *outline)	/* Outline structure to be filled in. */
 {
-    outline->gc = None;
+    outline->gc = NULL;
     outline->width = 1.0;
     outline->activeWidth = 0.0;
     outline->disabledWidth = 0.0;
@@ -1002,7 +1002,7 @@ Tk_DeleteOutline(
     Display *display,		/* Display containing window. */
     Tk_Outline *outline)
 {
-    if (outline->gc != None) {
+    if (outline->gc != NULL) {
 	Tk_FreeGC(display, outline->gc);
     }
     if ((unsigned) ABS(outline->dash.number) > sizeof(char *)) {

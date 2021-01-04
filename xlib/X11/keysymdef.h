@@ -30,7 +30,7 @@ SOFTWARE.
 /*
  * TTY Functions, cleverly chosen to map to ascii, for convenience of
  * programming, but could have been arbitrary (at the cost of lookup
- * tables in client code.
+ * tables in client code).
  */
 
 #define XK_BackSpace		0xFF08	/* back space, back char */
@@ -397,6 +397,7 @@ SOFTWARE.
 #define XK_Otilde              0x0d5
 #define XK_Odiaeresis          0x0d6
 #define XK_multiply            0x0d7
+#define XK_Oslash              0x0d8
 #define XK_Ooblique            0x0d8
 #define XK_Ugrave              0x0d9
 #define XK_Uacute              0x0da
@@ -840,6 +841,7 @@ SOFTWARE.
 #define XK_Greek_EPSILONaccent                         0x7a2
 #define XK_Greek_ETAaccent                             0x7a3
 #define XK_Greek_IOTAaccent                            0x7a4
+#define XK_Greek_IOTAdieresis                          0x7a5
 #define XK_Greek_IOTAdiaeresis                         0x7a5
 #define XK_Greek_OMICRONaccent                         0x7a7
 #define XK_Greek_UPSILONaccent                         0x7a8

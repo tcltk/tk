@@ -4,8 +4,7 @@
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -81,8 +80,9 @@ static Tk_OptionSpec BaseOptionSpecs[] =
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 "none", Tk_Offset(Base,base.compoundObj), -1,
-	 0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
+	NULL, Tk_Offset(Base,base.compoundObj), -1,
+	TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
+	GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, Tk_Offset(Base,base.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
@@ -102,7 +102,7 @@ static Tk_OptionSpec BaseOptionSpecs[] =
  */
 static void TextVariableChanged(void *clientData, const char *value)
 {
-    Base *basePtr = clientData;
+    Base *basePtr = (Base *)clientData;
     Tcl_Obj *newText;
 
     if (WidgetDestroyed(&basePtr->core)) {
@@ -119,9 +119,11 @@ static void TextVariableChanged(void *clientData, const char *value)
 }
 
 static void
-BaseInitialize(Tcl_Interp *interp, void *recordPtr)
+BaseInitialize(Tcl_Interp *dummy, void *recordPtr)
 {
-    Base *basePtr = recordPtr;
+    Base *basePtr = (Base *)recordPtr;
+    (void)dummy;
+
     basePtr->base.textVariableTrace = 0;
     basePtr->base.imageSpec = NULL;
 }
@@ -129,7 +131,7 @@ BaseInitialize(Tcl_Interp *interp, void *recordPtr)
 static void
 BaseCleanup(void *recordPtr)
 {
-    Base *basePtr = recordPtr;
+    Base *basePtr = (Base *)recordPtr;
     if (basePtr->base.textVariableTrace)
 	Ttk_UntraceVariable(basePtr->base.textVariableTrace);
     if (basePtr->base.imageSpec)
@@ -142,12 +144,19 @@ BaseImageChanged(
 	int imageWidth, int imageHeight)
 {
     Base *basePtr = (Base *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imageWidth;
+    (void)imageHeight;
+
     TtkResizeWidget(&basePtr->core);
 }
 
 static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Base *basePtr = recordPtr;
+    Base *basePtr = (Base *)recordPtr;
     Tcl_Obj *textVarName = basePtr->base.textVariableObj;
     Ttk_TraceHandle *vt = 0;
     Ttk_ImageSpec *imageSpec = NULL;
@@ -190,10 +199,12 @@ error:
 }
 
 static int
-BasePostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
+BasePostConfigure(Tcl_Interp *dummy, void *recordPtr, int mask)
 {
-    Base *basePtr = recordPtr;
+    Base *basePtr = (Base *)recordPtr;
     int status = TCL_OK;
+    (void)dummy;
+    (void)mask;
 
     if (basePtr->base.textVariableTrace) {
 	status = Ttk_FireTrace(basePtr->base.textVariableTrace);
@@ -315,7 +326,7 @@ static Tk_OptionSpec ButtonOptionSpecs[] =
 	"", Tk_Offset(Button, button.commandObj), -1, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-default", "default", "Default",
 	"normal", Tk_Offset(Button, button.defaultStateObj), -1,
-	0, (ClientData) ttkDefaultStrings, DEFAULTSTATE_CHANGED},
+	0, (void *)ttkDefaultStrings, DEFAULTSTATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
@@ -323,7 +334,7 @@ static Tk_OptionSpec ButtonOptionSpecs[] =
 
 static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Button *buttonPtr = recordPtr;
+    Button *buttonPtr = (Button *)recordPtr;
 
     if (BaseConfigure(interp, recordPtr, mask) != TCL_OK) {
 	return TCL_ERROR;
@@ -351,7 +362,7 @@ static int
 ButtonInvokeCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Button *buttonPtr = recordPtr;
+    Button *buttonPtr = (Button *)recordPtr;
     if (objc > 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "invoke");
 	return TCL_ERROR;
@@ -443,7 +454,7 @@ static Tk_OptionSpec CheckbuttonOptionSpecs[] =
  */
 static void CheckbuttonVariableChanged(void *clientData, const char *value)
 {
-    Checkbutton *checkPtr = clientData;
+    Checkbutton *checkPtr = (Checkbutton *)clientData;
 
     if (WidgetDestroyed(&checkPtr->core)) {
 	return;
@@ -465,7 +476,7 @@ static void CheckbuttonVariableChanged(void *clientData, const char *value)
 static void
 CheckbuttonInitialize(Tcl_Interp *interp, void *recordPtr)
 {
-    Checkbutton *checkPtr = recordPtr;
+    Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     Tcl_Obj *variableObj;
 
     /* default -variable is the widget name:
@@ -479,7 +490,7 @@ CheckbuttonInitialize(Tcl_Interp *interp, void *recordPtr)
 static void
 CheckbuttonCleanup(void *recordPtr)
 {
-    Checkbutton *checkPtr = recordPtr;
+    Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
     checkPtr->checkbutton.variableTrace = 0;
     BaseCleanup(recordPtr);
@@ -488,13 +499,16 @@ CheckbuttonCleanup(void *recordPtr)
 static int
 CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Checkbutton *checkPtr = recordPtr;
-    Ttk_TraceHandle *vt = Ttk_TraceVariable(
-	interp, checkPtr->checkbutton.variableObj,
-	CheckbuttonVariableChanged, checkPtr);
+    Checkbutton *checkPtr = (Checkbutton *)recordPtr;
+    Tcl_Obj *varName = checkPtr->checkbutton.variableObj;
+    Ttk_TraceHandle *vt = NULL;
 
-    if (!vt) {
-	return TCL_ERROR;
+    if (varName != NULL && *Tcl_GetString(varName) != '\0') {
+        vt = Ttk_TraceVariable(interp, varName,
+	    CheckbuttonVariableChanged, checkPtr);
+        if (!vt) {
+	    return TCL_ERROR;
+        }
     }
 
     if (BaseConfigure(interp, recordPtr, mask) != TCL_OK){
@@ -502,7 +516,9 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	return TCL_ERROR;
     }
 
-    Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
+    if (checkPtr->checkbutton.variableTrace) {
+        Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
+    }
     checkPtr->checkbutton.variableTrace = vt;
 
     return TCL_OK;
@@ -511,7 +527,7 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 static int
 CheckbuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Checkbutton *checkPtr = recordPtr;
+    Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     int status = TCL_OK;
 
     if (checkPtr->checkbutton.variableTrace)
@@ -529,7 +545,7 @@ static int
 CheckbuttonInvokeCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Checkbutton *checkPtr = recordPtr;
+    Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     WidgetCore *corePtr = &checkPtr->core;
     Tcl_Obj *newValue;
 
@@ -548,10 +564,13 @@ CheckbuttonInvokeCommand(
     else
 	newValue = checkPtr->checkbutton.onValueObj;
 
-    if (Tcl_ObjSetVar2(interp,
-	    checkPtr->checkbutton.variableObj, NULL, newValue,
-	    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
-	== NULL)
+    if (checkPtr->checkbutton.variableObj == NULL ||
+        *Tcl_GetString(checkPtr->checkbutton.variableObj) == '\0')
+        CheckbuttonVariableChanged(checkPtr, Tcl_GetString(newValue));
+    else if (Tcl_ObjSetVar2(interp,
+	        checkPtr->checkbutton.variableObj, NULL, newValue,
+	        TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+	    == NULL)
 	return TCL_ERROR;
 
     if (WidgetDestroyed(corePtr))
@@ -641,7 +660,7 @@ static Tk_OptionSpec RadiobuttonOptionSpecs[] =
 static void
 RadiobuttonVariableChanged(void *clientData, const char *value)
 {
-    Radiobutton *radioPtr = clientData;
+    Radiobutton *radioPtr = (Radiobutton *)clientData;
 
     if (WidgetDestroyed(&radioPtr->core)) {
 	return;
@@ -663,7 +682,7 @@ RadiobuttonVariableChanged(void *clientData, const char *value)
 static void
 RadiobuttonCleanup(void *recordPtr)
 {
-    Radiobutton *radioPtr = recordPtr;
+    Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     Ttk_UntraceVariable(radioPtr->radiobutton.variableTrace);
     radioPtr->radiobutton.variableTrace = 0;
     BaseCleanup(recordPtr);
@@ -672,7 +691,7 @@ RadiobuttonCleanup(void *recordPtr)
 static int
 RadiobuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Radiobutton *radioPtr = recordPtr;
+    Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     Ttk_TraceHandle *vt = Ttk_TraceVariable(
 	interp, radioPtr->radiobutton.variableObj,
 	RadiobuttonVariableChanged, radioPtr);
@@ -695,7 +714,7 @@ RadiobuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 static int
 RadiobuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Radiobutton *radioPtr = recordPtr;
+    Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     int status = TCL_OK;
 
     if (radioPtr->radiobutton.variableTrace)
@@ -713,7 +732,7 @@ static int
 RadiobuttonInvokeCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Radiobutton *radioPtr = recordPtr;
+    Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     WidgetCore *corePtr = &radioPtr->core;
 
     if (objc > 2) {
@@ -800,7 +819,7 @@ static Tk_OptionSpec MenubuttonOptionSpecs[] =
 	"", Tk_Offset(Menubutton, menubutton.menuObj), -1, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	"below", Tk_Offset(Menubutton, menubutton.directionObj), -1,
-	0,(ClientData)directionStrings,GEOMETRY_CHANGED},
+	0, (void *)directionStrings, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
@@ -835,7 +854,7 @@ TTK_BEGIN_LAYOUT(MenubuttonLayout)
     TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
 	TTK_GROUP("Menubutton.focus", TTK_FILL_BOTH,
 	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
+	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
 	        TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 

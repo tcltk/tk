@@ -60,7 +60,7 @@ test frame-1.1 {frame configuration options} -setup {
     .f configure -class
 } -cleanup {
     deleteWindows
-} -result {-class class Class Frame NewFrame} 
+} -result {-class class Class Frame NewFrame}
 test frame-1.2 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -623,16 +623,6 @@ test frame-3.5 {TkCreateFrame procedure} -setup {
     deleteWindows
     option clear
 } -result {#123456}
-test frame-3.6 {TkCreateFrame procedure} -setup {
-	deleteWindows
-} -body {
-    option add *NewFrame.background #123456
-    frame .f -class NewFrame
-    lindex [.f configure -background] 4
-} -cleanup {
-    deleteWindows
-    option clear
-} -result {#123456}
 test frame-3.7 {TkCreateFrame procedure} -setup {
 	deleteWindows
 } -body {
@@ -668,6 +658,12 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
 } -cleanup {
+# This call to update idletasks was added to prevent a crash that was
+# observed on OSX 10.12 (Sierra) only.  Any change, such as using the
+# Development version to make debugging symbols available, adding a print
+# statement, or calling update idletasks here, would make the test pass
+# with no segfault.
+    update idletasks
     deleteWindows
 } -result {0 0 140 300}
 test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
@@ -677,9 +673,19 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     option add *x.use [winfo id .t]
     toplevel .x -width 140 -height 300 -bg green
-    tkwait visibility .x
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	tkwait visibility .x
+	update
+    }
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
@@ -792,7 +798,7 @@ test frame-3.18 {TkCreateFrame procedure} -constraints {
 } -setup {
 	deleteWindows
 } -body {
-    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343 
+    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
@@ -836,7 +842,7 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 	deleteWindows
 } -body {
     set x ok
-    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343 
+    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
@@ -1132,7 +1138,7 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
     place .f -x 0 -y 0 -width 100 -height 100
     pack [frame .f.f] -fill both -expand 1
 
-    set result {} 
+    set result {}
     foreach lp {nw n ne en e es se s sw ws w wn} {
         .f configure -labelanchor $lp
         update
@@ -1156,17 +1162,26 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
 } -result {1 1 1 1 1 1 1 1 1 1 1 1}
 test frame-12.3 {FrameWorldChanged procedure} -setup {
 	deleteWindows
+	update idletasks
 } -body {
     # Check reaction on font change
     font create myfont -family courier -size 10
     labelframe .f -font myfont -text Mupp
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
     font configure myfont -size 20
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     set h2 [font metrics myfont -linespace]
     set y2 [winfo y .f.f]
     expr {($h2 - $h1) - ($y2 - $y1)}

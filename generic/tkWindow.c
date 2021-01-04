@@ -13,7 +13,7 @@
  */
 
 #include "tkInt.h"
-
+#include "tkPort.h"
 #ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
@@ -37,7 +37,7 @@ typedef struct TkHalfdeadWindow {
     struct TkHalfdeadWindow *nextPtr;
 } TkHalfdeadWindow;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int numMainWindows;		/* Count of numver of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
@@ -124,7 +124,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *) TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -664,6 +664,8 @@ TkAllocWindow(
     winPtr->selHandlerList = NULL;
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
+    winPtr->geomMgrName = NULL;
+    winPtr->maintainerPtr = NULL;
     winPtr->reqWidth = winPtr->reqHeight = 1;
     winPtr->internalBorderLeft = 0;
     winPtr->wmInfoPtr = NULL;
@@ -675,7 +677,6 @@ TkAllocWindow(
     winPtr->internalBorderBottom = 0;
     winPtr->minReqWidth = 0;
     winPtr->minReqHeight = 0;
-    winPtr->geometryMaster = NULL;
 
     return winPtr;
 }
@@ -851,7 +852,7 @@ TkCreateMainWindow(
      * Create the basic TkWindow structure.
      */
 
-    tkwin = CreateTopLevelWindow(interp, (Tk_Window) NULL, baseName,
+    tkwin = CreateTopLevelWindow(interp, NULL, baseName,
 	    screenName, /* flags */ 0);
     if (tkwin == NULL) {
 	return NULL;
@@ -938,7 +939,7 @@ TkCreateMainWindow(
 	    clientData = NULL;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
-	    ((TkInitProc *) cmdPtr->objProc)(interp, clientData);
+	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
@@ -1460,9 +1461,9 @@ Tk_DestroyWindow(
     TkOptionDeadWindow(winPtr);
     TkSelDeadWindow(winPtr);
     TkGrabDeadWindow(winPtr);
-    if (winPtr->geometryMaster != NULL) {
-	ckfree(winPtr->geometryMaster);
-	winPtr->geometryMaster = NULL;
+    if (winPtr->geomMgrName != NULL) {
+	ckfree(winPtr->geomMgrName);
+	winPtr->geomMgrName = NULL;
     }
     if (winPtr->mainPtr != NULL) {
 	if (winPtr->pathName != NULL) {
@@ -1647,7 +1648,7 @@ Tk_MapWindow(
     event.xmap.event = winPtr->window;
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    Tk_HandleEvent(&event);
+    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
 }
 
 /*
@@ -1809,7 +1810,7 @@ Tk_UnmapWindow(
 	event.xunmap.event = winPtr->window;
 	event.xunmap.window = winPtr->window;
 	event.xunmap.from_configure = False;
-	Tk_HandleEvent(&event);
+	TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
     }
 }
 
@@ -2088,7 +2089,7 @@ void
 Tk_UndefineCursor(
     Tk_Window tkwin)		/* Window to manipulate. */
 {
-    Tk_DefineCursor(tkwin, None);
+    Tk_DefineCursor(tkwin, NULL);
 }
 
 void
@@ -2786,6 +2787,18 @@ DeleteWindowsExitProc(
     }
 
     /*
+     * Let error handlers catch up before actual close of displays.
+     * Must be done before tsdPtr->displayList is cleared, otherwise
+     * ErrorProc() in tkError.c cannot associate the pending X errors
+     * to the remaining error handlers.
+     */
+
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
+           dispPtr = dispPtr->nextPtr) {
+       XSync(dispPtr->display, False);
+    }
+
+    /*
      * Iterate destroying the displays until no more displays remain. It is
      * possible for displays to get recreated during exit by any code that
      * calls GetScreen, so we must destroy these new displays as well as the
@@ -2836,24 +2849,24 @@ TkCygwinMainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
-    TCHAR name[MAX_PATH];
+    WCHAR name[MAX_PATH];
     int len;
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
     len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
-    name[len-2] = TEXT('.');
+    name[len-2] = '.';
     name[len-1] = name[len-5];
-    _tcscpy(name+len, TEXT(".dll"));
-    memcpy(name+len-8, TEXT("libtk8"), 6 * sizeof(TCHAR));
+    wcscpy(name+len, L".dll");
+    memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
 
-    tkcygwindll = LoadLibrary(name);
+    tkcygwindll = LoadLibraryW(name);
     if (!tkcygwindll) {
 	/* dll is not present */
 	return 0;
     }
     tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
-	    GetProcAddress(tkcygwindll, "Tk_MainEx");
+	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
     if (!tkmainex) {
 	return 0;
     }
@@ -2893,7 +2906,7 @@ Tk_Init(
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
-	tkinit = (int(*)(Tcl_Interp *)) GetProcAddress(tkcygwindll,"Tk_Init");
+	tkinit = (int(*)(Tcl_Interp *))(void *)GetProcAddress(tkcygwindll,"Tk_Init");
 	if (tkinit) {
 	    return tkinit(interp);
 	}
@@ -2956,7 +2969,7 @@ Tk_SafeInit(
      * Current risks:
      *
      * - No CPU time limit, no memory allocation limits, no color limits.
-     *   CPU time limits can be imposed by an unsafe master interpreter.
+     *   CPU time limits can be imposed by an unsafe parent interpreter.
      *
      * The actual code called is the same as Tk_Init but Tcl_IsSafe() is
      * checked at several places to differentiate the two initialisations.
@@ -2967,7 +2980,7 @@ Tk_SafeInit(
 	int (*tksafeinit)(Tcl_Interp *);
 
 	tksafeinit = (int (*)(Tcl_Interp *))
-		GetProcAddress(tkcygwindll, "Tk_SafeInit");
+		(void *)GetProcAddress(tkcygwindll, "Tk_SafeInit");
 	if (tksafeinit) {
 	    return tksafeinit(interp);
 	}
@@ -3068,23 +3081,23 @@ Initialize(
     if (Tcl_IsSafe(interp)) {
 	/*
 	 * Get the clearance to start Tk and the "argv" parameters from the
-	 * master.
+	 * parent.
 	 */
 
 	/*
-	 * Step 1 : find the master and construct the interp name (could be a
+	 * Step 1 : find the parent and construct the interp name (could be a
 	 * function if new APIs were ok). We could also construct the path
 	 * while walking, but there is no API to get the name of an interp
 	 * either.
 	 */
 
-	Tcl_Interp *master = interp;
+	Tcl_Interp *parent = interp;
 
-	while (Tcl_IsSafe(master)) {
-	    master = Tcl_GetMaster(master);
-	    if (master == NULL) {
+	while (Tcl_IsSafe(parent)) {
+	    parent = Tcl_GetParent(parent);
+	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"no controlling master interpreter", -1));
+			"no controlling parent interpreter", -1));
 		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
 		return TCL_ERROR;
 	    }
@@ -3094,35 +3107,35 @@ Initialize(
 	 * Construct the name (rewalk...)
 	 */
 
-	code = Tcl_GetInterpPath(master, interp);
+	code = Tcl_GetInterpPath(parent, interp);
 	if (code != TCL_OK) {
 	    Tcl_Panic("Tcl_GetInterpPath broken!");
 	}
 
 	/*
-	 * Build the command to eval in trusted master.
+	 * Build the command to eval in trusted parent.
 	 */
 
 	cmd = Tcl_NewListObj(2, NULL);
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(parent));
 
 	/*
-	 * Step 2 : Eval in the master. The argument is the *reversed* interp
-	 * path of the slave.
+	 * Step 2 : Eval in the parent. The argument is the *reversed* interp
+	 * path of the child.
 	 */
 
 	Tcl_IncrRefCount(cmd);
-	code = Tcl_EvalObjEx(master, cmd, 0);
+	code = Tcl_EvalObjEx(parent, cmd, 0);
 	Tcl_DecrRefCount(cmd);
-	Tcl_TransferResult(master, code, interp);
+	Tcl_TransferResult(parent, code, interp);
 	if (code != TCL_OK) {
 	    return code;
 	}
 
 	/*
-	 * Use the master's result as argv. Note: We don't use the Obj
+	 * Use the parent's result as argv. Note: We don't use the Obj
 	 * interfaces to avoid dealing with cross interp refcounting and
 	 * changing the code below.
 	 */
@@ -3248,7 +3261,7 @@ Initialize(
     }
     Tcl_ResetResult(interp);
     if (sync) {
-	XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
+	(void)XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
     }
 
     /*
@@ -3326,7 +3339,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, 0);
+tkInit", -1, TCL_EVAL_GLOBAL);
     }
     if (code == TCL_OK) {
 	/*

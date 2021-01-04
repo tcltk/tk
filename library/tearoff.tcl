@@ -39,7 +39,7 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 	    # Shift by height of tearoff entry minus height of window titlebar
 	    catch {incr y [expr {[$w yposition 1] - 16}]}
 	    # Avoid the native menu bar which sits on top of everything.
-	    if {$y < 22} { set y 22 }
+	    if {$y < 22} {set y 22}
 	}
     }
 
@@ -153,9 +153,11 @@ proc ::tk::MenuDup {src dst type} {
 
     # Copy tags to x, replacing each substring of src with dst.
 
-    while {[set index [string first $src $tags]] != -1} {
-	append x [string range $tags 0 [expr {$index - 1}]]$dst
-	set tags [string range $tags [expr {$index + $srcLen}] end]
+    while {[set index [string first $src $tags]] >= 0} {
+	if {$index > 0} {
+	    append x [string range $tags 0 $index-1]$dst
+	}
+	set tags [string range $tags $index+$srcLen end]
     }
     append x $tags
 
@@ -168,10 +170,12 @@ proc ::tk::MenuDup {src dst type} {
 
 	# Copy script to x, replacing each substring of event with dst.
 
-	while {[set index [string first $event $script]] != -1} {
-	    append x [string range $script 0 [expr {$index - 1}]]
+	while {[set index [string first $event $script]] >= 0} {
+	    if {$index > 0} {
+		append x [string range $script 0 $index-1]
+	    }
 	    append x $dst
-	    set script [string range $script [expr {$index + $eventLen}] end]
+	    set script [string range $script $index+$eventLen end]
 	}
 	append x $script
 

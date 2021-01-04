@@ -75,10 +75,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	6
 #define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	8
+#define TK_RELEASE_SERIAL	11
 
 #define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.8"
+#define TK_PATCH_LEVEL		"8.6.11"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -92,13 +92,14 @@ extern "C" {
 
 #ifndef RC_INVOKED
 
-#ifndef _XLIB_H
+#if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
 #   endif
 #endif
-#ifdef __STDC__
+#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
+     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
 #   include <stddef.h>
 #endif
 
@@ -121,6 +122,7 @@ extern "C" {
  * Dummy types that are used by clients:
  */
 
+#define Tk_ImageModel Tk_ImageMaster
 typedef struct Tk_BindingTable_ *Tk_BindingTable;
 typedef struct Tk_Canvas_ *Tk_Canvas;
 typedef struct Tk_Cursor_ *Tk_Cursor;
@@ -266,10 +268,10 @@ typedef struct Tk_ObjCustomOption {
  * Computes number of bytes from beginning of structure to a given field.
  */
 
-#ifdef offsetof
 #define Tk_Offset(type, field) ((int) offsetof(type, field))
-#else
-#define Tk_Offset(type, field) ((int) ((char *) &((type *) 0)->field))
+/* Workaround for platforms missing offsetof(), e.g. VC++ 6.0 */
+#ifndef offsetof
+#   define offsetof(type, field) ((size_t) ((char *) &((type *) 0)->field))
 #endif
 
 /*
@@ -613,21 +615,22 @@ typedef struct Tk_ClassProcs {
  * the geometry manager to carry out certain functions.
  */
 
+#define Tk_GeomLostContentProc Tk_GeomLostSlaveProc
 typedef void (Tk_GeomRequestProc) (ClientData clientData, Tk_Window tkwin);
-typedef void (Tk_GeomLostSlaveProc) (ClientData clientData, Tk_Window tkwin);
+typedef void (Tk_GeomLostContentProc) (ClientData clientData, Tk_Window tkwin);
 
 typedef struct Tk_GeomMgr {
     const char *name;		/* Name of the geometry manager (command used
 				 * to invoke it, or name of widget class that
 				 * allows embedded widgets). */
     Tk_GeomRequestProc *requestProc;
-				/* Procedure to invoke when a slave's
+				/* Procedure to invoke when a content's
 				 * requested geometry changes. */
-    Tk_GeomLostSlaveProc *lostSlaveProc;
-				/* Procedure to invoke when a slave is taken
+    Tk_GeomLostContentProc *lostSlaveProc;
+				/* Procedure to invoke when content is taken
 				 * away from one geometry manager by another.
 				 * NULL means geometry manager doesn't care
-				 * when slaves are lost. */
+				 * when content lost. */
 } Tk_GeomMgr;
 
 /*
@@ -676,7 +679,7 @@ typedef struct {
 				 * request. */
     Display *display;		/* Display the event was read from. */
     Window event;		/* Window on which event was requested. */
-    Window root;		/* Root window that the event occured on. */
+    Window root;		/* Root window that the event occurred on. */
     Window subwindow;		/* Child window. */
     Time time;			/* Milliseconds. */
     int x, y;			/* Pointer x, y coordinates in event
@@ -813,10 +816,11 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
-    char *dummy20;		/* geometryMaster */
 #ifdef TK_USE_INPUT_METHODS
-    int dummy21;
+    int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
+    char *dummy21;		/* geomMgrName */
+    Tk_Window dummy22;		/* maintainerPtr */
 } Tk_FakeWin;
 
 /*
@@ -882,6 +886,10 @@ typedef struct Tk_FakeWin {
  *				window.
  * TK_WM_MANAGEABLE		1 marks a window as capable of being converted
  *				into a toplevel using [wm manage].
+ * TK_CAN_INPUT_TEXT            1 means that this window accepts text input.
+ *                              Used on macOS to indicate that key events can be
+ *                              processed with the NSTextInputClient protocol.
+ *                              Not currently accessible through the public API.
  */
 
 #define TK_MAPPED		1
@@ -895,6 +903,7 @@ typedef struct Tk_FakeWin {
 #define TK_EMBEDDED		0x100
 #define TK_CONTAINER		0x200
 #define TK_BOTH_HALVES		0x400
+
 #define TK_WRAPPER		0x1000
 #define TK_REPARENTED		0x2000
 #define TK_ANONYMOUS_WINDOW	0x4000
@@ -903,6 +912,7 @@ typedef struct Tk_FakeWin {
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
 #define TK_WM_MANAGEABLE	0x80000
+#define TK_CAN_INPUT_TEXT       0x100000
 
 /*
  *----------------------------------------------------------------------
@@ -1174,7 +1184,7 @@ typedef struct Tk_TSOffset {
 } Tk_TSOffset;
 
 /*
- * Bit fields in Tk_Offset->flags:
+ * Bit fields in Tk_TSOffset->flags:
  */
 
 #define TK_OFFSET_INDEX		1
@@ -1220,19 +1230,19 @@ typedef struct Tk_Outline {
 typedef struct Tk_ImageType Tk_ImageType;
 #ifdef USE_OLD_IMAGE
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
-	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster model,
+	ClientData *clientDataPtr);
 #else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, CONST86 char *name, int objc,
-	Tcl_Obj *const objv[], CONST86 Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	Tcl_Obj *const objv[], CONST86 Tk_ImageType *typePtr, Tk_ImageMaster model,
+	ClientData *clientDataPtr);
 #endif /* USE_OLD_IMAGE */
-typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData masterData);
-typedef void (Tk_ImageDisplayProc) (ClientData instanceData, Display *display,
+typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData clientData);
+typedef void (Tk_ImageDisplayProc) (ClientData clientData, Display *display,
 	Drawable drawable, int imageX, int imageY, int width, int height,
 	int drawableX, int drawableY);
-typedef void (Tk_ImageFreeProc) (ClientData instanceData, Display *display);
-typedef void (Tk_ImageDeleteProc) (ClientData masterData);
+typedef void (Tk_ImageFreeProc) (ClientData clientData, Display *display);
+typedef void (Tk_ImageDeleteProc) (ClientData clientData);
 typedef void (Tk_ImageChangedProc) (ClientData clientData, int x, int y,
 	int width, int height, int imageWidth, int imageHeight);
 typedef int (Tk_ImagePostscriptProc) (ClientData clientData,

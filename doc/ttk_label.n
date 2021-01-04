@@ -19,7 +19,7 @@ The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
 \-class	\-compound	\-cursor
-\-image	\-padding	\-style	\-takefocus
+\-image	\-padding	\-state	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width
 .SE
@@ -49,9 +49,6 @@ Specifies the 3-D effect desired for the widget border.
 Valid values are
 \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR, \fBsolid\fR,
 and \fBsunken\fR.
-.OP \-text text Text
-Specifies a text string to be displayed inside the widget
-(unless overridden by \fB\-textvariable\fR).
 .OP \-wraplength wrapLength WrapLength
 Specifies the maximum line length (in pixels).
 If this option is less than or equal to zero,
@@ -63,6 +60,27 @@ than the specified value.
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
 see \fIttk::widget(n)\fR.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::label\fP is \fBTLabel\fP.
+.PP
+Dynamic states: \fBdisabled\fP, \fBreadonly\fP.
+.PP
+\fBTLabel\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-compound\fP \fIcompound\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-font\fP \fIfont\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), label(n)
 '\" Local Variables:

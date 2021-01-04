@@ -191,15 +191,15 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 0, 0, 0},
-    {TK_OPTION_BORDER, "-buttonbackground", "Button.background", "Background",
+    {TK_OPTION_BORDER, "-buttonbackground", "buttonBackground", "Background",
 	DEF_BUTTON_BG_COLOR, -1, Tk_Offset(Spinbox, buttonBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
-    {TK_OPTION_CURSOR, "-buttoncursor", "Button.cursor", "Cursor",
+    {TK_OPTION_CURSOR, "-buttoncursor", "buttonCursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(Spinbox, bCursor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_RELIEF, "-buttondownrelief", "Button.relief", "Relief",
+    {TK_OPTION_RELIEF, "-buttondownrelief", "buttonDownRelief", "Relief",
 	DEF_BUTTON_RELIEF, -1, Tk_Offset(Spinbox, bdRelief), 0, 0, 0},
-    {TK_OPTION_RELIEF, "-buttonuprelief", "Button.relief", "Relief",
+    {TK_OPTION_RELIEF, "-buttonuprelief", "buttonUpRelief", "Relief",
 	DEF_BUTTON_RELIEF, -1, Tk_Offset(Spinbox, buRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_SPINBOX_CMD, -1, Tk_Offset(Spinbox, command),
@@ -426,7 +426,7 @@ static int		EntryWidgetObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
-			    const char *string, int *indexPtr);
+			    Tcl_Obj *indexObj, int *indexPtr);
 static int		InsertChars(Entry *entryPtr, int index, const char *string);
 
 /*
@@ -524,16 +524,16 @@ Tk_EntryObjCmd(
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
-    entryPtr->cursor		= None;
+    entryPtr->cursor		= NULL;
     entryPtr->exportSelection	= 1;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
     entryPtr->displayString	= entryPtr->string;
     entryPtr->inset		= XPAD;
-    entryPtr->textGC		= None;
-    entryPtr->selTextGC		= None;
-    entryPtr->highlightGC	= None;
+    entryPtr->textGC		= NULL;
+    entryPtr->selTextGC		= NULL;
+    entryPtr->highlightGC	= NULL;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
@@ -618,7 +618,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -670,13 +670,13 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&first) != TCL_OK) {
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first + 1;
-	} else if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	} else if (GetEntryIndex(interp, entryPtr, objv[3],
 		&last) != TCL_OK) {
 	    goto error;
 	}
@@ -702,7 +702,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pos");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&entryPtr->insertPos) != TCL_OK) {
 	    goto error;
 	}
@@ -716,7 +716,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -731,7 +731,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -811,7 +811,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (entryPtr->selectFirst >= 0) {
@@ -851,7 +851,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    entryPtr->selectAnchor = index;
@@ -871,11 +871,11 @@ EntryWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 3, objv, "start end");
 		goto error;
 	    }
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	    if (GetEntryIndex(interp, entryPtr, objv[3],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[4]),
+	    if (GetEntryIndex(interp, entryPtr, objv[4],
 		    &index2) != TCL_OK) {
 		goto error;
 	    }
@@ -887,7 +887,8 @@ EntryWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && (entryPtr->exportSelection)) {
+		    && (entryPtr->exportSelection)
+		    && (!Tcl_IsSafe(entryPtr->interp))) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
 			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
@@ -901,7 +902,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    EntrySelectTo(entryPtr, index);
@@ -941,7 +942,7 @@ EntryWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, span));
 	    goto done;
 	} else if (objc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	    if (GetEntryIndex(interp, entryPtr, objv[2],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
@@ -1032,10 +1033,10 @@ DestroyEntry(
 		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
-    if (entryPtr->textGC != None) {
+    if (entryPtr->textGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
-    if (entryPtr->selTextGC != None) {
+    if (entryPtr->selTextGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
@@ -1122,7 +1123,7 @@ ConfigureEntry(
      * value.
      */
 
-    oldExport = entryPtr->exportSelection;
+    oldExport = (entryPtr->exportSelection) && (!Tcl_IsSafe(entryPtr->interp));
     if (entryPtr->type == TK_SPINBOX) {
 	oldValues = sbPtr->valueStr;
 	oldFormat = sbPtr->reqFormat;
@@ -1276,6 +1277,7 @@ ConfigureEntry(
 	 */
 
 	if (entryPtr->exportSelection && (!oldExport)
+		&& (!Tcl_IsSafe(entryPtr->interp))
 		&& (entryPtr->selectFirst != -1)
 		&& !(entryPtr->flags & GOT_SELECTION)) {
 	    Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
@@ -1428,7 +1430,7 @@ EntryWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc = None;
+    GC gc = NULL;
     unsigned long mask;
     Tk_3DBorder border;
     XColor *colorPtr;
@@ -1480,7 +1482,7 @@ EntryWorldChanged(
     gcValues.graphics_exposures = False;
     mask = GCForeground | GCFont | GCGraphicsExposures;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->textGC != None) {
+    if (entryPtr->textGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
     entryPtr->textGC = gc;
@@ -1491,7 +1493,7 @@ EntryWorldChanged(
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->selTextGC != None) {
+    if (entryPtr->selTextGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     entryPtr->selTextGC = gc;
@@ -1511,17 +1513,15 @@ EntryWorldChanged(
  *
  * TkpDrawEntryBorderAndFocus --
  *
- *	This function redraws the border of an entry widget. It overrides the
- *	generic border drawing code if the entry widget parameters are such
- *	that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native entry borders.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1540,17 +1540,15 @@ TkpDrawEntryBorderAndFocus(
  *
  * TkpDrawSpinboxButtons --
  *
- *	This function redraws the buttons of an spinbox widget. It overrides
- *	the generic button drawing code if the spinbox widget parameters are
- *	such that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native spinbox buttons.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1729,18 +1727,14 @@ DisplayEntry(
 	}
     }
 
-    /*
-     * Draw the text in two pieces: first the unselected portion, then the
-     * selected portion on top of it.
-     */
-
-    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
-	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-	    entryPtr->leftIndex, entryPtr->numChars);
-
     if (showSelection && (entryPtr->state != STATE_DISABLED)
 	    && (entryPtr->selTextGC != entryPtr->textGC)
 	    && (entryPtr->selectFirst < entryPtr->selectLast)) {
+
+	/*
+	 * Draw the selected and unselected portions separately.
+	 */
+
 	int selFirst;
 
 	if (entryPtr->selectFirst < entryPtr->leftIndex) {
@@ -1748,9 +1742,28 @@ DisplayEntry(
 	} else {
 	    selFirst = entryPtr->selectFirst;
 	}
+	if (entryPtr->leftIndex < selFirst) {
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    entryPtr->leftIndex, selFirst);
+	}
 	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
 		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 		selFirst, entryPtr->selectLast);
+	if (entryPtr->selectLast < entryPtr->numChars) {
+	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		    entryPtr->selectLast, entryPtr->numChars);
+	}
+    } else {
+
+        /*
+         * Draw the entire visible text
+         */
+
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+		entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+		entryPtr->leftIndex, entryPtr->numChars);
     }
 
     if (entryPtr->type == TK_SPINBOX) {
@@ -2051,7 +2064,7 @@ InsertChars(
     char *newStr;
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
+    byteIndex = TkUtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
 	return TCL_OK;
@@ -2075,6 +2088,8 @@ InsertChars(
     entryPtr->string = newStr;
 
     /*
+     * ??? Is this construction still needed with Tcl_NumUtfChars ???
+     *
      * The following construction is used because inserting improperly formed
      * UTF-8 sequences between other improperly formed UTF-8 sequences could
      * result in actually forming valid UTF-8 sequences; the number of
@@ -2155,8 +2170,8 @@ DeleteChars(
     }
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
-    byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
+    byteIndex = TkUtfAtIndex(string, index) - string;
+    byteCount = TkUtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
     newStr = ckalloc(newByteCount);
@@ -2455,9 +2470,9 @@ EntryEventProc(
 	    } else if ((elem == SEL_BUTTONDOWN) || (elem == SEL_BUTTONUP)) {
 		cursor = sbPtr->bCursor;
 	    } else {
-		cursor = None;
+		cursor = NULL;
 	    }
-	    if (cursor != None) {
+	    if (cursor != NULL) {
 		Tk_DefineCursor(entryPtr->tkwin, cursor);
 	    } else {
 		Tk_UndefineCursor(entryPtr->tkwin);
@@ -2558,12 +2573,11 @@ GetEntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry for which the index is being
 				 * specified. */
-    const char *string,	/* Specifies character in entryPtr. */
+    Tcl_Obj *indexObj,	/* Specifies character in entryPtr. */
     int *indexPtr)		/* Where to store converted character index */
 {
-    size_t length;
-
-    length = strlen(string);
+    const char *string = Tcl_GetString(indexObj);
+    size_t length = indexObj->length;
 
     switch (string[0]) {
     case 'a':
@@ -2638,7 +2652,7 @@ GetEntryIndex(
 	break;
     }
     default:
-	if (Tcl_GetInt(NULL, string, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0){
@@ -2745,7 +2759,8 @@ EntrySelectTo(
      * Grab the selection if we don't own it already.
      */
 
-    if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)) {
+    if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)
+	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
 		entryPtr);
 	entryPtr->flags |= GOT_SELECTION;
@@ -2812,12 +2827,13 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if ((entryPtr->selectFirst < 0) || !(entryPtr->exportSelection)) {
+    if ((entryPtr->selectFirst < 0) || (!entryPtr->exportSelection)
+	    || Tcl_IsSafe(entryPtr->interp)) {
 	return -1;
     }
     string = entryPtr->displayString;
-    selStart = Tcl_UtfAtIndex(string, entryPtr->selectFirst);
-    selEnd = Tcl_UtfAtIndex(selStart,
+    selStart = TkUtfAtIndex(string, entryPtr->selectFirst);
+    selEnd = TkUtfAtIndex(selStart,
 	    entryPtr->selectLast - entryPtr->selectFirst);
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
@@ -2865,7 +2881,8 @@ EntryLostSelection(
      */
 
     if (TkpAlwaysShowSelection(entryPtr->tkwin)
-	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection) {
+	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection
+	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	entryPtr->selectFirst = -1;
 	entryPtr->selectLast = -1;
 	EventuallyRedraw(entryPtr);
@@ -3005,7 +3022,7 @@ EntryUpdateScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (code != TCL_OK) {
 	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
@@ -3150,14 +3167,34 @@ EntryTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        entryPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        EntryTextVarProc, probe);
+                if (probe == (ClientData)entryPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
 		    entryPtr->string, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
-	}
+        }
 	return NULL;
     }
 
@@ -3202,7 +3239,7 @@ EntryValidate(
 				 * string). */
 {
     register Tcl_Interp *interp = entryPtr->interp;
-    int code, bool;
+    int code, isOK;
 
     code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 
@@ -3224,7 +3261,7 @@ EntryValidate(
      */
 
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
-	    &bool) != TCL_OK) {
+	    &isOK) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		 "\n    (invalid boolean result from validation command)");
 	Tcl_BackgroundException(interp, TCL_ERROR);
@@ -3233,7 +3270,7 @@ EntryValidate(
     }
 
     Tcl_ResetResult(interp);
-    return (bool ? TCL_OK : TCL_BREAK);
+    return (isOK ? TCL_OK : TCL_BREAK);
 }
 
 /*
@@ -3246,7 +3283,7 @@ EntryValidate(
  *
  * Results:
  *	TCL_OK if the validatecommand accepts the new string, TCL_ERROR if any
- *	problems occured with validatecommand.
+ *	problems occurred with validatecommand.
  *
  * Side effects:
  *	The insertion/deletion may be aborted, and the validatecommand might
@@ -3271,17 +3308,21 @@ EntryValidateChange(
 
     if (entryPtr->validateCmd == NULL ||
 	entryPtr->validate == VALIDATE_NONE) {
+        if (entryPtr->flags & VALIDATING) {
+            entryPtr->flags |= VALIDATE_ABORT;
+        }
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
     /*
-     * If we're already validating, then we're hitting a loop condition Return
-     * and set validate to 0 to disallow further validations and prevent
-     * current validation from finishing
+     * If we're already validating, then we're hitting a loop condition. Set
+     * validate to none to disallow further validations, arrange for flags
+     * to prevent current validation from finishing, and return.
      */
 
     if (entryPtr->flags & VALIDATING) {
 	entryPtr->validate = VALIDATE_NONE;
+        entryPtr->flags |= VALIDATE_ABORT;
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
@@ -3303,7 +3344,7 @@ EntryValidateChange(
     /*
      * If e->validate has become VALIDATE_NONE during the validation, or we
      * now have VALIDATE_VAR set (from EntrySetValue) and didn't before, it
-     * means that a loop condition almost occured. Do not allow this
+     * means that a loop condition almost occurred. Do not allow this
      * validation result to finish.
      */
 
@@ -3615,22 +3656,22 @@ Tk_SpinboxObjCmd(
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
-    entryPtr->cursor		= None;
+    entryPtr->cursor		= NULL;
     entryPtr->exportSelection	= 1;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
     entryPtr->displayString	= entryPtr->string;
     entryPtr->inset		= XPAD;
-    entryPtr->textGC		= None;
-    entryPtr->selTextGC		= None;
-    entryPtr->highlightGC	= None;
+    entryPtr->textGC		= NULL;
+    entryPtr->selTextGC		= NULL;
+    entryPtr->highlightGC	= NULL;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
     sbPtr->selElement		= SEL_NONE;
     sbPtr->curElement		= SEL_NONE;
-    sbPtr->bCursor		= None;
+    sbPtr->bCursor		= NULL;
     sbPtr->repeatDelay		= 400;
     sbPtr->repeatInterval	= 100;
     sbPtr->fromValue		= 0.0;
@@ -3728,7 +3769,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3779,14 +3820,14 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&first) != TCL_OK) {
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first + 1;
 	} else {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	    if (GetEntryIndex(interp, entryPtr, objv[3],
 		    &last) != TCL_OK) {
 		goto error;
 	    }
@@ -3813,7 +3854,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pos");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&entryPtr->insertPos) != TCL_OK) {
 	    goto error;
 	}
@@ -3846,7 +3887,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3861,7 +3902,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3958,7 +3999,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (entryPtr->selectFirst >= 0) {
@@ -3998,7 +4039,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    entryPtr->selectAnchor = index;
@@ -4019,11 +4060,11 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[4]),& index2) != TCL_OK) {
+		    objv[4],& index2) != TCL_OK) {
 		goto error;
 	    }
 	    if (index >= index2) {
@@ -4034,7 +4075,8 @@ SpinboxWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && entryPtr->exportSelection) {
+		    && entryPtr->exportSelection
+		    && (!Tcl_IsSafe(entryPtr->interp))) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
 			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
@@ -4048,7 +4090,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    EntrySelectTo(entryPtr, index);
@@ -4128,7 +4170,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, span));
 	    goto done;
 	} else if (objc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	    if (GetEntryIndex(interp, entryPtr, objv[2],
 		    &index) != TCL_OK) {
 		goto error;
 	    }

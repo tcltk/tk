@@ -103,7 +103,7 @@ const int tkpWinBltModes[] = {
 
 typedef BOOL (CALLBACK *WinDrawFunc)(HDC dc, const POINT *points, int npoints);
 
-typedef struct ThreadSpecificData {
+typedef struct {
     POINT *winPoints;		/* Array of points that is reused. */
     int nWinPoints;		/* Current size of point array. */
 } ThreadSpecificData;
@@ -1448,7 +1448,7 @@ TkWinFillRect(
     rect.bottom = y + height;
     oldColor = SetBkColor(dc, (COLORREF)pixel);
     SetBkMode(dc, OPAQUE);
-    ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+    ExtTextOutW(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
     SetBkColor(dc, oldColor);
 }
 

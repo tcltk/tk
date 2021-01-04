@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     int size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[2];		/* Characters that make up character info.
+	char chars[TKFLEXARRAY];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -489,7 +489,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[1];		/* Array of tabs. The actual size will be
+    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;
@@ -667,7 +667,7 @@ typedef struct TkText {
 				/* Color for drawing traversal highlight area
 				 * when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
-    Tk_Cursor cursor;		/* Current cursor for window, or None. */
+    Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     XColor *fgColor;		/* Default foreground color for text. */
     Tk_Font tkfont;		/* Default font for displaying text. */
     int charWidth;		/* Width of average character in default
@@ -1070,7 +1070,7 @@ MODULE_SCOPE int	TkTextGetObjIndex(Tcl_Interp *interp, TkText *textPtr,
 MODULE_SCOPE int	TkTextSharedGetObjIndex(Tcl_Interp *interp,
 			    TkSharedText *sharedTextPtr, Tcl_Obj *idxPtr,
 			    TkTextIndex *indexPtr);
-MODULE_SCOPE const TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
+MODULE_SCOPE const	TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *objPtr);
 MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *stringPtr);
@@ -1159,7 +1159,7 @@ MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
-
+MODULE_SCOPE void       TkTextRunAfterSyncCmd(ClientData clientData);
 #endif /* _TKTEXT */
 
 /*

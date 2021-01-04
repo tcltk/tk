@@ -63,7 +63,7 @@ if {[tk windowingsystem] eq "aqua"} {
 }
 foreach i {A B C D E F} {
     $m add command -label "Print letter \"$i\"" -underline 14 \
-	    -accelerator Meta+$i -command "puts $i" -accelerator $modifier+$i
+	    -accelerator $modifier+$i -command "puts $i"
     bind $w <$modifier-[string tolower $i]> "puts $i"
 }
 
@@ -144,9 +144,24 @@ $m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
 set m $w.menu.colors
 $w.menu add cascade -label "Colors" -menu $m -underline 1
 menu $m -tearoff 1
-foreach i {red orange yellow green blue} {
-    $m add command -label $i -background $i -command [list \
-	    puts "You invoked \"$i\"" ]
+if {[tk windowingsystem] eq "aqua"} {
+    # Aqua ignores the -background and -foreground options, but a compound
+    # button can be used for selecting colors.
+    foreach i {red orange yellow green blue} {
+	image create photo image_$i -height 16 -width 16
+	image_$i put black -to 0 0 16 1
+	image_$i put black -to 0 1 1 16
+	image_$i put black -to 0 15 16 16
+	image_$i put black -to 15 1 16 16
+	image_$i put $i -to 1 1 15 15
+	$m add command -label $i -image image_$i -compound left -command [list \
+	puts "You invoked \"$i\"" ]
+    }
+} else {
+    foreach i {red orange yellow green blue} {
+	$m add command -label $i -background $i -command [list \
+	puts "You invoked \"$i\"" ]
+    }
 }
 
 $w configure -menu $w.menu
