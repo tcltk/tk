@@ -6437,7 +6437,7 @@ else $as_nop
   tcl_type_64bit="long long"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-	# See if we could use long anyway  Note that we substitute in the
+	# See if we should use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
         cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -7250,22 +7250,7 @@ fi
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
-ac_fn_c_check_header_compile "$LINENO" "sys/time.h" "ac_cv_header_sys_time_h" "$ac_includes_default"
-if test "x$ac_cv_header_sys_time_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_SYS_TIME_H 1" >>confdefs.h
 
-fi
-
-
-
-# Obsolete code to be removed.
-if test $ac_cv_header_sys_time_h = yes; then
-
-printf "%s\n" "#define TIME_WITH_SYS_TIME 1" >>confdefs.h
-
-fi
-# End of obsolete code.
 
 
 #--------------------------------------------------------------------
