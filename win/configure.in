@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
+AC_INIT([tk],[8.5])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.59])
 
