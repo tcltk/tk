@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT
+AC_INIT([tk],[8.7])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.59])
 
@@ -300,5 +300,5 @@ AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
 AC_OUTPUT
 
 dnl Local Variables:
-dnl mode: autoconf;
+dnl mode: autoconf
 dnl End:
