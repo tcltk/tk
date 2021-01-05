@@ -94,10 +94,7 @@ extern "C" {
 #	include <X11/X.h>
 #   endif
 #endif
-#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
-     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
-#   include <stddef.h>
-#endif
+#include <stddef.h>
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS

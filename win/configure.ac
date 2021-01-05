@@ -3,9 +3,9 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT
+AC_INIT([tk],[8.7])
 AC_CONFIG_SRCDIR([../generic/tk.h])
-AC_PREREQ([2.69])
+AC_PREREQ([2.70])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
@@ -43,7 +43,6 @@ fi
 
 AC_PROG_CC
 AC_C_INLINE
-AC_HEADER_STDC
 AC_CHECK_INCLUDES_DEFAULT
 
 AC_CHECK_TOOL(AR, ar)
@@ -303,5 +302,5 @@ AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
 AC_OUTPUT
 
 dnl Local Variables:
-dnl mode: autoconf;
+dnl mode: autoconf
 dnl End:
