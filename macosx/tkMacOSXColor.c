@@ -33,6 +33,11 @@ static NSAppearance *darkAqua = nil;
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
+static const CGFloat GRAPHITE_TINT[4] =
+    {160.0 / 255, 160.0 / 255, 165.0 / 255, 1.0};
+static const CGFloat BLUE_TINT[4] =
+    {70.0 / 255, 154.0 / 255, 252.0 / 255, 1.0};
+
 
 void initColorTable()
 {
@@ -321,8 +326,16 @@ GetRGBA(
     case semantic:
 	if (entry->index == controlAccentIndex && useFakeAccentColor) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
-	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
-			      colorUsingColorSpace:sRGB];
+	    NSControlTint tint = [NSColor currentControlTint];
+	    if (tint == NSGraphiteControlTint) {
+		for (int i = 0; i < 3; i++) {
+		    rgba[i] = GRAPHITE_TINT[i];
+		}
+	    } else {
+		for (int i = 0; i < 3; i++) {
+		    rgba[i] = BLUE_TINT[i];
+		}
+	    }
 #endif
 	} else if (entry->index == selectedTabTextIndex) {
 	    int OSVersion = [NSApp macOSVersion];
