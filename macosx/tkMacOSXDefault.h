@@ -303,14 +303,14 @@
 #define DEF_MENU_ACTIVE_BORDER_WIDTH	"0"
 #define DEF_MENU_ACTIVE_FG_COLOR	IGNORED
 #define DEF_MENU_ACTIVE_FG_MONO		IGNORED
-#define DEF_MENU_BG_COLOR		"#000001" /* Detects custom bg. */
+#define DEF_MENU_BG_COLOR		NORMAL_BG
 #define DEF_MENU_BG_MONO		IGNORED
 #define DEF_MENU_BORDER_WIDTH		"0"
 #define DEF_MENU_CURSOR			"arrow"
 #define DEF_MENU_DISABLED_FG_COLOR	IGNORED
 #define DEF_MENU_DISABLED_FG_MONO	""
 #define DEF_MENU_FONT			"menu" /* special: see tkMacOSXMenu.c */
-#define DEF_MENU_FG			"#010000"  /* Detects custom fg. */
+#define DEF_MENU_FG			NORMAL_FG
 #define DEF_MENU_POST_COMMAND		""
 #define DEF_MENU_RELIEF			"flat"
 #define DEF_MENU_SELECT_COLOR		IGNORED
