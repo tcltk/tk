@@ -5,8 +5,8 @@
  *	for the Tk toolkit. Frames are windows with a background color and
  *	possibly a 3-D effect, but not much else in the way of attributes.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -839,7 +839,7 @@ FrameWidgetObjCmd(
 		    || ((c == 'v')
 			&& (strncmp(arg, "-visual", length) == 0))) {
 
-#ifdef SUPPORT_CONFIG_EMBEDDED
+#ifdef _WIN32
 		    if (c == 'u') {
 			const char *string = Tcl_GetString(objv[i+1]);
 

@@ -4,10 +4,10 @@
  *	This file contains the implementation of a tcl event source
  *	for the AppKit event loop.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2015 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -334,7 +334,7 @@ TkMacOSXNotifyExitHandler(
  *	None.
  *
  * Side effects:
- *	Parts of windows my get redrawn.
+ *	Parts of windows may get redrawn.
  *
  *----------------------------------------------------------------------
  */
@@ -445,7 +445,7 @@ TkMacOSXEventsSetupProc(
 	 *
  	 * If we have any events waiting or if there is any drawing to be done
 	 * we want Tcl_WaitForEvent to return immediately.  So we set the block
-	 * time to 0 and stop the heatbeat.
+	 * time to 0 and stop the heartbeat.
   	 */
 
 	NSEvent *currentEvent =

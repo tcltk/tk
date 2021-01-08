@@ -1,10 +1,9 @@
 /*
- * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
  */
 
-#include "tkInt.h"
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
@@ -483,14 +482,15 @@ ValueToPoint(Scale *scalePtr, double value)
 }
 
 static const Ttk_Ensemble ScaleCommands[] = {
-    { "configure",   TtkWidgetConfigureCommand,0 },
     { "cget",        TtkWidgetCgetCommand,0 },
-    { "state",       TtkWidgetStateCommand,0 },
-    { "instate",     TtkWidgetInstateCommand,0 },
-    { "identify",    TtkWidgetIdentifyCommand,0 },
-    { "set",         ScaleSetCommand,0 },
-    { "get",         ScaleGetCommand,0 },
+    { "configure",   TtkWidgetConfigureCommand,0 },
     { "coords",      ScaleCoordsCommand,0 },
+    { "get",         ScaleGetCommand,0 },
+    { "identify",    TtkWidgetIdentifyCommand,0 },
+    { "instate",     TtkWidgetInstateCommand,0 },
+    { "set",         ScaleSetCommand,0 },
+    { "state",       TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

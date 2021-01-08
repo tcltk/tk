@@ -3,9 +3,9 @@
  *
  *	This file contains Macintosh specific cursor related routines.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -262,7 +262,7 @@ FindCursorByName(
 		break;
 	    case IMAGEBITMAP: {
 		unsigned char *bitmap = (unsigned char *)(cursorNames[idx].id1);
-		NSBitmapImageRep *bitmapImageRep = NULL;
+		NSBitmapImageRep *bitmapImageRep = nil;
 		CGImageRef img = NULL, mask = NULL, maskedImg = NULL;
 		static const CGFloat decodeWB[] = {1, 0};
 		CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(
@@ -457,7 +457,7 @@ TkpFreeCursor(
     TkMacOSXCursor *macCursorPtr = (TkMacOSXCursor *) cursorPtr;
 
     [macCursorPtr->macCursor release];
-    macCursorPtr->macCursor = NULL;
+    macCursorPtr->macCursor = nil;
     if (macCursorPtr == gCurrentCursor) {
 	gCurrentCursor = NULL;
     }

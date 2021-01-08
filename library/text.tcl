@@ -5,7 +5,7 @@
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
-# Copyright © 1998 by Scriptics Corporation.
+# Copyright © 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -306,9 +306,7 @@ bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-Key> {# nothing}
-}
+bind Text <Command-Key> {# nothing}
 
 # Additional emacs-like bindings:
 
@@ -442,16 +440,16 @@ bind Text <B2-Motion> {
 set ::tk::Priv(prevPos) {}
 
 bind Text <MouseWheel> {
-    tk::MouseWheel %W y %D -3.0 pixels
+    tk::MouseWheel %W y %D -4.0 pixels
 }
 bind Text <Option-MouseWheel> {
-    tk::MouseWheel %W y %D -0.3 pixels
+    tk::MouseWheel %W y %D -1.2 pixels
 }
 bind Text <Shift-MouseWheel> {
-    tk::MouseWheel %W x %D -3.0 pixels
+    tk::MouseWheel %W x %D -4.0 pixels
 }
 bind Text <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x %D -0.3 pixels
+    tk::MouseWheel %W x %D -1.2 pixels
 }
 
 # ::tk::TextClosestGap --

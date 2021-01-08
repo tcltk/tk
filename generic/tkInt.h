@@ -6,7 +6,7 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright (c) 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -132,6 +132,12 @@
 #	define TCL_Z_MODIFIER	""
 #   endif
 #endif /* !TCL_Z_MODIFIER */
+#undef TCL_LL_MODIFIER
+#if defined(_WIN32) && (!defined(__USE_MINGW_ANSI_STDIO) || !__USE_MINGW_ANSI_STDIO)
+#   define TCL_LL_MODIFIER	"I64"
+#else
+#   define TCL_LL_MODIFIER	"ll"
+#endif
 
 /*
  * Opaque type declarations:
@@ -901,7 +907,7 @@ typedef struct {
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;
-#elif !defined(MAC_OSC_TK)
+#elif !defined(MAC_OSX_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been

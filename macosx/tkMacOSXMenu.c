@@ -3,10 +3,10 @@
  *
  *	This module implements the Mac-platform specific features of menus.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2012 Adrian Robert.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2012 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -316,12 +316,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
 
-	    /*
-	     * Add time for errors to fire if necessary. This is sub-optimal
-	     * but avoids issues with Tcl/Cocoa event loop integration.
-	     */
-
-	    //Tcl_Sleep(100);
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -685,7 +679,6 @@ TkpConfigureMenuEntry(
     NSString *keyEquivalent = @"";
     NSUInteger modifierMask = NSCommandKeyMask;
     NSMenu *submenu = nil;
-    NSDictionary *attributes;
     int imageWidth, imageHeight;
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ?
@@ -714,9 +707,7 @@ TkpConfigureMenuEntry(
 		&imageHeight);
 	image = TkMacOSXGetNSImageFromBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
-	if (gc->foreground == defaultFg) {
-	    [image setTemplate:YES];
-	}
+	[image setTemplate:YES];
     }
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
@@ -730,25 +721,50 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setTitle:title];
-    if (strcmp(Tcl_GetString(fontPtr), "menu") || gc->foreground != defaultFg
-	    || gc->background != defaultBg) {
-	attributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
-		mePtr->menuPtr->tkwin, fontPtr));
-	if (gc->foreground != defaultFg || gc->background != defaultBg) {
-	    NSColor *color = TkMacOSXGetNSColor(gc,
-		    gc->foreground!=defaultFg? gc->foreground:gc->background);
 
-	    attributes = [[attributes mutableCopy] autorelease];
-	    [(NSMutableDictionary *) attributes setObject:color
-		    forKey:NSForegroundColorAttributeName];
-	}
-	if (attributes) {
-	    attributedTitle = [[[NSAttributedString alloc]
-		    initWithString:title attributes:attributes] autorelease];
-	}
+#if 0
+
+    /*
+     * The -background and -foreground options are now ignored in Aqua.
+     * See ticket [635167af14].
+     */
+
+    NSDictionary fontAttributes = TkMacOSXNSFontAttributesForFont(
+	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
+    NSMutableDictionary *attributes = [fontAttributes mutableCopy];
+    static unsigned long defaultBg = 0, defaultFg = 0;
+    if (defaultBg == 0) {
+	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
+	defaultBg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
     }
+    if (defaultFg == 0) {
+	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
+	defaultFg = tkColPtr->color.pixel;
+	ckfree(tkColPtr);
+    }
+    if (gc->foreground != defaultFg) {
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	[attributes setObject:fgcolor
+		       forKey:NSForegroundColorAttributeName];
+    }
+    if (gc->background != defaultBg) {
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	[attributes setObject:bgcolor
+	 	       forKey:NSBackgroundColorAttributeName];
+    }
+
+#else
+
+    NSDictionary *attributes = TkMacOSXNSFontAttributesForFont(
+	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
+
+#endif
+
+    attributedTitle = [[NSAttributedString alloc] initWithString:title
+	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
-    [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
+    [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
 	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
@@ -781,27 +797,17 @@ TkpConfigureMenuEntry(
     		if ([menuItem isEnabled]) {
 
 		    /*
-		     * This menuItem might have been previously disabled (XXX:
-		     * track this), which would have disabled entries; we must
-		     * re-enable the entries here.
+		     * This menuItem might have been previously disabled which
+		     * would have disabled all of its entries; we must re-enable the
+		     * entries here.  It is important to iterate though the Tk
+		     * entries, not the NSMenuItems, since some NSMenuItems may
+		     * have been added by the system.  See [7185d26cf4].
 		     */
 
-		    int i = 0;
-		    NSArray *itemArray = [submenu itemArray];
-
-		    for (NSMenuItem *item in itemArray) {
+		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-
-			/*
-			 * Work around an apparent bug where itemArray can have
-			 * more items than the menu's entries[] array.
-			 */
-
-			if (i >= (int) menuRefPtr->menuPtr->numEntries) {
-			    break;
-			}
-			[item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
-			i++;
+			NSMenuItem *item = (NSMenuItem *) submePtr->platformEntryData;
+			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
 		    }
 		}
 	    }
@@ -1674,8 +1680,6 @@ TkMacOSXClearMenubarActive(void)
 void
 TkpMenuInit(void)
 {
-    //    TkColor *tkColPtr;
-
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
 #define observe(n, s) \
@@ -1815,13 +1819,17 @@ TkpComputeMenubarGeometry(
  * TkpDrawMenuEntry --
  *
  *	Draws the given menu entry at the given coordinates with the given
- *	attributes.
+ *	attributes.  This is a no-op on macOS since the menus are drawn by
+ *      the Apple window manager, which also handles all events related to
+ *      selecting menu items.  This function is only called for tearoff
+ *      menus, which are not supported on macOS but do get drawn as nearly
+ *      invisible 1 pixel wide windows on macOS
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	X Server commands are executed to display the menu entry.
+ *	None
  *
  *----------------------------------------------------------------------
  */

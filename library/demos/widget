@@ -366,7 +366,6 @@ addFormattedText {
     @@subtitle	Scales and Progress Bars
     @@demo hscale	Horizontal scale
     @@demo vscale	Vertical scale
-    @@new
     @@demo ttkscale	Themed scale linked to a label with traces
     @@demo ttkprogress	Progress bar
 
@@ -387,6 +386,8 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
+    @@new
+    @@demo systray      System tray icon and notification
 
     @@subtitle	Animation
     @@demo anilabel	Animated labels

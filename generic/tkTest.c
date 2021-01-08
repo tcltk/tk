@@ -6,9 +6,9 @@
  *	commands are not normally included in Tcl applications; they're only
  *	used for testing.
  *
- * Copyright (c) 1993-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1993-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -247,7 +247,7 @@ Tktest_Init(
      * Create additional commands for testing Tk.
      */
 
-    if (Tcl_PkgProvideEx(interp, "Tktest", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
+    if (Tcl_PkgProvideEx(interp, "tk::test", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
@@ -1933,11 +1933,7 @@ TestprintfObjCmd(
 {
     char buffer[256];
     Tcl_WideInt wideInt;
-#ifdef _WIN32
-    __int64 longLongInt;
-#else
     long long longLongInt;
-#endif
     (void)dummy;
 
     if (objc != 2) {
@@ -1956,7 +1952,7 @@ TestprintfObjCmd(
      */
     sprintf(buffer, "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
 	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
-	    (Tcl_WideInt)longLongInt, (Tcl_WideUInt)longLongInt);
+	    longLongInt, (unsigned long long)longLongInt);
     Tcl_AppendResult(interp, buffer, NULL);
     return TCL_OK;
 }

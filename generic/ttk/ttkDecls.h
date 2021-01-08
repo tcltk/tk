@@ -13,7 +13,11 @@ extern const char *TtkInitializeStubs(
 	interp, TTK_VERSION, TTK_STUBS_EPOCH, TTK_STUBS_REVISION)
 #else
 
-#define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "Ttk", TTK_VERSION, 0, NULL)
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
+#   define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "Ttk", TTK_VERSION, 0, NULL)
+#else
+#   define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "ttk", TTK_VERSION, 0, NULL)
+#endif
 
 #endif
 

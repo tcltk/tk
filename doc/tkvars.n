@@ -50,7 +50,7 @@ it uniquely identifies an official version of Tk.
 .RS
 .PP
 This value is normally the same as the result of
-.QW "\fBpackage require\fR \fBTk\fR" .
+.QW "\fBpackage require\fR \fBtk\fR" .
 .RE
 .TP
 \fBtk_strictMotif\fR
