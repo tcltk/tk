@@ -3,7 +3,7 @@
  *
  * Generic layout processing.
  *
- * Copyright (c) 2003 Joe English.  Freely redistributable.
+ * Copyright © 2003 Joe English.  Freely redistributable.
  */
 
 #include "tkInt.h"

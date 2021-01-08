@@ -3,7 +3,7 @@
 # for Tcl tests.
 #
 # Copyright © 1994 Sun Microsystems, Inc.
-# Copyright © 1998-1999 by Scriptics Corporation.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 #
@@ -23,7 +23,7 @@ if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
         testConstraint cliboardManagerPresent 1
     }
 }
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 global longValue selValue selInfo
 

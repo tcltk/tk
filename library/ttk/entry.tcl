@@ -130,12 +130,8 @@ bind TEntry <Escape> 			{# nothing}
 bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
+bind TEntry <Command-Key>		{# nothing}
 
-# Argh.  Apparently on Windows, the NumLock modifier is interpreted
-# as a Command modifier.
-if {[tk windowingsystem] eq "aqua"} {
-    bind TEntry <Command-Key>		{# nothing}
-}
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
 bind TEntry <<NextLine>>		{# nothing}

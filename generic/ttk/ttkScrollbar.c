@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * ttk::scrollbar widget.
  */
@@ -282,8 +282,8 @@ ScrollbarFractionCommand(
 }
 
 static const Ttk_Ensemble ScrollbarCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "delta",    	ScrollbarDeltaCommand,0 },
     { "fraction",    	ScrollbarFractionCommand,0 },
     { "get",    	ScrollbarGetCommand,0 },
@@ -291,6 +291,7 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "set",  		ScrollbarSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 

@@ -102,18 +102,18 @@ which returns the number of tabs
 (only valid for
 .QW "\fIpathname \fBindex\fR" ).
 .SH "WIDGET COMMAND"
+.PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+notebook widgets support the following additional commands:
 .TP
 \fIpathname \fBadd \fIwindow\fR ?\fIoptions...\fR?
 Adds a new tab to the notebook.
 See \fBTAB OPTIONS\fR for the list of available \fIoptions\fR.
 If \fIwindow\fR is currently managed by the notebook but hidden,
 it is restored to its previous position.
-.TP
-\fIpathname \fBconfigure\fR ?\fIoptions\fR?
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathname \fBcget \fIoption\fR
-See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBforget \fItabid\fR
 Removes the tab specified by \fItabid\fR,
@@ -151,18 +151,12 @@ If \fIsubwindow\fR is already managed by the notebook,
 moves it to the specified position.
 See \fBTAB OPTIONS\fR for the list of available options.
 .TP
-\fIpathname \fBinstate \fIstatespec \fR?\fIscript...\fR?
-See \fIttk::widget(n)\fR.
-.TP
 \fIpathname \fBselect\fR ?\fItabid\fR?
 Selects the specified tab.
 The associated content window will be displayed,
 and the previously-selected window (if different) is unmapped.
 If \fItabid\fR is omitted, returns the widget name of the
 currently selected pane.
-.TP
-\fIpathname \fBstate\fR ?\fIstatespec\fR?
-See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBtab \fItabid\fR ?\fI\-option \fR?\fIvalue ...\fR
 Query or modify the options of the specific tab.

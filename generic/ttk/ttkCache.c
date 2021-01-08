@@ -1,7 +1,7 @@
 /*
  *      Theme engine resource cache.
  *
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * The problem:
  *

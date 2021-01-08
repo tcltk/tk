@@ -5,7 +5,7 @@
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
-# Copyright © 1998 by Scriptics Corporation.
+# Copyright © 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -177,16 +177,16 @@ bind Listbox <B2-Motion> {
 }
 
 bind Listbox <MouseWheel> {
-    tk::MouseWheel %W y %D -30.0
+    tk::MouseWheel %W y %D -40.0
 }
 bind Listbox <Option-MouseWheel> {
-    tk::MouseWheel %W y %D -3.0
+    tk::MouseWheel %W y %D -12.0
 }
 bind Listbox <Shift-MouseWheel> {
-    tk::MouseWheel %W x %D -30.0
+    tk::MouseWheel %W x %D -40.0
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x %D -3.0
+    tk::MouseWheel %W x %D -12.0
 }
 
 # ::tk::ListboxBeginSelect --

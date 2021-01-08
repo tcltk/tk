@@ -3,8 +3,8 @@
  *
  *	A Tk photo image file handler for PNG files.
  *
- * Copyright (c) 2006-2008 Muonics, Inc.
- * Copyright (c) 2008 Donal K. Fellows
+ * Copyright © 2006-2008 Muonics, Inc.
+ * Copyright © 2008 Donal K. Fellows
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
