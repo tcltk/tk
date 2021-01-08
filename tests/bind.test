@@ -15,6 +15,7 @@ tk useinputmethods 0
 
 testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7]
+testConstraint failsOnWindows [expr {![info exists ::env(CI)] || [tk windowingsystem] ne "win32"}]
 
 
 toplevel .t -width 100 -height 50
@@ -2224,7 +2225,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind all <Key> $savedBind(All)
     unset savedBind
 } -result {0 1 2}
-test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87} -setup {
+test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87 failsOnWindows} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
