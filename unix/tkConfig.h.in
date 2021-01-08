@@ -162,9 +162,6 @@
 /* Do 'long' and 'long long' have the same size (64-bit)? */
 #undef TCL_WIDE_INT_IS_LONG
 
-/* What type should be used to define wide integers? */
-#undef TCL_WIDE_INT_TYPE
-
 /* Is Tk built as a framework? */
 #undef TK_FRAMEWORK
 
