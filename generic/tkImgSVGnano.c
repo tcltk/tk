@@ -591,7 +591,16 @@ RasterizeSVG(
 		NULL);
 	goto cleanAST;
     }
-    imgData = (unsigned char *)attemptckalloc(w * h *4);
+
+    /* Tk Ticket [822330269b] Check potential int overflow in following ckalloc */
+    unsigned long long wh = (unsigned long long)w * (unsigned long long)h;
+    if ( wh > INT_MAX / 4) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("image size overflow", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "IMAGE_SIZE_OVERFLOW", NULL);
+	goto cleanRAST;
+    }
+
+    imgData = (unsigned char *)attemptckalloc(wh * 4);
     if (imgData == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);

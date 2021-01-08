@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT
+AC_INIT([tk],[8.7])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.69])
 
@@ -43,7 +43,6 @@ fi
 
 AC_PROG_CC
 AC_C_INLINE
-AC_HEADER_STDC
 AC_CHECK_INCLUDES_DEFAULT
 
 AC_CHECK_TOOL(AR, ar)
@@ -151,7 +150,7 @@ SC_PROG_TCLSH
 #	Zipfs support - Tip 430
 #--------------------------------------------------------------------
 AC_ARG_ENABLE(zipfs,
-    AC_HELP_STRING([--enable-zipfs],
+    AS_HELP_STRING([--enable-zipfs],
 	[build with Zipfs support (default: on)]),
     [tcl_ok=$enableval], [tcl_ok=yes])
 if test "$tcl_ok" = "yes" ; then
@@ -349,5 +348,5 @@ AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
 AC_OUTPUT
 
 dnl Local Variables:
-dnl mode: autoconf;
+dnl mode: autoconf
 dnl End:
