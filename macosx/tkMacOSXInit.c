@@ -203,6 +203,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 	if (path) {
 	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
 	    if (image) {
+		[image setName:@"NSApplicationIcon"];
 		[NSApp setApplicationIconImage:image];
 		[image release];
 	    }
