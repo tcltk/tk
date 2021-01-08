@@ -201,7 +201,7 @@ FileReadPPM(
     }
 
     if (srcY > 0) {
-	Tcl_Seek(chan, (Tcl_WideInt)(srcY * block.pitch), SEEK_CUR);
+	Tcl_Seek(chan, (long long)srcY * block.pitch, SEEK_CUR);
     }
 
     nLines = (MAX_MEMORY + block.pitch - 1) / block.pitch;

@@ -4405,7 +4405,7 @@ then :
 	    *++|*++-*)
 		;;
 	    *)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers -Wdeclaration-after-statement"
+		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers"
 		;;
 	esac
 
@@ -6026,7 +6026,7 @@ then :
 	    Darwin-*) ;;
 	    IRIX*) ;;
 	    Linux*|GNU*) ;;
-	    NetBSD-*|OpenBSD-*) ;;
+	    NetBSD-*|DragonFly-*|FreeBSD-*|OpenBSD-*) ;;
 	    OSF1-V*) ;;
 	    SCO_SV-3.2*) ;;
 	    *) SHLIB_CFLAGS="-fPIC" ;;
@@ -6430,25 +6430,6 @@ then :
 else $as_nop
 
 	tcl_cv_type_64bit=none
-	# See if the compiler knows natively about __int64
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-__int64 value = (__int64) 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  tcl_type_64bit=__int64
-else $as_nop
-  tcl_type_64bit="long long"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 	# See if we could use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
@@ -6459,7 +6440,7 @@ int
 main (void)
 {
 switch (0) {
-            case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
+            case 1: case (sizeof(long long)==sizeof(long)): ;
         }
   ;
   return 0;
@@ -6467,7 +6448,7 @@ switch (0) {
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"
 then :
-  tcl_cv_type_64bit=${tcl_type_64bit}
+  tcl_cv_type_64bit="long long"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
@@ -6479,12 +6460,6 @@ printf "%s\n" "#define TCL_WIDE_INT_IS_LONG 1" >>confdefs.h
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
     else
-
-printf "%s\n" "#define TCL_WIDE_INT_TYPE ${tcl_cv_type_64bit}" >>confdefs.h
-
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: ${tcl_cv_type_64bit}" >&5
-printf "%s\n" "${tcl_cv_type_64bit}" >&6; }
-
 	# Now check for auxiliary declarations
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for struct dirent64" >&5
 printf %s "checking for struct dirent64... " >&6; }
@@ -7262,22 +7237,7 @@ fi
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
-ac_fn_c_check_header_compile "$LINENO" "sys/time.h" "ac_cv_header_sys_time_h" "$ac_includes_default"
-if test "x$ac_cv_header_sys_time_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_SYS_TIME_H 1" >>confdefs.h
 
-fi
-
-
-
-# Obsolete code to be removed.
-if test $ac_cv_header_sys_time_h = yes; then
-
-printf "%s\n" "#define TIME_WITH_SYS_TIME 1" >>confdefs.h
-
-fi
-# End of obsolete code.
 
 
 #--------------------------------------------------------------------
@@ -8768,6 +8728,9 @@ printf "%s\n" "static library" >&6; }
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
+    if test "${SHARED_BUILD}" = "0"; then
+	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
+    fi
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in"
 
