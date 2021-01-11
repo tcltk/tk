@@ -332,7 +332,7 @@ test place-9.5 {PlaceObjCmd} -setup {
     place badopt .foo
 } -cleanup {
     destroy .foo
-} -returnCodes error -result {bad option "badopt": must be configure, content, forget, or info}
+} -returnCodes error -result {bad option "badopt": must be configure, content, forget, info, or slaves}
 test place-9.6 {PlaceObjCmd, configure errors} -setup {
     destroy .foo
 } -body {
