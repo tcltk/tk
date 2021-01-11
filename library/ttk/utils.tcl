@@ -303,9 +303,9 @@ proc ttk::bindMouseWheel {bindtag callback} {
     }
     if {[tk windowingsystem] eq "aqua"} {
 	bind $bindtag <MouseWheel> "$callback \[expr {-%D}\]"
-	bind $bindtag <Option-MouseWheel> "$callback \[expr {-10*%D}\]"
+	bind $bindtag <Option-MouseWheel> "$callback \[expr {-10 * %D}\]"
     } else {
-	bind $bindtag <MouseWheel> "$callback \[expr {-%D/120)}\]"
+	bind $bindtag <MouseWheel> "$callback \[expr {-%D / 120}\]"
     }
 }
 
@@ -325,18 +325,18 @@ if {[tk windowingsystem] eq "x11"} {
 }
 if {[tk windowingsystem] eq "aqua"} {
     bind TtkScrollable <MouseWheel> \
-	    { %W yview scroll [expr {-(%D)}] units }
+	    { %W yview scroll [expr {-%D}] units }
     bind TtkScrollable <Shift-MouseWheel> \
-	    { %W xview scroll [expr {-(%D)}] units }
+	    { %W xview scroll [expr {-%D}] units }
     bind TtkScrollable <Option-MouseWheel> \
-	    { %W yview scroll  [expr {-10 * (%D)}] units }
+	    { %W yview scroll  [expr {-10 * %D}] units }
     bind TtkScrollable <Shift-Option-MouseWheel> \
-	    { %W xview scroll [expr {-10 * (%D)}] units }
+	    { %W xview scroll [expr {-10 * %D}] units }
 } else {
     bind TtkScrollable <MouseWheel> \
-	    { %W yview scroll [expr {-(%D / 120)}] units }
+	    { %W yview scroll [expr {-%D / 120}] units }
     bind TtkScrollable <Shift-MouseWheel> \
-	    { %W xview scroll [expr {-(%D / 120)}] units }
+	    { %W xview scroll [expr {-%D / 120}] units }
 }
 
 #*EOF*
