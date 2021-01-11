@@ -129,7 +129,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 typedef struct Container {
     Tk_Window tkwin;		/* Tk's token for container window. */
-    struct Content *contentPtr;	/* First in linked list of content windowslaced
+    struct Content *contentPtr;	/* First in linked list of content placed
 				 * relative to this container. */
     int *abortPtr;		/* If non-NULL, it means that there is a nested
 				 * call to RecomputePlacement already working on
@@ -216,9 +216,6 @@ Tk_PlaceObjCmd(
     static const char *const optionStrings[] = {
 	"configure", "content", "forget", "info", "slaves", NULL
     };
-    static const char *const optionStringsNoDep[] = {
-	"configure", "content", "forget", "info", NULL
-    };
     enum options { PLACE_CONFIGURE, PLACE_CONTENT, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
     int index;
 
@@ -281,14 +278,6 @@ Tk_PlaceObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
-	/*
-	 * Call it again without the deprecated ones to get a proper error
-	 * message. This works well since there can't be any ambiguity between
-	 * deprecated and new options.
-	 */
-
-	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
-		sizeof(char *), "option", 0, &index);
 	return TCL_ERROR;
     }
 
@@ -479,7 +468,7 @@ FindContent(
  *
  * UnlinkContent --
  *
- *	This function removes a content window from the chain of content windows in its
+ *	This function removes a content window from the chain of content in its
  *	container.
  *
  * Results:
@@ -684,7 +673,7 @@ ConfigureContent(
 
 	/*
 	 * Make sure that the new container is either the logical parent of the
-	 * content window or a descendant of that window, and that the container and content
+	 * content or a descendant of that window, and that the container and content
 	 * aren't the same.
 	 */
 
@@ -899,7 +888,7 @@ RecomputePlacement(
     Tcl_Preserve(containerPtr);
 
     /*
-     * Iterate over all the content windows for the container. Each content's geometry can
+     * Iterate over all the content for the container. Each content's geometry can
      * be computed independently of the other content. Changes to the window's
      * structure could cause almost anything to happen, including deleting the
      * parent or child. If this happens, we'll be told to abort.
