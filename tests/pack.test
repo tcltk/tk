@@ -1362,7 +1362,7 @@ test pack-12.46 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack lousy .pack
-} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, or propagate}
+} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, propagate, or slaves}
 
 test pack-13.1 {window deletion} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d .pack.right .pack.bottom
