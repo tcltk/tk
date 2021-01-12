@@ -793,11 +793,15 @@ test textTag-17.1 {insert procedure inserts tags} {
 
 catch {destroy .t}
 
-test textTag-18.1 {TkTextPickCurrent tag bindings} {
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
+    destroy .t
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+} -body {
     text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
       -highlightthickness 10 -pady 2
     pack .t
+    update ; # map the window, otherwise -warp can't be done
 
     .t insert end " Tag here " TAG " no tag here"
     .t tag configure TAG -borderwidth 4 -relief raised
@@ -816,7 +820,9 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} {
     event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
     event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
     set res
-} {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
+} -cleanup {
+    destroy .t
+} -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
 
 catch {destroy .t}
 
