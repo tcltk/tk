@@ -20,7 +20,7 @@ static const char *const sideNames[] = {
 
 /*
  * For each window that the packer cares about (either because the window is
- * managed by the packer or because the window has content that are managed by
+ * managed by the packer or because the window has content managed by
  * the packer), there is a structure of the following type:
  */
 
@@ -122,10 +122,8 @@ static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyPacker(void *memPtr);
 static Packer *		GetPacker(Tk_Window tkwin);
-#ifndef TK_NO_DEPRECATED
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
 			    Packer *containerPtr, int objc,Tcl_Obj *const objv[]);
-#endif /* !TK_NO_DEPRECATED */
 static void		PackStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		Unlink(Packer *packPtr);
@@ -199,17 +197,12 @@ Tk_PackObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     const char *argv2;
     static const char *const optionStrings[] = {
-#ifndef TK_NO_DEPRECATED
-	"after", "append", "before", "unpack",
-#endif /* !TK_NO_DEPRECATED */
-	"configure", "content", "forget", "info", "propagate", "slaves", NULL };
-    static const char *const optionStringsNoDep[] = {
-	"configure", "content", "forget", "info", "propagate", NULL };
+	/* after, append, before and unpack are deprecated */
+	"after", "append", "before", "unpack", "configure",
+	"content", "forget", "info", "propagate", "slaves", NULL };
     enum options {
-#ifndef TK_NO_DEPRECATED
-	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
-#endif /* !TK_NO_DEPRECATED */
-	PACK_CONFIGURE, PACK_CONTENT, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
+	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK, PACK_CONFIGURE,
+	PACK_CONTENT, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
     int index;
 
     if (objc >= 2) {
@@ -224,7 +217,7 @@ Tk_PackObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(NULL, objv[1], optionStrings,
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	/*
 	 * Call it again without the deprecated ones to get a proper error
@@ -232,14 +225,14 @@ Tk_PackObjCmd(
 	 * deprecated and new options.
 	 */
 
-	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
+	Tcl_ResetResult(interp);
+	Tcl_GetIndexFromObjStruct(interp, objv[1], &optionStrings[4],
 		sizeof(char *), "option", 0, &index);
 	return TCL_ERROR;
     }
 
     argv2 = Tcl_GetString(objv[2]);
     switch ((enum options) index) {
-#ifndef TK_NO_DEPRECATED
     case PACK_AFTER: {
 	Packer *prevPtr;
 	Tk_Window tkwin2;
@@ -304,7 +297,6 @@ Tk_PackObjCmd(
 	}
 	return PackAfter(interp, prevPtr, containerPtr, objc-3, objv+3);
     }
-#endif /* !TK_NO_DEPRECATED */
     case PACK_CONFIGURE:
 	if (argv2[0] != '.') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -467,7 +459,6 @@ Tk_PackObjCmd(
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
-#ifndef TK_NO_DEPRECATED
     case PACK_UNPACK: {
 	Tk_Window tkwin2;
 	Packer *packPtr;
@@ -491,7 +482,6 @@ Tk_PackObjCmd(
 	}
 	break;
     }
-#endif /* !TK_NO_DEPRECATED */
     }
 
     return TCL_OK;
@@ -608,7 +598,7 @@ ArrangePacking(
     containerPtr->flags &= ~REQUESTED_REPACK;
 
     /*
-     * If the container has no content anymore, then leave the container's size as-is.
+     * If the container has no content anymore, then leave the container size as-is.
      * Otherwise there is no way to "relinquish" control over the container
      * so another geometry manager can take over.
      */
@@ -1097,7 +1087,6 @@ GetPacker(
  *------------------------------------------------------------------------
  */
 
-#ifndef TK_NO_DEPRECATED
 static int
 PackAfter(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
@@ -1318,7 +1307,6 @@ PackAfter(
     }
     return TCL_OK;
 }
-#endif /* !TK_NO_DEPRECATED */
 
 /*
  *----------------------------------------------------------------------
