@@ -793,7 +793,7 @@ test textTag-17.1 {insert procedure inserts tags} {
 
 catch {destroy .t}
 
-test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
+test textTag-18.1 {TkTextPickCurrent tag bindings} -constraints knownBug -setup {
     destroy .t
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
