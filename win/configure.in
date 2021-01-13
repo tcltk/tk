@@ -157,7 +157,7 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-if test ${SHARED_BUILD} = 0 ; then
+if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=\"${LIBPREFIX}tk${VER}${LIBSUFFIX}\""
 else
  eval "TK_LIB_FILE=\"${LIBPREFIX}tk${VER}${DLLSUFFIX}.a\""
