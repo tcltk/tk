@@ -305,7 +305,7 @@ proc ttk::bindMouseWheel {bindtag callback} {
 	bind $bindtag <MouseWheel> "$callback \[expr {-%D}\]"
 	bind $bindtag <Option-MouseWheel> "$callback \[expr {-10*%D}\]"
     } else {
-	bind $bindtag <MouseWheel> "$callback \[expr {-%D/120)}\]"
+	bind $bindtag <MouseWheel> "$callback \[expr {-%D/120}\]"
     }
 }
 
