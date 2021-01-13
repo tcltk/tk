@@ -1257,7 +1257,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	arg = TkGetStringFromObj(objv[2], &length);
+	arg = Tcl_GetStringFromObj(objv[2], &length);
 	c = arg[0];
 
 	/*

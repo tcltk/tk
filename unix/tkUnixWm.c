@@ -3075,7 +3075,7 @@ WmProtocolCmd(
 	    break;
 	}
     }
-    cmd = TkGetStringFromObj(objv[4], &cmdLength);
+    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
 	protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
@@ -5462,7 +5462,7 @@ SetNetWmType(
     for (n = 0; n < objc; ++n) {
 	Tcl_DString ds, dsName;
 	TkSizeT len;
-	char *name = TkGetStringFromObj(objv[n], &len);
+	char *name = Tcl_GetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);
 	Tcl_UtfToExternalDString(NULL, name, len, &dsName);
