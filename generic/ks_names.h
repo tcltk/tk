@@ -45,28 +45,13 @@
 { "Hangul_Jamo", 0xFF35 },
 { "Hangul_Romaja", 0xFF36 },
 { "Codeinput", 0xFF37 },
-#ifndef TK_NO_DEPRECATED
-{ "Kanji_Bangou", 0xFF37 },
-{ "Hangul_Codeinput", 0xFF37 },
-#endif
 { "Hangul_Jeonja", 0xFF38 },
 { "Hangul_Banja", 0xFF39 },
 { "Hangul_PreHanja", 0xFF3A },
 { "Hangul_PostHanja", 0xFF3B },
 { "SingleCandidate", 0xFF3C },
-#ifndef TK_NO_DEPRECATED
-{ "Hangul_SingleCandidate", 0xFF3C },
-#endif
 { "MultipleCandidate", 0xFF3D },
-#ifndef TK_NO_DEPRECATED
-{ "Zen_Koho", 0xFF3D },
-{ "Hangul_MultipleCandidate", 0xFF3D },
-#endif
 { "PreviousCandidate", 0xFF3E },
-#ifndef TK_NO_DEPRECATED
-{ "Mae_Koho", 0xFF3E },
-{ "Hangul_PreviousCandidate", 0xFF3E },
-#endif
 { "Hangul_Special", 0xFF3F },
 { "Home", 0xFF50 },
 { "Left", 0xFF51 },
@@ -96,11 +81,10 @@
 { "Mode_switch", 0xFF7E },
 #ifndef TK_NO_DEPRECATED
 { "script_switch", 0xFF7E },
-{ "ISO_Group_Shift", 0xFF7E },
 { "kana_switch", 0xFF7E },
+{ "Arabic_switch", 0xFF7E },
 { "Greek_switch", 0xFF7E },
 { "Hebrew_switch", 0xFF7E },
-{ "Hangul_switch", 0xFF7E },
 #endif
 { "Num_Lock", 0xFF7F },
 { "KP_Space", 0xFF80 },
@@ -606,9 +590,6 @@
 { "odiaeresis", 0xF6 },
 { "division", 0xF7 },
 { "oslash", 0xF8 },
-#ifndef TK_NO_DEPRECATED
-{ "ooblique", 0xF8 },
-#endif
 { "ugrave", 0xF9 },
 { "uacute", 0xFA },
 { "ucircumflex", 0xFB },
@@ -819,6 +800,7 @@
 { "kana_N", 0x4DD },
 { "voicedsound", 0x4DE },
 { "semivoicedsound", 0x4DF },
+{ "Arabic_comma", 0x5AC },
 { "Arabic_semicolon", 0x5BB },
 { "Arabic_question_mark", 0x5BF },
 { "Arabic_hamza", 0x5C1 },
