@@ -551,7 +551,11 @@ AC_C_CHAR_UNSIGNED
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
+if test ${TCL_MAJOR_VERSION} = 8 ; then
 eval "TK_LIB_FILE=libtk${LIB_SUFFIX}"
+else
+eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
+fi
 
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
 # since on some platforms TK_LIB_FILE contains shell escapes.
