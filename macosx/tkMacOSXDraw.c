@@ -1255,6 +1255,8 @@ TkMacOSXSetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
+static NSView *lockedView = nil;
+
 Bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
@@ -1329,11 +1331,21 @@ TkMacOSXSetupDrawingContext(
 	 * part of the view inside the drawing bounds will get redrawn during
 	 * the next call to its drawRect method.
 	 */
-
 	if (view != [NSView focusView]) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
+	    if ([view canDraw]) {
+		[view lockFocus];
+		lockedView = view;
+	    } else {
+		[view addTkDirtyRect:drawingBounds];
+		canDraw = false;
+		goto end;
+	    }
+#else
 	    [view addTkDirtyRect:drawingBounds];
 	    canDraw = false;
 	    goto end;
+#endif
 	}
 
 	/*
@@ -1482,6 +1494,10 @@ void
 TkMacOSXRestoreDrawingContext(
     TkMacOSXDrawingContext *dcPtr)
 {
+    if ([NSView focusView] == lockedView) {
+	[lockedView unlockFocus];
+	lockedView = nil;
+    }
     if (dcPtr->context) {
 	CGContextSynchronize(dcPtr->context);
 	CGContextRestoreGState(dcPtr->context);
