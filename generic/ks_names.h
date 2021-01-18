@@ -64,9 +64,6 @@
 { "Page_Down", 0xFF56 },
 { "End", 0xFF57 },
 { "Begin", 0xFF58 },
-{ "Win_L", 0xFF5B },
-{ "Win_R", 0xFF5C },
-{ "App", 0xFF5D },
 { "Select", 0xFF60 },
 { "Print", 0xFF61 },
 { "Execute", 0xFF62 },
@@ -74,6 +71,9 @@
 { "Undo", 0xFF65 },
 { "Redo", 0xFF66 },
 { "Menu", 0xFF67 },
+#ifndef TK_NO_DEPRECATED
+{ "App", 0xFF67 },
+#endif
 { "Find", 0xFF68 },
 { "Cancel", 0xFF69 },
 { "Help", 0xFF6A },
@@ -195,7 +195,13 @@
 { "Alt_L", 0xFFE9 },
 { "Alt_R", 0xFFEA },
 { "Super_L", 0xFFEB },
+#ifndef TK_NO_DEPRECATED
+{ "Win_L", 0xFFEB },
+#endif
 { "Super_R", 0xFFEC },
+#ifndef TK_NO_DEPRECATED
+{ "Win_R", 0xFFEC },
+#endif
 { "Hyper_L", 0xFFED },
 { "Hyper_R", 0xFFEE },
 { "braille_dot_1", 0xFFF1 },
@@ -993,7 +999,9 @@
 { "Greek_ETAaccent", 0x7A3 },
 { "Greek_IOTAaccent", 0x7A4 },
 { "Greek_IOTAdieresis", 0x7A5 },
+#ifndef TK_NO_DEPRECATED
 { "Greek_IOTAdiaeresis", 0x7A5 },
+#endif
 { "Greek_IOTAaccentdiaeresis", 0x7A6 },
 { "Greek_OMICRONaccent", 0x7A7 },
 { "Greek_UPSILONaccent", 0x7A8 },
