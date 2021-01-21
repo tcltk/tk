@@ -15,56 +15,30 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: tk/unix
+        working-directory: unix
     steps:
       - name: Check out Tk
         uses: actions/checkout@v2
-        with:
-          path: tk
-      - name: Check out Tcl
-        uses: actions/checkout@v2
-        with:
-          repository: tcltk/tcl
-          ref: core-8-5-branch
-          path: tcl
-      - name: Prepare checked out repositories
+      - name: Prepare checked out repository
         run: |
-          touch tkStubInit.c
+          touch ../generic/tkStubInit.c ../doc/man.macros
           mkdir "$HOME/install"
-          echo "USE_XVFB=$SET_DISPLAY" >> $GITHUB_ENV
-        working-directory: tk/generic
+          echo "USE_XVFB=$USE_XVFB" >> $GITHUB_ENV
         env:
-          SET_DISPLAY: ${{ contains(matrix.options, '--disable-aqua') }}
-      - name: Add X11 (if required)
+          USE_XVFB: ${{ contains(matrix.options, '--disable-aqua') }}
+      - name: Add Tcl
+         run: |
+           brew install tcl-tk          
+      - name: Add X11
         if: ${{ env.USE_XVFB }}
         # This involves black magic
         run: |
           brew install --cask xquartz
           sudo /opt/X11/lib/X11/xinit/privileged_startx.d/10-tmpdirs || true
-        working-directory: .
-      - name: Build Tcl
-        # Note that macOS is always a 64 bit platform
-        run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install" || {
-            cat config.log
-            echo "::error::Failure during Tcl Configure"
-            exit 1
-          }
-          make all || {
-            echo "::error::Failure during Tcl Build"
-            exit 1
-          }
-          make install || {
-            echo "::error::Failure during Tcl Install"
-            exit 1
-          }
-        working-directory: tcl/unix
-        env:
-          CFGOPT: --enable-symbols=${{ matrix.symbols }}
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
         # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install" || {
+          ./configure --enable-64bit --with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include ${CFGOPT} "--prefix=$HOME/install" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -73,7 +47,7 @@ jobs:
           CFGOPT: --enable-symbols=${{ matrix.symbols }} ${{matrix.options }}
       - name: Build
         run: |
-          make all tktest || {
+          make binaries libraries tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
