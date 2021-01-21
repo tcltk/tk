@@ -64,17 +64,16 @@ jobs:
           path: tcl
       - name: Prepare checked out repositories
         run: |
-          touch tkStubInit.c
+          touch ../generic/tkStubInit.c ../doc/man.macros
           mkdir "$HOME/install dir"
           echo "USE_XVFB=$SET_DISPLAY" >> $GITHUB_ENV
-        working-directory: tk/generic
         env:
           SET_DISPLAY: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add X11 (if required)
         if: ${{ env.USE_XVFB }}
         # This involves black magic
         run: |
-          brew cask install xquartz
+          brew install --cask xquartz
           sudo /opt/X11/lib/X11/xinit/privileged_startx.d/10-tmpdirs || true
         working-directory: .
       - name: Build Tcl
@@ -108,7 +107,7 @@ jobs:
           CFGOPT: --enable-symbols=${{ matrix.symbols }} ${{matrix.options }}
       - name: Build
         run: |
-          make all tktest || {
+          make binaries libraries tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
