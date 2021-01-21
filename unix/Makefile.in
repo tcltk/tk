@@ -1163,7 +1163,7 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 # even though they will be placed in a static archive
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
 
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
@@ -1433,7 +1433,7 @@ ttkStubInit.o: $(TTK_DIR)/ttkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubInit.c
 
 ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
 
 ttkTagSet.o: $(TTK_DIR)/ttkTagSet.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTagSet.c
