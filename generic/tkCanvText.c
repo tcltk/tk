@@ -1020,7 +1020,7 @@ TextInsert(
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
-    string = TkGetStringFromObj(obj, &byteCount);
+    string = Tcl_GetStringFromObj(obj, &byteCount);
 
     text = textPtr->text;
 
@@ -1399,7 +1399,7 @@ GetTextIndex(
 	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(obj, &length);
+    string = Tcl_GetStringFromObj(obj, &length);
     c = string[0];
 
     if ((c == 'i')

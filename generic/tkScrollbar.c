@@ -271,7 +271,7 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "activate element");
 	    goto error;
 	}
-	c = TkGetStringFromObj(objv[2], &len)[0];
+	c = Tcl_GetStringFromObj(objv[2], &len)[0];
 	oldActiveField = scrollPtr->activeField;
 	if ((c == 'a') && (strcmp(Tcl_GetString(objv[2]), "arrow1") == 0)) {
 	    scrollPtr->activeField = TOP_ARROW;
