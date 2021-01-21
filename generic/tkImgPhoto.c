@@ -457,7 +457,7 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    return TCL_ERROR;
 	}
-	arg = TkGetStringFromObj(objv[2], &length);
+	arg = Tcl_GetStringFromObj(objv[2], &length);
 	if (strncmp(arg,"-data", length) == 0) {
 	    if (modelPtr->dataString) {
 		Tcl_SetObjResult(interp, modelPtr->dataString);
@@ -506,7 +506,7 @@ ImgPhotoCmd(
 	    return TCL_OK;
 
 	} else if (objc == 3) {
-	    const char *arg = TkGetStringFromObj(objv[2], &length);
+	    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
 
 	    if (length > 1 && !strncmp(arg, "-data", length)) {
 		Tcl_AppendResult(interp, "-data {} {} {}", NULL);
@@ -1503,7 +1503,7 @@ ParseSubcommandOptions(
 	 * optPtr->name.
 	 */
 
-	expandedOption = option = TkGetStringFromObj(objv[index], &length);
+	expandedOption = option = Tcl_GetStringFromObj(objv[index], &length);
 	if (option[0] != '-') {
 	    if (optPtr->name == NULL) {
 		optPtr->name = objv[index];
@@ -1781,7 +1781,7 @@ ImgPhotoConfigureModel(
 
     args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
-	args[j] = TkGetStringFromObj(objv[i], &length);
+	args[j] = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
 	    if ((args[j][1] == 'd') &&
 		    !strncmp(args[j], "-data", length)) {
@@ -1862,7 +1862,7 @@ ImgPhotoConfigureModel(
 	 */
 	TkSizeT bytesize;
 
-	(void) TkGetByteArrayFromObj(data, &bytesize);
+	(void) Tcl_GetByteArrayFromObj(data, &bytesize);
 	if (bytesize) {
 	    Tcl_IncrRefCount(data);
 	} else {

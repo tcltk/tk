@@ -1275,7 +1275,7 @@ TkWinHandleMenuEvent(
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
-		    const char *src = TkGetStringFromObj(labelPtr, &len);
+		    const char *src = Tcl_GetStringFromObj(labelPtr, &len);
 
 		    Tcl_DStringFree(&ds);
 		    Tcl_DStringInit(&ds);
