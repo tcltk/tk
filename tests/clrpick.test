@@ -9,6 +9,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
+
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
     # machines with small color palettes still fail.
@@ -168,7 +170,7 @@ test clrpick-2.2 {tk_chooseColor command} \
     tk_chooseColor -parent $parent -title "choose $colors"
 } "$color"
 test clrpick-2.3 {tk_chooseColor command} \
-	{nonUnixUserInteraction colorsLeftover} {
+	{nonUnixUserInteraction colorsLeftover failsOnQuarz} {
     ToPressButton $parent ok
     tk_chooseColor -parent $parent -title "Press OK"
 } "$color"

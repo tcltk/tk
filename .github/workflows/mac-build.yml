@@ -27,8 +27,8 @@ jobs:
         env:
           USE_XVFB: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add Tcl
-         run: |
-           brew install tcl-tk          
+        run: |
+          brew install tcl-tk          
       - name: Add X11
         if: ${{ env.USE_XVFB }}
         # This involves black magic

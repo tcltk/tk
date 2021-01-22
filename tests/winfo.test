@@ -10,6 +10,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
+
 # eatColors --
 # Creates a toplevel window and allocates enough colors in it to
 # use up all the slots in the colormap.
@@ -220,7 +222,7 @@ test winfo-9.2 {"winfo viewable" command} {
 test winfo-9.3 {"winfo viewable" command} {
     winfo viewable .
 } {1}
-test winfo-9.4 {"winfo viewable" command} failsOnUbuntu {
+test winfo-9.4 {"winfo viewable" command} {failsOnUbuntu failsOnQuarz} {
     wm iconify .
     winfo viewable .
 } {0}
@@ -241,7 +243,7 @@ test winfo-9.6 {"winfo viewable" command} {
     update
     list [winfo viewable .f1] [winfo viewable .f1.f2]
 } {0 0}
-test winfo-9.7 {"winfo viewable" command} failsOnUbuntu {
+test winfo-9.7 {"winfo viewable" command} {failsOnUbuntu failsOnQuarz} {
     deleteWindows
     frame .f1 -width 100 -height 100 -relief raised -bd 2
     place .f1 -x 0 -y 0

@@ -14,6 +14,7 @@ button .b -text .b -relief raised -bd 2
 pack .b
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 proc focusSetup {} {
     catch {destroy .t}
@@ -513,7 +514,7 @@ test focus-4.4 {TkFocusDeadWindow procedure} {unix testwrapper} {
 
 setupbg
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} \
-	{unix testwrapper secureserver failsOnUbuntu} {
+	{unix testwrapper secureserver failsOnUbuntu failsOnQuarz} {
     focusSetup
     focus -force .t
     update

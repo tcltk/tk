@@ -16,6 +16,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
+
 if {[tk windowingsystem] eq "x11"} {
     set xlsf [auto_execok xlsfonts]
 }
@@ -255,7 +257,7 @@ test unixfont-8.3 {AllocFont procedure: can't parse info from name} unix {
     catch {unset fontArray}
     set result
 } {-family -overstrike -size -slant -underline -weight}
-test unixfont-8.4 {AllocFont procedure: classify characters} {unix failsOnUbuntu} {
+test unixfont-8.4 {AllocFont procedure: classify characters} {unix failsOnUbuntu failsOnQuarz} {
     set x 0
     incr x [font measure $courier "\u4000"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
@@ -266,7 +268,7 @@ test unixfont-8.4 {AllocFont procedure: classify characters} {unix failsOnUbuntu
 test unixfont-8.5 {AllocFont procedure: setup widths of normal chars} unix {
     font metrics $courier -fixed
 } {1}
-test unixfont-8.6 {AllocFont procedure: setup widths of special chars} {unix failsOnUbuntu} {
+test unixfont-8.6 {AllocFont procedure: setup widths of special chars} {unix failsOnUbuntu failsOnQuarz} {
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
     incr x [font measure $courier "\002"]   ;# 4
@@ -294,7 +296,7 @@ test unixfont-8.11 {AllocFont procedure: XA_UNDERLINE_POSITION was 0} unix {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {unix failsOnUbuntu} {
+test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {unix failsOnUbuntu failsOnQuarz} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -303,7 +305,7 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {unix failsOnUb
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {unix failsOnUbuntu} {
+test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {unix failsOnUbuntu failsOnQuarz} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}

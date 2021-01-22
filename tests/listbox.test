@@ -10,6 +10,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
+
 set fixed {Courier -12}
 
 proc record {name args} {
@@ -206,7 +208,7 @@ test listbox-3.16 {ListboxWidgetCmd procedure, "bbox" option} {fonts} {
     update
     list [.l bbox 17] [.l bbox end] [.l bbox 18]
 } {{7 83 24 14} {7 83 24 14} {}}
-test listbox-3.17 {ListboxWidgetCmd procedure, "bbox" option} {fonts} {
+test listbox-3.17 {ListboxWidgetCmd procedure, "bbox" option} {fonts failsOnQuarz} {
     catch {destroy .t}
     toplevel .t
     wm geom .t +0+0
@@ -217,7 +219,7 @@ test listbox-3.17 {ListboxWidgetCmd procedure, "bbox" option} {fonts} {
     .t.l xview moveto .2
     .t.l bbox 2
 } {-72 39 393 14}
-test listbox-3.18 {ListboxWidgetCmd procedure, "bbox" option, partial last line} {fonts} {
+test listbox-3.18 {ListboxWidgetCmd procedure, "bbox" option, partial last line} {fonts failsOnQuarz} {
     mkPartial
     list [.partial.l bbox 3] [.partial.l bbox 4]
 } {{5 56 24 14} {5 73 23 14}}
@@ -463,7 +465,7 @@ test listbox-3.76 {ListboxWidgetCmd procedure, "scan" option} {
 test listbox-3.77 {ListboxWidgetCmd procedure, "scan" option} {
     list [catch {.l scan foo 2 2.3} msg] $msg
 } {1 {expected integer but got "2.3"}}
-test listbox-3.78 {ListboxWidgetCmd procedure, "scan" option} {fonts} {
+test listbox-3.78 {ListboxWidgetCmd procedure, "scan" option} {fonts failsOnQuarz} {
     catch {destroy .t}
     toplevel .t
     wm geom .t +0+0
@@ -754,7 +756,7 @@ test listbox-3.137 {ListboxWidgetCmd procedure, "xview" option} {
 # No tests for DestroyListbox:  I can't come up with anything to test
 # in this procedure.
 
-test listbox-4.1 {ConfigureListbox procedure} {fonts} {
+test listbox-4.1 {ConfigureListbox procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -setgrid 1 -width 25 -height 15
     pack .l
@@ -812,7 +814,7 @@ test listbox-4.5 {-exportselection option} {
 } {0 el1 1 1 {PRIMARY selection doesn't exist or form "STRING" not defined} 1 1 {PRIMARY selection doesn't exist or form "STRING" not defined} {} 1 {PRIMARY selection doesn't exist or form "STRING" not defined} {1 2 3} 0 {el1
 el2
 el3} {1 2 3}}
-test listbox-4.6 {ConfigureListbox procedure} {fonts} {
+test listbox-4.6 {ConfigureListbox procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
 
     # The following code (reset geometry, withdraw, etc.) is necessary
@@ -951,20 +953,20 @@ test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} {
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
 
-test listbox-5.1 {ListboxComputeGeometry procedure} {fonts} {
+test listbox-5.1 {ListboxComputeGeometry procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -font $fixed -width 15 -height 20
     pack .l
     list [winfo reqwidth .l] [winfo reqheight .l]
 } {115 328}
-test listbox-5.2 {ListboxComputeGeometry procedure} {fonts} {
+test listbox-5.2 {ListboxComputeGeometry procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -font $fixed -width 0 -height 10
     pack .l
     update
     list [winfo reqwidth .l] [winfo reqheight .l]
 } {17 168}
-test listbox-5.3 {ListboxComputeGeometry procedure} {fonts} {
+test listbox-5.3 {ListboxComputeGeometry procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -font $fixed -width 0 -height 10 -bd 3
     .l insert 0 Short "Really much longer" Longer
@@ -972,14 +974,14 @@ test listbox-5.3 {ListboxComputeGeometry procedure} {fonts} {
     update
     list [winfo reqwidth .l] [winfo reqheight .l]
 } {138 170}
-test listbox-5.4 {ListboxComputeGeometry procedure} {fonts} {
+test listbox-5.4 {ListboxComputeGeometry procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -font $fixed -width 10 -height 0
     pack .l
     update
     list [winfo reqwidth .l] [winfo reqheight .l]
 } {80 24}
-test listbox-5.5 {ListboxComputeGeometry procedure} {fonts} {
+test listbox-5.5 {ListboxComputeGeometry procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -font $fixed -width 10 -height 0 -highlightthickness 0
     .l insert 0 Short "Really much longer" Longer
@@ -1080,7 +1082,7 @@ test listbox-6.11 {InsertEls procedure} {
     update
     set log
 } {{y 0 0.166667} {x 0 1}}
-test listbox-6.12 {InsertEls procedure} {fonts} {
+test listbox-6.12 {InsertEls procedure} {fonts failsOnQuarz} {
     catch {destroy .l2}
     listbox .l2 -width 0 -height 0
     pack .l2 -side top
@@ -1263,7 +1265,7 @@ test listbox-7.19 {DeleteEls procedure} {
     update
     set log
 } {{y 0 0.2} {x 0 1}}
-test listbox-7.20 {DeleteEls procedure} {fonts} {
+test listbox-7.20 {DeleteEls procedure} {fonts failsOnQuarz} {
     catch {destroy .l2}
     listbox .l2 -width 0 -height 0
     pack .l2 -side top
@@ -1282,7 +1284,7 @@ test listbox-7.21 {DeleteEls procedure, check -listvar update} {
     set x
 } [list c d]
 
-test listbox-8.1 {ListboxEventProc procedure} {fonts} {
+test listbox-8.1 {ListboxEventProc procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -setgrid 1
     pack .l
@@ -1292,7 +1294,7 @@ test listbox-8.1 {ListboxEventProc procedure} {fonts} {
     list $x [getsize .] [winfo exists .l] [info command .l]
 } {20x10 150x178 0 {}}
 resetGridInfo
-test listbox-8.2 {ListboxEventProc procedure} {fonts} {
+test listbox-8.2 {ListboxEventProc procedure} {fonts failsOnQuarz} {
     catch {destroy .l}
     listbox .l -height 5 -width 10
     .l insert 0 a b c "A string that is very very long" d e f g h i j k
@@ -1319,7 +1321,7 @@ test listbox-9.1 {ListboxCmdDeletedProc procedure} {
     rename .l1 {}
     list [info command .l*] [winfo children .]
 } {{} {}}
-test listbox-9.2 {ListboxCmdDeletedProc procedure, disabling -setgrid} fonts {
+test listbox-9.2 {ListboxCmdDeletedProc procedure, disabling -setgrid} {fonts failsOnQuarz} {
     catch {destroy .top}
     toplevel .top
     wm geom .top +0+0
@@ -1552,7 +1554,7 @@ update
 test listbox-14.2 {NearestListboxElement procedure} {fonts} {
     .l index @50,0
 } {4}
-test listbox-14.3 {NearestListboxElement procedure} {fonts} {
+test listbox-14.3 {NearestListboxElement procedure} {fonts failsOnQuarz} {
     list [.l index @50,35] [.l index @50,36]
 } {5 6}
 test listbox-14.4 {NearestListboxElement procedure} {fonts} {
