@@ -11,6 +11,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
+
 proc scroll args {
     global scrollInfo
     set scrollInfo $args
@@ -257,13 +259,13 @@ test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
 } [format %.6g [expr (21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
        /([getTroughSize .s] - 1)]]
-test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {unix failsOnUbuntu} {
+test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {unix failsOnUbuntu failsOnQuarz} {
     format {%.6g} [.s fraction 4 179]
 } {1}
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     format {%.6g} [.s fraction 4 [expr 200 - [testmetrics cyvscroll .s]]]
 } {1}
-test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {unix failsOnUbuntu} {
+test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {unix failsOnUbuntu failsOnQuarz} {
     format {%.6g} [.s fraction 4 178]
 } {0.993711}
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
@@ -460,7 +462,7 @@ test scrollbar-6.10 {ScrollbarPosition procedure} {
 test scrollbar-6.11 {ScrollbarPosition procedure} unix {
     .s identify 8 4
 } {arrow1}
-test scrollbar-6.12 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
+test scrollbar-6.12 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnQuarz} {
     .s identify 8 19
 } {arrow1}
 test scrollbar-6.14 {ScrollbarPosition procedure} win {
@@ -518,7 +520,7 @@ test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] \
 						 - [testmetrics cyvscroll .s] - 1]
 } {trough2}
-test scrollbar-6.29 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
+test scrollbar-6.29 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnQuarz} {
     .s identify 8 180
 } {arrow2}
 test scrollbar-6.30 {ScrollbarPosition procedure} unix {
@@ -534,7 +536,7 @@ test scrollbar-6.33 {ScrollbarPosition procedure} win {
 test scrollbar-6.34 {ScrollbarPosition procedure} unix {
     .s identify 4 100
 } {trough2}
-test scrollbar-6.35 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
+test scrollbar-6.35 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnQuarz} {
     .s identify 18 100
 } {trough2}
 test scrollbar-6.37 {ScrollbarPosition procedure} win {
@@ -565,7 +567,7 @@ test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics win} {
     .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s] \
 		       - 1] [expr [winfo height .t.s] / 2]
 } {slider}
-test scrollbar-6.44 {ScrollbarPosition procedure} {unix failsOnUbuntu} {
+test scrollbar-6.44 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnQuarz} {
     .t.s identify 100 18
 } {trough2}
 test scrollbar-6.45 {ScrollbarPosition procedure} win {

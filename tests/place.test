@@ -12,6 +12,7 @@ tcltest::loadTestedCommands
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
@@ -198,7 +199,7 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} {
 } {30 60}
 
 
-test place-8.1 {MasterStructureProc, mapping and unmapping slaves} failsOnUbuntu {
+test place-8.1 {MasterStructureProc, mapping and unmapping slaves} {failsOnUbuntu failsOnQuarz} {
     place forget .t.f2
     place forget .t.f
     place .t.f2 -relx 1.0 -rely 1.0 -anchor sw
@@ -214,7 +215,7 @@ test place-8.1 {MasterStructureProc, mapping and unmapping slaves} failsOnUbuntu
     update
     lappend result [winfo ismapped .t.f2]
 } {1 0 40 30 0 1}
-test place-8.2 {MasterStructureProc, mapping and unmapping slaves} failsOnUbuntu {
+test place-8.2 {MasterStructureProc, mapping and unmapping slaves} {failsOnUbuntu failsOnQuarz} {
     place forget .t.f2
     place forget .t.f
     place .t.f -x 0 -y 0 -width 200 -height 100
@@ -401,7 +402,7 @@ test place-14.1 {memory leak testing} -setup {
         }
         return $res
     }
-} -constraints memory -body {
+} -constraints {memory failsOnQuarz} -body {
     # Test all manners of forgetting a slave
     frame .f
     frame .f.f
