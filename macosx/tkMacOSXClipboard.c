@@ -3,9 +3,9 @@
  *
  *	This file manages the clipboard for the Tk toolkit.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -177,7 +177,7 @@ XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
     Window owner,		/* Window to be the owner. */
-    Time time)			/* The current time? */
+    TCL_UNUSED(Time))			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
     (void)time;
@@ -238,13 +238,11 @@ TkMacOSXSelDeadWindow(
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
-    TkClipboardTarget *targetPtr)
+    TCL_UNUSED(TkWindow *),		/* Window associated with clipboard. */
+    TCL_UNUSED(TkClipboardTarget *))
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
-    (void)winPtr;
-    (void)targetPtr;
 
     changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
 	    owner:NSApp];
@@ -297,9 +295,8 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
-    (void)eventPtr;
 }
 
 /*

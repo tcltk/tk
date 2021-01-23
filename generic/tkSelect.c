@@ -4,8 +4,8 @@
  *	This file manages the selection for the Tk toolkit, translating
  *	between the standard X ICCCM conventions and Tcl commands.
  *
- * Copyright (c) 1990-1993 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1993 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -28,7 +28,7 @@ typedef struct {
 				 * chunk. */
     char buffer[4];		/* A buffer to hold part of a UTF character
 				 * that is split across chunks. */
-    char command[1];		/* Command to invoke. Actual space is
+    char command[TKFLEXARRAY];		/* Command to invoke. Actual space is
 				 * allocated as large as necessary. This must
 				 * be the last entry in the structure. */
 } CommandInfo;
@@ -900,7 +900,7 @@ Tk_SelectionObjCmd(
 	} else {
 	    format = XA_STRING;
 	}
-	string = TkGetStringFromObj(objs[1], &cmdLength);
+	string = Tcl_GetStringFromObj(objs[1], &cmdLength);
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
@@ -992,7 +992,7 @@ Tk_SelectionObjCmd(
 
 	    if ((infoPtr != NULL)
 		    && (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
-		Tcl_SetObjResult(interp, TkNewWindowObj(infoPtr->owner));
+		Tcl_SetObjResult(interp, Tk_NewWindowObj(infoPtr->owner));
 	    }
 	    return TCL_OK;
 	}
@@ -1289,12 +1289,10 @@ static int
 SelGetProc(
     ClientData clientData,	/* Dynamic string holding partially assembled
 				 * selection. */
-    Tcl_Interp *dummy,		/* Interpreter used for error reporting (not
+    TCL_UNUSED(Tcl_Interp *),	/* Interpreter used for error reporting (not
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    (void)dummy;
-
     Tcl_DStringAppend((Tcl_DString *)clientData, portion, -1);
     return TCL_OK;
 }

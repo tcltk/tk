@@ -3,8 +3,9 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT(../generic/tk.h)
-AC_PREREQ(2.69)
+AC_INIT([tk],[8.7])
+AC_CONFIG_SRCDIR([../generic/tk.h])
+AC_PREREQ([2.70])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
@@ -42,7 +43,7 @@ fi
 
 AC_PROG_CC
 AC_C_INLINE
-AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
 
 AC_CHECK_TOOL(AR, ar)
 AC_CHECK_TOOL(RANLIB, ranlib)
@@ -96,6 +97,10 @@ fi
 
 SC_CONFIG_CFLAGS
 
+AC_CHECK_TYPES([intptr_t, uintptr_t],,,[[
+#include <stdint.h>
+]])
+
 #--------------------------------------------------------------------
 # man2tcl needs this so that it can use errno.h
 #--------------------------------------------------------------------
@@ -108,12 +113,42 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_TRY_LINK([#include <stdlib.h>],
-	    [_strtoi64(0,0,0)],
-	    tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]], [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
+
+AC_CHECK_TYPE([intptr_t], [
+    AC_DEFINE([HAVE_INTPTR_T], 1, [Do we have the intptr_t type?])], [
+    AC_CACHE_CHECK([for pointer-size signed integer type], tcl_cv_intptr_t, [
+    for tcl_cv_intptr_t in "int" "long" "__int64" none; do
+	if test "$tcl_cv_intptr_t" != none; then
+	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
+		    [[sizeof (void *) <= sizeof ($tcl_cv_intptr_t)]])],
+		[tcl_ok=yes], [tcl_ok=no])
+	    test "$tcl_ok" = yes && break; fi
+    done])
+    if test "$tcl_cv_intptr_t" != none; then
+	AC_DEFINE_UNQUOTED([intptr_t], [$tcl_cv_intptr_t], [Signed integer
+	   type wide enough to hold a pointer.])
+    fi
+])
+AC_CHECK_TYPE([uintptr_t], [
+    AC_DEFINE([HAVE_UINTPTR_T], 1, [Do we have the uintptr_t type?])], [
+    AC_CACHE_CHECK([for pointer-size unsigned integer type], tcl_cv_uintptr_t, [
+    for tcl_cv_uintptr_t in "unsigned int" "unsigned long" "unsigned __int64" \
+	    none; do
+	if test "$tcl_cv_uintptr_t" != none; then
+	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
+		    [[sizeof (void *) <= sizeof ($tcl_cv_uintptr_t)]])],
+		[tcl_ok=yes], [tcl_ok=no])
+	    test "$tcl_ok" = yes && break; fi
+    done])
+    if test "$tcl_cv_uintptr_t" != none; then
+	AC_DEFINE_UNQUOTED([uintptr_t], [$tcl_cv_uintptr_t], [Unsigned integer
+	   type wide enough to hold a pointer.])
+    fi
+])
 
 #--------------------------------------------------------------------
 # Windows XP theme engine header for Ttk
@@ -133,8 +168,6 @@ AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
 #--------------------------------------------------------------------
 
 SC_ENABLE_SYMBOLS
-
-TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
 # Embed the manifest if we can determine how
@@ -162,7 +195,11 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
+if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
@@ -194,18 +231,10 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 #--------------------------------------------------------------------
 
 if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
-    fi
+    RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES=""
-    fi
+    RC_DEFINES=""
     TK_RES='tk.$(RES)'
 fi
 
@@ -226,7 +255,6 @@ AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
-AC_SUBST(TK_DBGX)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
 AC_SUBST(TK_STUB_LIB_FILE)
@@ -242,7 +270,6 @@ AC_SUBST(TCL_PATCH_LEVEL)
 
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
-AC_SUBST(TCL_DBGX)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
@@ -303,8 +330,9 @@ AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(RES)
 
-AC_OUTPUT(Makefile tkConfig.sh wish.exe.manifest)
+AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
+AC_OUTPUT
 
 dnl Local Variables:
-dnl mode: autoconf;
+dnl mode: autoconf
 dnl End:

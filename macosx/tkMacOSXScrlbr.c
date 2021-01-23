@@ -4,11 +4,11 @@
  *	This file implements the Macintosh specific portion of the scrollbar
  *	widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2015 Kevin Walzer/WordTech Commununications LLC.
- * Copyright (c) 2018-2019 Marc Culler
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015 Kevin Walzer/WordTech Commununications LLC.
+ * Copyright © 2018-2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -174,8 +174,8 @@ static void drawMacScrollbar(
     MacScrollbar *msPtr,
     CGContextRef context)
 {
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
-    NSView *view = TkMacOSXDrawableView(macWin);
+    Drawable d = Tk_WindowId(scrollPtr->tkwin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(d);
     CGPathRef path;
     CGPoint inner[2], outer[2], thumbOrigin;
     CGSize thumbSize;
@@ -258,12 +258,12 @@ TkpDisplayScrollbar(
 	return;
     }
 
-    MacDrawable *macWin = (MacDrawable *) winPtr->window;
-    NSView *view = TkMacOSXDrawableView(macWin);
+    MacDrawable *macWin = (MacDrawable *)winPtr->window;
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
-	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
+	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
 
@@ -590,12 +590,12 @@ UpdateControlValues(
 {
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
+    MacDrawable *macWin = (MacDrawable *)Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect contrlRect;
     short width, height;
 
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 
@@ -662,7 +662,7 @@ UpdateControlValues(
  *
  * ScrollbarEvent --
  *
- *	This procedure is invoked in response to <ButtonPress>,
+ *	This procedure is invoked in response to <Button>,
  *      <ButtonRelease>, <EnterNotify>, and <LeaveNotify> events.  The
  *      Scrollbar appearance is modified for each event.
  *

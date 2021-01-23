@@ -3,8 +3,8 @@
  *
  *	Functions to map color names to system color values.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
- * Copyright (c) 1994 Software Research Associates, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
+ * Copyright © 1994 Software Research Associates, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -58,6 +58,7 @@ static const SystemColorEntry sysColors[] = {
     {"InfoText",		COLOR_INFOTEXT},
     {"Menu",			COLOR_MENU},
     {"MenuText",		COLOR_MENUTEXT},
+    {"PlaceHolderText",		COLOR_GRAYTEXT},
     {"Scrollbar",		COLOR_SCROLLBAR},
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},

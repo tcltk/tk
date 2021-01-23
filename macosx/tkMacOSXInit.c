@@ -4,20 +4,19 @@
  *	This file contains Mac OS X -specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkMacOSXPrivate.h"
-
-#include <sys/stat.h>
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
+#include <sys/stat.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -41,6 +40,8 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
+@synthesize needsToDraw = _needsToDraw;
+@synthesize isSigned = _isSigned;
 @end
 
 /*
@@ -103,16 +104,16 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
+}
 
-    /*
-     * Construct the menu bar.
-     */
-    _defaultMainMenu = nil;
-    [self _setupMenus];
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    (void)notification;
 
-    /*
-     * Initialize event processing.
-     */
+   /*
+    * Initialize event processing.
+    */
+
     TkMacOSXInitAppleEvents(_eventInterp);
 
     /*
@@ -120,11 +121,13 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
-}
 
--(void)applicationDidFinishLaunching:(NSNotification *)notification
-{
-    (void)notification;
+    /*
+     * Construct the menu bar.
+     */
+
+    _defaultMainMenu = nil;
+    [self _setupMenus];
 
     /*
      * It is not safe to force activation of the NSApp until this method is
@@ -144,7 +147,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
 }
 
@@ -201,6 +204,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 	if (path) {
 	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
 	    if (image) {
+		[image setName:@"NSApplicationIcon"];
 		[NSApp setApplicationIconImage:image];
 		[image release];
 	    }
@@ -270,6 +274,80 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *----------------------------------------------------------------------
  */
 
+/*
+ * Helper function which closes the shared NSFontPanel and NSColorPanel.
+ */
+
+static void closePanels(
+    void)
+{
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+}
+
+/*
+ * This custom exit procedure is called by Tcl_Exit in place of the exit
+ * function from the C runtime.  It calls the terminate method of the
+ * NSApplication class (superTerminate for a TKApplication).  The purpose of
+ * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
+ * before the process exits, and that the application state is recorded
+ * correctly for all termination scenarios.
+ *
+ * TkpWantsExitProc tells Tcl_AppInit whether to install our custom exit proc,
+ * which terminates the process by calling [NSApplication terminate].  This
+ * does not work correctly if the process is part of an exec pipeline, so it is
+ * only done if the process was launched by the launcher or if both stdin and
+ * stdout are ttys.  To disable using the custom exit proc altogether, undefine
+ * USE_CUSTOM_EXIT_PROC.
+ */
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+static Bool doCleanupFromExit = NO;
+
+int TkpWantsExitProc(void) {
+    return doCleanupFromExit == YES;
+}
+
+TCL_NORETURN void TkpExitProc(
+    void *clientdata)
+{
+    Bool doCleanup = doCleanupFromExit;
+    if (doCleanupFromExit) {
+	doCleanupFromExit = NO; /* prevent possible recursive call. */
+	closePanels();
+    }
+
+    /*
+     * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
+     */
+
+    Tcl_Finalize();
+    if (doCleanup == YES) {
+	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
+    }
+    exit((long)clientdata); /* Convince the compiler that we don't return. */
+}
+#endif
+
+/*
+ * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
+ * so that normal finalization occurs when a Tk app is killed by one of these
+ * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
+ * Tcl_Exit instead of the C runtime exit function called by the default handler.
+ * This is consistent with the Tcl_Exit manual page, which says that Tcl_Exit
+ * should always be called instead of exit.  When Tk is killed by a signal we
+ * return exit status 1.
+ */
+
+static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
+
+    Tcl_Exit(1);
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -277,15 +355,15 @@ TkpInit(
     static int initialized = 0;
 
     /*
-     * Since it is possible for TkInit to be called multiple times and we
-     * don't want to do the following initialization multiple times we protect
-     * against doing it more than once.
+     * TkpInit can be called multiple times with different interpreters. But
+     * The application initialization should only be done onece.
      */
 
     if (!initialized) {
 	struct stat st;
-
-	initialized = 1;
+	Bool shouldOpenConsole = NO;
+        Bool stdinIsNullish = (!isatty(0) &&
+	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
@@ -295,7 +373,10 @@ TkpInit(
 #   error Mac OS X 10.6 required
 #endif
 
+	initialized = 1;
+
 #ifdef TK_FRAMEWORK
+
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
 	 * framework scripts directory.
@@ -312,16 +393,6 @@ TkpInit(
 #endif
 
 	/*
-	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
-	 * fight with gdb for stdin & stdout
-	 */
-
-	if (getenv("XCNOSTDIN") != NULL) {
-	    close(0);
-	    close(1);
-	}
-
-	/*
 	 * Instantiate our NSApplication object. This needs to be done before
 	 * we check whether to open a console window.
 	 */
@@ -336,20 +407,20 @@ TkpInit(
 			      nil]];
 	[TKApplication sharedApplication];
 	[pool drain];
-	[NSApp _setup:interp];
 
         /*
-         * WARNING: The finishLaunching method runs asynchronously, apparently
-         * in a separate thread.  This creates a race between the
-         * initialization of the NSApplication and the initialization of Tk.
-         * If Tk wins the race bad things happen with the root window (see
-         * below).  If the NSApplication wins then an AppleEvent created during
-         * launch, e.g. by dropping a file icon on the application icon, will
-         * be delivered before the procedure meant to to handle the AppleEvent
-         * has been defined.  This is now handled by processing the AppleEvent
-         * as an idle task.  See tkMacOSXHLEvents.c.
+         * WARNING: The finishLaunching method runs asynchronously. This
+         * creates a race between the initialization of the NSApplication and
+         * the initialization of Tk.  If Tk wins the race bad things happen
+         * with the root window (see below).  If the NSApplication wins then an
+         * AppleEvent created during launch, e.g. by dropping a file icon on
+         * the application icon, will be delivered before the procedure meant
+         * to to handle the AppleEvent has been defined.  This is handled in
+         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+         * ApplEvent later, after the required procedure has been defined.
          */
 
+	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
         /*
@@ -376,36 +447,60 @@ TkpInit(
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
-	 * If we don't have a TTY and stdin is a special character file of
-	 * length 0, (e.g. /dev/null, which is what Finder sets when double
-	 * clicking Wish) then use the Tk based console interpreter.
+	 * Decide whether to open a console window.  If the TK_CONSOLE
+	 * environment variable is not defined we only show the console if
+	 * stdin is not a tty and there is no startup script.
 	 */
 
-	if (getenv("TK_CONSOLE") ||
-		(!isatty(0) && (fstat(0, &st) ||
-		(S_ISCHR(st.st_mode) && st.st_blocks == 0)))) {
+	if (getenv("TK_CONSOLE")) {
+	    shouldOpenConsole = YES;
+	} else if (stdinIsNullish && Tcl_GetStartupScript(NULL) == NULL) {
+	    const char *intvar = Tcl_GetVar2(interp, "tcl_interactive",
+					     NULL, TCL_GLOBAL_ONLY);
+	    if (intvar == NULL) {
+		Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
+			    TCL_GLOBAL_ONLY);
+	    }
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
+
+	    shouldOpenConsole = YES;
+	}
+	if (shouldOpenConsole) {
 	    Tk_InitConsoleChannels(interp);
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-
-	    /*
-	     * Only show the console if we don't have a startup script and
-	     * tcl_interactive hasn't been set already.
-	     */
-
-	    if (Tcl_GetStartupScript(NULL) == NULL) {
-		const char *intvar = Tcl_GetVar2(interp,
-			"tcl_interactive", NULL, TCL_GLOBAL_ONLY);
-
-		if (intvar == NULL) {
-		    Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
-			    TCL_GLOBAL_ONLY);
-		}
-	    }
 	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		return TCL_ERROR;
 	    }
+	} else if (stdinIsNullish) {
+
+	    /*
+	     * When launched as a macOS application with no console,
+	     * redirect stderr and stdout to /dev/null. This avoids waiting
+	     * forever for those files to become writable if the underlying
+	     * Tcl program tries to write to them with a puts command.
+	     */
+
+	    FILE *null = fopen("/dev/null", "w");
+	    dup2(fileno(null), STDOUT_FILENO);
+	    dup2(fileno(null), STDERR_FILENO);
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
+	}
+
+	/*
+	 * FIXME: Close stdin & stdout for remote debugging if XCNOSTDIN is
+	 * set.  Otherwise we will fight with gdb for stdin & stdout
+	 */
+
+	if (getenv("XCNOSTDIN") != NULL) {
+	    close(0);
+	    close(1);
 	}
 
 	/*
@@ -415,7 +510,45 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+
+	/*
+	 * The root window has been created and mapped, but XMapWindow deferred its
+	 * call to makeKeyAndOrderFront because the first call to XMapWindow
+	 * occurs too early in the initialization process for that.  Process idle
+	 * tasks now, so the root window is configured, then order it front.
+	 */
+
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	for (NSWindow *window in [NSApp windows]) {
+	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+	    if (winPtr && Tk_IsMapped(winPtr)) {
+		[window makeKeyAndOrderFront:NSApp];
+		break;
+	    }
+	}
+
+# if defined(USE_CUSTOM_EXIT_PROC)
+
+	if ((isatty(0) && isatty(1))) {
+	    doCleanupFromExit = YES;
+	}
+
+# endif
+
+	/*
+	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
+	 * Tcl_Exit instead of exit so that normal cleanup takes place if a TK
+	 * application is killed with one of these signals.
+	 */
+
+	signal(SIGINT, TkMacOSXSignalHandler);
+	signal(SIGHUP, TkMacOSXSignalHandler);
+	signal(SIGTERM, TkMacOSXSignalHandler);
     }
+
+    /*
+     * Initialization steps that are needed for all interpreters.
+     */
 
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
@@ -432,6 +565,8 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
+    MacSystrayInit(interp);
+
     return TCL_OK;
 }
 
@@ -490,13 +625,11 @@ TkpGetAppName(
 
 static int
 TkMacOSXGetAppPathCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    (void)dummy;
-
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
@@ -625,11 +758,10 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    const char* module,
-    const char* symbol)
+    TCL_UNUSED(const char *),
+    const char *symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
-    (void)module;
 
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */

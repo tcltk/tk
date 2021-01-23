@@ -94,10 +94,7 @@ extern "C" {
 #	include <X11/X.h>
 #   endif
 #endif
-#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
-     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
-#   include <stddef.h>
-#endif
+#include <stddef.h>
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
@@ -122,13 +119,14 @@ extern "C" {
  * Dummy types that are used by clients:
  */
 
+#define Tk_ImageMaster Tk_ImageModel
 typedef struct Tk_BindingTable_ *Tk_BindingTable;
 typedef struct Tk_Canvas_ *Tk_Canvas;
 typedef struct Tk_Cursor_ *Tk_Cursor;
 typedef struct Tk_ErrorHandler_ *Tk_ErrorHandler;
 typedef struct Tk_Font_ *Tk_Font;
 typedef struct Tk_Image__ *Tk_Image;
-typedef struct Tk_ImageMaster_ *Tk_ImageMaster;
+typedef struct Tk_ImageModel_ *Tk_ImageModel;
 typedef struct Tk_OptionTable_ *Tk_OptionTable;
 typedef struct Tk_PostscriptInfo_ *Tk_PostscriptInfo;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
@@ -650,21 +648,22 @@ typedef struct Tk_ClassProcs {
  * the geometry manager to carry out certain functions.
  */
 
+#define Tk_GeomLostSlaveProc Tk_GeomLostContentProc
 typedef void (Tk_GeomRequestProc) (ClientData clientData, Tk_Window tkwin);
-typedef void (Tk_GeomLostSlaveProc) (ClientData clientData, Tk_Window tkwin);
+typedef void (Tk_GeomLostContentProc) (ClientData clientData, Tk_Window tkwin);
 
 typedef struct Tk_GeomMgr {
     const char *name;		/* Name of the geometry manager (command used
 				 * to invoke it, or name of widget class that
 				 * allows embedded widgets). */
     Tk_GeomRequestProc *requestProc;
-				/* Procedure to invoke when a slave's
+				/* Procedure to invoke when a content's
 				 * requested geometry changes. */
-    Tk_GeomLostSlaveProc *lostSlaveProc;
-				/* Procedure to invoke when a slave is taken
+    Tk_GeomLostContentProc *lostContentProc;
+				/* Procedure to invoke when content is taken
 				 * away from one geometry manager by another.
 				 * NULL means geometry manager doesn't care
-				 * when slaves are lost. */
+				 * when content lost. */
 } Tk_GeomMgr;
 
 /*
@@ -1303,19 +1302,19 @@ typedef struct Tk_Outline {
 typedef struct Tk_ImageType Tk_ImageType;
 #if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
-	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
+	ClientData *clientDataPtr);
 #else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, int objc,
-	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *masterDataPtr);
+	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageModel model,
+	ClientData *clientDataPtr);
 #endif /* USE_OLD_IMAGE */
-typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData masterData);
-typedef void (Tk_ImageDisplayProc) (ClientData instanceData, Display *display,
+typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData clientData);
+typedef void (Tk_ImageDisplayProc) (ClientData clientData, Display *display,
 	Drawable drawable, int imageX, int imageY, int width, int height,
 	int drawableX, int drawableY);
-typedef void (Tk_ImageFreeProc) (ClientData instanceData, Display *display);
-typedef void (Tk_ImageDeleteProc) (ClientData masterData);
+typedef void (Tk_ImageFreeProc) (ClientData clientData, Display *display);
+typedef void (Tk_ImageDeleteProc) (ClientData clientData);
 typedef void (Tk_ImageChangedProc) (ClientData clientData, int x, int y,
 	int width, int height, int imageWidth, int imageHeight);
 typedef int (Tk_ImagePostscriptProc) (ClientData clientData,

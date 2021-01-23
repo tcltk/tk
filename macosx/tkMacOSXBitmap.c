@@ -3,9 +3,9 @@
  *
  *	This file handles the implementation of native bitmaps.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -136,15 +136,13 @@ PixmapFromImage(
     Pixmap pixmap;
 
     pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
-    if (TkMacOSXSetupDrawingContext(pixmap, NULL, 1, &dc)) {
+    if (TkMacOSXSetupDrawingContext(pixmap, NULL, &dc)) {
 	if (dc.context) {
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1,
 				    .tx = 0, .ty = size.height};
 	    CGContextConcatCTM(dc.context, t);
 	    [NSGraphicsContext saveGraphicsState];
-	    [NSGraphicsContext setCurrentContext:[NSGraphicsContext
-		graphicsContextWithGraphicsPort:dc.context
-		flipped:NO]];
+	    [NSGraphicsContext setCurrentContext:GET_NSCONTEXT(dc.context, NO)];
 	    [image drawAtPoint:NSZeroPoint fromRect:NSZeroRect
 		operation:NSCompositeCopy fraction:1.0];
 	    [NSGraphicsContext restoreGraphicsState];
@@ -180,7 +178,7 @@ TkpCreateNativeBitmap(
     NSImage *iconImage = [[NSWorkspace sharedWorkspace]
 			     iconForFileType: iconUTI];
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
-    Pixmap pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
+    Pixmap pixmap = PixmapFromImage(display, iconImage, size);
     return pixmap;
 }
 
@@ -343,7 +341,7 @@ TkpGetNativeAppBitmap(
 
 int
 TkMacOSXIconBitmapObjCmd(
-    ClientData dummy,	/* Unused. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -352,7 +350,6 @@ TkMacOSXIconBitmapObjCmd(
     int i = 1, len, isNew, result = TCL_ERROR;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
-    (void)dummy;
 
     if (objc != 6) {
 	Tcl_WrongNumArgs(interp, 1, objv, "name width height "

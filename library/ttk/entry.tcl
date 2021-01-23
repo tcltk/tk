@@ -1,9 +1,9 @@
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 2004, Joe English
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 2004, Joe English
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -82,20 +82,14 @@ bind TEntry <<ToggleSelection>> {
     %W instate {!readonly !disabled} { %W icursor @%x ; focus %W }
 }
 
-## Button2 (Button3 on Aqua) bindings:
+## Button2 bindings:
 #	Used for scanning and primary transfer.
-#	Note: ButtonRelease-2 (ButtonRelease-3 on Aqua)
+#	Note: ButtonRelease-2
 #	is mapped to <<PasteSelection>> in tk.tcl.
 #
-if {[tk windowingsystem] ne "aqua"} {
-    bind TEntry <Button-2> 		{ ttk::entry::ScanMark %W %x }
-    bind TEntry <B2-Motion> 		{ ttk::entry::ScanDrag %W %x }
-    bind TEntry <ButtonRelease-2>	{ ttk::entry::ScanRelease %W %x }
-} else {
-    bind TEntry <Button-3> 		{ ttk::entry::ScanMark %W %x }
-    bind TEntry <B3-Motion> 		{ ttk::entry::ScanDrag %W %x }
-    bind TEntry <ButtonRelease-3>	{ ttk::entry::ScanRelease %W %x }
-}
+bind TEntry <Button-2> 			{ ttk::entry::ScanMark %W %x }
+bind TEntry <B2-Motion> 		{ ttk::entry::ScanDrag %W %x }
+bind TEntry <ButtonRelease-2>		{ ttk::entry::ScanRelease %W %x }
 bind TEntry <<PasteSelection>>		{ ttk::entry::ScanRelease %W %x }
 
 ## Keyboard navigation bindings:
@@ -136,12 +130,8 @@ bind TEntry <Escape> 			{# nothing}
 bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
+bind TEntry <Command-Key>		{# nothing}
 
-# Argh.  Apparently on Windows, the NumLock modifier is interpreted
-# as a Command modifier.
-if {[tk windowingsystem] eq "aqua"} {
-    bind TEntry <Command-Key>		{# nothing}
-}
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
 bind TEntry <<NextLine>>		{# nothing}
@@ -179,7 +169,7 @@ bind TEntry <<TkAccentBackspace>> {
 #
 proc ttk::entry::EntrySelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]

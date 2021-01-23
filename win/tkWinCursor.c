@@ -3,7 +3,7 @@
  *
  *	This file contains Win32 specific cursor related routines.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -104,7 +104,7 @@ TkGetCursorByName(
 
     /*
      * All cursor names are valid lists of one element (for
-     * Unix-compatability), even unadorned system cursor names.
+     * Unix-compatibility), even unadorned system cursor names.
      */
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {

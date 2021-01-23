@@ -4,7 +4,7 @@
  *	This file contains routines for dealing with international keyboard
  *	input.
  *
- * Copyright (c) 1997 by Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -303,6 +303,14 @@ TkpGetKeySym(
     KeySym sym;
     int index;
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
+
+    /*
+     * X11 keycodes always lie in the inclusive range [8,255].
+     */
+
+    if (eventPtr->xkey.keycode > 0xff) {
+        return NoSymbol;
+    }
 
     /*
      * Refresh the mapping information if it's stale. This must happen before

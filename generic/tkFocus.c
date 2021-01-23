@@ -3,8 +3,8 @@
  *
  *	This file contains functions that manage the input focus for Tk.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -128,7 +128,7 @@ Tk_FocusObjCmd(
 	Tk_Window focusWin = (Tk_Window) TkGetFocusWin(winPtr);
 
 	if (focusWin != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(focusWin));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj(focusWin));
 	}
 	return TCL_OK;
     }
@@ -179,7 +179,7 @@ Tk_FocusObjCmd(
 	}
 	newPtr = TkGetFocusWin(newPtr);
 	if (newPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) newPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) newPtr));
 	}
 	break;
     case 1:			/* -force */
@@ -212,12 +212,12 @@ Tk_FocusObjCmd(
 	    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 		    tlFocusPtr = tlFocusPtr->nextPtr) {
 		if (tlFocusPtr->topLevelPtr == topLevelPtr) {
-		    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+		    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window)
 			    tlFocusPtr->focusWinPtr));
 		    return TCL_OK;
 		}
 	    }
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) topLevelPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) topLevelPtr));
 	    return TCL_OK;
 	}
 	break;

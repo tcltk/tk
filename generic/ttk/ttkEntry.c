@@ -1,11 +1,11 @@
 /*
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Ajuba Solutions.
- * Copyright (c) 2002 ActiveState Corporation.
- * Copyright (c) 2004 Joe English
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Ajuba Solutions.
+ * Copyright © 2002 ActiveState Corporation.
+ * Copyright © 2004 Joe English
  */
 
 #include "tkInt.h"
@@ -181,7 +181,7 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
 	"none", TCL_INDEX_NONE, offsetof(Entry, entry.validate),
-	0, (ClientData) validateStrings, 0},
+	0, (void *) validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
 	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -325,7 +325,7 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-        text = TkGetStringFromObj(entryPtr->entry.placeholderObj, &length);
+        text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
         entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    text, length,
@@ -403,7 +403,7 @@ static void EntryOwnSelection(Entry *entryPtr)
 	&& (!Tcl_IsSafe(entryPtr->core.interp))
 	&& !(entryPtr->core.flags & GOT_SELECTION)) {
 	Tk_OwnSelection(entryPtr->core.tkwin, XA_PRIMARY, EntryLostSelection,
-		(ClientData) entryPtr);
+		entryPtr);
 	entryPtr->core.flags |= GOT_SELECTION;
     }
 }
@@ -600,9 +600,9 @@ EntryValidateChange(
     VMODE vmode = entryPtr->entry.validate;
     int code, change_ok;
 
-    if (   (entryPtr->entry.validateCmd == NULL)
+    if ((entryPtr->entry.validateCmd == NULL)
 	|| (entryPtr->core.flags & VALIDATING)
-	|| !EntryNeedsValidation(vmode, reason) )
+	|| !EntryNeedsValidation(vmode, reason))
     {
 	return TCL_OK;
     }
@@ -958,7 +958,7 @@ EntryInitialize(Tcl_Interp *dummy, void *recordPtr)
     Tk_CreateEventHandler(
 	entryPtr->core.tkwin, EntryEventMask, EntryEventProc, entryPtr);
     Tk_CreateSelHandler(entryPtr->core.tkwin, XA_PRIMARY, XA_STRING,
-	EntryFetchSelection, (ClientData) entryPtr, XA_STRING);
+	EntryFetchSelection, entryPtr, XA_STRING);
     TtkBlinkCursor(&entryPtr->core);
 
     entryPtr->entry.string		= (char *)ckalloc(1);
@@ -1312,26 +1312,47 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	(void)TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
+	(void)Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
     } else {
 	foregroundObj = es.foregroundObj;
     }
     gc = EntryGetGC(entryPtr, foregroundObj, clipRegion);
-    Tk_DrawTextLayout(
-	Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
-	entryPtr->entry.layoutX, entryPtr->entry.layoutY,
-	leftIndex, rightIndex);
-    XSetClipMask(Tk_Display(tkwin), gc, None);
-    Tk_FreeGC(Tk_Display(tkwin), gc);
-
-    /* Overwrite the selected portion (if any) in the -selectforeground color:
-     */
     if (showSelection) {
+
+        /* Draw the selected and unselected portions separately.
+	 */
+	if (leftIndex < selFirst) {
+	    Tk_DrawTextLayout(
+		Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
+		entryPtr->entry.layoutX, entryPtr->entry.layoutY,
+		leftIndex, selFirst);
+	}
+	if (selLast < rightIndex) {
+	    Tk_DrawTextLayout(
+		Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
+		entryPtr->entry.layoutX, entryPtr->entry.layoutY,
+		selLast, rightIndex);
+	}
+	XSetClipMask(Tk_Display(tkwin), gc, None);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+
+	/* Draw the selected portion in the -selectforeground color:
+	 */
 	gc = EntryGetGC(entryPtr, es.selForegroundObj, clipRegion);
 	Tk_DrawTextLayout(
 	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
 	    selFirst, selLast);
+	XSetClipMask(Tk_Display(tkwin), gc, None);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    } else {
+
+        /* Draw the entire visible text
+         */
+	Tk_DrawTextLayout(
+	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
+	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
+	    leftIndex, rightIndex);
 	XSetClipMask(Tk_Display(tkwin), gc, None);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
@@ -1372,14 +1393,14 @@ EntryIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
-    	if (idx + 1 > entryPtr->entry.numChars + 1) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > entryPtr->entry.numChars)) {
     	    idx = entryPtr->entry.numChars;
     	}
     	*indexPtr = idx;
     	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(indexObj, &length);
+    string = Tcl_GetStringFromObj(indexObj, &length);
 
     if (strncmp(string, "insert", length) == 0) {
 	*indexPtr = entryPtr->entry.insertPos;
@@ -1556,7 +1577,7 @@ EntryIndexCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
+    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
@@ -1629,7 +1650,7 @@ static int EntrySelectionRangeCommand(
 	Tcl_WrongNumArgs(interp, 3, objv, "start end");
 	return TCL_ERROR;
     }
-    if (    EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
+    if (EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
          || EntryIndex(interp, entryPtr, objv[4], &end) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -1690,7 +1711,7 @@ static int EntryValidateCommand(
     if (code == TCL_ERROR)
 	return code;
 
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(code == TCL_OK));
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(code == TCL_OK));
     return TCL_OK;
 }
 
@@ -1724,6 +1745,7 @@ static const Ttk_Ensemble EntryCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate", 	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -1828,7 +1850,7 @@ static int ComboboxCurrentCommand(
     if (objc == 2) {
 	/* Check if currentIndex still valid:
 	 */
-	if (    currentIndex == TCL_INDEX_NONE
+	if (currentIndex == TCL_INDEX_NONE
 	     || currentIndex >= (TkSizeT)nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
@@ -1846,7 +1868,7 @@ static int ComboboxCurrentCommand(
 	    }
 	}
 	cbPtr->combobox.currentIndex = currentIndex;
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj((int)currentIndex));
+	Tcl_SetObjResult(interp, TkNewIndexObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
 	TkSizeT idx;
@@ -1892,8 +1914,9 @@ static const Ttk_Ensemble ComboboxCommands[] = {
     { "insert", 	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
-    { "state",  	TtkWidgetStateCommand,0 },
     { "set", 		EntrySetCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -2004,8 +2027,9 @@ static const Ttk_Ensemble SpinboxCommands[] = {
     { "insert", 	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "selection", 	0,EntrySelectionCommands },
-    { "state",  	TtkWidgetStateCommand,0 },
     { "set", 		EntrySetCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
@@ -2088,7 +2112,7 @@ TTK_END_LAYOUT
 TTK_BEGIN_LAYOUT(ComboboxLayout)
     TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
-	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH|TTK_PACK_LEFT|TTK_EXPAND,
+	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 

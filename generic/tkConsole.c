@@ -5,7 +5,7 @@
  *	have access to a console. It uses the Text widget and provides special
  *	access via a console command.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -67,7 +67,7 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
 
 static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
-    TCL_CHANNEL_VERSION_5,	/* v4 channel */
+    TCL_CHANNEL_VERSION_5,	/* v5 channel */
     (Tcl_DriverCloseProc *)ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
@@ -561,17 +561,12 @@ ConsoleOutput(
 
 static int
 ConsoleInput(
-    void *dummy,		/* Unused. */
-    char *buf,			/* Where to store data read. */
-    int bufSize,		/* How much space is available in the
+    TCL_UNUSED(void *),
+    TCL_UNUSED(char *),			/* Where to store data read. */
+    TCL_UNUSED(int),		/* How much space is available in the
 				 * buffer? */
-    int *errorCode)		/* Where to store error code. */
+    TCL_UNUSED(int *))		/* Where to store error code. */
 {
-    (void)dummy;
-    (void)buf;
-    (void)bufSize;
-    (void)errorCode;
-
     return 0;			/* Always return EOF. */
 }
 
@@ -594,11 +589,10 @@ ConsoleInput(
 static int
 ConsoleClose(
     ClientData instanceData,
-    Tcl_Interp *dummy)		/* Unused. */
+    TCL_UNUSED(Tcl_Interp *))
 {
     ChannelData *data = (ChannelData *)instanceData;
     ConsoleInfo *info = data->info;
-    (void)dummy;
 
     if (info) {
 	if (info->refCount-- <= 1) {
@@ -645,13 +639,11 @@ Console2Close(
 
 static void
 ConsoleWatch(
-    ClientData dummy,	/* Device ID for the channel. */
-    int mask)			/* OR-ed combination of TCL_READABLE,
+    TCL_UNUSED(void *),	/* Device ID for the channel. */
+    TCL_UNUSED(int))			/* OR-ed combination of TCL_READABLE,
 				 * TCL_WRITABLE and TCL_EXCEPTION, for the
 				 * events we are interested in. */
 {
-    (void)dummy;
-    (void)mask;
 }
 
 /*
@@ -673,16 +665,12 @@ ConsoleWatch(
 
 static int
 ConsoleHandle(
-    ClientData dummy,	/* Device ID for the channel. */
-    int direction,		/* TCL_READABLE or TCL_WRITABLE to indicate
+    TCL_UNUSED(void *),	/* Device ID for the channel. */
+    TCL_UNUSED(int),		/* TCL_READABLE or TCL_WRITABLE to indicate
 				 * which direction of the channel is being
 				 * requested. */
-    ClientData *handlePtr)	/* Where to store handle */
+    TCL_UNUSED(void **))	/* Where to store handle */
 {
-    (void)dummy;
-    (void)direction;
-    (void)handlePtr;
-
     return TCL_ERROR;
 }
 
@@ -824,7 +812,7 @@ InterpreterObjCmd(
 
     if ((otherInterp == NULL) || Tcl_InterpDeleted(otherInterp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no active master interp", -1));
+		"no active parent interp", -1));
 	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", NULL);
 	return TCL_ERROR;
     }
@@ -947,7 +935,7 @@ ConsoleDeleteProc(
  *
  * ConsoleEventProc --
  *
- *	This event function is registered on the main window of the slave
+ *	This event function is registered on the main window of the child
  *	interpreter. If the user or a running script causes the main window to
  *	be destroyed, then we need to inform the console interpreter by
  *	invoking "::tk::ConsoleExit".

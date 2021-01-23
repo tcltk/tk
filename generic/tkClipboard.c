@@ -5,8 +5,8 @@
  * 	collection of data buffers that will be supplied on demand to
  * 	requesting applications.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -173,16 +173,12 @@ ClipboardAppHandler(
 
 static TkSizeT
 ClipboardWindowHandler(
-    ClientData dummy,	/* Not used. */
-    TkSizeT offset,			/* Return selection bytes starting at this
+    TCL_UNUSED(void *),	/* Not used. */
+    TCL_UNUSED(TkSizeT),			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    TCL_UNUSED(TkSizeT))		/* Maximum # of bytes to store at buffer. */
 {
-    (void)dummy;
-    (void)offset;
-    (void)maxBytes;
-
     buffer[0] = '.';
     buffer[1] = 0;
     return 1;
@@ -458,7 +454,7 @@ Tk_ClipboardObjCmd(
 	TkSizeT length;
 
 	for (i = 2; i < objc - 1; i++) {
-	    string = TkGetStringFromObj(objv[i], &length);
+	    string = Tcl_GetStringFromObj(objv[i], &length);
 	    if (string[0] != '-') {
 		break;
 	    }
@@ -641,11 +637,10 @@ Tk_ClipboardObjCmd(
 
 int
 TkClipInit(
-    Tcl_Interp *dummy,		/* Interpreter to use for error reporting. */
+    TCL_UNUSED(Tcl_Interp *),		/* Interpreter to use for error reporting. */
     TkDisplay *dispPtr)/* Display to initialize. */
 {
     XSetWindowAttributes atts;
-    (void)dummy;
 
     dispPtr->clipTargetPtr = NULL;
     dispPtr->clipboardActive = 0;
@@ -710,12 +705,10 @@ static int
 ClipboardGetProc(
     ClientData clientData,	/* Dynamic string holding partially assembled
 				 * selection. */
-    Tcl_Interp *dummy,		/* Interpreter used for error reporting (not
+    TCL_UNUSED(Tcl_Interp *),		/* Interpreter used for error reporting (not
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    (void)dummy;
-
     Tcl_DStringAppend((Tcl_DString *)clientData, portion, -1);
     return TCL_OK;
 }

@@ -3,9 +3,9 @@
  *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
- * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2019 Marc Culler.
- * Copyright (c) 2010 Adrian Robert.
+ * Copyright © 2010-2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2019 Marc Culler.
+ * Copyright © 2010 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -20,12 +20,10 @@
 
 static int
 ServicesEventProc(
-    Tcl_Event *event,
-    int flags)
+    TCL_UNUSED(Tcl_Event *),
+    TCL_UNUSED(int))
 {
     TkMainInfo *info = TkGetMainInfoList();
-    (void)event;
-    (void)flags;
 
     Tcl_GlobalEval(info->interp, "::tk::mac::PerformService");
     return 1;
@@ -143,9 +141,8 @@ ServicesEventProc(
 
 int
 TkMacOSXServices_Init(
-    Tcl_Interp *dummy)
+    TCL_UNUSED(Tcl_Interp *))
 {
-    (void)dummy;
     /*
      * Initialize an instance of TkService and register it with the NSApp.
      */

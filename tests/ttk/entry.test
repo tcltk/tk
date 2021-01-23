@@ -2,9 +2,12 @@
 # Tile package: entry widget tests
 #
 
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 variable scrollInfo
 proc scroll args {
@@ -74,7 +77,7 @@ test entry-2.1 "Create entry before scrollbar" -body {
     	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
-test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
+test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints failsOnUbuntu -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     .te insert end [string repeat "abc" 50]
@@ -106,7 +109,7 @@ test entry-3.0 "Series 3 setup" -body {
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
     variable bd 2	;# border + padding
-    variable ux [font measure $fixed \u4e4e]
+    variable ux [font measure $fixed 乎]
 
     pack [ttk::entry .e -font $fixed -width 20]
     update
@@ -342,6 +345,18 @@ test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
     destroy .e
 } -result {red}
 
+test entry-10.3 {styling option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    set current [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground blue
+    set res [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground $current
+    set res
+} -cleanup {
+    destroy .e
+} -result {blue}
+
 test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
     pack [ttk::entry .e]
     update
@@ -353,5 +368,19 @@ test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup 
 } -result {invalid invalid} -cleanup {
     destroy .e
 }
+
+test entry-12.1 "style command" -body {
+    ttk::entry .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TEntry TEntry}
+test entry-12.2 "style command" -body {
+    ttk::style configure customStyle.TEntry
+    ttk::entry .w -style customStyle.TEntry
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TEntry customStyle.TEntry TEntry}
 
 tcltest::cleanupTests

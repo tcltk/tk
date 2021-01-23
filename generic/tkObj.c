@@ -3,7 +3,7 @@
  *
  *	This file contains functions that implement the common Tk object types
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -99,6 +99,9 @@ static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 
 #if TCL_MAJOR_VERSION < 9
+#ifdef __cplusplus
+extern "C" {
+#endif
 #if defined(USE_TCL_STUBS)
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntStubs, just
@@ -109,7 +112,7 @@ typedef struct TclIntStubs {
     void (*dummy[34]) (void); /* dummy entries 0-33, not used */
     int (*tclGetIntForIndex) (Tcl_Interp *interp, Tcl_Obj *objPtr, int endValue, int *indexPtr); /* 34 */
 } TclIntStubs;
-extern const struct TclIntStubs *tclIntStubsPtr;
+extern const TclIntStubs *tclIntStubsPtr;
 
 # undef Tcl_GetIntForIndex
 # define Tcl_GetIntForIndex(interp, obj, max, ptr) ((tclIntStubsPtr->tclGetIntForIndex == NULL)? \
@@ -117,7 +120,10 @@ extern const struct TclIntStubs *tclIntStubsPtr;
 	tclIntStubsPtr->tclGetIntForIndex((interp), (obj), (max), (ptr)))
 #elif TCL_MINOR_VERSION < 7
 extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
-# define Tcl_GetIntForIndex TclGetIntForIndex
+# define Tcl_GetIntForIndex(interp, obj, max, ptr) TclGetIntForIndex(interp, obj, max, ptr)
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif
 
@@ -965,12 +971,11 @@ TkGetWindowFromObj(
 
 static int
 SetWindowFromAny(
-    Tcl_Interp *dummy,		/* Used for error reporting if not NULL. */
+    TCL_UNUSED(Tcl_Interp *),
     Tcl_Obj *objPtr)	/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
     WindowRep *winPtr;
-    (void)dummy;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -1057,7 +1062,7 @@ FreeWindowInternalRep(
 /*
  *----------------------------------------------------------------------
  *
- * TkNewWindowObj --
+ * Tk_NewWindowObj --
  *
  *	This function allocates a new Tcl_Obj that refers to a particular to a
  *	particular Tk window.
@@ -1072,7 +1077,7 @@ FreeWindowInternalRep(
  */
 
 Tcl_Obj *
-TkNewWindowObj(
+Tk_NewWindowObj(
     Tk_Window tkwin)
 {
     Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);

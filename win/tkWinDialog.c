@@ -3,7 +3,7 @@
  *
  *	Contains the Windows implementation of the common dialog boxes.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -590,63 +590,7 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
-static void             LoadShellProcs(void);
 
-
-/* Definitions of dynamically loaded Win32 calls */
-typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
-    PCWSTR pszPath, IBindCtx *pbc, REFIID riid, void **ppv);
-struct ShellProcPointers {
-    SHCreateItemFromParsingNameProc *SHCreateItemFromParsingName;
-} ShellProcs;
-
-
-/*
- *-------------------------------------------------------------------------
- *
- * LoadShellProcs --
- *
- *     Some shell functions are not available on older versions of
- *     Windows. This function dynamically loads them and stores pointers
- *     to them in ShellProcs. Any function that is not available has
- *     the corresponding pointer set to NULL.
- *
- *     Note this call never fails. Unavailability of a function is not
- *     a reason for failure. Caller should check whether a particular
- *     function pointer is NULL or not. Once loaded a function stays
- *     forever loaded.
- *
- *     XXX - we load the function pointers into global memory. This implies
- *     there is a potential (however small) for race conditions between
- *     threads. However, Tk is in any case meant to be loaded in exactly
- *     one thread so this should not be an issue and saves us from
- *     unnecessary bookkeeping.
- *
- * Return value:
- *     None.
- *
- * Side effects:
- *     ShellProcs is populated.
- *-------------------------------------------------------------------------
- */
-static void LoadShellProcs(void)
-{
-    static HMODULE shell32_handle = NULL;
-
-    if (shell32_handle != NULL) {
-	return; /* We have already been through here. */
-    }
-
-    shell32_handle = GetModuleHandleW(L"shell32.dll");
-    if (shell32_handle == NULL) { /* Should never happen but check anyways. */
-	return;
-    }
-
-    ShellProcs.SHCreateItemFromParsingName = (SHCreateItemFromParsingNameProc*)
-	    (void *)GetProcAddress(shell32_handle, "SHCreateItemFromParsingName");
-}
-
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -1071,7 +1015,7 @@ ParseOFNOptions(
     };
     static const struct Options dirOptions[] = {
 	{"-initialdir", FILE_INITDIR},
-        {"-mustexist",  FILE_MUSTEXIST},
+	{"-mustexist",  FILE_MUSTEXIST},
 	{"-parent",	FILE_PARENT},
 	{"-title",	FILE_TITLE},
 	{NULL,		FILE_DEFAULT/*ignored*/ }
@@ -1086,7 +1030,7 @@ ParseOFNOptions(
     }
 
     ZeroMemory(optsPtr, sizeof(*optsPtr));
-    // optsPtr->forceXPStyle = 1;
+    /* optsPtr->forceXPStyle = 1; */
     optsPtr->tkwin = (Tk_Window)clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
     Tcl_DStringInit(&optsPtr->utfDirString);
@@ -1211,30 +1155,26 @@ static int VistaFileDialogsAvailable(void)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->newFileDialogsState == FDLG_STATE_INIT) {
-        tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
-        LoadShellProcs();
-        if (ShellProcs.SHCreateItemFromParsingName != NULL) {
-            hr = CoInitialize(0);
-            /* XXX - need we schedule CoUninitialize at thread shutdown ? */
+	tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
+	hr = CoInitialize(0);
+	/* XXX - need we schedule CoUninitialize at thread shutdown ? */
 
-            /* Ensure all COM interfaces we use are available */
-            if (SUCCEEDED(hr)) {
-                hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
-                                      CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
-                if (SUCCEEDED(hr)) {
-                    fdlgPtr->lpVtbl->Release(fdlgPtr);
-                    hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
-                             CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog,
-                                          (void **) &fdlgPtr);
-                    if (SUCCEEDED(hr)) {
-                        fdlgPtr->lpVtbl->Release(fdlgPtr);
+	/* Ensure all COM interfaces we use are available */
+	if (SUCCEEDED(hr)) {
+	    hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
+		    CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
+	    if (SUCCEEDED(hr)) {
+		fdlgPtr->lpVtbl->Release(fdlgPtr);
+		hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
+			CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgPtr);
+		if (SUCCEEDED(hr)) {
+		    fdlgPtr->lpVtbl->Release(fdlgPtr);
 
-                        /* Looks like we have all we need */
-                        tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
-                    }
-                }
-            }
-        }
+		    /* Looks like we have all we need */
+		    tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
+		}
+	    }
+	}
     }
 
     return (tsdPtr->newFileDialogsState == FDLG_STATE_USE_NEW);
@@ -1413,7 +1353,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
             Tcl_IncrRefCount(normPath);
             nativePath = (LPCWSTR)Tcl_FSGetNativePath(normPath); /* Points INTO normPath*/
             if (nativePath) {
-                hr = ShellProcs.SHCreateItemFromParsingName(
+                hr = SHCreateItemFromParsingName(
                     nativePath, NULL,
                     &IIDIShellItem, (void **) &dirIf);
                 if (SUCCEEDED(hr)) {
@@ -2121,7 +2061,7 @@ MakeFilter(
 	if (valuePtr == NULL) {
 	    len = 0;
 	} else {
-	    (void) TkGetStringFromObj(valuePtr, &len);
+	    (void) Tcl_GetStringFromObj(valuePtr, &len);
 	}
 
 	/*
@@ -2711,10 +2651,10 @@ ChooseDirectoryValidateProc(
 
 	if (SHGetPathFromIDListW((LPITEMIDLIST) lParam, selDir)) {
 	    SendMessageW(hwnd, BFFM_SETSTATUSTEXTW, 0, (LPARAM) selDir);
-	    // enable the OK button
+	    /* enable the OK button */
 	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	} else {
-	    // disable the OK button
+	    /* disable the OK button */
 	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
 	}
 	UpdateWindow(hwnd);
@@ -3187,13 +3127,13 @@ HookProc(
 	if (IsWindow(hwndCtrl)) {
 	    EnableWindow(hwndCtrl, FALSE);
 	}
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
+	Tk_SendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 1; /* we handled the message */
     }
 
     if (WM_DESTROY == msg) {
 	phd->hwnd = NULL;
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
+	Tk_SendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 0;
     }
 
@@ -3211,7 +3151,7 @@ HookProc(
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
 	if (phd && phd->parent) {
-	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
+	    Tk_SendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
 	}
 	return 1;
     }
@@ -3525,7 +3465,7 @@ FontchooserShowCmd(
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
 	    if (hdPtr->parent) {
-		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
+		Tk_SendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);

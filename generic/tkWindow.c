@@ -5,15 +5,15 @@
  *	equivalent to functions in Xlib (and even invoke them) but also
  *	maintain the local Tk_Window structure.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkInt.h"
-
+#include "tkPort.h"
 #ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
@@ -238,8 +238,6 @@ TkCloseDisplay(
     TkDisplay *dispPtr)
 {
     TkClipCleanup(dispPtr);
-
-    TkpCancelWarp(dispPtr);
 
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
@@ -1644,7 +1642,7 @@ Tk_MapWindow(
     event.xmap.event = winPtr->window;
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    Tk_HandleEvent(&event);
+    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
 }
 
 /*
@@ -1806,7 +1804,7 @@ Tk_UnmapWindow(
 	event.xunmap.event = winPtr->window;
 	event.xunmap.window = winPtr->window;
 	event.xunmap.from_configure = False;
-	Tk_HandleEvent(&event);
+	TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
     }
 }
 
@@ -2694,7 +2692,7 @@ Tk_GetNumMainWindows(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkpAlwaysShowSelection --
+ * Tk_AlwaysShowSelection --
  *
  *	Indicates whether text/entry widgets should always display
  *	their selection, regardless of window focus.
@@ -2712,7 +2710,7 @@ Tk_GetNumMainWindows(void)
  */
 
 int
-TkpAlwaysShowSelection(
+Tk_AlwaysShowSelection(
     Tk_Window tkwin)		/* Window whose application is to be
 				 * checked. */
 {
@@ -2961,7 +2959,7 @@ Tk_SafeInit(
      * Current risks:
      *
      * - No CPU time limit, no memory allocation limits, no color limits.
-     *   CPU time limits can be imposed by an unsafe master interpreter.
+     *   CPU time limits can be imposed by an unsafe parent interpreter.
      *
      * The actual code called is the same as Tk_Init but Tcl_IsSafe() is
      * checked at several places to differentiate the two initialisations.
@@ -3081,24 +3079,24 @@ Initialize(
     if (Tcl_IsSafe(interp)) {
 	/*
 	 * Get the clearance to start Tk and the "argv" parameters from the
-	 * master.
+	 * parent.
 	 */
 
 	/*
-	 * Step 1 : find the master and construct the interp name (could be a
+	 * Step 1 : find the parent and construct the interp name (could be a
 	 * function if new APIs were ok). We could also construct the path
 	 * while walking, but there is no API to get the name of an interp
 	 * either.
 	 */
 
-	Tcl_Interp *master = interp;
+	Tcl_Interp *parent = interp;
 
-	while (Tcl_IsSafe(master)) {
-	    master = Tcl_GetMaster(master);
-	    if (master == NULL) {
+	while (Tcl_IsSafe(parent)) {
+	    parent = Tcl_GetParent(parent);
+	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"no controlling master interpreter", -1));
-		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
+			"no controlling parent interpreter", -1));
+		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_PARENT", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -3107,35 +3105,35 @@ Initialize(
 	 * Construct the name (rewalk...)
 	 */
 
-	code = Tcl_GetInterpPath(master, interp);
+	code = Tcl_GetInterpPath(parent, interp);
 	if (code != TCL_OK) {
 	    Tcl_Panic("Tcl_GetInterpPath broken!");
 	}
 
 	/*
-	 * Build the command to eval in trusted master.
+	 * Build the command to eval in trusted parent.
 	 */
 
 	cmd = Tcl_NewListObj(2, NULL);
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(parent));
 
 	/*
-	 * Step 2 : Eval in the master. The argument is the *reversed* interp
-	 * path of the slave.
+	 * Step 2 : Eval in the parent. The argument is the *reversed* interp
+	 * path of the child.
 	 */
 
 	Tcl_IncrRefCount(cmd);
-	code = Tcl_EvalObjEx(master, cmd, 0);
+	code = Tcl_EvalObjEx(parent, cmd, 0);
 	Tcl_DecrRefCount(cmd);
-	Tcl_TransferResult(master, code, interp);
+	Tcl_TransferResult(parent, code, interp);
 	if (code != TCL_OK) {
 	    return code;
 	}
 
 	/*
-	 * Use the master's result as argv. Note: We don't use the Obj
+	 * Use the parent's result as argv. Note: We don't use the Obj
 	 * interfaces to avoid dealing with cross interp refcounting and
 	 * changing the code below.
 	 */
@@ -3203,7 +3201,7 @@ Initialize(
 
     {
 	TkSizeT numBytes;
-	const char *bytes = TkGetStringFromObj(nameObj, &numBytes);
+	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
 
@@ -3285,10 +3283,14 @@ Initialize(
     }
 
     /*
-     * Provide Tk and its stub table.
+     * Provide "tk" and its stub table.
      */
 
-    code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
+#ifndef TK_NO_DEPRECATED
+    Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
+	    (ClientData) &tkStubs);
+#endif
+    code = Tcl_PkgProvideEx(interp, "tk", TK_PATCH_LEVEL,
 	    (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
@@ -3383,7 +3385,7 @@ Tk_PkgInitStubsCheck(
     const char * version,
     int exact)
 {
-    const char *actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0, NULL);
+    const char *actualVersion = Tcl_PkgRequireEx(interp, "tk", version, 0, NULL);
 
     if (exact && actualVersion) {
 	const char *p = version;
@@ -3395,11 +3397,11 @@ Tk_PkgInitStubsCheck(
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
 		/* Construct error message */
-		Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
+		Tcl_PkgPresentEx(interp, "tk", version, 1, NULL);
 		return NULL;
 	    }
 	} else {
-	    return Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
+	    return Tcl_PkgPresentEx(interp, "tk", version, 1, NULL);
 	}
     }
     return actualVersion;

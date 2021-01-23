@@ -4,8 +4,8 @@
  *	This module provides functions that manipulate indices for text
  *	widgets.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright  © 1992-1994 The Regents of the University of California.
+ * Copyright  © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -62,7 +62,7 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
 #define GET_INDEXEPOCH(objPtr) \
 	(PTR2INT((objPtr)->internalRep.twoPtrValue.ptr2))
 #define SET_TEXTINDEX(objPtr, indexPtr) \
-	((objPtr)->internalRep.twoPtrValue.ptr1 = (void *) (indexPtr))
+	((objPtr)->internalRep.twoPtrValue.ptr1 = (void *)(indexPtr))
 #define SET_INDEXEPOCH(objPtr, epoch) \
 	((objPtr)->internalRep.twoPtrValue.ptr2 = (void *) (size_t) (epoch))
 

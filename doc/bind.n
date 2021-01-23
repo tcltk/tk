@@ -1,7 +1,7 @@
 '\"
 '\" Copyright (c) 1990 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
-'\" Copyright (c) 1998 by Scriptics Corporation.
+'\" Copyright (c) 1998 Scriptics Corporation.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -201,14 +201,26 @@ substitutions you would make when binding to these events.
 Many contemporary mice support a mouse wheel, which is used
 for scrolling documents without using the scrollbars.  By rolling the
 wheel, the system will generate \fBMouseWheel\fR events that the
-application can use to scroll.  Like \fBKey\fR events the event is
-always routed to the window that currently has focus. When the event
+application can use to scroll.  The event is routed to the
+window currently under the mouse pointer. When the event
 is received you can use the \fB%D\fR substitution to get the
-\fIdelta\fR field for the event, which is a integer value describing how
+\fIdelta\fR field for the event, which is an integer value describing how
 the mouse wheel has moved.  The smallest value for which the
-system will report is defined by the OS. The sign of the
+system will report is defined by the OS.  The sign of the
 value determines which direction your widget should scroll.  Positive
 values should scroll up and negative values should scroll down.
+.RS
+.PP
+Horizontal scrolling uses \fBShift-MouseWheel\fR events, with positive
+\fB%D\fR \fIdelta\fR substitution indicating left scrolling and negative
+right scrolling.
+Horizontal scrolling events may fire from
+many different hardware units such as tilt wheels or touchpads.  Horizontal
+scrolling can also be emulated by holding Shift and scrolling vertically.
+.RE
+.IP "\fBKeyPress\fR, \fBKeyRelease\fR" 5
+The \fBKeyPress\fR and \fBKeyRelease\fR events are generated
+whenever a key is pressed or released.  \fBKeyPress\fR and \fBKeyRelease\fR
 .IP "\fBKey\fR, \fBKeyRelease\fR" 5
 The \fBKey\fR and \fBKeyRelease\fR events are generated
 whenever a key is pressed or released.  \fBKey\fR and \fBKeyRelease\fR
@@ -270,7 +282,8 @@ it is destroyed.
 When the \fBDestroy\fR event is delivered
 to a widget, it is in a
 .QW half-dead
-state: the widget still exists, but most operations on it will fail.
+state: the widget still exists, but operations that involve it
+may return invalid results, or return an error.
 .RE
 .IP "\fBFocusIn\fR, \fBFocusOut\fR" 5
 The \fBFocusIn\fR and \fBFocusOut\fR events are generated

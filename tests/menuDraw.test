@@ -1,8 +1,8 @@
 # This file is a Tcl script to test drawing of menus in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -561,7 +561,7 @@ test menuDraw-15.2 {TkPostTearoffMenu - Deactivation} -setup {
     $tearoff index active
 } -cleanup {
     deleteWindows
-} -result {none}
+} -result none
 test menuDraw-15.3 {TkPostTearoffMenu - post command} -setup {
     deleteWindows
 } -body {

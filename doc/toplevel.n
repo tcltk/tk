@@ -40,7 +40,9 @@ empty string, no image will be displayed.
 Specifies a class for the window.
 This class will be used when querying the option database for
 the window's other options, and it will also be used later for
-other purposes such as bindings.
+other purposes such as bindings. Some window managers display the
+class name for windows in their dock while some others display the
+window title.
 The \fB\-class\fR option may not be changed with the \fBconfigure\fR
 widget command.
 .OP \-colormap colormap Colormap
@@ -139,7 +141,7 @@ command may be used to invoke various
 operations on the widget.  It has the following general form:
 .PP
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 .PP
 \fIPathName\fR is the name of the command, which is the same as

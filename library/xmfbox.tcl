@@ -4,8 +4,8 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Scriptics Corporation
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Scriptics Corporation
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.

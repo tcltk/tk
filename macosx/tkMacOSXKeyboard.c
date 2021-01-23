@@ -3,10 +3,10 @@
  *
  *	Routines to support keyboard events on the Macintosh.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2020 Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -489,13 +489,12 @@ XKeycodeToKeysym(
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: Needed to get
+    TCL_UNUSED(TkWindow *),	/* Window where event occurred: Needed to get
 				 * input context. */
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
 				 * result. */
 {
-    (void) winPtr; /*unused*/
     MacKeycode macKC;
     char utfChars[8];
     int length = 0;
@@ -588,19 +587,15 @@ XFreeModifiermap(
 
 char *
 XKeysymToString(
-    KeySym keysym)
+    TCL_UNUSED(KeySym))
 {
-    (void)keysym;
-
     return NULL;
 }
 
 KeySym
 XStringToKeysym(
-    const char* string)
+    TCL_UNUSED(const char *))
 {
-    (void)string;
-
     return NoSymbol;
 }
 
@@ -666,7 +661,7 @@ XKeysymToKeycode(
 	macKC.x.keychar = (unsigned int) data;
 	hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.x.keychar));
 	if (hPtr != NULL) {
-	    unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	    data = (unsigned long) Tcl_GetHashValue(hPtr);
 	    macKC.x.xvirtual = (unsigned int) data;
 	}
     }

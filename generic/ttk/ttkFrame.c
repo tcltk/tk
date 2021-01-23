@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004 Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
  */
@@ -48,11 +48,12 @@ static const Tk_OptionSpec FrameOptionSpecs[] = {
 };
 
 static const Ttk_Ensemble FrameCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",   	TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -88,12 +89,12 @@ static Ttk_Padding FrameMargins(Frame *framePtr)
  * 	The frame doesn't request a size of its own by default,
  * 	but it does have an internal border.  See also <<NOTE-SIZE>>
  */
-static int FrameSize(void *recordPtr, int *widthPtr, int *heightPtr)
+static int FrameSize(
+    void *recordPtr,
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *))
 {
     Frame *framePtr = (Frame *)recordPtr;
-    (void)widthPtr;
-    (void)heightPtr;
-
     Ttk_SetMargins(framePtr->core.tkwin, FrameMargins(framePtr));
     return 0;
 }
@@ -340,15 +341,16 @@ LabelframeLabelSize(Labelframe *lframePtr, int *widthPtr, int *heightPtr)
  * 	Like the frame, this doesn't request a size of its own
  * 	but it does have internal padding and a minimum size.
  */
-static int LabelframeSize(void *recordPtr, int *widthPtr, int *heightPtr)
+static int LabelframeSize(
+    void *recordPtr,
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *))
 {
     Labelframe *lframePtr = (Labelframe *)recordPtr;
     WidgetCore *corePtr = &lframePtr->core;
     Ttk_Padding margins;
     LabelframeStyle style;
     int labelWidth, labelHeight;
-    (void)widthPtr;
-    (void)heightPtr;
 
     LabelframeStyleOptions(lframePtr, &style);
 
@@ -460,7 +462,7 @@ static void LabelframeDoLayout(void *recordPtr)
 	Ttk_PlaceLayout(
 	    lframePtr->label.labelLayout, corePtr->state, labelParcel);
     }
-    /* labelWidget placed in LabelframePlaceSlaves GM hook */
+    /* labelWidget placed in LabelframePlaceContent GM hook */
     lframePtr->label.labelParcel = labelParcel;
 }
 
@@ -476,29 +478,28 @@ static void LabelframeDisplay(void *recordPtr, Drawable d)
 /* +++ Labelframe geometry manager hooks.
  */
 
-/* LabelframePlaceSlaves --
+/* LabelframePlaceContent --
  * 	Sets the position and size of the labelwidget.
  */
-static void LabelframePlaceSlaves(void *recordPtr)
+static void LabelframePlaceContent(void *recordPtr)
 {
     Labelframe *lframe = (Labelframe *)recordPtr;
 
-    if (Ttk_NumberSlaves(lframe->label.mgr) == 1) {
+    if (Ttk_NumberContent(lframe->label.mgr) == 1) {
 	Ttk_Box b;
 	LabelframeDoLayout(recordPtr);
 	b = lframe->label.labelParcel;
-	/* ASSERT: slave #0 is lframe->label.labelWidget */
-	Ttk_PlaceSlave(lframe->label.mgr, 0, b.x,b.y,b.width,b.height);
+	/* ASSERT: content #0 is lframe->label.labelWidget */
+	Ttk_PlaceContent(lframe->label.mgr, 0, b.x,b.y,b.width,b.height);
     }
 }
 
-static int LabelRequest(void *managerData, TkSizeT index, int width, int height)
+static int LabelRequest(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(TkSizeT),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    (void)managerData;
-    (void)index;
-    (void)width;
-    (void)height;
-
     return 1;
 }
 
@@ -507,20 +508,21 @@ static int LabelRequest(void *managerData, TkSizeT index, int width, int height)
  *
  * <<NOTE-LABELREMOVED>>:
  * 	This routine is also called when the widget voluntarily forgets
- * 	the slave in LabelframeConfigure.
+ * 	the window in LabelframeConfigure.
  */
-static void LabelRemoved(void *managerData, TkSizeT slaveIndex)
+static void LabelRemoved(
+    void *managerData,
+    TCL_UNUSED(TkSizeT))
 {
     Labelframe *lframe = (Labelframe *)managerData;
-    (void)slaveIndex;
 
     lframe->label.labelWidget = 0;
 }
 
 static Ttk_ManagerSpec LabelframeManagerSpec = {
-    { "labelframe", Ttk_GeometryRequestProc, Ttk_LostSlaveProc },
+    { "labelframe", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     LabelframeSize,
-    LabelframePlaceSlaves,
+    LabelframePlaceContent,
     LabelRequest,
     LabelRemoved
 };
@@ -528,10 +530,11 @@ static Ttk_ManagerSpec LabelframeManagerSpec = {
 /* LabelframeInitialize --
  * 	Initialization hook.
  */
-static void LabelframeInitialize(Tcl_Interp *dummy, void *recordPtr)
+static void LabelframeInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Labelframe *lframe = (Labelframe *)recordPtr;
-    (void)dummy;
 
     lframe->label.mgr = Ttk_CreateManager(
 	&LabelframeManagerSpec, lframe, lframe->core.tkwin);
@@ -603,15 +606,15 @@ static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
     /* Update -labelwidget changes, if any:
      */
     if (mask & LABELWIDGET_CHANGED) {
-	if (Ttk_NumberSlaves(lframePtr->label.mgr) == 1) {
-	    Ttk_ForgetSlave(lframePtr->label.mgr, 0);
+	if (Ttk_NumberContent(lframePtr->label.mgr) == 1) {
+	    Ttk_ForgetContent(lframePtr->label.mgr, 0);
 	    /* Restore labelWidget field (see <<NOTE-LABELREMOVED>>)
 	     */
 	    lframePtr->label.labelWidget = labelWidget;
 	}
 
 	if (labelWidget) {
-	    Ttk_InsertSlave(lframePtr->label.mgr, 0, labelWidget, NULL);
+		Ttk_InsertContent(lframePtr->label.mgr, 0, labelWidget, NULL);
 	    RaiseLabelWidget(lframePtr);
 	}
     }

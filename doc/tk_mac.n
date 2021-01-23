@@ -218,11 +218,17 @@ support.
 .TP
 \fB::tk::mac::standardAboutPanel\fR
 .
-Brings the standard Cocoa about panel to the front, with all its information
-filled in from your application bundle files (standard about panel with no
-options specified). See Apple Technote TN2179 and the AppKit documentation for
--[NSApplication orderFrontStandardAboutPanelWithOptions:] for details on the
-Info.plist keys and app bundle files used by the about panel.
+Brings the standard Cocoa about panel to the front with information filled in
+from the application bundle files. The panel displays the application icon and
+the values associated to the info.plist keys named CFBundleName,
+CFBundleShortVersionString, NSAboutPanelOptionVersion and
+NSHumanReadableCopyright.  If a file named \fICredits.html\fR or
+\fICredits.rtf\fR exists in the bundle's Resources directory then its contents
+will be displayed in a scrolling text box at the bottom of the dialog. See the
+documentation for -[NSApplication orderFrontStandardAboutPanelWithOptions:]
+for more details. A hook is also provided for a custom About dialog.  If a Tcl
+proc named tkAboutDialog is defined in the main interpreter then that
+procedure will be called instead of opening the standardAboutPanel.
 .SH "SYSTEM CONFIGURATION"
 .PP
 There are a number of additional global configuration options that control the

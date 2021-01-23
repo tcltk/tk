@@ -4,9 +4,9 @@
  *	This file contains a collection of Tk-related Tcl commands that didn't
  *	fit in any particular file of the toolkit.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Scriptics Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -897,13 +897,12 @@ UseinputmethodsCmd(
 
 int
 WindowingsystemCmd(
-    ClientData dummy,	/* Main window associated with interpreter. */
+    TCL_UNUSED(void *),	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     const char *windowingsystem;
-    (void)dummy;
 
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
@@ -1114,16 +1113,12 @@ Tk_TkwaitObjCmd(
 static char *
 WaitVariableProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
-    Tcl_Interp *dummy,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
-    int flags)			/* Information about what happened. */
+    TCL_UNUSED(Tcl_Interp *),		/* Interpreter containing variable. */
+    TCL_UNUSED(const char *),		/* Name of variable. */
+    TCL_UNUSED(const char *),		/* Second part of variable name. */
+    TCL_UNUSED(int))			/* Information about what happened. */
 {
     int *donePtr = (int *)clientData;
-    (void)dummy;
-    (void)name1;
-    (void)name2;
-    (void)flags;
 
     *donePtr = 1;
     return NULL;
@@ -1174,7 +1169,7 @@ WaitWindowProc(
 
 int
 Tk_UpdateObjCmd(
-    ClientData dummy,	/* Main window associated with interpreter. */
+    TCL_UNUSED(void *),	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1183,7 +1178,6 @@ Tk_UpdateObjCmd(
     int flags, index;
     TkDisplay *dispPtr;
     int code = TCL_OK;
-    (void)dummy;
 
     if (objc == 1) {
 	flags = TCL_DONT_WAIT;
@@ -1741,7 +1735,23 @@ Tk_WinfoObjCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+#ifdef TK_HAS_DYNAMIC_COLORS
+
+	/*
+	 * Make sure that the TkColor used for the winfo rgb command is
+	 * destroyed when we are through with it, so we do not get stale RGB
+	 * values next time.
+	 */
+
+	{
+	    Colormap temp = Tk_Colormap(tkwin);
+	    Tk_Colormap(tkwin) = TK_DYNAMIC_COLORMAP;
+	    colorPtr = Tk_GetColor(interp, tkwin, Tcl_GetString(objv[3]));
+	    Tk_Colormap(tkwin) = temp;
+	}
+#else
 	colorPtr = Tk_GetColor(interp, tkwin, Tcl_GetString(objv[3]));
+#endif
 	if (colorPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -1852,7 +1862,7 @@ TkGetDisplayOf(
     if (objc < 1) {
 	return 0;
     }
-    string = TkGetStringFromObj(objv[0], &length);
+    string = Tcl_GetStringFromObj(objv[0], &length);
     if ((length >= 2) &&
 	    (strncmp(string, "-displayof", length) == 0)) {
         if (objc < 2) {
@@ -1890,14 +1900,11 @@ TkGetDisplayOf(
 
 int
 TkDeadAppObjCmd(
-    ClientData dummy,	/* Dummy. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TCL_UNUSED(int),			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
-	(void)dummy;
-	(void)objc;
-
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "can't invoke \"%s\" command: application has been destroyed",
 	    Tcl_GetString(objv[0])));

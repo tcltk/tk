@@ -1052,7 +1052,7 @@ The \fBtext\fR command creates a new Tcl command whose name is the same as the
 path name of the text's window. This command may be used to invoke various
 operations on the widget. It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as the text
 widget's path name. \fIOption\fR and the \fIarg\fRs determine the exact
@@ -1082,7 +1082,7 @@ satisfied and 0 if it is not. \fIOp\fR must be one of the operators <, <=, ==,
 the same character, if \fIop\fR is < then 1 is returned if \fIindex1\fR refers
 to an earlier character in the text than \fIindex2\fR, and so on.
 .TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? \fI?value option value ...\fR?
+\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
 Query or modify the configuration options of the widget. If no \fIoption\fR is
 specified, returns a list describing all of the available options for
@@ -1095,7 +1095,7 @@ command modifies the given widget option(s) to have the given value(s); in
 this case the command returns an empty string. \fIOption\fR may have any of
 the values accepted by the \fBtext\fR command.
 .TP
-\fIpathName \fBcount\fR \fI?options\fR? \fIindex1 index2\fR
+\fIpathName \fBcount\fR ?\fIoptions\fR? \fIindex1 index2\fR
 .
 Counts the number of relevant things between the two indices. If \fIindex1\fR
 is after \fIindex2\fR, the result will be a negative number (and this holds
@@ -1281,7 +1281,7 @@ must have a create script.) In this case an empty string is returned, and you
 must query the window by its index position to get more information.
 .RE
 .TP
-\fIpathName \fBedit \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBedit \fIoption \fR?\fIarg ...\fR?
 .
 This command controls the undo mechanism and the modified flag. The exact
 behavior of the command depends on the \fIoption\fR argument that follows the
@@ -1349,10 +1349,10 @@ given, then, within each range, only those characters which are not elided
 will be returned. This may have the effect that some of the returned ranges
 are empty strings.
 .TP
-\fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBimage \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
-command depends on the \fIoption\fR argument that follows the \fBtag\fR
+command depends on the \fIoption\fR argument that follows the \fBimage\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
@@ -1414,7 +1414,7 @@ effect as if a separate \fIpathName \fBinsert\fR widget command had been
 issued for each pair, in order. The last \fItagList\fR argument may be
 omitted.
 .TP
-\fIpathName \fBmark \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate marks. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBmark\fR argument. The
@@ -1694,7 +1694,7 @@ calculations, the scheduling is immediate. The command returns the empty
 string. \fBbgerror\fR is called on \fIcommand\fR failure.
 .RE
 .TP
-\fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBtag \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate tags. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBtag\fR argument. The
@@ -1861,7 +1861,7 @@ file or \fIindex2\fR is less than or equal to \fIindex1\fR) then the command
 has no effect. This command returns an empty string.
 .RE
 .TP
-\fIpathName \fBwindow \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBwindow \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded windows. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBwindow\fR

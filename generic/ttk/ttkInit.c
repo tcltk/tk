@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
  */
@@ -122,28 +122,6 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 	    break;
     }
 #   undef SETFLAGS
-}
-
-/* TtkSendVirtualEvent --
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $tgtWindow <<$eventName>>"
- *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
- * 	so this routine does not reenter the interpreter.
- */
-void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
-{
-    union {XEvent general; XVirtualEvent virt;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(tgtWin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(tgtWin);
-    event.general.xany.display = Tk_Display(tgtWin);
-    event.virt.name = Tk_GetUid(eventName);
-
-    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
 /* TtkEnumerateOptions, TtkGetOptionValue --
@@ -293,7 +271,10 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
+#ifndef TK_NO_DEPRECATED
     Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
+#endif
+    Tcl_PkgProvideEx(interp, "ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
 
     return TCL_OK;
 }
