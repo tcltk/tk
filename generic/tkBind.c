@@ -4,10 +4,10 @@
  *	This file provides functions that associate Tcl commands with X events
  *	or sequences of X events.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
- * Copyright (c) 2018-2019 by Gregor Cramer.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
+ * Copyright © 2018-2019 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -137,17 +137,10 @@ typedef struct {
     			 * this count considers the detail (keySym or button). */
 } Event;
 
-/*
- * We need a structure providing a list of pattern sequences.
- */
-
-typedef unsigned EventMask;
-typedef unsigned long ModMask;
-
 struct PatSeq; /* forward declaration */
 
 /* We need this array for bookkeeping the last matching modifier mask per pattern. */
-TK_ARRAY_DEFINE(PSModMaskArr, ModMask);
+TK_ARRAY_DEFINE(PSModMaskArr, unsigned);
 
 typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
@@ -203,7 +196,7 @@ typedef struct Tk_BindingTable_ {
     				/* Containing the most recent event for every event type. */
     PromArr *promArr;		/* Contains the promoted pattern sequences. */
     Event *curEvent;		/* Pointing to most recent event. */
-    ModMask curModMask;		/* Containing the current modifier mask. */
+    unsigned curModMask;		/* Containing the current modifier mask. */
     LookupTables lookupTables;	/* Containing hash tables for fast lookup. */
     Tcl_HashTable objectTable;	/* Used to map from an object to a list of patterns associated with
     				 * that object. Keys are ClientData, values are (PatSeq *). */
@@ -265,7 +258,7 @@ typedef struct {
 typedef struct {
     unsigned eventType;		/* Type of X event, e.g. ButtonPress. */
     unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
-    ModMask modMask;		/* Mask of modifiers that must be present (zero means no modifiers
+    unsigned modMask;		/* Mask of modifiers that must be present (zero means no modifiers
     				 * are required). */
     Info info;			/* Additional information that must match event. Normally this is zero,
     				 * meaning no additional information must match. For KeyPress and
@@ -416,7 +409,7 @@ static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
 
 typedef struct {
     const char *name;	/* Name of modifier. */
-    ModMask mask;	/* Button/modifier mask value, such as Button1Mask. */
+    unsigned mask;	/* Button/modifier mask value, such as Button1Mask. */
     unsigned flags;	/* Various flags; see below for definitions. */
 } ModInfo;
 
@@ -439,7 +432,9 @@ static const ModInfo modArray[] = {
     {"Shift",		ShiftMask,	0},
     {"Lock",		LockMask,	0},
     {"Meta",		META_MASK,	0},
+#ifndef TK_NO_DEPRECATED
     {"M",		META_MASK,	0},
+#endif
     {"Alt",		ALT_MASK,	0},
     {"Extended",	EXTENDED_MASK,	0},
     {"B1",		Button1Mask,	0},
@@ -462,10 +457,20 @@ static const ModInfo modArray[] = {
     {"Button9",		Button9Mask,	0},
     {"Mod1",		Mod1Mask,	0},
     {"M1",		Mod1Mask,	0},
+#ifdef MAC_OSX_TK
     {"Command",		Mod1Mask,	0},
+#elif defined (_WIN32)
+    {"Command",		ControlMask,	0},
+#else
+    {"Command",		META_MASK,	0},
+#endif
     {"Mod2",		Mod2Mask,	0},
     {"M2",		Mod2Mask,	0},
+#ifdef MAC_OSX_TK
     {"Option",		Mod2Mask,	0},
+#else
+    {"Option",		ALT_MASK,	0},
+#endif
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
     {"Mod4",		Mod4Mask,	0},
@@ -501,10 +506,14 @@ typedef struct {
 
 static const EventInfo eventArray[] = {
     {"Key",		KeyPress,		KeyPressMask},
+#ifndef TK_NO_DEPRECATED
     {"KeyPress",	KeyPress,		KeyPressMask},
+#endif
     {"KeyRelease",	KeyRelease,		KeyPressMask|KeyReleaseMask},
     {"Button",		ButtonPress,		ButtonPressMask},
+#ifndef TK_NO_DEPRECATED
     {"ButtonPress",	ButtonPress,		ButtonPressMask},
+#endif
     {"ButtonRelease",	ButtonRelease,		ButtonPressMask|ButtonReleaseMask},
     {"Motion",		MotionNotify,		ButtonPressMask|PointerMotionMask},
     {"Enter",		EnterNotify,		EnterWindowMask},
@@ -721,7 +730,7 @@ static void		ExpandPercents(TkWindow *winPtr, const char *before, Event *eventPt
 			    unsigned scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp, LookupTables *lookupTables,
 			    ClientData object, const char *eventString, int create,
-			    int allowVirtual, EventMask *maskPtr);
+			    int allowVirtual, unsigned *maskPtr);
 static void		GetAllVirtualEvents(Tcl_Interp *interp, VirtualEventTable *vetPtr);
 static const char *	GetField(const char *p, char *copy, unsigned size);
 static Tcl_Obj *	GetPatternObj(const PatSeq *psPtr);
@@ -737,8 +746,7 @@ static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSLi
 static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
-			    TkPattern *patPtr, EventMask *eventMaskPtr);
-static void		DoWarp(ClientData clientData);
+			    TkPattern *patPtr, unsigned *eventMaskPtr);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
@@ -769,8 +777,8 @@ static int TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_
 
 static int
 IsSubsetOf(
-    ModMask lhsMask,	/* this is a subset */
-    ModMask rhsMask)	/* of this bit field? */
+    unsigned lhsMask,	/* this is a subset */
+    unsigned rhsMask)	/* of this bit field? */
 {
     return (lhsMask & rhsMask) == lhsMask;
 }
@@ -800,8 +808,10 @@ static unsigned
 GetButtonNumber(
     const char *field)
 {
+    unsigned button;
     assert(field);
-    return (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
+    button = (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
+    return (button > 3) ? (button + 4) : button;
 }
 
 static Time
@@ -957,11 +967,10 @@ ClearList(
 
 static PSEntry *
 FreePatSeqEntry(
-    PSList *pool,
+    TCL_UNUSED(PSList *),
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
-    (void)pool;
 
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
@@ -977,13 +986,13 @@ ResolveModifiers(
 
     if (dispPtr->metaModMask) {
 	if (modMask & META_MASK) {
-	    modMask &= ~(ModMask)META_MASK;
+	    modMask &= ~META_MASK;
 	    modMask |= dispPtr->metaModMask;
 	}
     }
     if (dispPtr->altModMask) {
 	if (modMask & ALT_MASK) {
-	    modMask &= ~(ModMask)ALT_MASK;
+	    modMask &= ~ALT_MASK;
 	    modMask |= dispPtr->altModMask;
 	}
     }
@@ -993,7 +1002,7 @@ ResolveModifiers(
 
 static int
 ButtonNumberFromState(
-    ModMask state)
+    unsigned state)
 {
     if (!(state & ALL_BUTTONS)) { return 0; }
     if (state & Button1Mask) { return 1; }
@@ -1648,7 +1657,7 @@ Tk_CreateBinding(
 				 * existing binding will always be replaced. */
 {
     PatSeq *psPtr;
-    EventMask eventMask;
+    unsigned eventMask;
     char *oldStr;
     char *newStr;
 
@@ -2173,7 +2182,7 @@ Tk_BindEvent(
     TkDisplay *dispPtr;
     TkDisplay *oldDispPtr;
     Event *curEvent;
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     BindInfo *bindInfoPtr;
     Tcl_InterpState interpState;
     LookupTables *physTables;
@@ -2463,7 +2472,6 @@ Tk_BindEvent(
 		LookupTables *virtTables = &bindInfoPtr->virtualEventTable.lookupTables;
 		PatSeq *matchPtr = matchPtrArr[k];
 		PatSeq *mPtr;
-		PSList *psl[2];
 
 		/*
 		 * Note that virtual events cannot promote.
@@ -2741,8 +2749,8 @@ static int
 CompareModMasks(
     const PSModMaskArr *fstModMaskArr,
     const PSModMaskArr *sndModMaskArr,
-    ModMask fstModMask,
-    ModMask sndModMask)
+    unsigned fstModMask,
+    unsigned sndModMask)
 {
     int fstCount = 0;
     int sndCount = 0;
@@ -2766,11 +2774,11 @@ CompareModMasks(
 	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
 
 	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
-	    ModMask fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
-	    ModMask sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+	    unsigned fstiModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    unsigned sndiModMask = *PSModMaskArr_Get(sndModMaskArr, i);
 
-	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
-	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
+	    if (IsSubsetOf(fstiModMask, sndiModMask)) { ++sndCount; }
+	    if (IsSubsetOf(sndiModMask, fstiModMask)) { ++fstCount; }
 	}
     }
 
@@ -2800,7 +2808,7 @@ MatchPatterns(
     PSEntry *psEntry;
     PatSeq *bestPtr;
     PatSeq *bestPhysPtr;
-    ModMask bestModMask;
+    unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
     int i, isModKeyOnly = 0;
 
@@ -2867,8 +2875,8 @@ MatchPatterns(
 		     * cannot be done in ParseEventDescription, otherwise this function would
 		     * be the better place.
 		     */
-		    ModMask modMask = ResolveModifiers(dispPtr, patPtr->modMask);
-		    ModMask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
+		    unsigned modMask = ResolveModifiers(dispPtr, patPtr->modMask);
+		    unsigned curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = 1; /* remove it from promotion list */
                     psEntry->keepIt = 0; /* don't keep matching patterns */
@@ -3002,8 +3010,8 @@ ExpandPercents(
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
-	Tcl_WideInt number;     /* signed */
-	Tcl_WideUInt unumber;   /* unsigned */
+	long long number;     /* signed */
+	unsigned long long unumber;   /* unsigned */
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -3520,7 +3528,7 @@ DeleteVirtualEventTable(
  *	already defined, the new definition augments those that already exist.
  *
  * Results:
- *	The return value is TCL_ERROR if an error occured while creating the
+ *	The return value is TCL_ERROR if an error occurred while creating the
  *	virtual binding. In this case, an error message will be left in the
  *	interp's result. If all went well then the return value is TCL_OK.
  *
@@ -3864,7 +3872,7 @@ HandleEventGenerate(
     Tk_Window tkwin;
     Tk_Window tkwin2;
     TkWindow *mainPtr;
-    EventMask eventMask;
+    unsigned eventMask;
     Tcl_Obj *userDataObj;
     int synch;
     int warp;
@@ -4048,6 +4056,9 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & BUTTON) {
+		if (number >= Button4) {
+		    number += (Button8 - Button4);
+		}
 		event.general.xbutton.button = number;
 	    } else {
 		badOpt = 1;
@@ -4402,17 +4413,6 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * Now we have constructed the event, inject it into the event handling
-	 * code.
-	 */
-
-	if (synch) {
-	    Tk_HandleEvent(&event.general);
-	} else {
-	    Tk_QueueWindowEvent(&event.general, pos);
-	}
-
-	/*
 	 * We only allow warping if the window is mapped.
 	 */
 
@@ -4420,11 +4420,6 @@ HandleEventGenerate(
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
-
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-	    }
 
 	    if (warpWindow != dispPtr->warpWindow) {
 		if (warpWindow) {
@@ -4438,6 +4433,31 @@ HandleEventGenerate(
 	    dispPtr->warpMainwin = mainWin;
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
+
+            /*
+             * Warping with respect to a window will be done when Tk_handleEvent
+             * below will run the event handlers and in particular TkPointerEvent.
+             * This allows to make grabs and warping work together robustly, that
+             * is without depending on a precise sequence of events.
+             * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+             * is NULL) is run directly here.
+             */
+
+            if (!dispPtr->warpWindow) {
+                TkpWarpPointer(dispPtr);
+                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+            }
+	}
+
+	/*
+	 * Now we have constructed the event, inject it into the event handling
+	 * code.
+	 */
+
+	if (synch) {
+	    Tk_HandleEvent(&event.general);
+	} else {
+	    Tk_QueueWindowEvent(&event.general, pos);
 	}
     }
 
@@ -4510,46 +4530,47 @@ NameToWindow(
 /*
  *-------------------------------------------------------------------------
  *
- * DoWarp --
+ * TkDoWarpWrtWin --
  *
- *	Perform Warping of X pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer with respect to a window.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	X Pointer will move to a new location.
+ *	Mouse pointer moves to a new location.
  *
  *-------------------------------------------------------------------------
  */
 
-static void
-DoWarp(
-    ClientData clientData)
+void
+TkDoWarpWrtWin(
+    TkDisplay *dispPtr)
 {
-    TkDisplay *dispPtr = (TkDisplay *)clientData;
-
-    assert(clientData);
+    assert(dispPtr);
 
     /*
-     * DoWarp was scheduled only if the window was mapped. It needs to be
-     * still mapped at the time the present idle callback is executed. Also
-     * one needs to guard against window destruction in the meantime.
-     * Finally, the case warpWindow == NULL is special in that it means
-     * the whole screen.
+     * A NULL warpWindow means warping with respect to the whole screen.
+     * We want to warp here only if we're warping with respect to a window.
      */
 
-    if (!dispPtr->warpWindow ||
-            (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None)) {
-        TkpWarpPointer(dispPtr);
-        XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    }
-
     if (dispPtr->warpWindow) {
-	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = NULL;
+
+        /*
+         * Warping with respect to a window can only be done if the window is
+         * mapped. This was checked in HandleEvent. The window needs to be
+         * still mapped at the time the present code is executed. Also
+         * one needs to guard against window destruction in the meantime,
+         * which could have happened as a side effect of an event handler.
+         */
+
+        if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
+            TkpWarpPointer(dispPtr);
+            XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+        }
+        Tcl_Release(dispPtr->warpWindow);
+        dispPtr->warpWindow = NULL;
     }
-    dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
 /*
@@ -4636,7 +4657,7 @@ FindSequence(
     				 * 1 means create. */
     int allowVirtual,		/* 0 means that virtual events are not allowed in the sequence.
     				 * 1 otherwise. */
-    EventMask *maskPtr)		/* *maskPtr is filled in with the event types on which this
+    unsigned *maskPtr)		/* *maskPtr is filled in with the event types on which this
     				 * pattern sequence depends. */
 {
     unsigned patsBufSize = 1;
@@ -4650,8 +4671,8 @@ FindSequence(
     int isNew;
     unsigned count;
     unsigned maxCount = 0;
-    EventMask eventMask = 0;
-    ModMask modMask = 0;
+    unsigned eventMask = 0;
+    unsigned modMask = 0;
     PatternTableKey key;
 
     assert(lookupTables);
@@ -4825,10 +4846,10 @@ ParseEventDescription(
     const char **eventStringPtr,/* On input, holds a pointer to start of event string. On exit,
     				 * gets pointer to rest of string after parsed event. */
     TkPattern *patPtr,		/* Filled with the pattern parsed from the event string. */
-    EventMask *eventMaskPtr)	/* Filled with event mask of matched event. */
+    unsigned *eventMaskPtr)	/* Filled with event mask of matched event. */
 {
     const char *p;
-    EventMask eventMask = 0;
+    unsigned eventMask = 0;
     unsigned count = 1;
 
     assert(eventStringPtr);
@@ -5001,7 +5022,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modMask |= TkGetButtonMask(button);
+		    patPtr->modMask |= Tk_GetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -5011,7 +5032,7 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modMask |= TkGetButtonMask(button);
+			patPtr->modMask |= Tk_GetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
@@ -5141,7 +5162,7 @@ GetPatternObj(
 	    assert(patPtr->name);
 	    Tcl_AppendPrintfToObj(patternObj, "<<%s>>", patPtr->name);
 	} else {
-	    ModMask modMask;
+	    unsigned modMask;
 	    const ModInfo *modPtr;
 
 	    /*
@@ -5189,16 +5210,16 @@ GetPatternObj(
 		}
 		case ButtonPress:
 		case ButtonRelease:
-		    assert(patPtr->info <= Button9);
-		    Tcl_AppendPrintfToObj(patternObj, "-%d", (int) patPtr->info);
+		    assert(patPtr->info <= 13);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) ((patPtr->info > 7) ? (patPtr->info - 4) : patPtr->info));
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
-		    ModMask mask = patPtr->modMask;
+		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
-			int button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%d", button);
-			mask &= ~TkGetButtonMask(button);
+			unsigned button = ButtonNumberFromState(mask);
+			Tcl_AppendPrintfToObj(patternObj, "-%u", (button > 7) ? (button - 4) : button);
+			mask &= ~Tk_GetButtonMask(button);
 		    }
 		    break;
 		}
@@ -5235,14 +5256,48 @@ TkStringToKeysym(
     const char *name)		/* Name of a keysym. */
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
+    Tcl_HashEntry *hPtr;
+#endif /* REDO_KEYSYM_LOOKUP */
+    int keysym;
 
+    size_t len = TkUtfToUniChar(name, &keysym);
+    if (name[len] == '\0') {
+        if (!Tcl_UniCharIsPrint(keysym)) {
+    	/* This form not supported */
+        } else if ((unsigned)(keysym - 0x21) <= 0x5D) {
+		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return 0x20AC;
+	    } else {
+		return keysym + 0x1000000;
+	    }
+    }
+#ifdef REDO_KEYSYM_LOOKUP
+    if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
+	char *p = (char *)name + 1;
+	keysym = strtol(p, &p, 16);
+	if ((p >= name + 5) && (p <= name + 9) && !*p && (keysym >= 0x20)
+		&& ((unsigned)(keysym - 0x7F) > 0x20)) {
+	    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return keysym;
+	    }
+	    return keysym + 0x1000000;
+	}
+    }
+#endif
+#ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
-    assert(name);
-    if (strlen(name) == 1u) {
-	KeySym keysym = (KeySym) (unsigned char) name[0];
+    if (((unsigned)(name[0]-1) < 0x7F) && !name[1]) {
+	keysym = (unsigned char) name[0];
 
 	if (TkKeysymToString(keysym)) {
 	    return keysym;
@@ -5275,16 +5330,37 @@ TkKeysymToString(
     KeySym keysym)
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, (char *)keysym);
+    Tcl_HashEntry *hPtr;
+#endif
+
+    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+	keysym += 0x1000000;
+    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+	keysym += 0x1000000;
+    } else if (keysym == 0x20AC) {
+	keysym += 0x1000000;
+    }
+    if ((keysym >= 0x1000020) && (keysym <= 0x110FFFF)
+	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
+	char buf[10];
+	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
+	    buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	} else if (keysym >= 0x1010000) {
+	    sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
+	} else {
+	    sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
+	}
+	return Tk_GetUid(buf);
+    }
+
+#ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&nameTable, INT2PTR(keysym));
 
     if (hPtr) {
 	return (const char *)Tcl_GetHashValue(hPtr);
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-    if (keysym > (KeySym)0x1008FFFF) {
-	return NULL;
-    }
     return XKeysymToString(keysym);
 }
 
@@ -5315,35 +5391,6 @@ TkpGetBindingXEvent(
     BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
     return &bindPtr->curEvent->xev;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpCancelWarp --
- *
- *	This function cancels an outstanding pointer warp and
- *	is called during tear down of the display.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpCancelWarp(
-    TkDisplay *dispPtr)
-{
-    assert(dispPtr);
-
-    if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
-	Tcl_CancelIdleCall(DoWarp, dispPtr);
-	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
-    }
 }
 
 /*

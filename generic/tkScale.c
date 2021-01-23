@@ -9,9 +9,9 @@
  *	implementation by Paul Mackerras. The -variable option is due to
  *	Henning Schulzrinne. All of these are used with permission.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -357,7 +357,7 @@ Tk_ScaleObjCmd(
 
     scalePtr->flags &= ~INVOKE_COMMAND;
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(scalePtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(scalePtr->tkwin));
     return TCL_OK;
 }
 
@@ -659,13 +659,11 @@ ConfigureScale(
 	    }
 	}
 
-	/*
-	 * Several options need special processing, such as parsing the
-	 * orientation and creating GCs.
-	 */
+        /*
+         * The fromValue shall not be rounded to the resolution, but the
+         * toValue and tickInterval do.
+         */
 
-	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
-		scalePtr->fromValue);
 	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
 	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);

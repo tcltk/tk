@@ -4,8 +4,8 @@
  *	This file contains miscellaneous utility functions that are used by
  *	the rest of Tk, such as a function for drawing a focus highlight.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -664,6 +664,7 @@ Tk_GetScrollInfo(
 	return TK_SCROLL_MOVETO;
     } else if ((c == 's')
 	    && (strncmp(argv[2], "scroll", length) == 0)) {
+	double d;
 	if (argc != 5) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
@@ -671,9 +672,10 @@ Tk_GetScrollInfo(
 	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
-	if (Tcl_GetInt(interp, argv[3], intPtr) != TCL_OK) {
+	if (Tcl_GetDouble(interp, argv[3], &d) != TCL_OK) {
 	    return TK_SCROLL_ERROR;
 	}
+	*intPtr = (d > 0) ? ceil(d) : floor(d);
 	length = strlen(argv[4]);
 	c = argv[4][0];
 	if ((c == 'p') && (strncmp(argv[4], "pages", length) == 0)) {
@@ -729,7 +731,7 @@ Tk_GetScrollInfoObj(
 				 * scroll, if any. */
 {
     TkSizeT length;
-    const char *arg = TkGetStringFromObj(objv[2], &length);
+    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
 
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
@@ -744,15 +746,20 @@ Tk_GetScrollInfoObj(
 	}
 	return TK_SCROLL_MOVETO;
     } else if (ArgPfxEq("scroll")) {
+	double d;
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number pages|units");
 	    return TK_SCROLL_ERROR;
 	}
-	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
 	    return TK_SCROLL_ERROR;
 	}
+	*intPtr = (d >= 0) ? ceil(d) : floor(d);
+	if (dblPtr) {
+	    *dblPtr = d;
+	}
 
-	arg = TkGetStringFromObj(objv[4], &length);
+	arg = Tcl_GetStringFromObj(objv[4], &length);
 	if (ArgPfxEq("pages")) {
 	    return TK_SCROLL_PAGES;
 	} else if (ArgPfxEq("units")) {
@@ -1130,7 +1137,7 @@ TkMakeEnsemble(
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
-	Tcl_Obj *nameObj, *fqdnObj;
+	Tcl_Obj *fqdnObj;
 
 	nameObj = Tcl_NewStringObj(map[i].name, -1);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -1157,7 +1164,7 @@ TkMakeEnsemble(
 /*
  *----------------------------------------------------------------------
  *
- * TkSendVirtualEvent --
+ * Tk_SendVirtualEvent --
  *
  * 	Send a virtual event notification to the specified target window.
  * 	Equivalent to:
@@ -1170,7 +1177,7 @@ TkMakeEnsemble(
  */
 
 void
-TkSendVirtualEvent(
+Tk_SendVirtualEvent(
     Tk_Window target,
     const char *eventName,
     Tcl_Obj *detail)
@@ -1305,19 +1312,6 @@ TkUtfPrev(
 }
 
 #endif
-
-#if TCL_MAJOR_VERSION > 8
-unsigned char *
-TkGetByteArrayFromObj(
-	Tcl_Obj *objPtr,
-	size_t *lengthPtr
-) {
-    unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, NULL);
-    *lengthPtr = *(size_t *) objPtr->internalRep.twoPtrValue.ptr1;
-    return result;
-}
-#endif /* TCL_MAJOR_VERSION > 8 */
-
 /*
  * Local Variables:
  * mode: c

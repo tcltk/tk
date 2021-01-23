@@ -2,8 +2,9 @@
 # ttk::spinbox widget tests
 #
 
-package require Tk
-package require tcltest ; namespace import -force tcltest::*
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 test spinbox-1.0 "Spinbox tests -- setup" -body {
@@ -126,7 +127,7 @@ test spinbox-1.8.2 "option -validate" -setup {
     .sb cget -validate
 } -cleanup {
     destroy .sb
-} -result {none}
+} -result none
 
 test spinbox-1.8.3 "option -validate" -setup {
     ttk::spinbox .sb -from 0 -to 100
@@ -204,16 +205,19 @@ test spinbox-3.0 "textarea should expand to fill widget" -setup {
     set ::spinbox_test {}
     ttk::spinbox .sb -from 0 -to 10 -textvariable SBV
 } -body {
-    grid .sb -sticky ew
     grid columnconfigure . 0 -weight 1
+    update idletasks
+    set timer [after 500 {set ::spinbox_test timedout}]
     bind . <Map> {
         after idle {
             wm geometry . "210x80"
-            after 100 {set ::spinbox_test [.sb identify element 5 5]}
+	    update idletasks
+            set ::spinbox_test [.sb identify element 25 5]
         }
         bind . <Map> {}
     }
-    after 500 {set ::spinbox_wait 1} ; vwait ::spinbox_wait
+    grid .sb -sticky ew
+    vwait ::spinbox_test
     set ::spinbox_test
 } -cleanup {
     destroy .sb
@@ -353,6 +357,20 @@ test spinbox-dieoctaldie-2 "Cope with general bad input" -body {
 } -result [list asdfasdf 000 asdfasdf 000] -cleanup {
     destroy .sb
 }
+
+test spinbox-5.1 "style command" -body {
+    ttk::spinbox .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TSpinbox TSpinbox}
+test spinbox-5.2 "style command" -body {
+    ttk::style configure customStyle.TSpinbox
+    ttk::spinbox .w -style customStyle.TSpinbox
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TSpinbox customStyle.TSpinbox TSpinbox}
 
 tcltest::cleanupTests
 

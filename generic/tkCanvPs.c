@@ -5,8 +5,8 @@
  *	the "postscript" widget command plus a few utility functions used for
  *	generating Postscript.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1603,7 +1603,7 @@ Tk_PostscriptPhoto(
 	    /*
 	     * Generate data for image in monochrome mode. No attempt at
 	     * dithering is made--instead, just set a threshold. To handle
-	     * transparecies we need to output two lines: one for the black
+	     * transparencies we need to output two lines: one for the black
 	     * pixels, one for the white ones.
 	     */
 

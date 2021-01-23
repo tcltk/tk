@@ -224,11 +224,11 @@ proc ttk::menubutton::TransferGrab {mb} {
 # FindMenuEntry --
 #	Hack to support tk_optionMenus.
 #	Returns the index of the menu entry with a matching -label,
-#	-1 if not found.
+#	"" if not found.
 #
 proc ttk::menubutton::FindMenuEntry {menu s} {
     set last [$menu index last]
-    if {$last eq "none"} {
+    if {$last eq "none" || $last eq ""} {
 	return ""
     }
     for {set i 0} {$i <= $last} {incr i} {

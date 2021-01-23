@@ -6,7 +6,7 @@
  *	interfaces are not guaranteed to remain the same between
  *	versions.  Use at your own risk.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  * All rights reserved.
  */
 
@@ -36,6 +36,10 @@
 #  ifndef TCL_STORAGE_CLASS
 #    define TCL_STORAGE_CLASS DLLIMPORT
 #  endif
+#endif
+
+#if defined(MAC_OSX_TK) && !defined(MAC_OSX_TCL)
+#  define MAC_OSX_TCL 1
 #endif
 
 typedef int (*XAfterFunction) (	    /* WARNING, this type not in Xlib spec */
@@ -765,7 +769,10 @@ EXTERN Status		XIconifyWindow(Display *d, Window w, int i);
 EXTERN Status		XWithdrawWindow(Display *d, Window w, int i);
 /* 105 */
 EXTERN XHostAddress *	XListHosts(Display *d, int *i, Bool *b);
-/* Slot 106 is reserved */
+/* 106 */
+EXTERN int		XSetClipRectangles(Display *display, GC gc,
+				int clip_x_origin, int clip_y_origin,
+				XRectangle rectangles[], int n, int ordering);
 /* 107 */
 EXTERN int		XFlush(Display *display);
 /* 108 */
@@ -1162,7 +1169,7 @@ typedef struct TkIntXlibStubs {
     Status (*xIconifyWindow) (Display *d, Window w, int i); /* 103 */
     Status (*xWithdrawWindow) (Display *d, Window w, int i); /* 104 */
     XHostAddress * (*xListHosts) (Display *d, int *i, Bool *b); /* 105 */
-    void (*reserved106)(void);
+    int (*xSetClipRectangles) (Display *display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 106 */
     int (*xFlush) (Display *display); /* 107 */
     int (*xGrabServer) (Display *display); /* 108 */
     int (*xUngrabServer) (Display *display); /* 109 */
@@ -1748,7 +1755,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xWithdrawWindow) /* 104 */
 #define XListHosts \
 	(tkIntXlibStubsPtr->xListHosts) /* 105 */
-/* Slot 106 is reserved */
+#define XSetClipRectangles \
+	(tkIntXlibStubsPtr->xSetClipRectangles) /* 106 */
 #define XFlush \
 	(tkIntXlibStubsPtr->xFlush) /* 107 */
 #define XGrabServer \

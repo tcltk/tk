@@ -2,9 +2,9 @@
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
  *
- * Copyright (c) 2003 by Georgios Petasis, petasis@iit.demokritos.gr.
- * Copyright (c) 2003 by Joe English
- * Copyright (c) 2003 by Pat Thoyts
+ * Copyright © 2003 Georgios Petasis, petasis@iit.demokritos.gr.
+ * Copyright © 2003 Joe English
+ * Copyright © 2003 Pat Thoyts
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -795,7 +795,7 @@ static const Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
 
 /*
  *----------------------------------------------------------------------
@@ -838,7 +838,7 @@ static void TextElementSize(
     if (!InitElementData(elementData, tkwin, 0))
 	return;
 
-    src = TkGetStringFromObj(element->textObj, &len);
+    src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
@@ -847,7 +847,7 @@ static void TextElementSize(
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
 	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    NULL,
 	    &rc);
 
@@ -877,7 +877,7 @@ static void TextElementDraw(
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    src = TkGetStringFromObj(element->textObj, &len);
+    src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
@@ -886,7 +886,7 @@ static void TextElementDraw(
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
 	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
 	    &rc);
 
@@ -919,8 +919,8 @@ TTK_LAYOUT("TButton",
 
 TTK_LAYOUT("TMenubutton",
     TTK_NODE("Menubutton.dropdown", TTK_PACK_RIGHT|TTK_FILL_Y)
-    TTK_GROUP("Menubutton.button", TTK_PACK_RIGHT|TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
+    TTK_GROUP("Menubutton.button", TTK_FILL_BOTH,
+	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
 	        TTK_NODE("Menubutton.label", 0))))
 
 TTK_LAYOUT("Horizontal.TScrollbar",
@@ -938,14 +938,14 @@ TTK_LAYOUT("Vertical.TScrollbar",
 	    TTK_NODE("Vertical.Scrollbar.grip", 0))))
 
 TTK_LAYOUT("Horizontal.TScale",
-    TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
-	TTK_GROUP("Horizontal.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
+    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
 	    TTK_NODE("Horizontal.Scale.track", TTK_FILL_X)
 	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )))
 
 TTK_LAYOUT("Vertical.TScale",
-    TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
-	TTK_GROUP("Vertical.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
+    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
 	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
 	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )))
 
@@ -1046,12 +1046,10 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
     	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
 #endif
-
     { 0,0,0,0,0,NOPAD,0 }
 };
 #undef PAD
@@ -1144,7 +1142,7 @@ Ttk_CreateVsapiElement(
     if (Tcl_GetIntFromObj(interp, objv[1], &partId) != TCL_OK) {
 	return TCL_ERROR;
     }
-    name = TkGetStringFromObj(objv[0], &length);
+    name = Tcl_GetStringFromObj(objv[0], &length);
     Tcl_DStringInit(&classBuf);
     className = Tcl_UtfToWCharDString(name, length, &classBuf);
 

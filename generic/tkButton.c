@@ -5,8 +5,8 @@
  *	toolkit. The widgets implemented include buttons, checkbuttons,
  *	radiobuttons, and labels.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -760,7 +760,7 @@ ButtonCreate(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(butPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(butPtr->tkwin));
     return TCL_OK;
 }
 

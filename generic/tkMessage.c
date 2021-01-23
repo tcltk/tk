@@ -5,9 +5,9 @@
  *	widget displays a multi-line string in a window according to a
  *	particular aspect ratio.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Ajuba Solutions.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -278,7 +278,7 @@ Tk_MessageObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(msgPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(msgPtr->tkwin));
     return TCL_OK;
 }
 

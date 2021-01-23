@@ -3,8 +3,8 @@
  *
  *	This file implements the widget styles and themes support.
  *
- * Copyright (c) 1990-1993 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1993 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -178,11 +178,10 @@ static const Tcl_ObjType styleObjType = {
 
 void
 TkStylePkgInit(
-    TkMainInfo *mainPtr)	/* The application being created. */
+    TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)mainPtr;
 
     if (tsdPtr->nbInit != 0) {
 	return;
@@ -234,7 +233,7 @@ TkStylePkgInit(
 
 void
 TkStylePkgFree(
-    TkMainInfo *mainPtr)	/* The application being deleted. */
+    TCL_UNUSED(TkMainInfo *))	/* The application being deleted. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -242,7 +241,6 @@ TkStylePkgFree(
     Tcl_HashEntry *entryPtr;
     StyleEngine *enginePtr;
     int i;
-    (void)mainPtr;
 
     tsdPtr->nbInit--;
     if (tsdPtr->nbInit != 0) {
@@ -523,10 +521,8 @@ InitElement(
 
 static void
 FreeElement(
-    Element *elementPtr)	/* The element to free. */
+    TCL_UNUSED(Element *))	/* The element to free. */
 {
-    (void)elementPtr;
-
     /* Nothing to do. */
 }
 
@@ -1380,9 +1376,8 @@ Tk_GetStyle(
 
 void
 Tk_FreeStyle(
-    Tk_Style style)
+    TCL_UNUSED(Tk_Style))
 {
-    (void)style;
 }
 
 /*

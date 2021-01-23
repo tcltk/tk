@@ -4,10 +4,10 @@
  *	This file implements functions that decode & handle keyboard events on
  *	MacOS X.
  *
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2012 Adrian Robert.
- * Copyright 2015-2020 Marc Culler.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2012 Adrian Robert.
+ * Copyright © 2015-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -51,7 +51,7 @@ static NSUInteger textInputModifiers;
 #endif
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window)winPtr;
     NSEventType type = [theEvent type];
     NSUInteger virtual = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
@@ -83,7 +83,7 @@ static NSUInteger textInputModifiers;
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
 	    winPtr =winPtr->dispPtr->focusPtr;
-	    tkwin = (Tk_Window) winPtr;
+	    tkwin = (Tk_Window)winPtr;
 	}
     }
 
@@ -255,11 +255,10 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
+
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
-    }
-    if (xEvent.xany.type == KeyPress) {
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;
@@ -268,14 +267,8 @@ static NSUInteger textInputModifiers;
 
 
 @implementation TKContentView
-
--(id)init {
-    self = [super init];
-    if (self) {
-        _needsRedisplay = NO;
-    }
-    return self;
-}
+@synthesize tkDirtyRect = _tkDirtyRect;
+@synthesize tkNeedsDisplay = _tkNeedsDisplay;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -293,7 +286,7 @@ static NSUInteger textInputModifiers;
     XEvent xEvent;
     NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window)winPtr;
     Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
@@ -329,8 +322,8 @@ static NSUInteger textInputModifiers;
      */
 
     if (repRange.location == 0) {
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
     /*
@@ -403,7 +396,7 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
     (void)selRange;
@@ -439,12 +432,12 @@ static NSUInteger textInputModifiers;
      * Use our insertText method to display the marked text.
      */
 
-    TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     processingCompose = YES;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
-    TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
 - (BOOL)hasMarkedText
@@ -512,8 +505,8 @@ static NSUInteger textInputModifiers;
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
 
@@ -562,7 +555,6 @@ static NSUInteger textInputModifiers;
 }
 /* End of NSTextInputClient implementation. */
 
-@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
@@ -588,7 +580,7 @@ static NSUInteger textInputModifiers;
 	privateWorkingText = nil;
 	processingCompose = NO;
 	if (composeWin) {
-	    TkSendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
+	    Tk_SendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
 	}
     }
 }
@@ -709,8 +701,8 @@ XGrabKeyboard(
     (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
-	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
-	MacDrawable *macWin = (MacDrawable *) grab_window;
+	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
+	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
 	    if (modalSession) {
@@ -788,7 +780,7 @@ TkMacOSXGetModalSession(void)
  *	This enables correct placement of the popups used for character
  *      selection by the NSTextInputClient.  It gets called by text entry
  *      widgets whenever the cursor is drawn.  It does nothing if the widget's
- *      NSWindow is not the current KeyWindow.  Otherwise it udpates the
+ *      NSWindow is not the current KeyWindow.  Otherwise it updates the
  *      display's caret structure and records the caret geometry in static
  *      variables for use by the NSTextInputClient implementation.  Any
  *      widget passed to this function will be marked as being able to input
@@ -814,7 +806,7 @@ Tk_SetCaretPos(
  {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkCaret *caretPtr = &(winPtr->dispPtr->caret);
-    NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *w = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
 
     /*
      * Register this widget as being capable of text input, so we know we

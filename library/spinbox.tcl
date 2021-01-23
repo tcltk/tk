@@ -4,10 +4,10 @@
 # procedures that help in implementing those bindings.  The spinbox builds
 # off the entry widget, so it can reuse Entry bindings and procedures.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1999-2000 Jeffrey Hobbs
-# Copyright (c) 2000 Ajuba Solutions
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1999-2000 Jeffrey Hobbs
+# Copyright © 2000 Ajuba Solutions
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -218,9 +218,7 @@ bind Spinbox <KP_Enter> {# nothing}
 bind Spinbox <Tab> {# nothing}
 bind Spinbox <Prior> {# nothing}
 bind Spinbox <Next> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Spinbox <Command-Key> {# nothing}
-}
+bind Spinbox <Command-Key> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
@@ -280,27 +278,14 @@ bind Spinbox <Meta-Delete> {
 
 # A few additional bindings of my own.
 
-if {[tk windowingsystem] ne "aqua"} {
-    bind Spinbox <Button-2> {
-        if {!$tk_strictMotif} {
-        ::tk::EntryScanMark %W %x
-        }
+bind Spinbox <Button-2> {
+    if {!$tk_strictMotif} {
+	::tk::EntryScanMark %W %x
     }
-    bind Spinbox <B2-Motion> {
-        if {!$tk_strictMotif} {
-        ::tk::EntryScanDrag %W %x
-        }
-    }
-} else {
-    bind Spinbox <Button-3> {
-        if {!$tk_strictMotif} {
-        ::tk::EntryScanMark %W %x
-        }
-    }
-    bind Spinbox <B3-Motion> {
-        if {!$tk_strictMotif} {
-        ::tk::EntryScanDrag %W %x
-        }
+}
+bind Spinbox <B2-Motion> {
+    if {!$tk_strictMotif} {
+	::tk::EntryScanDrag %W %x
     }
 }
 
@@ -483,10 +468,10 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	word {
 	    if {$cur < [$w index anchor]} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+		set after [tcl_wordBreakAfter [$w get] $anchor-1]
 	    } else {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+		set after [tcl_wordBreakAfter [$w get] $cur-1]
 	    }
 	    if {$before < 0} {
 		set before 0
@@ -589,5 +574,5 @@ proc ::tk::spinbox::AutoScan {w} {
 
 proc ::tk::spinbox::GetSelection {w} {
     return [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
@@ -85,7 +85,7 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
-	 TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,
+	 TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
          GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Base,base.paddingObj), TCL_INDEX_NONE,
@@ -273,11 +273,12 @@ static const Tk_OptionSpec LabelOptionSpecs[] =
 };
 
 static const Ttk_Ensemble LabelCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -378,12 +379,13 @@ ButtonInvokeCommand(
 }
 
 static const Ttk_Ensemble ButtonCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "invoke",		ButtonInvokeCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "invoke",		ButtonInvokeCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -585,12 +587,13 @@ CheckbuttonInvokeCommand(
 }
 
 static const Ttk_Ensemble CheckbuttonCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "invoke",		CheckbuttonInvokeCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "invoke",		CheckbuttonInvokeCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     /* MISSING: select, deselect, toggle */
     { 0,0,0 }
 };
@@ -761,12 +764,13 @@ RadiobuttonInvokeCommand(
 }
 
 static const Ttk_Ensemble RadiobuttonCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "invoke",		RadiobuttonInvokeCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "invoke",		RadiobuttonInvokeCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     /* MISSING: select, deselect */
     { 0,0,0 }
 };
@@ -823,7 +827,7 @@ static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 	"", offsetof(Menubutton, menubutton.menuObj), TCL_INDEX_NONE, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	"below", offsetof(Menubutton, menubutton.directionObj), TCL_INDEX_NONE,
-	0,(ClientData)directionStrings,GEOMETRY_CHANGED},
+	0, (void *)directionStrings, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
@@ -835,6 +839,7 @@ static const Ttk_Ensemble MenubuttonCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -858,7 +863,7 @@ TTK_BEGIN_LAYOUT(MenubuttonLayout)
     TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
 	TTK_GROUP("Menubutton.focus", TTK_FILL_BOTH,
 	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
+	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
 	        TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 

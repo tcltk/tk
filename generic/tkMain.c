@@ -403,19 +403,24 @@ Tk_MainEx(
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
-    int mask)			/* Not used. */
+    TCL_UNUSED(int))
 {
     char *cmd;
     int code;
-    size_t count;
+    TkSizeT count;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
-    (void)mask;
+    Tcl_DString savedEncoding;
 
-    count = (size_t)Tcl_Gets(chan, &isPtr->line);
+    Tcl_DStringInit(&savedEncoding);
+    Tcl_GetChannelOption(NULL, chan, "-encoding", &savedEncoding);
+    Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
+    count = Tcl_Gets(chan, &isPtr->line);
+    Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
+    Tcl_DStringFree(&savedEncoding);
 
-    if (count == (size_t)-1 && !isPtr->gotPartial) {
+    if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
