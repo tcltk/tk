@@ -127,7 +127,7 @@ TkpDisplayWarning(
 
     /* If running on Cygwin and we have a stderr channel, use it. */
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9) {
+	if (tclStubsPtr->tcl_CreateFileHandler) {
 	Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 	if (errChannel) {
 	    Tcl_WriteChars(errChannel, title, -1);
