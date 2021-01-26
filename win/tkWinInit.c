@@ -43,6 +43,7 @@ TkpInit(
      */
 
     WinIcoInit(interp);
+    PrintInit(interp);
     TkWinXInit(Tk_GetHINSTANCE());
     return TCL_OK;
 }
