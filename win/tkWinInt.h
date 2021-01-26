@@ -222,6 +222,12 @@ MODULE_SCOPE void		TkSetCursorPos(int x, int y);
 MODULE_SCOPE  int       WinIcoInit (Tcl_Interp* interp);
 
 /*
+ * The following is implemented in tkWinPrint.c
+ */
+
+MODULE_SCOPE  int       PrintInit(Tcl_Interp* interp);
+
+/*
  * Common routines used in Windows implementation
  */
 MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);

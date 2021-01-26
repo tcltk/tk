@@ -65,10 +65,10 @@ WinGetSystemPalette(void)
  */
 static int
 WinPrint(
-    ClientData clientData,	/* Interpreter-specific data. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
-    Tcl_Obj *CONST *objv)
+    Tcl_Obj *const *objv)
 {
     BITMAPINFO bi;
     DIBSECTION ds;
@@ -79,17 +79,19 @@ WinPrint(
     Tk_Window tkwin;
     TkWinDCState state;
     int result;
-    PRINTDLG pd; 
+    PRINTDLG pd;
     DOCINFO di;
     double pageWidth, pageHeight;
     int jobId;
-    DEVMODE *dmPtr;
-    HGLOBAL hMem;
     Tcl_DString dString;
     char *path;
 
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window");
+	return TCL_ERROR;
+    }
     Tcl_DStringInit(&dString);
-    path = Tcl_GetString(objv[3]);
+    path = Tcl_GetString(objv[1]);
     tkwin = Tk_NameToWindow(interp, path, Tk_MainWindow(interp));
     if (tkwin == NULL) {
 	return TCL_ERROR;
@@ -97,7 +99,7 @@ WinPrint(
     if (Tk_WindowId(tkwin) == None) {
 	Tk_MakeWindowExist(tkwin);
     }
-    
+
     result = TCL_ERROR;
     hDC = TkWinGetDrawableDC(Tk_Display(tkwin), Tk_WindowId(tkwin), &state);
 
@@ -121,16 +123,14 @@ WinPrint(
     /* Copy the window contents to the memory surface. */
     if (!BitBlt(memDC, 0, 0, Tk_Width(tkwin), Tk_Height(tkwin), hDC, 0, 0,
 		SRCCOPY)) {
-	Tcl_AppendResult(interp, "can't blit \"", Tk_PathName(tkwin),
-			 NULL, (char *)NULL);
+	Tcl_AppendResult(interp, "can't blit \"", Tk_PathName(tkwin), NULL);
 	goto done;
     }
     /* Now that the DIB contains the image of the window, get the
      * databits and write them to the printer device, stretching the
      * image to the fit the printer's resolution.  */
     if (GetObject(hBitmap, sizeof(DIBSECTION), &ds) == 0) {
-      Tcl_AppendResult(interp, "can't get DIB object", NULL,
-			 (char *)NULL);
+      Tcl_AppendResult(interp, "can't get DIB object", NULL);
 	goto done;
     }
        if (PrintDlg(&pd) == FALSE) {
@@ -140,8 +140,7 @@ WinPrint(
     //   GlobalUnlock(hMem);
     //    GlobalFree(hMem);
     if (printDC == NULL) {
-	Tcl_AppendResult(interp, "can't allocate printer DC",
-			 NULL, (char *)NULL);
+	Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
 	goto done;
     }
 	double scale, sx, sy;
@@ -161,17 +160,15 @@ WinPrint(
     di.lpszDocName = Tcl_DStringValue(&dString);
     jobId = StartDoc(printDC, &di);
     if (jobId <= 0) {
-      Tcl_AppendResult(interp, "can't start document", 
-		(char *)NULL);
+      Tcl_AppendResult(interp, "can't start document", NULL);
 	goto done;
     }
     if (StartPage(printDC) <= 0) {
-      Tcl_AppendResult(interp, "error starting page", 
-		(char *)NULL);
+      Tcl_AppendResult(interp, "error starting page", NULL);
 	goto done;
     }
-    StretchDIBits(printDC, 0, 0, (int) pageWidth, (int) pageHeight, 0, 0, 
-	Tk_Width(tkwin), Tk_Height(tkwin), ds.dsBm.bmBits, 
+    StretchDIBits(printDC, 0, 0, (int) pageWidth, (int) pageHeight, 0, 0,
+	Tk_Width(tkwin), Tk_Height(tkwin), ds.dsBm.bmBits,
 	(LPBITMAPINFO)&ds.dsBmih, DIB_RGB_COLORS, SRCCOPY);
     EndPage(printDC);
     EndDoc(printDC);
@@ -181,7 +178,7 @@ WinPrint(
 
   done:
     Tcl_DStringFree(&dString);
- 
+
     DeleteObject(hBitmap);
     //    DeleteDC(memDC);
     TkWinReleaseDrawableDC(Tk_WindowId(tkwin), hDC, &state);
@@ -215,7 +212,6 @@ int
 PrintInit(
     Tcl_Interp *interp)
 {
-     Tcl_CreateObjCommand(interp, "winprint", WinPrint, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "winprint", WinPrint, NULL, NULL);
     return TCL_OK;
-    
 }
