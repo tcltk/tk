@@ -501,9 +501,9 @@ if this option is not given, is the whole image.
 .
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
-.TP
 .VS 8.7
-\fB\-metadata\fR \fmetadata\fR
+.TP
+\fB\-metadata\fR \fBmetadata\fR
 .
 Image format handler may use metadata to be included in the written file.
 The specified metadata is passed to the driver for inclusion in the
@@ -747,18 +747,18 @@ parsed, or may use metadata to be included in image files or formats.
 Each image format driver supports an individual set of metadata dictionary
 keys. Predefined keys are:
 .TP
-.
 DPI
+.
 Horizontal image resolution in DPI as a double value.
 Supported by format \fBpng\fR.
 .TP
-.
 aspect
+.
 Aspect ratio horizontal divided by vertical as double value.
 Supported by formats \fBgif\fR and \fBpng\fR.
 .TP
-.
 comment
+.
 Image text comment.
 Supported by formats \fBgif\fR and \fBpng\fR.
 .PP
