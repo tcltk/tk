@@ -1,7 +1,7 @@
 /*
- * tkWinIco.h --
+ * tkWinIco.c --
  *
- *	This file contains declarations for icon-manipulation routines
+ *	This file contains functions for icon-manipulation routines
  *      in Windows.
  *
  * Copyright © 1995-1996 Microsoft Corp.

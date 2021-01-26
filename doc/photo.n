@@ -303,7 +303,7 @@ If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fmetadata\fR
+\fB\-metadata\fR \fImetadata\fR
 .
 Image format handler may use metadata to be included in the returned
 data string.
@@ -347,7 +347,7 @@ This means that the braces may be omitted if the argument has only one
 word. Also, instead of braces, double quotes may be used for quoting.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fmetadata\fR
+\fB\-metadata\fR \fImetadata\fR
 .
 A specified metadata is passed to the image format driver when interpreting
 the data.
@@ -401,7 +401,7 @@ The default, if this option is not specified, is the whole of the
 image in the image file.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fmetadata\fR
+\fB\-metadata\fR \fImetadata\fR
 .
 A specified metadata is passed to the image format driver when interpreting
 the data.
