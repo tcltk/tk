@@ -1426,6 +1426,10 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
     MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
 #endif
 
+#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
+#   define tcl_CreateFileHandler reserved9
+#endif
+
 /*
  * Unsupported commands.
  */
