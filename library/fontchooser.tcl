@@ -2,8 +2,8 @@
 #
 #	A themeable Tk font selection dialog. See TIP #324.
 #
-# Copyright (C) 2008 Keith Vetter
-# Copyright (C) 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
+# Copyright © 2008 Keith Vetter
+# Copyright © 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.

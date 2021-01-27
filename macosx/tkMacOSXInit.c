@@ -4,10 +4,10 @@
  *	This file contains Mac OS X -specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -42,6 +42,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
+@synthesize isSigned = _isSigned;
 @end
 
 /*
@@ -211,6 +212,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 	if (path) {
 	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
 	    if (image) {
+		[image setName:@"NSApplicationIcon"];
 		[NSApp setApplicationIconImage:image];
 		[image release];
 	    }
@@ -619,6 +621,7 @@ TkMacOSXGetAppPathObjCmd(
 
     CFRelease(mainBundleURL);
     CFRelease(appPath);
+    MacSystrayInit(interp);
 
     return TCL_OK;
 }

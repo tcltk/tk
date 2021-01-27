@@ -6,10 +6,10 @@
  *	spinbox expands on the entry by adding up/down buttons that control
  *	the value of the entry widget.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Ajuba Solutions.
- * Copyright (c) 2002 ActiveState Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Ajuba Solutions.
+ * Copyright © 2002 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -2690,7 +2690,7 @@ GetEntryIndex(
 	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(indexObj, &length);
+    string = Tcl_GetStringFromObj(indexObj, &length);
 
     switch (string[0]) {
     case 'a':
@@ -4433,7 +4433,7 @@ SpinboxInvoke(
 
 		Tcl_ListObjGetElements(interp, sbPtr->listObj, &listc, &listv);
 		for (i = 0; i < listc; i++) {
-		    bytes = TkGetStringFromObj(listv[i], &elemLen);
+		    bytes = Tcl_GetStringFromObj(listv[i], &elemLen);
 		    if ((length == elemLen) &&
 			    (memcmp(bytes, entryPtr->string,
 				    length) == 0)) {

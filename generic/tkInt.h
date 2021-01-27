@@ -6,7 +6,7 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright (c) 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -132,6 +132,12 @@
 #	define TCL_Z_MODIFIER	""
 #   endif
 #endif /* !TCL_Z_MODIFIER */
+#undef TCL_LL_MODIFIER
+#if defined(_WIN32) && (!defined(__USE_MINGW_ANSI_STDIO) || !__USE_MINGW_ANSI_STDIO)
+#   define TCL_LL_MODIFIER	"I64"
+#else
+#   define TCL_LL_MODIFIER	"ll"
+#endif
 
 /*
  * Opaque type declarations:
@@ -1420,15 +1426,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
     MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
 #endif
 
-#if TCL_MAJOR_VERSION > 8
-#define TkGetStringFromObj(objPtr, lenPtr) \
-	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
-	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
-MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
-	size_t *lengthPtr);
-#else
-#define TkGetStringFromObj Tcl_GetStringFromObj
-#define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
+#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
+#   define tcl_CreateFileHandler reserved9
 #endif
 
 /*

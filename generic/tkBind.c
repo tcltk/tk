@@ -4,10 +4,10 @@
  *	This file provides functions that associate Tcl commands with X events
  *	or sequences of X events.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
- * Copyright (c) 2018-2019 by Gregor Cramer.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
+ * Copyright © 2018-2019 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -3010,8 +3010,8 @@ ExpandPercents(
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
-	Tcl_WideInt number;     /* signed */
-	Tcl_WideUInt unumber;   /* unsigned */
+	long long number;     /* signed */
+	unsigned long long unumber;   /* unsigned */
 
 	/*
 	 * Find everything up to the next % character and append it to the

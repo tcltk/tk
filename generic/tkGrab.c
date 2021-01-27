@@ -3,8 +3,8 @@
  *
  *	This file provides functions that implement grabs for Tk.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -215,7 +215,7 @@ Tk_GrabObjCmd(
      * First check for a window name or "-global" as the first argument.
      */
 
-    arg = TkGetStringFromObj(objv[1], &len);
+    arg = Tcl_GetStringFromObj(objv[1], &len);
     if (arg[0] == '.') {
 	/* [grab window] */
 	if (objc != 2) {

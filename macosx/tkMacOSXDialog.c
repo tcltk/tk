@@ -3,10 +3,10 @@
  *
  *	Contains the Mac implementation of the common dialog boxes.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Christian Gollwitzer.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Christian Gollwitzer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -302,7 +302,6 @@ getFileURL(
 - (void)selectFormat:(id)sender  {
     NSPopUpButton *button      = (NSPopUpButton *)sender;
     filterInfo.fileTypeIndex   = [button indexOfSelectedItem];
-
     if ([[filterInfo.fileTypeAllowsAll objectAtIndex:filterInfo.fileTypeIndex] boolValue]) {
 	[openpanel setAllowsOtherFileTypes:YES];
 
@@ -799,6 +798,7 @@ Tk_GetOpenFileObjCmd(
 	[label setBezeled:NO];
 	[label setDrawsBackground:NO];
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
+	[popupButton setTarget:NSApp];
 	[popupButton setAction:@selector(selectFormat:)];
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
@@ -1084,8 +1084,8 @@ Tk_GetSaveFileObjCmd(
 
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
 	[popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
+	[popupButton setTarget:NSApp];
 	[popupButton setAction:@selector(saveFormat:)];
-
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
 

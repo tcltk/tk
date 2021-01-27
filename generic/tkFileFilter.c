@@ -4,7 +4,7 @@
  *	Process the -filetypes option for the file dialogs on Windows and the
  *	Mac.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -263,7 +263,7 @@ AddClause(
 
 	for (i=0; i<ostypeCount; i++) {
 	    TkSizeT len;
-	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
+	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 
 	    /*
 	     * If len is < 4, it is definitely an error. If equal or longer,
@@ -323,7 +323,7 @@ AddClause(
 	for (i=0; i<globCount; i++) {
 	    GlobPattern *globPtr = (GlobPattern *)ckalloc(sizeof(GlobPattern));
 	    TkSizeT len;
-	    const char *str = TkGetStringFromObj(globList[i], &len);
+	    const char *str = Tcl_GetStringFromObj(globList[i], &len);
 
 	    len = (len + 1) * sizeof(char);
 	    if (str[0] && str[0] != '*') {
@@ -377,7 +377,7 @@ AddClause(
 	    Tcl_DString osTypeDS;
 	    TkSizeT len;
 	    MacFileType *mfPtr = (MacFileType *)ckalloc(sizeof(MacFileType));
-	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
+	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 	    char *string;
 
 	    /*

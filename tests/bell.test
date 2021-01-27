@@ -2,7 +2,7 @@
 # It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
-# Copyright © 1998-2000 by Scriptics Corporation.
+# Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2

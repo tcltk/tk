@@ -1,8 +1,8 @@
 /*
  *	Image specifications and image element factory.
  *
- * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
- * Copyright (C) 2004 Joe English
+ * Copyright © 2004 Pat Thoyts <patthoyts@users.sf.net>
+ * Copyright © 2004 Joe English
  *
  * An imageSpec is a multi-element list; the first element
  * is the name of the default image to use, the remainder of the

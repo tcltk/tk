@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
+ * Copyright © Joe English, Pat Thoyts, Michael Kirkham
  *
  * ttk::progressbar widget.
  */
@@ -125,7 +125,6 @@ static void AnimateProgressProc(ClientData clientData)
     Progressbar *pb = (Progressbar *)clientData;
 
     pb->progress.timer = 0;
-
     if (AnimationEnabled(pb)) {
 	int phase = 0;
 	Tcl_GetIntFromObj(NULL, pb->progress.phaseObj, &phase);
@@ -133,9 +132,11 @@ static void AnimateProgressProc(ClientData clientData)
 	/*
 	 * Update -phase:
 	 */
+
 	++phase;
-	if (pb->progress.maxPhase)
-	    phase %= pb->progress.maxPhase;
+	if (phase > pb->progress.maxPhase) {
+	    phase = 0;
+	}
 	Tcl_DecrRefCount(pb->progress.phaseObj);
 	pb->progress.phaseObj = Tcl_NewWideIntObj(phase);
 	Tcl_IncrRefCount(pb->progress.phaseObj);
@@ -143,9 +144,9 @@ static void AnimateProgressProc(ClientData clientData)
 	/*
 	 * Reschedule:
 	 */
+
 	pb->progress.timer = Tcl_CreateTimerHandler(
 	    pb->progress.period, AnimateProgressProc, clientData);
-
 	TtkRedisplayWidget(&pb->core);
     }
 }

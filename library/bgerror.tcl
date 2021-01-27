@@ -6,8 +6,8 @@
 #	trace (like save it to a log).  This is adapted from work done by
 #	Donal K. Fellows.
 #
-# Copyright © 1998-2000 by Ajuba Solutions.
-# Copyright © 2007 by ActiveState Software Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007 ActiveState Software Inc.
 # Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # Copyright © 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 
