@@ -14,7 +14,7 @@ tcltest::loadTestedCommands
 tk useinputmethods 0
 
 testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7]
+testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
 testConstraint failsOnWindows [expr {![info exists ::env(CI)] || [tk windowingsystem] ne "win32"}]
 
 
