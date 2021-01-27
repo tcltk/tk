@@ -1708,9 +1708,9 @@ UnfilterLine(
     PNGImage *pngPtr)
 {
     unsigned char *thisLine =
-	    Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, NULL);
+	    Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (int *)NULL);
     unsigned char *lastLine =
-	    Tcl_GetByteArrayFromObj(pngPtr->lastLineObj, NULL);
+	    Tcl_GetByteArrayFromObj(pngPtr->lastLineObj, (int *)NULL);
 
 #define	PNG_FILTER_NONE		0
 #define	PNG_FILTER_SUB		1
@@ -1840,7 +1840,7 @@ DecodeLine(
     int colStep = 1;		/* Column increment each pass */
     int pixStep = 0;		/* extra pixelPtr increment each pass */
     unsigned char lastPixel[6];
-    unsigned char *p = Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, NULL);
+    unsigned char *p = Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (int *)NULL);
 
     p++;
     if (UnfilterLine(interp, pngPtr) == TCL_ERROR) {
