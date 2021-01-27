@@ -5,8 +5,8 @@
  *	text widgets, plus most of the other high-level functions related to
  *	tags.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1111,7 +1111,7 @@ FindTag(
     TkSizeT len;
     const char *str;
 
-    str = TkGetStringFromObj(tagName, &len);
+    str = Tcl_GetStringFromObj(tagName, &len);
     if (len == 3 && !strcmp(str, "sel")) {
 	return textPtr->selTagPtr;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Joe English.  Freely redistributable.
+ * Copyright © 2005 Joe English.  Freely redistributable.
  *
  * ttk::panedwindow widget implementation.
  *

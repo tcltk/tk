@@ -1,11 +1,11 @@
 /*
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Ajuba Solutions.
- * Copyright (c) 2002 ActiveState Corporation.
- * Copyright (c) 2004 Joe English
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Ajuba Solutions.
+ * Copyright © 2002 ActiveState Corporation.
+ * Copyright © 2004 Joe English
  */
 
 #include "tkInt.h"
@@ -325,7 +325,7 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-        text = TkGetStringFromObj(entryPtr->entry.placeholderObj, &length);
+        text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
         entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    text, length,
@@ -1312,7 +1312,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	(void)TkGetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
+	(void)Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
     } else {
 	foregroundObj = es.foregroundObj;
     }
@@ -1400,7 +1400,7 @@ EntryIndex(
     	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(indexObj, &length);
+    string = Tcl_GetStringFromObj(indexObj, &length);
 
     if (strncmp(string, "insert", length) == 0) {
 	*indexPtr = entryPtr->entry.insertPos;

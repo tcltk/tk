@@ -100,7 +100,7 @@ static int WinIsTty(int fd) {
      */
 
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9 && tclIntPlatStubsPtr->tclpIsAtty) {
+	if (tclStubsPtr->tcl_CreateFileHandler && tclIntPlatStubsPtr->tclpIsAtty) {
 	    /* We are running on Cygwin */
 	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
 	}
@@ -189,7 +189,7 @@ Tk_MainEx(
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
 
-    if (tclStubsPtr->reserved9) {
+    if (tclStubsPtr->tcl_CreateFileHandler) {
 	/* We are running win32 Tk under Cygwin, so let's check
 	 * whether the env("DISPLAY") variable or the -display
 	 * argument is set. If so, we really want to run the
@@ -221,7 +221,7 @@ Tk_MainEx(
 #if defined(_WIN32)
 #if !defined(STATIC_BUILD)
     /* If compiled for Win32 but running on Cygwin, don't use console */
-    if (!tclStubsPtr->reserved9)
+    if (!tclStubsPtr->tcl_CreateFileHandler)
 #endif
     Tk_InitConsoleChannels(interp);
 #endif
@@ -411,8 +411,14 @@ StdinProc(
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
+    Tcl_DString savedEncoding;
 
+    Tcl_DStringInit(&savedEncoding);
+    Tcl_GetChannelOption(NULL, chan, "-encoding", &savedEncoding);
+    Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
     count = Tcl_Gets(chan, &isPtr->line);
+    Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
+    Tcl_DStringFree(&savedEncoding);
 
     if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
 	if (isPtr->tty) {

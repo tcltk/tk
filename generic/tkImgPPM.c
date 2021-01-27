@@ -3,8 +3,8 @@
  *
  *	A photo image file handler for PPM (Portable PixMap) files.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -201,7 +201,7 @@ FileReadPPM(
     }
 
     if (srcY > 0) {
-	Tcl_Seek(chan, (Tcl_WideInt)(srcY * block.pitch), SEEK_CUR);
+	Tcl_Seek(chan, (long long)srcY * block.pitch, SEEK_CUR);
     }
 
     nLines = (MAX_MEMORY + block.pitch - 1) / block.pitch;
@@ -767,7 +767,7 @@ ReadPPMStringHeader(
     TkSizeT dataSize;
     unsigned char *dataBuffer;
 
-    dataBuffer = TkGetByteArrayFromObj(dataPtr, &dataSize);
+    dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
 
     /*
      * Read 4 space-separated fields from the string, ignoring comments (any

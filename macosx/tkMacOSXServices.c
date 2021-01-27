@@ -3,9 +3,9 @@
  *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
- * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2019 Marc Culler.
- * Copyright (c) 2010 Adrian Robert.
+ * Copyright © 2010-2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2019 Marc Culler.
+ * Copyright © 2010 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.

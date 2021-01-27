@@ -4,8 +4,8 @@
  *	This file provides functions that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter.
  *
- * Copyright (c) 1997 by Sun Microsystems, Inc.
- * Copyright (c) 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 1997 Sun Microsystems, Inc.
+ * Copyright © 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

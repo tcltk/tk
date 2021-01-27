@@ -3,10 +3,10 @@
  *
  *	This module implements the Mac-platform specific features of menus.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2012 Adrian Robert.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2012 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -725,7 +725,7 @@ TkpConfigureMenuEntry(
      * The -background and -foreground options are now ignored in Aqua.
      * See ticket [635167af14].
      */
-    
+
     NSDictionary fontAttributes = TkMacOSXNSFontAttributesForFont(
 	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
     NSMutableDictionary *attributes = [fontAttributes mutableCopy];
@@ -752,10 +752,10 @@ TkpConfigureMenuEntry(
     }
 
 #else
-    
+
     NSDictionary *attributes = TkMacOSXNSFontAttributesForFont(
 	Tk_GetFontFromObj(mePtr->menuPtr->tkwin, fontPtr));
-    
+
 #endif
 
     attributedTitle = [[NSAttributedString alloc] initWithString:title
@@ -801,7 +801,7 @@ TkpConfigureMenuEntry(
 		     * have been added by the system.  See [7185d26cf4].
 		     */
 
-		    for (int i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
+		    for (TkSizeT i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 			NSMenuItem *item = (NSMenuItem *) submePtr->platformEntryData;
 			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];

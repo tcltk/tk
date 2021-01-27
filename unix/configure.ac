@@ -1,10 +1,10 @@
-#! /bin/bash -norc
+! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
 AC_INIT([tk],[8.7])
-AC_PREREQ(2.69)
+AC_PREREQ([2.69])
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
@@ -17,8 +17,9 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     /* Undef unused package specific autoheader defines so that we can
      * include both tclConfig.h and tkConfig.h at the same time: */
     /* override */ #undef PACKAGE_NAME
-    /* override */ #undef PACKAGE_STRING
     /* override */ #undef PACKAGE_TARNAME
+    /* override */ #undef PACKAGE_VERSION
+    /* override */ #undef PACKAGE_STRING
     #endif /* _TKCONFIG */])
 ])
 
@@ -92,7 +93,7 @@ if test -z "$no_pipe" && test -n "$GCC"; then
     AC_CACHE_CHECK([if the compiler understands -pipe],
 	tcl_cv_cc_pipe, [
 	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -pipe"
-	AC_TRY_COMPILE(,, tcl_cv_cc_pipe=yes, tcl_cv_cc_pipe=no)
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[tcl_cv_cc_pipe=yes],[tcl_cv_cc_pipe=no])
 	CFLAGS=$hold_cflags])
     if test $tcl_cv_cc_pipe = yes; then
 	CFLAGS="$CFLAGS -pipe"
@@ -145,7 +146,7 @@ fi
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
         Different --prefix selected for Tk and Tcl!
-        [[package require Tk]] may not work correctly in tclsh.])
+        [[package require tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------
@@ -159,8 +160,7 @@ fi
 #--------------------------------------------------------------------
 
 AC_CACHE_CHECK([for fd_set in sys/types], tcl_cv_type_fd_set, [
-    AC_TRY_COMPILE([#include <sys/types.h>],[fd_set readMask, writeMask;],
-	tcl_cv_type_fd_set=yes, tcl_cv_type_fd_set=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]], [[fd_set readMask, writeMask;]])],[tcl_cv_type_fd_set=yes],[tcl_cv_type_fd_set=no])])
 tk_ok=$tcl_cv_type_fd_set
 if test $tk_ok = no; then
     AC_CACHE_CHECK([for fd_mask in sys/select], tcl_cv_grep_fd_mask, [
@@ -179,8 +179,7 @@ fi
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
-AC_CHECK_HEADERS(sys/time.h)
-AC_HEADER_TIME
+AC_CHECK_HEADERS_ONCE([sys/time.h])
 
 #--------------------------------------------------------------------
 #	Check for various typedefs and provide substitutes if
@@ -190,48 +189,17 @@ AC_HEADER_TIME
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_TYPE_UID_T
 
-AC_CHECK_TYPE([intptr_t], [
-    AC_DEFINE([HAVE_INTPTR_T], 1, [Do we have the intptr_t type?])], [
-    AC_CACHE_CHECK([for pointer-size signed integer type], tcl_cv_intptr_t, [
-    for tcl_cv_intptr_t in "int" "long" "long long" none; do
-	if test "$tcl_cv_intptr_t" != none; then
-	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
-		    [[sizeof (void *) <= sizeof ($tcl_cv_intptr_t)]])],
-		[tcl_ok=yes], [tcl_ok=no])
-	    test "$tcl_ok" = yes && break; fi
-    done])
-    if test "$tcl_cv_intptr_t" != none; then
-	AC_DEFINE_UNQUOTED([intptr_t], [$tcl_cv_intptr_t], [Signed integer
-	   type wide enough to hold a pointer.])
-    fi
-])
-AC_CHECK_TYPE([uintptr_t], [
-    AC_DEFINE([HAVE_UINTPTR_T], 1, [Do we have the uintptr_t type?])], [
-    AC_CACHE_CHECK([for pointer-size unsigned integer type], tcl_cv_uintptr_t, [
-    for tcl_cv_uintptr_t in "unsigned int" "unsigned long" "unsigned long long" \
-	    none; do
-	if test "$tcl_cv_uintptr_t" != none; then
-	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
-		    [[sizeof (void *) <= sizeof ($tcl_cv_uintptr_t)]])],
-		[tcl_ok=yes], [tcl_ok=no])
-	    test "$tcl_ok" = yes && break; fi
-    done])
-    if test "$tcl_cv_uintptr_t" != none; then
-	AC_DEFINE_UNQUOTED([uintptr_t], [$tcl_cv_uintptr_t], [Unsigned integer
-	   type wide enough to hold a pointer.])
-    fi
-])
+AC_CHECK_TYPES([intptr_t, uintptr_t],,,[[
+#include <stdint.h>
+]])
 
 #-------------------------------------------
 #     In OS/390 struct pwd has no pw_gecos field
 #-------------------------------------------
 
 AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
-    AC_TRY_COMPILE([#include <pwd.h>],
-	    [struct passwd pwd; (void)pwd.pw_gecos;],
-	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pwd.h>]], [[struct passwd pwd; (void)pwd.pw_gecos;]])],[tcl_cv_pwd_pw_gecos=yes],[tcl_cv_pwd_pw_gecos=no])])
 if test $tcl_cv_pwd_pw_gecos = yes; then
     AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
 fi
@@ -243,8 +211,7 @@ fi
 if test "`uname -s`" = "Darwin" ; then
     AC_MSG_CHECKING([whether to use Aqua])
     AC_ARG_ENABLE(aqua,
-	AC_HELP_STRING([--enable-aqua=yes|no],
-	    [use Aqua windowingsystem on Mac OS X (default: no)]),
+	AS_HELP_STRING([--enable-aqua=yes|no],[use Aqua windowingsystem on Mac OS X (default: no)]),
 	[tk_aqua=$enableval], [tk_aqua=no])
     if test $tk_aqua = yes -o $tk_aqua = cocoa; then
 	tk_aqua=yes
@@ -270,8 +237,7 @@ if test "`uname -s`" = "Darwin" ; then
 		done
 		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
 		LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
-		AC_TRY_LINK([#include <X11/Xlib.h>], [XrmInitialize();],
-		    tcl_cv_lib_x11_64=yes, tcl_cv_lib_x11_64=no)
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <X11/Xlib.h>]], [[XrmInitialize();]])],[tcl_cv_lib_x11_64=yes],[tcl_cv_lib_x11_64=no])
 		for v in CFLAGS CPPFLAGS LDFLAGS; do
 		    eval $v'="$hold_'$v'"'
 		done])
@@ -290,15 +256,14 @@ if test "`uname -s`" = "Darwin" ; then
 	AC_CACHE_CHECK([if ld accepts -weak-l flag], tcl_cv_ld_weak_l, [
 	    hold_ldflags=$LDFLAGS
 	    LDFLAGS="$LDFLAGS -Wl,-weak-lm"
-	    AC_TRY_LINK([#include <math.h>], [double f = sin(1.0);],
-		tcl_cv_ld_weak_l=yes, tcl_cv_ld_weak_l=no)
+	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[double f = sin(1.0);]])],[tcl_cv_ld_weak_l=yes],[tcl_cv_ld_weak_l=no])
 	    LDFLAGS=$hold_ldflags])
     fi
     AC_CHECK_HEADERS(AvailabilityMacros.h)
     if test "$ac_cv_header_AvailabilityMacros_h" = yes; then
 	AC_CACHE_CHECK([if weak import is available], tcl_cv_cc_weak_import, [
 	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    AC_TRY_LINK([
+	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
 		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
 		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
@@ -307,8 +272,7 @@ if test "`uname -s`" = "Darwin" ; then
 		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
 		    #endif
 		    int rand(void) __attribute__((weak_import));
-		], [rand();],
-		tcl_cv_cc_weak_import=yes, tcl_cv_cc_weak_import=no)
+		]], [[rand();]])],[tcl_cv_cc_weak_import=yes],[tcl_cv_cc_weak_import=no])
 	    CFLAGS=$hold_cflags])
 	if test $tcl_cv_cc_weak_import = yes; then
 	    AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
@@ -316,7 +280,7 @@ if test "`uname -s`" = "Darwin" ; then
 	AC_CACHE_CHECK([if Darwin SUSv3 extensions are available],
 	    tcl_cv_cc_darwin_c_source, [
 	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    AC_TRY_COMPILE([
+	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
 		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
 		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
@@ -326,7 +290,7 @@ if test "`uname -s`" = "Darwin" ; then
 		    #endif
 		    #define _DARWIN_C_SOURCE 1
 		    #include <sys/cdefs.h>
-		],,tcl_cv_cc_darwin_c_source=yes, tcl_cv_cc_darwin_c_source=no)
+		]], [[]])],[tcl_cv_cc_darwin_c_source=yes],[tcl_cv_cc_darwin_c_source=no])
 	    CFLAGS=$hold_cflags])
 	if test $tcl_cv_cc_darwin_c_source = yes; then
 	    AC_DEFINE(_DARWIN_C_SOURCE, 1,
@@ -339,7 +303,10 @@ fi
 
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework Security"
+    if test -d /System/Library/Frameworks/UserNotifications.framework; then
+        LIBS="$LIBS -framework UserNotifications"
+    fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
@@ -421,15 +388,15 @@ if test -d /usr/include/mit -a $tk_aqua = no; then
     CFLAGS="$CFLAGS -I/usr/include/mit"
     tk_oldLibs=$LIBS
     LIBS="$LIBS -lX11-mit"
-    AC_TRY_LINK([
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	#include <X11/Xlib.h>
-    ], [
+    ]], [[
 	XOpenDisplay(0);
-    ], [
+    ]])],[
 	AC_MSG_RESULT([yes])
 	XLIBSW="-lX11-mit"
 	XINCLUDES="-I/usr/include/mit"
-    ], AC_MSG_RESULT([no]))
+    ],[AC_MSG_RESULT(no)])
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
@@ -441,8 +408,7 @@ fi
 if test $tk_aqua = no; then
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
-	AC_HELP_STRING([--enable-xft],
-	    [use freetype/fontconfig/xft (default: on)]),
+	AS_HELP_STRING([--enable-xft],[use freetype/fontconfig/xft (default: on)]),
 	[enable_xft=$enableval], [enable_xft="default"])
     XFT_CFLAGS=""
     XFT_LIBS=""
@@ -537,8 +503,7 @@ if test $tk_aqua = no; then
     xss_lib_found=no
     AC_MSG_CHECKING([whether to try to use XScreenSaver])
     AC_ARG_ENABLE(xss,
-	AC_HELP_STRING([--enable-xss],
-	    [use XScreenSaver for activity timer (default: on)]),
+	AS_HELP_STRING([--enable-xss],[use XScreenSaver for activity timer (default: on)]),
 	[enable_xss=$enableval], [enable_xss=yes])
     if test "$enable_xss" = "no" ; then
 	AC_MSG_RESULT([$enable_xss])
@@ -618,6 +583,9 @@ if test "`uname -s`" = "Darwin" ; then
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
+    if test "${SHARED_BUILD}" = "0"; then
+	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
+    fi
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done

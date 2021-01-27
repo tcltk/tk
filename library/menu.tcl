@@ -6,7 +6,7 @@
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
-# Copyright © 1998-1999 by Scriptics Corporation.
+# Copyright © 1998-1999 Scriptics Corporation.
 # Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
