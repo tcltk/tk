@@ -1712,12 +1712,12 @@ PostProcessEntry(
     if (mePtr->labelPtr == NULL) {
 	mePtr->labelLength = 0;
     } else {
-	(void)TkGetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
+	(void)Tcl_GetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
     }
     if (mePtr->accelPtr == NULL) {
 	mePtr->accelLength = 0;
     } else {
-	(void)TkGetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
+	(void)Tcl_GetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
     }
 
     /*

@@ -1116,7 +1116,7 @@ ListboxBboxSubCmd(
 	    return result;
 	}
 
-	stringRep = TkGetStringFromObj(el, &stringLen);
+	stringRep = Tcl_GetStringFromObj(el, &stringLen);
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
@@ -2079,7 +2079,7 @@ DisplayListbox(
 	 */
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = TkGetStringFromObj(curElement, &stringLen);
+        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
         textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -2263,7 +2263,7 @@ ListboxComputeGeometry(
 	    if (result != TCL_OK) {
 		continue;
 	    }
-	    text = TkGetStringFromObj(element, &textLength);
+	    text = Tcl_GetStringFromObj(element, &textLength);
 	    Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, text, textLength);
 	    if (pixelWidth > listPtr->maxWidth) {
@@ -2341,7 +2341,7 @@ ListboxInsertSubCmd(
 	 * if so, update our notion of "widest."
 	 */
 
-	stringRep = TkGetStringFromObj(objv[i], &length);
+	stringRep = Tcl_GetStringFromObj(objv[i], &length);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	if (pixelWidth > listPtr->maxWidth) {
 	    listPtr->maxWidth = pixelWidth;
@@ -2500,7 +2500,7 @@ ListboxDeleteSubCmd(
 
 	if (widthChanged == 0) {
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &element);
-	    stringRep = TkGetStringFromObj(element, &length);
+	    stringRep = Tcl_GetStringFromObj(element, &length);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	    if (pixelWidth == listPtr->maxWidth) {
 		widthChanged = 1;
@@ -3148,7 +3148,7 @@ ListboxFetchSelection(
 	    }
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i,
 		    &curElement);
-	    stringRep = TkGetStringFromObj(curElement, &stringLen);
+	    stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
 	    Tcl_DStringAppend(&selection, stringRep, stringLen);
 	    needNewline = 1;
 	}

@@ -44,7 +44,7 @@ static const KeySym keymap[] = {
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*75 0x4B*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*80 0x50*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*85 0x55*/
-    NoSymbol, XK_Win_L, XK_Win_R, XK_App, NoSymbol, /*90 0x5A*/
+    NoSymbol, XK_Super_L, XK_Super_R, XK_Menu, NoSymbol, /*90 0x5A*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*95 0x5F*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*100 0x64*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*105 0x69*/

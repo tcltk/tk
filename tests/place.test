@@ -507,16 +507,17 @@ test place-14.1 {memory leak testing} -constraints memory -setup {
     frame .f
     frame .f.f
     stress {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        place forget .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	place forget .f.f
     } {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        pack .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	pack .f.f
+	update; # Needed because of TIP #518, handle <<NoManagedChild>> event.
     } {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        destroy .f
-        frame .f
-        frame .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	destroy .f
+	frame .f
+	frame .f.f
     }
 } -cleanup {
     destroy .f
