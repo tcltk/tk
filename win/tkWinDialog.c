@@ -2061,7 +2061,7 @@ MakeFilter(
 	if (valuePtr == NULL) {
 	    len = 0;
 	} else {
-	    (void) TkGetStringFromObj(valuePtr, &len);
+	    (void) Tcl_GetStringFromObj(valuePtr, &len);
 	}
 
 	/*

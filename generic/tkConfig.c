@@ -684,7 +684,7 @@ DoObjConfig(
 	}
 	if (internalPtr != NULL) {
 	    if (valuePtr != NULL) {
-		value = TkGetStringFromObj(valuePtr, &length);
+		value = Tcl_GetStringFromObj(valuePtr, &length);
 		newStr = (char *)ckalloc(length + 1);
 		strcpy(newStr, value);
 	    } else {

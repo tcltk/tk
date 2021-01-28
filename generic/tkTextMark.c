@@ -133,7 +133,7 @@ TkTextMarkCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "markName ?gravity?");
 	    return TCL_ERROR;
 	}
-	str = TkGetStringFromObj(objv[3], &length);
+	str = Tcl_GetStringFromObj(objv[3], &length);
 	if (length == 6 && !strcmp(str, "insert")) {
 	    markPtr = textPtr->insertMarkPtr;
 	} else if (length == 7 && !strcmp(str, "current")) {
@@ -160,7 +160,7 @@ TkTextMarkCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
 	    return TCL_OK;
 	}
-	str = TkGetStringFromObj(objv[4],&length);
+	str = Tcl_GetStringFromObj(objv[4],&length);
 	c = str[0];
 	if ((c == 'l') && (strncmp(str, "left", length) == 0)) {
 	    newTypePtr = &tkTextLeftMarkType;

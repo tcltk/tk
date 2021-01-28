@@ -1683,6 +1683,8 @@ GetPolygonIndex(
     if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
+	} else if (idx >= INT_MAX - ((INT_MAX) % count)) {
+	    idx = count;
 	} else {
 	    idx = (idx & (TkSizeT)-2) % count;
 	}
@@ -1690,7 +1692,7 @@ GetPolygonIndex(
 	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(obj, &length);
+    string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == '@') {
 	int i;

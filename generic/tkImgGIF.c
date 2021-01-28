@@ -765,7 +765,7 @@ StringMatchGIF(
     (void)format;
     (void)dummy;
 
-    data = TkGetByteArrayFromObj(dataObj, &length);
+    data = Tcl_GetByteArrayFromObj(dataObj, &length);
 
     /*
      * Header is a minimum of 10 bytes.
@@ -833,7 +833,7 @@ StringReadGIF(
     MFile handle, *hdlPtr = &handle;
     TkSizeT length;
     const char *xferFormat;
-    unsigned char *data = TkGetByteArrayFromObj(dataObj, &length);
+    unsigned char *data = Tcl_GetByteArrayFromObj(dataObj, &length);
 
     mInit(data, hdlPtr, length);
 

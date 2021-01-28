@@ -2690,7 +2690,7 @@ GetEntryIndex(
 	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(indexObj, &length);
+    string = Tcl_GetStringFromObj(indexObj, &length);
 
     switch (string[0]) {
     case 'a':
@@ -4433,7 +4433,7 @@ SpinboxInvoke(
 
 		Tcl_ListObjGetElements(interp, sbPtr->listObj, &listc, &listv);
 		for (i = 0; i < listc; i++) {
-		    bytes = TkGetStringFromObj(listv[i], &elemLen);
+		    bytes = Tcl_GetStringFromObj(listv[i], &elemLen);
 		    if ((length == elemLen) &&
 			    (memcmp(bytes, entryPtr->string,
 				    length) == 0)) {

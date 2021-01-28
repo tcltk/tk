@@ -1436,15 +1436,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
     MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
 #endif
 
-#if TCL_MAJOR_VERSION > 8
-#define TkGetStringFromObj(objPtr, lenPtr) \
-	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
-	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
-MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
-	size_t *lengthPtr);
-#else
-#define TkGetStringFromObj Tcl_GetStringFromObj
-#define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
+#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
+#   define tcl_CreateFileHandler reserved9
 #endif
 
 /*
