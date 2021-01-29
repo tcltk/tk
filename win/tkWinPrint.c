@@ -1,16 +1,15 @@
 /*
  * tkWinPrint.c --
- *
+ * 
  *      This module implements Win32 printer access.
- *
- * Copyright © 1998 Bell Labs Innovations for Lucent Technologies.
- * Copyright © 2018 Microsoft Corporation.
+ * 
+ * Copyright © 1998 Bell Labs Innovations for Lucent Technologies. 
+ * Copyright © 2018 018 Microsoft Corporation. 
  * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
- *
+ * 
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
 
 
 #include <windows.h>
@@ -21,20 +20,40 @@
 #include "tkWinInt.h"
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>   /* For floor(), used later */
+#include <math.h>		
+
+/*Declaration for functions used later in this file.*/
+HPALETTE WinGetSystemPalette(void);
+static int WinPrint( TCL_UNUSED(void *), Tcl_Interp * interp, int objc,
+		     Tcl_Obj * const *objv);
+int PrintInit(Tcl_Interp * interp;)
+
+/*
+ * --------------------------------------------------------------------------
+ * 
+ * WinGetSystemPalette --
+ * 
+ *      Sets a default color palette for bitmap rendering on Win32. 
+ * 
+ * Results: 
+ *
+ *      Sets the palette.
+ * 
+ * -------------------------------------------------------------------------
+ */
 
 HPALETTE
 WinGetSystemPalette(void)
 {
-    HDC hDC;
-    HPALETTE hPalette;
-    DWORD flags;
+    HDC		    hDC;
+    HPALETTE	    hPalette;
+    DWORD	    flags;
 
     hPalette = NULL;
     hDC = GetDC(NULL);		/* Get the desktop device context */
     flags = GetDeviceCaps(hDC, RASTERCAPS);
     if (flags & RC_PALETTE) {
-	LOGPALETTE *palettePtr;
+	LOGPALETTE     *palettePtr;
 
 	palettePtr = (LOGPALETTE *)
 	    GlobalAlloc(GPTR, sizeof(LOGPALETTE) + 256 * sizeof(PALETTEENTRY));
@@ -51,40 +70,41 @@ WinGetSystemPalette(void)
 
 /*
  * --------------------------------------------------------------------------
- *
+ * 
  * WinPrint --
- *
- *	Prints a snapshot of a Tk_Window to the designated printer.
- *
- * Results:
- *	Returns a standard Tcl result.  If an error occurred
- *	TCL_ERROR is returned and interp->result will contain an
- *	error message.
- *
+ * 
+ *      Prints a snapshot of a Tk_Window to the designated printer.
+ * 
+ * Results: 
+ *      Returns a standard Tcl result.  If an error occurred TCL_ERROR is
+ *      returned and interp->result will contain an error message.
+ * 
  * -------------------------------------------------------------------------
  */
+
 static int
 WinPrint(
-    TCL_UNUSED(void *),
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const *objv)
+	 TCL_UNUSED(void *),
+	 Tcl_Interp * interp,
+	 int objc,
+	 Tcl_Obj * const *objv)
 {
-    BITMAPINFO bi;
-    DIBSECTION ds;
-    HBITMAP hBitmap;
-    HPALETTE hPalette;
-    HDC hDC, printDC, memDC;
-    void *data;
-    Tk_Window tkwin;
-    TkWinDCState state;
-    int result;
-    PRINTDLG pd;
-    DOCINFO di;
-    double pageWidth, pageHeight;
-    int jobId;
-    Tcl_DString dString;
-    char *path;
+    BITMAPINFO	    bi;
+    DIBSECTION	    ds;
+    HBITMAP	    hBitmap;
+    HPALETTE	    hPalette;
+    HDC		    hDC, printDC, memDC;
+    void           *data;
+    Tk_Window	    tkwin;
+    TkWinDCState    state;
+    int		    result;
+    PRINTDLG	    pd;
+    DOCINFO	    di;
+    double	    pageWidth, pageHeight;
+    int		    jobId;
+    Tcl_DString	    dString;
+    char           *path;
+    double          scale, sx, sy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "window");
@@ -99,10 +119,11 @@ WinPrint(
     if (Tk_WindowId(tkwin) == None) {
 	Tk_MakeWindowExist(tkwin);
     }
-
     result = TCL_ERROR;
     hDC = TkWinGetDrawableDC(Tk_Display(tkwin), Tk_WindowId(tkwin), &state);
 
+
+    /* Initialize bitmap to contain window contents/data. */
     ZeroMemory(&bi, sizeof(bi));
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = Tk_Width(tkwin);
@@ -126,91 +147,92 @@ WinPrint(
 	Tcl_AppendResult(interp, "can't blit \"", Tk_PathName(tkwin), NULL);
 	goto done;
     }
-    /* Now that the DIB contains the image of the window, get the
-     * databits and write them to the printer device, stretching the
-     * image to the fit the printer's resolution.  */
+    /*
+     * Now that the DIB contains the image of the window, get the databits
+     * and write them to the printer device, stretching the image to the fit
+     * the printer's resolution.
+     */
     if (GetObject(hBitmap, sizeof(DIBSECTION), &ds) == 0) {
-      Tcl_AppendResult(interp, "can't get DIB object", NULL);
+	Tcl_AppendResult(interp, "can't get DIB object", NULL);
 	goto done;
     }
-       if (PrintDlg(&pd) == FALSE) {
-      return TCL_ERROR;
-       } else {
-    printDC = pd.hDC;
-    //   GlobalUnlock(hMem);
-    //    GlobalFree(hMem);
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
-	goto done;
-    }
-	double scale, sx, sy;
+    /* Initialize print dialog.  */
+    ZeroMemory(&pd, sizeof(pd));
+    pd.lStructSize = sizeof(pd);
+    pd.Flags = PD_RETURNDC;
+
+    if (PrintDlg(&pd) == TRUE) {
+	printDC = pd.hDC;
+
+	if (printDC == NULL) {
+	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
+	    goto done;
+	}
 
 	/* Get the resolution of the printer device. */
-	sx = (double)GetDeviceCaps(printDC, HORZRES)/(double)Tk_Width(tkwin);
-	sy = (double)GetDeviceCaps(printDC, VERTRES)/(double)Tk_Height(tkwin);
+	sx = (double)GetDeviceCaps(printDC, HORZRES) / (double)Tk_Width(tkwin);
+	sy = (double)GetDeviceCaps(printDC, VERTRES) / (double)Tk_Height(tkwin);
 	scale = fmin(sx, sy);
 	pageWidth = scale * Tk_Width(tkwin);
 	pageHeight = scale * Tk_Height(tkwin);
 
-    ZeroMemory(&di, sizeof(di));
-    di.cbSize = sizeof(di);
-    Tcl_DStringAppend(&dString, "Snapshot of \"", -1);
-    Tcl_DStringAppend(&dString, Tk_PathName(tkwin), -1);
-    Tcl_DStringAppend(&dString, "\"", -1);
-    di.lpszDocName = Tcl_DStringValue(&dString);
-    jobId = StartDoc(printDC, &di);
-    if (jobId <= 0) {
-      Tcl_AppendResult(interp, "can't start document", NULL);
-	goto done;
-    }
-    if (StartPage(printDC) <= 0) {
-      Tcl_AppendResult(interp, "error starting page", NULL);
-	goto done;
-    }
-    StretchDIBits(printDC, 0, 0, (int) pageWidth, (int) pageHeight, 0, 0,
-	Tk_Width(tkwin), Tk_Height(tkwin), ds.dsBm.bmBits,
-	(LPBITMAPINFO)&ds.dsBmih, DIB_RGB_COLORS, SRCCOPY);
-    EndPage(printDC);
-    EndDoc(printDC);
-    DeleteDC(printDC);
-    //   Tcl_SetResult(interp, Blt_Itoa(jobId), TCL_VOLATILE);
-    result = TCL_OK;
+	ZeroMemory(&di, sizeof(di));
+	di.cbSize = sizeof(di);
+	Tcl_DStringAppend(&dString, "Snapshot of \"", -1);
+	Tcl_DStringAppend(&dString, Tk_PathName(tkwin), -1);
+	Tcl_DStringAppend(&dString, "\"", -1);
+	di.lpszDocName = Tcl_DStringValue(&dString);
+	jobId = StartDoc(printDC, &di);
+	if (jobId <= 0) {
+	    Tcl_AppendResult(interp, "can't start document", NULL);
+	    goto done;
+	}
+	if (StartPage(printDC) <= 0) {
+	    Tcl_AppendResult(interp, "error starting page", NULL);
+	    goto done;
+	}
+	StretchDIBits(printDC, 0, 0, pageWidth, pageHeight, 0, 0,
+		      Tk_Width(tkwin), Tk_Height(tkwin), ds.dsBm.bmBits,
+		      (LPBITMAPINFO) & ds.dsBmih, DIB_RGB_COLORS, SRCCOPY);
+	EndPage(printDC);
+	EndDoc(printDC);
+	DeleteDC(printDC);
+	result = TCL_OK;
 
-  done:
-    Tcl_DStringFree(&dString);
+done:
+	Tcl_DStringFree(&dString);
 
-    DeleteObject(hBitmap);
-    //    DeleteDC(memDC);
-    TkWinReleaseDrawableDC(Tk_WindowId(tkwin), hDC, &state);
-    if (hPalette != NULL) {
-	DeleteObject(hPalette);
+	DeleteObject(hBitmap);
+	DeleteDC(memDC);
+	TkWinReleaseDrawableDC(Tk_WindowId(tkwin), hDC, &state);
+	if (hPalette != NULL) {
+	    DeleteObject(hPalette);
+	}
+    } else {
+	return TCL_ERROR;
     }
-       }
 
     return result;
 }
 
 
 /*
- *----------------------------------------------------------------------
- *
+ * ----------------------------------------------------------------------
+ * 
  * PrintInit  --
- *
- * 	Initialize this package and create script-level commands.
- *
- * Results:
- *	Initialization of code.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
+ * 
+ *      Initialize this package and create script-level commands.
+ * 
+ * Results: 
+ *      Initialization of code.
+ * 
+ * ----------------------------------------------------------------------
  */
 
 
 int
 PrintInit(
-    Tcl_Interp *interp)
+	  Tcl_Interp * interp)
 {
     Tcl_CreateObjCommand(interp, "winprint", WinPrint, NULL, NULL);
     return TCL_OK;
