@@ -626,7 +626,7 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
+${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	rm -f $@
 	@MAKE_LIB@
 	@if test "${ZIPFS_BUILD}" = "1" ; then \
