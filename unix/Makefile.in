@@ -544,6 +544,28 @@ AQUA_SRCS = \
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 
+###
+# Tip 430 - ZipFS Modifications
+###
+
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_ROOT		= libtk.vfs
+TK_VFS_PATH		= ${TK_VFS_ROOT}/tk_library
+
+HOST_CC			= @CC_FOR_BUILD@
+HOST_EXEEXT		= @EXEEXT_FOR_BUILD@
+HOST_OBJEXT		= @OBJEXT_FOR_BUILD@
+ZIPFS_BUILD		= @ZIPFS_BUILD@
+NATIVE_ZIP		= @ZIP_PROG@
+ZIP_PROG_OPTIONS	= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH	= @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+INSTALL_LIBRARIES	= @INSTALL_LIBRARIES@
+INSTALL_MSGS		= @INSTALL_MSGS@
+
+ZIP_INSTALL_OBJS	= @ZIP_INSTALL_OBJS@
+
+
 AQUA_RESOURCES = \
 	$(MAC_OSX_DIR)/tkAboutDlg.r $(MAC_OSX_DIR)/tkMacOSXCursors.r \
 	$(MAC_OSX_DIR)/tkMacOSXXCursors.r
@@ -583,11 +605,35 @@ binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
 
+tkzipfile: ${TK_ZIP_FILE}
+
+${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
+	@rm -rf ${TK_VFS_ROOT}
+	@mkdir -p ${TK_VFS_PATH}
+	@echo "creating ${TK_VFS_PATH} (prepare compression)"
+	@if \
+	    ln -s $(TOP_DIR)/library/* ${TK_VFS_PATH}/; \
+	then : ; else \
+	    cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+	fi
+	@find ${TK_VFS_ROOT} -type d -empty -delete
+	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
+	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
+	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
+	    echo 'cd ${TK_VFS_ROOT} &&' $$zip '${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}'; \
+	    cd ${TK_VFS_ROOT} && \
+	    $$zip ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH} >/dev/null)
+
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
 ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
 	rm -f $@
 	@MAKE_LIB@
+	@if test "${ZIPFS_BUILD}" = "1" ; then \
+	    cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
+	    ${NATIVE_ZIP} -A ${LIB_FILE} \
+	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
@@ -904,7 +950,8 @@ Makefile: $(UNIX_DIR)/Makefile.in
 
 clean:
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
-		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
+		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
+		 *.zip *.vfs
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
