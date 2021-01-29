@@ -4,7 +4,7 @@
  *      This module implements Win32 printer access.
  * 
  * Copyright © 1998 Bell Labs Innovations for Lucent Technologies. 
- * Copyright © 2018 018 Microsoft Corporation. 
+ * Copyright © 2018 Microsoft Corporation. 
  * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
  * 
  * See the file "license.terms" for information on usage and redistribution of
