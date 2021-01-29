@@ -6,9 +6,9 @@ dnl	to configure the system for the local environment.
 AC_INIT([tk],[8.7])
 AC_PREREQ([2.69])
 
+AC_CONFIG_HEADERS([tkConfig.h:../unix/tkConfig.h.in])
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
-    AC_CONFIG_HEADERS([tkConfig.h:../unix/tkConfig.h.in])
     AC_CONFIG_COMMANDS_PRE([DEFS="-DHAVE_TK_CONFIG_H  -imacros tkConfig.h"])
     AH_TOP([
     #ifndef _TKCONFIG
