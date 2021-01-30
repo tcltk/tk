@@ -3,9 +3,9 @@
  * 
  *      This module implements Win32 printer access.
  * 
- * Copyright © 1998 Bell Labs Innovations for Lucent Technologies. 
- * Copyright © 2018 Microsoft Corporation. 
- * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
+ * Copyright Â© 1998 Bell Labs Innovations for Lucent Technologies. 
+ * Copyright Â© 2018 018 Microsoft Corporation. 
+ * Copyright Â© 2021 Kevin Walzer/WordTech Communications LLC.
  * 
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,6 +13,7 @@
 
 
 #include <windows.h>
+#include <winspool.h>
 #include <commdlg.h>
 #include <wingdi.h>
 #include <tcl.h>
@@ -24,9 +25,11 @@
 
 /*Declaration for functions used later in this file.*/
 HPALETTE WinGetSystemPalette(void);
-static int WinPrint( TCL_UNUSED(void *), Tcl_Interp * interp, int objc,
+static int WinCanvasPrint(TCL_UNUSED(void *), Tcl_Interp * interp, int objc,
+		    Tcl_Obj * const *objv);
+static int WinTextPrint(TCL_UNUSED(void *), Tcl_Interp * interp, int objc,
 		     Tcl_Obj * const *objv);
-int PrintInit(Tcl_Interp * interp;)
+int PrintInit(Tcl_Interp * interp);
 
 /*
  * --------------------------------------------------------------------------
@@ -71,19 +74,18 @@ WinGetSystemPalette(void)
 /*
  * --------------------------------------------------------------------------
  * 
- * WinPrint --
+ * WinCanvasPrint --
  * 
- *      Prints a snapshot of a Tk_Window to the designated printer.
+ *      Prints a snapshot of a Tk_Window/canvas to the designated printer.
  * 
  * Results: 
- *      Returns a standard Tcl result.  If an error occurred TCL_ERROR is
- *      returned and interp->result will contain an error message.
+ *      Returns a standard Tcl result.  
  * 
  * -------------------------------------------------------------------------
  */
 
 static int
-WinPrint(
+WinCanvasPrint(
 	 TCL_UNUSED(void *),
 	 Tcl_Interp * interp,
 	 int objc,
@@ -219,6 +221,114 @@ done:
 /*
  * ----------------------------------------------------------------------
  * 
+ * WinTextPrint  --
+ * 
+ *      Prints a character buffer to the designated printer.
+ * 
+ * Results: 
+ *      Returns a standard Tcl result.  
+ * 
+ * ----------------------------------------------------------------------
+ */
+
+
+static int WinTextPrint(TCL_UNUSED(void*),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const *objv)
+{
+
+    BOOL bStatus;
+    HANDLE hPrinter;
+    BOOL printDlgReturn;
+    PRINTDLG printDlgInfo = { 0 };
+    PDEVMODE returnedDevmode = NULL;
+    PDEVMODE localDevmode = NULL;
+    DOC_INFO_1 DocInfo;
+    DWORD dwJob;
+    DWORD dwBytesWritten;
+    LPWSTR localPrinterName;
+    LPBYTE lpData;
+    DWORD dwCount;
+
+     if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "text");
+	return TCL_ERROR;
+    }
+
+    char *data = Tcl_GetString(objv[1]);
+    int *len = strlen(data);
+
+    lpData = (LPBYTE) data;
+    dwCount = (DWORD) len;
+
+    /*Initialize the print dialog box's data structure. */
+    printDlgInfo.lStructSize = sizeof(printDlgInfo);
+
+    /*Display the printer dialog and retrieve the printer DC */
+    printDlgReturn = PrintDlg(&printDlgInfo);
+
+    /*Lock the handle to get a pointer to the DEVMODE structure. */
+    returnedDevmode = (PDEVMODE) GlobalLock(printDlgInfo.hDevMode);
+
+    localDevmode = (LPDEVMODE) HeapAlloc(        GetProcessHeap(),
+        HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
+        returnedDevmode->dmSize);
+
+    if (NULL != localDevmode)
+    {
+        memcpy(            (LPVOID) localDevmode,
+            (LPVOID) returnedDevmode,
+            returnedDevmode->dmSize);
+
+        /*Save the printer name from the DEVMODE structure. 
+        /*This is done here just to illustrate how to access 
+        /*the name field. The printer name can also be accessed
+        /*by referring to the dmDeviceName in the local 
+        /*copy of the DEVMODE structure. */
+        localPrinterName = localDevmode->dmDeviceName;
+    }
+
+    bStatus = OpenPrinter(localPrinterName, &hPrinter, NULL);
+
+    DocInfo.pDocName = (LPTSTR) _T("Tk Output");
+    DocInfo.pOutputFile = NULL;
+    DocInfo.pDatatype = (LPTSTR) _T("RAW");
+
+    /*Inform the spooler the document is beginning. */
+    dwJob = StartDocPrinter(hPrinter, 1, (LPBYTE) &DocInfo);
+    if (dwJob > 0)
+    {
+        /*Start a page.  */
+        bStatus = StartPagePrinter(hPrinter);
+        if (bStatus)
+        {
+            /*Send the data to the printer.  */
+            bStatus = WritePrinter(hPrinter, lpData, dwCount, &dwBytesWritten);
+            EndPagePrinter(hPrinter);
+        }
+        /*Inform the spooler that the document is ending.  */
+        EndDocPrinter(hPrinter);
+    }
+    /*Close the printer handle. */
+    ClosePrinter(hPrinter);
+
+    /*Check to see if correct number of bytes were written.  */
+    if (!bStatus || (dwBytesWritten != dwCount))
+    {
+        bStatus = FALSE;
+        return TCL_ERROR;
+    } else {
+        bStatus = TRUE;
+        return TCL_OK;
+    }
+    return TCL_OK;
+}
+
+
+/*
+ * ----------------------------------------------------------------------
+ * 
  * PrintInit  --
  * 
  *      Initialize this package and create script-level commands.
@@ -234,6 +344,17 @@ int
 PrintInit(
 	  Tcl_Interp * interp)
 {
-    Tcl_CreateObjCommand(interp, "winprint", WinPrint, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_printcanvas", WinCanvasPrint, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_printtext", WinTextPrint, NULL, NULL);
     return TCL_OK;
 }
+
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
