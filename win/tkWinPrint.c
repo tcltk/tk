@@ -3,9 +3,9 @@
  * 
  *      This module implements Win32 printer access.
  * 
- * Copyright Â© 1998 Bell Labs Innovations for Lucent Technologies. 
- * Copyright Â© 2018 018 Microsoft Corporation. 
- * Copyright Â© 2021 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 1998 Bell Labs Innovations for Lucent Technologies. 
+ * Copyright © 2018 Microsoft Corporation. 
+ * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
  * 
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -262,13 +262,13 @@ static int WinTextPrint(TCL_UNUSED(void*),
     lpData = (LPBYTE) data;
     dwCount = (DWORD) len;
 
-    /*Initialize the print dialog box's data structure. */
+    /* Initialize the print dialog box's data structure. */
     printDlgInfo.lStructSize = sizeof(printDlgInfo);
 
-    /*Display the printer dialog and retrieve the printer DC */
+    /* Display the printer dialog and retrieve the printer DC. */
     printDlgReturn = PrintDlg(&printDlgInfo);
 
-    /*Lock the handle to get a pointer to the DEVMODE structure. */
+    /* Lock the handle to get a pointer to the DEVMODE structure. */
     returnedDevmode = (PDEVMODE) GlobalLock(printDlgInfo.hDevMode);
 
     localDevmode = (LPDEVMODE) HeapAlloc(        GetProcessHeap(),
@@ -281,11 +281,13 @@ static int WinTextPrint(TCL_UNUSED(void*),
             (LPVOID) returnedDevmode,
             returnedDevmode->dmSize);
 
-        /*Save the printer name from the DEVMODE structure. 
-        /*This is done here just to illustrate how to access 
-        /*the name field. The printer name can also be accessed
-        /*by referring to the dmDeviceName in the local 
-        /*copy of the DEVMODE structure. */
+        /* 
+         * Save the printer name from the DEVMODE structure. 
+         * This is done here just to illustrate how to access 
+         * the name field. The printer name can also be accessed
+         * by referring to the dmDeviceName in the local 
+         * copy of the DEVMODE structure. 
+	 */
         localPrinterName = localDevmode->dmDeviceName;
     }
 
@@ -295,11 +297,11 @@ static int WinTextPrint(TCL_UNUSED(void*),
     DocInfo.pOutputFile = NULL;
     DocInfo.pDatatype = (LPTSTR) _T("RAW");
 
-    /*Inform the spooler the document is beginning. */
+    /* Inform the spooler the document is beginning. */
     dwJob = StartDocPrinter(hPrinter, 1, (LPBYTE) &DocInfo);
     if (dwJob > 0)
     {
-        /*Start a page.  */
+        /* Start a page.  */
         bStatus = StartPagePrinter(hPrinter);
         if (bStatus)
         {
@@ -307,13 +309,13 @@ static int WinTextPrint(TCL_UNUSED(void*),
             bStatus = WritePrinter(hPrinter, lpData, dwCount, &dwBytesWritten);
             EndPagePrinter(hPrinter);
         }
-        /*Inform the spooler that the document is ending.  */
+        /* Inform the spooler that the document is ending.  */
         EndDocPrinter(hPrinter);
     }
-    /*Close the printer handle. */
+    /* Close the printer handle. */
     ClosePrinter(hPrinter);
 
-    /*Check to see if correct number of bytes were written.  */
+    /* Check to see if correct number of bytes were written.  */
     if (!bStatus || (dwBytesWritten != dwCount))
     {
         bStatus = FALSE;
