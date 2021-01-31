@@ -284,11 +284,7 @@ static int WinTextPrint(TCL_UNUSED(void*),
             returnedDevmode->dmSize);
 
         /* 
-         * Save the printer name from the DEVMODE structure. 
-         * This is done here just to illustrate how to access 
-         * the name field. The printer name can also be accessed
-         * by referring to the dmDeviceName in the local 
-         * copy of the DEVMODE structure. 
+         * Save the printer name from the DEVMODE structure.  
 	 */
         localPrinterName = localDevmode->dmDeviceName;
     }
