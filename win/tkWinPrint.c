@@ -153,12 +153,12 @@ WinCanvasPrint(
      * Now that the DIB contains the image of the window, get the databits
      * and write them to the printer device, stretching the image to the fit
      * the printer's resolution.
-     */
+    */
     if (GetObject(hBitmap, sizeof(DIBSECTION), &ds) == 0) {
 	Tcl_AppendResult(interp, "can't get DIB object", NULL);
 	goto done;
     }
-    /* Initialize print dialog.  */
+    /* Initialize print dialog. */
     ZeroMemory(&pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.Flags = PD_RETURNDC;
@@ -241,43 +241,45 @@ static int WinTextPrint(TCL_UNUSED(void*),
     BOOL bStatus;
     HANDLE hPrinter;
     BOOL printDlgReturn;
-    PRINTDLG printDlgInfo = { 0 };
-    PDEVMODE returnedDevmode = NULL;
-    PDEVMODE localDevmode = NULL;
-    DOC_INFO_1 DocInfo;
+    PRINTDLG pd = { 0 };
+    PDEVMODE returnedDevmode;
+    PDEVMODE localDevmode;
+    DOC_INFO_1 di;
     DWORD dwJob;
     DWORD dwBytesWritten;
     LPWSTR localPrinterName;
     LPBYTE lpData;
     DWORD dwCount;
+    char *data;
+    int len;
 
      if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "text");
 	return TCL_ERROR;
     }
 
-    char *data = Tcl_GetString(objv[1]);
-    int *len = strlen(data);
+    data = Tcl_GetString(objv[1]);
+    len = strlen(data);
 
     lpData = (LPBYTE) data;
     dwCount = (DWORD) len;
 
     /* Initialize the print dialog box's data structure. */
-    printDlgInfo.lStructSize = sizeof(printDlgInfo);
+    pd.lStructSize = sizeof(pd);
 
     /* Display the printer dialog and retrieve the printer DC. */
-    printDlgReturn = PrintDlg(&printDlgInfo);
+    printDlgReturn = PrintDlg(&pd);
 
     /* Lock the handle to get a pointer to the DEVMODE structure. */
-    returnedDevmode = (PDEVMODE) GlobalLock(printDlgInfo.hDevMode);
+    returnedDevmode = (PDEVMODE) GlobalLock(pd.hDevMode);
 
-    localDevmode = (LPDEVMODE) HeapAlloc(        GetProcessHeap(),
+    localDevmode = (LPDEVMODE) HeapAlloc(GetProcessHeap(),
         HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
         returnedDevmode->dmSize);
 
     if (NULL != localDevmode)
     {
-        memcpy(            (LPVOID) localDevmode,
+        memcpy((LPVOID) localDevmode,
             (LPVOID) returnedDevmode,
             returnedDevmode->dmSize);
 
@@ -293,29 +295,29 @@ static int WinTextPrint(TCL_UNUSED(void*),
 
     bStatus = OpenPrinter(localPrinterName, &hPrinter, NULL);
 
-    DocInfo.pDocName = (LPTSTR) _T("Tk Output");
-    DocInfo.pOutputFile = NULL;
-    DocInfo.pDatatype = (LPTSTR) _T("RAW");
+    di.pDocName = (LPTSTR) ("Tk Output");
+    di.pOutputFile = NULL;
+    di.pDatatype = (LPTSTR) ("XPS_PASS");
 
     /* Inform the spooler the document is beginning. */
-    dwJob = StartDocPrinter(hPrinter, 1, (LPBYTE) &DocInfo);
+    dwJob = StartDocPrinter(hPrinter, 1, (LPBYTE) &di);
     if (dwJob > 0)
     {
-        /* Start a page.  */
+        /* Start a page. */
         bStatus = StartPagePrinter(hPrinter);
         if (bStatus)
         {
-            /*Send the data to the printer.  */
+            /*Send the data to the printer. */
             bStatus = WritePrinter(hPrinter, lpData, dwCount, &dwBytesWritten);
             EndPagePrinter(hPrinter);
         }
-        /* Inform the spooler that the document is ending.  */
+        /* Inform the spooler that the document is ending. */
         EndDocPrinter(hPrinter);
     }
     /* Close the printer handle. */
     ClosePrinter(hPrinter);
 
-    /* Check to see if correct number of bytes were written.  */
+    /* Check to see if correct number of bytes were written. */
     if (!bStatus || (dwBytesWritten != dwCount))
     {
         bStatus = FALSE;
