@@ -951,7 +951,8 @@ Makefile: $(UNIX_DIR)/Makefile.in
 clean:
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
 		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
-		 *.zip *.vfs
+		 *.zip
+	rm -rf *.vfs
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
