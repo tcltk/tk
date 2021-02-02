@@ -988,7 +988,7 @@ WinSystrayCmd(
                 }
             }
             if (cmd == CMD_ADD && imageObj == NULL) {
-                Tcl_SetResult(interp, "missing required option \"-image\"", TCL_STATIC);
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("missing required option \"-image\"", -1));
                 return TCL_ERROR;
             }
             if (imageObj != NULL) {
@@ -1175,7 +1175,7 @@ WinIcoInit(
 
     mainWindow = Tk_MainWindow(interp);
     if (mainWindow == NULL) {
-        Tcl_SetResult(interp, "main window has been destroyed", TCL_STATIC);
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("main window has been destroyed", -1));
         return TCL_ERROR;
     }
 

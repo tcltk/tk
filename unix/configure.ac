@@ -17,8 +17,9 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     /* Undef unused package specific autoheader defines so that we can
      * include both tclConfig.h and tkConfig.h at the same time: */
     /* override */ #undef PACKAGE_NAME
-    /* override */ #undef PACKAGE_STRING
     /* override */ #undef PACKAGE_TARNAME
+    /* override */ #undef PACKAGE_VERSION
+    /* override */ #undef PACKAGE_STRING
     #endif /* _TKCONFIG */])
 ])
 
@@ -178,21 +179,7 @@ fi
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
-AC_CHECK_HEADERS(sys/time.h)
-m4_warn([obsolete],
-[Update your code to rely only on HAVE_SYS_TIME_H,
-then remove this warning and the obsolete code below it.
-All current systems provide time.h; it need not be checked for.
-Not all systems provide sys/time.h, but those that do, all allow
-you to include it and time.h simultaneously.])dnl
 AC_CHECK_HEADERS_ONCE([sys/time.h])
-# Obsolete code to be removed.
-if test $ac_cv_header_sys_time_h = yes; then
-  AC_DEFINE([TIME_WITH_SYS_TIME],[1],[Define to 1 if you can safely include both <sys/time.h>
-	     and <time.h>.  This macro is obsolete.])
-fi
-# End of obsolete code.
-
 
 #--------------------------------------------------------------------
 #	Check for various typedefs and provide substitutes if
@@ -596,6 +583,9 @@ if test "`uname -s`" = "Darwin" ; then
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
+    if test "${SHARED_BUILD}" = "0"; then
+	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
+    fi
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
@@ -671,6 +661,51 @@ else
     fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
+
+#--------------------------------------------------------------------
+#	Zipfs support - Tip 430
+#--------------------------------------------------------------------
+AC_ARG_ENABLE(zipfs,
+    AS_HELP_STRING([--enable-zipfs],[build with Zipfs support (default: on)]),
+    [tcl_ok=$enableval], [tcl_ok=yes])
+if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"; then
+    #
+    # Find a native compiler
+    #
+    AX_CC_FOR_BUILD
+    #
+    # Find a native zip implementation
+    #
+    SC_ZIPFS_SUPPORT
+	ZIPFS_BUILD=1
+	TK_ZIP_FILE=libtk_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+else
+	ZIPFS_BUILD=0
+	TK_ZIP_FILE=
+fi
+# Do checking message here to not mess up interleaved configure output
+AC_MSG_CHECKING([for building with zipfs])
+if test "${ZIPFS_BUILD}" = 1; then
+    if test "${SHARED_BUILD}" = 0; then
+       ZIPFS_BUILD=2;
+       AC_DEFINE(ZIPFS_BUILD, 2, [Are we building with zipfs enabled?])
+       INSTALL_LIBRARIES=install-libraries-zipfs-static
+       AC_MSG_RESULT([yes])
+     else
+       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])\
+       INSTALL_LIBRARIES=install-libraries-zipfs-shared
+       AC_MSG_RESULT([yes])
+    fi
+else
+AC_MSG_RESULT([no])
+INSTALL_LIBRARIES=install-libraries
+INSTALL_MSGS=install-msgs
+fi
+AC_SUBST(ZIPFS_BUILD)
+AC_SUBST(TK_ZIP_FILE)
+AC_SUBST(INSTALL_LIBRARIES)
+AC_SUBST(INSTALL_MSGS)
+
 
 #--------------------------------------------------------------------
 #       The statements below define various symbols relating to Tk

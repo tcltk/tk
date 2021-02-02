@@ -865,7 +865,7 @@ TextWidgetObjCmd(
 	for (i = 2; i < objc-2; i++) {
 	    int value;
 	    TkSizeT length;
-	    const char *option = TkGetStringFromObj(objv[i], &length);
+	    const char *option = Tcl_GetStringFromObj(objv[i], &length);
 	    char c;
 
 	    if (length < 2 || option[0] != '-') {
@@ -1275,12 +1275,12 @@ TextWidgetObjCmd(
 
 	i = 2;
 	if (objc > 3) {
-	    name = TkGetStringFromObj(objv[i], &length);
+	    name = Tcl_GetStringFromObj(objv[i], &length);
 	    if (length > 1 && name[0] == '-') {
 		if (strncmp("-displaychars", name, length) == 0) {
 		    i++;
 		    visible = 1;
-		    name = TkGetStringFromObj(objv[i], &length);
+		    name = Tcl_GetStringFromObj(objv[i], &length);
 		}
 		if ((i < objc-1) && (length == 2) && !strcmp("--", name)) {
 		    i++;
@@ -2636,7 +2636,7 @@ InsertChars(
     int *lineAndByteIndex;
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
-    const char *string = TkGetStringFromObj(stringPtr, &length);
+    const char *string = Tcl_GetStringFromObj(stringPtr, &length);
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -4759,7 +4759,7 @@ TextDumpCmd(
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	str = TkGetStringFromObj(objv[arg], &length);
+	str = Tcl_GetStringFromObj(objv[arg], &length);
 	if (strncmp(str, "end", length) == 0) {
 	    atEnd = 1;
 	}
@@ -5828,7 +5828,7 @@ SearchCore(
 	 * it has dual purpose.
 	 */
 
-	pattern = TkGetStringFromObj(patObj, &matchLength);
+	pattern = Tcl_GetStringFromObj(patObj, &matchLength);
 	nl = strchr(pattern, '\n');
 
 	/*

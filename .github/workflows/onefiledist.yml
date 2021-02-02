@@ -180,6 +180,8 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-branch
           path: tcl
+      - name: Install MSYS2, Make, Zip
+        run: choco install -y msys2 make zip
       - name: Setup Environment
         run: |
           mkdir -p install/1dist
@@ -196,7 +198,6 @@ jobs:
       - name: Build & Install Tcl
         run: |
           make binaries libraries tclzipfile install
-          echo "ZIP_BIN=`pwd`/minizip.exe" >> $GITHUB_ENV
           echo "TCL_ZIP=`pwd`/`echo libtcl*.zip`" >> $GITHUB_ENV
           $INST_DIR/bin/tclsh* $VER_PATH $GITHUB_ENV
         working-directory: tcl/win
@@ -214,7 +215,7 @@ jobs:
         run: |
           unzip $TCL_ZIP
           cp -R ../lib/tk[0-9]* .
-          $ZIP_BIN -o -r ../1dist.zip *
+          zip -o -r ../1dist.zip *
         working-directory: install/1dist
       - name: Package
         run: |

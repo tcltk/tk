@@ -302,7 +302,6 @@ getFileURL(
 - (void)selectFormat:(id)sender  {
     NSPopUpButton *button      = (NSPopUpButton *)sender;
     filterInfo.fileTypeIndex   = [button indexOfSelectedItem];
-
     if ([[filterInfo.fileTypeAllowsAll objectAtIndex:filterInfo.fileTypeIndex] boolValue]) {
 	[openpanel setAllowsOtherFileTypes:YES];
 
@@ -799,6 +798,7 @@ Tk_GetOpenFileObjCmd(
 	[label setBezeled:NO];
 	[label setDrawsBackground:NO];
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
+	[popupButton setTarget:NSApp];
 	[popupButton setAction:@selector(selectFormat:)];
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
@@ -1084,8 +1084,8 @@ Tk_GetSaveFileObjCmd(
 
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
 	[popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
+	[popupButton setTarget:NSApp];
 	[popupButton setAction:@selector(saveFormat:)];
-
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
 

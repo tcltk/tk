@@ -129,6 +129,10 @@ EXESUFFIX		= @EXESUFFIX@
 VER			= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER			= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
 
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 TK_LIB_FILE		= @TK_LIB_FILE@
 TK_DLL_FILE		= @TK_DLL_FILE@
@@ -178,7 +182,7 @@ CC		= @CC@
 RC		= @RC@
 RES		= @RES@
 TK_RES		= @TK_RES@
-AC_FLAGS	= @EXTRA_CFLAGS@ @DEFS@ @TCL_DEFS@
+AC_FLAGS	= @EXTRA_CFLAGS@ @DEFS@
 CPPFLAGS	= @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@ @LDFLAGS_DEFAULT@
 LDFLAGS_CONSOLE	= @LDFLAGS_CONSOLE@
@@ -195,6 +199,7 @@ MKDIR		= mkdir -p
 SHELL		= @SHELL@
 RM		= rm -f
 COPY		= cp
+LN		= ln
 
 BUILD_TCLSH	= @BUILD_TCLSH@
 
@@ -211,6 +216,45 @@ NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
 # make dist.
 TCL_EXE			= @TCLSH_PROG@
 WINE    		= @WINE@
+
+###
+# Tip 430 - ZipFS Modifications
+###
+
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+
+HOST_CC		        = @CC_FOR_BUILD@
+HOST_EXEEXT             = @EXEEXT_FOR_BUILD@
+HOST_OBJEXT             = @OBJEXT_FOR_BUILD@
+ZIPFS_BUILD	        = @ZIPFS_BUILD@
+NATIVE_ZIP		= @ZIP_PROG@
+ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+INSTALL_MSGS            = @INSTALL_MSGS@
+INSTALL_LIBRARIES       = @INSTALL_LIBRARIES@
+
+# Minizip
+MINIZIP_OBJS = \
+        adler32.$(HOST_OBJEXT) \
+        compress.$(HOST_OBJEXT) \
+        crc32.$(HOST_OBJEXT) \
+        deflate.$(HOST_OBJEXT) \
+        infback.$(HOST_OBJEXT) \
+        inffast.$(HOST_OBJEXT) \
+        inflate.$(HOST_OBJEXT) \
+        inftrees.$(HOST_OBJEXT) \
+        ioapi.$(HOST_OBJEXT) \
+        iowin32.$(HOST_OBJEXT)  \
+        trees.$(HOST_OBJEXT) \
+        uncompr.$(HOST_OBJEXT) \
+        zip.$(HOST_OBJEXT) \
+        zutil.$(HOST_OBJEXT) \
+        minizip.$(HOST_OBJEXT)
+
+ZIP_INSTALL_OBJS =  @ZIP_INSTALL_OBJS@
 
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
@@ -638,6 +682,29 @@ cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LIBS) $(LDFLAGS_CONSOLE)
 
+tkzipfile: ${TK_ZIP_FILE}
+
+${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
+	@rm -rf ${TK_VFS_ROOT}
+	@mkdir -p ${TK_VFS_PATH}
+	@echo "creating ${TK_VFS_PATH} (prepare compression)"
+	@( \
+	  $(LN) $$(find $(TOP_DIR)/library/* -maxdepth 0 -type f) ${TK_VFS_PATH}/ && \
+	  (for D in $$(find $(TOP_DIR)/library/* -maxdepth 0 -type d); do \
+	    mkdir -p "${TK_VFS_PATH}/$$(basename $$D)"; \
+	    $(LN) -s $$D/* ${TK_VFS_PATH}/$$(basename $$D)/; \
+	  done) \
+	) || ( \
+	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+	)
+	(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+	  (echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+	  cd ${TK_VFS_ROOT} && \
+	  $$zip ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH} >/dev/null && \
+	  echo "${TK_ZIP_FILE} successful created with $$zip" && \
+	  cd ..)
+
+
 # The following targets are configured by autoconf to generate either
 # a shared library or static library
 
@@ -646,10 +713,15 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@MAKE_STUB_LIB@ ${STUB_OBJS}
 	@POST_MAKE_LIB@
 
-${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
+${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES) ${TK_ZIP_FILE}
 	@$(RM) ${TK_DLL_FILE}
 	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 	@VC_MANIFEST_EMBED_DLL@
+	@if test "${ZIPFS_BUILD}" = "1" ; then \
+		cat ${TK_ZIP_FILE} >> ${TK_DLL_FILE}; \
+		${NATIVE_ZIP} -A ${TK_DLL_FILE} \
+		  || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}
@@ -675,6 +747,12 @@ tkWinTest.$(OBJEXT): tkWinTest.c
 
 tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+
+tkStubLib.$(OBJEXT): tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ @DEPARG@ $(CC_OBJNAME)
+
+ttkStubLib.$(OBJEXT): ${TTK_DIR}/ttkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ @DEPARG@ $(CC_OBJNAME)
 
 tkMain2.$(OBJEXT): tkMain.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DUNICODE=1 -D_UNICODE=1 @DEPARG@ $(CC_OBJNAME)
@@ -714,7 +792,8 @@ cleanhelp:
 clean: cleanhelp
 	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
 	$(RM) $(WISH) $(TKTEST) $(CAT32)
-	$(RM) *.pch *.ilk *.pdb
+	$(RM) *.pch *.ilk *.pdb *.zip
+	$(RMDIR) *.vfs
 
 distclean: clean
 	$(RM) Makefile config.status config.cache config.log tkConfig.sh \
