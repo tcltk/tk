@@ -31,7 +31,6 @@
 
 #include "tkMacOSXPrivate.h"
 #include "ttk/ttkTheme.h"
-#include <math.h>
 
 /*
  * Macros for handling drawing contexts.
@@ -2291,15 +2290,36 @@ static void PbarElementDraw(
 {
     PbarElement *pbar = elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
-    int phase = 0;
-    double value = 0, maximum = 100, factor;
+
+    /*
+     * Using 1000 as the maximum should give better than 1 pixel
+     * resolution for most progress bars.
+     */
+
+    int kind, phase = 0, ivalue, imaximum = 1000;
     CGRect bounds;
 
     TtkGetOrientFromObj(NULL, pbar->orientObj, &orientation);
-    Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
-    Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
-    Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
-    factor = RangeToFactor(maximum);
+    kind = !strcmp("indeterminate", Tcl_GetString(pbar->modeObj)) ?
+	kThemeIndeterminateBar : kThemeProgressBar;
+    if (kind == kThemeIndeterminateBar) {
+	Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
+
+	/*
+	 * On macOS 11 the fraction of an indeterminate progress bar which is
+	 * traversed by the oscillating thumb is value / maximum.  The phase
+	 * determines the position of the moving thumb in that range and is
+	 * apparently expected to vary between 0 and 120.  On earlier systems
+	 * it is unclear how the phase is used in generating the animation.
+	 */
+
+	ivalue = imaximum;
+    } else {
+	double value, maximum;
+	Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
+	Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
+	ivalue = (value / maximum)*1000;
+    }
 
     /*
      * HIThemeTrackDrawInfo uses 2-byte alignment; assigning to a separate
@@ -2309,21 +2329,16 @@ static void PbarElementDraw(
     bounds = BoxToRect(d, b);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
-	.kind =
-	    (!strcmp("indeterminate",
-	    Tcl_GetString(pbar->modeObj)) && value) ?
-	    kThemeIndeterminateBar : kThemeProgressBar,
+	.kind = kind,
 	.bounds = bounds,
 	.min = 0,
-	.max = maximum * factor,
-	.value = value * factor,
+	.max = imaximum,
+	.value = ivalue,
 	.attributes = kThemeTrackShowThumb |
-	    (orientation == TTK_ORIENT_HORIZONTAL ?
-	    kThemeTrackHorizontal : 0),
+	    (orientation == TTK_ORIENT_HORIZONTAL ? kThemeTrackHorizontal : 0),
 	.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state),
-	.trackInfo.progress.phase = phase,
+	.trackInfo.progress.phase = phase
     };
-
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	bounds = BoxToRect(d, b);
@@ -2870,7 +2885,7 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
  * +++ Field elements --
  *
  *      Used for the Treeview widget. This is like the BackgroundElement
- *      except that the fieldbackground color is configureable.
+ *      except that the fieldbackground color is configurable.
  */
 
 typedef struct {

@@ -900,7 +900,7 @@ Tk_SelectionObjCmd(
 	} else {
 	    format = XA_STRING;
 	}
-	string = TkGetStringFromObj(objs[1], &cmdLength);
+	string = Tcl_GetStringFromObj(objs[1], &cmdLength);
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {

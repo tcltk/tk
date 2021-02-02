@@ -3010,8 +3010,8 @@ ExpandPercents(
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
-	Tcl_WideInt number;     /* signed */
-	Tcl_WideUInt unumber;   /* unsigned */
+	long long number;     /* signed */
+	unsigned long long unumber;   /* unsigned */
 
 	/*
 	 * Find everything up to the next % character and append it to the

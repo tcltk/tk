@@ -2960,7 +2960,7 @@ empty strings.
 \fIpathName \fBimage \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
-command depends on the \fIoption\fR argument that follows the \fBtag\fR
+command depends on the \fIoption\fR argument that follows the \fBimage\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
