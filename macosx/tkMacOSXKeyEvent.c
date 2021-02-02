@@ -268,7 +268,7 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 @synthesize tkDirtyRect = _tkDirtyRect;
-@synthesize tkNeedsDisplay = _tkNeedsDisplay;;
+@synthesize tkNeedsDisplay = _tkNeedsDisplay;
 
 /*
  * Implementation of the NSTextInputClient protocol.

@@ -1933,11 +1933,7 @@ TestprintfObjCmd(
 {
     char buffer[256];
     Tcl_WideInt wideInt;
-#ifdef _WIN32
-    __int64 longLongInt;
-#else
     long long longLongInt;
-#endif
     (void)dummy;
 
     if (objc != 2) {
@@ -1956,7 +1952,7 @@ TestprintfObjCmd(
      */
     sprintf(buffer, "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
 	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
-	    (Tcl_WideInt)longLongInt, (Tcl_WideUInt)longLongInt);
+	    longLongInt, (unsigned long long)longLongInt);
     Tcl_AppendResult(interp, buffer, NULL);
     return TCL_OK;
 }

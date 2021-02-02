@@ -880,7 +880,7 @@ TkTextGetIndexFromObj(
     assert(textPtr);
     assert(objPtr);
 
-    str = TkGetStringFromObj(objPtr, &length);
+    str = Tcl_GetStringFromObj(objPtr, &length);
     return TkpTextGetIndex(interp, textPtr->sharedTextPtr, textPtr,
 	    str, length, indexPtr);
 }

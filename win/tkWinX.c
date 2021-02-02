@@ -128,13 +128,7 @@ TkGetServerInfo(
     (void)tkwin;
 
     if (!buffer[0]) {
-	HMODULE handle = GetModuleHandleW(L"NTDLL");
-	int(__stdcall *getversion)(void *) = (int(__stdcall *)(void *))
-		(void *)GetProcAddress(handle, "RtlGetVersion");
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	if (!getversion || getversion(&os)) {
-	    GetVersionExW(&os);
-	}
+	GetVersionExW(&os);
 	/* Write the first character last, preventing multi-thread issues. */
 	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,

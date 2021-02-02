@@ -25,12 +25,7 @@
 #include "tkIntPlatDecls.h"
 
 MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
-#ifdef HAVE_LIBNOTIFY
 MODULE_SCOPE  int       SysNotify_Init (Tcl_Interp* interp);
-#else
-#define SysNotify_Init(interp) TCL_OK
-#endif
-
 
 #endif /* _TKUNIXINT */
 

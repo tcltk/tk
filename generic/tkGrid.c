@@ -2986,7 +2986,7 @@ ConfigureContent(
 	TkSizeT length;
 	char prevChar = firstChar;
 
-	string = TkGetStringFromObj(objv[i], &length);
+	string = Tcl_GetStringFromObj(objv[i], &length);
     	firstChar = string[0];
 
 	if (firstChar == '.') {

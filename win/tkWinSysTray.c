@@ -51,7 +51,7 @@
 
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
-    int id;                     /* Integer identifier for command;  used to
+    unsigned id;                /* Identifier for command;  used to
                                  * cancel it. */
     Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
@@ -371,7 +371,7 @@ GetIcoPtr(
     const char *string)
 {
     IcoInfo *icoPtr;
-    int id;
+    unsigned id;
     const char *start;
     char *end;
 
@@ -988,7 +988,7 @@ WinSystrayCmd(
                 }
             }
             if (cmd == CMD_ADD && imageObj == NULL) {
-                Tcl_SetResult(interp, "missing required option \"-image\"", TCL_STATIC);
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("missing required option \"-image\"", -1));
                 return TCL_ERROR;
             }
             if (imageObj != NULL) {
@@ -1175,7 +1175,7 @@ WinIcoInit(
 
     mainWindow = Tk_MainWindow(interp);
     if (mainWindow == NULL) {
-        Tcl_SetResult(interp, "main window has been destroyed", TCL_STATIC);
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("main window has been destroyed", -1));
         return TCL_ERROR;
     }
 

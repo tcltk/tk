@@ -920,7 +920,7 @@ TkCreateMainWindow(
 	}
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
-	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
+	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->tcl_CreateFileHandler) {
 	    /*
 	     * We are running on Cygwin, so don't use the win32 dialogs.
 	     */
@@ -3201,7 +3201,7 @@ Initialize(
 
     {
 	TkSizeT numBytes;
-	const char *bytes = TkGetStringFromObj(nameObj, &numBytes);
+	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
 

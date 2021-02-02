@@ -1862,7 +1862,7 @@ TkGetDisplayOf(
     if (objc < 1) {
 	return 0;
     }
-    string = TkGetStringFromObj(objv[0], &length);
+    string = Tcl_GetStringFromObj(objv[0], &length);
     if ((length >= 2) &&
 	    (strncmp(string, "-displayof", length) == 0)) {
         if (objc < 2) {

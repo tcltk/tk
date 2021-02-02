@@ -1554,7 +1554,7 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     event gen .t <Motion> -warp 1 -x 20 -y 20 ; update
     event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
     event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
-    return $res
+    set res
 } -cleanup {
     destroy .t
 } -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
