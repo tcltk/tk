@@ -17,7 +17,6 @@ jobs:
         cfgopt:
           - ""
           - "CFLAGS=-DTK_NO_DEPRECATED=1"
-          - "EXTRA_CC_SWITCHES='-x c++'"
           - "--disable-shared"
           - "--disable-xft"
           - "--disable-xss"
@@ -85,12 +84,12 @@ jobs:
             exit 1
           }
       - name: Discover Version ID
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         run: |
           cd /tmp/dist
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         uses: actions/upload-artifact@v2
         with:
           name: Tk ${{ env.VERSION }} Source distribution (unofficial)
@@ -98,7 +97,7 @@ jobs:
             /tmp/dist/tk*
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         uses: actions/upload-artifact@v2
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (unofficial)

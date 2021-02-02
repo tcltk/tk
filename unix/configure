@@ -689,6 +689,16 @@ TK_MAJOR_VERSION
 TK_VERSION
 TK_DEMO_DIR
 DEMO_DIR
+INSTALL_MSGS
+INSTALL_LIBRARIES
+TK_ZIP_FILE
+ZIPFS_BUILD
+ZIP_INSTALL_OBJS
+ZIP_PROG_VFSSEARCH
+ZIP_PROG_OPTIONS
+ZIP_PROG
+EXEEXT_FOR_BUILD
+CC_FOR_BUILD
 UNIX_FONT_OBJS
 XFT_LIBS
 XFT_CFLAGS
@@ -714,6 +724,7 @@ LD_SEARCH_FLAGS
 CC_SEARCH_FLAGS
 LDFLAGS_OPTIMIZE
 LDFLAGS_DEBUG
+CFLAGS_NOLTO
 CFLAGS_WARNING
 CFLAGS_OPTIMIZE
 CFLAGS_DEBUG
@@ -807,6 +818,7 @@ with_x
 enable_xft
 enable_xss
 enable_framework
+enable_zipfs
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1460,6 +1472,7 @@ Optional Features:
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
+  --enable-zipfs          build with Zipfs support (default: on)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4393,7 +4406,7 @@ then :
 	    *++|*++-*)
 		;;
 	    *)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers -Wdeclaration-after-statement"
+		CFLAGS_WARNING="${CFLAGS_WARNING} -Wc++-compat -fextended-identifiers"
 		;;
 	esac
 
@@ -6014,7 +6027,7 @@ then :
 	    Darwin-*) ;;
 	    IRIX*) ;;
 	    Linux*|GNU*) ;;
-	    NetBSD-*|OpenBSD-*) ;;
+	    NetBSD-*|DragonFly-*|FreeBSD-*|OpenBSD-*) ;;
 	    OSF1-V*) ;;
 	    SCO_SV-3.2*) ;;
 	    *) SHLIB_CFLAGS="-fPIC" ;;
@@ -6140,6 +6153,41 @@ printf "%s\n" "$tcl_cv_cast_to_union" >&6; }
 printf "%s\n" "#define HAVE_CAST_TO_UNION 1" >>confdefs.h
 
 	fi
+	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working -fno-lto" >&5
+printf %s "checking for working -fno-lto... " >&6; }
+if test ${ac_cv_nolto+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ac_cv_nolto=yes
+else $as_nop
+  ac_cv_nolto=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_nolto" >&5
+printf "%s\n" "$ac_cv_nolto" >&6; }
+	CFLAGS=$hold_cflags
+	if test "$ac_cv_nolto" = "yes" ; then
+	    CFLAGS_NOLTO="-fno-lto"
+	else
+	    CFLAGS_NOLTO=""
+	fi
 
     ac_fn_c_check_header_compile "$LINENO" "stdbool.h" "ac_cv_header_stdbool_h" "$ac_includes_default"
 if test "x$ac_cv_header_stdbool_h" = xyes
@@ -6153,6 +6201,7 @@ fi
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
     # would use TCL_DL_LIBS instead of TCL_LIBS.
+
 
 
 
@@ -6418,25 +6467,6 @@ then :
 else $as_nop
 
 	tcl_cv_type_64bit=none
-	# See if the compiler knows natively about __int64
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-__int64 value = (__int64) 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  tcl_type_64bit=__int64
-else $as_nop
-  tcl_type_64bit="long long"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 	# See if we could use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
@@ -6447,7 +6477,7 @@ int
 main (void)
 {
 switch (0) {
-            case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
+            case 1: case (sizeof(long long)==sizeof(long)): ;
         }
   ;
   return 0;
@@ -6455,7 +6485,7 @@ switch (0) {
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"
 then :
-  tcl_cv_type_64bit=${tcl_type_64bit}
+  tcl_cv_type_64bit="long long"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
@@ -6467,12 +6497,6 @@ printf "%s\n" "#define TCL_WIDE_INT_IS_LONG 1" >>confdefs.h
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
     else
-
-printf "%s\n" "#define TCL_WIDE_INT_TYPE ${tcl_cv_type_64bit}" >>confdefs.h
-
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: ${tcl_cv_type_64bit}" >&5
-printf "%s\n" "${tcl_cv_type_64bit}" >&6; }
-
 	# Now check for auxiliary declarations
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for struct dirent64" >&5
 printf %s "checking for struct dirent64... " >&6; }
@@ -7250,22 +7274,7 @@ fi
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
-ac_fn_c_check_header_compile "$LINENO" "sys/time.h" "ac_cv_header_sys_time_h" "$ac_includes_default"
-if test "x$ac_cv_header_sys_time_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_SYS_TIME_H 1" >>confdefs.h
 
-fi
-
-
-
-# Obsolete code to be removed.
-if test $ac_cv_header_sys_time_h = yes; then
-
-printf "%s\n" "#define TIME_WITH_SYS_TIME 1" >>confdefs.h
-
-fi
-# End of obsolete code.
 
 
 #--------------------------------------------------------------------
@@ -8587,6 +8596,9 @@ printf "%s\n" "static library" >&6; }
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
+    if test "${SHARED_BUILD}" = "0"; then
+	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
+    fi
     EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in"
 
@@ -8659,6 +8671,175 @@ else
     fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
+
+#--------------------------------------------------------------------
+#	Zipfs support - Tip 430
+#--------------------------------------------------------------------
+# Check whether --enable-zipfs was given.
+if test ${enable_zipfs+y}
+then :
+  enableval=$enable_zipfs; tcl_ok=$enableval
+else $as_nop
+  tcl_ok=yes
+fi
+
+if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"; then
+    #
+    # Find a native compiler
+    #
+    # Put a plausible default for CC_FOR_BUILD in Makefile.
+    if test -z "$CC_FOR_BUILD"; then
+      if test "x$cross_compiling" = "xno"; then
+        CC_FOR_BUILD='$(CC)'
+      else
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for gcc" >&5
+printf %s "checking for gcc... " >&6; }
+        if test ${ac_cv_path_cc+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+            search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+            for dir in $search_path ; do
+                for j in `ls -r $dir/gcc 2> /dev/null` \
+                        `ls -r $dir/gcc 2> /dev/null` ; do
+                    if test x"$ac_cv_path_cc" = x ; then
+                        if test -f "$j" ; then
+                            ac_cv_path_cc=$j
+                            break
+                        fi
+                    fi
+                done
+            done
+
+fi
+
+      fi
+    fi
+
+    # Also set EXEEXT_FOR_BUILD.
+    if test "x$cross_compiling" = "xno"; then
+      EXEEXT_FOR_BUILD='$(EXEEXT)'
+      OBJEXT_FOR_BUILD='$(OBJEXT)'
+    else
+      OBJEXT_FOR_BUILD='.no'
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for build system executable suffix" >&5
+printf %s "checking for build system executable suffix... " >&6; }
+if test ${bfd_cv_build_exeext+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  rm -f conftest*
+         echo 'int main () { return 0; }' > conftest.c
+         bfd_cv_build_exeext=
+         ${CC_FOR_BUILD} -o conftest conftest.c 1>&5 2>&5
+         for file in conftest.*; do
+           case $file in
+           *.c | *.o | *.obj | *.ilk | *.pdb) ;;
+           *) bfd_cv_build_exeext=`echo $file | sed -e s/conftest//` ;;
+           esac
+         done
+         rm -f conftest*
+         test x"${bfd_cv_build_exeext}" = x && bfd_cv_build_exeext=no
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $bfd_cv_build_exeext" >&5
+printf "%s\n" "$bfd_cv_build_exeext" >&6; }
+      EXEEXT_FOR_BUILD=""
+      test x"${bfd_cv_build_exeext}" != xno && EXEEXT_FOR_BUILD=${bfd_cv_build_exeext}
+    fi
+
+    #
+    # Find a native zip implementation
+    #
+
+    ZIP_PROG=""
+    ZIP_PROG_OPTIONS=""
+    ZIP_PROG_VFSSEARCH=""
+    ZIP_INSTALL_OBJS=""
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for zip" >&5
+printf %s "checking for zip... " >&6; }
+    if test ${ac_cv_path_zip+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+    search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+    for dir in $search_path ; do
+        for j in `ls -r $dir/zip 2> /dev/null` \
+            `ls -r $dir/zip 2> /dev/null` ; do
+        if test x"$ac_cv_path_zip" = x ; then
+            if test -f "$j" ; then
+            ac_cv_path_zip=$j
+            break
+            fi
+        fi
+        done
+    done
+
+fi
+
+    if test -f "$ac_cv_path_zip" ; then
+        ZIP_PROG="$ac_cv_path_zip"
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ZIP_PROG" >&5
+printf "%s\n" "$ZIP_PROG" >&6; }
+        ZIP_PROG_OPTIONS="-rq"
+        ZIP_PROG_VFSSEARCH="*"
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found INFO Zip in environment" >&5
+printf "%s\n" "Found INFO Zip in environment" >&6; }
+        # Use standard arguments for zip
+    else
+        # It is not an error if an installed version of Zip can't be located.
+        # We can use the locally distributed minizip instead
+        ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
+        ZIP_PROG_OPTIONS="-o -r"
+        ZIP_PROG_VFSSEARCH="*"
+        ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: No zip found on PATH. Building minizip" >&5
+printf "%s\n" "No zip found on PATH. Building minizip" >&6; }
+    fi
+
+
+
+
+
+	ZIPFS_BUILD=1
+	TK_ZIP_FILE=libtk_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+else
+	ZIPFS_BUILD=0
+	TK_ZIP_FILE=
+fi
+# Do checking message here to not mess up interleaved configure output
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for building with zipfs" >&5
+printf %s "checking for building with zipfs... " >&6; }
+if test "${ZIPFS_BUILD}" = 1; then
+    if test "${SHARED_BUILD}" = 0; then
+       ZIPFS_BUILD=2;
+
+printf "%s\n" "#define ZIPFS_BUILD 2" >>confdefs.h
+
+       INSTALL_LIBRARIES=install-libraries-zipfs-static
+       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+     else
+
+printf "%s\n" "#define ZIPFS_BUILD 1" >>confdefs.h
+\
+       INSTALL_LIBRARIES=install-libraries-zipfs-shared
+       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    fi
+else
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+INSTALL_LIBRARIES=install-libraries
+INSTALL_MSGS=install-msgs
+fi
+
+
+
+
+
 
 #--------------------------------------------------------------------
 #       The statements below define various symbols relating to Tk

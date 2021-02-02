@@ -333,7 +333,7 @@ WISHSCRIPTZIP = $(OUT_DIR)\wish.zip
 # defined in rules.vc
 PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
-CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
+CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
 		 /DHAVE_STRINGS_H=1 \
 !if $(HAVE_UXTHEME_H)
@@ -508,19 +508,21 @@ $(TKSCRIPTZIP): .PHONY
 	@if not exist "$(LIBTKVFS)" $(MKDIR) "$(LIBTKVFS)"
 	@if exist "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)" $(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
 	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
-	@echo file delete -force {$@} > "$(OUT_DIR)\zipper.tcl"
-	@echo zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)} >> "$(OUT_DIR)\zipper.tcl"
-	@cd "$(OUT_DIR)" && $(TCLSH) zipper.tcl
+	@cd "$(OUT_DIR)" && $(TCLSH) <<
+file delete -force {$@}
+zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
+<<
 
 !if $(STATIC_BUILD)
 $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@echo Building Wish Tcl+Tk library zip file
 	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
-	@echo file delete -force {$@} > "$(OUT_DIR)\zipper.tcl"
-	@echo zipfs mount mnt "$(TCLSCRIPTZIP:\=/)" >> "$(OUT_DIR)\zipper.tcl"
-	@echo file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)" >> "$(OUT_DIR)\zipper.tcl"
-	@echo zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)} >> "$(OUT_DIR)\zipper.tcl"
-	@cd "$(OUT_DIR)" && $(TCLSH) zipper.tcl
+	@cd "$(OUT_DIR)" && $(TCLSH) <<
+file delete -force {$@}
+zipfs mount mnt "$(TCLSCRIPTZIP:\=/)"
+file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"
+zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
+<<
 !endif
 
 
@@ -540,6 +542,7 @@ genstubs:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR)\ttk $(GENERICDIR)\ttk\ttk.decls
 !endif
 
 
