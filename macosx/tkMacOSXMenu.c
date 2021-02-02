@@ -236,7 +236,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (TkMenu *) tkMenu
 {
-    return _tkMenu;
+    return (TkMenu *)_tkMenu;
 }
 
 - (int) tkIndexOfItem: (NSMenuItem *) menuItem
@@ -413,7 +413,7 @@ TKBackgroundLoop *backgroundLoop = nil;
     (void)menu;
 
     if (_tkMenu) {
-	RecursivelyClearActiveMenu(_tkMenu);
+	RecursivelyClearActiveMenu((TkMenu *)_tkMenu);
     }
 }
 
@@ -437,7 +437,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 	Tcl_Preserve(interp);
 	Tcl_Preserve(menuPtr);
 
-	int result = TkPostCommand(_tkMenu);
+	int result = TkPostCommand(menuPtr);
 
 	if (result!=TCL_OK && result!=TCL_CONTINUE && result!=TCL_BREAK) {
 	      Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
@@ -695,7 +695,7 @@ TkpConfigureMenuEntry(
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
-    } else if (mePtr->bitmapPtr != None) {
+    } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
 		mePtr->bitmapPtr);
 

@@ -1482,7 +1482,7 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_TITLEPATH: {
-	const char *path = Tcl_FSGetNativePath(value);
+	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
 
 	if (path && *path) {
@@ -1636,7 +1636,7 @@ WmAttributesCmd(
 	    Tcl_ListObjAppendElement(NULL, result,
 		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
 	    Tcl_ListObjAppendElement(NULL, result,
-		    WmGetAttribute(winPtr, macWindow, attribute));
+		    WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
 	}
 	Tcl_SetObjResult(interp, result);
     } else if (objc == 4) {	/* wm attributes $win -attribute */
@@ -1644,7 +1644,7 @@ WmAttributesCmd(
 		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, attribute));
+	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
     } else if ((objc - 3) % 2 == 0) {	/* wm attributes $win -att value... */
 	int i;
 
@@ -1653,7 +1653,7 @@ WmAttributesCmd(
 		    sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (WmSetAttribute(winPtr, macWindow, interp, attribute, objv[i+1])
+	    if (WmSetAttribute(winPtr, macWindow, interp, (WmAttribute)attribute, objv[i+1])
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -4128,7 +4128,7 @@ TopLevelEventProc(
     ClientData clientData,	/* Window for which event occurred. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
 
     winPtr->wmInfoPtr->flags |= WM_VROOT_OFFSET_STALE;
     if (eventPtr->type == DestroyNotify) {
@@ -4214,7 +4214,7 @@ static void
 UpdateGeometryInfo(
     ClientData clientData)	/* Pointer to the window's record. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, min, max;
 
@@ -5593,8 +5593,8 @@ TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
-    NSWindow *window = whichWindow;
-    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+    NSWindow *window = (NSWindow *)whichWindow;
+    TkWindow *winPtr = (TkWindow *)TkMacOSXGetTkWindow(window);
     WmInfo *wmPtr;
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -5651,7 +5651,7 @@ TkUnsupported1ObjCmd(
     enum SubCmds {
 	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE, TKMWS_ISDARK
     };
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
     int index;
 
@@ -6717,7 +6717,7 @@ TkWmStackorderToplevel(
 	for (NSWindow *w in backToFront) {
 	    hPtr = Tcl_FindHashEntry(&table, (char*) w);
 	    if (hPtr != NULL) {
-		childWinPtr = Tcl_GetHashValue(hPtr);
+		childWinPtr = (TkWindow *)Tcl_GetHashValue(hPtr);
 		*windowPtr++ = childWinPtr;
 	    }
 	}
@@ -7042,7 +7042,7 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	if (wmPtr->container != None) {
+	if (wmPtr->container != NULL) {
 	    TkWindow *containerWinPtr = (TkWindow *)wmPtr->container;
 
 	    if (containerWinPtr && (containerWinPtr->window != None)

@@ -165,8 +165,8 @@ void
 TkpDisplayMenuButton(
     ClientData clientData)	/* Information about widget. */
 {
-    MacMenuButton *mbPtr = clientData;
-    TkMenuButton *butPtr = clientData;
+    MacMenuButton *mbPtr = (MacMenuButton *)clientData;
+    TkMenuButton *butPtr = (TkMenuButton *)clientData;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams *dpPtr = &mbPtr->drawParams;
@@ -240,8 +240,8 @@ TkpDestroyMenuButton(
  */
 
 void
-TkpComputeMenuButtonGeometry(butPtr)
-    TkMenuButton *butPtr;	/* Widget record for menu button. */
+TkpComputeMenuButtonGeometry(
+    TkMenuButton *butPtr)	/* Widget record for menu button. */
 {
     int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
@@ -689,8 +689,8 @@ MenuButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkMenuButton *buttonPtr = clientData;
-    MacMenuButton *mbPtr = clientData;
+    TkMenuButton *buttonPtr = (TkMenuButton *)clientData;
+    MacMenuButton *mbPtr = (MacMenuButton *)clientData;
 
     if (eventPtr->type == ActivateNotify
 	    || eventPtr->type == DeactivateNotify) {
