@@ -24,7 +24,7 @@ typedef struct
     Tcl_Obj *textObj;
     Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
-    Tcl_Obj *underlineObj;
+    int underline;
     Tcl_Obj *widthObj;
 
     Ttk_TraceHandle	*textVariableTrace;
@@ -66,7 +66,7 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
 	offsetof(Base,base.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TK_OPTION_UNDERLINE_DEF(Base, base.underlineObj), 0},
+	TK_OPTION_UNDERLINE_DEF(Base, base.underline), 0},
     /* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
     {TK_OPTION_STRING, "-width", "width", "Width",
 	NULL, offsetof(Base,base.widthObj), TCL_INDEX_NONE,
