@@ -44,7 +44,7 @@ typedef struct
     Tcl_Obj *textObj;
     Tcl_Obj *imageObj;
     Tcl_Obj *compoundObj;
-    Tcl_Obj *underlineObj;
+    int underline;
 
 } Tab;
 
@@ -68,7 +68,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TK_OPTION_UNDERLINE_DEF(Tab, underlineObj), GEOMETRY_CHANGED},
+	TK_OPTION_UNDERLINE_DEF(Tab, underline), GEOMETRY_CHANGED},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
