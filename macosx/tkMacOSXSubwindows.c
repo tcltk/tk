@@ -973,7 +973,7 @@ InvalViewRect(
     void *ref)
 {
     static CGAffineTransform t;
-    TKContentView *view = ref;
+    TKContentView *view = (TKContentView *)ref;
     NSRect dirtyRect;
 
     if (!view) {
@@ -1435,7 +1435,7 @@ Tk_FreePixmap(
 
     display->request++;
     if (macPix->context) {
-	char *data = CGBitmapContextGetData(macPix->context);
+	char *data = (char *)CGBitmapContextGetData(macPix->context);
 
 	if (data) {
 	    ckfree(data);

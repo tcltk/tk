@@ -127,8 +127,7 @@ Tcl_AppInit(
 
 #if defined(USE_CUSTOM_EXIT_PROC)
     if (TkpWantsExitProc()) {
-	/* The cast below avoids warnings from old gcc compilers. */
-	Tcl_SetExitProc((void *)TkpExitProc);
+	Tcl_SetExitProc(TkpExitProc);
     }
 #endif
 

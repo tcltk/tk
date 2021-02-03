@@ -180,6 +180,9 @@
 # endif
 #endif
 
+/* Are we building with zipfs enabled? */
+#undef ZIPFS_BUILD
+
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
 
