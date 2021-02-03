@@ -437,7 +437,11 @@ typedef TkStatusItem** StatusItemInfo;
      */
 
     DEBUG_LOG("willPresentNotification\n");
-    completionHandler(ALERT_OPTION);
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+    if (@available(macOS 11.0, *)) {
+	completionHandler(ALERT_OPTION);
+    }
+#endif
 }
 
 - (void) userNotificationCenter:(UNUserNotificationCenter *)center
