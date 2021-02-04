@@ -7656,15 +7656,15 @@ TkTextCharLayoutProc(
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     if (baseCharChunkPtr == NULL) {
 	baseCharChunkPtr = chunkPtr;
-	bciPtr = ckalloc(sizeof(BaseCharInfo));
+	bciPtr = (BaseCharInfo *)ckalloc(sizeof(BaseCharInfo));
 	baseString = &bciPtr->baseChars;
 	Tcl_DStringInit(baseString);
 	bciPtr->width = 0;
 
 	ciPtr = &bciPtr->ci;
     } else {
-	bciPtr = baseCharChunkPtr->clientData;
-	ciPtr = ckalloc(sizeof(CharInfo));
+	bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
+	ciPtr = (CharInfo *)ckalloc(sizeof(CharInfo));
 	baseString = &bciPtr->baseChars;
     }
 
@@ -7988,7 +7988,7 @@ CharDisplayProc(
     }
 
 #ifdef TK_DRAW_IN_CONTEXT
-    bciPtr = ciPtr->baseChunkPtr->clientData;
+    bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
     numBytes = Tcl_DStringLength(&bciPtr->baseChars);
     string = Tcl_DStringValue(&bciPtr->baseChars);
 
@@ -8899,7 +8899,7 @@ FinalizeBaseChunk(
 	if (chunkPtr->displayProc != CharDisplayProc) {
 	    continue;
 	}
-	ciPtr = chunkPtr->clientData;
+	ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr->baseChunkPtr != baseCharChunkPtr) {
 	    break;
 	}
@@ -8916,7 +8916,7 @@ FinalizeBaseChunk(
     }
 
     if (addChunkPtr != NULL) {
-	ciPtr = addChunkPtr->clientData;
+	ciPtr = (CharInfo *)addChunkPtr->clientData;
 	ciPtr->chars = baseChars + ciPtr->baseOffset;
 
 #ifdef TK_DRAW_IN_CONTEXT
@@ -8967,7 +8967,7 @@ FreeBaseChunk(
 	if (chunkPtr->undisplayProc != CharUndisplayProc) {
 	    continue;
 	}
-	ciPtr = chunkPtr->clientData;
+	ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr->baseChunkPtr != baseChunkPtr) {
 	    break;
 	}
@@ -9087,14 +9087,14 @@ RemoveFromBaseChunk(
      * Reinstitute this base chunk for re-layout.
      */
 
-    ciPtr = chunkPtr->clientData;
+    ciPtr = (CharInfo *)chunkPtr->clientData;
     baseCharChunkPtr = ciPtr->baseChunkPtr;
 
     /*
      * Remove the chunk data from the base chunk data.
      */
 
-    bciPtr = baseCharChunkPtr->clientData;
+    bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
 
 #ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
     if ((ciPtr->baseOffset + ciPtr->numBytes)

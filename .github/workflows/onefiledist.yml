@@ -36,7 +36,7 @@ jobs:
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
-          make binaries libraries tclzipfile install
+          make binaries libraries install
           make shell SCRIPT="$VER_PATH $GITHUB_ENV"
         working-directory: tcl/unix
       - name: Configure Tk
@@ -48,15 +48,9 @@ jobs:
           make binaries libraries install
         working-directory: tk/unix
         # TODO: need the Tk version separately for distro naming below
-      - name: Pack Tk Library Files into Library Zip
-        run: |
-          unzip ../lib/libtcl*.zip
-          cp -a ../lib/tk[0-9]* .
-          zip -r ../1dist.zip .
-        working-directory: ${{ env.INST_DIR }}/1dist.vfs
       - name: Package
         run: |
-          cat ../tk/unix/wish 1dist.zip >> ${BUILD_NAME}
+          cp ../tk/unix/wish ${BUILD_NAME}
           chmod +x ${BUILD_NAME}
           tar -cf ${BUILD_NAME}.tar ${BUILD_NAME}
         working-directory: ${{ env.INST_DIR }}
@@ -113,7 +107,7 @@ jobs:
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
-          make binaries libraries tclzipfile install
+          make binaries libraries install
           make shell SCRIPT="$VER_PATH $GITHUB_ENV"
         working-directory: tcl/unix
       - name: Configure Tk
@@ -126,15 +120,9 @@ jobs:
           make binaries libraries install
         working-directory: tk/unix
         # TODO: need the Tk version separately for distro naming below
-      - name: Pack Tk Library Files into Library Zip
-        run: |
-          unzip ../lib/libtcl*.zip
-          cp -a ../lib/tk[0-9]* .
-          zip -r ../1dist.zip .
-        working-directory: ${{ env.INST_DIR }}/1dist.vfs
       - name: Package
         run: |
-          cat ../tk/unix/wish 1dist.zip >> contents/${BUILD_NAME}
+          cp ../tk/unix/wish contents/${BUILD_NAME}
           chmod +x contents/${BUILD_NAME}
           cat > contents/README.txt <<EOF
           This is a single-file executable developer preview of Tcl/Tk $TCL_PATCHLEVEL
@@ -197,7 +185,7 @@ jobs:
         working-directory: tcl/win
       - name: Build & Install Tcl
         run: |
-          make binaries libraries tclzipfile install
+          make binaries libraries install
           echo "TCL_ZIP=`pwd`/`echo libtcl*.zip`" >> $GITHUB_ENV
           $INST_DIR/bin/tclsh* $VER_PATH $GITHUB_ENV
         working-directory: tcl/win
@@ -211,15 +199,9 @@ jobs:
           echo "TK_BIN=`pwd`/`echo wish*.exe`" >> $GITHUB_ENV
         working-directory: tk/win
         # TODO: need the Tk version separately for distro naming below
-      - name: Pack Tk Library Files into Library Zip
-        run: |
-          unzip $TCL_ZIP
-          cp -R ../lib/tk[0-9]* .
-          zip -o -r ../1dist.zip *
-        working-directory: install/1dist
       - name: Package
         run: |
-          cat ${TK_BIN} 1dist.zip > combined/${BUILD_NAME}.exe
+          cp ${TK_BIN} combined/${BUILD_NAME}.exe
         working-directory: install
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial

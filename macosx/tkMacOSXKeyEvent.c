@@ -53,7 +53,7 @@ static NSUInteger textInputModifiers;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
     Tk_Window tkwin = (Tk_Window)winPtr;
     NSEventType type = [theEvent type];
-    NSUInteger virtual = [theEvent keyCode];
+    NSUInteger virt = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
     XEvent xEvent;
@@ -126,7 +126,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
 	      [self class], self, _cmd,
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
-	      virtual, w, type);
+	      virt, w, type);
 #endif
 
     }
@@ -215,7 +215,7 @@ static NSUInteger textInputModifiers;
 
     macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
 		    (modifiers & NSAlternateKeyMask ? INDEX_OPTION : 0));
-    macKC.v.virtual = virtual;
+    macKC.v.virt = virt;
     switch (type) {
     case NSFlagsChanged:
 
@@ -349,9 +349,9 @@ static NSUInteger textInputModifiers;
 	    UniChar lowChar = [str characterAtIndex:++i];
 	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
 				  (UniChar)keychar, lowChar);
-	    macKC.v.virtual = NON_BMP_VIRTUAL;
+	    macKC.v.virt = NON_BMP_VIRTUAL;
 	} else if (repRange.location == 0 || sendingIMEText) {
-	    macKC.v.virtual = REPLACEMENT_VIRTUAL;
+	    macKC.v.virt = REPLACEMENT_VIRTUAL;
 	} else {
 	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
 	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
