@@ -656,11 +656,16 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
+$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES) ${TK_ZIP_FILE}
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+		cat ${TK_ZIP_FILE} >> ${WISH}; \
+		${NATIVE_ZIP} -A ${WISH} \
+		  || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 tktest: $(TKTEST)
 
@@ -697,6 +702,11 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	) || ( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && cp ${BUILD_TCLSH}s.exe ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
 	(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 	  (echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
 	  cd ${TK_VFS_ROOT} && \
@@ -792,7 +802,8 @@ cleanhelp:
 clean: cleanhelp
 	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
 	$(RM) $(WISH) $(TKTEST) $(CAT32)
-	$(RM) *.pch *.ilk *.pdb
+	$(RM) *.pch *.ilk *.pdb *.zip
+	$(RMDIR) *.vfs
 
 distclean: clean
 	$(RM) Makefile config.status config.cache config.log tkConfig.sh \

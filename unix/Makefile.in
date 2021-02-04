@@ -618,6 +618,11 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	fi
 	@find ${TK_VFS_ROOT} -type d -empty -delete
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && cp ${BUILD_TCLSH} ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
 	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
 	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
 	    echo 'cd ${TK_VFS_ROOT} &&' $$zip '${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}'; \
@@ -667,6 +672,11 @@ objs: ${OBJS}
 ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
+	    ${NATIVE_ZIP} -A ${WISH_EXE} \
+	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -951,7 +961,8 @@ Makefile: $(UNIX_DIR)/Makefile.in
 clean:
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
 		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
-		 *.zip *.vfs
+		 *.zip
+	rm -rf *.vfs
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
