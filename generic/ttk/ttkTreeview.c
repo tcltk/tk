@@ -56,6 +56,7 @@ struct TreeItemRec {
     Tcl_Obj	*tagsObj;
     Tcl_Obj     *selObj;
     Tcl_Obj     *imageAnchorObj;
+    int 	hidden;
     int		height; 	/* Height is in number of row heights */
 
     Ttk_TagSet  *cellTagSets;
@@ -80,6 +81,9 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
 	0,0,0 },
     {TK_OPTION_INT, "-height", "height", "Height",
 	"1", -1, offsetof(TreeItem,height),
+	0,0,0 },
+    {TK_OPTION_BOOLEAN, "-hidden", "hidden", "Hidden",
+	"0", -1, offsetof(TreeItem,hidden),
 	0,0,0 },
     {TK_OPTION_STRING, "-image", "image", "Image",
 	NULL, offsetof(TreeItem,imageObj), TCL_INDEX_NONE,
@@ -122,6 +126,7 @@ static TreeItem *NewItem(void)
     item->tagsObj = NULL;
     item->selObj = NULL;
     item->imageAnchorObj = NULL;
+    item->hidden = 0;
     item->height = 1;
     item->cellTagSets = NULL;
     item->nTagSets = 0;
@@ -1590,6 +1595,10 @@ static void UpdatePositionItem(
     item->itemPos = *itemPos;
     *itemPos += 1;
 
+    if (item->hidden) {
+	hidden = 1;
+    }
+    
     if (hidden) {
 	item->rowPos = -1;
 	item->visiblePos = -1;
