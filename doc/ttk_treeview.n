@@ -501,6 +501,10 @@ the remaining values are assumed empty.
 If there are more values than columns,
 the extra values are ignored.
 .RE
+.IP \fB\-hidden\fR
+A boolean value indicating whether this item
+should be displayed (\fB\-hidden false\fR) or hidden (\fB\-hidden true\fR).
+If a parent is hidden, all its decendants are hidden too.
 .IP \fB\-open\fR
 A boolean value indicating whether the item's children
 should be displayed (\fB\-open true\fR) or hidden (\fB\-open false\fR).
@@ -521,6 +525,8 @@ Specifies the item image, in case the item's \fB\-image\fR option is empty.
 Specifies the item image anchor, in case the item's \fB\-imageanchor\fR option is empty.
 .IP \fB\-stripedbackground\fR
 Specifies the cell or item background color for alternate lines, if \fB\-striped\fR is true.
+.PP
+Note that \fB\-image\fR and \fB\-imageanchor\fR currently have no effect on cell tags.
 .\" .PP
 .\" \fI(@@@ TODO: sort out order of precedence for options)\fR
 .PP
