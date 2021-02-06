@@ -241,7 +241,8 @@ static int WinTextPrint(
     HDC hDC;
     TEXTMETRIC tm;
     HANDLE printhandle;
-    int i, countlines;
+    size_t lineCur;
+    int countlines;
     int dpi_x, dpi_y, margin_left, margin_right, margin_top, margin_bottom;
     int printarea_horz, printarea_vert, phys_height, phys_width;
     int digital_margin_left, digital_margin_top, digital_margin_right, digital_margin_bottom;
@@ -296,8 +297,8 @@ static int WinTextPrint(
         Tcl_ReadChars(chan, printbuffer, -1, 1);
         cline = Tcl_GetStringFromObj(printbuffer, &clen);
         countlines = 0;
-        for (i = 0; i < strlen(cline); i++) {
-            if (cline[i] == '\n') {
+        for (lineCur = 0; lineCur < strlen(cline); lineCur++) {
+            if (cline[lineCur] == '\n') {
                 countlines++;
             }
         }
