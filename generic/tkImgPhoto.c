@@ -2866,16 +2866,15 @@ if (formatPtr == NULL) {
 	    }
 
 	    /*
-	     * Clear eventual set keys in the metadata object
+	     * Check if driver has shared or changed the metadata tcl object.
+	     * In this case, release and recreate it.
 	     */
 
 	    if (metadataOutObj != NULL) {
 		int dictSize;
-		if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
+		if (Tcl_IsShared(metadataOutObj)
+			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {
-		    /*
-		     * Driver has modified the metadata dict, so clear it
-		     */
 		    Tcl_DecrRefCount(metadataOutObj);
 		    metadataOutObj = Tcl_NewDictObj();
 		    Tcl_IncrRefCount(metadataOutObj);
@@ -3069,16 +3068,15 @@ MatchStringFormat(
 	    }
 
 	    /*
-	     * Clear eventual set keys in the metadata object
+	     * Check if driver has shared or changed the metadata tcl object.
+	     * In this case, release and recreate it.
 	     */
 
 	    if (metadataOutObj != NULL) {
 		int dictSize;
-		if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
+		if (Tcl_IsShared(metadataOutObj)
+			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {
-		    /*
-		     * Driver has modified the metadata dict, so clear it
-		     */
 		    Tcl_DecrRefCount(metadataOutObj);
 		    metadataOutObj = Tcl_NewDictObj();
 		    Tcl_IncrRefCount(metadataOutObj);
