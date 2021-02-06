@@ -351,11 +351,18 @@ static int WinTextPrint(
         total_pages = (countlines + lines_per_page - 1) / lines_per_page;
 
         if (StartDoc(hDC, &di) > 0) {
+	    if(StartPage(pd.hDC) < 0) {
+               Tcl_AppendResult(interp, "unable to start page", NULL);
+            result = TCL_ERROR;
+            return result;
+                }
+          
+	    SetViewportOrgEx(hDC, left_adjust_margin, top_adjust_margin, NULL);
             for (page = 0; page < total_pages; page++) {
                 printhandle = SelectObject(hDC, hFont);
                 RECT r = {
-                    10,
-                    10,
+                    0,
+                    0,
                     page_width,
                     page_height
                 };
