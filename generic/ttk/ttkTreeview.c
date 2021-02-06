@@ -66,8 +66,9 @@ struct TreeItemRec {
      */
     Ttk_TagSet	tagset;
     Ttk_ImageSpec *imagespec;
-    int rowPos;			/* Counting rows (physical space) */
     int itemPos; 		/* Counting items */
+    int visiblePos; 		/* Counting visible items */
+    int rowPos;			/* Counting rows (visible physical space) */
 };
 
 #define ITEM_OPTION_TAGS_CHANGED	0x100
@@ -1582,20 +1583,24 @@ error:
  * 	Update position data for all visible items.
  */
 static void UpdatePositionItem(
-    Treeview *tv, TreeItem *item, int hidden, int *rowPos, int *itemPos)
+    Treeview *tv, TreeItem *item, int hidden,
+    int *rowPos, int *itemPos, int *visiblePos)
 {
     TreeItem *child = item->children;
+    item->itemPos = *itemPos;
+    *itemPos += 1;
+
     if (hidden) {
 	item->rowPos = -1;
-	item->itemPos = -1;
+	item->visiblePos = -1;
     } else {
 	item->rowPos = *rowPos;
-	item->itemPos = *itemPos;
-	if (*itemPos == tv->tree.nTitleItems) {
+	item->visiblePos = *visiblePos;
+	if (*visiblePos == tv->tree.nTitleItems) {
 	    tv->tree.titleRows = *rowPos;
 	}
 
-	*itemPos += 1;
+	*visiblePos += 1;
 	*rowPos += item->height;
     }
 
@@ -1603,7 +1608,7 @@ static void UpdatePositionItem(
 	hidden = 1;
     }
     while (child) {
-	UpdatePositionItem(tv, child, hidden, rowPos, itemPos);
+	UpdatePositionItem(tv, child, hidden, rowPos, itemPos, visiblePos);
 	child = child->next;
     }
 }
@@ -1613,9 +1618,10 @@ static void UpdatePositionItem(
  */
 static void UpdatePositionTree(Treeview *tv)
 {
-    int rowPos = -1, itemPos = -1; /* -1 for the invisible root */
+    /* -1 for the invisible root */
+    int rowPos = -1, itemPos = -1, visiblePos = -1;
     tv->tree.titleRows = 0;
-    UpdatePositionItem(tv, tv->tree.root, 0, &rowPos, &itemPos);
+    UpdatePositionItem(tv, tv->tree.root, 0, &rowPos, &itemPos, &visiblePos);
     tv->tree.totalRows = rowPos;
     tv->tree.rowPosNeedsUpdate = 0;
 }
@@ -2054,7 +2060,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
  static void OverrideStriped(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem)
 {
-    int striped = item->itemPos % 2 && tv->tree.striped;
+    int striped = item->visiblePos % 2 && tv->tree.striped;
     if (striped && displayItem->stripedBgObj) {
 	displayItem->backgroundObj = displayItem->stripedBgObj;
 	displayItem->stripedBgObj = NULL;
@@ -3577,6 +3583,8 @@ static int CellSelectionRange(
 	return TCL_ERROR;
     }
 
+    /* Correct order.
+     */
     if (fromNo > toNo) {
 	colno = fromNo;
 	fromNo = toNo;
@@ -3599,14 +3607,12 @@ static int CellSelectionRange(
 	CellSelectionClear(tv);
     }
 
-    /* Handle if itemTo is before itemFrom
+    /* Correct order.
      */
-    for (item = cellFrom.item; item; item = NextPreorder(item)) {
-	if (item == cellTo.item) {
-	    break;
-	}
+    if (tv->tree.rowPosNeedsUpdate) {
+	UpdatePositionTree(tv);
     }
-    if (item != cellTo.item) {
+    if (cellFrom.item->itemPos > cellTo.item->itemPos) {
 	item = cellFrom.item;
 	cellFrom.item = cellTo.item;
 	cellTo.item = item;
