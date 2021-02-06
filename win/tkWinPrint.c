@@ -28,38 +28,6 @@ static HPALETTE WinGetSystemPalette(void);
 static int WinCanvasPrint(void *, Tcl_Interp *, int, Tcl_Obj *const *);
 static int WinTextPrint(void *, Tcl_Interp *, int, Tcl_Obj *const *);
 
-/* Declaration for functions used later in this file.*/
-static HPALETTE WinGetSystemPalette(void);
-static int WinCanvasPrint(void *, Tcl_Interp *, int, Tcl_Obj *const *);
-static int WinTextPrint(void *, Tcl_Interp *, int, Tcl_Obj *const *);
-
-/*Utility functions and definitions.*/
-
-#define SCALE_FACTOR        100    
-
-/*Convert milimiters to points.*/
- static int MM_TO_PIXELS (int mm, int dpi)
-{
-    return MulDiv (mm * 100, dpi, 2540);
-}
-
-/* Calculate the wrapped height of a string.  */
-static int calculate_wrapped_string_height (HDC hDC, int width, char *s)
-{
-    RECT r = { 0, 0, width, 16384 };
-    DrawText (hDC, s, strlen(s), &r, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
-    return (r.bottom == 16384) ? calculate_wrapped_string_height (hDC, width, " ") : r.bottom;
-}
-
-/* Print a string in the width provided. */
-static void print_string (HDC hDC, int x, int y, int width, const char* s)
-{
-    RECT r = { x, y, x + width, 16384 };
-    DrawText (hDC, s, strlen(s), &r, DT_CALCRECT | DT_NOPREFIX | DT_WORDBREAK);
-}
-
-
-
 /*
  * --------------------------------------------------------------------------
  *
@@ -84,7 +52,7 @@ WinGetSystemPalette(void)
     hPalette = NULL;
     hDC = GetDC(NULL);		/* Get the desktop device context */
     flags = GetDeviceCaps(hDC, RASTERCAPS);
-    if (flags & RC_PALETTE) {
+    if (flags &RC_PALETTE) {
 	LOGPALETTE     *palettePtr;
 
 	palettePtr = (LOGPALETTE *)
@@ -225,7 +193,7 @@ WinCanvasPrint(
 	}
 	StretchDIBits(printDC, 0, 0, pageWidth, pageHeight, 0, 0,
 		      Tk_Width(tkwin), Tk_Height(tkwin), ds.dsBm.bmBits,
-		      (LPBITMAPINFO) & ds.dsBmih, DIB_RGB_COLORS, SRCCOPY);
+		      (LPBITMAPINFO) &ds.dsBmih, DIB_RGB_COLORS, SRCCOPY);
 	EndPage(printDC);
 	EndDoc(printDC);
 	DeleteDC(printDC);
@@ -243,7 +211,6 @@ done:
     } else {
 	return TCL_ERROR;
     }
-
     return result;
 }
 
@@ -262,135 +229,151 @@ done:
  */
 
 static int WinTextPrint(
-			TCL_UNUSED(void * ),
-			Tcl_Interp * interp,
-			int objc,
-			Tcl_Obj *
-			const * objv)
-{
+    TCL_UNUSED(void * ),
+    Tcl_Interp * interp,
+    int objc,
+    Tcl_Obj *
+    const * objv) {
 
     Tcl_Channel chan;
     Tcl_Obj * printbuffer;
     PRINTDLG pd;
     HDC hDC;
+    TEXTMETRIC tm;
+    HANDLE printhandle;
+    int i, countlines;
+    int dpi_x, dpi_y, margin_left, margin_right, margin_top, margin_bottom;
+    int printarea_horz, printarea_vert, phys_height, phys_width;
+    int digital_margin_left, digital_margin_top, digital_margin_right, digital_margin_bottom;
+    int left_adjust_margin, top_adjust_margin, right_adjust_margin, bottom_adjust_margin;
+    int page_height, page_width;
+    int yChar;
+    int page, lines_per_page, total_pages, header_height;
+    int result;
 
-    int dpi, lpx, lpy, res_x, res_y, left_margin, top_margin, right_margin, bottom_margin, width, y_max, job_id, x, y, pagenum, err, space_needed, max_page, clen;
     DOCINFO di;
-    LOGFONT lf;
-    HFONT hTextFont, hOldFont;
+    HFONT hFont;
     char * cline;
+    int clen;
     const char * mode;
 
+    result = TCL_OK;
+
     if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "text");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 1, objv, "text");
+        result = TCL_ERROR;
+        return result;
     }
 
     mode = "r";
 
-
     /* Initialize print dialog. */
-    ZeroMemory( & pd, sizeof(pd));
+    ZeroMemory( &pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_RETURNDC | PD_NOPAGENUMS;
 
-    if (PrintDlg(&pd) == TRUE) {
-	hDC = pd.hDC;
+    if (PrintDlg( &pd) == TRUE) {
+        hDC = pd.hDC;
+        if (hDC == NULL) {
+            Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
+            return TCL_ERROR;
+        }
 
-	if (hDC== NULL) {
-	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
-	    return TCL_ERROR;
-		}
+        ZeroMemory( &di, sizeof(di));
+        di.cbSize = sizeof(di);
+        di.lpszDocName = "Tk Output";
 
-	dpi = 96 * 100 / SCALE_FACTOR;
-	lpx = GetDeviceCaps(hDC, LOGPIXELSX);
-	lpy = GetDeviceCaps(hDC, LOGPIXELSX);
-	res_x = GetDeviceCaps(hDC, HORZRES);
-	res_y = GetDeviceCaps(hDC, VERTRES);
+        /* Read file for printing and count number of lines in file.*/
+        chan = Tcl_FSOpenFileChannel(interp, objv[1], mode, 0);
+        if (chan == NULL) {
+            Tcl_AppendResult(interp, "unable to open channel to file", NULL);
+            result = TCL_ERROR;
+            return result;
+        }
+        printbuffer = Tcl_NewObj();
+        Tcl_IncrRefCount(printbuffer);
+        Tcl_ReadChars(chan, printbuffer, -1, 1);
+        cline = Tcl_GetStringFromObj(printbuffer, &clen);
+        countlines = 0;
+        for (i = 0; i < strlen(cline); i++) {
+            if (cline[i] == '\n') {
+                countlines++;
+            }
+        }
 
-	/* Margins */   
-	left_margin = MM_TO_PIXELS(10, dpi);
-	top_margin = MM_TO_PIXELS(20, dpi);
-	right_margin = MM_TO_PIXELS(20, dpi);
-	bottom_margin = MM_TO_PIXELS(20, dpi);
+        Tcl_Close(interp, chan);
+        Tcl_DecrRefCount(printbuffer);
 
-	width = MulDiv(res_x, dpi, lpx) - (left_margin + right_margin);
-	y_max = MulDiv(res_y, dpi, lpy) - bottom_margin;
+        /* Get printer resolution. */
+        dpi_x = GetDeviceCaps(hDC, LOGPIXELSX);
+        dpi_y = GetDeviceCaps(hDC, LOGPIXELSY);
 
-	/* Set up for SCALE_FACTOR. */
-	SetMapMode(hDC, MM_ANISOTROPIC);
-	SetWindowExtEx(hDC, dpi, dpi, NULL);
-	SetViewportExtEx(hDC, lpx, lpy, NULL);
-	SetStretchBltMode(hDC, HALFTONE);
+        /* Compute physical area and margins. */
+        margin_left = GetDeviceCaps(hDC, PHYSICALOFFSETX);
+        margin_top = GetDeviceCaps(hDC, PHYSICALOFFSETY);
+        printarea_horz = GetDeviceCaps(hDC, HORZRES);
+        printarea_vert = GetDeviceCaps(hDC, VERTRES);
+        phys_width = GetDeviceCaps(hDC, PHYSICALWIDTH);
+        phys_height = GetDeviceCaps(hDC, PHYSICALHEIGHT);
+        margin_right = phys_width - printarea_horz - margin_left;
+        margin_bottom = phys_height - printarea_vert - margin_top;
 
-	ZeroMemory(&di, sizeof(di));
-	di.cbSize = sizeof(di);
-	di.lpszDocName = "Tk Output";
-	job_id = StartDoc(hDC, & di);
+        /* Convert margins into pixel values the printer understands. */
+        digital_margin_left = MulDiv(margin_left, dpi_x, 1000);
+        digital_margin_top = MulDiv(margin_top, dpi_y, 1000);
+        digital_margin_right = MulDiv(margin_right, dpi_x, 1000);
+        digital_margin_bottom = MulDiv(margin_bottom, dpi_y, 1000);
 
-	if (job_id <= 0) {
-	    Tcl_AppendResult(interp, "unable to start document", NULL);
-	    DeleteDC(hDC);
-	    return TCL_ERROR;
-	}
+        /* Compute adjusted printer margins in pixels. */
+        left_adjust_margin = digital_margin_left - margin_left;
+        top_adjust_margin = digital_margin_top - margin_top;
+        right_adjust_margin = digital_margin_right - margin_right;
+        bottom_adjust_margin = digital_margin_bottom - margin_bottom;
 
-	SetBkMode(hDC, TRANSPARENT);
-	ZeroMemory( & lf, sizeof(lf));
-	lf.lfWeight = FW_NORMAL;
-	lf.lfHeight = 12;
-	hTextFont = CreateFontIndirect(&lf);
-	hOldFont = (HFONT) GetCurrentObject(hDC, OBJ_FONT);
-	SelectObject(hDC, hTextFont);
+        /* Finally, here is our print area. */
+        page_width = printarea_horz - (left_adjust_margin + right_adjust_margin);
+        page_height = printarea_vert - (top_adjust_margin + bottom_adjust_margin);
 
-	x = left_margin;
-	y = top_margin;
-	pagenum = 0;
-	err = StartPage(hDC);
+        hFont = (HFONT) GetStockObject(ANSI_FIXED_FONT);
 
-	if (err <= 0) {
-	    Tcl_AppendResult(interp, "unable to start page", NULL);
-	    DeleteDC(hDC);
-	    return TCL_ERROR;
-	}
+        /* Set up the current device context. */
+        SetMapMode(hDC, MM_TEXT);
+        SelectObject(hDC, hFont);
 
-	/* Printing loop, per line.*/
-	chan = Tcl_FSOpenFileChannel(interp, objv[1], mode, 0);
-	if (chan == NULL) {
-	    Tcl_AppendResult(interp, "unable to open channel to file", NULL);
-	    return TCL_ERROR;
-	}
-	printbuffer = Tcl_NewObj();
-	Tcl_IncrRefCount(printbuffer);
-	while (Tcl_GetsObj(chan, printbuffer) != -1) {
-            max_page = 0;
-	    cline = Tcl_GetStringFromObj(printbuffer, &clen);
-	    space_needed = calculate_wrapped_string_height(hDC, width, cline);
-	    if (space_needed > y_max - y) {
-		if (pagenum >= max_page)
-		    break;
+        /* Work out the character dimensions for the current font. */
+        GetTextMetrics(hDC, &tm);
+        yChar = tm.tmHeight;
 
-		if (EndPage(hDC) < 0 || StartPage(hDC) < 0)
-		    break;
-	    }
+        /* Work out how much data can be printed onto each page. */
+        header_height = 0;
+        lines_per_page = (page_height - header_height / yChar);
+        total_pages = (countlines + lines_per_page - 1) / lines_per_page;
 
-	    print_string(hDC, x, y, width, cline);
-	    y += space_needed;
-	}
-	Tcl_Close(interp, chan);
-	Tcl_DecrRefCount(printbuffer);
+        if (StartDoc(hDC, &di) > 0) {
+            for (page = 0; page < total_pages; page++) {
+                printhandle = SelectObject(hDC, hFont);
+                RECT r = {
+                    10,
+                    10,
+                    page_width,
+                    page_height
+                };
+                DrawText(hDC, cline, -1, &r, DT_NOPREFIX | DT_WORDBREAK);
+            }
 
-	EndPage(hDC);
-	EndDoc(hDC);
-	SelectObject(hDC, hOldFont);
-	DeleteObject(hTextFont);
-	DeleteDC(hDC);
+            EndPage(hDC);
+            EndDoc(hDC);
+            DeleteDC(hDC);
 
-	return TCL_OK;
+            result = TCL_OK;
+            return result;
+        }
+        result = TCL_OK;
+        return result;
     }
-    return TCL_OK;
+    return result;
 }
-
 
 /*
  * ----------------------------------------------------------------------
