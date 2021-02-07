@@ -3,10 +3,10 @@
  *
  *	Contains the Mac implementation of the common dialog boxes.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Christian Gollwitzer.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Christian Gollwitzer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -221,7 +221,7 @@ getFileURL(
 		returnCode: (NSModalResponse) returnCode
 	       contextInfo: (void *) contextInfo
 {
-    FilePanelCallbackInfo *callbackInfo = contextInfo;
+    FilePanelCallbackInfo *callbackInfo = (FilePanelCallbackInfo *)contextInfo;
 
     if (returnCode == modalOK) {
 	Tcl_Obj *resultObj;
@@ -266,7 +266,7 @@ getFileURL(
 - (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
 	contextInfo: (void *) contextInfo
 {
-    AlertCallbackInfo *callbackInfo = contextInfo;
+    AlertCallbackInfo *callbackInfo = (AlertCallbackInfo *)contextInfo;
 
     if (returnCode >= NSAlertFirstButtonReturn) {
 	Tcl_Obj *resultObj = Tcl_NewStringObj(alertButtonStrings[
@@ -302,7 +302,6 @@ getFileURL(
 - (void)selectFormat:(id)sender  {
     NSPopUpButton *button      = (NSPopUpButton *)sender;
     filterInfo.fileTypeIndex   = [button indexOfSelectedItem];
-
     if ([[filterInfo.fileTypeAllowsAll objectAtIndex:filterInfo.fileTypeIndex] boolValue]) {
 	[openpanel setAllowsOtherFileTypes:YES];
 
@@ -423,7 +422,7 @@ Tk_ChooseColorObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int result = TCL_ERROR;
-    Tk_Window parent, tkwin = clientData;
+    Tk_Window parent, tkwin = (Tk_Window)clientData;
     const char *title = NULL;
     int i;
     NSColor *color = nil, *initialColor = nil;
@@ -678,7 +677,7 @@ Tk_GetOpenFileObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
     int index, len, multiple = 0;
@@ -799,6 +798,7 @@ Tk_GetOpenFileObjCmd(
 	[label setBezeled:NO];
 	[label setDrawsBackground:NO];
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
+	[popupButton setTarget:NSApp];
 	[popupButton setAction:@selector(selectFormat:)];
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
@@ -1084,8 +1084,8 @@ Tk_GetSaveFileObjCmd(
 
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
 	[popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
+	[popupButton setTarget:NSApp];
 	[popupButton setAction:@selector(saveFormat:)];
-
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
 
@@ -1679,10 +1679,10 @@ FontchooserEvent(
     if (!fontchooserInterp) {
 	return;
     }
-    fcdPtr = Tcl_GetAssocData(fontchooserInterp, "::tk::fontchooser", NULL);
+    fcdPtr = (FontchooserData *)Tcl_GetAssocData(fontchooserInterp, "::tk::fontchooser", NULL);
     switch (kind) {
     case FontchooserClosed:
-	if (fcdPtr->parent != None) {
+	if (fcdPtr->parent != NULL) {
 	    Tk_SendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
 	    fontchooserInterp = NULL;
 	}
@@ -1738,7 +1738,7 @@ FontchooserCget(
 
     switch(optionIndex) {
     case FontchooserParent:
-	if (fcdPtr->parent != None) {
+	if (fcdPtr->parent != NULL) {
 	    resObj = Tcl_NewStringObj(
 		    ((TkWindow *)fcdPtr->parent)->pathName, -1);
 	} else {
@@ -1801,7 +1801,7 @@ FontchooserConfigureCmd(
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
-    FontchooserData *fcdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser",
+    FontchooserData *fcdPtr = (FontchooserData *)Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
     int i, r = TCL_OK;
 
@@ -1858,7 +1858,7 @@ FontchooserConfigureCmd(
 	    Tk_Window parent = Tk_NameToWindow(interp,
 		    Tcl_GetString(objv[i+1]), tkwin);
 
-	    if (parent == None) {
+	    if (parent == NULL) {
 		return TCL_ERROR;
 	    }
 	    if (fcdPtr->parent) {
@@ -1885,7 +1885,7 @@ FontchooserConfigureCmd(
 		fcdPtr->titleObj = NULL;
 	    }
 	    break;
-	case FontchooserFont:
+	case FontchooserFont: {
 	    Tcl_GetStringFromObj(objv[i+1], &len);
 	    if (len) {
 		Tk_Font f = Tk_AllocFontFromObj(interp, tkwin, objv[i+1]);
@@ -1919,6 +1919,7 @@ FontchooserConfigureCmd(
 			"TkFontchooserFontChanged", NULL);
 	    }
 	    break;
+	}
 	case FontchooserCmd:
 	    if (fcdPtr->cmdObj) {
 		Tcl_DecrRefCount(fcdPtr->cmdObj);
@@ -1964,10 +1965,10 @@ FontchooserShowCmd(
     TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 {
-    FontchooserData *fcdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser",
+    FontchooserData *fcdPtr = (FontchooserData *)Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
 
-    if (fcdPtr->parent == None) {
+    if (fcdPtr->parent == NULL) {
 	fcdPtr->parent = (Tk_Window)clientData;
 	Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
@@ -2042,7 +2043,7 @@ FontchooserParentEventHandler(
     ClientData clientData,
     XEvent *eventPtr)
 {
-    FontchooserData *fcdPtr = clientData;
+    FontchooserData *fcdPtr = (FontchooserData *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
@@ -2074,7 +2075,7 @@ DeleteFontchooserData(
     ClientData clientData,
     Tcl_Interp *interp)
 {
-    FontchooserData *fcdPtr = clientData;
+    FontchooserData *fcdPtr = (FontchooserData *)clientData;
 
     if (fcdPtr->titleObj) {
 	Tcl_DecrRefCount(fcdPtr->titleObj);

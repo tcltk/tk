@@ -6,8 +6,8 @@
  * supplemented by platform-specific files. The geometry calculation and
  * drawing code for menus is in the file tkMenuDraw.c
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -161,7 +161,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
 	(ClientData) menuStateStrings, 0},
     {TK_OPTION_INT, "-underline", NULL, NULL,
-	DEF_MENU_ENTRY_UNDERLINE, TCL_INDEX_NONE, offsetof(TkMenuEntry, underline), 0, NULL, 0},
+	TK_OPTION_UNDERLINE_DEF(TkMenuEntry, underline), 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
@@ -1710,12 +1710,12 @@ PostProcessEntry(
     if (mePtr->labelPtr == NULL) {
 	mePtr->labelLength = 0;
     } else {
-	(void)TkGetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
+	(void)Tcl_GetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
     }
     if (mePtr->accelPtr == NULL) {
 	mePtr->accelLength = 0;
     } else {
-	(void)TkGetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
+	(void)Tcl_GetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
     }
 
     /*

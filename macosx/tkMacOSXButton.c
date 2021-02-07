@@ -4,12 +4,12 @@
  *	This file implements the Macintosh specific portion of the button
  *	widgets.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2007 Revar Desmera.
- * Copyright 2015 Kevin Walzer/WordTech Communications LLC.
- * Copyright 2015 Marc Culler.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001 Apple Computer, Inc.
+ * Copyright © 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2007 Revar Desmera.
+ * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -181,8 +181,8 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    MacButton *macButtonPtr = clientData;
-    TkButton *butPtr = clientData;
+    MacButton *macButtonPtr = (MacButton *)clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
@@ -901,8 +901,8 @@ ButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkButton *buttonPtr = clientData;
-    MacButton *mbPtr = clientData;
+    TkButton *buttonPtr = (TkButton *)clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     if (eventPtr->type == ActivateNotify
 	    || eventPtr->type == DeactivateNotify) {
@@ -957,7 +957,7 @@ TkMacOSXComputeButtonParams(
         *btnkind = kThemePushButton;
     }
 
-    if ((butPtr->image == None) && (butPtr->bitmap == None)) {
+    if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
         switch (butPtr->type) {
 	case TYPE_BUTTON:
 	    *btnkind = kThemePushButton;
@@ -1174,7 +1174,7 @@ TkMacOSXComputeButtonDrawParams(
 static void
 PulseDefaultButtonProc(ClientData clientData)
 {
-    MacButton *mbPtr = clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     TkpDisplayButton(clientData);
     /*

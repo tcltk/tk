@@ -5,8 +5,8 @@
 #	This file is used to generate the tkDecls.h, tkPlatDecls.h,
 #	tkStub.c, and tkPlatStub.c files.
 #
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.

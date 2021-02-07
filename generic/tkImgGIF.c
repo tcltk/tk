@@ -8,10 +8,10 @@
  *	encoded ascii. Derived from the giftoppm code found in the pbmplus
  *	package and tkImgFmtPPM.c in the tk4.0b2 distribution.
  *
- * Copyright (c) Reed Wade (wade@cs.utk.edu), University of Tennessee
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1997 Australian National University
- * Copyright (c) 2005-2010 Donal K. Fellows
+ * Copyright © Reed Wade (wade@cs.utk.edu), University of Tennessee
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Australian National University
+ * Copyright © 2005-2010 Donal K. Fellows
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -765,7 +765,7 @@ StringMatchGIF(
     (void)format;
     (void)dummy;
 
-    data = TkGetByteArrayFromObj(dataObj, &length);
+    data = Tcl_GetByteArrayFromObj(dataObj, &length);
 
     /*
      * Header is a minimum of 10 bytes.
@@ -833,7 +833,7 @@ StringReadGIF(
     MFile handle, *hdlPtr = &handle;
     TkSizeT length;
     const char *xferFormat;
-    unsigned char *data = TkGetByteArrayFromObj(dataObj, &length);
+    unsigned char *data = Tcl_GetByteArrayFromObj(dataObj, &length);
 
     mInit(data, hdlPtr, length);
 

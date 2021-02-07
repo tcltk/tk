@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets
  * like scrollbars in which individual elements may

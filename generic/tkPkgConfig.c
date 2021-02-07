@@ -4,8 +4,8 @@
  *	This file contains the configuration information to embed into the tcl
  *	binary library.
  *
- * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
- * Copyright (c) 2017 Stuart Cassoff <stwo@users.sourceforge.net>
+ * Copyright © 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ * Copyright © 2017 Stuart Cassoff <stwo@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

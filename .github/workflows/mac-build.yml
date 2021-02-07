@@ -74,7 +74,7 @@ jobs:
         if: ${{ env.USE_XVFB }}
         # This involves black magic
         run: |
-          brew cask install xquartz
+          brew install --cask xquartz
           sudo /opt/X11/lib/X11/xinit/privileged_startx.d/10-tmpdirs || true
         working-directory: .
       - name: Build Tcl

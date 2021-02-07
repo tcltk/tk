@@ -3,7 +3,7 @@
 # standard white-box fashion for Tcl tests.
 #
 # Copyright © 1996-1998 Sun Microsystems, Inc.
-# Copyright © 1998-1999 by Scriptics Corporation.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -2340,7 +2340,7 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntuNoXft -setup {
+test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5
@@ -2364,7 +2364,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
 } -result {times}
-test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed} -body {
+test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed failsOnUbuntu} -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
         # avoid test failure on systems that have a real "times new roman" font
         set res 1

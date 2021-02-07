@@ -4,10 +4,10 @@
  *	This file implements functions that decode & handle keyboard events on
  *	MacOS X.
  *
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2012 Adrian Robert.
- * Copyright 2015-2020 Marc Culler.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2012 Adrian Robert.
+ * Copyright © 2015-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -53,7 +53,7 @@ static NSUInteger textInputModifiers;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
     Tk_Window tkwin = (Tk_Window)winPtr;
     NSEventType type = [theEvent type];
-    NSUInteger virtual = [theEvent keyCode];
+    NSUInteger virt = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
     XEvent xEvent;
@@ -126,7 +126,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
 	      [self class], self, _cmd,
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
-	      virtual, w, type);
+	      virt, w, type);
 #endif
 
     }
@@ -215,7 +215,7 @@ static NSUInteger textInputModifiers;
 
     macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
 		    (modifiers & NSAlternateKeyMask ? INDEX_OPTION : 0));
-    macKC.v.virtual = virtual;
+    macKC.v.virt = virt;
     switch (type) {
     case NSFlagsChanged:
 
@@ -268,7 +268,7 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 @synthesize tkDirtyRect = _tkDirtyRect;
-@synthesize tkNeedsDisplay = _tkNeedsDisplay;;
+@synthesize tkNeedsDisplay = _tkNeedsDisplay;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -349,9 +349,9 @@ static NSUInteger textInputModifiers;
 	    UniChar lowChar = [str characterAtIndex:++i];
 	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
 				  (UniChar)keychar, lowChar);
-	    macKC.v.virtual = NON_BMP_VIRTUAL;
+	    macKC.v.virt = NON_BMP_VIRTUAL;
 	} else if (repRange.location == 0 || sendingIMEText) {
-	    macKC.v.virtual = REPLACEMENT_VIRTUAL;
+	    macKC.v.virt = REPLACEMENT_VIRTUAL;
 	} else {
 	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
 	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);

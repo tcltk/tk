@@ -3,7 +3,7 @@
  *
  *	This file contains functions that implement the common Tk object types
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -99,6 +99,9 @@ static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 
 #if TCL_MAJOR_VERSION < 9
+#ifdef __cplusplus
+extern "C" {
+#endif
 #if defined(USE_TCL_STUBS)
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntStubs, just
@@ -109,7 +112,7 @@ typedef struct TclIntStubs {
     void (*dummy[34]) (void); /* dummy entries 0-33, not used */
     int (*tclGetIntForIndex) (Tcl_Interp *interp, Tcl_Obj *objPtr, int endValue, int *indexPtr); /* 34 */
 } TclIntStubs;
-extern const struct TclIntStubs *tclIntStubsPtr;
+extern const TclIntStubs *tclIntStubsPtr;
 
 # undef Tcl_GetIntForIndex
 # define Tcl_GetIntForIndex(interp, obj, max, ptr) ((tclIntStubsPtr->tclGetIntForIndex == NULL)? \
@@ -118,6 +121,9 @@ extern const struct TclIntStubs *tclIntStubsPtr;
 #elif TCL_MINOR_VERSION < 7
 extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
 # define Tcl_GetIntForIndex(interp, obj, max, ptr) TclGetIntForIndex(interp, obj, max, ptr)
+#endif
+#ifdef __cplusplus
+}
 #endif
 #endif
 

@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 .TH keysyms n 8.3 Tk "Tk Built-In Commands"
@@ -544,9 +544,11 @@ Greek_EPSILONaccent               1954     0x7A2
 Greek_ETAaccent                   1955     0x7A3
 Greek_IOTAaccent                  1956     0x7A4
 Greek_IOTAdieresis                1957     0x7A5
+Greek_IOTAaccentdiaeresis         1958     0x7A6
 Greek_OMICRONaccent               1959     0x7A7
 Greek_UPSILONaccent               1960     0x7A8
 Greek_UPSILONdieresis             1961     0x7A9
+Greek_UPSILONaccentdieresis       1962     0x7AA
 Greek_OMEGAaccent                 1963     0x7AB
 Greek_accentdieresis              1966     0x7AE
 Greek_horizbar                    1967     0x7AF
@@ -1221,16 +1223,13 @@ Prior                            65365     0xFF55
 Next                             65366     0xFF56
 End                              65367     0xFF57
 Begin                            65368     0xFF58
-Win_L                            65371     0xFF5B
-Win_R                            65372     0xFF5C
-App                              65373     0xFF5D
 Select                           65376     0xFF60
 Print                            65377     0xFF61
 Execute                          65378     0xFF62
 Insert                           65379     0xFF63
 Undo                             65381     0xFF65
 Redo                             65382     0xFF66
-Menu                             65383     0xFF67
+Menu (App)                       65383     0xFF67
 Find                             65384     0xFF68
 Cancel                           65385     0xFF69
 Help                             65386     0xFF6A
@@ -1317,8 +1316,8 @@ Meta_L                           65511     0xFFE7
 Meta_R                           65512     0xFFE8
 Alt_L                            65513     0xFFE9
 Alt_R                            65514     0xFFEA
-Super_L                          65515     0xFFEB
-Super_R                          65516     0xFFEC
+Super_L (Win_L)                  65515     0xFFEB
+Super_R (Win_R)                  65516     0xFFEC
 Hyper_L                          65517     0xFFED
 Hyper_R                          65518     0xFFEE
 braille_dot_1                    65521     0xFFF1

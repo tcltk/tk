@@ -5,11 +5,11 @@
  *	toolkit, in order to avoid round-trips to the server to
  *	map color names to pixel values.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2020 Marc Culler
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -421,6 +421,8 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
+#else
+    (void) tkwin;
 #endif
     return false;
 }
@@ -579,7 +581,7 @@ TkpGetColor(
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
     static Bool initialized = NO;
-    static NSColorSpace* sRGB = NULL;
+    static NSColorSpace* sRGB = nil;
 
     if (!initialized) {
 	initialized = YES;

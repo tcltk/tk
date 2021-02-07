@@ -1,4 +1,4 @@
-/* square.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+/* square.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * Minimal sample ttk widget.
  */

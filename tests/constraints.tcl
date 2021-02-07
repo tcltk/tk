@@ -5,7 +5,7 @@ if {[namespace exists tk::test]} {
     return
 }
 
-package require Tk
+package require tk
 tk appname tktest
 wm title . tktest
 # If the main window isn't already mapped (e.g. because the tests are

@@ -3,10 +3,10 @@
  *
  *	The code in this file provides an interface for XImages,
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017-2020 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -86,7 +86,7 @@ TkMacOSXCreateCGImageWithXImage(
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
 	    }
 	} else {
-	    data = memcpy(ckalloc(len), image->data + image->xoffset, len);
+	    data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	}
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
@@ -116,7 +116,7 @@ TkMacOSXCreateCGImageWithXImage(
 	bitmapInfo = (image->byte_order == MSBFirst ?
 		kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
 	bitmapInfo |= kCGImageAlphaLast;
-	data = memcpy(ckalloc(len), image->data + image->xoffset, len);
+	data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
 		    releaseData);
@@ -336,7 +336,7 @@ XCreateImage(
     XImage *ximage;
 
     display->request++;
-    ximage = ckalloc(sizeof(XImage));
+    ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
     ximage->width = width;
@@ -418,7 +418,7 @@ XPutImage(
     int dest_x,			/* Destination X & Y. */
     int dest_y,
     unsigned int width,	        /* Same width & height for both */
-    unsigned int height)	/* distination and source. */
+    unsigned int height)	/* destination and source. */
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
@@ -516,8 +516,8 @@ CreateCGImageFromDrawableRect(
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGImageRef cg_image = NULL, result = NULL;
-    NSBitmapImageRep *bitmapRep = NULL;
-    NSView *view = NULL;
+    NSBitmapImageRep *bitmapRep = nil;
+    NSView *view = nil;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	/*
 	 * This MacDrawable is a bitmap, so its view is NULL.
@@ -531,7 +531,7 @@ CreateCGImageFromDrawableRect(
 	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
 	    CGImageRelease(cg_image);
 	}
-    } else if (TkMacOSXGetNSViewForDrawable(mac_drawable) != NULL) {
+    } else if (TkMacOSXGetNSViewForDrawable(mac_drawable) != nil) {
 
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
@@ -629,10 +629,10 @@ XGetImage(
     TCL_UNUSED(unsigned long), /* plane_mask */
     int format)
 {
-    NSBitmapImageRep* bitmapRep = NULL;
+    NSBitmapImageRep* bitmapRep = nil;
     NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
-    char* bitmap = NULL;
+    char *bitmap = NULL;
     char R, G, B, A;
     int depth = 32, offset = 0, bitmap_pad = 0;
     unsigned int bytes_per_row, size, row, n, m;
@@ -655,7 +655,7 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
-	bitmap = ckalloc(size);
+	bitmap = (char *)ckalloc(size);
 	if (!bitmap
 		|| (bitmap_fmt != 0 && bitmap_fmt != 1)
 		|| [bitmapRep samplesPerPixel] != 4
