@@ -344,6 +344,44 @@ XQueryPointer(
  *----------------------------------------------------------------------
  */
 
+ /*
+  * TkSetCursorPos is a helper function replacing SetCursorPos since this
+  * latter Windows function appears to have been broken by Microsoft
+  * since Win10 Falls Creator Update - See ticket [69b48f427e] along with
+  * several other Internet reports about this breakage.
+  */
+
+void TkSetCursorPos(
+    int x,
+    int y)
+{
+    INPUT input;
+    int xscreen = (int)(GetSystemMetrics(SM_CXSCREEN) - 1);
+    int yscreen = (int)(GetSystemMetrics(SM_CYSCREEN) - 1);
+
+    input.type = INPUT_MOUSE;
+    input.mi.dx = (x * 65535 + xscreen / 2) / xscreen;
+    input.mi.dy = (y * 65535 + yscreen / 2) / yscreen;
+
+    /*
+     * Horrible workaround here. There is a bug on Win 10: when warping to
+     * pixel (x = 0, y = 0) the SendInput() below just does not move the
+     * mouse pointer. However, as soon as dx or dy is non zero it moves as
+     * expected. Given the scaling factor of 65535 (see above),
+     * (dx = 1 , dy = 0) still means pixel (x = 0, y = 0).
+     * See ticket [69b48f427e].
+     */
+    if (input.mi.dx == 0 && input.mi.dy == 0) {
+	input.mi.dx = 1;
+    }
+
+    input.mi.mouseData = 0;
+    input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+    input.mi.time = 0;
+    input.mi.dwExtraInfo = 0;
+    SendInput(1, &input, sizeof(input));
+}
+
 int
 XWarpPointer(
     Display *display,
@@ -359,7 +397,7 @@ XWarpPointer(
     RECT r;
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
-    SetCursorPos(r.left+dest_x, r.top+dest_y);
+    TkSetCursorPos(r.left+dest_x, r.top+dest_y);
     return Success;
 }
 
