@@ -1355,35 +1355,37 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    CGAffineTransform t = {
-	.a = 1, .b = 0,
-	.c = 0, .d = -1,
-	.tx = 0,
-	.ty = dc.portBounds.size.height
-    };
+    {
+	CGAffineTransform t = {
+	    .a = 1, .b = 0,
+	    .c = 0, .d = -1,
+	    .tx = 0,
+	    .ty = dc.portBounds.size.height
+	};
 
-    dc.portBounds.origin.x += macDraw->xOff;
-    dc.portBounds.origin.y += macDraw->yOff;
-    CGContextSaveGState(dc.context);
-    CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-    CGContextConcatCTM(dc.context, t);
-    if (dc.clipRgn) {
+	dc.portBounds.origin.x += macDraw->xOff;
+	dc.portBounds.origin.y += macDraw->yOff;
+	CGContextSaveGState(dc.context);
+	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
+	CGContextConcatCTM(dc.context, t);
+	if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
-	CGContextSaveGState(dc.context);
-	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
-	CGContextEOFillPath(dc.context);
-	CGContextRestoreGState(dc.context);
+	    CGContextSaveGState(dc.context);
+	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
+	    CGContextEOFillPath(dc.context);
+	    CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
 
-	CGRect r;
-	CGRect b = CGRectApplyAffineTransform(
-	    CGContextGetClipBoundingBox(dc.context), t);
-	if (!HIShapeIsRectangular(dc.clipRgn) ||
-	    !CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
-	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	    CGContextEOClip(dc.context);
+	    CGRect r;
+	    CGRect b = CGRectApplyAffineTransform(
+		CGContextGetClipBoundingBox(dc.context), t);
+	    if (!HIShapeIsRectangular(dc.clipRgn) ||
+		!CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
+		ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+		CGContextEOClip(dc.context);
+	    }
 	}
     }
     if (gc) {

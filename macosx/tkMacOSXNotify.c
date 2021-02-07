@@ -16,7 +16,32 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXConstants.h"
-#include <tclInt.h>
+
+#ifdef USE_TCL_STUBS
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*  Little hack to eliminate the need for "tclInt.h" here:
+    Just copy a small portion of TclIntPlatStubs, just
+    enough to make it work. See [600b72bfbc] */
+typedef struct {
+    int magic;
+    void *hooks;
+    void (*dummy[19]) (void); /* dummy entries 0-18, not used */
+    void (*tclMacOSXNotifierAddRunLoopMode) (const void *runLoopMode); /* 19 */
+} TclIntPlatStubs;
+extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#ifdef __cplusplus
+}
+#endif
+#define TclMacOSXNotifierAddRunLoopMode \
+	(tclIntPlatStubsPtr->tclMacOSXNotifierAddRunLoopMode) /* 19 */
+#elif TCL_MINOR_VERSION < 7
+    extern void TclMacOSXNotifierAddRunLoopMode(const void *runLoopMode);
+#else
+    extern void Tcl_MacOSXNotifierAddRunLoopMode(const void *runLoopMode);
+#   define TclMacOSXNotifierAddRunLoopMode Tcl_MacOSXNotifierAddRunLoopMode
+#endif
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */
@@ -25,7 +50,7 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-#define TSD_INIT() ThreadSpecificData *tsdPtr = \
+#define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 static void TkMacOSXNotifyExitHandler(ClientData clientData);
