@@ -427,10 +427,11 @@ evaluation; see \fBbind(n)\fR for details.
 .RE
 .TP
 \fIpathName \fBtag cell \fIsubcmd...\fR
+A \fIcellList\fR argument may be a single cell or a list of cells.
 .RS
 .TP
-\fIpathName \fBtag cell add \fItag cells\fR
-Adds the specified \fItag\fR to each of the listed \fIcells\fR.
+\fIpathName \fBtag cell add \fItag cellList\fR
+Adds the specified \fItag\fR to each of the listed \fIcellList\fR.
 If \fItag\fR is already present for a particular cell,
 then the tag list for that cell is unchanged.
 .TP
@@ -440,9 +441,9 @@ depending on whether the specified cell has the named tag.
 Otherwise, returns a list of all cells which have
 the specified tag.
 .TP
-\fIpathName \fBtag cell remove \fItag\fR ?\fIcells\fR?
-Removes the specified \fItag\fR from each of the listed \fIcells\fR.
-If \fIcells\fR is omitted, removes \fItag\fR from each cell in the tree.
+\fIpathName \fBtag cell remove \fItag\fR ?\fIcellList\fR?
+Removes the specified \fItag\fR from each of the listed \fIcellList\fR.
+If \fIcellList\fR is omitted, removes \fItag\fR from each cell in the tree.
 .RE
 .TP
 \fIpathName \fBtag configure \fItagName\fR ?\fIoption\fR? ?\fIvalue option value...\fR?
@@ -484,7 +485,7 @@ in the \fBinsert\fR and \fBitem\fR widget commands.
 .IP \fB\-text\fR
 The textual label to display for the item.
 .IP \fB\-height\fR
-The height for the item, in multiples of \fB\-rowheight\fP. Default is 1.
+The height for the item, in integer multiples of \fB\-rowheight\fP. Default is 1.
 .IP \fB\-image\fR
 A Tk image, displayed next to the label, placed according to \fB-imageanchor\fR.
 .IP \fB\-imageanchor\fR
