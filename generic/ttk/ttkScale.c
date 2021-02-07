@@ -1,10 +1,9 @@
 /*
- * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
  */
 
-#include "tkInt.h"
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"

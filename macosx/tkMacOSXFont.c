@@ -4,9 +4,9 @@
  *	Contains the Macintosh implementation of the platform-independent font
  *	package interface.
  *
- * Copyright 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
+ * Copyright © 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -112,7 +112,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     self = [self init];
     if (self) {
 	Tcl_DStringInit(&_ds);
-	Tcl_UtfToChar16DString(bytes, len, &_ds);
+	Tcl_UtfToChar16DString((const char *)bytes, len, &_ds);
 	_string = [[NSString alloc]
 	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
 			       length:Tcl_DStringLength(&_ds)>>1
@@ -127,7 +127,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     self = [self init];
     if (self) {
 	_string = [[NSString alloc] initWithString:aString];
-	self.UTF8String = _string.UTF8String;
+	_UTF8String = _string.UTF8String;
     }
     return self;
 }
@@ -148,10 +148,6 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 {
     return [_string characterAtIndex:index];
 }
-
-# ifndef __clang__
-@synthesize DString = _ds;
-#endif
 
 - (Tcl_DString)DString
 {
@@ -177,6 +173,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 
 #ifndef __clang__
 @synthesize UTF8String = _UTF8String;
+@synthesize DString = _ds;
 #endif
 @end
 

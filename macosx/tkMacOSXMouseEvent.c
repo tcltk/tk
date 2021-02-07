@@ -4,8 +4,8 @@
  *	This file implements functions that decode & handle mouse events on
  *	MacOS X.
  *
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -686,6 +686,12 @@ TkpWarpPointer(
     }
 
     CGWarpMouseCursorPosition(pt);
+
+    if (dispPtr->warpWindow) {
+        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+    } else {
+        TkGenerateButtonEventForXPointer(None);
+    }
 }
 
 /*

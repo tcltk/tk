@@ -4,8 +4,8 @@
  *	This file maintains a database of fonts for the Tk toolkit. It also
  *	provides several utility functions for measuring and displaying text.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -733,7 +733,7 @@ Tk_FontObjCmd(
 	if (tkfont == NULL) {
 	    return TCL_ERROR;
 	}
-	string = TkGetStringFromObj(objv[3 + skip], &length);
+	string = Tcl_GetStringFromObj(objv[3 + skip], &length);
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		Tk_TextWidth(tkfont, string, length)));
 	Tk_FreeFont(tkfont);
@@ -3344,7 +3344,7 @@ Tk_TextLayoutToPostscript(
 	    sprintf(uindex, "%04X", ch);		/* endianness? */
 	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
 	    if (glyphname) {
-		ps = TkGetStringFromObj(psObj, &len);
+		ps = Tcl_GetStringFromObj(psObj, &len);
 		if (ps[len-1] == '(') {
 		    /*
 		     * In-place edit. Ewww!

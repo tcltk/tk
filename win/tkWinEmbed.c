@@ -6,7 +6,7 @@
  *	one application can use as its main window an internal window from
  *	another application).
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

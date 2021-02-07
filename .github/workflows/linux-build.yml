@@ -14,14 +14,13 @@ jobs:
         compiler:
           - "gcc"
           - "clang"
-        symbols:
-          - "no"
-          - "mem"
-        disables:
+        cfgopt:
           - ""
+          - "CFLAGS=-DTK_NO_DEPRECATED=1"
           - "--disable-shared"
           - "--disable-xft"
           - "--disable-xss"
+          - "--enable-symbols"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -44,10 +43,10 @@ jobs:
           echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: --enable-symbols=${{ matrix.symbols }} ${{ matrix.disables }}
+          CFGOPT: ${{ matrix.cfgopt }}
           COMPILER: ${{ matrix.compiler }}
-          OPTS: ${{ matrix.compiler }}-${{ matrix.symbols }}${{ matrix.disables }}
-      - name: Configure (symbols=${{ matrix.symbols }} opts=${{ matrix.disables }})
+          OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
+      - name: Configure (opts=${{ matrix.cfgopt }})
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
@@ -85,12 +84,12 @@ jobs:
             exit 1
           }
       - name: Discover Version ID
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         run: |
           cd /tmp/dist
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         uses: actions/upload-artifact@v2
         with:
           name: Tk ${{ env.VERSION }} Source distribution (unofficial)
@@ -98,7 +97,7 @@ jobs:
             /tmp/dist/tk*
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         uses: actions/upload-artifact@v2
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (unofficial)
@@ -109,9 +108,9 @@ jobs:
       matrix:
         compiler:
           - "gcc"
-        symbols:
-          - "no"
-          - "mem"
+        cfgopt:
+          - ""
+          - "--enable-symbols"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -126,9 +125,9 @@ jobs:
           echo "CC=$COMPILER" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: --enable-symbols=${{ matrix.symbols }}
+          CFGOPT: ${{ matrix.cfgopt }}
           COMPILER: ${{ matrix.compiler }}
-      - name: Configure (symbols=${{ matrix.symbols }})
+      - name: Configure ${{ matrix.cfgopt }}
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
@@ -143,15 +142,13 @@ jobs:
           }
       - name: Run Tests
         run: |
-          xvfb-run --auto-servernum make test-classic | tee out-classic.txt || {
+          xvfb-run --auto-servernum make test-classic | tee out-classic.txt
+          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt
+          grep -q "Failed	0" out-classic.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
-          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          cat out-classic.txt out-ttk.txt | grep -q "Failed	0" || {
+          grep -q "Failed	0" out-ttk.txt || {
             echo "::error::Failure during Test"
             exit 1
           }

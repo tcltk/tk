@@ -4,10 +4,10 @@
  *	This file contains functions that draw to windows. Many of thees
  *	functions emulate Xlib functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009 Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2014-2020 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2014-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1322,7 +1322,7 @@ TkMacOSXSetupDrawingContext(
 	 * will get redrawn in the next call to its drawRect method.
 	 */
 
-	currentBounds = CGContextGetClipBoundingBox(dc.context);
+	currentBounds = NSRectFromCGRect(CGContextGetClipBoundingBox(dc.context));
 	if (!NSContainsRect(currentBounds, drawingBounds)) {
 	    [view addTkDirtyRect:drawingBounds];
 	}
@@ -1332,35 +1332,37 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    CGAffineTransform t = {
-	.a = 1, .b = 0,
-	.c = 0, .d = -1,
-	.tx = 0,
-	.ty = dc.portBounds.size.height
-    };
+    {
+	CGAffineTransform t = {
+	    .a = 1, .b = 0,
+	    .c = 0, .d = -1,
+	    .tx = 0,
+	    .ty = dc.portBounds.size.height
+	};
 
-    dc.portBounds.origin.x += macDraw->xOff;
-    dc.portBounds.origin.y += macDraw->yOff;
-    CGContextSaveGState(dc.context);
-    CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-    CGContextConcatCTM(dc.context, t);
-    if (dc.clipRgn) {
+	dc.portBounds.origin.x += macDraw->xOff;
+	dc.portBounds.origin.y += macDraw->yOff;
+	CGContextSaveGState(dc.context);
+	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
+	CGContextConcatCTM(dc.context, t);
+	if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
-	CGContextSaveGState(dc.context);
-	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
-	CGContextEOFillPath(dc.context);
-	CGContextRestoreGState(dc.context);
+	    CGContextSaveGState(dc.context);
+	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
+	    CGContextEOFillPath(dc.context);
+	    CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
 
-	CGRect r;
-	CGRect b = CGRectApplyAffineTransform(
-	    CGContextGetClipBoundingBox(dc.context), t);
-	if (!HIShapeIsRectangular(dc.clipRgn) ||
-	    !CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
-	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	    CGContextEOClip(dc.context);
+	    CGRect r;
+	    CGRect b = CGRectApplyAffineTransform(
+		CGContextGetClipBoundingBox(dc.context), t);
+	    if (!HIShapeIsRectangular(dc.clipRgn) ||
+		!CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
+		ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+		CGContextEOClip(dc.context);
+	    }
 	}
     }
     if (gc) {

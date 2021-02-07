@@ -6,7 +6,7 @@
  *	to generate appropriate enter/leave events, and to update the global
  *	grab window information.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -502,7 +502,7 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	tsdPtr->lastWinPtr = NULL;
+	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
     }
     if (winPtr == tsdPtr->grabWinPtr) {
 	tsdPtr->grabWinPtr = NULL;

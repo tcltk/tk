@@ -3,9 +3,9 @@
  *
  *	This file handles the implementation of native bitmaps.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -178,7 +178,7 @@ TkpCreateNativeBitmap(
     NSImage *iconImage = [[NSWorkspace sharedWorkspace]
 			     iconForFileType: iconUTI];
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
-    Pixmap pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
+    Pixmap pixmap = PixmapFromImage(display, iconImage, size);
     return pixmap;
 }
 
@@ -257,7 +257,7 @@ TkpGetNativeAppBitmap(
     if (iconBitmapTable.buckets &&
 	    (hPtr = Tcl_FindHashEntry(&iconBitmapTable, name))) {
 	OSType type;
-	IconBitmap *iconBitmap = Tcl_GetHashValue(hPtr);
+	IconBitmap *iconBitmap = (IconBitmap *)Tcl_GetHashValue(hPtr);
 	name = NULL;
 	size = NSMakeSize(iconBitmap->width, iconBitmap->height);
 	switch (iconBitmap->kind) {
@@ -403,7 +403,7 @@ TkMacOSXIconBitmapObjCmd(
     }
     hPtr = Tcl_CreateHashEntry(&iconBitmapTable, name, &isNew);
     if (!isNew) {
-	iconBitmap = Tcl_GetHashValue(hPtr);
+	iconBitmap = (IconBitmap *)Tcl_GetHashValue(hPtr);
 	ckfree(iconBitmap->value);
     } else {
 	iconBitmap = (IconBitmap *)ckalloc(sizeof(IconBitmap));

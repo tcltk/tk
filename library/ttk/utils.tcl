@@ -291,19 +291,14 @@ proc ttk::bindMouseWheel {bindtag callback} {
 
 ## Mousewheel bindings for standard scrollable widgets.
 #
-# Usage: [ttk::copyBindings TtkScrollable $bindtag]
-#
-# $bindtag should be for a widget that supports the
-# standard scrollbar protocol.
-#
 
 bind TtkScrollable <MouseWheel> \
-	{ tk::MouseWheel %W y %D -30.0 }
+	{ tk::MouseWheel %W y %D -40.0 }
 bind TtkScrollable <Option-MouseWheel> \
-	{ tk::MouseWheel %W y %D -3.0 }
+	{ tk::MouseWheel %W y %D -12.0 }
 bind TtkScrollable <Shift-MouseWheel> \
-	{ tk::MouseWheel %W x %D -30.0 }
+	{ tk::MouseWheel %W x %D -40.0 }
 bind TtkScrollable <Shift-Option-MouseWheel> \
-	{ tk::MouseWheel %W x %D -3.0 }
+	{ tk::MouseWheel %W x %D -12.0 }
 
 #*EOF*
