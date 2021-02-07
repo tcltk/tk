@@ -105,7 +105,7 @@ XDestroyWindow(
     macWin->view = nil;
 
     /*
-     * Delay deletion of a toplevel data structure untill all children have
+     * Delay deletion of a toplevel data structure until all children have
      * been deleted.
      */
 
