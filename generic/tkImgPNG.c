@@ -2818,7 +2818,7 @@ FileMatchPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
     TCL_UNUSED(const char *),	/* The name of the image file. */
-    TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* User-specified format object, or NULL. */
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
@@ -2870,7 +2870,7 @@ FileReadPNG(
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
-    TCL_UNUSED(int),	/* Dimensions of block of photo image to be
+    TCL_UNUSED(int),		/* Dimensions of block of photo image to be
 				 * written to. */
     TCL_UNUSED(int),
     TCL_UNUSED(int),		/* Coordinates of top-left pixel to be used in
@@ -2925,7 +2925,7 @@ static int
 StringMatchPNG(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *pObjData,		/* the object containing the image data */
-    TCL_UNUSED(Tcl_Obj *),		/* the image format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* the image format object, or NULL */
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr,		/* where to put the string width */
     int *heightPtr,		/* where to put the string height */
@@ -2974,7 +2974,7 @@ StringReadPNG(
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     Tk_PhotoHandle imageHandle,	/* the image to write this data into */
     int destX, int destY,	/* The rectangular region of the */
-    TCL_UNUSED(int),	/* image to copy */
+    TCL_UNUSED(int),		/* image to copy */
     TCL_UNUSED(int),
     TCL_UNUSED(int),
     TCL_UNUSED(int),
@@ -3514,7 +3514,7 @@ WriteExtraChunks(
      * Add a pHYs chunk if there is metadata for DPI and/or aspect
      * aspect = PPUy / PPUx
      * DPI = PPUx * 0.0254
-     * The physical chunc consists of:
+     * The physical chunk consists of:
      * - Points per meter in x direction (32 bit)
      * - Points per meter in x direction (32 bit)
      * - Unit specifier: 0: no unit (only aspect), 1: Points per meter

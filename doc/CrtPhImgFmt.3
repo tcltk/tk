@@ -24,10 +24,7 @@ Tk_CreatePhotoImageFormat \- define new file format for photo images
 .sp
 \fBTk_CreatePhotoImageFormat\fR(\fIformatPtr\fR)
 .SH ARGUMENTS
-.VS 8.7
 .AS "const Tk_PhotoImageFormatVersion3" *formatVersion3Ptr
-.VE 8.7
-.AS "const Tk_PhotoImageFormat" *formatPtr
 .VS 8.7
 .AP "const Tk_PhotoImageFormatVersion3" *formatVersion3Ptr in
 Structure that defines the new file format including metadata functionality.
@@ -50,7 +47,7 @@ image configuration option or the \fB\-format\fR option to the
 \fBread\fR and \fBwrite\fR photo image subcommands.
 .PP
 The alternate version 2 function \fBTk_CreatePhotoImageFormat\fR has
-identical functionality, but does not allow to handler to get or return
+identical functionality, but does not allow the handler to get or return
 the metadata dictionary of the image.
 It is described in section \fBVERSION 2 INTERFACE\fR below.
 .PP
@@ -126,7 +123,7 @@ respectively, and return 1.  Otherwise it should return 0.
 .PP
 \fIformatPtr->stringMatchProc\fR provides the address of a procedure
 for Tk to call when it is searching for an image file format handler
-for suitable for reading data from a given string.
+suitable for reading data from a given string.
 \fIformatPtr->stringMatchProc\fR must match the following prototype:
 .CS
 typedef int \fBTk_ImageStringMatchProcVersion3\fR(
@@ -300,7 +297,7 @@ image formats may feature aspect and no resolution value.
 .RE
 .SS "METADATA INPUT"
 .PP
-Each driver function gets a tcl object pointer \fBmetadataIn\fR as
+Each driver function gets a Tcl object pointer \fBmetadataIn\fR as
 parameter. This parameter serves to input a metadata dict to the
 driver function.
 It may be NULL to flag that the metadata dict is empty.
@@ -332,12 +329,12 @@ this purpose.
 .PP
 The image match and read driver functions may set keys in a prepared
 matadata dict to return them.
-Those functions get a tcl object pointer \fBmetadataOut\fR as
+Those functions get a Tcl object pointer \fBmetadataOut\fR as
 parameter.
 metadataOut may be NULL to indicate, that no metadata return is
-attended (put, read subcommands).
-metadataOut is initialized to an empty unshared dict object if
-metadata return is attended (image create command, configure
+attended(\fBput\fR, \fBread\fR subcommands).
+\fBmetadataOut\fR is initialized to an empty unshared dict object if
+metadata return is attended (\fBimage create\fR command, \fBconfigure\fR
 subcommand). The driver may set dict keys in this object to return
 metadata.
 If a match function succeeds, the metadataOut pointer is passed to the
@@ -352,7 +349,7 @@ if (NULL != metadataOut) {
 The metadata keys returned by the driver are merged into the present
 metadata property of the image or into the metadata dict given by the
 \fB\-metadata\fR command line option.
-On the script level, the command \fBimage create\fR and the
+At the script level, the command \fBimage create\fR and the
 \fBconfigure\fR method may return metadata from the driver.
 .PP
 Format string options or metadata keys may influence the creation of

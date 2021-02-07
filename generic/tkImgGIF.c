@@ -356,10 +356,10 @@ static void		FlushChar(GIFState_t *statePtr);
 
 static int
 FileMatchGIF(
-    TCL_UNUSED(Tcl_Interp *),		/* not used */
+    TCL_UNUSED(Tcl_Interp *),	/* not used */
     Tcl_Channel chan,		/* The image file, open for reading. */
     TCL_UNUSED(const char *),	/* The name of the image file. */
-    TCL_UNUSED(Tcl_Obj *),		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* User-specified format object, or NULL. */
     TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
@@ -1181,8 +1181,8 @@ ReadImage(
     Tcl_Channel chan,
     int len, int rows,
     unsigned char cmap[MAXCOLORMAPSIZE][4],
-	TCL_UNUSED(int),
-	TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
     int interlace,
     int transparent)
 {
