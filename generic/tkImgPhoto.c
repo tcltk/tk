@@ -2090,7 +2090,7 @@ ImgPhotoConfigureModel(
     }
     if (metadataInObj) {
 	/*
-	 * make -metadata a dict.
+	 * Make -metadata a dict.
 	 * Take also empty metadatas as this may be a sign to replace
 	 * existing metadata.
 	 */
@@ -2246,7 +2246,6 @@ ImgPhotoConfigureModel(
 		goto errorExit;
 	    }
 	} else {
-	    
 	    if (imageFormatVersion3->stringReadProc(interp, tempdata, tempformat,
 		    modelPtr->metadata, (Tk_PhotoHandle) modelPtr, 0, 0,
 		    imageWidth, imageHeight, 0, 0, metadataOutObj) != TCL_OK) {
@@ -2866,7 +2865,7 @@ if (formatPtr == NULL) {
 	    }
 
 	    /*
-	     * Check if driver has shared or changed the metadata tcl object.
+	     * Check if driver has shared or changed the metadata Tcl object.
 	     * In this case, release and recreate it.
 	     */
 

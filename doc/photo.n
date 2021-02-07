@@ -109,7 +109,7 @@ Set the metadata dictionary of the image.
 Additional keys may be set within the metadata dictionary of the image,
 if image data is processed due to a \fB\-file\fR or \fB\-data\fR options
 and the driver outputs any metadata keys.
-See section \fBMETADATA DICT\fR below.
+See section \fBMETADATA DICTIONARY\fR below.
 .VE 8.7
 .TP
 \fB\-palette \fIpalette-spec\fR
@@ -307,7 +307,7 @@ information. All pixel data will be transformed into grayscale.
 .
 Image format handler may use metadata to be included in the returned
 data string.
-The specified metadata is passed to the driver for inclusion in the
+The specified \fImetadata\fR is passed to the driver for inclusion in the
 data.
 If no \fB\-metadata\fR option is given, the current metadata of the
 image is used.
@@ -349,7 +349,7 @@ word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-metadata\fR \fImetadata\fR
 .
-A specified metadata is passed to the image format driver when interpreting
+A specified \fImetadata\fR is passed to the image format driver when interpreting
 the data.
 Note: The current metadata of the image is not passed to the format driver
 and is not changed by the command.
@@ -403,7 +403,7 @@ image in the image file.
 .TP
 \fB\-metadata\fR \fImetadata\fR
 .
-A specified metadata is passed to the image format driver when interpreting
+A specified \fImetadata\fR is passed to the image format driver when interpreting
 the data.
 Note: The current metadata of the image is not passed to the format driver
 and is not changed by the command.
@@ -506,7 +506,7 @@ information. All pixel data will be transformed into grayscale.
 \fB\-metadata\fR \fBmetadata\fR
 .
 Image format handler may use metadata to be included in the written file.
-The specified metadata is passed to the driver for inclusion in the
+The specified \fImetadata\fR is passed to the driver for inclusion in the
 file.
 If no \fB\-metadata\fR option is given, the current metadata of the
 image is used.
