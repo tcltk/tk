@@ -1272,7 +1272,7 @@ Tk_DestroyWindow(
 
     /*
      * Some cleanup needs to be done immediately, rather than later, because
-     * it needs information that will be destoyed before we get to the main
+     * it needs information that will be destroyed before we get to the main
      * cleanup point. For example, TkFocusDeadWindow needs to access the
      * parentPtr field from a window, but if a Destroy event handler deletes
      * the window's parent this field will be NULL before the main cleanup
