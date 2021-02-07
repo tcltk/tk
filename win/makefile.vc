@@ -469,6 +469,7 @@ genstubs:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR)\ttk $(GENERICDIR)\ttk\ttk.decls
 !endif
 
 

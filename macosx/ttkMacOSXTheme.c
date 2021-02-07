@@ -1379,7 +1379,7 @@ static void ButtonElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     const HIThemeButtonDrawInfo info =
 	computeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
@@ -1425,7 +1425,7 @@ static void ButtonElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
 
@@ -1769,7 +1769,7 @@ static void EntryElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    EntryElement *e = elementRecord;
+    EntryElement *e = (EntryElement *)elementRecord;
     Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
     CGRect bounds = BoxToRect(d, inner);
     NSColor *background;
@@ -2142,8 +2142,8 @@ static void TrackElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    TrackElementData *data = clientData;
-    TrackElement *elem = elementRecord;
+    TrackElementData *data = (TrackElementData *)clientData;
+    TrackElement *elem = (TrackElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
     CGRect bounds;
@@ -2288,7 +2288,7 @@ static void PbarElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    PbarElement *pbar = elementRecord;
+    PbarElement *pbar = (PbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL, phase = 0, kind;
 
     /*
@@ -2387,7 +2387,7 @@ static void TroughElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
@@ -2428,7 +2428,7 @@ static void TroughElementDraw(
     Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
@@ -2470,7 +2470,7 @@ static void ThumbElementSize(
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *))
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2491,7 +2491,7 @@ static void ThumbElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2906,7 +2906,7 @@ static void FieldElementDraw(
     Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    FieldElement *e = elementRecord;
+    FieldElement *e = (FieldElement *)elementRecord;
     Tk_3DBorder backgroundPtr =
 	Tk_Get3DBorderFromObj(tkwin, e->backgroundObj);
 
@@ -2998,7 +2998,7 @@ static void TreeHeaderElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     const HIThemeButtonDrawInfo info = {
 	.version = 0,

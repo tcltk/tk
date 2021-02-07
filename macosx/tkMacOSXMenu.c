@@ -236,7 +236,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (TkMenu *) tkMenu
 {
-    return _tkMenu;
+    return (TkMenu *)_tkMenu;
 }
 
 - (int) tkIndexOfItem: (NSMenuItem *) menuItem
@@ -413,7 +413,7 @@ TKBackgroundLoop *backgroundLoop = nil;
     (void)menu;
 
     if (_tkMenu) {
-	RecursivelyClearActiveMenu(_tkMenu);
+	RecursivelyClearActiveMenu((TkMenu *)_tkMenu);
     }
 }
 
@@ -437,7 +437,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 	Tcl_Preserve(interp);
 	Tcl_Preserve(menuPtr);
 
-	int result = TkPostCommand(_tkMenu);
+	int result = TkPostCommand(menuPtr);
 
 	if (result!=TCL_OK && result!=TCL_CONTINUE && result!=TCL_BREAK) {
 	      Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
@@ -695,7 +695,7 @@ TkpConfigureMenuEntry(
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
-    } else if (mePtr->bitmapPtr != None) {
+    } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
 		mePtr->bitmapPtr);
 
@@ -708,9 +708,14 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[[NSString alloc] initWithBytes:Tcl_GetString(mePtr->labelPtr)
-		length:mePtr->labelLength encoding:NSUTF8StringEncoding]
-		autorelease];
+	Tcl_DString ds;
+	Tcl_DStringInit(&ds);
+	Tcl_UtfToUniCharDString(Tcl_GetString(mePtr->labelPtr),
+				mePtr->labelLength, &ds);
+	title = [[NSString alloc]
+		    initWithCharacters:(unichar *)Tcl_DStringValue(&ds)
+				length:Tcl_DStringLength(&ds)>>1];
+	Tcl_DStringFree(&ds);
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];

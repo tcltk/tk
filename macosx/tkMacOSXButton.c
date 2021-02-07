@@ -181,8 +181,8 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    MacButton *macButtonPtr = clientData;
-    TkButton *butPtr = clientData;
+    MacButton *macButtonPtr = (MacButton *)clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
@@ -901,8 +901,8 @@ ButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkButton *buttonPtr = clientData;
-    MacButton *mbPtr = clientData;
+    TkButton *buttonPtr = (TkButton *)clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     if (eventPtr->type == ActivateNotify
 	    || eventPtr->type == DeactivateNotify) {
@@ -957,7 +957,7 @@ TkMacOSXComputeButtonParams(
         *btnkind = kThemePushButton;
     }
 
-    if ((butPtr->image == None) && (butPtr->bitmap == None)) {
+    if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
         switch (butPtr->type) {
 	case TYPE_BUTTON:
 	    *btnkind = kThemePushButton;
@@ -1174,7 +1174,7 @@ TkMacOSXComputeButtonDrawParams(
 static void
 PulseDefaultButtonProc(ClientData clientData)
 {
-    MacButton *mbPtr = clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     TkpDisplayButton(clientData);
     /*
