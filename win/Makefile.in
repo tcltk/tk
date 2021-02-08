@@ -531,7 +531,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.6-}]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 8.6-]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
@@ -702,6 +702,7 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	) || ( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
+	$(RMDIR) ${TCL_VFS_PATH}/demos
 	@if test "${ZIPFS_BUILD}" = "2" ; then \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
