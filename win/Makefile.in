@@ -146,7 +146,7 @@ MAN2TCL			= man2tcl$(EXEEXT)
 # makefile to look into these paths when resolving .c to .obj
 # dependencies.
 
-VPATH = $(GENERIC_DIR):$(TTK_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
+VPATH = $(GENERIC_DIR):$(TTK_DIR):$(WIN_DIR):$(XLIB_DIR):$(RC_DIR)
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
@@ -159,18 +159,12 @@ CFLAGS_OPTIMIZE	= @CFLAGS_OPTIMIZE@
 LDFLAGS_DEBUG    = @LDFLAGS_DEBUG@
 LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 
-# Tk does not used deprecated Tcl constructs so it should
-# compile fine with -DTCL_NO_DEPRECATED. To remove its own
-# set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	=
-#NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
-
 # To change the compiler switches, for example to change from optimization to
 # debugging symbols, change the following line:
 #CFLAGS		= $(CFLAGS_DEBUG)
 #CFLAGS		= $(CFLAGS_OPTIMIZE)
 #CFLAGS		= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ $(NO_DEPRECATED_FLAGS) -D_ATL_XP_TARGETING=1 -D__USE_MINGW_ANSI_STDIO=0
+CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -D_ATL_XP_TARGETING=1 -D__USE_MINGW_ANSI_STDIO=0
 
 # Special compiler flags to use when building man2tcl on Windows.
 MAN2TCLFLAGS	= @MAN2TCLFLAGS@
@@ -204,6 +198,12 @@ COPY		= cp
 
 BUILD_TCLSH	= @BUILD_TCLSH@
 
+# Tk does not used deprecated Tcl constructs so it should
+# compile fine with -DTCL_NO_DEPRECATED. To remove its own
+# set of deprecated code uncomment the second line.
+NO_DEPRECATED_FLAGS	=
+#NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
+
 # TCL_EXE is the name of a tclsh executable that is available *BEFORE*
 # running make for the first time. Certain build targets (make genstubs)
 # need it to be available on the PATH. This executable should *NOT* be
@@ -214,7 +214,8 @@ TCL_EXE			= @TCLSH_PROG@
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
--I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" ${AC_FLAGS}
+-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" \
+${AC_FLAGS} $(NO_DEPRECATED_FLAGS)
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@
@@ -480,12 +481,12 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.5.0}]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 8.5.0]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]] Tk]";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
 	echo "} else {";\
-	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]] Tk]";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]]]";\
 	echo "}";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
@@ -650,7 +651,7 @@ winMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 testMain.$(OBJEXT): winMain.c
-	$(CC) -c $(CC_SWITCHES) @DEPARG@ -DTK_TEST $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) -DTK_TEST @DEPARG@ $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
@@ -692,7 +693,8 @@ cleanhelp:
 clean: cleanhelp
 	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
 	$(RM) $(WISH) $(TKTEST) $(CAT32)
-	$(RM) *.pch *.ilk *.pdb
+	$(RM) *.pch *.ilk *.pdb *.zip
+	$(RMDIR) *.vfs
 
 distclean: clean
 	$(RM) Makefile config.status config.cache config.log tkConfig.sh \
