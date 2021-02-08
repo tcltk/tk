@@ -417,18 +417,18 @@ RCDIR		= $(WIN_DIR)\rc
 TK_INCLUDES	= -I"$(WIN_DIR)" -I"$(GENERICDIR)" -I"$(BITMAPDIR)" -I"$(XLIBDIR)" \
 			$(TCL_INCLUDES)
 
-CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
-		 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 \
-		 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 \
-		 -DSUPPORT_CONFIG_EMBEDDED \
+CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
+		 /DHAVE_STDLIB_H=1 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
+		 /DHAVE_STRINGS_H=1 /DHAVE_INTTYPES_H=1 \
+		 /DSUPPORT_CONFIG_EMBEDDED \
 !if $(HAVE_UXTHEME_H)
-		 -DHAVE_UXTHEME_H=1 \
+		 /DHAVE_UXTHEME_H=1 \
 !endif
 !if $(TTK_SQUARE_WIDGET)
-		 -DTTK_SQUARE_WIDGET=1 \
+		 /DTTK_SQUARE_WIDGET=1 \
 !endif
 
-TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS) -Dinline=__inline
+TK_DEFINES	=/DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS) /Dinline=__inline
 
 #---------------------------------------------------------------------
 # Compile flags
@@ -453,7 +453,7 @@ cdebug	= -Zi -WX $(DEBUGFLAGS)
 !endif
 
 ### Declarations common to all compiler options
-cwarn = $(WARNINGS) -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
+cwarn = $(WARNINGS) /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
 
 !if $(MSVCRT)
@@ -471,8 +471,8 @@ crt = -MT
 !endif
 
 BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
-TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
-CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
+TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) /DUSE_TCL_STUBS
+CON_CFLAGS	= $(cdebug) $(cflags) $(crt) /DCONSOLE
 WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
 STUB_CFLAGS     = $(cflags) $(cdebug) $(TK_DEFINES)
 
@@ -501,14 +501,6 @@ lflags	= $(lflags) -profile
 lflags	= $(lflags) -nodefaultlib:libucrt.lib
 !endif
 
-!if $(ALIGN98_HACK) && !$(STATIC_BUILD)
-### Align sections for PE size savings.
-lflags	= $(lflags) -opt:nowin98
-!else if !$(ALIGN98_HACK) && $(STATIC_BUILD)
-### Align sections for speed in loading by choosing the virtual page size.
-lflags	= $(lflags) -align:4096
-!endif
-
 !if $(LOIMPACT)
 lflags	= $(lflags) -ws:aggressive
 !endif
@@ -517,7 +509,7 @@ dlllflags = $(lflags) -dll
 conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
-baselibs   = kernel32.lib user32.lib
+baselibs   = kernel32.lib user32.lib ws2_32.lib
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
@@ -829,8 +821,8 @@ close $$f
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
-	$(cc32) $(WISH_CFLAGS) -DTK_TEST \
-	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	$(cc32) $(WISH_CFLAGS) /DTK_TEST \
+	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
@@ -847,15 +839,15 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(WISH_CFLAGS) \
-	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
 # and no reference made to a C runtime.
 
-$(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
-	$(cc32) $(STUB_CFLAGS) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
+$(TMP_DIR)\tkStubLib.obj: $(GENERICDIR)\tkStubLib.c
+	$(cc32) $(STUB_CFLAGS) $(TK_INCLUDES) -Zl /DSTATIC_BUILD -Fo$@ $?
 
 
 $(TMP_DIR)\wish.exe.manifest: $(WIN_DIR)\wish.exe.manifest.in
@@ -878,7 +870,7 @@ depend:
 !else
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
-		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
+		-passthru:"/DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
 		$(WIN_DIR),$$(WIN_DIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
 		$(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
@@ -909,27 +901,27 @@ $(TMP_DIR)\tk.res: \
 #---------------------------------------------------------------------
 
 {$(XLIBDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) /DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
 {$(GENERICDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) /DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
 {$(TTKDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) /DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
 {$(WIN_DIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) /DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
 {$(ROOT)\unix}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) /DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
