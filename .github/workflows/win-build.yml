@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: bug-87e840c26c
           path: tcl
       - name: Init MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -102,7 +102,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: bug-87e840c26c
           path: tcl
       - name: Install MSYS2, Make, Zip
         run: choco install -y msys2 make zip
