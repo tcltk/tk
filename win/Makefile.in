@@ -665,6 +665,12 @@ tkWinTest.$(OBJEXT): tkWinTest.c
 tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
+tkUnixMenubu.$(OBJEXT): ${UNIX_DIR}/tkUnixMenubu.c
+	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+
+tkUnixScale.$(OBJEXT): ${UNIX_DIR}/tkUnixScale.c
+	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
 tkMain.$(OBJEXT): configure Makefile
