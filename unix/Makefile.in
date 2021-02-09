@@ -1095,6 +1095,7 @@ tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
 		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
 		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
 		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_LIB_FILE)\"" \
 		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
 		\
 		$(GENERIC_DIR)/tkPkgConfig.c

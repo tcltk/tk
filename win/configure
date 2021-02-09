@@ -740,7 +740,6 @@ TCL_STUB_LIB_FILE
 TCL_LIB_SPEC
 TCL_LIB_FLAG
 TCL_LIB_FILE
-TCL_ZIP_FILE
 TCL_SRC_DIR
 TCL_BIN_DIR
 TCL_VERSION
@@ -4042,7 +4041,6 @@ printf "%s\n" "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 
-
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
     as_fn_error $? "${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
@@ -5754,7 +5752,7 @@ printf "%s\n" "No zip found on PATH building minizip" >&6; }
 
 
 	ZIPFS_BUILD=1
-	TK_ZIP_FILE=libtk_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
 else
 	ZIPFS_BUILD=0
 	TCL_ZIP_FILE=

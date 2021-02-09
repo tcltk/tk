@@ -774,6 +774,12 @@ tkUnixMenubu.$(OBJEXT): ${UNIX_DIR}/tkUnixMenubu.c
 tkUnixScale.$(OBJEXT): ${UNIX_DIR}/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
+tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)	 -DBUILD_tk -DBUILD_ttk		\
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_DLL_FILE)\"" \
+		@DEPARG@ $(CC_OBJNAME)
+
+
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
 tkMain.$(OBJEXT): configure Makefile
