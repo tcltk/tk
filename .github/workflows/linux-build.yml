@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: bug-87e840c26c
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
