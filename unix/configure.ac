@@ -678,7 +678,7 @@ if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"; then
     #
     SC_ZIPFS_SUPPORT
 	ZIPFS_BUILD=1
-	TK_ZIP_FILE=libtk_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
 else
 	ZIPFS_BUILD=0
 	TK_ZIP_FILE=

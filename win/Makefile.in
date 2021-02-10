@@ -531,7 +531,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.6-}]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 8.6-]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
@@ -656,11 +656,16 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
+$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES) ${TK_ZIP_FILE}
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+		cat ${TK_ZIP_FILE} >> ${WISH}; \
+		${NATIVE_ZIP} -A ${WISH} \
+		  || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 tktest: $(TKTEST)
 
@@ -697,6 +702,12 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	) || ( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
+	$(RMDIR) ${TCL_VFS_PATH}/demos
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && cp ${BUILD_TCLSH}s.exe ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
 	(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 	  (echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
 	  cd ${TK_VFS_ROOT} && \
@@ -762,6 +773,12 @@ tkUnixMenubu.$(OBJEXT): ${UNIX_DIR}/tkUnixMenubu.c
 
 tkUnixScale.$(OBJEXT): ${UNIX_DIR}/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+
+tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)	 -DBUILD_tk -DBUILD_ttk		\
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_DLL_FILE)\"" \
+		@DEPARG@ $(CC_OBJNAME)
+
 
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
