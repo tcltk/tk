@@ -59,11 +59,11 @@ proc ttk::notebook::Press {w x y} {
 #	Select the next/previous tab in the list.
 #
 proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
-    if {[$w index end] != 0} {
-	set current [$w index current]
+    set current [$w index current]
+    if {$current >= 0} {
+	set tabCount [$w index end]
 	set d [expr {$dir/$factor}]
 	set d [expr {int($d > 0 ? ceil($d) : floor($d))}]
-	set tabCount [$w index end]
 	set select [expr {($current + $d) % $tabCount}]
 	set step [expr {$d > 0 ? 1 : -1}]
 	while {[$w tab $select -state] ne "normal" && ($select != $current)} {
