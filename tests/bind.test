@@ -44,8 +44,7 @@ proc unsetBindings {} {
 toplevel .top
 wm geometry .top 50x50-50-50
 update
-event generate .top <Button-1> -warp 1
-update
+controlPointerWarpTiming {event generate .top <Button-1> -warp 1}
 destroy .top
 
 test bind-1.1 {bind command} -body {
@@ -6247,8 +6246,7 @@ test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -se
     focus -force .t.f
     update
 } -body {
-    event generate .t.f <Button-1> -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate .t.f <Button-1> -warp 1}
     event generate .t.f <ButtonRelease-1>
     destroy .t.f
     update  ;  # shall simply not crash
@@ -6828,13 +6826,11 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     # how much the pointer moved
     wm geometry .top +200+200
     update
-    event generate .top <Motion> -x 20 -y 20 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate .top <Motion> -x 20 -y 20 -warp 1}
     set pointerPos1 [winfo pointerxy .top]
     wm geometry .top +600+600
     update
-    event generate .top <Motion> -x 20 -y 20 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate .top <Motion> -x 20 -y 20 -warp 1}
     set pointerPos2 [winfo pointerxy .top]
     # from the first warped position to the second one, the mouse
     # pointer should have moved the same amount as the window moved
@@ -6851,11 +6847,9 @@ test bind-34.1 {-warp works relatively to a window} -setup {
 test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
     # Contrary to bind-34.1, we're directly checking screen coordinates
-    event generate {} <Motion> -x 20 -y 20 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate {} <Motion> -x 20 -y 20 -warp 1}
     set res [winfo pointerxy .]
-    event generate {} <Motion> -x 200 -y 200 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate {} <Motion> -x 200 -y 200 -warp 1}
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
 } -result {20 20 200 200}
@@ -6872,8 +6866,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     }
     set res {}
 } -body {
-    event generate {} <Motion> -x 0 -y 0 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate {} <Motion> -x 0 -y 0 -warp 1}
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6881,10 +6874,8 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
             lappend res $dim
         }
     }
-    event generate {} <Motion> -x 100 -y 100 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
-    event generate {} <Motion> -x -1 -y -1 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate {} <Motion> -x 100 -y 100 -warp 1}
+    controlPointerWarpTiming {event generate {} <Motion> -x -1 -y -1 -warp 1}
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -7028,8 +7019,7 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 } -result pass
 
 test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
-    event generate {} <Motion> -warp 1 -x 50 -y 50
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate {} <Motion> -warp 1 -x 50 -y 50}
     toplevel .top
     grab release .top
     wm geometry .top 200x200+300+300
@@ -7044,14 +7034,11 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     after 100 ; update
 } -body {
     grab .top
-    event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate .top.l <Motion> -warp 1 -x 10 -y 10}
     foreach {x1 y1} [winfo pointerxy .top.l] {}
-    event generate {} <Motion> -warp 1 -x 50 -y 50
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate {} <Motion> -warp 1 -x 50 -y 50}
     grab release .top
-    event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming {event generate .top.l <Motion> -warp 1 -x 10 -y 10}
     foreach {x2 y2} [winfo pointerxy .top.l] {}
     # success if the coords are the same with or without the grab, and if they
     # are at (10,10) inside the label widget as requested by the warping
