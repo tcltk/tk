@@ -218,7 +218,7 @@ namespace eval tk {
 	#    accomplished by calling [after ms].
 	#
 	#    ----
-	#    For the history of this issue pleasse refer to Tk ticket [69b48f427e],
+	#    For the history of this issue please refer to Tk ticket [69b48f427e],
 	#    specifically the comment on 2019-10-27 14:24:26.
 	#
 	variable idle_pointer_warping [expr {[package vcompare [package present Tk] 8.7] >= 0?0:1}]
