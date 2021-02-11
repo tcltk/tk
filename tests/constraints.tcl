@@ -229,7 +229,7 @@ namespace eval tk {
 		if {$idle_pointer_warping} {
 			update idletasks ;# see a. above
 		}
-		if {($::tcl_platform(os) eq "Windows NT") && ($::tcl_platform(osVersion) eq "10.0")} {
+		if {($::tcl_platform(os) eq "Windows NT") && ($::tcl_platform(osVersion) >= 10.0)} {
 			after $duration ;# see b. above
 		}
 	}
