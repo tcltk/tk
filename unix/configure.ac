@@ -689,11 +689,11 @@ if test "${ZIPFS_BUILD}" = 1; then
     if test "${SHARED_BUILD}" = 0; then
        ZIPFS_BUILD=2;
        AC_DEFINE(ZIPFS_BUILD, 2, [Are we building with zipfs enabled?])
-       INSTALL_LIBRARIES=install-libraries-zipfs-static
+       INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
      else
        AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])\
-       INSTALL_LIBRARIES=install-libraries-zipfs-shared
+       INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
     fi
 else
