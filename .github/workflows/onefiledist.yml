@@ -24,7 +24,6 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get install libxss-dev
-          mkdir -p install/1dist.vfs
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -64,7 +63,7 @@ jobs:
       - name: Describe Installation Zip Contents
         if: ${{ always() }}
         run: |
-          unzip -l 1dist.zip || true
+          unzip -l wish${{ env.TCL_PATCHLEVEL }}_unofficial || true
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
@@ -94,7 +93,7 @@ jobs:
           path: create-dmg
       - name: Setup Environment
         run: |
-          mkdir -p install/1dist.vfs install/contents
+          mkdir -p install/contents
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -172,7 +171,6 @@ jobs:
         run: choco install -y msys2 make zip
       - name: Setup Environment
         run: |
-          mkdir -p install/1dist
           mkdir -p install/combined
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
@@ -186,7 +184,6 @@ jobs:
       - name: Build & Install Tcl
         run: |
           make binaries libraries install
-          echo "TCL_ZIP=`pwd`/`echo libtcl*.zip`" >> $GITHUB_ENV
           $INST_DIR/bin/tclsh* $VER_PATH $GITHUB_ENV
         working-directory: tcl/win
       - name: Configure Tk
