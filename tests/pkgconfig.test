@@ -20,11 +20,12 @@ tcltest::loadTestedCommands
 
 testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
-test pkgconfig-1.1 {query keys} {nonwin nodeprecated} {
+test pkgconfig-1.1 {query keys} -constraints {nonwin nodeprecated} -body {
     lsort [::tk::pkgconfig list]
-} [list \
-    64bit bindir,install bindir,runtime debug demodir,install demodir,runtime \
-    docdir,install docdir,runtime fontsystem includedir,install includedir,runtime \
+} -match glob -result [list \
+    64bit bindir,install bindir,runtime debug demodir,install \
+    demodir,runtime*docdir,install docdir,runtime fontsystem \
+    includedir,install includedir,runtime \
     libdir,install libdir,runtime mem_debug optimized profiled \
     scriptdir,install scriptdir,runtime threaded \
 ]
