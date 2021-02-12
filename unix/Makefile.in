@@ -755,7 +755,7 @@ valgrind: $(TKTEST_EXE)
 valgrindshell: $(TKTEST_EXE)
 	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)
 
-INSTALL_BASE_TARGETS = install-binaries install-libraries
+INSTALL_BASE_TARGETS = install-binaries ${INSTALL_LIBRARIES}
 INSTALL_DOC_TARGETS = install-doc
 INSTALL_DEV_TARGETS = install-headers
 INSTALL_DEMO_TARGETS = install-demos
