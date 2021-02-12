@@ -112,7 +112,7 @@ TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 # for this version of Tk:
 TCL_BIN_DIR		= @TCL_BIN_DIR@
 
-# The linker flags needed to link in the Tcl library (ex: -ltcl8.2)
+# The linker flags needed to link in the Tcl library (ex: -ltcl8.7)
 TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Flag, 1: we're building a shared lib, 0 we're not
@@ -619,10 +619,10 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	rm -rf ${TK_VFS_PATH}/demos
 	@find ${TK_VFS_ROOT} -type d -empty -delete
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
-	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	-@if test "${ZIPFS_BUILD}" = "2" ; then \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
-		cd ${TK_VFS_ROOT} && cp ${BUILD_TCLSH} ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
+		cd ${TK_VFS_ROOT} && cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
 	fi
 	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
 	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
