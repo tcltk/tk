@@ -51,8 +51,6 @@ proc pointerAway {} {
     destroy .top
 }
 pointerAway
-controlPointerWarpTiming {event generate .top <Button-1> -warp 1}
-destroy .top
 
 test bind-1.1 {bind command} -body {
     bind
