@@ -221,7 +221,7 @@ namespace eval tk {
 	#    For the history of this issue please refer to Tk ticket [69b48f427e],
 	#    specifically the comment on 2019-10-27 14:24:26.
 	#
-	variable idle_pointer_warping [expr {[package vcompare [package present Tk] 8.7] >= 0?0:1}]
+	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
 	proc controlPointerWarpTiming {script {duration 50}} {
 		uplevel 1 $script
 		
