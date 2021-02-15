@@ -620,9 +620,10 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	@find ${TK_VFS_ROOT} -type d -empty -delete
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
 	-@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cp ${TCL_BIN_DIR}/tclsh ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
-		cd ${TK_VFS_ROOT} && cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
+		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
 	fi
 	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
 	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
@@ -636,7 +637,11 @@ ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	rm -f $@
 	@MAKE_LIB@
 	@if test "${ZIPFS_BUILD}" = "1" ; then \
+	    if test "x$(MACHER)" = "x" ; then \
 	    cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
+	    else $(MACHER) append ${LIB_FILE} ${TK_ZIP_FILE} /tmp/macher_output; \
+	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+	    fi; \
 	    ${NATIVE_ZIP} -A ${LIB_FILE} \
 	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
 	fi
@@ -675,6 +680,11 @@ ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 	@if test "${ZIPFS_BUILD}" = "2" ; then \
 	    cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
+	    if test "x$(MACHER)" = "x" ; then \
+	    cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
+	    else $(MACHER) append ${WISH_EXE} ${TK_ZIP_FILE} /tmp/macher_output; \
+	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+	    fi; \
 	    ${NATIVE_ZIP} -A ${WISH_EXE} \
 	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
 	fi
