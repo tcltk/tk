@@ -1378,6 +1378,7 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
 #define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
+#define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
@@ -1424,6 +1425,10 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
     MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
+#endif
+
+#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
+#   define tcl_CreateFileHandler reserved9
 #endif
 
 /*

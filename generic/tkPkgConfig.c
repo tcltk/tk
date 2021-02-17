@@ -126,6 +126,9 @@ static const Tcl_Config cfg[] = {
 #ifdef CFG_RUNTIME_DEMODIR
     {"demodir,runtime",		CFG_RUNTIME_DEMODIR},
 #endif
+#if !defined(STATIC_BUILD)
+    {"dllfile,runtime",		CFG_RUNTIME_DLLFILE},
+#endif
 
     /* Installation paths to various stuff */
 
