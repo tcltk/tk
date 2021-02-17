@@ -694,12 +694,6 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	@mkdir -p ${TK_VFS_PATH}
 	@echo "creating ${TK_VFS_PATH} (prepare compression)"
 	@( \
-	  $(LN) $$(find $(TOP_DIR)/library/* -maxdepth 0 -type f) ${TK_VFS_PATH}/ && \
-	  (for D in $$(find $(TOP_DIR)/library/* -maxdepth 0 -type d); do \
-	    mkdir -p "${TK_VFS_PATH}/$$(basename $$D)"; \
-	    $(LN) -s $$D/* ${TK_VFS_PATH}/$$(basename $$D)/; \
-	  done) \
-	) || ( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
 	@$(RMDIR) $(TK_VFS_PATH)/demos
