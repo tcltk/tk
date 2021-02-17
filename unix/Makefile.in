@@ -112,7 +112,7 @@ TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 # for this version of Tk:
 TCL_BIN_DIR		= @TCL_BIN_DIR@
 
-# The linker flags needed to link in the Tcl library (ex: -ltcl8.2)
+# The linker flags needed to link in the Tcl library (ex: -ltcl8.7)
 TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Flag, 1: we're building a shared lib, 0 we're not
@@ -544,6 +544,28 @@ AQUA_SRCS = \
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 
+###
+# Tip 430 - ZipFS Modifications
+###
+
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_ROOT		= libtk.vfs
+TK_VFS_PATH		= ${TK_VFS_ROOT}/tk_library
+
+HOST_CC			= @CC_FOR_BUILD@
+HOST_EXEEXT		= @EXEEXT_FOR_BUILD@
+HOST_OBJEXT		= @OBJEXT_FOR_BUILD@
+ZIPFS_BUILD		= @ZIPFS_BUILD@
+NATIVE_ZIP		= @ZIP_PROG@
+ZIP_PROG_OPTIONS	= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH	= @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+INSTALL_LIBRARIES	= @INSTALL_LIBRARIES@
+INSTALL_MSGS		= @INSTALL_MSGS@
+
+ZIP_INSTALL_OBJS	= @ZIP_INSTALL_OBJS@
+
+
 AQUA_RESOURCES = \
 	$(MAC_OSX_DIR)/tkAboutDlg.r $(MAC_OSX_DIR)/tkMacOSXCursors.r \
 	$(MAC_OSX_DIR)/tkMacOSXXCursors.r
@@ -583,11 +605,46 @@ binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
 
+tkzipfile: ${TK_ZIP_FILE}
+
+${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
+	@rm -rf ${TK_VFS_ROOT}
+	@mkdir -p ${TK_VFS_PATH}
+	@echo "creating ${TK_VFS_PATH} (prepare compression)"
+	@if \
+	    ln -s $(TOP_DIR)/library/* ${TK_VFS_PATH}/; \
+	then : ; else \
+	    cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+	fi
+	rm -rf ${TK_VFS_PATH}/demos
+	@find ${TK_VFS_ROOT} -type d -empty -delete
+	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
+	-@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cp ${TCL_BIN_DIR}/tclsh ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
+	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
+	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
+	    echo 'cd ${TK_VFS_ROOT} &&' $$zip '${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}'; \
+	    cd ${TK_VFS_ROOT} && \
+	    $$zip ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH} >/dev/null)
+
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
+${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	rm -f $@
 	@MAKE_LIB@
+	@if test "${ZIPFS_BUILD}" = "1" ; then \
+	    if test "x$(MACHER)" = "x" ; then \
+	    cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
+	    else $(MACHER) append ${LIB_FILE} ${TK_ZIP_FILE} /tmp/macher_output; \
+	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+	    fi; \
+	    ${NATIVE_ZIP} -A ${LIB_FILE} \
+	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
@@ -621,6 +678,16 @@ objs: ${OBJS}
 ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
+	    if test "x$(MACHER)" = "x" ; then \
+	    cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
+	    else $(MACHER) append ${WISH_EXE} ${TK_ZIP_FILE} /tmp/macher_output; \
+	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+	    fi; \
+	    ${NATIVE_ZIP} -A ${WISH_EXE} \
+	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -698,7 +765,7 @@ valgrind: $(TKTEST_EXE)
 valgrindshell: $(TKTEST_EXE)
 	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)
 
-INSTALL_BASE_TARGETS = install-binaries install-libraries
+INSTALL_BASE_TARGETS = install-binaries ${INSTALL_LIBRARIES}
 INSTALL_DOC_TARGETS = install-doc
 INSTALL_DEV_TARGETS = install-headers
 INSTALL_DEMO_TARGETS = install-demos
@@ -727,7 +794,7 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f "$(PKG_INDEX)"; \
 	    (\
-	    echo "if {[catch {package present Tcl 8.6-}]} return";\
+	    echo "if {![package vsatisfies [package provide Tcl] 8.6-]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
 	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]]]";\
@@ -736,7 +803,7 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)]]]";\
 	    echo "} else {";\
-	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
+	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
 	    echo "}";\
 	    fi; \
 	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
@@ -903,8 +970,10 @@ Makefile: $(UNIX_DIR)/Makefile.in
 #	$(SHELL) config.status
 
 clean:
+	rm -rf *.vfs
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
-		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
+		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
+		 *.zip
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
@@ -1036,6 +1105,7 @@ tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
 		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
 		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
 		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_LIB_FILE)\"" \
 		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
 		\
 		$(GENERIC_DIR)/tkPkgConfig.c
@@ -1194,7 +1264,7 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 # even though they will be placed in a static archive
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
 
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
@@ -1473,7 +1543,7 @@ ttkStubInit.o: $(TTK_DIR)/ttkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubInit.c
 
 ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
 
 ttkTagSet.o: $(TTK_DIR)/ttkTagSet.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTagSet.c

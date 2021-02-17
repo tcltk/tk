@@ -185,7 +185,7 @@ static SystemColorDatum systemColorData[] = {
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
 {"UnemphasizedSelectedTextBackgroundColor", semantic, 0, "grayColor", 0, NULL },
-{NULL,				    0, 0, NULL, 0, NULL }
+{NULL,				    rgbColor, 0, NULL, 0, NULL }
 };
 
 #endif
