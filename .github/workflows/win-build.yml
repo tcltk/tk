@@ -95,7 +95,6 @@ jobs:
           - "no"
           - "mem"
           - "all"
-    # Using powershell means we need to explicitly stop on failure
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -105,8 +104,8 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-6-branch
           path: tcl
-      - name: Install MSYS2, Make
-        run: choco install -y msys2 make
+      - name: Install MSYS2, Make, Zip
+        run: choco install -y msys2 make zip
       - name: Prepare
         run: |
           touch tkStubInit.c
