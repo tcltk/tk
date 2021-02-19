@@ -264,8 +264,8 @@ static int WinTextPrint(
 	return result;
     }
 
-    /* 
-     *Initialize print dialog. 
+    /*
+     *Initialize print dialog.
      */
     ZeroMemory( &pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
@@ -291,34 +291,34 @@ static int WinTextPrint(
 	    }
 	}
 
-	/* 
-	 * Work out the character dimensions for the current font. 
+	/*
+	 * Work out the character dimensions for the current font.
 	 */
         GetTextMetrics(hDC, &tm);
         yChar = tm.tmHeight + tm.tmExternalLeading;
 
-	/* 
-	 * Work out how much data can be printed onto each page. 
+	/*
+	 * Work out how much data can be printed onto each page.
 	 */
 	chars_per_line = GetDeviceCaps (hDC, HORZRES) / tm.tmAveCharWidth ;
         lines_per_page = GetDeviceCaps (hDC, VERTRES) / yChar ;
         total_pages = (countlines + lines_per_page - 1) / lines_per_page;
-	
-	/* 
-	 * Convert input text into a format Windows can use for printing. 
+
+	/*
+	 * Convert input text into a format Windows can use for printing.
 	 */
 	tmptxt = data;
 	printbuffer = (LPCTSTR) tmptxt;
 	bufferlen = lstrlen(printbuffer);
 
-	/* 
-	 * Get printer resolution. 
+	/*
+	 * Get printer resolution.
 	 */
 	dpi_x = GetDeviceCaps(hDC, LOGPIXELSX);
 	dpi_y = GetDeviceCaps(hDC, LOGPIXELSY);
 
-	/* 
-	 * Compute physical area and margins. 
+	/*
+	 * Compute physical area and margins.
 	 */
 	margin_left = GetDeviceCaps(hDC, PHYSICALOFFSETX);
 	margin_top = GetDeviceCaps(hDC, PHYSICALOFFSETY);
@@ -329,23 +329,23 @@ static int WinTextPrint(
 	margin_right = phys_width - printarea_horz - margin_left;
 	margin_bottom = phys_height - printarea_vert - margin_top;
 
-	/* 
-	 * Convert margins into pixel values the printer understands. 
+	/*
+	 * Convert margins into pixel values the printer understands.
 	 */
 	digital_margin_left = MulDiv(margin_left, dpi_x, 1000);
 	digital_margin_top = MulDiv(margin_top, dpi_y, 1000);
 	digital_margin_right = MulDiv(margin_right, dpi_x, 1000);
 	digital_margin_bottom = MulDiv(margin_bottom, dpi_y, 1000);
 
-	/* 
-	 *Compute adjusted printer margins in pixels. 
+	/*
+	 *Compute adjusted printer margins in pixels.
 	 */
 	left_adjust_margin = digital_margin_left - margin_left;
 	top_adjust_margin = digital_margin_top - margin_top;
 	right_adjust_margin = digital_margin_right - margin_right;
 	bottom_adjust_margin = digital_margin_bottom - margin_bottom;
 
-	/* 
+	/*
 	 *Finally, here is our print area.
 	 */
 	page_width = printarea_horz - (left_adjust_margin + right_adjust_margin);
@@ -361,13 +361,13 @@ static int WinTextPrint(
 	LPCTSTR begin_text;
 	int testheight = 0;
 
-	/* 
-	 * Start printing. 
+	/*
+	 * Start printing.
 	 */
 	output = StartDoc(hDC, &di);
- 	if (output = 0) {
+ 	if (output == 0) {
 	    Tcl_AppendResult(interp, "unable to start document", NULL);
-	    return TCL_ERROR;		
+	    return TCL_ERROR;
 	}
 
 	RECT r, testrect;
@@ -375,10 +375,10 @@ static int WinTextPrint(
 	r.top = 100;
 	r.right = (page_width - 100);
 	r.bottom = (page_height - 100);
-		
+
 	begin_text = printbuffer;
 
-	/* 
+	/*
 	 * Loop through the text until it is all printed. We are
          * drawing to a dummy rect with the DT_CALCRECT flag set to
 	 * calculate the full area of the text buffer; see
@@ -391,7 +391,7 @@ static int WinTextPrint(
 		int textcount = textrange_high;
 
 		output = StartPage(hDC);
-		if (output = 0) {
+		if (output == 0) {
 		    Tcl_AppendResult(interp, "unable to start page", NULL);
 		    return TCL_ERROR;
 		    break;
@@ -399,7 +399,7 @@ static int WinTextPrint(
 
 		SetMapMode(hDC, MM_TEXT);
 	        SelectObject(hDC, hFont);
-		
+
 		testrect = r;
 		while (textrange_low < textrange_high) {
 		    testrect.right = r.right;
@@ -415,21 +415,21 @@ static int WinTextPrint(
 		    break;
 		}
 		output = DrawText(hDC, begin_text, textcount, &r, DT_WORDBREAK|DT_NOCLIP|DT_EXPANDTABS|DT_NOPREFIX);
-		if (output = 0) {
+		if (output == 0) {
 		    Tcl_AppendResult(interp, "unable to draw text", NULL);
-		    return TCL_ERROR;	
+		    return TCL_ERROR;
 		}
 	        /*
-		 * Recalculate each of these values to draw on the next page 
+		 * Recalculate each of these values to draw on the next page
 		 * until the buffer is empty, then end that page.
 		 */
 		begin_text += textcount;
 		text_done += textcount;
 
 		output = EndPage(hDC);
-		if (output = 0) {
+		if (output == 0) {
 		    Tcl_AppendResult(interp, "unable to end page", NULL);
-		    return TCL_ERROR;	
+		    return TCL_ERROR;
 		}
 	    }
 	EndDoc(hDC);
