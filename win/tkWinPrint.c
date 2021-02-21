@@ -236,27 +236,22 @@ static int WinTextPrint(
 			const * objv) {
     PRINTDLG pd;
     HDC hDC;
+    HWND hwndEdit;
     TEXTMETRIC tm;
-    size_t lineCur;
-    int countlines;
-    int yChar;
-    int  lines_per_page, total_pages, chars_per_line;
     int result;
-    int page;
     DOCINFO di;
     HFONT hFont = NULL;
     char * data;
     const char * tmptxt;
     LPCTSTR printbuffer;
     LONG bufferlen;
-    int output;
-    int dpi_x, dpi_y, margin_left, margin_right, margin_top, margin_bottom;
-    int printarea_horz, printarea_vert, phys_height, phys_width;
-    int digital_margin_left, digital_margin_top, digital_margin_right, digital_margin_bottom;
-    int left_adjust_margin, top_adjust_margin, right_adjust_margin, bottom_adjust_margin;
-    int page_height, page_width;
-
+    int yChar, chars_per_line, lines_per_page, total_lines,
+	total_pages, page, line, line_number;
+    PTSTR linebuffer;
+    BOOL success;
+    
     result = TCL_OK;
+    success = TRUE;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "text");
@@ -267,42 +262,26 @@ static int WinTextPrint(
     /*
      *Initialize print dialog.
      */
-    ZeroMemory( &pd, sizeof(pd));
+    ZeroMemory( & pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_ALLPAGES | PD_USEDEVMODECOPIESANDCOLLATE;
 
-    if (PrintDlg( &pd) == TRUE) {
+    if (PrintDlg( & pd) == TRUE) {
 	hDC = pd.hDC;
 	if (hDC == NULL) {
 	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
 	    return TCL_ERROR;
 	}
 
-	ZeroMemory( &di, sizeof(di));
+	ZeroMemory( & di, sizeof(di));
 	di.cbSize = sizeof(di);
 	di.lpszDocName = "Tk Output";
 
+	/*
+	 * Get text for printing.
+	 */
 	data = Tcl_GetString(objv[1]);
-	countlines = 0;
-	for (lineCur = 0; lineCur < strlen(data); lineCur++) {
-	    if (data[lineCur] == '\n') {
-		countlines++;
-	    }
-	}
-
-	/*
-	 * Work out the character dimensions for the current font.
-	 */
-        GetTextMetrics(hDC, &tm);
-        yChar = tm.tmHeight + tm.tmExternalLeading;
-
-	/*
-	 * Work out how much data can be printed onto each page.
-	 */
-	chars_per_line = GetDeviceCaps (hDC, HORZRES) / tm.tmAveCharWidth ;
-        lines_per_page = GetDeviceCaps (hDC, VERTRES) / yChar ;
-        total_pages = (countlines + lines_per_page - 1) / lines_per_page;
 
 	/*
 	 * Convert input text into a format Windows can use for printing.
@@ -312,134 +291,86 @@ static int WinTextPrint(
 	bufferlen = lstrlen(printbuffer);
 
 	/*
-	 * Get printer resolution.
+	 * Place text into a hidden Windows multi-line edit control
+	 * to make it easier to parse for printing.
 	 */
-	dpi_x = GetDeviceCaps(hDC, LOGPIXELSX);
-	dpi_y = GetDeviceCaps(hDC, LOGPIXELSY);
+
+	hwndEdit = CreateWindowEx(
+				  0, "EDIT",
+				  NULL,
+				  WS_POPUP | ES_MULTILINE,
+				  0, 0, 0, 0,
+				  NULL,
+				  NULL,
+				  NULL,
+				  NULL);
 
 	/*
-	 * Compute physical area and margins.
+	 * Add text to the window.
 	 */
-	margin_left = GetDeviceCaps(hDC, PHYSICALOFFSETX);
-	margin_top = GetDeviceCaps(hDC, PHYSICALOFFSETY);
-	printarea_horz = GetDeviceCaps(hDC, HORZRES);
-	printarea_vert = GetDeviceCaps(hDC, VERTRES);
-	phys_width = GetDeviceCaps(hDC, PHYSICALWIDTH);
-	phys_height = GetDeviceCaps(hDC, PHYSICALHEIGHT);
-	margin_right = phys_width - printarea_horz - margin_left;
-	margin_bottom = phys_height - printarea_vert - margin_top;
+	SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) printbuffer);
+
+	if (0 == (total_lines = SendMessage(hwndEdit, EM_GETLINECOUNT, 0, 0)))
+	    return TCL_OK;
 
 	/*
-	 * Convert margins into pixel values the printer understands.
+	 * Determine how text will fit on page.
 	 */
-	digital_margin_left = MulDiv(margin_left, dpi_x, 1000);
-	digital_margin_top = MulDiv(margin_top, dpi_y, 1000);
-	digital_margin_right = MulDiv(margin_right, dpi_x, 1000);
-	digital_margin_bottom = MulDiv(margin_bottom, dpi_y, 1000);
+	GetTextMetrics(hDC, & tm);
+	yChar = tm.tmHeight + tm.tmExternalLeading;
+	chars_per_line = GetDeviceCaps(hDC, HORZRES) / tm.tmAveCharWidth;
+	lines_per_page = GetDeviceCaps(hDC, VERTRES) / yChar;
+	total_pages = (total_lines + lines_per_page - 1) / lines_per_page;
 
 	/*
-	 *Compute adjusted printer margins in pixels.
+	 * Allocate a buffer for each line of text.
 	 */
-	left_adjust_margin = digital_margin_left - margin_left;
-	top_adjust_margin = digital_margin_top - margin_top;
-	right_adjust_margin = digital_margin_right - margin_right;
-	bottom_adjust_margin = digital_margin_bottom - margin_bottom;
+	linebuffer = ckalloc(sizeof(TCHAR) * (chars_per_line + 1));
 
-	/*
-	 *Finally, here is our print area.
-	 */
-	page_width = printarea_horz - (left_adjust_margin + right_adjust_margin);
-	page_height = printarea_vert - (top_adjust_margin + bottom_adjust_margin);
-
-	/*
-	  Set font and define variables for printing.
-	*/
-	hFont = (HFONT) GetStockObject(ANSI_FIXED_FONT);
-
-	LONG printlen = bufferlen;
-	int text_done = 0;
-	LPCTSTR begin_text;
-	int testheight = 0;
-
-	/*
-	 * Start printing.
-	 */
-	output = StartDoc(hDC, &di);
- 	if (output == 0) {
-	    Tcl_AppendResult(interp, "unable to start document", NULL);
-	    return TCL_ERROR;
-	}
-
-	RECT r, testrect;
-	r.left = 100;
-	r.top = 100;
-	r.right = (page_width - 100);
-	r.bottom = (page_height - 100);
-
-	begin_text = printbuffer;
-
-	/*
-	 * Loop through the text until it is all printed. We are
-         * drawing to a dummy rect with the DT_CALCRECT flag set to
-	 * calculate the full area of the text buffer; see
-	 * https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-drawtext.
-	 */
-	for (page = pd.nMinPage; (output >= 0) && (text_done < printlen); page++)
-	    {
-		int textrange_low = 0;
-		int textrange_high = printlen - text_done;
-		int textcount = textrange_high;
-
-		output = StartPage(hDC);
-		if (output == 0) {
-		    Tcl_AppendResult(interp, "unable to start page", NULL);
-		    return TCL_ERROR;
-		    break;
+	if (StartDoc(pd.hDC, & di) > 0) {
+	    for (page  = 0 ; page  < total_pages ; page++) {
+		if (StartPage(hDC) < 0) {
+		    success = FALSE;
+		    result = TCL_ERROR;
+		    return result;
 		}
 
-		SetMapMode(hDC, MM_TEXT);
-	        SelectObject(hDC, hFont);
-
-		testrect = r;
-		while (textrange_low < textrange_high) {
-		    testrect.right = r.right;
-		    testheight = DrawText(hDC, begin_text, textcount, &testrect, DT_CALCRECT|DT_WORDBREAK|DT_NOCLIP|DT_EXPANDTABS|DT_NOPREFIX);
-		    if (testheight < r.bottom)
-			textrange_low = textcount;
-		    if (testheight > r.bottom)
-			textrange_high = textcount;
-		    if (textrange_low == textrange_high - 1)
-			textrange_low = textrange_high;
-		    if (textrange_low < textrange_high)
-		        textcount = textrange_low + (textrange_high - textrange_low)/2;
-		    break;
-		}
-		output = DrawText(hDC, begin_text, textcount, &r, DT_WORDBREAK|DT_NOCLIP|DT_EXPANDTABS|DT_NOPREFIX);
-		if (output == 0) {
-		    Tcl_AppendResult(interp, "unable to draw text", NULL);
-		    return TCL_ERROR;
-		}
-	        /*
-		 * Recalculate each of these values to draw on the next page
-		 * until the buffer is empty, then end that page.
+		/* 
+		 * For each page, print the lines.
 		 */
-		begin_text += textcount;
-		text_done += textcount;
-
-		output = EndPage(hDC);
-		if (output == 0) {
-		    Tcl_AppendResult(interp, "unable to end page", NULL);
-		    return TCL_ERROR;
+		for (line = 0; line < lines_per_page; line++) {
+		    line_number = lines_per_page * page + line;
+		    if (line_number > total_lines)
+			break;
+		    *(int * ) linebuffer = chars_per_line;
+		    TextOut(hDC, 100, yChar * line, linebuffer,
+			    (int) SendMessage(hwndEdit, EM_GETLINE,
+					      (WPARAM) line_number, (LPARAM) linebuffer));
+		}
+		if (EndPage(hDC) < 0) {
+		    success = FALSE;
+		    result = TCL_ERROR;
+		    return result;
 		}
 	    }
-	EndDoc(hDC);
-	DeleteDC(hDC);
-
+	    if (!success) {
+		result = TCL_ERROR;
+		return result;
+	    }
+	    if (success){
+		EndDoc(hDC);
+	        DestroyWindow(hwndEdit);
+	    }
+	}
+	ckfree(linebuffer);
+	DeleteDC(pd.hDC);
 	result = TCL_OK;
 	return result;
     }
     return result;
 }
+    
+
 
 
 
