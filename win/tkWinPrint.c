@@ -267,14 +267,14 @@ static int WinTextPrint(
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_ALLPAGES | PD_USEDEVMODECOPIESANDCOLLATE;
 
-    if (PrintDlg( & pd) == TRUE) {
+    if (PrintDlg( &pd) == TRUE) {
 	hDC = pd.hDC;
 	if (hDC == NULL) {
 	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
 	    return TCL_ERROR;
 	}
 
-	ZeroMemory( & di, sizeof(di));
+	ZeroMemory( &di, sizeof(di));
 	di.cbSize = sizeof(di);
 	di.lpszDocName = "Tk Output";
 
@@ -316,7 +316,7 @@ static int WinTextPrint(
 	/*
 	 * Determine how text will fit on page.
 	 */
-	GetTextMetrics(hDC, & tm);
+	GetTextMetrics(hDC, &tm);
 	yChar = tm.tmHeight + tm.tmExternalLeading;
 	chars_per_line = GetDeviceCaps(hDC, HORZRES) / tm.tmAveCharWidth;
 	lines_per_page = GetDeviceCaps(hDC, VERTRES) / yChar;
