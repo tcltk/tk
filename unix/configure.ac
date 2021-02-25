@@ -652,14 +652,18 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
+    TK_LIB_FLAG="-l"
+    if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+	TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
+    fi
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
-	TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+	TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
     else
 	if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-	    TK_LIB_FLAG="-ltk${TK_VERSION}"
+	    TK_LIB_FLAG="${TK_LIB_FLAG}tk${TK_VERSION}"
 	else
-	    TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+	    TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	fi
 	TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
     fi
