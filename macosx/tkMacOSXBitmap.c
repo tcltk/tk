@@ -257,7 +257,7 @@ TkpGetNativeAppBitmap(
     if (iconBitmapTable.buckets &&
 	    (hPtr = Tcl_FindHashEntry(&iconBitmapTable, name))) {
 	OSType type;
-	IconBitmap *iconBitmap = Tcl_GetHashValue(hPtr);
+	IconBitmap *iconBitmap = (IconBitmap *)Tcl_GetHashValue(hPtr);
 	name = NULL;
 	size = NSMakeSize(iconBitmap->width, iconBitmap->height);
 	switch (iconBitmap->kind) {
@@ -403,7 +403,7 @@ TkMacOSXIconBitmapObjCmd(
     }
     hPtr = Tcl_CreateHashEntry(&iconBitmapTable, name, &isNew);
     if (!isNew) {
-	iconBitmap = Tcl_GetHashValue(hPtr);
+	iconBitmap = (IconBitmap *)Tcl_GetHashValue(hPtr);
 	ckfree(iconBitmap->value);
     } else {
 	iconBitmap = (IconBitmap *)ckalloc(sizeof(IconBitmap));
