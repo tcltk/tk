@@ -31,7 +31,7 @@
  */
 
 typedef struct {
-    int virtual;	/* value of [NSEvent keyCode] */
+    int virt;	/* value of [NSEvent keyCode] */
     KeySym keysym;	/* X11 keysym */
     KeyCode keychar;	/* XEvent keycode & 0xFFFF */
 } KeyInfo;
