@@ -57,8 +57,8 @@
 # Tk_PhotoPutBlock_Panic                no tests, probably none needed
 # Tk_PhotoPutZoomedBlock_Panic          no tests, probably none needed
 # Tk_PhotoSetSize_Panic                 no tests, probably none needed
-# Tk_PhotoGetMetadata:                  imgPhoto-19.*
-# Tk_PhotoSetMetadata:                  imgPhoto-20.*
+# Tk_PhotoGetMetadata:                  imgPhoto-21.*
+# Tk_PhotoSetMetadata:                  imgPhoto-22.*
 #--------------------------------------------------------------------------
 #
 
