@@ -188,7 +188,7 @@ namespace eval tk {
 	#    the case.
 	#
 	# b. Work around a race condition associated with OS notification of
-	#    mouse motion by Windows 10.
+	#    mouse motion on Windows.
 	#
 	#    When calling [event generate $w $event -warp 1 ...], the following
 	#    sequence occurs:
@@ -222,14 +222,12 @@ namespace eval tk {
 	#    specifically the comment on 2019-10-27 14:24:26.
 	#
 	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
-	proc controlPointerWarpTiming {script {duration 50}} {
-		uplevel 1 $script
-		
+	proc controlPointerWarpTiming {{duration 50}} {
 		variable idle_pointer_warping
 		if {$idle_pointer_warping} {
 			update idletasks ;# see a. above
 		}
-		if {([tk windowingsystem] eq "win32") && ($::tcl_platform(osVersion) >= 10.0)} {
+		if {[tk windowingsystem] eq "win32"} {
 			after $duration ;# see b. above
 		}
 	}
