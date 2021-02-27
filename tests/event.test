@@ -829,7 +829,8 @@ test event-9 {no <Enter> event is generated for the container window when its
     bind all <Enter> {lappend res %W}
     pack [frame .top.f -bg green -width 50 -height 50] -anchor se -side bottom
     update
-    controlPointerWarpTiming {event generate .top.f <Motion> -warp 1 -x 25 -y 25}
+    event generate .top.f <Motion> -warp 1 -x 25 -y 25
+    controlPointerWarpTiming
     update  ; # idletasks not enough
     destroy .top.f  ; # no <Enter> event sent
     update
