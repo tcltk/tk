@@ -137,7 +137,13 @@ TkSelGetSelection(
 	    string = [pb stringForType:type];
 	}
 	if (string) {
-	    result = proc(clientData, interp, string.UTF8String);
+	    if (target == dispPtr->utf8Atom) {
+		result = proc(clientData, interp, string.UTF8String);
+	    } else if (target == XA_STRING) {
+		const char *latin1 = [string
+		    cStringUsingEncoding:NSISOLatin1StringEncoding];
+		result = proc(clientData, interp, latin1);
+	    }
 	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
