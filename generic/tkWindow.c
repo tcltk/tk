@@ -334,9 +334,9 @@ CreateTopLevelWindow(
 	 * Create built-in photo image formats.
 	 */
 
-        Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
-	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
-	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
+	Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtGIF);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
 	Tk_CreatePhotoImageFormat(&tkImgFmtSVGnano);
     }
