@@ -604,11 +604,12 @@ static void
 setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
     unsigned int state = 0;
-    Display *display = Tk_Display(tkwin);
+    Display *display;
 
     if (tkwin == NULL) {
 	return;
     }
+    display = Tk_Display(tkwin);
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
 	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |

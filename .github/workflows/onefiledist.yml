@@ -24,7 +24,6 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get install libxss-dev
-          mkdir -p install/1dist.vfs
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -50,7 +49,7 @@ jobs:
         # TODO: need the Tk version separately for distro naming below
       - name: Package
         run: |
-          cp ../tk/unix/wish ${BUILD_NAME}
+          cp bin/wish8.7 ${BUILD_NAME}
           chmod +x ${BUILD_NAME}
           tar -cf ${BUILD_NAME}.tar ${BUILD_NAME}
         working-directory: ${{ env.INST_DIR }}
@@ -64,7 +63,7 @@ jobs:
       - name: Describe Installation Zip Contents
         if: ${{ always() }}
         run: |
-          unzip -l 1dist.zip || true
+          unzip -l wish${{ env.TCL_PATCHLEVEL }}_unofficial || true
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
@@ -94,12 +93,13 @@ jobs:
           path: create-dmg
       - name: Setup Environment
         run: |
-          mkdir -p install/1dist.vfs install/contents
+          mkdir -p install/contents
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
           echo "VER_PATH=$(cd tcl/tools; pwd)/addVerToFile.tcl" >> $GITHUB_ENV
           echo "CREATE_DMG=$(cd create-dmg;pwd)/create-dmg" >> $GITHUB_ENV
+          echo "CFLAGS=-arch x86_64 -arch arm64e" >> $GITHUB_ENV
         working-directory: "."
       - name: Configure Tcl
         run: |
@@ -172,7 +172,6 @@ jobs:
         run: choco install -y msys2 make zip
       - name: Setup Environment
         run: |
-          mkdir -p install/1dist
           mkdir -p install/combined
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
@@ -186,7 +185,6 @@ jobs:
       - name: Build & Install Tcl
         run: |
           make binaries libraries install
-          echo "TCL_ZIP=`pwd`/`echo libtcl*.zip`" >> $GITHUB_ENV
           $INST_DIR/bin/tclsh* $VER_PATH $GITHUB_ENV
         working-directory: tcl/win
       - name: Configure Tk
