@@ -1058,7 +1058,6 @@ ImgPhotoCmd(
     }
     case PHOTO_READ: {
 	Tcl_Obj *format;
-	int result;
 
 	/*
 	 * photo read command - first parse the options specified.
