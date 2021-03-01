@@ -192,6 +192,25 @@ TKBackgroundLoop *backgroundLoop = nil;
 {
     return (_tkSpecial == special);
 }
+
+/*
+ * The performKeyEquivalent method is being overridden here to work around an
+ * Apple bug revealed by [1626ed65b8].  Sometimes the AppKit will call this
+ * method and pass it a KeyDown event which has no characters.  This causes an
+ * NSInvalidArgumentException in the default implementation of the method.
+ * These malformed events are not sent to the Tk application but are handled
+ * directly by the system using this method.  So far this bug has only been
+ * seen when pressing Command-backquote on a Spanish keyboard.
+ */
+
+- (BOOL)performKeyEquivalent:(NSEvent *)event
+{
+    if (event.characters.length == 0) {
+	TKLog(@"performKeyEquivalent: the key event has no characters.");
+	return NO;
+    }
+    return [super performKeyEquivalent:event];
+}
 @end
 
 @implementation TKMenu(TKMenuPrivate)
