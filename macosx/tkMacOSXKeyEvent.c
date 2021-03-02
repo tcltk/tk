@@ -92,26 +92,33 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyUp || type == NSKeyDown) {
-	if ([[theEvent characters] length] > 0) {
-	    keychar = [[theEvent characters] characterAtIndex:0];
+	NSString *characters = [theEvent characters];
+	if (characters.length > 0) {
+	    keychar = [characters characterAtIndex:0];
 
 	    /*
 	     * Currently, real keys always send BMP characters, but who knows?
 	     */
 
 	    if (CFStringIsSurrogateHighCharacter(keychar)) {
-		UniChar lowChar = [[theEvent characters] characterAtIndex:1];
+		UniChar lowChar = [characters characterAtIndex:1];
 		keychar = CFStringGetLongCharacterForSurrogatePair(
 		    keychar, lowChar);
 	    }
 	} else {
 
 	    /*
-	     * This is a dead key, such as Option-e, so it should go to the
-	     * TextInputClient.
+	     * This is a dead key, such as Option-e, so it usually should get
+	     * passed to the TextInputClient.  But if it has a Command modifier
+	     * then it is not functioning as a dead key and should not be
+	     * handled by the TextInputClient.  See ticket [1626ed65b8] and the
+	     * method performKeyEquivalent which is implemented in
+	     * tkMacOSXMenu.c.
 	     */
 
-	    use_text_input = YES;
+	    if (!(modifiers & NSCommandKeyMask)) {
+		use_text_input = YES;
+	    }
 	}
 
 	/*
@@ -393,9 +400,6 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    if (!winPtr) {
-	return;
-    }
     Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
