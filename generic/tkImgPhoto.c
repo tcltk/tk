@@ -1513,6 +1513,7 @@ readCleanup:
 		}
 	    }
 	}
+#endif
 	if (imageFormat == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -1528,7 +1529,6 @@ readCleanup:
 		}
 	    }
 	}
-#endif
 	if (usedExt && !matched) {
 	    /*
 	     * If we didn't find one and we're using file extensions as the
