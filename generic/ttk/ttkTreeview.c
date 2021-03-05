@@ -340,8 +340,8 @@ static int GetEnumSetFromObj(
 
     for (i = 0; i < objc; ++i) {
 	int index;
-	if (TCL_OK != Tcl_GetIndexFromObj(
-		    interp, objv[i], table, "value", TCL_EXACT, &index))
+	if (TCL_OK != Tcl_GetIndexFromObj(interp, objv[i], table,
+		"value", TCL_EXACT, &index))
 	{
 	    return TCL_ERROR;
 	}
@@ -688,7 +688,7 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
      */
     tv->tree.nColumns = ncols;
     tv->tree.columns =
-	(TreeColumn*)ckalloc(tv->tree.nColumns * sizeof(TreeColumn));
+	    (TreeColumn*)ckalloc(tv->tree.nColumns * sizeof(TreeColumn));
 
     for (i = 0; i < ncols; ++i) {
 	int isNew;
@@ -733,12 +733,12 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 
     if (!strcmp(Tcl_GetString(tv->tree.displayColumnsObj), "#all")) {
 	ndcols = tv->tree.nColumns;
-	displayColumns = (TreeColumn**)ckalloc((ndcols+1)*sizeof(TreeColumn*));
+	displayColumns = (TreeColumn**)ckalloc((ndcols+1) * sizeof(TreeColumn*));
 	for (index = 0; index < ndcols; ++index) {
 	    displayColumns[index+1] = tv->tree.columns + index;
 	}
     } else {
-	displayColumns = (TreeColumn**)ckalloc((ndcols+1)*sizeof(TreeColumn*));
+	displayColumns = (TreeColumn**)ckalloc((ndcols+1) * sizeof(TreeColumn*));
 	for (index = 0; index < ndcols; ++index) {
 	    displayColumns[index+1] = GetColumn(interp, tv, dcolumns[index]);
 	    if (!displayColumns[index+1]) {
@@ -1785,7 +1785,7 @@ static void DrawItem(
 		x+indent, y, colwidth-indent, rowHeight);
 	if (item->textObj) { displayItem.textObj = item->textObj; }
 	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
+        displayItem.anchorObj = tv->tree.column0.anchorObj;
 	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
 	x += colwidth;
     }
@@ -1828,7 +1828,7 @@ static int DrawSubtree(
 static int DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
-    while (item && row <= tv->tree.yscroll.last) {
+    while (item && row < tv->tree.yscroll.last) {
         row = DrawSubtree(tv, item, d, depth, row);
 	item = item->next;
     }
@@ -1916,7 +1916,7 @@ static int AncestryCheck(
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
 		    "Cannot insert ", ItemName(tv, item),
-		    " as a descendant of ", ItemName(tv, parent),
+		    " as descendant of ", ItemName(tv, parent),
 		    NULL);
 	    return 0;
 	}
@@ -2291,8 +2291,8 @@ static int TreeviewIdentifyCommand(
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIndexFromObj(interp, objv[2],
-		submethodStrings, "command", TCL_EXACT, &submethod) != TCL_OK
+    if (Tcl_GetIndexFromObj(interp, objv[2], submethodStrings,
+	    "command", TCL_EXACT, &submethod) != TCL_OK
         || Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK
 	|| Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK
     ) {
@@ -2489,9 +2489,9 @@ static int TreeviewSetCommand(
 	for (columnNumber=0; columnNumber<tv->tree.nColumns; ++columnNumber) {
 	    Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &value);
 	    if (value) {
-		Tcl_ListObjAppendElement(interp, result,
+		Tcl_ListObjAppendElement(NULL, result,
 			tv->tree.columns[columnNumber].idObj);
-		Tcl_ListObjAppendElement(interp, result, value);
+		Tcl_ListObjAppendElement(NULL, result, value);
 	    }
 	}
 	Tcl_SetObjResult(interp, result);
@@ -2588,6 +2588,7 @@ static int TreeviewInsertCommand(
     objc -= 4; objv += 4;
     if (objc >= 2 && !strcmp("-id", Tcl_GetString(objv[0]))) {
 	const char *itemName = Tcl_GetString(objv[1]);
+
 	entryPtr = Tcl_CreateHashEntry(&tv->tree.items, itemName, &isNew);
 	if (!isNew) {
 	    Tcl_AppendResult(interp, "Item ",itemName," already exists",NULL);
@@ -2954,8 +2955,7 @@ static int TreeviewSelectionCommand(
     }
 
     if (Tcl_GetIndexFromObj(interp, objv[2], selopStrings,
-	    "selection operation", 0, &selop) != TCL_OK)
-    {
+	    "selection operation", 0, &selop) != TCL_OK) {
 	return TCL_ERROR;
     }
 

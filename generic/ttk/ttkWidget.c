@@ -440,7 +440,7 @@ int TtkWidgetConstructorObjCmd(
 
 error:
     if (WidgetDestroyed(corePtr)) {
-	Tcl_SetResult(interp, "Widget has been destroyed", TCL_STATIC);
+	Tcl_SetResult(interp, "widget has been destroyed", TCL_STATIC);
     } else {
 	Tk_DestroyWindow(tkwin);
     }
@@ -649,7 +649,7 @@ int TtkWidgetConfigureCommand(
 
 	status = corePtr->widgetSpec->postConfigureProc(interp,recordPtr,mask);
 	if (WidgetDestroyed(corePtr)) {
-	    Tcl_SetResult(interp, "Widget has been destroyed", TCL_STATIC);
+	    Tcl_SetResult(interp, "widget has been destroyed", TCL_STATIC);
 	    status = TCL_ERROR;
 	}
 	if (status != TCL_OK) {
