@@ -28,7 +28,7 @@ jobs:
           USE_XVFB: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add Tcl
         run: |
-          brew install tcl-tk          
+          brew install tcl-tk
       - name: Add X11
         if: ${{ env.USE_XVFB }}
         # This involves black magic
@@ -38,7 +38,7 @@ jobs:
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
         # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit --with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include ${CFGOPT} "--prefix=$HOME/install" || {
+          ./configure --enable-64bit --enable-framework --with-tcl=/usr/local/opt/tcl-tk/lib --disable-corefoundation --x-includes=/opt/X11/include --x-libraries=/opt/X11/lib CFLAGS=-I/usr/local/opt/tcl-tk/include ${CFGOPT} "--prefix=$HOME/install" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
