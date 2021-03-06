@@ -159,6 +159,8 @@ struct PhotoModel {
     Tcl_Obj *dataString;	/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
 				 * or string value. */
+    Tcl_Obj *metadata;		/* User-specified metadata dict or read from
+				 * image file */
     unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly dithered
 				 * pixel in image. */
