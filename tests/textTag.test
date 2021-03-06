@@ -1608,6 +1608,14 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
+# some debug info
+puts [.t cget -font]
+puts [font actual [.t cget -font]]
+puts [font metrics [.t cget -font]]
+puts $bigFont
+puts [font actual $bigFont]
+puts [font metrics $bigFont]
+puts "$x1,$y1 -- $x2,$y2"
     .t tag configure big -font $bigFont
     event gen .t <ButtonRelease-1> -state 0x100 -x $x1 -y $y1
     event gen .t <Motion> -x $x2 -y $y2
