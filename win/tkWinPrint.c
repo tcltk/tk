@@ -138,7 +138,6 @@ static const char usage_string[] =
 /* File Global Variables */
 static BOOL fPDLGInitialised = FALSE;
 static PRINTDLG pdlg;
-static PAGESETUPDLG pgdlg;
 static HPEN hPen = NULL;
 static HFONT hFont[10] =
 	{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
@@ -539,8 +538,8 @@ BOOL __declspec(dllexport) WINAPI DllEntryPoint(
 
 int __declspec(dllexport) Winprint_Init (Tcl_Interp *Interp)
 {
-	if (Tcl_InitStubs(Interp, "8.1", 0) == NULL
-		|| Tk_InitStubs(Interp, "8.1", 0) == NULL)
+	if (Tcl_InitStubs(Interp, "8.6-", 0) == NULL
+		|| Tk_InitStubs(Interp, TK_VERSION, 0) == NULL)
 	{
 		return RET_ERROR;
 	}
@@ -565,8 +564,11 @@ int __declspec(dllexport) Winprint_Init (Tcl_Interp *Interp)
  * -------------------------------------------------------------------------
  */
 
-int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
-			 Tcl_Obj *const objv[])
+int WinPrintCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
 	/* Option list and indexes */
 	const char *subCmds[] = {
@@ -603,7 +605,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 	/* Store the parameters in strings. */
 	int iPar[8];
 	Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
-	char ParCur;
+	int ParCur;
 	Tcl_DString	sPar1;
 	int PositionSPar;
 	/*
@@ -819,7 +821,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 	case iOpenPrinter:
 	case iOpenjobdialog:
 		{
-			short Orientation;
+			short Orientation = -1;
 			short PaperSize;
 			unsigned short MaxPage;
 			double Double;
@@ -840,8 +842,6 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 				} else {
 					Orientation = fg_orient_i_command[ParInt];
 				}
-			} else {
-				Orientation = -1;
 			}
 			/* Paper Size */
 			if ( objc > 4 )
@@ -1187,6 +1187,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 	{
 	case RET_OK_NO_RESULT_SET:
 		Tcl_SetStringObj( resultPtr, "", -1);
+		/* FALLTHRU */
 	case RET_OK:
 		return RET_OK;
 	case RET_ERROR_PRINTER_IO:
@@ -2545,8 +2546,8 @@ char ListFonts(Tcl_Interp *interp, HDC hDC, int fFontNameOnly)
 
 int CALLBACK EnumFontFamExProc(
 	ENUMLOGFONTEX *lpelfe,    /* logical-font data */
-	NEWTEXTMETRICEX *lpntme,  /* physical-font data */
-	DWORD FontType,           /* type of font */
+	TCL_UNUSED(NEWTEXTMETRICEX *),  /* physical-font data */
+	TCL_UNUSED(DWORD),           /* type of font */
 	LPARAM lParam             /* application-defined data */
 )
 {
@@ -2689,12 +2690,12 @@ char ListFontUnicodeRanges(Tcl_Interp *interp, HDC hDC)
 	for (PosCur = 0 ; PosCur < (int)(pGlyphSet->cRanges) ; PosCur++) {
 		/* Starting glyph */
 		if (RET_OK != Tcl_ListObjAppendElement(interp, oList,
-			Tcl_NewIntObj(pGlyphSet->ranges[PosCur].wcLow))) {
+			Tcl_NewWideIntObj(pGlyphSet->ranges[PosCur].wcLow))) {
 			return RET_ERROR;
 		}
 		/* Length of range */
 		if (RET_OK != Tcl_ListObjAppendElement(interp, oList,
-			Tcl_NewIntObj(pGlyphSet->ranges[PosCur].cGlyphs))) {
+			Tcl_NewWideIntObj(pGlyphSet->ranges[PosCur].cGlyphs))) {
 			return RET_ERROR;
 		}
 	}
@@ -2760,12 +2761,12 @@ char GetFirstTextNoChar(Tcl_Interp *interp, TCHAR *pText)
 			}
 		}
 		if (!fFound) {
-			Tcl_SetObjResult(interp,Tcl_NewIntObj(IndexCur));
+			Tcl_SetObjResult(interp,Tcl_NewWideIntObj(IndexCur));
 			return RET_OK;
 		}
 	}
 
-	Tcl_SetObjResult(interp,Tcl_NewIntObj(-1));
+	Tcl_SetObjResult(interp,Tcl_NewWideIntObj(-1));
 	return RET_OK;
 }
 
@@ -3063,7 +3064,7 @@ char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 {
 	SIZE Size;
 
-	int Res;
+	int Res = RET_OK;
 	Tcl_Obj	*lResult;
 	Tcl_Obj *IntObj;
 
@@ -3082,7 +3083,7 @@ char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 	lResult = Tcl_GetObjResult( interp );
 
 	/* X Size */
-	IntObj = Tcl_NewIntObj( Size.cx );
+	IntObj = Tcl_NewWideIntObj( Size.cx );
 	if ( RET_OK != Tcl_ListObjAppendElement( interp, lResult, IntObj ))
 	{
 		/* Error already set in interp. */
@@ -3090,13 +3091,13 @@ char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 	}
 
 	/* Y Size */
-	IntObj = Tcl_NewIntObj( Size.cy );
+	IntObj = Tcl_NewWideIntObj( Size.cy );
 	if ( RET_OK != Tcl_ListObjAppendElement( interp, lResult, IntObj ))
 	{
 		/* Error already set in interp */
 		Res = RET_ERROR;
 	}
-	return RET_OK;
+	return Res;
 }
 
 
@@ -3107,8 +3108,13 @@ char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 /* @param DestPosY Destination Y position */
 /* @param DestWidth Width of destination image, or 0 to use original size */
 /* @param DestHeight Height of destination image or 0 to use original size */
-char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *const oImageName,
-	int DestPosX, int DestPosY, int DestWidth, int DestHeight)
+char PaintPhoto(
+    Tcl_Interp *interp,
+    Tcl_Obj *const oImageName,
+	int DestPosX,
+    int DestPosY,
+    int DestWidth,
+    int DestHeight)
 {
 #if 0
 	Tk_PhotoImageBlock sImageBlock;
@@ -3185,6 +3191,13 @@ char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *const oImageName,
 		return RET_ERROR_PRINTER_DRIVER;
 	}
 	DeleteObject(hDIB);
+#else
+    (void)interp;
+    (void)oImageName;
+    (void)DestPosX;
+    (void)DestPosY;
+    (void)DestWidth;
+    (void)DestHeight;
 #endif
 	return RET_OK;
 }
