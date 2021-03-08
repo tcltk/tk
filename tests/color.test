@@ -9,6 +9,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
+
 # cname --
 # Returns a proper name for a color, given its intensities.
 #
@@ -277,7 +279,7 @@ test color-3.4 {Tk_FreeColorFromObj - unlinking from list} colorsFree {
     lappend result [testcolor purple]
 } {{{4 1} {3 0} {2 0} {1 0}} {{4 1} {2 0} {1 0}} {{4 1} {2 0}} {{2 0}} {}}
 
-test color-4.1 {FreeColorObjProc} colorsFree {
+test color-4.1 {FreeColorObjProc} {colorsFree failsOnQuarz} {
     destroy .b
     set x [format purple]
     button .b -foreground $x -text .b1

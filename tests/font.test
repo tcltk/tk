@@ -18,6 +18,7 @@ update idletasks
 set defaultfontlist [font names]
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 proc getnondefaultfonts {} {
     global defaultfontlist
@@ -630,7 +631,7 @@ test font-17.6 {Tk_FreeFont procedure: named font not deleted yet} {
     list [lindex [font actual xyz] 0] [lindex $x 0]
 } {-family -family}
 
-test font-18.1 {FreeFontObjProc} {testfont failsOnUbuntu} {
+test font-18.1 {FreeFontObjProc} {testfont failsOnUbuntu failsOnQuarz} {
     destroy .b1
     set x [format {Courier 12}]
     button .b1 -font $x
@@ -1112,7 +1113,7 @@ test font-31.6 {Tk_IntersectTextLayout procedure: ignore spaces at eol} {
     set x
 } {}
 
-test font-32.1 {Tk_TextLayoutToPostscript: ensure buffer doesn't overflow} failsOnUbuntu {
+test font-32.1 {Tk_TextLayoutToPostscript: ensure buffer doesn't overflow} {failsOnUbuntu failsOnQuarz} {
     # If there were a whole bunch of returns or tabs in a row, then the
     # temporary buffer could overflow and write on the stack.
 

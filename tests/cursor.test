@@ -11,6 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 test cursor-1.1 {Tk_AllocCursorFromObj - converting internal reps} {testcursor} {
     set x watch
@@ -107,7 +108,7 @@ test cursor-3.1 {Tk_FreeCursorFromObj - reference counts} {testcursor} {
     lappend result [testcursor heart]
 } {{{3 1}} {{2 1}} {{1 1}} {}}
 
-test cursor-4.1 {FreeCursorObjProc} {testcursor failsOnUbuntu} {
+test cursor-4.1 {FreeCursorObjProc} {testcursor failsOnUbuntu failsOnQuarz} {
     destroy .b
     set x [format heart]
     button .b -cursor $x
