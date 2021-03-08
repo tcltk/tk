@@ -771,7 +771,7 @@ FileReadGIF(
     result = TCL_OK;
 
 error:
-    
+
     /*
      * If a trash buffer has been allocated, free it now.
      */
@@ -1996,11 +1996,11 @@ CommonWriteGIF(
      */
     if (NULL != metadataInObj) {
 	Tcl_Obj *itemData;
-	
+
 	/*
 	 * Check and code comment block
 	 */
-	
+
 	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
 		Tcl_NewStringObj("comment",-1),
 		&itemData)) {

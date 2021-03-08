@@ -129,15 +129,11 @@ jobs:
               : do nothing
             }
           fi
-          ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
+          ( runXvfb :0; make test-classic test-ttk; exit $? ) | tee out.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
-          ( runXvfb :0; make test-ttk; exit $? ) | tee out-ttk.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          cat out-classic.txt out-ttk.txt | grep -q "Failed[[:space:]][[:space:]]*[1-9]" && {
+          cat out.txt | grep -q "Failed	[1-9]" && {
             echo "::error::Failure during Test"
             exit 1
           }
