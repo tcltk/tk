@@ -225,7 +225,7 @@ MODULE_SCOPE  int       WinIcoInit (Tcl_Interp* interp);
  * The following is implemented in tkWinPrint.c
  */
 
-MODULE_SCOPE  int       PrintInit(Tcl_Interp* interp);
+MODULE_SCOPE  int       Winprint_Init(Tcl_Interp* interp);
 
 /*
  * Common routines used in Windows implementation

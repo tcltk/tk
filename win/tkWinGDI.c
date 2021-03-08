@@ -3,9 +3,9 @@
  *
  *      This module implements access to the Win32 GDI API.
  *
- * Copyright © 1991-1996 Microsoft Corp.
- * Copyright © 2009, Michael I. Schwartz.
- * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
+ * Copyright Â© 1991-1996 Microsoft Corp.
+ * Copyright Â© 2009, Michael I. Schwartz.
+ * Copyright Â© 2021 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -20,90 +20,41 @@
 #include <math.h>
 
 
-#if defined(__WIN32__) || defined (__WIN32S__) || defined (WIN32S)
- #ifndef STATIC_BUILD
-  #   if defined(_MSC_VER)
-  #     include <wtypes.h> /* Ensure to include WINAPI definition */
-  #     define EXPORT(a,b) __declspec(dllexport) a b
-  #     define IMPORT(a,b) __declspec(dllimport) a b
-  #     define DllEntryPoint DllMain
-  #     define strcmpi(l,r) _stricmp(l,r)
-  #     define strncmpi(l,r,c) _strnicmp(l,r,c)
-  #   else
-  #     if defined(__BORLANDC__)
-  #         define EXPORT(a,b) a _export b
-  #         define IMPORT(a,b) a _import b
-  #     else
-  #         define EXPORT(a,b) a b
-  #         define IMPORT(a,b) a b
-  #     endif
-  #   endif 
-  #   define hypot(dx,dy) _hypot(dx,dy)
- #endif
-#else
-  #   error "Extension is only for Windows"
-#endif
+#include <wtypes.h> /* Ensure to include WINAPI definition */
 
 #include <tcl.h>
 /* #include <tclPlatDecls.h> */
-#include <tk.h>
-
-/* New macros for tcl8.0.3 and later */
-#if defined(TCL_STORAGE_CLASS)
-#  undef TCL_STORAGE_CLASS
-#endif
-
-#define TCL_STORAGE_CLASS DLLEXPORT
-
-#if ! defined(EXTERN)
-#  define EXTERN
-#endif
-
-/* Defined at the bottom so we can import the symbols */
-static HWND tk_gethwnd (Window window);
-static HWND tkwingetwrapperwindow(Window tkwin);
-
-#if TCL_MAJOR_VERSION == 7 && TCL_MINOR_VERSION <= 5
-/* In this case, must replace Tcl_Alloc(), Tcl_Realloc(), and Tcl_Free()
-* with ckalloc(), ckrealloc(), and ckfree()
-*/
-
-#define Tcl_Alloc(x)  ckalloc(x)
-#define Tcl_Free(x)   ckfree(x)
-#define Tcl_Realloc(x,y)  ckrealloc(x,y)
-
-#endif
-
+#include <tkInt.h>
 
 /* Main dispatcher for commands */
-static int gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
+static int gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
 /* Main dispatcher for subcommands */
-static int Gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
+static int Gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
 
 /* Real functions */
-static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiBitmap   (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiImage    (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int Version     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
+static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiBitmap   (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiImage    (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int Version     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
 
-static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
-static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const char *argv);
+static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
 
 /* Local copies of similar routines elsewhere in Tcl/Tk */
 static int GdiParseColor (const char *name, unsigned long *color);
 static int GdiGetColor   (const char *name, unsigned long *color);
-static int TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints);
+static int TkGdiMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints);
 
 /* Routines imported from irox */
-static int PrintTextCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char *argv);
+static int PrintTextCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
 
 /*
 * Hash table support
@@ -127,8 +78,8 @@ static HDC get_dc(Tcl_Interp *interp, const char *name);
 * Helper functions
 */
 static int GdiMakeLogFont(Tcl_Interp *interp, const char *str, LOGFONT *lf, HDC hDC);
-static int GdiMakePen(Tcl_Interp *interp, int width, 
-                      int dashstyle, const char *dashstyledata, 
+static int GdiMakePen(Tcl_Interp *interp, int width,
+                      int dashstyle, const char *dashstyledata,
                       int capstyle,
                       int joinstyle,
                       int stipplestyle, const char *stippledata,
@@ -138,8 +89,8 @@ static int GdiFreePen(Tcl_Interp *interp, HDC hDC, HGDIOBJ oldPen);
 static int GdiMakeBrush (Tcl_Interp *interp, unsigned int style, unsigned long color,
                          long hatch, LOGBRUSH *lb, HDC hDC, HGDIOBJ *oldBrush);
 static int GdiFreeBrush (Tcl_Interp *interp, HDC hDC, HGDIOBJ oldBrush);
-static int GdiGetHdcInfo( HDC hdc, 
-                          LPPOINT worigin, LPSIZE wextent, 
+static int GdiGetHdcInfo( HDC hdc,
+                          LPPOINT worigin, LPSIZE wextent,
                           LPPOINT vorigin, LPSIZE vextent);
 
 /* Helper functions for printing the window client area */
@@ -153,7 +104,7 @@ static int PalEntriesOnDevice(HDC hDC);
 static HPALETTE GetSystemPalette(void);
 static void GetDisplaySize (LONG *width, LONG *height);
 
-static char usage_message[] = "gdi [arc|characters|copybits|line|map|oval|"
+static const char gdi_usage_message[] = "gdi [arc|characters|copybits|line|map|oval|"
                               "photo|polygon|rectangle|text|version]\n"
                               "\thdc parameters can be generated by the printer extension";
 static char msgbuf[1024];
@@ -163,7 +114,7 @@ static char msgbuf[1024];
 * It strips off the first word of the command (gdi) and
 * sends the result to the switch
 */
-static int gdi  (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int gdi  (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
   if ( argc > 1 && strcmp(*argv, "gdi") == 0 )
   {
@@ -172,7 +123,7 @@ static int gdi  (ClientData unused, Tcl_Interp *interp, int argc, const char *ar
     return Gdi(unused, interp, argc, argv);
   }
 
-  Tcl_SetResult (interp, usage_message, TCL_STATIC);
+  Tcl_SetResult (interp, gdi_usage_message, TCL_STATIC);
   return TCL_ERROR;
 }
 
@@ -183,8 +134,8 @@ static int gdi  (ClientData unused, Tcl_Interp *interp, int argc, const char *ar
 */
 struct gdi_command
 {
-  char *command_string;
-  int (*command) (ClientData, Tcl_Interp *, int, const char *);
+  const char *command_string;
+  int (*command) (ClientData, Tcl_Interp *, int, const char **);
 } gdi_commands[] =
 {
   { "arc",        GdiArc },
@@ -199,26 +150,26 @@ struct gdi_command
   { "polygon",    GdiPolygon },
   { "rectangle",  GdiRectangle },
   { "text",       GdiText },
-#if TEXTWIDGET_CMD
+#ifdef TEXTWIDGET_CMD
   { "textwidget", PrintTextCmd },
 #endif
   { "copybits",   GdiCopyBits },
   { "version",    Version },
-  
+
 };
 
 /*
 * This is the GDI subcommand dispatcher
 */
-static int Gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int Gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  int i;
+  size_t i;
 
   for (i=0; i<sizeof(gdi_commands) / sizeof(struct gdi_command); i++)
     if ( strcmp (*argv, gdi_commands[i].command_string) == 0 )
       return (*gdi_commands[i].command)(unused, interp, argc-1, argv+1);
 
-  Tcl_SetResult (interp, usage_message, TCL_STATIC);
+  Tcl_SetResult (interp, gdi_usage_message, TCL_STATIC);
   return TCL_ERROR;
 }
 
@@ -230,9 +181,9 @@ static int Gdi      (ClientData unused, Tcl_Interp *interp, int argc, const char
 * [-width and -height are not modified in this function]
 * Other "canvas" options are not relevant to a static display
 */
-static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi configure hdc "
+  static const char usage_message[] = "gdi configure hdc "
                                 "[-background bgcolor]";
 
   COLORREF c;
@@ -272,7 +223,7 @@ static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const c
           SetBkColor(hDC, color);
         else
         {
-          Tcl_AppendResult(interp, 
+          Tcl_AppendResult(interp,
 	                   "{ {gdi configure: color parsing error for background ",
 			   argv[0],
 			   "} }",
@@ -284,7 +235,7 @@ static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const c
     argc--;
     argv++;
   }
-  
+
   if ( (c = GetBkColor(hDC)) == CLR_INVALID )
   {
     Tcl_AppendResult(interp, "{ -background INVALID }", 0);
@@ -295,7 +246,7 @@ static int GdiConfig   (ClientData unused, Tcl_Interp *interp, int argc, const c
     sprintf(clrhex, "#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
     Tcl_AppendResult(interp, "{ -background ", clrhex, " }", 0);
   }
-  
+
   return status;
 }
 
@@ -309,7 +260,7 @@ typedef BOOL (WINAPI *DrawFunc) (HDC, int, int, int, int, int, int, int, int); /
 typedef BOOL WINAPI (*DrawFunc) (HDC, int, int, int, int, int, int, int, int); /* Arc, Chord, Pie */
 #endif
 
-static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
   int x1, y1, x2, y2;
   int xr0, yr0, xr1, yr1;
@@ -326,7 +277,7 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
   int dodash = 0;
   const char *dashdata = 0;
 
-  static char usage_message[] = "gdi arc hdc x1 y1 x2 y2 "
+  static const char usage_message[] = "gdi arc hdc x1 y1 x2 y2 "
                                 "-extent degrees "
 				"-fill color -outline color "
 				"-outlinestipple bitmap "
@@ -335,7 +286,7 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
 				"-style [pieslice|chord|arc] -width linewid";
 
   drawfunc = Pie;
-  
+
   /* Verrrrrry simple for now... */
   if (argc >= 5)
   {
@@ -346,12 +297,12 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
       Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for GDI", 0);
       return TCL_ERROR;
     }
-    
+
     x1 = atoi(argv[1]);
     y1 = atoi(argv[2]);
     x2 = atoi(argv[3]);
     y2 = atoi(argv[4]);
-      
+
     argc -= 5;
     argv += 5;
     while ( argc >= 2 )
@@ -405,7 +356,7 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
 
 
     /*
-    * The angle used by the arc must be "warped" by the eccentricity of the ellipse. 
+    * The angle used by the arc must be "warped" by the eccentricity of the ellipse.
     * Thanks to Nigel Dodd <nigel.dodd@avellino.com> for bringing a nice example.
     */
     xr0 += (int)(100.0 * (x2 - x1) * cos( (start * 2.0 * 3.14159265) / 360.0 ) );
@@ -417,7 +368,7 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
        assume that arcs are drawn counterclockwise (e.g., positive extent)
        So if it's negative, switch the coordinates!
     */
-    if ( extent < 0 ) 
+    if ( extent < 0 )
     {
       int xr2 = xr0;
       int yr2 = yr0;
@@ -426,18 +377,18 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
       yr0 = yr1;
       yr1 = yr2;
     }
-      
+
     if ( dofillcolor )
       GdiMakeBrush(interp, 0, fillcolor, 0, &lbrush, hDC, (HGDIOBJ *)&hBrush);
     else
       oldobj = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH) );
-      
+
     if ( width || dolinecolor )
-        GdiMakePen(interp, width, 
-                   dodash, dashdata, 
+        GdiMakePen(interp, width,
+                   dodash, dashdata,
                    0, 0, 0, 0,
                    linecolor, hDC, (HGDIOBJ *)&hPen);
-      
+
     (*drawfunc)(hDC, x1, y1, x2, y2, xr0, yr0, xr1, yr1);
 
     if ( width || dolinecolor )
@@ -459,16 +410,16 @@ static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const c
 * Unimplemented for now.
 * Should use the same techniques as CanvasPsBitmap (tkCanvPs.c)
 */
-static int GdiBitmap   (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiBitmap   (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi bitmap hdc x y "
+  static const char usage_message[] = "gdi bitmap hdc x y "
                                 "-anchor [center|n|e|s|w] -background color "
 		                "-bitmap bitmap -foreground color\n"
                                 "Not implemented yet. Sorry!";
 
   /* Skip this for now.... */
   /* Should be based on common code with the copybits command */
-  
+
   Tcl_SetResult(interp, usage_message, TCL_STATIC);
   return TCL_ERROR;
 }
@@ -480,14 +431,14 @@ static int GdiBitmap   (ClientData unused, Tcl_Interp *interp, int argc, const c
 * (or other registered function(?))
 * This code is similar to that in the tkx.y.z/win/tkWinImage.c code?
 */
-static int GdiImage    (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiImage    (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi image hdc x y -anchor [center|n|e|s|w] -image name\n"
+  static const char usage_message[] = "gdi image hdc x y -anchor [center|n|e|s|w] -image name\n"
                                 "Not implemented yet. Sorry!";
 
   /* Skip this for now.... */
   /* Should be based on common code with the copybits command */
-  
+
   Tcl_SetResult(interp, usage_message, TCL_STATIC);
   /* Normally, usage results in TCL_ERROR--but wait til' it's implemented */
   return TCL_OK;
@@ -496,20 +447,20 @@ static int GdiImage    (ClientData unused, Tcl_Interp *interp, int argc, const c
 /*
 * Gdi Photo
 * Contributed by Lukas Rosenthaler <lukas.rosenthaler@balcab.ch>
-* Note: The canvas doesn't directly support photos (only as images), 
+* Note: The canvas doesn't directly support photos (only as images),
 *       so this is the first gdi command without an equivalent canvas command.
 * This code may be modified to support photo images on the canvas.
 */
-static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi photo hdc [-destination x y [w [h]]] -photo name\n";
+  static const char usage_message[] = "gdi photo hdc [-destination x y [w [h]]] -photo name\n";
   HDC dst;
   int dst_x = 0, dst_y = 0, dst_w = 0, dst_h = 0;
   int nx, ny, sll;
   const char *photoname = 0;    /* For some reason Tk_FindPhoto takes a char * */
   Tk_PhotoHandle photo_handle;
   Tk_PhotoImageBlock img_block;
-  BITMAPINFO bitmapinfo;  /* Since we don't need the bmiColors table, 
+  BITMAPINFO bitmapinfo;  /* Since we don't need the bmiColors table,
                              there is no need for dynamic allocation */
   int oldmode; /* For saving the old stretch mode */
   POINT pt;    /* For saving the brush org */
@@ -542,43 +493,43 @@ static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const c
   if ( (GetDeviceCaps (dst, RASTERCAPS) & RC_STRETCHDIB) == 0 ) {
     sprintf(msgbuf, "gdi photo not supported on device context (0x%s)", argv[0]);
     Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
-    return TCL_ERROR;      
+    return TCL_ERROR;
   }
 
   /* Parse the command line arguments */
-  for (j = 1; j < argc; j++) 
+  for (j = 1; j < argc; j++)
   {
-    if (strcmp (argv[j], "-destination") == 0) 
+    if (strcmp (argv[j], "-destination") == 0)
     {
       double x, y, w, h;
       int count = 0;
 
       if ( j < argc )
         count = sscanf(argv[++j], "%lf%lf%lf%lf", &x, &y, &w, &h);
-          
+
       if ( count < 2 ) /* Destination must provide at least 2 arguments */
       {
 	Tcl_AppendResult(interp, "-destination requires a list of at least 2 numbers\n",
 	                         usage_message, 0);
 	return TCL_ERROR;
       }
-      else 
+      else
       {
 	dst_x = (int) x;
 	dst_y = (int) y;
-	if ( count == 3 ) 
+	if ( count == 3 )
 	{
 	  dst_w = (int) w;
 	  dst_h = -1;
         }
-        else if ( count == 4 ) 
+        else if ( count == 4 )
 	{
           dst_w = (int) w;
           dst_h = (int) h;
         }
       }
     }
-    else if (strcmp (argv[j], "-photo") == 0) 
+    else if (strcmp (argv[j], "-photo") == 0)
       photoname = argv[++j];
   }
 
@@ -587,7 +538,7 @@ static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const c
     Tcl_AppendResult(interp, "No photo name provided to gdi photo\n", usage_message, 0);
     return TCL_ERROR;
   }
-  
+
   photo_handle = Tk_FindPhoto (interp, photoname);
   if ( photo_handle == 0 )
   {
@@ -610,11 +561,11 @@ static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const c
   }
 
   /* After this, all returns must go through retval */
-  
+
   /* BITMAP expects BGR; photo provides RGB */
-  for (k = 0; k < ny; k++) 
+  for (k = 0; k < ny; k++)
   {
-    for (i = 0; i < nx; i++) 
+    for (i = 0; i < nx; i++)
     {
       pbuf[k*sll + 3*i] =
 	img_block.pixelPtr[k*img_block.pitch + i*img_block.pixelSize + img_block.offset[2]];
@@ -642,13 +593,13 @@ static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const c
   oldmode = SetStretchBltMode (dst, HALFTONE);
   /* According to the Win32 Programmer's Manual, we have to set the brush org, now */
   SetBrushOrgEx(dst, 0, 0, &pt);
-  
-  if (dst_w <= 0) 
+
+  if (dst_w <= 0)
   {
     dst_w = nx;
     dst_h = ny;
   }
-  else if (dst_h <= 0) 
+  else if (dst_h <= 0)
   {
     dst_h = ny*dst_w / nx;
   }
@@ -669,7 +620,7 @@ static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const c
     SetStretchBltMode(dst, oldmode);
     SetBrushOrgEx(dst, pt.x, pt.y, &pt);
   }
-  
+
   Tcl_Free (pbuf);
 
   if ( retval == TCL_OK )
@@ -683,7 +634,7 @@ static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const c
 
 /*
 * Interface to Tk's line smoother, used for lines and pollies
-* Provided by Jasper Taylor <jasper.taylor@ed.ac.uk> 
+* Provided by Jasper Taylor <jasper.taylor@ed.ac.uk>
 */
 int Bezierize(POINT* polypoints, int npoly, int nStep, POINT* bpointptr) {
     /* First, translate my points into a list of doubles */
@@ -691,53 +642,53 @@ int Bezierize(POINT* polypoints, int npoly, int nStep, POINT* bpointptr) {
     int n;
     int nbpoints = 0;
     POINT* bpoints;
-    
-    
+
+
     inPointList=(double *)Tcl_Alloc(2*sizeof(double)*npoly);
     if ( inPointList == 0 ) {
         return nbpoints; /* 0 */
     }
-    
+
     for (n=0;n<npoly;n++) {
         inPointList[2*n]=polypoints[n].x;
         inPointList[2*n+1]=polypoints[n].y;
     }
-    
-    
+
+
     nbpoints=1+npoly*nStep; /* this is the upper limit */
     outPointList=(double *)Tcl_Alloc(2*sizeof(double)*nbpoints);
     if ( outPointList == 0 ) {
         Tcl_Free ((void *)inPointList);
         return 0;
     }
-    
-    
-    nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep, 
+
+
+    nbpoints = TkGdiMakeBezierCurve(NULL, inPointList, npoly, nStep,
                                  NULL, outPointList);
-    
-    
+
+
     Tcl_Free((void *)inPointList);
     bpoints = (POINT *)Tcl_Alloc(sizeof(POINT)*nbpoints);
     if ( bpoints == 0 ) {
         Tcl_Free ((void *)outPointList);
         return 0;
     }
-    
+
     for (n=0;n<nbpoints;n++) {
         bpoints[n].x = (long)outPointList[2*n];
         bpoints[n].y = (long)outPointList[2*n+1];
     }
     Tcl_Free((void *)outPointList);
-    *bpointptr = bpoints;
+    *bpointptr = *bpoints;
     return nbpoints;
 }
 
 /*
 * Line command
 */
-static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi line hdc x1 y1 ... xn yn "
+  static const char usage_message[] = "gdi line hdc x1 y1 ... xn yn "
                                 "-arrow [first|last|both|none] -arrowshape {d1 d2 d3} "
                                 "-dash dashlist "
 		     	        "-capstyle [butt|projecting|round] -fill color "
@@ -749,7 +700,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
   int x, y;
   HDC hDC;
   HPEN hPen;
-  
+
   LOGBRUSH lbrush;
   HBRUSH hBrush;
 
@@ -759,16 +710,16 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
   int dosmooth       = 0;
   int doarrow        = 0; /* 0=none; 1=end; 2=start; 3=both */
   int arrowshape[3];
-    
+
   int nStep = 12;
-    
+
   int dodash = 0;
-  const char *dashdata = 0; 
- 
+  const char *dashdata = 0;
+
   arrowshape[0] = 8;
   arrowshape[1] = 10;
   arrowshape[2] = 3;
-  
+
   /* Verrrrrry simple for now... */
   if (argc >= 5)
   {
@@ -792,7 +743,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
     argc -= 5;
     argv += 5;
     npoly = 2;
-    
+
     while ( argc >= 2 )
     {
       /* Check for a number  */
@@ -849,7 +800,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
             /* Else the numbers are bad */
           }
           /* Else the argument was bad */
-          
+
           argv+=2;
           argc-=2;
         }
@@ -873,7 +824,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
         else if ( strcmp(*argv, "-smooth") == 0 )
         {
           /* Argument is true/false or 1/0 or bezier */
-          if ( argv[1] ) {  
+          if ( argv[1] ) {
             switch ( argv[1][0] ) {
               case 't': case 'T':
               case '1':
@@ -931,7 +882,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
     }
 
     if (width || dolinecolor || dodash )
-      GdiMakePen(interp, width, 
+      GdiMakePen(interp, width,
                  dodash, dashdata,
                  0, 0, 0, 0,
                  linecolor, hDC, (HGDIOBJ *)&hPen);
@@ -950,18 +901,18 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
         if ( bpoints != 0 )
             Tcl_Free((void *)bpoints);
     }
-    else      
+    else
       Polyline(hDC, polypoints, npoly);
 
     if ( dodash && doarrow )  /* Don't use dashed or thick pen for the arrows! */
     {
         GdiFreePen(interp, hDC, hPen);
-        GdiMakePen(interp, width, 
+        GdiMakePen(interp, width,
                    0, 0,
                    0, 0, 0, 0,
                    linecolor, hDC, (HGDIOBJ *)&hPen);
     }
-      
+
     /* Now the arrowheads, if any */
     if ( doarrow & 1 )
     {
@@ -974,7 +925,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
 
       fracHeight = 2.0 / arrowshape[2];
       backup = fracHeight*arrowshape[1] + arrowshape[0]*(1.0 - fracHeight)/2.0;
-      
+
       ahead[0].x = ahead[5].x = polypoints[npoly-1].x;
       ahead[0].y = ahead[5].y = polypoints[npoly-1].y;
       dx = ahead[0].x - polypoints[npoly-2].x;
@@ -1000,9 +951,9 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
       ahead[3].y = (long)(ahead[4].y*fracHeight + vertY*(1.0-fracHeight));
 
       Polygon(hDC, ahead, 6);
-      
+
     }
-    
+
     if ( doarrow & 2 )
     {
       /* Arrowhead at end = polypoints[0].x, polypoints[0].y */
@@ -1014,7 +965,7 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
 
       fracHeight = 2.0 / arrowshape[2];
       backup = fracHeight*arrowshape[1] + arrowshape[0]*(1.0 - fracHeight)/2.0;
-      
+
       ahead[0].x = ahead[5].x = polypoints[0].x;
       ahead[0].y = ahead[5].y = polypoints[0].y;
       dx = ahead[0].x - polypoints[1].x;
@@ -1042,14 +993,14 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
       Polygon(hDC, ahead, 6);
     }
 
-      
+
     if (width || dolinecolor || dodash )
       GdiFreePen(interp, hDC, hPen);
     if ( doarrow )
       GdiFreeBrush(interp, hDC, hBrush);
-    
+
     Tcl_Free((void *)polypoints);
-    
+
     return TCL_OK;
   }
 
@@ -1060,9 +1011,9 @@ static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const c
 /*
 * Oval command
 */
-static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
+  static const char usage_message[] = "gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
                                 "-stipple bitmap -width linewid";
   int x1, y1, x2, y2;
   HDC hDC;
@@ -1073,7 +1024,7 @@ static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const c
   HBRUSH hBrush;
   LOGBRUSH lbrush;
   HGDIOBJ oldobj;
-    
+
   int dodash = 0;
   const char *dashdata = 0;
 
@@ -1143,9 +1094,9 @@ static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const c
       GdiMakeBrush(interp, 0, fillcolor, 0, &lbrush, hDC, (HGDIOBJ *)&hBrush);
     else
       oldobj = SelectObject( hDC, GetStockObject(HOLLOW_BRUSH) );
-    
+
     if (width || dolinecolor)
-      GdiMakePen(interp, width, 
+      GdiMakePen(interp, width,
                  dodash, dashdata,
                  0, 0, 0, 0,
                  linecolor, hDC, (HGDIOBJ *)&hPen);
@@ -1161,7 +1112,7 @@ static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const c
       GdiFreeBrush(interp, hDC, hBrush);
     else
       SelectObject (hDC, oldobj );
-      
+
     return TCL_OK;
   }
 
@@ -1172,9 +1123,9 @@ static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const c
 /*
 * Polygon command
 */
-static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi polygon hdc x1 y1 ... xn yn "
+  static const char usage_message[] = "gdi polygon hdc x1 y1 ... xn yn "
                                 "-fill color -outline color -smooth [true|false|bezier] "
 				"-splinesteps number -stipple bitmap -width linewid";
 
@@ -1182,7 +1133,7 @@ static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const c
   POINT *polypoints;
   int npoly;
   int dosmooth = 0;
-  int nStep = 12;  
+  int nStep = 12;
   int x, y;
   HDC hDC;
   HPEN hPen;
@@ -1192,7 +1143,7 @@ static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const c
   LOGBRUSH lbrush;
   HBRUSH hBrush;
   HGDIOBJ oldobj;
-    
+
   int dodash = 0;
   const char *dashdata = 0;
 
@@ -1219,7 +1170,7 @@ static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const c
     argc -= 5;
     argv += 5;
     npoly = 2;
-    
+
     while ( argc >= 2 )
     {
       /* Check for a number  */
@@ -1303,13 +1254,13 @@ static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const c
       GdiMakeBrush(interp, 0, fillcolor, 0, &lbrush, hDC, (HGDIOBJ *)&hBrush);
     else
       oldobj = SelectObject (hDC, GetStockObject(HOLLOW_BRUSH));
-      
+
     if (width || dolinecolor)
-        GdiMakePen(interp, width, 
+        GdiMakePen(interp, width,
                    dodash, dashdata,
                    0, 0, 0, 0,
                    linecolor, hDC, (HGDIOBJ *)&hPen);
-      
+
     if ( dosmooth)
     {
         int nbpoints;
@@ -1324,16 +1275,16 @@ static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const c
     }
     else
         Polygon(hDC, polypoints, npoly);
-      
+
     if (width || dolinecolor)
       GdiFreePen(interp, hDC, hPen);
     if (dofillcolor)
       GdiFreeBrush(interp, hDC, hBrush);
     else
       SelectObject (hDC, oldobj);
-    
+
     Tcl_Free((void *)polypoints);
-    
+
     return TCL_OK;
   }
 
@@ -1344,9 +1295,9 @@ static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const c
 /*
 * Rectangle command
 */
-static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi rectangle hdc x1 y1 x2 y2 "
+  static const char usage_message[] = "gdi rectangle hdc x1 y1 x2 y2 "
                                 "-fill color -outline color "
 				"-stipple bitmap -width linewid";
 
@@ -1362,7 +1313,7 @@ static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const c
 
   int dodash = 0;
   const char *dashdata = 0;
-  
+
   /* Verrrrrry simple for now... */
   if (argc >= 5)
   {
@@ -1382,26 +1333,26 @@ static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const c
     if ( y1 > y2 ) { int y3 = y1; y1 = y2; y2 = y3; }
     argc -= 5;
     argv += 5;
-    
+
     /* Now handle any other arguments that occur */
     while (argc > 1)
     {
-      if ( strcmp(argv[0], "-fill") == 0 ) 
+      if ( strcmp(argv[0], "-fill") == 0 )
       {
           if (argv[1])
               if (GdiGetColor(argv[1], &fillcolor) )
                   dofillcolor = 1;
       }
-      else if ( strcmp(argv[0], "-outline") == 0) 
+      else if ( strcmp(argv[0], "-outline") == 0)
       {
           if (argv[1])
               if (GdiGetColor(argv[1], &linecolor) )
                   dolinecolor = 1;
       }
-      else if ( strcmp(argv[0], "-stipple") == 0) 
-      { 
+      else if ( strcmp(argv[0], "-stipple") == 0)
+      {
       }
-      else if ( strcmp(argv[0], "-width") == 0) 
+      else if ( strcmp(argv[0], "-width") == 0)
       {
           if (argv[1] )
               width = atoi(argv[1]);
@@ -1413,7 +1364,7 @@ static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const c
               dashdata = argv[1];
           }
       }
-        
+
       argc -= 2;
       argv += 2;
     }
@@ -1427,9 +1378,9 @@ static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const c
       GdiMakeBrush(interp, 0, fillcolor, 0, &lbrush, hDC, (HGDIOBJ *)&hBrush);
     else
       oldobj = SelectObject (hDC, GetStockObject(HOLLOW_BRUSH));
-      
+
     if ( width || dolinecolor )
-        GdiMakePen(interp, width, 
+        GdiMakePen(interp, width,
                    dodash, dashdata,
                    0, 0, 0, 0,
                    linecolor, hDC, (HGDIOBJ *)&hPen);
@@ -1459,9 +1410,9 @@ static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const c
 * This is completely inadequate for typesetting, but should work
 * for simple text manipulation.
 */
-static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi characters hdc [-font fontname] [-array ary]";
+  static const char usage_message[] = "gdi characters hdc [-font fontname] [-array ary]";
   /* Returns widths of characters from font in an associative array
   * Font is currently selected font for HDC if not specified
   * Array name is GdiCharWidths if not specified
@@ -1475,7 +1426,7 @@ static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const
   /* For now, assume 256 characters in the font... */
   int widths[256];
   int retval;
-  
+
   if ( argc < 1 )
   {
     Tcl_SetResult(interp, usage_message, TCL_STATIC);
@@ -1518,7 +1469,7 @@ static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const
     }
     argv++;
     argc--;
-  }  
+  }
 
   /* Now, get the widths using the correct function for this windows version */
 #ifdef WIN32
@@ -1549,19 +1500,19 @@ static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const
     }
     return TCL_ERROR;
   }
-  
+
   {
     int i;
     char numbuf[11+1];
     char ind[2];
     ind[1] = '\0';
-    
+
     for (i = 0; i < 255; i++ )
     {
       /* May need to convert the widths here(?) */
       sprintf(numbuf, "%d", widths[i]);
       ind[0] = i;
-      Tcl_SetVar2(interp, aryvarname, ind, numbuf, TCL_GLOBAL_ONLY); 
+      Tcl_SetVar2(interp, aryvarname, ind, numbuf, TCL_GLOBAL_ONLY);
     }
   }
   /* Now, remove the font if we created it only for this function */
@@ -1583,9 +1534,9 @@ static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const
 *    and treat no width supplied (width of 0) to output as
 *    a single line EXCEPT that it respects newlines.
 */
-static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi text hdc x y -anchor [center|n|e|s|w] "
+  static const char usage_message[] = "gdi text hdc x y -anchor [center|n|e|s|w] "
                                 "-fill color -font fontname "
 		                "-justify [left|right|center] "
 				"-stipple bitmap -text string -width linelen "
@@ -1610,12 +1561,12 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
   int usewidth=0;
   int usesingle = 0;
   const char *encoding_name = 0;
-    
+
 #if TCL_MAJOR_VERSION > 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 1 )
   TCHAR *ostring;
   Tcl_DString tds;
   Tcl_Encoding encoding = NULL;
-  int tds_len;  
+  int tds_len;
 #endif
 
   if ( argc >= 4 )
@@ -1636,7 +1587,7 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
 
     sizerect.left = sizerect.right = x;
     sizerect.top = sizerect.bottom = y;
-    
+
     while ( argc > 0 )
     {
       if ( strcmp(argv[0], "-anchor") == 0 )
@@ -1684,7 +1635,7 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
         argc--;
         argv++;
         /* Not implemented yet */
-      } 
+      }
       else if ( strcmp(argv[0], "-fill") == 0 )
       {
         argc--;
@@ -1709,7 +1660,7 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
       }
       else if ( strcmp(argv[0], "-backfill") == 0 )
           dobgmode = 1;
-      else if ( strcmp(argv[0], "-unicode") == 0 ) 
+      else if ( strcmp(argv[0], "-unicode") == 0 )
       {
           dounicodeoutput = 1;
           /* Set the encoding name to utf-8, but can be overridden */
@@ -1730,7 +1681,7 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
 
 #if TCL_MAJOR_VERSION > 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 1 )
     /* Handle the encoding, if present */
-    if ( encoding_name != 0 ) 
+    if ( encoding_name != 0 )
     {
         Tcl_Encoding tmp_encoding;
         tmp_encoding = Tcl_GetEncoding(interp,encoding_name);
@@ -1738,13 +1689,13 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
             encoding = tmp_encoding;
     }
 #endif
-      
+
       if (string == 0 )
     {
       Tcl_SetResult(interp, usage_message, TCL_STATIC);
       return TCL_ERROR;
     }
-    
+
     /* Set the format flags for -single: Overrides -width */
     if ( usesingle == 1 )
     {
@@ -1758,17 +1709,17 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
     Tcl_DStringInit(&tds);
     Tcl_UtfToExternalDString(encoding, string, -1, &tds);
     ostring = Tcl_DStringValue(&tds);
-    tds_len = Tcl_DStringLength(&tds);  
+    tds_len = Tcl_DStringLength(&tds);
     /* Just for fun, let's try translating ostring to unicode */
     if (dounicodeoutput) /* Convert UTF-8 to unicode */
     {
         Tcl_UniChar *ustring;
         Tcl_DString tds2;
         Tcl_DStringInit(&tds2);
-        ustring = Tcl_UtfToUniCharDString(ostring, tds_len, &tds2);
-        DrawTextW(hDC, (LPWSTR)ustring, Tcl_UniCharLen(ustring), &sizerect, format_flags | DT_CALCRECT);
+        ustring = Tcl_UtfToWCharDString(ostring, tds_len, &tds2);
+        DrawTextW(hDC, (LPWSTR)ustring, Tcl_DStringLength(&tds2)/2, &sizerect, format_flags | DT_CALCRECT);
         Tcl_DStringFree(&tds2);
-    } 
+    }
     else /* Use UTF-8/local code page output */
     {
          DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags | DT_CALCRECT);
@@ -1834,8 +1785,8 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
         Tcl_UniChar *ustring;
         Tcl_DString tds2;
         Tcl_DStringInit(&tds2);
-        ustring = Tcl_UtfToUniCharDString(ostring, tds_len, &tds2);
-        retval = DrawTextW(hDC, (LPWSTR)ustring, Tcl_UniCharLen(ustring), &sizerect, format_flags);
+        ustring = Tcl_UtfToWCharDString(ostring, tds_len, &tds2);
+        retval = DrawTextW(hDC, (LPWSTR)ustring, Tcl_DStringLength(&tds2)/2, &sizerect, format_flags);
         Tcl_DStringFree(&tds2);
     }
     else
@@ -1862,10 +1813,10 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
     /* In this case, the return value is the height of the text */
     sprintf(msgbuf, "%d", retval);
     Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
-    
+
     return TCL_OK;
   }
-  
+
   Tcl_SetResult(interp, usage_message, TCL_STATIC);
   return TCL_ERROR;
 }
@@ -1878,18 +1829,18 @@ static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const c
 * Otherwise the return value is the current mapping mode
 * (this may be VERY windows-specific).
 */
-static int GdiGetHdcInfo( HDC hdc, 
-                          LPPOINT worigin, LPSIZE wextent, 
+static int GdiGetHdcInfo( HDC hdc,
+                          LPPOINT worigin, LPSIZE wextent,
                           LPPOINT vorigin, LPSIZE vextent)
 {
   int mapmode;
   int retval;
 
-  memset (worigin, 0, sizeof(POINT));    
+  memset (worigin, 0, sizeof(POINT));
   memset (vorigin, 0, sizeof(POINT));
   memset (wextent, 0, sizeof(SIZE));
   memset (vextent, 0, sizeof(SIZE));
-  
+
   if ( (mapmode = GetMapMode(hdc)) == 0 )
   {
     /* Failed! */
@@ -1918,7 +1869,7 @@ static int GdiGetHdcInfo( HDC hdc,
     /* Failed! */
     retval = 0;
   }
-  
+
   return retval;
 }
 
@@ -1986,9 +1937,9 @@ static const char *GdiModeToName(int mode)
 * Alternative:
 * Possibly this could be a feature of the HDC extension itself?
 */
-static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
-  static char usage_message[] = "gdi map hdc "
+  static const char usage_message[] = "gdi map hdc "
                                 "[-logical x[y]] [-physical x[y]] "
                                 "[-offset {x y} ] [-default] [-mode mode]"
 				;
@@ -2007,7 +1958,7 @@ static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const c
   int use_offset   = 0;
   int use_default  = 0;
   int use_mode     = 0;
-  
+
   /* Required parameter: HDC for printer */
   if ( argc >= 1 )
   {
@@ -2025,7 +1976,7 @@ static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const c
       Tcl_SetResult(interp, "Cannot get current HDC info", TCL_STATIC);
       return TCL_ERROR;
     }
-    
+
     /* Parse remaining arguments */
     for (argno = 1; argno < argc; argno++)
     {
@@ -2125,9 +2076,9 @@ static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const c
       need_usage = 1;
     if ( use_mode && use_logical &&
          (mapmode != MM_ISOTROPIC && mapmode != MM_ANISOTROPIC)
-       )       
+       )
       need_usage = 1;
-      
+
     if ( need_usage == 0 )
     {
       /* Call Windows CTM functions */
@@ -2135,7 +2086,7 @@ static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const c
       {
         SetMapMode(hdc, mapmode);
       }
-      
+
       if ( use_offset || use_default )
       {
         POINT oldorg;
@@ -2154,7 +2105,7 @@ static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const c
       * the report:
       */
       mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent);
-      
+
       /* Output current CTM info */
       /* Note: This should really be in terms that can be used in a gdi map command! */
       sprintf(msgbuf, "Transform: \"(%ld, %ld) -> (%ld, %ld)\" "
@@ -2175,7 +2126,7 @@ static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const c
 /*
 * GdiCopyBits
 */
-static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
   /* Goal: get the Tk_Window from the top-level
            convert it to an HWND
@@ -2184,10 +2135,10 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
            Use an optional parameter to point to an arbitrary window instead of the main
            Use optional parameters to map to the width and height required for the dest.
   */
-  static char usage_message[] = "gdi copybits hdc [-window w|-screen] [-client] "
+  static const char usage_message[] = "gdi copybits hdc [-window w|-screen] [-client] "
                                 "[-source \"a b c d\"] "
                                 "[-destination \"a b c d\"] [-scale number] [-calc]";
-  
+
   Tk_Window mainWin;
   Tk_Window workwin;
   Window w;
@@ -2199,7 +2150,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
   LPBITMAPINFOHEADER lpDIBHdr;
   LPSTR lpBits;
   enum PrintType wintype = PTWindow;
-  
+
   int hgt, wid;
   char *strend;
   long errcode;
@@ -2209,14 +2160,14 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
   int do_screen=0;
   int do_scale=0;
   int do_print=1;
-  
+
   /* Variables to remember the values in the arguments */
   const char *window_spec;
   double scale=1.0;
   int src_x=0, src_y=0, src_w=0, src_h=0;
   int dst_x=0, dst_y=0, dst_w=0, dst_h=0;
   int is_toplevel = 0;
-  
+
   /*
   * The following steps are peculiar to the top level window.
   * There is likely a clever way to do the mapping of a
@@ -2256,7 +2207,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
   {
     sprintf(msgbuf, "Can't do bitmap operations on device context (0x%lx)", dst);
     Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
-    return TCL_ERROR;      
+    return TCL_ERROR;
   }
 
   /* Loop through the remaining arguments */
@@ -2382,7 +2333,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
     Tcl_SetResult(interp, usage_message, TCL_STATIC);
     return TCL_ERROR;
   }
-  
+
   /*
   * Get the MS Window we want to copy.
   */
@@ -2391,7 +2342,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
   {
     if ( Tk_IsTopLevel(workwin) )
       is_toplevel = 1;
-      
+
     if ( (w =    Tk_WindowId(workwin)) == 0 )
     {
       Tcl_SetResult(interp, "Can't get id for Tk window", TCL_STATIC);
@@ -2400,7 +2351,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
 
     /* Given the "Window" we can get a Microsoft Windows HWND */
 
-    if ( (wnd =  tk_gethwnd(w)) == 0 )
+    if ( (wnd =  Tk_GetHWND(w)) == 0 )
     {
       Tcl_SetResult(interp, "Can't get Windows handle for Tk window", TCL_STATIC);
       return TCL_ERROR;
@@ -2414,11 +2365,11 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
     if ( is_toplevel )
     {
       HWND tmpWnd = wnd;
-      while ( (tmpWnd = GetParent( tmpWnd ) ) != 0 ) 
+      while ( (tmpWnd = GetParent( tmpWnd ) ) != 0 )
         wnd = tmpWnd;
     }
   }
-  
+
   /* Given the HWND, we can get the window's device context */
   if ( (src =  GetWindowDC(wnd)) == 0 )
   {
@@ -2448,7 +2399,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
       ReleaseDC(wnd,src);
       return TCL_ERROR;
     }
-    
+
     if ( (wid =  Tk_Width(workwin)) <= 0 )
     {
       Tcl_SetResult(interp, "Can't get width of Tk window", TCL_STATIC);
@@ -2463,19 +2414,19 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
   * B: No dimensions exceed the maximums
   * C: The dimensions don't lead to a 0 width or height image.
   */
-  if ( src_x < 0 ) 
+  if ( src_x < 0 )
     src_x = 0;
-  if ( src_y < 0 ) 
+  if ( src_y < 0 )
     src_y = 0;
-  if ( dst_x < 0 ) 
+  if ( dst_x < 0 )
     dst_x = 0;
-  if ( dst_y < 0 ) 
+  if ( dst_y < 0 )
     dst_y = 0;
 
   if ( src_w > wid || src_w <= 0 )
     src_w = wid;
-    
-  if ( src_h > hgt || src_h <= 0 ) 
+
+  if ( src_h > hgt || src_h <= 0 )
     src_h = hgt;
 
   if ( do_scale && dst_w == 0 )
@@ -2485,7 +2436,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
     dst_h = (int)(scale * src_h);
   }
 
-  if ( dst_h == -1 ) 
+  if ( dst_h == -1 )
     dst_h = (int) (((long)src_h * dst_w) / (src_w + 1)) + 1;
 
   if ( dst_h == 0 || dst_w == 0 )
@@ -2506,27 +2457,27 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
     * for the "grab"
     */
     hDib = CopyToDIB( wnd, wintype );
-  
+
     /* GdiFlush(); */
-  
+
     if (!hDib) {
       Tcl_SetResult(interp, "Can't create DIB", TCL_STATIC);
       ReleaseDC(wnd,src);
       return TCL_ERROR;
     }
-  
+
     lpDIBHdr = (LPBITMAPINFOHEADER)GlobalLock(hDib);
     if (!lpDIBHdr) {
       Tcl_SetResult(interp, "Can't get DIB header", TCL_STATIC);
       ReleaseDC(wnd,src);
       return TCL_ERROR;
     }
-  
+
     lpBits = (LPSTR)lpDIBHdr + lpDIBHdr->biSize + DIBNumColors(lpDIBHdr) * sizeof(RGBQUAD);
-  
+
     /* stretch the DIBbitmap directly in the target device */
-  
-    if (StretchDIBits(dst, 
+
+    if (StretchDIBits(dst,
                       dst_x, dst_y, dst_w, dst_h,
                       src_x, src_y, src_w, src_h,
   		      lpBits, (LPBITMAPINFO)lpDIBHdr, DIB_RGB_COLORS,
@@ -2545,7 +2496,7 @@ static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const c
     GlobalUnlock(hDib);
     GlobalFree(hDib);
   }
-  
+
   ReleaseDC(wnd,src);
 
   /* The return value should relate to the size in the destination space.
@@ -2569,7 +2520,7 @@ static int DIBNumColors(LPBITMAPINFOHEADER lpDIB)
     // color table can be less than the number of bits per pixel
     // allows for (i.e. lpbi->biClrUsed can be set to some value).
     // If this is the case, return the appropriate value.
-    
+
 
     dwClrUsed = (lpDIB)->biClrUsed;
     if (dwClrUsed)
@@ -2577,7 +2528,7 @@ static int DIBNumColors(LPBITMAPINFOHEADER lpDIB)
 
     // Calculate the number of colors in the color table based on
     // the number of bits per pixel for the DIB.
-    
+
     wBitCount = (lpDIB)->biBitCount;
 
     // return number of colors based on bits per pixel
@@ -2642,7 +2593,7 @@ static int GdiParseFontWords(Tcl_Interp *interp, LOGFONT *lf, const char *str[],
 static int GdiWordToWeight(const char *str)
 {
   int retval = -1;
-  int i; 
+  int i;
   static struct font_weight
   {
     const char *name;
@@ -2664,10 +2615,10 @@ static int GdiWordToWeight(const char *str)
     { "heavy", FW_HEAVY },
     { "black", FW_HEAVY },
   };
-  
+
   if ( str == 0 )
     return -1;
-    
+
   for (i=0; i<sizeof(font_weights) / sizeof(struct font_weight); i++)
   {
     if ( strcmp(str, font_weights[i].name) == 0 )
@@ -2676,7 +2627,7 @@ static int GdiWordToWeight(const char *str)
       break;
     }
   }
-  
+
   return retval;
 }
 
@@ -2716,7 +2667,7 @@ static int GdiMakeLogFont(Tcl_Interp *interp, const char *str, LOGFONT *lf, HDC 
     int siz;
     char *strend;
     siz = strtol(list[1], &strend, 0);
-    
+
     /* Assumptions:
     * 1) Like canvas, if a positive number is specified, it's in points
     * 2) Like canvas, if a negative number is specified, it's in pixels
@@ -2790,7 +2741,7 @@ static int GdiMakeLogFont(Tcl_Interp *interp, const char *str, LOGFONT *lf, HDC 
       }
     }
     else
-      GdiParseFontWords(interp, lf, list+1, count-1); 
+      GdiParseFontWords(interp, lf, list+1, count-1);
   }
 
   if ( count >= 3 )
@@ -2810,14 +2761,14 @@ static int GdiMakeLogFont(Tcl_Interp *interp, const char *str, LOGFONT *lf, HDC 
  * PS_DOT:   a dotted pen
  * PS_DASHDOT: a pen with a dash followed by a dot
  * PS_DASHDOTDOT: a pen with a dash followed by 2 dots
- * 
+ *
  * It seems that converting to ExtCreatePen may be more advantageous, as it matches
  * the Tk canvas pens much better--but not for Win95, which does not support PS_USERSTYLE
  * An explicit test (or storage in a static after first failure) may suffice for working
  * around this. The ExtCreatePen is not supported at all under Win32s.
 */
-static int GdiMakePen(Tcl_Interp *interp, int width, 
-                      int dashstyle, const char *dashstyledata, 
+static int GdiMakePen(Tcl_Interp *interp, int width,
+                      int dashstyle, const char *dashstyledata,
                       int capstyle,					/* Ignored for now */
                       int joinstyle,					/* Ignored for now */
                       int stipplestyle, const char *stippledata,	/* Ignored for now */
@@ -2831,8 +2782,8 @@ static int GdiMakePen(Tcl_Interp *interp, int width,
   DWORD joinStyle = PS_JOIN_ROUND;   /* -joinstyle should override */
   DWORD styleCount = 0;
   DWORD *styleArray = 0;
-    
-  /* To limit the propagation of allocated memory, the dashes will have a maximum here. 
+
+  /* To limit the propagation of allocated memory, the dashes will have a maximum here.
    * If one wishes to remove the static allocation, please be sure to update GdiFreePen
    * and ensure that the array is NOT freed if the LOGPEN option is used.
    */
@@ -2884,7 +2835,7 @@ static int GdiMakePen(Tcl_Interp *interp, int width,
       if (dup)
           Tcl_Free(dup);
   }
-    
+
   if ( dashstyle != 0 )
     pStyle = PS_USERSTYLE;
 
@@ -2892,7 +2843,7 @@ static int GdiMakePen(Tcl_Interp *interp, int width,
   lBrush.lbStyle = BS_SOLID;
   lBrush.lbColor = color;
   lBrush.lbHatch = 0;
-    
+
   /* We only use geometric pens, even for 1-pixel drawing */
   hPen = ExtCreatePen ( PS_GEOMETRIC|pStyle|endStyle|joinStyle,
                         width,
@@ -2900,7 +2851,7 @@ static int GdiMakePen(Tcl_Interp *interp, int width,
                         styleCount,
                         styleArray);
 
-  if ( hPen == 0 ) { /* Failed for some reason...Fall back on CreatePenIndirect */ 
+  if ( hPen == 0 ) { /* Failed for some reason...Fall back on CreatePenIndirect */
     LOGPEN lf;
     lf.lopnWidth.x = width;
     lf.lopnWidth.y = 0;         /* Unused in LOGPEN */
@@ -2911,8 +2862,8 @@ static int GdiMakePen(Tcl_Interp *interp, int width,
     lf.lopnColor = color;       /* Assume we're getting a COLORREF */
     /* Now we have a logical pen. Create the "real" pen and put it in the hDC */
     hPen = CreatePenIndirect(&lf);
-  }                          
-    
+  }
+
   *oldPen = SelectObject(hDC, hPen);
   return 1;
 }
@@ -2964,50 +2915,50 @@ static int GdiFreeBrush (Tcl_Interp *interp, HDC hDC, HGDIOBJ oldBrush)
 * GdiParseColor is a copy of XParseColor from xcolors.c
 */
 typedef struct {
-    char *name;
+    const char *name;
     int index;
 } SystemColorEntry;
 
 
-static SystemColorEntry sysColors[] = {
-    "3dDarkShadow",		COLOR_3DDKSHADOW,
-    "3dLight",			COLOR_3DLIGHT,
-    "ActiveBorder",		COLOR_ACTIVEBORDER,
-    "ActiveCaption",		COLOR_ACTIVECAPTION,
-    "AppWorkspace",		COLOR_APPWORKSPACE,
-    "Background",		COLOR_BACKGROUND,
-    "ButtonFace",		COLOR_BTNFACE,
-    "ButtonHighlight",		COLOR_BTNHIGHLIGHT,
-    "ButtonShadow",		COLOR_BTNSHADOW,
-    "ButtonText",		COLOR_BTNTEXT,
-    "CaptionText",		COLOR_CAPTIONTEXT,
-    "DisabledText",		COLOR_GRAYTEXT,
-    "GrayText",			COLOR_GRAYTEXT,
-    "Highlight",		COLOR_HIGHLIGHT,
-    "HighlightText",		COLOR_HIGHLIGHTTEXT,
-    "InactiveBorder",		COLOR_INACTIVEBORDER,
-    "InactiveCaption",		COLOR_INACTIVECAPTION,
-    "InactiveCaptionText",	COLOR_INACTIVECAPTIONTEXT,
-    "InfoBackground",		COLOR_INFOBK,
-    "InfoText",			COLOR_INFOTEXT,
-    "Menu",			COLOR_MENU,
-    "MenuText",			COLOR_MENUTEXT,
-    "Scrollbar",		COLOR_SCROLLBAR,
-    "Window",			COLOR_WINDOW,
-    "WindowFrame",		COLOR_WINDOWFRAME,
-    "WindowText",		COLOR_WINDOWTEXT,
+static const SystemColorEntry sysColors[] = {
+    {"3dDarkShadow",		COLOR_3DDKSHADOW},
+    {"3dLight",			COLOR_3DLIGHT},
+    {"ActiveBorder",		COLOR_ACTIVEBORDER},
+    {"ActiveCaption",		COLOR_ACTIVECAPTION},
+    {"AppWorkspace",		COLOR_APPWORKSPACE},
+    {"Background",		COLOR_BACKGROUND},
+    {"ButtonFace",		COLOR_BTNFACE},
+    {"ButtonHighlight",		COLOR_BTNHIGHLIGHT},
+    {"ButtonShadow",		COLOR_BTNSHADOW},
+    {"ButtonText",		COLOR_BTNTEXT},
+    {"CaptionText",		COLOR_CAPTIONTEXT},
+    {"DisabledText",		COLOR_GRAYTEXT},
+    {"GrayText",			COLOR_GRAYTEXT},
+    {"Highlight",		COLOR_HIGHLIGHT},
+    {"HighlightText",		COLOR_HIGHLIGHTTEXT},
+    {"InactiveBorder",		COLOR_INACTIVEBORDER},
+    {"InactiveCaption",		COLOR_INACTIVECAPTION},
+    {"InactiveCaptionText",	COLOR_INACTIVECAPTIONTEXT},
+    {"InfoBackground",		COLOR_INFOBK},
+    {"InfoText",			COLOR_INFOTEXT},
+    {"Menu",			COLOR_MENU},
+    {"MenuText",			COLOR_MENUTEXT},
+    {"Scrollbar",		COLOR_SCROLLBAR},
+    {"Window",			COLOR_WINDOW},
+    {"WindowFrame",		COLOR_WINDOWFRAME},
+    {"WindowText",		COLOR_WINDOWTEXT}
 };
 
 static int numsyscolors = 0;
 
 typedef struct {
-    char *name;
+    const char *name;
     unsigned char red;
     unsigned char green;
     unsigned char blue;
 } XColorEntry;
 
-static XColorEntry xColors[] =  {
+static const XColorEntry xColors[] =  {
     {"alice blue", 240, 248, 255},
     {"AliceBlue", 240, 248, 255},
     {"antique white", 250, 235, 215},
@@ -3757,7 +3708,7 @@ static int GdiGetColor(const char *name, unsigned long *color)
 {
   if ( numsyscolors == 0 )
     numsyscolors = sizeof ( sysColors ) / sizeof (SystemColorEntry);
-  if ( strncmpi(name, "system", 6) == 0 )
+  if ( _strnicmp(name, "system", 6) == 0 )
   {
     int i, l, u, r;
     l = 0;
@@ -3765,7 +3716,7 @@ static int GdiGetColor(const char *name, unsigned long *color)
     while ( l <= u )
     {
       i = (l + u) / 2;
-      if ( (r = strcmpi(name+6, sysColors[i].name)) == 0 )
+      if ( (r = _strcmpi(name+6, sysColors[i].name)) == 0 )
         break;
       if ( r < 0 )
         u = i - 1;
@@ -3831,11 +3782,11 @@ static int GdiParseColor (const char *name, unsigned long *color)
       numxcolors = sizeof(xColors) / sizeof(XColorEntry);
     l = 0;
     u = numxcolors;
-    
+
     while ( l <= u)
     {
       i = (l + u) / 2;
-      if ( (r = strcmpi(name, xColors[i].name)) == 0 )
+      if ( (r = _strcmpi(name, xColors[i].name)) == 0 )
         break;
       if ( r < 0 )
         u = i-1;
@@ -3865,7 +3816,7 @@ static HANDLE CopyToDIB ( HWND hWnd, enum PrintType type )
    HANDLE     hDIB;
    HBITMAP  hBitmap;
    HPALETTE hPalette;
-   
+
    /* check for a valid window handle */
 
     if (!hWnd)
@@ -3884,11 +3835,11 @@ static HANDLE CopyToDIB ( HWND hWnd, enum PrintType type )
             /* get the DIB of the window by calling
             * CopyScreenToDIB and passing it the window rect
             */
-            
+
             hDIB = CopyScreenToDIB(&rectWnd);
             break;
         }
-      
+
         case PTClient: /* copy client area */
         {
             RECT    rectClient;
@@ -3922,13 +3873,13 @@ static HANDLE CopyToDIB ( HWND hWnd, enum PrintType type )
         case PTScreen: /* Entire screen */
         {
           RECT   Rect;
-          
+
           /* get the device-dependent bitmap in lpRect by calling
           *  CopyScreenToBitmap and passing it the rectangle to grab
           */
           Rect.top = Rect.left = 0;
           GetDisplaySize(&Rect.right, &Rect.bottom);
-          
+
           hBitmap = CopyScreenToBitmap(&Rect);
 
           /* check for a valid bitmap handle */
@@ -3991,7 +3942,7 @@ static HBITMAP CopyScreenToBitmap(LPRECT lpRect)
     /* create a DC for the screen and create
     * a memory DC compatible to screen DC
     */
-    
+
     hScrDC = CreateDC("DISPLAY", NULL, NULL, NULL);
     hMemDC = CreateCompatibleDC(hScrDC);
 
@@ -4033,7 +3984,7 @@ static HBITMAP CopyScreenToBitmap(LPRECT lpRect)
     /* select old bitmap back into memory DC and get handle to
     * bitmap of the screen
     */
-    
+
     hBitmap = SelectObject(hMemDC, hOldBitmap);
 
     /* clean up */
@@ -4049,14 +4000,14 @@ static HBITMAP CopyScreenToBitmap(LPRECT lpRect)
 
 static HANDLE BitmapToDIB(HBITMAP hBitmap, HPALETTE hPal)
 {
-    BITMAP              bm;         
-    BITMAPINFOHEADER    bi;         
-    LPBITMAPINFOHEADER  lpbi;       
-    DWORD               dwLen;      
+    BITMAP              bm;
+    BITMAPINFOHEADER    bi;
+    LPBITMAPINFOHEADER  lpbi;
+    DWORD               dwLen;
     HANDLE              hDIB;
-    HANDLE              h;    
-    HDC                 hDC;        
-    WORD                biBits;     
+    HANDLE              h;
+    HDC                 hDC;
+    WORD                biBits;
 
     /* check if bitmap handle is valid */
 
@@ -4172,7 +4123,7 @@ static HANDLE BitmapToDIB(HBITMAP hBitmap, HPALETTE hPal)
         return NULL;
     }
 
-    /* lock memory block and get pointer to it */ 
+    /* lock memory block and get pointer to it */
 
     lpbi = (LPBITMAPINFOHEADER)GlobalLock(hDIB);
 
@@ -4208,9 +4159,9 @@ static HANDLE BitmapToDIB(HBITMAP hBitmap, HPALETTE hPal)
 
 static HANDLE CopyScreenToDIB(LPRECT lpRect)
 {
-    HBITMAP     hBitmap;        
-    HPALETTE    hPalette;       
-    HANDLE      hDIB;    
+    HBITMAP     hBitmap;
+    HPALETTE    hPalette;
+    HANDLE      hDIB;
 
     /* get the device-dependent bitmap in lpRect by calling
     * CopyScreenToBitmap and passing it the rectangle to grab
@@ -4283,7 +4234,7 @@ static HPALETTE GetSystemPalette(void)
             (LPPALETTEENTRY)(lpLogPal->palPalEntry));
 
     // Go ahead and create the palette.  Once it's created,
-    // we no longer need the LOGPALETTE, so free it.    
+    // we no longer need the LOGPALETTE, so free it.
 
     hPal = CreatePalette(lpLogPal);
 
@@ -4311,7 +4262,7 @@ static int PalEntriesOnDevice(HDC hDC)
 static char version_string[] = "0.9.9.15";
 
 /* Version command */
-static int Version(ClientData unused, Tcl_Interp *interp, int argc, const char *argv)
+static int Version(ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
 {
   Tcl_SetResult(interp, version_string, TCL_STATIC);
   return TCL_OK;
@@ -4323,11 +4274,11 @@ static int Version(ClientData unused, Tcl_Interp *interp, int argc, const char *
 * These are OS independent
 */
 /* Initialization Procedures */
-EXPORT(int,Gdi_Init) (Tcl_Interp *interp)
+int Gdi_Init(Tcl_Interp *interp)
 {
 
 #if TCL_MAJOR_VERSION <= 7
-  Tcl_CreateCommand(interp, "gdi", gdi, 
+  Tcl_CreateCommand(interp, "gdi", gdi,
                     (ClientData)0, 0);
 #else
   #if defined(USE_TCL_STUBS)
@@ -4340,7 +4291,7 @@ EXPORT(int,Gdi_Init) (Tcl_Interp *interp)
   /* Since this package is so full of numbers, this would be a great place
   * to introduce a TclCmdObj
   */
-  Tcl_CreateCommand(interp, "gdi", gdi, 
+  Tcl_CreateCommand(interp, "gdi", gdi,
                     (ClientData)0, (Tcl_CmdDeleteProc *)0);
 #endif
 
@@ -4355,18 +4306,19 @@ EXPORT(int,Gdi_Init) (Tcl_Interp *interp)
   }
   else
     hdc_loaded = 0;
-  
+
   Tcl_PkgProvide (interp, "gdi", version_string);
 
   return TCL_OK;
 }
 
 /* The gdi function is considered safe. */
-EXPORT (int,Gdi_SafeInit) (Tcl_Interp *interp)
+int Gdi_SafeInit(Tcl_Interp *interp)
 {
   return Gdi_Init(interp);
 }
 
+#if 0
 /* Exported symbols */
 BOOL APIENTRY DllEntryPoint (HINSTANCE hInstance, DWORD reason, LPVOID lpCmdLine)
 {
@@ -4385,6 +4337,7 @@ BOOL APIENTRY DllEntryPoint (HINSTANCE hInstance, DWORD reason, LPVOID lpCmdLine
   /* Don't do anything, so just return true */
   return TRUE;
 }
+#endif
 
 static void init_hdc_functions(Tcl_Interp *interp)
 {
@@ -4394,7 +4347,7 @@ static void init_hdc_functions(Tcl_Interp *interp)
   Tcl_Eval(interp, "hdc FunctionVector");
   cp = Tcl_GetStringResult(interp);
   /* Does cp need to be freed when I'm done? */
-  result = sscanf(cp, "%lx%lx%lx%lx%lx%lx%lx", &fn[0], &fn[1], &fn[2], &fn[3], 
+  result = sscanf(cp, "%lx%lx%lx%lx%lx%lx%lx", &fn[0], &fn[1], &fn[2], &fn[3],
                                                &fn[4], &fn[5], &fn[6]);
   if ( result == 7)
   {
@@ -4414,13 +4367,13 @@ static HDC get_dc(Tcl_Interp *interp, const char *name)
   if ( hdc_loaded == 0 || hdc_valid == 0 || hdc_valid(interp, name, -1) == 0 )
   {
     char *strend;
-    unsigned long tmp;
-    
+    HGDIOBJ tmp;
+
     /* Perhaps it is a numeric DC */
-    tmp = strtoul(name, &strend, 0);
+    tmp = (HGDIOBJ)INT2PTR(strtoul(name, &strend, 0));
     if ( strend != 0 && strend > name )
     {
-      DWORD objtype = GetObjectType((HGDIOBJ)tmp);
+      DWORD objtype = GetObjectType(tmp);
       switch (objtype)
       {
         /* Any of the DC types are OK. */
@@ -4464,59 +4417,31 @@ static HDC get_dc(Tcl_Interp *interp, const char *name)
   }
 }
 
-#if TCL_MAJOR_VERSION == 7 && TCL_MINOR_VERSION <= 6
-  /* Under version 8.0, there is a nice function called Tk_GetHWND
-  * to do the real work..
-  */
 
-  /*
-  * Copy a piece of tkWinInt.h
-  * This is easier to deal with than including tkWinInt.h,
-  * though it does mean one has to check when compiling
-  * against a new version!
-  */
-  typedef struct {
-    int type;
-    HWND handle;
-    void *winPtr; /* Really a TkWindow */
-  } TkWinWindow, TkWinDrawable;
-
-  #define Tk_GetHWND(w) (((TkWinWindow *)w)->handle)
-#elif defined(USE_TK_STUBS)
-  #include "tkPlatDecls.h"
-#else
-  IMPORT(HWND,Tk_GetHWND) _ANSI_ARGS_((Window window));
-#endif
-
-
-static HWND tk_gethwnd (Window window)
-{
-  return Tk_GetHWND(window);
-}
 
 /*
 * Something new: Include 'irox@cygnus.com' text widget printer
 */
-#if TEXTWIDGET_CMD
+#ifdef TEXTWIDGET_CMD
 #include "tkWinPrintText.c"
 #endif
 
 /*
 * The following functions are copied from tkTrig.c, since they
-* are not available in the stubs library. 
+* are not available in the stubs library.
 */
 
 /*
  *--------------------------------------------------------------
  *
- * TkBezierScreenPoints --
+ * TkGdiBezierScreenPoints --
  *
  *	Given four control points, create a larger set of XPoints
  *	for a Bezier spline based on the points.
  *
  * Results:
  *	The array at *xPointPtr gets filled in with numSteps XPoints
- *	corresponding to the Bezier spline defined by the four 
+ *	corresponding to the Bezier spline defined by the four
  *	control points.  Note:  no output point is generated for the
  *	first input point, but an output point *is* generated for
  *	the last input point.
@@ -4528,7 +4453,7 @@ static HWND tk_gethwnd (Window window)
  */
 
 static void
-TkBezierScreenPoints(canvas, control, numSteps, xPointPtr)
+TkGdiBezierScreenPoints(canvas, control, numSteps, xPointPtr)
     Tk_Canvas canvas;			/* Canvas in which curve is to be
 					 * drawn. */
     double control[];			/* Array of coordinates for four
@@ -4560,7 +4485,7 @@ TkBezierScreenPoints(canvas, control, numSteps, xPointPtr)
 /*
  *--------------------------------------------------------------
  *
- * TkBezierPoints --
+ * TkGdiBezierPoints --
  *
  *	Given four control points, create a larger set of points
  *	for a Bezier spline based on the points.
@@ -4579,7 +4504,7 @@ TkBezierScreenPoints(canvas, control, numSteps, xPointPtr)
  */
 
 static void
-TkBezierPoints(control, numSteps, coordPtr)
+TkGdiBezierPoints(control, numSteps, coordPtr)
     double control[];			/* Array of coordinates for four
 					 * control points:  x0, y0, x1, y1,
 					 * ... x3 y3. */
@@ -4607,7 +4532,7 @@ TkBezierPoints(control, numSteps, coordPtr)
 /*
  *--------------------------------------------------------------
  *
- * TkMakeBezierCurve --
+ * TkGdiMakeBezierCurve --
  *
  *	Given a set of points, create a new set of points that fit
  *	parabolic splines to the line segments connecting the original
@@ -4629,9 +4554,8 @@ TkBezierPoints(control, numSteps, coordPtr)
  *
  *--------------------------------------------------------------
  */
-
 static int
-TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
+TkGdiMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
     Tk_Canvas canvas;			/* Canvas in which curve is to be
 					 * drawn. */
     double *pointPtr;			/* Array of input coordinates:  x0,
@@ -4646,7 +4570,7 @@ TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
     double dblPoints[];			/* Array of points to fill in as
 					 * doubles, in the form x0, y0,
 					 * x1, y1, ....  NULL means don't
-					 * fill in anything in this form. 
+					 * fill in anything in this form.
 					 * Caller must make sure that this
 					 * array has enough space. */
 {
@@ -4683,13 +4607,13 @@ TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
 	if (xPoints != NULL) {
 	    Tk_CanvasDrawableCoords(canvas, control[0], control[1],
 		    &xPoints->x, &xPoints->y);
-	    TkBezierScreenPoints(canvas, control, numSteps, xPoints+1);
+	    TkGdiBezierScreenPoints(canvas, control, numSteps, xPoints+1);
 	    xPoints += numSteps+1;
 	}
 	if (dblPoints != NULL) {
 	    dblPoints[0] = control[0];
 	    dblPoints[1] = control[1];
-	    TkBezierPoints(control, numSteps, dblPoints+2);
+	    TkGdiBezierPoints(control, numSteps, dblPoints+2);
 	    dblPoints += 2*(numSteps+1);
 	}
 	outputPoints += numSteps+1;
@@ -4775,11 +4699,11 @@ TkMakeBezierCurve(canvas, pointPtr, numPoints, numSteps, xPoints, dblPoints)
 
 
 	if (xPoints != NULL) {
-	    TkBezierScreenPoints(canvas, control, numSteps, xPoints);
+	    TkGdiBezierScreenPoints(canvas, control, numSteps, xPoints);
 	    xPoints += numSteps;
 	}
 	if (dblPoints != NULL) {
-	    TkBezierPoints(control, numSteps, dblPoints);
+	    TkGdiBezierPoints(control, numSteps, dblPoints);
 	    dblPoints += 2*numSteps;
 	}
 	outputPoints += numSteps;

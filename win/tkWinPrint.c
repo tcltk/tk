@@ -4,7 +4,7 @@
  *      This module implements Win32 printer access.
  *
  * Copyright © 1998-2019 Harald Oehlmann, Elmicron GmbH
- * Copyright © 2018 Microsoft Corporation. 
+ * Copyright © 2018 Microsoft Corporation.
  * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -12,7 +12,9 @@
  */
 
 
-#pragma warning(disable : 4201 4214 4514)
+#if defined(_MSC_VER)
+#pragma warning(disable: 4201 4214 4514)
+#endif
 #define STRICT
 #define UNICODE
 #define _UNICODE
@@ -31,13 +33,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include <tcl.h>
-#include <tk.h>
+#include <tkInt.h>
 
 /* Helper defines. */
 
-/* 
-* Values of the Res variable. 
-* /
+/*
+* Values of the Res variable.
+*/
 
 /* Success, result value not set */
 #define RET_OK_NO_RESULT_SET 2
@@ -63,13 +65,13 @@
 #define F_RETURN_LIST (2)
 
 
-/* 
+/*
  * File Global Constants.
  */
- 
+
 /* Version information. */
-static char version_string[] = "3.0";
-static char usage_string[] =
+static const char version_string[] = "3.0";
+static const char usage_string[] =
 	"Windows printing (c) Elmicron GmbH, Harald Oehlmann, 2019-01-23\n"
 	"Preparation:\n"
 	"  winprint getattr option: possible options:\n"
@@ -106,7 +108,7 @@ static char usage_string[] =
 	"Configure and select drawing tools\n"
 	"  winprint setmapmode mapmode\n"
 	"    Define the coordinate system. 'Text' is in device units origin "
-		"top-up.\n" 
+		"top-up.\n"
 	"  winprint pen width ?r g b?: r,g,b is 16 bit color value (internal / 256)\n"
 	"    No rgb values uses black color.\n"
 	"  winprint brushcolor r g b: filling for rectangle\n"
@@ -138,19 +140,19 @@ static BOOL fPDLGInitialised = FALSE;
 static PRINTDLG pdlg;
 static PAGESETUPDLG pgdlg;
 static HPEN hPen = NULL;
-static HFONT hFont[10] = 
+static HFONT hFont[10] =
 	{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 /* Index of the actually selected font, -1:None */
 static int SelectedFont = -1;
 
-/* 
- *  Interpreter pointer to return automatic errors from the EnumerateFontsEx 
- *  callback and the ListFontsEx function. 
+/*
+ *  Interpreter pointer to return automatic errors from the EnumerateFontsEx
+ *  callback and the ListFontsEx function.
  */
 static Tcl_Interp *fg_interp;
 
 /* Subcommand "getattr" option list and indexes. */
-static char *fg_getattr_sub_cmds[] = {
+static const char *fg_getattr_sub_cmds[] = {
 	"printers", "defaultprinter", "copies", "firstpage", "lastpage",
 	"mapmode", "avecharheight", "avecharwidth", "horzres", "vertres",
 	"dpi", "physicaloffsetx", "physicaloffsety",
@@ -158,24 +160,24 @@ static char *fg_getattr_sub_cmds[] = {
 	"papertypes", "mapmodes",
 	"fontweights", "fontcharsets", "fontpitchvalues", "fontfamilies", "fonts",
 	"fontnames", "fontunicoderanges", NULL};
-static enum fg_getattr_i_command {
+typedef enum {
 	iPrinters, iDefaultPrinter, iCopies, iFirstPage, iLastPage,
-	iMapMode, iAveCharHeight, iAveCharWidth, iHorzRes, iVertRes, 
+	iMapMode, iAveCharHeight, iAveCharWidth, iHorzRes, iVertRes,
 	iDPI, iPhysicalOffsetX, iPhysicalOffsetY,
 	iPrinter, iOrientation, iPaperSize,
 	iPaperTypes, iMapModes,
 	iFontWeights, iFontCharsets, iFontPitchValues, iFontFamilies, iFonts,
-	iFontNames, iFontUnicodeRanges};
+	iFontNames, iFontUnicodeRanges} fg_getattr_i_command;
 
 /* Subcommand "pagesetup" orientation option list and indexes. */
-static char *fg_orient_sub_cmds[] = {"portrait", "landscape", "", NULL};
+static const char *fg_orient_sub_cmds[] = {"portrait", "landscape", "", NULL};
 static short fg_orient_i_command[] = {
 	DMORIENT_PORTRAIT,
 	DMORIENT_LANDSCAPE,
 	-1};
 
 /* Subcommand "pagesetup" pagesize. */
-static char *fg_papersize_sub_cmds[] = {
+static const char *fg_papersize_sub_cmds[] = {
 	"Letter", "LetterSmall", "Tabloid", "Ledger", "Legal", "Statement",
 	"Executive", "A3", "A4", "A4Small", "A5", "B4", "B5", "Folio", "Quarto",
 	"10X14", "11X17", "Note", "Env_9", "Env_10", "Env_11", "Env_12", "Env_14",
@@ -187,7 +189,7 @@ static char *fg_papersize_sub_cmds[] = {
 	"Legal_Extra", "Tabloid_Extra", "A4_Extra", "Letter_Transverse",
 	"A4_Transverse", "Letter_Extra_Transverse", "A_Plus", "B_Plus",
 	"Letter_Plus", "A4_Plus", "A5_Transverse", "B5_Transverse", "A3_Extra",
-	"A5_Extra", "B5_Extra", "A2", "A3_Transverse", "A3_Extra_Transverse", 
+	"A5_Extra", "B5_Extra", "A2", "A3_Transverse", "A3_Extra_Transverse",
 	"Dbl_Japanese_Postcard", "A6", "JEnv_Kaku2", "JEnv_Kaku3", "JEnv_Chou3",
 	"JEnv_Chou4", "Letter_Rotated", "A3_Rotated", "A4_Rotated", "A5_Rotated",
 	"B4_JIS_Rotated", "B5_JIS_Rotated", "Japanese_Postcard_Rotated",
@@ -325,7 +327,7 @@ static short fg_papersize_i_command[] = {
 	};
 
 /* Map modes */
-static char *fg_map_modes_sub_cmds[] = {
+static const char *fg_map_modes_sub_cmds[] = {
 	"Text",
 	"LoMetric",
 	"HiMetric",
@@ -347,11 +349,11 @@ static int fg_map_modes_i_command[] = {
 	MM_ANISOTROPIC
 };
 
-/* 
+/*
  * Font weights.
   */
 /* Map modes */
-static char *fg_font_weight_sub_cmds[] = {
+static const char *fg_font_weight_sub_cmds[] = {
 	"Dontcare",
 	"Thin",
 	"Extralight",
@@ -377,7 +379,7 @@ static int fg_font_weight_i_command[] = {
 	FW_HEAVY
 };
 
-static char *fg_font_charset_sub_cmds[] = {
+static const char *fg_font_charset_sub_cmds[] = {
 	"Default",
 	"ANSI",
 	"Symbol",
@@ -422,7 +424,7 @@ static int fg_font_charset_i_command[] = {
 	BALTIC_CHARSET
 };
 
-static char *fg_font_pitch_sub_cmds[] = {
+static const char *fg_font_pitch_sub_cmds[] = {
 	"Default",
 	"Fixed",
 	"Variable",
@@ -437,7 +439,7 @@ static int fg_font_pitch_i_command[] = {
 	,MONO_FONT
 };
 
-static char *fg_font_family_sub_cmds[] = {
+static const char *fg_font_family_sub_cmds[] = {
 	"Dontcare",
 	"Roman",
 	"Swiss",
@@ -457,8 +459,8 @@ static int fg_font_family_i_command[] = {
 };
 
 /* Declaration for functions used later in this file.*/
-static int WinPrintCmd(ClientData clientData, Tcl_Interp *interp, 
-			    int objc, Tcl_Obj *CONST objv[]);
+static int WinPrintCmd(ClientData clientData, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *const objv[]);
 static TCHAR * ReturnLockedDeviceName( HGLOBAL hDevNames );
 static char GetDeviceName(
 	Tcl_Interp *interp,
@@ -492,7 +494,7 @@ static char PrintGetAttr(Tcl_Interp *interp, int Index);
 static char PrintSetAttr(Tcl_Interp *interp, int Index, Tcl_Obj *oParam);
 static char DefaultPrinterGet( Tcl_Interp *interp );
 static char ListPrinters(Tcl_Interp *interp);
-static char ListChoices(Tcl_Interp *interp, char *ppChoiceList[]);
+static char ListChoices(Tcl_Interp *interp, const char *ppChoiceList[]);
 static char PrintSetMapMode( int MapMode);
 static char LoadDefaultPrinter( );
 static char DefaultPrinterGet( Tcl_Interp *interp );
@@ -501,7 +503,7 @@ static char PrintBrushColor(COLORREF Color);
 static char PrintBkColor(COLORREF Color);
 static char PrintRuler(int X0, int Y0, int LenX, int LenY);
 static char PrintRectangle(int X0, int Y0, int X1, int Y1);
-static char PrintFontCreate(int FontNumber, 
+static char PrintFontCreate(int FontNumber,
 	TCHAR *Name, double PointSize, int Weight, int Italic, int Charset,
 	int Pitch, int Family);
 static char PrintFontSelect(int FontNumber);
@@ -516,12 +518,13 @@ static int CALLBACK EnumFontFamExProc(
 	DWORD FontType,           /* type of font */
 	LPARAM lParam             /* application-defined data */
 );
-static char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *CONST oImageName,
+static char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *const oImageName,
 	int PosX, int PosY, int Width, int Height);
 
 
 /*DLL entry point */
 
+#if 0
 BOOL __declspec(dllexport) WINAPI DllEntryPoint(
 	HINSTANCE hInstance,
 	DWORD seginfo,
@@ -530,6 +533,7 @@ BOOL __declspec(dllexport) WINAPI DllEntryPoint(
   /* Don't do anything, so just return true */
   return TRUE;
 }
+#endif
 
 /*Initialisation Procedu	Res */
 
@@ -560,9 +564,9 @@ int __declspec(dllexport) Winprint_Init (Tcl_Interp *Interp)
  *
  * -------------------------------------------------------------------------
  */
- 
+
 int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
-			 Tcl_Obj *CONST objv[])
+			 Tcl_Obj *const objv[])
 {
 	/* Option list and indexes */
 	const char *subCmds[] = {
@@ -578,7 +582,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 	enum iCommand {
 		iHelp, iSelectPrinter, iPrinterSetup, iPageSetup,
 		iOpenjobdialog,
-		iOpenPrinter, iClose, iClosedoc, iOpenpage, 
+		iOpenPrinter, iClose, iClosedoc, iOpenpage,
 		iClosepage, iVersion, iGetattr, iSetAttr, iOpendoc,
 		iPen, iBrushColor, iBkColor,
 		iFontselect, iGetTextSize, iRuler, iRectangle, iFontCreate,
@@ -586,10 +590,10 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 		iPhoto
 		};
 
-	/* 
-	 * State variables. 
+	/*
+	 * State variables.
 	 */
-	 
+
 	/* Choice of option. */
 	int Index;
 	/* Result flag. */
@@ -602,12 +606,12 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 	char ParCur;
 	Tcl_DString	sPar1;
 	int PositionSPar;
-	/* 
-	 * Check if option argument is given and decode it. 
+	/*
+	 * Check if option argument is given and decode it.
 	 */
 	if (objc > 1)
 	{
-		if (RET_ERROR == 
+		if (RET_ERROR ==
 			Tcl_GetIndexFromObj(interp, objv[1], subCmds, "subcmd", 0, &Index))
 			return RET_ERROR;
 	} else {
@@ -686,10 +690,10 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 	/* Default result. */
 	Res = RET_OK;
 
-	/* 
-	 * One string parameter.             
-     * if this option is not given, a 0 pointer 
-     * is present. 
+	/*
+	 * One string parameter.
+     * if this option is not given, a 0 pointer
+     * is present.
      */
 	Tcl_DStringInit(& sPar1);
 	switch (Index) {
@@ -722,7 +726,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 			Tcl_WinUtfToTChar( pStr, lStr, &sPar1);
 		}
 	}
-	/* 
+	/*
 	 * Decode parameters and invoke.
 	*/
 	switch (Index) {
@@ -749,7 +753,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 			if ( objc > 2 )
 			{
 				int OptionIndex;
-				if (RET_ERROR == 
+				if (RET_ERROR ==
 					Tcl_GetIndexFromObj(
 						interp, objv[2], close_subCmds, "option", 0,
 						&OptionIndex))
@@ -792,7 +796,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 		/* One Index parameter. */
 		{
 			int IndexAttr;
-			if (RET_ERROR == 
+			if (RET_ERROR ==
 				Tcl_GetIndexFromObj(
 					interp, objv[2], fg_getattr_sub_cmds, "getattr", 0,
 					&IndexAttr))
@@ -819,15 +823,15 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 			short PaperSize;
 			unsigned short MaxPage;
 			double Double;
-			/* 
-			 * Argument 2: Printer is already in sPar or NULL. 
+			/*
+			 * Argument 2: Printer is already in sPar or NULL.
 			 */
 
 			/* Orientation */
 			if ( objc > 3 )
 			{
 				int ParInt;
-				if (RET_ERROR == 
+				if (RET_ERROR ==
 					Tcl_GetIndexFromObj(
 						interp, objv[3], fg_orient_sub_cmds, "orient", 0,
 						&ParInt))
@@ -843,7 +847,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 			if ( objc > 4 )
 			{
 				int ParInt;
-				if (RET_ERROR == 
+				if (RET_ERROR ==
 					Tcl_GetIndexFromObj(
 						interp, objv[4], fg_papersize_sub_cmds, "papersize", 0,
 						&ParInt))
@@ -918,7 +922,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 				if ( objc > 5 )
 				{
 					int ParInt;
-					if (RET_ERROR == 
+					if (RET_ERROR ==
 						Tcl_GetIntFromObj( interp, objv[5], &ParInt))
 					{
 						Res = RET_ERROR;
@@ -956,14 +960,14 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 			const char ** pTable;
 			const char * pMsg;
 			const int *pValue;
-			
+
 			/* Set default values. */
 			iPar[3] = FW_DONTCARE; /* Weight */
 			iPar[4] = 0; /* Default Italic: off */
 			iPar[5] = DEFAULT_CHARSET; /* Character set */
 			iPar[6] = FW_DONTCARE; /* Pitch */
 			iPar[7] = FF_DONTCARE; /* Family */
-			
+
 			for ( ParCur = 0 ; ParCur < objc-2 && Res != RET_ERROR ; ParCur++)
 			{
 				switch (ParCur)
@@ -1013,7 +1017,7 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 						pMsg = "font family";
 						break;
 					}
-					if (RET_ERROR == 
+					if (RET_ERROR ==
 						Tcl_GetIndexFromObj(
 							interp, objv[ParCur+2], pTable,
 							pMsg, 0, & IndexOut ) )
@@ -1170,14 +1174,14 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
 		break;
 	}
 	/*
-	 * Free any intermediated strings. 
+	 * Free any intermediated strings.
 	 */
-	 
+
 	/* String parameter. */
 	Tcl_DStringFree(& sPar1);
-	
-	/* 
-	 * Format return value. 
+
+	/*
+	 * Format return value.
 	*/
 	switch (Res)
 	{
@@ -1214,9 +1218,9 @@ int WinPrintCmd(ClientData unused, Tcl_Interp *interp, int objc,
  *
  * ReturnLockedDeviceName --
  *
- *      Extract the locked device name from the hDevNames structure and returns 
+ *      Extract the locked device name from the hDevNames structure and returns
  *      its pointer. hDevNames must be unlocked on success (which captures
- *      the return value). 
+ *      the return value).
 
  * Results:
  *      Returns the device name.
@@ -1244,8 +1248,8 @@ static TCHAR * ReturnLockedDeviceName( HGLOBAL hDevNames )
  *
  * GetDeviceName  --
  *
- *      Extract the device name from the hDevNames structure and put it in the 
- * 		interpreter result.  
+ *      Extract the device name from the hDevNames structure and put it in the
+ * 		interpreter result.
  *
  * Results:
  *      Returns the device name.
@@ -1266,7 +1270,7 @@ static char GetDeviceName(
 	pPrinter = ReturnLockedDeviceName( hDevNames );
 	if ( pPrinter == NULL )
 		return RET_ERROR_PRINTER_IO;
-	
+
 	Tcl_DStringInit( &Printer );
 	Tcl_WinTCharToUtf( pPrinter, -1, &Printer);
 	Ret = RET_OK;
@@ -1274,7 +1278,7 @@ static char GetDeviceName(
 	{
 		Tcl_Obj *PrinterObj;
 		Tcl_Obj	*lResult;
-		
+
 		PrinterObj = Tcl_NewStringObj(
 			Tcl_DStringValue( &Printer ),
 			Tcl_DStringLength( &Printer ) );
@@ -1304,7 +1308,7 @@ static char GetDeviceName(
  *
  * PrintSelectPrinter --
  *
- *      Return the selected printer using the printer selection box.   
+ *      Return the selected printer using the printer selection box.
  *
  * Results:
  *      Returns the selected printer.
@@ -1336,8 +1340,8 @@ static char PrintSelectPrinter( Tcl_Interp *interp )
  *
  * GetOrientation --
  *
- *      Search the DevMode structure for an orientation value and return 
- *      it as a Tcl object. If not found, NULL is returned. 
+ *      Search the DevMode structure for an orientation value and return
+ *      it as a Tcl object. If not found, NULL is returned.
  *
  * Results:
  *      Returns the selected orientation.
@@ -1347,7 +1351,7 @@ static char PrintSelectPrinter( Tcl_Interp *interp )
 
 static Tcl_Obj * GetOrientation( DEVMODE * pDevMode )
 {
-	char * pText;
+	const char * pText;
 	int IndexCur;
 
 	if ( pDevMode == NULL)
@@ -1373,8 +1377,8 @@ static Tcl_Obj * GetOrientation( DEVMODE * pDevMode )
  *
  * GetPaperSize--
  *
- *      Search the DevMode structure for a paper size value and return 
- *      it as a Tcl object. If not found, NULL is returned. 
+ *      Search the DevMode structure for a paper size value and return
+ *      it as a Tcl object. If not found, NULL is returned.
  *
  * Results:
  *      Returns the paper size.
@@ -1384,7 +1388,7 @@ static Tcl_Obj * GetOrientation( DEVMODE * pDevMode )
 
 static Tcl_Obj * GetPaperSize( DEVMODE * pDevMode )
 {
-	char * pText;
+	const char * pText;
 	int IndexCur;
 
 	if ( pDevMode == NULL)
@@ -1410,7 +1414,7 @@ static Tcl_Obj * GetPaperSize( DEVMODE * pDevMode )
  *
  * AppendOrientPaperSize--
  *
- *      Append orientation and paper size to the configuration. 
+ *      Append orientation and paper size to the configuration.
  *
  * Results:
  *      Returns the paper size.
@@ -1454,8 +1458,8 @@ static char AppendOrientPaperSize(  Tcl_Interp *interp, DEVMODE * pDevMode )
  *
  * PrintPrinterSetup--
  *
- *     Show the page setup dialogue box and for paper size and orientation 
- *     and return the users selection as Tcl variables. 
+ *     Show the page setup dialogue box and for paper size and orientation
+ *     and return the users selection as Tcl variables.
  *
  * Results:
  *     Returns the paper size and orientation.
@@ -1497,8 +1501,8 @@ static char PrintPrinterSetup( Tcl_Interp *interp, TCHAR *pPrinter,
  *
  * PrintPageSetup--
  *
- *     Show the page setup dialogue box and return the users selection 
-*      as Tcl variables. 
+ *     Show the page setup dialogue box and return the users selection
+*      as Tcl variables.
  *
  * Results:
  *      Returns the complete page setup.
@@ -1540,7 +1544,7 @@ static char PrintPageSetup( Tcl_Interp *interp, TCHAR *pPrinter,
 	sPageSetupDlg.rtMargin.top = ( Top != -1) ? Top : 2500;
 	sPageSetupDlg.rtMargin.right = ( Right != -1) ? Right : 2500;
 	sPageSetupDlg.rtMargin.bottom = ( Bottom != -1) ? Bottom : 2500;
- 
+
 	/* Show page setup dialog box. */
 	if ( FALSE == PageSetupDlg( & sPageSetupDlg ) )
 	{
@@ -1564,7 +1568,7 @@ static char PrintPageSetup( Tcl_Interp *interp, TCHAR *pPrinter,
 	{
 		if ( pdlg.hDevNames != NULL )
 			GlobalFree( pdlg.hDevNames );
-		
+
 		pdlg.hDevNames = sPageSetupDlg.hDevNames;
 	}
 
@@ -1629,17 +1633,16 @@ static char PrintPageSetup( Tcl_Interp *interp, TCHAR *pPrinter,
  *
  * CreateDevMode--
  *
- *     Create a DevMode structure for the given settings. The devmode 
- *     structure is put in a moveable memory object. The handle is placed 
- *     in pdlg.hDevMode. 
+ *     Create a DevMode structure for the given settings. The devmode
+ *     structure is put in a moveable memory object. The handle is placed
+ *     in pdlg.hDevMode.
  *
  * Results:
  *      Creates a DevMode structure for the printer.
  *
  * -------------------------------------------------------------------------
  */
-
-static char CreateDevMode( TCHAR * pPrinter, short Orientation, short PaperSize,
+char CreateDevMode( TCHAR * pPrinter, short Orientation, short PaperSize,
 	char fShowPropertySheet )
 {
 	HANDLE hPrinter;
@@ -1648,7 +1651,7 @@ static char CreateDevMode( TCHAR * pPrinter, short Orientation, short PaperSize,
 	DWORD fMode;
 	char fDevNamesLocked;
 	char Res;
-	
+
 	Res = RET_OK;
 	/* If no printer given use last or default printer. */
 	if ( pPrinter == NULL || pPrinter[0] == '\0' )
@@ -1742,6 +1745,7 @@ static char CreateDevMode( TCHAR * pPrinter, short Orientation, short PaperSize,
 		if ( Size < 0 )
 		{
 					Res = RET_ERROR_PRINTER_IO;
+		}
 	}
 	if ( fDevNamesLocked )
 		GlobalUnlock( pdlg.hDevNames );
@@ -1766,7 +1770,7 @@ static char CreateDevMode( TCHAR * pPrinter, short Orientation, short PaperSize,
  *
  * PrintOpenPrinter--
  *
- *     Open the given printer. 
+ *     Open the given printer.
  *
  * Results:
  *      Opens the selected printer.
@@ -1774,14 +1778,13 @@ static char CreateDevMode( TCHAR * pPrinter, short Orientation, short PaperSize,
  * -------------------------------------------------------------------------
  */
 
-
-static char PrintOpenPrinter(
+char PrintOpenPrinter(
 	TCHAR * pPrinter, short Orientation, short PaperSize)
 {
 	DEVMODE* lpInitData;
 	char Res;
 	char fDevNamesLocked;
-	
+
 	PrintReset( 1 );
 
 	Res = CreateDevMode( pPrinter, Orientation, PaperSize, 0 );
@@ -1793,9 +1796,9 @@ static char PrintOpenPrinter(
 		return RET_ERROR_MEMORY;
 	}
 
-	/* 
-	 * If no printer given, it was loaded by CreateDevMode in 
-	 * pdlg.hDeviceNames. 
+	/*
+	 * If no printer given, it was loaded by CreateDevMode in
+	 * pdlg.hDeviceNames.
 	 */
 	if ( pPrinter == NULL || pPrinter[0] == '\0' )
 	{
@@ -1829,7 +1832,7 @@ static char PrintOpenPrinter(
  *
  * PrintOpenJobDialog--
  *
- *     Open the print job dialog. 
+ *     Open the print job dialog.
  *
  * Results:
  *      Opens the job dialog.
@@ -1837,13 +1840,13 @@ static char PrintOpenPrinter(
  * -------------------------------------------------------------------------
  */
 
-static char PrintOpenJobDialog(
+char PrintOpenJobDialog(
 	TCHAR * pPrinter,
 	short Orientation,
 	short PaperSize,
 	unsigned short MaxPage
 	)
-{	
+{
 	char Res;
 
 	PrintReset( 1 );
@@ -1881,8 +1884,8 @@ static char PrintOpenJobDialog(
  *
  * PrintReset--
  *
- *      Free any resource which might be opened by a print command. 
- *      Initialise the print dialog structure. 
+ *      Free any resource which might be opened by a print command.
+ *      Initialise the print dialog structure.
  *
  * Results:
  *      Free print resources and re-start the print dialog structure.
@@ -1890,7 +1893,7 @@ static char PrintOpenJobDialog(
  * -------------------------------------------------------------------------
  */
 
-static char PrintReset( char fPreserveDeviceData )
+char PrintReset( char fPreserveDeviceData )
 {
 	int i;
 	if (hPen != NULL)
@@ -1912,7 +1915,7 @@ static char PrintReset( char fPreserveDeviceData )
 			hFont[i] = NULL;
 		}
 	}
-	/* 
+	/*
 	 * Free members of the pdlg structure.
      */
 	if ( fPDLGInitialised )
@@ -1940,7 +1943,7 @@ static char PrintReset( char fPreserveDeviceData )
 			}
 		}
 	} else {
-		/* 
+		/*
 		 * Initialise pdlg structure.
 		 */
 		memset( &pdlg, 0, sizeof( PRINTDLG ) );
@@ -1963,7 +1966,7 @@ static char PrintReset( char fPreserveDeviceData )
  * -------------------------------------------------------------------------
  */
 
-static char PrintOpenDoc(Tcl_Obj *resultPtr, TCHAR *DocName)
+char PrintOpenDoc(Tcl_Obj *resultPtr, TCHAR *DocName)
 {
 	int JobID;
     DOCINFO di;
@@ -1997,7 +2000,7 @@ static char PrintOpenDoc(Tcl_Obj *resultPtr, TCHAR *DocName)
  */
 
 
-static char PrintCloseDoc()
+char PrintCloseDoc()
 {
 	if ( EndDoc(pdlg.hDC) > 0)
 		return RET_OK;
@@ -2017,10 +2020,10 @@ static char PrintCloseDoc()
  * -------------------------------------------------------------------------
  */
 
-static char PrintOpenPage()
+char PrintOpenPage()
 {
 
-/* 
+/*
  * Here we have to (re)set the mapping mode and select all objects
  * because StartPage starts with default values.
  */
@@ -2058,7 +2061,7 @@ static char PrintOpenPage()
  * -------------------------------------------------------------------------
  */
 
-static char PrintClosePage()
+char PrintClosePage()
 {
 	if ( EndPage(pdlg.hDC) > 0)
 		return RET_OK;
@@ -2078,15 +2081,15 @@ static char PrintClosePage()
  * -------------------------------------------------------------------------
  */
 
-static char PrintGetAttr(Tcl_Interp *interp, int Index)
+char PrintGetAttr(Tcl_Interp *interp, int Index)
 {
 	char Res;
 	DEVMODE * pDevMode;
-	
-	/* 
+
+	/*
 	 * State variables.
 	 */
-	
+
 	/* Check for open printer when hDC is required. */
 	switch ( Index )
 	{
@@ -2104,7 +2107,7 @@ static char PrintGetAttr(Tcl_Interp *interp, int Index)
 		if (pdlg.hDC == NULL)
 			return RET_ERROR_PRINTER_NOT_OPEN;
 	}
-	
+
 	/* Check for Allocated DeviceMode structure. */
 	switch ( Index )
 	{
@@ -2129,11 +2132,11 @@ static char PrintGetAttr(Tcl_Interp *interp, int Index)
 		Tcl_SetIntObj(Tcl_GetObjResult(interp), pdlg.nCopies);
 		return RET_OK;
 	case iFirstPage:
-		Tcl_SetIntObj(Tcl_GetObjResult(interp), 
+		Tcl_SetIntObj(Tcl_GetObjResult(interp),
 			0 != (pdlg.Flags & PD_PAGENUMS) ? pdlg.nFromPage : pdlg.nMinPage);
 		return RET_OK;
 	case iLastPage:
-		Tcl_SetIntObj(Tcl_GetObjResult(interp), 
+		Tcl_SetIntObj(Tcl_GetObjResult(interp),
 			0 != (pdlg.Flags & PD_PAGENUMS) ? pdlg.nToPage : pdlg.nMaxPage);
 		return RET_OK;
 	case iMapMode:
@@ -2202,7 +2205,7 @@ static char PrintGetAttr(Tcl_Interp *interp, int Index)
 			GetDeviceCaps(pdlg.hDC, PHYSICALOFFSETY));
 		return RET_OK;
 	case iPrinter:
-		if ( fPDLGInitialised 
+		if ( fPDLGInitialised
 			&& pdlg.hDevNames != NULL)
 		{
 			return GetDeviceName( interp, pdlg.hDevNames, FALSE );
@@ -2263,7 +2266,7 @@ static char PrintGetAttr(Tcl_Interp *interp, int Index)
 	/* Unlock pDevMode. */
 	if ( NULL != pDevMode )
 		GlobalUnlock( pdlg.hDevMode );
-	
+
 	return Res;
 }
 
@@ -2280,14 +2283,14 @@ static char PrintGetAttr(Tcl_Interp *interp, int Index)
  * -------------------------------------------------------------------------
  */
 
-static char PrintSetAttr(Tcl_Interp *interp, int Index, Tcl_Obj *oParam)
+char PrintSetAttr(Tcl_Interp *interp, int Index, Tcl_Obj *oParam)
 {
 	switch ( Index )
 	{
 	case iMapMode:
 		{
 			int IndexMapMode;
-			if (RET_ERROR == 
+			if (RET_ERROR ==
 				Tcl_GetIndexFromObj(
 					interp, oParam, fg_map_modes_sub_cmds,
 					"setmapmode", 1, &IndexMapMode))
@@ -2314,7 +2317,7 @@ static char PrintSetAttr(Tcl_Interp *interp, int Index, Tcl_Obj *oParam)
  * -------------------------------------------------------------------------
  */
 
-static char LoadDefaultPrinter( )
+char LoadDefaultPrinter( )
 {
 	PrintReset( 1 );
 	pdlg.Flags = PD_RETURNDEFAULT ;
@@ -2339,7 +2342,7 @@ static char LoadDefaultPrinter( )
  */
 
 
-static char DefaultPrinterGet( Tcl_Interp *interp )
+char DefaultPrinterGet( Tcl_Interp *interp )
 {
 	char Res;
 	Res = LoadDefaultPrinter();
@@ -2353,7 +2356,7 @@ static char DefaultPrinterGet( Tcl_Interp *interp )
  *
  * ListPrinters--
  *
- *   Lists all available printers on the system. 
+ *   Lists all available printers on the system.
  *
  * Results:
  *    Returns the printer list.
@@ -2362,7 +2365,7 @@ static char DefaultPrinterGet( Tcl_Interp *interp )
  */
 
 
-static char ListPrinters(Tcl_Interp *interp)
+char ListPrinters(Tcl_Interp *interp)
 {
 	DWORD dwSize = 0;
 	DWORD dwPrinters = 0;
@@ -2371,12 +2374,12 @@ static char ListPrinters(Tcl_Interp *interp)
 
 	/* Initialise result value. */
 	Res = RET_OK;
-	
+
 	/* Find required buffer size. */
-	if (! EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS, 
+	if (! EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_CONNECTIONS,
 		   NULL, 5, NULL, 0, &dwSize, &dwPrinters))
 	{
-		/* 
+		/*
 		 * Check for ERROR_INSUFFICIENT_BUFFER.
 		 * If something else, then quit.
 		 */
@@ -2387,7 +2390,7 @@ static char ListPrinters(Tcl_Interp *interp)
 		}
 		/* Fall through */
 	}
-	
+
 	/* Allocate the buffer memory */
 	pInfo = (PRINTER_INFO_5 *) GlobalAlloc(GMEM_FIXED, dwSize);
 	if (pInfo == NULL)
@@ -2395,8 +2398,8 @@ static char ListPrinters(Tcl_Interp *interp)
 		/* Out of memory */
 		return RET_ERROR_MEMORY;
 	}
-	
-	/* 
+
+	/*
 	 * Fill the buffer. Again,
 	 * this depends on the O/S.
 	  */
@@ -2432,9 +2435,9 @@ static char ListPrinters(Tcl_Interp *interp)
 		/* Error - unlikely though as first call to EnumPrinters succeeded! */
 		return RET_ERROR_PRINTER_IO;
 	}
-	
+
 	GlobalFree( pInfo );
-	
+
 	return Res;
 }
 
@@ -2452,14 +2455,14 @@ static char ListPrinters(Tcl_Interp *interp)
  */
 
 
-static char ListChoices(Tcl_Interp *interp, char *ppChoiceList[])
+char ListChoices(Tcl_Interp *interp, const char *ppChoiceList[])
 {
 	int Index;
 	Tcl_Obj	*lResult;
-	
+
 	/* Initialise return list. */
 	lResult = Tcl_GetObjResult( interp );
-	
+
 	/* Loop adding the printers to the list */
 	for ( Index = 0; ppChoiceList[Index] != NULL; Index++)
 	{
@@ -2487,23 +2490,23 @@ static char ListChoices(Tcl_Interp *interp, char *ppChoiceList[])
  * -------------------------------------------------------------------------
  */
 
-static char ListFonts(Tcl_Interp *interp, HDC hDC, int fFontNameOnly)
+char ListFonts(Tcl_Interp *interp, HDC hDC, int fFontNameOnly)
 {
 
-/* This function is used by getattr fonts and getattr fontnamestyle. 
- * getattr fonts: lParam is passed as 0 to EnumFontFamExProc. 
- * getattr fontnames: lParam is passed with an initialized last fontname 
+/* This function is used by getattr fonts and getattr fontnamestyle.
+ * getattr fonts: lParam is passed as 0 to EnumFontFamExProc.
+ * getattr fontnames: lParam is passed with an initialized last fontname
  * to EnumFontFamExProc.
- * This value is used to check for duplicate listed font names. */
+ * This value is used to check for duplicate listed font names.
  */
 	LOGFONT LogFont;
 	TCHAR *pCompareFont;
-	
+
 	/* Initialise LogFont */
 	LogFont.lfCharSet		= DEFAULT_CHARSET;
 	LogFont.lfPitchAndFamily	= 0;
 	LogFont.lfFaceName[0]	= '\0';
-	
+
 	/*> Save interpreter ptr in global variable to use it for automatic */
 	/*> error feedback. */
 	fg_interp = interp;
@@ -2513,7 +2516,7 @@ static char ListFonts(Tcl_Interp *interp, HDC hDC, int fFontNameOnly)
 	} else {
 		pCompareFont = 0;
 	}
-	
+
 	/* Initialise return list */
 	if ( EnumFontFamiliesEx(
 		hDC,
@@ -2540,7 +2543,7 @@ static char ListFonts(Tcl_Interp *interp, HDC hDC, int fFontNameOnly)
  * -------------------------------------------------------------------------
  */
 
-static int CALLBACK EnumFontFamExProc(
+int CALLBACK EnumFontFamExProc(
 	ENUMLOGFONTEX *lpelfe,    /* logical-font data */
 	NEWTEXTMETRICEX *lpntme,  /* physical-font data */
 	DWORD FontType,           /* type of font */
@@ -2549,21 +2552,21 @@ static int CALLBACK EnumFontFamExProc(
 {
 
 /*
- * This function is used by getattr fonts and getattr fontnamestyle. 
+ * This function is used by getattr fonts and getattr fontnamestyle.
  *
- * getattr fonts: the font attributes name, style, charset and normal/fixed are 
+ * getattr fonts: the font attributes name, style, charset and normal/fixed are
  * added. In this case, the parameter lParam is 0.
  *
- * getattr fontnamestyle: it is checked if the current font has different name 
- * or style as the last font. If yes, name and style is added. 
- * If not, nothing is added. In this case, the parameter lParam contains a pointer 
- * to a ENUMLOGFONTEX variable. On a change, the current content is copied into 
+ * getattr fontnamestyle: it is checked if the current font has different name
+ * or style as the last font. If yes, name and style is added.
+ * If not, nothing is added. In this case, the parameter lParam contains a pointer
+ * to a ENUMLOGFONTEX variable. On a change, the current content is copied into
  * that variable for the next comparison round.
  */
 	Tcl_Obj *AppendObj;
 	Tcl_Obj *pResultObj;
 	Tcl_DString	dStr;
-	
+
 	if (lParam != 0) {
 		TCHAR *pCompareFont = (TCHAR *)lParam;
 		if ( 0 == _tcscmp(pCompareFont, lpelfe->elfFullName) ) {
@@ -2572,9 +2575,9 @@ static int CALLBACK EnumFontFamExProc(
 			_tcscpy( pCompareFont, lpelfe->elfFullName );
 		}
 	}
-	
+
 	pResultObj = Tcl_GetObjResult(fg_interp);
-	
+
 	/*> Add font name */
 	Tcl_DStringInit(& dStr);
 	Tcl_WinTCharToUtf(lpelfe->elfFullName,-1, &dStr);
@@ -2582,19 +2585,19 @@ static int CALLBACK EnumFontFamExProc(
 	Tcl_DStringFree(& dStr);
 	if (RET_OK != Tcl_ListObjAppendElement(fg_interp, pResultObj, AppendObj))
 		return FALSE;
-	
+
 	/*> For getattr fontnames, end here */
 	if (lParam != 0) {
 		return TRUE;
 	}
-	
+
 	/*
 	 * Transform style to weight.
 	 *
-	 * Style may have other words like condensed etc, so map all unknown weights 
-	 * to "Normal". 
+	 * Style may have other words like condensed etc, so map all unknown weights
+	 * to "Normal".
 	 */
-	 
+
 	if (	0 == _tcscmp(lpelfe->elfStyle, TEXT("Thin"))
 			|| 0 == _tcscmp(lpelfe->elfStyle, TEXT("Light"))
 			|| 0 == _tcscmp(lpelfe->elfStyle, TEXT("Medium"))
@@ -2621,7 +2624,7 @@ static int CALLBACK EnumFontFamExProc(
 	}
 	if (RET_OK != Tcl_ListObjAppendElement(fg_interp, pResultObj, AppendObj))
 		return FALSE;
-	
+
 	/* Add script. */
 	Tcl_DStringInit(& dStr);
 	Tcl_WinTCharToUtf(lpelfe->elfScript,-1, &dStr);
@@ -2629,7 +2632,7 @@ static int CALLBACK EnumFontFamExProc(
 	Tcl_DStringFree(& dStr);
 	if (RET_OK != Tcl_ListObjAppendElement(fg_interp, pResultObj, AppendObj))
 		return FALSE;
-	
+
 	/* Pitch. */
 	switch ( (lpelfe->elfLogFont.lfPitchAndFamily) & 0xf )
 	{
@@ -2642,7 +2645,7 @@ static int CALLBACK EnumFontFamExProc(
 	}
 	if (RET_OK != Tcl_ListObjAppendElement(fg_interp, pResultObj, AppendObj))
 		return FALSE;
-	
+
 	/* Continue enumeration. */
 	return TRUE;
 }
@@ -2660,13 +2663,13 @@ static int CALLBACK EnumFontFamExProc(
  * -------------------------------------------------------------------------
  */
 
-static char ListFontUnicodeRanges(Tcl_Interp *interp, HDC hDC)
+char ListFontUnicodeRanges(Tcl_Interp *interp, HDC hDC)
 {
 	size_t StructSize;
 	LPGLYPHSET pGlyphSet;
 	int PosCur;
 	Tcl_Obj	*oList;
-	
+
 	/* Get structure size. */
 	StructSize = GetFontUnicodeRanges(hDC,NULL);
 	if (StructSize == 0) {
@@ -2674,15 +2677,15 @@ static char ListFontUnicodeRanges(Tcl_Interp *interp, HDC hDC)
 	}
 	/* Alloc return memory on the stack */
 	pGlyphSet = _alloca(StructSize);
-	
+
 	/* Get glyph set structure */
 	if (0 == GetFontUnicodeRanges(hDC,pGlyphSet)) {
 		return RET_ERROR_PRINTER_IO;
 	}
-	
+
 	/* Prepare result list. */
 	oList = Tcl_NewListObj(0,NULL);
-	
+
 	for (PosCur = 0 ; PosCur < (int)(pGlyphSet->cRanges) ; PosCur++) {
 		/* Starting glyph */
 		if (RET_OK != Tcl_ListObjAppendElement(interp, oList,
@@ -2695,7 +2698,7 @@ static char ListFontUnicodeRanges(Tcl_Interp *interp, HDC hDC)
 			return RET_ERROR;
 		}
 	}
-	
+
 	Tcl_SetObjResult(interp,oList);
 	return RET_OK;
 }
@@ -2706,22 +2709,22 @@ static char ListFontUnicodeRanges(Tcl_Interp *interp, HDC hDC)
  *
  * GetFirstTextNoChar --
  *
- *   Get data on glyph structure. 
+ *   Get data on glyph structure.
  *
  * Results:
- *    Returns glyph structure. 
+ *    Returns glyph structure.
  *
  * -------------------------------------------------------------------------
  */
 
-static char GetFirstTextNoChar(Tcl_Interp *interp, TCHAR *pText)
+char GetFirstTextNoChar(Tcl_Interp *interp, TCHAR *pText)
 {
 	size_t StructSize;
 	LPGLYPHSET pGlyphSet;
 	int PosCur;
 	int IndexCur;
 	Tcl_Obj	*oList;
-	
+
 	/* Get structure size. */
 	StructSize = GetFontUnicodeRanges(pdlg.hDC,NULL);
 	if (StructSize == 0) {
@@ -2729,15 +2732,15 @@ static char GetFirstTextNoChar(Tcl_Interp *interp, TCHAR *pText)
 	}
 	/* Alloc return memory on the stack. */
 	pGlyphSet = _alloca(StructSize);
-	
+
 	/* Get glyph set structure. */
 	if (0 == GetFontUnicodeRanges(pdlg.hDC,pGlyphSet)) {
 		return RET_ERROR_PRINTER_IO;
 	}
-	
+
 	/* Prepare result list. */
 	oList = Tcl_NewListObj(0,NULL);
-	
+
 	/*> Loop over characters. */
 	for (IndexCur = 0;;IndexCur++) {
 		int fFound = 0;
@@ -2761,7 +2764,7 @@ static char GetFirstTextNoChar(Tcl_Interp *interp, TCHAR *pText)
 			return RET_OK;
 		}
 	}
-	
+
 	Tcl_SetObjResult(interp,Tcl_NewIntObj(-1));
 	return RET_OK;
 }
@@ -2774,12 +2777,12 @@ static char GetFirstTextNoChar(Tcl_Interp *interp, TCHAR *pText)
  *   Set the map mode for the printer.
  *
  * Results:
- *    Returns the map mode. 
+ *    Returns the map mode.
  *
  * -------------------------------------------------------------------------
  */
 
-static char PrintSetMapMode( int MapMode )
+char PrintSetMapMode( int MapMode )
 {
 	/* Check for open printer when hDC is required. */
 	if (pdlg.hDC == NULL)
@@ -2804,7 +2807,7 @@ static char PrintSetMapMode( int MapMode )
  * -------------------------------------------------------------------------
  */
 
-static char PrintPen(int Width, COLORREF Color)
+char PrintPen(int Width, COLORREF Color)
 {
 	if (hPen != NULL)
 		DeleteObject(hPen);
@@ -2814,9 +2817,9 @@ static char PrintPen(int Width, COLORREF Color)
 	} else {
 		/* Solid pen. */
 		LOGBRUSH lb;
-		lb.lbStyle = BS_SOLID; 
-        lb.lbColor = Color; 
-        lb.lbHatch = 0; 
+		lb.lbStyle = BS_SOLID;
+        lb.lbColor = Color;
+        lb.lbHatch = 0;
 		hPen = ExtCreatePen(PS_GEOMETRIC|PS_SOLID|PS_ENDCAP_SQUARE|PS_JOIN_MITER
 			, Width, &lb, 0, NULL);
 	}
@@ -2838,7 +2841,7 @@ static char PrintPen(int Width, COLORREF Color)
  * -------------------------------------------------------------------------
  */
 
-static char PrintBrushColor(COLORREF Color)
+char PrintBrushColor(COLORREF Color)
 {
 	if (CLR_INVALID == SetDCBrushColor(pdlg.hDC, Color) )
 		return RET_ERROR_PRINTER_IO;
@@ -2858,7 +2861,7 @@ static char PrintBrushColor(COLORREF Color)
  * -------------------------------------------------------------------------
  */
 
-static char PrintBkColor(COLORREF Color)
+char PrintBkColor(COLORREF Color)
 {
 	if (CLR_INVALID == SetBkColor(pdlg.hDC, Color) )
 		return RET_ERROR_PRINTER_IO;
@@ -2877,8 +2880,8 @@ static char PrintBkColor(COLORREF Color)
  *
  * -------------------------------------------------------------------------
  */
- 
-static char PrintRuler(int X0, int Y0, int LenX, int LenY)
+
+char PrintRuler(int X0, int Y0, int LenX, int LenY)
 {
 	POINT pt[2];
 	pt[0].x = X0;
@@ -2903,7 +2906,7 @@ static char PrintRuler(int X0, int Y0, int LenX, int LenY)
  * -------------------------------------------------------------------------
  */
 
-static char PrintRectangle(int X0, int Y0, int X1, int Y1)
+char PrintRectangle(int X0, int Y0, int X1, int Y1)
 {
 	if (FALSE == Rectangle(pdlg.hDC, X0,Y0,X1,Y1))
 		return RET_ERROR_PRINTER_IO;
@@ -2923,30 +2926,30 @@ static char PrintRectangle(int X0, int Y0, int X1, int Y1)
  * -------------------------------------------------------------------------
  */
 
-static char PrintFontCreate(int FontNumber, 
+char PrintFontCreate(int FontNumber,
 	TCHAR *Name, double dPointSize, int Weight, int Italic, int Charset,
 	int Pitch, int Family)
 {
 
 /*
- * Charset: 
- * ANSI 0 
- * DEFAULT_ 1 
- * GREEK_ 161 (0xA1) 
- * Italic 
- * 	0	No 
- * 	1	Yes 
- * Pitch 
- * 	0	Default 
- * 	1	Fixed 
- * 	2	Variable 
- * Family 
- * 	0	FF_DONTCARE 
- * 	1	FF_ROMAN	Variable stroke width, serifed. Times Roman, Century Schoolbook, etc. 
- * 	2	FF_SWISS	Variable stroke width, sans-serifed. Helvetica, Swiss, etc. 
- * 	3	FF_MODERN	Constant stroke width, serifed or sans-serifed. Pica, Elite, Courier, etc. 
- * 	4	FF_SCRIPT	Cursive, etc. 
- * 	5	FF_DECORATIVE	Old English, etc. 
+ * Charset:
+ * ANSI 0
+ * DEFAULT_ 1
+ * GREEK_ 161 (0xA1)
+ * Italic
+ * 	0	No
+ * 	1	Yes
+ * Pitch
+ * 	0	Default
+ * 	1	Fixed
+ * 	2	Variable
+ * Family
+ * 	0	FF_DONTCARE
+ * 	1	FF_ROMAN	Variable stroke width, serifed. Times Roman, Century Schoolbook, etc.
+ * 	2	FF_SWISS	Variable stroke width, sans-serifed. Helvetica, Swiss, etc.
+ * 	3	FF_MODERN	Constant stroke width, serifed or sans-serifed. Pica, Elite, Courier, etc.
+ * 	4	FF_SCRIPT	Cursive, etc.
+ * 	5	FF_DECORATIVE	Old English, etc.
  */
 
 	POINT	pt;	/* To convert to logical scale. */
@@ -2962,7 +2965,7 @@ static char PrintFontCreate(int FontNumber,
 		}
 		DeleteObject (hFont[FontNumber]);
 	}
-	
+
 	/* Convert decipoints to the logical device points. */
 	pt.x = 0;
 	pt.y = (int) (dPointSize * GetDeviceCaps(pdlg.hDC, LOGPIXELSY) / 72.0);
@@ -3001,7 +3004,7 @@ static char PrintFontCreate(int FontNumber,
  *
  * -------------------------------------------------------------------------
  */
-static char PrintFontSelect(int FontNumber)
+char PrintFontSelect(int FontNumber)
 {
 	if (FontNumber < 0 || FontNumber > 9 || hFont[FontNumber] == NULL)
 		return RET_ERROR_PARAMETER;
@@ -3026,7 +3029,7 @@ static char PrintFontSelect(int FontNumber)
  * -------------------------------------------------------------------------
  */
 
-static char PrintText(int X0, int Y0, TCHAR *pText, COLORREF Color )
+char PrintText(int X0, int Y0, TCHAR *pText, COLORREF Color )
 {
 	if (CLR_INVALID == SetTextColor(pdlg.hDC, Color ) )
 		return RET_ERROR_PRINTER_IO;
@@ -3056,7 +3059,7 @@ static char PrintText(int X0, int Y0, TCHAR *pText, COLORREF Color )
  * -------------------------------------------------------------------------
  */
 
-static char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
+char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 {
 	SIZE Size;
 
@@ -3071,10 +3074,10 @@ static char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 	{
 		return RET_ERROR_PRINTER_IO;
 	}
-	
-	/* 
-	 * We have got the size values. 
-	 * Initialise return list. 
+
+	/*
+	 * We have got the size values.
+	 * Initialise return list.
 	*/
 	lResult = Tcl_GetObjResult( interp );
 
@@ -3104,10 +3107,10 @@ static char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 /* @param DestPosY Destination Y position */
 /* @param DestWidth Width of destination image, or 0 to use original size */
 /* @param DestHeight Height of destination image or 0 to use original size */
-static char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *CONST oImageName,
+char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *const oImageName,
 	int DestPosX, int DestPosY, int DestWidth, int DestHeight)
 {
-    #if 0
+#if 0
 	Tk_PhotoImageBlock sImageBlock;
 	Tk_PhotoHandle hPhoto;
 	HBITMAP hDIB;
@@ -3137,7 +3140,7 @@ static char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *CONST oImageName,
 	bmInfo.bmiHeader.biPlanes = 1;
 	bmInfo.bmiHeader.biBitCount = 32;
 	bmInfo.bmiHeader.biCompression = BI_RGB;
-	
+
 	/* the first parameter is the dc, which may be 0. */
 	/* no difference to specify it */
 	hDIB = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
@@ -3182,6 +3185,7 @@ static char PaintPhoto( Tcl_Interp *interp, Tcl_Obj *CONST oImageName,
 		return RET_ERROR_PRINTER_DRIVER;
 	}
 	DeleteObject(hDIB);
-	#endif
+#endif
 	return RET_OK;
 }
+
