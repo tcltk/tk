@@ -22,6 +22,7 @@ set ay [font metrics $font -linespace]
 set ax [font measure $font 0]
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 foreach test {
     {-anchor nw nw xyz {bad anchor position "xyz": must be n, ne, e, se, s, sw, w, nw, or center}}
@@ -478,7 +479,7 @@ set font {Courier 12 italic}
 set ax [font measure $font 0]
 set ay [font metrics $font -linespace]
 
-test canvText-17.1 {TextToPostscript procedure} failsOnUbuntu {
+test canvText-17.1 {TextToPostscript procedure} {failsOnUbuntu failsOnQuarz} {
     .c delete all
     .c config -height 300 -highlightthickness 0 -bd 0
     update

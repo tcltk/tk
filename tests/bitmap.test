@@ -10,7 +10,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 test bitmap-1.1 {Tk_AllocBitmapFromObj - converting internal reps} testbitmap {
     set x gray25
@@ -66,7 +66,7 @@ test bitmap-3.1 {Tk_FreeBitmapFromObj - reference counts} testbitmap {
     lappend result [testbitmap questhead]
 } {{{3 1}} {{2 1}} {{1 1}} {}}
 
-test bitmap-4.1 {FreeBitmapObjProc} {testbitmap failsOnUbuntu} {
+test bitmap-4.1 {FreeBitmapObjProc} {testbitmap failsOnUbuntu failsOnQuarz} {
     destroy .b
     set x [format questhead]
     button .b -bitmap $x

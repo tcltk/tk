@@ -2582,7 +2582,7 @@ test text-20.167 {TextSearchCmd, regexp search multi-line} {
     list [.t2 search -regexp -forward -all -count foo \
       -- {(b+\nc+\nb+)\na+} 1.0] $foo
 } {2.0 19}
-test text-20.168 {TextSearchCmd, regexp search multi-line} {knownBug} {
+test text-20.168 {TextSearchCmd, regexp search multi-line} knownBug {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
@@ -2590,7 +2590,7 @@ test text-20.168 {TextSearchCmd, regexp search multi-line} {knownBug} {
     list [.t2 search -regexp -forward -all -count foo \
       -- {(a+|b+\nc+\nb+)\na+} 1.0] $foo
 } {2.0 19}
-test text-20.169 {TextSearchCmd, regexp search multi-line} {knownBug} {
+test text-20.169 {TextSearchCmd, regexp search multi-line} knownBug {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
@@ -2606,14 +2606,14 @@ test text-20.170 {TextSearchCmd, regexp search multi-line} {
     list [.t2 search -regexp -forward -all -count foo \
       -- {((a+|b+\nc+\nb+)+\n)+a+} 1.0] $foo
 } {1.0 24}
-test text-20.171 {TextSearchCmd, regexp search multi-line} {knownBug} {
+test text-20.171 {TextSearchCmd, regexp search multi-line} knownBug {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
     list [.t2 search -regexp -backward -all -count foo \
       -- {b+\n|a+\n(b+\n)+} end] $foo
 } {1.0 25}
-test text-20.172 {TextSearchCmd, regexp search multi-line} {knownBug} {
+test text-20.172 {TextSearchCmd, regexp search multi-line} knownBug {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
@@ -3333,7 +3333,7 @@ test text-27.2 {tabs - must be positive and must be increasing} {
     pack [text .t -wrap none]
     list [catch {.t configure -tabs {-5}} msg] $msg
 } {1 {tab stop "-5" is not at a positive distance}}
-test text-27.3 {tabs - must be positive and must be increasing} {knownBug} {
+test text-27.3 {tabs - must be positive and must be increasing} knownBug {
     # This bug will be fixed in Tk 9.0, when we can allow a minor
     # incompatibility with Tk 8.x
     destroy .t

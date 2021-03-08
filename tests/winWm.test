@@ -13,6 +13,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 # Measure the height of a single menu line

@@ -15,6 +15,7 @@ if {[testConstraint pseudocolor8]} {
 }
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnQuarz [expr {![info exists ::env(MAC_CI)]}]
 
 test border-1.1 {Tk_AllocBorderFromObj - converting internal reps} testborder {
     set x orange
@@ -104,7 +105,7 @@ test border-3.4 {Tk_Free3DBorder - unlinking from list} {pseudocolor8 testborder
     lappend result [testborder purple]
 } {{{4 1} {3 0} {2 0} {1 0}} {{4 1} {2 0} {1 0}} {{4 1} {2 0}} {{2 0}} {}}
 
-test border-4.1 {FreeBorderObjProc} {testborder failsOnUbuntu} {
+test border-4.1 {FreeBorderObjProc} {testborder failsOnUbuntu failsOnQuarz} {
     destroy .b
     set x [format purple]
     button .b -bg $x -text .b1
