@@ -6736,20 +6736,20 @@ test bind-33.21 {simulate use of the keyboard to trigger a pattern sequence with
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
     wm geometry .top +100+100
-    update
+    after 10 ; update
 } -body {
     # In order to avoid platform-dependent coordinate results due to
     # decorations and borders, this test warps the pointer twice
     # relatively to a window that moved in the meantime, and checks
     # how much the pointer moved
     wm geometry .top +200+200
-    update
+    after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
     set pointerPos1 [winfo pointerxy .top]
     wm geometry .top +600+600
-    update
+    after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
