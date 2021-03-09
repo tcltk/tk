@@ -598,7 +598,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {textfonts} {
     list [.t bbox 2.0] [.t bbox 2.25] [.t bbox 3.0] $tk_textRelayout
 } [list [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] {1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     wm geom . 103x$height
@@ -609,7 +609,7 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
     updateText
     list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk_textRelayout
 } [list [list 5 [expr {$fixedDiff + 18}] 1 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 1 $fixedHeight] {1.0 2.0 3.0}]
-if {$tcl_platform(platform) == "windows"} {
+if {[tk windowingsystem] == "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
@@ -620,7 +620,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     frame .f2 -width 20 -height 100
@@ -652,7 +652,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     .t delete 1.0 end
@@ -3318,7 +3318,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {textfonts} {
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 7 $fixedHeight] [list 143 3 3 $fixedHeight]]
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {textfonts} {
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     .t configure -wrap char
@@ -3328,7 +3328,7 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {textfonts} {
     updateText
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
 } [list [list 3 3 1 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 1 $fixedHeight] [list 3 [expr {2*$fixedDiff + 29}] 1 $fixedHeight]]
-if {$tcl_platform(platform) == "windows"} {
+if {[tk windowingsystem] == "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {textfonts} {
@@ -3654,7 +3654,7 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {textfonts} {
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list 32 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 39 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts} {
+test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts failsOnXQuarz} {
     .t delete 1.0 end
     set cm [winfo fpixels .t 1c]
     .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
