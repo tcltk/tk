@@ -876,8 +876,10 @@ test event-9 {no <Enter> event is generated for the container window when its
     pack [frame .top.f -bg green -width 50 -height 50] -anchor se -side bottom
     update
     event generate .top.f <Motion> -warp 1 -x 25 -y 25  ; # <Enter> sent to .top and .top.f
-    update idletasks ; after 500  ; # Win specific - wait for SendInput to be executed
-    update ; after 500 ; update
+    update idletasks ; after 50  ; # Win specific - wait for SendInput to be executed
+    for {set i 0} {$i < 100} {incr i} {
+        update ; after 50 ; update idletasks ; after 50
+    }
     destroy .top.f  ; # no <Enter> event sent
     update
     set res

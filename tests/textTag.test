@@ -1613,7 +1613,9 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
     event gen .t <Motion> -x $x2 -y $y2
     set x [.t index current]
     .t tag add big 3.0
-    after 50 ; update ; after 50 ; update
+    for {set i 0} {$i < 100} {incr i} {
+        update ; after 50 ; update idletasks ; after 50
+    }
     lappend x [.t index current]
 } -cleanup {
     .t tag delete big
