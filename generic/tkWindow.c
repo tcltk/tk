@@ -199,6 +199,8 @@ static const TkCmd commands[] = {
     {NULL,		NULL,			0}
 };
 
+static Tcl_CmdInfo *saveTclUpdateCmd = NULL;
+static Tcl_ObjCmdProc *updateObjProc = NULL;
 /*
  * Forward declarations to functions defined later in this file:
  */
@@ -915,6 +917,8 @@ TkCreateMainWindow(
 
     isSafe = Tcl_IsSafe(interp);
     for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
+	Tcl_CmdInfo cmdInfo;
+	
 	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
@@ -933,6 +937,13 @@ TkCreateMainWindow(
 	    clientData = tkwin;
 	} else {
 	    clientData = NULL;
+	}
+	if (Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo)) {
+	    if (cmdInfo.isNativeObjectProc && saveTclUpdateCmd == NULL) {
+		saveTclUpdateCmd = ckalloc(sizeof (Tcl_CmdInfo));
+		*saveTclUpdateCmd = cmdInfo;
+		updateObjProc = cmdInfo.objProc;
+	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -1496,13 +1507,19 @@ Tk_DestroyWindow(
 	     */
 
 	    if ((winPtr->mainPtr->interp != NULL) &&
-		    !Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
+		!Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-		    Tcl_CreateObjCommand(winPtr->mainPtr->interp, cmdPtr->name,
-			    TkDeadAppObjCmd, NULL, NULL);
+		    if (saveTclUpdateCmd && updateObjProc &&
+			cmdPtr->objProc == Tk_UpdateObjCmd) {
+			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+					     cmdPtr->name, updateObjProc,
+					     NULL, NULL);
+		    } else {
+			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+					     cmdPtr->name, TkDeadAppObjCmd,
+					     NULL, NULL);
+		    }
 		}
-		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
-			TkDeadAppObjCmd, NULL, NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
 		Tcl_UnlinkVar(winPtr->mainPtr->interp,
 			"::tk::AlwaysShowSelection");
