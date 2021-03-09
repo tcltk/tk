@@ -180,7 +180,7 @@ typedef struct {
     /*
      * Physical size: pHYS chunks.
      */
-    
+
     double DPI;
     double aspect;
 
@@ -361,11 +361,11 @@ InitPNGImage(
 	}
 	return TCL_ERROR;
     }
-    
+
     /*
      * Initialize physical size pHYS values
      */
-    
+
     pngPtr->DPI = -1;
     pngPtr->aspect = -1;
 
@@ -1710,7 +1710,7 @@ ReadPHYS(
      * 4 bytes: Pixels per unit, y axis
      * 1 byte: unit specifier
      */
-    
+
     if (ReadInt32(interp, pngPtr, &PPUx, &crc) == TCL_ERROR) {
 	return TCL_ERROR;
     }
@@ -1724,7 +1724,7 @@ ReadPHYS(
     if (CheckCRC(interp, pngPtr, crc) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    
+
     if ( PPUx > 2147483647 || PPUy > 2147483647
 	    || unitSpecifier > 1 ) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2520,7 +2520,7 @@ DecodePNG(
     /*
      * Physical header may be present here so try to parse it
      */
-    
+
     if (CHUNK_pHYs == chunkType) {
 	/*
 	 * Finish parsing the PHYS chunk.
@@ -2593,7 +2593,7 @@ DecodePNG(
     /*
      * Physical header may be present here so try to parse it
      */
-    
+
     if (CHUNK_pHYs == chunkType) {
 	/*
 	 * Finish parsing the PHYS chunk.
@@ -3509,7 +3509,7 @@ WriteExtraChunks(
 	return TCL_ERROR;
     }
     Tcl_DStringFree(&buf);
-    
+
     /*
      * Add a pHYs chunk if there is metadata for DPI and/or aspect
      * aspect = PPUy / PPUx
@@ -3519,14 +3519,14 @@ WriteExtraChunks(
      * - Points per meter in x direction (32 bit)
      * - Unit specifier: 0: no unit (only aspect), 1: Points per meter
      */
-    
+
     if (metadataInObj != NULL) {
-	
+
 	Tcl_Obj *aspectObj, *DPIObj;
 	double aspectValue=-1, DPIValue=-1;
 	unsigned long PPUx = 65536, PPUy = 65536;
 	char unitSpecifier;
-	
+
 	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
 		Tcl_NewStringObj("aspect",-1),
 		&aspectObj) ||
@@ -3555,7 +3555,7 @@ WriteExtraChunks(
 	    /*
 	     * aspect = PPUy / PPUx
 	     */
-	    
+
 	    if (DPIObj == NULL) {
 		unitSpecifier = 0;
 		PPUx = 65536;
@@ -3573,7 +3573,7 @@ WriteExtraChunks(
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PHYS", NULL);
 		return TCL_ERROR;
 	    }
-	    
+
 	    LongToInt32(PPUx, buffer);
 	    LongToInt32(PPUy, buffer+4);
 	    buffer[8] = unitSpecifier;

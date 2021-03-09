@@ -799,11 +799,11 @@ ImgPhotoCmd(
             options.format = Tcl_NewStringObj("default", -1);
             freeObj = options.format;
 	}
-	
+
 	/*
 	 * Use argument metadata if specified, otherwise the master metadata
 	 */
-	
+
 	if (NULL != options.metadata) {
 	    metadataIn = options.metadata;
 	} else {
@@ -1058,7 +1058,6 @@ ImgPhotoCmd(
     }
     case PHOTO_READ: {
 	Tcl_Obj *format;
-	int result;
 
 	/*
 	 * photo read command - first parse the options specified.
@@ -1469,11 +1468,11 @@ readCleanup:
 	    usedExt = 0;
 	}
 
-	
+
 	/*
 	 * Use argument metadata if specified, otherwise the master metadata
 	 */
-	
+
 	if (NULL != options.metadata) {
 	    metadataIn = options.metadata;
 	} else {
@@ -1514,6 +1513,7 @@ readCleanup:
 		}
 	    }
 	}
+#endif
 	if (imageFormat == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -1529,7 +1529,6 @@ readCleanup:
 		}
 	    }
 	}
-#endif
 	if (usedExt && !matched) {
 	    /*
 	     * If we didn't find one and we're using file extensions as the
@@ -2274,7 +2273,7 @@ ImgPhotoConfigureModel(
 	    /*
 	     * We have driver return metadata
 	     */
-	    
+
 	    if (modelPtr->metadata == NULL) {
 		modelPtr->metadata = metadataOutObj;
 		metadataOutObj = NULL;
@@ -2881,7 +2880,7 @@ if (formatPtr == NULL) {
 	    }
 	}
     }
-    
+
     /*
      * No matching format found
      */
