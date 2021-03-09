@@ -22,6 +22,9 @@
 */wish*
 */tktest*
 */versions.vc
+*/version.vc
+*/libtk.vfs
+*/libtk*.zip
 doc/man.macros
 html
 macosx/configure
