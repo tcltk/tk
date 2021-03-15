@@ -323,15 +323,21 @@ enum {
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
 
-	delta = [theEvent deltaY] * 120;
+	delta = [theEvent scrollingDeltaY];
 	if (delta != 0.0) {
+	    if (![theEvent hasPreciseScrollingDeltas]) {
+		delta *= 120;
+	    }
 	    xEvent.xbutton.state = state;
 	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
-	delta = [theEvent deltaX] * 120;
+	delta = [theEvent scrollingDeltaX];
 	if (delta != 0.0) {
+	    if (![theEvent hasPreciseScrollingDeltas]) {
+		delta *= 120;
+	    }
 	    xEvent.xbutton.state = state | ShiftMask;
 	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
