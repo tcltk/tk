@@ -1322,7 +1322,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 # define c_class class
 #endif
 
-#if TCL_UTF_MAX > 4
+/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
+#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf
 #   define TkUtfPrev Tcl_UtfPrev
