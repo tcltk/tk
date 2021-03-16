@@ -339,23 +339,25 @@ enum {
 	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
 	}
 	tsdPtr->wheelTickPrev = wheelTick;
-	delta = [theEvent scrollingDeltaY];
+	delta = [theEvent deltaY];
 	if (delta != 0.0) {
-	    delta = tsdPtr->vWheelAcc += delta;
-	    if (fabs(delta) >= 1.0) {
+	    delta = (tsdPtr->vWheelAcc += delta);
+	    if (fabs(delta) >= 0.6) {
 		xEvent.xbutton.state = state;
-		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
+		xEvent.xkey.keycode = WHEEL_DELTA * round(delta);
+		if (xEvent.xkey.keycode == 0) {xEvent.xkey.keycode = (delta >= 0) ? WHEEL_DELTA : -WHEEL_DELTA;}
 		tsdPtr->vWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
 	}
-	delta = [theEvent scrollingDeltaX];
+	delta = [theEvent deltaX];
 	if (delta != 0.0) {
-	    delta = tsdPtr->hWheelAcc += delta;
-	    if (fabs(delta) >= 1.0) {
+	    delta = (tsdPtr->hWheelAcc += delta);
+	    if (fabs(delta) >= 0.6) {
 		xEvent.xbutton.state = state | ShiftMask;
-		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
+		xEvent.xkey.keycode = WHEEL_DELTA * round(delta);
+		if (xEvent.xkey.keycode == 0) {xEvent.xkey.keycode = (delta >= 0) ? WHEEL_DELTA : -WHEEL_DELTA;}
 		tsdPtr->hWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
