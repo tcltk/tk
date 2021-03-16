@@ -810,7 +810,7 @@ test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
     destroy .t2 .r.f
 } -result {can't iconify ".t2": it is an embedded window}
 
-test wm-iconify-3.1 {iconify behavior} -constraints failsOnUbuntu -body {
+test wm-iconify-3.1 {iconify behavior} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t2
     wm geom .t2 -0+0
     update idletasks
@@ -1418,7 +1418,7 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
 
 deleteWindows
 
-test wm-stackorder-3.1 {unmapped toplevel} -constraints failsOnUbuntu -body {
+test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t1 ; update
     toplevel .t2 ; update
     wm iconify .t1
@@ -1739,7 +1739,7 @@ test wm-transient-4.1 {transient toplevel is withdrawn
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.2 {already mapped transient toplevel
-        is withdrawn if toplevel is iconic} -constraints failsOnUbuntu -body {
+        is withdrawn if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .top
     raiseDelay
     wm iconify .top
@@ -1753,7 +1753,7 @@ test wm-transient-4.2 {already mapped transient toplevel
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.3 {iconify/deiconify on the toplevel
-        does a withdraw/deiconify on the transient} -constraints failsOnUbuntu -setup {
+        does a withdraw/deiconify on the transient} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     set results [list]
 } -body {
     toplevel .top
@@ -2006,7 +2006,7 @@ test wm-state-2.7 {state change before map} -body {
 } -cleanup {
     deleteWindows
 } -result {iconic}
-test wm-state-2.8 {state change after map} -constraints failsOnUbuntu -body {
+test wm-state-2.8 {state change after map} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t
     update
     wm state .t iconic
@@ -2014,7 +2014,7 @@ test wm-state-2.8 {state change after map} -constraints failsOnUbuntu -body {
 } -cleanup {
     deleteWindows
 } -result {iconic}
-test wm-state-2.9 {state change after map} -constraints failsOnUbuntu -body {
+test wm-state-2.9 {state change after map} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t
     update
     wm iconify .t

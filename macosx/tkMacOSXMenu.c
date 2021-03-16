@@ -189,6 +189,34 @@ TKBackgroundLoop *backgroundLoop = nil;
 {
     return (_tkSpecial == special);
 }
+
+/*
+ * There are cases where a KeyEquivalent (aka menu accelerator) is defined for
+ * a "dead key", i.e. a key which does not have an associated character but is
+ * only meant to be the start of a composition sequence.  For example, on a
+ * Spanish keyboard both the ' and the ` keys are dead keys used to place
+ * accents over letters.  But ⌘` is a standard KeyEquivalent which cycles
+ * through the open windows of an application, changing the focus to the next
+ * window.
+ *
+ * The performKeyEquivalent callback method is being overridden here to work
+ * around a bug reported in [1626ed65b8].  When a dead key that is also as a
+ * KeyEquivalent is pressed, a KeyDown event with no characters is passed to
+ * performKeyEquivalent.  The default implementation provided by Apple will
+ * cause that event to be routed to some private methods of NSMenu which raise
+ * NSInvalidArgumentException, causing an abort. Returning NO in such a case
+ * prevents the abort, but does not prevent the KeyEquivalent action from being
+ * invoked, presumably because the event does get correctly handled higher in
+ * the responder chain.
+ */
+
+- (BOOL)performKeyEquivalent:(NSEvent *)event
+{
+    if (event.characters.length == 0) {
+	return NO;
+    }
+    return [super performKeyEquivalent:event];
+}
 @end
 
 @implementation TKMenu(TKMenuPrivate)

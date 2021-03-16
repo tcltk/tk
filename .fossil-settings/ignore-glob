@@ -24,7 +24,7 @@
 */versions.vc
 */version.vc
 */libtk.vfs
-*/libtk_*.zip
+*/libtk*.zip
 html
 macosx/configure
 win/Debug*
