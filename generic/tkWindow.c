@@ -1522,6 +1522,8 @@ Tk_DestroyWindow(
 					     NULL, NULL);
 		    }
 		}
+		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
+			TkDeadAppObjCmd, NULL, NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
 		Tcl_UnlinkVar(winPtr->mainPtr->interp,
 			"::tk::AlwaysShowSelection");
