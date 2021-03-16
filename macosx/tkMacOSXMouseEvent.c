@@ -345,7 +345,6 @@ enum {
 	    if (fabs(delta) >= 0.6) {
 		xEvent.xbutton.state = state;
 		xEvent.xkey.keycode = WHEEL_DELTA * round(delta);
-		if (xEvent.xkey.keycode == 0) {xEvent.xkey.keycode = (delta >= 0) ? WHEEL_DELTA : -WHEEL_DELTA;}
 		tsdPtr->vWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
@@ -357,7 +356,6 @@ enum {
 	    if (fabs(delta) >= 0.6) {
 		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = WHEEL_DELTA * round(delta);
-		if (xEvent.xkey.keycode == 0) {xEvent.xkey.keycode = (delta >= 0) ? WHEEL_DELTA : -WHEEL_DELTA;}
 		tsdPtr->hWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
