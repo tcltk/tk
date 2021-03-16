@@ -1198,9 +1198,6 @@ MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SpinboxObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
