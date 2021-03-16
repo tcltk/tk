@@ -188,7 +188,7 @@
 #	define inline
 #	define TK_C99_INLINE_DEFINED
 #   endif
-#elif __STDC_VERSION__ >= 199901L
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #	define TK_C99_INLINE_SUPPORT
 #else
 #	define inline
@@ -1143,10 +1143,10 @@ MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
 
 MODULE_SCOPE const Tk_SmoothMethod tkBezierSmoothMethod;
 MODULE_SCOPE Tk_ImageType	tkBitmapImageType;
-MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtGIF;
+MODULE_SCOPE Tk_PhotoImageFormatVersion3 tkImgFmtGIF;
 MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
-MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
+MODULE_SCOPE Tk_PhotoImageFormatVersion3 tkImgFmtPNG;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtSVGnano;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
@@ -1454,6 +1454,7 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
 #define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
+#define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
@@ -1492,14 +1493,13 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 # define c_class class
 #endif
 
-#if TCL_UTF_MAX > 4
+/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
+#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
 #   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
 #   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
-#   define TkUtfPrev Tcl_UtfPrev
 #else
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
-    MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
 #endif
 
 #if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9

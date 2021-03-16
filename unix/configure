@@ -697,6 +697,7 @@ ZIP_INSTALL_OBJS
 ZIP_PROG_VFSSEARCH
 ZIP_PROG_OPTIONS
 ZIP_PROG
+MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
 UNIX_FONT_OBJS
@@ -4401,7 +4402,7 @@ fi
 then :
 
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith -finput-charset=UTF-8"
+	CFLAGS_WARNING="-Wall -Wextra -Wshadow -Wundef -Wwrite-strings -Wpointer-arith"
 	case "${CC}" in
 	    *++|*++-*)
 		;;
@@ -6113,11 +6114,11 @@ then :
 fi
 
 
-	# See if the compiler supports casting to a union type.
-	# This is used to stop gcc from printing a compiler
-	# warning when initializing a union member.
+    # See if the compiler supports casting to a union type.
+    # This is used to stop gcc from printing a compiler
+    # warning when initializing a union member.
 
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for cast to union support" >&5
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for cast to union support" >&5
 printf %s "checking for cast to union support... " >&6; }
 if test ${tcl_cv_cast_to_union+y}
 then :
@@ -6130,8 +6131,8 @@ int
 main (void)
 {
 
-		  union foo { int i; double d; };
-		  union foo f = (union foo) (int) 0;
+		union foo { int i; double d; };
+		union foo f = (union foo) (int) 0;
 
   ;
   return 0;
@@ -6148,13 +6149,13 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cast_to_union" >&5
 printf "%s\n" "$tcl_cv_cast_to_union" >&6; }
-	if test "$tcl_cv_cast_to_union" = "yes"; then
+    if test "$tcl_cv_cast_to_union" = "yes"; then
 
 printf "%s\n" "#define HAVE_CAST_TO_UNION 1" >>confdefs.h
 
-	fi
-	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working -fno-lto" >&5
+    fi
+    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working -fno-lto" >&5
 printf %s "checking for working -fno-lto... " >&6; }
 if test ${ac_cv_nolto+y}
 then :
@@ -6182,12 +6183,45 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_nolto" >&5
 printf "%s\n" "$ac_cv_nolto" >&6; }
+    CFLAGS=$hold_cflags
+    if test "$ac_cv_nolto" = "yes" ; then
+	CFLAGS_NOLTO="-fno-lto"
+    else
+	CFLAGS_NOLTO=""
+    fi
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if the compiler understands -finput-charset" >&5
+printf %s "checking if the compiler understands -finput-charset... " >&6; }
+if test ${tcl_cv_cc_input_charset+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -finput-charset=UTF-8"
+	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  tcl_cv_cc_input_charset=yes
+else $as_nop
+  tcl_cv_cc_input_charset=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 	CFLAGS=$hold_cflags
-	if test "$ac_cv_nolto" = "yes" ; then
-	    CFLAGS_NOLTO="-fno-lto"
-	else
-	    CFLAGS_NOLTO=""
-	fi
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cc_input_charset" >&5
+printf "%s\n" "$tcl_cv_cc_input_charset" >&6; }
+    if test $tcl_cv_cc_input_charset = yes; then
+	CFLAGS="$CFLAGS -finput-charset=UTF-8"
+    fi
 
     ac_fn_c_check_header_compile "$LINENO" "stdbool.h" "ac_cv_header_stdbool_h" "$ac_includes_default"
 if test "x$ac_cv_header_stdbool_h" = xyes
@@ -8752,11 +8786,41 @@ printf "%s\n" "$bfd_cv_build_exeext" >&6; }
     # Find a native zip implementation
     #
 
+    MACHER_PROG=""
     ZIP_PROG=""
     ZIP_PROG_OPTIONS=""
     ZIP_PROG_VFSSEARCH=""
     ZIP_INSTALL_OBJS=""
 
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for macher" >&5
+printf %s "checking for macher... " >&6; }
+    if test ${ac_cv_path_macher+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+    search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+    for dir in $search_path ; do
+        for j in `ls -r $dir/macher 2> /dev/null` \
+            `ls -r $dir/macher 2> /dev/null` ; do
+        if test x"$ac_cv_path_macher" = x ; then
+            if test -f "$j" ; then
+            ac_cv_path_macher=$j
+            break
+            fi
+        fi
+        done
+    done
+
+fi
+
+    if test -f "$ac_cv_path_macher" ; then
+        MACHER_PROG="$ac_cv_path_macher"
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $MACHER_PROG" >&5
+printf "%s\n" "$MACHER_PROG" >&6; }
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found macher in environment" >&5
+printf "%s\n" "Found macher in environment" >&6; }
+    fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for zip" >&5
 printf %s "checking for zip... " >&6; }
     if test ${ac_cv_path_zip+y}
@@ -8803,8 +8867,9 @@ printf "%s\n" "No zip found on PATH. Building minizip" >&6; }
 
 
 
+
 	ZIPFS_BUILD=1
-	TK_ZIP_FILE=libtk_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
 else
 	ZIPFS_BUILD=0
 	TK_ZIP_FILE=
@@ -8818,14 +8883,14 @@ if test "${ZIPFS_BUILD}" = 1; then
 
 printf "%s\n" "#define ZIPFS_BUILD 2" >>confdefs.h
 
-       INSTALL_LIBRARIES=install-libraries-zipfs-static
+       INSTALL_LIBRARIES=install-demos
        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
      else
 
 printf "%s\n" "#define ZIPFS_BUILD 1" >>confdefs.h
 \
-       INSTALL_LIBRARIES=install-libraries-zipfs-shared
+       INSTALL_LIBRARIES=install-demos
        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
     fi
