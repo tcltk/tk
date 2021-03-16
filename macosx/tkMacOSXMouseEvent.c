@@ -333,7 +333,7 @@ enum {
 	xEvent.xany.window = Tk_WindowId(target);
 
 #define WHEEL_DELTA 120
-#define WHEEL_DELAY 1500000
+#define WHEEL_DELAY 1500000000
 	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
 	if (wheelTick - tsdPtr->wheelTickPrev >= WHEEL_DELAY) {
 	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
@@ -345,7 +345,7 @@ enum {
 	    if (fabs(tsdPtr->vWheelAcc) >= 1.0) {
 		xEvent.xbutton.state = state;
 		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
-	    tsdPtr->vWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
+		tsdPtr->vWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
@@ -356,7 +356,7 @@ enum {
 	    if (fabs(tsdPtr->hWheelAcc) >= 1.0) {
 		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
-	    tsdPtr->hWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
+		tsdPtr->hWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
