@@ -14846,7 +14846,7 @@ DrawChars(
 	GC fgGC;
 
 	string = Tcl_DStringValue(&baseChunkPtr->baseChars);
-	ciPtr = chunkPtr->clientData;
+	ciPtr = (const CharInfo *)chunkPtr->clientData;
 	start = ciPtr->baseOffset + offsetBytes;
 	len = ciPtr->numBytes - offsetBytes;
 
@@ -14858,7 +14858,7 @@ DrawChars(
 
 	stylePtr = chunkPtr->stylePtr;
 	sValuePtr = stylePtr->sValuePtr;
-	ciPtr = chunkPtr->clientData;
+	ciPtr = (const CharInfo *)chunkPtr->clientData;
 	xDisplacement = x - chunkPtr->x;
 	fgGC = GetForegroundGC(textPtr, chunkPtr);
 

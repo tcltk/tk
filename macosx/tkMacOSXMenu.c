@@ -189,6 +189,34 @@ TKBackgroundLoop *backgroundLoop = nil;
 {
     return (_tkSpecial == special);
 }
+
+/*
+ * There are cases where a KeyEquivalent (aka menu accelerator) is defined for
+ * a "dead key", i.e. a key which does not have an associated character but is
+ * only meant to be the start of a composition sequence.  For example, on a
+ * Spanish keyboard both the ' and the ` keys are dead keys used to place
+ * accents over letters.  But ⌘` is a standard KeyEquivalent which cycles
+ * through the open windows of an application, changing the focus to the next
+ * window.
+ *
+ * The performKeyEquivalent callback method is being overridden here to work
+ * around a bug reported in [1626ed65b8].  When a dead key that is also as a
+ * KeyEquivalent is pressed, a KeyDown event with no characters is passed to
+ * performKeyEquivalent.  The default implementation provided by Apple will
+ * cause that event to be routed to some private methods of NSMenu which raise
+ * NSInvalidArgumentException, causing an abort. Returning NO in such a case
+ * prevents the abort, but does not prevent the KeyEquivalent action from being
+ * invoked, presumably because the event does get correctly handled higher in
+ * the responder chain.
+ */
+
+- (BOOL)performKeyEquivalent:(NSEvent *)event
+{
+    if (event.characters.length == 0) {
+	return NO;
+    }
+    return [super performKeyEquivalent:event];
+}
 @end
 
 @implementation TKMenu(TKMenuPrivate)
@@ -233,7 +261,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (TkMenu *) tkMenu
 {
-    return _tkMenu;
+    return (TkMenu *)_tkMenu;
 }
 
 - (int) tkIndexOfItem: (NSMenuItem *) menuItem
@@ -410,7 +438,7 @@ TKBackgroundLoop *backgroundLoop = nil;
     (void)menu;
 
     if (_tkMenu) {
-	RecursivelyClearActiveMenu(_tkMenu);
+	RecursivelyClearActiveMenu((TkMenu *)_tkMenu);
     }
 }
 
@@ -434,7 +462,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 	Tcl_Preserve(interp);
 	Tcl_Preserve(menuPtr);
 
-	int result = TkPostCommand(_tkMenu);
+	int result = TkPostCommand(menuPtr);
 
 	if (result!=TCL_OK && result!=TCL_CONTINUE && result!=TCL_BREAK) {
 	      Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
@@ -699,7 +727,7 @@ TkpConfigureMenuEntry(
     	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
-    } else if (mePtr->bitmapPtr != None) {
+    } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
 		mePtr->bitmapPtr);
 

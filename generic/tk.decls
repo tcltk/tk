@@ -1091,6 +1091,12 @@ declare 279 {
     Tcl_Obj *Tk_FontGetDescription(Tk_Font tkfont)
 }
 
+# TIP#529
+declare 280 {
+    void Tk_CreatePhotoImageFormatVersion3(
+	    const Tk_PhotoImageFormatVersion3 *formatPtr)
+}
+
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
 
