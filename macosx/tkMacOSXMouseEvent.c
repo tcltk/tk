@@ -341,8 +341,8 @@ enum {
 	tsdPtr->wheelTickPrev = wheelTick;
 	delta = [theEvent scrollingDeltaY];
 	if (delta != 0.0) {
-	    tsdPtr->vWheelAcc += delta;
-	    if (fabs(tsdPtr->vWheelAcc) >= 1.0) {
+	    delta = tsdPtr->vWheelAcc += delta;
+	    if (fabs(delta) >= 1.0) {
 		xEvent.xbutton.state = state;
 		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
 		tsdPtr->vWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
@@ -352,8 +352,8 @@ enum {
 	}
 	delta = [theEvent scrollingDeltaX];
 	if (delta != 0.0) {
-	    tsdPtr->hWheelAcc += delta;
-	    if (fabs(tsdPtr->hWheelAcc) >= 1.0) {
+	    delta = tsdPtr->hWheelAcc += delta;
+	    if (fabs(delta) >= 1.0) {
 		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
 		tsdPtr->hWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
