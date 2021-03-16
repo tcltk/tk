@@ -25,6 +25,13 @@ typedef struct {
     Point local;
 } MouseEventData;
 
+typedef struct {
+    uint64_t wheelTickPrev;	/* For high resolution wheels. */
+    double vWheelAcc;		/* For high resolution wheels (vertical). */
+    double hWheelAcc;		/* For high resolution wheels (horizontal). */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
+
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
@@ -309,6 +316,8 @@ enum {
     } else {
 	CGFloat delta;
 	XEvent xEvent;
+	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
@@ -323,25 +332,34 @@ enum {
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
 
+#define WHEEL_DELTA 120
+#define WHEEL_DELAY 1500000
+	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
+	if (wheelTick - tsdPtr->wheelTickPrev >= WHEEL_DELAY) {
+	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
+	}
+	tsdPtr->wheelTickPrev = wheelTick;
 	delta = [theEvent scrollingDeltaY];
 	if (delta != 0.0) {
-	    if (![theEvent hasPreciseScrollingDeltas]) {
-		delta *= 120;
+	    tsdPtr->vWheelAcc += delta;
+	    if (fabs(tsdPtr->vWheelAcc) >= 1.0) {
+		xEvent.xbutton.state = state;
+		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
+	    tsdPtr->vWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	    xEvent.xbutton.state = state;
-	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
 	delta = [theEvent scrollingDeltaX];
 	if (delta != 0.0) {
-	    if (![theEvent hasPreciseScrollingDeltas]) {
-		delta *= 120;
+	    tsdPtr->hWheelAcc += delta;
+	    if (fabs(tsdPtr->hWheelAcc) >= 1.0) {
+		xEvent.xbutton.state = state | ShiftMask;
+		xEvent.xkey.keycode = WHEEL_DELTA * ((delta > 0) ? ceil(delta) : floor(delta));
+	    tsdPtr->hWheelAcc -= (int)xEvent.xkey.keycode / WHEEL_DELTA;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	    xEvent.xbutton.state = state | ShiftMask;
-	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
     }
     return theEvent;
