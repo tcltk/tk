@@ -1417,14 +1417,13 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 # define c_class class
 #endif
 
-#if TCL_UTF_MAX > 4
+/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
+#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
 #   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
 #   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
-#   define TkUtfPrev Tcl_UtfPrev
 #else
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
-    MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
 #endif
 
 #if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
