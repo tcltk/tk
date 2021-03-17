@@ -333,15 +333,19 @@ enum {
 	xEvent.xany.window = Tk_WindowId(target);
 
 #define WHEEL_DELTA 120
-#define WHEEL_DELAY 1500000000
+#define WHEEL_DELAY 300000000
 	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
-	if (wheelTick - tsdPtr->wheelTickPrev >= WHEEL_DELAY) {
+	int timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
+	if (timeout) {
 	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
 	}
 	tsdPtr->wheelTickPrev = wheelTick;
 	delta = [theEvent deltaY];
 	if (delta != 0.0) {
 	    delta = (tsdPtr->vWheelAcc += delta);
+	    if (timeout && fabs(delta) < 1.0) {
+		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	    }
 	    if (fabs(delta) >= 0.6) {
 		xEvent.xbutton.state = state;
 		xEvent.xkey.keycode = WHEEL_DELTA * round(delta);
@@ -353,6 +357,9 @@ enum {
 	delta = [theEvent deltaX];
 	if (delta != 0.0) {
 	    delta = (tsdPtr->hWheelAcc += delta);
+	    if (timeout && fabs(delta) < 1.0) {
+		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	    }
 	    if (fabs(delta) >= 0.6) {
 		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = WHEEL_DELTA * round(delta);
