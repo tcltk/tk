@@ -1600,7 +1600,7 @@ test textTag-16.1 {TkTextPickCurrent procedure} -constraints {
     event gen .t <ButtonRelease-1> -state 0x100 -x $x3 -y $y3
     lappend x [.t index current]
 } -result {2.1 3.2 3.2 3.2 3.2 3.2 4.3}
-
+ 
 test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
     haveCourier12 failsOnUbuntuNoXft
 } -setup {
