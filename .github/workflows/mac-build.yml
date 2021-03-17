@@ -137,8 +137,6 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
-        env:
-          MAC_CI: 1
       - name: Carry out trial installation
         run: |
           make install || {
