@@ -616,8 +616,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand(interp, "startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "endOfCluster", endOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*
