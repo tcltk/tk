@@ -701,7 +701,7 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
-    Tcl_CmdInfo *tclUpdateCmdPtr;
+    Tcl_ObjCmdProc *tclUpdateObjProc;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
@@ -1262,9 +1262,6 @@ MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SpinboxObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,

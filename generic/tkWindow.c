@@ -877,7 +877,7 @@ TkCreateMainWindow(
     Tcl_InitHashTable(&mainPtr->imageTable, TCL_STRING_KEYS);
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
-    mainPtr->tclUpdateCmdPtr = NULL;
+    mainPtr->tclUpdateObjProc = NULL;
     if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
@@ -940,10 +940,8 @@ TkCreateMainWindow(
 	}
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
-	    cmdInfo.isNativeObjectProc &&
-	    mainPtr->tclUpdateCmdPtr == NULL) {
-	    mainPtr->tclUpdateCmdPtr = ckalloc(sizeof (Tcl_CmdInfo));
-	    *mainPtr->tclUpdateCmdPtr = cmdInfo;
+	    cmdInfo.isNativeObjectProc) {
+	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -1510,11 +1508,11 @@ Tk_DestroyWindow(
 		!Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
 		    if ((cmdPtr->flags & SAVEUPDATECMD) &&
-			winPtr->mainPtr->tclUpdateCmdPtr != NULL) {
+			winPtr->mainPtr->tclUpdateObjProc != NULL) {
 			/* Restore Tcl's version of [update] */
 			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
 					     cmdPtr->name,
-					     winPtr->mainPtr->tclUpdateCmdPtr->objProc,
+					     winPtr->mainPtr->tclUpdateObjProc,
 					     NULL, NULL);
 		    } else {
 			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
@@ -1546,9 +1544,6 @@ Tk_DestroyWindow(
 
 	    if (winPtr->flags & TK_EMBEDDED) {
 		XSync(winPtr->display, False);
-	    }
-	    if (winPtr->mainPtr->tclUpdateCmdPtr) {
-		ckfree(winPtr->mainPtr->tclUpdateCmdPtr);
 	    }
 	    ckfree(winPtr->mainPtr);
 
