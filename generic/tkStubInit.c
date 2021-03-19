@@ -1332,6 +1332,7 @@ const TkStubs tkStubs = {
     Tk_NewWindowObj, /* 277 */
     Tk_SendVirtualEvent, /* 278 */
     Tk_FontGetDescription, /* 279 */
+    Tk_CreatePhotoImageFormatVersion3 /* 280 */
 };
 
 /* !END!: Do not edit above this line. */

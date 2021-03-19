@@ -101,6 +101,16 @@ Specifies the height of the image, in pixels.  This option is useful
 primarily in situations where the user wishes to build up the contents
 of the image piece by piece.  A value of zero (the default) allows the
 image to expand or shrink vertically to fit the data stored in it.
+.VS 8.7
+.TP
+\fB\-metadata \fImetadata\fR
+.
+Set the metadata dictionary of the image.
+Additional keys may be set within the metadata dictionary of the image,
+if image data is processed due to a \fB\-file\fR or \fB\-data\fR options
+and the driver outputs any metadata keys.
+See section \fBMETADATA DICTIONARY\fR below.
+.VE 8.7
 .TP
 \fB\-palette \fIpalette-spec\fR
 .
@@ -146,7 +156,7 @@ The following commands are possible for photo images:
 .
 Blank the image; that is, set the entire image to have no data, so it
 will be displayed as transparent, and the background of whatever
-window it is displayed in will show through.
+window it is displayed in will show through. The metadata dict of the image is not changed.
 .TP
 \fIimageName \fBcget\fR \fIoption\fR
 .
@@ -169,6 +179,10 @@ modifies the given option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the
 \fBimage create\fR \fBphoto\fR command.
+.VS 8.7
+Note: setting the \fB\-metadata\fR option without any other option
+will not invoke the image format driver to recreate the bitmap.
+.VE 8.7
 .TP
 \fIimageName \fBcopy\fR \fIsourceImage\fR ?\fIoption value(s) ...\fR?
 .
@@ -287,9 +301,18 @@ whole image.
 .
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
-.RE
 .VS 8.7
 .TP
+\fB\-metadata\fR \fImetadata\fR
+.
+Image format handler may use metadata to be included in the returned
+data string.
+The specified \fImetadata\fR is passed to the driver for inclusion in the
+data.
+If no \fB\-metadata\fR option is given, the current metadata of the
+image is used.
+.VE 8.7
+.RE
 \fIimageName \fBget\fR \fIx y\fR ?\fB-withalpha\fR?
 .
 Returns the color of the pixel at coordinates (\fIx\fR,\fIy\fR) in the
@@ -322,6 +345,15 @@ format handler to read the data.
 Note: the value of this option must be a Tcl list.
 This means that the braces may be omitted if the argument has only one
 word. Also, instead of braces, double quotes may be used for quoting.
+.VS 8.7
+.TP
+\fB\-metadata\fR \fImetadata\fR
+.
+A specified \fImetadata\fR is passed to the image format driver when interpreting
+the data.
+Note: The current metadata of the image is not passed to the format driver
+and is not changed by the command.
+.VE 8.7
 .TP
 \fB\-to \fIx1 y1\fR ?\fIx2 y2\fR?
 .
@@ -367,6 +399,15 @@ corner of the image in the image file.  If all four coordinates are
 specified, they specify diagonally opposite corners or the region.
 The default, if this option is not specified, is the whole of the
 image in the image file.
+.VS 8.7
+.TP
+\fB\-metadata\fR \fImetadata\fR
+.
+A specified \fImetadata\fR is passed to the image format driver when interpreting
+the data.
+Note: The current metadata of the image is not passed to the format driver
+and is not changed by the command.
+.VE 8.7
 .TP
 \fB\-shrink\fR
 .
@@ -460,6 +501,16 @@ if this option is not given, is the whole image.
 .
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
+.VS 8.7
+.TP
+\fB\-metadata\fR \fBmetadata\fR
+.
+Image format handler may use metadata to be included in the written file.
+The specified \fImetadata\fR is passed to the driver for inclusion in the
+file.
+If no \fB\-metadata\fR option is given, the current metadata of the
+image is used.
+.VE 8.7
 .RE
 .SH "IMAGE FORMATS"
 .PP
@@ -682,6 +733,39 @@ each primary color to try to allocate.  It can also be used to force
 the image to be displayed in shades of gray, even on a color display,
 by giving a single number rather than three numbers separated by
 slashes.
+.VS 8.7
+.SH "METADATA DICTIONARY"
+.PP
+Each image has a metadata dictionary property.
+This dictionary is not relevant to the bitmap representation of the
+image, but may contain additional information like resolution or
+comments.
+Image format drivers may output metadata when image data is
+parsed, or may use metadata to be included in image files or formats.
+.SS "METADATA KEYS"
+.PP
+Each image format driver supports an individual set of metadata dictionary
+keys. Predefined keys are:
+.TP
+DPI
+.
+Horizontal image resolution in DPI as a double value.
+Supported by format \fBpng\fR.
+.TP
+aspect
+.
+Aspect ratio horizontal divided by vertical as double value.
+Supported by formats \fBgif\fR and \fBpng\fR.
+.TP
+comment
+.
+Image text comment.
+Supported by formats \fBgif\fR and \fBpng\fR.
+.PP
+It is valid to set any key in the metadata dict.
+A format driver will ignore keys it does not handle.
+.PP
+.VE 8.7
 .SH CREDITS
 .PP
 The photo image type was designed and implemented by Paul Mackerras,
