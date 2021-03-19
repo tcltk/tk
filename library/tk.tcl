@@ -701,14 +701,7 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-if {[tk windowingsystem] eq "aqua"} {
-    namespace eval :: {
-	namespace export endOfCluster startOfCluster
-    }
-    namespace eval ::tk:: {
-	namespace import ::endOfCluster ::startOfCluster
-    }
-} else {
+if {[info commands ::tk::endOfCluster] eq ""} {
     proc ::tk::endOfCluster {str start} {
 	if {$start >= [string length $str]} {
 	    return -1;
@@ -722,6 +715,8 @@ if {[tk windowingsystem] eq "aqua"} {
 	}
 	return $start
     }
+}
+if {[info commands ::tk::startOfCluster] eq ""} {
     proc ::tk::startOfCluster {str start} {
 	if {$start eq "end"} {
 	    set start [expr {[string length $str]-1}]
