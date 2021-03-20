@@ -636,14 +636,6 @@ proc ::tk::EntryPreviousChar {w start} {
     return $pos
 }
 
-proc ::tk::EntryInsertChar {w start} {
-    set pos [::tk::endOfCluster [$w get] [$w index $start]]
-    if {$pos < 0} {
-	return end
-    }
-    return $pos
-}
-
 
 # ::tk::EntryScanMark --
 #
