@@ -363,7 +363,7 @@ enum {
 	    }
 	    if (fabs(delta) >= 0.6) {
 	    int intDelta = round(delta);
-		xEvent.xbutton.state = state ^ ShiftMask;
+		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
 		tsdPtr->hWheelAcc -= intDelta;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
