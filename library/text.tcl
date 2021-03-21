@@ -99,10 +99,10 @@ bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert ::tk::startOfCluster]
+    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfCluster]
 }
 bind Text <<NextChar>> {
-    tk::TextSetCursor %W [tk::TextNextPos %W insert ::tk::endOfCluster]
+    tk::TextSetCursor %W [tk::TextNextPos %W insert tk::endOfCluster]
 }
 bind Text <<PrevLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W -1]
@@ -111,10 +111,10 @@ bind Text <<NextLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<SelectPrevChar>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert ::tk::startOfCluster]
+    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfCluster]
 }
 bind Text <<SelectNextChar>> {
-    tk::TextKeySelect %W [tk::TextNextPos %W insert ::tk::endOfCluster]
+    tk::TextKeySelect %W [tk::TextNextPos %W insert tk::endOfCluster]
 }
 bind Text <<SelectPrevLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
@@ -123,7 +123,7 @@ bind Text <<SelectNextLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
 }
 bind Text <<NextWord>> {
     tk::TextSetCursor %W [tk::TextNextWord %W insert]
@@ -135,7 +135,7 @@ bind Text <<NextPara>> {
     tk::TextSetCursor %W [tk::TextNextPara %W insert]
 }
 bind Text <<SelectPrevWord>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
 }
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextNextWord %W insert]
@@ -222,7 +222,8 @@ bind Text <Delete> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare end != insert+1c]} {
-	    %W delete [tk::TextPrevPos %W insert+1c ::tk::startOfCluster] [tk::TextNextPos %W insert ::tk::endOfCluster]
+	    %W delete [tk::TextPrevPos %W insert+1c tk::startOfCluster] \
+		    [tk::TextNextPos %W insert tk::endOfCluster]
 	}
 	%W see insert
     }
@@ -232,7 +233,8 @@ bind Text <BackSpace> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare insert != 1.0]} {
-	    %W delete [tk::TextPrevPos %W insert ::tk::startOfCluster] [tk::TextNextPos %W insert-1c ::tk::endOfCluster]
+	    %W delete [tk::TextPrevPos %W insert tk::startOfCluster] \
+		    [tk::TextNextPos %W insert-1c tk::endOfCluster]
 	}
 	%W see insert
     }
@@ -355,7 +357,7 @@ bind Text <<Redo>> {
 
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+	tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
     }
 }
 bind Text <Meta-d> {
@@ -380,12 +382,12 @@ bind Text <Meta-greater> {
 }
 bind Text <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
+	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
     }
 }
 bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
+	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
     }
 }
 
@@ -1067,12 +1069,12 @@ proc ::tk_textPaste w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::TextNextWord {w start} {
-	TextNextPos $w [TextNextPos $w $start tcl_endOfWord] \
-		tcl_startOfNextWord
+	TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
+		tk::startOfNextWord
     }
 } else {
     proc ::tk::TextNextWord {w start} {
-	TextNextPos $w $start tcl_endOfWord
+	TextNextPos $w $start tk::endOfWord
     }
 }
 

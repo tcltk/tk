@@ -462,8 +462,8 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     int numBytes;
-    Tcl_WideInt indexArg;
-    Tcl_WideInt result;
+    TkSizeT indexArg;
+    TkSizeT result;
     if ((objc != 3)) {
         Tcl_WrongNumArgs(interp, 1, objv, "string index");
         return TCL_ERROR;
@@ -472,16 +472,20 @@ startOfClusterObjCmd(
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
-    if (Tcl_GetWideIntFromObj(interp, objv[2], &indexArg) != TCL_OK) {
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &indexArg) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer or end",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
     if ((unsigned long long) indexArg >= [S length]) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj([S length]));
 	return TCL_OK;
     }
     result = indexArg >= 0 ? [S startOfCluster:indexArg] : -1;
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+    Tcl_SetObjResult(interp, TkNewIndexObj(result));
     return TCL_OK;
 }
 
@@ -495,8 +499,8 @@ endOfClusterObjCmd(
     TKNSString *S;
     char *stringArg;
     int numBytes;
-    Tcl_WideInt indexArg;
-    Tcl_WideInt result;
+    TkSizeT indexArg;
+    TkSizeT result;
 
     if ((objc != 3)) {
         Tcl_WrongNumArgs(interp, 1, objv, "string index");
@@ -506,17 +510,21 @@ endOfClusterObjCmd(
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
-    if (Tcl_GetWideIntFromObj(interp, objv[2], &indexArg) != TCL_OK) {
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &indexArg) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer or end",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
     if (indexArg < 0) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
 	return TCL_OK;
     }
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
     result = (unsigned long long) indexArg < [S length] ?
 	[S endOfCluster:indexArg] : [S length];
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+    Tcl_SetObjResult(interp, TkNewIndexObj(result));
     return TCL_OK;
 }
 
