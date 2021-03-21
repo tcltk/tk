@@ -701,6 +701,21 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+if {[info commands ::tk::endOfWord] eq ""} {
+    proc ::tk::endOfWord {str start} {
+	return [tcl_endOfWord $str $start]
+    }
+}
+if {[info commands ::tk::startOfNextWord] eq ""} {
+    proc ::tk::startOfNextWord {str start} {
+	return [tcl_startOfNextWord $str $start]
+    }
+}
+if {[info commands ::tk::startOfPreviousWord] eq ""} {
+    proc ::tk::startOfPreviousWord {str start} {
+	return [tcl_startOfPreviousWord $str $start]
+    }
+}
 if {[info commands ::tk::endOfCluster] eq ""} {
     proc ::tk::endOfCluster {str start} {
 	if {$start >= [string length $str]} {

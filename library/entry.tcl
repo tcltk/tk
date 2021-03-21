@@ -165,7 +165,8 @@ bind Entry <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete [::tk::startOfCluster [%W get] [%W index insert]] [::tk::endOfCluster [%W get] [%W index insert]]
+	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
+		[tk::endOfCluster [%W get] [%W index insert]]
     }
 }
 bind Entry <BackSpace> {
@@ -505,8 +506,8 @@ proc ::tk::EntryBackspace w {
     } else {
 	set x [expr {[$w index insert] - 1}]
 	if {$x >= 0} {
-	    $w delete [::tk::startOfCluster [$w get] $x] \
-		      [::tk::endOfCluster [$w get] $x]
+	    $w delete [tk::startOfCluster [$w get] $x] \
+		      [tk::endOfCluster [$w get] $x]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -584,9 +585,9 @@ proc ::tk::EntryTranspose w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
+	set pos [tk::endOfWord [$w get] [$w index $start]]
 	if {$pos >= 0} {
-	    set pos [tcl_startOfNextWord [$w get] $pos]
+	    set pos [tk::startOfNextWord [$w get] $pos]
 	}
 	if {$pos < 0} {
 	    return end
@@ -595,7 +596,7 @@ if {[tk windowingsystem] eq "win32"}  {
     }
 } else {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
+	set pos [tk::endOfWord [$w get] [$w index $start]]
 	if {$pos < 0} {
 	    return end
 	}
@@ -613,7 +614,7 @@ if {[tk windowingsystem] eq "win32"}  {
 # start -	Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
-    set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return 0
     }
@@ -621,7 +622,7 @@ proc ::tk::EntryPreviousWord {w start} {
 }
 
 proc ::tk::EntryNextChar {w start} {
-    set pos [::tk::endOfCluster [$w get] [$w index $start]]
+    set pos [tk::endOfCluster [$w get] [$w index $start]]
     if {$pos < 0} {
 	return end
     }
@@ -629,7 +630,7 @@ proc ::tk::EntryNextChar {w start} {
 }
 
 proc ::tk::EntryPreviousChar {w start} {
-    set pos [::tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
     if {$pos < 0} {
 	return 0
     }

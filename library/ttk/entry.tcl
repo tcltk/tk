@@ -244,9 +244,9 @@ set ::ttk::entry::State(startNext) \
 
 proc ttk::entry::NextWord {w start} {
     variable State
-    set pos [tcl_endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start]]
     if {$pos >= 0 && $State(startNext)} {
-	set pos [tcl_startOfNextWord [$w get] $pos]
+	set pos [tk::startOfNextWord [$w get] $pos]
     }
     if {$pos < 0} {
 	return end
@@ -257,7 +257,7 @@ proc ttk::entry::NextWord {w start} {
 ## PrevWord -- Find the previous word position.
 #
 proc ttk::entry::PrevWord {w start} {
-    set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return 0
     }
@@ -268,17 +268,17 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::NextChar {w start} {
     variable State
-    set pos [::tk::endOfCluster [$w get] [$w index $start]]
+    set pos [tk::endOfCluster [$w get] [$w index $start]]
     if {$pos < 0} {
 	return end
     }
     return $pos
 }
 
-## PrevChar -- Find the previous word position.
+## PrevChar -- Find the previous char position.
 #
 proc ttk::entry::PrevChar {w start} {
-    set pos [::tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
     if {$pos < 0} {
 	return 0
     }
@@ -621,7 +621,7 @@ proc ttk::entry::Backspace {w} {
     set x [expr {[$w index insert] - 1}]
     if {$x < 0} { return }
 
-    $w delete [::tk::startOfCluster [$w get] $x] [::tk::endOfCluster [$w get] $x]
+    $w delete [tk::startOfCluster [$w get] $x] [tk::endOfCluster [$w get] $x]
 
     if {[$w index @0] >= [$w index insert]} {
 	set range [$w xview]
@@ -636,7 +636,8 @@ proc ttk::entry::Backspace {w} {
 #
 proc ttk::entry::Delete {w} {
     if {![PendingDelete $w]} {
-	$w delete [::tk::startOfCluster [$w get] [$w index insert]] [::tk::endOfCluster [$w get] [$w index insert]]
+	$w delete [tk::startOfCluster [$w get] [$w index insert]] \
+		[tk::endOfCluster [$w get] [$w index insert]]
     }
 }
 
