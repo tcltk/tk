@@ -1609,6 +1609,8 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
     event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
 } -body {
     .t tag configure big -font $bigFont
+    # update needed here to stabilize the test
+    update
     event gen .t <ButtonRelease-1> -state 0x100 -x $x1 -y $y1
     event gen .t <Motion> -x $x2 -y $y2
     set x [.t index current]
