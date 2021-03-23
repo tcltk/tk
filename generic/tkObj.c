@@ -929,10 +929,10 @@ SetWindowFromAny(
 
 static void
 DupWindowInternalRep(
-    register Tcl_Obj *srcPtr,
-    register Tcl_Obj *copyPtr)
+    Tcl_Obj *srcPtr,
+    Tcl_Obj *copyPtr)
 {
-    register WindowRep *oldPtr, *newPtr;
+    WindowRep *oldPtr, *newPtr;
 
     oldPtr = srcPtr->internalRep.twoPtrValue.ptr1;
     newPtr = ckalloc(sizeof(WindowRep));
