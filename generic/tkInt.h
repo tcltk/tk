@@ -1431,6 +1431,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #   define tcl_CreateFileHandler reserved9
 #endif
 
+MODULE_SCOPE  int       Icu_Init(Tcl_Interp* interp);
+
 /*
  * Unsupported commands.
  */

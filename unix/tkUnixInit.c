@@ -43,6 +43,7 @@ TkpInit(
     GetLibraryPath(interp);
     Tktray_Init(interp);
     (void)SysNotify_Init (interp);
+    Icu_Init(interp);
     return TCL_OK;
 }
 
