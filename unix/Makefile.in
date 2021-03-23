@@ -389,7 +389,7 @@ STUB_OBJS = tkStubInit.o
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
 X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
-	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
+	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
@@ -507,7 +507,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixCursor.c \
 	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
-	$(UNIX_DIR)/tkUnixFocus.c \
+	$(UNIX_DIR)/tkUnixFocus.c $(GENERIC_DIR)/tkIcu.c \
 	$(UNIX_DIR)/tkUnixRFont.c \
 	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
 	$(UNIX_DIR)/tkUnixKey.c \
@@ -1295,6 +1295,9 @@ tkUnixEmbed.o: $(UNIX_DIR)/tkUnixEmbed.c
 
 tkUnixEvent.o: $(UNIX_DIR)/tkUnixEvent.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixEvent.c
+
+tkIcu.o: $(GENERIC_DIR)/tkIcu.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIcu.c
 
 tkUnixFocus.o: $(UNIX_DIR)/tkUnixFocus.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixFocus.c
