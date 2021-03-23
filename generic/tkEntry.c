@@ -477,7 +477,7 @@ Tk_EntryObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register Entry *entryPtr;
+    Entry *entryPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
     char *tmp;
@@ -3234,11 +3234,11 @@ EntryTextVarProc(
 
 static int
 EntryValidate(
-     register Entry *entryPtr,	/* Entry that needs validation. */
-     register char *cmd)	/* Validation command (NULL-terminated
+     Entry *entryPtr,	/* Entry that needs validation. */
+     char *cmd)	/* Validation command (NULL-terminated
 				 * string). */
 {
-    register Tcl_Interp *interp = entryPtr->interp;
+    Tcl_Interp *interp = entryPtr->interp;
     int code, isOK;
 
     code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
@@ -3294,7 +3294,7 @@ EntryValidate(
 
 static int
 EntryValidateChange(
-     register Entry *entryPtr,	/* Entry that needs validation. */
+     Entry *entryPtr,	/* Entry that needs validation. */
      const char *change,	/* Characters to be added/deleted
 				 * (NUL-terminated string). */
      const char *newValue,	/* Potential new value of entry string */
@@ -3437,8 +3437,8 @@ EntryValidateChange(
 
 static void
 ExpandPercents(
-     register Entry *entryPtr,	/* Entry that needs validation. */
-     register const char *before,
+     Entry *entryPtr,	/* Entry that needs validation. */
+     const char *before,
 				/* Command containing percent expressions to
 				 * be replaced. */
      const char *change,	/* Characters to added/deleted (NUL-terminated
@@ -3452,7 +3452,7 @@ ExpandPercents(
     int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, length;
-    register const char *string;
+    const char *string;
     int ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
@@ -3607,8 +3607,8 @@ Tk_SpinboxObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register Entry *entryPtr;
-    register Spinbox *sbPtr;
+    Entry *entryPtr;
+    Spinbox *sbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
     char *tmp;
@@ -4285,8 +4285,8 @@ GetSpinboxElement(
 
 static int
 SpinboxInvoke(
-    register Tcl_Interp *interp,/* Current interpreter. */
-    register Spinbox *sbPtr,	/* Spinbox to invoke. */
+    Tcl_Interp *interp,/* Current interpreter. */
+    Spinbox *sbPtr,	/* Spinbox to invoke. */
     int element)		/* Element to invoke, either the "up" or
 				 * "down" button. */
 {

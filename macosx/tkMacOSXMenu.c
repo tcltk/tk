@@ -201,7 +201,7 @@ TKBackgroundLoop *backgroundLoop = nil;
  * accents over letters.  But ⌘` is a standard KeyEquivalent which cycles
  * through the open windows of an application, changing the focus to the next
  * window.
- * 
+ *
  * The performKeyEquivalent callback method is being overridden here to work
  * around a bug reported in [1626ed65b8].  When a dead key that is also as a
  * KeyEquivalent is pressed, a KeyDown event with no characters is passed to
