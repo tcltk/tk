@@ -807,7 +807,7 @@ TkFocusKeyEvent(
 
 void
 TkFocusDeadWindow(
-    register TkWindow *winPtr)	/* Information about the window that is being
+    TkWindow *winPtr)	/* Information about the window that is being
 				 * deleted. */
 {
     ToplevelFocusInfo *tlFocusPtr, *prevPtr;
