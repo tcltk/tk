@@ -229,7 +229,7 @@ TkcGetCursor(
 				 * details on legal syntax. */
 {
     Tcl_HashEntry *nameHashPtr;
-    register TkCursor *cursorPtr;
+    TkCursor *cursorPtr;
     TkCursor *existingCursorPtr = NULL;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -320,7 +320,7 @@ Tk_GetCursorFromData(
 {
     DataKey dataKey;
     Tcl_HashEntry *dataHashPtr;
-    register TkCursor *cursorPtr;
+    TkCursor *cursorPtr;
     int isNew;
     XColor fgColor, bgColor;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
