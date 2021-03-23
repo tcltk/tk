@@ -480,7 +480,7 @@ TkTextMakeCharIndex(
     TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
-    int ch;
+    Tcl_UniChar ch = 0;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -527,7 +527,7 @@ TkTextMakeCharIndex(
 		    return indexPtr;
 		}
 		charIndex--;
-		offset = TkUtfToUniChar(p, &ch);
+		offset = Tcl_UtfToUniChar(p, &ch);
 		index += offset;
 	    }
 	} else {
