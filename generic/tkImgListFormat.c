@@ -413,7 +413,7 @@ StringMatchDef(
     if (Tcl_ListObjIndex(interp, rowListPtr[0], 0, &pixelData) != TCL_OK) {
         return 0;
     }
-    if (Tcl_GetCharLength(pixelData) > TK_PHOTO_MAX_COLOR_CHARS) {
+    if (TkNumUtfChars(Tcl_GetString(pixelData), -1) > TK_PHOTO_MAX_COLOR_CHARS) {
         return 0;
     }
     if (ParseColor(interp, pixelData, Tk_Display(Tk_MainWindow(interp)),

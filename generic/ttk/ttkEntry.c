@@ -365,8 +365,8 @@ EntryFetchSelection(
     }
     string = entryPtr->entry.displayString;
 
-    selStart = Tcl_UtfAtIndex(string, entryPtr->entry.selectFirst);
-    selEnd = Tcl_UtfAtIndex(selStart,
+    selStart = TkUtfAtIndex(string, entryPtr->entry.selectFirst);
+    selEnd = TkUtfAtIndex(selStart,
 	    entryPtr->entry.selectLast - entryPtr->entry.selectFirst);
     if (selEnd  <= selStart + offset) {
 	return 0;
@@ -484,11 +484,11 @@ ExpandPercents(
 		break;
 	    case 'S': /* string to be inserted/deleted, if any */
 		if (reason == VALIDATE_INSERT) {
-		    string = Tcl_UtfAtIndex(newValue, index);
-		    stringLength = Tcl_UtfAtIndex(string, count) - string;
+		    string = TkUtfAtIndex(newValue, index);
+		    stringLength = TkUtfAtIndex(string, count) - string;
 		} else if (reason == VALIDATE_DELETE) {
-		    string = Tcl_UtfAtIndex(entryPtr->entry.string, index);
-		    stringLength = Tcl_UtfAtIndex(string, count) - string;
+		    string = TkUtfAtIndex(entryPtr->entry.string, index);
+		    stringLength = TkUtfAtIndex(string, count) - string;
 		} else {
 		    string = "";
 		    stringLength = 0;
@@ -734,7 +734,7 @@ static void
 EntryStoreValue(Entry *entryPtr, const char *value)
 {
     size_t numBytes = strlen(value);
-    TkSizeT numChars = Tcl_NumUtfChars(value, numBytes);
+    TkSizeT numChars = TkNumUtfChars(value, numBytes);
 
     if (entryPtr->core.flags & VALIDATING)
 	entryPtr->core.flags |= VALIDATION_SET_VALUE;
@@ -839,9 +839,9 @@ InsertChars(
     const char *value)		/* New characters to add */
 {
     char *string = entryPtr->entry.string;
-    size_t byteIndex = Tcl_UtfAtIndex(string, index) - string;
+    size_t byteIndex = TkUtfAtIndex(string, index) - string;
     size_t byteCount = strlen(value);
-    int charsAdded = Tcl_NumUtfChars(value, byteCount);
+    int charsAdded = TkNumUtfChars(value, byteCount);
     size_t newByteCount = entryPtr->entry.numBytes + byteCount + 1;
     char *newBytes;
     int code;
@@ -893,8 +893,8 @@ DeleteChars(
 	return TCL_OK;
     }
 
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
-    byteCount = Tcl_UtfAtIndex(string+byteIndex, count) - (string+byteIndex);
+    byteIndex = TkUtfAtIndex(string, index) - string;
+    byteCount = TkUtfAtIndex(string+byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->entry.numBytes + 1 - byteCount;
     newBytes =  (char *)ckalloc(newByteCount);
@@ -1305,10 +1305,10 @@ static void EntryDisplay(void *clientData, Drawable d)
     if ((*(entryPtr->entry.displayString) == '\0')
 		&& (entryPtr->entry.placeholderObj != NULL)) {
 	/* No text displayed, but -placeholder is given */
-	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
+	if (TkNumUtfChars(Tcl_GetString(es.placeholderForegroundObj), -1) > 0) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
-            foregroundObj = es.foregroundObj;
+	    foregroundObj = es.foregroundObj;
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;

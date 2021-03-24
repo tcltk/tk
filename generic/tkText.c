@@ -1466,7 +1466,7 @@ TextWidgetObjCmd(
 
 		insertLength = 0;
 		for (j = 4; j < objc; j += 2) {
-		    insertLength += Tcl_GetCharLength(objv[j]);
+		    insertLength += TkNumUtfChars(Tcl_GetString(objv[j]), -1);
 		}
 
 		/*
@@ -4101,12 +4101,12 @@ TextSearchIndexInLine(
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
 		} else {
-		    index += Tcl_NumUtfChars(segPtr->body.chars, leftToScan);
+		    index += TkNumUtfChars(segPtr->body.chars, leftToScan);
 		}
 	    } else if (searchSpecPtr->exact) {
 		index += segPtr->size;
 	    } else {
-		index += Tcl_NumUtfChars(segPtr->body.chars, -1);
+		index += TkNumUtfChars(segPtr->body.chars, -1);
 	    }
 	}
 	leftToScan -= segPtr->size;
@@ -4231,7 +4231,7 @@ TextSearchAddNextLine(
 	    Tcl_GetString(theLine);
 	    *lenPtr = theLine->length;
 	} else {
-	    *lenPtr = Tcl_GetCharLength(theLine);
+	    *lenPtr = TkNumUtfChars(Tcl_GetString(theLine), -1);
 	}
     }
     return linePtr;
@@ -4301,7 +4301,7 @@ TextSearchFoundMatch(
     if (searchSpecPtr->exact) {
 	const char *startOfLine = Tcl_GetString(theLine);
 
-	numChars = Tcl_NumUtfChars(startOfLine + matchOffset, matchLength);
+	numChars = TkNumUtfChars(startOfLine + matchOffset, matchLength);
     } else {
 	numChars = matchLength;
     }
@@ -4360,13 +4360,13 @@ TextSearchFoundMatch(
 		if (searchSpecPtr->exact) {
 		    matchOffset += segPtr->size;
 		} else {
-		    matchOffset += Tcl_NumUtfChars(segPtr->body.chars, -1);
+		    matchOffset += TkNumUtfChars(segPtr->body.chars, -1);
 		}
 	    } else {
 		if (searchSpecPtr->exact) {
 		    leftToScan -= (int)segPtr->size;
 		} else {
-		    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
+		    leftToScan -= TkNumUtfChars(segPtr->body.chars, -1);
 		}
 	    }
 	    curIndex.byteIndex += segPtr->size;
@@ -4451,13 +4451,13 @@ TextSearchFoundMatch(
 	    continue;
 	} else if (!searchSpecPtr->searchElide
 		&& TkTextIsElided(textPtr, &curIndex, NULL)) {
-	    numChars += Tcl_NumUtfChars(segPtr->body.chars, -1);
+	    numChars += TkNumUtfChars(segPtr->body.chars, -1);
 	    continue;
 	}
 	if (searchSpecPtr->exact) {
 	    leftToScan -= segPtr->size;
 	} else {
-	    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
+	    leftToScan -= TkNumUtfChars(segPtr->body.chars, -1);
 	}
     }
 

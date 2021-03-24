@@ -112,7 +112,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     self = [self init];
     if (self) {
 	Tcl_DStringInit(&_ds);
-	Tcl_UtfToChar16DString((const char *)bytes, len, &_ds);
+	Tcl_UtfToUniCharDString((const char *)bytes, len, &_ds);
 	_string = [[NSString alloc]
 	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
 			       length:Tcl_DStringLength(&_ds)>>1
@@ -1041,8 +1041,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
+    start = TkNumUtfChars(source, rangeStart);
+    len = TkNumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -1143,7 +1143,7 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
+    fit = (TkUtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
@@ -1339,8 +1339,8 @@ TkpDrawAngledCharsInContext(
              -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
+    start = TkNumUtfChars(source, rangeStart);
+    length = TkNumUtfChars(source, rangeStart + rangeLength) - start;
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
 
