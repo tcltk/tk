@@ -36,6 +36,7 @@ typedef void *(*fn_icu_open)(UBreakIteratorTypex, const char *,
 typedef void	(*fn_icu_close)(void *);
 typedef int32_t	(*fn_icu_preceding)(void *, int32_t);
 typedef int32_t	(*fn_icu_following)(void *, int32_t);
+typedef void	(*fn_icu_setText)(void *, const void *, int32_t, UErrorCodex *);
 
 static struct {
     int				nopen;
@@ -44,8 +45,9 @@ static struct {
     fn_icu_close		close;
     fn_icu_preceding	preceding;
     fn_icu_following	following;
+    fn_icu_setText	setText;
 } icu_fns = {
-    0, NULL, NULL, NULL, NULL, NULL
+    0, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #define FLAG_WORD 1
@@ -55,6 +57,7 @@ static struct {
 #define icu_close			icu_fns.close
 #define icu_preceding		icu_fns.preceding
 #define icu_following		icu_fns.following
+#define icu_setText		icu_fns.setText
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
@@ -68,7 +71,7 @@ startEndOfCmd(
     Tcl_DString ds;
     TkSizeT len;
     const char *str;
-    UErrorCodex errorCode;
+    UErrorCodex errorCode = U_ZERO_ERRORZ;
     void *it;
     TkSizeT idx;
     int flags = PTR2INT(clientData);
@@ -79,26 +82,43 @@ startEndOfCmd(
     }
     Tcl_DStringInit(&ds);
     str = Tcl_GetStringFromObj(objv[1], &len);
-    Tcl_UtfToChar16DString(str, len, &ds);
-    if (TkGetIntForIndex(objv[2], Tcl_DStringLength(&ds)/2-1, 1, &idx) != TCL_OK) {
+    Tcl_UtfToUniCharDString(str, len, &ds);
+    if (TkGetIntForIndex(objv[2], Tcl_DStringLength(&ds)/2-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
 	return TCL_ERROR;
     }
 
-    it = icu_open((UBreakIteratorTypex)(PTR2INT(clientData)&3), "C",
-    		(const uint16_t *)Tcl_DStringValue(&ds), -1, &errorCode);
+    it = icu_open((UBreakIteratorTypex)(PTR2INT(clientData)&3), NULL,
+    		NULL, -1, &errorCode);
+    if (it != NULL) {
+	errorCode = U_ZERO_ERRORZ;
+	icu_setText(it, (const uint16_t *)Tcl_DStringValue(&ds), Tcl_DStringLength(&ds)/2, &errorCode);
+    }
+    if (it == NULL || errorCode != U_ZERO_ERRORZ) {
+    	Tcl_DStringFree(&ds);
+    	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errocode: %d", (int)errorCode));
+    	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", NULL);
+    	return TCL_ERROR;
+    }
     if (flags & FLAG_FOLLOWING) {
 	idx = icu_following(it, idx);
     } else {
-	idx = icu_preceding(it, idx);
+	idx = icu_preceding(it, idx + 1);
     }
     Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     icu_close(it);
     Tcl_DStringFree(&ds);
     return TCL_OK;
 }
+
+#ifdef MAC_OSX_TCL
+/* Hack, since homebrew doesn't have ICU 68 yet */
+#define ICU_VERSION "64"
+#else
+#define ICU_VERSION "68"
+#endif
 
 void
 Icu_Init(
@@ -111,14 +131,14 @@ Icu_Init(
 	Tcl_Obj *nameobj;
 	static const char *iculibs[] = {
 #if defined(_WIN32)
-	    "cygicuuc68.dll",
-	    "icuuc68.dll",
+	    "cygicuuc" ICU_VERSION ".dll",
+	    "icuuc" ICU_VERSION ".dll",
 #elif defined(__CYGWIN__)
-	    "cygicuuc68.dll",
+	    "cygicuuc" ICU_VERSION ".dll",
 #elif defined(MAC_OSX_TCL)
-	    "libicuuc68.dylib",
+	    "libicuuc." ICU_VERSION ".dylib",
 #else
-	    "libicuuc.so.68",
+	    "libicuuc.so." ICU_VERSION "",
 #endif
 	    NULL
 	};
@@ -144,11 +164,12 @@ Icu_Init(
 	if (icu_fns.lib != NULL) {
 #define ICU_SYM(name)							\
 	    icu_fns.name = (fn_icu_ ## name)				\
-		Tcl_FindSymbol(NULL, icu_fns.lib, "ubrk_" #name "_68")
+		Tcl_FindSymbol(NULL, icu_fns.lib, "ubrk_" #name "_" ICU_VERSION)
 	    ICU_SYM(open);
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
 	    ICU_SYM(following);
+	    ICU_SYM(setText);
 #undef ICU_SYM
 	}
     }

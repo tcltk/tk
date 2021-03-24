@@ -2134,13 +2134,13 @@ DrawMenuUnderline(
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
-	len = Tcl_GetCharLength(mePtr->labelPtr);
+	len = TkNumUtfChars(Tcl_GetString(mePtr->labelPtr), -1);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 	    int ch;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
-	    start = Tcl_UtfAtIndex(label, mePtr->underline);
+	    start = TkUtfAtIndex(label, mePtr->underline);
 	    end = start + TkUtfToUniChar(start, &ch);
 	    Tk_UnderlineChars(menuPtr->display, d,
 		    gc, tkfont, label, x + mePtr->indicatorSpace,
