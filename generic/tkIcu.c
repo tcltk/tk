@@ -11,6 +11,13 @@
  */
 
 #include "tkInt.h"
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 /*
  * Runtime linking of libicu.
@@ -41,6 +48,9 @@ static struct {
     0, NULL, NULL, NULL, NULL, NULL
 };
 
+#define FLAG_WORD 1
+#define FLAG_FOLLOWING 4
+
 #define icu_open			icu_fns.open
 #define icu_close			icu_fns.close
 #define icu_preceding		icu_fns.preceding
@@ -48,19 +58,77 @@ static struct {
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
-int
+static int
+startEndOfCmd(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    Tcl_DString ds;
+    TkSizeT len;
+    const char *str;
+    UErrorCodex errorCode;
+    void *it;
+    TkSizeT idx;
+    int flags = PTR2INT(clientData);
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start");
+	return TCL_ERROR;
+    }
+    Tcl_DStringInit(&ds);
+    str = Tcl_GetStringFromObj(objv[1], &len);
+    Tcl_UtfToChar16DString(str, len, &ds);
+    if (TkGetIntForIndex(objv[2], Tcl_DStringLength(&ds)/2-1, 1, &idx) != TCL_OK) {
+	Tcl_DStringFree(&ds);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+
+    it = icu_open((UBreakIteratorTypex)(PTR2INT(clientData)&3), "C",
+    		(const uint16_t *)Tcl_DStringValue(&ds), -1, &errorCode);
+    if (flags & FLAG_FOLLOWING) {
+	idx = icu_following(it, idx);
+    } else {
+	idx = icu_preceding(it, idx);
+    }
+    Tcl_SetObjResult(interp, TkNewIndexObj(idx));
+    icu_close(it);
+    Tcl_DStringFree(&ds);
+    return TCL_OK;
+}
+
+void
 Icu_Init(
     Tcl_Interp *interp)
 {
     Tcl_MutexLock(&icu_mutex);
+
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
 	static const char *iculibs[] = {
-	    "libicuuc68.so",
+#if defined(_WIN32)
+	    "cygicuuc68.dll",
+	    "icuuc68.dll",
+#elif defined(__CYGWIN__)
+	    "cygicuuc68.dll",
+#elif defined(MAC_OSX_TCL)
+	    "libicuuc68.dylib",
+#else
+	    "libicuuc.so.68",
+#endif
 	    NULL
 	};
 
+#if defined(_WIN32) && !defined(STATIC_BUILD)
+	if (!tclStubsPtr->tcl_CreateFileHandler) {
+	    /* Not running on Cygwin, so don't try to load the cygwin icu dll */
+	    i++;
+	}
+#endif
 	while (iculibs[i] != NULL) {
 	    Tcl_ResetResult(interp);
 	    nameobj = Tcl_NewStringObj(iculibs[i], -1);
@@ -76,7 +144,7 @@ Icu_Init(
 	if (icu_fns.lib != NULL) {
 #define ICU_SYM(name)							\
 	    icu_fns.name = (fn_icu_ ## name)				\
-		Tcl_FindSymbol(NULL, icu_fns.lib, "ubrk_" #name "_86")
+		Tcl_FindSymbol(NULL, icu_fns.lib, "ubrk_" #name "_68")
 	    ICU_SYM(open);
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
@@ -87,9 +155,18 @@ Icu_Init(
     icu_fns.nopen++;
     Tcl_MutexUnlock(&icu_mutex);
 
-    //Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterCmd,
-	//    interp, NULL);
-    return TCL_OK;
+    if (icu_fns.lib != NULL) {
+	Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startEndOfCmd,
+		INT2PTR(0), NULL);
+	Tcl_CreateObjCommand(interp, "::tk::startOfNextWord", startEndOfCmd,
+		INT2PTR(FLAG_WORD|FLAG_FOLLOWING), NULL);
+	Tcl_CreateObjCommand(interp, "::tk::startOfPreviousWord", startEndOfCmd,
+		INT2PTR(FLAG_WORD), NULL);
+	Tcl_CreateObjCommand(interp, "::tk::endOfCluster", startEndOfCmd,
+		INT2PTR(FLAG_FOLLOWING), NULL);
+	Tcl_CreateObjCommand(interp, "::tk::endOfWord", startEndOfCmd,
+		INT2PTR(FLAG_WORD|FLAG_FOLLOWING), NULL);
+    }
 }
 
 /*
