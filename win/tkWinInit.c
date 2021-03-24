@@ -44,6 +44,7 @@ TkpInit(
 
     WinIcoInit(interp);
     TkWinXInit(Tk_GetHINSTANCE());
+    Icu_Init(interp);
     return TCL_OK;
 }
 

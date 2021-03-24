@@ -725,9 +725,6 @@ if {[info commands ::tk::endOfCluster] eq ""} {
 	    set start [expr {$start+1}]
 	}
 	set start [expr {$start+1}]
-	if {[string index $str $start] eq {^}} {
-	    set start [expr {$start+1}];# For demo purposes only
-	}
 	return $start
     }
 }
@@ -738,12 +735,6 @@ if {[info commands ::tk::startOfCluster] eq ""} {
 	}
 	if {$start < 0} {
 	    return -1;
-	}
-	if {[string index $str $start] eq {^}} {
-	    set start [expr {$start-1}];# For demo purposes only
-	}
-	if {[string length [string index $str [expr {$start-1}]]] > 1} {
-	    return [expr {$start-1}]
 	}
 	return $start
     }
