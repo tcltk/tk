@@ -333,7 +333,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 ${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} -DTCL_UTF_MAX=3 @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -1200,6 +1200,9 @@ tkRectOval.o: $(GENERIC_DIR)/tkRectOval.c
 tkTrig.o: $(GENERIC_DIR)/tkTrig.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTrig.c
 
+tkIcu.o: $(GENERIC_DIR)/tkIcu.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIcu.c
+
 tkImage.o: $(GENERIC_DIR)/tkImage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImage.c
 
@@ -1295,9 +1298,6 @@ tkUnixEmbed.o: $(UNIX_DIR)/tkUnixEmbed.c
 
 tkUnixEvent.o: $(UNIX_DIR)/tkUnixEvent.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixEvent.c
-
-tkIcu.o: $(GENERIC_DIR)/tkIcu.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIcu.c
 
 tkUnixFocus.o: $(UNIX_DIR)/tkUnixFocus.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixFocus.c
