@@ -130,13 +130,13 @@ test cluster-6.0 {::tk::startOfCluster} -body {
 test cluster-6.1 {::tk::endOfCluster} -body {
     ::tk::endOfCluster a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::endOfCluster str start ?locale?"}
-test cluster-6.0 {::tk::startOfPreviousWord} -body {
+test cluster-6.2 {::tk::startOfPreviousWord} -body {
     ::tk::startOfPreviousWord a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::startOfPreviousWord str start ?locale?"}
-test cluster-6.0 {::tk::startOfNextWord} -body {
+test cluster-6.3 {::tk::startOfNextWord} -body {
     ::tk::startOfNextWord a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::startOfNextWord str start ?locale?"}
-test cluster-6.1 {::tk::endOfWord} -body {
+test cluster-6.4 {::tk::endOfWord} -body {
     ::tk::endOfWord a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::endOfWord str start ?locale?"}
 
