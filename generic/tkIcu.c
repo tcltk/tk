@@ -83,10 +83,17 @@ startEndOfCmd(
     TkSizeT idx;
     int flags = PTR2INT(clientData);
     const uint16_t *ustr;
+    const char *locale = NULL;
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 1 , objv, "str start");
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
+    }
+    if (objc > 3) {
+	locale = Tcl_GetString(objv[3]);
+	if (!*locale) {
+	    locale = NULL;
+	}
     }
     Tcl_DStringInit(&ds);
     str = Tcl_GetStringFromObj(objv[1], &len);
@@ -99,7 +106,7 @@ startEndOfCmd(
 	return TCL_ERROR;
     }
 
-    it = icu_open((UBreakIteratorTypex)(flags&3), NULL,
+    it = icu_open((UBreakIteratorTypex)(flags&3), locale,
     		NULL, -1, &errorCode);
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
@@ -108,7 +115,7 @@ startEndOfCmd(
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
     	Tcl_DStringFree(&ds);
-    	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errocode: %d", (int)errorCode));
+    	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
     	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", NULL);
     	return TCL_ERROR;
     }
