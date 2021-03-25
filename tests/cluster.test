@@ -124,6 +124,21 @@ test cluster-5.7 {::tk::startOfNextWord} -body {
     ::tk::startOfNextWord "ab cd" end
 } -result -1
 
+test cluster-6.0 {::tk::startOfCluster} -body {
+    ::tk::startOfCluster a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::startOfCluster str start ?locale?"}
+test cluster-6.1 {::tk::endOfCluster} -body {
+    ::tk::endOfCluster a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::endOfCluster str start ?locale?"}
+test cluster-6.0 {::tk::startOfPreviousWord} -body {
+    ::tk::startOfPreviousWord a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::startOfPreviousWord str start ?locale?"}
+test cluster-6.0 {::tk::startOfNextWord} -body {
+    ::tk::startOfNextWord a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::startOfNextWord str start ?locale?"}
+test cluster-6.1 {::tk::endOfWord} -body {
+    ::tk::endOfWord a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::endOfWord str start ?locale?"}
 
 cleanupTests
 return

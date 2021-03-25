@@ -464,9 +464,9 @@ startOfClusterObjCmd(
     int numBytes;
     TkSizeT indexArg;
     TkSizeT result;
-    if ((objc != 3)) {
-        Tcl_WrongNumArgs(interp, 1, objv, "string index");
-        return TCL_ERROR;
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
     }
     stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
     if (stringArg == NULL) {
@@ -505,9 +505,9 @@ endOfClusterObjCmd(
     TkSizeT indexArg;
     TkSizeT result;
 
-    if ((objc != 3)) {
-        Tcl_WrongNumArgs(interp, 1, objv, "string index");
-        return TCL_ERROR;
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
     }
     stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
     if (stringArg == NULL) {
