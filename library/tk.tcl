@@ -718,8 +718,10 @@ if {[info commands ::tk::startOfPreviousWord] eq ""} {
 }
 if {[info commands ::tk::endOfCluster] eq ""} {
     proc ::tk::endOfCluster {str start} {
-	if {$start >= [string length $str]} {
-	    return -1;
+	if {$start eq "end"} {
+	    return [string length $str]
+	} elseif {$start >= [string length $str]} {
+	    return -1
 	}
 	if {[string length [string index $str $start]] > 1} {
 	    set start [expr {$start+1}]
@@ -732,9 +734,14 @@ if {[info commands ::tk::startOfCluster] eq ""} {
     proc ::tk::startOfCluster {str start} {
 	if {$start eq "end"} {
 	    set start [expr {[string length $str]-1}]
+	} elseif {$start >= [string length $str]} {
+	    return [string length $str]
+	}
+	if {[string length [string index $str $start]] < 1} {
+	    set start [expr {$start-1}]
 	}
 	if {$start < 0} {
-	    return -1;
+	    return -1
 	}
 	return $start
     }

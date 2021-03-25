@@ -482,8 +482,9 @@ startOfClusterObjCmd(
     }
     if (indexArg == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, TkNewIndexObj(TCL_INDEX_NONE));
+	return TCL_OK;
     } else if ((size_t)indexArg >= [S length]) {
-	Tcl_SetObjResult(interp, TkNewIndexObj([S length]));
+	Tcl_SetObjResult(interp, TkNewIndexObj((TkSizeT)[S length]));
 	return TCL_OK;
     }
     result = [S startOfCluster:indexArg];
@@ -524,7 +525,7 @@ endOfClusterObjCmd(
 	result = 0;
     } else {
 	result = (size_t)indexArg < [S length] ?
-		[S endOfCluster:indexArg] : [S length];
+		[S endOfCluster:indexArg] : -1;
     }
     Tcl_SetObjResult(interp, TkNewIndexObj(result));
     return TCL_OK;
