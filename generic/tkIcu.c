@@ -82,6 +82,7 @@ startEndOfCmd(
     void *it;
     TkSizeT idx;
     int flags = PTR2INT(clientData);
+    const uint16_t *ustr;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start");
@@ -102,7 +103,8 @@ startEndOfCmd(
     		NULL, -1, &errorCode);
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
-	icu_setText(it, (const uint16_t *)Tcl_DStringValue(&ds), len, &errorCode);
+	ustr = (const uint16_t *)Tcl_DStringValue(&ds);
+	icu_setText(it, ustr, len, &errorCode);
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
     	Tcl_DStringFree(&ds);
@@ -111,16 +113,34 @@ startEndOfCmd(
     	return TCL_ERROR;
     }
     if (flags & FLAG_FOLLOWING) {
+	if ((idx == TCL_INDEX_NONE) && (flags & FLAG_WORD)) {
+	    idx = 0;
+	}
 	idx = icu_following(it, idx);
-    } else {
-	idx = icu_preceding(it, idx + 1);
+	if ((flags & FLAG_WORD) && idx >= len) {
+	    idx = -1;
+	}
+    } else if (idx > 0) {
+	if (!(flags & FLAG_WORD)) {
+		idx += 1 + (((ustr[idx]&0xFFC0) == 0xD800) && ((ustr[idx+1]&0xFFC0) == 0xDC00));
+	}
+	idx = icu_preceding(it, idx);
+	if (idx == 0 && (flags & FLAG_WORD)) {
+	    flags &= ~FLAG_WORD; /* If 0 is reached here, don't do a further search */
+	}
     }
-    if ((flags & FLAG_WORD) && (idx != (TkSizeT)-1) && !(flags & FLAG_SPACE) ==
-	    ((idx >= len) || Tcl_UniCharIsSpace(((const uint16_t *)Tcl_DStringValue(&ds))[idx]))) {
-	if (flags & FLAG_FOLLOWING) {
-	    idx = icu_next(it);
-	} else {
-	    idx = icu_previous(it);
+    if ((flags & FLAG_WORD) && (idx != TCL_INDEX_NONE)) {
+	if (!(flags & FLAG_SPACE) == ((idx >= len) || Tcl_UniCharIsSpace(ustr[idx]))) {
+	    if (flags & FLAG_FOLLOWING) {
+		idx = icu_next(it);
+		if (idx >= len) {
+		    idx = -1;
+		}
+	    } else {
+		idx = icu_previous(it);
+	    }
+	} else if (idx == 0 && !(flags & FLAG_FOLLOWING)) {
+	    idx = -1;
 	}
     }
     Tcl_SetObjResult(interp, TkNewIndexObj(idx));
