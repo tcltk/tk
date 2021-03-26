@@ -149,17 +149,6 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     return [_string characterAtIndex:index];
 }
 
-- (NSUInteger)startOfCluster:(NSUInteger)index
-{
-    NSRange range = [_string rangeOfComposedCharacterSequenceAtIndex:index];
-    return range.location;
-}
-- (NSUInteger)endOfCluster:(NSUInteger)index
-{
-    NSRange range = [_string rangeOfComposedCharacterSequenceAtIndex:index];
-    return range.location + range.length;
-}
-
 - (Tcl_DString)DString
 {
     if ( _ds.string == NULL) {
@@ -462,8 +451,7 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     int numBytes;
-    TkSizeT indexArg;
-    TkSizeT result;
+    TkSizeT index;
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -473,22 +461,22 @@ startOfClusterObjCmd(
 	return TCL_ERROR;
     }
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
-    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &indexArg) != TCL_OK) {
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer or end",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (indexArg == TCL_INDEX_NONE) {
-	Tcl_SetObjResult(interp, TkNewIndexObj(TCL_INDEX_NONE));
-	return TCL_OK;
-    } else if ((size_t)indexArg >= [S length]) {
-	Tcl_SetObjResult(interp, TkNewIndexObj((TkSizeT)[S length]));
-	return TCL_OK;
+    if (index == TCL_INDEX_NONE) {
+	/* index = TCL_INDEX_NONE; */
+    } else if ((size_t)index >= [S length]) {
+	index = (TkSizeT)[S length];
+    } else {
+	NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	index = range.location;
     }
-    result = [S startOfCluster:indexArg];
-    Tcl_SetObjResult(interp, TkNewIndexObj(result));
+    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
@@ -502,8 +490,7 @@ endOfClusterObjCmd(
     TKNSString *S;
     char *stringArg;
     int numBytes;
-    TkSizeT indexArg;
-    TkSizeT result;
+    TkSizeT index;
 
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
@@ -514,20 +501,22 @@ endOfClusterObjCmd(
 	return TCL_ERROR;
     }
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
-    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &indexArg) != TCL_OK) {
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer or end",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (indexArg == TCL_INDEX_NONE) {
-	result = 0;
+    if (index == TCL_INDEX_NONE) {
+	index = 0;
+    } else if ((size_t)index >= [S length]) {
+	index = TCL_INDEX_NONE;
     } else {
-	result = (size_t)indexArg < [S length] ?
-		[S endOfCluster:indexArg] : -1;
+	NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	index = range.location + range.length;
     }
-    Tcl_SetObjResult(interp, TkNewIndexObj(result));
+    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
