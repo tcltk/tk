@@ -156,13 +156,6 @@ startEndOfCmd(
     return TCL_OK;
 }
 
-#ifdef MAC_OSX_TCL
-/* Hack, since homebrew doesn't have ICU 68 yet */
-#define ICU_VERSION "64"
-#else
-#define ICU_VERSION "68"
-#endif
-
 /*
  *----------------------------------------------------------------------
  *
@@ -198,46 +191,63 @@ Icu_Init(
     Tcl_Interp *interp)
 {
     Tcl_MutexLock(&icu_mutex);
+    char symbol[24];
+    char icuversion[3] = "70"; /* Highest ICU version + 1 */
 
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
 	static const char *iculibs[] = {
 #if defined(_WIN32)
-	    //"cygicuuc" ICU_VERSION ".dll",
-	    "icuuc" ICU_VERSION ".dll",
+	    "icuuc??.dll", /* When running under Windows */
+	    NULL,
+	    "cygicuuc??.dll", /* When running under Cygwin */
 #elif defined(__CYGWIN__)
-	    "cygicuuc" ICU_VERSION ".dll",
+	    "cygicuuc??.dll",
 #elif defined(MAC_OSX_TCL)
-	    "libicuuc." ICU_VERSION ".dylib",
+	    "libicuuc.??.dylib",
 #else
-	    "libicuuc.so." ICU_VERSION "",
+	    "libicuuc.so.??",
 #endif
 	    NULL
 	};
 
-#if defined(_WIN32) && !defined(STATIC_BUILD)
-	if (!tclStubsPtr->tcl_CreateFileHandler) {
-	    /* Not running on Cygwin, so don't try to load the cygwin icu dll */
-	    //i++;
-	}
-#endif
-	while (iculibs[i] != NULL) {
-	    Tcl_ResetResult(interp);
-	    nameobj = Tcl_NewStringObj(iculibs[i], -1);
-	    Tcl_IncrRefCount(nameobj);
-	    if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
-		    == TCL_OK) {
-		Tcl_DecrRefCount(nameobj);
-		break;
+	/* Going back down to ICU version 50 */
+	while ((icu_fns.lib == NULL) && (icuversion[0] >= '5')) {
+	    if (icuversion[1]-- < '0') {
+		icuversion[0]--; icuversion[1] = '9';
 	    }
-	    Tcl_DecrRefCount(nameobj);
-	    ++i;
+#if defined(_WIN32) && !defined(STATIC_BUILD)
+	    if (tclStubsPtr->tcl_CreateFileHandler) {
+		/* Running on Cygwin, so try to load the cygwin icu dll */
+		i = 2;
+	    } else
+#endif
+	    i = 0;
+	    while (iculibs[i] != NULL) {
+		Tcl_ResetResult(interp);
+		nameobj = Tcl_NewStringObj(iculibs[i], -1);
+		char *nameStr = Tcl_GetString(nameobj);
+		char *p = strchr(nameStr, '?');
+		if (p != NULL) {
+		    memcpy(p, icuversion, 2);
+		}
+		Tcl_IncrRefCount(nameobj);
+		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
+			== TCL_OK) {
+		    Tcl_DecrRefCount(nameobj);
+		    break;
+		}
+		Tcl_DecrRefCount(nameobj);
+		++i;
+	    }
 	}
 	if (icu_fns.lib != NULL) {
 #define ICU_SYM(name)							\
+	    strcpy(symbol, "ubrk_" #name "_" ); \
+	    strcat(symbol, icuversion); \
 	    icu_fns.name = (fn_icu_ ## name)				\
-		Tcl_FindSymbol(NULL, icu_fns.lib, "ubrk_" #name "_" ICU_VERSION);
+		Tcl_FindSymbol(NULL, icu_fns.lib, symbol);
 	    ICU_SYM(open);
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
