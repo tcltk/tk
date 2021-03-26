@@ -70,11 +70,10 @@
  */
 
 /* Version information. */
-static const char version_string[] = "3.0";
 static const char usage_string[] =
 	"Windows printing (c) Elmicron GmbH, Harald Oehlmann, 2019-01-23\n"
 	"Preparation:\n"
-	"  winprint getattr option: possible options:\n"
+	"  ::tk::print::_print getattr option: possible options:\n"
 	"    printers, defaultprinter, copies, firstpage, lastpage, mapmode*,\n"
 	"    avecharheight*, avecharwidth*, horzres*, vertres*, dpi*,\n"
 	"    physicaloffsetx*, physicaloffsety*, printer, orientation, papersize,\n"
@@ -84,50 +83,50 @@ static const char usage_string[] =
 	"    fontnames*: returns list of unique font names\n"
 	"    fontunicoderanges: returns list of alternating start len unicode point ints\n"
 	"    *: requires open printer\n"
-	"  winprint pagesetup ?printer? ?Orientation? ?PaperSize? "
+	"  ::tk::print::_print pagesetup ?printer? ?Orientation? ?PaperSize? "
 	"?left? ?top? ?right? ?bottom?\n"
 	"    returns a list of identical parameters reflecting the users choice\n"
 	"    Margin unit is millimeter. Default values also by empty string\n"
-	"  winprint selectprinter: select a printer\n"
-	"  winprint printersetup ?printer? ? Orientation? ?PageSize?\n"
+	"  ::tk::print::_print selectprinter: select a printer\n"
+	"  ::tk::print::_print printersetup ?printer? ? Orientation? ?PageSize?\n"
 	"    Sets up the printer options and returns them.\n"
 	"    Not exposed printer settings are editable.\n"
 	"Open printer: use one of:\n"
-	"  winprint openjobdialog ?printer? ?Orientation? ?PaperSize? ?Maxpage?\n"
-	"  winprint openprinter ?printer? ?Orientation? ?PaperSize?\n"
+	"  ::tk::print::_print openjobdialog ?printer? ?Orientation? ?PaperSize? ?Maxpage?\n"
+	"  ::tk::print::_print openprinter ?printer? ?Orientation? ?PaperSize?\n"
 	"Get information about the print job and user selections:\n"
-	"  winprint getattr {copies firstpage lastpage avecharheight avecharwidth"
+	"  ::tk::print::_print getattr {copies firstpage lastpage avecharheight avecharwidth"
 		"horzres\n"
 	"    vertres dpi physicaloffsetx physicaloffsety printer orientation "
 		"papersize}\n"
 	"  The dpi value is used to transform from paint units (pixel) to mm:\n"
-	"    Size/[mm] = [winprint getattr horzres]/[winprint getattr dpi]*2.54\n"
+	"    Size/[mm] = [::tk::print::_print getattr horzres]/[::tk::print::_print getattr dpi]*2.54\n"
 	"Start document and page\n"
-	"  winprint opendoc jobname\n"
-	"  winprint openpage\n"
+	"  ::tk::print::_print opendoc jobname\n"
+	"  ::tk::print::_print openpage\n"
 	"Configure and select drawing tools\n"
-	"  winprint setmapmode mapmode\n"
+	"  ::tk::print::_print setmapmode mapmode\n"
 	"    Define the coordinate system. 'Text' is in device units origin "
 		"top-up.\n"
-	"  winprint pen width ?r g b?: r,g,b is 16 bit color value (internal / 256)\n"
+	"  ::tk::print::_print pen width ?r g b?: r,g,b is 16 bit color value (internal / 256)\n"
 	"    No rgb values uses black color.\n"
-	"  winprint brushcolor r g b: filling for rectangle\n"
+	"  ::tk::print::_print brushcolor r g b: filling for rectangle\n"
 	"  winfo bkcolor r g b: text background\n"
-	"  winprint fontcreate Fontnumber Fontname Points/10 ?Weight? ?Italic? "
+	"  ::tk::print::_print fontcreate Fontnumber Fontname Points/10 ?Weight? ?Italic? "
 		"?Charset?\n"
 		"    ?Pitch? ?Family? : use getattr font* to get possible values.\n"
-	"  winprint fontselect Fontnumber\n"
+	"  ::tk::print::_print fontselect Fontnumber\n"
 	"Create printed items:\n"
-	"  winprint ruler x0 y0 width height\n"
-	"  winprint rectangle x0 y0 x1 y1\n"
-	"  winprint text X0 Y0 Text ?r g b?: no rgb uses black text\n"
-	"  winprint getfirstfontnochar Text: -1 or first index with no glyph\n"
-	"  winprint gettextsize Text\n"
-	"  winprint photo tkimage X0 Y0 ?Width? ?Height?\n"
+	"  ::tk::print::_print ruler x0 y0 width height\n"
+	"  ::tk::print::_print rectangle x0 y0 x1 y1\n"
+	"  ::tk::print::_print text X0 Y0 Text ?r g b?: no rgb uses black text\n"
+	"  ::tk::print::_print getfirstfontnochar Text: -1 or first index with no glyph\n"
+	"  ::tk::print::_print gettextsize Text\n"
+	"  ::tk::print::_print photo tkimage X0 Y0 ?Width? ?Height?\n"
 	"Close page and printjob\n"
-	"  winprint closepage    Close a page\n"
-	"  winprint closedoc     Close the document\n"
-	"  winprint close ?option?\n"
+	"  ::tk::print::_print closepage    Close a page\n"
+	"  ::tk::print::_print closedoc     Close the document\n"
+	"  ::tk::print::_print close ?option?\n"
 	"    Close and cleanup the printing interface.\n"
 	"    If the option -eraseprinterstate is given, also the printer settings "
 		"not passed\n"
@@ -543,9 +542,9 @@ int __declspec(dllexport) Winprint_Init (Tcl_Interp *Interp)
 	{
 		return RET_ERROR;
 	}
-	Tcl_CreateObjCommand(Interp, "winprint", WinPrintCmd, (ClientData)NULL,
+	Tcl_CreateObjCommand(Interp, "::tk::print::_print", WinPrintCmd, (ClientData)NULL,
 		(Tcl_CmdDeleteProc *)NULL);
-	Tcl_PkgProvide (Interp, "winprint", version_string);
+	Tcl_PkgProvide (Interp, "::tk::print::_print", version_string);
 	return RET_OK;
 }
 
@@ -585,7 +584,7 @@ int WinPrintCmd(
 		iHelp, iSelectPrinter, iPrinterSetup, iPageSetup,
 		iOpenjobdialog,
 		iOpenPrinter, iClose, iClosedoc, iOpenpage,
-		iClosepage, iVersion, iGetattr, iSetAttr, iOpendoc,
+		iClosepage, iGetattr, iSetAttr, iOpendoc,
 		iPen, iBrushColor, iBkColor,
 		iFontselect, iGetTextSize, iRuler, iRectangle, iFontCreate,
 		iText, iTextuni, iGetFirstFontNochar,
@@ -734,9 +733,6 @@ int WinPrintCmd(
 	switch (Index) {
 	case iHelp:
 		Tcl_SetStringObj(resultPtr, usage_string,-1);
-		break;
-	case iVersion:
-		Tcl_SetStringObj(resultPtr, version_string,-1);
 		break;
 	case iSelectPrinter:
 		Res = PrintSelectPrinter( interp );
@@ -3100,7 +3096,6 @@ char PrintGetTextSize( Tcl_Interp *interp, TCHAR *pText )
 	return Res;
 }
 
-
 /* Paint a photo image to the printer DC */
 /* @param interp tcl interpreter */
 /* @param oImageName tcl object with tk imsge name */
@@ -3164,7 +3159,7 @@ char PaintPhoto(
 		bgraPixel.ptr[IndexCur+2] = sImageBlock.pixelPtr[IndexCur+0];
 		bgraPixel.ptr[IndexCur+3] = sImageBlock.pixelPtr[IndexCur+3];
 	}
-	/* Use original width and height if not given */
+	/* Use original width and height if not given. */
 	if (DestWidth == 0) { DestWidth = sImageBlock.width; }
 	if (DestHeight == 0) { DestHeight = sImageBlock.height; }
 	/* Use StretchDIBits with full image. */
@@ -3201,4 +3196,12 @@ char PaintPhoto(
 #endif
 	return RET_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
 
