@@ -141,18 +141,20 @@ startEndOfCmd(
 	    if (flags & FLAG_FOLLOWING) {
 		idx = icu_next(it);
 		if (idx >= len) {
-		    idx = -1;
+		    idx = TCL_INDEX_NONE;
 		}
 	    } else {
 		idx = icu_previous(it);
 	    }
 	} else if (idx == 0 && !(flags & FLAG_FOLLOWING)) {
-	    idx = -1;
+	    idx = TCL_INDEX_NONE;
 	}
     }
-    Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     icu_close(it);
     Tcl_DStringFree(&ds);
+    if (idx != TCL_INDEX_NONE) {
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
+    }
     return TCL_OK;
 }
 

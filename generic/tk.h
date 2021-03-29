@@ -168,7 +168,8 @@ typedef enum {
     TK_OPTION_WINDOW,
     TK_OPTION_END,
     TK_OPTION_CUSTOM,
-    TK_OPTION_STYLE
+    TK_OPTION_STYLE,
+    TK_OPTION_INDEX
 } Tk_OptionType;
 
 /*

@@ -468,15 +468,15 @@ startOfClusterObjCmd(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index == TCL_INDEX_NONE) {
-	/* index = TCL_INDEX_NONE; */
-    } else if ((size_t)index >= [S length]) {
-	index = (TkSizeT)[S length];
-    } else {
-	NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
-	index = range.location;
+    if (index != TCL_INDEX_NONE) {
+	if ((size_t)index >= [S length]) {
+	    index = (TkSizeT)[S length];
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	    index = range.location;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
     }
-    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
@@ -508,15 +508,15 @@ endOfClusterObjCmd(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index == TCL_INDEX_NONE) {
-	index = 0;
-    } else if ((size_t)index >= [S length]) {
-	index = TCL_INDEX_NONE;
-    } else {
-	NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
-	index = range.location + range.length;
+    if ((size_t)index + 1 <= [S length]) {
+	if (index == TCL_INDEX_NONE) {
+		index = 0;
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	    index = range.location + range.length;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
     }
-    Tcl_SetObjResult(interp, TkNewIndexObj(index));
     return TCL_OK;
 }
 
