@@ -799,11 +799,11 @@ ImgPhotoCmd(
             options.format = Tcl_NewStringObj("default", -1);
             freeObj = options.format;
 	}
-	
+
 	/*
 	 * Use argument metadata if specified, otherwise the master metadata
 	 */
-	
+
 	if (NULL != options.metadata) {
 	    metadataIn = options.metadata;
 	} else {
@@ -1468,11 +1468,11 @@ readCleanup:
 	    usedExt = 0;
 	}
 
-	
+
 	/*
 	 * Use argument metadata if specified, otherwise the master metadata
 	 */
-	
+
 	if (NULL != options.metadata) {
 	    metadataIn = options.metadata;
 	} else {
@@ -2273,7 +2273,7 @@ ImgPhotoConfigureModel(
 	    /*
 	     * We have driver return metadata
 	     */
-	    
+
 	    if (modelPtr->metadata == NULL) {
 		modelPtr->metadata = metadataOutObj;
 		metadataOutObj = NULL;
@@ -2880,7 +2880,7 @@ if (formatPtr == NULL) {
 	    }
 	}
     }
-    
+
     /*
      * No matching format found
      */
