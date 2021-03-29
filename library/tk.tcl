@@ -703,17 +703,29 @@ if {[tk windowingsystem] eq "aqua"} {
 
 if {[info commands ::tk::endOfWord] eq ""} {
     proc ::tk::endOfWord {str start {locale {}}} {
-	return [tcl_endOfWord $str $start]
+	set start [tcl_endOfWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
     }
 }
 if {[info commands ::tk::startOfNextWord] eq ""} {
     proc ::tk::startOfNextWord {str start {locale {}}} {
-	return [tcl_startOfNextWord $str $start]
+	set start [tcl_startOfNextWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
     }
 }
 if {[info commands ::tk::startOfPreviousWord] eq ""} {
     proc ::tk::startOfPreviousWord {str start {locale {}}} {
-	return [tcl_startOfPreviousWord $str $start]
+	set start [tcl_startOfPreviousWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
     }
 }
 if {[info commands ::tk::endOfCluster] eq ""} {
@@ -721,7 +733,7 @@ if {[info commands ::tk::endOfCluster] eq ""} {
 	if {$start eq "end"} {
 	    return [string length $str]
 	} elseif {$start >= [string length $str]} {
-	    return -1
+	    return ""
 	}
 	if {[string length [string index $str $start]] > 1} {
 	    set start [expr {$start+1}]
@@ -741,7 +753,7 @@ if {[info commands ::tk::startOfCluster] eq ""} {
 	    set start [expr {$start-1}]
 	}
 	if {$start < 0} {
-	    return -1
+	    return ""
 	}
 	return $start
     }

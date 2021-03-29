@@ -1683,14 +1683,14 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
-    .t.f config -text "foo" -underline -1
+    .t.f config -text "foo" -underline {}
 } -result {}
 test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 10
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -underline -1
+    .t.f config -wrap -1 -underline {}
 } -result {}
 destroy .t.f
 
@@ -1765,7 +1765,7 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-29.1 {Tk_CharBBox procedure: index < 0} -body {
-    .t.f config -text "000" -underline -1
+    .t.f config -text "000" -underline {}
 } -result {}
 test font-29.2 {Tk_CharBBox procedure: loop} -body {
     .t.f config -text "000\t000\t000\t000" -underline 9
