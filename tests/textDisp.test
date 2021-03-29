@@ -3660,7 +3660,7 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {textfonts} {
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list 32 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 39 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts} {
+test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts failsOnXQuarz} {
     .t delete 1.0 end
     set cm [winfo fpixels .t 1c]
     .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
