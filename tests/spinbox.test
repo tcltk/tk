@@ -1875,7 +1875,7 @@ test spinbox-3.79 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -1
+    .e xview {}
     .e index @0
 } -cleanup {
     destroy .e
@@ -2396,7 +2396,7 @@ test spinbox-8.2 {DeleteChars procedure} -setup {
     .e insert 0 abcde
     update idletasks
     set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
-    .e delete -1 2
+    .e delete {} 2
     vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -3125,7 +3125,7 @@ test spinbox-13.23 {GetSpinboxIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -1
+    .e index {}
 } -cleanup {
     destroy .e
 } -result 0

@@ -851,16 +851,16 @@ DrawMenuUnderline(
     int x, int y,
     TCL_UNUSED(int), int height)
 {
-    if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
+    if (mePtr->labelPtr != NULL) {
 	int len;
 
 	len = TkNumUtfChars(Tcl_GetString(mePtr->labelPtr), -1);
-	if (mePtr->underline < len) {
+	if (mePtr->underline < len && mePtr->underline >= -len) {
 	    int activeBorderWidth, leftEdge, ch;
 	    const char *label, *start, *end;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
-	    start = TkUtfAtIndex(label, mePtr->underline);
+	    start = TkUtfAtIndex(label, (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline);
 	    end = start + TkUtfToUniChar(start, &ch);
 
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
