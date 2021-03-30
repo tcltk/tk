@@ -703,6 +703,9 @@ if {[tk windowingsystem] eq "aqua"} {
 
 if {[info commands ::tk::endOfWord] eq ""} {
     proc ::tk::endOfWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
 	set start [tcl_endOfWord $str $start]
 	if {$start < 0} {
 	    set start ""
@@ -712,6 +715,11 @@ if {[info commands ::tk::endOfWord] eq ""} {
 }
 if {[info commands ::tk::startOfNextWord] eq ""} {
     proc ::tk::startOfNextWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
 	set start [tcl_startOfNextWord $str $start]
 	if {$start < 0} {
 	    set start ""
@@ -721,6 +729,11 @@ if {[info commands ::tk::startOfNextWord] eq ""} {
 }
 if {[info commands ::tk::startOfPreviousWord] eq ""} {
     proc ::tk::startOfPreviousWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
 	set start [tcl_startOfPreviousWord $str $start]
 	if {$start < 0} {
 	    set start ""
@@ -730,8 +743,12 @@ if {[info commands ::tk::startOfPreviousWord] eq ""} {
 }
 if {[info commands ::tk::endOfCluster] eq ""} {
     proc ::tk::endOfCluster {str start {locale {}}} {
-	if {$start eq "end"} {
-	    return [string length $str]
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
 	} elseif {$start >= [string length $str]} {
 	    return ""
 	}
@@ -744,8 +761,12 @@ if {[info commands ::tk::endOfCluster] eq ""} {
 }
 if {[info commands ::tk::startOfCluster] eq ""} {
     proc ::tk::startOfCluster {str start {locale {}}} {
-	if {$start eq "end"} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
 	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
 	} elseif {$start >= [string length $str]} {
 	    return [string length $str]
 	}
