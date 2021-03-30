@@ -753,9 +753,9 @@ if {[info commands ::tk::endOfCluster] eq ""} {
 	    return ""
 	}
 	if {[string length [string index $str $start]] > 1} {
-	    set start [expr {$start+1}]
+	    incr start
 	}
-	set start [expr {$start+1}]
+	incr start
 	return $start
     }
 }
@@ -771,7 +771,7 @@ if {[info commands ::tk::startOfCluster] eq ""} {
 	    return [string length $str]
 	}
 	if {[string length [string index $str $start]] < 1} {
-	    set start [expr {$start-1}]
+	    incr start -1
 	}
 	if {$start < 0} {
 	    return ""
