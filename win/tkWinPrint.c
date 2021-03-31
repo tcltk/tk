@@ -533,9 +533,9 @@ BOOL __declspec(dllexport) WINAPI DllEntryPoint(
 }
 #endif
 
-/*Initialisation Procedu	Res */
+/*Initialisation Function,*/
 
-int __declspec(dllexport) Winprint_Init (Tcl_Interp *Interp)
+int Winprint_Init (Tcl_Interp *Interp)
 {
 	if (Tcl_InitStubs(Interp, "8.6-", 0) == NULL
 		|| Tk_InitStubs(Interp, TK_VERSION, 0) == NULL)
@@ -544,7 +544,7 @@ int __declspec(dllexport) Winprint_Init (Tcl_Interp *Interp)
 	}
 	Tcl_CreateObjCommand(Interp, "::tk::print::_print", WinPrintCmd, (ClientData)NULL,
 		(Tcl_CmdDeleteProc *)NULL);
-	Tcl_PkgProvide (Interp, "::tk::print::_print", version_string);
+	
 	return RET_OK;
 }
 
