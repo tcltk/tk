@@ -25,6 +25,13 @@ typedef struct {
     Point local;
 } MouseEventData;
 
+typedef struct {
+    uint64_t wheelTickPrev;	/* For high resolution wheels. */
+    double vWheelAcc;		/* For high resolution wheels (vertical). */
+    double hWheelAcc;		/* For high resolution wheels (horizontal). */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
+
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
@@ -309,6 +316,8 @@ enum {
     } else {
 	CGFloat delta;
 	XEvent xEvent;
+	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
@@ -323,19 +332,43 @@ enum {
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
 
-	delta = [theEvent deltaY] * 120;
-	if (delta != 0.0) {
-	    xEvent.xbutton.state = state;
-	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+#define WHEEL_DELTA 120
+#define WHEEL_DELAY 300000000
+	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
+	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
+	if (timeout) {
+	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
 	}
-	delta = [theEvent deltaX] * 120;
+	tsdPtr->wheelTickPrev = wheelTick;
+	delta = [theEvent deltaY];
 	if (delta != 0.0) {
-	    xEvent.xbutton.state = state | ShiftMask;
-	    xEvent.xkey.keycode = (delta > 0) ? ceil(delta) : floor(delta);
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    delta = (tsdPtr->vWheelAcc += delta);
+	    if (timeout && fabs(delta) < 1.0) {
+		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	    }
+	    if (fabs(delta) >= 0.6) {
+		int intDelta = round(delta);
+		xEvent.xbutton.state = state;
+		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
+		tsdPtr->vWheelAcc -= intDelta;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
+	}
+	delta = [theEvent deltaX];
+	if (delta != 0.0) {
+	    delta = (tsdPtr->hWheelAcc += delta);
+	    if (timeout && fabs(delta) < 1.0) {
+		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	    }
+	    if (fabs(delta) >= 0.6) {
+	    int intDelta = round(delta);
+		xEvent.xbutton.state = state | ShiftMask;
+		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
+		tsdPtr->hWheelAcc -= intDelta;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
 	}
     }
     return theEvent;
