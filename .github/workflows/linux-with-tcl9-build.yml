@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: bug-ea39ab591e
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -133,7 +133,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: bug-ea39ab591e
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
