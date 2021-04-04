@@ -369,9 +369,9 @@ static int GdiBitmap(
 		                "-bitmap bitmap -foreground color\n"
                                 "Not implemented yet. Sorry!";
 
-  /* 
-   * Skip this for now. Should be based on common 
-   * code with the copybits command. 
+  /*
+   * Skip this for now. Should be based on common
+   * code with the copybits command.
    */
 
   Tcl_AppendResult(interp, usage_message, NULL);
@@ -384,7 +384,7 @@ static int GdiBitmap(
  *
  * GdiImage --
  *
- * 	Unimplemented for now. Unimplemented for now. Should switch on image type and call 
+ * 	Unimplemented for now. Unimplemented for now. Should switch on image type and call
  *  either GdiPhoto or GdiBitmap. This code is similar to that in tkWinImage.c.
  *
  * Results:
@@ -450,7 +450,7 @@ static int GdiPhoto(
   /*
    *   Parse the arguments.
    */
-  
+
   /* HDC is required. */
   if ( argc < 1 ) {
     Tcl_AppendResult(interp, usage_message, NULL);
@@ -1025,7 +1025,7 @@ static int GdiLine(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int GdiOval(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
@@ -1151,7 +1151,7 @@ static int GdiOval(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int GdiPolygon(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
@@ -1277,7 +1277,7 @@ static int GdiPolygon(
         }
         argc -= 2;
         argv += 2;
-        /* 
+        /*
           * Check for arguments.
           * Most of the arguments affect the "Pen" and "Brush".
           */
@@ -1338,7 +1338,7 @@ static int GdiPolygon(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int GdiRectangle(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
@@ -1417,7 +1417,7 @@ static int GdiRectangle(
       argv += 2;
     }
 
-   /* 
+   /*
 	* Note: If any fill is specified, the function must create a brush and
 	* put the coordinates in a RECTANGLE structure, and call FillRect.
 	* FillRect requires a BRUSH / color.
@@ -1458,7 +1458,7 @@ static int GdiRectangle(
  *
  * GdiCharWidths --
  *
- *  Computes /character widths. This is completely inadequate for typesetting, 
+ *  Computes /character widths. This is completely inadequate for typesetting,
     but should work for simple text manipulation.
  *
  * Results:
@@ -1475,7 +1475,7 @@ static int GdiCharWidths(
     const char **argv)
 {
   static const char usage_message[] = "::tk::print::_gdi characters hdc [-font fontname] [-array ary]";
-  /* 
+  /*
    * Returns widths of characters from font in an associative array.
   *  Font is currently selected font for HDC if not specified.
   *  Array name is GdiCharWidths if not specified.
@@ -1536,7 +1536,7 @@ static int GdiCharWidths(
 
   /* Now, get the widths using the correct function for this Windows version. */
 #ifdef WIN32
-  /* 
+  /*
    * Try the correct function. If it fails (as has been reported on some
    * versions of Windows 95), try the "old" function.
    */
@@ -1547,7 +1547,7 @@ static int GdiCharWidths(
 #else
   retval = GetCharWidth  (hDC, 0, 255, widths);
 #endif
-  /* 
+  /*
    * Retval should be 1 (TRUE) if the function succeeded. If the function fails,
    * get the "extended" error code and return. Be sure to deallocate the font if
    * necessary.
@@ -1791,9 +1791,9 @@ int GdiText(
         Tcl_DStringInit(&tds2);
         ustring = Tcl_UtfToUniCharDString(ostring, tds_len, &tds2);
         DrawTextW(hDC, (LPWSTR)ustring, Tcl_DStringLength(&tds2)/2, &sizerect, format_flags | DT_CALCRECT);
-        Tcl_DStringFree(&tds2); 
+        Tcl_DStringFree(&tds2);
 	} else /* Use UTF-8/local code page output. */
-    { 
+    {
          DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags | DT_CALCRECT);
     }
 #else
@@ -2214,14 +2214,14 @@ static int GdiMap(
         SetViewportExtEx (hdc, vextent.cx, vextent.cy, &oldsiz);
       }
 
-      /* 
+      /*
         * Since we may not have set up every parameter, get them again for
         * the report.
         */
       mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent);
 
       /*
-        * Output current CTM info. 
+        * Output current CTM info.
         * Note: This should really be in terms that can be used in a ::tk::print::_gdi map command!
          */
       sprintf(msgbuf, "Transform: \"(%ld, %ld) -> (%ld, %ld)\" "
@@ -2467,7 +2467,7 @@ static int GdiCopyBits (
 
  /*
   * Get the MS Window we want to copy.
-  * Given the HDC, we can get the "Window". 
+  * Given the HDC, we can get the "Window".
   */
   if (wnd == 0 )
   {
@@ -2488,7 +2488,7 @@ static int GdiCopyBits (
       return TCL_ERROR;
     }
 
-     /* 
+     /*
       * If it's a toplevel, give it special treatment: Get the top-level window instead.
       * If the user only wanted the client, the -client flag will take care of it.
       * This uses "windows" tricks rather than Tk since the obvious method of
@@ -2631,7 +2631,7 @@ static int GdiCopyBits (
 
   ReleaseDC(wnd,src);
 
-  /* 
+  /*
    * The return value should relate to the size in the destination space.
    * At least the height should be returned (for page layout purposes).
    */
@@ -2660,7 +2660,7 @@ static int DIBNumColors(LPBITMAPINFOHEADER lpDIB)
     WORD wBitCount;  /* DIB bit count. */
     DWORD dwClrUsed;
 
-    /* 
+    /*
      * If this is a Windows-style DIB, the number of colors in the
      * color table can be less than the number of bits per pixel.
      * allows for (i.e. lpbi->biClrUsed can be set to some value).
@@ -2672,9 +2672,9 @@ static int DIBNumColors(LPBITMAPINFOHEADER lpDIB)
     if (dwClrUsed)
       return (WORD)dwClrUsed;
 
-    /* 
+    /*
      * Calculate the number of colors in the color table based on.
-     * The number of bits per pixel for the DIB. 
+     * The number of bits per pixel for the DIB.
      */
 
     wBitCount = (lpDIB)->biBitCount;
@@ -2718,7 +2718,7 @@ static int DIBNumColors(LPBITMAPINFOHEADER lpDIB)
  *  Overstrike and underline cannot be "undone" by other words
  *
  * Results:
- *	 Keywords converted to modifiers. 
+ *	 Keywords converted to modifiers.
  *
  *----------------------------------------------------------------------
  */
@@ -2851,7 +2851,7 @@ static int GdiMakeLogFont(Tcl_Interp *interp, const char *str, LOGFONT *lf, HDC 
     char *strend;
     siz = strtol(list[1], &strend, 0);
 
-    /* 
+    /*
      * Assumptions:
      * 1) Like canvas, if a positive number is specified, it's in points.
      * 2) Like canvas, if a negative number is specified, it's in pixels.
@@ -2962,7 +2962,7 @@ static int GdiMakePen(
     HGDIOBJ *oldPen)
 {
 
-/* 
+/*
  * The LOGPEN structure takes the following dash options:
  * PS_SOLID: a solid pen
  * PS_DASH:  a dashed pen
@@ -2984,7 +2984,7 @@ static int GdiMakePen(
   DWORD styleCount = 0;
   DWORD *styleArray = 0;
 
-  /* 
+  /*
    * To limit the propagation of allocated memory, the dashes will have a maximum here.
    * If one wishes to remove the static allocation, please be sure to update GdiFreePen
    * and ensure that the array is NOT freed if the LOGPEN option is used.
@@ -4107,7 +4107,7 @@ static HANDLE CopyToDIB ( HWND hWnd, enum PrintType type )
 
             GetWindowRect(hWnd, &rectWnd);
 
-            /* 
+            /*
              * Get the DIB of the window by calling
              * CopyScreenToDIB and passing it the window rect.
              */
@@ -4138,7 +4138,7 @@ static HANDLE CopyToDIB ( HWND hWnd, enum PrintType type )
             rectClient.right = pt2.x;
             rectClient.bottom = pt2.y;
 
-            /* 
+            /*
              * Get the DIB of the client area by calling
              * CopyScreenToDIB and passing it the client rect.
              */
@@ -4151,7 +4151,7 @@ static HANDLE CopyToDIB ( HWND hWnd, enum PrintType type )
         {
           RECT   Rect;
 
-          /* 
+          /*
            * Get the device-dependent bitmap in lpRect by calling
            * CopyScreenToBitmap and passing it the rectangle to grab.
            */
@@ -4226,7 +4226,7 @@ static void GetDisplaySize (LONG *width, LONG *height)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static HBITMAP CopyScreenToBitmap(LPRECT lpRect)
 {
     HDC         hScrDC, hMemDC;         /* Screen DC and memory DC. */
@@ -4240,7 +4240,7 @@ static HBITMAP CopyScreenToBitmap(LPRECT lpRect)
     if (IsRectEmpty(lpRect))
       return NULL;
 
-    /* 
+    /*
      * Create a DC for the screen and create
      * a memory DC compatible to screen DC.
      */
@@ -4283,7 +4283,7 @@ static HBITMAP CopyScreenToBitmap(LPRECT lpRect)
     /* Bitblt screen DC to memory DC. */
     BitBlt(hMemDC, 0, 0, nWidth, nHeight, hScrDC, nX, nY, SRCCOPY);
 
-    /* 
+    /*
      * Select old bitmap back into memory DC and get handle to
      * bitmap of the screen.
      */
@@ -4476,21 +4476,21 @@ static HANDLE BitmapToDIB(HBITMAP hBitmap, HPALETTE hPal)
  *
  * CopyScreenToDIB--
  *
- *  Copies screen to DIB. 
+ *  Copies screen to DIB.
  *
  * Results:
  *	 Screen copied.
  *
  *----------------------------------------------------------------------
  */
- 
+
 static HANDLE CopyScreenToDIB(LPRECT lpRect)
 {
     HBITMAP     hBitmap;
     HPALETTE    hPalette;
     HANDLE      hDIB;
 
-    /* 
+    /*
      * Get the device-dependent bitmap in lpRect by calling
      * CopyScreenToBitmap and passing it the rectangle to grab.
      */
@@ -4531,7 +4531,7 @@ static HANDLE CopyScreenToDIB(LPRECT lpRect)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static HPALETTE GetSystemPalette(void)
 {
     HDC hDC;                /* Handle to a DC. */
@@ -4573,7 +4573,7 @@ static HPALETTE GetSystemPalette(void)
     GetSystemPaletteEntries(hDC, 0, nColors,
             (LPPALETTEENTRY)(lpLogPal->palPalEntry));
 
-    /* 
+    /*
      * Go ahead and create the palette.  Once it's created,
      * we no longer need the LOGPALETTE, so free it.
      */
@@ -4601,7 +4601,7 @@ static HPALETTE GetSystemPalette(void)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int PalEntriesOnDevice(HDC hDC)
 {
   return (1 << (GetDeviceCaps(hDC, BITSPIXEL) * GetDeviceCaps(hDC, PLANES)));
@@ -4620,14 +4620,14 @@ static int PalEntriesOnDevice(HDC hDC)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static HDC get_dc(Tcl_Interp *interp, const char *name)
 {
   /* ANY type of DC should be ok here. */
 
     char *strend;
     unsigned long tmp;
-    
+
     /* Perhaps it is a numeric DC. */
     tmp = strtoul(name, &strend, 0);
     if ( strend != 0 && strend > name )
@@ -4655,7 +4655,7 @@ static HDC get_dc(Tcl_Interp *interp, const char *name)
       return 0;
     }
 }
-    
+
 
 int Gdi_Init(Tcl_Interp *interp)
 {
@@ -4799,7 +4799,7 @@ TkGdiMakeBezierCurve(
     int numSteps,				/* Number of steps to use for each spline segments. */
     XPoint xPoints[],			/* Array of XPoints to fill in. */
     double dblPoints[])			/* Array of points to fill in as  doubles, in the form x0, y0, x1, y1. */
-					
+
 {
     int closed, outputPoints, i;
     int numCoords = numPoints*2;
@@ -4812,7 +4812,7 @@ TkGdiMakeBezierCurve(
       */
 
     if (!pointPtr) {
-	/* 
+	/*
 	 * Of pointPtr == NULL, this function returns an upper limit.
 	 * of the array size to store the coordinates. This can be
 	 * used to allocate storage, before the actual coordinates
@@ -4924,7 +4924,7 @@ TkGdiMakeBezierCurve(
 
 	/*
 	 * Generate a Bezier spline using the control points.
-	 */   
+	 */
 
 
 	if (xPoints != NULL) {

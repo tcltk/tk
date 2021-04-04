@@ -544,7 +544,7 @@ int Winprint_Init (Tcl_Interp *Interp)
 	}
 	Tcl_CreateObjCommand(Interp, "::tk::print::_print", WinPrintCmd, (ClientData)NULL,
 		(Tcl_CmdDeleteProc *)NULL);
-	
+
 	return RET_OK;
 }
 
