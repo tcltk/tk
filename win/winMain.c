@@ -13,7 +13,6 @@
  */
 
 #include "tk.h"
-#include "tkWinInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -94,8 +93,6 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 /* Make sure the stubbed variants of those are never used. */
 #undef Tcl_ObjSetVar2
 #undef Tcl_NewStringObj
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -269,7 +266,6 @@ Tcl_AppInit(
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
-
     return TCL_OK;
 }
 
