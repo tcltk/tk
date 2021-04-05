@@ -294,7 +294,7 @@ test winfo-9.2 {"winfo viewable" command} -body {
 test winfo-9.3 {"winfo viewable" command} -body {
     winfo viewable .
 } -result 1
-test winfo-9.4 {"winfo viewable" command} -constraints failsOnUbuntu -body {
+test winfo-9.4 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     wm iconify .
     winfo viewable .
 } -cleanup {
