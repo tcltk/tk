@@ -436,7 +436,7 @@ TkTextMakeByteIndex(
 		 */
 
 		start = segPtr->body.chars + (byteIndex - index);
-		p = TkUtfPrev(start, segPtr->body.chars);
+		p = Tcl_UtfPrev(start, segPtr->body.chars);
 		p += TkUtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }
@@ -480,7 +480,7 @@ TkTextMakeCharIndex(
     TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
-    int ch;
+    Tcl_UniChar ch = 0;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -527,7 +527,7 @@ TkTextMakeCharIndex(
 		    return indexPtr;
 		}
 		charIndex--;
-		offset = TkUtfToUniChar(p, &ch);
+		offset = Tcl_UtfToUniChar(p, &ch);
 		index += offset;
 	    }
 	} else {
@@ -2126,7 +2126,7 @@ TkTextIndexBackChars(
 	    if (segPtr->typePtr == &tkTextCharType) {
 		start = segPtr->body.chars;
 		end = segPtr->body.chars + segSize;
-		for (p = end; ; p = TkUtfPrev(p, start)) {
+		for (p = end; ; p = Tcl_UtfPrev(p, start)) {
 		    if (charCount == 0) {
 			dstPtr->byteIndex -= (end - p);
 			goto backwardCharDone;
@@ -2367,7 +2367,7 @@ StartEnd(
 		}
 		if (offset + 1 > 1) {
 		    chSize = (segPtr->body.chars + offset
-			    - TkUtfPrev(segPtr->body.chars + offset,
+			    - Tcl_UtfPrev(segPtr->body.chars + offset,
 			    segPtr->body.chars));
 		}
 		firstChar = 0;
