@@ -5805,6 +5805,8 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
+eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
+eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
 if test ${TCL_MAJOR_VERSION} = 8 ; then
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
 if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
