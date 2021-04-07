@@ -64,6 +64,10 @@ namespace eval ttk::theme::aqua {
 	    }
 
 	# Spinbox
+	ttk::style configure TSpinbox \
+	    -foreground systemTextColor \
+	    -background systemTextBackgroundColor \
+	    -fieldbackground systemTextBackgroundColor
 	ttk::style map TSpinbox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
