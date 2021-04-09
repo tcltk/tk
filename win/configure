@@ -5805,18 +5805,33 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
+eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
+eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
+if test ${TCL_MAJOR_VERSION} = 8 ; then
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
 if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
 else
  eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
 fi
+else
+eval "TK_DLL_FILE=tcl9tk$VER${DLLSUFFIX}"
+if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
+fi
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
-eval "TK_LIB_FLAG=\"-ltk${VER}${LIBFLAGSUFFIX}\""
+TK_LIB_FLAG="-l"
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
+fi
+eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
 
