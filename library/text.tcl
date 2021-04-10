@@ -768,7 +768,7 @@ proc ::tk::TextAutoScan {w} {
 # pos -		The desired new position for the cursor in the window.
 
 proc ::tk::TextSetCursor {w pos} {
-    if {[$w compare $pos == end]} {
+    if {[$w compare $pos >= end]} {
 	set pos {end - 1 chars}
     }
     $w mark set insert $pos
