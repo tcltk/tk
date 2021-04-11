@@ -997,6 +997,37 @@ GetIndex(
     if (indexPtr->linePtr == NULL) {
 	Tcl_Panic("Bad index created");
     }
+
+    /*
+     * Restrict indexPtr to -startline/-endline thresholds.
+     */
+
+    if (textPtr) {
+	if (textPtr->start != NULL) {
+	    int start;
+	    TkTextIndex indexStart;
+
+	    start = TkBTreeLinesTo(NULL, textPtr->start);
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+		&indexStart);
+	    if (TkTextIndexCmp(indexPtr, &indexStart) < 0) {
+		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+		    indexPtr);
+	    }
+	}
+	if (textPtr->end != NULL) {
+	    int end;
+	    TkTextIndex indexEnd;
+
+	    end = TkBTreeLinesTo(NULL, textPtr->end);
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
+		&indexEnd);
+	    if (TkTextIndexCmp(indexPtr, &indexEnd) > 0) {
+		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
+		    indexPtr);
+	    }
+	}
+    }
     return TCL_OK;
 
   error:
