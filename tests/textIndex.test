@@ -964,6 +964,19 @@ test textIndex-25.1 {IndexCountBytesOrdered, bug [3f1f79abcf]} {
     destroy .t2
 } {}
 
+test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline in peers, bug [34db75c0ac]} {
+    set res {}
+    pack [text .t2]
+    .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
+    pack [.t2 peer create .p2 -startline 2 -endline 3]
+    lappend res [.p2 index "end"]
+    lappend res [.p2 index "end lineend"]
+    lappend res [.p2 index "end display lineend"]
+    destroy .t2 .p2
+    set res
+} {2.0 2.0 2.0}
+
+
 # cleanup
 rename textimage {}
 catch {destroy .t}
