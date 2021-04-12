@@ -972,9 +972,14 @@ test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline
     lappend res [.p2 index "end"]
     lappend res [.p2 index "end lineend"]
     lappend res [.p2 index "end display lineend"]
+    .p2 configure -startline 3 -endline {}
+    image create photo redsquare -width 5 -height 5
+    redsquare put red -to 0 0 4 4
+    .t2 image create 1.0 -image redsquare
+    lappend res [.p2 index redsquare]
     destroy .t2 .p2
     set res
-} {2.0 2.0 2.0}
+} {2.0 2.0 2.0 1.0}
 
 
 # cleanup
