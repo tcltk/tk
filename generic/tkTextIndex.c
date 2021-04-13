@@ -997,37 +997,7 @@ GetIndex(
     if (indexPtr->linePtr == NULL) {
 	Tcl_Panic("Bad index created");
     }
-
-    /*
-     * Restrict indexPtr to -startline/-endline thresholds.
-     */
-
-    if (textPtr) {
-	if (textPtr->start != NULL) {
-	    int start;
-	    TkTextIndex indexStart;
-
-	    start = TkBTreeLinesTo(NULL, textPtr->start);
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-		&indexStart);
-	    if (TkTextIndexCmp(indexPtr, &indexStart) < 0) {
-		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-		    indexPtr);
-	    }
-	}
-	if (textPtr->end != NULL) {
-	    int end;
-	    TkTextIndex indexEnd;
-
-	    end = TkBTreeLinesTo(NULL, textPtr->end);
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
-		&indexEnd);
-	    if (TkTextIndexCmp(indexPtr, &indexEnd) > 0) {
-		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
-		    indexPtr);
-	    }
-	}
-    }
+    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 0);
     return TCL_OK;
 
   error:
@@ -1035,6 +1005,67 @@ GetIndex(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", NULL);
     return TCL_ERROR;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextIndexAdjustToStartEnd --
+ *
+ *      Adjust indexPtr to the -startline/-endline range, or just check
+ *      if indexPtr is out of this range.
+ *
+ * Results:
+ *	The return value is a standard Tcl return result. If check is true,
+ *      return TCL_ERROR if indexPtr is outside the -startline/-endline
+ *      range (indexPtr is not modified).
+ *      If check is false, adjust indexPtr to -startline/-endline.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextIndexAdjustToStartEnd(
+    TkText* textPtr,
+    TkTextIndex* indexPtr,  /* Pointer to index. */
+    int check)		    /* 1 means only check indexPtr against
+			     * the -startline/-endline range
+			     * 0 means adjust to this range */
+{
+    int bound;
+    TkTextIndex indexBound;
+
+    if (!textPtr) {
+	return TCL_OK;
+    }
+    if (textPtr->start != NULL) {
+	bound = TkBTreeLinesTo(NULL, textPtr->start);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+	    &indexBound);
+	if (TkTextIndexCmp(indexPtr, &indexBound) < 0) {
+	    if (check) {
+		return TCL_ERROR;
+	    }
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+		indexPtr);
+	}
+    }
+    if (textPtr->end != NULL) {
+	bound = TkBTreeLinesTo(NULL, textPtr->end);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+	    &indexBound);
+	if (TkTextIndexCmp(indexPtr, &indexBound) > 0) {
+	    if (check) {
+		return TCL_ERROR;
+	    }
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+		indexPtr);
+	}
+    }
+    return TCL_OK;
 }
 
 /*
