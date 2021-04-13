@@ -1161,7 +1161,7 @@ MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 MODULE_SCOPE void       TkTextRunAfterSyncCmd(ClientData clientData);
 MODULE_SCOPE int        TkTextIndexAdjustToStartEnd(TkText* textPtr,
-			    TkTextIndex* indexPtr, int err);
+			    TkTextIndex *indexPtr, int err);
 #endif /* _TKTEXT */
 
 /*
