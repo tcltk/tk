@@ -5358,7 +5358,8 @@ TkTextSetYView(
 
     /*
      * If the specified position is the extra line at the end of the text,
-     * round it back to the last real line.
+     * round it back to the last real line. Also, adjust to the -starline
+     * and -endline limits.
      */
 
     lineIndex = TkBTreeLinesTo(textPtr, indexPtr->linePtr);
@@ -5366,6 +5367,7 @@ TkTextSetYView(
 	TkTextIndexBackChars(textPtr, indexPtr, 1, &rounded, COUNT_INDICES);
 	indexPtr = &rounded;
     }
+    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 0);
 
     if (pickPlace == TK_TEXT_NOPIXELADJUST) {
 	if (textPtr->topIndex.linePtr == indexPtr->linePtr
