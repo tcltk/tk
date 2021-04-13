@@ -5328,6 +5328,7 @@ TkTextRelayoutWindow(
  *	The display will (eventually) be updated so that the position given by
  *	"indexPtr" is visible on the screen at the position determined by
  *	"pickPlace".
+ *      indexPtr may be adjusted to the -startline/-endline range.
  *
  *----------------------------------------------------------------------
  */
