@@ -1029,8 +1029,8 @@ GetIndex(
 
 int
 TkTextIndexAdjustToStartEnd(
-    TkText* textPtr,
-    TkTextIndex* indexPtr,  /* Pointer to index. */
+    TkText *textPtr,
+    TkTextIndex *indexPtr,  /* Pointer to index. */
     int check)		    /* 1 means only check indexPtr against
 			     * the -startline/-endline range
 			     * 0 means adjust to this range */
