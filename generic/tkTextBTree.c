@@ -7859,8 +7859,8 @@ TkBTreeFindPixelLine(
     if (textPtr->endMarker != textPtr->sharedTextPtr->endMarker) {
 	TkTextLine *endLinePtr = textPtr->endMarker->sectionPtr->linePtr;
 
-	if (TkBTreeLinesTo(tree, textPtr, linePtr, NULL) >
-		TkBTreeLinesTo(tree, textPtr, endLinePtr, NULL)) {
+	if (TkBTreeLinesTo(tree, NULL, linePtr, NULL) >
+		TkBTreeLinesTo(tree, NULL, endLinePtr, NULL)) {
 	    linePtr = endLinePtr;
 	}
     }
