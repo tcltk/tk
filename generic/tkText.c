@@ -3318,7 +3318,6 @@ DeleteIndexRange(
 			    0, &indexStart);
 		    if (TkTextIndexCmp(&indexTmp, &indexStart) < 0) {
 			indexTmp = indexStart;
-			printf("ADJUSTED !!!!!!!!!!!!!!!!!!!!!!\n");
 		    }
 		}
 		TkTextSetYView(tPtr, &indexTmp, 0);
