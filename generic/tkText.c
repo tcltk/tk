@@ -3284,6 +3284,14 @@ DeleteIndexRange(
 
 	    if (tPtr == textPtr) {
 		if (viewUpdate) {
+		    /*
+		     * line cannot be before -startline of textPtr because
+		     * this line corresponds to an index which is necessarily
+		     * between "1.0" and "end" relative to textPtr.
+		     * Therefore no need to clamp line to the -start/-end
+		     * range.
+		     */
+
 		    TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, line,
 			    byteIndex, &indexTmp);
 		    TkTextSetYView(tPtr, &indexTmp, 0);
@@ -3291,6 +3299,28 @@ DeleteIndexRange(
 	    } else {
 		TkTextMakeByteIndex(sharedTextPtr->tree, tPtr, line,
 			byteIndex, &indexTmp);
+		/*
+		 * line may be before -startline of tPtr and must be
+		 * clamped to -startline before providing it to
+		 * TkTextSetYView otherwise lines before -startline
+		 * would be displayed.
+		 * There is no need to worry about -endline however,
+		 * because the view will only be reset if the deletion
+		 * involves the TOP line of the screen
+		 */
+
+		if (tPtr->start != NULL) {
+		    int start;
+		    TkTextIndex indexStart;
+
+		    start = TkBTreeLinesTo(NULL, tPtr->start);
+		    TkTextMakeByteIndex(sharedTextPtr->tree, NULL, start,
+			    0, &indexStart);
+		    if (TkTextIndexCmp(&indexTmp, &indexStart) < 0) {
+			indexTmp = indexStart;
+			printf("ADJUSTED !!!!!!!!!!!!!!!!!!!!!!\n");
+		    }
+		}
 		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
 	}

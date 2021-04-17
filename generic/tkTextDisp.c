@@ -5328,7 +5328,6 @@ TkTextRelayoutWindow(
  *	The display will (eventually) be updated so that the position given by
  *	"indexPtr" is visible on the screen at the position determined by
  *	"pickPlace".
- *      indexPtr may be adjusted to the -startline/-endline range.
  *
  *----------------------------------------------------------------------
  */
@@ -5359,8 +5358,7 @@ TkTextSetYView(
 
     /*
      * If the specified position is the extra line at the end of the text,
-     * round it back to the last real line. Also, adjust to the -starline
-     * and -endline limits.
+     * round it back to the last real line.
      */
 
     lineIndex = TkBTreeLinesTo(textPtr, indexPtr->linePtr);
@@ -5368,7 +5366,6 @@ TkTextSetYView(
 	TkTextIndexBackChars(textPtr, indexPtr, 1, &rounded, COUNT_INDICES);
 	indexPtr = &rounded;
     }
-    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 0);
 
     if (pickPlace == TK_TEXT_NOPIXELADJUST) {
 	if (textPtr->topIndex.linePtr == indexPtr->linePtr
