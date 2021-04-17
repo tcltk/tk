@@ -1044,25 +1044,25 @@ TkTextIndexAdjustToStartEnd(
     if (textPtr->start != NULL) {
 	bound = TkBTreeLinesTo(NULL, textPtr->start);
 	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
-	    &indexBound);
+		&indexBound);
 	if (TkTextIndexCmp(indexPtr, &indexBound) < 0) {
 	    if (check) {
 		return TCL_ERROR;
 	    }
 	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
-		indexPtr);
+		    indexPtr);
 	}
     }
     if (textPtr->end != NULL) {
 	bound = TkBTreeLinesTo(NULL, textPtr->end);
 	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
-	    &indexBound);
+		&indexBound);
 	if (TkTextIndexCmp(indexPtr, &indexBound) > 0) {
 	    if (check) {
 		return TCL_ERROR;
 	    }
 	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
-		indexPtr);
+		    indexPtr);
 	}
     }
     return TCL_OK;
