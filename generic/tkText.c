@@ -3297,7 +3297,7 @@ DeleteIndexRange(
 		    TkTextSetYView(tPtr, &indexTmp, 0);
 		}
 	    } else {
-		TkTextMakeByteIndex(sharedTextPtr->tree, tPtr, line,
+		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line,
 			byteIndex, &indexTmp);
 		/*
 		 * line may be before -startline of tPtr and must be
