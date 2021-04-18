@@ -761,11 +761,11 @@ GetIndex(
 	goto done;
     }
 
-    if (TkTextWindowIndex(textPtr, string, indexPtr) != 0) {
+    if (TkTextWindowIndex(textPtr, string, indexPtr) == TCL_OK) {
 	goto done;
     }
 
-    if (TkTextImageIndex(textPtr, string, indexPtr) != 0) {
+    if (TkTextImageIndex(textPtr, string, indexPtr) == TCL_OK) {
 	goto done;
     }
 
@@ -917,7 +917,7 @@ GetIndex(
 	*endOfBase = 0;
 	result = TkTextWindowIndex(textPtr, Tcl_DStringValue(&copy), indexPtr);
 	*endOfBase = c;
-	if (result != 0) {
+	if (result == TCL_OK) {
 	    goto gotBase;
 	}
     }
@@ -954,7 +954,7 @@ GetIndex(
 	*endOfBase = 0;
 	result = TkTextImageIndex(textPtr, Tcl_DStringValue(&copy), indexPtr);
 	*endOfBase = c;
-	if (result != 0) {
+	if (result == TCL_OK) {
 	    goto gotBase;
 	}
     }

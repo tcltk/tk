@@ -454,7 +454,8 @@ TkTextMarkNameToIndex(
     }
     TkTextMarkSegToIndex(textPtr, segPtr, indexPtr);
 
-    /* If indexPtr refers to somewhere outside the -startline/-endline
+    /*
+     * If indexPtr refers to somewhere outside the -startline/-endline
      * range limits of the widget, error out since the mark indeed is not
      * reachable from this text widget (it may be reachable from a peer)
      * (bug 1630271).
