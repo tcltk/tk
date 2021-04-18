@@ -2144,6 +2144,7 @@ inline void		TkTextIndexSave(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRebuild(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToStartRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
+MODULE_SCOPE int	TkTextIndexOutsideStartEnd(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
 MODULE_SCOPE int		TkrTesttextCmd(ClientData dummy, Tcl_Interp *interp,
