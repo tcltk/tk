@@ -186,9 +186,8 @@ test textMark-6.6 {attempt to move the insert mark beyond peer -endline - bug 34
   .t peer create .p -startline 1 -endline 2
   pack .p
   update
-  .p mark set insert 1.0
+  .p mark set insert 1.2
   focus -force .p
-  event generate .p <<NextLine>>
   event generate .p <<NextLine>>  ; # shall not error out
   set res [.p index insert]
 } -cleanup {
