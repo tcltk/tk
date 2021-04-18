@@ -1668,6 +1668,21 @@ test textDisp-11.21 {TkTextSetYView, window height smaller than the line height}
     .top.t see 1.0
     .top.t index @0,[expr {$lineheight - 2}]
 } {1.0}
+test textDisp-11.22 {TkTextSetYView, peer has -startline} {
+    .top.t delete 1.0 end
+    for {set i 1} {$i <= 50} {incr i} {
+        .top.t insert end "Line $i\n"
+    }
+    pack [.top.t peer create .top.p] -side left
+    pack [scrollbar .top.sb -command {.top.p yview}] -side left -fill y
+    .top.p configure -startline 5 -endline 35 -yscrollcommand {.top.sb set}
+    updateText
+    .top.p yview moveto 0
+    updateText
+    set res [.top.p get @0,0 "@0,0 lineend"]
+    destroy .top.p
+    set res
+} {Line 5}
 
 .t configure -wrap word
 .t delete 50.0 51.0
