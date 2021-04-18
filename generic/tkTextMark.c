@@ -2090,36 +2090,12 @@ MarkToIndex(
     TkTextSegment *markPtr,	/* Pointer to mark segment. */
     TkTextIndex *indexPtr)	/* Index information gets stored here. */
 {
-    TkTextIndex index;
-
     assert(textPtr);
     TkTextMarkSegToIndex(textPtr, markPtr, indexPtr);
     indexPtr->textPtr = textPtr;
 
-    /*
-     * If indexPtr refers to somewhere outside the -start/-end range
-     * limits of the widget, error out since the mark indeed is not
-     * reachable from this text widget (it may be reachable from a peer)
-     * (bug 1630271).
-     */
-
-    if (textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
-	TkTextIndexClear(&index, textPtr);
-	TkTextIndexSetSegment(&index, textPtr->startMarker);
-	if (TkTextIndexCompare(indexPtr, &index) < 0) {
-	    return 0;
-	}
-    }
-    if (textPtr->endMarker != textPtr->sharedTextPtr->endMarker) {
-	if (TkTextIndexGetLine(indexPtr) == textPtr->endMarker->sectionPtr->linePtr) {
-	    TkTextIndexClear(&index, textPtr);
-	    TkTextIndexSetSegment(&index, textPtr->endMarker);
-	} else {
-	    TkTextIndexSetupToEndOfText(&index, textPtr, indexPtr->tree);
-	}
-	if (TkTextIndexCompare(indexPtr, &index) > 0) {
-	    return 0;
-	}
+    if (TkTextIndexOutsideStartEnd(indexPtr)) {
+	return 0;
     }
 
     return 1;
