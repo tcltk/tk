@@ -23,6 +23,7 @@
 #include <tcl.h>
 
 #include "tkWinInt.h"
+#include "tkWinHDC.h"
 
 /* Main dispatcher for commands. */
 static int TkWinGDI      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
