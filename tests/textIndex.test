@@ -972,14 +972,30 @@ test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline
     lappend res [.p2 index "end"]
     lappend res [.p2 index "end lineend"]
     lappend res [.p2 index "end display lineend"]
+    destroy .t2 .p2
+    set res
+} {2.0 2.0 2.0}
+test textIndex-26.2 {GetIndex errors out if mark, image or window is outside -starline/-endline, bug [34db75c0ac]} {
+    set res {}
+    pack [text .t2]
+    .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
+    pack [.t2 peer create .p2 -startline 2 -endline 3]
     .p2 configure -startline 3 -endline {}
+    .t2 mark set 1.0 mymark
+    catch {.p2 index mymark} msg
+    lappend res $msg
     image create photo redsquare -width 5 -height 5
     redsquare put red -to 0 0 4 4
     .t2 image create 1.0 -image redsquare
-    lappend res [.p2 index redsquare]
+    catch {.p2 index redsquare} msg
+    lappend res $msg
+    frame .f -width 10 -height 10 -bg blue
+    .t2 window create 1.2 -window .f
+    catch {.p2 index .f} msg
+    lappend res $msg
     destroy .t2 .p2
     set res
-} {2.0 2.0 2.0 1.0}
+} {{bad text index "mymark"} {bad text index "redsquare"} {bad text index ".f"}}
 
 
 # cleanup
