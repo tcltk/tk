@@ -1030,6 +1030,56 @@ TkTextIndexRestrictToEndRange(
 /*
  *----------------------------------------------------------------------
  *
+ * TkTextIndexOutsideStartEnd --
+ *
+ *	Check if given index is outside the range of the widget (at either
+ *	side).
+ *
+ * Results:
+ *	Returns 0 if the index is within range, or 1 if index is outside
+ *	range.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkTextIndexOutsideStartEnd(
+    TkTextIndex* indexPtr)
+{
+    TkText* textPtr = indexPtr->textPtr;
+    TkTextIndex index;
+
+    assert(textPtr);
+
+    if (textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
+	TkTextIndexClear(&index, textPtr);
+	TkTextIndexSetSegment(&index, textPtr->startMarker);
+	if (TkTextIndexCompare(indexPtr, &index) < 0) {
+	    return 1;
+	}
+    }
+    if (textPtr->endMarker != textPtr->sharedTextPtr->endMarker) {
+	if (TkTextIndexGetLine(indexPtr) == textPtr->endMarker->sectionPtr->linePtr) {
+	    TkTextIndexClear(&index, textPtr);
+	    TkTextIndexSetSegment(&index, textPtr->endMarker);
+	}
+	else {
+	    TkTextIndexSetupToEndOfText(&index, textPtr, indexPtr->tree);
+	}
+	if (TkTextIndexCompare(indexPtr, &index) > 0) {
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTextIndexEnsureBeforeLastChar --
  *
  *	If given index is on last line, then this index will be set to
