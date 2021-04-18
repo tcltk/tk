@@ -975,7 +975,7 @@ test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline
     destroy .t2 .p2
     set res
 } {2.0 2.0 2.0}
-test textIndex-26.2 {GetIndex errors out if mark, image or window is outside -starline/-endline, bug [34db75c0ac]} {
+test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outside peer -starline/-endline, bug [34db75c0ac]} {
     set res {}
     pack [text .t2]
     .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
@@ -983,19 +983,23 @@ test textIndex-26.2 {GetIndex errors out if mark, image or window is outside -st
     .p2 configure -startline 3 -endline {}
     .t2 mark set mymark 1.0
     catch {.p2 index mymark} msg
-    lappend res $msg
+    lappend res [.t2 index mymark] $msg
     image create photo redsquare -width 5 -height 5
     redsquare put red -to 0 0 4 4
     .t2 image create 1.0 -image redsquare
     catch {.p2 index redsquare} msg
-    lappend res $msg
+    lappend res [.t2 index redsquare] $msg
     frame .f -width 10 -height 10 -bg blue
     .t2 window create 1.2 -window .f
     catch {.p2 index .f} msg
-    lappend res $msg
+    lappend res [.t2 index .f] $msg
+    .t2 tag add mytag 1.3
+    catch {.p2 index mytag.first} msg
+    lappend res [.t2 index mytag.first] $msg
     destroy .t2 .p2
     set res
-} {{bad text index "mymark"} {bad text index "redsquare"} {bad text index ".f"}}
+} {1.0 {bad text index "mymark"} 1.0 {bad text index "redsquare"} 1.2\
+   {bad text index ".f"} 1.3 {text doesn't contain any characters tagged with "mytag"}}
 
 
 # cleanup
