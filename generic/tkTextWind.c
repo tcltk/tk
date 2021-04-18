@@ -1355,7 +1355,7 @@ TkTextWindowIndex(
  
     /*
      * If indexPtr refers to somewhere outside the -startline/-endline
-     * range limits of the widget, error out since the image indeed is not
+     * range limits of the widget, error out since the window indeed is not
      * reachable from this text widget (it may be reachable from a peer).
      */
 
