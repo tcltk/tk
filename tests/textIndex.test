@@ -981,7 +981,7 @@ test textIndex-26.2 {GetIndex errors out if mark, image or window is outside -st
     .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
     pack [.t2 peer create .p2 -startline 2 -endline 3]
     .p2 configure -startline 3 -endline {}
-    .t2 mark set 1.0 mymark
+    .t2 mark set mymark 1.0
     catch {.p2 index mymark} msg
     lappend res $msg
     image create photo redsquare -width 5 -height 5
