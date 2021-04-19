@@ -14,6 +14,43 @@
 
 #include "tkWinHDC.h"
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Hdc_build_name --
+ *
+ *  Creates HDC name.
+ *
+ * Results:
+ *	 HDC name created.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static const char *Hdc_build_name(int type)
+{
+  const char *prefix;
+  Tcl_HashEntry *data;
+  int status;
+  
+  if ( (data = Tcl_FindHashEntry(&hdcprefixes, (char *)type)) != 0 )
+    prefix = (const char *)Tcl_GetHashValue(data);
+  else
+  {
+    char *cp;
+    prefix = "hdc";
+    if ( (cp = (char *)Tcl_Alloc(4)) != 0 )
+    {
+      strcpy (cp, prefix);
+      if ( (data = Tcl_CreateHashEntry(&hdcprefixes, (char *)type, &status)) != 0 )
+        Tcl_SetHashValue(data, (ClientData)cp);
+    }
+  }
+
+  sprintf(hdc_name, "%s%ld", prefix, ++hdc_count);
+  return hdc_name;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -183,7 +220,7 @@ const char * hdc_prefixof (Tcl_Interp *interp, int type, const char *newprefix)
   if ( newprefix )
   {
     char *cp;
-    int siz, len;
+    size_t siz, len;
     
     siz = strlen(newprefix);
     len = siz > 32 ? 32 : siz;
