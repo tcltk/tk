@@ -3589,8 +3589,7 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
             {
 	      int found=0;
 	      int i;
-	      for (i=0; i<key_count; i++)
-                {
+	      for (i=0; i<key_count; i++) {
 		  if ( Tcl_StringMatch(key, keys[i]) == 1 )
                     {
 		      found = 1;
@@ -3942,11 +3941,10 @@ static HDC get_printer_dc(Tcl_Interp *interp, const char *name)
         
 }
    
-   
+ 
 /*
- * Local Variables:
+ * Local variables:
  * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- *  End:
-*/ 
+ * indent-tabs-mode: nil
+ * End:
+ */
