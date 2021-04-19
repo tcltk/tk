@@ -20,9 +20,10 @@ static Tcl_HashTable hdcprefixes;
 static char hdc_name [32+12+1];
 
 
-int hdc_create(ClientData data, Tcl_Interp *interp, int argc, char **argv);
-int hdc_delete(ClientData data, Tcl_Interp *interp, int argc, char **argv);
-int hdc_list(ClientData data, Tcl_Interp *interp, int argc, char **argv);
-int hdc_prefixof(ClientData data, Tcl_Interp *interp, int argc, char **argv);
-int hdc_typeof(ClientData data, Tcl_Interp *interp, int argc, char **argv);
+const char * hdc_create (Tcl_Interp *interp, void *ptr, int type);
+int hdc_valid (Tcl_Interp *interp, const char *hdcname, int type);
+int hdc_delete (Tcl_Interp *interp, const char *hdcname);
+const char * hdc_prefixof (Tcl_Interp *interp, int type, const char *newprefix);
+int hdc_typeof (Tcl_Interp *interp, const char *hdcname);
 void * hdc_get (Tcl_Interp *interp, const char *hdcname);
+static const char *Hdc_build_name(int type);
