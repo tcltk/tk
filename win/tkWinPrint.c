@@ -3,10 +3,10 @@
  *
  *      This module implements Win32 printer access.
  *
- * Copyright © 1998-2019 Harald Oehlmann, Elmicron GmbH
- * Copyright © 2009 Michael I. Schwartz.
- * Copyright © 2018 Microsoft Corporation.
- * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 1998-2019 Harald Oehlmann, Elmicron GmbH
+ * Copyright (c) 2009 Michael I. Schwartz.
+ * Copyright (c) 2018 Microsoft Corporation.
+ * Copyright (c) 2021 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -20,17 +20,16 @@
  *  end of the file.
  */
 #if defined(__WIN32__) || defined (__WIN32S__) || defined (WIN32S)
-/* Suppress Vista Warnings.  */
+/* Suppress Vista Warnings. */
 #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <windows.h>
 #include <commdlg.h>
-
-
-
 #include <tcl.h>
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>    /* For floor(), used later.  */
+#include <math.h>    /* For floor(), used later. */
 #include "tkWinHDC.h"
 
 /* 
@@ -65,21 +64,21 @@
 
 static struct printer_values
 {
-  unsigned long magic; /* Give some indication if this is a "real" structure.  */
-  HDC hDC;             /* Default printer context--override via args?.  */
-  char hdcname[19+1];  /* Name of hdc.  */
-  PRINTDLG pdlg;       /* Printer dialog and associated values.  */
-  PAGESETUPDLG pgdlg;  /* Printer setup dialog and associated values.  */
-  DEVMODE *pdevmode;   /* Allocated when the printer_values is built.  */
-  char extra_space[1024+1];       /* space just in case....  */
-  int space_count;                /* How much extra space.  */
-  char devnames_filename[255+1];  /* Driver filename.  */
-  char devnames_port[255+1];      /* Output port.  */
-  char devnames_printername[255+1];  /* Full printer name.  */
-  Tcl_HashTable attribs;   /* Hold the attribute name/value pairs..  */
-  int in_job;          /* Set to 1 after job start and before job end.  */
-  int in_page;         /* Set to 1 after page start and before page end.  */
-  DWORD errorCode;      /* Under some conditions, save the Windows error code.  */
+  unsigned long magic; /* Give some indication if this is a "real" structure. */
+  HDC hDC;             /* Default printer context--override via args?. */
+  char hdcname[19+1];  /* Name of hdc. */
+  PRINTDLG pdlg;       /* Printer dialog and associated values. */
+  PAGESETUPDLG pgdlg;  /* Printer setup dialog and associated values. */
+  DEVMODE *pdevmode;   /* Allocated when the printer_values is built. */
+  char extra_space[1024+1];       /* space just in case.... */
+  int space_count;                /* How much extra space. */
+  char devnames_filename[255+1];  /* Driver filename. */
+  char devnames_port[255+1];      /* Output port. */
+  char devnames_printername[255+1];  /* Full printer name. */
+  Tcl_HashTable attribs;   /* Hold the attribute name/value pairs.. */
+  int in_job;          /* Set to 1 after job start and before job end. */
+  int in_page;         /* Set to 1 after page start and before page end. */
+  DWORD errorCode;      /* Under some conditions, save the Windows error code. */
 } default_printer_values;
 
 /* 
@@ -87,7 +86,7 @@ static struct printer_values
  *  managing printer_values structures.
  */
 struct printer_values *current_printer_values = &default_printer_values;
-static int is_valid_printer_values ( const struct printer_values *ppv );
+static int is_valid_printer_values (const struct printer_values *ppv);
 static struct printer_values *make_printer_values(HDC hdc);
 static void delete_printer_values (struct printer_values *ppv);
 
@@ -138,7 +137,7 @@ static int PrintPageAttr (HDC hdc, int *hsize,   int *vsize,
 static int is_valid_hdc (HDC hdc);
 static void RestorePageMargins (const char *attrib, PAGESETUPDLG *pgdlg);
 
-/* New functions from Mark Roseman.  */
+/* New functions from Mark Roseman. */
 static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintOpenDefault (ClientData data, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintClose(ClientData data, Tcl_Interp *interp, int argc, const char  * argv);
@@ -148,9 +147,9 @@ static int PrintPage(ClientData data, Tcl_Interp *interp, int argc, const char  
 static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintOption(ClientData data, Tcl_Interp *interp, int argc, const char  * argv);
 static int JobInfo(int state, const char *name, const char  * outname);
-/* End new functions.  */
+/* End new functions. */
 
-/* Functions to give printer contexts names.  */
+/* Functions to give printer contexts names. */
 static void init_printer_dc_contexts(Tcl_Interp *interp);
 static void delete_printer_dc_contexts(Tcl_Interp *inter);
 static const char *make_printer_dc_name(Tcl_Interp *interp, HDC hdc, struct printer_values *pv);
@@ -163,7 +162,7 @@ static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, i
  *  Internal static data structures (ClientData)
  */
 static char msgbuf[255+1];
-int autoclose = 1;           /* Default is old behavior--one open printer at a time.  */ 
+int autoclose = 1;           /* Default is old behavior--one open printer at a time. */ 
 
 static struct {
   char *tmpname;
@@ -189,10 +188,10 @@ static struct {
 static long WinVersion(void)
 {
   static OSVERSIONINFO osinfo;
-  if ( osinfo.dwOSVersionInfoSize == 0 )
+  if (osinfo.dwOSVersionInfoSize == 0)
     {
       osinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-      GetVersionEx(&osinfo);  /* Should never fail--only failure is if size too small.  */
+      GetVersionEx(&osinfo);  /* Should never fail--only failure is if size too small. */
     }
   return osinfo.dwPlatformId;
 }
@@ -215,7 +214,7 @@ static long WinVersion(void)
 static void ReportWindowsError(Tcl_Interp * interp, DWORD errorCode)
 {
   LPVOID lpMsgBuf;
-  FormatMessage( 
+  FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 		FORMAT_MESSAGE_FROM_SYSTEM | 
 		FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -225,10 +224,10 @@ static void ReportWindowsError(Tcl_Interp * interp, DWORD errorCode)
 		(LPTSTR) &lpMsgBuf,
 		0,
 		NULL 
-		 );
+		);
   Tcl_AppendResult(interp,(char *)lpMsgBuf,0);
   // Free the buffer.
-  LocalFree( lpMsgBuf );
+  LocalFree(lpMsgBuf);
     
 }
 
@@ -262,12 +261,12 @@ static const char *set_attribute(Tcl_HashTable *att, const char *key, const char
   char *val = 0;
     
   data = Tcl_CreateHashEntry(att, key, &status);
-  if ( status == 0)  /* Already existing item!.  */
-    if ( (val = (char *)Tcl_GetHashValue(data)) != 0 )
+  if (status == 0)  /* Already existing item!. */
+    if ((val = (char *)Tcl_GetHashValue(data)) != 0)
       Tcl_Free(val);
     
-  /* In any case, now set the new value.  */
-  if ( value != 0 && (val = (char *)Tcl_Alloc(strlen(value)+1)) != 0 )
+  /* In any case, now set the new value. */
+  if (value != 0 && (val = (char *)Tcl_Alloc(strlen(value)+1)) != 0)
     {
       strcpy (val, value);
       Tcl_SetHashValue(data, val);
@@ -292,7 +291,7 @@ static const char *get_attribute(Tcl_HashTable *att, const char *key)
 {
   Tcl_HashEntry *data;
     
-  if ( ( data = Tcl_FindHashEntry(att, key) ) != 0 )
+  if ((data = Tcl_FindHashEntry(att, key)) != 0)
     return (char *)Tcl_GetHashValue(data);
   return 0;
 }
@@ -315,10 +314,10 @@ static int del_attribute(Tcl_HashTable *att, const char *key)
 {
   Tcl_HashEntry *data;
     
-  if ( ( data = Tcl_FindHashEntry(att, key) ) != 0 )
+  if ((data = Tcl_FindHashEntry(att, key)) != 0)
     {
       char *val;
-      if ( (val = (char *)Tcl_GetHashValue(data) ) != 0 )
+      if ((val = (char *)Tcl_GetHashValue(data)) != 0)
 	Tcl_Free(val);
       Tcl_DeleteHashEntry(data);
       return 1;
@@ -340,7 +339,7 @@ static int del_attribute(Tcl_HashTable *att, const char *key)
  *----------------------------------------------------------------------
  */
  
-static int is_valid_printer_values ( const struct printer_values *ppv )
+static int is_valid_printer_values (const struct printer_values *ppv)
 {
   if (ppv && ppv->magic == PVMAGIC)
     return 1;
@@ -363,9 +362,9 @@ static int is_valid_printer_values ( const struct printer_values *ppv )
 static struct printer_values *make_printer_values(HDC hdc)
 {
   struct printer_values *ppv;
-  if ( (ppv = (struct printer_values *)Tcl_Alloc(sizeof(struct printer_values)) ) == 0 )
+  if ((ppv = (struct printer_values *)Tcl_Alloc(sizeof(struct printer_values))) == 0)
     return 0;
-  memset(ppv, 0, sizeof(struct printer_values) );
+  memset(ppv, 0, sizeof(struct printer_values));
   ppv->magic = PVMAGIC;
   ppv->hDC   = hdc;
   Tcl_InitHashTable(&(ppv->attribs), TCL_STRING_KEYS);
@@ -388,12 +387,12 @@ static struct printer_values *make_printer_values(HDC hdc)
 
 static void delete_printer_values (struct printer_values *ppv)
 {
-  if ( is_valid_printer_values(ppv) )
+  if (is_valid_printer_values(ppv))
     {
-      ppv->magic = 0L;  /* Prevent re-deletion....  */
+      ppv->magic = 0L;  /* Prevent re-deletion.... */
       Tcl_DeleteHashTable(&ppv->attribs);
-      if ( ppv->pdevmode ) {
-	Tcl_Free( (char *) ppv->pdevmode );
+      if (ppv->pdevmode) {
+	Tcl_Free((char *) ppv->pdevmode);
 	ppv->pdevmode = 0;
       }
       Tcl_Free((char *)ppv);
@@ -415,7 +414,7 @@ static void delete_printer_values (struct printer_values *ppv)
 
 static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, int wildcard)
 {
-  /* The following 3 declarations are only needed for the Win32s case.  */
+  /* The following 3 declarations are only needed for the Win32s case. */
   static char devices_buffer[256];
   static char value[256];
   char *cp;
@@ -424,29 +423,31 @@ static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, i
    *  This is not needed for normal cases, but at least one report on
    *  WinNT with at least one printer, this is not initialized.
    *  Suggested by Jim Garrison <garrison@qualcomm.com>
-   .  */
-  *dev = *dvr = *port = "";
+   . */
+  *dev = "";
+  *dvr = "";
+  *port = "";
     
   /* 
    * The result should be useful for specifying the devices and/or OpenPrinter and/or lp -d.  
    * Rather than make this compilation-dependent, do a runtime check.  
    */
-  switch ( WinVersion() )
+  switch (WinVersion())
     {
-    case VER_PLATFORM_WIN32s:  /* Windows 3.1.  */
+    case VER_PLATFORM_WIN32s:  /* Windows 3.1. */
       /* Getting the printer list isn't hard... the trick is which is right for WfW?
        *  [PrinterPorts] or [devices]?
        *  For now, use devices.
-       .  */
-      /* First, get the entries in the section.  */
+       . */
+      /* First, get the entries in the section. */
       GetProfileString("devices", 0, "", (LPSTR)devices_buffer, sizeof devices_buffer);
         
-      /* Next get the values for each entry; construct each as a list of 3 elements.  */
+      /* Next get the values for each entry; construct each as a list of 3 elements. */
       for (cp = devices_buffer; *cp ; cp+=strlen(cp) + 1)
         {
 	  GetProfileString("devices", cp, "", (LPSTR)value, sizeof value);
-	  if ( ( wildcard != 0 && Tcl_StringMatch(value, name) ) ||
-	       ( wildcard == 0 && lstrcmpi (value, name) == 0 )  )
+	  if ((wildcard != 0 && Tcl_StringMatch(value, name)) ||
+	       (wildcard == 0 && lstrcmpi (value, name) == 0) )
             {
 	      static char stable_val[80];
 	      strncpy (stable_val, value,80);
@@ -456,10 +457,10 @@ static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, i
         }
       return 0;
       break;
-    case VER_PLATFORM_WIN32_WINDOWS:   /* Windows 95, 98.  */
-    case VER_PLATFORM_WIN32_NT:        /* Windows NT.  */
+    case VER_PLATFORM_WIN32_WINDOWS:   /* Windows 95, 98. */
+    case VER_PLATFORM_WIN32_NT:        /* Windows NT. */
     default:
-      /* Win32 implementation uses EnumPrinters.  */
+      /* Win32 implementation uses EnumPrinters. */
          
       /* There is a hint in the documentation that this info is stored in the registry.
        *  if so, that interface would probably be even better!
@@ -473,30 +474,30 @@ static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, i
 	PRINTER_INFO_2 *ary = 0;
 	DWORD i;
             
-	/* First, get the size of array needed to enumerate the printers.  */
-	if ( EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, 
+	/* First, get the size of array needed to enumerate the printers. */
+	if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, 
 			  NULL, 
 			  2, (LPBYTE)ary, 
 			  bufsiz, &needed, 
-			  &num_printers) == FALSE )
+			  &num_printers) == FALSE)
 	  {
-	    /* Expected failure--we didn't allocate space.  */
+	    /* Expected failure--we didn't allocate space. */
 	    DWORD err = GetLastError();
-	    /* If the error isn't insufficient space, we have a real problem..  */
-	    if ( err != ERROR_INSUFFICIENT_BUFFER )
+	    /* If the error isn't insufficient space, we have a real problem. */
+	    if (err != ERROR_INSUFFICIENT_BUFFER)
 	      return 0;
 	  }
             
-	/* Now that we know how much, allocate it.  */
-	if ( needed > 0 && (ary = (PRINTER_INFO_2 *)Tcl_Alloc(needed) ) != 0 )
+	/* Now that we know how much, allocate it. */
+	if (needed > 0 && (ary = (PRINTER_INFO_2 *)Tcl_Alloc(needed)) != 0)
 	  bufsiz = needed;
 	else
 	  return 0;
             
-	if ( EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, NULL, 
+	if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, NULL, 
 			  2, (LPBYTE)ary, 
 			  bufsiz, &needed, 
-			  &num_printers) == FALSE )
+			  &num_printers) == FALSE)
 	  {
 	    /* Now we have a real failure!  */
 	    return 0;
@@ -504,10 +505,10 @@ static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, i
             
 	for (i=0; i<num_printers; i++) 
 	  {
-	    if (  (wildcard != 0 && (Tcl_StringMatch(ary[i].pPrinterName, name) ||
-				     Tcl_StringMatch(ary[i].pPortName,    name) )   ||
-		   (                 (lstrcmpi(ary[i].pPrinterName, name) == 0 ||
-				      lstrcmpi(ary[i].pPortName,    name) == 0) ) ) )
+	   if ((wildcard != 0 && (Tcl_StringMatch(ary[i].pPrinterName, name) ||
+	          Tcl_StringMatch(ary[i].pPortName, name)) ||
+	        ((lstrcmpi(ary[i].pPrinterName, name) == 0 ||
+	          lstrcmpi(ary[i].pPortName, name) == 0))))
 	      {
 		static char stable_name[80];
 		static char stable_port[80];
@@ -557,34 +558,34 @@ static int PrinterGetDefaults(struct printer_values *ppv,
   HANDLE pHandle;
   int result = 1;
     
-  switch ( WinVersion() )
+  switch (WinVersion())
     {
     case VER_PLATFORM_WIN32s:
       return GETDEFAULTS_UNSUPPORTED;
     }
     
-  if ( ppv->hDC == NULL )
+  if (ppv->hDC == NULL)
     {
       /*
        *  Use the name to create a DC if at all possible:
        *  This may require using the printer list and matching on the name.
-       .  */
+       . */
       char *dev, *dvr, *port;
-      if ( GetPrinterWithName ((char *)printer_name, &dev, &dvr, &port, 1) == 0 ) {
-	return GETDEFAULTS_NOSUCHPRINTER;  /* Can't find a printer with that name.  */
+      if (GetPrinterWithName ((char *)printer_name, &dev, &dvr, &port, 1) == 0) {
+	return GETDEFAULTS_NOSUCHPRINTER;  /* Can't find a printer with that name. */
       }
-      if ( (ppv->hDC = CreateDC(dvr, dev, NULL, NULL) ) == NULL ) {
-	return GETDEFAULTS_CANTCREATEDC;  /* Can't get defaults on non-existent DC.  */
+      if ((ppv->hDC = CreateDC(dvr, dev, NULL, NULL)) == NULL) {
+	return GETDEFAULTS_CANTCREATEDC;  /* Can't get defaults on non-existent DC. */
       }
-      if ( OpenPrinter((char *)printer_name, &pHandle, NULL) == 0 ) {
+      if (OpenPrinter((char *)printer_name, &pHandle, NULL) == 0) {
 	return GETDEFAULTS_CANTOPENPRINTER;
       }
     }
     
     
-  /* Use DocumentProperties to get the default devmode.  */
-  if ( set_default_devmode > 0 || ppv->pdevmode == 0 )
-    /* First get the required size:.  */
+  /* Use DocumentProperties to get the default devmode. */
+  if (set_default_devmode > 0 || ppv->pdevmode == 0)
+    /* First get the required size:. */
     {
       LONG siz = 0L;
         
@@ -597,28 +598,28 @@ static int PrinterGetDefaults(struct printer_values *ppv,
 				NULL,
 				0);
         
-      if ( siz > 0 && (cp = Tcl_Alloc(siz)) != 0 )
+      if (siz > 0 && (cp = Tcl_Alloc(siz)) != 0)
         {
-	  if ( (siz = DocumentProperties (GetActiveWindow(),
+	  if ((siz = DocumentProperties (GetActiveWindow(),
 					  pHandle,
 					  (char *)printer_name,
 					  (DEVMODE *)cp,
 					  NULL,
-					  DM_OUT_BUFFER)) >= 0 )
+					  DM_OUT_BUFFER)) >= 0)
             {
-	      if ( ppv->pdevmode != 0 )
-		Tcl_Free ( (char *)(ppv->pdevmode) );
+	      if (ppv->pdevmode != 0)
+		Tcl_Free ((char *)(ppv->pdevmode));
 	      ppv->pdevmode = (DEVMODE *)cp;
-	      SetDevModeAttribs ( &ppv->attribs, ppv->pdevmode);
+	      SetDevModeAttribs (&ppv->attribs, ppv->pdevmode);
             } else {
 	    /* added 8/7/02 by Jon Hilbert <jhilbert@hilbertsoft.com>
 	       This call may fail when the printer is known to Windows but unreachable
 	       for some reason (e.g. network sharing property changes). Add code to 
-	       test for failures here..  */
-	    /* call failed -- get error code.  */
+	       test for failures here.. */
+	    /* call failed -- get error code. */
 	    ppv->errorCode = GetLastError();
 	    result = GETDEFAULTS_WINDOWSERROR;
-	    /* release the DC.  */
+	    /* release the DC. */
 	    DeleteDC(ppv->hDC);
 	    ppv->hDC = 0;
 	  }
@@ -627,10 +628,10 @@ static int PrinterGetDefaults(struct printer_values *ppv,
   if (pHandle)
     ClosePrinter(pHandle);
     
-  if (result == 1)  /* Only do this if the attribute setting code succeeded.  */
+  if (result == 1)  /* Only do this if the attribute setting code succeeded. */
     SetHDCAttribs (&ppv->attribs, ppv->hDC);
     
-  return result;  /* A return of 0 or less indicates failure.  */
+  return result;  /* A return of 0 or less indicates failure. */
 }
 
 /*
@@ -657,9 +658,9 @@ static void MakeDevmode (struct printer_values *ppv, HANDLE hdevmode)
       ppv->pdevmode = 0;
     }
     
-  if ( (pdm = (DEVMODE *)GlobalLock(hdevmode)) != NULL )
+  if ((pdm = (DEVMODE *)GlobalLock(hdevmode)) != NULL)
     {
-      if ( (ppv->pdevmode = (DEVMODE *)Tcl_Alloc(pdm->dmSize + pdm->dmDriverExtra)) != NULL )
+      if ((ppv->pdevmode = (DEVMODE *)Tcl_Alloc(pdm->dmSize + pdm->dmDriverExtra)) != NULL)
 	memcpy (ppv->pdevmode, pdm, pdm->dmSize + pdm->dmDriverExtra);
       GlobalUnlock(hdevmode);
     }
@@ -682,13 +683,13 @@ static void CopyDevnames (struct printer_values *ppv, HANDLE hdevnames)
 {
   DEVNAMES *pdn;
     
-  if ( (pdn = (DEVNAMES *)GlobalLock(hdevnames)) != NULL )
+  if ((pdn = (DEVNAMES *)GlobalLock(hdevnames)) != NULL)
     {
       strcpy(ppv->devnames_filename,    (char *)pdn + pdn->wDriverOffset);
       strcpy(ppv->devnames_printername, (char *)pdn + pdn->wDeviceOffset);
       if (ppv && ppv->pdevmode) {
-	/* As reported by Steve Bold, protect against unusually long printer names.  */
-	strncpy(ppv->pdevmode->dmDeviceName, (char *)pdn + pdn->wDeviceOffset,sizeof(ppv->pdevmode->dmDeviceName));
+	/* As reported by Steve Bold, protect against unusually long printer names. */
+	strncpy((char* restrict)ppv->pdevmode->dmDeviceName, (char *)pdn + pdn->wDeviceOffset,sizeof(ppv->pdevmode->dmDeviceName));
 	ppv->pdevmode->dmDeviceName[sizeof(ppv->pdevmode->dmDeviceName)-1] = '\0';
       }
       strcpy(ppv->devnames_port,        (char *)pdn + pdn->wOutputOffset);
@@ -696,10 +697,10 @@ static void CopyDevnames (struct printer_values *ppv, HANDLE hdevnames)
     }
 }
 
-/* A macro for converting 10ths of millimeters to 1000ths of inches.  */
-#define MM_TO_MINCH(x) ( (x) / 0.0254 )
-#define TENTH_MM_TO_MINCH(x) ( (x) / 0.254 )
-#define MINCH_TO_TENTH_MM(x) ( 0.254  * (x) )
+/* A macro for converting 10ths of millimeters to 1000ths of inches. */
+#define MM_TO_MINCH(x) ((x) / 0.0254)
+#define TENTH_MM_TO_MINCH(x) ((x) / 0.254)
+#define MINCH_TO_TENTH_MM(x) (0.254  * (x))
 
 static const struct paper_size { int size; long wid; long len; } paper_sizes[] = {
   { DMPAPER_LETTER, 8500, 11000 },
@@ -777,22 +778,22 @@ static void GetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
    * 
    *  Taken care of elsewhere
    *    #copies
-   .  */
+   . */
   const char *cp;
     
-  if ( cp = get_attribute(att, "page orientation") )
+  if (cp = get_attribute(att, "page orientation"))
     {
       dm->dmFields |= DM_ORIENTATION;
-      if ( strcmp(cp, "portrait") == 0 )
+      if (strcmp(cp, "portrait") == 0)
 	dm->dmOrientation = DMORIENT_PORTRAIT;
       else
 	dm->dmOrientation = DMORIENT_LANDSCAPE;
     } 
-  /* --------------  added 8/1/02 by Jon Hilbert; modified 2/24/03 by Jon Hilbert.  */
-  else if ( cp = get_attribute(att, "page dimensions") )
+  /* --------------  added 8/1/02 by Jon Hilbert; modified 2/24/03 by Jon Hilbert. */
+  else if (cp = get_attribute(att, "page dimensions"))
     {
       long width,length;
-      dm->dmFields |= (DM_PAPERLENGTH | DM_PAPERWIDTH | DM_PAPERSIZE );
+      dm->dmFields |= (DM_PAPERLENGTH | DM_PAPERWIDTH | DM_PAPERSIZE);
       sscanf(cp, "%ld %ld", &width, &length);
       dm->dmPaperWidth = (short)MINCH_TO_TENTH_MM(width);
       dm->dmPaperLength = (short)MINCH_TO_TENTH_MM(length);
@@ -827,21 +828,21 @@ static void SetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
   sprintf(tmpbuf, "%d", dm->dmCopies);
   set_attribute(att, "copies", tmpbuf);
     
-  /* Everything depends on what flags are set.  */
-  if ( dm->dmDeviceName[0] )
-    set_attribute(att, "device", dm->dmDeviceName);
-  if ( dm->dmFields & DM_ORIENTATION )
+  /* Everything depends on what flags are set. */
+  if (dm->dmDeviceName[0])
+    set_attribute(att, "device", (const *char) dm->dmDeviceName);
+  if (dm->dmFields & DM_ORIENTATION)
     set_attribute(att, "page orientation", 
 		  dm->dmOrientation==DMORIENT_PORTRAIT?"portrait":"landscape");
-  if ( dm->dmFields & DM_YRESOLUTION )
+  if (dm->dmFields & DM_YRESOLUTION)
     {
       sprintf(tmpbuf, "%d %d", dm->dmYResolution, dm->dmPrintQuality);
       set_attribute(att, "resolution", tmpbuf);
     }
-  else if ( dm->dmFields & DM_PRINTQUALITY)
+  else if (dm->dmFields & DM_PRINTQUALITY)
     {
-      /* The result may be positive (DPI) or negative (preset value).  */
-      if ( dm->dmPrintQuality > 0 )
+      /* The result may be positive (DPI) or negative (preset value). */
+      if (dm->dmPrintQuality > 0)
         {
 	  sprintf(tmpbuf, "%d %d", dm->dmPrintQuality, dm->dmPrintQuality);
 	  set_attribute(att, "resolution", tmpbuf);
@@ -858,12 +859,12 @@ static void SetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
 	      { DMRES_LOW, "Low" },
 	      { DMRES_DRAFT, "Draft" }
             };
-	  int i;
+	  unsigned int i;
 	  const char *cp = "Unknown";
             
 	  for (i = 0; i < sizeof(print_quality) / sizeof(struct PrinterQuality); i++)
             {
-	      if ( print_quality[i].res == dm->dmPrintQuality )
+	      if (print_quality[i].res == dm->dmPrintQuality)
                 {
 		  cp = print_quality[i].desc;
 		  break;
@@ -876,28 +877,28 @@ static void SetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
   /* If the page size is provided by the paper size, use the page size to update
    *  the previous size from the HDC.
    */
-  if ( (dm->dmFields & DM_PAPERLENGTH) && (dm->dmFields & DM_PAPERWIDTH ) )
+  if ((dm->dmFields & DM_PAPERLENGTH) && (dm->dmFields & DM_PAPERWIDTH))
     {
       sprintf(tmpbuf, "%ld %ld", (long)TENTH_MM_TO_MINCH(dm->dmPaperWidth),
-	      (long)TENTH_MM_TO_MINCH(dm->dmPaperLength) );
+	      (long)TENTH_MM_TO_MINCH(dm->dmPaperLength));
       set_attribute(att, "page dimensions", tmpbuf);
     }
-  else if ( dm->dmFields & DM_PAPERSIZE )
+  else if (dm->dmFields & DM_PAPERSIZE)
     {
       /* If we are in this case, we must also check for landscape vs. portrait;
        *  unfortunately, Windows does not distinguish properly in this subcase
-       .  */
-      int i;
-      for ( i=0; i < sizeof(paper_sizes)/sizeof (struct paper_size); i++)
+       */
+      unsigned int i;
+      for (i=0; i < sizeof(paper_sizes)/sizeof (struct paper_size); i++)
         {
-	  if ( paper_sizes[i].size == dm->dmPaperSize )
+	  if (paper_sizes[i].size == dm->dmPaperSize)
             {
-	      if ( dm->dmOrientation == DMORIENT_PORTRAIT )
+	      if (dm->dmOrientation == DMORIENT_PORTRAIT)
                 {
 		  sprintf(tmpbuf, "%ld %ld", paper_sizes[i].wid, paper_sizes[i].len);
 		  set_attribute(att, "page dimensions", tmpbuf);
                 }
-	      else if ( dm->dmOrientation == DMORIENT_LANDSCAPE )
+	      else if (dm->dmOrientation == DMORIENT_LANDSCAPE)
                 {
 		  sprintf(tmpbuf, "%ld %ld", paper_sizes[i].len, paper_sizes[i].wid);
 		  set_attribute(att, "page dimensions", tmpbuf);
@@ -922,8 +923,8 @@ static void SetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
 
 static void SetDevNamesAttribs (Tcl_HashTable *att, struct printer_values *dn)
 {
-  /* Set the "device", "driver" and "port" attributes - (belt and suspenders).  */
-  if (dn->devnames_printername != NULL && strlen(dn->devnames_printername) > 0 )
+  /* Set the "device", "driver" and "port" attributes - (belt and suspenders). */
+  if (dn->devnames_printername != NULL && strlen(dn->devnames_printername) > 0)
     set_attribute(att,"device",dn->devnames_printername);
   if (dn->devnames_filename != NULL && strlen(dn->devnames_filename)>0)
     set_attribute(att,"driver",dn->devnames_filename);
@@ -948,7 +949,7 @@ static void GetPageDlgAttribs (Tcl_HashTable *att, PAGESETUPDLG *pgdlg)
 {
   const char *cp;
     
-  if ( cp = get_attribute(att, "page margins") ) {
+  if (cp = get_attribute(att, "page margins")) {
     RestorePageMargins(cp, pgdlg);
   }
     
@@ -971,59 +972,59 @@ static void GetPrintDlgAttribs (Tcl_HashTable *att, PRINTDLG *pdlg)
 {
   const char *cp;
     
-  if ( cp = get_attribute(att, "copies") )
+  if (cp = get_attribute(att, "copies"))
     pdlg->nCopies = atoi(cp);
     
-  /* Add minimum and maximum page numbers to enable print page selection.  */
-  if ( cp = get_attribute(att, "minimum page") )
+  /* Add minimum and maximum page numbers to enable print page selection. */
+  if (cp = get_attribute(att, "minimum page"))
     {
       pdlg->nMinPage = atoi(cp);
-      if ( pdlg->nMinPage <= 0 )
+      if (pdlg->nMinPage <= 0)
 	pdlg->nMinPage = 1;
     }
     
-  if ( cp = get_attribute(att, "maximum page") )
+  if (cp = get_attribute(att, "maximum page"))
     {
       pdlg->nMaxPage = atoi(cp);
-      if ( pdlg->nMaxPage < pdlg->nMinPage )
+      if (pdlg->nMaxPage < pdlg->nMinPage)
 	pdlg->nMaxPage = pdlg->nMinPage;
     }
     
-  if ( cp = get_attribute(att, "first page") )
+  if (cp = get_attribute(att, "first page"))
     {
       pdlg->nFromPage = atoi(cp);
       if (pdlg->nFromPage > 0)
         {
 	  pdlg->Flags &= (~PD_ALLPAGES);
 	  pdlg->Flags |= PD_PAGENUMS;
-	  if ( pdlg->nMinPage > pdlg->nFromPage )
+	  if (pdlg->nMinPage > pdlg->nFromPage)
 	    pdlg->nMinPage = 1;
         }
     }
     
-  if ( cp = get_attribute(att, "last page") )
+  if (cp = get_attribute(att, "last page"))
     {
       pdlg->nToPage   = atoi(cp);
-      if ( pdlg->nToPage > 0 )
+      if (pdlg->nToPage > 0)
         {
 	  pdlg->Flags &= (~PD_ALLPAGES);
 	  pdlg->Flags |= PD_PAGENUMS;
-	  if ( pdlg->nMaxPage < pdlg->nToPage )
+	  if (pdlg->nMaxPage < pdlg->nToPage)
 	    pdlg->nMaxPage = pdlg->nToPage;
         }
     }
     
-  /* Added to match the radiobuttons on the windows dialog.  */
-  if ( cp = get_attribute(att, "print flag" ) )
+  /* Added to match the radiobuttons on the windows dialog. */
+  if (cp = get_attribute(att, "print flag"))
     {
-      if (lstrcmpi(cp, "all") == 0 )
+      if (lstrcmpi(cp, "all") == 0)
 	pdlg->Flags &= (~(PD_PAGENUMS|PD_SELECTION));
-      else if ( lstrcmpi(cp, "selection") == 0 )
+      else if (lstrcmpi(cp, "selection") == 0)
         {
 	  pdlg->Flags |= PD_SELECTION;
 	  pdlg->Flags &= (~(PD_PAGENUMS|PD_NOSELECTION));
         }
-      else if ( lstrcmpi(cp, "pagenums") == 0 )
+      else if (lstrcmpi(cp, "pagenums") == 0)
         {
 	  pdlg->Flags |= PD_PAGENUMS;
 	  pdlg->Flags &= (~(PD_SELECTION|PD_NOPAGENUMS));
@@ -1051,28 +1052,28 @@ static void SetPrintDlgAttribs (Tcl_HashTable *att, PRINTDLG *pdlg)
   /* 
    *  This represents the number of copies the program is expected to spool
    *  (e.g., if collation is on)
-   .  */
+   . */
   sprintf(tmpbuf, "%d", pdlg->nCopies);
   set_attribute(att, "copiesToSpool", tmpbuf);
     
-  /* Set the to and from page if they are nonzero.  */
-  if ( pdlg->nFromPage > 0 )
+  /* Set the to and from page if they are nonzero. */
+  if (pdlg->nFromPage > 0)
     {
       sprintf(tmpbuf, "%d", pdlg->nFromPage);
       set_attribute(att, "first page", tmpbuf);
     }
     
-  if ( pdlg->nToPage > 0 )
+  if (pdlg->nToPage > 0)
     {
       sprintf(tmpbuf, "%d", pdlg->nToPage);
       set_attribute(att, "last page", tmpbuf);
     }
     
-  if ( pdlg->Flags & PD_PAGENUMS )
+  if (pdlg->Flags & PD_PAGENUMS)
     set_attribute(att, "print flag", "pagenums");
-  else if ( pdlg->Flags & PD_SELECTION )
+  else if (pdlg->Flags & PD_SELECTION)
     set_attribute(att, "print flag", "selection");
-  else if ( ( pdlg->Flags & (PD_PAGENUMS | PD_SELECTION)) == 0 )
+  else if ((pdlg->Flags & (PD_PAGENUMS | PD_SELECTION)) == 0)
     set_attribute(att, "print flag", "all");
 }
 
@@ -1095,11 +1096,11 @@ static void SetPageSetupDlgAttribs (Tcl_HashTable *att, PAGESETUPDLG *pgdlg)
   /* According to the PAGESETUPDLG page, the paper size and margins may be
    *  provided in locale-specific units. We want thousandths of inches
    *  for consistency at this point. Look for the flag:
-   .  */
+   . */
   int metric = (pgdlg->Flags & PSD_INHUNDREDTHSOFMILLIMETERS)?1:0;
   double factor = 1.0;
     
-  if ( metric )
+  if (metric)
     factor = 2.54;
     
   sprintf(tmpbuf, "%ld %ld", (long)(pgdlg->ptPaperSize.x / factor), 
@@ -1135,21 +1136,21 @@ static void SetHDCAttribs (Tcl_HashTable *att, HDC hDC)
   char tmpbuf[2*11+2+1];
   int hsize, vsize, hscale, vscale, hoffset, voffset, hppi, vppi;
     
-  sprintf(tmpbuf, "0x%lx", hDC);
+  sprintf(tmpbuf, "0x%lx", (long) hDC);
   set_attribute(att, "hDC", tmpbuf);
     
-  if ( PrintPageAttr(hDC, &hsize, &vsize, 
+  if (PrintPageAttr(hDC, &hsize, &vsize, 
 		     &hscale, &vscale, 
 		     &hoffset, &voffset, 
 		     &hppi, &vppi) == 0 &&
-       hppi > 0 && vppi > 0 )
+       hppi > 0 && vppi > 0)
     {
       sprintf(tmpbuf, "%d %d", (int)(hsize*1000L/hppi), (int)(vsize*1000L/vppi));
       set_attribute(att, "page dimensions", tmpbuf);
       sprintf(tmpbuf, "%d %d", hppi, vppi);
       set_attribute(att, "pixels per inch", tmpbuf);
         
-      /* Perhaps what's below should only be done if not already set....  */
+      /* Perhaps what's below should only be done if not already set.... */
       sprintf(tmpbuf, "%d %d %d %d", (int)(hoffset*1000L/hppi), (int)(voffset*1000L/vppi),
 	      (int)(hoffset*1000L/hppi), (int)(voffset*1000L/vppi));
       set_attribute(att, "page minimum margins", tmpbuf);
@@ -1187,23 +1188,23 @@ static void StorePrintVals(struct printer_values *ppv, PRINTDLG *pdlg, PAGESETUP
    *  the platform-specific notion is left to the conversion function.
    */
 
-  /* First, take care of the hDC structure.  */
-  if ( pdlg != NULL )
+  /* First, take care of the hDC structure. */
+  if (pdlg != NULL)
     {
       const char *cp;
-      if ( ppv->hDC != NULL )
+      if (ppv->hDC != NULL)
         {
 	  delete_dc (ppv->hDC);
 	  DeleteDC(ppv->hDC);
         }
-      if ( ppv->hdcname[0] != '\0')
+      if (ppv->hdcname[0] != '\0')
         {
 	  if (hdc_delete)
 	    hdc_delete(0, ppv->hdcname);
 	  ppv->hdcname[0] = '\0';
         }
       ppv->hDC = pdlg->hDC;
-      /* Only need to do this if the hDC has changed.  */
+      /* Only need to do this if the hDC has changed. */
       if (ppv->hDC)
         {
 	  SetHDCAttribs(&ppv->attribs, ppv->hDC);
@@ -1217,9 +1218,9 @@ static void StorePrintVals(struct printer_values *ppv, PRINTDLG *pdlg, PAGESETUP
     }
     
   /* Next, get the DEVMODE out of the pdlg if present;
-   *  if not, try the page dialog; if neither, skip this step
-   .  */
-  if ( pdlg != NULL && pdlg->hDevMode != NULL)
+   *  if not, try the page dialog; if neither, skip this step.
+   */
+  if (pdlg != NULL && pdlg->hDevMode != NULL)
     {
       MakeDevmode(ppv, pdlg->hDevMode);
       GlobalFree(pdlg->hDevMode);
@@ -1236,8 +1237,8 @@ static void StorePrintVals(struct printer_values *ppv, PRINTDLG *pdlg, PAGESETUP
     
   /* Next, get the DEVNAMES out of the pdlg if present;
    *  if not, try the page dialog; if neither, skip this step
-   .  */
-  if ( pdlg != NULL && pdlg->hDevNames != NULL)
+   . */
+  if (pdlg != NULL && pdlg->hDevNames != NULL)
     {
       CopyDevnames(ppv, pdlg->hDevNames);
       GlobalFree(pdlg->hDevNames);
@@ -1252,11 +1253,11 @@ static void StorePrintVals(struct printer_values *ppv, PRINTDLG *pdlg, PAGESETUP
       SetDevNamesAttribs(&ppv->attribs, ppv);
     }
     
-  /* Set attributes peculiar to the print dialog.  */
+  /* Set attributes peculiar to the print dialog. */
   if (pdlg != NULL)
     SetPrintDlgAttribs(&ppv->attribs, pdlg);
     
-  /* Set attributes peculiar to the page setup dialog.  */
+  /* Set attributes peculiar to the page setup dialog. */
   if (pgdlg != NULL)
     SetPageSetupDlgAttribs(&ppv->attribs, pgdlg);
 }
@@ -1291,14 +1292,14 @@ static void RestorePageMargins (const char *attrib, PAGESETUPDLG *pgdlg)
   /* According to the PAGESETUPDLG page, the paper size and margins may be
    *  provided in locale-specific units. We want thousandths of inches
    *  for consistency at this point. Look for the flag:
-   .  */
+   . */
   int metric = (default_printer_values.pgdlg.Flags & PSD_INHUNDREDTHSOFMILLIMETERS)?1:0;
   double factor = 1.0;
     
-  if ( metric )
+  if (metric)
     factor = 2.54;
     
-  if ( sscanf(attrib, "%lf %lf %lf %lf", &left, &top, &right, &bottom) == 4 ) {
+  if (sscanf(attrib, "%lf %lf %lf %lf", &left, &top, &right, &bottom) == 4) {
     r.left   = (long) (floor(left  * factor + 0.5));
     r.top    = (long) (floor(top  * factor + 0.5));
     r.right  = (long) (floor(right  * factor + 0.5));
@@ -1331,11 +1332,11 @@ static void RestorePrintVals (struct printer_values *ppv, PRINTDLG *pdlg, PAGESE
        *  copies
        *  first page
        *  last page
-       .  */
+       . */
       GetPrintDlgAttribs(&ppv->attribs, pdlg);
         
-      /* Note: if DEVMODE is not null, copies is taken from the DEVMODE structure.  */
-      if (ppv->pdevmode )
+      /* Note: if DEVMODE is not null, copies is taken from the DEVMODE structure. */
+      if (ppv->pdevmode)
 	ppv->pdevmode->dmCopies = pdlg->nCopies;
         
     }
@@ -1345,7 +1346,7 @@ static void RestorePrintVals (struct printer_values *ppv, PRINTDLG *pdlg, PAGESE
       /*
        *  Values to be restored:
        *  page margins
-       .  */
+       . */
       GetPageDlgAttribs(&ppv->attribs, pgdlg);
     }
 }
@@ -1359,7 +1360,7 @@ static void RestorePrintVals (struct printer_values *ppv, PRINTDLG *pdlg, PAGESE
  *  For now the commands will be searched linearly (there are only
  *  a few), but keep them sorted, so a binary search could be used.
  */
-typedef int (*tcl_prtcmd) (ClientData, Tcl_Interp *, int, const char  * );
+typedef int (*tcl_prtcmd) (ClientData, Tcl_Interp *, int, const char  *);
 struct prt_cmd
 {
   const char *name;
@@ -1392,7 +1393,7 @@ static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, 
   Tcl_AppendResult(interp, "printer [", 0);
   for (i=0; i < last; i++)
     {
-      if ( printer_commands[i].safe >= safe )
+      if (printer_commands[i].safe >= safe)
         {
 	  if (first)
             {
@@ -1402,14 +1403,14 @@ static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, 
 	  else
 	    Tcl_AppendResult(interp, " | ", printer_commands[i].name, 0);
         }
-      if ( i == (last - 1) )
+      if (i == (last - 1))
 	Tcl_AppendResult(interp, " ]", 0);
     }
   if (argc)
     {
-      Tcl_AppendResult(interp, "\n(Bad command: ", 0 );
+      Tcl_AppendResult(interp, "\n(Bad command: ", 0);
       for (i=0; i<argc; i++)
-	Tcl_AppendResult(interp, argv[i], " ", 0 );
+	Tcl_AppendResult(interp, argv[i], " ", 0);
       Tcl_AppendResult(interp, ")", 0);
     }
 }
@@ -1430,8 +1431,8 @@ static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, 
 
 static int Print (ClientData defaults, Tcl_Interp *interp, int argc, const char  * argv, int safe)
 {
-  int i;
-  if ( argc == 0 )
+  unsigned int i;
+  if (argc == 0)
     {
       top_usage_message(interp, argc+1, argv-1, safe);
       return TCL_ERROR;
@@ -1441,9 +1442,9 @@ static int Print (ClientData defaults, Tcl_Interp *interp, int argc, const char 
    * Linear search for now--could be a binary search. 
    * Exact match for now--could be case-insensitive, leading match. 
    */
-  for (i=0; i < (sizeof printer_commands / sizeof (struct prt_cmd) ); i++)
-    if ( printer_commands[i].safe >= safe )
-      if ( strcmp(argv[0], printer_commands[i].name) == 0 )
+  for (i=0; i < (sizeof printer_commands / sizeof (struct prt_cmd)); i++)
+    if (printer_commands[i].safe >= safe)
+      if (strcmp((const char*) argv[0], printer_commands[i].name) == 0)
 	return printer_commands[i].func(defaults, interp, argc-1, argv+1);
     
   top_usage_message(interp, argc+1, argv-1, safe);
@@ -1466,7 +1467,7 @@ static int Print (ClientData defaults, Tcl_Interp *interp, int argc, const char 
 
 static int printer (ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
-  if ( argc > 1 )
+  if (argc > 1)
     {
       argv++;
       argc--;
@@ -1492,19 +1493,19 @@ static int printer (ClientData data, Tcl_Interp *interp, int argc, const char  *
  
 int Winprint_Init(Tcl_Interp * interp) {
 
-  Tcl_CreateObjCommand(interp, "::tk::print::_print", printer,
-		       (ClientData)( & current_printer_values), 0);
+  Tcl_CreateCommand(interp, "::tk::print::_print", printer,
+		       (ClientData)(& current_printer_values), 0);
 
-  /* Initialize the attribute hash table.  */
+  /* Initialize the attribute hash table. */
   init_printer_dc_contexts(interp);
 
-  /* Initialize the attribute hash table.  */
-  Tcl_InitHashTable( & (current_printer_values -> attribs), TCL_STRING_KEYS);
+  /* Initialize the attribute hash table. */
+  Tcl_InitHashTable(& (current_printer_values -> attribs), TCL_STRING_KEYS);
 
-  /* Initialize the list of HDCs hash table.  */
-  Tcl_InitHashTable( & printer_hdcs, TCL_ONE_WORD_KEYS);
+  /* Initialize the list of HDCs hash table. */
+  Tcl_InitHashTable(& printer_hdcs, TCL_ONE_WORD_KEYS);
 
-  /* Initialize the default page settings.  */
+  /* Initialize the default page settings. */
   current_printer_values -> pgdlg.lStructSize = sizeof(PAGESETUPDLG);
   current_printer_values -> pgdlg.Flags |= PSD_RETURNDEFAULT;
 
@@ -1529,9 +1530,9 @@ int Winprint_Init(Tcl_Interp * interp) {
 static int SplitDevice(LPSTR device, LPSTR *dev, LPSTR *dvr, LPSTR *port)
 {
   static char buffer[256];
-  if (device == 0 )
+  if (device == 0)
     {
-      switch ( WinVersion() )
+      switch (WinVersion())
         {
         case VER_PLATFORM_WIN32s:
 	  GetProfileString("windows", "device", "", (LPSTR)buffer, sizeof buffer);
@@ -1550,13 +1551,13 @@ static int SplitDevice(LPSTR device, LPSTR *dev, LPSTR *dvr, LPSTR *port)
   *port = strtok(NULL, ",");
     
   if (*dev)
-    while (  * dev == ' ')
+    while ( * dev == ' ')
       (*dev)++;
   if (*dvr)
-    while (  * dvr == ' ')
+    while ( * dvr == ' ')
       (*dvr)++;
   if (*port)
-    while (  * port == ' ')
+    while ( * port == ' ')
       (*port)++;
     
   return 1;
@@ -1570,7 +1571,7 @@ static int SplitDevice(LPSTR device, LPSTR *dev, LPSTR *dvr, LPSTR *port)
  *   Build a compatible printer DC for the default printer.
  *
  * Results:
- *	Returns DC.
+ *	  Returns DC.
  *
  *----------------------------------------------------------------------
  */
@@ -1585,7 +1586,7 @@ static HDC GetPrinterDC (const char *printer)
   LPSTR lpPrintPort   = "";
     
   SplitDevice ((LPSTR)printer, &lpPrintDevice, &lpPrintDriver, &lpPrintPort);
-  switch ( WinVersion() )
+  switch (WinVersion())
     {
     case VER_PLATFORM_WIN32s:
       hdcPrint = CreateDC (lpPrintDriver,
@@ -1606,7 +1607,7 @@ static HDC GetPrinterDC (const char *printer)
   return hdcPrint;
 }
 
-/* End of support for file printing.  */
+/* End of support for file printing. */
 
 
 /*
@@ -1623,7 +1624,7 @@ static HDC GetPrinterDC (const char *printer)
  *----------------------------------------------------------------------
  */
 
-static const char *PrintStatusToStr( DWORD status ) 
+static const char *PrintStatusToStr(DWORD status) 
 {
   switch (status) {
   case PRINTER_STATUS_PAUSED:            return "Paused";
@@ -1679,7 +1680,7 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
   const char *match = 0;
   const char *illegal = 0;
     
-  /* The following 3 declarations are only needed for the Win32s case.  */
+  /* The following 3 declarations are only needed for the Win32s case. */
   static char devices_buffer[256];
   static char value[256];
   char *cp;
@@ -1691,7 +1692,7 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
     {
       if (strcmp(argv[i], "-match") == 0)
 	match = argv[++i];
-      else if ( strcmp(argv[i], "-verbose") == 0 )
+      else if (strcmp(argv[i], "-verbose") == 0)
 	verbose = 1;
       else
 	illegal = argv[i];
@@ -1707,16 +1708,16 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
    * The result should be useful for specifying the devices and/or OpenPrinter and/or lp -d. 
    * Rather than make this compilation-dependent, do a runtime check.  
    */
-  switch ( WinVersion() )
+  switch (WinVersion())
     {
-    case VER_PLATFORM_WIN32_NT:        /* Windows NT.  */
+    case VER_PLATFORM_WIN32_NT:        /* Windows NT. */
     default:
-      /* Win32 implementation uses EnumPrinters.  */
+      /* Win32 implementation uses EnumPrinters. */
       /* There is a hint in the documentation that this info is stored in the registry.
        *  if so, that interface would probably be even better!
        *  NOTE: This implementation was suggested by Brian Griffin <bgriffin@model.com>,
        *        and replaces the older implementation which used PRINTER_INFO_4,5
-       .  */
+       . */
       {
 	DWORD bufsiz = 0;
 	DWORD needed = 0;
@@ -1724,17 +1725,17 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
 	PRINTER_INFO_2 *ary = 0;
 	DWORD i;
             
-	/* First, get the size of array needed to enumerate the printers.  */
-	if ( EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, 
+	/* First, get the size of array needed to enumerate the printers. */
+	if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, 
 			  NULL, 
 			  2, (LPBYTE)ary, 
 			  bufsiz, &needed, 
-			  &num_printers) == FALSE )
+			  &num_printers) == FALSE)
 	  {
-	    /* Expected failure--we didn't allocate space.  */
+	    /* Expected failure--we didn't allocate space. */
 	    DWORD err = GetLastError();
-	    /* If the error isn't insufficient space, we have a real problem..  */
-	    if ( err != ERROR_INSUFFICIENT_BUFFER )
+	    /* If the error isn't insufficient space, we have a real problem.. */
+	    if (err != ERROR_INSUFFICIENT_BUFFER)
 	      {
 		sprintf (msgbuf, "EnumPrinters: unexpected error code: %ld", (long)err);
 		Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
@@ -1742,8 +1743,8 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
 	      }
 	  }
             
-	if ( needed > 0 ) {
-	  if ( (ary = (PRINTER_INFO_2 *)Tcl_Alloc(needed) ) != 0 )
+	if (needed > 0) {
+	  if ((ary = (PRINTER_INFO_2 *)Tcl_Alloc(needed)) != 0)
 	    bufsiz = needed;
 	  else
 	    {
@@ -1751,17 +1752,17 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
 	      Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
 	      return TCL_ERROR;
 	    }
-	} else {  /* No printers to report!.  */
+	} else {  /* No printers to report!. */
 	  return TCL_OK;
 	}
             
-	/* Now that we know how much, allocate it -- if there is a printer!.  */
-	if ( EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, NULL, 
+	/* Now that we know how much, allocate it -- if there is a printer!. */
+	if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, NULL, 
 			  2, (LPBYTE)ary, 
 			  bufsiz, &needed, 
-			  &num_printers) == FALSE )
+			  &num_printers) == FALSE)
 	  {
-	    /* Now we have a real failure!.  */
+	    /* Now we have a real failure!  */
 	    sprintf(msgbuf, "::tk::print::_print list: Cannot enumerate printers: %ld", (long)GetLastError());
 	    Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
 	    return TCL_ERROR;
@@ -1769,21 +1770,21 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
             
 	/* Question for UTF: Do I need to convert all visible output?
 	 *  Or just the printer name and location?
-	 .  */
+	 . */
             
-	/* Question for Win95: Do I need to provide the port number?.  */
+	/* Question for Win95: Do I need to provide the port number?. */
 	for (i=0; i<num_printers; i++) 
 	  {
 	    if (match == 0 || Tcl_StringMatch(ary[i].pPrinterName, match) ||
-		Tcl_StringMatch(ary[i].pPortName,    match) )
+		Tcl_StringMatch(ary[i].pPortName,    match))
 	      {
 		if (verbose)
 		  {
-		    Tcl_AppendResult(interp, "{", 0);  /* New list for each printer.  */
-		    /* The verbose list is a set of name/value pairs.  */
+		    Tcl_AppendResult(interp, "{", 0);  /* New list for each printer. */
+		    /* The verbose list is a set of name/value pairs. */
 		    Tcl_AppendResult(interp, "{", 0);
 		    Tcl_AppendElement(interp, "Name");
-#if TCL_MAJOR_VERSION > 8 || ( TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 1 )
+#if TCL_MAJOR_VERSION > 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 1)
 		    {
 		      const char *ostring;
 		      Tcl_DString tds;
@@ -1799,42 +1800,42 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
 		    Tcl_AppendResult(interp, "} ", 0);
 		    Tcl_AppendResult(interp, "{", 0);
 		    Tcl_AppendElement(interp, "Status");
-		    Tcl_AppendElement(interp, PrintStatusToStr(ary[i].Status) );
+		    Tcl_AppendElement(interp, PrintStatusToStr(ary[i].Status));
 		    Tcl_AppendResult(interp, "} ", 0);
-		    if ( ary[i].pDriverName && ary[i].pDriverName[0] != '\0')
+		    if (ary[i].pDriverName && ary[i].pDriverName[0] != '\0')
 		      {
 			Tcl_AppendResult(interp, "{", 0);
 			Tcl_AppendElement(interp, "Driver");
-			Tcl_AppendElement(interp, ary[i].pDriverName );
+			Tcl_AppendElement(interp, ary[i].pDriverName);
 			Tcl_AppendResult(interp, "} ", 0);
 		      }
-		    if ( ary[i].pServerName && ary[i].pServerName[0] != '\0')
+		    if (ary[i].pServerName && ary[i].pServerName[0] != '\0')
 		      {
 			Tcl_AppendResult(interp, "{", 0);
 			Tcl_AppendElement(interp, "Control");
-			Tcl_AppendElement(interp, "Server" );
+			Tcl_AppendElement(interp, "Server");
 			Tcl_AppendResult(interp, "} ", 0);
 			Tcl_AppendResult(interp, "{", 0);
 			Tcl_AppendElement(interp, "Server");
-			Tcl_AppendElement(interp, ary[i].pServerName );
+			Tcl_AppendElement(interp, ary[i].pServerName);
 			Tcl_AppendResult(interp, "} ", 0);
 		      }
 		    else
 		      {
 			Tcl_AppendResult(interp, "{", 0);
 			Tcl_AppendElement(interp, "Control");
-			Tcl_AppendElement(interp, "Local" );
+			Tcl_AppendElement(interp, "Local");
 			Tcl_AppendResult(interp, "} ", 0);
 			Tcl_AppendResult(interp, "{", 0);
 			Tcl_AppendElement(interp, "Port");
-			Tcl_AppendElement(interp, ary[i].pPortName );
+			Tcl_AppendElement(interp, ary[i].pPortName);
 			Tcl_AppendResult(interp, "} ", 0);
 		      }
-		    if ( ary[i].pLocation && ary[i].pLocation[0] != '\0')
+		    if (ary[i].pLocation && ary[i].pLocation[0] != '\0')
 		      {
 			Tcl_AppendResult(interp, "{", 0);
 			Tcl_AppendElement(interp, "Location");
-#if TCL_MAJOR_VERSION > 8 || ( TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 1 )
+#if TCL_MAJOR_VERSION > 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 1)
 			{
 			  const char *ostring;
 			  Tcl_DString tds;
@@ -1852,9 +1853,9 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
 		    Tcl_AppendResult(interp, "{", 0);
 		    Tcl_AppendElement(interp, "Queued Jobs");
 		    sprintf(msgbuf, "%ld", (long)ary[i].cJobs);
-		    Tcl_AppendElement(interp, msgbuf );
+		    Tcl_AppendElement(interp, msgbuf);
 		    Tcl_AppendResult(interp, "} ", 0);
-		    /* End of this printer's list.  */
+		    /* End of this printer's list. */
 		    Tcl_AppendResult(interp, "}\n", 0);
 		  }
 		else              
@@ -1893,8 +1894,8 @@ static int PrintSend (ClientData defaults, Tcl_Interp *interp, int argc, const c
     "[-printer printer] "
     "[-datalen nnnnnn] "
     "[-file|-data] file_or_data ... ";
-  int ps = 0;      /* The default is nopostscript.  */
-  int binary = 1;  /* The default is binary.  */
+  int ps = 0;      /* The default is nopostscript. */
+  int binary = 1;  /* The default is binary. */
   long datalen = 0L;
     
   const char *printer = 0;
@@ -1902,17 +1903,17 @@ static int PrintSend (ClientData defaults, Tcl_Interp *interp, int argc, const c
   static char last_printer[255+1];
   int debug = 0;
   int printtype = PRINT_FROM_FILE;
-  struct printer_values  * ppv = *(struct printer_values  * ) defaults;
+  struct printer_values  * ppv = *(struct printer_values  *) defaults;
   struct printer_values  * oldppv = 0;
-  int self_created = 0;  /* Remember if we specially created the DC.  */
+  int self_created = 0;  /* Remember if we specially created the DC. */
   int direct_to_port = 0;
   HANDLE hdc = NULL;
     
-  while ( argc > 0 )
+  while (argc > 0)
     {
       if (argv[0][0] == '-')
         {
-	  /* Check for -postscript / -nopostscript flag.  */
+	  /* Check for -postscript / -nopostscript flag. */
 	  if (strcmp(argv[0], "-postscript") == 0)
 	    ps = 1;
 	  else if (strcmp(argv[0], "-nopostscript") == 0)
@@ -1921,26 +1922,26 @@ static int PrintSend (ClientData defaults, Tcl_Interp *interp, int argc, const c
 	    binary = 0;
 	  else if (strcmp(argv[0], "-binary") == 0)
 	    binary = 1;
-	  else if ( strcmp(argv[0], "-printer") == 0)
+	  else if (strcmp(argv[0], "-printer") == 0)
             {
 	      argc--;
 	      argv++;
 	      printer = argv[0];
             }
-	  else if ( strcmp(argv[0], "-file") == 0)
+	  else if (strcmp(argv[0], "-file") == 0)
 	    printtype = PRINT_FROM_FILE;
-	  else if ( strcmp(argv[0], "-data") == 0) {
+	  else if (strcmp(argv[0], "-data") == 0) {
 	    printtype = PRINT_FROM_DATA;
 	  }
-	  else if ( strcmp(argv[0], "-datalen") == 0 ) 
+	  else if (strcmp(argv[0], "-datalen") == 0) 
             {
 	      argc--;
 	      argv++;
 	      datalen = atol(argv[0]);
             }
-	  else if ( strcmp(argv[0], "-debug") == 0)
+	  else if (strcmp(argv[0], "-debug") == 0)
 	    debug++;
-	  else if ( strcmp(argv[0], "-direct") == 0 )
+	  else if (strcmp(argv[0], "-direct") == 0)
 	    direct_to_port = 1;
         }
       else
@@ -1964,30 +1965,30 @@ static int PrintSend (ClientData defaults, Tcl_Interp *interp, int argc, const c
    * If we still don't have a good HDC, we've failed.
    *
    */ 
-  if ( hdc == NULL  )
+  if (hdc == NULL )
     {
-      if ( printer )
+      if (printer)
 	OpenPrinter((char *)printer, &hdc, NULL);
-      else if ( last_printer[0] != '\0' )
+      else if (last_printer[0] != '\0')
 	OpenPrinter(last_printer, &hdc, NULL);
-      else if ( current_printer_values != 0 && current_printer_values->devnames_printername[0] != '\0')
+      else if (current_printer_values != 0 && current_printer_values->devnames_printername[0] != '\0')
 	OpenPrinter(current_printer_values->devnames_printername, &hdc, NULL);
       else 
         {
         }
         
-      if ( hdc == NULL )  /* STILL can't get a good printer DC.  */
+      if (hdc == NULL)  /* STILL can't get a good printer DC. */
         {
 	  Tcl_SetResult (interp, "Error: Can't get a valid printer context", TCL_STATIC);
 	  return TCL_ERROR;
         }
     }
     
-  /* Now save off a bit of information for the next call....  */
+  /* Now save off a bit of information for the next call.... */
   if (printer)
-    strncpy ( last_printer, printer, sizeof(last_printer) - 1);
-  else if ( ppv && ppv->devnames_printername[0] )
-    strncpy ( last_printer, ppv->devnames_printername, sizeof(last_printer) - 1 );
+    strncpy (last_printer, printer, sizeof(last_printer) - 1);
+  else if (ppv && ppv->devnames_printername[0])
+    strncpy (last_printer, ppv->devnames_printername, sizeof(last_printer) - 1);
     
   /* *
    * Everything left is a file or data. Just print it.
@@ -1999,21 +2000,21 @@ static int PrintSend (ClientData defaults, Tcl_Interp *interp, int argc, const c
         
       const char *docname;
         
-      if ( argv[0][0] == '-') {
-	if ( strcmp(argv[0], "-datalen") == 0 ) 
+      if (argv[0][0] == '-') {
+	if (strcmp(argv[0], "-datalen") == 0) 
 	  {
 	    argc--;
 	    argv++;
 	    datalen = atol(argv[0]);
 	    continue;
 	  }            
-	else if ( strcmp(argv[0], "-file") == 0) {
+	else if (strcmp(argv[0], "-file") == 0) {
 	  argc--;
 	  argv++;
 	  printtype = PRINT_FROM_FILE;
 	  continue;
 	}
-	else if ( strcmp(argv[0], "-data") == 0) {
+	else if (strcmp(argv[0], "-data") == 0) {
 	  argc--;
 	  argv++;
 	  printtype = PRINT_FROM_DATA;
@@ -2028,43 +2029,43 @@ static int PrintSend (ClientData defaults, Tcl_Interp *interp, int argc, const c
       case PRINT_FROM_DATA:
       default:
 	docname = "Tcl Print Data";
-	if (datalen == 0L ) {
+	if (datalen == 0L) {
 	  Tcl_AppendResult(interp, "Printer warning: ::tk::print::_print send ... -data requires a -datalen preceding argument. Using strlen as a poor substitute.\n", 0);
 	  datalen = strlen(argv[0]);
 	}
 	break;
       }
         
-      if ( PrintStart(hdc, interp, docname) == 1 ) {
+      if (PrintStart(hdc, interp, docname) == 1) {
 	if (ps) {
 	  DWORD inCount = strlen(init_postscript);
 	  DWORD outCount = 0;
-	  if ( WritePrinter(hdc,(LPVOID)init_postscript,inCount,&outCount) == 0 ||
-	       inCount != outCount ) {
+	  if (WritePrinter(hdc,(LPVOID)init_postscript,inCount,&outCount) == 0 ||
+	       inCount != outCount) {
 	    Tcl_AppendResult(interp,"Printer error: Postscript init failed\n", 0);
 	  }
 	}
             
 	switch (printtype) {
 	case PRINT_FROM_FILE:
-	  if ( PrintRawFileData(hdc,interp,argv[0],binary) == 0 ) {
+	  if (PrintRawFileData(hdc,interp,argv[0],binary) == 0) {
 	    Tcl_AppendResult(interp,"Printer error: Could not print file ", argv[0], "\n", 0);
 	  }
 	  break;
 	case PRINT_FROM_DATA:
 	default:
-	  if ( PrintRawData(hdc,interp,(LPBYTE)argv[0],datalen) == 0 ) {
+	  if (PrintRawData(hdc,interp,(LPBYTE)argv[0],datalen) == 0) {
 	    Tcl_AppendResult(interp,"Printer error: Could not print raw data\n", 0);
 	  }
-	  datalen=0L;  /* reset the data length, so it is not reused.  */
+	  datalen=0L;  /* reset the data length, so it is not reused. */
 	  break;
 	}
             
 	if (ps) {
 	  DWORD inCount = strlen(fini_postscript);
 	  DWORD outCount = 0;
-	  if ( WritePrinter(hdc,(LPVOID)fini_postscript,inCount,&outCount) == 0 ||
-	       inCount != outCount ) {
+	  if (WritePrinter(hdc,(LPVOID)fini_postscript,inCount,&outCount) == 0 ||
+	       inCount != outCount) {
 	    Tcl_AppendResult(interp,"Printer error: Postscript finish failed\n", 0);
 	  }
 	}
@@ -2102,12 +2103,12 @@ static int PrintRawData (HANDLE printer, Tcl_Interp *interp, LPBYTE lpData, DWOR
   int retval = 0;
   DWORD dwBytesWritten = 0;
     
-  /* Send the data.  */
-  if ( WritePrinter( printer, lpData, dwCount, &dwBytesWritten) == 0 ) {
-    /* Error writing the data.  */
+  /* Send the data. */
+  if (WritePrinter(printer, lpData, dwCount, &dwBytesWritten) == 0) {
+    /* Error writing the data. */
     Tcl_AppendResult(interp, "Printer error: Cannot write data to printer");
-  } else if ( dwBytesWritten != dwCount ) {    
-    /* Wrong number of bytes were written....  */
+  } else if (dwBytesWritten != dwCount) {    
+    /* Wrong number of bytes were written.... */
     sprintf(msgbuf, "%ld written; %ld requested", dwBytesWritten, dwCount);
     Tcl_AppendResult(interp, "Printer error: Wrong number of bytes were written", 
 		     msgbuf, "\n", 0);
@@ -2139,40 +2140,40 @@ static int PrintRawFileData (HANDLE printer, Tcl_Interp *interp, const char *fil
   Tcl_Channel channel;
     
   struct {
-    WORD len;  /* Defined to be 16 bits.....  */
+    WORD len;  /* Defined to be 16 bits..... */
     char buffer[128+1];
   } indata;
     
-  if ( (channel = Tcl_OpenFileChannel(interp, (char *)filename, "r", 0444)) == NULL)
+  if ((channel = Tcl_OpenFileChannel(interp, (char *)filename, "r", 0444)) == NULL)
     {
-      /* Can't open the file!.  */
+      /* Can't open the file!. */
       return 0;
     }
     
-  if ( binary )
+  if (binary)
     Tcl_SetChannelOption(interp, channel, "-translation", "binary");
     
-  /* Send the data.  */
-  while ( (indata.len = Tcl_Read(channel, indata.buffer, sizeof(indata.buffer)-1)) > 0)
+  /* Send the data. */
+  while ((indata.len = Tcl_Read(channel, indata.buffer, sizeof(indata.buffer)-1)) > 0)
     {
       DWORD dwWritten = 0;
       dwBytesRequested += indata.len;
       indata.buffer[indata.len] = '\0';
-      if ( WritePrinter( printer, indata.buffer, indata.len, &dwWritten) == 0 )
+      if (WritePrinter(printer, indata.buffer, indata.len, &dwWritten) == 0)
         {
-	  /* Error writing the data.  */
+	  /* Error writing the data. */
 	  Tcl_AppendResult(interp, "Printer error: Can't write data to printer\n", 0);
 	  Tcl_Close(interp, channel);
 	  break;
         }
       dwBytesWritten += dwWritten;
-      if ( dwWritten != indata.len ) {
+      if (dwWritten != indata.len) {
 	sprintf(msgbuf, "%ld requested; %ld written", (long)indata.len, dwWritten);
 	Tcl_AppendResult(interp, "Printer warning: Short write: ", msgbuf, "\n", 0);
       }
     }
 
-  if ( dwBytesWritten == dwBytesRequested )
+  if (dwBytesWritten == dwBytesRequested)
     retval = 1;
     
   Tcl_Close(interp, channel);
@@ -2199,23 +2200,23 @@ static int PrintStart (HDC printer, Tcl_Interp *interp, const char *docname)
   DOC_INFO_1 DocInfo;
   DWORD dwJob;
     
-  /* Fill in the document information with the details.  */
-  if ( docname != 0 ) 
+  /* Fill in the document information with the details. */
+  if (docname != 0) 
     DocInfo.pDocName = (LPTSTR)docname;
   else
     DocInfo.pDocName = (LPTSTR)"Tcl Document";
   DocInfo.pOutputFile = 0;
   DocInfo.pDatatype = "RAW";
     
-  /* Start the job.  */
-  if ( (dwJob = StartDocPrinter(printer, 1, (LPSTR)&DocInfo)) == 0 ) {
-    /* Error starting doc printer.  */
+  /* Start the job. */
+  if ((dwJob = StartDocPrinter(printer, 1, (LPSTR)&DocInfo)) == 0) {
+    /* Error starting doc printer. */
     Tcl_AppendResult(interp, "Printer error: Cannot start document printing\n", 0);
     return 0;
   }
-  /* Start the first page.  */
-  if ( StartPagePrinter(printer) == 0 ) {
-    /* Error starting the page.  */
+  /* Start the first page. */
+  if (StartPagePrinter(printer) == 0) {
+    /* Error starting the page. */
     Tcl_AppendResult(interp, "Printer error: Cannot start document page\n", 0);
     EndDocPrinter(printer);
     return 0;
@@ -2238,15 +2239,15 @@ static int PrintStart (HDC printer, Tcl_Interp *interp, const char *docname)
 
 static int PrintFinish (HDC printer, Tcl_Interp *interp)
 {
-  /* Finish the last page.  */
-  if ( EndPagePrinter(printer) == 0 ) {
+  /* Finish the last page. */
+  if (EndPagePrinter(printer) == 0) {
     Tcl_AppendResult(interp, "Printer warning: Cannot end document page\n", 0);
-    /* Error ending the last page.  */
+    /* Error ending the last page. */
   }
-  /* Conclude the document.  */
-  if ( EndDocPrinter(printer) == 0 ) {
+  /* Conclude the document. */
+  if (EndDocPrinter(printer) == 0) {
     Tcl_AppendResult(interp, "Printer warning: Cannot end document printing\n", 0);
-    /* Error ending document.  */
+    /* Error ending document. */
   }
     
   JobInfo(0,0,0);
@@ -2269,8 +2270,8 @@ static int PrintFinish (HDC printer, Tcl_Interp *interp)
 
 static int PrintOpenDefault (ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
-  struct printer_values *ppv = *(struct printer_values  * )data;
-  if ( autoclose && ppv && ppv->hDC)
+  struct printer_values *ppv = *(struct printer_values  *)data;
+  if (autoclose && ppv && ppv->hDC)
     {
       char tmpbuf[11+1+1];
       char *args[3];
@@ -2280,10 +2281,10 @@ static int PrintOpenDefault (ClientData data, Tcl_Interp *interp, int argc, cons
       args[2] = 0;
       PrintClose(data, interp, 2, args);
     }
-  *(struct printer_values  * )data = ppv
-    = make_printer_values(0);  /* Get a default printer_values context.  */
+  *(struct printer_values  *)data = ppv
+    = make_printer_values(0);  /* Get a default printer_values context. */
     
-  /* This version uses PrintDlg, and works under Win32s.  */
+  /* This version uses PrintDlg, and works under Win32s. */
   {
     HWND tophwnd;
     int retval;
@@ -2291,49 +2292,49 @@ static int PrintOpenDefault (ClientData data, Tcl_Interp *interp, int argc, cons
     /* The following is an attempt to get the right owners notified of
      *  repaint requests from the dialog. It doesn't quite work.
      *  It does make the dialog box modal to the toplevel it's working with, though.
-     .  */
-    if ( (ppv->pdlg.hwndOwner = GetActiveWindow()) != 0 )
-      while ( (tophwnd = GetParent(ppv->pdlg.hwndOwner) ) != 0 )
+     . */
+    if ((ppv->pdlg.hwndOwner = GetActiveWindow()) != 0)
+      while ((tophwnd = GetParent(ppv->pdlg.hwndOwner)) != 0)
 	ppv->pdlg.hwndOwner = tophwnd;
         
     /*
      *  Since we are doing the "default" dialog, we must put NULL in the
      *  hDevNames and hDevMode members.
      *  Use '::tk::printer::_print  dialog select' for selecting a printer from a list
-     .  */
-    ppv->pdlg.lStructSize = sizeof( PRINTDLG );
+     . */
+    ppv->pdlg.lStructSize = sizeof(PRINTDLG);
     ppv->pdlg.Flags = PD_RETURNDEFAULT | PD_RETURNDC;
     ppv->pdlg.hDevNames = 0;
     ppv->pdlg.hDevMode  = 0;
         
-    retval = PrintDlg ( &(ppv->pdlg) );
+    retval = PrintDlg (&(ppv->pdlg));
         
-    if ( retval == 1 )
+    if (retval == 1)
       {
 	const char *name;
-	if ( ppv->hdcname[0] && hdc_delete )
+	if (ppv->hdcname[0] && hdc_delete)
 	  hdc_delete(interp, ppv->hdcname);
 	ppv->hdcname[0] = '\0';
-	/* StorePrintVals creates and stores the hdcname as well.  */
+	/* StorePrintVals creates and stores the hdcname as well. */
 	StorePrintVals(ppv, &ppv->pdlg, 0);
-	if  ( (name = get_attribute (&ppv->attribs, "device")) != 0 )
-	  if ( PrinterGetDefaults(ppv, name, 1) > 0 ) {  /* Set default DEVMODE too.  */
-	    current_printer_values = ppv;  /* This is now the default printer.  */
+	if  ((name = get_attribute (&ppv->attribs, "device")) != 0)
+	  if (PrinterGetDefaults(ppv, name, 1) > 0) {  /* Set default DEVMODE too. */
+	    current_printer_values = ppv;  /* This is now the default printer. */
 	  }
       }
     else
       {
-	/* Failed or cancelled. Leave everything else the same.  */
-	Tcl_Free( (char *) ppv);
+	/* Failed or cancelled. Leave everything else the same. */
+	Tcl_Free((char *) ppv);
 	/* Per Steve Bold--restore the default printer values
 	   In any case the current_printer_values shouldn't be left hanging
-	   .  */
-	*(struct printer_values  * )data = &default_printer_values;
+	   . */
+	*(struct printer_values  *)data = &default_printer_values;
       }
   }
     
-  /* The status does not need to be supplied. either hDC is OK or it's NULL.  */
-  if ( ppv->hdcname[0] )
+  /* The status does not need to be supplied. either hDC is OK or it's NULL. */
+  if (ppv->hdcname[0])
     Tcl_SetResult(interp, ppv->hdcname, TCL_VOLATILE);
   else
     {
@@ -2361,8 +2362,8 @@ static int PrintOpenDefault (ClientData data, Tcl_Interp *interp, int argc, cons
 
 static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
-  /* The ClientData is the default printer--this may be overridden by the proc arguments.  */
-  struct printer_values *ppv = *(struct printer_values  * )data;
+  /* The ClientData is the default printer--this may be overridden by the proc arguments. */
+  struct printer_values *ppv = *(struct printer_values  *)data;
   const char *printer_name;
   int        use_printer_name = 0;
   int        use_default = 0;
@@ -2372,26 +2373,26 @@ static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  
   int        retval = TCL_OK;
   static const char usage_message[] = "::tk::print::_print open [-name printername|-default]";
     
-  /* Command line should specify everything needed. Don't bring up dialog.  */
-  /* This should also SET the default to any overridden printer name.  */
+  /* Command line should specify everything needed. Don't bring up dialog. */
+  /* This should also SET the default to any overridden printer name. */
   for (j=0; j<argc; j++)
     {
-      if ( strcmp (argv[j], "-name") == 0 )
+      if (strcmp (argv[j], "-name") == 0)
         {
 	  use_printer_name = 1;
 	  printer_name = argv[++j];
         }
-      else if ( strcmp (argv[j], "-default") == 0 )
+      else if (strcmp (argv[j], "-default") == 0)
 	use_default = 1;
-      /* Need a case here for attributes, so one can specify EVERYTHING on the command.  */
-      else if ( strncmp (argv[j], "-attr", 5) == 0 )
+      /* Need a case here for attributes, so one can specify EVERYTHING on the command. */
+      else if (strncmp (argv[j], "-attr", 5) == 0)
         {
 	  use_attrs = 1;
 	  attrs = argv[++j];
         }
     }
     
-  switch ( use_printer_name + use_default )
+  switch (use_printer_name + use_default)
     {
     case 0:
       use_default = 1;
@@ -2401,7 +2402,7 @@ static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  
       return TCL_ERROR;
     }
     
-  if ( use_printer_name )
+  if (use_printer_name)
     {
       if (ppv && ppv->hDC)
         {
@@ -2414,8 +2415,8 @@ static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  
 	  PrintClose(data, interp, 2, args);
         }
         
-      ppv = make_printer_values(0);  /* Get a default printer_values context.  */
-      *(struct printer_values  * )data = ppv;
+      ppv = make_printer_values(0);  /* Get a default printer_values context. */
+      *(struct printer_values  *)data = ppv;
       /*
        *  Since this is a print open, a new HDC will be created--at this point, starting
        *  with the default attributes.
@@ -2423,71 +2424,71 @@ static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  
       if (ppv) {
 	int retval = 0;
             
-	if ( (retval = PrinterGetDefaults(ppv, printer_name, 1)) > 0 )     /* Set devmode if available.  */
+	if ((retval = PrinterGetDefaults(ppv, printer_name, 1)) > 0)     /* Set devmode if available. */
 	  {
 	    const char *cp;
-	    if ( (cp = make_printer_dc_name(interp, ppv->hDC, ppv) ) != 0 )
+	    if ((cp = make_printer_dc_name(interp, ppv->hDC, ppv)) != 0)
 	      {
 		strncpy(ppv->hdcname, cp, sizeof (current_printer_values->hdcname));
 		set_attribute(&ppv->attribs, "hdcname", cp);
 	      }
-	    current_printer_values = ppv;  /* This is now the default printer.  */
+	    current_printer_values = ppv;  /* This is now the default printer. */
 	  } else {
-	  /* an error occurred - printer is not usable for some reason, so report that.  */
-	  switch ( retval ) {
-	  case GETDEFAULTS_UNSUPPORTED:  /* Not supported.  */
+	  /* an error occurred - printer is not usable for some reason, so report that. */
+	  switch (retval) {
+	  case GETDEFAULTS_UNSUPPORTED:  /* Not supported. */
 	    Tcl_AppendResult(interp, "PrinterGetDefaults: Not supported for this OS\n", 0);
 	    break;
-	  case GETDEFAULTS_NOSUCHPRINTER:  /* Can't find printer.  */
+	  case GETDEFAULTS_NOSUCHPRINTER:  /* Can't find printer. */
 	    Tcl_AppendResult(interp, "PrinterGetDefaults: Can't find printer ", printer_name, "\n", 0);
 	    break;
-	  case GETDEFAULTS_CANTCREATEDC:  /* Can't create DC.  */
+	  case GETDEFAULTS_CANTCREATEDC:  /* Can't create DC. */
 	    Tcl_AppendResult(interp, "PrinterGetDefaults: Can't create DC: Insufficient printer information\n", 0);
 	    break;
-	  case GETDEFAULTS_CANTOPENPRINTER:  /* Can't open printer.  */
+	  case GETDEFAULTS_CANTOPENPRINTER:  /* Can't open printer. */
 	    Tcl_AppendResult(interp, "PrinterGetDefaults: Can't open printer ", printer_name, "\n", 0);
 	    break;
-	  case GETDEFAULTS_WINDOWSERROR:  /* Windows error.  */
+	  case GETDEFAULTS_WINDOWSERROR:  /* Windows error. */
 	    Tcl_AppendResult(interp, "PrinterGetDefaults: Windows error\n", 0);
 	    break;
-	  default:  /* ???.  */
+	  default:  /* ???. */
 	    Tcl_AppendResult(interp, "PrinterGetDefaults: Unknown error\n", 0);
 	    break;
 	  }
                 
-	  if (ppv->errorCode != 0 )
+	  if (ppv->errorCode != 0)
 	    ReportWindowsError(interp,ppv->errorCode);
                 
-	  /* release the ppv.  */
+	  /* release the ppv. */
 	  delete_printer_values(ppv);
                 
 	  return TCL_ERROR;
 	}
       }
     }
-  else  /* It's a default.  */
+  else  /* It's a default. */
     {
-      retval = PrintOpenDefault(data, interp, argc, argv);    /* argc, argv unused.  */
-      ppv = *(struct printer_values  * )data;
+      retval = PrintOpenDefault(data, interp, argc, argv);    /* argc, argv unused. */
+      ppv = *(struct printer_values  *)data;
     }
     
-  /* Get device names information.  */
+  /* Get device names information. */
   {
     char *dev, *dvr, *port;
     /* 
      * retval test added by Jon Hilbert, <jhilbert@hilbertsoft.com> 8/8/02. 
      * The printer name in this function should not be matched with wildcards.  
      */
-    if ( retval == TCL_OK && ppv && ppv->pdevmode && ppv->pdevmode->dmDeviceName &&
-	 GetPrinterWithName((char *)(ppv->pdevmode->dmDeviceName), &dev, &dvr, &port, 0) != 0 )
+    if (retval == TCL_OK && ppv && ppv->pdevmode && ppv->pdevmode->dmDeviceName &&
+	 GetPrinterWithName((char *)(ppv->pdevmode->dmDeviceName), &dev, &dvr, &port, 0) != 0)
       {
-	strcpy(ppv->devnames_filename, dvr );
-	strcpy(ppv->devnames_port,    port );
+	strcpy(ppv->devnames_filename, dvr);
+	strcpy(ppv->devnames_port,    port);
       }
   }
     
-  /* Check for attribute modifications.  */
-  if ( use_attrs != 0 && retval == TCL_OK )
+  /* Check for attribute modifications. */
+  if (use_attrs != 0 && retval == TCL_OK)
     {
       char hdcbuffer[20];
       const char *args[5];
@@ -2507,8 +2508,8 @@ static int PrintOpen(ClientData data, Tcl_Interp *interp, int argc, const char  
 #endif
     }
     
-  /* The status does not need to be supplied. either hDC is OK or it's NULL.  */
-  if ( ppv->hdcname[0] )
+  /* The status does not need to be supplied. either hDC is OK or it's NULL. */
+  if (ppv->hdcname[0])
     Tcl_SetResult(interp, ppv->hdcname, TCL_VOLATILE);
   else
     {
@@ -2537,40 +2538,40 @@ static int PrintClose(ClientData data, Tcl_Interp *interp, int argc, const char 
   int j;
   const char *hdcString = 0;
     
-  /* Start with the default printer.  */
-  struct printer_values *ppv = *(struct printer_values  * )data;
+  /* Start with the default printer. */
+  struct printer_values *ppv = *(struct printer_values  *)data;
     
-  /* See if there are any command line arguments.  */
+  /* See if there are any command line arguments. */
   for (j=0; j<argc; j++)
     {
-      if ( strcmp (argv[j], "-hDC") == 0 || strcmp (argv[j], "-hdc") == 0 )
+      if (strcmp (argv[j], "-hDC") == 0 || strcmp (argv[j], "-hdc") == 0)
         {
 	  hdcString = argv[++j];
         }
     }
     
-  if ( hdcString)
+  if (hdcString)
     {
       HDC hdc = get_printer_dc(interp, hdcString);
       ppv = find_dc_by_hdc(hdc);
-      *(struct printer_values  * )data = ppv;
+      *(struct printer_values  *)data = ppv;
         
-      if ( ppv == current_printer_values )
+      if (ppv == current_printer_values)
         {
-	  current_printer_values = &default_printer_values;  /* This is the easiest....  */
+	  current_printer_values = &default_printer_values;  /* This is the easiest.... */
         }
     }
     
-  if ( ppv == 0 )  /* Already closed?.  */
+  if (ppv == 0)  /* Already closed?. */
     return TCL_OK;
     
-  /* Check the status of the job and page.  */
+  /* Check the status of the job and page. */
     
   PrintFinish(ppv->hDC, interp);
   ppv->in_page = 0;
   ppv->in_job  = 0;
     
-  /* Free the printer DC.  */
+  /* Free the printer DC. */
   if (ppv->hDC)
     {
       delete_dc(ppv->hDC);
@@ -2578,12 +2579,12 @@ static int PrintClose(ClientData data, Tcl_Interp *interp, int argc, const char 
       ppv->hDC = NULL;
     }
     
-  if ( ppv->hdcname[0] != '\0' && hdc_delete != 0 )
+  if (ppv->hdcname[0] != '\0' && hdc_delete != 0)
     hdc_delete(interp, ppv->hdcname);
   ppv->hdcname[0] = '\0';
     
-  /* We should also clean up the devmode and devname structures.  */
-  if ( ppv && ppv != current_printer_values )
+  /* We should also clean up the devmode and devname structures. */
+  if (ppv && ppv != current_printer_values)
     delete_printer_values(ppv);
     
   return TCL_OK;
@@ -2605,9 +2606,9 @@ static int PrintClose(ClientData data, Tcl_Interp *interp, int argc, const char 
 
 static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
-  /* Which dialog is requested: one of select, page_setup.  */
+  /* Which dialog is requested: one of select, page_setup. */
   static char usage_message[] = "::tk::print::_print dialog [-hDC hdc ] [select|page_setup] [-flags flagsnum]";
-  struct printer_values *ppv = *(struct printer_values  * )data;
+  struct printer_values *ppv = *(struct printer_values  *)data;
   int flags;
   int oldMode;
   int print_retcode;
@@ -2635,7 +2636,7 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
   static const int PAGE_REQUIRED_SET =
     PSD_NOWARNING | PSD_DISABLEPRINTER;
     
-  /* Create matching devmode and devnames to match the defaults.  */
+  /* Create matching devmode and devnames to match the defaults. */
   HANDLE  hDevMode = 0;
   HANDLE  hDevNames = 0;
   DEVMODE *pdm = 0;
@@ -2660,101 +2661,101 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
       return TCL_ERROR;
     }
     
-  for (k = 0; k < argc; k++ )
+  for (k = 0; k < argc; k++)
     {
-      if ( strcmp(argv[k], "select") == 0 )
+      if (strcmp(argv[k], "select") == 0)
 	do_select = 1;
-      else if ( strcmp(argv[k], "page_setup") == 0 )
+      else if (strcmp(argv[k], "page_setup") == 0)
 	do_page   = 1;
-      else if ( strcmp(argv[k], "-hdc") == 0  || strcmp (argv[k], "-hDC") == 0 )
+      else if (strcmp(argv[k], "-hdc") == 0  || strcmp (argv[k], "-hDC") == 0)
         {
 	  k++;
 	  hdcString = argv[k];
         }
-      else if ( strcmp(argv[k], "-flags") == 0 )
+      else if (strcmp(argv[k], "-flags") == 0)
         {
 	  char *endstr;
 	  if (argv[k+1])
             {
-	      flags = strtol(argv[++k], &endstr, 0);  /* Take any valid base.  */
-	      if (endstr != argv[k])  /* if this was a valid numeric string.  */
+	      flags = strtol(argv[++k], &endstr, 0);  /* Take any valid base. */
+	      if (endstr != argv[k])  /* if this was a valid numeric string. */
 		do_flags = 1;
             }
         }
     }
     
-  if ( (do_page + do_select) != 1 )
+  if ((do_page + do_select) != 1)
     {
       Tcl_SetResult(interp, usage_message, TCL_STATIC);
       return TCL_ERROR;
     }
     
-  if ( ppv == 0 || ppv == &default_printer_values || ppv->hDC == 0 )
+  if (ppv == 0 || ppv == &default_printer_values || ppv->hDC == 0)
     {
       is_new_ppv = 1;
       old_ppv = 0;
     }
     
-  if ( hdcString )
+  if (hdcString)
     {
       hdc = get_printer_dc(interp,hdcString);
       ppv = find_dc_by_hdc(hdc);
-      *(struct printer_values  * )data = ppv;
-      if (hdc == 0 )
+      *(struct printer_values  *)data = ppv;
+      if (hdc == 0)
         {
 	  is_new_ppv = 1;
         }
-      if (ppv == 0 )
+      if (ppv == 0)
         {
 	  is_new_ppv = 1;
         }
     }
     
-  if ( is_new_ppv == 1 )
+  if (is_new_ppv == 1)
     {
-      /* Open a brand new printer values structure.  */
+      /* Open a brand new printer values structure. */
       old_ppv = ppv;
       ppv = make_printer_values(0);
-      *(struct printer_values  * )data = ppv;
+      *(struct printer_values  *)data = ppv;
     }
     
-  /* Copy the devmode and devnames into usable components.  */
+  /* Copy the devmode and devnames into usable components. */
   if (ppv && ppv->pdevmode)
     dmsize = ppv->pdevmode->dmSize+ppv->pdevmode->dmDriverExtra;
     
-  if ( dmsize <= 0 )
-    ;  /* Don't allocate a devmode structure.  */
-  else if ( (hDevMode = GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT, dmsize) ) == NULL )
+  if (dmsize <= 0)
+    ;  /* Don't allocate a devmode structure. */
+  else if ((hDevMode = GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT, dmsize)) == NULL)
     {
-      /* Failure!.  */
+      /* Failure!. */
       errors |= alloc_devmode;
-      pdm = 0;   /* Use the default devmode.  */
+      pdm = 0;   /* Use the default devmode. */
     }
-  else if ( (pdm = (DEVMODE *)GlobalLock(hDevMode)) == NULL )
+  else if ((pdm = (DEVMODE *)GlobalLock(hDevMode)) == NULL)
     {
-      /* Failure!.  */
+      /* Failure!. */
       errors |= lock_devmode;
     }
     
-  /* If this is the first time we've got a ppv, just leave the names null.  */
-  if ( ppv->devnames_filename[0] == 0 ||
+  /* If this is the first time we've got a ppv, just leave the names null. */
+  if (ppv->devnames_filename[0] == 0 ||
        ppv->devnames_port[0] == 0 ||
-       ppv->pdevmode == 0 )
-    ;  /* Don't allocate the devnames structure.  */
-  else if ( (hDevNames = GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT,
+       ppv->pdevmode == 0)
+    ;  /* Don't allocate the devnames structure. */
+  else if ((hDevNames = GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT,
 				     sizeof(DEVNAMES)+
 				     sizeof(ppv->devnames_filename)   + 
 				     CCHDEVICENAME +
-				     sizeof(ppv->devnames_port)       + 2 )
-	     ) == NULL)
+				     sizeof(ppv->devnames_port)       + 2)
+	    ) == NULL)
     {
-      /* Failure!.  */
+      /* Failure!. */
       errors |= alloc_devname;
       pdn = 0;
     }
-  else if ( (pdn = (DEVNAMES *)GlobalLock(hDevNames)) == NULL)
+  else if ((pdn = (DEVNAMES *)GlobalLock(hDevNames)) == NULL)
     {
-      /* Failure!.  */
+      /* Failure!. */
       errors |= lock_devname;
     }
     
@@ -2765,11 +2766,11 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
     {
       pdn->wDefault = 0;
       pdn->wDriverOffset = 4*sizeof (WORD);
-      strcpy( (char *)pdn + pdn->wDriverOffset, ppv->devnames_filename);
+      strcpy((char *)pdn + pdn->wDriverOffset, ppv->devnames_filename);
       pdn->wDeviceOffset = pdn->wDriverOffset + strlen(ppv->devnames_filename) + 2;
-      strcpy ( (char *)pdn + pdn->wDeviceOffset, ppv->pdevmode->dmDeviceName);
+      strcpy ((char *)pdn + pdn->wDeviceOffset, ppv->pdevmode->dmDeviceName);
       pdn->wOutputOffset = pdn->wDeviceOffset + strlen(ppv->pdevmode->dmDeviceName) + 2;
-      strcpy ( (char *)pdn + pdn->wOutputOffset, ppv->devnames_port);
+      strcpy ((char *)pdn + pdn->wOutputOffset, ppv->devnames_port);
     }
     
   if (hDevMode) 
@@ -2777,7 +2778,7 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
   if (hDevNames)
     GlobalUnlock(hDevNames);
     
-  if ( do_select )
+  if (do_select)
     {
       /*
        *  Looking at the return value of PrintDlg, we want to
@@ -2792,67 +2793,67 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
        *  consistently establish and free the handles.
        *  Current thinking is to preserve them in the PageSetup structure ONLY,
        *  thus avoiding the problem here.
-       .  */
+       . */
         
       HWND    tophwnd;
         
-      /* Assign the copied, moveable handles to the dialog structure.  */
+      /* Assign the copied, moveable handles to the dialog structure. */
       ppv->pdlg.hDevMode = hDevMode;
       ppv->pdlg.hDevNames = hDevNames;
         
       /* 
        *  This loop make the dialog box modal to the toplevel it's working with.
        *  It also avoids any reliance on Tk code (for Tcl users).
-       .  */
-      if ( (ppv->pdlg.hwndOwner = GetActiveWindow()) != 0 )
-	while ( (tophwnd = GetParent(ppv->pdlg.hwndOwner) ) != 0 )
+       . */
+      if ((ppv->pdlg.hwndOwner = GetActiveWindow()) != 0)
+	while ((tophwnd = GetParent(ppv->pdlg.hwndOwner)) != 0)
 	  ppv->pdlg.hwndOwner = tophwnd;
         
-      /* Leaving the memory alone will preserve selections.  */
-      /* memset (&(ppv->pdlg), 0, sizeof(PRINTDLG) );.  */
+      /* Leaving the memory alone will preserve selections. */
+      /* memset (&(ppv->pdlg), 0, sizeof(PRINTDLG));. */
       ppv->pdlg.lStructSize = sizeof(PRINTDLG);
       ppv->pdlg.Flags |= PRINT_REQUIRED_SET; 
         
-      /* Vista (Win95) Fix Start.  */
-      /* Seems to be needed to print multiple copies.  */
+      /* Vista (Win95) Fix Start. */
+      /* Seems to be needed to print multiple copies. */
       ppv->pdlg.Flags |= PD_USEDEVMODECOPIES; 
-      ppv->pdlg.nCopies = (WORD)PD_USEDEVMODECOPIES;  /* Value shouldn't matter.  */
-      /* Vista Fix End.  */
+      ppv->pdlg.nCopies = (WORD)PD_USEDEVMODECOPIES;  /* Value shouldn't matter. */
+      /* Vista Fix End. */
         
-      if ( do_flags )
+      if (do_flags)
         {
-	  /* Enable requested flags, but disable the flags we don't want to support.  */
+	  /* Enable requested flags, but disable the flags we don't want to support. */
 	  ppv->pdlg.Flags |= flags;
 	  ppv->pdlg.Flags &= PRINT_ALLOWED_SET;
         }
         
-      /* One may not specify return default when devmode or devnames are present.  */
+      /* One may not specify return default when devmode or devnames are present. */
       /* Since the copied flags in the ppv's pdevmode may have been created by
        *  the "PrintOpen" call, this flag _might_ be set
-       .  */
+       . */
       if (ppv->pdlg.hDevMode || ppv->pdlg.hDevNames)
 	ppv->pdlg.Flags &= (~PD_RETURNDEFAULT);
         
 #if TCL_MAJOR_VERSION > 7
-      /* In Tcl versions 8 and later, a service call to the notifier is provided.  */
+      /* In Tcl versions 8 and later, a service call to the notifier is provided. */
       oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 #endif
         
       print_retcode = PrintDlg(&(ppv->pdlg));
         
 #if TCL_MAJOR_VERSION > 7
-      /* Return the service mode to its original state.  */
+      /* Return the service mode to its original state. */
       Tcl_SetServiceMode(oldMode);
 #endif
         
-      if ( print_retcode == 1 )  /* Not canceled.  */
+      if (print_retcode == 1)  /* Not canceled. */
         {
 	  const char *name;
 	  StorePrintVals (ppv, &ppv->pdlg, 0);
             
-	  if  ( (name = get_attribute (&ppv->attribs, "device")) != 0 )
+	  if  ((name = get_attribute (&ppv->attribs, "device")) != 0)
 	    PrinterGetDefaults(ppv, name, 0);  /* Don't set default DEVMODE: 
-						  user may have already set it in properties.  */
+						  user may have already set it in properties. */
             
 	  add_dc(ppv->hDC, ppv);
 	  current_printer_values = ppv;
@@ -2860,7 +2861,7 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
 	  hDevNames = NULL;
 	  hDevMode = NULL;
         }
-      else  /* Canceled.  */
+      else  /* Canceled. */
         {
 	  DWORD extError = CommDlgExtendedError();
 	  if (ppv->pdlg.hDevMode)
@@ -2869,7 +2870,7 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
 	    GlobalFree(hDevMode);
 	  hDevMode = ppv->pdlg.hDevMode = NULL;
             
-	  if ( ppv->pdlg.hDevNames )
+	  if (ppv->pdlg.hDevNames)
 	    GlobalFree (ppv->pdlg.hDevNames);
 	  else
 	    GlobalFree (hDevNames);
@@ -2879,13 +2880,13 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
             {
 	      Tcl_Free((char *)ppv);
 	      ppv = old_ppv;
-	      if ( ppv == 0 )
+	      if (ppv == 0)
 		ppv = &default_printer_values;
-	      *(struct printer_values  * )data = ppv;
+	      *(struct printer_values  *)data = ppv;
             }
         }
         
-      /* Results are available through printer attr; HDC now returned.  */
+      /* Results are available through printer attr; HDC now returned. */
       /* This would be a good place for Tcl_SetObject, but for now, support
        *  older implementations by returning a Hex-encoded value.
        *  Note: Added a 2nd parameter to allow caller to note cancellation.
@@ -2893,7 +2894,7 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
       {
 	const char *cp = ppv->hdcname;
 	if (cp && cp[0])
-	  sprintf(msgbuf, "%s %d", cp, print_retcode );
+	  sprintf(msgbuf, "%s %d", cp, print_retcode);
 	else
 	  sprintf(msgbuf, "0x%lx %d", ppv->hDC, print_retcode);
 	Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
@@ -2901,40 +2902,40 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
     }
   else if (do_page)
     {
-      if ( do_flags == 0 )
+      if (do_flags == 0)
 	flags = PSD_MARGINS|PSD_NOWARNING|PSD_DISABLEPRINTER|PSD_INTHOUSANDTHSOFINCHES;
         
       ppv->pgdlg.Flags = flags;
-      /* Restrict flags to those we wish to support.  */
+      /* Restrict flags to those we wish to support. */
       ppv->pgdlg.Flags |= PAGE_REQUIRED_SET;
       ppv->pgdlg.Flags &= PAGE_ALLOWED_SET;
         
-      /* Set the devmode and devnames to match our structures.  */
+      /* Set the devmode and devnames to match our structures. */
       ppv->pgdlg.hDevMode = hDevMode;
       ppv->pgdlg.hDevNames = hDevNames;
         
       ppv->pgdlg.lStructSize = sizeof(PAGESETUPDLG);
 #if TCL_MAJOR_VERSION > 7
-      /* In Tcl versions 8 and later, a service call to the notifier is provided.  */
+      /* In Tcl versions 8 and later, a service call to the notifier is provided. */
       oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 #endif
         
       print_retcode = PageSetupDlg(&(ppv->pgdlg));
         
 #if TCL_MAJOR_VERSION > 7
-      /* Return the service mode to its original state.  */
+      /* Return the service mode to its original state. */
       Tcl_SetServiceMode(oldMode);
 #endif
         
-      if ( print_retcode == 1 )  /* Not cancelled.  */
+      if (print_retcode == 1)  /* Not cancelled. */
         {      
 	  StorePrintVals(ppv, 0, &ppv->pgdlg);
-	  /* Modify the HDC using ResetDC.  */
+	  /* Modify the HDC using ResetDC. */
 	  ResetDC(ppv->hDC, ppv->pdevmode);      
 	  hDevNames = NULL;
 	  hDevMode  = NULL;
         }
-      else  /* Canceled.  */
+      else  /* Canceled. */
         {
 	  if (ppv->pgdlg.hDevMode)
 	    GlobalFree(ppv->pgdlg.hDevMode);
@@ -2942,25 +2943,25 @@ static int PrintDialog(ClientData data, Tcl_Interp *interp, int argc, const char
 	    GlobalFree(hDevMode);
 	  hDevMode = ppv->pgdlg.hDevMode = NULL;
             
-	  if ( ppv->pgdlg.hDevNames )
+	  if (ppv->pgdlg.hDevNames)
 	    GlobalFree (ppv->pgdlg.hDevNames);
 	  else
 	    GlobalFree (hDevNames);
 	  hDevNames = ppv->pgdlg.hDevNames = NULL;
-	  if ( is_new_ppv )
+	  if (is_new_ppv)
             {
 	      Tcl_Free ((char *)ppv);
 	      ppv = old_ppv;
-	      if (ppv == 0 )
+	      if (ppv == 0)
 		ppv = &default_printer_values;
-	      *(struct printer_values  * )data = ppv;
+	      *(struct printer_values  *)data = ppv;
             }
         }
         
       {
 	const char *cp = ppv->hdcname;
 	if (cp && cp[0])
-	  sprintf(msgbuf, "%s %d", cp, print_retcode );
+	  sprintf(msgbuf, "%s %d", cp, print_retcode);
 	else
 	  sprintf(msgbuf, "0x%lx %d", ppv->hDC, print_retcode);
 	Tcl_SetResult(interp, msgbuf, TCL_VOLATILE);
@@ -3001,13 +3002,13 @@ static int JobInfo(int state, const char *name, const char  * outname)
       break;
     case 1:
       inJob = 1;
-      if ( name )
-	strncpy (jobname, name, sizeof(jobname) - 1 );
+      if (name)
+	strncpy (jobname, name, sizeof(jobname) - 1);
       break;
     default:
       break;
     }
-  if ( outname )
+  if (outname)
     *outname = jobname;
   return inJob;
 }
@@ -3029,14 +3030,14 @@ static int JobInfo(int state, const char *name, const char  * outname)
 static int PrintJob(ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
   DOCINFO di;
-  struct printer_values  * ppv = *(struct printer_values  * ) data;
+  struct printer_values  * ppv = *(struct printer_values  *) data;
     
   static char usage_message[] = "::tk::print::_print job [ -hDC hdc ] [ [start [-name docname] ] | end ]";
   HDC hdc = 0;
   const char *hdcString = 0;
     
-  /* Parameters for document name and output file (if any) should be supported.  */
-  if ( argc > 0 && (strcmp(argv[0], "-hdc") == 0  || strcmp (argv[0], "-hDC") == 0) )
+  /* Parameters for document name and output file (if any) should be supported. */
+  if (argc > 0 && (strcmp(argv[0], "-hdc") == 0  || strcmp (argv[0], "-hDC") == 0))
     {
       argc--;
       argv++;
@@ -3045,72 +3046,72 @@ static int PrintJob(ClientData data, Tcl_Interp *interp, int argc, const char  *
       argv++;
     }
     
-  if ( hdcString )
+  if (hdcString)
     {
       hdc = get_printer_dc(interp,hdcString);
       ppv = find_dc_by_hdc(hdc);
-      *(struct printer_values  * )data = ppv;
+      *(struct printer_values  *)data = ppv;
         
-      if (hdc == 0 )
+      if (hdc == 0)
         {
 	  Tcl_AppendResult(interp, "printer job got unrecognized hdc ", hdcString, 0);
 	  return TCL_ERROR;
         }
-      if (ppv == 0 )
+      if (ppv == 0)
         {
         }
     }
     
-  if (ppv && hdc == 0 )
+  if (ppv && hdc == 0)
     hdc = ppv->hDC;
     
   /* Should this command keep track of start/end state so two starts in a row
    *  automatically have an end inserted?
-   .  */
-  if ( argc == 0 )   /* printer job by itself.  */
+   . */
+  if (argc == 0)   /* printer job by itself. */
     {
       const char *jobname;
       int status;
         
       status = JobInfo (-1, 0, &jobname);
-      if ( status )
+      if (status)
 	Tcl_SetResult(interp, (char *)jobname, TCL_VOLATILE);
       return TCL_OK;
     }
-  else if ( argc >= 1 )
+  else if (argc >= 1)
     {
-      if ( strcmp (*argv, "start") == 0 )
+      if (strcmp (*argv, "start") == 0)
         {
 	  const char *docname = "Tcl Printer Document";
 	  int oldMode;
             
 	  argc--;
 	  argv++;
-	  /* handle -name argument if present.  */
-	  if ( argc >= 1 && strcmp( *argv, "-name" ) == 0 )
+	  /* handle -name argument if present. */
+	  if (argc >= 1 && strcmp(*argv, "-name") == 0)
             {
 	      argv++;
-	      if ( --argc > 0 )
+	      if (--argc > 0)
                 {
 		  docname = *argv;
                 }
             }
             
-	  /* Ensure the hDC is valid before continuing.  */
-	  if ( hdc == NULL )
+	  /* Ensure the hDC is valid before continuing. */
+	  if (hdc == NULL)
             {
 	      Tcl_SetResult (interp, "Error starting print job: no printer context", TCL_STATIC);
 	      return TCL_ERROR;
             }
             
-	  /* Close off any other job if already in progress.  */
-	  if ( JobInfo(-1, 0, 0) )
+	  /* Close off any other job if already in progress. */
+	  if (JobInfo(-1, 0, 0))
             {
 	      EndDoc(ppv->hDC);
 	      JobInfo(0, 0, 0);
             }
             
-	  memset ( &di, 0, sizeof(DOCINFO) );
+	  memset (&di, 0, sizeof(DOCINFO));
 	  di.cbSize = sizeof(DOCINFO);
 	  di.lpszDocName = docname;
             
@@ -3119,13 +3120,13 @@ static int PrintJob(ClientData data, Tcl_Interp *interp, int argc, const char  *
 	   *  Therefore, in Tcl 8 and above, enable event handling
 	   *  */
 #if TCL_MAJOR_VERSION > 7
-	  /* In Tcl versions 8 and later, a service call to the notifier is provided.  */
+	  /* In Tcl versions 8 and later, a service call to the notifier is provided. */
 	  oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 #endif
 	  StartDoc(hdc, &di);
 	  JobInfo (1, docname, 0);
 #if TCL_MAJOR_VERSION > 7
-	  /* Return the service mode to its original state.  */
+	  /* Return the service mode to its original state. */
 	  Tcl_SetServiceMode(oldMode);
 #endif
 	  if (ppv)
@@ -3133,7 +3134,7 @@ static int PrintJob(ClientData data, Tcl_Interp *interp, int argc, const char  *
             
 	  return TCL_OK;
         }
-      else if ( strcmp (*argv, "end") == 0 )
+      else if (strcmp (*argv, "end") == 0)
         {
 	  EndDoc(hdc);
 	  JobInfo (0, 0, 0);
@@ -3164,12 +3165,12 @@ static int PrintJob(ClientData data, Tcl_Interp *interp, int argc, const char  *
 
 static int PrintPage(ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
-  struct printer_values  * ppv = *(struct printer_values  * ) data;
+  struct printer_values  * ppv = *(struct printer_values  *) data;
   static char usage_message[] = "::tk::print::_print [-hDC hdc] [start|end]";
   HDC hdc = 0;
   const char *hdcString = 0;
     
-  if ( argv[0] && ( strcmp(argv[0], "-hdc") == 0  || strcmp (argv[0], "-hDC") == 0 ) )
+  if (argv[0] && (strcmp(argv[0], "-hdc") == 0  || strcmp (argv[0], "-hDC") == 0))
     {
       argc--;
       argv++;
@@ -3178,18 +3179,18 @@ static int PrintPage(ClientData data, Tcl_Interp *interp, int argc, const char  
       argv++;
     }
     
-  if ( hdcString )
+  if (hdcString)
     {
       hdc = get_printer_dc(interp,hdcString);
       ppv = find_dc_by_hdc(hdc);
-      *(struct printer_values  * )data = ppv;
+      *(struct printer_values  *)data = ppv;
         
-      if (hdc == 0 )
+      if (hdc == 0)
         {
 	  Tcl_AppendResult(interp, "printer page got unrecognized hdc ", hdcString, 0);
 	  return TCL_ERROR;
         }
-      if (ppv == 0 )
+      if (ppv == 0)
         {
 	  Tcl_AppendResult(interp, "printer page got unrecognized hdc ", hdcString, 0);
 	  return TCL_ERROR;
@@ -3199,16 +3200,16 @@ static int PrintPage(ClientData data, Tcl_Interp *interp, int argc, const char  
    *  Should this command keep track of start/end state so two starts in a row
    *  automatically have an end inserted?
    *  Also, if no job has started, should it start a printer job?
-   .  */
-  if ( argc >= 1 )
+   . */
+  if (argc >= 1)
     {
-      if ( strcmp (*argv, "start") == 0 )
+      if (strcmp (*argv, "start") == 0)
         {
 	  StartPage(ppv->hDC);
 	  ppv->in_page = 1;
 	  return TCL_OK;
         }
-      else if ( strcmp (*argv, "end") == 0 )
+      else if (strcmp (*argv, "end") == 0)
         {
 	  EndPage(ppv->hDC);
 	  ppv->in_page = 0;
@@ -3230,9 +3231,9 @@ static int PrintPageAttr (HDC hdc, int *hsize,   int *vsize,
                           int *hppi,    int *vppi)
 {
   int status = 0;
-  if ( hdc == 0 )
+  if (hdc == 0)
     {
-      return -1;  /* A value indicating failure.  */
+      return -1;  /* A value indicating failure. */
     }
     
   *hsize   = GetDeviceCaps(hdc, PHYSICALWIDTH);
@@ -3276,7 +3277,7 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
     "[-hDC hdc] "
     "[ [-get keylist] | [-set key-value-pair list] | [-delete key-list] | [-prompt] ]";
     
-  struct printer_values  * ppv = *(struct printer_values  * ) data;
+  struct printer_values  * ppv = *(struct printer_values  *) data;
     
   Tcl_HashEntry *ent;
   Tcl_HashSearch srch;
@@ -3287,7 +3288,7 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
    * The attributes of interest are the ones buried in the dialog structures. 
    */
     
-  /* For the first implementation, more than 100 keys/pairs will be ignored.  */
+  /* For the first implementation, more than 100 keys/pairs will be ignored. */
   char  * keys=0;
   int key_count = 0;
     
@@ -3300,75 +3301,75 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
   /*
    *  This command should take an HDC as an optional parameter, otherwise using
    *  the one in the ppv structure?
-   .  */
+   . */
   for (i=0; i<argc; i++)
     {
-      if ( strcmp(argv[i], "-get") == 0 )
+      if (strcmp(argv[i], "-get") == 0)
         {
-	  if ( argv[++i] == 0 )
+	  if (argv[++i] == 0)
             {
-	      Tcl_AppendResult(interp, "\nMust supply list with -get\n", usage_message, 0 );
+	      Tcl_AppendResult(interp, "\nMust supply list with -get\n", usage_message, 0);
 	      return TCL_ERROR;
             }
 	  do_get = 1;
-	  /* Now extract the list of keys.  */
-	  if ( Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR )
+	  /* Now extract the list of keys. */
+	  if (Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR)
             {
 	      Tcl_AppendResult(interp, "\nCan't parse list with -get\n", 
-			       argv[i], "\n", usage_message, 0 );
+			       argv[i], "\n", usage_message, 0);
 	      return TCL_ERROR;
             }
         }
-      else if (strcmp(argv[i], "-set") == 0 )
+      else if (strcmp(argv[i], "-set") == 0)
         {
 	  /* With the change in philosophy to doing a per-hdc attribute setting,
 	   *  the attributes are automatically synched, and use ResetDC
 	   *  to update the HDC
-           .  */
-	  if ( argv[++i] == 0 )
+           . */
+	  if (argv[++i] == 0)
             {
-	      Tcl_AppendResult(interp, "\nMust supply list with -set\n", usage_message, 0 );
+	      Tcl_AppendResult(interp, "\nMust supply list with -set\n", usage_message, 0);
 	      return TCL_ERROR;
             }
 	  do_set = 1;
-	  /* Extract the list of key/value pairs.  */
-	  if ( Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR )
+	  /* Extract the list of key/value pairs. */
+	  if (Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR)
             {
 	      Tcl_AppendResult(interp, "\nCan't parse list with -set\n", 
-			       argv[i], "\n", usage_message, 0 );
+			       argv[i], "\n", usage_message, 0);
 	      return TCL_ERROR;
             }
         }
-      else if ( strcmp(argv[i], "-delete") == 0 )
+      else if (strcmp(argv[i], "-delete") == 0)
         {
-	  if ( argv[++i] == 0 )
+	  if (argv[++i] == 0)
             {
 	      Tcl_AppendResult(interp, "\nMust supply list with -delete\n", usage_message, 0);
 	      return TCL_ERROR;
             }
 	  do_delete = 1;
-	  /* Now extract the list of keys.  */
-	  if ( Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR )
+	  /* Now extract the list of keys. */
+	  if (Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR)
             {
 	      Tcl_AppendResult(interp, "\nCan't parse list with -delete\n", 
-			       argv[i], "\n", usage_message, 0 );
+			       argv[i], "\n", usage_message, 0);
 	      return TCL_ERROR;
             }      
         }
-      else if ( strcmp(argv[0], "-prompt") == 0 )
+      else if (strcmp(argv[0], "-prompt") == 0)
         {
 	  do_prompt = 1;
         }
-      else if ( strcmp(argv[0], "-hdc") == 0  || strcmp (argv[0], "-hDC") == 0 )
+      else if (strcmp(argv[0], "-hdc") == 0  || strcmp (argv[0], "-hDC") == 0)
         {
 	  i++;
 	  hdcString = argv[i];
         }
-      /* Ignore others or generate error?.  */
+      /* Ignore others or generate error?. */
     }
     
-  /* Check for any illegal implementations.  */
-  if ( do_set + do_get + do_delete + do_prompt > 1 )
+  /* Check for any illegal implementations. */
+  if (do_set + do_get + do_delete + do_prompt > 1)
     {
       Tcl_AppendResult(interp, "\nCannot use two options from "
 		       "-get, -set, -delete, and -prompt in same request.\n", 
@@ -3379,18 +3380,18 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
       return TCL_ERROR;
     } 
     
-  if ( hdcString )
+  if (hdcString)
     {
       hdc = get_printer_dc(interp,hdcString);
       ppv = find_dc_by_hdc(hdc);
-      *(struct printer_values  * )data = ppv;
+      *(struct printer_values  *)data = ppv;
         
-      if (hdc == 0 )
+      if (hdc == 0)
         {
 	  Tcl_AppendResult(interp, "::tk::print::_print attr got unrecognized hdc ", hdcString, 0);
 	  return TCL_ERROR;
         }
-      if (ppv == 0 )
+      if (ppv == 0)
         {
 	  Tcl_AppendResult(interp, "::tk::print::_print attr got unrecognized hdc ", hdcString, 0);
 	  return TCL_ERROR;
@@ -3402,10 +3403,10 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
    *  The two choices are (a) to consider this a fatal error for the printer attr
    *  command; and (b) to open the default printer. For now, we use choice (b)
    */
-  if ( ppv == 0 || ppv == &default_printer_values || ppv->hDC == NULL )
+  if (ppv == 0 || ppv == &default_printer_values || ppv->hDC == NULL)
     {
-      /* In these cases, open the default printer, if any. If none, return an error.  */
-      if ( PrintOpen(data, interp, 0, 0) != TCL_OK )
+      /* In these cases, open the default printer, if any. If none, return an error. */
+      if (PrintOpen(data, interp, 0, 0) != TCL_OK)
         {
 	  Tcl_AppendResult(interp, "\nThere appears to be no default printer."
 			   "\nUse '::tk::print::_print dialog select' before '::tk::print::_print attr'\n", 
@@ -3415,10 +3416,10 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
 	  return TCL_ERROR;
         }
       else
-	Tcl_ResetResult(interp);   /* Remove the hDC from the result.  */
+	Tcl_ResetResult(interp);   /* Remove the hDC from the result. */
         
-      /* This changes the ppv (via changing data in PrintOpen!.  */
-      ppv = *(struct printer_values  * )data;
+      /* This changes the ppv (via changing data in PrintOpen!. */
+      ppv = *(struct printer_values  *)data;
         
     }
     
@@ -3432,15 +3433,15 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
    *  attribute list. Values CAN be set in this list that are not
    *  recognized by the printer dialogs or structures.
    */
-  /* This is the "delete" part, used only by the -delete case.  */
-  if ( do_delete )
+  /* This is the "delete" part, used only by the -delete case. */
+  if (do_delete)
     {
       int count_del = 0;
       char count_str[12+1];
         
       /* The only trick here is to ensure that only permitted
        *  items are deleted
-       .  */
+       . */
       static const char *illegal[] = {
 	"device",
 	"driver",
@@ -3450,25 +3451,25 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
 	"port",
 	"resolution",
       };
-      for ( ent = Tcl_FirstHashEntry(&ppv->attribs, &srch);
+      for (ent = Tcl_FirstHashEntry(&ppv->attribs, &srch);
 	    ent != 0;
-	    ent = Tcl_NextHashEntry(&srch) )
+	    ent = Tcl_NextHashEntry(&srch))
         {
 	  const char *key;
-	  if ( (key   = (const char *)Tcl_GetHashKey(&ppv->attribs, ent))   != 0   )
+	  if ((key   = (const char *)Tcl_GetHashKey(&ppv->attribs, ent))   != 0  )
             {
-	      /* Test here to see if a list is available, and if this element is on it.  */
+	      /* Test here to see if a list is available, and if this element is on it. */
 	      int found=0;
 	      int i;
 	      for (i=0; i<key_count; i++)
                 {
-		  if ( Tcl_StringMatch(key, keys[i]) == 1 )
+		  if (Tcl_StringMatch(key, keys[i]) == 1)
                     {
 		      int q;
 		      for (q=0; q < sizeof illegal / sizeof (char *); q++)
-			if ( strcmp(key, illegal[q]) == 0 )
+			if (strcmp(key, illegal[q]) == 0)
 			  break;
-		      if ( q == sizeof illegal / sizeof (char *) )
+		      if (q == sizeof illegal / sizeof (char *))
 			found = 1;
 		      break;
                     }
@@ -3480,55 +3481,55 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
 	  count_del++;
         }
         
-      /* If the delete option is chosen, we're done.  */
+      /* If the delete option is chosen, we're done. */
       if (keys)
 	Tcl_Free((char *)keys);
       sprintf(count_str, "%d", count_del);
       Tcl_SetResult(interp, count_str, TCL_VOLATILE);
       return TCL_OK;
     }
-  /* This is the "set" part, used only by the -set case.  */
-  else if ( do_set )
+  /* This is the "set" part, used only by the -set case. */
+  else if (do_set)
     {
       int k;
       /* Split each key, do the set, and then free the result.
        *  Also, replace keys[k] with just the key part.
-       .  */
+       . */
       for (k=0; k<key_count; k++)
         {
 	  int scount;
 	  char  * slist;
-	  if ( Tcl_SplitList(interp, keys[k], &scount, &slist) == TCL_ERROR )
+	  if (Tcl_SplitList(interp, keys[k], &scount, &slist) == TCL_ERROR)
             {
 	      Tcl_AppendResult(interp, "\nCan't parse list with -set\n", 
-			       argv[i], "\n", usage_message, 0 );
+			       argv[i], "\n", usage_message, 0);
             }
 	  else
             {
-	      if ( scount > 1 )
+	      if (scount > 1)
                 {
 		  set_attribute (&ppv->attribs, slist[0], slist[1]);
-		  strcpy(keys[k], slist[0]);  /* Always shorter, so this should be OK.  */
+		  strcpy(keys[k], slist[0]);  /* Always shorter, so this should be OK. */
                 }
-	      if ( slist )
+	      if (slist)
 		Tcl_Free((char *)slist);
             }
         }
         
-      /* Here we should "synchronize" the pairs with the devmode.  */
+      /* Here we should "synchronize" the pairs with the devmode. */
       GetDevModeAttribs (&ppv->attribs, ppv->pdevmode);
       RestorePrintVals  (ppv, &ppv->pdlg, &ppv->pgdlg);
-      /* -------------- added 8/1/02 by Jon Hilbert.  */
+      /* -------------- added 8/1/02 by Jon Hilbert. */
       /* tell the printer about the devmode changes 
 	 This is necessary to support paper size setting changes
-	 .  */
+	 . */
       DocumentProperties(GetActiveWindow(),ppv->hDC,ppv->pdevmode->dmDeviceName,
 			 ppv->pdevmode,ppv->pdevmode,DM_IN_BUFFER|DM_OUT_BUFFER);
         
-      /* Here we should modify the DEVMODE by calling ResetDC.  */
+      /* Here we should modify the DEVMODE by calling ResetDC. */
       ResetDC(ppv->hDC, ppv->pdevmode);
     } 
-  else if ( do_prompt ) 
+  else if (do_prompt) 
     {
       DWORD dwRet;
       HANDLE hPrinter;
@@ -3541,9 +3542,9 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
       dwRet = DocumentProperties (
 				  GetActiveWindow(), hPrinter, ppv->pdevmode->dmDeviceName,
 				  ppv->pdevmode, ppv->pdevmode, DM_PROMPT | DM_IN_BUFFER | DM_OUT_BUFFER);
-      if ( dwRet == IDCANCEL ) 
+      if (dwRet == IDCANCEL) 
         {
-	  /* The dialog was canceled. Don't do anything.  */
+	  /* The dialog was canceled. Don't do anything. */
         } 
       else 
         {
@@ -3575,22 +3576,22 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
       ClosePrinter(hPrinter);
     }
     
-  /* This is the "get" part, used for all cases of the command.  */
-  for ( ent = Tcl_FirstHashEntry(&ppv->attribs, &srch);
+  /* This is the "get" part, used for all cases of the command. */
+  for (ent = Tcl_FirstHashEntry(&ppv->attribs, &srch);
 	ent != 0;
-	ent = Tcl_NextHashEntry(&srch) )
+	ent = Tcl_NextHashEntry(&srch))
     {
       const char *key, *value;
-      if ( (value = (const char *)Tcl_GetHashValue(ent)) != 0 &&
-	   (key   = (const char *)Tcl_GetHashKey(&ppv->attribs, ent))   != 0   )
+      if ((value = (const char *)Tcl_GetHashValue(ent)) != 0 &&
+	   (key   = (const char *)Tcl_GetHashKey(&ppv->attribs, ent))   != 0  )
         {
-	  /* Test here to see if a list is available, and if this element is on it.  */
-	  if (do_set || do_get )
+	  /* Test here to see if a list is available, and if this element is on it. */
+	  if (do_set || do_get)
             {
 	      int found=0;
 	      int i;
 	      for (i=0; i<key_count; i++) {
-		  if ( Tcl_StringMatch(key, keys[i]) == 1 )
+		  if (Tcl_StringMatch(key, keys[i]) == 1)
                     {
 		      found = 1;
 		      break;
@@ -3617,10 +3618,10 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
   {
     const char *cp;
 #if TCL_MAJOR_VERSION == 8
-    /* In earlier versions of Tcl, don't sort the list--too expensive.  */
-    cp = Tcl_GetStringResult(interp);  /* JUST the attribute pairs: Tcl 8 and higher.  */
+    /* In earlier versions of Tcl, don't sort the list--too expensive. */
+    cp = Tcl_GetStringResult(interp);  /* JUST the attribute pairs: Tcl 8 and higher. */
     Tcl_VarEval(interp, "lsort -dictionary -index 0 {", cp, "}", 0);  /* Tcl 8 and up */
-    /* Tcl_Free(cp);  /* Not documented, but assume this has to be freed....  */
+    /* Tcl_Free(cp);  /* Not documented, but assume this has to be freed.... */
 #endif
   }
            
@@ -3644,7 +3645,7 @@ static int PrintAttr(ClientData data, Tcl_Interp *interp, int argc, const char  
    
 static int PrintOption(ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
 {
-  /* Currently, there is only one option (autoclose)--so the logic is simple.  */
+  /* Currently, there is only one option (autoclose)--so the logic is simple. */
   int i;
   const char *cp;
   int errors = 0;
@@ -3655,40 +3656,40 @@ static int PrintOption(ClientData data, Tcl_Interp *interp, int argc, const char
         
   for (i=0; i<argc; i++)
     {
-      /* Input is a list with 2 elements.  */
+      /* Input is a list with 2 elements. */
       char  * keys = 0;
       int key_count = 0;
-      if ( Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR 
-	   || key_count != 2 )  /* count test added by Jon Hilbert.  */
+      if (Tcl_SplitList(interp, argv[i], &key_count, &keys) == TCL_ERROR 
+	   || key_count != 2)  /* count test added by Jon Hilbert. */
 	{
 	  Tcl_AppendResult(interp, "Can't parse argument ", argv[i], "\n", 0);
 	  errors++;
 	  continue;
 	}
-      if  ( strcmp(keys[0], "autoclose") == 0 )
+      if  (strcmp(keys[0], "autoclose") == 0)
 	{
-	  autoclose = 0;  /* Set a default value.  */
-	  Tcl_GetBoolean(interp, keys[1],&autoclose);  /* Replaced strcmp with Tcl routine -- Jon Hilbert.  */
+	  autoclose = 0;  /* Set a default value. */
+	  Tcl_GetBoolean(interp, keys[1],&autoclose);  /* Replaced strcmp with Tcl routine -- Jon Hilbert. */
 	}
-      else if ( strcmp(keys[0], "abortproc_var") == 0 )
+      else if (strcmp(keys[0], "abortproc_var") == 0)
 	{
-	  if ( keys[1] && keys[1][0] )
+	  if (keys[1] && keys[1][0])
 	    setAbortProcVarName(keys[1]);
 	}
-      /* Other cases go here in an "else if".  */
-      if ( keys ) 
+      /* Other cases go here in an "else if". */
+      if (keys) 
 	Tcl_Free((char *)keys);
     }
         
-  if ( autoclose != 0 )
+  if (autoclose != 0)
     cp = "true";
   else
     cp = "false";
         
   Tcl_AppendResult (interp, "{ autoclose ", cp, " }",
 		    "{ abortproc_var ", setAbortProcVarName(0), " }", 
-		    0 );
-  if (errors > 0 )
+		    0);
+  if (errors > 0)
     Tcl_AppendResult(interp, "\n", usage, "\n", 0);
         
   return TCL_OK;
@@ -3733,7 +3734,7 @@ static struct printer_values *delete_dc (HDC hdc)
 {
   Tcl_HashEntry *data;
   struct printer_values *pv = 0;
-  if ( (data = Tcl_FindHashEntry(&printer_hdcs, (const char *)hdc)) != 0 )
+  if ((data = Tcl_FindHashEntry(&printer_hdcs, (const char *)hdc)) != 0)
     {
       pv = (struct printer_values *)Tcl_GetHashValue(data);
       Tcl_DeleteHashEntry(data);
@@ -3758,7 +3759,7 @@ static struct printer_values *delete_dc (HDC hdc)
 static struct printer_values *find_dc_by_hdc(HDC hdc)
 {
   Tcl_HashEntry *data;
-  if ( (data = Tcl_FindHashEntry(&printer_hdcs, (const char *)hdc)) != 0 )
+  if ((data = Tcl_FindHashEntry(&printer_hdcs, (const char *)hdc)) != 0)
     return (struct printer_values *)Tcl_GetHashValue(data);
   return 0;
 }
@@ -3807,11 +3808,11 @@ static void delete_printer_dc_contexts(Tcl_Interp *interp)
   HDC hdc;
         
         
-  /* Note: hdc_List, hdc_get, and hdc_delete do not use the interp argument.  */ 
+  /* Note: hdc_List, hdc_get, and hdc_delete do not use the interp argument. */ 
   hdc_list(interp, PRINTER_dc_type, contexts, &outlen);
   for (i=0; i<outlen; i++)
     {
-      if ( (hdc = (HDC)hdc_get(interp, contexts[i])) != 0 )
+      if ((hdc = (HDC)hdc_get(interp, contexts[i])) != 0)
 	{
 	  delete_dc(hdc);
 	  DeleteDC(hdc);
@@ -3885,12 +3886,12 @@ static int is_valid_hdc (HDC hdc)
   DWORD objtype = GetObjectType((HGDIOBJ)hdc);
   switch (objtype)
     {
-      /* Any of the DC types are OK.  */
+      /* Any of the DC types are OK. */
     case OBJ_DC: case OBJ_MEMDC: case OBJ_METADC: case OBJ_ENHMETADC:
       retval = 1;
       break;
-      /* Anything else is invalid.  */
-    case 0:  /* Function failed.  */
+      /* Anything else is invalid. */
+    case 0:  /* Function failed. */
     default:
       break;
     }
@@ -3913,16 +3914,16 @@ static int is_valid_hdc (HDC hdc)
         
 static HDC get_printer_dc(Tcl_Interp *interp, const char *name)
 {
-  if ( printer_name_valid(interp, name) == 0 )
+  if (printer_name_valid(interp, name) == 0)
     {
       char *strend;
       unsigned long tmp;
             
-      /* Perhaps it is a numeric DC.  */
+      /* Perhaps it is a numeric DC. */
       tmp = strtoul(name, &strend, 0);
-      if ( strend != 0 && strend > name )
+      if (strend != 0 && strend > name)
 	{
-	  if ( is_valid_hdc((HDC)tmp) == 0 )
+	  if (is_valid_hdc((HDC)tmp) == 0)
 	    {
 	      tmp = 0;
 	      Tcl_AppendResult(interp, "Error: Wrong type of handle for this operation: ",
@@ -3941,7 +3942,7 @@ static HDC get_printer_dc(Tcl_Interp *interp, const char *name)
         
 }
    
- 
+ \0x0C
 /*
  * Local variables:
  * mode: c

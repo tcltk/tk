@@ -218,14 +218,6 @@ static int GdiArc(
   int dodash = 0;
   const char *dashdata = 0;
 
-  static const char usage_message[] = "::tk::print::_gdi arc hdc x1 y1 x2 y2 "
-                                "-extent degrees "
-				"-fill color -outline color "
-				"-outlinestipple bitmap "
-		                "-start degrees -stipple bitmap "
-                                "-dash pattern "
-				"-style [pieslice|chord|arc] -width linewid";
-
   drawfunc = Pie;
 
   /* Verrrrrry simple for now.... */
