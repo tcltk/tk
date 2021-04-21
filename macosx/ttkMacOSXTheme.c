@@ -36,10 +36,22 @@
  * Macros for handling drawing contexts.
  */
 
-#define BEGIN_DRAWING(d) {	   \
-	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
-#define END_DRAWING \
+#define BEGIN_DRAWING(d) {				    \
+    TkMacOSXDrawingContext dc;				    \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {	    \
+	return;						    \
+    }							    \
+
+#define BEGIN_DRAWING_OR_REDRAW(d) {			      \
+    TkMacOSXDrawingContext dc;				      \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {	      \
+	NSView *view = TkMacOSXGetNSViewForDrawable(d);	      \
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}	      \
+	[(TKContentView *)view addTkDirtyRect:[view bounds]]; \
+	return;						      \
+    }							      \
+
+#define END_DRAWING				\
     TkMacOSXRestoreDrawingContext(&dc);}
 
 #define HIOrientation kHIThemeOrientationNormal
@@ -1602,7 +1614,7 @@ static void TabElementDraw(
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING_OR_REDRAW(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkTab(bounds, state, dc.context);
     } else {
@@ -2794,7 +2806,7 @@ static void FillElementDraw(
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *bgColor;
 	CGFloat fill[4];
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING_OR_REDRAW(d)
 	GetBackgroundColor(dc.context, tkwin, 0, fill);
 	bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 					 count: 4];
