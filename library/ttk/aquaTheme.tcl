@@ -84,8 +84,7 @@ namespace eval ttk::theme::aqua {
 	# Entry
 	ttk::style configure TEntry \
 	    -foreground systemTextColor \
-	    -background systemTextBackgroundColor \
-	    -fieldbackground systemTextBackgroundColor
+	    -background systemTextBackgroundColor
 	ttk::style map TEntry \
 	    -foreground {
 		disabled systemDisabledControlTextColor
@@ -106,8 +105,7 @@ namespace eval ttk::theme::aqua {
 	# Spinbox
 	ttk::style configure TSpinbox \
 	    -foreground systemTextColor \
-	    -background systemTextBackgroundColor \
-	    -fieldbackground systemTextBackgroundColor
+	    -background systemTextBackgroundColor
 	ttk::style map TSpinbox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
