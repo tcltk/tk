@@ -13,11 +13,24 @@
  * Macros for handling drawing contexts.
  */
 
-#define BEGIN_DRAWING(d) {	   \
-	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
-#define END_DRAWING \
+#define BEGIN_DRAWING(d) {				    \
+    TkMacOSXDrawingContext dc;				    \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {	    \
+	return;						    \
+    }							    \
+
+#define BEGIN_DRAWING_OR_REDRAW(d) {			      \
+    TkMacOSXDrawingContext dc;				      \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {	      \
+	NSView *view = TkMacOSXGetNSViewForDrawable(d);	      \
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}	      \
+	[(TKContentView *)view addTkDirtyRect:[view bounds]]; \
+	return;						      \
+    }							      \
+
+#define END_DRAWING				\
     TkMacOSXRestoreDrawingContext(&dc);}
+
 
 #define HIOrientation kHIThemeOrientationNormal
 #define NoThemeMetric 0xFFFFFFFF
