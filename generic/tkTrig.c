@@ -440,7 +440,7 @@ TkPolygonToPoint(
 				 * intersect a ray extending vertically
 				 * upwards from the point to infinity. */
     int count;
-    register double *pPtr;
+    double *pPtr;
 
     /*
      * Iterate through all of the edges in the polygon, updating bestDist and
@@ -588,7 +588,7 @@ TkPolygonToArea(
 				 * polygon: x0, y0, x1, y1, ... The polygon
 				 * may be self-intersecting. */
     int numPoints,		/* Total number of points at *polyPtr. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
+    double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
 {
@@ -596,7 +596,7 @@ TkPolygonToArea(
 				 * outside, 1 means inside, won't ever be
 				 * 0). */
     int count;
-    register double *pPtr;
+    double *pPtr;
 
     /*
      * Iterate over all of the edges of the polygon and test them against the
@@ -751,11 +751,11 @@ TkOvalToPoint(
 
 int
 TkOvalToArea(
-    register double *ovalPtr,	/* Points to coordinates defining the
+    double *ovalPtr,	/* Points to coordinates defining the
 				 * bounding rectangle for the oval: x1, y1,
 				 * x2, y2. X1 must be less than x2 and y1 less
 				 * than y2. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
+    double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
 {
@@ -870,7 +870,7 @@ TkOvalToArea(
 	/* ARGSUSED */
 void
 TkIncludePoint(
-    register Tk_Item *itemPtr,	/* Item whose bounding box is being
+    Tk_Item *itemPtr,	/* Item whose bounding box is being
 				 * calculated. */
     double *pointPtr)		/* Address of two doubles giving x and y
 				 * coordinates of point. */
@@ -919,7 +919,7 @@ TkBezierScreenPoints(
     double control[],		/* Array of coordinates for four control
 				 * points: x0, y0, x1, y1, ... x3 y3. */
     int numSteps,		/* Number of curve points to generate. */
-    register XPoint *xPointPtr)	/* Where to put new points. */
+    XPoint *xPointPtr)	/* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;
@@ -965,7 +965,7 @@ TkBezierPoints(
     double control[],		/* Array of coordinates for four control
 				 * points: x0, y0, x1, y1, ... x3 y3. */
     int numSteps,		/* Number of curve points to generate. */
-    register double *coordPtr)	/* Where to put new points. */
+    double *coordPtr)	/* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;

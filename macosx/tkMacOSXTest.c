@@ -376,7 +376,7 @@ InjectKeyEventObjCmd(
 	characters:chars
 	charactersIgnoringModifiers:unmod
 	isARepeat:NO
-	keyCode:macKC.v.virtual];
+	keyCode:macKC.v.virt];
     [NSApp postEvent:keyEvent atStart:NO];
     return TCL_OK;
 }

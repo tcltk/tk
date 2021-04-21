@@ -494,7 +494,7 @@ other contexts. At the
 script level the command will accept only the first image passed in the
 parameters as support for multiple sizes/resolutions on macOS is outside Tk's
 scope. Developers should use the largest icon they can support
-(preferably 512 pixels) to ensure smooth rendering on the Mac. 
+(preferably 512 pixels) to ensure smooth rendering on the Mac.
 .RE
 .TP
 \fBwm iconposition \fIwindow\fR ?\fIx y\fR?

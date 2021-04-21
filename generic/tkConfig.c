@@ -1400,7 +1400,7 @@ Tk_RestoreSavedOptions(
 		    = savePtr->items[i].valuePtr;
 	}
 	if (specPtr->internalOffset >= 0) {
-	    register char *ptr = (char *) &savePtr->items[i].internalForm;
+	    char *ptr = (char *) &savePtr->items[i].internalForm;
 
 	    CLANG_ASSERT(internalPtr);
 	    switch (specPtr->type) {
