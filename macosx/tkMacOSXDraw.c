@@ -1455,12 +1455,8 @@ end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
     if (!canDraw && macDraw->winPtr != NULL) {
-	TkWindow *winPtr = macDraw->winPtr;
-
-	if (winPtr) {
-	    fprintf(stderr, "Cannot draw in %s - postponing.\n",
-		    Tk_PathName(winPtr));
-	}
+	fprintf(stderr, "Cannot draw in %s - postponing.\n",
+		Tk_PathName(macDraw->winPtr));
     }
 #endif
 
