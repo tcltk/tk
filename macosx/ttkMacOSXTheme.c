@@ -2809,7 +2809,7 @@ static void ThumbElementDraw(
 	    bgGray = isDark ? darkInactiveThumb : lightInactiveThumb;
 	}
 	thumbColor = CGColorFromGray(bgGray);
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING_OR_REDRAW(d)
 	FillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
     } else {
@@ -3071,7 +3071,7 @@ static void FillElementDraw(
     CGRect bounds = BoxToRect(d, b);
     if ([NSApp macOSVersion] > 100800) {
 	CGColorRef bgColor;
-	BEGIN_DRAWING_OR_REDRAW(d)
+	BEGIN_DRAWING(d)
 	bgColor = GetBackgroundCGColor(dc.context, tkwin, NO, 0);
 	CGContextSetFillColorWithColor(dc.context, bgColor);
 	CGContextFillRect(dc.context, bounds);
