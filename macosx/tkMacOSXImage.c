@@ -84,7 +84,7 @@ TkMacOSXCreateCGImageWithXImage(
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
 	    }
 	} else {
-	    data = memcpy(ckalloc(len), image->data + image->xoffset, len);
+	    data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	}
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
@@ -114,7 +114,7 @@ TkMacOSXCreateCGImageWithXImage(
 	bitmapInfo = (image->byte_order == MSBFirst ?
 		kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
 	bitmapInfo |= kCGImageAlphaLast;
-	data = memcpy(ckalloc(len), image->data + image->xoffset, len);
+	data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
 		    releaseData);
@@ -334,7 +334,7 @@ XCreateImage(
     XImage *ximage;
 
     display->request++;
-    ximage = ckalloc(sizeof(XImage));
+    ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
     ximage->width = width;
@@ -647,7 +647,7 @@ XGetImage(
     NSBitmapImageRep* bitmapRep = nil;
     NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
-    char* bitmap = NULL;
+    char *bitmap = NULL;
     char R, G, B, A;
     int depth = 32, offset = 0, bitmap_pad = 0;
     unsigned int bytes_per_row, size, row, n, m;
@@ -670,7 +670,7 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
-	bitmap = ckalloc(size);
+	bitmap = (char *)ckalloc(size);
 	if (!bitmap
 		|| (bitmap_fmt != 0 && bitmap_fmt != 1)
 		|| [bitmapRep samplesPerPixel] != 4

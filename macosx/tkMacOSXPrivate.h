@@ -135,7 +135,7 @@
 typedef struct keycode_v_t {
     unsigned keychar: 22;    /* UCS-32 character */
     unsigned o_s: 2;         /* State of Option and Shift keys. */
-    unsigned virtual: 8;     /* 8-bit virtual keycode - identifies a key. */
+    unsigned virt: 8;     /* 8-bit virtual keycode - identifies a key. */
 } keycode_v;
 
 typedef struct keycode_x_t {
@@ -157,7 +157,7 @@ typedef union MacKeycode_t {
  * Note that 0x7f is del and 0xF8FF is the Apple Logo character.
  */
 
-#define ON_KEYPAD(virtual) ((virtual >= 0x41) && (virtual <= 0x5C))
+#define ON_KEYPAD(virt) ((virt >= 0x41) && (virt <= 0x5C))
 #define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar != 0x7f) && \
                                ((keychar < 0xF700) || keychar >= 0xF8FF))
 
@@ -231,7 +231,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
 			    const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 			    HIShapeRef inShape2, HIMutableShapeRef outResult);
-
+MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
+MODULE_SCOPE void       TkMacOSXPrintRectsInRegion(HIShapeRef shape);
 /*
  * Prototypes of TkAqua internal procs.
  */

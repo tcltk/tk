@@ -45,6 +45,32 @@ static NSColor *controlAccentColor(void) {
     return [TkMacOSXGetNSColor(NULL, accentPixel) retain];
 }
 
+#define HIOrientation kHIThemeOrientationNormal
+#define NoThemeMetric 0xFFFFFFFF
+
+#ifdef __LP64__
+#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
+#else
+#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
+#endif /* __LP64__ */
+
+#define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
+#define TTK_STATE_LAST_TAB      TTK_STATE_USER2
+#define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
+
+#define HIOrientation kHIThemeOrientationNormal
+#define NoThemeMetric 0xFFFFFFFF
+
+#ifdef __LP64__
+#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
+#else
+#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
+#endif /* __LP64__ */
+
+#define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
+#define TTK_STATE_LAST_TAB      TTK_STATE_USER2
+#define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
+
 /*
  * Values which depend on the OS version.  These are initialized
  * in Ttk_MacOSXInit.
@@ -1680,7 +1706,7 @@ static void ButtonElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     HIThemeButtonDrawInfo info =
 	ComputeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
@@ -1746,7 +1772,7 @@ static void ButtonElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = ComputeButtonDrawInfo(params, state, tkwin);
     int isDark = TkMacOSXInDarkMode(tkwin);
@@ -1937,7 +1963,7 @@ static void TabElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING_OR_REDRAW(d)
     if ([NSApp macOSVersion] >= 110000) {
 	DrawTab11(bounds, state, dc.context, tkwin);
     } else if ([NSApp macOSVersion] > 100800) {
@@ -2113,7 +2139,7 @@ static void EntryElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    EntryElement *e = elementRecord;
+    EntryElement *e = (EntryElement *)elementRecord;
     ThemeFrameParams *params = clientData;
     HIThemeFrameKind kind = params ? params->kind :
 	kHIThemeFrameTextFieldSquare;
@@ -2465,8 +2491,8 @@ static void TrackElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    TrackElementData *data = clientData;
-    TrackElement *elem = elementRecord;
+    TrackElementData *data = (TrackElementData *)clientData;
+    TrackElement *elem = (TrackElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, fraction, max;
     CGRect bounds = BoxToRect(d, b);
@@ -2605,7 +2631,7 @@ static void PbarElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    PbarElement *pbar = elementRecord;
+    PbarElement *pbar = (PbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL, phase;
     double value = 0, maximum = 100, factor;
     CGRect bounds = BoxToRect(d, b);
@@ -2683,7 +2709,7 @@ static void TroughElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
@@ -2710,7 +2736,7 @@ static void TroughElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
     GrayColor bgGray;
@@ -2748,7 +2774,7 @@ static void ThumbElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2769,7 +2795,7 @@ static void ThumbElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -3071,7 +3097,7 @@ static void FillElementDraw(
     CGRect bounds = BoxToRect(d, b);
     if ([NSApp macOSVersion] > 100800) {
 	CGColorRef bgColor;
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING_OR_REDRAW(d)
 	bgColor = GetBackgroundCGColor(dc.context, tkwin, NO, 0);
 	CGContextSetFillColorWithColor(dc.context, bgColor);
 	CGContextFillRect(dc.context, bounds);
@@ -3179,7 +3205,7 @@ static void FieldElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    FieldElement *e = elementRecord;
+    FieldElement *e = (FieldElement *)elementRecord;
     Tk_3DBorder backgroundPtr =
 	Tk_Get3DBorderFromObj(tkwin, e->backgroundObj);
 
@@ -3271,7 +3297,7 @@ static void TreeHeaderElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     const HIThemeButtonDrawInfo info = {
 	.version = 0,

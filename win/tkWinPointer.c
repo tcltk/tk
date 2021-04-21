@@ -232,11 +232,6 @@ MouseTimerProc(
 
     mouseTimerSet = 0;
 
-    /*
-     * Get the current mouse position and window. Don't do anything if the
-     * mouse hasn't moved since the last time we looked.
-     */
-
     GetCursorPos(&pos);
     Tk_PointerEvent(NULL, pos.x, pos.y);
 }
