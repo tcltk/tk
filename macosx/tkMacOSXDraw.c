@@ -513,7 +513,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon.
+ *	Draws a filled polygon using the even-odd fill algorithm,
  *
  * Results:
  *	None.
@@ -531,7 +531,7 @@ XFillPolygon(
     GC gc,			/* Use this GC. */
     XPoint *points,		/* Array of points. */
     int npoints,		/* Number of points. */
-    TCL_UNUSED(int),	/* Shape to draw. */
+    TCL_UNUSED(int),		/* Shape to draw. */
     int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *)d;
@@ -1277,7 +1277,6 @@ TkMacOSXSetupDrawingContext(
 	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
     } else {
 	NSRect drawingBounds, currentBounds;
-
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
 	dc.portBounds = NSRectToCGRect([view bounds]);
@@ -1332,37 +1331,46 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    {
-	CGAffineTransform t = {
-	    .a = 1, .b = 0,
-	    .c = 0, .d = -1,
-	    .tx = 0,
-	    .ty = dc.portBounds.size.height
-	};
+    CGAffineTransform t = {
+	.a = 1, .b = 0,
+	.c = 0, .d = -1,
+	.tx = 0,
+	.ty = dc.portBounds.size.height
+    };
 
-	dc.portBounds.origin.x += macDraw->xOff;
-	dc.portBounds.origin.y += macDraw->yOff;
-	CGContextSaveGState(dc.context);
-	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-	CGContextConcatCTM(dc.context, t);
-	if (dc.clipRgn) {
+    dc.portBounds.origin.x += macDraw->xOff;
+    dc.portBounds.origin.y += macDraw->yOff;
+    CGContextSaveGState(dc.context);
+    CGContextSetTextDrawingMode(dc.context, kCGTextFill);
+    CGContextConcatCTM(dc.context, t);
+    if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
-	    CGContextSaveGState(dc.context);
-	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
-	    CGContextEOFillPath(dc.context);
-	    CGContextRestoreGState(dc.context);
+	CGContextSaveGState(dc.context);
+	ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
+	CGContextEOFillPath(dc.context);
+	CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
 
+	if (!HIShapeIsRectangular(dc.clipRgn)) {
+
+	    /*
+	     * We expect the clipping path dc.clipRgn to consist of the
+	     * bounding rectangle of the drawable window, together with
+	     * disjoint smaller rectangles inside of it which bound its
+	     * geometric children.  In that case the even-odd rule will
+	     * clip to the region inside the large rectangle and outside
+	     * of the smaller rectangles.
+	     */
+
+	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+	    CGContextEOClip(dc.context);
+	}
+	else {
 	    CGRect r;
-	    CGRect b = CGRectApplyAffineTransform(
-		CGContextGetClipBoundingBox(dc.context), t);
-	    if (!HIShapeIsRectangular(dc.clipRgn) ||
-		!CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
-		ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
-		CGContextEOClip(dc.context);
-	    }
+	    HIShapeGetBounds(dc.clipRgn, &r);
+	    CGContextClipToRect(dc.context, r);
 	}
     }
     if (gc) {
@@ -1382,8 +1390,8 @@ TkMacOSXSetupDrawingContext(
 
 	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
 	if (view) {
-	    CGContextSetPatternPhase(dc.context, CGSizeMake(
-	        dc.portBounds.size.width, dc.portBounds.size.height));
+	    CGContextSetPatternPhase(dc.context,
+		CGSizeMake(dc.portBounds.size.width, dc.portBounds.size.height));
 	}
 	if (gc->function != GXcopy) {
 	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
@@ -1423,13 +1431,9 @@ TkMacOSXSetupDrawingContext(
 end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    if (!canDraw && win != NULL) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
-
-	if (winPtr) {
-	    fprintf(stderr, "Cannot draw in %s - postponing.\n",
-		    Tk_PathName(winPtr));
-	}
+    if (!canDraw && macDraw->winPtr != NULL) {
+	fprintf(stderr, "Cannot draw in %s - postponing.\n",
+		Tk_PathName(macDraw->winPtr));
     }
 #endif
 
