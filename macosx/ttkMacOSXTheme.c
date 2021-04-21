@@ -45,32 +45,6 @@ static NSColor *controlAccentColor(void) {
     return [TkMacOSXGetNSColor(NULL, accentPixel) retain];
 }
 
-#define HIOrientation kHIThemeOrientationNormal
-#define NoThemeMetric 0xFFFFFFFF
-
-#ifdef __LP64__
-#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
-#else
-#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
-#endif /* __LP64__ */
-
-#define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
-#define TTK_STATE_LAST_TAB      TTK_STATE_USER2
-#define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
-
-#define HIOrientation kHIThemeOrientationNormal
-#define NoThemeMetric 0xFFFFFFFF
-
-#ifdef __LP64__
-#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
-#else
-#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
-#endif /* __LP64__ */
-
-#define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
-#define TTK_STATE_LAST_TAB      TTK_STATE_USER2
-#define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
-
 /*
  * Values which depend on the OS version.  These are initialized
  * in Ttk_MacOSXInit.
