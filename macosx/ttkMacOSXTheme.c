@@ -2541,7 +2541,7 @@ static void ThumbElementDraw(
 	thumbColor = [NSColor colorWithColorSpace: deviceRGB
 	    components: rgba
 	    count: 4];
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING_OR_REDRAW(d)
 	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
     } else {
@@ -2806,7 +2806,7 @@ static void FillElementDraw(
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *bgColor;
 	CGFloat fill[4];
-	BEGIN_DRAWING_OR_REDRAW(d)
+	BEGIN_DRAWING(d)
 	GetBackgroundColor(dc.context, tkwin, 0, fill);
 	bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 					 count: 4];
