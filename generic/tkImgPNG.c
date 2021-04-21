@@ -2237,14 +2237,14 @@ ApplyAlpha(
     PNGImage *pngPtr)
 {
     if (pngPtr->alpha != 1.0) {
-	register unsigned char *p = pngPtr->block.pixelPtr;
+	unsigned char *p = pngPtr->block.pixelPtr;
 	unsigned char *endPtr = p + pngPtr->blockLen;
 	int offset = pngPtr->block.offset[3];
 
 	p += offset;
 
 	if (16 == pngPtr->bitDepth) {
-	    register unsigned int channel;
+	    unsigned int channel;
 
 	    while (p < endPtr) {
 		channel = (unsigned int)

@@ -363,7 +363,7 @@ const char *
 Tk_NameOfColor(
     XColor *colorPtr)		/* Color whose name is desired. */
 {
-    register TkColor *tkColPtr = (TkColor *) colorPtr;
+    TkColor *tkColPtr = (TkColor *) colorPtr;
 
     if (tkColPtr->magic==COLOR_MAGIC && tkColPtr->type==TK_COLOR_BY_NAME) {
 	return tkColPtr->hashPtr->key.string;

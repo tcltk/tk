@@ -679,6 +679,10 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
+    Tcl_ObjCmdProc *tclUpdateObjProc;
+				/* Saved Tcl [update] command, used to restore
+				 * Tcl's version of [update] after Tk is shut
+				 * down */
 } TkMainInfo;
 
 /*
@@ -1198,9 +1202,6 @@ MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SpinboxObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -1322,7 +1323,8 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 # define c_class class
 #endif
 
-#if TCL_UTF_MAX > 4
+/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
+#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf
 #   define TkUtfPrev Tcl_UtfPrev

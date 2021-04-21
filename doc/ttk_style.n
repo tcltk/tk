@@ -134,7 +134,7 @@ as \fB\-expand\fR 1).
 \fB\-sticky\fR \fB[\fInswe\fB]\fR
 Specifies the actual parcel position and size inside the allocated parcel.
 If specified as an empty string then the actual parcel is centered in
-the allocated parcel. Default is \fBnswe\fR. 
+the allocated parcel. Default is \fBnswe\fR.
 .\" -unit should remain undocumented for now (dubious usefulness)
 .\" .TP
 .\" \fB\-unit\fR \fIboolean\fR

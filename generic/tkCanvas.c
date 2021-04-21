@@ -2450,6 +2450,10 @@ DisplayCanvas(
     Tk_Item *itemPtr;
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
+#ifdef MAC_OSX_TK
+    TkWindow *winPtr;
+    MacDrawable *macWin;
+#endif
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -2464,8 +2468,8 @@ DisplayCanvas(
      * If drawing is disabled, all we need to do is
      * clear the REDRAW_PENDING flag.
      */
-    TkWindow *winPtr = (TkWindow *)(canvasPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
+    winPtr = (TkWindow *)(canvasPtr->tkwin);
+    macWin = winPtr->privatePtr;
     if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
 	canvasPtr->flags &= ~REDRAW_PENDING;
 	return;

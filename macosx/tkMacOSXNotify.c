@@ -50,7 +50,7 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-#define TSD_INIT() ThreadSpecificData *tsdPtr = \
+#define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 static void TkMacOSXNotifyExitHandler(ClientData clientData);

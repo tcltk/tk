@@ -66,17 +66,17 @@ static void		GCInit(TkDisplay *dispPtr);
 GC
 Tk_GetGC(
     Tk_Window tkwin,		/* Window in which GC will be used. */
-    register unsigned long valueMask,
+    unsigned long valueMask,
 				/* 1 bits correspond to values specified in
 				 * *valuesPtr; other values are set from
 				 * defaults. */
-    register XGCValues *valuePtr)
+    XGCValues *valuePtr)
 				/* Values are specified here for bits set in
 				 * valueMask. */
 {
     ValueKey valueKey;
     Tcl_HashEntry *valueHashPtr, *idHashPtr;
-    register TkGC *gcPtr;
+    TkGC *gcPtr;
     int isNew;
     Drawable d, freeDrawable;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -291,7 +291,7 @@ Tk_FreeGC(
     GC gc)			/* Graphics context to be released. */
 {
     Tcl_HashEntry *idHashPtr;
-    register TkGC *gcPtr;
+    TkGC *gcPtr;
     TkDisplay *dispPtr = TkGetDisplay(display);
 
     if (!dispPtr->gcInit) {
