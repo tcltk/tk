@@ -1932,7 +1932,7 @@ static void TabElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING_OR_REDRAW(d)
     if ([NSApp macOSVersion] >= 110000) {
 	DrawTab11(bounds, state, dc.context, tkwin);
     } else if ([NSApp macOSVersion] > 100800) {
@@ -3066,7 +3066,7 @@ static void FillElementDraw(
     CGRect bounds = BoxToRect(d, b);
     if ([NSApp macOSVersion] > 100800) {
 	CGColorRef bgColor;
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING_OR_REDRAW(d)
 	bgColor = GetBackgroundCGColor(dc.context, tkwin, NO, 0);
 	CGContextSetFillColorWithColor(dc.context, bgColor);
 	CGContextFillRect(dc.context, bounds);

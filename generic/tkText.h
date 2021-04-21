@@ -1170,6 +1170,8 @@ MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 MODULE_SCOPE void       TkTextRunAfterSyncCmd(ClientData clientData);
+MODULE_SCOPE int        TkTextIndexAdjustToStartEnd(TkText *textPtr,
+			    TkTextIndex *indexPtr, int err);
 #endif /* _TKTEXT */
 
 /*
