@@ -555,6 +555,8 @@ static void SolidFillRoundedRectangle(
     CGContextSetFillColorWithColor(context, CGCOLOR(color));
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
+    fprintf(stderr, "Filling rounded rectangle at %s\n",
+	    NSStringFromRect(bounds).UTF8String);
     CGContextFillPath(context);
     CFRelease(path);
 }
