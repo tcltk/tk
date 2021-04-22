@@ -575,7 +575,7 @@ rectPrinter(
     void *ref)
 {
     if (rect) {
-	printf("    %s\n", NSStringFromRect(*rect).UTF8String);
+	fprintf(stderr, "    %s\n", NSStringFromRect(*rect).UTF8String);
     }
     return noErr;
 }
