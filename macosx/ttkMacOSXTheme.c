@@ -1937,7 +1937,7 @@ static void TabElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-    BEGIN_DRAWING_OR_REDRAW(d)
+    BEGIN_DRAWING(d)
     if ([NSApp macOSVersion] >= 110000) {
 	DrawTab11(bounds, state, dc.context, tkwin);
     } else if ([NSApp macOSVersion] > 100800) {
@@ -2809,7 +2809,7 @@ static void ThumbElementDraw(
 	    bgGray = isDark ? darkInactiveThumb : lightInactiveThumb;
 	}
 	thumbColor = CGColorFromGray(bgGray);
-	BEGIN_DRAWING_OR_REDRAW(d)
+	BEGIN_DRAWING(d)
 	FillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
     } else {
