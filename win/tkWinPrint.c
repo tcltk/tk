@@ -109,7 +109,8 @@ int Winprint_Init (Tcl_Interp *Interp);
 /* 
  *  Internal function prototypes
  */
-static int Print (ClientData unused, Tcl_Interp *interp, int argc, const char  * argv, int safe);
+static int printer (ClientData data, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int Print (ClientData unused, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[], int safe);
 static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintSend (ClientData unused, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintRawData (HANDLE printer, Tcl_Interp *interp, LPBYTE lpData, DWORD dwCount);
@@ -117,7 +118,6 @@ static int PrintRawFileData (HANDLE printer, Tcl_Interp *interp, const char *fil
 static int PrintStart (HDC hdc, Tcl_Interp *interp, const char *docname);
 static int PrintFinish (HDC hdc, Tcl_Interp *interp);
 static int Version(ClientData unused, Tcl_Interp *interp, int argc, const char  * argv);
-static long WinVersion(void);
 static void ReportWindowsError(Tcl_Interp * interp, DWORD errorCode);
 static int PrinterGetDefaults(struct printer_values *ppv, const char *printer_name, int set_default_devmode);
 static void StorePrintVals(struct printer_values *ppv, PRINTDLG *pdlg, PAGESETUPDLG *pgdlg);
@@ -174,32 +174,6 @@ static struct {
 /*
  *----------------------------------------------------------------------
  *
- * WinVersion --
- *
- *  WinVersion returns an integer representing the current version
- *  of Windows.
- *
- * Results:
- *	 Returns Windows version.
- *
- *----------------------------------------------------------------------
- */
-
-static long WinVersion(void)
-{
-  static OSVERSIONINFO osinfo;
-  if (osinfo.dwOSVersionInfoSize == 0)
-    {
-      osinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-      GetVersionEx(&osinfo);  /* Should never fail--only failure is if size too small. */
-    }
-  return osinfo.dwPlatformId;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
  * ReportWindowsError --
  *
  *  This function sets the Tcl error code to the provided
@@ -226,7 +200,7 @@ static void ReportWindowsError(Tcl_Interp * interp, DWORD errorCode)
 		NULL 
 		);
   Tcl_AppendResult(interp,(char *)lpMsgBuf,0);
-  // Free the buffer.
+  /* Free the buffer. */
   LocalFree(lpMsgBuf);
     
 }
@@ -414,52 +388,7 @@ static void delete_printer_values (struct printer_values *ppv)
 
 static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, int wildcard)
 {
-  /* The following 3 declarations are only needed for the Win32s case. */
-  static char devices_buffer[256];
-  static char value[256];
-  char *cp;
-    
-  /* First ensure dev, dvr, and port are initialized empty
-   *  This is not needed for normal cases, but at least one report on
-   *  WinNT with at least one printer, this is not initialized.
-   *  Suggested by Jim Garrison <garrison@qualcomm.com>
-   . */
-  *dev = "";
-  *dvr = "";
-  *port = "";
-    
-  /* 
-   * The result should be useful for specifying the devices and/or OpenPrinter and/or lp -d.  
-   * Rather than make this compilation-dependent, do a runtime check.  
-   */
-  switch (WinVersion())
-    {
-    case VER_PLATFORM_WIN32s:  /* Windows 3.1. */
-      /* Getting the printer list isn't hard... the trick is which is right for WfW?
-       *  [PrinterPorts] or [devices]?
-       *  For now, use devices.
-       . */
-      /* First, get the entries in the section. */
-      GetProfileString("devices", 0, "", (LPSTR)devices_buffer, sizeof devices_buffer);
-        
-      /* Next get the values for each entry; construct each as a list of 3 elements. */
-      for (cp = devices_buffer; *cp ; cp+=strlen(cp) + 1)
-        {
-	  GetProfileString("devices", cp, "", (LPSTR)value, sizeof value);
-	  if ((wildcard != 0 && Tcl_StringMatch(value, name)) ||
-	       (wildcard == 0 && lstrcmpi (value, name) == 0) )
-            {
-	      static char stable_val[80];
-	      strncpy (stable_val, value,80);
-	      stable_val[79] = '\0';
-	      return SplitDevice(stable_val, dev, dvr, port);
-            }
-        }
-      return 0;
-      break;
-    case VER_PLATFORM_WIN32_WINDOWS:   /* Windows 95, 98. */
-    case VER_PLATFORM_WIN32_NT:        /* Windows NT. */
-    default:
+     
       /* Win32 implementation uses EnumPrinters. */
          
       /* There is a hint in the documentation that this info is stored in the registry.
@@ -524,10 +453,9 @@ static int GetPrinterWithName(char *name, LPSTR *dev, LPSTR *dvr, LPSTR *port, i
 	      }
 	  }
 	Tcl_Free((char *)ary);
-      }
-      break;
-    }
+    
   return 1;
+   }
 }
 
 /*
@@ -558,18 +486,12 @@ static int PrinterGetDefaults(struct printer_values *ppv,
   HANDLE pHandle;
   int result = 1;
     
-  switch (WinVersion())
-    {
-    case VER_PLATFORM_WIN32s:
-      return GETDEFAULTS_UNSUPPORTED;
-    }
-    
   if (ppv->hDC == NULL)
     {
       /*
        *  Use the name to create a DC if at all possible:
        *  This may require using the printer list and matching on the name.
-       . */
+       */
       char *dev, *dvr, *port;
       if (GetPrinterWithName ((char *)printer_name, &dev, &dvr, &port, 1) == 0) {
 	return GETDEFAULTS_NOSUCHPRINTER;  /* Can't find a printer with that name. */
@@ -582,10 +504,9 @@ static int PrinterGetDefaults(struct printer_values *ppv,
       }
     }
     
-    
   /* Use DocumentProperties to get the default devmode. */
   if (set_default_devmode > 0 || ppv->pdevmode == 0)
-    /* First get the required size:. */
+    /* First get the required size. */
     {
       LONG siz = 0L;
         
@@ -697,15 +618,16 @@ static void CopyDevnames (struct printer_values *ppv, HANDLE hdevnames)
     }
 }
 
-/* A macro for converting 10ths of millimeters to 1000ths of inches. */
-#define MM_TO_MINCH(x) ((x) / 0.0254)
-#define TENTH_MM_TO_MINCH(x) ((x) / 0.254)
-#define MINCH_TO_TENTH_MM(x) (0.254  * (x))
+/* A macro for converting 10ths of millimeters to 1000ths of inches.  */
+#define MM_TO_MINCH(x)((x) / 0.0254)
+#define TENTH_MM_TO_MINCH(x)((x) / 0.254)
+#define MINCH_TO_TENTH_MM(x)(0.254 * (x))
+
 
 static const struct paper_size { int size; long wid; long len; } paper_sizes[] = {
   { DMPAPER_LETTER, 8500, 11000 },
   { DMPAPER_LEGAL, 8500, 14000 },
-  { DMPAPER_A4, (long)MM_TO_MINCH(210), (long)MM_TO_MINCH(297) },
+  { DMPAPER_A4, (long)(8267.72), (long)(11692.91) },
   { DMPAPER_CSHEET, 17000, 22000 },
   { DMPAPER_DSHEET, 22000, 34000 },
   { DMPAPER_ESHEET, 34000, 44000 },
@@ -713,13 +635,13 @@ static const struct paper_size { int size; long wid; long len; } paper_sizes[] =
   { DMPAPER_TABLOID, 11000, 17000 },
   { DMPAPER_LEDGER, 17000, 11000 },
   { DMPAPER_STATEMENT, 5500, 8500 },
-  { DMPAPER_A3, (long)MM_TO_MINCH(297), (long)MM_TO_MINCH(420) },
-  { DMPAPER_A4SMALL, (long)MM_TO_MINCH(210), (long)MM_TO_MINCH(297) },
-  { DMPAPER_A5, (long)MM_TO_MINCH(148), (long)MM_TO_MINCH(210) },
-  { DMPAPER_B4, (long)MM_TO_MINCH(250), (long)MM_TO_MINCH(354) },
-  { DMPAPER_B5, (long)MM_TO_MINCH(182), (long)MM_TO_MINCH(257) },
+  { DMPAPER_A3, (long)(11692.91), (long)(16535.43) },
+  { DMPAPER_A4SMALL, (long)(8267.72), (long)(11692.91) },
+  { DMPAPER_A5, (long)(5826.77), (long)(8267.72) },
+  { DMPAPER_B4, (long)(9842.52), (long)(13937) },
+  { DMPAPER_B5, (long)(7165.35), (long)(10118.11) },
   { DMPAPER_FOLIO, 8500, 13000 },
-  { DMPAPER_QUARTO, (long)MM_TO_MINCH(215), (long)MM_TO_MINCH(275) },
+  { DMPAPER_QUARTO, (long)(8464.57), (long)(10826.77) },
   { DMPAPER_10X14, 10000, 14000 },
   { DMPAPER_11X17, 11000, 17000 },
   { DMPAPER_NOTE, 8500, 11000 },
@@ -728,16 +650,16 @@ static const struct paper_size { int size; long wid; long len; } paper_sizes[] =
   { DMPAPER_ENV_11, 4500, 10375 },
   { DMPAPER_ENV_12, 4750, 11000 },
   { DMPAPER_ENV_14, 5000, 11500 },
-  { DMPAPER_ENV_DL, (long)MM_TO_MINCH(110), (long)MM_TO_MINCH(220) },
-  { DMPAPER_ENV_C5, (long)MM_TO_MINCH(162), (long)MM_TO_MINCH(229) },
-  { DMPAPER_ENV_C3, (long)MM_TO_MINCH(324), (long)MM_TO_MINCH(458) },
-  { DMPAPER_ENV_C4, (long)MM_TO_MINCH(229), (long)MM_TO_MINCH(324) },
-  { DMPAPER_ENV_C6, (long)MM_TO_MINCH(114), (long)MM_TO_MINCH(162) },
-  { DMPAPER_ENV_C65, (long)MM_TO_MINCH(114), (long)MM_TO_MINCH(229) },
-  { DMPAPER_ENV_B4, (long)MM_TO_MINCH(250), (long)MM_TO_MINCH(353) },
-  { DMPAPER_ENV_B5, (long)MM_TO_MINCH(176), (long)MM_TO_MINCH(250) },
-  { DMPAPER_ENV_B6, (long)MM_TO_MINCH(176), (long)MM_TO_MINCH(125) },
-  { DMPAPER_ENV_ITALY, (long)MM_TO_MINCH(110), (long)MM_TO_MINCH(230) },
+  { DMPAPER_ENV_DL, (long)(4330.71), (long)(8661.42) },
+  { DMPAPER_ENV_C5, (long)(6377.95), (long)(9015.75) },
+  { DMPAPER_ENV_C3, (long)(12755.91), (long)(18031.5) },
+  { DMPAPER_ENV_C4, (long)(9015.75), (long)(12755.91) },
+  { DMPAPER_ENV_C6, (long)(4488.19), (long)(6377.95) },
+  { DMPAPER_ENV_C65, (long)(4488.19), (long)(9015.75) },
+  { DMPAPER_ENV_B4, (long)(9842.52), (long)(13897.64) },
+  { DMPAPER_ENV_B5, (long)(6929.13), (long)(9842.52) },
+  { DMPAPER_ENV_B6, (long)(6929.13), (long)(4921.26) },
+  { DMPAPER_ENV_ITALY, (long)(4330.71), (long)(9055.12) },
   { DMPAPER_ENV_MONARCH, 3825, 7500 },
   { DMPAPER_ENV_PERSONAL, 3625, 6500 },
   { DMPAPER_FANFOLD_US, 14825, 11000 },
@@ -797,7 +719,7 @@ static void GetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
       sscanf(cp, "%ld %ld", &width, &length);
       dm->dmPaperWidth = (short)MINCH_TO_TENTH_MM(width);
       dm->dmPaperLength = (short)MINCH_TO_TENTH_MM(length);
-      // indicate that size is specified by dmPaperWidth,dmPaperLength
+      /* Indicate that size is specified by dmPaperWidth,dmPaperLength. */
       dm->dmPaperSize = 0;  
     }  
 }
@@ -830,10 +752,16 @@ static void SetDevModeAttribs (Tcl_HashTable *att, DEVMODE *dm)
     
   /* Everything depends on what flags are set. */
   if (dm->dmDeviceName[0])
-    set_attribute(att, "device", (const *char) dm->dmDeviceName);
+    {
+    const char * devicename;
+    devicename = dm->dmDeviceName;
+    set_attribute(att, "device", devicename);
+    }
   if (dm->dmFields & DM_ORIENTATION)
+    {
     set_attribute(att, "page orientation", 
 		  dm->dmOrientation==DMORIENT_PORTRAIT?"portrait":"landscape");
+    }
   if (dm->dmFields & DM_YRESOLUTION)
     {
       sprintf(tmpbuf, "%d %d", dm->dmYResolution, dm->dmPrintQuality);
@@ -1429,12 +1357,12 @@ static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, 
  *----------------------------------------------------------------------
  */
 
-static int Print (ClientData defaults, Tcl_Interp *interp, int argc, const char  * argv, int safe)
+static int Print (ClientData defaults, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[], int safe)
 {
   unsigned int i;
   if (argc == 0)
     {
-      top_usage_message(interp, argc+1, argv-1, safe);
+      top_usage_message(interp, argc+1, objv-1, safe);
       return TCL_ERROR;
     }
     
@@ -1444,10 +1372,10 @@ static int Print (ClientData defaults, Tcl_Interp *interp, int argc, const char 
    */
   for (i=0; i < (sizeof printer_commands / sizeof (struct prt_cmd)); i++)
     if (printer_commands[i].safe >= safe)
-      if (strcmp((const char*) argv[0], printer_commands[i].name) == 0)
-	return printer_commands[i].func(defaults, interp, argc-1, argv+1);
+      if (strcmp(objv[0], printer_commands[i].name) == 0)
+	return printer_commands[i].func(defaults, interp, argc-1, objv+1);
     
-  top_usage_message(interp, argc+1, argv-1, safe);
+  top_usage_message(interp, argc+1, objv-1, safe);
   return TCL_ERROR;  
 }
 
@@ -1465,16 +1393,16 @@ static int Print (ClientData defaults, Tcl_Interp *interp, int argc, const char 
  *----------------------------------------------------------------------
  */
 
-static int printer (ClientData data, Tcl_Interp *interp, int argc, const char  * argv)
+static int printer (ClientData data, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
 {
   if (argc > 1)
     {
-      argv++;
+      objv++;
       argc--;
-      return Print(data, interp, argc, argv, 0);
+      return Print(data, interp, argc, objv, 0);
     }
     
-  top_usage_message(interp, argc, argv, 0);
+  top_usage_message(interp, argc, objv, 0);
   return TCL_ERROR;
 }
 
@@ -1493,7 +1421,7 @@ static int printer (ClientData data, Tcl_Interp *interp, int argc, const char  *
  
 int Winprint_Init(Tcl_Interp * interp) {
 
-  Tcl_CreateCommand(interp, "::tk::print::_print", printer,
+  Tcl_CreateObjCommand(interp, "::tk::print::_print", printer,
 		       (ClientData)(& current_printer_values), 0);
 
   /* Initialize the attribute hash table. */
@@ -1532,18 +1460,7 @@ static int SplitDevice(LPSTR device, LPSTR *dev, LPSTR *dvr, LPSTR *port)
   static char buffer[256];
   if (device == 0)
     {
-      switch (WinVersion())
-        {
-        case VER_PLATFORM_WIN32s:
-	  GetProfileString("windows", "device", "", (LPSTR)buffer, sizeof buffer);
-	  device = (LPSTR)buffer;
-	  break;
-        case VER_PLATFORM_WIN32_WINDOWS:
-        case VER_PLATFORM_WIN32_NT:
-        default:
 	  device = (LPSTR)"WINSPOOL,Postscript,";
-	  break;
-        }
     }
     
   *dev = strtok(device, ",");
@@ -1586,24 +1503,12 @@ static HDC GetPrinterDC (const char *printer)
   LPSTR lpPrintPort   = "";
     
   SplitDevice ((LPSTR)printer, &lpPrintDevice, &lpPrintDriver, &lpPrintPort);
-  switch (WinVersion())
-    {
-    case VER_PLATFORM_WIN32s:
-      hdcPrint = CreateDC (lpPrintDriver,
-			   lpPrintDevice,
-			   lpPrintPort,
-			   NULL);
-      break;
-    case VER_PLATFORM_WIN32_WINDOWS:
-    case VER_PLATFORM_WIN32_NT:
-    default:
+  
       hdcPrint = CreateDC (lpPrintDriver, 
 			   lpPrintDevice, 
 			   NULL, 
 			   NULL);
-      break;
-    }
-    
+
   return hdcPrint;
 }
 
@@ -1708,22 +1613,19 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
    * The result should be useful for specifying the devices and/or OpenPrinter and/or lp -d. 
    * Rather than make this compilation-dependent, do a runtime check.  
    */
-  switch (WinVersion())
-    {
-    case VER_PLATFORM_WIN32_NT:        /* Windows NT. */
-    default:
+ 
       /* Win32 implementation uses EnumPrinters. */
       /* There is a hint in the documentation that this info is stored in the registry.
        *  if so, that interface would probably be even better!
        *  NOTE: This implementation was suggested by Brian Griffin <bgriffin@model.com>,
        *        and replaces the older implementation which used PRINTER_INFO_4,5
        . */
-      {
+    
 	DWORD bufsiz = 0;
 	DWORD needed = 0;
 	DWORD num_printers = 0;
 	PRINTER_INFO_2 *ary = 0;
-	DWORD i;
+	DWORD _i;
             
 	/* First, get the size of array needed to enumerate the printers. */
 	if (EnumPrinters(PRINTER_ENUM_LOCAL|PRINTER_ENUM_FAVORITE, 
@@ -1863,9 +1765,6 @@ static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const cha
 	      }
 	  }
 	Tcl_Free((char *)ary);
-      }
-      break;
-    }
   return TCL_OK;
 }
 
