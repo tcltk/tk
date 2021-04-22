@@ -89,6 +89,7 @@ struct printer_values *current_printer_values = &default_printer_values;
 static int is_valid_printer_values (const struct printer_values *ppv);
 static struct printer_values *make_printer_values(HDC hdc);
 static void delete_printer_values (struct printer_values *ppv);
+static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, int safe);
 
 /* 
  *  These declarations and variables are related to managing a 
@@ -109,8 +110,8 @@ int Winprint_Init (Tcl_Interp *Interp);
 /* 
  *  Internal function prototypes
  */
-static int printer (ClientData data, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
-static int Print (ClientData unused, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[], int safe);
+static int printer (ClientData data, Tcl_Interp *interp, int argc, char  * argv);
+static int Print (ClientData unused, Tcl_Interp *interp, int argc, char  * argv, int safe);
 static int PrintList (ClientData unused, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintSend (ClientData unused, Tcl_Interp *interp, int argc, const char  * argv);
 static int PrintRawData (HANDLE printer, Tcl_Interp *interp, LPBYTE lpData, DWORD dwCount);
@@ -1349,7 +1350,7 @@ static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, 
  * Print  --
  *
  *  Takes the print command, parses it, and calls
- *  the correct subfunction.
+ *  the correct subfunction.st
  *
  * Results:
  *	Executes print command/subcommand.
@@ -1357,12 +1358,12 @@ static void top_usage_message(Tcl_Interp *interp, int argc, const char  * argv, 
  *----------------------------------------------------------------------
  */
 
-static int Print (ClientData defaults, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[], int safe)
+static int Print (ClientData defaults, Tcl_Interp *interp, int argc, char  * argv, int safe)
 {
   unsigned int i;
   if (argc == 0)
     {
-      top_usage_message(interp, argc+1, objv-1, safe);
+      top_usage_message(interp, argc+1, argv-1, safe);
       return TCL_ERROR;
     }
     
@@ -1371,11 +1372,14 @@ static int Print (ClientData defaults, Tcl_Interp *interp, int argc, Tcl_Obj *co
    * Exact match for now--could be case-insensitive, leading match. 
    */
   for (i=0; i < (sizeof printer_commands / sizeof (struct prt_cmd)); i++)
-    if (printer_commands[i].safe >= safe)
-      if (strcmp(objv[0], printer_commands[i].name) == 0)
-	return printer_commands[i].func(defaults, interp, argc-1, objv+1);
+    if (printer_commands[i].safe >= safe) {
+		const char *name = (char *)argv[0];
+		const char *cmd = printer_commands[i].name;
+		if (strcmp(name, cmd) == 0)
+	return printer_commands[i].func(defaults, interp, argc-1, argv+1);
+	}
     
-  top_usage_message(interp, argc+1, objv-1, safe);
+  top_usage_message(interp, argc+1, argv-1, safe);
   return TCL_ERROR;  
 }
 
@@ -1393,16 +1397,16 @@ static int Print (ClientData defaults, Tcl_Interp *interp, int argc, Tcl_Obj *co
  *----------------------------------------------------------------------
  */
 
-static int printer (ClientData data, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+static int printer (ClientData data, Tcl_Interp *interp, int argc, char  * argv)
 {
   if (argc > 1)
     {
-      objv++;
+      argv++;
       argc--;
-      return Print(data, interp, argc, objv, 0);
+      return Print(data, interp, argc, argv, 0);
     }
     
-  top_usage_message(interp, argc, objv, 0);
+  top_usage_message(interp, argc, argv, 0);
   return TCL_ERROR;
 }
 
