@@ -2817,7 +2817,7 @@ DestroyNode(
 	linePtr = nodePtr->linePtr;
 
 	while (linePtr != lastPtr) {
-	    TkTextLine *nextPtr = linePtr->nextPtr;
+	    TkTextLine *nextPtr1 = linePtr->nextPtr;
 	    segPtr = linePtr->segPtr;
 	    sectionPtr = segPtr->sectionPtr;
 	    while (segPtr) {
@@ -2831,7 +2831,7 @@ DestroyNode(
 	    }
 	    FreeSections(sectionPtr);
 	    FreeLine((const BTree *) tree, linePtr);
-	    linePtr = nextPtr;
+	    linePtr = nextPtr1;
 	}
     } else {
 	Node *childPtr = nodePtr->childPtr;
@@ -3786,8 +3786,8 @@ TkBTreeLoad(
 	STATE_BREAK        = 1 << 8
     };
 
-    Tcl_Obj **objv;
-    int objc, i;
+    Tcl_Obj **objv1;
+    int objc1, i;
     int byteLength;
     TkTextTagSet *tagInfoPtr;
     TkSharedText *sharedTextPtr;
@@ -3813,12 +3813,12 @@ TkBTreeLoad(
     int changeToLineCount;
     int changeToLogicalLineCount;
     int changeToBranchCount;
-    int size;
+    int size1;
     int isElided;
     int isInsert;
     LoadData data;
 
-    if (Tcl_ListObjGetElements(interp, content, &objc, &objv) != TCL_OK) {
+    if (Tcl_ListObjGetElements(interp, content, &objc1, &objv1) != TCL_OK) {
 	return LoadError(interp, "list of items expected", -1, -1, -1, NULL);
     }
 
@@ -3838,7 +3838,7 @@ TkBTreeLoad(
     textPtr->state = TK_TEXT_STATE_NORMAL;
     isElided = 0;
     state = STATE_START;
-    size = 0;
+    size1 = 0;
 
     assert(segPtr->typePtr != &tkTextCharType);
 
@@ -3856,12 +3856,12 @@ TkBTreeLoad(
     data.lastPtr = lastPtr;
     data.linePtr = linePtr;
 
-    for (i = 0; i < objc; ++i) {
+    for (i = 0; i < objc1; ++i) {
 	const char *type;
 	Tcl_Obj **argv;
 	int argc;
 
-	if (Tcl_ListObjGetElements(interp, objv[i], &argc, &argv) != TCL_OK) {
+	if (Tcl_ListObjGetElements(interp, objv1[i], &argc, &argv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (argc == 0) {
@@ -3948,7 +3948,7 @@ TkBTreeLoad(
 		if (!isElided) {
 		    changeToLogicalLineCount += 1;
 		}
-		size += 1;
+		size1 += 1;
 		contentPtr = charSegPtr;
 		segPtr = charSegPtr = NULL;
 		state = STATE_BREAK;
@@ -4069,7 +4069,7 @@ TkBTreeLoad(
 		    data.linePtr = linePtr = newLinePtr;
 		}
 	    }
-	    size += byteLength;
+	    size1 += byteLength;
 	    contentPtr = segPtr = charSegPtr;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
@@ -4113,7 +4113,7 @@ TkBTreeLoad(
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
-	    size += 1;
+	    size1 += 1;
 	    contentPtr = segPtr = hyphPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
@@ -4255,7 +4255,7 @@ TkBTreeLoad(
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
-	    size += 1;
+	    size1 += 1;
 	    contentPtr = segPtr = embPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
@@ -4302,7 +4302,7 @@ TkBTreeLoad(
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
-	    size += 1;
+	    size1 += 1;
 	    contentPtr = segPtr = embPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
@@ -4346,7 +4346,7 @@ TkBTreeLoad(
 	RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
     } else {
 	changeToLineCount -= 1;
-	size -= 1;
+	size1 -= 1;
 	if (!isElided) {
 	    changeToLogicalLineCount -= 1;
 	}
@@ -4360,7 +4360,7 @@ TkBTreeLoad(
     }
 
     SubtractPixelCount2(treePtr, startLinePtr->parentPtr, -changeToLineCount,
-	    -changeToLogicalLineCount, -changeToBranchCount, -size, changeToPixelInfo);
+	    -changeToLogicalLineCount, -changeToBranchCount, -size1, changeToPixelInfo);
     startLinePtr->parentPtr->numChildren += changeToLineCount;
     UpdateNodeTags(sharedTextPtr, startLinePtr->parentPtr);
 
@@ -4418,7 +4418,7 @@ TkBTreeInsertChars(
     TkTextTagSet *emptyTagInfoPtr;
     TkTextTagSet *hyphenTagInfoPtr = NULL;
     TkTextTagSet *myTagInfoPtr;
-    TkTextTag *tagPtr;
+    TkTextTag *tagPtr1;
     TkTextTag *hyphenElideTagPtr = NULL;
     UndoTokenInsert *undoToken = NULL;
     BTree *treePtr = (BTree *) tree;
@@ -4479,14 +4479,14 @@ TkBTreeInsertChars(
 
 	assert(textPtr);
 
-	for (tagPtr = hyphenTagPtr; tagPtr; tagPtr = tagPtr->nextPtr) {
-	    if (!TkTextTagSetTest(linePtr->parentPtr->tagonPtr, tagPtr->index)) {
-		AddTagToNode(linePtr->parentPtr, tagPtr, 1);
+	for (tagPtr1 = hyphenTagPtr; tagPtr1; tagPtr1 = tagPtr1->nextPtr) {
+	    if (!TkTextTagSetTest(linePtr->parentPtr->tagonPtr, tagPtr1->index)) {
+		AddTagToNode(linePtr->parentPtr, tagPtr1, 1);
 	    }
-	    if (tagPtr->elideString
-		    && (int) tagPtr->priority > highestPriority
-		    && (!tagPtr->textPtr || tagPtr->textPtr == textPtr)) {
-		highestPriority = (hyphenElideTagPtr = tagPtr)->priority;
+	    if (tagPtr1->elideString
+		    && (int) tagPtr1->priority > highestPriority
+		    && (!tagPtr1->textPtr || tagPtr1->textPtr == textPtr)) {
+		highestPriority = (hyphenElideTagPtr = tagPtr1)->priority;
 	    }
 	}
     }
@@ -5527,7 +5527,7 @@ static void
 SplitSection(
     TkTextSection *sectionPtr)	/* Pointer to section of text segments. */
 {
-    TkTextSegment *segPtr, *splitSegPtr;
+    TkTextSegment *segPtr1, *splitSegPtr;
     TkTextSection *newSectionPtr, *prevPtr, *nextPtr;
     int length;
     int lengthLHS, lengthRHS;
@@ -5548,11 +5548,11 @@ SplitSection(
      */
     assert(length <= MAX_TEXT_SEGS + NUM_TEXT_SEGS);
 
-    segPtr = sectionPtr->nextPtr ? sectionPtr->nextPtr->segPtr->prevPtr : sectionPtr->linePtr->lastPtr;
+    segPtr1 = sectionPtr->nextPtr ? sectionPtr->nextPtr->segPtr->prevPtr : sectionPtr->linePtr->lastPtr;
     for (lengthLHS = length - 1; lengthLHS > NUM_TEXT_SEGS; --lengthLHS) {
-	segPtr = segPtr->prevPtr;
+	segPtr1 = segPtr1->prevPtr;
     }
-    splitSegPtr = segPtr;
+    splitSegPtr = segPtr1;
 
     /*
      * We have to take into account that a branch segment must be
@@ -6899,8 +6899,8 @@ DeleteRange(
     TkTextUndoInfo *undoInfo)	/* Store undo information, can be NULL. */
 {
     const TkTextSegment *lastNewlineSegPtr;
-    TkTextSegment *prevPtr;
-    TkTextSegment *nextPtr;
+    TkTextSegment *prevPtr1;
+    TkTextSegment *nextPtr1;
     TkTextSegment *segPtr;
     TkTextSegment **segments;
     TkTextSegment *prevLinkPtr;
@@ -6912,7 +6912,7 @@ DeleteRange(
     TkTextSection *sectionPtr;
     TkTextLine *linePtr1;
     TkTextLine *linePtr2;
-    TkTextLine *nextLinePtr;
+    TkTextLine *nextLinePtr1;
     TkTextLine *curLinePtr;
     Node *curNodePtr;
     Node *nodePtr1;
@@ -6974,7 +6974,7 @@ DeleteRange(
     curLinePtr = firstSegPtr->sectionPtr->linePtr;
     sectionPtr = curLinePtr->segPtr->sectionPtr;
     prevSectionPtr = curLinePtr->lastPtr->sectionPtr;
-    prevPtr = firstSegPtr;
+    prevPtr1 = firstSegPtr;
     segPtr = firstSegPtr->nextPtr;
     steadyMarks = sharedTextPtr->steadyMarks;
     numSegments = 0;
@@ -7113,7 +7113,7 @@ DeleteRange(
 
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
 	    assert(segPtr->typePtr->deleteProc);
-	    nextPtr = segPtr->nextPtr;
+	    nextPtr1 = segPtr->nextPtr;
 	    byteSize += segPtr->size;
 
 	    if (!segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, flags)) {
@@ -7132,14 +7132,14 @@ DeleteRange(
 		    prevLinkPtr->body.link.prevPtr->body.branch.nextPtr = segPtr->body.branch.nextPtr;
 		    segPtr->body.branch.nextPtr->body.link.prevPtr = prevLinkPtr->body.link.prevPtr;
 		    /* remove this pair from chain */
-		    nextPtr = segPtr->nextPtr;
+		    nextPtr1 = segPtr->nextPtr;
 		    UnlinkSegment(segPtr);
 		    TkBTreeFreeSegment(segPtr);
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
 		    TkBTreeFreeSegment(prevLinkPtr);
-		    if (nextPtr->prevPtr && nextPtr->prevPtr->typePtr == &tkTextCharType) {
-			TkTextSegment *sPtr = CleanupCharSegments(sharedTextPtr, nextPtr);
-			if (sPtr != nextPtr) { nextPtr = nextPtr->nextPtr; }
+		    if (nextPtr1->prevPtr && nextPtr1->prevPtr->typePtr == &tkTextCharType) {
+			TkTextSegment *sPtr = CleanupCharSegments(sharedTextPtr, nextPtr1);
+			if (sPtr != nextPtr1) { nextPtr1 = nextPtr1->nextPtr; }
 		    }
 		    prevLinkPtr = NULL;
 		} else {
@@ -7155,14 +7155,14 @@ DeleteRange(
 		    if (segPtr->typePtr == &tkTextLinkType) {
 			assert(!prevLinkPtr);
 			prevLinkPtr = segPtr;
-			LinkSwitch(linePtr1, prevPtr, segPtr);
+			LinkSwitch(linePtr1, prevPtr1, segPtr);
 
-			if (prevPtr->typePtr->group != SEG_GROUP_MARK) {
-			    prevPtr = segPtr;
+			if (prevPtr1->typePtr->group != SEG_GROUP_MARK) {
+			    prevPtr1 = segPtr;
 			}
 		    } else {
 			assert(segPtr->typePtr->group == SEG_GROUP_MARK);
-			LinkMark(sharedTextPtr, linePtr1, prevPtr, segPtr);
+			LinkMark(sharedTextPtr, linePtr1, prevPtr1, segPtr);
 
 			/*
 			 * Option 'steadymarks' is off:
@@ -7173,7 +7173,7 @@ DeleteRange(
 			 */
 
 			if (steadyMarks || segPtr->typePtr->gravity != GRAVITY_RIGHT) {
-			    prevPtr = segPtr;
+			    prevPtr1 = segPtr;
 			}
 		    }
 
@@ -7238,11 +7238,11 @@ DeleteRange(
 		}
 	    }
 
-	    segPtr = nextPtr;
+	    segPtr = nextPtr1;
 	}
     }
 
-    nextLinePtr = linePtr1->nextPtr;
+    nextLinePtr1 = linePtr1->nextPtr;
 
     if (linePtr1 != linePtr2) {
 	/*
@@ -7416,9 +7416,9 @@ DeleteRange(
      * Now its time to deallocate all unused lines.
      */
 
-    curLinePtr = nextLinePtr;
-    nextLinePtr = linePtr2->nextPtr;
-    while (curLinePtr != nextLinePtr) {
+    curLinePtr = nextLinePtr1;
+    nextLinePtr1 = linePtr2->nextPtr;
+    while (curLinePtr != nextLinePtr1) {
 	TkTextLine *nextLinePtr = curLinePtr->nextPtr;
 	FreeLine(treePtr, curLinePtr);
 	curLinePtr = nextLinePtr;
@@ -8099,7 +8099,7 @@ TkBTreeLinkSegment(
     TkTextIndex *indexPtr)	/* Where to add segment: it gets linked in just before the segment
     				 * indicated here. */
 {
-    TkTextSegment *prevPtr;
+    TkTextSegment *prevPtr1;
     TkTextLine *linePtr;
 
     assert(!segPtr->sectionPtr); /* otherwise still in use */
@@ -8111,28 +8111,28 @@ TkBTreeLinkSegment(
     linePtr = TkTextIndexGetLine(indexPtr);
 
     if (sharedTextPtr->steadyMarks) {
-	prevPtr = TkTextIndexGetSegment(indexPtr);
+	prevPtr1 = TkTextIndexGetSegment(indexPtr);
 
-	if (prevPtr && prevPtr->typePtr->group == SEG_GROUP_MARK) {
+	if (prevPtr1 && prevPtr1->typePtr->group == SEG_GROUP_MARK) {
 	    /*
 	     * We have steady marks, and the insertion point is a mark segment,
 	     * so insert the new segment according to the gravity of this mark.
 	     */
 
-	    if (prevPtr->typePtr == &tkTextRightMarkType) {
-		prevPtr = prevPtr->prevPtr;
+	    if (prevPtr1->typePtr == &tkTextRightMarkType) {
+		prevPtr1 = prevPtr1->prevPtr;
 	    }
 	} else {
-	    prevPtr = SplitSeg(indexPtr, NULL);
+	    prevPtr1 = SplitSeg(indexPtr, NULL);
 	}
     } else {
-	prevPtr = SplitSeg(indexPtr, NULL);
+	prevPtr1 = SplitSeg(indexPtr, NULL);
     }
 
     if (segPtr->typePtr->group == SEG_GROUP_MARK) {
-	LinkMark(sharedTextPtr, linePtr, prevPtr, segPtr);
+	LinkMark(sharedTextPtr, linePtr, prevPtr1, segPtr);
     } else {
-	LinkSegment(linePtr, prevPtr, segPtr);
+	LinkSegment(linePtr, prevPtr1, segPtr);
     }
     SplitSection(segPtr->sectionPtr);
     TkBTreeIncrEpoch(indexPtr->tree);
@@ -12644,10 +12644,10 @@ TkBTreeGetSegmentTags(
     const TkTextTagSet *tagInfoPtr;
     TkTextTag *tagBuf[256];
     TkTextTag **tagArray = tagBuf;
-    TkTextTag *tagPtr;
+    TkTextTag *tagPtr1;
     int highestPriority = -1;
     unsigned count = 0;
-    unsigned i;
+    unsigned j;
 
     assert(segPtr->tagInfoPtr);
 
@@ -12711,18 +12711,18 @@ TkBTreeGetSegmentTags(
 	break;
     }
 
-    tagPtr = tagArray[0];
-    for (i = 1; i < count; ++i) {
-	tagPtr = tagPtr->nextPtr = tagArray[i];
+    tagPtr1 = tagArray[0];
+    for (j = 1; j < count; ++j) {
+	tagPtr1 = tagPtr1->nextPtr = tagArray[j];
     }
-    tagPtr->nextPtr = NULL;
-    tagPtr = tagArray[0];
+    tagPtr1->nextPtr = NULL;
+    tagPtr1 = tagArray[0];
 
     if (tagArray != tagBuf) {
 	free(tagArray);
     }
 
-    return tagPtr;
+    return tagPtr1;
 }
 
 /*
@@ -12803,7 +12803,7 @@ TkBTreeCheck(
     BTree *treePtr = (BTree *) tree;
     const Node *nodePtr;
     const TkTextLine *linePtr, *prevLinePtr;
-    const TkTextSegment *segPtr;
+    const TkTextSegment *segPtr1;
     const TkText *peer;
     unsigned numBranches = 0;
     unsigned numLinks = 0;
@@ -13006,28 +13006,28 @@ TkBTreeCheck(
 	}
     }
     linePtr = nodePtr->lastPtr;
-    segPtr = linePtr->segPtr;
-    if (segPtr->typePtr == &tkTextLinkType) {
+    segPtr1 = linePtr->segPtr;
+    if (segPtr1->typePtr == &tkTextLinkType) {
 	/* It's OK to have one link in the last line. */
-	segPtr = segPtr->nextPtr;
+	segPtr1 = segPtr1->nextPtr;
     }
-    while (segPtr->typePtr->group == SEG_GROUP_MARK) {
+    while (segPtr1->typePtr->group == SEG_GROUP_MARK) {
 	/* It's OK to have marks or breaks in the last line. */
-	segPtr = segPtr->nextPtr;
+	segPtr1 = segPtr1->nextPtr;
     }
-    if (segPtr->typePtr != &tkTextCharType) {
+    if (segPtr1->typePtr != &tkTextCharType) {
 	Tcl_Panic("TkBTreeCheck: last line has bogus segment type");
     }
-    if (segPtr->nextPtr) {
+    if (segPtr1->nextPtr) {
 	Tcl_Panic("TkBTreeCheck: last line has too many segments");
     }
-    if (segPtr->size != 1) {
-	Tcl_Panic("TkBTreeCheck: last line has wrong # characters: %d", segPtr->size);
+    if (segPtr1->size != 1) {
+	Tcl_Panic("TkBTreeCheck: last line has wrong # characters: %d", segPtr1->size);
     }
 
-    s = segPtr->body.chars; /* this avoids warnings */
+    s = segPtr1->body.chars; /* this avoids warnings */
     if (s[0] != '\n' || s[1] != '\0') {
-	Tcl_Panic("TkBTreeCheck: last line had bad value: %s", segPtr->body.chars);
+	Tcl_Panic("TkBTreeCheck: last line had bad value: %s", segPtr1->body.chars);
     }
 
     for (entryPtr = Tcl_FirstHashEntry(&treePtr->sharedTextPtr->tagTable, &search);
@@ -13226,11 +13226,11 @@ CheckNodeConsistency(
 			nodePtr->level, childNodePtr->level);
 	    }
 	    if (childNodePtr->linePtr != startLinePtr) {
-		const Node *nodePtr = childNodePtr;
-		while (nodePtr->level > 0) {
-		    nodePtr = nodePtr->childPtr;
+		const Node *nodePtr1 = childNodePtr;
+		while (nodePtr1->level > 0) {
+		    nodePtr1 = nodePtr1->childPtr;
 		}
-		if (nodePtr->linePtr != startLinePtr) {
+		if (nodePtr1->linePtr != startLinePtr) {
 		    Tcl_Panic("CheckNodeConsistency: pointer to first line is wrong");
 		} else {
 		    Tcl_Panic("CheckNodeConsistency: pointer to last line is wrong");
