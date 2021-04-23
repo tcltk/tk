@@ -1668,6 +1668,21 @@ test textDisp-11.21 {TkTextSetYView, window height smaller than the line height}
     .top.t see 1.0
     .top.t index @0,[expr {$lineheight - 2}]
 } {1.0}
+test textDisp-11.22 {TkTextSetYView, peer has -startline} {
+    .top.t delete 1.0 end
+    for {set i 1} {$i <= 50} {incr i} {
+        .top.t insert end "Line $i\n"
+    }
+    pack [.top.t peer create .top.p] -side left
+    pack [scrollbar .top.sb -command {.top.p yview}] -side left -fill y
+    .top.p configure -startline 5 -endline 35 -yscrollcommand {.top.sb set}
+    updateText
+    .top.p yview moveto 0
+    updateText
+    set res [.top.p get @0,0 "@0,0 lineend"]
+    destroy .top.p
+    set res
+} {Line 5}
 
 .t configure -wrap word
 .t delete 50.0 51.0
@@ -2360,45 +2375,61 @@ test textDisp-17.5 {TkTextScanCmd procedure} {
 test textDisp-17.6 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0
+    updateText
     .t scan mark 40 60
     .t scan dragto 35 55
+    updateText
     .t index @0,0
 } {4.7}
 test textDisp-17.7 {TkTextScanCmd procedure} {textfonts} {
     .t yview 10.0
     .t xview moveto 0
+    updateText
     .t xview scroll 20 units
+    updateText
     .t scan mark -10 60
     .t scan dragto -5 65
+    updateText
     .t index @0,0
     set x [.t index @0,0]
     .t scan dragto 0 [expr {70 + $fixedDiff}]
+    updateText
     list $x [.t index @0,0]
 } {6.12 2.5}
 test textDisp-17.8 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0
+    updateText
     .t scan mark 0 60
     .t scan dragto 30 100
+    updateText
     .t scan dragto 25 95
+    updateText
     .t index @0,0
 } {4.7}
 test textDisp-17.9 {TkTextScanCmd procedure} {textfonts} {
     .t yview end
     .t xview moveto 0
+    updateText
     .t xview scroll 100 units
+    updateText
     .t scan mark 90 60
     .t scan dragto 10 0
+    updateText
     .t scan dragto 14 5
+    updateText
     .t index @0,0
-} {18.44}
+} {14.44}
 .t configure -wrap word
 test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
     .t yview 10.0
+    updateText
     .t scan mark -10 60
     .t scan dragto -5 65
+    updateText
     set x [.t index @0,0]
     .t scan dragto 0 [expr {70 + $fixedDiff}]
+    updateText
     list $x [.t index @0,0]
 } {9.0 8.0}
 .t configure -xscrollcommand scroll -yscrollcommand {}

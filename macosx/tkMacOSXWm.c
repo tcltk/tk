@@ -6297,8 +6297,7 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view setTkNeedsDisplay:YES];
-	[view setTkDirtyRect:bounds];
+	[view addTkDirtyRect:bounds];
     }
 }
 
