@@ -3346,7 +3346,7 @@ DeleteIndexRange(
 		    TkTextSetYView(tPtr, &indexTmp, 0);
 		}
 	    } else {
-		TkTextMakeByteIndex(sharedTextPtr->tree, tPtr, line,
+		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line,
 			byteIndex, &indexTmp);
 		/*
 		 * line may be before -startline of tPtr and must be
@@ -3355,20 +3355,12 @@ DeleteIndexRange(
 		 * would be displayed.
 		 * There is no need to worry about -endline however,
 		 * because the view will only be reset if the deletion
-		 * involves the TOP line of the screen
+		 * involves the TOP line of the screen. That said,
+		 * the following call adjusts to both.
 		 */
 
-		if (tPtr->start != NULL) {
-		    int start;
-		    TkTextIndex indexStart;
+		TkTextIndexAdjustToStartEnd(tPtr, &indexTmp, 0);
 
-		    start = TkBTreeLinesTo(NULL, tPtr->start);
-		    TkTextMakeByteIndex(sharedTextPtr->tree, NULL, start,
-			    0, &indexStart);
-		    if (TkTextIndexCmp(&indexTmp, &indexStart) < 0) {
-			indexTmp = indexStart;
-		    }
-		}
 		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
 	}
