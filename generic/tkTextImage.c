@@ -284,7 +284,7 @@ TkTextImageCmd(
 	    for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
 		    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 		Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-			Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr), -1));
+			(const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr), -1));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
 	    return TCL_OK;
@@ -796,7 +796,7 @@ TkTextImageIndex(
     indexPtr->linePtr = eiPtr->body.ei.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
 
-    /* 
+    /*
      * If indexPtr refers to somewhere outside the -startline/-endline
      * range limits of the widget, error out since the image indeed is not
      * reachable from this text widget (it may be reachable from a peer).

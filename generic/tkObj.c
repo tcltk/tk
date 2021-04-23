@@ -934,8 +934,8 @@ DupWindowInternalRep(
 {
     WindowRep *oldPtr, *newPtr;
 
-    oldPtr = srcPtr->internalRep.twoPtrValue.ptr1;
-    newPtr = ckalloc(sizeof(WindowRep));
+    oldPtr = (WindowRep *)srcPtr->internalRep.twoPtrValue.ptr1;
+    newPtr = (WindowRep *)ckalloc(sizeof(WindowRep));
     newPtr->tkwin = oldPtr->tkwin;
     newPtr->mainPtr = oldPtr->mainPtr;
     newPtr->epoch = oldPtr->epoch;
@@ -997,7 +997,7 @@ TkNewWindowObj(
 
     SetWindowFromAny(NULL, objPtr);
 
-    winPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    winPtr = (WindowRep *)objPtr->internalRep.twoPtrValue.ptr1;
     winPtr->tkwin = tkwin;
     winPtr->mainPtr = mainPtr;
     winPtr->epoch = mainPtr->deletionEpoch;

@@ -4490,13 +4490,13 @@ NameToWindow(
  *
  * DoWarp --
  *
- *	Perform Warping of X pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer. Executed as an idle handler only.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	X Pointer will move to a new location.
+ *	Mouse pointer moves to a new location.
  *
  *-------------------------------------------------------------------------
  */
@@ -4505,7 +4505,7 @@ static void
 DoWarp(
     ClientData clientData)
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
 
     assert(clientData);
 
