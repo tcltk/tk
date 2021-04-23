@@ -2532,7 +2532,7 @@ static void ThumbElementDraw(
 	thumbColor = [NSColor colorWithColorSpace: deviceRGB
 	    components: rgba
 	    count: 4];
-	BEGIN_DRAWING_OR_REDRAW(d)
+	BEGIN_DRAWING(d)
 	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
     } else {
