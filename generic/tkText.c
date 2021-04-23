@@ -10803,7 +10803,7 @@ SearchCore(
 
 		if (!match
 			|| (info.extendStart == info.matches[0].start
-			    && info.matches[0].end == (TkSizeT)(lastOffset - firstOffset))) {
+			    && (int)info.matches[0].end == lastOffset - firstOffset)) {
 		    int extraLines = 0;
 		    int prevFullLine;
 
@@ -10820,7 +10820,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if (info.extendStart == TCL_INDEX_NONE) {
+		    if (info.extendStart < 0) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -10912,9 +10912,9 @@ SearchCore(
 			 * circumstances.
 			 */
 
-			if ((match  && info.matches[0].end != (TkSizeT)(lastTotal - firstOffset)
-				    && (info.matches[0].end + 1) < (TkSizeT)(prevFullLine - firstOffset + 1))
-				|| info.extendStart == TCL_INDEX_NONE) {
+			if ((match  && firstOffset + (int)info.matches[0].end != lastTotal
+				    && firstOffset + (int)info.matches[0].end < prevFullLine)
+				|| info.extendStart < 0) {
 			    break;
 			}
 
@@ -10925,10 +10925,10 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && info.matches[0].start + 1 >= (TkSizeT)(lastOffset + 1)) {
+			if (match && info.matches[0].start + 1 >= (TkSizeT)lastOffset + 1) {
 			    break;
 			}
-			if (match && (info.matches[0].end + 1) >= (TkSizeT)(prevFullLine - firstOffset + 1)) {
+			if (match && firstOffset + (int)info.matches[0].end >= prevFullLine) {
 			    if (extraLines > 0) {
 				extraLinesSearched = extraLines - 1;
 			    }
@@ -11062,8 +11062,8 @@ SearchCore(
 		if (matchOffset == -1 ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
 			    && (firstOffset < matchOffset
-				|| (info.matches[0].end - info.matches[0].start + 1)
-				    > (TkSizeT)(matchOffset + matchLength - firstOffset + 1)))) {
+				|| firstOffset + info.matches[0].end
+				    > info.matches[0].start + matchOffset + matchLength))) {
 
 		    matchOffset = firstOffset;
 		    matchLength = info.matches[0].end - info.matches[0].start;
