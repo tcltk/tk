@@ -557,9 +557,9 @@ TkMacOSHIShapeUnion(
 
 static OSStatus
 rectCounter(
-    int msg,
+    TCL_UNUSED(int),
     TCL_UNUSED(HIShapeRef),
-    const CGRect *rect,
+    TCL_UNUSED(const CGRect *),
     void *ref)
 {
     int *count = (int *)ref;
@@ -569,10 +569,10 @@ rectCounter(
 
 static OSStatus
 rectPrinter(
-    int msg,
+    TCL_UNUSED(int),
     TCL_UNUSED(HIShapeRef),
     const CGRect *rect,
-    void *ref)
+    TCL_UNUSED(void *))
 {
     if (rect) {
 	printf("    %s\n", NSStringFromRect(*rect).UTF8String);

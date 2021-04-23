@@ -1331,18 +1331,20 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    CGAffineTransform t = {
-	.a = 1, .b = 0,
-	.c = 0, .d = -1,
-	.tx = 0,
-	.ty = dc.portBounds.size.height
-    };
+    { /* Restricted scope for t needed for C++ */
+	CGAffineTransform t = {
+	    .a = 1, .b = 0,
+	    .c = 0, .d = -1,
+	    .tx = 0,
+	    .ty = dc.portBounds.size.height
+	};
 
-    dc.portBounds.origin.x += macDraw->xOff;
-    dc.portBounds.origin.y += macDraw->yOff;
-    CGContextSaveGState(dc.context);
-    CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-    CGContextConcatCTM(dc.context, t);
+	dc.portBounds.origin.x += macDraw->xOff;
+	dc.portBounds.origin.y += macDraw->yOff;
+	CGContextSaveGState(dc.context);
+	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
+	CGContextConcatCTM(dc.context, t);
+    }
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
