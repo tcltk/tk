@@ -5065,7 +5065,6 @@ ReInsertSegment(
 	TkTextIndex index;
 
 	assert(indexPtr->lineIndex >= 0);
-	assert(indexPtr->u.byteIndex >= 0);
 
 	linePtr = TkBTreeFindLine(sharedTextPtr->tree, NULL, indexPtr->lineIndex);
 	TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
@@ -14372,7 +14371,6 @@ TkBTreeNextDisplayLine(
 
     assert(textPtr);
     assert(linePtr->logicalLine || linePtr == TkBTreeGetStartLine(textPtr));
-    assert(*displayLineNo >= 0);
     assert(*displayLineNo < GetDisplayLines(linePtr, textPtr->pixelReference));
 
     if (offset == 0) {
@@ -14507,7 +14505,6 @@ TkBTreePrevDisplayLine(
 
     assert(textPtr);
     assert(linePtr->logicalLine || linePtr == TkBTreeGetStartLine(textPtr));
-    assert(*displayLineNo >= 0);
     assert(*displayLineNo < GetDisplayLines(linePtr, textPtr->pixelReference));
 
     if (offset == 0) {
