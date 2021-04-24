@@ -7146,10 +7146,10 @@ DeleteRange(
 		    /*
 		     * This segment refuses to die, it's either a switch with a counterpart
 		     * outside of the deletion range, or it's a mark. Link this segment
-		     * after prevPtr.
+		     * after prevPtr1.
 		     */
 
-		    assert(prevPtr);
+		    assert(prevPtr1);
 		    DEBUG(segPtr->sectionPtr = NULL);
 
 		    if (segPtr->typePtr == &tkTextLinkType) {
@@ -7166,10 +7166,10 @@ DeleteRange(
 
 			/*
 			 * Option 'steadymarks' is off:
-			 * 'prevPtr' will be advanced only if the segment don't has right gravity.
+			 * 'prevPtr1' will be advanced only if the segment don't has right gravity.
 			 *
 			 * Option 'steadymarks' is on:
-			 * 'prevPtr' will always be advanced, because we keep the order of the marks.
+			 * 'prevPtr1' will always be advanced, because we keep the order of the marks.
 			 */
 
 			if (steadyMarks || segPtr->typePtr->gravity != GRAVITY_RIGHT) {
