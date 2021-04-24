@@ -9385,7 +9385,7 @@ cat >>confdefs.h <<\_ACEOF
 #define MAC_OSX_TK 1
 _ACEOF
 
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore"
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
