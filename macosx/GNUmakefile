@@ -46,12 +46,6 @@ TK_X11			?=
 
 # Checks and overrides for subframework builds
 ifeq (${SUBFRAMEWORK}_${TK_X11},1_)
-ifeq (${DYLIB_INSTALL_DIR},)
-	@echo "Cannot install subframework with empty DYLIB_INSTALL_DIR !" && false
-endif
-ifeq (${DESTDIR},)
-	@echo "Cannot install subframework with empty DESTDIR !" && false
-endif
 override BUILD_DIR = ${DESTDIR}/build
 override INSTALL_PATH = /Frameworks
 endif
@@ -145,9 +139,9 @@ wish			:= ${wish}-X11
 override EMBEDDED_BUILD :=
 endif
 
-INSTALL_TARGETS		= install-binaries install-libraries
+INSTALL_TARGETS		= install-binaries install-libraries install-headers
 ifeq (${EMBEDDED_BUILD},)
-INSTALL_TARGETS		+= install-private-headers install-headers install-demos
+INSTALL_TARGETS		+= install-private-headers install-demos
 endif
 ifeq (${INSTALL_BUILD}_${EMBEDDED_BUILD}_${BUILD_STYLE},1__Deployment)
 INSTALL_TARGETS		+= html-tk
