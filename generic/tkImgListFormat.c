@@ -44,7 +44,7 @@
  * longer than this limit
  */
 
-#define TK_PHOTO_MAX_COLOR_CHARS 99
+#define TK_PHOTO_MAX_COLOR_LENGTH 99
 
 /*
  * Symbols for the different formats of a color string.
@@ -413,7 +413,8 @@ StringMatchDef(
     if (Tcl_ListObjIndex(interp, rowListPtr[0], 0, &pixelData) != TCL_OK) {
         return 0;
     }
-    if (Tcl_GetCharLength(pixelData) > TK_PHOTO_MAX_COLOR_CHARS) {
+    (void)Tcl_GetString(pixelData);
+    if (pixelData->length > TK_PHOTO_MAX_COLOR_LENGTH) {
         return 0;
     }
     if (ParseColor(interp, pixelData, Tk_Display(Tk_MainWindow(interp)),
@@ -775,30 +776,30 @@ ParseColor(
     unsigned char *alphaPtr)
 {
     const char *specString;
-    TkSizeT charCount;
+    TkSizeT length;
 
     /*
      * Find out which color format we have
      */
 
-    specString = Tcl_GetStringFromObj(specObj, &charCount);
+    specString = Tcl_GetStringFromObj(specObj, &length);
 
-    if (charCount == 0) {
+    if (length == 0) {
         /* Empty string */
         *redPtr = *greenPtr = *bluePtr = *alphaPtr = 0;
         return TCL_OK;
     }
-    if (charCount > TK_PHOTO_MAX_COLOR_CHARS) {
+    if (length > TK_PHOTO_MAX_COLOR_LENGTH) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid color"));
         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                 "INVALID_COLOR", NULL);
         return TCL_ERROR;
     }
     if (specString[0] == '#') {
-        return ParseColorAsHex(interp, specString, charCount, display,
+        return ParseColorAsHex(interp, specString, length, display,
                 colormap, redPtr, greenPtr, bluePtr, alphaPtr);
     }
-    if (ParseColorAsList(interp, specString, charCount,
+    if (ParseColorAsList(interp, specString, length,
             redPtr, greenPtr, bluePtr, alphaPtr) == TCL_OK) {
         return TCL_OK;
     }
@@ -809,7 +810,7 @@ ParseColor(
      */
 
     Tcl_ResetResult(interp);
-    return ParseColorAsStandard(interp, specString, charCount, display,
+    return ParseColorAsStandard(interp, specString, length, display,
             colormap, redPtr, greenPtr, bluePtr, alphaPtr);
 
 }
@@ -1005,7 +1006,7 @@ ParseColorAsStandard(
 {
     XColor parsedColor;
     const char *suffixString, *colorString;
-    char colorBuffer[TK_PHOTO_MAX_COLOR_CHARS + 1];
+    char colorBuffer[TK_PHOTO_MAX_COLOR_LENGTH + 1];
     char *tmpString;
     double fracAlpha;
     unsigned int suffixAlpha;
