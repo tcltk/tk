@@ -918,7 +918,7 @@ TkCreateMainWindow(
     isSafe = Tcl_IsSafe(interp);
     for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
 	Tcl_CmdInfo cmdInfo;
-	
+
 	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
@@ -940,7 +940,7 @@ TkCreateMainWindow(
 	}
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
-	    cmdInfo.isNativeObjectProc) {
+	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
 	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
