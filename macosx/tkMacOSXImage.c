@@ -529,44 +529,42 @@ CreateCGImageFromDrawableRect(
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGRect image_rect = CGRectMake(x, y, width, height);
-    CGImageRef cg_image = nil, result = nil;
+    CGImageRef cg_image = NULL, result = NULL;
+    unsigned char *imageData = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	if (cg_image) {
-	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
-	    CGImageRelease(cg_image);
+	if (cg_context) {
+	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
+	    CFRelease(cg_context);
 	}
     } else {
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
 	if (view == nil) {
 	    TkMacOSXDbgMsg("Invalid source drawable");
-	    return nil;
+	    return NULL;
 	}
 	NSSize size = view.frame.size;
 	NSUInteger width = size.width, height = size.height;
         NSUInteger bytesPerPixel = 4,
 	    bytesPerRow = bytesPerPixel * width,
 	    bitsPerComponent = 8;
-        unsigned char *rawData = malloc(height * bytesPerRow);
-	if (rawData) {
-	    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	    cg_context = CGBitmapContextCreate(rawData, width, height,
-		bitsPerComponent, bytesPerRow, colorSpace,
-	        kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-	    CFRelease(colorSpace);
-	    if (cg_context) {
-		[view.layer renderInContext:cg_context];
-		cg_image = CGBitmapContextCreateImage(cg_context);
-		CGContextRelease(cg_context);
-	    }
-	    free(rawData);
-	}
-	if (cg_image) {
-	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
-	    CGImageRelease(cg_image);
-	}
+        imageData = ckalloc(height * bytesPerRow);
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	cg_context = CGBitmapContextCreate(imageData, width, height,
+			 bitsPerComponent, bytesPerRow, colorSpace,
+			 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CFRelease(colorSpace);
+	[view.layer renderInContext:cg_context];
     }
+    if (cg_context) {
+	cg_image = CGBitmapContextCreateImage(cg_context);
+	CGContextRelease(cg_context);
+    }
+    if (cg_image) {
+	result = CGImageCreateWithImageInRect(cg_image, image_rect);
+	CGImageRelease(cg_image);
+    }
+    ckfree(imageData);
     return result;
 }
 
