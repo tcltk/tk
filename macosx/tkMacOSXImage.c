@@ -670,11 +670,11 @@ XGetImage(
 		|| bytes_per_row < 4 * width
 		|| size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
-	    CFRelease(bitmapRep);
+	    [bitmapRep release];
 	    return NULL;
 	}
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
-	CFRelease(bitmapRep);
+	[bitmapRep release];
 
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in either
