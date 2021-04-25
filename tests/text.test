@@ -11,6 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
+
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 wm geometry . {}
@@ -8204,6 +8206,7 @@ test text-38.1 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
@@ -8222,6 +8225,7 @@ test text-38.2 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete 2.0 end
     lappend res [.t inspect -chars -tag]
@@ -8240,6 +8244,7 @@ test text-38.3 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete 1.end end
     lappend res [.t inspect -chars -tag]
@@ -8258,6 +8263,7 @@ test text-38.4 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete 2.end end
     lappend res [.t inspect -chars -tag]
@@ -8276,6 +8282,7 @@ test text-38.5 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
@@ -8294,6 +8301,7 @@ test text-38.6 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete 2.0 end
     lappend res [.t inspect -chars -tag]
@@ -8312,6 +8320,7 @@ test text-38.7 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete 1.end end
     lappend res [.t inspect -chars -tag]
@@ -8330,6 +8339,7 @@ test text-38.8 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete 2.end end
     lappend res [.t inspect -chars -tag]
@@ -8349,6 +8359,7 @@ test text-38.9 {deletion - newline behavior - undo/redo behavior} -setup {
     .t tag add n begin
     .t edit separator -immediately
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
@@ -8366,6 +8377,7 @@ test text-38.9 {deletion - newline behavior - undo/redo behavior} -setup {
 test text-38.10 {deletion - clean widget} -setup {
     text .t -undo on
     set res {}
+} -constraints needsTcl87 {
 } -body {
     lappend res [.t inspect -chars -tag]
     .t delete begin end
@@ -8396,6 +8408,7 @@ test text-38.12 {deletion - newline behavior - undo/redo behavior} -setup {
     .t tag add n begin end
     .t edit separator -immediately
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
@@ -8416,6 +8429,7 @@ test text-38.13 {deletion - newline behavior - undo/redo behavior} -setup {
     .t edit separator -immediately
     .t insert end "1"
     set res {}
+} -constraints needsTcl87 {
 } -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
