@@ -1266,7 +1266,8 @@ set y5 [expr [lindex $c 1] + [lindex $c 3]/2]
 test textTag-15.1 {TkTextBindProc} -setup {
     .t tag delete x y
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     bind .t <ButtonRelease> {lappend x up}
     .t tag bind x <ButtonRelease> {lappend x x-up}
@@ -1292,7 +1293,8 @@ test textTag-15.1 {TkTextBindProc} -setup {
 test textTag-15.2 {TkTextBindProc} -setup {
     .t tag delete x y
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
     .t tag bind x <Button> {lappend x x-down}
@@ -1321,7 +1323,8 @@ test textTag-15.2 {TkTextBindProc} -setup {
 test textTag-15.3 {TkTextBindProc} -setup {
     .t tag delete x y
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
     .t tag bind x <Button-1> {lappend x x-down}
@@ -1355,7 +1358,8 @@ test textTag-15.3 {TkTextBindProc} -setup {
 test textTag-16.1 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     event gen .t <ButtonRelease-1> -state 0x100 -x $x1 -y $y1
     set x [.t index current]
@@ -1378,7 +1382,8 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
 } -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1400,7 +1405,8 @@ test textTag-16.3 {TkTextPickCurrent procedure} -setup {
         .t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
         .t tag bind $i <Enter> "lappend x enter-$i"
@@ -1428,7 +1434,8 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
         .t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
         .t tag bind $i <Enter> "lappend x enter-$i"
@@ -1457,7 +1464,8 @@ test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
         .t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1478,7 +1486,8 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
         .t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1500,7 +1509,8 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
         .t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1533,7 +1543,8 @@ test textTag-17.1 {insert procedure inserts tags} -setup {
 test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     destroy .t
     wm geometry . +200+200 ; update
-    event generate {} <Motion> -warp 1 -x 5 -y 5 ; update idletasks ; after 50
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
       -highlightthickness 10 -pady 2
@@ -1550,6 +1561,10 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     set res {}
     # Bindings must not trigger on the widget border, only over
     # the actual tagged characters themselves.
+    # Note that we don't need to call controlPointerWarpTiming
+    # in the following six calls because we're not checking that
+    # the mouse pointer has actually moved but rather that the
+    # tag binding mechanism of the text widget correctly triggers.
     event gen .t <Motion> -warp 1 -x 0 -y 0 ; update
     event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
     event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
