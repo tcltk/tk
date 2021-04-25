@@ -904,12 +904,12 @@ TkTextMarkCmd(
 
 	for (i = 3; i < objc; i++) {
 	    if ((hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, Tcl_GetString(objv[i])))) {
-		TkTextSegment *markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
+		TkTextSegment *markPtr3 = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
-		if (TkTextIsPrivateMark(markPtr)) {
-		    UnsetMark(textPtr->sharedTextPtr, markPtr, NULL);
-		} else if (!TkTextIsSpecialMark(markPtr)) {
-		    UnsetMark(textPtr->sharedTextPtr, markPtr, undoInfoPtr);
+		if (TkTextIsPrivateMark(markPtr3)) {
+		    UnsetMark(textPtr->sharedTextPtr, markPtr3, NULL);
+		} else if (!TkTextIsSpecialMark(markPtr3)) {
+		    UnsetMark(textPtr->sharedTextPtr, markPtr3, undoInfoPtr);
 		    if (undoInfoPtr && undoInfo.token) {
 			TkTextPushUndoToken(textPtr->sharedTextPtr, undoInfo.token, 0);
 		    }
