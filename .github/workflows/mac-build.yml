@@ -116,7 +116,7 @@ jobs:
           if [ $USE_XVFB == true ]; then
             function runXvfb {
               PATH=$PATH:/opt/X11/bin
-              Xvfb $1 &
+              Xvfb $1 -nolisten unix &
               XVFB_PID=$!
               echo Launched Xvfb $1 as process $XVFB_PID >&2
               trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID" 0
