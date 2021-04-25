@@ -647,12 +647,12 @@ TkTextMarkCmd(
 	break;
     }
     case MARK_GENERATE: {
-	TkTextSegment *markPtr;
-	TkTextIndex index;
+	TkTextSegment *markPtr1;
+	TkTextIndex index1;
 	char uniqName[100];
 
-	TkTextIndexClear(&index, textPtr);
-	TkTextIndexSetSegment(&index, textPtr->startMarker);
+	TkTextIndexClear(&index1, textPtr);
+	TkTextIndexSetSegment(&index1, textPtr->startMarker);
 	/* IMPORTANT NOTE: ensure fixed length (depending on pointer size) */
 	snprintf(uniqName, sizeof(uniqName),
 #ifdef TK_IS_64_BIT_ARCH
@@ -664,11 +664,11 @@ TkTextMarkCmd(
 #endif /* TK_IS_64_BIT_ARCH */
 	);
 	assert(!TkTextFindMark(textPtr, uniqName));
-    	markPtr = TkTextMakeMark(textPtr, uniqName);
-    	markPtr->privateMarkFlag = 1;
+    	markPtr1 = TkTextMakeMark(textPtr, uniqName);
+    	markPtr1->privateMarkFlag = 1;
 	textPtr->sharedTextPtr->numMarks -= 1; /* take back counting */
 	textPtr->sharedTextPtr->numPrivateMarks += 1;
-	TkBTreeLinkSegment(textPtr->sharedTextPtr, markPtr, &index);
+	TkBTreeLinkSegment(textPtr->sharedTextPtr, markPtr1, &index1);
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(uniqName, -1));
 	break;
     }
@@ -761,9 +761,9 @@ TkTextMarkCmd(
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable, &search);
 		hPtr;
 		hPtr = Tcl_NextHashEntry(&search)) {
-	    TkTextSegment *markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
+	    TkTextSegment *markPtr1 = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
-	    if (!markPtr->privateMarkFlag && !markPtr->startEndMarkFlag) {
+	    if (!markPtr1->privateMarkFlag && !markPtr1->startEndMarkFlag) {
 		const char *name = (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr);
 
 		if (!pattern || Tcl_StringMatch(name, pattern)) {

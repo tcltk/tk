@@ -508,11 +508,11 @@ TkTextWindowCmd(
 	    }
 	    Tcl_ListObjGetElements(NULL, objPtr, &objn, &objs);
 	    for (i = 0; i < objn; ++i) {
-		Tcl_Obj **objv;
-		int objc = 0;
+		Tcl_Obj **objv1;
+		int objc1 = 0;
 
-		Tcl_ListObjGetElements(NULL, objs[i], &objc, &objv);
-		if (objc == 5 && strcmp(Tcl_GetString(objv[0]), "-tags") == 0) {
+		Tcl_ListObjGetElements(NULL, objs[i], &objc1, &objv1);
+		if (objc1 == 5 && strcmp(Tcl_GetString(objv1[0]), "-tags") == 0) {
 		    Tcl_Obj *valuePtr;
 
 		    /* { argvName, dbName, dbClass, defValue, current value } */

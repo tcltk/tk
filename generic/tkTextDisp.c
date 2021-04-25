@@ -1664,9 +1664,9 @@ TkTextCreateDInfo(
     if (textPtr->state == TK_TEXT_STATE_NORMAL
 	    && textPtr->blockCursorType
 	    && textPtr->showInsertFgColor) {
-	XGCValues gcValues;
+	XGCValues gcValues1;
 	gcValues.foreground = textPtr->insertFgColor->pixel;
-	dInfoPtr->insertFgGC = Tk_GetGC(textPtr->tkwin, GCForeground, &gcValues);
+	dInfoPtr->insertFgGC = Tk_GetGC(textPtr->tkwin, GCForeground, &gcValues1);
     }
 
     /*
@@ -2087,9 +2087,9 @@ MakeStyle(
      */
 
     if (containsSelection) {
-	TkTextTag *tagPtr = textPtr->selTagPtr;
+	TkTextTag *tagPtr1 = textPtr->selTagPtr;
 
-	if ((int) tagPtr->priority > borderPrio
+	if ((int) tagPtr1->priority > borderPrio
 		&& (haveFocus
 		    /*
 		     * If this is the selection tag, and selAttrs.inactiveBorder is NULL
@@ -2104,7 +2104,7 @@ MakeStyle(
 			&& (textPtr->state == TK_TEXT_STATE_NORMAL)
 #endif
 		))) {
-	    borderPrio = FillStyle(tagPtr, &styleValues, haveFocus, containsSelection);
+	    borderPrio = FillStyle(tagPtr1, &styleValues, haveFocus, containsSelection);
 
 	    if (borderPrio == -1) {
 		if (textPtr->selAttrs.border)  { styleValues.border = textPtr->selAttrs.border; }
@@ -2491,7 +2491,6 @@ LayoutUpdateLineHeightInformation(
     TkTextPixelInfo *pixelInfo = TkBTreeLinePixelInfo(textPtr, linePtr);
     unsigned oldNumDispLines = TkBTreeGetNumberOfDisplayLines(pixelInfo);
     TkTextDispLineInfo *dispLineInfo;
-    TkTextLine *nextLogicalLinePtr;
 
     assert(dlPtr->byteCount > 0);
     assert(linePtr->logicalLine);
@@ -2504,6 +2503,7 @@ LayoutUpdateLineHeightInformation(
 
 	if (TkRangeListContains(textPtr->dInfoPtr->lineMetricUpdateRanges, lineNo)) {
 	    int mergedLines = 1;
+	    TkTextLine *nextLogicalLinePtr;
 
 	    nextLogicalLinePtr = TkBTreeNextLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
 	    if (linePtr->nextPtr != nextLogicalLinePtr) {
@@ -3872,9 +3872,9 @@ LayoutLogicalLine(
 	    const TextDInfo *dInfoPtr = data->textPtr->dInfoPtr;
 	    const StyleValues *sValuePtr;
 	    TextStyle *stylePtr;
-	    int byteOffset;
+	    int byteOffset1;
 
-	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset);
+	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset1);
 	    stylePtr = GetStyle(data->textPtr, segPtr);
 	    sValuePtr = stylePtr->sValuePtr;
 	    data->tabArrayPtr = sValuePtr->tabArrayPtr;
@@ -3884,7 +3884,7 @@ LayoutLogicalLine(
 	    data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	    data->maxX = MAX(data->width, data->x);
 	    FreeStyle(data->textPtr, stylePtr);
-	    ComputeSizeOfTab(data, segPtr, byteOffset);
+	    ComputeSizeOfTab(data, segPtr, byteOffset1);
 	    data->tabApplied = dispLineEntry->tabApplied;
 
 	    switch (data->tabAlignment) {
@@ -3905,13 +3905,13 @@ LayoutLogicalLine(
 		break;
 	    case NUMERIC:
 		if (!data->tabApplied) {
-		    if (IsDecimalPointPos(data, segPtr, byteOffset)) {
+		    if (IsDecimalPointPos(data, segPtr, byteOffset1)) {
 			data->tabSize = 0;
 			data->isNumericTab = 0;
 		    }
 		    if (data->maxX >= 0 && data->tabSize >= data->maxX - data->x) {
 			data->tabX += data->maxX;
-			ComputeShiftForNumericTab(data, segPtr, byteOffset);
+			ComputeShiftForNumericTab(data, segPtr, byteOffset1);
 			if (data->lengthOfFractional == data->shiftToNextLine) {
 			    data->shiftToNextLine = 0;
 			}
@@ -3922,10 +3922,10 @@ LayoutLogicalLine(
 	}
 
 	if (data->textPtr->hyphenate) {
-	    int byteOffset;
+	    int byteOffset1;
 	    int hyphenRule;
 
-	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset);
+	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset1);
 	    hyphenRule = dispLineEntry->hyphenRule;
 
 	    switch (hyphenRule) {
@@ -3947,8 +3947,8 @@ LayoutLogicalLine(
 		    numBytes = 1;
 		    break;
 		case TK_TEXT_HYPHEN_TREMA:
-		    assert(UCHAR(segPtr->body.chars[byteOffset]) == 0xc3);
-		    buf[0] = UmlautToVowel(ConvertC3Next(segPtr->body.chars[byteOffset + 1]));
+		    assert(UCHAR(segPtr->body.chars[byteOffset1]) == 0xc3);
+		    buf[0] = UmlautToVowel(ConvertC3Next(segPtr->body.chars[byteOffset1 + 1]));
 		    numBytes = 2;
 		    break;
 		case TK_TEXT_HYPHEN_DOUBLE_DIGRAPH:
@@ -4566,7 +4566,7 @@ LayoutDLine(
     }
 
     if (data.textPtr->hyphenate) {
-	TkTextDispChunk *chunkPtr = data.firstChunkPtr->nextPtr;
+	TkTextDispChunk *chunkPtr1 = data.firstChunkPtr->nextPtr;
 
 	/*
 	 * Remove all unused hyphen segments, this will speed up the display process,
@@ -4574,20 +4574,20 @@ LayoutDLine(
 	 * may iterate over the chunks several times.
 	 */
 
-	while (chunkPtr) {
-	    TkTextDispChunk *nextChunkPtr = chunkPtr->nextPtr;
+	while (chunkPtr1) {
+	    TkTextDispChunk *nextChunkPtr = chunkPtr1->nextPtr;
 
-	    if (nextChunkPtr && chunkPtr->width == 0 && chunkPtr != data.cursorChunkPtr) {
-		chunkPtr->prevPtr->numBytes += chunkPtr->numBytes;
+	    if (nextChunkPtr && chunkPtr1->width == 0 && chunkPtr1 != data.cursorChunkPtr) {
+		chunkPtr1->prevPtr->numBytes += chunkPtr1->numBytes;
 
-		if ((chunkPtr->prevPtr->nextPtr = nextChunkPtr)) {
-		    nextChunkPtr->prevPtr = chunkPtr->prevPtr;
-		    data.chunkPtr = chunkPtr;
+		if ((chunkPtr1->prevPtr->nextPtr = nextChunkPtr)) {
+		    nextChunkPtr->prevPtr = chunkPtr1->prevPtr;
+		    data.chunkPtr = chunkPtr1;
 		    LayoutFreeChunk(&data);
 		}
 	    }
 
-	    chunkPtr = nextChunkPtr;
+	    chunkPtr1 = nextChunkPtr;
 	}
     }
 
@@ -5682,7 +5682,7 @@ UpdateDisplayInfo(
 	    y += spaceLeft;
 	    spaceLeft = 0;
 	} else {
-	    TkTextLine *linePtr;
+	    TkTextLine *linePtr1;
 	    TkTextLine *firstLinePtr;
 
 	    /*
@@ -5706,16 +5706,16 @@ UpdateDisplayInfo(
 		index = topLine ? topLine->index : textPtr->topIndex;
 		savedDLine = prevSavedDLine;
 		if (TkrTextIndexBackBytes(textPtr, &index, 1, &index) == 1) {
-		    firstLinePtr = linePtr = NULL; /* we are already at start of text */
+		    firstLinePtr = linePtr1 = NULL; /* we are already at start of text */
 		} else {
-		    linePtr = TkTextIndexGetLine(&index);
+		    linePtr1 = TkTextIndexGetLine(&index);
 		}
 
-		for ( ; linePtr != firstLinePtr && spaceLeft > 0; linePtr = linePtr->prevPtr) {
-		    if (linePtr != TkTextIndexGetLine(&index)) {
-			TkTextIndexSetToLastChar2(&index, linePtr);
+		for ( ; linePtr1 != firstLinePtr && spaceLeft > 0; linePtr1 = linePtr1->prevPtr) {
+		    if (linePtr1 != TkTextIndexGetLine(&index)) {
+			TkTextIndexSetToLastChar2(&index, linePtr1);
 		    }
-		    linePtr = ComputeDisplayLineInfo(textPtr, &index, &info);
+		    linePtr1 = ComputeDisplayLineInfo(textPtr, &index, &info);
 
 		    do {
 			if (info.lastDLinePtr) {
@@ -5730,7 +5730,7 @@ UpdateDisplayInfo(
 				info.dLinePtr = info.lastDLinePtr = NULL;
 			    }
 			} else {
-			    TkTextIndexSetToStartOfLine2(&index, linePtr);
+			    TkTextIndexSetToStartOfLine2(&index, linePtr1);
 			    TkrTextIndexForwBytes(textPtr, &index, info.entry->byteOffset, &index);
 			    if (savedDLine && TkTextIndexIsEqual(&index, &savedDLine->index)) {
 				dlPtr = savedDLine;
@@ -13587,7 +13587,7 @@ NextTabStop(
  *--------------------------------------------------------------
  */
 
-#if TK_DRAW_IN_CONTEXT
+#ifdef TK_DRAW_IN_CONTEXT
 
 static int
 TkpMeasureChars(
@@ -14130,22 +14130,22 @@ CheckLineMetricConsistency(
 	lineNum += 1;
 
 	while (linePtr != lastLinePtr && !linePtr->logicalLine) {
-	    const TkTextPixelInfo *pixelInfo = linePtr->pixelInfo + reference;
+	    const TkTextPixelInfo *pixelInfo1 = linePtr->pixelInfo + reference;
 
-	    if ((pixelInfo->epoch & EPOCH_MASK) != epoch) {
+	    if ((pixelInfo1->epoch & EPOCH_MASK) != epoch) {
 		Tcl_Panic("CheckLineMetricConsistency: line metric info (%d) is not up-to-date",
 			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
-	    if (pixelInfo->epoch & PARTIAL_COMPUTED_BIT) {
+	    if (pixelInfo1->epoch & PARTIAL_COMPUTED_BIT) {
 		Tcl_Panic("CheckLineMetricConsistency: partial flag shouldn't be set (line %d)",
 			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
-	    if (pixelInfo->dispLineInfo) {
+	    if (pixelInfo1->dispLineInfo) {
 		Tcl_Panic("CheckLineMetricConsistency: "
 			"merged line (%d) should not have display line info",
 			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
-	    if (pixelInfo->height > 0) {
+	    if (pixelInfo1->height > 0) {
 		Tcl_Panic("CheckLineMetricConsistency: merged line (%d) should not have a height",
 			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
@@ -14763,7 +14763,7 @@ GetForegroundGC(
     return chunkPtr->stylePtr->fgGC;
 }
 
-#if TK_DRAW_IN_CONTEXT
+#ifdef TK_DRAW_IN_CONTEXT
 # if defined(_WIN32) || defined(__UNIX__)
 
 /*****************************************************************************

@@ -439,9 +439,6 @@ TkTextTagCmd(
 	anyChanges = 0;
 
 	for (i = arg; i < objc; i += 2) {
-	    TkTextIndex index1, index2;
-	    TkTextTag *tagPtr;
-
 	    if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &index1)) {
 		return TCL_ERROR;
 	    }
@@ -3619,15 +3616,15 @@ EnumerateTags(
     }
 
     if (objc == i + 1) {
-	TkTextIndex index;
+	TkTextIndex index1;
 	TkTextSegment *segPtr;
 	TkTextTagSet *tagInfoPtr;
 
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &index)) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &index1)) {
 	    return TCL_ERROR;
 	}
 
-	segPtr = TkTextIndexGetContentSegment(&index, NULL);
+	segPtr = TkTextIndexGetContentSegment(&index1, NULL);
 
 	if (!includeBits && !discardBits) {
 	    TkTextFindTags(interp, textPtr, segPtr, discardSelection);
