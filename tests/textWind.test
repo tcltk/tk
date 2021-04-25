@@ -1526,13 +1526,15 @@ test textWind-17.9 {peer widget window configuration} -setup {
     destroy .t .tt
 } -body {
     pack [text .t]
+    update idletasks
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     toplevel .tt
     pack [.t peer create .tt.t]
+    update idletasks
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
-    update ; update
     .tt.t window configure 1.2 -window [frame .tt.t.f -width 10 -height 20 -bg red]
+    update idletasks
     list [.t window configure 1.2 -window] [.tt.t window configure 1.2 -window]
 } -cleanup {
     destroy .tt .t
@@ -1542,20 +1544,22 @@ test textWind-17.10 {peer widget window configuration} -setup {
     destroy .t .tt
 } -body {
     pack [text .t]
+    update idletasks
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     toplevel .tt
     pack [.t peer create .tt.t]
+    update idletasks
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
     .tt.t window create 1.2 -window [frame .tt.t.f -width 25 -height 20 -bg blue]
-    update ; update
+    update idletasks
     .t window configure 1.2 -create \
       {destroy %W.f ; frame %W.f -width 50 -height 7 -bg red}
     .tt.t window configure 1.2 -window {}
     .t window configure 1.2 -window {}
     set res [list [.t window configure 1.2 -window] \
         [.tt.t window configure 1.2 -window]]
-    update
+    update idletasks
     lappend res [.t window configure 1.2 -window] \
         [.tt.t window configure 1.2 -window]
 } -cleanup {
