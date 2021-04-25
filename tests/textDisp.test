@@ -11,6 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
+
 # Platform specific procedure for updating the text widget.
 
 if {[tk windowingsystem] == "aqua"} {
@@ -506,7 +508,7 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts} {
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
 	    [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
 } [list 35 65 95 125]
-test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts} {
+test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts needsTcl87} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60 90 120] -justify right
@@ -3458,7 +3460,7 @@ test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {textfonts} {
 catch {destroy .t.f}
 .t configure -width 20
 updateText
-test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {textfonts} {
+test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {textfonts needsTcl87} {
     .t delete 1.0 end
     .t tag configure x -justify center
     .t insert 1.0 aa\tbb\tcc\tdd\t
@@ -3789,7 +3791,7 @@ test textDisp-27.9 {SizeOfTab procedure, left alignment} {textfonts} {
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
 } [list [list 131 5 13 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {textfonts} {
+test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {textfonts needsTcl87} {
     .t delete 1.0 end
     .t insert 1.0 a\t123.4
     .t tag delete x
