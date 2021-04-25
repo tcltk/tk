@@ -1266,6 +1266,7 @@ TkMacOSXSetupDrawingContext(
     Bool canDraw = true;
     TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
+    CGFloat drawingHeight;
 
 #ifdef TK_MAC_DEBUG_CG
     fprintf(stderr, "TkMacOSXSetupDrawingContext: %s\n",
@@ -1357,11 +1358,13 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
+    drawingHeight = view ? [view bounds].size.height :
+	CGContextGetClipBoundingBox(dc.context).size.height;
     CGAffineTransform t = {
 	.a = 1, .b = 0,
 	.c = 0, .d = -1,
 	.tx = 0,
-	.ty = [view bounds].size.height
+	.ty = drawingHeight
     };
 
 #ifdef TK_MAC_DEBUG_CG
