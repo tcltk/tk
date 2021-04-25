@@ -1437,7 +1437,7 @@ TkMacOSXSetupDrawingContext(
 
 	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
 	if (view) {
-	    NSSize size = [view bounds].size;
+	    CGSize size = NSSizeToCGSize([view bounds].size);
 	    CGContextSetPatternPhase(dc.context, size);
 	}
 	if (gc->function != GXcopy) {
