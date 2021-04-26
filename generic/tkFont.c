@@ -3780,7 +3780,7 @@ NewChunk(
     if (layoutPtr->numChunks == maxChunks) {
 	maxChunks *= 2;
 	s = Tk_Offset(TextLayout, chunks) + (maxChunks * sizeof(LayoutChunk));
-	layoutPtr = ckrealloc(layoutPtr, s);
+	layoutPtr = (TextLayout *)ckrealloc(layoutPtr, s);
 
 	*layoutPtrPtr = layoutPtr;
 	*maxPtr = maxChunks;
