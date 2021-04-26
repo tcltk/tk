@@ -11,8 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
-
 # Platform specific procedure for updating the text widget.
 
 if {[tk windowingsystem] == "aqua"} {
