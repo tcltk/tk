@@ -3460,7 +3460,7 @@ test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {textfonts} {
 catch {destroy .t.f}
 .t configure -width 20
 updateText
-test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} textfonts {
+test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {textfonts knownBug} {
     .t delete 1.0 end
     .t tag configure x -justify center
     .t insert 1.0 aa\tbb\tcc\tdd\t
