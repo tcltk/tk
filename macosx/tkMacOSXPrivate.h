@@ -231,7 +231,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
 			    const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 			    HIShapeRef inShape2, HIMutableShapeRef outResult);
-
+MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
+MODULE_SCOPE void       TkMacOSXPrintRectsInRegion(HIShapeRef shape);
 /*
  * Prototypes of TkAqua internal procs.
  */
