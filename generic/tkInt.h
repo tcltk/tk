@@ -123,6 +123,17 @@
 #   endif
 #endif
 
+/*
+ * Fallback in case Tk is linked against a Tcl version not having TIP #585
+ * (TCL_INDEX_TEMP_TABLE flag). This allows to use the internal
+ * INDEX_TEMP_TABLE flag of Tcl. However this is rather ugly and not robust
+ * since nothing prevents Tcl from changing the value of its internal flags!
+ */
+
+#if !defined(TCL_INDEX_TEMP_TABLE)
+#   define TCL_INDEX_TEMP_TABLE 2
+#endif
+
 #ifndef TCL_Z_MODIFIER
 #   if defined(_WIN64)
 #	define TCL_Z_MODIFIER	"I"
