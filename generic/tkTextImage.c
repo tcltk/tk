@@ -801,7 +801,7 @@ TkTextImageIndex(
     indexPtr->linePtr = eiPtr->body.ei.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
 
-    /* 
+    /*
      * If indexPtr refers to somewhere outside the -startline/-endline
      * range limits of the widget, error out since the image indeed is not
      * reachable from this text widget (it may be reachable from a peer).
