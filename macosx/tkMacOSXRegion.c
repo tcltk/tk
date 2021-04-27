@@ -559,7 +559,7 @@ static OSStatus
 rectCounter(
     TCL_UNUSED(int),
     TCL_UNUSED(HIShapeRef),
-    TCL_UNUSED(CGRect *),
+    TCL_UNUSED(const CGRect *),
     void *ref)
 {
     int *count = (int *)ref;
