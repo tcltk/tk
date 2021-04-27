@@ -27,6 +27,7 @@
 #define TextStyle MacTextStyle
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -203,7 +204,6 @@ typedef struct TkMacOSXDrawingContext {
     CGContextRef context;
     NSView *view;
     HIShapeRef clipRgn;
-    CGRect portBounds;
 } TkMacOSXDrawingContext;
 
 /*
