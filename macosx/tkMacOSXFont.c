@@ -1310,11 +1310,13 @@ TkpDrawAngledCharsInContext(
     TkSetMacColor(gc->foreground, &fg);
     attributes = [fontPtr->nsAttributes mutableCopy];
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
+    CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
     [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     attributedString = [[NSAttributedString alloc] initWithString:string
 	    attributes:attributes];
+    [string release];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
     textX += (CGFloat) macWin->xOff;
@@ -1351,7 +1353,6 @@ TkpDrawAngledCharsInContext(
     CFRelease(line);
     CFRelease(typesetter);
     [attributedString release];
-    [string release];
     [attributes release];
     TkMacOSXRestoreDrawingContext(&drawingContext);
 }
