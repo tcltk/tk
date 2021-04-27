@@ -115,6 +115,8 @@ jobs:
         run: |
           if [ $USE_XVFB == true ]; then
             function runXvfb {
+              rm /tmp/.X11-unix/X1
+              rm /tmp/.X1
               PATH=$PATH:/opt/X11/bin
               Xvfb $1 -nolisten unix &
               XVFB_PID=$!
@@ -128,7 +130,7 @@ jobs:
               : do nothing
             }
           fi
-          ( runXvfb :1664; make test-classic test-ttk; exit $? ) | tee out.txt || {
+          ( runXvfb :1; make test-classic test-ttk; exit $? ) | tee out.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
