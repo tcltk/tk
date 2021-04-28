@@ -1325,7 +1325,7 @@ HandleTclCommand(
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
-    CommandInfo *cmdInfoPtr = clientData;
+    CommandInfo *cmdInfoPtr = (CommandInfo *)clientData;
     int length;
     Tcl_Obj *command;
     const char *string;
