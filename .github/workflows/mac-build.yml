@@ -115,8 +115,6 @@ jobs:
         run: |
           if [ $USE_XVFB == true ]; then
             function runXvfb {
-              rm /tmp/.X11-unix/X1
-              rm /tmp/.X1
               PATH=$PATH:/opt/X11/bin
               Xvfb $1 -nolisten unix &
               XVFB_PID=$!
@@ -124,6 +122,8 @@ jobs:
               trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID" 0
               export DISPLAY=$1
               sleep 2
+              ls -lsa /tmp/.X*
+              cat /var/log/Xorg.0.log
             }
           else
             function runXvfb {
