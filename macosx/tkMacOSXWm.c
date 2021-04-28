@@ -6433,6 +6433,12 @@ TkpWmSetState(
 
     macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
+    /*
+     * Make sure windows are updated before the state change.
+     */
+
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == IconicState) {
@@ -6453,8 +6459,9 @@ TkpWmSetState(
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+
     /*
-     * Make sure windows are updated after the state change.
+     * Make sure windows are updated after the state change too.
      */
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
