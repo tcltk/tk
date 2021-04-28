@@ -1402,14 +1402,10 @@ Tk_AllocStyleFromObj(
     Tcl_Obj *objPtr)		/* Object containing name of the style to
 				 * retrieve. */
 {
-    Style *stylePtr;
-
     if (objPtr->typePtr != &styleObjType) {
 	SetStyleFromAny(interp, objPtr);
     }
-    stylePtr = objPtr->internalRep.twoPtrValue.ptr1;
-
-    return (Tk_Style) stylePtr;
+    return (Tk_Style)objPtr->internalRep.twoPtrValue.ptr1;
 }
 
 /*
@@ -1439,7 +1435,7 @@ Tk_GetStyleFromObj(
 	SetStyleFromAny(NULL, objPtr);
     }
 
-    return objPtr->internalRep.twoPtrValue.ptr1;
+    return (Tk_Style)objPtr->internalRep.twoPtrValue.ptr1;
 }
 
 /*
