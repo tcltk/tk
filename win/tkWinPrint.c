@@ -142,7 +142,7 @@ static int PrintSelectPrinter( Tcl_Interp *interp )
 /*
  * ----------------------------------------------------------------------
  *
- * PrintInit  --
+ * WinprintInit  --
  *
  *      Initialize this package and create script-level commands.
  *
