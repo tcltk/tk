@@ -535,7 +535,6 @@ CreateCGImageFromDrawableRect(
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	if (cg_context) {
 	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	    CFRelease(cg_context);
 	}
     } else {
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
