@@ -2995,6 +2995,7 @@ test entry-17.2 {EntryUpdateScrollbar procedure} -body {
 test entry-17.3 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
+    update idletasks
     set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
