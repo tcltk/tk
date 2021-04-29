@@ -6274,6 +6274,7 @@ TkMacOSXMakeRealWindowExist(
     	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
     	ApplyContainerOverrideChanges(winPtr, NULL);
     }
+    [window display];
 }
 
 /*
