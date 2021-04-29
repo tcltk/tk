@@ -138,14 +138,18 @@ test spinbox-1.8.3 "option -validate" -setup {
 } -returnCodes error -result {bad validate "bogus": must be all, key, focus, focusin, focusout, or none}
 
 test spinbox-1.8.4 "-validate option: " -setup {
-    set ::spinbox_test {}
     ttk::spinbox .sb -from 0 -to 100
+    set ::spinbox_test {}
 } -body {
-    .sb configure -validate all -validatecommand {lappend ::spinbox_test %P}
+    .sb configure -validate all -validatecommand {set ::spinbox_test %P}
     pack .sb
+    update idletasks
     .sb set 50
     focus -force .sb
-    after 500 {set ::spinbox_wait 1} ; vwait ::spinbox_wait
+    set ::spinbox_wait 0
+    set timer [after 100 {set ::spinbox_wait 1}]
+    vwait ::spinbox_wait
+    after cancel $timer
     set ::spinbox_test
 } -cleanup {
     destroy .sb
