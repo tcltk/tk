@@ -379,6 +379,7 @@ TkMacOSXDrawAllViews(
 		   continue;
 		}
 		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
+		[view setNeedsDisplay:YES];
 	    }
 	} else {
 	    [window displayIfNeeded];
