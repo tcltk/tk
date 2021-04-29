@@ -1406,7 +1406,7 @@ test textWind-17.1 {peer widgets and embedded windows} -setup {
     .t window create 1.3 -window .f
     toplevel .tt
     pack [.t peer create .tt.t]
-    update ; update
+    update
     destroy .t .tt
     winfo exists .f
 } -result 0
@@ -1420,7 +1420,7 @@ test textWind-17.2 {peer widgets and embedded windows} -setup {
     .t window create 1.4 -window .f
     toplevel .tt
     pack [.t peer create .tt.t]
-    update ; update
+    update
     destroy .t
     .tt.t insert 1.0 "foo"
     update
@@ -1435,7 +1435,7 @@ test textWind-17.3 {peer widget and -create} -setup {
     .t insert 1.0 "Some sample text"
     toplevel .tt
     pack [.t peer create .tt.t]
-    update ; update
+    update
     .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
     update
     destroy .t .tt
@@ -1451,7 +1451,7 @@ test textWind-17.4 {peer widget deleted one window shouldn't delete others} -set
     toplevel .tt
     pack [.t peer create .tt.t]
     .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
-    update ; update
+    update
     destroy .tt
     lappend res [.t get 1.2]
     update
@@ -1469,7 +1469,7 @@ test textWind-17.5 {peer widget window configuration} -setup {
     toplevel .tt
     pack [.t peer create .tt.t]
     .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
-    update ; update
+    update
     list [.t window cget 1.2 -window] [.tt.t window cget 1.2 -window]
 } -cleanup {
     destroy .tt .t
@@ -1484,7 +1484,7 @@ test textWind-17.6 {peer widget window configuration} -setup {
     toplevel .tt
     pack [.t peer create .tt.t]
     .t window create 1.2 -create {frame %W.f -width 10 -height 20 -bg blue}
-    update ; update
+    update
     list [.t window configure 1.2 -window] \
         [.tt.t window configure 1.2 -window]
 } -cleanup {
@@ -1500,7 +1500,7 @@ test textWind-17.7 {peer widget window configuration} -setup {
     toplevel .tt
     pack [.t peer create .tt.t]
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
-    update ; update
+    update
     list [.t window cget 1.2 -window] [.tt.t window cget 1.2 -window]
 } -cleanup {
     destroy .tt .t
@@ -1515,7 +1515,7 @@ test textWind-17.8 {peer widget window configuration} -setup {
     toplevel .tt
     pack [.t peer create .tt.t]
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
-    update ; update
+    update
     list [.t window configure 1.2 -window] \
         [.tt.t window configure 1.2 -window]
 } -cleanup {
@@ -1531,7 +1531,7 @@ test textWind-17.9 {peer widget window configuration} -setup {
     toplevel .tt
     pack [.t peer create .tt.t]
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
-    update ; update
+    update
     .tt.t window configure 1.2 -window [frame .tt.t.f -width 10 -height 20 -bg red]
     list [.t window configure 1.2 -window] [.tt.t window configure 1.2 -window]
 } -cleanup {
@@ -1541,26 +1541,34 @@ test textWind-17.9 {peer widget window configuration} -setup {
 test textWind-17.10 {peer widget window configuration} -setup {
     destroy .t .tt
 } -body {
+    set res {}
     pack [text .t]
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     toplevel .tt
     pack [.t peer create .tt.t]
+    update idletasks
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
+    update idletasks
+    # There should be a window in the main widget but not in the peer.
+    lappend res [.t window configure 1.2 -window]
+    lappend res [.tt.t window configure 1.2 -window]
     .tt.t window create 1.2 -window [frame .tt.t.f -width 25 -height 20 -bg blue]
-    update ; update
-    .t window configure 1.2 -create \
-      {destroy %W.f ; frame %W.f -width 50 -height 7 -bg red}
-    .tt.t window configure 1.2 -window {}
+    update idletasks
+    .t window configure 1.2 -create {destroy %W.f ; frame %W.f -width 50 -height 7 -bg red}
+    update idletasks
+    # The main widget should not have changed.
+    lappend res [.t window configure 1.2 -window]
     .t window configure 1.2 -window {}
-    set res [list [.t window configure 1.2 -window] \
-        [.tt.t window configure 1.2 -window]]
+    .tt.t window configure 1.2 -window {}
     update
-    lappend res [.t window configure 1.2 -window] \
-        [.tt.t window configure 1.2 -window]
+    # Nothing should have changed.
+    lappend res [.t window configure 1.2 -window]
+    lappend res [.tt.t window configure 1.2 -window]
 } -cleanup {
     destroy .tt .t
-}  -result {{-window {} {} {} {}} {-window {} {} {} {}} {-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
+}  -result {{-window {} {} {} .t.f} {-window {} {} {} {}} {-window {} {} {} .t.f}\
+{-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
 
 test textWind-18.1 {embedded window deletion triggered by a script bound to <Map>} -setup {
     catch {destroy .t .f .f2}
