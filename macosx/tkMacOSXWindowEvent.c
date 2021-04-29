@@ -954,6 +954,7 @@ ConfigureRestrictProc(
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
     [NSApp setNeedsToDraw:YES];
     [self setNeedsDisplay:YES];
+    [[self layer] setNeedsDisplay];
 }
 
 - (void) clearTkDirtyRect
