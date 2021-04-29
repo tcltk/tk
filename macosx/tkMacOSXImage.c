@@ -530,13 +530,13 @@ CreateCGImageFromDrawableRect(
 	    return NULL;
 	}
 	NSSize size = view.frame.size;
-	NSUInteger width = size.width, height = size.height;
+	NSUInteger view_width = size.width, view_height = size.height;
         NSUInteger bytesPerPixel = 4,
-	    bytesPerRow = bytesPerPixel * width,
+	    bytesPerRow = bytesPerPixel * view_width,
 	    bitsPerComponent = 8;
-        imageData = ckalloc(height * bytesPerRow);
+        imageData = ckalloc(view_height * bytesPerRow);
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	cg_context = CGBitmapContextCreate(imageData, width, height,
+	cg_context = CGBitmapContextCreate(imageData, view_width, view_height,
 			 bitsPerComponent, bytesPerRow, colorSpace,
 			 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 	CFRelease(colorSpace);
