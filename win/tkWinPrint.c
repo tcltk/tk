@@ -29,8 +29,10 @@ Tcl_HashTable *attribs;
 static PRINTDLG pd;
 static PAGESETUPDLG psd;
 static  DOCINFO di;
-static int PrintSelectPrinter(Tcl_Interp *interp);
-static int PrintPageSetup( Tcl_Interp *interp);
+static int PrintSelectPrinter( ClientData clientData,Tcl_Interp *interp,
+			       int objc,Tcl_Obj *const objv[]);
+static int PrintPageSetup( ClientData clientData, Tcl_Interp *interp,
+			   int objc,Tcl_Obj *const objv[]);
 BOOL CALLBACK PaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int Winprint_Init(Tcl_Interp * interp);
 
@@ -46,20 +48,31 @@ int Winprint_Init(Tcl_Interp * interp);
  *----------------------------------------------------------------------
  */
 
-static int PrintSelectPrinter( Tcl_Interp *interp )
+static int PrintSelectPrinter(  ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[] )
 {
 
+    (void) clientData;
+    (void) objc;
+    (void) objv;
     HDC hDC;
     PDEVMODE returnedDevmode;
     PDEVMODE localDevmode;
-    LPWSTR localPrinterName;
     int copies, paper_width, paper_height, dpi_x, dpi_y, new;
     Tcl_HashEntry *hPtr;
+    LPWSTR localPrinterName;
 
     returnedDevmode = NULL;
     localDevmode = NULL;
     localPrinterName = NULL;
-    copies, paper_width, paper_height, dpi_x, dpi_y, new = 0;
+    copies = 0;
+    paper_width = 0;
+    paper_height = 0;
+    dpi_x = 0;
+    dpi_y = 0;
+    new = 0;
 
     /* Set up print dialog and initalize property structure. */
 
@@ -154,9 +167,15 @@ static int PrintSelectPrinter( Tcl_Interp *interp )
  * -------------------------------------------------------------------------
  */
 
-static int PrintPageSetup( Tcl_Interp *interp)
+static int PrintPageSetup( ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
-  
+
+    (void) clientData;
+    (void) objc;
+    (void) objv;
     /* Initialize PAGESETUPDLG. */
     ZeroMemory(&psd, sizeof(psd));
     psd.lStructSize = sizeof(psd);
@@ -246,11 +265,13 @@ BOOL CALLBACK PaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 int
-Winprint_Init(
-	  Tcl_Interp * interp)
+Winprint_Init(Tcl_Interp * interp)
 {
 
-    Tcl_InitHashTable(&attribs, TCL_ONE_WORD_KEYS);
+    Tcl_InitHashTable(attribs, TCL_ONE_WORD_KEYS);
+    Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter", PrintSelectPrinter, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_pagesetup", PrintPageSetup,
+			 NULL, NULL);
     return TCL_OK;
 }
 
