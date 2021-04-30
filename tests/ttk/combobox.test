@@ -60,6 +60,7 @@ test combobox-2.end "Cleanup" -body { destroy .cb }
 test combobox-3 "Read postoffset value dynamically from current style" -body {
     ttk::combobox .cb -values [list a b c] -style "DerivedStyle.TCombobox"
     pack .cb -expand true -fill both
+    update idletasks
     ttk::style configure DerivedStyle.TCombobox -postoffset [list 25 0 0 0]
     ttk::combobox::Post .cb
     expr {[winfo rootx .cb.popdown] - [winfo rootx .cb]}
@@ -70,6 +71,7 @@ test combobox-3 "Read postoffset value dynamically from current style" -body {
 test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
     # whitebox test...
     pack [ttk::combobox .cb -values [list a b c]]
+    update idletasks
     set result [list]
     bind .cb <<ComboboxSelected>> {
     	lappend result Event [winfo ismapped .cb.popdown] [.cb get]
@@ -80,7 +82,6 @@ test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
     .cb.popdown.f.l selection clear 0 end; .cb.popdown.f.l selection set 1
     ttk::combobox::LBSelected .cb.popdown.f.l
     lappend result Select [winfo ismapped .cb.popdown] [.cb get]
-    update
     set result
 } -result [list Start 0 {} Post 1 {} Select 0 b Event 0 b] -cleanup {
     destroy .cb
