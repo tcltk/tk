@@ -258,13 +258,15 @@ static NSUInteger textInputModifiers;
 
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
-     * repeated KeyPress.
+     * repeated KeyPress unless key repeats have been disabled in the
+     * system preferences.
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
-
-	xEvent.xany.type = KeyRelease;
-	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	if ([NSEvent keyRepeatDelay] > 0) {
+	    xEvent.xany.type = KeyRelease;
+	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	}
 	xEvent.xany.type = KeyPress;
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
