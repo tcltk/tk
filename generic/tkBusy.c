@@ -340,7 +340,7 @@ DestroyBusy(
 	    RefWinEventProc, busyPtr);
 
     if (busyPtr->tkBusy != NULL) {
-	Tk_FreeConfigOptions(data, busyPtr->optionTable, busyPtr->tkBusy);
+	Tk_FreeConfigOptions((char *)data, busyPtr->optionTable, busyPtr->tkBusy);
 	Tk_DeleteEventHandler(busyPtr->tkBusy, StructureNotifyMask,
 		BusyEventProc, busyPtr);
 	Tk_ManageGeometry(busyPtr->tkBusy, NULL, busyPtr);
