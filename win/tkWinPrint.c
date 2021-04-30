@@ -27,9 +27,12 @@
 /* Initialize variables for later use.  */
 Tcl_HashTable *attribs;
 static PRINTDLG pd;
-static PAGESETUPDLG pgdlg;
+static PAGESETUPDLG psd;
 static  DOCINFO di;
-static int PrintSelectPrinter( Tcl_Interp *interp );
+static int PrintSelectPrinter(Tcl_Interp *interp);
+static int PrintPageSetup( Tcl_Interp *interp);
+BOOL CALLBACK PaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+int Winprint_Init(Tcl_Interp * interp);
 
 /*----------------------------------------------------------------------
  *
@@ -67,7 +70,7 @@ static int PrintSelectPrinter( Tcl_Interp *interp )
 	
     if (PrintDlg(&pd) == TRUE) {
 	hDC = pd.hDC;
-	if (hDC == NULL) {
+	if (hDC = NULL) {
 	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
 	    return TCL_ERROR;
 	} 	
@@ -85,7 +88,7 @@ static int PrintSelectPrinter( Tcl_Interp *interp )
 					    HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
 					    returnedDevmode->dmSize);
                         
-	if (NULL != localDevmode) 
+	if (localDevmode !=NULL) 
 	    {
 		memcpy(
 		       (LPVOID)localDevmode,
@@ -136,6 +139,95 @@ static int PrintSelectPrinter( Tcl_Interp *interp )
     Tcl_LinkVar(interp, "::tk::print::paper_height", &paper_height, TCL_LINK_INT);
     
     return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PrintPageSetup--
+ *
+ *     Show the page setup dialogue box.
+ *
+ * Results:
+ *      Returns the complete page setup.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+static int PrintPageSetup( Tcl_Interp *interp)
+{
+  
+    /* Initialize PAGESETUPDLG. */
+    ZeroMemory(&psd, sizeof(psd));
+    psd.lStructSize = sizeof(psd);
+    psd.hwndOwner = GetDesktopWindow();
+    psd.Flags = PSD_DISABLEORIENTATION | PSD_DISABLEPAPER | PSD_DISABLEPRINTER |  PSD_ENABLEPAGEPAINTHOOK | PSD_MARGINS;
+
+    /*Set default margins.*/
+    psd.rtMargin.top = 1000;
+    psd.rtMargin.left = 1250;
+    psd.rtMargin.right = 1250;
+    psd.rtMargin.bottom = 1000;
+
+    /*Callback for displaying print preview.*/
+    psd.lpfnPagePaintHook = PaintHook;
+
+    if (PageSetupDlg(&psd)!=TRUE)
+	{
+  	    Tcl_AppendResult(interp, "can't display page setup dialog", NULL);
+	    return TCL_ERROR;
+	} else {
+	return TCL_OK;
+    }
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PaintHook--
+ *
+ *     Callback for displaying page margins/print preview.
+ *
+ * Results:
+ *      Returns visual thumbnail of page margins.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
+BOOL CALLBACK PaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) 
+{ 
+    LPRECT lprc; 
+    COLORREF crMargRect; 
+    HDC hdc, hdcOld; 
+ 
+    switch (uMsg) 
+    { 
+        /* Draw the margin rectangle.  */
+        case WM_PSD_MARGINRECT: 
+            hdc = (HDC) wParam; 
+            lprc = (LPRECT) lParam; 
+ 
+            /* Get the system highlight color. */ 
+            crMargRect = GetSysColor(COLOR_HIGHLIGHT); 
+ 
+            /* 
+	     * Create a dash-dot pen of the system highlight color and  
+             * select it into the DC of the sample page. 
+	     */ 
+            hdcOld = SelectObject(hdc, CreatePen(PS_DASHDOT, .5, crMargRect)); 
+ 
+            /* Draw the margin rectangle.  */
+            Rectangle(hdc, lprc->left, lprc->top, lprc->right, lprc->bottom); 
+ 
+            /* Restore the previous pen to the DC.  */
+            SelectObject(hdc, hdcOld); 
+            return TRUE; 
+ 
+        default: 
+            return FALSE; 
+    } 
+    return TRUE; 
 }
 
 
