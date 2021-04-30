@@ -3941,9 +3941,8 @@ test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over 
     pack .top.mb
     update
     # simulate mouse click on the menubutton, which posts its menu
-    event generate .top.mb <ButtonPress-1> -warp 1
-    update
-    after 50
+    event generate .top.mb <Button-1> -warp 1
+    controlPointerWarpTiming
     event generate .top.mb <ButtonRelease-1>
     update
     # simulate mouse click on the menu again, i.e. without

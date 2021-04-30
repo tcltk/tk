@@ -1352,7 +1352,7 @@ TkTextWindowIndex(
     indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = ewPtr->body.ew.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(ewPtr, indexPtr->linePtr);
- 
+
     /*
      * If indexPtr refers to somewhere outside the -startline/-endline
      * range limits of the widget, error out since the window indeed is not

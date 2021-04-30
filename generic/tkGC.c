@@ -218,7 +218,7 @@ Tk_GetGC(
     valueHashPtr = Tcl_CreateHashEntry(&dispPtr->gcValueTable,
 	    (char *) &valueKey, &isNew);
     if (!isNew) {
-	gcPtr = Tcl_GetHashValue(valueHashPtr);
+	gcPtr = (TkGC *)Tcl_GetHashValue(valueHashPtr);
 	gcPtr->refCount++;
 	return gcPtr->gc;
     }
@@ -228,7 +228,7 @@ Tk_GetGC(
      * and add a new structure to the database.
      */
 
-    gcPtr = ckalloc(sizeof(TkGC));
+    gcPtr = (TkGC *)ckalloc(sizeof(TkGC));
 
     /*
      * Find or make a drawable to use to specify the screen and depth of the
@@ -311,9 +311,8 @@ Tk_FreeGC(
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeGC received unknown gc argument");
     }
-    gcPtr = Tcl_GetHashValue(idHashPtr);
-    gcPtr->refCount--;
-    if (gcPtr->refCount == 0) {
+    gcPtr = (TkGC *)Tcl_GetHashValue(idHashPtr);
+    if (gcPtr->refCount-- <= 1) {
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
 	Tcl_DeleteHashEntry(idHashPtr);
@@ -348,7 +347,7 @@ TkGCCleanup(
 
     for (entryPtr = Tcl_FirstHashEntry(&dispPtr->gcIdTable, &search);
 	    entryPtr != NULL; entryPtr = Tcl_NextHashEntry(&search)) {
-	gcPtr = Tcl_GetHashValue(entryPtr);
+	gcPtr = (TkGC *)Tcl_GetHashValue(entryPtr);
 
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);

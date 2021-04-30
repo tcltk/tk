@@ -965,9 +965,11 @@ TkpPostMenu(
     	return TCL_OK;
     }
 
-    [menu popUpMenuPositioningItem:item
-			atLocation:[win tkConvertPointFromScreen:location]
-			    inView:view];
+    if (view) {
+	[menu popUpMenuPositioningItem:item
+			    atLocation:[win tkConvertPointFromScreen:location]
+				inView:view];
+    }
     inPostMenu = 0;
     return TCL_OK;
 }

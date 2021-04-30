@@ -93,7 +93,7 @@ jobs:
         if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
         uses: actions/upload-artifact@v2
         with:
-          name: Tk ${{ env.VERSION }} Source distribution (unofficial)
+          name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
             /tmp/dist/tk*
             !/tmp/dist/tk*/html/**
@@ -101,7 +101,7 @@ jobs:
         if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
         uses: actions/upload-artifact@v2
         with:
-          name: Tk ${{ env.VERSION }} HTML documentation (unofficial)
+          name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
   test:
     runs-on: ubuntu-20.04
