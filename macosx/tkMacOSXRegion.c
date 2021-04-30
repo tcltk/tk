@@ -575,7 +575,7 @@ rectPrinter(
     TCL_UNUSED(void *))
 {
     if (rect) {
-	printf("    %s\n", NSStringFromRect(*rect).UTF8String);
+	fprintf(stderr, "    %s\n", NSStringFromRect(*rect).UTF8String);
     }
     return noErr;
 }
