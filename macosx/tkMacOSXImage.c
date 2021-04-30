@@ -517,51 +517,42 @@ CreateCGImageFromDrawableRect(
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
+    CGRect image_rect = CGRectMake(x, y, width, height);
     CGImageRef cg_image = NULL, result = NULL;
-    NSBitmapImageRep *bitmapRep = nil;
-    NSView *view = nil;
+    unsigned char *imageData = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
-	/*
-	 * This MacDrawable is a bitmap, so its view is NULL.
-	 */
-
-	CGRect image_rect = CGRectMake(x, y, width, height);
-
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	if (cg_image) {
-	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
-	    CGImageRelease(cg_image);
-	}
-    } else if (TkMacOSXGetNSViewForDrawable(mac_drawable) != nil) {
-
-	/*
-	 * Convert Tk top-left to NSView bottom-left coordinates.
-	 */
-
-	int view_height = [view bounds].size.height;
-	NSRect view_rect = NSMakeRect(x + mac_drawable->xOff,
-		view_height - height - y - mac_drawable->yOff,
-		width, height);
-
-	/*
-	 * Attempt to copy from the view to a bitmapImageRep.  If the view does
-	 * not have a valid CGContext, doing this will silently corrupt memory
-	 * and make a big mess. So, in that case, we just return NULL.
-	 */
-
-	if (view == [NSView focusView]) {
-	    bitmapRep = [view bitmapImageRepForCachingDisplayInRect: view_rect];
-	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmapRep];
-	    result = [bitmapRep CGImage];
-	    CFRelease(bitmapRep);
-	} else {
-	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    result = NULL;
+	if (cg_context) {
+	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
 	}
     } else {
-	TkMacOSXDbgMsg("Invalid source drawable");
+	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
+	if (view == nil) {
+	    TkMacOSXDbgMsg("Invalid source drawable");
+	    return NULL;
+	}
+	NSSize size = view.frame.size;
+	NSUInteger view_width = size.width, view_height = size.height;
+        NSUInteger bytesPerPixel = 4,
+	    bytesPerRow = bytesPerPixel * view_width,
+	    bitsPerComponent = 8;
+        imageData = ckalloc(view_height * bytesPerRow);
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	cg_context = CGBitmapContextCreate(imageData, view_width, view_height,
+			 bitsPerComponent, bytesPerRow, colorSpace,
+			 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CFRelease(colorSpace);
+	[view.layer renderInContext:cg_context];
     }
+    if (cg_context) {
+	cg_image = CGBitmapContextCreateImage(cg_context);
+	CGContextRelease(cg_context);
+    }
+    if (cg_image) {
+	result = CGImageCreateWithImageInRect(cg_image, image_rect);
+	CGImageRelease(cg_image);
+    }
+    ckfree(imageData);
     return result;
 }
 
@@ -665,11 +656,11 @@ XGetImage(
 		|| bytes_per_row < 4 * width
 		|| size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
-	    CFRelease(bitmapRep);
+	    [bitmapRep release];
 	    return NULL;
 	}
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
-	CFRelease(bitmapRep);
+	[bitmapRep release];
 
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in either
