@@ -391,14 +391,25 @@ XCreateImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkPutImage, XPutImage --
+ * TkPutImage, XPutImage, TkpPutRGBAImage --
  *
- *	Copies a rectangular subimage of an XImage into a drawable.  Currently
- *      this is only called by TkImgPhotoDisplay, using a Window as the
- *      drawable.
+ *	These functions, which all have the same signature, copy a rectangular
+ *      subimage of an XImage into a drawable.  The first two are identical on
+ *      macOS.  They assume that the XImage data has the structure of a 32bpp
+ *      ZPixmap in which the image data is an array of 32bit integers packed
+ *      with 8 bit values for the Red Green and Blue channels.  They ignore the
+ *      fourth byte.  The function TkpPutRGBAImage assumes that the XImage data
+ *      has been extended by using the fourth byte to store an 8-bit Alpha
+ *      value.  (The Alpha data is assumed not to pre-multiplied).  The image
+ *      is then drawn into the drawable using standard Porter-Duff Source Atop
+ *      Composition (kCGBlendModeSourceAtop in Apple's Core Graphics).
+ *
+ *      The TkpPutRGBAfunction is used by TkImgPhotoDisplay to render photo
+ *      images if the compile-time variable TK_CAN_RENDER_RGBA is defined in
+ *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
  *
  * Results:
- *	None.
+ *	These functions always return Success.
  *
  * Side effects:
  *	Draws the image on the specified drawable.
@@ -413,7 +424,7 @@ XCreateImage(
 
 static int
 TkMacOSXPutImage(
-    uint32 pixelFormat, 
+    uint32_t pixelFormat, 
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
