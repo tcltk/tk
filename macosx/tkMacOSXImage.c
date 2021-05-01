@@ -647,7 +647,7 @@ CreateCGImageFromPixmap(
  */
 struct pixel_fmt {int r; int g; int b; int a;};
 static struct pixel_fmt bgra = {2, 1, 0, 3};
-static struct pixel_fmt abgr = {3, 2, 1, 0};
+static struct pixel_fmt argb = {1, 2, 3, 0};
 
 XImage *
 XGetImage(
@@ -702,10 +702,10 @@ XGetImage(
 
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in either
-	 * BGRA or ABGR format.  For an XImage we need RGBA.
+	 * BGRA or ARGB format.  For an XImage we need RGBA.
 	 */
 
-	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
+	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : argb;
 
 	for (row = 0, n = 0; row < height; row++, n += bytes_per_row) {
 	    for (m = n; m < n + 4*width; m += 4) {
