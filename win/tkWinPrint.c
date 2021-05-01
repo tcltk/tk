@@ -25,10 +25,11 @@
 
 
 /* Initialize variables for later use.  */
-Tcl_HashTable *attribs;
 static PRINTDLG pd;
 static PAGESETUPDLG psd;
 static  DOCINFO di;
+int copies, paper_width, paper_height, dpi_x, dpi_y;
+char *localPrinterName;
 static int PrintSelectPrinter( ClientData clientData,Tcl_Interp *interp,
 			       int objc,Tcl_Obj *const objv[]);
 static int PrintPageSetup( ClientData clientData, Tcl_Interp *interp,
@@ -60,9 +61,6 @@ static int PrintSelectPrinter(  ClientData clientData,
     HDC hDC;
     PDEVMODE returnedDevmode;
     PDEVMODE localDevmode;
-    int copies, paper_width, paper_height, dpi_x, dpi_y, new;
-    Tcl_HashEntry *hPtr;
-    LPWSTR localPrinterName;
 
     returnedDevmode = NULL;
     localDevmode = NULL;
@@ -72,7 +70,6 @@ static int PrintSelectPrinter(  ClientData clientData,
     paper_height = 0;
     dpi_x = 0;
     dpi_y = 0;
-    new = 0;
 
     /* Set up print dialog and initalize property structure. */
 
@@ -107,10 +104,14 @@ static int PrintSelectPrinter(  ClientData clientData,
 		       (LPVOID)localDevmode,
 		       (LPVOID)returnedDevmode, 
 		       returnedDevmode->dmSize);
-		/* Get printer name and number of copies set by user. */
-		localPrinterName = localDevmode->dmDeviceName;
+		/* Get values from user-set and built-in properties. */
+		localPrinterName = (char*) localDevmode->dmDeviceName;
+		dpi_y = localDevmode->dmYResolution;
+		dpi_x =  localDevmode->dmPrintQuality;
+		paper_height = (int) localDevmode->dmPaperLength;
+		paper_width = (int) localDevmode->dmPaperWidth;
 		copies = pd.nCopies; 
-	    }
+	}
 	else
 	    {
 		localDevmode = NULL;
@@ -120,39 +121,27 @@ static int PrintSelectPrinter(  ClientData clientData,
 		GlobalFree(pd.hDevMode);
 	    }
     }
-	
-    /* 
-     * Get printer resolution and paper size. 
-     */
-    dpi_x = GetDeviceCaps(hDC, LOGPIXELSX);
-    dpi_y = GetDeviceCaps(hDC, LOGPIXELSY);
-    paper_width = GetDeviceCaps(hDC, PHYSICALWIDTH);
-    paper_height = GetDeviceCaps(hDC, PHYSICALHEIGHT);
-	
-    /* 
-     * Store print properties in hash table and link variables 
-     * so they can be accessed from script level.
-     */
-    hPtr = Tcl_CreateHashEntry (attribs, "hDC", &new);
-    Tcl_SetHashValue (hPtr, &hDC);
-    hPtr = Tcl_CreateHashEntry (attribs, "copies", &new);
-    Tcl_SetHashValue (hPtr, &copies);
-    Tcl_LinkVar(interp, "::tk::print::copies", &copies, TCL_LINK_INT);
-    hPtr = Tcl_CreateHashEntry (attribs, "dpi_x", &new);
-    Tcl_SetHashValue (hPtr, &dpi_x);
-    Tcl_LinkVar(interp, "::tk::print::dpi_x", &dpi_x, TCL_LINK_INT);
-    hPtr = Tcl_CreateHashEntry (attribs, "dpi_y", &new);
-    Tcl_SetHashValue (hPtr, &dpi_y);
-    Tcl_LinkVar(interp, "::tk::print::dpi_y", &dpi_y, TCL_LINK_INT);
-    hPtr = Tcl_CreateHashEntry (attribs, "paper_width", &new);
-    Tcl_SetHashValue (hPtr, &paper_width);
-    Tcl_LinkVar(interp, "::tk::print::paper_width", &paper_width, TCL_LINK_INT);
-    hPtr = Tcl_CreateHashEntry (attribs, "paper_height", &new);
-    Tcl_SetHashValue (hPtr, &paper_height);
-    Tcl_LinkVar(interp, "::tk::print::paper_height", &paper_height, TCL_LINK_INT);
-    
-    return TCL_OK;
+		 /* 
+   * Store print properties and link variables 
+   * so they can be accessed from script level.
+   */
+ 
+
+  char *varlink1 = Tcl_Alloc(100 * sizeof(char));
+  char **varlink2 =  (char **)Tcl_Alloc(sizeof(char *));
+  *varlink2 = varlink1;
+  strcpy (varlink1, localPrinterName);		
+	  
+  Tcl_LinkVar(interp, "::tk::print::hDC", (char*)varlink2, TCL_LINK_STRING | TCL_LINK_READ_ONLY);
+  Tcl_LinkVar(interp, "::tk::print::copies", (char *)&copies, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+  Tcl_LinkVar(interp, "::tk::print::dpi_x", (char *)&dpi_x, TCL_LINK_INT | TCL_LINK_READ_ONLY);
+  Tcl_LinkVar(interp, "::tk::print::dpi_y", (char *)&dpi_y, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+  Tcl_LinkVar(interp, "::tk::print::paper_width", (char *)&paper_width, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+  Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+ 
+  return TCL_OK;
 }
+
 
 /*
  * --------------------------------------------------------------------------
@@ -180,16 +169,19 @@ static int PrintPageSetup( ClientData clientData,
     ZeroMemory(&psd, sizeof(psd));
     psd.lStructSize = sizeof(psd);
     psd.hwndOwner = GetDesktopWindow();
-    psd.Flags = PSD_DISABLEORIENTATION | PSD_DISABLEPAPER | PSD_DISABLEPRINTER |  PSD_ENABLEPAGEPAINTHOOK | PSD_MARGINS;
+    psd.Flags =  PSD_ENABLEPAGEPAINTHOOK | PSD_MARGINS;
 
     /*Set default margins.*/
     psd.rtMargin.top = 1000;
     psd.rtMargin.left = 1250;
     psd.rtMargin.right = 1250;
     psd.rtMargin.bottom = 1000;
+	////psd.ptPaperSize.x = 8500;
+//	psd.ptPaperSize.y = 1100;
+	//= (8500, 1100);
 
     /*Callback for displaying print preview.*/
-    psd.lpfnPagePaintHook = PaintHook;
+    psd.lpfnPagePaintHook = (LPPAGEPAINTHOOK)PaintHook;
 
     if (PageSetupDlg(&psd)!=TRUE)
 	{
@@ -268,7 +260,6 @@ int
 Winprint_Init(Tcl_Interp * interp)
 {
 
-    Tcl_InitHashTable(attribs, TCL_ONE_WORD_KEYS);
     Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter", PrintSelectPrinter, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::print::_pagesetup", PrintPageSetup,
 			 NULL, NULL);

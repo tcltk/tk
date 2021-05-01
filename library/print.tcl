@@ -14,7 +14,7 @@
 namespace eval ::tk::print {
 
 
-    if [tk windowingsystem] eq "win32" {
+    if {[tk windowingsystem] eq "win32"} {
 
 	variable printargs
 	set printargs ""
