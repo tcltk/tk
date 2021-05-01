@@ -229,9 +229,7 @@ static NSUInteger textInputModifiers;
 
     /*
      * We are not handling this event as an NSTextInputClient, so we need to
-     * finish constructing the XEvent and queue it.  However, we just drop all
-     * repeated events in the case that the user has turned off key repeats.
-     * See ticket [2ecb09d118].
+     * finish constructing the XEvent and queue it.
      */
 
     macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
@@ -272,8 +270,7 @@ static NSUInteger textInputModifiers;
 
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
-     * repeated KeyPress unless key repeats have been disabled in the
-     * system preferences.
+     * repeated KeyPress,
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
