@@ -49,10 +49,10 @@ int Winprint_Init(Tcl_Interp * interp);
  *----------------------------------------------------------------------
  */
 
-static int PrintSelectPrinter(  ClientData clientData,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[] )
+static int PrintSelectPrinter(ClientData clientData,
+				Tcl_Interp *interp,
+				int objc,
+				Tcl_Obj *const objv[])
 {
 
     (void) clientData;
@@ -111,7 +111,7 @@ static int PrintSelectPrinter(  ClientData clientData,
 		paper_height = (int) localDevmode->dmPaperLength;
 		paper_width = (int) localDevmode->dmPaperWidth;
 		copies = pd.nCopies; 
-	}
+	    }
 	else
 	    {
 		localDevmode = NULL;
@@ -121,25 +121,25 @@ static int PrintSelectPrinter(  ClientData clientData,
 		GlobalFree(pd.hDevMode);
 	    }
     }
-		 /* 
-   * Store print properties and link variables 
-   * so they can be accessed from script level.
-   */
+    
+    /* 
+     * Store print properties and link variables 
+     * so they can be accessed from script level.
+     */
  
-
-  char *varlink1 = Tcl_Alloc(100 * sizeof(char));
-  char **varlink2 =  (char **)Tcl_Alloc(sizeof(char *));
-  *varlink2 = varlink1;
-  strcpy (varlink1, localPrinterName);		
+    char *varlink1 = Tcl_Alloc(100 * sizeof(char));
+    char **varlink2 =  (char **)Tcl_Alloc(sizeof(char *));
+    *varlink2 = varlink1;
+    strcpy (varlink1, localPrinterName);		
 	  
-  Tcl_LinkVar(interp, "::tk::print::hDC", (char*)varlink2, TCL_LINK_STRING | TCL_LINK_READ_ONLY);
-  Tcl_LinkVar(interp, "::tk::print::copies", (char *)&copies, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
-  Tcl_LinkVar(interp, "::tk::print::dpi_x", (char *)&dpi_x, TCL_LINK_INT | TCL_LINK_READ_ONLY);
-  Tcl_LinkVar(interp, "::tk::print::dpi_y", (char *)&dpi_y, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
-  Tcl_LinkVar(interp, "::tk::print::paper_width", (char *)&paper_width, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
-  Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::hDC", (char*)varlink2, TCL_LINK_STRING | TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::copies", (char *)&copies, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::dpi_x", (char *)&dpi_x, TCL_LINK_INT | TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::dpi_y", (char *)&dpi_y, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::paper_width", (char *)&paper_width, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
  
-  return TCL_OK;
+    return TCL_OK;
 }
 
 
@@ -157,18 +157,23 @@ static int PrintSelectPrinter(  ClientData clientData,
  */
 
 static int PrintPageSetup( ClientData clientData,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+			   Tcl_Interp *interp,
+			   int objc,
+			   Tcl_Obj *const objv[])
 {
 
     (void) clientData;
     (void) objc;
     (void) objv;
+    
     /* Initialize PAGESETUPDLG. */
     ZeroMemory(&psd, sizeof(psd));
     psd.lStructSize = sizeof(psd);
     psd.hwndOwner = GetDesktopWindow();
+    returnedDevmode = NULL;
+    localDevmode = NULL;
+
+
     psd.Flags =  PSD_ENABLEPAGEPAINTHOOK | PSD_MARGINS;
 
     /*Set default margins.*/
@@ -176,19 +181,45 @@ static int PrintPageSetup( ClientData clientData,
     psd.rtMargin.left = 1250;
     psd.rtMargin.right = 1250;
     psd.rtMargin.bottom = 1000;
-	////psd.ptPaperSize.x = 8500;
-//	psd.ptPaperSize.y = 1100;
-	//= (8500, 1100);
 
     /*Callback for displaying print preview.*/
     psd.lpfnPagePaintHook = (LPPAGEPAINTHOOK)PaintHook;
 
-    if (PageSetupDlg(&psd)!=TRUE)
+    if (PageSetupDlg(&psd)=TRUE)
 	{
-  	    Tcl_AppendResult(interp, "can't display page setup dialog", NULL);
-	    return TCL_ERROR;
+	    /* Copy print attributes to local structure. */ 
+	    returnedDevmode = (PDEVMODE)GlobalLock(psd.hDevMode);	
+	    localDevmode = (LPDEVMODE)HeapAlloc(
+						GetProcessHeap(), 
+						HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
+						returnedDevmode->dmSize);
+                        
+	    if (localDevmode !=NULL) 
+		{
+		    memcpy(
+			   (LPVOID)localDevmode,
+			   (LPVOID)returnedDevmode, 
+			   returnedDevmode->dmSize);
+		    /* Get values from user-set and built-in properties. */
+		    localPrinterName = (char*) localDevmode->dmDeviceName;
+		    dpi_y = localDevmode->dmYResolution;
+		    dpi_x =  localDevmode->dmPrintQuality;
+		    paper_height = (int) localDevmode->dmPaperLength;
+		    paper_width = (int) localDevmode->dmPaperWidth; 
+		}
+	    else
+		{
+		    localDevmode = NULL;
+		}
+	    if (psd.hDevMode !=NULL) 
+		{
+		    GlobalFree(psd.hDevMode);
+		}
+	    return TCL_OK;
+  
 	} else {
-	return TCL_OK;
+	Tcl_AppendResult(interp, "can't display page setup dialog", NULL);
+	return TCL_ERROR;
     }
 }
 
@@ -256,8 +287,7 @@ BOOL CALLBACK PaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 
 
-int
-Winprint_Init(Tcl_Interp * interp)
+int Winprint_Init(Tcl_Interp * interp)
 {
 
     Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter", PrintSelectPrinter, NULL, NULL);
