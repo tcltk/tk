@@ -30,6 +30,8 @@ static PAGESETUPDLG psd;
 static  DOCINFO di;
 int copies, paper_width, paper_height, dpi_x, dpi_y;
 char *localPrinterName;
+PDEVMODE returnedDevmode;
+PDEVMODE localDevmode;
 static int PrintSelectPrinter( ClientData clientData,Tcl_Interp *interp,
 			       int objc,Tcl_Obj *const objv[]);
 static int PrintPageSetup( ClientData clientData, Tcl_Interp *interp,
@@ -59,9 +61,7 @@ static int PrintSelectPrinter(ClientData clientData,
     (void) objc;
     (void) objv;
     HDC hDC;
-    PDEVMODE returnedDevmode;
-    PDEVMODE localDevmode;
-
+    
     returnedDevmode = NULL;
     localDevmode = NULL;
     localPrinterName = NULL;
@@ -185,7 +185,7 @@ static int PrintPageSetup( ClientData clientData,
     /*Callback for displaying print preview.*/
     psd.lpfnPagePaintHook = (LPPAGEPAINTHOOK)PaintHook;
 
-    if (PageSetupDlg(&psd)=TRUE)
+    if (PageSetupDlg(&psd)==TRUE)
 	{
 	    /* Copy print attributes to local structure. */ 
 	    returnedDevmode = (PDEVMODE)GlobalLock(psd.hDevMode);	
