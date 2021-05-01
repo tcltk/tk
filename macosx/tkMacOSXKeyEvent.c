@@ -270,7 +270,7 @@ static NSUInteger textInputModifiers;
 
     /*
      * Finally we can queue the XEvent, inserting a KeyRelease before a
-     * repeated KeyPress,
+     * repeated KeyPress.
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
