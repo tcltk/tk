@@ -51,7 +51,8 @@ static void ReleaseData(void *info, const void *data, size_t size) {
 
 CGImageRef
 TkMacOSXCreateCGImageWithXImage(
-    XImage *image)
+    XImage *image,
+    uint32 alphaInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
@@ -94,6 +95,7 @@ TkMacOSXCreateCGImageWithXImage(
 		    provider, decode, 0);
 	}
     } else if ((image->format == ZPixmap) && (image->bits_per_pixel == 32)) {
+
 	/*
 	 * Color image
 	 */
@@ -101,6 +103,7 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
 	if (image->width == 0 && image->height == 0) {
+
 	    /*
 	     * CGCreateImage complains on early macOS releases.
 	     */
@@ -111,7 +114,7 @@ TkMacOSXCreateCGImageWithXImage(
 	bitsPerPixel = 32;
 	bitmapInfo = (image->byte_order == MSBFirst ?
 		kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
-	bitmapInfo |= kCGImageAlphaLast;
+	bitmapInfo |= alphaInfo;
 	data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
@@ -388,14 +391,25 @@ XCreateImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkPutImage, XPutImage --
+ * TkPutImage, XPutImage, TkpPutRGBAImage --
  *
- *	Copies a rectangular subimage of an XImage into a drawable.  Currently
- *      this is only called by TkImgPhotoDisplay, using a Window as the
- *      drawable.
+ *	These functions, which all have the same signature, copy a rectangular
+ *      subimage of an XImage into a drawable.  The first two are identical on
+ *      macOS.  They assume that the XImage data has the structure of a 32bpp
+ *      ZPixmap in which the image data is an array of 32bit integers packed
+ *      with 8 bit values for the Red Green and Blue channels.  They ignore the
+ *      fourth byte.  The function TkpPutRGBAImage assumes that the XImage data
+ *      has been extended by using the fourth byte to store an 8-bit Alpha
+ *      value.  (The Alpha data is assumed not to pre-multiplied).  The image
+ *      is then drawn into the drawable using standard Porter-Duff Source Atop
+ *      Composition (kCGBlendModeSourceAtop in Apple's Core Graphics).
+ *
+ *      The TkpPutRGBAfunction is used by TkImgPhotoDisplay to render photo
+ *      images if the compile-time variable TK_CAN_RENDER_RGBA is defined in
+ *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
  *
  * Results:
- *	None.
+ *	These functions always return Success.
  *
  * Side effects:
  *	Draws the image on the specified drawable.
@@ -403,8 +417,14 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-int
-XPutImage(
+#define PIXEL_RGBA kCGImageAlphaLast
+#define PIXEL_ARGB kCGImageAlphaFirst
+#define PIXEL_XRGB kCGImageAlphaNoneSkipFirst
+#define PIXEL_RGBX kCGImageAlphaNoneSkipLast
+
+static int
+TkMacOSXPutImage(
+    uint32_t pixelFormat, 
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
@@ -425,7 +445,7 @@ XPutImage(
     }
     if (dc.context) {
 	CGRect bounds, srcRect, dstRect;
-	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image);
+	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image, pixelFormat);
 
 	/*
 	 * The CGContext for a pixmap is RGB only, with A = 0.
@@ -453,22 +473,29 @@ XPutImage(
     return Success;
 }
 
-int
-TkPutImage(
-    unsigned long *colors,	/* Array of pixel values used by this image.
-				 * May be NULL. */
-    int ncolors,		/* Number of colors used, or 0. */
-    Display *display,
-    Drawable d,			/* Destination drawable. */
-    GC gc,
-    XImage *image,		/* Source image. */
-    int src_x, int src_y,	/* Offset of subimage. */
-    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
-    unsigned int width, unsigned int height)
-				/* Dimensions of subimage. */
-{
-    return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
+int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
+	      int src_x, int src_y, int dest_x, int dest_y,
+	      unsigned int width, unsigned int height) {
+    return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
+			    src_x, src_y, dest_x, dest_y, width, height);
 }
+
+int TkPutImage(unsigned long *colors, int ncolors, Display* display,
+	       Drawable drawable, GC gc, XImage* image,
+	       int src_x, int src_y, int dest_x, int dest_y,
+	       unsigned int width, unsigned int height) {
+    return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
+		     src_x, src_y, dest_x, dest_y, width, height);
+}
+
+int TkpPutRGBAImage(unsigned long *colors, int ncolors, Display* display,
+		    Drawable drawable, GC gc, XImage* image,
+		    int src_x, int src_y, int dest_x, int dest_y,
+		    unsigned int width, unsigned int height) {
+    return TkMacOSXPutImage(PIXEL_RGBA, display, drawable, gc, image,
+			    src_x, src_y, dest_x, dest_y, width, height);
+}
+
 
 /*
  *----------------------------------------------------------------------
