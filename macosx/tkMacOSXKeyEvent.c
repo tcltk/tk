@@ -217,9 +217,14 @@ static NSUInteger textInputModifiers;
 
     /*
      * We are not handling this event as an NSTextInputClient, so we need to
-     * finish constructing the XEvent and queue it.
+     * finish constructing the XEvent and queue it.  However, we just drop all
+     * repeated events in the case that the user has turned off key repeats.
+     * See ticket [2ecb09d118].
      */
 
+    if ([theEvent isARepeat] && [NSEvent keyRepeatDelay] < 0) {
+            return theEvent;
+    }
     macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
 		    (modifiers & NSAlternateKeyMask ? INDEX_OPTION : 0));
     macKC.v.virt = virt;
@@ -263,10 +268,8 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
-	if ([NSEvent keyRepeatDelay] > 0) {
-	    xEvent.xany.type = KeyRelease;
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-	}
+	xEvent.xany.type = KeyRelease;
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
     }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
