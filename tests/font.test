@@ -523,16 +523,16 @@ test font-12.2 {UpdateDependantFonts procedure: pings the widgets} -setup {
     destroy .t.f
     catch {font delete xyz}
     pack [label .t.f]
-    update
+    update idletasks
 } -body {
     font create xyz -family times -size 20
     .t.f config -font xyz -text "abcd" -padx 0 -bd 0 -highlightthickness 0
     set a1 [font measure xyz "abcd"]
-    update
+    update idletasks
     set b1 [winfo reqwidth .t.f]
     font configure xyz -family helvetica -size 20
     set a2 [font measure xyz "abcd"]
-    update
+    update idletasks
     set b2 [winfo reqwidth .t.f]
     expr {$a1==$b1 && $a2==$b2}
 } -cleanup {
