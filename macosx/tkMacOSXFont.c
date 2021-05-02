@@ -1220,7 +1220,7 @@ TkpDrawAngledCharsInContext(
 	    (CFAttributedStringRef)attributedString);
     textX += (CGFloat) macWin->xOff;
     textY += (CGFloat) macWin->yOff;
-    height = drawingContext.portBounds.size.height;
+    height = [drawingContext.view bounds].size.height;
     textY = height - textY;
     t = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
     if (angle != 0.0) {
