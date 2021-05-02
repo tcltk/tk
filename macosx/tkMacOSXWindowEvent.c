@@ -948,6 +948,19 @@ ConfigureRestrictProc(
     return NO;
 }
 
+- (void) viewDidChangeBackingProperties
+{
+
+    /*
+     * Make sure that the layer uses a contentScale that matches the
+     * backing scale factor of the screen.  This avoids blurry text whe
+     * the view is on a Retina display, as well as incorrect size when
+     * the view is on a normal display.
+     */
+    
+    self.layer.contentsScale = self.window.screen.backingScaleFactor;
+}
+
 - (void) addTkDirtyRect: (NSRect) rect
 {
     _tkNeedsDisplay = YES;
