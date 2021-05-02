@@ -7975,6 +7975,9 @@ CharDisplayProc(
     BaseCharInfo *bciPtr;
 #endif /* TK_DRAW_IN_CONTEXT */
 
+    if (!ciPtr) {
+	return;
+    }
     if ((x + chunkPtr->width) <= 0) {
 	/*
 	 * The chunk is off-screen.
