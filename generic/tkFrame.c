@@ -901,11 +901,11 @@ DestroyFramePartly(
     if (framePtr->type == TYPE_LABELFRAME && labelframePtr->labelWin != NULL) {
 	Tk_DeleteEventHandler(labelframePtr->labelWin, StructureNotifyMask,
 		FrameStructureProc, framePtr);
-	Tk_ManageGeometry(labelframePtr->labelWin, NULL, NULL);
 	if (framePtr->tkwin != Tk_Parent(labelframePtr->labelWin)) {
 	    Tk_UnmaintainGeometry(labelframePtr->labelWin, framePtr->tkwin);
 	}
 	Tk_UnmapWindow(labelframePtr->labelWin);
+	Tk_ManageGeometry(labelframePtr->labelWin, NULL, NULL);
 	labelframePtr->labelWin = NULL;
     }
 
@@ -1013,9 +1013,9 @@ ConfigureFrame(
 	    if (oldWindow != NULL) {
 		Tk_DeleteEventHandler(oldWindow, StructureNotifyMask,
 			FrameStructureProc, framePtr);
-		Tk_ManageGeometry(oldWindow, NULL, NULL);
 		Tk_UnmaintainGeometry(oldWindow, framePtr->tkwin);
 		Tk_UnmapWindow(oldWindow);
+		Tk_ManageGeometry(oldWindow, NULL, NULL);
 	    }
 	    if (labelframePtr->labelWin != NULL) {
 		Tk_Window ancestor, parent, sibling = NULL;
