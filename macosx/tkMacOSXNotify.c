@@ -343,8 +343,9 @@ TkMacOSXNotifyExitHandler(
  *       for all views that need display before it returns.  We call it with
  *       deQueue=NO so that it will not change anything on the AppKit event
  *       queue, because we only want the side effect that it runs drawRect. The
- *       only time when any NSViews have the needsDisplay property set to YES
- *       is during execution of this function.
+ *       only times when any NSViews have the needsDisplay property set to YES
+ *       are during execution of this function or in the addDirtyRect method
+ *       of TKContentView.
  *
  *       The reason for running this function as an idle task is to try to
  *       arrange that all widgets will be fully configured before they are
@@ -380,7 +381,8 @@ TkMacOSXDrawAllViews(
 		if (dirtyCount) {
 		   continue;
 		}
-		[view setNeedsDisplayInRect:[view tkDirtyRect]];
+		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
+		[view setNeedsDisplay:YES];
 	    }
 	} else {
 	    [window displayIfNeeded];
