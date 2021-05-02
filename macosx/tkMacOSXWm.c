@@ -793,18 +793,6 @@ void TkMacOSXHandleMapOrUnmap(
     TkWindow *winPtr = (TkWindow *) tkwin;
     const Tk_GeomMgr *geomMgrPtr = winPtr->geomMgrPtr;
 
-    /*
-     * Sadly, this approach does not work with the "text" geometry manager.
-     * The mysterious unexplained crash elicited by textDisp-5.2 occurs.  So we
-     * have to check for the "text" manager and revert to using Tk_HandleEvent
-     * in that case.  Hopefully this can be removed when the revised text
-     * widget is in place.
-     */
-
-    if (geomMgrPtr && strcmp(geomMgrPtr->name, "text") == 0) {
-	Tk_HandleEvent(event);
-	return;
-    }
     oldProc = Tk_RestrictEvents(MapUnmapRestrictProc, NULL, &oldArg);
     Tk_QueueWindowEvent(event, TCL_QUEUE_TAIL);
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
