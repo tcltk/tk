@@ -1393,7 +1393,7 @@ EntryIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > entryPtr->entry.numChars) {
     	    idx = entryPtr->entry.numChars;
