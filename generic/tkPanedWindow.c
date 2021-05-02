@@ -624,11 +624,11 @@ PanedWindowWidgetObjCmd(
 	    panePtr = GetPane(pwPtr, pane);
 	    if ((panePtr != NULL) && (panePtr->containerPtr != NULL)) {
 		count++;
-		Tk_ManageGeometry(pane, NULL, NULL);
 		Tk_UnmaintainGeometry(panePtr->tkwin, pwPtr->tkwin);
 		Tk_DeleteEventHandler(panePtr->tkwin, StructureNotifyMask,
 			PaneStructureProc, panePtr);
 		Tk_UnmapWindow(panePtr->tkwin);
+		Tk_ManageGeometry(pane, NULL, NULL);
 		Unlink(panePtr);
 	    }
 	    if (count != 0) {

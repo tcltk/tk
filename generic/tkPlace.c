@@ -318,8 +318,8 @@ Tk_PlaceObjCmd(
 		(void *)tkwin));
 	Tk_DeleteEventHandler(tkwin, StructureNotifyMask, ContentStructureProc,
 		contentPtr);
-	Tk_ManageGeometry(tkwin, NULL, NULL);
 	Tk_UnmapWindow(tkwin);
+	Tk_ManageGeometry(tkwin, NULL, NULL);
 	FreeContent(contentPtr);
 	break;
 

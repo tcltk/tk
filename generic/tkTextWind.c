@@ -414,12 +414,12 @@ EmbWinConfigure(
 		    Tk_PathName(oldWindow)));
 	    Tk_DeleteEventHandler(oldWindow, StructureNotifyMask,
 		    EmbWinStructureProc, client);
-	    Tk_ManageGeometry(oldWindow, NULL, NULL);
 	    if (textPtr->tkwin != Tk_Parent(oldWindow)) {
 		Tk_UnmaintainGeometry(oldWindow, textPtr->tkwin);
 	    } else {
 		Tk_UnmapWindow(oldWindow);
 	    }
+	    Tk_ManageGeometry(oldWindow, NULL, NULL);
 	}
 	if (client != NULL) {
 	    client->tkwin = NULL;
