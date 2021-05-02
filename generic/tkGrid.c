@@ -685,13 +685,13 @@ GridForgetRemoveCommand(
 		    Tcl_IncrRefCount(contentPtr->in);
 		}
 	    }
-	    Tk_ManageGeometry(content, NULL, NULL);
 	    if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
 		Tk_UnmaintainGeometry(contentPtr->tkwin,
 			contentPtr->containerPtr->tkwin);
 	    }
 	    Unlink(contentPtr);
 	    Tk_UnmapWindow(contentPtr->tkwin);
+	    Tk_ManageGeometry(content, NULL, NULL);
 	}
     }
     return TCL_OK;
@@ -2875,8 +2875,8 @@ GridStructureProc(
 	}
 	for (contentPtr = gridPtr->contentPtr; contentPtr != NULL;
 		contentPtr = nextPtr) {
-	    Tk_ManageGeometry(contentPtr->tkwin, NULL, NULL);
 	    Tk_UnmapWindow(contentPtr->tkwin);
+	    Tk_ManageGeometry(contentPtr->tkwin, NULL, NULL);
 	    contentPtr->containerPtr = NULL;
 	    nextPtr = contentPtr->nextPtr;
 	    contentPtr->nextPtr = NULL;
