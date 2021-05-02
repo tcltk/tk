@@ -791,7 +791,6 @@ void TkMacOSXHandleMapOrUnmap(
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
     TkWindow *winPtr = (TkWindow *) tkwin;
-    const Tk_GeomMgr *geomMgrPtr = winPtr->geomMgrPtr;
 
     oldProc = Tk_RestrictEvents(MapUnmapRestrictProc, NULL, &oldArg);
     Tk_QueueWindowEvent(event, TCL_QUEUE_TAIL);
