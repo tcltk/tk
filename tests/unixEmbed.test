@@ -1301,6 +1301,7 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     wm geometry .main 200x400+100+100
     update idletasks
     focus -force .main
+    after 100
     set x [expr {[winfo x .main ] + [winfo x .main.b] + 40}]
     set y [expr {[winfo y .main ] + [winfo y .main.b] + 38}]
     lappend result [winfo containing $x $y]
