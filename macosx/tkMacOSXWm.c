@@ -6459,9 +6459,6 @@ TkpWmSetState(
     if (state != WithdrawnState) {
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
     }
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == IconicState) {
