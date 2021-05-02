@@ -316,13 +316,13 @@ Tk_PackObjCmd(
 	    }
 	    contentPtr = GetPacker(content);
 	    if ((contentPtr != NULL) && (contentPtr->containerPtr != NULL)) {
-		Tk_ManageGeometry(content, NULL, NULL);
 		if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
 		    Tk_UnmaintainGeometry(contentPtr->tkwin,
 			    contentPtr->containerPtr->tkwin);
 		}
 		Unlink(contentPtr);
 		Tk_UnmapWindow(contentPtr->tkwin);
+		Tk_ManageGeometry(content, NULL, NULL);
 	    }
 	}
 	break;
@@ -472,13 +472,13 @@ Tk_PackObjCmd(
 	}
 	packPtr = GetPacker(tkwin2);
 	if ((packPtr != NULL) && (packPtr->containerPtr != NULL)) {
-	    Tk_ManageGeometry(tkwin2, NULL, NULL);
 	    if (packPtr->containerPtr->tkwin != Tk_Parent(packPtr->tkwin)) {
 		Tk_UnmaintainGeometry(packPtr->tkwin,
 			packPtr->containerPtr->tkwin);
 	    }
 	    Unlink(packPtr);
 	    Tk_UnmapWindow(packPtr->tkwin);
+	    Tk_ManageGeometry(tkwin2, NULL, NULL);
 	}
 	break;
     }
@@ -1446,8 +1446,8 @@ PackStructureProc(
 
 	for (contentPtr = packPtr->contentPtr; contentPtr != NULL;
 		contentPtr = nextPtr) {
-	    Tk_ManageGeometry(contentPtr->tkwin, NULL, NULL);
 	    Tk_UnmapWindow(contentPtr->tkwin);
+	    Tk_ManageGeometry(contentPtr->tkwin, NULL, NULL);
 	    contentPtr->containerPtr = NULL;
 	    nextPtr = contentPtr->nextPtr;
 	    contentPtr->nextPtr = NULL;
