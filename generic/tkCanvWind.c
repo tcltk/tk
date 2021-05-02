@@ -325,9 +325,9 @@ ConfigureWinItem(
 	if (oldWindow != NULL) {
 	    Tk_DeleteEventHandler(oldWindow, StructureNotifyMask,
 		    WinItemStructureProc, winItemPtr);
-	    Tk_ManageGeometry(oldWindow, NULL, NULL);
 	    Tk_UnmaintainGeometry(oldWindow, canvasTkwin);
 	    Tk_UnmapWindow(oldWindow);
+	    Tk_ManageGeometry(oldWindow, NULL, NULL);
 	}
 	if (winItemPtr->tkwin != NULL) {
 	    Tk_Window ancestor, parent;
@@ -409,11 +409,11 @@ DeleteWinItem(
     if (winItemPtr->tkwin != NULL) {
 	Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
 		WinItemStructureProc, winItemPtr);
-	Tk_ManageGeometry(winItemPtr->tkwin, NULL, NULL);
 	if (canvasTkwin != Tk_Parent(winItemPtr->tkwin)) {
 	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
 	}
 	Tk_UnmapWindow(winItemPtr->tkwin);
+	Tk_ManageGeometry(winItemPtr->tkwin, NULL, NULL);
     }
 }
 
