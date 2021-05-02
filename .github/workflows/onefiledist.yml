@@ -54,16 +54,16 @@ jobs:
           tar -cf ${BUILD_NAME}.tar ${BUILD_NAME}
         working-directory: ${{ env.INST_DIR }}
         env:
-          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial
+          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (unofficial)
+          name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.tar
       - name: Describe Installation Zip Contents
         if: ${{ always() }}
         run: |
-          unzip -l wish${{ env.TCL_PATCHLEVEL }}_unofficial || true
+          unzip -l wish${{ env.TCL_PATCHLEVEL }}_snapshot || true
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
@@ -135,18 +135,18 @@ jobs:
           to mark the executable as runnable on your machine.
           EOF
           $CREATE_DMG \
-              --volname "TclTk $TCL_PATCHLEVEL (unofficial)" \
+              --volname "TclTk $TCL_PATCHLEVEL (snapshot)" \
               --window-pos 200 120 \
               --window-size 800 400 \
-              "TclTk-$TCL_PATCHLEVEL-(unofficial).dmg" \
+              "TclTk-$TCL_PATCHLEVEL-(snapshot).dmg" \
               "contents/"
         working-directory: ${{ env.INST_DIR }}
         env:
-          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial
+          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (unofficial)
+          name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.dmg
   win:
     name: Windows
@@ -202,9 +202,9 @@ jobs:
           cp ${TK_BIN} combined/${BUILD_NAME}.exe
         working-directory: install
         env:
-          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial
+          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (unofficial)
-          path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_unofficial.exe
+          name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (snapshot)
+          path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_snapshot.exe
