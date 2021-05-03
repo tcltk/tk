@@ -4460,7 +4460,6 @@ LayoutDLine(
     unsigned chunksPerSection;
     int length, offset;
 
-    assert(displayLineNo >= 0);
     assert((displayLineNo == 0) ==
 	    (IsStartOfNotMergedLine(indexPtr) || TkTextIndexIsStartOfText(indexPtr)));
     assert(indexPtr);
