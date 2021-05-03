@@ -429,7 +429,7 @@ XCreateImage(
 
 static int
 TkMacOSXPutImage(
-    uint32_t pixelFormat, 
+    uint32_t pixelFormat,
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
@@ -486,7 +486,7 @@ int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
 
-int TkpPutRGBAImage(unsigned long *colors, int ncolors, Display* display,
+int TkpPutRGBAImage(Display* display,
 		    Drawable drawable, GC gc, XImage* image,
 		    int src_x, int src_y, int dest_x, int dest_y,
 		    unsigned int width, unsigned int height)
