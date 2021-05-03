@@ -6,7 +6,7 @@
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017-2020 Marc Culler.
+ * Copyright (c) 2017-2021 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,6 +18,71 @@
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
 static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
 	   int x, int y, unsigned int width, unsigned int height);
+
+/* Pixel formats
+ *
+ * Tk uses the XImage structure defined in Xlib.h for storing images.  The
+ * image data in an XImage is a 32-bit aligned array of bytes.  Interpretation
+ * of that data is not specified, but the structure includes parameters which
+ * provide interpretation hints so that an application can use a family of
+ * different data structures.
+ *
+ * The possible values for the XImage format field are XYBitmap, XYPixmap and
+ * ZPixmap.  The macOS port does not support the XYPixmap format.  This means
+ * that bitmap images are stored as a single bit plane (XYBitmap) and that
+ * color images are stored as a sequence of pixel values (ZPixmap).
+ *
+ * For a ZPixmap, the number of bits allocated to each pixel is specified by
+ * the bits_per_pixel field of the XImage structure.  The functions in this
+ * module which convert between XImage and native CGImage or NSImage structures
+ * only support XImages with 32 bits per pixel.  The ImageGetPixel and PutPixel
+ * implementations in this file allow 1, 4, 8, 16 or 32 bits per pixel, however.
+ *
+ * In tkImgPhInstance.c the layout used for pixels is determined by the values
+ * of the red_mask, blue_mask and green_mask fields in the XImage structure.
+ * The Aqua port always sets red_mask = 0xFF0000, green_mask = 0xFF00, and
+ * blue_mask = 0xFF. This means that a 32bpp ZPixmap XImage uses ARGB32 pixels,
+ * with small-endian byte order BGRA. The data array for such an XImage can be
+ * passed directly to construct a CGBitmapImageRep if one specifies the
+ * bitmapInfo as kCGBitmapByteOrder32Big | kCGImageAlphaLast.
+ *
+ * The structures below describe the bitfields in two common 32 bpp pixel
+ * layouts.  Note that bit field layouts are compiler dependent. The layouts
+ * shown in the comments are those produced by clang and gcc.  Also note
+ * that kCGBitmapByteOrder32Big is consistently set when creating CGImages or
+ * CGImageBitmapReps.
+ */
+
+/* RGBA32 0xRRGGBBAA (Byte order is RGBA on big-endian systems.)
+ * This is used by NSBitmapImageRep when the bitmapFormat property is 0,
+ * the default value.
+ */
+
+typedef struct RGBA32pixel_t {
+    unsigned red: 8;
+    unsigned green: 8;
+    unsigned blue: 8;
+    unsigned alpha: 8;
+} RGBA32pixel;
+
+/*
+ * ARGB32 0xAARRGGBB (Byte order is ARGB on big-endian systems.)
+ * This is used by Aqua Tk for XImages and by NSBitmapImageReps whose
+ * bitmapFormat property is NSBitmapFormatAlphaFirst.
+ */
+
+typedef struct ARGB32pixel_t {
+    unsigned blue: 8;
+    unsigned green: 8;
+    unsigned red: 8;
+    unsigned alpha: 8;
+} ARGB32pixel;
+
+typedef union pixel32_t {
+    unsigned int uint;
+    RGBA32pixel rgba;
+    ARGB32pixel argb;
+} pixel32;
 
 #pragma mark XImage handling
 
@@ -112,9 +177,7 @@ TkMacOSXCreateCGImageWithXImage(
 	}
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
-	bitmapInfo = (image->byte_order == MSBFirst ?
-		kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
-	bitmapInfo |= alphaInfo;
+	bitmapInfo = kCGBitmapByteOrder32Big | alphaInfo;
 	data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
@@ -204,14 +267,12 @@ ImageGetPixel(
 
 	switch (image->bits_per_pixel) {
 	case 32: /* 8 bits per channel */
-	    b = (*((unsigned int*) srcPtr) >> 16) & 0xff;
-	    g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
-	    r = (*((unsigned int*) srcPtr)      ) & 0xff;
-	    /*if (image->byte_order == LSBFirst) {
-		r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
-	    } else {
-		r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
-	    }*/
+	    {
+		ARGB32pixel *pixel = (ARGB32pixel *)srcPtr;
+		r = pixel->red;
+		g = pixel->green;
+		b = pixel->blue;
+	    }
 	    break;
 	case 16: /* 5 bits per channel */
 	    r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
@@ -248,7 +309,10 @@ ImageGetPixel(
  *
  * ImagePutPixel --
  *
- *	Set a single pixel in an image.
+ *	Set a single pixel in an image.  The pixel is provided as an unsigned
+ *      32-bit integer.  The value of that integer is interpreted by assuming
+ *      that its low-order N bits have the format specified by the XImage,
+ *      where N is equal to the bits_per_pixel field of the XImage.
  *
  * Results:
  *	None.
@@ -274,27 +338,20 @@ ImagePutPixel(
 	if (image->bits_per_pixel == 32) {
 	    *((unsigned int*) dstPtr) = pixel;
 	} else {
-	    unsigned char r = ((pixel & image->red_mask)   >> 16) & 0xff;
-	    unsigned char g = ((pixel & image->green_mask) >>  8) & 0xff;
-	    unsigned char b = ((pixel & image->blue_mask)       ) & 0xff;
 	    switch (image->bits_per_pixel) {
 	    case 16:
-		*((unsigned short*) dstPtr) = ((r & 0xf8) << 7) |
-			((g & 0xf8) << 2) | ((b & 0xf8) >> 3);
+		*((unsigned short*) dstPtr) = pixel & 0xffff;
 		break;
 	    case 8:
-		*dstPtr = ((r & 0xc0) >> 2) | ((g & 0xc0) >> 4) |
-			((b & 0xc0) >> 6);
+		*dstPtr = pixel & 0xff;
 		break;
 	    case 4: {
-		unsigned char c = ((r & 0x80) >> 5) | ((g & 0x80) >> 6) |
-			((b & 0x80) >> 7);
-		*dstPtr = (x % 2) ? ((*dstPtr & 0xf0) | (c & 0x0f)) :
-			((*dstPtr & 0x0f) | ((c << 4) & 0xf0));
+		*dstPtr = (x % 2) ? ((*dstPtr & 0xf0) | (pixel & 0x0f)) :
+			((*dstPtr & 0x0f) | ((pixel << 4) & 0xf0));
 		break;
 		}
 	    case 1:
-		*dstPtr = ((r|g|b) & 0x80) ? (*dstPtr | (0x80 >> (x % 8))) :
+		*dstPtr = pixel ? (*dstPtr | (0x80 >> (x % 8))) :
 			(*dstPtr & ~(0x80 >> (x % 8)));
 		break;
 	    }
@@ -417,14 +474,12 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-#define PIXEL_RGBA kCGImageAlphaLast
-#define PIXEL_ARGB kCGImageAlphaFirst
-#define PIXEL_XRGB kCGImageAlphaNoneSkipFirst
-#define PIXEL_RGBX kCGImageAlphaNoneSkipLast
+#define USE_ALPHA kCGImageAlphaLast
+#define IGNORE_ALPHA kCGImageAlphaNoneSkipLast
 
 static int
 TkMacOSXPutImage(
-    uint32_t pixelFormat, 
+    uint32_t pixelFormat,
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
@@ -476,7 +531,7 @@ TkMacOSXPutImage(
 int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
 	      int src_x, int src_y, int dest_x, int dest_y,
 	      unsigned int width, unsigned int height) {
-    return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
+    return TkMacOSXPutImage(IGNORE_ALPHA, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
 
@@ -484,7 +539,7 @@ int TkPutImage(unsigned long *colors, int ncolors, Display* display,
 	       Drawable drawable, GC gc, XImage* image,
 	       int src_x, int src_y, int dest_x, int dest_y,
 	       unsigned int width, unsigned int height) {
-    return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
+    return TkMacOSXPutImage(IGNORE_ALPHA, display, drawable, gc, image,
 		     src_x, src_y, dest_x, dest_y, width, height);
 }
 
@@ -492,7 +547,7 @@ int TkpPutRGBAImage(unsigned long *colors, int ncolors, Display* display,
 		    Drawable drawable, GC gc, XImage* image,
 		    int src_x, int src_y, int dest_x, int dest_y,
 		    unsigned int width, unsigned int height) {
-    return TkMacOSXPutImage(PIXEL_RGBA, display, drawable, gc, image,
+    return TkMacOSXPutImage(USE_ALPHA, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
 
@@ -578,7 +633,8 @@ CreateCGImageFromDrawableRect(
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	cg_context = CGBitmapContextCreate(imageData, width, height,
 			 bitsPerComponent, bytesPerRow, colorSpace,
-			 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+			 kCGImageAlphaPremultipliedLast |
+			 kCGBitmapByteOrder32Big);
 	CFRelease(colorSpace);
 	[view.layer renderInContext:cg_context];
     }
@@ -645,9 +701,6 @@ CreateCGImageFromPixmap(
  *
  *----------------------------------------------------------------------
  */
-struct pixel_fmt {int r; int g; int b; int a;};
-static struct pixel_fmt bgra = {2, 1, 0, 3};
-static struct pixel_fmt abgr = {3, 2, 1, 0};
 
 XImage *
 XGetImage(
@@ -687,12 +740,11 @@ XGetImage(
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
 	bitmap = (char *)ckalloc(size);
-	if (!bitmap
-		|| (bitmap_fmt != 0 && bitmap_fmt != 1)
-		|| [bitmapRep samplesPerPixel] != 4
-		|| [bitmapRep isPlanar] != 0
-		|| bytes_per_row < 4 * width
-		|| size != bytes_per_row * height) {
+	if ((bitmap_fmt != 0 && bitmap_fmt != NSBitmapFormatAlphaFirst)
+	    || [bitmapRep samplesPerPixel] != 4
+	    || [bitmapRep isPlanar] != 0
+	    || bytes_per_row < 4 * width
+	    || size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    [bitmapRep release];
 	    return NULL;
@@ -700,35 +752,37 @@ XGetImage(
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
 	[bitmapRep release];
 
-	/*
-	 * When Apple extracts a bitmap from an NSView, it may be in either
-	 * BGRA or ABGR format.  For an XImage we need RGBA.
-	 */
-
-	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
-
 	for (row = 0, n = 0; row < height; row++, n += bytes_per_row) {
 	    for (m = n; m < n + 4*width; m += 4) {
-		R = *(bitmap + m + pixel.r);
-		G = *(bitmap + m + pixel.g);
-		B = *(bitmap + m + pixel.b);
-		A = *(bitmap + m + pixel.a);
+		pixel32 pixel = *((pixel32 *)(bitmap + m));
+		if (bitmap_fmt == 0) { // default format
 
-		*(bitmap + m)     = R;
-		*(bitmap + m + 1) = G;
-		*(bitmap + m + 2) = B;
-		*(bitmap + m + 3) = A;
+		    /*
+		     * This pixel is in ARGB32 format.  We need RGBA32.
+		     */
+
+		    pixel32 flipped;
+		    flipped.rgba.red = pixel.argb.red;
+		    flipped.rgba.green = pixel.argb.green;
+		    flipped.rgba.blue = pixel.argb.blue;
+		    flipped.rgba.alpha = pixel.argb.alpha;
+		    *((pixel32 *)(bitmap + m)) = flipped;
+		} else { // bitmap_fmt = NSBitmapFormatAlphaFirst
+		    *((pixel32 *)(bitmap + m)) = pixel;
+		}
 	    }
 	}
 	imagePtr = XCreateImage(display, NULL, depth, format, offset,
 		(char*) bitmap, width, height,
 		bitmap_pad, bytes_per_row);
     } else {
+
 	/*
 	 * There are some calls to XGetImage in the generic Tk code which pass
 	 * an XYPixmap rather than a ZPixmap.  XYPixmaps should be handled
 	 * here.
 	 */
+
 	TkMacOSXDbgMsg("XGetImage does not handle XYPixmaps at the moment.");
     }
     return imagePtr;
