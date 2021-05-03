@@ -76,7 +76,7 @@ static NSUInteger textInputModifiers;
      * "off" in System Preferences.  It is unclear why we get these, but we do.
      * See ticket [2ecb09d118].
      */
-    
+
     if ([theEvent type] ==  NSKeyDown &&
 	[theEvent isARepeat] &&
 	[NSEvent keyRepeatDelay] < 0) {

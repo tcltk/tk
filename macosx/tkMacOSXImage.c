@@ -429,7 +429,7 @@ XCreateImage(
 
 static int
 TkMacOSXPutImage(
-    uint32_t pixelFormat, 
+    uint32_t pixelFormat,
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
