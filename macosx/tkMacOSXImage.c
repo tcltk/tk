@@ -204,9 +204,9 @@ ImageGetPixel(
 
 	switch (image->bits_per_pixel) {
 	case 32: /* 8 bits per channel */
-	    r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
+	    b = (*((unsigned int*) srcPtr) >> 16) & 0xff;
 	    g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
-	    b = (*((unsigned int*) srcPtr)      ) & 0xff;
+	    r = (*((unsigned int*) srcPtr)      ) & 0xff;
 	    /*if (image->byte_order == LSBFirst) {
 		r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
 	    } else {
@@ -646,8 +646,8 @@ CreateCGImageFromPixmap(
  *----------------------------------------------------------------------
  */
 struct pixel_fmt {int r; int g; int b; int a;};
-static struct pixel_fmt rgba = {0, 1, 2, 3};
-static struct pixel_fmt argb = {3, 0, 1, 2};
+static struct pixel_fmt bgra = {2, 1, 0, 3};
+static struct pixel_fmt abgr = {3, 2, 1, 0};
 
 XImage *
 XGetImage(
@@ -702,10 +702,10 @@ XGetImage(
 
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in either
-	 * RGBA or ARGB format.  For an XImage we need RGBA.
+	 * BGRA or ABGR format.  For an XImage we need RGBA.
 	 */
 
-	struct pixel_fmt pixel = bitmap_fmt == 0 ? rgba : argb;
+	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
 
 	for (row = 0, n = 0; row < height; row++, n += bytes_per_row) {
 	    for (m = n; m < n + 4*width; m += 4) {
