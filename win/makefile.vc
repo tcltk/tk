@@ -378,7 +378,7 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 # Project specific targets
 #---------------------------------------------------------------------
 
-release:  setup $(TKSTUBLIB) $(WISH) 
+release:  setup $(TKSTUBLIB) $(WISH)
 !if !$(USING_PRE87_TCL)
 release:  libtkzip embed
 !endif
