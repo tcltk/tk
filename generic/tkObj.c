@@ -239,7 +239,12 @@ TkGetIntForIndex(
 	}
 	return TCL_ERROR;
     }
-    if ((end + 1 >= 0) && (*indexPtr + 1) > (end + 1)) {
+#if TCL_MAJOR_VERSION < 9
+    if (*indexPtr < -1) {
+	*indexPtr = TCL_INDEX_NONE;
+    } else if (end >= -1)
+#endif
+    if ((*indexPtr + 1) > (end + 1)) {
 	*indexPtr = end + 1;
     }
     return TCL_OK;

@@ -1440,7 +1440,7 @@ Tk_FreePixmap(
 	if (data) {
 	    ckfree(data);
 	}
-	/* 
+	/*
 	 * Releasing the context here causes a crash in the 8.7 regression
 	 * tests, but not in 8.6.
 	 *	CFRelease(macPix->context);
