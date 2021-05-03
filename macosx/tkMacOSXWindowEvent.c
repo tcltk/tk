@@ -957,7 +957,7 @@ ConfigureRestrictProc(
      * the view is on a Retina display, as well as incorrect size when
      * the view is on a normal display.
      */
-    
+
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
 
