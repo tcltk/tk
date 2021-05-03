@@ -26,14 +26,16 @@
 
 /* Initialize variables for later use.  */
 static PRINTDLG pd;
-static PAGESETUPDLG psd;
 static  DOCINFO di;
 int copies, paper_width, paper_height, dpi_x, dpi_y;
 char *localPrinterName;
 PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
-static int PrintSelectPrinter( ClientData clientData,Tcl_Interp *interp,
-			       int objc,Tcl_Obj *const objv[]);
+static HDC hDC;
+
+static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 int Winprint_Init(Tcl_Interp * interp);
 
 /*----------------------------------------------------------------------
@@ -48,17 +50,13 @@ int Winprint_Init(Tcl_Interp * interp);
  *----------------------------------------------------------------------
  */
 
-static int PrintSelectPrinter(ClientData clientData,
-				Tcl_Interp *interp,
-				int objc,
-				Tcl_Obj *const objv[])
+static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
 {
 
     (void) clientData;
-    (void) objc;
+    (void) argc;
     (void) objv;
-    HDC hDC;
-    
+
     returnedDevmode = NULL;
     localDevmode = NULL;
     localPrinterName = NULL;
@@ -129,35 +127,83 @@ static int PrintSelectPrinter(ClientData clientData,
     *varlink2 = varlink1;
     strcpy (varlink1, localPrinterName);		
 	  
-    Tcl_LinkVar(interp, "::tk::print::hDC", (char*)varlink2, TCL_LINK_STRING | TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2, TCL_LINK_STRING | TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::copies", (char *)&copies, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::dpi_x", (char *)&dpi_x, TCL_LINK_INT | TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::dpi_y", (char *)&dpi_y, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::paper_width", (char *)&paper_width, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
-    Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
+    Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height, TCL_LINK_INT | TCL_LINK_READ_ONLY);
  
     return TCL_OK;
 }
 
 /*
- * ----------------------------------------------------------------------
+ * --------------------------------------------------------------------------
  *
- * WinprintInit  --
+ * PrintOpenPrinter--
  *
- *      Initialize this package and create script-level commands.
+ *     Open the given printer.
  *
  * Results:
- *      Initialization of code.
+ *      Opens the selected printer.
  *
- * ----------------------------------------------------------------------
+ * -------------------------------------------------------------------------
  */
 
+int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+    (void) clientData;
+    
+    if (argc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "printer");
+	return TCL_ERROR;
+    }
 
+    char *printer = Tcl_GetString(objv[2]);
+    OpenPrinter(printer, &hDC, NULL);
+    return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PrintClosePrinter--
+ *
+ *    Closes the given printer.
+ *
+ * Results:
+ *    Printer closed.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+    (void) clientData;
+    (void) argc;
+    (void) objv;
+    
+    ClosePrinter(hDC);
+    return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * Winprint_Init--
+ *
+ *    Initializes printing module on Windows..
+ *
+ * Results:
+ *    Module initialized.
+ *
+ * -------------------------------------------------------------------------
+ */
 int Winprint_Init(Tcl_Interp * interp)
 {
-
     Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter", PrintSelectPrinter, NULL, NULL);
- 
+    Tcl_CreateObjCommand(interp, "::tk::print::_openprinter", PrintOpenPrinter, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_closeprinter", PrintClosePrinter, NULL, NULL); 
     return TCL_OK;
 }
 
