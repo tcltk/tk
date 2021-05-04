@@ -769,9 +769,9 @@ EmbImageBboxProc(
  *	index corresponding to the image's position in the text.
  *
  * Results:
- *	The return value is 1 if there is an embedded image by the given name
- *	in the text widget, 0 otherwise. If the image exists, *indexPtr is
- *	filled in with its index.
+ *	The return value is TCL_OK if there is an embedded image by the given
+ *	name in the text widget, TCL_ERROR otherwise. If the image exists,
+ *	*indexPtr is filled in with its index.
  *
  * Side effects:
  *	None.
@@ -789,18 +789,29 @@ TkTextImageIndex(
     TkTextSegment *eiPtr;
 
     if (textPtr == NULL) {
-	return 0;
+	return TCL_ERROR;
     }
 
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name);
     if (hPtr == NULL) {
-	return 0;
+	return TCL_ERROR;
     }
     eiPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = eiPtr->body.ei.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
-    return 1;
+
+    /*
+     * If indexPtr refers to somewhere outside the -startline/-endline
+     * range limits of the widget, error out since the image indeed is not
+     * reachable from this text widget (it may be reachable from a peer).
+     */
+
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    return TCL_OK;
 }
 
 /*

@@ -67,6 +67,12 @@ test entry-1.7 "Deletion - insert cursor in the middle " -body {
     .e index insert
 } -result 0
 
+test entry-1.8 "Index is between 0 and end" -body {
+    .e delete 0 end
+    .e insert end abcde
+    set res [list [.e index -1] [.e index -4] [.e index 999]]
+} -result {0 0 5}
+
 test entry-1.done "Cleanup" -body { destroy .e }
 
 # Scrollbar tests.
@@ -87,7 +93,7 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constra
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
     	-expand false -fill x
     update ; # no error
-    lappend res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
+    set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
 } -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
