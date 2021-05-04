@@ -528,25 +528,51 @@ TkMacOSXPutImage(
     return Success;
 }
 
-int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
-	      int src_x, int src_y, int dest_x, int dest_y,
-	      unsigned int width, unsigned int height) {
+int XPutImage(
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    int src_x,
+    int src_y,
+    int dest_x,
+    int dest_y,
+    unsigned int width,
+    unsigned int height) {
     return TkMacOSXPutImage(IGNORE_ALPHA, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
 
-int TkPutImage(unsigned long *colors, int ncolors, Display* display,
-	       Drawable drawable, GC gc, XImage* image,
-	       int src_x, int src_y, int dest_x, int dest_y,
-	       unsigned int width, unsigned int height) {
+int TkPutImage(
+    TCL_UNUSED(unsigned long *),
+    TCL_UNUSED(int),
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    int src_x,
+    int src_y,
+    int dest_x,
+    int dest_y,
+    unsigned int width,
+    unsigned int height) {
     return TkMacOSXPutImage(IGNORE_ALPHA, display, drawable, gc, image,
 		     src_x, src_y, dest_x, dest_y, width, height);
 }
 
-int TkpPutRGBAImage(unsigned long *colors, int ncolors, Display* display,
-		    Drawable drawable, GC gc, XImage* image,
-		    int src_x, int src_y, int dest_x, int dest_y,
-		    unsigned int width, unsigned int height) {
+int TkpPutRGBAImage(
+    TCL_UNUSED(unsigned long *),
+    TCL_UNUSED(int),
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    int src_x,
+    int src_y,
+    int dest_x,
+    int dest_y,
+    unsigned int width,
+    unsigned int height) {
     return TkMacOSXPutImage(USE_ALPHA, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
@@ -717,7 +743,6 @@ XGetImage(
     NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
     char *bitmap = NULL;
-    char R, G, B, A;
     int depth = 32, offset = 0, bitmap_pad = 0;
     unsigned int bytes_per_row, size, row, n, m;
 
