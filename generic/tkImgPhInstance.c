@@ -38,7 +38,7 @@ extern int		_XInitImageFuncPtrs(XImage *image);
  * Forward declarations
  */
 
-#ifndef TKPUTIMAGE_CAN_BLEND
+#ifndef TK_CAN_RENDER_RGBA
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 			    int xOffset, int yOffset, int width, int height);
 #endif
@@ -416,7 +416,7 @@ TkImgPhotoGet(
  *
  *----------------------------------------------------------------------
  */
-#ifndef TKPUTIMAGE_CAN_BLEND
+#ifndef TK_CAN_RENDER_RGBA
 #ifndef _WIN32
 #define GetRValue(rgb)	(UCHAR(((rgb) & red_mask) >> red_shift))
 #define GetGValue(rgb)	(UCHAR(((rgb) & green_mask) >> green_shift))
@@ -582,7 +582,7 @@ BlendComplexAlpha(
     }
 #undef ALPHA_BLEND
 }
-#endif /* TKPUTIMAGE_CAN_BLEND */
+#endif /* TK_CAN_RENDER_RGBA */
 
 /*
  *----------------------------------------------------------------------
@@ -614,7 +614,7 @@ TkImgPhotoDisplay(
 				 * to imageX and imageY. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;
-#ifndef TKPUTIMAGE_CAN_BLEND
+#ifndef TK_CAN_RENDER_RGBA
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
 
@@ -627,9 +627,10 @@ TkImgPhotoDisplay(
 	return;
     }
 
-#ifdef TKPUTIMAGE_CAN_BLEND
+#ifdef TK_CAN_RENDER_RGBA
+
     /*
-     * If TkPutImage can handle RGBA Ximages directly there is
+     * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
      * no need to call XGetImage or to do the Porter-Duff compositing by hand.
      */
 
@@ -638,11 +639,12 @@ TkImgPhotoDisplay(
 				 (unsigned int)instancePtr->width,
 				 (unsigned int)instancePtr->height,
 				 0, (unsigned int)(4 * instancePtr->width));
-    TkPutImage(NULL, 0, display, drawable, instancePtr->gc,
+    TkpPutRGBAImage(display, drawable, instancePtr->gc,
 	       photo, imageX, imageY, drawableX, drawableY,
 	       (unsigned int) width, (unsigned int) height);
     photo->data = NULL;
     XDestroyImage(photo);
+
 #else
 
     if ((instancePtr->modelPtr->flags & COMPLEX_ALPHA)

@@ -555,6 +555,55 @@ TkMacOSHIShapeUnion(
     return result;
 }
 
+static OSStatus
+rectCounter(
+    TCL_UNUSED(int),
+    TCL_UNUSED(HIShapeRef),
+    TCL_UNUSED(const CGRect *),
+    void *ref)
+{
+    int *count = (int *)ref;
+    (*count)++;
+    return noErr;
+}
+
+static OSStatus
+rectPrinter(
+    TCL_UNUSED(int),
+    TCL_UNUSED(HIShapeRef),
+    const CGRect *rect,
+    TCL_UNUSED(void *))
+{
+    if (rect) {
+	fprintf(stderr, "    %s\n", NSStringFromRect(*rect).UTF8String);
+    }
+    return noErr;
+}
+
+int
+TkMacOSXCountRectsInRegion(
+    HIShapeRef shape)
+{
+    int rect_count = 0;
+    if (!HIShapeIsEmpty(shape)) {
+	ChkErr(HIShapeEnumerate, shape,
+		kHIShapeParseFromBottom|kHIShapeParseFromLeft,
+		rectCounter, &rect_count);
+    }
+    return rect_count;
+}
+
+void
+TkMacOSXPrintRectsInRegion(
+    HIShapeRef shape)
+{
+    if (!HIShapeIsEmpty(shape)) {
+	ChkErr(HIShapeEnumerate, shape,
+		kHIShapeParseFromBottom|kHIShapeParseFromLeft,
+		rectPrinter, NULL);
+    }
+}
+
 /*
  * Local Variables:
  * mode: objc

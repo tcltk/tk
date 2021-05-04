@@ -915,11 +915,59 @@ ConfigureRestrictProc(
 
 @implementation TKContentView(TKWindowEvent)
 
+- (id)initWithFrame:(NSRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+	/*
+	 * The layer must exist before we set wantsLayer to YES.
+	 */
+
+	self.layer = [CALayer layer];
+	self.wantsLayer = YES;
+	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
+	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
+	    kCAGravityTopLeft : kCAGravityBottomLeft;
+
+	/*
+	 * Nothing gets drawn at all if the layer does not have a delegate.
+	 * Currently, we do not implement any methods of the delegate, however.
+	 */
+
+	self.layer.delegate = (id) self;
+    }
+    return self;
+}
+
+/*
+ * We will just use drawRect.
+ */
+
+- (BOOL) wantsUpdateLayer
+{
+    return NO;
+}
+
+- (void) viewDidChangeBackingProperties
+{
+
+    /*
+     * Make sure that the layer uses a contentScale that matches the
+     * backing scale factor of the screen.  This avoids blurry text whe
+     * the view is on a Retina display, as well as incorrect size when
+     * the view is on a normal display.
+     */
+
+    self.layer.contentsScale = self.window.screen.backingScaleFactor;
+}
+
 - (void) addTkDirtyRect: (NSRect) rect
 {
     _tkNeedsDisplay = YES;
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
     [NSApp setNeedsToDraw:YES];
+    [self setNeedsDisplay:YES];
+    [[self layer] setNeedsDisplay];
 }
 
 - (void) clearTkDirtyRect
