@@ -485,10 +485,19 @@ int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
 
-int TkpPutRGBAImage(Display* display,
-		    Drawable drawable, GC gc, XImage* image,
-		    int src_x, int src_y, int dest_x, int dest_y,
-		    unsigned int width, unsigned int height) {
+int TkpPutRGBAImage(
+    TCL_UNUSED(unsigned long *),
+    TCL_UNUSED(int),
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    int src_x,
+    int src_y,
+    int dest_x,
+    int dest_y,
+    unsigned int width,
+    unsigned int height) {
     return TkMacOSXPutImage(PIXEL_RGBA, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
