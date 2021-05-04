@@ -36,10 +36,13 @@
  * Macros for handling drawing contexts.
  */
 
-#define BEGIN_DRAWING(d) {	   \
-	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
-#define END_DRAWING \
+#define BEGIN_DRAWING(d) {				    \
+    TkMacOSXDrawingContext dc;				    \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {	    \
+	return;						    \
+    }							    \
+
+#define END_DRAWING				\
     TkMacOSXRestoreDrawingContext(&dc);}
 
 #define HIOrientation kHIThemeOrientationNormal
