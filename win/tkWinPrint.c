@@ -33,9 +33,17 @@ PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
 static HDC hDC;
 
+/*
+ * Prototypes for functions used only in this file.
+ */
+
 static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int PrintOpenDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int PrintOpenPage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 int Winprint_Init(Tcl_Interp * interp);
 
 /*----------------------------------------------------------------------
@@ -45,7 +53,7 @@ int Winprint_Init(Tcl_Interp * interp);
  *  Main dialog for selecting printer and initializing data for print job.
  *
  * Results:
- *	Printer selected.
+ *  Printer selected.
  *
  *----------------------------------------------------------------------
  */
@@ -83,22 +91,21 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 	/*Get document info.*/
 	ZeroMemory( &di, sizeof(di));
 	di.cbSize = sizeof(di);
-	di.lpszDocName = "Tk Output";
+	di.lpszDocName = "Tk Print Output";
     
 
 	/* Copy print attributes to local structure. */ 
 	returnedDevmode = (PDEVMODE)GlobalLock(pd.hDevMode);	
-	localDevmode = (LPDEVMODE)HeapAlloc(
-					    GetProcessHeap(), 
+	localDevmode = (LPDEVMODE)HeapAlloc(GetProcessHeap(), 
 					    HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
 					    returnedDevmode->dmSize);
                         
 	if (localDevmode !=NULL) 
 	    {
-		memcpy(
-		       (LPVOID)localDevmode,
+		memcpy((LPVOID)localDevmode,
 		       (LPVOID)returnedDevmode, 
 		       returnedDevmode->dmSize);
+		
 		/* Get values from user-set and built-in properties. */
 		localPrinterName = (char*) localDevmode->dmDeviceName;
 		dpi_y = localDevmode->dmYResolution;
@@ -160,6 +167,9 @@ int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Ob
     }
 
     char *printer = Tcl_GetString(objv[2]);
+    if (hDC == NULL) {
+	return TCL_ERROR;
+    }
     OpenPrinter(printer, &hDC, NULL);
     return TCL_OK;
 }
@@ -190,6 +200,127 @@ int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_O
 /*
  * --------------------------------------------------------------------------
  *
+ * PrintOpenDoc--
+ *
+ *     Opens the document for printing.
+ *
+ * Results:
+ *      Opens the print document.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+int PrintOpenDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+
+    (void) clientData;
+    (void) argc;
+    (void) objv;
+
+    int output = 0;
+
+    if (hDC == NULL) {
+	return TCL_ERROR;
+    }
+
+    /* 
+     * Start printing. 
+     */
+    output = StartDoc(hDC, &di);
+    if (output <= 0) {
+	Tcl_AppendResult(interp, "unable to start document", NULL);
+	return TCL_ERROR;		
+    } 
+   
+    return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PrintCloseDoc--
+ *
+ *     Closes the document for printing.
+ *
+ * Results:
+ *      Closes the print document.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
+int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+
+    (void) clientData;
+    (void) argc;
+    (void) objv;
+    
+    if ( EndDoc(hDC) <= 0) {
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PrintOpenPage--
+ *
+ *    Opens a page for printing.
+ *
+ * Results:
+ *      Opens the print page.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+int PrintOpenPage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+
+    (void) clientData;
+    (void) argc;
+    (void) objv;
+
+    /*Start an individual page.*/
+    if ( StartPage(hDC) <= 0) {
+	Tcl_AppendResult(interp, "unable to start page", NULL);
+	return TCL_ERROR;
+    }
+	
+    return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PrintClosePage--
+ *
+ *    Closes the printed page.
+ *
+ * Results:
+ *    Closes the page.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+
+    (void) clientData;
+    (void) argc;
+    (void) objv;
+    
+    if ( EndPage(hDC) <= 0) {
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+
+/*
+ * --------------------------------------------------------------------------
+ *
  * Winprint_Init--
  *
  *    Initializes printing module on Windows..
@@ -203,7 +334,11 @@ int Winprint_Init(Tcl_Interp * interp)
 {
     Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter", PrintSelectPrinter, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::print::_openprinter", PrintOpenPrinter, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_closeprinter", PrintClosePrinter, NULL, NULL); 
+    Tcl_CreateObjCommand(interp, "::tk::print::_closeprinter", PrintClosePrinter, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_opendoc", PrintOpenDoc, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_closedoc", PrintCloseDoc, NULL, NULL); 
+    Tcl_CreateObjCommand(interp, "::tk::print::_openpage", PrintOpenPage, NULL, NULL); 
+    Tcl_CreateObjCommand(interp, "::tk::print::_closepage", PrintClosePage, NULL, NULL); 
     return TCL_OK;
 }
 
