@@ -323,7 +323,7 @@ int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj 
  *
  * Winprint_Init--
  *
- *    Initializes printing module on Windows..
+ *    Initializes printing module on Windows.
  *
  * Results:
  *    Module initialized.
