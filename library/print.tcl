@@ -16,6 +16,14 @@ namespace eval ::tk::print {
 
     if {[tk windowingsystem] eq "win32"} {
 
+	variable ::tk::print::printer_name
+	variable ::tk::print::copies
+	variable ::tk::print::dpi_x
+	variable ::tk::print::dpi_y
+	variable ::tk::print::paper_width
+	variable ::tk::print::paper_height
+	variable ::tk::print::margin_left
+	variable ::tk::print::margin_top
 	variable printargs
 	set printargs ""
 
@@ -30,57 +38,29 @@ namespace eval ::tk::print {
 	proc _page_args { array } {
 	    upvar #0 $array ary
 
-	    # First we check whether we have a valid hDC
-	    # (perhaps we can later make this also an optional argument, defaulting to 
-	    #  the default printer)
-	    set attr [ ::tk::print::_print attr ]
-	    foreach attrpair $attr {
-		set key [lindex $attrpair 0]
-		set val [lindex $attrpair 1]
-		switch -exact $key {
-		    "hDC"       { set ary(hDC) $val }
-		    "copies"    { if { $val >= 0 } { set ary(copies) $val } }
-		    "page dimensions" {
-			set wid [lindex $val 0]
-			set hgt [lindex $val 1]
-			if { $wid > 0 } { set ary(pw) $wid }
-			if { $hgt > 0 } { set ary(pl) $hgt }
-		    }
-		    "page margins"    {
-			if { [scan [lindex $val 0] %d tmp] > 0 } {
-			    set ary(lm) [ lindex $val 0 ]
-			    set ary(tm) [ lindex $val 1 ]
-			    set ary(rm) [ lindex $val 2 ]
-			    set ary(bm) [ lindex $val 3 ]
-			}
-		    }
-		    "resolution"      {
-			if { [scan [lindex $val 0] %d tmp] > 0 } {
-			    set ary(resx) [ lindex $val 0 ]
-			    set ary(resy) [ lindex $val 1 ]
-			} else {
-			    set ary(resx) 200	;# Set some defaults for this...
-			    set ary(resy) 200
-			}
-		    }
-		}
+	    #First, we select the printer.
+	    ::tk::print::_selectprinter
+
+	    if {$::tk::print::printer_name == ""} {
+		#they pressed cancel
+		return
 	    }
+
+	    #Next, set values.
+	    set ary(hDC) $::tk::print::printer_name
+	    set ary(pw) $::tk::print::paper_width
+	    set ary(pl) $::tk::print::paper_height
+	    set ary(lm) $::tk::print::margin_left
+	    set ary(tm) $::tk::print::margin_top
+	    set ary(rm) [list expr $ary(pw) - $ary(lm)]
+	    set ary(bm) [list expr $ary(pl) - $ary(tm)]
+	    set ary(resx) $::tk::print::dpi_x
+	    set ary(resy) $::tk::print::dpi_y
+	    set ary(copies) $::tk::print::copies
 
 	    if { ( [ info exist ary(hDC) ] == 0 ) || ($ary(hDC) == 0x0) } {
 		error "Can't get printer attributes"
-	    }
-	    
-	    # Now, set "reasonable" defaults if some values were unavailable
-	    if { [ info exist ary(resx) ] == 0 } { set ary(resx) 200 }
-	    if { [ info exist ary(resy) ] == 0 } { set ary(resy) 200 }
-	    if { [ info exist ary(tm) ] == 0 } { set ary(tm) 1000 }
-	    if { [ info exist ary(bm) ] == 0 } { set ary(bm) 1000 }
-	    if { [ info exist ary(lm) ] == 0 } { set ary(lm) 1000 }
-	    if { [ info exist ary(rm) ] == 0 } { set ary(rm) 1000 }
-	    if { [ info exist ary(pw) ] == 0 } { set ary(pw) 8500 }
-	    if { [ info exist ary(pl) ] == 0 } { set ary(pl) 11000 }
-	    if { [ info exist ary(copies) ] == 0 } { set ary(copies) 1 }
-
+	    } 
 	}
 
 	# _ print_page_data
@@ -96,22 +76,18 @@ namespace eval ::tk::print {
 
 	    variable printargs
 	    _page_args printargs
-	    if { ! [info exist printargs(hDC)] } {
-		printer open
-		_page_args printargs
-	    }
 
 	    set tm [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
 	    set pw [ expr ( $printargs(pw)  - $printargs(rm) ) / 1000 * $printargs(resx) ]
-	    ::tk::print::_print job start
-	    ::tk::print::_print page start
+	    ::tk::print::_opendoc
+	    ::tk::print::_openpage
 	    eval gdi text $printargs(hDC) $lm $tm \
 		-anchor nw -text [list $data] \
 		-width $pw \
 		$fontargs
-	    ::tk::print::_print page end
-	    ::tk::print::_print job end
+	    ::tk::print::_closepage
+	    ::tk::print::_closedoc
 	}
 
 
@@ -147,15 +123,7 @@ namespace eval ::tk::print {
 	    variable printargs
 
 	    _page_args printargs
-	    if { ! [info exist printargs(hDC)] } {
-		::tk::print::_print open
-		_page_args printargs
-	    }
-	    if { $printargs(hDC) == "?" || $printargs(hDC) == 0 } {
-		::tk::print::_print open
-		_page_args printargs
-	    }
-
+	
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters $printargs(hDC) -array printcharwid
 	    } else {
@@ -168,8 +136,8 @@ namespace eval ::tk::print {
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 
-	    ::tk::print::_print job start -name "Tk Print Job" 
-	    ::tk::print::_print page start
+	    ::tk::print::_opendoc
+	    ::tk::print::_openpage
 	    while { $curlen < $totallen } {
 		set linestring [ string range $data $curlen end ]
 		if { $breaklines } {
@@ -188,13 +156,13 @@ namespace eval ::tk::print {
 		incr curlen [lindex $result 0]
 		incr curhgt [lindex $result 1]
 		if { [expr $curhgt + [lindex $result 1] ] > $pagehgt } {
-		    ::tk::print::_print page end
-		    ::tk::print::_print page start
+		    ::tk::print::_closepage
+		    ::tk::print::_openpage
 		    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 		}
 	    }
-	    ::tk::print::_print page end
-	    ::tk::print::_print job end
+	    ::tk::print::_print_closepage
+	    ::tk::print::_print_closedoc
 	}
 
 	
@@ -311,33 +279,12 @@ namespace eval ::tk::print {
 
 	proc _print_widget { wid {printer default} {name "Tk Print Job"} } {
 
-	    # start printing process ------
-	    if {[string match "default" $printer]} {
-		set hdc [::tk::print::_print open]
-	    } else {
-		set hdc [::tk::print::_print dialog select]
-		if { [lindex $hdc 1] == 0 } {
-		    # User has canceled printing
-		    return
-		}
-		set hdc [ lindex $hdc 0 ]
-	    }
-
 	    variable p
 	    set p(0) 0 ; unset p(0)
 	    _page_args p
 
-	    if {![info exist p(hDC)]} {
-		set hdc [::tk::print::_print open]
-		_page_args p
-	    }
-	    if {[string match "?" $hdc] || [string match 0x0 $hdc]} {
-		catch {::tk::print::_print close}
-		error "Problem opening printer: printer context cannot be established"
-	    }
-
-	    ::tk::print::_print job start -name "$name"
-	    ::tk::print::_print page start
+	    ::tk::print::_opendoc
+	    ::tk::print::_openpage
 
 	    # Here is where any scaling/gdi mapping should take place
 	    # For now, scale so the dimensions of the window are sized to the
@@ -404,9 +351,9 @@ namespace eval ::tk::print {
 	    }
 
 	    # end printing process ------
-	    ::tk::print::_print page end
-	    ::tk::print::_printj job end
-	    ::tk::print::_print close
+	    ::tk::print::_closepage
+	    ::tk::print::_closedoc
+	    ::tk::print::_closeprinter
 	}
 
 
