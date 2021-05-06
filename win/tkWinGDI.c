@@ -51,8 +51,6 @@ static int GdiParseColor (const char *name, unsigned long *color);
 static int GdiGetColor   (const char *name, unsigned long *color);
 static int TkGdiMakeBezierCurve(Tk_Canvas, double *, int, int, XPoint[], double[]);
 
-
-
 /*
  * Helper functions.
  */
@@ -109,6 +107,7 @@ static HDC get_dc(Tcl_Interp *interp, const char *name);
 
 static int TkWinGDI (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv)
 {
+
   if ( argc > 1 && strcmp(*argv, "::tk::print::_gdi") == 0 )
   {
     argc--;
@@ -4649,11 +4648,24 @@ static HDC get_dc(Tcl_Interp *interp, const char *name)
     }
 }
 
-
+/*
+ *--------------------------------------------------------------
+ *
+ * Gdi_Init --
+ *
+ *	Initializes the Gdi package.
+ *
+ * Results:
+ *	Gdi commands initialized.
+ *
+ *--------------------------------------------------------------
+ */
+ 
 int Gdi_Init(Tcl_Interp *interp)
 {
 
-  Tcl_CreateCommand(interp, ":tk::print::_gdi", TkWinGDI, (ClientData) NULL, (Tcl_CmdDeleteProc*) NULL);
+  Tcl_CreateCommand(interp, "::tk::print::_gdi", TkWinGDI, 
+                    (ClientData)0, (Tcl_CmdDeleteProc *)0);
   return TCL_OK;
 }
 
