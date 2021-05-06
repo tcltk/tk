@@ -44,6 +44,8 @@ static int PrintOpenDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl
 static int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 static int PrintOpenPage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 static int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+int PrintGetHDC(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+HDC get_hdc(void);
 int Winprint_Init(Tcl_Interp * interp);
 
 /*----------------------------------------------------------------------
@@ -327,6 +329,54 @@ int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj 
 /*
  * --------------------------------------------------------------------------
  *
+ * PrintGetHDC--
+ *
+ *    Gets the device context for the printer.
+ *
+ * Results:
+ *    Returns HDC.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+int PrintGetHDC(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
+{
+
+    (void) clientData;
+    (void) argc;
+    (void) objv;
+    
+    if ( hDC == NULL) {
+	return TCL_ERROR;
+    }
+
+    get_hdc();
+    return TCL_OK;
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
+ * PrintGetHDC--
+ *
+ *    Gets the device context for the printer.
+ *
+ * Results:
+ *    Returns HDC.
+ *
+ * -------------------------------------------------------------------------
+ */
+
+
+HDC get_hdc(void) {
+
+    return hDC;
+
+}
+
+/*
+ * --------------------------------------------------------------------------
+ *
  * Winprint_Init--
  *
  *    Initializes printing module on Windows.
@@ -336,6 +386,7 @@ int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj 
  *
  * -------------------------------------------------------------------------
  */
+
 int Winprint_Init(Tcl_Interp * interp)
 {
     Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter", PrintSelectPrinter, NULL, NULL);
@@ -344,7 +395,8 @@ int Winprint_Init(Tcl_Interp * interp)
     Tcl_CreateObjCommand(interp, "::tk::print::_opendoc", PrintOpenDoc, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::print::_closedoc", PrintCloseDoc, NULL, NULL); 
     Tcl_CreateObjCommand(interp, "::tk::print::_openpage", PrintOpenPage, NULL, NULL); 
-    Tcl_CreateObjCommand(interp, "::tk::print::_closepage", PrintClosePage, NULL, NULL); 
+    Tcl_CreateObjCommand(interp, "::tk::print::_closepage", PrintClosePage, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_gethdc", PrintGetHDC, NULL, NULL); 
     return TCL_OK;
 }
 
