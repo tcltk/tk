@@ -4,7 +4,7 @@
  *	The code in this file provides an interface for XImages,
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2017-2021 Marc Culler.
  *
@@ -88,7 +88,7 @@ typedef union pixel32_t {
 
 int
 _XInitImageFuncPtrs(
-    XImage *image)
+    TCL_UNUSED(XImage *)) /* image */
 {
     return 0;
 }
@@ -110,14 +110,18 @@ _XInitImageFuncPtrs(
  *----------------------------------------------------------------------
  */
 
-static void ReleaseData(void *info, const void *data, size_t size) {
+static void ReleaseData(
+    void *info,
+    TCL_UNUSED(const void *), /* data */
+    TCL_UNUSED(size_t))       /* size */
+{
     ckfree(info);
 }
 
 CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
-    uint32 alphaInfo)
+    uint32_t alphaInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
@@ -142,7 +146,7 @@ TkMacOSXCreateCGImageWithXImage(
 	if (image->bitmap_bit_order != MSBFirst) {
 	    char *srcPtr = image->data + image->xoffset;
 	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = ckalloc(len));
+	    char *destPtr = (data = (char *)ckalloc(len));
 
 	    while (srcPtr < endPtr) {
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
@@ -379,7 +383,7 @@ ImagePutPixel(
 XImage *
 XCreateImage(
     Display* display,
-    Visual* visual,
+    TCL_UNUSED(Visual*),  /* visual */
     unsigned int depth,
     int format,
     int offset,
@@ -561,8 +565,6 @@ int TkPutImage(
 }
 
 int TkpPutRGBAImage(
-    TCL_UNUSED(unsigned long *),
-    TCL_UNUSED(int),
     Display* display,
     Drawable drawable,
     GC gc,
@@ -574,7 +576,7 @@ int TkpPutRGBAImage(
     unsigned int width,
     unsigned int height) {
     return TkMacOSXPutImage(USE_ALPHA, display, drawable, gc, image,
-			    src_x, src_y, dest_x, dest_y, width, height);
+		     src_x, src_y, dest_x, dest_y, width, height);
 }
 
 
@@ -651,13 +653,13 @@ CreateCGImageFromDrawableRect(
 	    return NULL;
 	}
 	NSSize size = view.frame.size;
-	NSUInteger width = size.width, height = size.height;
+	NSUInteger view_width = size.width, view_height = size.height;
         NSUInteger bytesPerPixel = 4,
-	    bytesPerRow = bytesPerPixel * width,
+	    bytesPerRow = bytesPerPixel * view_width,
 	    bitsPerComponent = 8;
-        imageData = ckalloc(height * bytesPerRow);
+        imageData = ckalloc(view_height * bytesPerRow);
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	cg_context = CGBitmapContextCreate(imageData, width, height,
+	cg_context = CGBitmapContextCreate(imageData, view_width, view_height,
 			 bitsPerComponent, bytesPerRow, colorSpace,
 			 kCGImageAlphaPremultipliedLast |
 			 kCGBitmapByteOrder32Big);
@@ -736,7 +738,7 @@ XGetImage(
     int y,
     unsigned int width,
     unsigned int height,
-    unsigned long plane_mask,
+    TCL_UNUSED(unsigned long), /* plane_mask */
     int format)
 {
     NSBitmapImageRep* bitmapRep = nil;

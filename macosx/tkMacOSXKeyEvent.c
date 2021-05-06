@@ -72,6 +72,18 @@ static NSUInteger textInputModifiers;
     }
 
     /*
+     * Discard repeating KeyDown events if the repeat speed has been set to
+     * "off" in System Preferences.  It is unclear why we get these, but we do.
+     * See ticket [2ecb09d118].
+     */
+
+    if ([theEvent type] ==  NSKeyDown &&
+	[theEvent isARepeat] &&
+	[NSEvent keyRepeatDelay] < 0) {
+            return theEvent;
+	}
+
+    /*
      * If a local grab is in effect, key events for windows in the
      * grabber's application are redirected to the grabber.  Key events
      * for other applications are delivered normally.  If a global
@@ -262,7 +274,6 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
-
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
