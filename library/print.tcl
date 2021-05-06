@@ -46,11 +46,11 @@ namespace eval ::tk::print {
 	    }
 
 	    #Next, set values.
-	    set printargs(hDC) ::tk::print::_gethdc
+	    set printargs(hDC) [::tk::print::_gethdc]
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
-	    set printargs(lm) 100 ;#$::tk::print::margin_left
-	    set printargs(tm) 100 ;#$::tk::print::margin_top
+	    set printargs(lm) 100 
+	    set printargs(tm) 100 
 	    set printargs(rm) [expr $printargs(pw) - $printargs(lm)]
 	    set printargs(bm) [expr $printargs(pl) - $printargs(tm)]
 	    set printargs(resx) $::tk::print::dpi_x

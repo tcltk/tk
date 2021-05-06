@@ -27,7 +27,7 @@
 /* Initialize variables for later use.  */
 static PRINTDLG pd;
 static  DOCINFO di;
-int copies, paper_width, paper_height, dpi_x, dpi_y, margin_left, margin_top;
+int copies, paper_width, paper_height, dpi_x, dpi_y;
 char *localPrinterName;
 PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
@@ -75,8 +75,6 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
     paper_height = 0;
     dpi_x = 0;
     dpi_y = 0;
-    margin_left = 0;
-    margin_top = 0;
 
     /* Set up print dialog and initalize property structure. */
 
@@ -117,8 +115,6 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		paper_height = (int) localDevmode->dmPaperLength;
 		paper_width = (int) localDevmode->dmPaperWidth;
 		copies = pd.nCopies;
-		margin_left = GetDeviceCaps(hDC, PHYSICALOFFSETX);
-		margin_top = GetDeviceCaps(hDC, PHYSICALOFFSETY);
 	    }
 	else
 	    {
@@ -146,9 +142,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
     Tcl_LinkVar(interp, "::tk::print::dpi_y", (char *)&dpi_y, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::paper_width", (char *)&paper_width, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height, TCL_LINK_INT | TCL_LINK_READ_ONLY);
-     Tcl_LinkVar(interp, "::tk::print::margin_left", (char *)&margin_left, TCL_LINK_INT | TCL_LINK_READ_ONLY);
-      Tcl_LinkVar(interp, "::tk::print::margin_top", (char *)&margin_top, TCL_LINK_INT | TCL_LINK_READ_ONLY);
- 
+   
     return TCL_OK;
 }
 
