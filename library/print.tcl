@@ -25,7 +25,7 @@ namespace eval ::tk::print {
 	variable ::tk::print::margin_left
 	variable ::tk::print::margin_top
 	variable printargs
-	set printargs ""
+	array set printargs {}
 
 	# Multiple utility procedures for printing text based on the C printer
 	# primitives. 
@@ -33,10 +33,9 @@ namespace eval ::tk::print {
 	# _page_args: 
 	# Parse common arguments for text processing in the other commands.
 	#  
-	# Arguments:
-	# array - name of an array in which to store the various pieces  needed for text processing.
-	proc _page_args { array } {
-	    upvar #0 $array ary
+	# 
+	proc _page_args {} {
+	    variable printargs
 
 	    #First, we select the printer.
 	    ::tk::print::_selectprinter
@@ -47,20 +46,22 @@ namespace eval ::tk::print {
 	    }
 
 	    #Next, set values.
-	    set ary(hDC) $::tk::print::printer_name
-	    set ary(pw) $::tk::print::paper_width
-	    set ary(pl) $::tk::print::paper_height
-	    set ary(lm) $::tk::print::margin_left
-	    set ary(tm) $::tk::print::margin_top
-	    set ary(rm) [list expr $ary(pw) - $ary(lm)]
-	    set ary(bm) [list expr $ary(pl) - $ary(tm)]
-	    set ary(resx) $::tk::print::dpi_x
-	    set ary(resy) $::tk::print::dpi_y
-	    set ary(copies) $::tk::print::copies
+	    set printargs(hDC) $::tk::print::printer_name
+	    set printargs(pw) $::tk::print::paper_width
+	    set printargs(pl) $::tk::print::paper_height
+	    set printargs(lm) 100 ;#$::tk::print::margin_left
+	    set printargs(tm) 100 ;#$::tk::print::margin_top
+	    set printargs(rm) [expr $printargs(pw) - $printargs(lm)]
+	    set printargs(bm) [expr $printargs(pl) - $printargs(tm)]
+	    set printargs(resx) $::tk::print::dpi_x
+	    set printargs(resy) $::tk::print::dpi_y
+	    set printargs(copies) $::tk::print::copies
 
-	    if { ( [ info exist ary(hDC) ] == 0 ) || ($ary(hDC) == 0x0) } {
+	    if { ( [ info exist printargs(hDC) ] == 0 ) || ($printargs(hDC) == 0x0) } {
 		error "Can't get printer attributes"
 	    } 
+		
+		return printargs
 	}
 
 	# _ print_page_data
@@ -75,7 +76,8 @@ namespace eval ::tk::print {
 	proc _print_page_data { data {fontargs {}} } {
 
 	    variable printargs
-	    _page_args printargs
+
+	    _page_args 
 
 	    set tm [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
@@ -122,7 +124,7 @@ namespace eval ::tk::print {
 	proc _print_data { data {breaklines 1 } {font {}} } {
 	    variable printargs
 
-	    _page_args printargs
+	    _page_args
 	
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters $printargs(hDC) -array printcharwid
@@ -278,10 +280,8 @@ namespace eval ::tk::print {
 	#   name  -            App name to pass to printer.
 
 	proc _print_widget { wid {printer default} {name "Tk Print Job"} } {
-
-	    variable p
-	    set p(0) 0 ; unset p(0)
-	    _page_args p
+	
+	    _page_args 
 
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
@@ -568,10 +568,8 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.text {hdc cw id} {
 	    variable vtgPrint
-	    variable p
-
-	    set p(0) 1 ; unset p(0)
-	    _page_args p
+		
+	    _page_args
 	    
 	    set color [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    #    if {[string match white [string tolower $color]]} {return}

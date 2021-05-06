@@ -26,25 +26,25 @@
 #include "tkWinHDC.h"
 
 /* Main dispatcher for commands. */
-static int TkWinGDI      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int TkWinGDI      (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
 /* Main dispatcher for subcommands. */
-static int TkWinGDISubcmd (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int TkWinGDISubcmd (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
 
 
 
 /* Real functions. */
-static int GdiArc      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiBitmap   (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiCharWidths (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiImage    (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiPhoto    (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiLine     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiOval     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiPolygon  (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiRectangle(ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiText     (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiMap      (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
-static int GdiCopyBits (ClientData unused, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiArc      (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiBitmap   (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiCharWidths (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiImage    (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiPhoto    (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiLine     (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiOval     (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiPolygon  (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiRectangle(ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiText     (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiMap      (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GdiCopyBits (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
 
 /* Local copies of similar routines elsewhere in Tcl/Tk. */
 static int GdiParseColor (const char *name, unsigned long *color);
@@ -107,13 +107,13 @@ static HDC get_dc(Tcl_Interp *interp, const char *name);
  *----------------------------------------------------------------------
  */
 
-static int TkWinGDI (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
+static int TkWinGDI (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv)
 {
   if ( argc > 1 && strcmp(*argv, "::tk::print::_gdi") == 0 )
   {
     argc--;
     argv++;
-    return TkWinGDISubcmd(unused, interp, argc, argv);
+    return TkWinGDISubcmd(clientData, interp, argc, argv);
   }
 
   Tcl_AppendResult(interp, gdi_usage_message, NULL);
@@ -160,13 +160,13 @@ struct gdi_command
  *----------------------------------------------------------------------
  */
 
-static int TkWinGDISubcmd (ClientData unused, Tcl_Interp *interp, int argc, const char **argv)
+static int TkWinGDISubcmd (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv)
 {
   size_t i;
 
   for (i=0; i<sizeof(gdi_commands) / sizeof(struct gdi_command); i++)
     if ( strcmp (*argv, gdi_commands[i].command_string) == 0 )
-      return (*gdi_commands[i].command)(unused, interp, argc-1, argv+1);
+      return (*gdi_commands[i].command)(clientData, interp, argc-1, argv+1);
 
   Tcl_AppendResult (interp, gdi_usage_message, NULL);
   return TCL_ERROR;
