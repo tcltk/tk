@@ -232,7 +232,7 @@ MODULE_SCOPE  int       Winprint_Init(Tcl_Interp* interp);
  */
 
 
-MODULE_SCOPE  int 		Gdi_Init(Tcl_Interp *interp);
+MODULE_SCOPE  int 		Gdi_Init(Tcl_Interp* interp);
 
 /*
  * Common routines used in Windows implementation
