@@ -1298,13 +1298,15 @@ TkUtfAtIndex(
     Tcl_UniChar ch = 0;
     size_t len = 0;
 
-    while (index-- > 0) {
-	len = Tcl_UtfToUniChar(src, &ch);
-	src += len;
-    }
-    if ((ch >= 0xD800) && (len < 3)) {
-	/* Index points at character following high Surrogate */
-	src += Tcl_UtfToUniChar(src, &ch);
+    if (index != (size_t)-1) {
+	while (index-- > 0) {
+	    len = Tcl_UtfToUniChar(src, &ch);
+	    src += len;
+	}
+	if ((ch >= 0xD800) && (len < 3)) {
+	    /* Index points at character following high Surrogate */
+	    src += Tcl_UtfToUniChar(src, &ch);
+	}
     }
     return src;
 }
