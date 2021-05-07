@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-
+#include "tkWinHDC.h"
 
 /* Initialize variables for later use.  */
 static PRINTDLG pd;
@@ -345,6 +345,8 @@ int PrintGetHDC(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *co
     }
 
     get_hdc();
+    char hdcbuffer[20];
+   sprintf(hdcbuffer, "the hdc is 0x%lx", hDC);
     return TCL_OK;
 }
 

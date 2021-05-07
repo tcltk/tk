@@ -26,4 +26,4 @@ int hdc_delete (Tcl_Interp *interp, const char *hdcname);
 const char * hdc_prefixof (Tcl_Interp *interp, int type, const char *newprefix);
 int hdc_typeof (Tcl_Interp *interp, const char *hdcname);
 void * hdc_get (Tcl_Interp *interp, const char *hdcname);
-static const char *Hdc_build_name(int type);
+static const char *hdc_build_name(int type);

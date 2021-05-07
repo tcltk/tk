@@ -17,7 +17,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * Hdc_build_name --
+ * hdc_build_name --
  *
  *  Creates HDC name.
  *
@@ -27,7 +27,7 @@
  *----------------------------------------------------------------------
  */
 
-static const char *Hdc_build_name(int type)
+static const char * hdc_build_name(int type)
 {
   const char *prefix;
   Tcl_HashEntry *data;
@@ -80,7 +80,7 @@ const char * hdc_create (Tcl_Interp *interp, void *ptr, int type)
   pval->addr = ptr;
   pval->type = type;
 
-  name = Hdc_build_name(type);
+  name = hdc_build_name(type);
   if ( ( entry = Tcl_CreateHashEntry(&hdcs, name, &status)) != 0 )
     Tcl_SetHashValue(entry, (ClientData)pval);
   return name;
