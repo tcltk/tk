@@ -309,6 +309,7 @@ TK_OBJS = \
 	tkWinEmbed.$(OBJEXT) \
 	tkWinFont.$(OBJEXT) \
 	tkWinGDI.$(OBJEXT) \
+	tkWinHDC.$(OBJEXT) \
 	tkWinIco.$(OBJEXT) \
 	tkWinImage.$(OBJEXT) \
 	tkWinInit.$(OBJEXT) \
