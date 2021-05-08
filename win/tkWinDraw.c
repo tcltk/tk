@@ -587,8 +587,6 @@ TkPutImage(
     }
     if (!bitmap) {
 	Tcl_Panic("Fail to allocate bitmap");
-	DeleteDC(dcMem);
-    	TkWinReleaseDrawableDC(d, dc, &state);
 	return BadValue;
     }
     bitmap = SelectObject(dcMem, bitmap);
