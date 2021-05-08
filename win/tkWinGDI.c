@@ -3,8 +3,9 @@
  *
  *      This module implements access to the Win32 GDI API.
  *
- * Copyright © 1991-1996 Microsoft Corp.
+ * Copyright © 1991-2018 Microsoft Corp.
  * Copyright © 2009, Michael I. Schwartz.
+ * Copyright © 1998-2019 Harald Oehlmann, Elmicron GmbH
  * Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -109,8 +110,6 @@ char *localPrinterName;
 PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
 static HDC printDC;
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -4639,6 +4638,8 @@ static HDC get_dc(Tcl_Interp *interp)
   /* ANY type of DC should be ok here. */
 
       unsigned long tmp;
+	  tmp = 0;
+	  RestoreDC(printDC, -1);
       DWORD objtype = GetObjectType(printDC);
       switch (objtype)
       {
@@ -5023,6 +5024,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
 	    return TCL_ERROR;
 	} 	
+	SaveDC(printDC);
 
 	/*Get document info.*/
 	ZeroMemory( &di, sizeof(di));

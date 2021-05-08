@@ -56,10 +56,6 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-
-	   if { ( [ info exist printargs(hDC) ] == 0 ) || ($printargs(hDC) == 0x0) } {
-		error "Can't get printer attributes"
-	   } 
 		
 		return printargs
 	}
@@ -84,7 +80,7 @@ namespace eval ::tk::print {
 	    set pw [ expr ( $printargs(pw)  - $printargs(rm) ) / 1000 * $printargs(resx) ]
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
-	    eval ::tk::print::_gdi text $printargs(hDC) $lm $tm \
+	    eval ::tk::print::_gdi text $::tk::print::printer_name $lm $tm \
 		-anchor nw -text [list $data] \
 		-width $pw \
 		$fontargs
@@ -129,7 +125,7 @@ namespace eval ::tk::print {
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  -array printcharwid
 	    } else {
-		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
+		eval ::tk::print::_gdi characters $::tk::print::printer_name -font $font -array printcharwid
 	    }
 
 	    set pagewid  [ expr ( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) ]
@@ -237,12 +233,12 @@ namespace eval ::tk::print {
 	    }
 
 	    if { [string length $font] > 0 } {
-		set result [ ::tk::print::_gdi text $printargs(hDC) $lm $y \
+		set result [ ::tk::print::_gdi text $::tk::print::printer_name $lm $y \
 				 -anchor nw -justify left \
 				 -text [ string trim [ string range $string 0 $endindex ] "\r\n" ] \
 				 -font $font ]
 	    } else {
-		set result [ ::tk::print::_gdi text $printargs(hDC) $lm $y \
+		set result [ ::tk::print::_gdi text $::tk::print::printer_name $lm $y \
 				 -anchor nw -justify left \
 				 -text [string trim [ string range $string 0 $endindex ] "\r\n" ] ]
 	    }
