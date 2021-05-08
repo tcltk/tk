@@ -22,7 +22,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "tkWinHDC.h"
 
 /* Initialize variables for later use.  */
 static PRINTDLG pd;
@@ -341,20 +340,19 @@ int PrintGetHDC(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *co
     (void) argc;
     (void) objv;
 
-   hDC = CreateDC( L"WINSPOOL", localPrinterName, NULL, NULL);
     
     if ( hDC == NULL) {
 	return TCL_ERROR;
     }
 
-    // get_hdc();
+    get_hdc();
     return TCL_OK;
 }
 
 /*
  * --------------------------------------------------------------------------
  *
- * PrintGetHDC--
+ * get_hdc--
  *
  *    Gets the device context for the printer.
  *
@@ -366,7 +364,7 @@ int PrintGetHDC(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *co
 
 
 HDC get_hdc(void) {
-
+	
     return hDC;
 
 }
