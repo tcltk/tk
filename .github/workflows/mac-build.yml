@@ -74,7 +74,7 @@ jobs:
         # This involves black magic
         run: |
           brew install --cask xquartz
-          sudo /opt/X11/lib/X11/xinit/privileged_startx.d/10-tmpdirs || true
+          sudo /opt/X11/libexec/privileged_startx || true
         working-directory: .
       - name: Build Tcl
         # Note that macOS is always a 64 bit platform
