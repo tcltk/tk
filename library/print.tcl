@@ -46,7 +46,7 @@ namespace eval ::tk::print {
 	    }
 
 	    #Next, set values.
-		set printargs(hDC) [::tk::print::_gethdc]
+	    set printargs(hDC) $::tk::print::printer_name
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
 	    set printargs(lm) 100 
@@ -57,9 +57,9 @@ namespace eval ::tk::print {
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
 
-	  #  if { ( [ info exist printargs(hDC) ] == 0 ) || ($printargs(hDC) == 0x0) } {
-	#	error "Can't get printer attributes"
-	   # } 
+	   if { ( [ info exist printargs(hDC) ] == 0 ) || ($printargs(hDC) == 0x0) } {
+		error "Can't get printer attributes"
+	   } 
 		
 		return printargs
 	}
