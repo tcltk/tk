@@ -316,7 +316,6 @@ TK_OBJS = \
 	tkWinMenu.$(OBJEXT) \
 	tkWinPixmap.$(OBJEXT) \
 	tkWinPointer.$(OBJEXT) \
-	tkWinPrint.$(OBJEXT) \
 	tkWinRegion.$(OBJEXT) \
 	tkWinScrlbr.$(OBJEXT) \
 	tkWinSend.$(OBJEXT) \

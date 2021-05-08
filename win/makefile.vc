@@ -196,7 +196,6 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinMenu.obj \
 	$(TMP_DIR)\tkWinPixmap.obj \
 	$(TMP_DIR)\tkWinPointer.obj \
-	$(TMP_DIR)\tkWinPrint.obj \
 	$(TMP_DIR)\tkWinRegion.obj \
 	$(TMP_DIR)\tkWinScrlbr.obj \
 	$(TMP_DIR)\tkWinSend.obj \
