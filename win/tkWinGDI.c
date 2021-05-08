@@ -4639,7 +4639,8 @@ static HDC get_dc(Tcl_Interp *interp)
 
       unsigned long tmp;
 	  tmp = 0;
-	  RestoreDC(printDC, -1);
+	  
+	  RestoreDC(printDC, -1);	  
       DWORD objtype = GetObjectType(printDC);
       switch (objtype)
       {
@@ -5025,7 +5026,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 	    return TCL_ERROR;
 	} 	
 	SaveDC(printDC);
-
+	
 	/*Get document info.*/
 	ZeroMemory( &di, sizeof(di));
 	di.cbSize = sizeof(di);
@@ -5051,7 +5052,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		paper_height = (int) localDevmode->dmPaperLength;
 		paper_width = (int) localDevmode->dmPaperWidth;
 		copies = pd.nCopies;
-	    }
+		DWORD objtype2 = GetObjectType(printDC);
 	else
 	    {
 		localDevmode = NULL;
