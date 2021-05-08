@@ -125,7 +125,8 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		GlobalFree(pd.hDevMode);
 	    }
     }
-    
+
+        
     /* 
      * Store print properties and link variables 
      * so they can be accessed from script level.
@@ -339,12 +340,14 @@ int PrintGetHDC(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *co
     (void) clientData;
     (void) argc;
     (void) objv;
+
+   hDC = CreateDC( L"WINSPOOL", localPrinterName, NULL, NULL);
     
     if ( hDC == NULL) {
 	return TCL_ERROR;
     }
 
-    get_hdc();
+    // get_hdc();
     return TCL_OK;
 }
 
