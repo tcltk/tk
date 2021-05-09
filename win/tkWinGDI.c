@@ -4641,14 +4641,17 @@ static HDC get_dc(Tcl_Interp *interp)
 {
     // printDC = CreateDC("WINSPOOL", printerName, NULL, NULL);
     printDC = CreateDC (driver, printerName, output, returnedDevmode);
- 
+ return printDC;
     
+	#if 0
   /* ANY type of DC should be ok here. */
 
       unsigned long tmp;
       tmp = 0;
 	  	  
       DWORD objtype = GetObjectType(printDC);
+	  if (objtype = "OBJ_DC")
+		  printf("yes!");
       switch (objtype)
       {
         /* Any of the DC types are OK. */
@@ -4669,6 +4672,7 @@ static HDC get_dc(Tcl_Interp *interp)
       }
      
       return (HDC)tmp;
+	  #endif
 }
 
 /*
