@@ -108,7 +108,6 @@ static  DOCINFO di;
 int copies, paper_width, paper_height, dpi_x, dpi_y;
 char *localPrinterName;
 LPCTSTR printerName;
-const LPDEVNAMES devnames;
 PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
 static HDC printDC;
@@ -4637,11 +4636,8 @@ static int PalEntriesOnDevice(HDC hDC)
 
 static HDC get_dc(Tcl_Interp *interp)
 {
-   printDC = CreateDC((LPCTSTR)pDevNames + pDevNames->wDriverOffset,
-                          (LPCTSTR)pDevNames + pDevNames->wDeviceOffset,
-                          (LPCTSTR)pDevNames + pDevNames->wOutputOffset,
-                          pDevMode);
-    GlobalUnlock(pd.hDevNames);
+    printDC = CreateDC("WINSPOOL", printerName, NULL, NULL);
+ 
     
   /* ANY type of DC should be ok here. */
 
@@ -5014,7 +5010,6 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
     returnedDevmode = NULL;
     localDevmode = NULL;
     localPrinterName = NULL;
-    devnames = NULL;
     printerName = NULL;
     copies = 0;
     paper_width = 0;
@@ -5027,7 +5022,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
     ZeroMemory( &pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
-    pd.Flags = /*PD_RETURNDC*/ | PD_HIDEPRINTTOFILE  | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
+    pd.Flags = /*PD_RETURNDC |*/ PD_HIDEPRINTTOFILE  | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
 	
     if (PrintDlg(&pd) == TRUE) {
 	printDC = pd.hDC;
@@ -5045,7 +5040,8 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 
 	/* Copy print attributes to local structure. */ 
 	returnedDevmode = (PDEVMODE)GlobalLock(pd.hDevMode);
-	devname = (LPDEVNAMES)GlobalLock(pd.hDevNames);
+	const LPDEVNAMES devnames  = (LPDEVNAMES)GlobalLock(pd.hDevNames);
+	printerName = (LPCTSTR) devnames + devnames->wDeviceOffset;
 	localDevmode = (LPDEVMODE)HeapAlloc(GetProcessHeap(), 
 					    HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
 					    returnedDevmode->dmSize);
@@ -5063,17 +5059,20 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		paper_height = (int) localDevmode->dmPaperLength;
 		paper_width = (int) localDevmode->dmPaperWidth;
 		copies = pd.nCopies;
-		DWORD objtype2 = GetObjectType(printDC);
+	    }
 	else
 	    {
 		localDevmode = NULL;
 	    }
-	if (pd.hDevMode !=NULL) 
-	    {
-		GlobalFree(pd.hDevMode);
-	    }
     }
-
+    if (pd.hDevMode !=NULL) 
+	{
+	    GlobalFree(pd.hDevMode);
+	}
+    if       (pd.hDevNames != NULL)
+	{
+	    GlobalUnlock(pd.hDevNames);
+	}
         
     /* 
      * Store print properties and link variables 
