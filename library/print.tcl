@@ -46,7 +46,7 @@ namespace eval ::tk::print {
 	    }
 
 	    #Next, set values.
-	    set printargs(hDC) $::tk::print::printer_name
+	    set printargs(hDC) {}
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
 	    set printargs(lm) 100 
@@ -328,14 +328,14 @@ namespace eval ::tk::print {
 		set ph $printer_x
 	    }
 
-	    ::tk::print::_gdi map $hdc -logical $lo -physical $ph -offset $p(resolution)
+	    ::tk::print::_gdi map $::tk::print::printer_name -logical $lo -physical $ph -offset $p(resolution)
 	    
 	    # handling of canvas widgets
 	    # additional procs can be added for other widget types
 	    switch [winfo class $wid] {
 		Canvas {
 		    #	    if {[catch {
-		    _print_canvas [lindex $hdc 0] $wid
+		    _print_canvas [lindex $::tk::print::printer_name 0] $wid
 		    #	    } msg]} {
 		    #		debug_puts "print_widget: $msg"
 		    #		error "Windows Printing Problem: $msg"
@@ -372,7 +372,7 @@ namespace eval ::tk::print {
 	    foreach id [$cw find all] {
 		set type [$cw type $id]
 		if { [ info commands _print_canvas.$type ] == "_print_canvas.$type" } {
-		    _print_canvas.[$cw type $id] $hdc $cw $id
+		    _print_canvas.[$cw type $id] $::tk::print::printer_name $cw $id
 		} else {
 		    puts "Omitting canvas item of type $type since there is no handler registered for it"
 		}
@@ -406,7 +406,7 @@ namespace eval ::tk::print {
 	    set smooth  [$cw itemcget $id -smooth ]
 	    set splinesteps [ $cw itemcget $id -splinesteps ]
 	    
-	    set cmmd  "::tk::print::_gdi line $hdc $coords -fill $color -arrow $arrow -arrowshape [list $arwshp]"
+	    set cmmd  "::tk::print::_gdi line $::tk::print::printer_name $coords -fill $color -arrow $arrow -arrowshape [list $arwshp]"
 	    
 	    if { $wdth > 1 } {
 		set cmmd "$cmmd -width $wdth"
@@ -454,7 +454,7 @@ namespace eval ::tk::print {
 	    set extent  [ $cw itemcget $id -extent ]
 	    set fill    [ $cw itemcget $id -fill ]
 	    
-	    set cmmd  "::tk::print::_gdi arc $hdc $coords -outline $color -style $style -start $start -extent $extent"
+	    set cmmd  "::tk::print::_gdi arc $::tk::print::printer_name $coords -outline $color -style $style -start $start -extent $extent"
 	    if { $wdth > 1 } {
 		set cmmd "$cmmd -width $wdth"
 	    }
@@ -491,7 +491,7 @@ namespace eval ::tk::print {
 	    set splinesteps [ $cw itemcget $id -splinesteps ]
 	    
 
-	    set cmmd "::tk::print::_gdi polygon $hdc $coords -width $wdth \
+	    set cmmd "::tk::print::_gdi polygon $::tk::print::printer_name $coords -width $wdth \
 		-fill $fcolor -outline $ocolor"
 	    if { $smooth != "" } {
 		set cmmd "$cmmd -smooth $smooth"
@@ -523,7 +523,7 @@ namespace eval ::tk::print {
 	    set coords  [$cw coords $id]
 	    set wdth [$cw itemcget $id -width]
 
-	    set cmmd "::tk::print::_gdi oval $hdc $coords -width $wdth \
+	    set cmmd "::tk::print::_gdi oval $::tk::print::printer_name $coords -width $wdth \
 		-fill $fcolor -outline $ocolor"
 
 	    eval $cmmd
@@ -548,7 +548,7 @@ namespace eval ::tk::print {
 	    set coords  [$cw coords $id]
 	    set wdth [$cw itemcget $id -width]
 
-	    set cmmd "::tk::print::_gdi rectangle $hdc $coords -width $wdth \
+	    set cmmd "::tk::print::_gdi rectangle $::tk::print::printer_name $coords -width $wdth \
 		-fill $fcolor -outline $ocolor"
 
 	    eval $cmmd
@@ -590,7 +590,7 @@ namespace eval ::tk::print {
 	    # Improve this as GDI improves
 	    set font [list [font configure $font -family]  -[font configure $font -size] ]
 
-	    set cmmd "::tk::print::_gdi text $hdc $coords -fill $color -text [list $txt] \
+	    set cmmd "::tk::print::_gdi text $::tk::print::printer_name $coords -fill $color -text [list $txt] \
 		-anchor $anchr -font [ list $font ] \
 		-width $wdth -justify $just"
 	    eval $cmmd
@@ -641,11 +641,11 @@ namespace eval ::tk::print {
 		#set dstcoords [ list "[lindex $coords 0] [lindex $coords 1] [expr $wid - 1] [expr $hgt - 1]" ]
 		set srccoords  [ list "0 0 $wid $hgt" ]
 		set dstcoords [ list "[lindex $coords 0] [lindex $coords 1] $wid $hgt" ]
-		set cmmd "::tk::print::_gdi copybits $hdc -window $tl -client -source $srccoords -destination $dstcoords "
+		set cmmd "::tk::print::_gdi copybits $::tk::print::printer_name -window $tl -client -source $srccoords -destination $dstcoords "
 		eval $cmmd
 		destroy $tl      
 	    } else {
-		set cmmd "::tk::print::_gdi image $hdc $coords -anchor $anchor -image $imagename "
+		set cmmd "::tk::print::_gdi image $::tk::print::printer_name $coords -anchor $anchor -image $imagename "
 		eval $cmmd
 	    }
 	}
@@ -690,11 +690,11 @@ namespace eval ::tk::print {
 		update
 		set srccoords [list "0 0 [ expr $wid - 1] [expr  $hgt - 1 ]" ]
 		set dstcoords [ list "[lindex $coords 0] [lindex $coords 1] [expr $wid - 1] [expr $hgt - 1]" ]
-		set cmmd "::tk::print::_gdi copybits $hdc -window $tl -client -source $srccoords -destination $dstcoords "
+		set cmmd "::tk::print::_gdi copybits $::tk::print::printer_name -window $tl -client -source $srccoords -destination $dstcoords "
 		eval $cmmd
 		destroy $tl      
 	    } else {
-		set cmmd "::tk::print::_gdi bitmap $hdc $coords -anchor $anchor -bitmap $imagename"
+		set cmmd "::tk::print::_gdi bitmap $::tk::print::printer_name $coords -anchor $anchor -bitmap $imagename"
 		eval $cmmd
 	    }
 	}
