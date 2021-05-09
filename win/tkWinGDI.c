@@ -108,8 +108,11 @@ static  DOCINFO di;
 int copies, paper_width, paper_height, dpi_x, dpi_y;
 char *localPrinterName;
 LPCTSTR printerName;
+LPCTSTR driver;
+LPCTSTR output;
 PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
+LPDEVNAMES devnames;
 static HDC printDC;
 
 /*
@@ -4636,15 +4639,15 @@ static int PalEntriesOnDevice(HDC hDC)
 
 static HDC get_dc(Tcl_Interp *interp)
 {
-    printDC = CreateDC("WINSPOOL", printerName, NULL, NULL);
+    // printDC = CreateDC("WINSPOOL", printerName, NULL, NULL);
+    printDC = CreateDC (driver, printerName, output, returnedDevmode);
  
     
   /* ANY type of DC should be ok here. */
 
       unsigned long tmp;
-	  tmp = 0;
-	  
-	  // RestoreDC(printDC, -1);	  
+      tmp = 0;
+	  	  
       DWORD objtype = GetObjectType(printDC);
       switch (objtype)
       {
@@ -4658,6 +4661,11 @@ static HDC get_dc(Tcl_Interp *interp)
           Tcl_AppendResult(interp, "Error: Wrong type of handle for this operation\n", 0);
 	  return 0;
           break;
+      }
+
+      if (devnames != NULL)
+      {
+	  GlobalUnlock(devnames);
       }
      
       return (HDC)tmp;
@@ -5040,8 +5048,10 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 
 	/* Copy print attributes to local structure. */ 
 	returnedDevmode = (PDEVMODE)GlobalLock(pd.hDevMode);
-	const LPDEVNAMES devnames  = (LPDEVNAMES)GlobalLock(pd.hDevNames);
-	printerName = (LPCTSTR) devnames + devnames->wDeviceOffset;
+	devnames  = (LPDEVNAMES)GlobalLock(pd.hDevNames);
+	printerName = (LPCTSTR)devnames + devnames->wDeviceOffset;
+	driver = (LPCTSTR)devnames + devnames->wDriverOffset;
+	output = (LPCTSTR)devnames + devnames->wOutputOffset;
 	localDevmode = (LPDEVMODE)HeapAlloc(GetProcessHeap(), 
 					    HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
 					    returnedDevmode->dmSize);
@@ -5069,10 +5079,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 	{
 	    GlobalFree(pd.hDevMode);
 	}
-    if       (pd.hDevNames != NULL)
-	{
-	    GlobalUnlock(pd.hDevNames);
-	}
+   
         
     /* 
      * Store print properties and link variables 
