@@ -66,6 +66,8 @@ typedef struct {
 
     Tcl_Obj *textPtr;		/* Value of -text option: specifies text to
 				 * display in button. */
+    Tcl_Obj *idPtr;		/* Value of -id option: specifies an ID to
+				 * be used in button. */
     int underline;		/* Value of -underline option: specifies index
 				 * of character to underline. < 0 means don't
 				 * underline anything. */
