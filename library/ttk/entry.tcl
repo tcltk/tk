@@ -516,11 +516,11 @@ proc ttk::entry::WordSelect {w from to} {
 ## WordBack, WordForward -- helper routines for WordSelect.
 #
 proc ttk::entry::WordBack {text index} {
-    if {[set pos [tcl_wordBreakBefore $text $index]] < 0} { return 0 }
+    if {[set pos [tk::wordBreakBefore $text $index]] < 0} { return 0 }
     return $pos
 }
 proc ttk::entry::WordForward {text index} {
-    if {[set pos [tcl_wordBreakAfter $text $index]] < 0} { return end }
+    if {[set pos [tk::wordBreakAfter $text $index]] < 0} { return end }
     return $pos
 }
 
