@@ -157,21 +157,90 @@ test cluster-5.9 {::tk::startOfNextWord} -body {
     ::tk::startOfNextWord "ab cd" end-1
 } -result {}
 
-test cluster-6.0 {::tk::startOfCluster} -body {
+test cluster-6.0 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" -1
+} -result {}
+test cluster-6.1 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" 0
+} -result {}
+test cluster-6.2 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" 1
+} -result {}
+test cluster-6.3 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" 2
+} -result 2
+test cluster-6.4 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" 3
+} -result 3
+test cluster-6.5 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" 4
+} -result 3
+test cluster-6.6 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" 5
+} -result 3
+test cluster-6.7 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" end
+} -result 3
+test cluster-6.8 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore "ab cd" {}
+} -result {}
+test cluster-6.9 {::tk::wordBreakBefore} -body {
+    ::tk::startOfNextWord "ab cd" end-1
+} -result {}
+
+test cluster-7.0 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" -1
+} -result 2
+test cluster-7.1 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" 0
+} -result 2
+test cluster-7.2 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" 1
+} -result 2
+test cluster-7.3 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" 2
+} -result 3
+test cluster-7.4 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" 3
+} -result {}
+test cluster-7.5 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" 4
+} -result {}
+test cluster-7.6 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" 5
+} -result {}
+test cluster-7.7 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" end
+} -result {}
+test cluster-7.8 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" {}
+} -result 2
+test cluster-7.9 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter "ab cd" end-1
+} -result {}
+
+
+test cluster-8.0 {::tk::startOfCluster} -body {
     ::tk::startOfCluster a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::startOfCluster str start ?locale?"}
-test cluster-6.1 {::tk::endOfCluster} -body {
+test cluster-8.1 {::tk::endOfCluster} -body {
     ::tk::endOfCluster a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::endOfCluster str start ?locale?"}
-test cluster-6.2 {::tk::startOfPreviousWord} -body {
+test cluster-8.2 {::tk::startOfPreviousWord} -body {
     ::tk::startOfPreviousWord a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::startOfPreviousWord str start ?locale?"}
-test cluster-6.3 {::tk::startOfNextWord} -body {
+test cluster-8.3 {::tk::startOfNextWord} -body {
     ::tk::startOfNextWord a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::startOfNextWord str start ?locale?"}
-test cluster-6.4 {::tk::endOfWord} -body {
+test cluster-8.4 {::tk::endOfWord} -body {
     ::tk::endOfWord a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::endOfWord str start ?locale?"}
+test cluster-8.5 {::tk::wordBreakBefore} -body {
+    ::tk::wordBreakBefore a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::wordBreakBefore str start ?locale?"}
+test cluster-8.6 {::tk::wordBreakAfter} -body {
+    ::tk::wordBreakAfter a b c d
+} -returnCodes 1 -result {wrong # args: should be "::tk::wordBreakAfter str start ?locale?"}
 
 cleanupTests
 return
