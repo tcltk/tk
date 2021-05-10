@@ -128,7 +128,7 @@ jobs:
               : do nothing
             }
           fi
-          ( runXvfb :0; make test-classic test-ttk ) | tee out.txt || {
+          ( runXvfb :0; make test-classic test-ttk; exit 0 ) | tee out.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
