@@ -56,8 +56,8 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-	
-		return printargs
+	    
+	    return printargs
 	}
 
 	# _ print_page_data
@@ -74,10 +74,9 @@ namespace eval ::tk::print {
 	    variable printargs
 
 	    _page_args 
-	
 		
-				#parray printargs
-
+		array get printargs
+	    
 	    set tm [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
 	    set pw [ expr ($printargs(pw)  - $printargs(rm))  / 1000 * $printargs(resx) ]
@@ -101,9 +100,10 @@ namespace eval ::tk::print {
 	# fontargs -      Optional arguments to supply to the text command
 
 	proc _print_page_file { filename {fontargs {}} } {
-	
-	variable printargs
-	
+	    
+	    variable printargs
+	    array get printargs
+	    
 	    set fn [open $filename r]
 
 	    set data [ read $fn ]
@@ -124,12 +124,15 @@ namespace eval ::tk::print {
 	# font -       Font for printing
 
 	proc _print_data { data {breaklines 1 } {font {}} } {
-	    variable printargs
+	    
+			variable printargs
 
 	    _page_args
-	
+	    
+	    array get printargs
+	    
 	    if { [string length $font] == 0 } {
-		eval ::tk::print::_gdi characters  -array printcharwid
+		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
 	    } else {
 		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
 	    }
@@ -182,9 +185,11 @@ namespace eval ::tk::print {
 	#   font -       Optional arguments to supply to the text command
 	
 	proc _print_file { filename {breaklines 1 } { font {}} } {
-	 
-	 variable printargs
-	 
+	    
+	    variable printargs
+	    
+	    array get printargs
+	    
 	    set fn [open $filename r]
 
 	    set data [ read $fn ]
@@ -200,18 +205,23 @@ namespace eval ::tk::print {
 	# and y is the height of the line printed
 	# Arguments:
 	#   string -         Data to print
-	#   parray -         Array of values for printer characteristics
-	#   carray -         Array of values for character widths
+	#   pdata -         Array of values for printer characteristics
+	#   cdata -         Array of values for character widths
 	#   y -              Y value to begin printing at
 	#   font -           if non-empty specifies a font to draw the line in
 
-	proc _print_page_nextline { string carray parray y font } {
+	proc _print_page_nextline { string cdata pdata y font } {
 	
-	variable printargs
-	
-	    upvar #0 $carray charwidths
-	    upvar #0 $parray printargs
-
+	    variable printargs
+	    array get printargs  
+		  
+	    upvar #0 $cdata charwidths
+	    upvar #0 $pdata printargs
+		
+		puts "yup"
+		
+		parray pdata
+		
 	    set endindex 0
 	    set totwidth 0
 	    set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
@@ -269,14 +279,19 @@ namespace eval ::tk::print {
 	proc _init_print_canvas { } {
 	    variable option
 	    variable vtgPrint
-		variable printargs
+	    variable printargs
+	    
+	    array get printargs
 
 	    set option(use_copybits) 1
 	    set vtgPrint(printer.bg) white
 	}
 
 	proc _is_win {} {
-	variable printargs
+	    variable printargs
+	    
+	    array get printargs
+	    
 	    return [ info exist tk_patchLevel ]
 	}
 
@@ -290,10 +305,12 @@ namespace eval ::tk::print {
 	#   name  -            App name to pass to printer.
 
 	proc _print_widget { wid {printer default} {name "Tk Print Job"} } {
-	
-	variable printargs
-	
+	    
+	    variable printargs
+	    
 	    _page_args 
+	    
+	    array get printargs
 
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
@@ -379,6 +396,9 @@ namespace eval ::tk::print {
 
 	proc _print_canvas {hdc cw} {
 	    variable  vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    # get information about page being printed to
 	    # print_canvas.CalcSizing $cw
@@ -410,6 +430,9 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.line {hdc cw id} {
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    set color [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    if {[string match $vtgPrint(printer.bg) $color]} {return}
@@ -458,6 +481,9 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.arc {hdc cw id} {
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    set color [print_canvas.TransColor [$cw itemcget $id -outline]]
 	    if { [string match $vtgPrint(printer.bg) $color] } {
@@ -492,6 +518,9 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.polygon {hdc cw id} {
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    if { ![string length $fcolor] } {
@@ -531,6 +560,9 @@ namespace eval ::tk::print {
 	
 	proc _print_canvas.oval { hdc cw id } {
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    if {![string length $fcolor]} {set fcolor $vtgPrint(printer.bg)}
@@ -556,6 +588,9 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.rectangle {hdc cw id} {
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    if {![string length $fcolor]} {set fcolor $vtgPrint(printer.bg)}
@@ -580,8 +615,11 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.text {hdc cw id} {
 	    variable vtgPrint
-		
+	    
 	    _page_args
+	    
+	    variable printargs
+	    array get printargs
 	    
 	    set color [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    #    if {[string match white [string tolower $color]]} {return}
@@ -625,6 +663,9 @@ namespace eval ::tk::print {
 
 	    variable vtgPrint
 	    variable option
+	    
+	    variable printargs
+	    array get printargs
 
 	    # First, we have to get the image name
 	    set imagename [ $cw itemcget $id -image]
@@ -678,6 +719,9 @@ namespace eval ::tk::print {
 	proc _print_canvas.bitmap {hdc cw id} {
 	    variable option
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    # First, we have to get the bitmap name
 	    set imagename [ $cw itemcget $id -image]
@@ -728,6 +772,9 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.TransColor {color} {
 	    variable vtgPrint
+	    
+	    variable printargs
+	    array get printargs
 
 	    switch [string toupper $color] {
 		$vtgPrint(canvas.bg)       {return $vtgPrint(printer.bg)} 
