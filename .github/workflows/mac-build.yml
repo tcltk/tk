@@ -119,7 +119,7 @@ jobs:
               Xvfb $1 &
               XVFB_PID=$!
               echo Launched Xvfb $1 as process $XVFB_PID >&2
-              trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID; exit 0" 0
+              trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID; exit $?" 0
               export DISPLAY=$1
               sleep 2
             }
