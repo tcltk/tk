@@ -632,7 +632,7 @@ TkImgPhotoDisplay(
 				 (unsigned int)instancePtr->width,
 				 (unsigned int)instancePtr->height,
 				 0, (unsigned int)(4 * instancePtr->width));
-    TkpPutRGBAImage(NULL, 0, display, drawable, instancePtr->gc,
+    TkpPutRGBAImage(display, drawable, instancePtr->gc,
 	       photo, imageX, imageY, drawableX, drawableY,
 	       (unsigned int) width, (unsigned int) height);
     photo->data = NULL;
