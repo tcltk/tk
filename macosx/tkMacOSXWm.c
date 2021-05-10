@@ -790,7 +790,6 @@ void TkMacOSXHandleMapOrUnmap(
 {
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
-    TkWindow *winPtr = (TkWindow *) tkwin;
 
     oldProc = Tk_RestrictEvents(MapUnmapRestrictProc, NULL, &oldArg);
     Tk_QueueWindowEvent(event, TCL_QUEUE_TAIL);
@@ -6446,9 +6445,6 @@ TkpWmSetState(
     if (state != WithdrawnState) {
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
     }
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == IconicState) {

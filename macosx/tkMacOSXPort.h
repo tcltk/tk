@@ -169,7 +169,7 @@
 
 #define TK_CAN_RENDER_RGBA
 
-MODULE_SCOPE int TkpPutRGBAImage(unsigned long *colors, int ncolors,
+MODULE_SCOPE int TkpPutRGBAImage(
 		     Display* display, Drawable drawable, GC gc,XImage* image,
 		     int src_x, int src_y, int dest_x, int dest_y,
 		     unsigned int width, unsigned int height);
