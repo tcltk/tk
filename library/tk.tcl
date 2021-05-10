@@ -741,6 +741,34 @@ if {[info commands ::tk::startOfPreviousWord] eq ""} {
 	return $start
     }
 }
+if {[info commands ::tk::wordBreakBefore] eq ""} {
+    proc ::tk::wordBreakBefore {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_wordBreakBefore $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakAfter] eq ""} {
+    proc ::tk::wordBreakAfter {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_wordBreakAfter $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
 if {[info commands ::tk::endOfCluster] eq ""} {
     proc ::tk::endOfCluster {str start {locale {}}} {
 	if {$start < 0} {
