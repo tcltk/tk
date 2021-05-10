@@ -575,8 +575,8 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	    }
 
 	    # Now find word boundaries
-	    set first [TextPrevPos $w "$first + 1c" tcl_wordBreakBefore]
-	    set last [TextNextPos $w "$last - 1c" tcl_wordBreakAfter]
+	    set first [TextPrevPos $w "$first + 1c" tk::wordBreakBefore]
+	    set last [TextNextPos $w "$last - 1c" tk::wordBreakAfter]
 	}
 	line {
 	    # Set initial range based only on the anchor
