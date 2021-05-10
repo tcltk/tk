@@ -443,6 +443,7 @@ TkMacOSXPutImage(
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
+    int result = Success;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
@@ -470,12 +471,14 @@ TkMacOSXPutImage(
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
+	    result = BadDrawable
 	}
     } else {
 	TkMacOSXDbgMsg("Invalid destination drawable");
+	result = BadDrawable
     }
     TkMacOSXRestoreDrawingContext(&dc);
-    return Success;
+    return result;
 }
 
 int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
