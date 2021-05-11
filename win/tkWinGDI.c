@@ -4640,22 +4640,22 @@ static int PalEntriesOnDevice(HDC hDC)
 
 static HDC get_dc(Tcl_Interp *interp)
 {
-	/*
-	 * Check for valid DC, create or restore as needed.
-	 */
-	if (printDC == NULL) {
-    printDC = CreateDC (driver, printerName, output, returnedDevmode);
+    /*
+     * Check for valid DC, create or restore as needed.
+     */
+    if (printDC == NULL) {
+	printDC = CreateDC (driver, printerName, output, returnedDevmode);
 	SaveDC(printDC);
-	} else {
+    } else {
 	RestoreDC(printDC, -1);
-	}
+    }
 	
-	 DWORD objtype = GetObjectType((HGDIOBJ)printDC);
-	 if (objtype = OBJ_DC) {
-		 return (HDC) 1;
-	 } else {
-		 return (HDC) 0;
-	 }
+    DWORD objtype = GetObjectType((HGDIOBJ)printDC);
+    if (objtype = OBJ_DC) {
+	return (HDC) 1;
+    } else {
+	return (HDC) 0;
+    }
 }
 
 /*
