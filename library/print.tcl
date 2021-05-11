@@ -46,7 +46,7 @@ namespace eval ::tk::print {
 	    }
 
 	    #Next, set values.
-	    set printargs(hDC) {}
+	    set printargs(hDC) [list $::tk::print::printer_name]
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
 	    set printargs(lm) 100 
@@ -56,6 +56,8 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
+		
+		parray printargs
 	    
 	    return printargs
 	}
@@ -76,6 +78,8 @@ namespace eval ::tk::print {
 	    _page_args 
 		
 		array get printargs
+		
+		puts "_print_page_data"
 	    
 	    set tm [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
@@ -125,11 +129,13 @@ namespace eval ::tk::print {
 
 	proc _print_data { data {breaklines 1 } {font {}} } {
 	    
-			variable printargs
+		variable printargs
 
 	    _page_args
 	    
 	    array get printargs
+		
+		puts "_print_data"
 	    
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
@@ -157,9 +163,15 @@ namespace eval ::tk::print {
 			}
 		    } 
 		} 
+		
+		set plist [array get printargs]
+		set clist [array get printcharwid]
+		
+		puts "plist is $plist"
+		puts "clist is $clist"
 
 		set result [_print_page_nextline $linestring \
-				printcharwid printargs $curhgt $font]
+				$clist $plist $curhgt $font]
 		incr curlen [lindex $result 0]
 		incr curhgt [lindex $result 1]
 		if { [expr $curhgt + [lindex $result 1] ] > $pagehgt } {
@@ -210,17 +222,13 @@ namespace eval ::tk::print {
 	#   y -              Y value to begin printing at
 	#   font -           if non-empty specifies a font to draw the line in
 
-	proc _print_page_nextline { string cdata pdata y font } {
+	proc _print_page_nextline { string clist plist y font } {
 	
-	    variable printargs
-	    array get printargs  
-		  
-	    upvar #0 $cdata charwidths
-	    upvar #0 $pdata printargs
+	   
+		array set charwidths $clist
+		array set printargs $plist
 		
-		puts "yup"
-		
-		parray pdata
+		puts "_print_page_nextline"
 		
 	    set endindex 0
 	    set totwidth 0
