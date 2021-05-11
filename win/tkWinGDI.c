@@ -255,6 +255,8 @@ static int GdiArc(
       return TCL_ERROR;
     }
 
+    hDC = printDC;
+
     x1 = atoi(argv[1]);
     y1 = atoi(argv[2]);
     x2 = atoi(argv[3]);
@@ -482,6 +484,8 @@ static int GdiPhoto(
     Tcl_AppendResult(interp, usage_message, NULL);
     return TCL_ERROR;
   }
+
+  dst = printDC;
 
   /*
   * Next, check to see if 'dst' can support BitBlt.
@@ -752,6 +756,8 @@ static int GdiLine(
       Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for GDI", NULL);
       return TCL_ERROR;
     }
+
+    hDC = printDC;
 
     if ( (polypoints = (POINT *)Tcl_Alloc(argc * sizeof(POINT))) == 0 )
     {
@@ -1075,6 +1081,8 @@ static int GdiOval(
       return TCL_ERROR;
     }
 
+    hDC = printDC;
+
     x1 = atol(argv[1]);
     y1 = atol(argv[2]);
     x2 = atol(argv[3]);
@@ -1207,6 +1215,8 @@ static int GdiPolygon(
       Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for GDI", NULL);
       return TCL_ERROR;
     }
+
+    hDC = printDC;
 
     if ( (polypoints = (POINT *)Tcl_Alloc(argc * sizeof(POINT))) == 0 )
     {
@@ -1390,6 +1400,8 @@ static int GdiRectangle(
       return TCL_ERROR;
     }
 
+    hDC = printDC;
+
     x1 = atol(argv[1]);
     y1 = atol(argv[2]);
     x2 = atol(argv[3]);
@@ -1520,6 +1532,8 @@ static int GdiCharWidths(
     Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for GDI", NULL);
     return TCL_ERROR;
   }
+
+  hDC = printDC;
 
   argc--;
   argv++;
@@ -1669,6 +1683,8 @@ int GdiText(
       Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for GDI", NULL);
       return TCL_ERROR;
     }
+
+    hDC = printDC;
 
     x = atol(argv[1]);
     y = atol(argv[2]);
@@ -2099,6 +2115,8 @@ static int GdiMap(
       return TCL_ERROR;
     }
 
+    hDC = printDC;
+
     if ( (mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent)) == 0 )
     {
       /* Failed!. */
@@ -2345,6 +2363,8 @@ static int GdiCopyBits (
     Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for BitBlt destination", NULL);
     return TCL_ERROR;
   }
+
+   dst = printDC;
 
   /*
    * Next, check to see if 'dst' can support BitBlt.
@@ -4639,13 +4659,12 @@ static int PalEntriesOnDevice(HDC hDC)
 
 static HDC get_dc(Tcl_Interp *interp)
 {
-     /*
+    /*
      * Check for valid DC, create or restore as needed.
      */
     if (printDC == NULL) {
 	printDC = CreateDC (driver, printerName, output, returnedDevmode);
-	
-	}
+    }
 	
     DWORD objtype = GetObjectType((HGDIOBJ)printDC);
     if (objtype = OBJ_DC) {
