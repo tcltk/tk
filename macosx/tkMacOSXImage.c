@@ -414,7 +414,7 @@ XCreateImage(
  *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
  *
  * Results:
- *	These functions always return Success.
+ *	These functions return either BadDrawable or Success.
  *
  * Side effects:
  *	Draws the image on the specified drawable.
@@ -461,7 +461,6 @@ TkMacOSXPutImage(
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
-
 	    bounds = CGRectMake(0, 0, image->width, image->height);
 	    srcRect = CGRectMake(src_x, src_y, width, height);
 	    dstRect = CGRectMake(dest_x, dest_y, width, height);
@@ -471,11 +470,11 @@ TkMacOSXPutImage(
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
-	    result = BadDrawable
+	    result = BadDrawable;
 	}
     } else {
 	TkMacOSXDbgMsg("Invalid destination drawable");
-	result = BadDrawable
+	result = BadDrawable;
     }
     TkMacOSXRestoreDrawingContext(&dc);
     return result;
