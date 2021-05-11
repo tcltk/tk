@@ -409,7 +409,7 @@ XCreateImage(
  *      Source Atop Composition (kCGBlendModeSourceAtop in Apple's Core
  *      Graphics).
  *
- *      The TkpPutRGBAfunction is used by TkImgPhotoDisplay to render photo
+ *      The TkpPutRGBAImage function is used by TkImgPhotoDisplay to render photo
  *      images if the compile-time variable TK_CAN_RENDER_RGBA is defined in
  *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
  *
