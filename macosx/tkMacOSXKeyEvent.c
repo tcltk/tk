@@ -94,7 +94,10 @@ static NSUInteger textInputModifiers;
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
-	    winPtr =winPtr->dispPtr->focusPtr;
+	    winPtr = winPtr->dispPtr->focusPtr;
+	    if (!winPtr) {
+		return theEvent;
+	    }
 	    tkwin = (Tk_Window)winPtr;
 	}
     }
