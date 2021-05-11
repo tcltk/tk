@@ -1551,19 +1551,18 @@ static int GdiCharWidths(
     argc--;
   }
 
-  /* Now, get the widths using the correct function for this Windows version. */
-#ifdef WIN32
+
+  /* Now, get the widths using the correct function for font type. */
+  
   /*
-   * Try the correct function. If it fails (as has been reported on some
-   * versions of Windows 95), try the "old" function.
+   * Try the correct function for non-TrueType fonts first.
    */
   if ( (retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE )
   {
-    retval = GetCharWidth (hDC, 0, 255, widths );
+	/*Try TrueType fonts next.*/
+    retval = GetCharABCWidths (hDC, 0, 255, (LPABC) widths );
   }
-#else
-  retval = GetCharWidth  (hDC, 0, 255, widths);
-#endif
+
   /*
    * Retval should be 1 (TRUE) if the function succeeded. If the function fails,
    * get the "extended" error code and return. Be sure to deallocate the font if
@@ -4640,15 +4639,13 @@ static int PalEntriesOnDevice(HDC hDC)
 
 static HDC get_dc(Tcl_Interp *interp)
 {
-    /*
+     /*
      * Check for valid DC, create or restore as needed.
      */
     if (printDC == NULL) {
 	printDC = CreateDC (driver, printerName, output, returnedDevmode);
-	SaveDC(printDC);
-    } else {
-	RestoreDC(printDC, -1);
-    }
+	
+	}
 	
     DWORD objtype = GetObjectType((HGDIOBJ)printDC);
     if (objtype = OBJ_DC) {
@@ -4657,6 +4654,7 @@ static HDC get_dc(Tcl_Interp *interp)
 	return (HDC) 0;
     }
 }
+
 
 /*
  *--------------------------------------------------------------
