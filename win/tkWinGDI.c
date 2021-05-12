@@ -247,7 +247,8 @@ static int GdiArc(
   if (argc >= 5)
   {
 
-    hDC = printDC;
+   // hDC = printDC;
+	hDC = CreateDC (driver, printerName, output, returnedDevmode);
 
     x1 = atoi(argv[1]);
     y1 = atoi(argv[2]);
@@ -468,7 +469,8 @@ static int GdiPhoto(
     return TCL_ERROR;
   }
 
-  dst = printDC;
+  //dst = printDC;
+  dst = CreateDC (driver, printerName, output, returnedDevmode);
 
   /*
   * Next, check to see if 'dst' can support BitBlt.
@@ -732,9 +734,10 @@ static int GdiLine(
   /* Verrrrrry simple for now.... */
   if (argc >= 5)
   {
-    hDC = get_dc(interp);
+ 	
+   // hDC = printDC;
+   hDC = CreateDC (driver, printerName, output, returnedDevmode);
 	
-    hDC = printDC;
 
     if ( (polypoints = (POINT *)Tcl_Alloc(argc * sizeof(POINT))) == 0 )
     {
@@ -1051,7 +1054,8 @@ static int GdiOval(
   if (argc >= 5)
   {
   
-    hDC = printDC;
+  //  hDC = printDC;
+	hDC  = CreateDC (driver, printerName, output, returnedDevmode);
 
     x1 = atol(argv[1]);
     y1 = atol(argv[2]);
@@ -1179,7 +1183,8 @@ static int GdiPolygon(
   if (argc >= 5)
   {
   
-    hDC = printDC;
+   // hDC = printDC;
+	hDC = CreateDC (driver, printerName, output, returnedDevmode);
 
     if ( (polypoints = (POINT *)Tcl_Alloc(argc * sizeof(POINT))) == 0 )
     {
@@ -1356,7 +1361,8 @@ static int GdiRectangle(
   if (argc >= 5)
   {
    
-    hDC = printDC;
+   //hDC = printDC;
+	hDC = CreateDC (driver, printerName, output, returnedDevmode);
 
     x1 = atol(argv[1]);
     y1 = atol(argv[2]);
@@ -1481,7 +1487,8 @@ static int GdiCharWidths(
     return TCL_ERROR;
   }
 
-  hDC = printDC;
+ // hDC = printDC;
+  hDC = CreateDC (driver, printerName, output, returnedDevmode);
 
   argc--;
   argv++;
@@ -1625,7 +1632,8 @@ int GdiText(
   {
     /* Parse the command. */
   
-    hDC = printDC;
+   // hDC = printDC;
+	hDC = CreateDC (driver, printerName, output, returnedDevmode);
 
     x = atol(argv[1]);
     y = atol(argv[2]);
@@ -2049,7 +2057,8 @@ static int GdiMap(
   if ( argc >= 1 )
   {
   
-    hdc = printDC;
+   // hdc = printDC;
+	hdc = CreateDC (driver, printerName, output, returnedDevmode);
 
     if ( (mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent)) == 0 )
     {
@@ -2289,8 +2298,8 @@ static int GdiCopyBits (
     return TCL_ERROR;
   }
 
-   dst = printDC;
-
+  //dst = printDC;
+dst = CreateDC (driver, printerName, output, returnedDevmode);
   /*
    * Next, check to see if 'dst' can support BitBlt.
    * If not, raise an error.
