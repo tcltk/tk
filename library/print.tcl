@@ -148,7 +148,7 @@ namespace eval ::tk::print {
 	    set totallen [ string length $data ]
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
-		puts "fuck"
+		puts "flick"
 
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
