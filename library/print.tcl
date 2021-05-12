@@ -30,11 +30,11 @@ namespace eval ::tk::print {
 	# Multiple utility procedures for printing text based on the C printer
 	# primitives. 
 
-	# _page_args: 
-	# Parse common arguments for text processing in the other commands.
-	#  
+	# _set_dc: 
+	# Select printer and set device context and other parameters
+	# for print job. 
 	# 
-	proc _page_args {} {
+	proc _set_dc {} {
 	    variable printargs
 
 	    #First, we select the printer.
@@ -56,86 +56,29 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-		
-		parray printargs
+	    
+	    parray printargs
 	    
 	    return printargs
 	}
-
-	# _ print_page_data
-	# This proc is the simplest way to print a small amount of
-	# text on a page. The text is formatted in a box the size of the
-	# selected page and margins.
-	#
-	# Arguments:
-	# data  -        Text data for printing
-	# fontargs -    Optional arguments to supply to the text command
-
-	proc _print_page_data { data {fontargs {}} } {
-
-	    variable printargs
-
-	    _page_args 
-		
-		array get printargs
-		
-		puts "_print_page_data"
-	    
-	    set tm [ expr $printargs(tm) * $printargs(resy) / 1000 ]
-	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
-	    set pw [ expr ($printargs(pw)  - $printargs(rm))  / 1000 * $printargs(resx) ]
-	    ::tk::print::_opendoc
-	    ::tk::print::_openpage
-	    eval ::tk::print::_gdi text $printargs(hDC) $lm $tm \
-		-anchor nw -text [list $data] \
-		-width $pw \
-		$fontargs
-	    ::tk::print::_closepage
-	    ::tk::print::_closedoc
-	}
-
-
-	# _print_page_file
-	# This is the simplest way to print a small file
-	# on a page. The text is formatted in a box the size of the
-	# selected page and margins.
-	# Arguments:
-	# data     -      Text data for printing
-	# fontargs -      Optional arguments to supply to the text command
-
-	proc _print_page_file { filename {fontargs {}} } {
-	    
-	    variable printargs
-	    array get printargs
-	    
-	    set fn [open $filename r]
-
-	    set data [ read $fn ]
-
-	    close $fn
-
-	    _print_page_data $data $fontargs
-	}
-
 
 	# _print_data
 	# This function prints multiple-page files, using a line-oriented
 	# function, taking advantage of knowing the character widths.
 	# Arguments: 
-	# data -	     Text data for printing
+	# data -       Text data for printing
 	# breaklines - If non-zero, keep newlines in the string as
 	#              newlines in the output.
 	# font -       Font for printing
 
 	proc _print_data { data {breaklines 1 } {font {}} } {
 	    
-		variable printargs
+	    variable printargs
 
-	    _page_args
-	    
-	 #   array get printargs
-		
-		puts "_print_data"
+	    _set_dc
+	     
+	    puts "_print_data"
+	    ::tk::print::_opendoc
 	    
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
@@ -148,11 +91,11 @@ namespace eval ::tk::print {
 	    set totallen [ string length $data ]
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
-		puts "flick"
+	    puts "flick"
 
-	    ::tk::print::_opendoc
+
 	    ::tk::print::_openpage
-		puts "yup"
+	    puts "yup"
 	    while { $curlen < $totallen } {
 		set linestring [ string range $data $curlen end ]
 		if { $breaklines } {
@@ -225,13 +168,13 @@ namespace eval ::tk::print {
 	#   font -           if non-empty specifies a font to draw the line in
 
 	proc _print_page_nextline { string clist plist y font } {
-	
-	   
-		array set charwidths $clist
-		array set printargs $plist
-		
-		puts "_print_page_nextline"
-		
+	    
+	    
+	    array set charwidths $clist
+	    array set printargs $plist
+	    
+	    puts "_print_page_nextline"
+	    
 	    set endindex 0
 	    set totwidth 0
 	    set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
@@ -318,7 +261,7 @@ namespace eval ::tk::print {
 	    
 	    variable printargs
 	    
-	    _page_args 
+	    _set_dc 
 	    
 	    array get printargs
 
@@ -626,7 +569,7 @@ namespace eval ::tk::print {
 	proc _print_canvas.text {hdc cw id} {
 	    variable vtgPrint
 	    
-	    _page_args
+	    _set_dc
 	    
 	    variable printargs
 	    array get printargs
