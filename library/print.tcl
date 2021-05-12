@@ -133,7 +133,7 @@ namespace eval ::tk::print {
 
 	    _page_args
 	    
-	    array get printargs
+	 #   array get printargs
 		
 		puts "_print_data"
 	    
@@ -148,9 +148,11 @@ namespace eval ::tk::print {
 	    set totallen [ string length $data ]
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
+		puts "fuck"
 
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
+		puts "yup"
 	    while { $curlen < $totallen } {
 		set linestring [ string range $data $curlen end ]
 		if { $breaklines } {
