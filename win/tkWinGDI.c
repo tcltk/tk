@@ -73,7 +73,7 @@ static int GdiMakePen(Tcl_Interp *interp, int width,
 static int GdiFreePen(Tcl_Interp *interp, HDC hDC, HGDIOBJ oldPen);
 static int GdiMakeBrush (Tcl_Interp *interp, unsigned int style, unsigned long color,
                          long hatch, LOGBRUSH *lb, HDC hDC, HGDIOBJ *oldBrush);
-static int GdiFreeBrush (Tcl_Interp *interp, HDC hDC, HGDIOBJ oldBrush);
+static int GdiFreeBrush (Tcl_Interp *interp, HDC hDC, HGDIOBJ oldBcrush);
 static int GdiGetHdcInfo( HDC hdc,
                           LPPOINT worigin, LPSIZE wextent,
                           LPPOINT vorigin, LPSIZE vextent);
@@ -114,7 +114,7 @@ LPCTSTR output;
 PDEVMODE returnedDevmode;
 PDEVMODE localDevmode;
 LPDEVNAMES devnames;
-static HDC printDC;
+HDC printDC;
 
 /*
  *----------------------------------------------------------------------
@@ -248,6 +248,7 @@ static int GdiArc(
   if (argc >= 5)
   {
       hDC = get_dc(interp);
+	  
     /* Check hDC. */
     if (hDC == (HDC)0 )
     {
@@ -750,6 +751,7 @@ static int GdiLine(
   if (argc >= 5)
   {
     hDC = get_dc(interp);
+	
     /* Check hDC. */
     if (hDC == (HDC)0 )
     {
@@ -1074,6 +1076,7 @@ static int GdiOval(
   if (argc >= 5)
   {
     hDC = get_dc(interp);
+	
     /* Check hDC. */
     if (hDC == (HDC)0 )
     {
@@ -1209,6 +1212,7 @@ static int GdiPolygon(
   if (argc >= 5)
   {
     hDC = get_dc(interp);
+	
     /* Check hDC. */
     if (hDC == (HDC)0 )
     {
@@ -1525,9 +1529,11 @@ static int GdiCharWidths(
     return TCL_ERROR;
   }
 
+
   hDC = get_dc(interp);
+  
   /* Check hDC. */
-  if (hDC == (HDC)0 )
+  if (hDC = (HDC)0 )
   {
     Tcl_AppendResult(interp, "Device context ", argv[0], " is invalid for GDI", NULL);
     return TCL_ERROR;
@@ -1677,6 +1683,7 @@ int GdiText(
   {
     /* Parse the command. */
     hDC = get_dc(interp);
+	
     /* Check hDC. */
     if (hDC == (HDC)0 )
     {
@@ -2108,6 +2115,7 @@ static int GdiMap(
   if ( argc >= 1 )
   {
     hdc = get_dc(interp);
+	
     /* Check hDC. */
     if (hdc == (HDC)0 )
     {
@@ -2115,7 +2123,7 @@ static int GdiMap(
       return TCL_ERROR;
     }
 
-    hDC = printDC;
+    hdc = printDC;
 
     if ( (mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent)) == 0 )
     {
@@ -4660,16 +4668,19 @@ static int PalEntriesOnDevice(HDC hDC)
 static HDC get_dc(Tcl_Interp *interp)
 {
     /*
-     * Check for valid DC, create or restore as needed.
+     * Create DC.
      */
-    if (printDC == NULL) {
+    if (printDC != NULL) {
 	printDC = CreateDC (driver, printerName, output, returnedDevmode);
-    }
+	}
+   
 	
     DWORD objtype = GetObjectType((HGDIOBJ)printDC);
     if (objtype = OBJ_DC) {
-	return (HDC) 1;
+     printf("HDC here!\n");
+	 return printDC;
     } else {
+		printf("ya got nuttin!\n");
 	return (HDC) 0;
     }
 }
@@ -5221,6 +5232,7 @@ int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *
     if ( EndDoc(printDC) <= 0) {
 	return TCL_ERROR;
     }
+	DeleteDC(printDC);
     return TCL_OK;
 }
 
