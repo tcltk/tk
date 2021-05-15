@@ -1460,11 +1460,12 @@ static int GdiCharWidths(
 {
     static const char usage_message[] = "::tk::print::_gdi characters hdc [-font fontname] [-array ary]";
     /*
-     * Returns widths of characters from font in an associative array.
+     *  Returns widths of characters from font in an associative array.
      *  Font is currently selected font for HDC if not specified.
      *  Array name is GdiCharWidths if not specified.
      *  Widths should be in the same measures as all other values (1/1000 inch).
      */
+	 
     HDC hDC;
     LOGFONT lf;
     HFONT hfont, oldfont;
@@ -1481,7 +1482,7 @@ static int GdiCharWidths(
 	}
 
     hDC = printDC;
-
+	
     argc--;
     argv++;
 
@@ -1518,12 +1519,13 @@ static int GdiCharWidths(
     /*
      * Try the correct function for non-TrueType fonts first.
      */
-    if ( (retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE )
-	{
-	    /*Try TrueType fonts next.*/
-	    retval = GetCharABCWidths (hDC, 0, 255, (LPABC) widths );
-	}
-
+	 
+	if ( (retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE )
+    {
+      /*Try TrueType fonts next.*/
+      retval = GetCharABCWidths (hDC, 0, 255, (LPABC) widths );
+    }
+  
     /*
      * Retval should be 1 (TRUE) if the function succeeded. If the function fails,
      * get the "extended" error code and return. Be sure to deallocate the font if
@@ -4976,8 +4978,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 	{
 	    GlobalFree(pd.hDevMode);
 	}
-   
-        
+    
     /* 
      * Store print properties and link variables 
      * so they can be accessed from script level.
@@ -5019,12 +5020,27 @@ int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Ob
 	Tcl_WrongNumArgs(interp, 1, objv, "printer");
 	return TCL_ERROR;
     }
-
-    char *printer = Tcl_GetString(objv[2]);
-    if (printDC== NULL) {
+	
+	int len = 0;
+	
+	  /*Start an individual page.*/
+    if ( StartPage(printDC) <= 0) {
+	
 	return TCL_ERROR;
     }
-    OpenPrinter(printer, &printDC, NULL);
+
+    char *printer = Tcl_GetStringFromObj(objv[1], &len);
+	
+    if (printDC == NULL) {
+    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+	return TCL_ERROR;
+    }
+	
+if ((OpenPrinter(printer, &printDC, NULL)) == FALSE) {
+	    Tcl_AppendResult(interp, "unable to open printer", NULL);
+		return TCL_ERROR;
+	}
+	
     return TCL_OK;
 }
 
@@ -5046,7 +5062,12 @@ int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_O
     (void) clientData;
     (void) argc;
     (void) objv;
-    
+	
+	if (printDC == NULL) {
+    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+	return TCL_ERROR;
+    }
+	
     ClosePrinter(printDC);
     return TCL_OK;
 }
@@ -5072,12 +5093,12 @@ int PrintOpenDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *c
     (void) objv;
 
     int output = 0;
-    RestoreDC(printDC, -1);
 
-    if (printDC == NULL) {
+     if (printDC == NULL) {
+    Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
-
+	
     /* 
      * Start printing. 
      */
@@ -5110,8 +5131,15 @@ int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *
     (void) clientData;
     (void) argc;
     (void) objv;
+
+   if (printDC == NULL) {
+    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+	return TCL_ERROR;
+    }
+	
     
     if ( EndDoc(printDC) <= 0) {
+	   Tcl_AppendResult(interp, "unable to establish close document", NULL);
 	return TCL_ERROR;
     }
     DeleteDC(printDC);
@@ -5137,6 +5165,12 @@ int PrintOpenPage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *
     (void) clientData;
     (void) argc;
     (void) objv;
+	
+	 if (printDC == NULL) {
+    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+	return TCL_ERROR;
+    }
+	
 
     /*Start an individual page.*/
     if ( StartPage(printDC) <= 0) {
@@ -5167,7 +5201,14 @@ int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj 
     (void) argc;
     (void) objv;
     
+	 if (printDC == NULL) {
+    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+	return TCL_ERROR;
+    }
+	
+	
     if ( EndPage(printDC) <= 0) {
+		  Tcl_AppendResult(interp, "unable to close page", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
