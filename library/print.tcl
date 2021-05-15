@@ -55,10 +55,8 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-	    
-	    ::tk::print::_closeprinter
-	    
-	}
+
+}
 
 	# _print_data
 	# This function prints multiple-page files, using a line-oriented
@@ -75,7 +73,8 @@ namespace eval ::tk::print {
 
 	    _set_dc
 
-	    
+	    puts "print_data"
+		
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
 	    } else {
@@ -88,7 +87,10 @@ namespace eval ::tk::print {
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 
+        puts "open doc"
 	    ::tk::print::_opendoc 
+		
+		puts "open page"
 	    ::tk::print::_openpage
 	    
 	    while { $curlen < $totallen } {
@@ -117,9 +119,11 @@ namespace eval ::tk::print {
 		    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 		}
 	    }
+		
+		puts "closing down"
 	    ::tk::print::_print_closepage
 	    ::tk::print::_print_closedoc
-	    ::tk::print::_closeprinter
+	    #::tk::print::_closeprinter
 	}
 
 	
