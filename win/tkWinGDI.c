@@ -4929,7 +4929,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
     ZeroMemory( &pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
-    pd.Flags = PD_RETURNDC |PD_HIDEPRINTTOFILE  | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
+    pd.Flags = PD_HIDEPRINTTOFILE  | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
 	
     if (PrintDlg(&pd) == TRUE) {
 	/*Set device context here for all GDI printing operations.*/
@@ -4968,6 +4968,11 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		paper_height = (int) localDevmode->dmPaperLength;
 		paper_width = (int) localDevmode->dmPaperWidth;
 		copies = pd.nCopies;
+		printDC = CreateDC(
+		"WINSPOOL", 
+		printerName,
+		NULL,
+		localDevmode);
 	    }
 	else
 	    {
