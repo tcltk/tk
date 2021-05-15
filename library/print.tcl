@@ -13,7 +13,6 @@
 
 namespace eval ::tk::print {
 
-
     if {[tk windowingsystem] eq "win32"} {
 
 	variable ::tk::print::printer_name
@@ -56,10 +55,9 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-	    
-	    parray printargs
-	    
-	    return printargs
+		
+		::tk::print::_closeprinter
+		
 	}
 
 	# _print_data
@@ -78,24 +76,26 @@ namespace eval ::tk::print {
 	    _set_dc
 	     
 	    puts "_print_data"
-	    ::tk::print::_opendoc
-	    
+		puts "opening printer"
+		
+	#   ::tk::print::_openprinter [list $printargs(hDC)]
+		
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
 	    } else {
 		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
 	    }
-
+         
 	    set pagewid  [ expr ( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) ]
 	    set pagehgt  [ expr ( $printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy) ]
 	    set totallen [ string length $data ]
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
-	    puts "flick"
 
-
-	    ::tk::print::_openpage
-	    puts "yup"
+    	 puts "opening doc"
+		   ::tk::print::_opendoc 
+        puts "opening page"
+	   ::tk::print::_openpage
 	    while { $curlen < $totallen } {
 		set linestring [ string range $data $curlen end ]
 		if { $breaklines } {
@@ -127,6 +127,7 @@ namespace eval ::tk::print {
 	    }
 	    ::tk::print::_print_closepage
 	    ::tk::print::_print_closedoc
+		::tk::print::_closeprinter
 	}
 
 	
