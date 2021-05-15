@@ -55,9 +55,9 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-		
-		::tk::print::_closeprinter
-		
+	    
+	    ::tk::print::_closeprinter
+	    
 	}
 
 	# _print_data
@@ -74,28 +74,23 @@ namespace eval ::tk::print {
 	    variable printargs
 
 	    _set_dc
-	     
-	    puts "_print_data"
-		puts "opening printer"
-		
-	#   ::tk::print::_openprinter [list $printargs(hDC)]
-		
+
+	    
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
 	    } else {
 		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
 	    }
-         
+	    
 	    set pagewid  [ expr ( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) ]
 	    set pagehgt  [ expr ( $printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy) ]
 	    set totallen [ string length $data ]
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 
-    	 puts "opening doc"
-		   ::tk::print::_opendoc 
-        puts "opening page"
-	   ::tk::print::_openpage
+	    ::tk::print::_opendoc 
+	    ::tk::print::_openpage
+	    
 	    while { $curlen < $totallen } {
 		set linestring [ string range $data $curlen end ]
 		if { $breaklines } {
@@ -111,9 +106,6 @@ namespace eval ::tk::print {
 		
 		set plist [array get printargs]
 		set clist [array get printcharwid]
-		
-		puts "plist is $plist"
-		puts "clist is $clist"
 
 		set result [_print_page_nextline $linestring \
 				$clist $plist $curhgt $font]
@@ -127,7 +119,7 @@ namespace eval ::tk::print {
 	    }
 	    ::tk::print::_print_closepage
 	    ::tk::print::_print_closedoc
-		::tk::print::_closeprinter
+	    ::tk::print::_closeprinter
 	}
 
 	
@@ -173,8 +165,6 @@ namespace eval ::tk::print {
 	    
 	    array set charwidths $clist
 	    array set printargs $plist
-	    
-	    puts "_print_page_nextline"
 	    
 	    set endindex 0
 	    set totwidth 0
