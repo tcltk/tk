@@ -44,14 +44,16 @@ namespace eval ::tk::print {
 		return
 	    }
 
-	    #Next, set values.
+	    #Next, set values. Some are taken from the printer, 
+		#some are sane defaults.
+		
 	    set printargs(hDC) [list $::tk::print::printer_name]
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
-	    set printargs(lm) 100 
-	    set printargs(tm) 100 
-	    set printargs(rm) [expr $printargs(pw) - $printargs(lm)]
-	    set printargs(bm) [expr $printargs(pl) - $printargs(tm)]
+	    set printargs(lm) 1000
+	    set printargs(tm) 1000 
+	    set printargs(rm) 1000
+	    set printargs(bm) 1000
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
@@ -78,7 +80,6 @@ namespace eval ::tk::print {
 	    } else {
 		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
 	    }
-		 
 	    set pagewid  [ expr ( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) ]
 	    set pagehgt  [ expr ( $printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy) ]
 	    set totallen [ string length $data ]
@@ -112,15 +113,15 @@ namespace eval ::tk::print {
 		}
 	    }
 
-	    ::tk::print::_print_closepage
-	    ::tk::print::_print_closedoc
+	    ::tk::print::_closepage
+	    ::tk::print::_closedoc
 	}
 
 	
 	# _print_file
 	# This function prints multiple-page files
 	# It will either break lines or just let them run over the 
-        # margins (and thus truncate).
+    # margins (and thus truncate).
 	# The font argument is JUST the font name, not any additional
 	# arguments.
 	# Arguments:
@@ -131,7 +132,6 @@ namespace eval ::tk::print {
 	proc _print_file { filename {breaklines 1 } { font {}} } {
 	    
 	    variable printargs
-	    
 	    array get printargs
 	    
 	    set fn [open $filename r]
@@ -169,7 +169,7 @@ namespace eval ::tk::print {
 			incr totwidth $charwidths([string index $string $i])
 			# set width($i) $totwidth
 		}
-
+		
 	    set endindex $i
 	    set startindex $endindex
 
@@ -197,7 +197,6 @@ namespace eval ::tk::print {
 				 -text [string trim [ string range $string 0 $endindex ] "\r\n" ] ]
 	    }
 	    return "$startindex $result"
-
 	}
 
 
