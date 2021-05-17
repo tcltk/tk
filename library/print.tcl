@@ -72,28 +72,23 @@ namespace eval ::tk::print {
 	    variable printargs
 
 	    _set_dc
-
-	    puts "print_data"
 		
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
 	    } else {
 		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
 	    }
-	    
+		 
 	    set pagewid  [ expr ( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) ]
 	    set pagehgt  [ expr ( $printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy) ]
 	    set totallen [ string length $data ]
 	    set curlen 0
 	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 
-        puts "open doc"
 	    ::tk::print::_opendoc 
-		
-		puts "open page"
 	    ::tk::print::_openpage
 	    
-	    while { $curlen < $totallen } {
+	    while { $curlen < $totallen } {		
 		set linestring [ string range $data $curlen end ]
 		if { $breaklines } {
 		    set endind [ string first "\n" $linestring ]
@@ -105,12 +100,9 @@ namespace eval ::tk::print {
 			}
 		    } 
 		} 
-		
-		set plist [array get printargs]
-		set clist [array get printcharwid]
 
 		set result [_print_page_nextline $linestring \
-				$clist $plist $curhgt $font]
+				printcharwid printargs $curhgt $font]
 		incr curlen [lindex $result 0]
 		incr curhgt [lindex $result 1]
 		if { [expr $curhgt + [lindex $result 1] ] > $pagehgt } {
@@ -119,11 +111,9 @@ namespace eval ::tk::print {
 		    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
 		}
 	    }
-		
-		puts "closing down"
+
 	    ::tk::print::_print_closepage
 	    ::tk::print::_print_closedoc
-	    #::tk::print::_closeprinter
 	}
 
 	
@@ -145,11 +135,8 @@ namespace eval ::tk::print {
 	    array get printargs
 	    
 	    set fn [open $filename r]
-
 	    set data [ read $fn ]
-
 	    close $fn
-
 	    _print_data $data $breaklines $font
 	}
 
@@ -164,27 +151,24 @@ namespace eval ::tk::print {
 	#   y -              Y value to begin printing at
 	#   font -           if non-empty specifies a font to draw the line in
 
-	proc _print_page_nextline { string clist plist y font } {
+	proc _print_page_nextline { string carray parray y font } {
 	    
 	    
-	    array set charwidths $clist
-	    array set printargs $plist
-	    
-	    set endindex 0
-	    set totwidth 0
-	    set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
-	    set maxstring [ string length $string ]
-	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
+		upvar #0 $carray charwidths
+		upvar #0 $parray printargs
+		
+		variable printargs
 
-	    for { set i 0 } { ( $i < $maxstring ) && ( $totwidth < $maxwidth ) } { incr i } {
-		set ch [ string index $string $i ]
-		if [ info exist charwidths($ch) ] {
-		    incr totwidth $charwidths([string index $string $i])
-		} else {
-		    incr totwidth $charwidths(n)
+		set endindex 0
+		set totwidth 0
+		set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
+		set maxstring [ string length $string ]
+		set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
+
+		for { set i 0 } { ( $i < $maxstring ) && ( $totwidth < $maxwidth ) } { incr i } {
+			incr totwidth $charwidths([string index $string $i])
+			# set width($i) $totwidth
 		}
-		# set width($i) $totwidth
-	    }
 
 	    set endindex $i
 	    set startindex $endindex
@@ -212,8 +196,8 @@ namespace eval ::tk::print {
 				 -anchor nw -justify left \
 				 -text [string trim [ string range $string 0 $endindex ] "\r\n" ] ]
 	    }
-
 	    return "$startindex $result"
+
 	}
 
 
