@@ -235,7 +235,7 @@ namespace eval ::tk::print {
 	#   printer -          Flag whether to use the default printer. 
 	#   name  -            App name to pass to printer.
 
-	proc _print_widget { wid {printer default} {name "Tk Print Job"} } {
+	proc _print_widget { wid {printer default} {name "Tk Print Output"} } {
 	    
 	    variable printargs
 	    
