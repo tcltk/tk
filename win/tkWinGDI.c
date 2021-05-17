@@ -5020,9 +5020,9 @@ int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Ob
 	return TCL_ERROR;
     }
 	
-	int len = 0;
+    int len = 0;
 	
-	  /*Start an individual page.*/
+    /*Start an individual page.*/
     if ( StartPage(printDC) <= 0) {
 	
 	return TCL_ERROR;
@@ -5031,14 +5031,14 @@ int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Ob
     char *printer = Tcl_GetStringFromObj(objv[1], &len);
 	
     if (printDC == NULL) {
-    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 	
-if ((OpenPrinter(printer, &printDC, NULL)) == FALSE) {
-	    Tcl_AppendResult(interp, "unable to open printer", NULL);
-		return TCL_ERROR;
-	}
+    if ((OpenPrinter(printer, &printDC, NULL)) == FALSE) {
+	Tcl_AppendResult(interp, "unable to open printer", NULL);
+	return TCL_ERROR;
+    }
 	
     return TCL_OK;
 }
@@ -5062,8 +5062,8 @@ int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_O
     (void) argc;
     (void) objv;
 	
-	if (printDC == NULL) {
-    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+    if (printDC == NULL) {
+	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 	
@@ -5093,8 +5093,8 @@ int PrintOpenDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *c
 
     int output = 0;
 
-     if (printDC == NULL) {
-    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+    if (printDC == NULL) {
+	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 	
@@ -5131,14 +5131,14 @@ int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *
     (void) argc;
     (void) objv;
 
-   if (printDC == NULL) {
-    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+    if (printDC == NULL) {
+	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 	
-    
+   
     if ( EndDoc(printDC) <= 0) {
-	   Tcl_AppendResult(interp, "unable to establish close document", NULL);
+	Tcl_AppendResult(interp, "unable to establish close document", NULL);
 	return TCL_ERROR;
     }
     DeleteDC(printDC);
@@ -5165,8 +5165,8 @@ int PrintOpenPage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *
     (void) argc;
     (void) objv;
 	
-	 if (printDC == NULL) {
-    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+    if (printDC == NULL) {
+	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 	
@@ -5200,14 +5200,14 @@ int PrintClosePage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj 
     (void) argc;
     (void) objv;
     
-	 if (printDC == NULL) {
-    Tcl_AppendResult(interp, "unable to establish device context", NULL);
+    if (printDC == NULL) {
+	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 	
 	
     if ( EndPage(printDC) <= 0) {
-		  Tcl_AppendResult(interp, "unable to close page", NULL);
+	Tcl_AppendResult(interp, "unable to close page", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

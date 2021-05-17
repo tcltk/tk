@@ -271,16 +271,16 @@ namespace eval ::tk::print {
 	    set pm "page margins"
 	    set ppi "pixels per inch"
 	    
-	    set printer_x [ expr ( [lindex $p($pd) 0] - \
-				       [lindex $p($pm) 0 ] - \
-				       [lindex $p($pm) 2 ] \
+	    set printer_x [ expr ( $printargs(pw) - \
+				      $printargs(lm)- \
+				       $printargs(rm) \
 				       ) * \
-				[lindex $p($ppi) 0] / 1000.0 ]
-	    set printer_y [ expr ( [lindex $p($pd) 1] - \
-				       [lindex $p($pm) 1 ] - \
-				       [lindex $p($pm) 3 ] \
+				$printargs(resx)  / 1000.0 ]
+	    set printer_y [ expr ( $printargs(pl)  - \
+				       $printargs(tm) - \
+				       $printargs(bm) 1000 \
 				       ) * \
-				[lindex $p($ppi) 1] / 1000.0 ]
+				$printargs(resy) / 1000.0 ]
 	    set factor_x [ expr $window_x / $printer_x ]
 	    set factor_y [ expr $window_y / $printer_y ]
 	    
@@ -292,7 +292,7 @@ namespace eval ::tk::print {
 		set ph $printer_x
 	    }
 
-	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph -offset $p(resolution)
+	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph -offset $printargs(resx)
 	    
 	    # handling of canvas widgets
 	    # additional procs can be added for other widget types
@@ -310,10 +310,9 @@ namespace eval ::tk::print {
 		}
 	    }
 
-	    # end printing process ------
+	    # End printing process ------
 	    ::tk::print::_closepage
 	    ::tk::print::_closedoc
-	    ::tk::print::_closeprinter
 	}
 
 
