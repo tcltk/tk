@@ -4959,8 +4959,8 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		localPrinterName = (char*) localDevmode->dmDeviceName;
 		dpi_y = localDevmode->dmYResolution;
 		dpi_x =  localDevmode->dmPrintQuality;
-		paper_height = (int) localDevmode->dmPaperLength;
-		paper_width = (int) localDevmode->dmPaperWidth;
+		paper_height = (int) localDevmode->dmPaperLength / 0.254;  /*Convert to logical points.*/
+		paper_width = (int) localDevmode->dmPaperWidth / 0.254;   /* Convert to logical points.*/
 		copies = pd.nCopies;
 		printDC = CreateDC(
 		"WINSPOOL", 
