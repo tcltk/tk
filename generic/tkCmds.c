@@ -1802,8 +1802,8 @@ Tk_WinfoObjCmd(
 		sprintf(buf, "%s %d", string, visInfoPtr[i].depth);
 	    }
 	    if (includeVisualId) {
-		sprintf(visualIdString, " 0x%lx",
-			(unsigned long) visInfoPtr[i].visualid);
+		sprintf(visualIdString, " 0x%" TCL_Z_MODIFIER "x",
+			(size_t) visInfoPtr[i].visualid);
 		strcat(buf, visualIdString);
 	    }
 	    strPtr = Tcl_NewStringObj(buf, -1);

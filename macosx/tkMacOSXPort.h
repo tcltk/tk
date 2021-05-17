@@ -118,7 +118,7 @@
  */
 
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%lx", (unsigned long) (w))
+	sprintf((buf), "0x%" TCL_Z_MODIFIER "x", (size_t)(w));
 
 /*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.

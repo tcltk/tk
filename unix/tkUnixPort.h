@@ -164,7 +164,7 @@
 
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
+	sprintf((buf), "%#08" TCL_Z_MODIFIER "x", (size_t)(w));
 #endif
 
 /*

@@ -1857,7 +1857,7 @@ TestpropObjCmd(
 {
     Tk_Window mainWin = (Tk_Window)clientData;
     int result, actualFormat;
-    unsigned long bytesAfter, length, value;
+    size_t bytesAfter, length, value;
     Atom actualType, propName;
     unsigned char *property, *p;
     char *end;
@@ -1878,7 +1878,7 @@ TestpropObjCmd(
 	    &bytesAfter, &property);
     if ((result == Success) && (actualType != None)) {
 	if ((actualFormat == 8) && (actualType == XA_STRING)) {
-	    for (p = property; ((unsigned long)(p-property)) < length; p++) {
+	    for (p = property; ((size_t)(p-property)) < length; p++) {
 		if (*p == 0) {
 		    *p = '\n';
 		}
@@ -1896,7 +1896,7 @@ TestpropObjCmd(
 		    value = 0xff & *p;
 		    p += 1;
 		}
-		sprintf(buffer, "0x%lx", value);
+		sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", value);
 		Tcl_AppendElement(interp, buffer);
 	    }
 	}
