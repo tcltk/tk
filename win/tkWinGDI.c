@@ -1515,16 +1515,10 @@ static int GdiCharWidths(
 
 
     /* Now, get the widths using the correct function for font type. */
-  
-    /*
-     * Try the correct function for non-TrueType fonts first.
-     */
-	 
 	if ( (retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE )
-    {
-      /*Try TrueType fonts next.*/
-      retval = GetCharABCWidths (hDC, 0, 255, (LPABC) widths );
-    }
+	{
+    retval = GetCharWidth (hDC, 0, 255, widths );
+	}
   
     /*
      * Retval should be 1 (TRUE) if the function succeeded. If the function fails,
