@@ -104,17 +104,37 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
+
+    if ([NSApp macOSVersion] >= 110000) {
+
+   /*
+    * Initialize Apple Event processing. Apple's docs (see
+    * https://developer.apple.com/documentation/appkit/nsapplication)
+    * recommend doing this here, although historically we have
+    * done this in applicationWillFinishLaunching. In response to
+    * bug 7bb246b072.
+    */
+
+    TkMacOSXInitAppleEvents(_eventInterp);
+
+    }
 }
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     (void)notification;
 
+   if ([NSApp macOSVersion] < 110000) {
+
    /*
-    * Initialize event processing.
+    * Initialize Apple Event processing on macOS versions
+    * older than Big Sur (11).
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
+
+    }
+
 
     /*
      * Initialize the graphics context.
