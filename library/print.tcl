@@ -45,8 +45,8 @@ namespace eval ::tk::print {
 	    }
 
 	    #Next, set values. Some are taken from the printer, 
-		#some are sane defaults.
-		
+	    #some are sane defaults.
+	    
 	    set printargs(hDC) [list $::tk::print::printer_name]
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
@@ -57,9 +57,9 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
-		set printargs(resolution) [list  $::tk::print::dpi_x $::tk::print::dpi_y]
+	    set printargs(resolution) [list  $::tk::print::dpi_x $::tk::print::dpi_y]
 
-}
+	}
 
 	# _print_data
 	# This function prints multiple-page files, using a line-oriented
@@ -75,7 +75,7 @@ namespace eval ::tk::print {
 	    variable printargs
 
 	    _set_dc
-		
+	    
 	    if { [string length $font] == 0 } {
 		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
 	    } else {
@@ -122,7 +122,7 @@ namespace eval ::tk::print {
 	# _print_file
 	# This function prints multiple-page files
 	# It will either break lines or just let them run over the 
-    # margins (and thus truncate).
+	# margins (and thus truncate).
 	# The font argument is JUST the font name, not any additional
 	# arguments.
 	# Arguments:
@@ -155,28 +155,30 @@ namespace eval ::tk::print {
 	proc _print_page_nextline { string carray parray y font } {
 	    
 	    
-		upvar #0 $carray charwidths
-		upvar #0 $parray printargs
-		
-		variable printargs
+	    upvar #0 $carray charwidths
+	    upvar #0 $parray printargs
+	    
+	    variable printargs
 
-		set endindex 0
-		set totwidth 0
-		set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
-		set maxstring [ string length $string ]
-		set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
+	    set endindex 0
+	    set totwidth 0
+	    set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
+	    set maxstring [ string length $string ]
+	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
 
-		for { set i 0 } { ( $i < $maxstring ) && ( $totwidth < $maxwidth ) } { incr i } {
-			incr totwidth $charwidths([string index $string $i])
-			# set width($i) $totwidth
-		}
-		
+	    for { set i 0 } { ( $i < $maxstring ) && ( $totwidth < $maxwidth ) } { incr i } {
+		incr totwidth $charwidths([string index $string $i])
+		# set width($i) $totwidth
+	    }
+	    
 	    set endindex $i
 	    set startindex $endindex
 
 	    if { $i < $maxstring } {
-		# In this case, the whole data string is not used up, and we wish to break on a 
-		# word. Since we have all the partial widths calculated, this should be easy.
+		# In this case, the whole data string is not used up, and we wish
+		# to break on a  word. Since we have all the partial widths calculated,
+		# this should be easy.
+		
 		set endindex [ expr [string wordstart $string $endindex] - 1 ]
 		set startindex [ expr $endindex + 1 ]
 
@@ -240,7 +242,7 @@ namespace eval ::tk::print {
 	    
 	    variable printargs
 	    
-	     _set_dc 
+	    _set_dc 
 	    
 	    array get printargs
 
@@ -268,18 +270,18 @@ namespace eval ::tk::print {
 		set window_y [ winfo height $wid ]
 	    }
 
-		set printer_x [ expr ( $printargs(pw) - \
-					   $printargs(lm) - \
-					   $printargs(rm) \
-					   ) * \
+	    set printer_x [ expr ( $printargs(pw) - \
+				       $printargs(lm) - \
+				       $printargs(rm) \
+				       ) * \
 				$printargs(resx)  / 1000.0 ]
-		set printer_y [ expr ( $printargs(pl) - \
-					   $printargs(tm) - \
-					   $printargs(bm) \
-					   ) * \
+	    set printer_y [ expr ( $printargs(pl) - \
+				       $printargs(tm) - \
+				       $printargs(bm) \
+				       ) * \
 				$printargs(resy) / 1000.0 ]
-		set factor_x [ expr $window_x / $printer_x ]
-		set factor_y [ expr $window_y / $printer_y ]
+	    set factor_x [ expr $window_x / $printer_x ]
+	    set factor_y [ expr $window_y / $printer_y ]
 	    
 	    if { $factor_x < $factor_y } {
 		set lo $window_y
@@ -291,23 +293,17 @@ namespace eval ::tk::print {
 
 	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph -offset $printargs(resolution)
 	    
-	    # handling of canvas widgets
-	    # additional procs can be added for other widget types
+	    # Handling of canvas widgets.
 	    switch [winfo class $wid] {
 		Canvas {
-		    #	    if {[catch {
 		    _print_canvas $printargs(hDC) $wid
-		    #	    } msg]} {
-		    #		debug_puts "print_widget: $msg"
-		    #		error "Windows Printing Problem: $msg"
-		    #	    }
 		}
 		default {
 		    puts "Can't print items of type [winfo class $wid]. No handler registered"
 		}
 	    }
 
-	    # End printing process ------
+	    # End printing process.
 	    ::tk::print::_closepage
 	    ::tk::print::_closedoc
 	}
@@ -327,11 +323,11 @@ namespace eval ::tk::print {
 	    variable printargs
 	    array get printargs
 
-	    # get information about page being printed to
+	    # Get information about page being printed to
 	    # print_canvas.CalcSizing $cw
 	    set vtgPrint(canvas.bg) [string tolower [$cw cget -background]]
 
-	    # re-write each widget from cw to printer
+	    # Re-write each widget from cw to printer
 	    foreach id [$cw find all] {
 		set type [$cw type $id]
 		if { [ info commands _print_canvas.$type ] == "_print_canvas.$type" } {
@@ -559,14 +555,17 @@ namespace eval ::tk::print {
 
 	    set just [$cw itemcget $id -justify]
 	    
-	    # Get the canvas font info
+	    # Get the canvas font info.
 	    set font [ $cw itemcget $id -font ]
-	    # Find the real font info
+	    
+	    # Find the real font info.
 	    set font [font actual $font]
-	    # Create a compatible font, suitable for printer name extraction
+	    
+	    # Create a compatible font, suitable for printer name extraction.
 	    set font [ eval font create $font ]
-	    # Just get the name and family, or some of the ::tk::print::_gdi commands will fail.
-	    # Improve this as GDI improves
+	    
+	    # Just get the name and family, or some of the ::tk::print::_gdi
+	    # commands will fail.
 	    set font [list [font configure $font -family]  -[font configure $font -size] ]
 
 	    set cmmd "::tk::print::_gdi text $printargs(hDC) $coords -fill $color -text [list $txt] \
@@ -592,12 +591,14 @@ namespace eval ::tk::print {
 	    variable printargs
 	    array get printargs
 
-	    # First, we have to get the image name
+	    # First, we have to get the image name.
 	    set imagename [ $cw itemcget $id -image]
-	    # Now we get the size
+	    
+	    # Now we get the size.
 	    set wid [ image width $imagename]
 	    set hgt [ image height $imagename ]
-	    # next, we get the location and anchor
+	    
+	    # Next, we get the location and anchor
 	    set anchor [ $cw itemcget $id -anchor ]
 	    set coords [ $cw coords $id ]
 	    
@@ -605,7 +606,8 @@ namespace eval ::tk::print {
 	    # Since the GDI commands don't yet support images and bitmaps,
 	    # and since this represents a rendered bitmap, we CAN use
 	    # copybits IF we create a new temporary toplevel to hold the beast.
-	    # if this is too ugly, change the option!
+	    # If this is too ugly, change the option!
+	    
 	    if { [ info exist option(use_copybits) ] } {
 		set firstcase $option(use_copybits)
 	    } else {
@@ -648,19 +650,22 @@ namespace eval ::tk::print {
 	    variable printargs
 	    array get printargs
 
-	    # First, we have to get the bitmap name
+	    # First, we have to get the bitmap name.
 	    set imagename [ $cw itemcget $id -image]
-	    # Now we get the size
+	    
+	    # Now we get the size.
 	    set wid [ image width $imagename]
 	    set hgt [ image height $imagename ]
-	    # next, we get the location and anchor
+	    
+	    #Next, we get the location and anchor.
 	    set anchor [ $cw itemcget $id -anchor ]
 	    set coords [ $cw coords $id ]
 	    
 	    # Since the GDI commands don't yet support images and bitmaps,
 	    # and since this represents a rendered bitmap, we CAN use
 	    # copybits IF we create a new temporary toplevel to hold the beast.
-	    # if this is too ugly, change the option!
+	    # If this is too ugly, change the option!
+	    
 	    if { [ info exist option(use_copybits) ] } {
 		set firstcase $option(use_copybits)
 	    } else {
@@ -707,7 +712,7 @@ namespace eval ::tk::print {
 	    return $color
 	}
 
-	# Initialize all the variables once
+	# Initialize all the variables once.
 	_init_print_canvas
     }
     #end win32 procedures  
