@@ -1515,9 +1515,9 @@ static int GdiCharWidths(
 
 
     /* Now, get the widths using the correct function for font type. */
-	if ( (retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE )
+    if ( (retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE )
 	{
-    retval = GetCharWidth (hDC, 0, 255, widths );
+	    retval = GetCharWidth (hDC, 0, 255, widths );
 	}
   
     /*
@@ -4963,10 +4963,10 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		paper_width = (int) localDevmode->dmPaperWidth / 0.254;   /* Convert to logical points.*/
 		copies = pd.nCopies;
 		printDC = CreateDC(
-		"WINSPOOL", 
-		printerName,
-		NULL,
-		localDevmode);
+				   "WINSPOOL", 
+				   printerName,
+				   NULL,
+				   localDevmode);
 	    }
 	else
 	    {

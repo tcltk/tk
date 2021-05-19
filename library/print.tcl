@@ -57,6 +57,7 @@ namespace eval ::tk::print {
 	    set printargs(resx) $::tk::print::dpi_x
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
+		set printargs(resolution) [list  $::tk::print::dpi_x $::tk::print::dpi_y]
 
 }
 
@@ -239,7 +240,7 @@ namespace eval ::tk::print {
 	    
 	    variable printargs
 	    
-	    _set_dc 
+	     _set_dc 
 	    
 	    array get printargs
 
@@ -267,22 +268,18 @@ namespace eval ::tk::print {
 		set window_y [ winfo height $wid ]
 	    }
 
-	    set pd "page dimensions"
-	    set pm "page margins"
-	    set ppi "pixels per inch"
-	    
-	    set printer_x [ expr ( $printargs(pw) - \
-				      $printargs(lm)- \
-				       $printargs(rm) \
-				       ) * \
+		set printer_x [ expr ( $printargs(pw) - \
+					   $printargs(lm) - \
+					   $printargs(rm) \
+					   ) * \
 				$printargs(resx)  / 1000.0 ]
-	    set printer_y [ expr ( $printargs(pl)  - \
-				       $printargs(tm) - \
-				       $printargs(bm) 1000 \
-				       ) * \
+		set printer_y [ expr ( $printargs(pl) - \
+					   $printargs(tm) - \
+					   $printargs(bm) \
+					   ) * \
 				$printargs(resy) / 1000.0 ]
-	    set factor_x [ expr $window_x / $printer_x ]
-	    set factor_y [ expr $window_y / $printer_y ]
+		set factor_x [ expr $window_x / $printer_x ]
+		set factor_y [ expr $window_y / $printer_y ]
 	    
 	    if { $factor_x < $factor_y } {
 		set lo $window_y
@@ -292,14 +289,14 @@ namespace eval ::tk::print {
 		set ph $printer_x
 	    }
 
-	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph -offset $printargs(resx)
+	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph -offset $printargs(resolution)
 	    
 	    # handling of canvas widgets
 	    # additional procs can be added for other widget types
 	    switch [winfo class $wid] {
 		Canvas {
 		    #	    if {[catch {
-		    _print_canvas [lindex $printargs(hDC) 0] $wid
+		    _print_canvas $printargs(hDC) $wid
 		    #	    } msg]} {
 		    #		debug_puts "print_widget: $msg"
 		    #		error "Windows Printing Problem: $msg"
@@ -415,7 +412,7 @@ namespace eval ::tk::print {
 	    variable printargs
 	    array get printargs
 
-	    set color [print_canvas.TransColor [$cw itemcget $id -outline]]
+	    set color [_print_canvas.TransColor [$cw itemcget $id -outline]]
 	    if { [string match $vtgPrint(printer.bg) $color] } {
 		return
 	    }
@@ -496,7 +493,7 @@ namespace eval ::tk::print {
 
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    if {![string length $fcolor]} {set fcolor $vtgPrint(printer.bg)}
-	    set ocolor [print_canvas.TransColor [$cw itemcget $id -outline]]
+	    set ocolor [_print_canvas.TransColor [$cw itemcget $id -outline]]
 	    if {![string length $ocolor]} {set ocolor $vtgPrint(printer.bg)}
 	    set coords  [$cw coords $id]
 	    set wdth [$cw itemcget $id -width]
@@ -524,7 +521,7 @@ namespace eval ::tk::print {
 
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
 	    if {![string length $fcolor]} {set fcolor $vtgPrint(printer.bg)}
-	    set ocolor [print_canvas.TransColor [$cw itemcget $id -outline]]
+	    set ocolor [_print_canvas.TransColor [$cw itemcget $id -outline]]
 	    if {![string length $ocolor]} {set ocolor $vtgPrint(printer.bg)}
 	    set coords  [$cw coords $id]
 	    set wdth [$cw itemcget $id -width]
@@ -545,8 +542,6 @@ namespace eval ::tk::print {
 
 	proc _print_canvas.text {hdc cw id} {
 	    variable vtgPrint
-	    
-	    _set_dc
 	    
 	    variable printargs
 	    array get printargs
