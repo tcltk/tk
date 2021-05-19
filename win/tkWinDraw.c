@@ -586,9 +586,8 @@ TkPutImage(
 	ckfree(infoPtr);
     }
     if (!bitmap) {
-	Tcl_Panic("Fail to allocate bitmap");
 	DeleteDC(dcMem);
-    	TkWinReleaseDrawableDC(d, dc, &state);
+	TkWinReleaseDrawableDC(d, dc, &state);
 	return BadValue;
     }
     bitmap = (HBITMAP)SelectObject(dcMem, bitmap);
