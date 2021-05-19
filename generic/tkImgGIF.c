@@ -1086,7 +1086,7 @@ DoExtension(
     /* Add extension to dict */
     if (NULL != metadataOutObj
 	    && extensionStreamName[0] != '\0' ) {
-	Tcl_Obj *ValueObj;
+	Tcl_Obj *ValueObj = NULL;
 	int length = 0;
 	for (;;) {
 	    count = GetDataBlock(gifConfPtr, chan, buf);
