@@ -1692,7 +1692,7 @@ int GdiText(
 			    argv++;
 			    if ( argc > 0 )
 				sizerect.right += atol(argv[0]);
-			    /* If a width is specified, break at words.. */
+			    /* If a width is specified, break at words. */
 			    format_flags |= DT_WORDBREAK;
 			}
 		    else if ( strcmp(argv[0], "-single") == 0 )
@@ -3112,7 +3112,7 @@ static int GdiFreeBrush(
  * Functions have removed reliance on X and Tk libraries,
  * as well as removing the need for TkWindows.
  * GdiGetColor is a copy of a TkpGetColor from tkWinColor.c
- *  GdiParseColor is a copy of XParseColor from xcolors.c
+ * GdiParseColor is a copy of XParseColor from xcolors.c
  */
 typedef struct {
     const char *name;
@@ -4926,12 +4926,6 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
     pd.Flags = PD_HIDEPRINTTOFILE  | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
 	
     if (PrintDlg(&pd) == TRUE) {
-	/*Set device context here for all GDI printing operations.*/
-	printDC = pd.hDC;
-	if (printDC = NULL) {
-	    Tcl_AppendResult(interp, "can't allocate printer DC", NULL);
-	    return TCL_ERROR;
-	} 	
 	
 	/*Get document info.*/
 	ZeroMemory( &di, sizeof(di));
@@ -4962,6 +4956,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		paper_height = (int) localDevmode->dmPaperLength / 0.254;  /*Convert to logical points.*/
 		paper_width = (int) localDevmode->dmPaperWidth / 0.254;   /* Convert to logical points.*/
 		copies = pd.nCopies;
+		/*Set device context here for all GDI printing operations.*/
 		printDC = CreateDC(
 				   "WINSPOOL", 
 				   printerName,
