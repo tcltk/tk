@@ -540,7 +540,7 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
