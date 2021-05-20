@@ -487,8 +487,7 @@ proc ::tk::MenuMotion {menu x y state} {
 	}
         set index [$menu index @$x,$y]
         if {[info exists Priv(menuActivated)] \
-                && $index ne "none" \
-                && $index ne "" \
+                && $index >= 0 \
                 && $index ne $activeindex} {
             set mode [option get $menu clickToFocus ClickToFocus]
             if {[string is false $mode]} {
@@ -528,7 +527,7 @@ proc ::tk::MenuButtonDown menu {
     if {![winfo viewable $menu]} {
         return
     }
-    if {[$menu index active] eq "none" || [$menu index active] eq ""} {
+    if {[$menu index active] < 0} {
         if {[$menu cget -type] ne "menubar" } {
             set Priv(window) {}
         }
@@ -586,7 +585,7 @@ proc ::tk::MenuButtonDown menu {
 proc ::tk::MenuLeave {menu rootx rooty state} {
     variable ::tk::Priv
     set Priv(window) {}
-    if {[$menu index active] eq "none" || [$menu index active] eq ""} {
+    if {[$menu index active] < 0} {
 	return
     }
     if {[$menu type active] eq "cascade" \
@@ -654,7 +653,7 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	}
     } else {
 	set active [$w index active]
-	if {$Priv(popup) eq "" || $active ne "none" || $active ne ""} {
+	if {$Priv(popup) eq "" || $active >= 0} {
 	    MenuUnpost $w
 	}
 	uplevel #0 [list $w invoke active]
@@ -798,8 +797,7 @@ proc ::tk::MenuNextMenu {menu direction} {
 	if {[winfo class $mb] eq "Menubutton" \
 		&& [$mb cget -state] ne "disabled" \
 		&& [$mb cget -menu] ne "" \
-		&& [[$mb cget -menu] index last] ne "" \
-		&& [[$mb cget -menu] index last] ne "none"} {
+		&& [[$mb cget -menu] index last] >= 0} {
 	    break
 	}
 	if {$mb eq $w} {
@@ -821,13 +819,14 @@ proc ::tk::MenuNextMenu {menu direction} {
 #				-1 means go to the next higher entry.
 
 proc ::tk::MenuNextEntry {menu count} {
-    if {[$menu index last] eq "none" || [$menu index last] eq ""} {
+    set last [$menu index last]
+    if {$last < 0} {
 	return
     }
     set length [expr {[$menu index last]+1}]
     set quitAfter $length
     set active [$menu index active]
-    if {$active eq "none" || $active eq "none"} {
+    if {$active < 0} {
 	set i 0
     } else {
 	set i [expr {$active + $count}]
@@ -1028,9 +1027,6 @@ proc ::tk::TraverseWithinMenu {w char} {
     }
     set char [string tolower $char]
     set last [$w index last]
-    if {$last eq "none" || $last eq ""} {
-	return
-    }
     for {set i 0} {$i <= $last} {incr i} {
 	if {[catch {set char2 [string index \
 		[$w entrycget $i -label] [$w entrycget $i -underline]]}]} {
@@ -1070,13 +1066,10 @@ proc ::tk::MenuFirstEntry menu {
 	return
     }
     tk_menuSetFocus $menu
-    if {[$menu index active] ne "none" || [$menu index active] ne ""} {
+    if {[$menu index active] >= 0} {
 	return
     }
     set last [$menu index last]
-    if {$last eq "none" || $last eq ""} {
-	return
-    }
     for {set i 0} {$i <= $last} {incr i} {
 	if {([catch {set state [$menu entrycget $i -state]}] == 0) \
 		&& $state ne "disabled" && [$menu type $i] ne "tearoff"} {
@@ -1116,9 +1109,6 @@ proc ::tk::MenuFindName {menu s} {
 	return $i
     }
     set last [$menu index last]
-    if {$last eq "none" || $last eq ""} {
-	return
-    }
     for {set i 0} {$i <= $last} {incr i} {
 	if {![catch {$menu entrycget $i -label} label]} {
 	    if {$label eq $s} {
