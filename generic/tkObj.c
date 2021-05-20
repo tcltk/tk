@@ -250,8 +250,8 @@ TkGetIntForIndex(
     }
 #if TCL_MAJOR_VERSION < 9
     if ((*indexPtr < -1) || (end < -1)) {
-	return TCL_ERROR;
-    }
+	*indexPtr = TCL_INDEX_NONE;
+    } else
 #endif
     if ((*indexPtr + 1) > (end + 1)) {
 	*indexPtr = end + 1;
