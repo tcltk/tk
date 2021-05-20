@@ -228,7 +228,7 @@ proc ttk::menubutton::TransferGrab {mb} {
 #
 proc ttk::menubutton::FindMenuEntry {menu s} {
     set last [$menu index last]
-    if {$last eq "none" || $last eq ""} {
+    if {$last eq "none" || $last < 0} {
 	return ""
     }
     for {set i 0} {$i <= $last} {incr i} {
