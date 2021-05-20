@@ -58,7 +58,7 @@ static void ReleaseData(
 CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
-    uint32 alphaInfo)
+    uint32_t alphaInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
@@ -411,12 +411,12 @@ XCreateImage(
  *      Source Atop Composition (kCGBlendModeSourceAtop in Apple's Core
  *      Graphics).
  *
- *      The TkpPutRGBAfunction is used by TkImgPhotoDisplay to render photo
+ *      The TkpPutRGBAImage function is used by TkImgPhotoDisplay to render photo
  *      images if the compile-time variable TK_CAN_RENDER_RGBA is defined in
  *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
  *
  * Results:
- *	These functions always return Success.
+ *	These functions return either BadDrawable or Success.
  *
  * Side effects:
  *	Draws the image on the specified drawable.
@@ -431,7 +431,7 @@ XCreateImage(
 
 static int
 TkMacOSXPutImage(
-    uint32_t pixelFormat, 
+    uint32_t pixelFormat,
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
@@ -445,6 +445,7 @@ TkMacOSXPutImage(
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
+    int result = Success;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
@@ -462,7 +463,6 @@ TkMacOSXPutImage(
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
-
 	    bounds = CGRectMake(0, 0, image->width, image->height);
 	    srcRect = CGRectMake(src_x, src_y, width, height);
 	    dstRect = CGRectMake(dest_x, dest_y, width, height);
@@ -472,27 +472,27 @@ TkMacOSXPutImage(
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
+	    result = BadDrawable;
 	}
     } else {
 	TkMacOSXDbgMsg("Invalid destination drawable");
+	result = BadDrawable;
     }
     TkMacOSXRestoreDrawingContext(&dc);
-    return Success;
+    return result;
 }
 
 int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
 	      int src_x, int src_y, int dest_x, int dest_y,
-	      unsigned int width, unsigned int height)
-{
+	      unsigned int width, unsigned int height) {
     return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
 
-int TkpPutRGBAImage(unsigned long *colors, int ncolors, Display* display,
+int TkpPutRGBAImage(Display* display,
 		    Drawable drawable, GC gc, XImage* image,
 		    int src_x, int src_y, int dest_x, int dest_y,
-		    unsigned int width, unsigned int height)
-{
+		    unsigned int width, unsigned int height) {
     return TkMacOSXPutImage(PIXEL_RGBA, display, drawable, gc, image,
 			    src_x, src_y, dest_x, dest_y, width, height);
 }
