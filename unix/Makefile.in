@@ -284,7 +284,7 @@ CC_SEARCH_FLAGS	= @CC_SEARCH_FLAGS@
 LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 
 # support for embedded libraries on Darwin / Mac OS X
-DYLIB_INSTALL_DIR	= ${LIB_RUNTIME_DIR}
+DYLIB_INSTALL_DIR	= $(libdir)
 
 # support for Xft:
 XFT_CFLAGS		= @XFT_CFLAGS@
