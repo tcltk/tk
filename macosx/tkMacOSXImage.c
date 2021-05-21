@@ -4,7 +4,7 @@
  *	The code in this file provides an interface for XImages,
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2017-2020 Marc Culler.
  *
@@ -23,7 +23,7 @@ static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
 
 int
 _XInitImageFuncPtrs(
-    XImage *image)
+    TCL_UNUSED(XImage *)) /* image */
 {
     return 0;
 }
@@ -45,13 +45,18 @@ _XInitImageFuncPtrs(
  *----------------------------------------------------------------------
  */
 
-static void ReleaseData(void *info, const void *data, size_t size) {
+static void ReleaseData(
+    void *info,
+    TCL_UNUSED(const void *), /* data */
+    TCL_UNUSED(size_t))       /* size */
+{
     ckfree(info);
 }
 
 CGImageRef
 TkMacOSXCreateCGImageWithXImage(
-    XImage *image)
+    XImage *image,
+    uint32_t alphaInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
@@ -76,7 +81,7 @@ TkMacOSXCreateCGImageWithXImage(
 	if (image->bitmap_bit_order != MSBFirst) {
 	    char *srcPtr = image->data + image->xoffset;
 	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = ckalloc(len));
+	    char *destPtr = (data = (char *)ckalloc(len));
 
 	    while (srcPtr < endPtr) {
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
@@ -94,6 +99,7 @@ TkMacOSXCreateCGImageWithXImage(
 		    provider, decode, 0);
 	}
     } else if ((image->format == ZPixmap) && (image->bits_per_pixel == 32)) {
+
 	/*
 	 * Color image
 	 */
@@ -101,6 +107,7 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
 	if (image->width == 0 && image->height == 0) {
+
 	    /*
 	     * CGCreateImage complains on early macOS releases.
 	     */
@@ -111,7 +118,7 @@ TkMacOSXCreateCGImageWithXImage(
 	bitsPerPixel = 32;
 	bitmapInfo = (image->byte_order == MSBFirst ?
 		kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
-	bitmapInfo |= kCGImageAlphaLast;
+	bitmapInfo |= alphaInfo;
 	data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len,
@@ -319,7 +326,7 @@ ImagePutPixel(
 XImage *
 XCreateImage(
     Display* display,
-    Visual* visual,
+    TCL_UNUSED(Visual*),  /* visual */
     unsigned int depth,
     int format,
     int offset,
@@ -388,14 +395,25 @@ XCreateImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkPutImage, XPutImage --
+ * TkPutImage, XPutImage, TkpPutRGBAImage --
  *
- *	Copies a rectangular subimage of an XImage into a drawable.  Currently
- *      this is only called by TkImgPhotoDisplay, using a Window as the
- *      drawable.
+ *	These functions, which all have the same signature, copy a rectangular
+ *      subimage of an XImage into a drawable.  The first two are identical on
+ *      macOS.  They assume that the XImage data has the structure of a 32bpp
+ *      ZPixmap in which the image data is an array of 32bit integers packed
+ *      with 8 bit values for the Red Green and Blue channels.  They ignore the
+ *      fourth byte.  The function TkpPutRGBAImage assumes that the XImage data
+ *      has been extended by using the fourth byte to store an 8-bit Alpha
+ *      value.  (The Alpha data is assumed not to pre-multiplied).  The image
+ *      is then drawn into the drawable using standard Porter-Duff Source Atop
+ *      Composition (kCGBlendModeSourceAtop in Apple's Core Graphics).
+ *
+ *      The TkpPutRGBAImage function is used by TkImgPhotoDisplay to render photo
+ *      images if the compile-time variable TK_CAN_RENDER_RGBA is defined in
+ *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
  *
  * Results:
- *	None.
+ *	These functions return either BadDrawable or Success.
  *
  * Side effects:
  *	Draws the image on the specified drawable.
@@ -403,8 +421,14 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-int
-XPutImage(
+#define PIXEL_RGBA kCGImageAlphaLast
+#define PIXEL_ARGB kCGImageAlphaFirst
+#define PIXEL_XRGB kCGImageAlphaNoneSkipFirst
+#define PIXEL_RGBX kCGImageAlphaNoneSkipLast
+
+static int
+TkMacOSXPutImage(
+    uint32_t pixelFormat,
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
@@ -418,14 +442,14 @@ XPutImage(
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
-
+    int result = Success;
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
 	CGRect bounds, srcRect, dstRect;
-	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image);
+	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image, pixelFormat);
 
 	/*
 	 * The CGContext for a pixmap is RGB only, with A = 0.
@@ -435,7 +459,6 @@ XPutImage(
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
-
 	    bounds = CGRectMake(0, 0, image->width, image->height);
 	    srcRect = CGRectMake(src_x, src_y, width, height);
 	    dstRect = CGRectMake(dest_x, dest_y, width, height);
@@ -445,30 +468,39 @@ XPutImage(
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
+	    result = BadDrawable;
 	}
     } else {
 	TkMacOSXDbgMsg("Invalid destination drawable");
+	result = BadDrawable;
     }
     TkMacOSXRestoreDrawingContext(&dc);
-    return Success;
+    return result;
 }
 
-int
-TkPutImage(
-    unsigned long *colors,	/* Array of pixel values used by this image.
-				 * May be NULL. */
-    int ncolors,		/* Number of colors used, or 0. */
-    Display *display,
-    Drawable d,			/* Destination drawable. */
-    GC gc,
-    XImage *image,		/* Source image. */
-    int src_x, int src_y,	/* Offset of subimage. */
-    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
-    unsigned int width, unsigned int height)
-				/* Dimensions of subimage. */
-{
-    return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
+int XPutImage(Display* display, Drawable drawable, GC gc, XImage* image,
+	      int src_x, int src_y, int dest_x, int dest_y,
+	      unsigned int width, unsigned int height) {
+    return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
+			    src_x, src_y, dest_x, dest_y, width, height);
 }
+
+int TkPutImage(unsigned long *colors, int ncolors, Display* display,
+	       Drawable drawable, GC gc, XImage* image,
+	       int src_x, int src_y, int dest_x, int dest_y,
+	       unsigned int width, unsigned int height) {
+    return TkMacOSXPutImage(PIXEL_RGBX, display, drawable, gc, image,
+		     src_x, src_y, dest_x, dest_y, width, height);
+}
+
+int TkpPutRGBAImage(Display* display,
+		    Drawable drawable, GC gc, XImage* image,
+		    int src_x, int src_y, int dest_x, int dest_y,
+		    unsigned int width, unsigned int height) {
+    return TkMacOSXPutImage(PIXEL_RGBA, display, drawable, gc, image,
+			    src_x, src_y, dest_x, dest_y, width, height);
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -528,51 +560,42 @@ CreateCGImageFromDrawableRect(
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
+    CGRect image_rect = CGRectMake(x, y, width, height);
     CGImageRef cg_image = NULL, result = NULL;
-    NSBitmapImageRep *bitmapRep = nil;
-    NSView *view = nil;
+    unsigned char *imageData = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
-	/*
-	 * This MacDrawable is a bitmap, so its view is NULL.
-	 */
-
-	CGRect image_rect = CGRectMake(x, y, width, height);
-
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	if (cg_image) {
-	    result = CGImageCreateWithImageInRect(cg_image, image_rect);
-	    CGImageRelease(cg_image);
-	}
-    } else if (TkMacOSXGetNSViewForDrawable(mac_drawable) != nil) {
-
-	/*
-	 * Convert Tk top-left to NSView bottom-left coordinates.
-	 */
-
-	int view_height = [view bounds].size.height;
-	NSRect view_rect = NSMakeRect(x + mac_drawable->xOff,
-		view_height - height - y - mac_drawable->yOff,
-		width, height);
-
-	/*
-	 * Attempt to copy from the view to a bitmapImageRep.  If the view does
-	 * not have a valid CGContext, doing this will silently corrupt memory
-	 * and make a big mess. So, in that case, we just return NULL.
-	 */
-
-	if (view == [NSView focusView]) {
-	    bitmapRep = [view bitmapImageRepForCachingDisplayInRect: view_rect];
-	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmapRep];
-	    result = [bitmapRep CGImage];
-	    CFRelease(bitmapRep);
-	} else {
-	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
-	    result = NULL;
+	if (cg_context) {
+	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
 	}
     } else {
-	TkMacOSXDbgMsg("Invalid source drawable");
+	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
+	if (view == nil) {
+	    TkMacOSXDbgMsg("Invalid source drawable");
+	    return NULL;
+	}
+	NSSize size = view.frame.size;
+	NSUInteger view_width = size.width, view_height = size.height;
+        NSUInteger bytesPerPixel = 4,
+	    bytesPerRow = bytesPerPixel * view_width,
+	    bitsPerComponent = 8;
+        imageData = ckalloc(view_height * bytesPerRow);
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	cg_context = CGBitmapContextCreate(imageData, view_width, view_height,
+			 bitsPerComponent, bytesPerRow, colorSpace,
+			 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+	CFRelease(colorSpace);
+	[view.layer renderInContext:cg_context];
     }
+    if (cg_context) {
+	cg_image = CGBitmapContextCreateImage(cg_context);
+	CGContextRelease(cg_context);
+    }
+    if (cg_image) {
+	result = CGImageCreateWithImageInRect(cg_image, image_rect);
+	CGImageRelease(cg_image);
+    }
+    ckfree(imageData);
     return result;
 }
 
@@ -639,7 +662,7 @@ XGetImage(
     int y,
     unsigned int width,
     unsigned int height,
-    unsigned long plane_mask,
+    TCL_UNUSED(unsigned long), /* plane_mask */
     int format)
 {
     NSBitmapImageRep* bitmapRep = nil;
@@ -676,11 +699,11 @@ XGetImage(
 		|| bytes_per_row < 4 * width
 		|| size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
-	    CFRelease(bitmapRep);
+	    [bitmapRep release];
 	    return NULL;
 	}
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
-	CFRelease(bitmapRep);
+	[bitmapRep release];
 
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in either

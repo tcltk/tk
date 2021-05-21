@@ -135,7 +135,7 @@ proc ::tk::MenuDup {src dst type} {
     }
     eval $cmd
     set last [$src index last]
-    if {$last eq "none"} {
+    if {$last eq "none" || $last < 0} {
 	return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {

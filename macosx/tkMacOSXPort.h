@@ -163,11 +163,16 @@
 #define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
- * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
- * alpha channel directly into a window.
+ * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to render RGBA
+ * images directly into a window.
  */
 
-#define TKPUTIMAGE_CAN_BLEND
+#define TK_CAN_RENDER_RGBA
+
+MODULE_SCOPE int TkpPutRGBAImage(
+		     Display* display, Drawable drawable, GC gc,XImage* image,
+		     int src_x, int src_y, int dest_x, int dest_y,
+		     unsigned int width, unsigned int height);
 
 /*
  * Used by xcolor.c
