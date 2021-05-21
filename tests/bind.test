@@ -48,7 +48,7 @@ proc pointerAway {} {
     # but let's wait more (it depends on computer performance).
     after 100 ; update
     event generate .top <Button-1> -warp 1
-    update
+    controlPointerWarpTiming
     destroy .top
 }
 pointerAway
@@ -1052,6 +1052,7 @@ test bind-13.45 {Tk_BindEvent procedure: error in script} -setup {
 test bind-15.1 {MatchPatterns procedure, ignoring type mismatches} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1068,6 +1069,7 @@ test bind-15.1 {MatchPatterns procedure, ignoring type mismatches} -setup {
 test bind-15.2 {MatchPatterns procedure, ignoring type mismatches} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1479,6 +1481,7 @@ test bind-15.26 {MatchPatterns procedure, reject a virtual event} -setup {
 test bind-15.27 {MatchPatterns procedure, conflict resolution} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1493,6 +1496,7 @@ test bind-15.27 {MatchPatterns procedure, conflict resolution} -setup {
 test bind-15.28 {MatchPatterns procedure, conflict resolution} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1507,6 +1511,7 @@ test bind-15.28 {MatchPatterns procedure, conflict resolution} -setup {
 test bind-15.29 {MatchPatterns procedure, conflict resolution} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -6153,6 +6158,7 @@ test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -se
     update
 } -body {
     event generate .t.f <Button-1> -warp 1
+    controlPointerWarpTiming
     event generate .t.f <ButtonRelease-1>
     destroy .t.f
     update  ;  # shall simply not crash
@@ -6745,14 +6751,12 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     wm geometry .top +200+200
     after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     set pointerPos1 [winfo pointerxy .top]
     wm geometry .top +600+600
     after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     set pointerPos2 [winfo pointerxy .top]
     # from the first warped position to the second one, the mouse
     # pointer should have moved the same amount as the window moved
@@ -6770,12 +6774,10 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
     # Contrary to bind-34.1, we're directly checking screen coordinates
     event generate {} <Motion> -x 20 -y 20 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     set res [winfo pointerxy .]
     event generate {} <Motion> -x 200 -y 200 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
 } -result {20 20 200 200}
@@ -6793,8 +6795,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6803,9 +6804,9 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
         }
     }
     event generate {} <Motion> -x 100 -y 100 -warp 1
-    update idletasks ; after 50
+    controlPointerWarpTiming
     event generate {} <Motion> -x -1 -y -1 -warp 1
-    update idletasks ; after 50
+    controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6967,15 +6968,15 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     after 50
     update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    update idletasks ; after 50
+    controlPointerWarpTiming
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
-    update idletasks ; after 50
+    controlPointerWarpTiming
     grab release .top  ; # this will queue events
     after 50
     update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    update idletasks ; after 50
+    controlPointerWarpTiming
     foreach {x2 y2} [winfo pointerxy .top.l] {}
     # success if the coords are the same with or without the grab, and if they
     # are at (10,10) inside the label widget as requested by the warping
