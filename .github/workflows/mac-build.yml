@@ -74,7 +74,7 @@ jobs:
         # This involves black magic
         run: |
           brew install --cask xquartz
-          sudo /opt/X11/lib/X11/xinit/privileged_startx.d/10-tmpdirs || true
+          sudo /opt/X11/libexec/privileged_startx || true
         working-directory: .
       - name: Build Tcl
         # Note that macOS is always a 64 bit platform
@@ -119,7 +119,6 @@ jobs:
               Xvfb $1 &
               XVFB_PID=$!
               echo Launched Xvfb $1 as process $XVFB_PID >&2
-              trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID" 0
               export DISPLAY=$1
               sleep 2
             }
@@ -133,7 +132,7 @@ jobs:
             exit 1
           }
           cat out.txt | grep -q "Failed	[1-9]" && {
-            echo "::error::Failure during Test"
+            echo "::error::Failure in test results"
             exit 1
           }
       - name: Carry out trial installation
