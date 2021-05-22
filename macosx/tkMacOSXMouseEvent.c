@@ -114,6 +114,17 @@ enum {
 	}
     case NSLeftMouseUp:
     case NSLeftMouseDown:
+
+	/*
+	 * Ignore mouse button events which arrive while the app is inactive.
+	 * These events will be resent after activation, causing duplicate
+	 * actions when an app is activated by a bound mouse event. See ticket
+	 * [7bda9882cb].
+	 */
+
+	if (! [NSApp isActive]) {
+	    return theEvent;
+	}
     case NSMouseMoved:
     case NSScrollWheel:
 #if 0
