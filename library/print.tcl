@@ -1,7 +1,8 @@
 # print.tcl --
 
-# This file defines the 'tk print' command for printing of the canvas widget and text on X11, Windows, and macOS. It implements an abstraction layer that
-# presents a consistent API across the three platforms.
+# This file defines the 'tk print' command for printing of the canvas
+# widget and text on X11, Windows, and macOS. It implements an abstraction
+# layer that presents a consistent API across the three platforms.
 
 # Copyright © 2009 Michael I. Schwartz.
 # Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
@@ -26,8 +27,8 @@ namespace eval ::tk::print {
 	variable printargs
 	array set printargs {}
 
-	# Multiple utility procedures for printing text based on the C printer
-	# primitives. 
+	# Multiple utility procedures for printing text based on the
+	# C printer primitives. 
 
 	# _set_dc: 
 	# Select printer and set device context and other parameters
@@ -715,6 +716,53 @@ namespace eval ::tk::print {
 	# Initialize all the variables once.
 	_init_print_canvas
     }
-    #end win32 procedures  
+    #end win32 procedures
+
+    namespace export canvas text
+    namespace ensemble create
 }
 
+
+# tk print --
+# This procedure prints the canvas and text widgets using platform-
+# native API's.
+#
+# Subcommands:
+#
+#     canvas - Print the display of a canvas widget.
+#         Arguments:
+#             w: Widget to print.
+#
+#     text - Print the display of a text widget.
+#         Arguments:
+#             w: Widget to print.
+
+
+proc ::tk::print::canvas {w} {
+
+    if {[tk windowingsystem] eq "win32"} {
+	::tk::print::_print_widget $w 0 "Tk Print Output"
+    }
+}
+
+
+proc ::tk::print::text {w} {
+
+    if {[tk windowingsystem] eq "win32"} {
+	set txt [$w get 1.0 end]
+	set tmpfile [file join $env(TMPDIR) print_txt.txt]
+	set print_txt [open $tmpfile  w]
+	puts $txt $print_txt
+	close $print_txt
+	::tk::print::_print_file $tmpfile 1 {Arial 12}
+    }
+}
+
+#Add this command to the tk command ensemble: tk print
+#Thanks to Christian Gollwitzer for the guidance here
+namespace ensemble configure tk -map \
+    [dict merge [namespace ensemble configure tk -map] \
+	 {print ::tk::print}]
+	    
+
+	
