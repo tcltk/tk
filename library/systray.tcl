@@ -323,7 +323,6 @@ proc ::tk::sysnotify::sysnotify {title message} {
 
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
 #Thanks to Christian Gollwitzer for the guidance here
-set map [namespace ensemble configure tk -map]
-dict set map systray ::tk::systray
-dict set map sysnotify ::tk::sysnotify::sysnotify
-namespace ensemble configure tk -map $map
+namespace ensemble configure tk -map \
+    [dict merge [namespace ensemble configure tk -map] \
+        {systray ::tk::systray sysnotify ::tk::sysnotify::sysnotify}]
