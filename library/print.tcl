@@ -750,11 +750,11 @@ proc ::tk::print::text {w} {
 
     if {[tk windowingsystem] eq "win32"} {
 	set txt [$w get 1.0 end]
-	set tmpfile [file join $env(TMPDIR) print_txt.txt]
-	set print_txt [open $tmpfile  w]
-	puts $txt $print_txt
+	set x [file join $::env(TEMP) tk_output.txt]
+	set print_txt [open $x  w]
+	puts $print_txt $txt
 	close $print_txt
-	::tk::print::_print_file $tmpfile 1 {Arial 12}
+	::tk::print::_print_file $x 1 {Arial 12}
     }
 }
 
