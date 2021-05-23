@@ -740,6 +740,11 @@ namespace eval ::tk::print {
 
 proc ::tk::print::canvas {w} {
 
+    if {[winfo class $w] ne "Canvas"} {
+	error "Tk only supports printing from canvas and text widgets."
+	return
+    }
+
     if {[tk windowingsystem] eq "win32"} {
 	::tk::print::_print_widget $w 0 "Tk Print Output"
     }
@@ -747,6 +752,11 @@ proc ::tk::print::canvas {w} {
 
 
 proc ::tk::print::text {w} {
+
+    if {[winfo class $w] ne "Text"} {
+	error "Tk only supports printing from canvas and text widgets."
+	return
+    }
 
     if {[tk windowingsystem] eq "win32"} {
 	set txt [$w get 1.0 end]
