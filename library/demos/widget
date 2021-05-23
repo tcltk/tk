@@ -388,6 +388,9 @@ addFormattedText {
     @@demo fontchoose	Font selection dialog
     @@new
     @@demo systray      System tray icon and notification
+    
+    @@new
+    @@demo print        Printing from canvas and text widgets
 
     @@subtitle	Animation
     @@demo anilabel	Animated labels
