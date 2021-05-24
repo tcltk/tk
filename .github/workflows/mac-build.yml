@@ -40,10 +40,12 @@ jobs:
       - name: Run Tests
         run: |
           make test | tee out.txt
-          grep -q -v "Failed	[1-9]" out.txt || {
+          nmatches=$( grep -q -c "Failed	0" out.txt )
+          if [ $nmatches -lt 4 ]
+          then
             echo "::error::Failure during Test"
             exit 1
-          }
+          fi
   clang:
     runs-on: macos-11
     strategy:
