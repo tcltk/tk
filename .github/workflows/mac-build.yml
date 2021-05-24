@@ -132,6 +132,8 @@ jobs:
           }
           echo "make test finished, now cat out.txt"
           cat out.txt
+          echo "done, now whereis grep"          
+          whereis grep
           echo "done, now trying direct grep"
           grep -n -C2 "Failed	[1-9]" out.txt
           echo "done, now piping cat output to grep"
