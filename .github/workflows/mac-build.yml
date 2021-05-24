@@ -63,15 +63,14 @@ jobs:
           ref: core-8-6-branch
           path: tcl
       - name: Prepare checked out repositories
+        env:
+          SET_DISPLAY: ${{ contains(matrix.options, '--disable-aqua') }}
         run: |
           touch ../generic/tkStubInit.c ../doc/man.macros
           mkdir "$HOME/install dir"
           echo "USE_XVFB=$SET_DISPLAY" >> $GITHUB_ENV
-        env:
-          SET_DISPLAY: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add X11 (if required)
-        if: ${{ env.USE_XVFB }}
-        # This involves black magic
+        if: ${{ env.USE_XVFB == 'true' }}
         run: |
           brew install --cask xquartz
           sudo /opt/X11/libexec/privileged_startx || true
@@ -124,7 +123,7 @@ jobs:
             }
           else
             function runXvfb {
-              : do nothing
+              echo Xvfb not used, this is a --enable-aqua build
             }
           fi
           ( runXvfb :0; make test-classic test-ttk; exit $? ) | tee out.txt || {
