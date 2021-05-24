@@ -70,8 +70,7 @@ jobs:
         env:
           SET_DISPLAY: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add X11 (if required)
-        if: ${{ env.USE_XVFB }}
-        # This involves black magic
+        if: ${{ env.SET_DISPLAY }}
         run: |
           brew install --cask xquartz
           sudo /opt/X11/libexec/privileged_startx || true
@@ -124,10 +123,10 @@ jobs:
             }
           else
             function runXvfb {
-              : do nothing
+              echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic test-ttk TESTFLAGS="-verbose bepst"; exit $? ) | tee out.txt || {
+          ( runXvfb :0; make test-classic test-ttk; exit $? ) | tee out.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
