@@ -69,6 +69,9 @@ jobs:
           touch ../generic/tkStubInit.c ../doc/man.macros
           mkdir "$HOME/install dir"
           echo "USE_XVFB=$SET_DISPLAY" >> $GITHUB_ENV
+      - name: fvogel checks
+          echo "env.USE_XVFB is ${{ env.USE_XVFB }}"
+          echo "env.SET_DISPLAY is ${{ env.SET_DISPLAY }}"
       - name: Add X11 (if required)
         if: ${{ env.USE_XVFB }}
         run: |
