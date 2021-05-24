@@ -49,7 +49,7 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
-clang:
+  clang:
     runs-on: macos-11
     strategy:
       matrix:
