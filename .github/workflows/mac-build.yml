@@ -126,12 +126,20 @@ jobs:
               echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic test-ttk; exit $? ) | tee out.txt || {
-            echo "::error::Failure during Test"
+          ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
+            echo "::error::Failure during Test (classic)"
             exit 1
           }
-          cat out.txt | grep "Failed	0" || {
-            echo "::error::Failure in test results"
+          ( runXvfb :0; make test-ttk; exit $? ) | tee out-ttk.txt || {
+            echo "::error::Failure during Test (ttk)"
+            exit 1
+          }
+          cat out-classic.txt | grep "Failed	0" || {
+            echo "::error::Failure in classic test results"
+            exit 1
+          }
+          cat out-ttk.txt | grep "Failed	0" || {
+            echo "::error::Failure in ttk test results"
             exit 1
           }
       - name: Carry out trial installation
