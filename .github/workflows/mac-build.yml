@@ -37,7 +37,19 @@ jobs:
             echo "::error::Failure during Build"
             exit 1
           }
-  clang:
+      - name: Run Tests
+        run: |
+          make test-classic | tee out-classic.txt
+          make test-ttk | tee out-ttk.txt
+          grep -q "Failed	0" out-classic.txt || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+          grep -q "Failed	0" out-ttk.txt || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+clang:
     runs-on: macos-11
     strategy:
       matrix:
