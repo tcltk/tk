@@ -37,6 +37,15 @@ jobs:
             echo "::error::Failure during Build"
             exit 1
           }
+      - name: Run Tests
+        run: |
+          make test | tee out.txt
+          nmatches=$( grep -c "Failed	0" out.txt )
+          if [ $nmatches -lt 4 ]
+          then
+            echo "::error::Failure during Test"
+            exit 1
+          fi
   clang:
     runs-on: macos-11
     strategy:
