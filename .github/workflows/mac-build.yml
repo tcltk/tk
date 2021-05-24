@@ -131,9 +131,18 @@ jobs:
             exit 1
           }
           echo "make test done, now trying direct grep"
-          grep -n -C2 "Failed\t[1-9]" out.txt
+          echo "step 1"
+          grep "Failed" out.txt
+          echo "step 2"
+          grep "Failed\t" out.txt
+          echo "step 3"
+          grep "Failed\t0" out.txt
+          echo "step 4"
+          grep "Failed\t[0-9]" out.txt
+          echo "step 5"
+          grep "Failed\t[1-9]" out.txt
           echo "done, now piping cat output to grep"
-          cat out.txt | grep -n -C2 "Failed\t[1-9]" && {
+          cat out.txt | grep "Failed\t[1-9]" && {
             echo "::error::Failure in test results"
             exit 1
           }
