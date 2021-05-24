@@ -126,7 +126,7 @@ jobs:
               echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic test-ttk TESTFLAGS="-verbose bepst"; exit $? ) | tee out.txt || {
+          ( runXvfb :0; make test-classic test-ttk; exit $? ) | tee out.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
