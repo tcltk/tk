@@ -27,10 +27,10 @@ pack [frame $w.m] -fill both -expand yes -side top
 set c [canvas $w.m.c -bg white]
 pack $c -fill both -expand no -side left
 
-$c create rectangle 10 10 200 50 -fill blue -outline black
-$c create oval 10 60 200 110 -fill green
-$c create image 110 150 -image logo
-$c create text 210 220   -anchor n -font {Helvetica 12}  \
+$c create rectangle 30 10 200 50 -fill blue -outline black
+$c create oval 30 60 200 110 -fill green
+$c create image 130 150 -image logo
+$c create text 150 250   -anchor n -font {Helvetica 12}  \
 	-text "A short demo of simple canvas elements."
 
 set txt {
@@ -44,9 +44,10 @@ pack $t -side right -fill both -expand no
 $t insert end $txt
 
 pack [frame $w.f] -side top -fill both -expand no
-pack [button $w.f.b -text "Print Canvas" -command [list tk print canvas $w.c]]  -expand no
-pack [button $w.f.x -text "Print Text" -command [list tk print text $w.t]]   -expand no
+pack [button $w.f.b -text "Print Canvas" -command [list tk print canvas $w.m.c]]  -expand no
+pack [button $w.f.x -text "Print Text" -command [list tk print text $w.m.t]]   -expand no
 
 ## See Code / Dismiss buttons
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
+
 
