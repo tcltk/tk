@@ -39,13 +39,8 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test-classic | tee out-classic.txt
-          make test-ttk | tee out-ttk.txt
-          grep -q "Failed	0" out-classic.txt || {
-            echo "::error::Failure during Test"
-            exit 1
-          }
-          grep -q "Failed	0" out-ttk.txt || {
+          make test | tee out.txt
+          grep -q -v "Failed	[1-9]" out.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
