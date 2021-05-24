@@ -130,6 +130,7 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+          echo "make test finished, now grepping for failures"
           cat out.txt | grep -n -C2 "Failed	[1-9]" && {
             echo "::error::Failure in test results"
             exit 1
