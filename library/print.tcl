@@ -218,7 +218,6 @@ namespace eval ::tk::print {
 
 	    array get printargs
 
-	    set option(use_copybits) 1
 	    set vtgPrint(printer.bg) white
 	}
 
@@ -392,8 +391,6 @@ namespace eval ::tk::print {
 		puts $result
 	    }
 	}
-
-
 
 	# _print_canvas.arc
 	#   Prints a arc item.
@@ -603,38 +600,9 @@ namespace eval ::tk::print {
 	    set anchor [ $cw itemcget $id -anchor ]
 	    set coords [ $cw coords $id ]
 
-
-	    # Since the GDI commands don't yet support images and bitmaps,
-	    # and since this represents a rendered bitmap, we CAN use
-	    # copybits IF we create a new temporary toplevel to hold the beast.
-	    # If this is too ugly, change the option!
-
-	    if { [ info exist option(use_copybits) ] } {
-		set firstcase $option(use_copybits)
-	    } else {
-		set firstcase 0
-	    }
-
-	    if { $firstcase > 0 } {
-		set tl [toplevel .tmptop[expr int( rand() * 65535 ) ] -height $hgt -width $wid -background $vtgPrint(printer.bg) ]
-		canvas $tl.canvas -width $wid -height $hgt
-		$tl.canvas create image 0 0 -image $imagename -anchor nw
-		pack $tl.canvas -side left -expand false -fill none
-		tkwait visibility $tl.canvas
-		update
-		#set srccoords [list "0 0 [ expr $wid - 1] [expr  $hgt - 1 ]" ]
-		#set dstcoords [ list "[lindex $coords 0] [lindex $coords 1] [expr $wid - 1] [expr $hgt - 1]" ]
-		set srccoords  [ list "0 0 $wid $hgt" ]
-		set dstcoords [ list "[lindex $coords 0] [lindex $coords 1] $wid $hgt" ]
-		set cmmd "::tk::print::_gdi copybits $printargs(hDC) -window $tl -client -source $srccoords -destination $dstcoords "
+		set cmmd "::tk::print::_gdi photo $printargs(hDC) -destination [list $coords] -photo $imagename "
 		eval $cmmd
-		destroy $tl
-	    } else {
-		set cmmd "::tk::print::_gdi image $printargs(hDC) $coords -anchor $anchor -image $imagename "
-		eval $cmmd
-	    }
 	}
-
 
 	# _print_canvas.bitmap
 	#   Prints a bitmap item.
@@ -740,11 +708,6 @@ namespace eval ::tk::print {
 
 proc ::tk::print::canvas {w} {
 
-    if {[winfo class $w] ne "Canvas"} {
-	error "Tk only supports printing from canvas and text widgets."
-	return
-    }
-
     if {[tk windowingsystem] eq "win32"} {
 	::tk::print::_print_widget $w 0 "Tk Print Output"
     }
@@ -752,11 +715,6 @@ proc ::tk::print::canvas {w} {
 
 
 proc ::tk::print::text {w} {
-
-    if {[winfo class $w] ne "Text"} {
-	error "Tk only supports printing from canvas and text widgets."
-	return
-    }
 
     if {[tk windowingsystem] eq "win32"} {
 	set txt [$w get 1.0 end]
