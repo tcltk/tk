@@ -131,7 +131,7 @@ jobs:
             exit 1
           }
           echo "make test done, now piping cat output to grep"
-          cat out.txt | grep "Failed\t[1-9]" && {
+          cat out.txt | grep "Failed	0" || {
             echo "::error::Failure in test results"
             exit 1
           }
