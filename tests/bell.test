@@ -10,6 +10,10 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+test testtesttest-0 {} -body {
+  set a 1
+} -result {0}
+
 test bell-1.1 {bell command} -body {
     bell a
 } -returnCodes {error} -result {bad option "a": must be -displayof or -nice}
