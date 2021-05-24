@@ -159,6 +159,7 @@ test tk-6.5 {tk inactive} -constraints failsOnXQuarz -body {
     update
     after 100
     set i [tk inactive]
+puts "tk-6.5: tk inactive: $i"
     expr {$i < 0 || ( $i > 90 && $i < 200 )}
 } -result 1
 
