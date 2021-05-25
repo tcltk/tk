@@ -713,8 +713,12 @@ XGrabKeyboard(
 	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
-	    if (modalSession) {
-		Tcl_Panic("XGrabKeyboard: already grabbed");
+	    if (modalSession ) {
+		if (keyboardGrabNSWindow == w) {
+		    return GrabSuccess;
+		} else {
+		    Tcl_Panic("XGrabKeyboard: already grabbed");
+		}
 	    }
 	    keyboardGrabNSWindow = w;
 	    [w retain];
