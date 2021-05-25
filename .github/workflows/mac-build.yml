@@ -29,9 +29,8 @@ jobs:
       - name: Add Tcl
         run: |
           brew install tcl-tk
-      - name: Add X11
-        if: ${{ env.USE_XVFB }}
-        # This involves black magic
+      - name: Add X11 (if required)
+        if: ${{ env.USE_XVFB == 'true' }}
         run: |
           brew install --cask xquartz
           sudo /opt/X11/libexec/privileged_startx || true
@@ -59,20 +58,29 @@ jobs:
               Xvfb $1 &
               XVFB_PID=$!
               echo Launched Xvfb $1 as process $XVFB_PID >&2
+              trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID" 0
               export DISPLAY=$1
               sleep 2
             }
           else
             function runXvfb {
-              : do nothing
+              echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic test-ttk; exit $? ) | tee out.txt || {
-            echo "::error::Failure during Test"
+          ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
+            echo "::error::Failure during Test (classic)"
             exit 1
           }
-          cat out.txt | grep -q "Failed	[1-9]" && {
-            echo "::error::Failure in test results"
+          ( runXvfb :0; make test-ttk; exit $? ) | tee out-ttk.txt || {
+            echo "::error::Failure during Test (ttk)"
+            exit 1
+          }
+          cat out-classic.txt | grep -q "Failed	0" || {
+            echo "::error::Failure in classic test results"
+            exit 1
+          }
+          cat out-ttk.txt | grep -q "Failed	0" || {
+            echo "::error::Failure in ttk test results"
             exit 1
           }
         env:
