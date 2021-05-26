@@ -773,7 +773,6 @@ XCopyArea(
     }
 
     if (!TkMacOSXSetupDrawingContext(dst, gc, &dc)) {
-	TkMacOSXDbgMsg("Failed to setup drawing context.");
 	return BadDrawable;
     }
 
