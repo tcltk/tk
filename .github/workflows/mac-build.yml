@@ -23,14 +23,10 @@ jobs:
         run: |
           touch ../generic/tkStubInit.c ../doc/man.macros
           mkdir "$HOME/install"
-          echo "USE_XVFB=$USE_XVFB" >> $GITHUB_ENV
-        env:
-          USE_XVFB: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add Tcl
         run: |
           brew install tcl-tk
-      - name: Add X11 (if required)
-        if: ${{ env.USE_XVFB == 'true' }}
+      - name: Add X11
         run: |
           brew install --cask xquartz
           sudo /opt/X11/libexec/privileged_startx || true
@@ -52,21 +48,15 @@ jobs:
           }
       - name: Run Tests
         run: |
-          if [ $USE_XVFB == true ]; then
-            function runXvfb {
-              PATH=$PATH:/opt/X11/bin
-              Xvfb $1 &
-              XVFB_PID=$!
-              echo Launched Xvfb $1 as process $XVFB_PID >&2
-              trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID" 0
-              export DISPLAY=$1
-              sleep 2
-            }
-          else
-            function runXvfb {
-              echo Xvfb not used, this is a --enable-aqua build
-            }
-          fi
+          function runXvfb {
+            PATH=$PATH:/opt/X11/bin
+            Xvfb $1 &
+            XVFB_PID=$!
+            echo Launched Xvfb $1 as process $XVFB_PID >&2
+            trap "echo killing process $XVFB_PID... >&2; kill $XVFB_PID" 0
+            export DISPLAY=$1
+            sleep 2
+          }
           ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
             echo "::error::Failure during Test (classic)"
             exit 1
