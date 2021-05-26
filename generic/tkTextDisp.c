@@ -24,6 +24,11 @@
 #include "tkTextTagSet.h"
 #include "tkRangeList.h"
 #include "tkAlloc.h"
+#include "tkPort.h"
+
+#ifdef TK_NO_DOUBLE_BUFFERING
+#define CLIPPING_IS_WORKING
+#endif
 
 #ifdef _WIN32
 # include "tkWinInt.h"
@@ -6474,7 +6479,8 @@ DisplayDLine(
 		dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
 			baseline, display, pixmap, screenY);
 
-		/* for any reason this doesn't work with the Tk lib even under X11 */
+		/* This doesn't work with X11, but it does work with aqua.*/
+
 		XSetClipRectangles(display, dInfoPtr->insertFgGC, 0, 0, &crect, 1, Unsorted);
 
 		for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
@@ -6569,7 +6575,6 @@ DisplayDLine(
     XCopyArea(display, pixmap, Tk_WindowId(textPtr->tkwin), dInfoPtr->copyGC,
 	    xOffs, yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
 	    xOffs, dlPtr->y + yOffs);
-
     DEBUG(stats.linesRedrawn += 1);
 }
 
