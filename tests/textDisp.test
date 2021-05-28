@@ -71,6 +71,7 @@ set twbw 2
 set twht 2
 option add *Text.borderWidth $twbw
 option add *Text.highlightThickness $twht
+set twbwht1 [expr {$twbw + $twht + 1}]
 
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
@@ -249,7 +250,7 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
     lappend x [lindex [.t bbox 1.2] 0]
 } [list 75 55 55]
 .t tag delete x y z
-test textDisp-1.2 {GetStyle procedure, wrapmode} {textfonts} {
+test textDisp-1.2 {GetStyle procedure, wrapmode} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcd\nefg hijkl mnop qrstuv wxyz"
@@ -262,7 +263,9 @@ test textDisp-1.2 {GetStyle procedure, wrapmode} {textfonts} {
     lappend result [.t bbox 2.20]
     .t tag add y 1.end 2.2
     lappend result [.t bbox 2.20]
-} [list [list 5 [expr {5+2*$fixedHeight}] 7 $fixedHeight] [list 40 [expr {5+2*$fixedHeight}] 7 $fixedHeight] {}]
+} [list [list $twbwht1 [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
+        [list [expr {$twbwht1+5*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
+	{}]
 .t tag delete x y
 
 test textDisp-2.1 {LayoutDLine, basics} {
@@ -270,45 +273,59 @@ test textDisp-2.1 {LayoutDLine, basics} {
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [expr {5 + $fixedWidth * 19}] 5 $fixedWidth $fixedHeight] [list 5 [expr {5 + $fixedHeight}] $fixedWidth $fixedHeight]]
-test textDisp-2.2 {LayoutDLine, basics} {textfonts} {
+} [list [list [expr {$twbwht1 + $fixedWidth * 19}] $twbwht1 $fixedWidth $fixedHeight] \
+        [list $twbwht1 [expr {$twbwht1 + $fixedHeight}] $fixedWidth $fixedHeight]]
+test textDisp-2.2 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 138 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-2.3 {LayoutDLine, basics} {textfonts} {
+} [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+test textDisp-2.3 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 138 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-2.4 {LayoutDLine, word wrap} {textfonts} {
+} [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+test textDisp-2.4 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 138 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-2.5 {LayoutDLine, word wrap} {textfonts} {
+} [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+test textDisp-2.5 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.13] [.t bbox 1.19] [.t bbox 1.20] [.t bbox 1.21]
-} [list [list 96 5 $fixedWidth $fixedHeight] [list 138 5 $fixedWidth $fixedHeight] [list 145 5 0  $fixedHeight] [list 5 [expr {$fixedDiff + 18}] $fixedWidth $fixedHeight]]
-test textDisp-2.6 {LayoutDLine, word wrap} failsOnUbuntu {
+} [list [list [expr {$twbwht1+13*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+        [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+	[list [expr {$twbwht1+20*$fixedWidth}] $twbwht1 0  $fixedHeight] \
+	[list $twbwht1 [expr {5+$fixedHeight}] $fixedWidth $fixedHeight]]
+test textDisp-2.6 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
-    list [.t bbox 1.15] [.t bbox 1.16]
-} [list [list 110 5 35 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-2.7 {LayoutDLine, marks and tags} {textfonts} {
+    set res [list [.t bbox 1.15] [.t bbox 1.16]]
+    set w [winfo width .t]
+    set expected [list [list [expr {$twbwht1+15*$fixedWidth}] $twbwht1 [expr {$w-(2*$twbwht1)-15*$fixedWidth}] $fixedHeight] \
+                       [list $twbwht1 [expr {5+$fixedHeight}] $fixedWidth $fixedHeight]]
+tk_messageBox
+    lequal $res $expected
+} {1}
+test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     .t tag add foo 1.4 1.6
     .t mark set insert 1.8
     list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
-} [list [list 19 5 7 $fixedHeight] [list 40 5 7 $fixedHeight] [list 82 5 7 $fixedHeight]]
+} [list [list [expr {$twbwht1+2*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+        [list [expr {$twbwht1+5*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
+	[list [expr {$twbwht1+11*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight]]
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
