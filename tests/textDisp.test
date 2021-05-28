@@ -304,7 +304,7 @@ test textDisp-2.5 {LayoutDLine, word wrap} {
 } [list [list [expr {$twbwht1+13*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
         [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
 	[list [expr {$twbwht1+20*$fixedWidth}] $twbwht1 0  $fixedHeight] \
-	[list $twbwht1 [expr {5+$fixedHeight}] $fixedWidth $fixedHeight]]
+	[list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
 test textDisp-2.6 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -312,7 +312,7 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     set res [list [.t bbox 1.15] [.t bbox 1.16]]
     set w [winfo width .t]
     set expected [list [list [expr {$twbwht1+15*$fixedWidth}] $twbwht1 [expr {$w-(2*$twbwht1)-15*$fixedWidth}] $fixedHeight] \
-                       [list $twbwht1 [expr {5+$fixedHeight}] $fixedWidth $fixedHeight]]
+                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
     lequal $res $expected
 } {1}
 test textDisp-2.7 {LayoutDLine, marks and tags} {
@@ -328,8 +328,9 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
-scan [wm geom .] %dx%d width height
-test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} {textfonts} {
+test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
+    scan [wm geom .] %dx%d width height
+} -body {
     wm geom . [expr {$width+1}]x$height
     updateText
     .t configure -wrap char
@@ -337,15 +338,22 @@ test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} {textfonts} {
     .t insert 1.0 "This isxx some sample text for testing."
     .t mark set foo 1.20
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 138 5 8 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-wm geom . {}
-updateText
-test textDisp-2.9 {LayoutDLine, marks and tags} {textfonts} {
+} -cleanup {
+    wm geom . {}
+    updateText
+} -result [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 [expr {$fixedWidth+1}] $fixedHeight] \
+                [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+test textDisp-2.9 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
-    list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
-} [list [list 68 5 77 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 110 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
+    set res [list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]]
+    set w [winfo width .t]
+    set expected [list [list [expr {$twbwht1+9*$fixedWidth}] $twbwht1 [expr {$w-(2*$twbwht1)-9*$fixedWidth}] $fixedHeight] \
+                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+	               [list [expr {$twbwht1+15*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
 test textDisp-2.10 {LayoutDLine, marks and tags} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
