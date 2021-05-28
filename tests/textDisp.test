@@ -313,7 +313,6 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     set w [winfo width .t]
     set expected [list [list [expr {$twbwht1+15*$fixedWidth}] $twbwht1 [expr {$w-(2*$twbwht1)-15*$fixedWidth}] $fixedHeight] \
                        [list $twbwht1 [expr {5+$fixedHeight}] $fixedWidth $fixedHeight]]
-tk_messageBox
     lequal $res $expected
 } {1}
 test textDisp-2.7 {LayoutDLine, marks and tags} {
