@@ -50,6 +50,21 @@ proc scrollError args {
     error "scrolling error"
 }
 
+# Return 1 if the two given lists are the same, otherwise return the two lists.
+# This is used to compare a test actual result with a test expected result.
+
+proc lequal {res expected} {
+    if {[llength $res] != [llength $expected]} {
+        return [list "Lengths differ"  result: $res - expected: $expected]
+    }
+    for {set i 0} {$i < [llength $res]} {incr i} {
+        if {[lindex $res $i] != [lindex $expected $i]} {
+	    return [list result: $res - expected: $expected]
+	}
+    }
+    return 1
+}
+
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
 set twbw 2
@@ -3451,14 +3466,7 @@ test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     set expected [list [list $x $y $fixedWidth $fixedHeight] \
 		       [list $x [expr {$y + $fixedHeight}] $fixedWidth $fixedHeight] \
 		       [list $x [expr {$y + 2*$fixedHeight}] $fixedWidth $fixedHeight]]
-    set checkedOK 1
-    for {set i 0} {$i < 8} {incr i} {
-        if {[lindex $res $i] != [lindex $expected $i]} {
-	    set checkedOK [list result: $res - expected: $expected]
-	    break
-	}
-    }
-    set checkedOK
+    lequal $res $expected
 } -cleanup {
     destroy .tt
 } -result {1}
