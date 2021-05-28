@@ -37,6 +37,21 @@ proc scrollError args {
     error "scrolling error"
 }
 
+# Return 1 if the two given lists are the same, otherwise return the two lists.
+# This is used to compare a test actual result with a test expected result.
+
+proc lequal {res expected} {
+    if {[llength $res] != [llength $expected]} {
+        return [list "Lengths differ"  result: $res - expected: $expected]
+    }
+    for {set i 0} {$i < [llength $res]} {incr i} {
+        if {[lindex $res $i] != [lindex $expected $i]} {
+	    return [list result: $res - expected: $expected]
+	}
+    }
+    return 1
+}
+
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
 set twbw 2
@@ -3467,16 +3482,22 @@ test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {textfonts kn
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.10]
 } [list [list 45 3 7 $fixedHeight] [list 94 3 7 $fixedHeight]]
-test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -constraints {textfonts} -setup {
+test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     text .tt -tabs {40 right} -wrap none -font $fixedFont
     pack .tt
 } -body {
     .tt insert end \t9\n\t99\n\t999
     updateText
-    list [.tt bbox 1.1] [.tt bbox 2.2] [.tt bbox 3.3]
+    set res [list [.tt bbox 1.1] [.tt bbox 2.2] [.tt bbox 3.3]]
+    set x [lindex [.tt bbox 1.1] 0]
+    set y [lindex [.tt bbox 1.1] 1]
+    set expected [list [list $x $y $fixedWidth $fixedHeight] \
+		       [list $x [expr {$y + $fixedHeight}] $fixedWidth $fixedHeight] \
+		       [list $x [expr {$y + 2*$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
 } -cleanup {
     destroy .tt
-} -result [list [list 38 5 7 $fixedHeight] [list 38 20 7 $fixedHeight] [list 38 35 7 $fixedHeight]]
+} -result {1}
 
 .t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 \
     -tabs 100
