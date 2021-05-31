@@ -129,7 +129,7 @@ proc xcharr {n {w .t}} {
     global bo
     return [expr {[winfo width $w] - $bo - [xw $n]}]
 }
-# y-coordinate of the first pixel of $l-th line (count starts at 1)
+# y-coordinate of the first pixel of $l-th display line (count starts at 1)
 proc yline {l} {
     global bo fixedHeight
     return [expr {$bo + ($l - 1) * $fixedHeight}]
@@ -292,7 +292,7 @@ test textDisp-1.2 {GetStyle procedure, wrapmode} {
     lappend result [.t bbox 2.20]
     .t tag add y 1.end 2.2
     lappend result [.t bbox 2.20]
-} [list [list $bo [yline 3] $fixedWidth $fixedHeight] \
+} [list [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
         [list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
 	    {}]
 .t tag delete x y
@@ -302,45 +302,45 @@ test textDisp-2.1 {LayoutDLine, basics} {
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.2 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.3 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.4 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.5 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.13] [.t bbox 1.19] [.t bbox 1.20] [.t bbox 1.21]
-} [list [list [xchar 13] $bo $fixedWidth $fixedHeight] \
-        [list [xchar 19] $bo $fixedWidth $fixedHeight] \
-	    [list [xchar 20] $bo 0  $fixedHeight] \
-	    [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [xchar 13] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+	    [list [xchar 20] [yline 1] 0  $fixedHeight] \
+	    [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.6 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     list [.t bbox 1.15] [.t bbox 1.16]
-} [list [list [xchar 15] $bo [xe 15] $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -348,9 +348,9 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t tag add foo 1.4 1.6
     .t mark set insert 1.8
     list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
-} [list [list [xchar 2] $bo $fixedWidth $fixedHeight] \
-        [list [xchar 5] $bo $fixedWidth $fixedHeight] \
-	    [list [xchar 11] $bo $fixedWidth $fixedHeight]]
+} [list [list [xchar 2] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 5] [yline 1] $fixedWidth $fixedHeight] \
+	    [list [xchar 11] [yline 1] $fixedWidth $fixedHeight]]
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
@@ -367,15 +367,15 @@ test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
 } -cleanup {
     wm geom . {}
     updateText
-} -result [list [list [xchar 19] $bo [expr {$fixedWidth+1}] $fixedHeight] \
-                [list $bo [yline 2] $fixedWidth $fixedHeight]]
+} -result [list [list [xchar 19] [yline 1] [expr {$fixedWidth+1}] $fixedHeight] \
+                [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.9 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
     list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
-} [list [list [xchar 9] $bo [xe 9] $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight] \
+} [list [list [xchar 9] [yline 1] [xe 9] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t configure -wrap word
@@ -386,8 +386,8 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t tag add foo 1.17
     .t tag add foo 1.19
     list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
-} [list [list [xchar 9] $bo [xe 9] $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight] \
+} [list [list [xchar 9] [yline 1] [xe 9] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
@@ -404,7 +404,7 @@ test textDisp-2.12 {LayoutDLine, justification} {
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
     list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
-} [list [list [expr {$bo+int([xe 0]/2)}] $bo [expr {[xe 0]-int([xe 0]/2)}] $fixedHeight] \
+} [list [list [expr {$bo+int([xe 0]/2)}] [yline 1] [expr {[xe 0]-int([xe 0]/2)}] $fixedHeight] \
         [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
         [list [expr {$bo+int([xe 3]/2)}] [yline 4] $fixedWidth $fixedHeight] \
         [list [expr {$bo+int([xe 3]/2)+[xw 2]}] [yline 4] $fixedWidth $fixedHeight]]
@@ -416,7 +416,7 @@ test textDisp-2.13 {LayoutDLine, justification} {
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
     list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
-} [list [list [xcharr 0] $bo 0 $fixedHeight] \
+} [list [list [xcharr 0] [yline 1] 0 $fixedHeight] \
         [list [xcharr 1] [yline 2] $fixedWidth $fixedHeight] \
         [list [xcharr 3] [yline 4] $fixedWidth $fixedHeight] \
         [list [xcharr 1] [yline 4] $fixedWidth $fixedHeight]]
@@ -433,7 +433,7 @@ test textDisp-2.14 {LayoutDLine, justification} {
 } [list [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
         [list [xcharr 2] [yline 3] $fixedWidth $fixedHeight] \
         [list [xcharr 0] [yline 3] 0 $fixedHeight] \
-        [list $bo [yline 4] $fixedWidth $fixedHeight]]
+        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.15 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -447,7 +447,7 @@ test textDisp-2.15 {LayoutDLine, justification} {
 } [list [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
         [list [expr {$bo+int([xe 2]/2)}] [yline 3] $fixedWidth $fixedHeight] \
         [list [expr {$bo+int([xe 2]/2)+[xw 2]}] [yline 3] [expr {int([xe 2]/2)}] $fixedHeight] \
-        [list $bo [yline 4] $fixedWidth $fixedHeight]]
+        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.16 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -456,19 +456,22 @@ test textDisp-2.16 {LayoutDLine, justification} {
     .t tag add x 1.1 1.20
     .t tag add x 1.21 1.end
     list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
-} [list [list $bo $bo $fixedWidth $fixedHeight] \
-        [list $bo [yline 2] $fixedWidth $fixedHeight] \
+} [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
         [list [expr {$bo+int([xe 4]/2)}] [yline 3] $fixedWidth $fixedHeight] \
-        [list $bo [yline 4] $fixedWidth $fixedHeight]]
-test textDisp-2.17 {LayoutDLine, justification} {textfonts} {
+        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
+test textDisp-2.17 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Lots of very long words, enough to force word wrap\nThen\nmore lines"
     .t tag configure x -justify center
     .t tag add x 1.18
     list [.t bbox 1.0] [.t bbox 1.18] [.t bbox 1.35] [.t bbox 2.0]
-} [list [list 5 5 7 $fixedHeight] [list 15 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
-test textDisp-2.18 {LayoutDLine, justification} {textfonts} {
+} [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+int([xe 17]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
+test textDisp-2.18 {LayoutDLine, justification} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert 1.0 "Lots of long words, enough to extend out of the window\n"
@@ -479,18 +482,22 @@ test textDisp-2.18 {LayoutDLine, justification} {textfonts} {
     .t tag add y 3.0
     .t xview scroll 5 units
     list [.t bbox 2.0] [.t bbox 3.0]
-} [list [list 26 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 40 [expr {2*$fixedDiff + 31}] 7 $fixedHeight]]
+} [list [list [expr {$bo+int([xe 4]/2)-[xw 5]}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[xcharr 10]-[xw 5]}] [yline 3] $fixedWidth $fixedHeight]]
 .t tag delete x
 .t tag delete y
-test textDisp-2.19 {LayoutDLine, margins} {textfonts} {
+test textDisp-2.19 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Lots of long words, enough to force word wrap\nThen\nmore lines"
     .t tag configure x -lmargin1 20 -lmargin2 40 -rmargin 15
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.12] [.t bbox 1.13] [.t bbox 2.0]
-} [list [list 25 5 7 $fixedHeight] [list 109 5 36 $fixedHeight] [list 45 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 25 [expr {5*$fixedDiff + 70}] 7 $fixedHeight]]
-test textDisp-2.20 {LayoutDLine, margins} {textfonts} {
+} [list [list [expr {$bo+20}] [yline 1] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+20+[xw 12]}] [yline 1] [expr {[xe 12]-20}] $fixedHeight] \
+        [list [expr {$bo+40}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+20}] [yline 6] $fixedWidth $fixedHeight]]
+test textDisp-2.20 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Lots of long words, enough to force word wrap\nThen\nmore lines"
@@ -500,18 +507,23 @@ test textDisp-2.20 {LayoutDLine, margins} {textfonts} {
     .t tag add x 1.0 end
     .t tag add y 1.13
     list [.t bbox 1.0] [.t bbox 1.13] [.t bbox 1.30] [.t bbox 2.0]
-} [list [list 25 5 7 $fixedHeight] [list 10 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 15 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 25 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
-test textDisp-2.21 {LayoutDLine, margins} {textfonts} {
+} [list [list [expr {$bo+20}] [yline 1] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+5}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+10}] [yline 3] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+20}] [yline 4] $fixedWidth $fixedHeight]]
+test textDisp-2.21 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Sample text"
     .t tag configure x -lmargin1 80 -lmargin2 80 -rmargin 100
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
-} [list [list 85 5 60 $fixedHeight] [list 85 [expr {$fixedDiff + 18}] 60 $fixedHeight] [list 85 [expr {2*$fixedDiff + 31}] 60 $fixedHeight]]
+} [list [list [expr {$bo+80}] [yline 1] [expr {[xe 0]-80}] $fixedHeight] \
+        [list [expr {$bo+80}] [yline 2] [expr {[xe 0]-80}] $fixedHeight] \
+        [list [expr {$bo+80}] [yline 3] [expr {[xe 0]-80}] $fixedHeight]]
 .t tag delete x
 .t tag delete y
-test textDisp-2.22 {LayoutDLine, spacing options} {textfonts} {
+test textDisp-2.22 {LayoutDLine, spacing options} {
     .t configure -wrap word
     .t delete 1.0 end
     .t tag delete x y
@@ -538,7 +550,7 @@ test textDisp-2.22 {LayoutDLine, spacing options} {textfonts} {
     list $b1 $b2 $b3 $b4
 } [list 2 7 10 15]
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
-test textDisp-2.23 {LayoutDLine, spacing options} {textfonts} {
+test textDisp-2.23 {LayoutDLine, spacing options} {
     .t configure -wrap word
     .t delete 1.0 end
     .t tag delete x y
@@ -570,7 +582,7 @@ test textDisp-2.23 {LayoutDLine, spacing options} {textfonts} {
     list $b1 $b2 $b3 $b4
 } [list 1 5 13 16]
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
-test textDisp-2.24 {LayoutDLine, tabs, saving from first chunk} {textfonts} {
+test textDisp-2.24 {LayoutDLine, tabs, saving from first chunk} {
     .t delete 1.0 end
     .t tag delete x y
     .t tag configure x -tabs 70
@@ -579,8 +591,8 @@ test textDisp-2.24 {LayoutDLine, tabs, saving from first chunk} {textfonts} {
     .t tag add x 1.0 end
     .t tag add y 1.1 end
     lindex [.t bbox 1.3] 0
-} {75}
-test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts} {
+} [expr {$bo+70}]
+test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60 90 120]
@@ -589,9 +601,9 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts} {
     .t mark set dummy2 1.2
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
-	    [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
-} [list 35 65 95 125]
-test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts} {
+	     [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
+} [list [expr {$bo+30}] [expr {$bo+60}] [expr {$bo+90}] [expr {$bo+120}]]
+test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60 90 120] -justify right
@@ -600,31 +612,31 @@ test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {textfonts} {
     .t mark set dummy2 1.2
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
-	    [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
-} [list 117 124 131 138]
-test textDisp-2.27 {LayoutDLine, tabs, calling AdjustForTab} {textfonts} {
+	     [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
+} [list [xcharr 4] [xcharr 3] [xcharr 2] [xcharr 1]]
+test textDisp-2.27 {LayoutDLine, tabs, calling AdjustForTab} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60]
     .t insert 1.0 "a\tb\tcd"
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0]
-} [list 35 65]
-test textDisp-2.28 {LayoutDLine, tabs, running out of space in dline} {textfonts} {
+} [list [expr {$bo+30}] [expr {$bo+60}]]
+test textDisp-2.28 {LayoutDLine, tabs, running out of space in dline} {
     .t delete 1.0 end
     .t insert 1.0 "a\tb\tc\td"
     .t bbox 1.6
-} [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight]
-test textDisp-2.29 {LayoutDLine, tabs, running out of space in dline} {textfonts} {
+} [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]
+test textDisp-2.29 {LayoutDLine, tabs, running out of space in dline} {
     .t delete 1.0 end
     .t insert 1.0 "a\tx\tabcd"
     .t bbox 1.4
-} [list 117 5 7 $fixedHeight]
-test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {textfonts} {
+} [list [xchar [expr {2*8}]] [yline 1] $fixedWidth $fixedHeight]
+test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {
     .t delete 1.0 end
     .t insert 1.0 "a\tx\tabc"
     .t bbox 1.4
-} [list 117 5 7 $fixedHeight]
+} [list [xchar [expr {2*8}]] [yline 1] $fixedWidth $fixedHeight]
 
 test textDisp-3.1 {different character sizes} {textfonts} {
     .t configure -wrap word
