@@ -214,7 +214,6 @@ MODULE_SCOPE void		TkWinPointerEvent(HWND hwnd, int x, int y);
 
 MODULE_SCOPE void		TkSetCursorPos(int x, int y);
 
-
 /*
  * The following is implemented in tkWinSysTray.c
  */
@@ -233,6 +232,12 @@ MODULE_SCOPE  int       Winprint_Init(Tcl_Interp* interp);
 
 
 MODULE_SCOPE  int 		Gdi_Init(Tcl_Interp* interp);
+
+/*
+ * The following is implemented in tkWinSysTray.c
+ */
+
+MODULE_SCOPE  int       WinIcoInit (Tcl_Interp* interp);
 
 /*
  * Common routines used in Windows implementation
