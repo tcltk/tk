@@ -42,17 +42,10 @@ TkpInit(
      * initialize printing and systray API's here.
      */
 
-<<<<<<< BEGIN MERGE CONFLICT: local copy shown first <<<<<<<<<<<<<<<
     WinIcoInit(interp);
     Winprint_Init(interp);
-	Gdi_Init(interp);
+    Gdi_Init(interp);
     TkWinXInit(Tk_GetHINSTANCE());
-======= COMMON ANCESTOR content follows ============================
-    TkWinXInit(Tk_GetHINSTANCE());
-======= MERGED IN content follows ==================================
-    WinIcoInit(interp);
-    TkWinXInit(Tk_GetHINSTANCE());
->>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     return TCL_OK;
 }
 
