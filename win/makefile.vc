@@ -188,16 +188,9 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinDraw.obj \
 	$(TMP_DIR)\tkWinEmbed.obj \
 	$(TMP_DIR)\tkWinFont.obj \
-<<<<<<< BEGIN MERGE CONFLICT: local copy shown first <<<<<<<<<<<<<<<
 	$(TMP_DIR)\tkWinGDI.obj \
 	$(TMP_DIR)\tkWinIco.obj \
 	$(TMP_DIR)\tkWinImage.obj \
-======= COMMON ANCESTOR content follows ============================
-	$(TMP_DIR)\tkWinImage.obj \
-======= MERGED IN content follows ==================================
-	$(TMP_DIR)\tkWinIco.obj \
-	$(TMP_DIR)\tkWinImage.obj \
->>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	$(TMP_DIR)\tkWinInit.obj \
 	$(TMP_DIR)\tkWinKey.obj \
 	$(TMP_DIR)\tkWinMenu.obj \
@@ -367,14 +360,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-<<<<<<< BEGIN MERGE CONFLICT: local copy shown first <<<<<<<<<<<<<<<
 PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib
-======= COMMON ANCESTOR content follows ============================
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
-
-======= MERGED IN content follows ==================================
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
->>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 #---------------------------------------------------------------------
 # TkTest flags
