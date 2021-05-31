@@ -67,17 +67,10 @@ jobs:
           touch tkStubInit.c
           mkdir "$HOME/install dir"
           echo "USE_XVFB=$SET_DISPLAY" >> $GITHUB_ENV
-<<<<<<< BEGIN MERGE CONFLICT: local copy shown first <<<<<<<<<<<<<<<
         working-directory: tk/generic
         env:
           SET_DISPLAY: ${{ contains(matrix.options, '--disable-aqua') }}
       - name: Add X11 (if required)
-======= COMMON ANCESTOR content follows ============================
-      - name: Add X11 (if required)
-======= MERGED IN content follows ==================================
-        working-directory: tk/generic
-      - name: Add X11 (if required)
->>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         if: ${{ env.USE_XVFB }}
         # This involves black magic
         run: |
