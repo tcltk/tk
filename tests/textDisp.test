@@ -310,8 +310,8 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     set res [list [.t bbox 1.15] [.t bbox 1.16]]
-    set w [winfo width .t]
-    set expected [list [list [expr {$twbwht1+15*$fixedWidth}] $twbwht1 [expr {$w-(2*$twbwht1)-15*$fixedWidth}] $fixedHeight] \
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+15*$fixedWidth}] $twbwht1 [expr {$tww-15*$fixedWidth}] $fixedHeight] \
                        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
     lequal $res $expected
 } {1}
@@ -324,7 +324,7 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
     list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
 } [list [list [expr {$twbwht1+2*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
         [list [expr {$twbwht1+5*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-	[list [expr {$twbwht1+11*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight]]
+	    [list [expr {$twbwht1+11*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight]]
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
@@ -348,13 +348,13 @@ test textDisp-2.9 {LayoutDLine, marks and tags} {
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
     set res [list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]]
-    set w [winfo width .t]
-    set expected [list [list [expr {$twbwht1+9*$fixedWidth}] $twbwht1 [expr {$w-(2*$twbwht1)-9*$fixedWidth}] $fixedHeight] \
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+9*$fixedWidth}] $twbwht1 [expr {$tww-9*$fixedWidth}] $fixedHeight] \
                        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-	               [list [expr {$twbwht1+15*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+	                   [list [expr {$twbwht1+15*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
     lequal $res $expected
 } {1}
-test textDisp-2.10 {LayoutDLine, marks and tags} {textfonts} {
+test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
@@ -362,33 +362,54 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {textfonts} {
     .t tag add foo 1.15
     .t tag add foo 1.17
     .t tag add foo 1.19
-    list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
-} [list [list 68 5 77 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 110 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-2.11 {LayoutDLine, newline width} {textfonts} {
+    set res [list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]]
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+9*$fixedWidth}] $twbwht1 [expr {$tww-9*$fixedWidth}] $fixedHeight] \
+                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+		               [list [expr {$twbwht1+15*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
+test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a\nbb\nccc\ndddd"
-    list [.t bbox 2.2] [.t bbox 3.3]
-} [list [list 19 [expr {$fixedDiff + 18}] 126 $fixedHeight] [list 26 [expr {2*$fixedDiff + 31}] 119 $fixedHeight]]
-test textDisp-2.12 {LayoutDLine, justification} {textfonts} {
+    set res [list [.t bbox 2.2] [.t bbox 3.3]]
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+2*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] [expr {$tww-2*$fixedWidth}] $fixedHeight] \
+                       [list [expr {$twbwht1+3*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] [expr {$tww-3*$fixedWidth}] $fixedHeight]]
+    lequal $res $expected
+} {1}
+test textDisp-2.12 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "\na\nbb\nccc\ndddd"
     .t tag configure x -justify center
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
-    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
-} [list [list 75 5 70 $fixedHeight] [list 71 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 64 [expr {3*$fixedDiff + 44}] 7 $fixedHeight] [list 78 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
-test textDisp-2.13 {LayoutDLine, justification} {textfonts} {
+    set res [list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]]
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+int($tww)/2}] $twbwht1 [expr {$tww-int($tww/2)}] $fixedHeight] \
+                       [list [expr {$twbwht1+int($tww-$fixedWidth)/2}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$twbwht1+int($tww-3*$fixedWidth)/2}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$twbwht1+int($tww-3*$fixedWidth)/2+2*$fixedWidth}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
+test textDisp-2.13 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "\na\nbb\nccc\ndddd"
     .t tag configure x -justify right
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
-    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
-} [list [list 145 5 0 $fixedHeight] [list 138 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 124 [expr {3*$fixedDiff + 44}] 7 $fixedHeight] [list 138 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
-test textDisp-2.14 {LayoutDLine, justification} {textfonts} {
+    set res [list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]]
+    set w [winfo width .t]
+    set expected [list [list [expr {$w-$twbwht1}] $twbwht1 0 $fixedHeight] \
+                       [list [expr {$w-$twbwht1-$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$w-$twbwht1-3*$fixedWidth}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$w-$twbwht1-$fixedWidth}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
+test textDisp-2.14 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "\na\nbb\nccc\ndddd"
@@ -397,9 +418,15 @@ test textDisp-2.14 {LayoutDLine, justification} {textfonts} {
     .t tag configure y -justify right
     .t tag add y 3.0 4.0
     .t tag raise y
-    list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
-} [list [list 71 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 131 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 145 [expr {2*$fixedDiff + 31}] 0 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
-test textDisp-2.15 {LayoutDLine, justification} {textfonts} {
+    set res [list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]]
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+int($tww-$fixedWidth)/2}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$tww+$twbwht1-2*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$tww+$twbwht1}] [expr {$twbwht1+2*$fixedHeight}] 0 $fixedHeight] \
+                       [list $twbwht1 [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
+test textDisp-2.15 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "\na\nbb\nccc\ndddd"
@@ -408,17 +435,29 @@ test textDisp-2.15 {LayoutDLine, justification} {textfonts} {
     .t tag configure y -justify right
     .t tag add y 3.0 4.0
     .t tag lower y
-    list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
-} [list [list 71 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 68 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 82 [expr {2*$fixedDiff + 31}] 63 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
-test textDisp-2.16 {LayoutDLine, justification} {textfonts} {
+    set res [list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]]
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list [expr {$twbwht1+int($tww-$fixedWidth)/2}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$twbwht1+int($tww-2*$fixedWidth)/2}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$twbwht1+int($tww-2*$fixedWidth)/2+2*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] [expr {$tww-(int($tww-2*$fixedWidth)/2+2*$fixedWidth)}] $fixedHeight] \
+                       [list $twbwht1 [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
+test textDisp-2.16 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Lots of long words, enough to force word wrap\nThen\nmore lines"
     .t tag configure x -justify center
     .t tag add x 1.1 1.20
     .t tag add x 1.21 1.end
-    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
-} [list [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 61 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
+    set res [list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]]
+    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
+    set expected [list [list $twbwht1 $twbwht1 $fixedWidth $fixedHeight] \
+                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list [expr {$twbwht1+int($tww-4*$fixedWidth)/2}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
+                       [list $twbwht1 [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
+    lequal $res $expected
+} {1}
 test textDisp-2.17 {LayoutDLine, justification} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
