@@ -71,7 +71,8 @@ set twbw 2
 set twht 2
 option add *Text.borderWidth $twbw
 option add *Text.highlightThickness $twht
-set twbwht1 [expr {$twbw + $twht + 1}]
+# full border size of the text widget, plus 1 , i.e. first x or y coordinate inside the text widget
+set bo [expr {$twbw + $twht + 1}]
 
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
@@ -105,11 +106,39 @@ set bigHeight [font metrics $bigFont -linespace]
 set bigAscent [font metrics $bigFont -ascent]
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 
+# Option  -width 20  (characters) below is a fundamental assumption of many
+# upcoming tests when wrapping enters in play
 text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
 wm geometry . {}
+
+# x-width of $n chars
+proc xw {n} {
+    global fixedWidth
+    return [expr {$n *$fixedWidth}]
+}
+# x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
+proc xchar {n} {
+    global bo
+    return [expr {$bo + [xw $n]}]
+}
+# x-coordinate in widget $w of the first pixel of $n-th char counted from the right, right justified
+proc xcharr {n {w .t}} {
+    global bo
+    return [expr {[winfo width $w] - $bo - [xw $n]}]
+}
+# y-coordinate of the first pixel of $l-th line (count starts at 1)
+proc yline {l} {
+    global bo fixedHeight
+    return [expr {$bo + ($l - 1) * $fixedHeight}]
+}
+# x-pixels of empty space in widget $w on a line containing $n chars
+proc xe {n {w .t}} {
+    global bo
+    return [expr {[winfo width $w] - (2*$bo) - [xw $n]}]
+}
 
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
@@ -263,9 +292,9 @@ test textDisp-1.2 {GetStyle procedure, wrapmode} {
     lappend result [.t bbox 2.20]
     .t tag add y 1.end 2.2
     lappend result [.t bbox 2.20]
-} [list [list $twbwht1 [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
-        [list [expr {$twbwht1+5*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
-	{}]
+} [list [list $bo [yline 3] $fixedWidth $fixedHeight] \
+        [list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
+	    {}]
 .t tag delete x y
 
 test textDisp-2.1 {LayoutDLine, basics} {
@@ -273,48 +302,45 @@ test textDisp-2.1 {LayoutDLine, basics} {
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [expr {$twbwht1 + $fixedWidth * 19}] $twbwht1 $fixedWidth $fixedHeight] \
-        [list $twbwht1 [expr {$twbwht1 + $fixedHeight}] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.2 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.3 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.4 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-        [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+} [list [list [xchar 19] $bo $fixedWidth $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.5 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.13] [.t bbox 1.19] [.t bbox 1.20] [.t bbox 1.21]
-} [list [list [expr {$twbwht1+13*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-        [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-	[list [expr {$twbwht1+20*$fixedWidth}] $twbwht1 0  $fixedHeight] \
-	[list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+} [list [list [xchar 13] $bo $fixedWidth $fixedHeight] \
+        [list [xchar 19] $bo $fixedWidth $fixedHeight] \
+	    [list [xchar 20] $bo 0  $fixedHeight] \
+	    [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.6 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
-    set res [list [.t bbox 1.15] [.t bbox 1.16]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+15*$fixedWidth}] $twbwht1 [expr {$tww-15*$fixedWidth}] $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 1.15] [.t bbox 1.16]
+} [list [list [xchar 15] $bo [xe 15] $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -322,9 +348,9 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t tag add foo 1.4 1.6
     .t mark set insert 1.8
     list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
-} [list [list [expr {$twbwht1+2*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-        [list [expr {$twbwht1+5*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight] \
-	    [list [expr {$twbwht1+11*$fixedWidth}] $twbwht1 $fixedWidth $fixedHeight]]
+} [list [list [xchar 2] $bo $fixedWidth $fixedHeight] \
+        [list [xchar 5] $bo $fixedWidth $fixedHeight] \
+	    [list [xchar 11] $bo $fixedWidth $fixedHeight]]
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
@@ -341,19 +367,16 @@ test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
 } -cleanup {
     wm geom . {}
     updateText
-} -result [list [list [expr {$twbwht1+19*$fixedWidth}] $twbwht1 [expr {$fixedWidth+1}] $fixedHeight] \
-                [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
+} -result [list [list [xchar 19] $bo [expr {$fixedWidth+1}] $fixedHeight] \
+                [list $bo [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.9 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
-    set res [list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+9*$fixedWidth}] $twbwht1 [expr {$tww-9*$fixedWidth}] $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-	                   [list [expr {$twbwht1+15*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
+} [list [list [xchar 9] $bo [xe 9] $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight] \
+	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -362,23 +385,17 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t tag add foo 1.15
     .t tag add foo 1.17
     .t tag add foo 1.19
-    set res [list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+9*$fixedWidth}] $twbwht1 [expr {$tww-9*$fixedWidth}] $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-		               [list [expr {$twbwht1+15*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
+} [list [list [xchar 9] $bo [xe 9] $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight] \
+	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a\nbb\nccc\ndddd"
-    set res [list [.t bbox 2.2] [.t bbox 3.3]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+2*$fixedWidth}] [expr {$twbwht1+$fixedHeight}] [expr {$tww-2*$fixedWidth}] $fixedHeight] \
-                       [list [expr {$twbwht1+3*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] [expr {$tww-3*$fixedWidth}] $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 2.2] [.t bbox 3.3]
+} [list [list [xchar 2] [yline 2] [xe 2] $fixedHeight] \
+        [list [xchar 3] [yline 3] [xe 3] $fixedHeight]]
 test textDisp-2.12 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -386,14 +403,11 @@ test textDisp-2.12 {LayoutDLine, justification} {
     .t tag configure x -justify center
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
-    set res [list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+int($tww)/2}] $twbwht1 [expr {$tww-int($tww/2)}] $fixedHeight] \
-                       [list [expr {$twbwht1+int($tww-$fixedWidth)/2}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$twbwht1+int($tww-3*$fixedWidth)/2}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$twbwht1+int($tww-3*$fixedWidth)/2+2*$fixedWidth}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
+} [list [list [expr {$bo+int([xe 0]/2)}] $bo [expr {[xe 0]-int([xe 0]/2)}] $fixedHeight] \
+        [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+int([xe 3]/2)}] [yline 4] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+int([xe 3]/2)+[xw 2]}] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.13 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -401,14 +415,11 @@ test textDisp-2.13 {LayoutDLine, justification} {
     .t tag configure x -justify right
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
-    set res [list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]]
-    set w [winfo width .t]
-    set expected [list [list [expr {$w-$twbwht1}] $twbwht1 0 $fixedHeight] \
-                       [list [expr {$w-$twbwht1-$fixedWidth}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$w-$twbwht1-3*$fixedWidth}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$w-$twbwht1-$fixedWidth}] [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
+} [list [list [xcharr 0] $bo 0 $fixedHeight] \
+        [list [xcharr 1] [yline 2] $fixedWidth $fixedHeight] \
+        [list [xcharr 3] [yline 4] $fixedWidth $fixedHeight] \
+        [list [xcharr 1] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.14 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -418,14 +429,11 @@ test textDisp-2.14 {LayoutDLine, justification} {
     .t tag configure y -justify right
     .t tag add y 3.0 4.0
     .t tag raise y
-    set res [list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+int($tww-$fixedWidth)/2}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$tww+$twbwht1-2*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$tww+$twbwht1}] [expr {$twbwht1+2*$fixedHeight}] 0 $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
+} [list [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [xcharr 2] [yline 3] $fixedWidth $fixedHeight] \
+        [list [xcharr 0] [yline 3] 0 $fixedHeight] \
+        [list $bo [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.15 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -435,14 +443,11 @@ test textDisp-2.15 {LayoutDLine, justification} {
     .t tag configure y -justify right
     .t tag add y 3.0 4.0
     .t tag lower y
-    set res [list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list [expr {$twbwht1+int($tww-$fixedWidth)/2}] [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$twbwht1+int($tww-2*$fixedWidth)/2}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$twbwht1+int($tww-2*$fixedWidth)/2+2*$fixedWidth}] [expr {$twbwht1+2*$fixedHeight}] [expr {$tww-(int($tww-2*$fixedWidth)/2+2*$fixedWidth)}] $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
+} [list [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+int([xe 2]/2)}] [yline 3] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+int([xe 2]/2)+[xw 2]}] [yline 3] [expr {int([xe 2]/2)}] $fixedHeight] \
+        [list $bo [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.16 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -450,14 +455,11 @@ test textDisp-2.16 {LayoutDLine, justification} {
     .t tag configure x -justify center
     .t tag add x 1.1 1.20
     .t tag add x 1.21 1.end
-    set res [list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]]
-    set tww [expr {[winfo width .t] -(2*$twbwht1)}]
-    set expected [list [list $twbwht1 $twbwht1 $fixedWidth $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list [expr {$twbwht1+int($tww-4*$fixedWidth)/2}] [expr {$twbwht1+2*$fixedHeight}] $fixedWidth $fixedHeight] \
-                       [list $twbwht1 [expr {$twbwht1+3*$fixedHeight}] $fixedWidth $fixedHeight]]
-    lequal $res $expected
-} {1}
+    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
+} [list [list $bo $bo $fixedWidth $fixedHeight] \
+        [list $bo [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {$bo+int([xe 4]/2)}] [yline 3] $fixedWidth $fixedHeight] \
+        [list $bo [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.17 {LayoutDLine, justification} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
