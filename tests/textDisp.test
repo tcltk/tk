@@ -69,10 +69,13 @@ proc lequal {res expected} {
 # like border width have predictable values.
 set twbw 2
 set twht 2
+set pad 1
 option add *Text.borderWidth $twbw
 option add *Text.highlightThickness $twht
-# full border size of the text widget, plus 1 , i.e. first x or y coordinate inside the text widget
-set bo [expr {$twbw + $twht + 1}]
+option add *Text.padX $pad
+option add *Text.padY $pad
+# full border size of the text widget, i.e. first x or y coordinate inside the text widget
+set bo [expr {$twbw + $twht + $pad}]
 
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
@@ -84,25 +87,18 @@ frame .f -width 100 -height 20
 pack .f -side left
 
 set fixedFont {Courier -12}
-# 15 on XP, 13 on Solaris 8
 set fixedHeight [font metrics $fixedFont -linespace]
-# 7 on all platforms
 set fixedWidth [font measure $fixedFont m]
-# 12 on XP
 set fixedAscent [font metrics $fixedFont -ascent]
-set fixedDiff [expr {$fixedHeight - 13}] ;# 2 on XP
+set fixedDiff [expr {$fixedHeight - 13}]
 
 set varFont {Times -14}
-# 16 on XP, 15 on Solaris 8
 set varHeight [font metrics $varFont -linespace]
-# 13 on XP
 set varAscent [font metrics $varFont -ascent]
-set varDiff [expr {$varHeight - 15}] ;# 1 on XP
+set varDiff [expr {$varHeight - 15}]
 
-set bigFont {Helvetica -24}
-# 27 on XP, 27 on Solaris 8
+set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
-# 21 on XP
 set bigAscent [font metrics $bigFont -ascent]
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 
@@ -114,10 +110,10 @@ pack .t -expand 1 -fill both
 .t debug on
 wm geometry . {}
 
-# x-width of $n chars
+# x-width of $n chars, fixed width font
 proc xw {n} {
-    global fixedWidth
-    return [expr {$n *$fixedWidth}]
+    global fixedWidth 
+    return [expr {$n * $fixedWidth}]
 }
 # x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
 proc xchar {n} {
@@ -137,7 +133,7 @@ proc yline {l} {
 # x-pixels of empty space in widget $w on a line containing $n chars
 proc xe {n {w .t}} {
     global bo
-    return [expr {[winfo width $w] - (2*$bo) - [xw $n]}]
+    return [expr {[winfo width $w] - (2 * $bo) - [xw $n]}]
 }
 
 # The statements below reset the main window;  it's needed if the window
@@ -641,7 +637,7 @@ test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {
     .t bbox 1.4
 } [list [xchar [expr {2*8}]] [yline 1] $fixedWidth $fixedHeight]
 
-test textDisp-3.1 {different character sizes} {textfonts} {
+test textDisp-3.1 {different character sizes} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert end "Some sample text, including both large\n"
@@ -650,9 +646,13 @@ test textDisp-3.1 {different character sizes} {textfonts} {
     .t tag add big 1.5 1.10
     .t tag add big 2.11 2.14
     list [.t bbox 1.1] [.t bbox 1.6] [.t dlineinfo 1.0] [.t dlineinfo 3.0]
-} [list [list 12 [expr {5+$ascentDiff}] 7 $fixedHeight] [list 52 5 13 27] [list 5 5 114 27 [font metrics $bigFont -ascent]] [list 5 [expr {2* $fixedDiff + 85}] 35 $fixedHeight [expr {$fixedDiff + 10}]]]
+} [list [list [xchar 1] [expr {[yline 1]+$ascentDiff}] $fixedWidth $fixedHeight] \
+        [list [expr {[xchar 5]+[font measure $bigFont s]}] [yline 1] [font measure $bigFont a] $bigHeight] \
+	[list $bo [yline 1] [expr {[xw 5]+[font measure $bigFont sampl]+[xw 2]}] $bigHeight $bigAscent] \
+	[list $bo [expr {$bo+2*$bigHeight+2*$fixedHeight}] [xw 5] $fixedHeight $fixedAscent]]
 .t configure -wrap char
-test textDisp-4.1 {UpdateDisplayInfo, basic} {textfonts} {
+
+test textDisp-4.1 {UpdateDisplayInfo, basic} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2\nLine 3\n"
     updateText
@@ -662,8 +662,12 @@ test textDisp-4.1 {UpdateDisplayInfo, basic} {textfonts} {
     .t insert 2.0 "New Line 2"
     updateText
     lappend res [.t bbox 1.0] [.t bbox 2.0] [.t bbox 3.0] $tk_textRelayout
-} [list 2.0 [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] 2.0]
-test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {textfonts} {
+} [list 2.0 \
+        [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
+	2.0]
+test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     updateText
@@ -674,8 +678,12 @@ test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {textfonts} {
     .t insert 2.0 X
     updateText
     lappend res [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
-} [list 2.0 2.20 [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 12 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight] {2.0 2.20}]
-test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {textfonts} {
+} [list 2.0 2.20 \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 1] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight] \
+	{2.0 2.20}]
+test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     updateText
@@ -683,16 +691,22 @@ test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {textfonts} {
     .t delete 2.2
     updateText
     list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
-} [list [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight] {2.0 2.20}]
+} [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight] \
+	{2.0 2.20}]
 .t mark unset x
-test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {textfonts} {
+test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     updateText
     list [.t bbox 2.0] [.t bbox 2.25] [.t bbox 3.0] $tk_textRelayout
-} [list [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] {1.0 2.0 3.0}]
-test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
+} [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+        {} \
+	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
+	{1.0 2.0 3.0}]
+test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
     if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
@@ -703,7 +717,10 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     updateText
     list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk_textRelayout
-} [list [list 5 [expr {$fixedDiff + 18}] 1 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 1 $fixedHeight] {1.0 2.0 3.0}]
+} [list [list [xchar 0] [yline 2] 1 $fixedHeight] \
+        {} \
+	[list [xchar 0] [yline 3] 1 $fixedHeight] \
+	{1.0 2.0 3.0}]
 if {[tk windowingsystem] == "win32"} {
     wm overrideredirect . 0
 }
@@ -730,15 +747,11 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     wm overrideredirect . 0
     updateText
     set x
-} [list [list 5 5 1 1] {} 1.0]
+} [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
 catch {destroy .f2}
-.t configure -borderwidth 0 -wrap char
+.t configure -wrap char
 wm geom . {}
 updateText
-set bw [.t cget -borderwidth]
-set px [.t cget -padx]
-set py [.t cget -pady]
-set hlth [.t cget -highlightthickness]
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
@@ -761,7 +774,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     updateText
     set x
 } {8.0 {16.0 17.0 15.0 14.0 13.0 12.0 11.0 10.0 9.0 8.0} {8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0}}
-test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} failsOnXQuarz {
+test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 16.0
@@ -770,14 +783,15 @@ test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} failsOnXQ
     updateText
     set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
 } {1.0 {5.0 4.0 3.0 2.0 1.0} {1.0 2.0 3.0 4.0 5.0 eof}}
-test textDisp-4.9 {UpdateDisplayInfo, filling in extra vertical space} {textfonts} {
+test textDisp-4.9 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 16.0
     updateText
     .t delete 15.0 end
     list [.t bbox 7.0] [.t bbox 12.0]
-} [list [list [expr {$hlth + $px + $bw}] [expr {$hlth + $py + $bw + 2 * $fixedHeight}] $fixedWidth $fixedHeight] [list [expr {$hlth + $px + $bw}] [expr {$hlth + $py + $bw + 7 * $fixedHeight}] $fixedWidth $fixedHeight]]
+} [list [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 8] $fixedWidth $fixedHeight]]
 test textDisp-4.10 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\nLine 6 is such a long line that it wraps around.\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
@@ -824,7 +838,7 @@ test textDisp-4.13 {UpdateDisplayInfo, special handling for top/bottom lines} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{11.0 12.0 13.0} {4.0 10.0 11.0 12.0 13.0}}
-test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} failsOnXQuarz {
+test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t tag remove x 1.0 end
     .t yview 1.0
     updateText
@@ -848,7 +862,7 @@ test textDisp-4.16 {UpdateDisplayInfo, special handling for top/bottom lines} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0}}
-test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
+test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -858,8 +872,11 @@ test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
     updateText
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.0] [.t bbox 2.5] \
 	    [.t bbox 2.23]
-} [list {} {1.0 2.0 3.0 4.0} {} [list 17 [expr {$fixedDiff + 16}] 7 $fixedHeight] {}]
-test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
+} [list {} {1.0 2.0 3.0 4.0} \
+        {} \
+        [list [expr {[xchar 5]-[xw 3]}] [yline 2] $fixedWidth $fixedHeight] \
+	{}]
+test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -868,8 +885,9 @@ test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
     .t xview scroll 100 units
     updateText
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.25]
-} [list {} {1.0 2.0 3.0 4.0} [list 10 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-4.19 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
+} [list {} {1.0 2.0 3.0 4.0} \
+        [list [xcharr 19] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-4.19 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -879,8 +897,9 @@ test textDisp-4.19 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
     .t xview scroll -10 units
     updateText
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.5]
-} [list {} {1.0 2.0 3.0 4.0} [list 38 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-4.20 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
+} [list {} {1.0 2.0 3.0 4.0} \
+	[list [xchar 5] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-4.20 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -891,8 +910,9 @@ test textDisp-4.20 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
     .t delete 2.30 2.44
     updateText
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.25]
-} [list 2.0 {1.0 2.0 3.0 4.0} [list 108 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-4.21 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
+} [list 2.0 {1.0 2.0 3.0 4.0} \
+        [list [xcharr 5] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-4.21 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -903,7 +923,7 @@ test textDisp-4.21 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {}}
-test textDisp-4.22 {UpdateDisplayInfo, no horizontal scrolling except for -wrap none} {textfonts} {
+test textDisp-4.22 {UpdateDisplayInfo, no horizontal scrolling except for -wrap none} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -912,8 +932,9 @@ test textDisp-4.22 {UpdateDisplayInfo, no horizontal scrolling except for -wrap 
     updateText
     .t configure -wrap word
     list [.t bbox 2.0] [.t bbox 2.16]
-} [list [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight] [list 10 [expr {2*$fixedDiff + 29}] 7 $fixedHeight]]
-test textDisp-4.23 {UpdateDisplayInfo, no horizontal scrolling except for -wrap none} {textfonts} {
+} [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+        [list [xchar 1] [yline 3] $fixedWidth $fixedHeight]]
+test textDisp-4.23 {UpdateDisplayInfo, no horizontal scrolling except for -wrap none} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "Short line 1\nLine 2 is long enough to scroll horizontally"
@@ -922,8 +943,10 @@ test textDisp-4.23 {UpdateDisplayInfo, no horizontal scrolling except for -wrap 
     updateText
     .t configure -wrap char
     list [.t bbox 2.0] [.t bbox 2.16]
-} [list [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight] [list 115 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-5.1 {DisplayDLine, handling of spacing} {textfonts} {
+} [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 16] [yline 2] $fixedWidth $fixedHeight]]
+
+test textDisp-5.1 {DisplayDLine, handling of spacing} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
@@ -940,13 +963,15 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {textfonts} {
     updateText
     list [winfo geometry .t.f1] [winfo geometry .t.f2] \
 	    [winfo geometry .t.f3] [winfo geometry .t.f4]
-} [list 10x4+24+11 10x4+55+[expr {$fixedDiff/2 + 15}] 10x4+10+[expr {2*$fixedDiff + 43}] 10x4+76+[expr {2*$fixedDiff + 40}]]
+} [list 10x4+[xchar 3]+[expr {[yline 1]+8}] \
+        10x4+[expr {[xchar 6]+10}]+[expr {[yline 1]+8+int(($fixedHeight-4)/2)}] \
+	10x4+[xchar 1]+[expr {[yline 2]+8+2+8+($fixedHeight-4)}] \
+	10x4+[expr {[xchar 9]+10}]+[expr {[yline 2]+8+2+8+($fixedAscent-4)}]]
 .t tag delete spacing
 
 # Although the following test produces a useful result, its main
 # effect is to produce a core dump if Tk doesn't handle display
 # relayout that occurs during redisplay.
-
 test textDisp-5.2 {DisplayDLine, line resizes during display} {
     .t delete 1.0 end
     frame .t.f -width 20 -height 20 -bd 2 -relief raised
