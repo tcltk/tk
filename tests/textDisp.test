@@ -603,7 +603,10 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
 	     [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
 } [list [expr {$bo+30}] [expr {$bo+60}] [expr {$bo+90}] [expr {$bo+120}]]
-test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {
+# Next test is currently constrainted to no run on mac (aqua)  because on
+# aqua it fails due to wrong implementation of tabs with right justification
+# (the text is not rendered at all). This is a bug.
+test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {notAqua} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60 90 120] -justify right
