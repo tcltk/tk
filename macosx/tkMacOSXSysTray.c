@@ -436,7 +436,12 @@ static int SysNotifyObjCmd(
     [notify appendString:title];
     [notify appendString:@"\""];
     NSAppleScript *scpt = [[[NSAppleScript alloc] initWithSource:notify] autorelease];
-    NSAppleEventDescriptor *result = [scpt executeAndReturnError:nil];
+    NSDictionary *errorInfo;
+    NSAppleEventDescriptor *result = [scpt executeAndReturnError:&errorInfo];
+    if (!result) {
+	NSLog(@"ERROR: %@", errorInfo);
+	return TCL_ERROR;
+    }
 
     return TCL_OK;
 }
