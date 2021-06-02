@@ -83,9 +83,8 @@ if {[tk windowingsystem] eq "aqua"} {
 	set mw [winfo reqwidth $menu]
 	set bw [winfo width $mb]
 	set dF [expr {[winfo width $mb] - [winfo reqwidth $menu] - $menuPad}]
-	set entry ""
 	set entry [::tk::MenuFindName $menu [$mb cget -text]]
-	if {$entry eq ""} {
+	if {$entry < 0} {
 	    set entry 0
 	}
 	set x [winfo rootx $mb]
@@ -124,16 +123,15 @@ if {[tk windowingsystem] eq "aqua"} {
 	    incr mh 6
 	    incr mw 16
 	}
-	set entry {}
 	set entry [::tk::MenuFindName $menu [$mb cget -text]]
-	if {$entry eq {}} {
+	if {$entry < 0} {
 	    set entry 0
 	}
 	set x [winfo rootx $mb]
 	set y [winfo rooty $mb]
 	switch [$mb cget -direction] {
 	    above {
-		set entry {}
+		set entry ""
 		incr y -$mh
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $mb]} {
@@ -142,7 +140,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		}
 	    }
 	    below {
-		set entry {}
+		set entry ""
 		incr y $bh
 		# if we go offscreen to the bottom, show as 'above'
 		if {($y + $mh) > ([winfo vrooty $mb] + [winfo vrootheight $mb])} {
@@ -196,7 +194,7 @@ proc ttk::menubutton::Pulldown {mb} {
     $mb state pressed
     $mb configure -cursor [$menu cget -cursor]
     foreach {x y entry} [PostPosition $mb $menu] { break }
-    if {$entry ne {}} {
+    if {$entry >= 0} {
 	$menu post $x $y $entry
     } else {
 	$menu post $x $y
