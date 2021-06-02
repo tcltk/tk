@@ -643,11 +643,9 @@ proc showCode w {
 # file -		Name of the original file (implicitly for title)
 
 proc printCode {w file} {
-
     tk print text $w
-    
 }
-  
+
 # tkAboutDialog --
 #
 #	Pops up a message box with an "about" message
