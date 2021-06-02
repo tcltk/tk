@@ -72,10 +72,8 @@ set twht 2
 set pad 1
 option add *Text.borderWidth $twbw
 option add *Text.highlightThickness $twht
-option add *Text.padX $pad
-option add *Text.padY $pad
-# full border size of the text widget, i.e. first x or y coordinate inside the text widget
-set bo [expr {$twbw + $twht + $pad}]
+option add *Text.padX $pad  ; # same padding in x and y, see proc bo
+option add *Text.padY $pad  ; # same padding in x and y, see proc bo
 
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
@@ -110,6 +108,13 @@ pack .t -expand 1 -fill both
 .t debug on
 wm geometry . {}
 
+# full border size of the text widget, i.e. first x or y coordinate inside the text widget
+# warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
+# vertically around the widget)
+proc bo {} {
+    return [expr {[.t cget -borderwidth] + [.t cget -highlightthickness] + [.t cget -padx]}]
+}
+
 # x-width of $n chars, fixed width font
 proc xw {n} {
     global fixedWidth 
@@ -117,23 +122,20 @@ proc xw {n} {
 }
 # x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
 proc xchar {n} {
-    global bo
-    return [expr {$bo + [xw $n]}]
+    return [expr {[bo] + [xw $n]}]
 }
 # x-coordinate in widget $w of the first pixel of $n-th char counted from the right, right justified
 proc xcharr {n {w .t}} {
-    global bo
-    return [expr {[winfo width $w] - $bo - [xw $n]}]
+    return [expr {[winfo width $w] - [bo] - [xw $n]}]
 }
 # y-coordinate of the first pixel of $l-th display line (count starts at 1)
 proc yline {l} {
-    global bo fixedHeight
-    return [expr {$bo + ($l - 1) * $fixedHeight}]
+    global fixedHeight
+    return [expr {[bo] + ($l - 1) * $fixedHeight}]
 }
 # x-pixels of empty space in widget $w on a line containing $n chars
 proc xe {n {w .t}} {
-    global bo
-    return [expr {[winfo width $w] - (2 * $bo) - [xw $n]}]
+    return [expr {[winfo width $w] - (2 * [bo]) - [xw $n]}]
 }
 
 # The statements below reset the main window;  it's needed if the window
@@ -400,10 +402,10 @@ test textDisp-2.12 {LayoutDLine, justification} {
     .t tag add x 1.0 end
     .t tag add y 3.0 3.2
     list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
-} [list [list [expr {$bo+int([xe 0]/2)}] [yline 1] [expr {[xe 0]-int([xe 0]/2)}] $fixedHeight] \
-        [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+int([xe 3]/2)}] [yline 4] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+int([xe 3]/2)+[xw 2]}] [yline 4] $fixedWidth $fixedHeight]]
+} [list [list [expr {[bo]+int([xe 0]/2)}] [yline 1] [expr {[xe 0]-int([xe 0]/2)}] $fixedHeight] \
+        [list [expr {[bo]+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+int([xe 3]/2)}] [yline 4] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+int([xe 3]/2)+[xw 2]}] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.13 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -426,7 +428,7 @@ test textDisp-2.14 {LayoutDLine, justification} {
     .t tag add y 3.0 4.0
     .t tag raise y
     list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
-} [list [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+} [list [list [expr {[bo]+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
         [list [xcharr 2] [yline 3] $fixedWidth $fixedHeight] \
         [list [xcharr 0] [yline 3] 0 $fixedHeight] \
         [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
@@ -440,9 +442,9 @@ test textDisp-2.15 {LayoutDLine, justification} {
     .t tag add y 3.0 4.0
     .t tag lower y
     list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
-} [list [list [expr {$bo+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+int([xe 2]/2)}] [yline 3] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+int([xe 2]/2)+[xw 2]}] [yline 3] [expr {int([xe 2]/2)}] $fixedHeight] \
+} [list [list [expr {[bo]+int([xe 1]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+int([xe 2]/2)}] [yline 3] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+int([xe 2]/2)+[xw 2]}] [yline 3] [expr {int([xe 2]/2)}] $fixedHeight] \
         [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.16 {LayoutDLine, justification} {
     .t configure -wrap word
@@ -454,7 +456,7 @@ test textDisp-2.16 {LayoutDLine, justification} {
     list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
 } [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
         [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+int([xe 4]/2)}] [yline 3] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+int([xe 4]/2)}] [yline 3] $fixedWidth $fixedHeight] \
         [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.17 {LayoutDLine, justification} {
     .t configure -wrap word
@@ -464,7 +466,7 @@ test textDisp-2.17 {LayoutDLine, justification} {
     .t tag add x 1.18
     list [.t bbox 1.0] [.t bbox 1.18] [.t bbox 1.35] [.t bbox 2.0]
 } [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+int([xe 17]/2)}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+int([xe 17]/2)}] [yline 2] $fixedWidth $fixedHeight] \
         [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
         [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.18 {LayoutDLine, justification} {
@@ -478,7 +480,7 @@ test textDisp-2.18 {LayoutDLine, justification} {
     .t tag add y 3.0
     .t xview scroll 5 units
     list [.t bbox 2.0] [.t bbox 3.0]
-} [list [list [expr {$bo+int([xe 4]/2)-[xw 5]}] [yline 2] $fixedWidth $fixedHeight] \
+} [list [list [expr {[bo]+int([xe 4]/2)-[xw 5]}] [yline 2] $fixedWidth $fixedHeight] \
         [list [expr {[xcharr 10]-[xw 5]}] [yline 3] $fixedWidth $fixedHeight]]
 .t tag delete x
 .t tag delete y
@@ -489,10 +491,10 @@ test textDisp-2.19 {LayoutDLine, margins} {
     .t tag configure x -lmargin1 20 -lmargin2 40 -rmargin 15
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.12] [.t bbox 1.13] [.t bbox 2.0]
-} [list [list [expr {$bo+20}] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+20+[xw 12]}] [yline 1] [expr {[xe 12]-20}] $fixedHeight] \
-        [list [expr {$bo+40}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+20}] [yline 6] $fixedWidth $fixedHeight]]
+} [list [list [expr {[bo]+20}] [yline 1] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+20+[xw 12]}] [yline 1] [expr {[xe 12]-20}] $fixedHeight] \
+        [list [expr {[bo]+40}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+20}] [yline 6] $fixedWidth $fixedHeight]]
 test textDisp-2.20 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -503,10 +505,10 @@ test textDisp-2.20 {LayoutDLine, margins} {
     .t tag add x 1.0 end
     .t tag add y 1.13
     list [.t bbox 1.0] [.t bbox 1.13] [.t bbox 1.30] [.t bbox 2.0]
-} [list [list [expr {$bo+20}] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+5}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+10}] [yline 3] $fixedWidth $fixedHeight] \
-        [list [expr {$bo+20}] [yline 4] $fixedWidth $fixedHeight]]
+} [list [list [expr {[bo]+20}] [yline 1] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+5}] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+10}] [yline 3] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+20}] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.21 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -514,9 +516,9 @@ test textDisp-2.21 {LayoutDLine, margins} {
     .t tag configure x -lmargin1 80 -lmargin2 80 -rmargin 100
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
-} [list [list [expr {$bo+80}] [yline 1] [expr {[xe 0]-80}] $fixedHeight] \
-        [list [expr {$bo+80}] [yline 2] [expr {[xe 0]-80}] $fixedHeight] \
-        [list [expr {$bo+80}] [yline 3] [expr {[xe 0]-80}] $fixedHeight]]
+} [list [list [expr {[bo]+80}] [yline 1] [expr {[xe 0]-80}] $fixedHeight] \
+        [list [expr {[bo]+80}] [yline 2] [expr {[xe 0]-80}] $fixedHeight] \
+        [list [expr {[bo]+80}] [yline 3] [expr {[xe 0]-80}] $fixedHeight]]
 .t tag delete x
 .t tag delete y
 test textDisp-2.22 {LayoutDLine, spacing options} {
@@ -587,7 +589,7 @@ test textDisp-2.24 {LayoutDLine, tabs, saving from first chunk} {
     .t tag add x 1.0 end
     .t tag add y 1.1 end
     lindex [.t bbox 1.3] 0
-} [expr {$bo+70}]
+} [expr {[bo]+70}]
 test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t delete 1.0 end
     .t tag delete x
@@ -598,7 +600,7 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
 	     [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
-} [list [expr {$bo+30}] [expr {$bo+60}] [expr {$bo+90}] [expr {$bo+120}]]
+} [list [expr {[bo]+30}] [expr {[bo]+60}] [expr {[bo]+90}] [expr {[bo]+120}]]
 # Next test is currently constrained to no run on mac (aqua) because on
 # aqua it fails due to wrong implementation of tabs with right justification
 # (the text is not rendered at all). This is a bug.
@@ -620,7 +622,7 @@ test textDisp-2.27 {LayoutDLine, tabs, calling AdjustForTab} {
     .t insert 1.0 "a\tb\tcd"
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0]
-} [list [expr {$bo+30}] [expr {$bo+60}]]
+} [list [expr {[bo]+30}] [expr {[bo]+60}]]
 test textDisp-2.28 {LayoutDLine, tabs, running out of space in dline} {
     .t delete 1.0 end
     .t insert 1.0 "a\tb\tc\td"
@@ -648,8 +650,8 @@ test textDisp-3.1 {different character sizes} {
     list [.t bbox 1.1] [.t bbox 1.6] [.t dlineinfo 1.0] [.t dlineinfo 3.0]
 } [list [list [xchar 1] [expr {[yline 1]+$ascentDiff}] $fixedWidth $fixedHeight] \
         [list [expr {[xchar 5]+[font measure $bigFont s]}] [yline 1] [font measure $bigFont a] $bigHeight] \
-	[list $bo [yline 1] [expr {[xw 5]+[font measure $bigFont sampl]+[xw 2]}] $bigHeight $bigAscent] \
-	[list $bo [expr {$bo+2*$bigHeight+2*$fixedHeight}] [xw 5] $fixedHeight $fixedAscent]]
+	[list [bo] [yline 1] [expr {[xw 5]+[font measure $bigFont sampl]+[xw 2]}] $bigHeight $bigAscent] \
+	[list [bo] [expr {[bo]+2*$bigHeight+2*$fixedHeight}] [xw 5] $fixedHeight $fixedAscent]]
 .t configure -wrap char
 
 test textDisp-4.1 {UpdateDisplayInfo, basic} {
@@ -749,7 +751,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     set x
 } [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
 catch {destroy .f2}
-.t configure -wrap char
+.t configure -borderwidth 0 -wrap char
 wm geom . {}
 updateText
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
@@ -1208,7 +1210,7 @@ test textDisp-7.8 {TkTextRedrawRegion} {notAqua} {
 } {{} {borders 4.0 5.0 6.0 7.0 eof}}
 .t configure -bd 0
 
-test textDisp-8.1 {TkTextChanged: redisplay whole lines} {textfonts} {
+test textDisp-8.1 {TkTextChanged: redisplay whole lines} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is so long that it wraps around, two times"
@@ -1219,7 +1221,7 @@ test textDisp-8.1 {TkTextChanged: redisplay whole lines} {textfonts} {
     .t delete 2.36 2.38
     updateText
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.32]
-} [list {2.0 2.18 2.38} {2.0 2.18 2.38} [list 101 [expr {2*$fixedDiff + 29}] 7 $fixedHeight]]
+} [list {2.0 2.18 2.38} {2.0 2.18 2.38} [list [xchar 14] [yline 3] $fixedWidth $fixedHeight]]
 .t configure -wrap char
 test textDisp-8.2 {TkTextChanged, redisplay whole lines} {
     .t delete 1.0 end
@@ -1276,7 +1278,7 @@ test textDisp-8.6 {TkTextChanged} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
-test textDisp-8.7 {TkTextChanged} failsOnXQuarz {
+test textDisp-8.7 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1298,7 +1300,7 @@ test textDisp-8.8 {TkTextChanged} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
-test textDisp-8.9 {TkTextChanged} failsOnXQuarz {
+test textDisp-8.9 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1309,7 +1311,7 @@ test textDisp-8.9 {TkTextChanged} failsOnXQuarz {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 8.0} {2.0 8.0}}
-test textDisp-8.10 {TkTextChanged} failsOnUbuntu {
+test textDisp-8.10 {TkTextChanged} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1369,7 +1371,7 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
     update idletasks
 } {}
 
-test textDisp-9.1 {TkTextRedrawTag} failsOnUbuntu {
+test textDisp-9.1 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1378,7 +1380,7 @@ test textDisp-9.1 {TkTextRedrawTag} failsOnUbuntu {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.18} {2.0 2.18}}
-test textDisp-9.2 {TkTextRedrawTag} {textfonts} {
+test textDisp-9.2 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1387,7 +1389,7 @@ test textDisp-9.2 {TkTextRedrawTag} {textfonts} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 2.0 2.17} {1.0 2.0 2.17}}
-test textDisp-9.3 {TkTextRedrawTag} failsOnUbuntu {
+test textDisp-9.3 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1398,7 +1400,7 @@ test textDisp-9.3 {TkTextRedrawTag} failsOnUbuntu {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.4 {TkTextRedrawTag} failsOnUbuntu {
+test textDisp-9.4 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1409,7 +1411,7 @@ test textDisp-9.4 {TkTextRedrawTag} failsOnUbuntu {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.5 {TkTextRedrawTag} {failsOnUbuntu failsOnXQuarz} {
+test textDisp-9.5 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1420,7 +1422,7 @@ test textDisp-9.5 {TkTextRedrawTag} {failsOnUbuntu failsOnXQuarz} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.6 {TkTextRedrawTag} failsOnUbuntu {
+test textDisp-9.6 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap"
@@ -1431,7 +1433,7 @@ test textDisp-9.6 {TkTextRedrawTag} failsOnUbuntu {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag} failsOnUbuntu {
+test textDisp-9.7 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1441,7 +1443,7 @@ test textDisp-9.7 {TkTextRedrawTag} failsOnUbuntu {
     updateText
     set tk_textRedraw
 } {2.0 2.20 eof}
-test textDisp-9.8 {TkTextRedrawTag} {textfonts} {
+test textDisp-9.8 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1451,7 +1453,7 @@ test textDisp-9.8 {TkTextRedrawTag} {textfonts} {
     updateText
     set tk_textRedraw
 } {2.0 2.17}
-test textDisp-9.9 {TkTextRedrawTag} {textfonts} {
+test textDisp-9.9 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1571,7 +1573,7 @@ test textDisp-11.1 {TkTextSetYView} {
     updateText
     .t index @0,0
 } {30.0}
-test textDisp-11.2 {TkTextSetYView} failsOnXQuarz {
+test textDisp-11.2 {TkTextSetYView} {
     .t yview 30.0
     updateText
     .t yview 32.0
@@ -1585,7 +1587,7 @@ test textDisp-11.3 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
-test textDisp-11.4 {TkTextSetYView} failsOnXQuarz {
+test textDisp-11.4 {TkTextSetYView} {
     .t yview 30.0
     updateText
     .t yview 31.4
@@ -1616,7 +1618,7 @@ test textDisp-11.7 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {21.0 {21.0 22.0 23.0 24.0 25.0 26.0 27.0 28.0 29.0}}
-test textDisp-11.8 {TkTextSetYView} failsOnXQuarz {
+test textDisp-11.8 {TkTextSetYView} {
     .t yview 30.0
     updateText
     set tk_textRedraw {}
@@ -1624,7 +1626,7 @@ test textDisp-11.8 {TkTextSetYView} failsOnXQuarz {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
-test textDisp-11.9 {TkTextSetYView} failsOnXQuarz {
+test textDisp-11.9 {TkTextSetYView} {
     .t yview 30.0
     updateText
     set tk_textRedraw {}
@@ -1648,7 +1650,7 @@ test textDisp-11.11 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {191.0 {191.0 192.0 193.0 194.0 195.0 196.0}}
-test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} failsOnXQuarz {
+test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
     .t insert 10.0 "Long line with enough text to wrap\n"
     .t yview 1.0
     updateText
