@@ -7,7 +7,7 @@
 
 .TH tk print n "" Tk "Tk Built-in Commands"
 .so man.macros
-.SH NAME 
+.SH NAME
 print \- Print canvas and text widgets using native API's.
 .SH SYNOPSIS
 
@@ -19,9 +19,9 @@ print \- Print canvas and text widgets using native API's.
 .PP
 The \fBtk print\fR command allows users to print output from
 the \fBcanvas\fR and \fBtext\fR widgets using platform-native API's and
-dialogs. 
+dialogs.
 .TP
-The \fBcanvas\fR widget has long supported PostScript export and both PostScript and text files can be sent directly to a printer on Unix-like systems using the "lp" or "lpr" commands, and the \fBtk print\fR command does not supersede that functionality; it builds on it. The \fBtk print\fR command is a fuller implementation that uses native dialogs on macOS and Windows, and a Tk-based dialog that provides parallel functionality on X11. 
+The \fBcanvas\fR widget has long supported PostScript export and both PostScript and text files can be sent directly to a printer on Unix-like systems using the "lp" or "lpr" commands, and the \fBtk print\fR command does not supersede that functionality; it builds on it. The \fBtk print\fR command is a fuller implementation that uses native dialogs on macOS and Windows, and a Tk-based dialog that provides parallel functionality on X11.
 .SH PLATFORM NOTES
 .TP
 \fBWindows\fR
@@ -29,7 +29,7 @@ The \fBcanvas\fR widget has long supported PostScript export and both PostScript
 The Windows implementation is based on the GDI (Graphics Device Interface)
 API. Because there are slight differences in how GDI and Tk's \fBcanvas\fR
 widget display graphics, printed output from the \fBcanvas\fR on Windows
-may not be identical to screen rendering. 
+may not be identical to screen rendering.
 .
 .SH KEYWORDS
 print, output, graphics, text, canvas
