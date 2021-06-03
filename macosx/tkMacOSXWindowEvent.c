@@ -321,7 +321,7 @@ static void RefocusGrabWindow(void *data) {
      * If one of the windows is the grab window for its display we focus
      * it.  This is done as at idle, in case the app was reactivated by
      * clicking a different window.  In that case we need to wait until the
-     * mouse event has been processed before focussing the grab window.
+     * mouse event has been processed before focusing the grab window.
      */
 
     for (NSWindow *win in [NSApp windows]) {
@@ -334,6 +334,8 @@ static void RefocusGrabWindow(void *data) {
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
+	} else {
+	    [[self keyWindow] orderFront: self];
 	}
     }
 }
