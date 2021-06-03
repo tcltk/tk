@@ -291,6 +291,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 }
 @end
 
+
+/*
+ * Idle task which forces focus to a particular window.
+ */
+
+static void RefocusGrabWindow(void *data) {
+    TkWindow *winPtr = (TkWindow *) data;
+    TkpChangeFocus(winPtr, 1);
+}
+
 #pragma mark TKApplication(TKApplicationEvent)
 
 @implementation TKApplication(TKApplicationEvent)
@@ -308,6 +318,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      * When the application is activated with Command-Tab it will create a
      * zombie window for every Tk window which has been withdrawn.  So iterate
      * through the list of windows and order out any withdrawn window.
+     * If one of the windows is the grab window for its display we focus
+     * it.  This is done as at idle, in case the app was reactivated by
+     * clicking a different window.  In that case we need to wait until the
+     * mouse event has been processed before focusing the grab window.
      */
 
     for (NSWindow *win in [NSApp windows]) {
@@ -317,6 +331,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:nil];
+	}
+	if (winPtr->dispPtr->grabWinPtr == winPtr) {
+	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
+	} else {
+	    [[self keyWindow] orderFront: self];
 	}
     }
 }
@@ -946,6 +965,19 @@ ConfigureRestrictProc(
 - (BOOL) wantsUpdateLayer
 {
     return NO;
+}
+
+- (void) viewDidChangeBackingProperties
+{
+
+    /*
+     * Make sure that the layer uses a contentScale that matches the
+     * backing scale factor of the screen.  This avoids blurry text whe
+     * the view is on a Retina display, as well as incorrect size when
+     * the view is on a normal display.
+     */
+
+    self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
 
 - (void) addTkDirtyRect: (NSRect) rect
