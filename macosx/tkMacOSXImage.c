@@ -651,8 +651,8 @@ CreateCGImageFromPixmap(
  *----------------------------------------------------------------------
  */
 struct pixel_fmt {int r; int g; int b; int a;};
-static struct pixel_fmt bgra = {2, 1, 0, 3};
-static struct pixel_fmt abgr = {3, 2, 1, 0};
+static const struct pixel_fmt bgra = {2, 1, 0, 3};
+static const struct pixel_fmt abgr = {3, 2, 1, 0};
 
 XImage *
 XGetImage(
