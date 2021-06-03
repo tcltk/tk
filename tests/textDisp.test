@@ -99,6 +99,7 @@ set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
 set bigAscent [font metrics $bigFont -ascent]
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
+set heightDiff [expr {$bigHeight - $fixedHeight}]
 
 # Option  -width 20  (characters) below is a fundamental assumption of many
 # upcoming tests when wrapping enters in play
@@ -2183,9 +2184,15 @@ for {set i 2} {$i <= 200} {incr i} {
 }
 .t tag add big 100.0 105.0
 .t insert 151.end { has a lot of extra text, so that it wraps around on the screen several times over.}
-.t insert 153.end { also has enoug extra text to wrap.}
+.t insert 153.end { also has largely enough extra text to wrap.}
 updateText
-.t count -update -ypixels 1.0 end
+set totpix [.t count -update -ypixels 1.0 end]
+# check that the wrapping lines wrap exactly 6 times in total,
+# this is an assumption of the upcoming tests
+if {[expr {double(($totpix-5*$heightDiff)/$fixedHeight)}] != 206.0} {
+    puts "---> Warning: the font actually used by the tests, which is [font actual [.t cget -font]], \
+is quite different from the requested [.t cget -font]. Some of the upcoming tests will probably fail."
+}
 test textDisp-16.1 {TkTextYviewCmd procedure} {
     .t yview 21.0
     set x [.t yview]
@@ -2241,11 +2248,15 @@ test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} {
     .t index @0,0
 } {151.60}
 test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
-    .t yview moveto .752
+    .t yview moveto .75
+    set pixtonextline [expr {-[bo] + [lindex [.t bbox @0,0] 1] + [lindex [.t bbox @0,0] 3]}]
+    .t yview moveto [expr {0.75 + ($pixtonextline-1)/double($totpix)}]
     .t index @0,0
 } {151.60}
 test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
-    .t yview moveto .754
+    .t yview moveto .75
+    set pixtonextline [expr {-[bo] + [lindex [.t bbox @0,0] 1] + [lindex [.t bbox @0,0] 3]}]
+    .t yview moveto [expr {0.75 + $pixtonextline/double($totpix)}]
     .t index @0,0
 } {151.80}
 test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
@@ -2332,9 +2343,12 @@ test textDisp-16.27 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
 test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 98.0
     updateText
+    # The man page does not say it but the code does: scrolling 1 page actually uses the
+    # window height minus two lines, so that there's some overlap between adjacent pages.
+    set expected [.t index @0,[expr {[winfo height .t]-2*$fixedHeight}]]
     .t yview scroll 1 page
-    .t index @0,0
-} {103.0}
+    lequal [.t index @0,0] $expected
+} {1}
 test textDisp-16.29 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t configure -height 1
     updateText
