@@ -2244,17 +2244,15 @@ test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .752
     .t index @0,0
 } {151.60}
-test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} textfonts {
-    set count [expr {5 * $bigHeight + 150 * $fixedHeight}]
-    set extra [expr {0.04 * double($fixedDiff * 150) / double($count)}]
-    .t yview moveto [expr {.753 - $extra}]
+test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
+    .t yview moveto .754
     .t index @0,0
-} {151.60}
-test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
+} {151.80}
+test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .755
     .t index @0,0
 } {151.80}
-test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {textfonts} {
+test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {
     catch {destroy .top1}
     toplevel .top1
     wm geometry .top1 +0+0
@@ -2307,10 +2305,10 @@ test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview 50.0
     updateText
     .t yview scroll -1 pages
-    set x [.t index @0,0]
+   set x [.t index @0,0]
     .t configure -height 10
     updateText
-    set x
+   set x
 } {49.0}
 test textDisp-16.26 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 50.0
@@ -2324,16 +2322,12 @@ test textDisp-16.27 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview scroll 2 pages
     .t index @0,0
 } {66.0}
-test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {textfonts} {
+test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 98.0
     updateText
     .t yview scroll 1 page
-    set res [expr {int([.t index @0,0])}]
-    if {$fixedDiff > 1} {
-	incr res -1
-    }
-    set res
-} {102}
+    .t index @0,0
+} {103.0}
 test textDisp-16.29 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t configure -height 1
     updateText
@@ -2414,7 +2408,7 @@ test textDisp-16.38 {TkTextYviewCmd procedure} {
 test textDisp-16.39 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 1.3i pixels} msg] $msg
 } {0 {}}
-test textDisp-16.40 {text count -xpixels} failsOnUbuntu {
+test textDisp-16.40 {text count -xpixels} {
     set res {}
     lappend res [.t count -xpixels 1.0 1.5] \
       [.t count -xpixels 1.5 1.0] \
