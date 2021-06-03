@@ -1885,7 +1885,7 @@ test textDisp-13.6 {TkTextSeeCmd procedure} {
     .t configure -wrap none
     set x
 } {27.0}
-test textDisp-13.7 {TkTextSeeCmd procedure} {textfonts} {
+test textDisp-13.7 {TkTextSeeCmd procedure} {
     .t xview moveto 0
     .t yview moveto 0
     .t tag add sel 30.20
@@ -1901,8 +1901,11 @@ test textDisp-13.7 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.38]
     .t see 30.20
     lappend x [.t bbox 30.20]
-} [list [list 73 [expr {5*$fixedDiff + 68}] 7 $fixedHeight] [list 3 [expr {5*$fixedDiff + 68}] 7 $fixedHeight] [list 3 [expr {5*$fixedDiff + 68}] 7 $fixedHeight] [list 73 [expr {5*$fixedDiff + 68}] 7 $fixedHeight]]
-test textDisp-13.8 {TkTextSeeCmd procedure} {textfonts} {
+} [list [list [xchar 10] [yline 6] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 6] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 6] $fixedWidth $fixedHeight] \
+	[list [xchar 10] [yline 6] $fixedWidth $fixedHeight]]
+test textDisp-13.8 {TkTextSeeCmd procedure} {
     .t xview moveto 0
     .t yview moveto 0
     .t tag add sel 30.20
@@ -1916,8 +1919,16 @@ test textDisp-13.8 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.65]
     .t see 30.90
     lappend x [.t bbox 30.90]
-} [list [list 73 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 73 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight]]
-test textDisp-13.9 {TkTextSeeCmd procedure} {textfonts} {
+    # contrary to textDisp-13.7 above there is no yview command in this test
+    # therefore take into account that the top line is partially hidden
+    set y [expr {[yline 6] + [lindex [.t bbox @0,0] 1] - [bo]}]
+    set expected [list [list [xchar 10] $y $fixedWidth $fixedHeight] \
+                       [list [xchar 19] $y $fixedWidth $fixedHeight] \
+                       [list [xchar 19] $y $fixedWidth $fixedHeight] \
+                       [list [xchar 10] $y $fixedWidth $fixedHeight]]
+    lequal $x $expected
+} {1}
+test textDisp-13.9 {TkTextSeeCmd procedure} {
     wm geom . [expr {$width-2}]x$height
     .t xview moveto 0
     .t yview moveto 0
@@ -1932,8 +1943,16 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.65]
     .t see 30.90
     lappend x [.t bbox 30.90]
-} [list [list 74 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight] [list 138 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight] [list 138 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight] [list 74 [expr {9*$fixedDiff/2 + 66}] 7 $fixedHeight]]
-test textDisp-13.10 {TkTextSeeCmd procedure} {} {
+    # contrary to textDisp-13.7 above there is no yview command in this test
+    # therefore take into account that the top line is partially hidden
+    set y [expr {[yline 6] + [lindex [.t bbox @0,0] 1] - [bo]}]
+    set expected [list [list [expr {[xchar 10]+1}] $y $fixedWidth $fixedHeight] \
+                       [list [expr {[xchar 19]+2}] $y $fixedWidth $fixedHeight] \
+                       [list [expr {[xchar 19]+2}] $y $fixedWidth $fixedHeight] \
+                       [list [expr {[xchar 10]+1}] $y $fixedWidth $fixedHeight]]
+    lequal $x $expected
+} {1}
+test textDisp-13.10 {TkTextSeeCmd procedure} {
     # SF Bug 641778
     set w .tsee
     destroy $w
@@ -1952,7 +1971,6 @@ test textDisp-13.11 {TkTextSeeCmd procedure} {} {
     pack [text .top2.t2 -wrap none]
     for {set i 1} {$i < 5} {incr i} {
         .top2.t2 insert end [string repeat "Line $i: éèàçù" 5]\n
-
     }
     wm geometry .top2 300x200+0+0
     updateText
@@ -2006,7 +2024,7 @@ test textDisp-14.5 {TkTextXviewCmd procedure} {
 test textDisp-14.6 {TkTextXviewCmd procedure} {
     list [catch {.t xview moveto a} msg] $msg
 } {1 {expected floating-point number but got "a"}}
-test textDisp-14.7 {TkTextXviewCmd procedure} failsOnUbuntu {
+test textDisp-14.7 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
     .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n"
@@ -2206,7 +2224,7 @@ test textDisp-16.9 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.10 {TkTextYviewCmd procedure, "moveto" option} {
     list [catch {.t yview moveto gorp} msg] $msg
 } {1 {expected floating-point number but got "gorp"}}
-test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
+test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto 0.5
     .t index @0,0
 } {103.0}
@@ -2218,11 +2236,11 @@ test textDisp-16.13 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto 1.1
     .t index @0,0
 } {191.0}
-test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
+test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .75
     .t index @0,0
 } {151.60}
-test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} failsOnUbuntu {
+test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .752
     .t index @0,0
 } {151.60}
