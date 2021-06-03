@@ -1903,7 +1903,7 @@ static int GdiGetHdcInfo( HDC hdc,
 
 static int GdiNameToMode(const char *name)
 {
-    static struct gdimodes {
+    static const struct gdimodes {
 	int mode;
 	const char *name;
     } modes[] = {
@@ -1942,7 +1942,7 @@ static int GdiNameToMode(const char *name)
 
 static const char *GdiModeToName(int mode)
 {
-    static struct gdi_modes {
+    static const struct gdi_modes {
 	int mode;
 	const char *name;
     } modes[] = {
@@ -2692,7 +2692,7 @@ static int GdiWordToWeight(const char *str)
 {
     int retval = -1;
     size_t i;
-    static struct font_weight
+    static const struct font_weight
     {
 	const char *name;
 	int weight;
