@@ -296,7 +296,7 @@ proc ::tk::ListboxMotion {w el} {
 	}
 	extended {
 	    set i $Priv(listboxPrev)
-	    if {$i eq ""} {
+	    if {$i < 0} {
 		set i $el
 		$w selection set $el
 	    }
