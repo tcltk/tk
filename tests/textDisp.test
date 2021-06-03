@@ -2299,17 +2299,24 @@ test textDisp-16.24 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview scroll -3 pa
     .t index @0,0
 } {1.0}
-test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} {
+test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -setup {
+    # this frame is needed because some window managers don't allow the overall
+    # height of a window to get very narrow, triggering false test failure
+    frame .f2 -height 20
+    pack .f2 -side top
+} -body {
     .t configure -height 1
     updateText
     .t yview 50.0
     updateText
     .t yview scroll -1 pages
-   set x [.t index @0,0]
+    set x [.t index @0,0]
     .t configure -height 10
     updateText
-   set x
-} {49.0}
+    set x
+} -cleanup {
+    destroy .f2
+} -result {49.0}
 test textDisp-16.26 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 50.0
     updateText
