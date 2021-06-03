@@ -32,7 +32,7 @@ accompany the text.
 .TP
 \fBmacOS\fR
 .
-The macOS version will request permission from the user to authorize 
+The macOS version will request permission from the user to authorize
 notifications. This must be activated in Apple's System Preferences Notifications section.
 .TP
 \fBWindows\fR
