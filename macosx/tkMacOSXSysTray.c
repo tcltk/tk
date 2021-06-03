@@ -421,10 +421,10 @@ static int SysNotifyObjCmd(
      * than multiple, some deprecated, API's, and also allows notifications
      * to work correctly without requiring Wish to be code-signed - an
      * undocumented but apparently consistent requirement. And by calling
-     * NSAppleScript inline rather than shelling to out osascript, 
+     * NSAppleScript inline rather than shelling to out osascript,
      * Wish shows correctly as the calling app rather than Script Editor.
-     */ 
-    
+     */
+
     NSString *title = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
     NSString *message = [NSString stringWithUTF8String: Tcl_GetString(objv[2])];
     NSMutableString *notify = [NSMutableString new];
