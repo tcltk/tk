@@ -2340,7 +2340,7 @@ test textDisp-16.27 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview scroll 2 pages
     .t index @0,0
 } {66.0}
-test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} failsOnXQuarz {
+test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 98.0
     updateText
     # The man page does not say it but the code does: scrolling 1 page actually uses the
