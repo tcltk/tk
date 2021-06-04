@@ -2807,10 +2807,19 @@ DrawCanvas(
     blockPtr.height = cHeight;
     blockPtr.pixelSize = 4;
     blockPtr.pitch = blockPtr.pixelSize * blockPtr.width;
+
+#ifdef TK_XGETIMAGE_USES_ABGR32
+    blockPtr.offset[0] = 1;
+    blockPtr.offset[1] = 2;
+    blockPtr.offset[2] = 3;
+    blockPtr.offset[3] = 0;
+#else
     blockPtr.offset[0] = 0;
     blockPtr.offset[1] = 1;
     blockPtr.offset[2] = 2;
     blockPtr.offset[3] = 3;
+#endif
+
     blockPtr.pixelPtr = (unsigned char *)ckalloc(blockPtr.pixelSize * blockPtr.height * blockPtr.width);
 
     /*
