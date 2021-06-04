@@ -2345,7 +2345,7 @@ test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     updateText
     # The man page does not say it but the code does: scrolling 1 page actually uses the
     # window height minus two lines, so that there's some overlap between adjacent pages.
-    set expected [.t index @0,[expr {[winfo height .t]-2*[bo]-2*$fixedHeight}]]
+    set expected [.t index @0,[expr {[winfo height .t]-[bo]-2*$fixedHeight}]]
     .t yview scroll 1 page
     lequal [.t index @0,0] $expected
 } {1}
