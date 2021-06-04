@@ -16,11 +16,7 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 #include "default.h"
-#ifdef TK_NO_DOUBLE_BUFFERING
-#ifdef MAC_OSX_TK
-#include "tkMacOSXInt.h"
-#endif
-#endif /* TK_NO_DOUBLE_BUFFERING */
+#include "tkPort.h"
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
@@ -2920,7 +2916,19 @@ DrawCanvas(
 #define   B_OFFSET blockPtr.offset[2]
 #define   A_OFFSET blockPtr.offset[3]
 #endif
-	    if (ximagePtr->bits_per_pixel < 32) {
+#ifdef TK_XGETIMAGE_USES_ABGR32
+#define COPY_PIXEL (ximagePtr->bits_per_pixel == 32)
+#else
+#define COPY_PIXEL 0
+#endif
+	    
+	    if (COPY_PIXEL) {
+		/*
+		 * This platform packs pixels in RGBA byte order, as expected
+		 * by Tk_PhotoPutBlock() so we can just copy the pixel as an int.
+		 */
+		*((unsigned int *) (blockPtr.pixelPtr + pixel_offset)) = pixel;
+	    } else {
 		blockPtr.pixelPtr[pixel_offset + R_OFFSET] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
 		blockPtr.pixelPtr[pixel_offset + G_OFFSET] =
@@ -2928,12 +2936,10 @@ DrawCanvas(
 		blockPtr.pixelPtr[pixel_offset + B_OFFSET] =
                     (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
 		blockPtr.pixelPtr[pixel_offset + A_OFFSET] = 0xFF;
-	    } else {
-		*((unsigned int *) (blockPtr.pixelPtr + pixel_offset)) = pixel;
 	    }
 
 #ifdef DEBUG_DRAWCANVAS
-	    fprintf(stderr, "Set pixel %x to %hhx %hhx %hhx %hhx \n",
+	    fprintf(stderr, "Converted pixel %x to %hhx %hhx %hhx %hhx \n",
 		    pixel,
 		    blockPtr.pixelPtr[pixel_offset + 0],
 		    blockPtr.pixelPtr[pixel_offset + 1],
