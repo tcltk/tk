@@ -17,6 +17,9 @@
 #include "tkCanvas.h"
 #include "default.h"
 #include "tkPort.h"
+#ifdef MAC_OSX_TK
+#include "tkMacOSXInt.h"
+#endif
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
