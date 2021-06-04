@@ -2807,19 +2807,10 @@ DrawCanvas(
     blockPtr.height = cHeight;
     blockPtr.pixelSize = 4;
     blockPtr.pitch = blockPtr.pixelSize * blockPtr.width;
-#ifndef MAC_OSX_TK
-/* XGetImage returns a pixmap whose 32-bit pixels have byte order RGBA */
     blockPtr.offset[0] = 0;
     blockPtr.offset[1] = 1;
     blockPtr.offset[2] = 2;
     blockPtr.offset[3] = 3;
-#else
-/* XGetImage returns a pixmap whose 32-bit pixels have byte order ARGB */
-    blockPtr.offset[0] = 1;
-    blockPtr.offset[1] = 2;
-    blockPtr.offset[2] = 3;
-    blockPtr.offset[3] = 0;
-#endif
     blockPtr.pixelPtr = (unsigned char *)ckalloc(blockPtr.pixelSize * blockPtr.height * blockPtr.width);
 
     /*
