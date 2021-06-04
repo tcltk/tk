@@ -1942,6 +1942,8 @@ WmDeiconifyCmd(
 	}
     }
 
+    [[win contentView] setNeedsDisplay:YES];
+    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
