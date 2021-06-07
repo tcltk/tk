@@ -7806,7 +7806,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2020-07-02 (bug)[2d2459] default style for combobox (bll)
 
-2020-07-06 (bug)[40c4bf] double free, entry-19.21 (vogel)
+2020-07-06 (bug)[40e4bf] double free, entry-19.21 (vogel)
 
 2020-07-06 (bug)[e3888d] grab & warp, bind-36.1 (vogel)
 
@@ -7913,22 +7913,69 @@ in this changeset (new minor version) rather than bug fixes:
 
 2020-02-24 [TIP 563] Scrollwheel on Horizontal Scrollbar Scrolls Without Shift too
 
+2020-02-28 [TIP 557] C++ support
+
+2020-03-12 (bug)[355180] solve XKeycodeToKeysym deprecation
+        *** POTENTIAL INCOMPATIBILITY -- Tk 8.7 now requires X11R6 ***
+
+2020-03-18 [TIP 569] Eliminate comments that serve lint
+
+2020-05-17 [d87dc2] Remove TkMacOSXGetStringObjFromCFString()
+
 2020-05-24 [TIP 574] Add a 'tag delete' command to the ttk::treeview widget
 
+2020-06-27 (bug)[50ed1e] spinbox with duplicate values
+
+2020-07-03 [TIP 578] Death to TCL_DBGX
+
+2020-08-23 (bug)[bb85d2] valgrind on TIP 489
+
+2020-08024 (bug)[d30c21] default colors for TIP 496
+
 2020-09-02 [TIP 580] Export Tk_GetDoublePixelsFromObj and 5 more
+
+2020-10-21 [TIP 474] Uniform mouse wheel events
 
 2020-11-15 [TIP 584] Better introspection for ttk
 
 2020-11-16 [TIP 588] Unicode for (X11) keysyms
 
+2020-12-03 [TIP 590] Recommend lowercase package names
+
+2020-12-09 (bug)[d6e9b4] SVG memory overflow
+
 2020-12-11 [TIP 591] Rotate ttk::notebook window with mousewheel on tab
+
+2020-12-12 [TIP 325] System tray and system notification
+
+2021-01-08 [TIP 592] End support: Windows XP, Server 2003, Vista, Server 2008
+
+2021-01-08 (bug)[822330] Prevent buffer overflow in SVG image.
+
+2021-01-28 (bug)[237971] 'end' argument to [$canvas insert] 
+
+2021-02-25 (bug)[be9cad] crash in [tkwait]
 
 2021-02-27 [TIP 529] Add metadata dictionary property to tk photo image
 
+2021-03-02 (bug)[1626ed] Aqua crash: dead keys as meny accelerator
 
+2021-03-29 (bug)[9b6065] Restore Tcl [update] when Tk is destroyed
 
+2021-04-08 (bug)[58222c] background colors
 
+2021-04-09 [TIP 595] Unicode-aware/case-sensitive Loadable Library handling
 
+2021-04-21 (bug)[cde766] update scrollbars on treeview
 
+2021-04-26 (bug)[c97464] memleak in aqua fonts
 
-- Released 8.7a5, Jun 1, 2021 --- http://core.tcl-lang.org/tcl/ for details -
+2021-05-02 (bug)[2ecb09] Follow Mac OSX Key-repeat setting
+
+2021-05-03 (bug)[8a5086] ttk::entry issue
+
+2021-05-22 (bug)[3e3360] bind substitution %S
+
+2021-05-25 (bug)[7bda98] aqua: double click bind with changing focus
+
+- Released 8.7a5, Jun 11, 2021 --- http://core.tcl-lang.org/tcl/ for details -
