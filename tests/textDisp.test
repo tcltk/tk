@@ -2563,42 +2563,49 @@ test textDisp-17.7 {TkTextScanCmd procedure} {
     updateText
     lequal [list $x [.t index @0,0]] $expected
 } {1}
-test textDisp-17.8 {TkTextScanCmd procedure} {textfonts} {
+test textDisp-17.8 {TkTextScanCmd procedure} {
     .t yview 1.0
     .t xview moveto 0
     updateText
+    set expected [.t index @[expr {[bo]+50}],[expr {[bo]+50}]]
     .t scan mark 0 60
     .t scan dragto 30 100
     updateText
     .t scan dragto 25 95
     updateText
-    .t index @0,0
-} {4.7}
-test textDisp-17.9 {TkTextScanCmd procedure} {textfonts} {
+    lequal [.t index @0,0] $expected
+} {1}
+test textDisp-17.9 {TkTextScanCmd procedure} {
     .t yview end
     .t xview moveto 0
     updateText
+    # this brings us at lower right corner of the text
     .t xview scroll 100 units
     updateText
+    # this does not trigger any scroll, we're already at the corner
     .t scan mark 90 60
     .t scan dragto 10 0
     updateText
+    set expected [.t index @[expr {[winfo width .t]-[bo]-40}],[expr {[winfo height .t]-[bo]-50}]]
+    set expected [.t index "$expected - [.t cget -height] lines - [.t cget -width] chars"]
     .t scan dragto 14 5
     updateText
-    .t index @0,0
-} {14.44}
+    lequal [.t index @0,0] $expected
+} {1}
 .t configure -wrap word
-test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
+test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     .t yview 10.0
     updateText
+    set expected [.t index "[.t index @0,0] - [expr {int(50/$fixedHeight)+1}] display lines"]
     .t scan mark -10 60
     .t scan dragto -5 65
     updateText
     set x [.t index @0,0]
-    .t scan dragto 0 [expr {70 + $fixedDiff}]
+    lappend expected [.t index "$expected - [expr {int(70/$fixedHeight)}] display lines"]
+    .t scan dragto 0 72
     updateText
-    list $x [.t index @0,0]
-} {9.0 8.0}
+    lequal [list $x [.t index @0,0]] $expected
+} {1}
 .t configure -xscrollcommand scroll -yscrollcommand {}
 
 test textDisp-18.1 {GetXView procedure} {
