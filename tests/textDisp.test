@@ -2525,30 +2525,44 @@ test textDisp-17.4 {TkTextScanCmd procedure} {
 test textDisp-17.5 {TkTextScanCmd procedure} {
     list [catch {.t scan stupid 123 456} msg] $msg
 } {1 {bad scan option "stupid": must be mark or dragto}}
-test textDisp-17.6 {TkTextScanCmd procedure} {textfonts} {
+test textDisp-17.6 {TkTextScanCmd procedure} {
     .t yview 1.0
     .t xview moveto 0
     updateText
+    set expected [.t index @[expr {[bo]+50}],[expr {[bo]+50}]]
     .t scan mark 40 60
     .t scan dragto 35 55
     updateText
-    .t index @0,0
-} {4.7}
-test textDisp-17.7 {TkTextScanCmd procedure} {textfonts} {
-    .t yview 10.0
+    lequal [.t index @0,0] $expected
+} {1}
+test textDisp-17.7 {TkTextScanCmd procedure} {
+    # 1st result
+    .t yview 1.0
     .t xview moveto 0
     updateText
+    set expected [.t index @[expr {[bo]+20*$fixedWidth-50}],[expr {[bo]+9*$fixedHeight-50}]]
+    .t yview 10.0
     .t xview scroll 20 units
     updateText
     .t scan mark -10 60
     .t scan dragto -5 65
     updateText
-    .t index @0,0
     set x [.t index @0,0]
-    .t scan dragto 0 [expr {70 + $fixedDiff}]
+    # 2nd result
+    .t yview 1.0
+    .t xview moveto 0
     updateText
-    list $x [.t index @0,0]
-} {6.12 2.5}
+    lappend expected [.t index @[expr {[bo]+20*$fixedWidth-50-50}],[expr {[bo]+9*$fixedHeight-50-70}]]
+    .t yview 10.0
+    .t xview scroll 20 units
+    updateText
+    .t scan mark -10 60
+    .t scan dragto -5 65
+    updateText
+    .t scan dragto 0 72
+    updateText
+    lequal [list $x [.t index @0,0]] $expected
+} {1}
 test textDisp-17.8 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0
@@ -2586,6 +2600,7 @@ test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
     list $x [.t index @0,0]
 } {9.0 8.0}
 .t configure -xscrollcommand scroll -yscrollcommand {}
+
 test textDisp-18.1 {GetXView procedure} {
     .t configure -wrap none
     .t delete 1.0 end
