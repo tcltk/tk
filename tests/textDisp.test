@@ -3070,14 +3070,13 @@ test textDisp-19.16 {count -ypixels} {
     updateText
     .t count -update -ypixels 1.0 end
     updateText
-    set res {}
-    lappend res \
+    set res [list \
       [.t count -ypixels 1.0 end] \
       [.t count -update -ypixels 1.0 end] \
       [.t count -ypixels 15.0 16.0] \
       [.t count -ypixels 15.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels 16.0 "16.0 displaylineend +1c"] \
-      [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"]
+      [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"] ]
 } [list [expr {20 * $fixedHeight}] \
         [expr {20 * $fixedHeight}] \
 	$fixedHeight \
@@ -3093,9 +3092,10 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
     }
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
-    set res {}
-    update
-    lappend res \
+    updateText
+    .t count -update -ypixels 1.0 end
+    updateText
+    set res [list \
       [.t count -ypixels 1.0 6.0] \
       [.t count -ypixels 2.0 7.5] \
       [.t count -ypixels 5.0 8.5] \
@@ -3107,7 +3107,7 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
       [.t count -ypixels 5.0 25.0] \
       [.t count -ypixels 25.0 5.0] \
       [.t count -ypixels 25.4 27.50] \
-      [.t count -ypixels 35.0 38.0]
+      [.t count -ypixels 35.0 38.0] ]
     .t yview 35.0
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {4 * $fixedHeight}] \
@@ -3128,12 +3128,13 @@ test textDisp-19.18 {count -ypixels with indices in elided lines} {
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
     .t yview 35.0
-    set res {}
-    update
-    lappend res [.t count -ypixels 5.0 25.0]
+    updateText
+    .t count -update -ypixels 1.0 end
+    updateText
+    set res [.t count -ypixels 5.0 25.0]
     .t yview scroll [expr {- 15 * $fixedHeight}] pixels
     updateText
-    lappend res [.t count -ypixels 5.0 25.0]
+   lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {5 * $fixedHeight}] [expr {5 * $fixedHeight}]]
 test textDisp-19.19 {count -ypixels with indices in elided lines} {
     .t configure -wrap char
