@@ -2596,12 +2596,13 @@ test textDisp-17.9 {TkTextScanCmd procedure} {
 test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     .t yview 10.0
     updateText
-    set expected [.t index "[.t index @0,0] - [expr {int(50/$fixedHeight)+1}] display lines"]
+    set origin [.t index @0,0]
+    set expected [.t index "$origin - [expr {int(ceil(50.0/$fixedHeight))}] display lines"]
     .t scan mark -10 60
     .t scan dragto -5 65
     updateText
     set x [.t index @0,0]
-    lappend expected [.t index "$expected - [expr {int(70/$fixedHeight)}] display lines"]
+    lappend expected [.t index "$origin - [expr {int(ceil((50.0+70.0)/$fixedHeight))}] display lines"]
     .t scan dragto 0 72
     updateText
     lequal [list $x [.t index @0,0]] $expected
