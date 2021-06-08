@@ -3134,7 +3134,7 @@ test textDisp-19.18 {count -ypixels with indices in elided lines} {
     set res [.t count -ypixels 5.0 25.0]
     .t yview scroll [expr {- 15 * $fixedHeight}] pixels
     updateText
-   lappend res [.t count -ypixels 5.0 25.0]
+    lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {5 * $fixedHeight}] [expr {5 * $fixedHeight}]]
 test textDisp-19.19 {count -ypixels with indices in elided lines} {
     .t configure -wrap char
