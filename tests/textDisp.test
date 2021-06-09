@@ -103,6 +103,7 @@ set heightDiff [expr {$bigHeight - $fixedHeight}]
 
 # Option  -width 20  (characters) below is a fundamental assumption of many
 # upcoming tests when wrapping enters in play
+# Also  -height 10  (lines) is an important assumption
 text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
