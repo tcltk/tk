@@ -5577,7 +5577,7 @@ printf "%s\n" "$result" >&6; }
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for tclsh in Tcl build directory" >&5
 printf %s "checking for tclsh in Tcl build directory... " >&6; }
-    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${EXEEXT}
+    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}\${EXESUFFIX}
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $BUILD_TCLSH" >&5
 printf "%s\n" "$BUILD_TCLSH" >&6; }
 
