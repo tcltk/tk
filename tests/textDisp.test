@@ -3418,42 +3418,57 @@ for {set i 2} {$i <= 200} {incr i} {
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
 updateText
-test textDisp-23.1 {TkTextDLineInfo} {textfonts} {
+test textDisp-23.1 {TkTextDLineInfo} {
     .t config -wrap word
     .t yview 48.0
     list [.t dlineinfo 47.3] [.t dlineinfo 48.0] [.t dlineinfo 50.40] \
 	    [.t dlineinfo 56.0]
-} [list {} [list 3 3 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {4*$fixedDiff + 55}] 91 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-23.2 {TkTextDLineInfo} {textfonts} {
-    .t config -bd 4 -wrap word
+} [list {} \
+        [list [bo] [yline 1] [xw 7] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent] \
+	{}]
+.t config -bd 4
+test textDisp-23.2 {TkTextDLineInfo} {
+    .t config -wrap word
     updateText
     .t yview 48.0
     .t dlineinfo 50.40
-} [list 7 [expr {4*$fixedDiff + 59}] 91 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]
+} [list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent]
 .t config -bd 0
-test textDisp-23.3 {TkTextDLineInfo} {textfonts} {
+test textDisp-23.3 {TkTextDLineInfo} {
     .t config -wrap none
     updateText
     .t yview 48.0
     list [.t dlineinfo 50.40] [.t dlineinfo 57.3]
-} [list [list 3 [expr {2*$fixedDiff + 29}] 371 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {9*$fixedDiff + 120}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
-test textDisp-23.4 {TkTextDLineInfo, cut-off lines} {textfonts} {
+} [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+        [list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent]]
+test textDisp-23.4 {TkTextDLineInfo, cut-off lines} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t config -wrap char
     .t yview 10.0
     wm geom . ${width}x[expr {$height-1}]
     updateText
-    list [.t dlineinfo 19.0] [.t dlineinfo 20.0]
-} [list [list 3 [expr {9*$fixedDiff + 120}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {10*$fixedDiff + 133}] 49 3 [expr {$fixedDiff + 10}]]]
-test textDisp-23.5 {TkTextDLineInfo, cut-off lines} {textfonts} {
+    set expected [list [list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent] \
+                       [list [bo] [yline 11] [xw 7] [expr {($height-1)-$oriHeight}] $fixedAscent]]
+    lequal [list [.t dlineinfo 19.0] [.t dlineinfo 20.0]] $expected
+} {1}
+test textDisp-23.5 {TkTextDLineInfo, cut-off lines} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t config -wrap char
     .t yview 10.0
     wm geom . ${width}x[expr {$height+1}]
     updateText
-    list [.t dlineinfo 19.0] [.t dlineinfo 20.0]
-} [list [list 3 [expr {9*$fixedDiff + 120}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {10*$fixedDiff + 133}] 49 5 [expr {$fixedDiff + 10}]]]
+    set expected [list [list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent] \
+                       [list [bo] [yline 11] [xw 7] [expr {($height+1)-$oriHeight}] $fixedAscent]]
+    lequal [list [.t dlineinfo 19.0] [.t dlineinfo 20.0]] $expected
+} {1}
 wm geom . {}
 updateText
-test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {textfonts} {
+test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {
     .t config -wrap none
     .t delete 1.0 end
     .t insert end "First line\n"
@@ -3462,9 +3477,11 @@ test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {textfonts} {
     .t xview scroll 6 units
     updateText
     list [.t dlineinfo 1.0] [.t dlineinfo 2.0] [.t dlineinfo 3.0]
-} [list [list -39 3 70 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list -39 [expr {$fixedDiff + 16}] 364 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list -39 [expr {2*$fixedDiff + 29}] 35 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
+} [list [list [expr {[xw -6]+[bo]}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
+        [list [expr {[xw -6]+[bo]}] [yline 2] [xw 52] $fixedHeight $fixedAscent] \
+	[list [expr {[xw -6]+[bo]}] [yline 3] [xw 5] $fixedHeight $fixedAscent]]
 .t xview moveto 0
-test textDisp-23.7 {TkTextDLineInfo, centering} {textfonts} {
+test textDisp-23.7 {TkTextDLineInfo, centering} {
     .t config -wrap word
     .t delete 1.0 end
     .t insert end "First line\n"
@@ -3475,7 +3492,9 @@ test textDisp-23.7 {TkTextDLineInfo, centering} {textfonts} {
     .t tag add x 1.0
     .t tag add y 3.0
     list [.t dlineinfo 1.0] [.t dlineinfo 2.0] [.t dlineinfo 3.0]
-} [list [list 38 3 70 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {$fixedDiff + 16}] 119 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 108 [expr {4*$fixedDiff + 55}] 35 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
+} [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
+        [list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
+	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
 .t tag delete x y
 
 test textDisp-24.1 {TkTextCharLayoutProc} {textfonts} {
