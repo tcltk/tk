@@ -126,6 +126,7 @@ TCL_SRC_DIR_NATIVE		= $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
 EXESUFFIX		= @EXESUFFIX@
+TCLVER			= @TCL_MAJOR_VERSION@@TCL_MINOR_VERSION@
 VER			= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER			= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
 
@@ -202,8 +203,6 @@ SHELL		= @SHELL@
 RM		= rm -f
 COPY		= cp
 LN		= ln
-
-BUILD_TCLSH	= @BUILD_TCLSH@
 
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
@@ -708,7 +707,7 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	)
 	@$(RMDIR) $(TK_VFS_PATH)/demos
 	-@if test "${ZIPFS_BUILD}" = "2" ; then \
-	    cp ${BUILD_TCLSH} ${TK_VFS_ROOT}/../${TK_ZIP_FILE} ; \
+	    cp ${TCL_BIN_DIR}/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
 		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
