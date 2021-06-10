@@ -7885,7 +7885,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2018-11-06 [TIP 415] New option -height for [$canvas create arc] (geard)
 
-2018-11-06 [TIP 518] New event <<NoMangedChild>> (oehlmann)
+2018-11-06 [TIP 518] New event <<NoManagedChild>> (oehlmann)
 
 2019-04-14 [TIP 164] New subcommand [$canvas rotate] (fellows)
 
