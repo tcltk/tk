@@ -3497,103 +3497,148 @@ test textDisp-23.7 {TkTextDLineInfo, centering} {
 	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
 .t tag delete x y
 
-test textDisp-24.1 {TkTextCharLayoutProc} {textfonts} {
+test textDisp-24.1 {TkTextCharLayoutProc} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 7 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.2 {TkTextCharLayoutProc} {textfonts} {
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-24.2 {TkTextCharLayoutProc} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
     wm geom . [expr {$width+1}]x$height
     updateText
-    list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 12 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.3 {TkTextCharLayoutProc} {textfonts} {
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width+1-$oriWidth)}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
+} {1}
+test textDisp-24.3 {TkTextCharLayoutProc} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
     wm geom . [expr {$width-1}]x$height
     updateText
-    list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 10 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {textfonts} {
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-1-$oriWidth)}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
+} {1}
+test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 01234567890123456789\n012345678901234567890
     wm geom . {}
     updateText
     list [.t bbox 1.19] [.t bbox 1.20] [.t bbox 2.20]
-} [list [list 136 3 7 $fixedHeight] [list 143 3 0 $fixedHeight] [list 3 [expr {2*$fixedDiff + 29}] 7 $fixedHeight]]
-test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {unix textfonts} {
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 20] [yline 1] 0 $fixedHeight] \
+	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight]]
+test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {nonwin} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 0\n1\n
-    wm geom . 110x$height
+    # set text widget width to ([bo] pixels) less than 1-char width
+    # note: windows refuses to shrink enough therefore the constraint
+    set wi [expr {[winfo width .f]+[bo]+[xw 1]}]
+    wm geom . ${wi}x$height
     updateText
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 2.0]
-} [list [list 3 3 4 $fixedHeight] [list 7 3 0 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 4 $fixedHeight]]
-test textDisp-24.6 {TkTextCharLayoutProc, line ends with space} {textfonts} {
+} [list [list [xchar 0] [yline 1] [expr {$fixedWidth-[bo]}] $fixedHeight] \
+        [list [expr {[xchar 1]-[bo]}] [yline 1] 0 $fixedHeight] \
+	[list [xchar 0] [yline 2] [expr {$fixedWidth-[bo]}] $fixedHeight]]
+test textDisp-24.6 {TkTextCharLayoutProc, line ends with space} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
     wm geom . {}
     updateText
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 7 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.7 {TkTextCharLayoutProc, line ends with space} {textfonts} {
+} [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-24.7 {TkTextCharLayoutProc, line ends with space} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
     wm geom . [expr {$width+1}]x$height
     updateText
-    list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 12 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.8 {TkTextCharLayoutProc, line ends with space} {textfonts} {
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width+1-$oriWidth)}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
+} {1}
+test textDisp-24.8 {TkTextCharLayoutProc, line ends with space} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
     wm geom . [expr {$width-1}]x$height
     updateText
-    list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 10 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.9 {TkTextCharLayoutProc, line ends with space} {textfonts} {
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-1-$oriWidth)}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
+} {1}
+test textDisp-24.9 {TkTextCharLayoutProc, line ends with space} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
     wm geom . [expr {$width-6}]x$height
     updateText
-    list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 5 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {textfonts} {
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-6-$oriWidth)}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
+} {1}
+test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {
+    wm geometry . {}
+    updateText
+    scan [wm geom .] %dx%d oriWidth oriHeight
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
     wm geom . [expr {$width-7}]x$height
     updateText
-    list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 4 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't quite fit} {textfonts} {
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-7-$oriWidth)}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
+} {1}
+test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't quite fit} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "01234567890123456789 \nabcdefg"
-    wm geom . [expr {$width-2}]x$height
+    # set text widget width to 2 pixels more than 20-char width
+    set wi [expr {[winfo width .f]+2*[bo]+[xw 20]+2}]
+    wm geom . ${wi}x$height
     updateText
-    set result {}
-    lappend result [.t bbox 1.21] [.t bbox 2.0]
+    set result [list [.t bbox 1.21] [.t bbox 2.0]]
     .t mark set insert 1.21
     lappend result [.t bbox 1.21] [.t bbox 2.0]
-} [list [list 145 3 0 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight] [list 145 3 0 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
-test textDisp-24.12 {TkTextCharLayoutProc, tab causes wrap} {textfonts} {
+} [list [list [expr {[xchar 20]+2}] [yline 1] 0 $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [expr {[xchar 20]+2}] [yline 1] 0 $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-24.12 {TkTextCharLayoutProc, tab causes wrap} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghi"
     .t mark set insert 1.4
     .t insert insert \t\t\t
-    list [.t bbox {insert -1c}] [.t bbox insert]
-} [list [list 115 3 30 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
+    set expected [list [list [expr {[xchar 0]+2*8*$fixedWidth}] [yline 1] [expr {[winfo width .t]-([xchar 0]+2*8*$fixedWidth)-[bo]}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox {insert -1c}] [.t bbox insert]] $expected
+} {1}
 test textDisp-24.13 {TkTextCharLayoutProc, -wrap none} {textfonts} {
     .t configure -wrap none
     .t delete 1.0 end
