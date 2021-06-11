@@ -3773,7 +3773,7 @@ test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {
 catch {destroy .t.f}
 .t configure -width 20
 updateText
-test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {
+test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} notAqua {
     .t delete 1.0 end
     .t tag configure x -justify center
     .t insert 1.0 aa\tbb\tcc\tdd\t
