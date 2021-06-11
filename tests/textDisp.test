@@ -3629,6 +3629,8 @@ test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't qui
         [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [expr {[xchar 20]+2}] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+wm geom . {}
+updateText
 test textDisp-24.12 {TkTextCharLayoutProc, tab causes wrap} {
     .t configure -wrap char
     .t delete 1.0 end
