@@ -1812,12 +1812,6 @@ alldist: dist
 #
 
 html:
-	$(BUILD_HTML)
-	@EXTRA_BUILD_HTML@
-html-tcl:
-	$(BUILD_HTML) --tcl
-	@EXTRA_BUILD_HTML@
-html-tk:
 	$(BUILD_HTML) --tk
 	@EXTRA_BUILD_HTML@
 
