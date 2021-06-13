@@ -3759,7 +3759,7 @@ test textDisp-24.22 {TkTextCharLayoutProc, word breaks} {
     .t window create end -window .t.f
     .t insert end "zzzzzzz qqqqq rrrr ssss tt u vvvvv"
    .t bbox 1.28
-} [list 33 [expr {$fixedDiff/2 + 19}] 7 $fixedHeight]
+} [list [expr {[bo]+30}] [expr {[yline 2]+(20-$fixedHeight)/2}] $fixedWidth $fixedHeight]
 test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {
     .t configure -wrap word
     .t delete 1.0 end
