@@ -3809,13 +3809,15 @@ test textDisp-25.1 {CharBboxProc procedure, check tab width} {
 .t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 \
 	-tabs {}
 updateText
-test textDisp-26.1 {AdjustForTab procedure, no tabs} {textfonts} {
+test textDisp-26.1 {AdjustForTab procedure, no tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.12] 0] \
 	    [lindex [.t bbox 1.14] 0]
-} [list 56 126 168]
-test textDisp-26.1.2 {AdjustForTab procedure, no tabs} {textfonts} {
+} [list [expr {[bo]+8*$fixedWidth}] \
+        [expr {[bo]+2*8*$fixedWidth+2*$fixedWidth}] \
+	[expr {[bo]+3*8*$fixedWidth}]]
+test textDisp-26.1.2 {AdjustForTab procedure, no tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
     .t configure -tabstyle wordprocessor
@@ -3823,13 +3825,16 @@ test textDisp-26.1.2 {AdjustForTab procedure, no tabs} {textfonts} {
       [lindex [.t bbox 1.14] 0]]
     .t configure -tabstyle tabular
     set res
-} [list 56 168 224]
+} [list [expr {[bo]+8*$fixedWidth}] \
+        [expr {[bo]+3*8*$fixedWidth}] \
+	[expr {[bo]+4*8*$fixedWidth}]]
 test textDisp-26.2 {AdjustForTab procedure, not enough tabs specified} {
     .t delete 1.0 end
     .t insert 1.0 a\tb\tc\td
     .t tag delete x
     .t tag configure x -tabs 40
     .t tag add x 1.0 end
+tk_messageBox
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
 	    [lindex [.t bbox 1.6] 0]
 } [list 40 80 120]
