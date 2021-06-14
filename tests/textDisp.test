@@ -3834,7 +3834,6 @@ test textDisp-26.2 {AdjustForTab procedure, not enough tabs specified} {
     .t tag delete x
     .t tag configure x -tabs 40
     .t tag add x 1.0 end
-tk_messageBox
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
 	    [lindex [.t bbox 1.6] 0]
 } [list 40 80 120]
