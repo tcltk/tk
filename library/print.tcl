@@ -470,8 +470,6 @@ namespace eval ::tk::print {
 	    eval $cmmd
 	}
 
-
-
 	# _print_canvas.oval
 	#   Prints an oval item.
 	# Arguments:
@@ -600,8 +598,8 @@ namespace eval ::tk::print {
 	    set anchor [ $cw itemcget $id -anchor ]
 	    set coords [ $cw coords $id ]
 
-		set cmmd "::tk::print::_gdi photo $printargs(hDC) -destination [list $coords] -photo $imagename "
-		eval $cmmd
+	    set cmmd "::tk::print::_gdi photo $printargs(hDC) -destination [list $coords] -photo $imagename "
+	    eval $cmmd
 	}
 
 	# _print_canvas.bitmap
@@ -686,6 +684,213 @@ namespace eval ::tk::print {
     }
     #end win32 procedures
 
+    #begin X11 procedures
+
+    if {[tk windowingsystem] eq "x11"} {
+
+	variable printcmd 
+	variable printlist
+	variable choosepaper
+	variable p
+	
+	set printmcd ""
+	set chooseprinter ""
+	set printlist {}
+
+	#Set the print environtment - print command, and list of printers.
+	proc _setprintenv {} {
+	    variable printcmd 
+	    variable printlist
+	    
+	    #Select print command. We prefer lpr, but will fall back to lp if necessary.
+	    set printcmd {exec which lpr}
+	    if {$printcmd == ""} {
+		set printcmd lp
+	    } else {
+		set printcmd lpr
+	    }
+
+	    #Build list of printers,
+	    set printdata [exec lpstat -a]
+	    foreach item [split $printdata \n] {
+		lappend printlist [lindex [split $item] 0]
+	    }
+	}
+
+	#Main printer dialog. Select printer, set options, and fire print command.
+	proc _print {w} {
+
+	    variable printlist
+	    variable printcmd
+	    variable chooseprinter
+	    variable printcopies
+	    variable choosepaper
+	    variable color
+	    variable p
+
+	    
+	    _setprintenv
+
+	    set chooseprinter [lindex $printlist 0]
+
+	    set p ._print
+
+	    catch {destroy $p}
+	    
+	    toplevel $p
+	    wm title $p "Print"
+	    wm resizable $p 0 0
+
+	    frame $p.frame -padx 10 -pady 10
+	    pack $p.frame -fill x -expand no
+
+	    #The main dialog
+	    frame $p.frame.printframe -padx 5 -pady 5
+	    pack $p.frame.printframe -side top -fill x -expand no
+	    
+	    label $p.frame.printframe.printlabel -text "Printer:" 
+	    ttk::combobox $p.frame.printframe.mb -textvariable chooseprinter -state readonly -values [lsort -unique $printlist]
+	    pack $p.frame.printframe.printlabel $p.frame.printframe.mb -side left -fill x -expand no
+	    
+	    bind $p.frame.printframe.mb <<ComboboxSelected>>  { set chooseprinter}
+
+	    set paperlist {Letter Legal A4}
+	    set colorlist {Grayscale RGB}
+
+	    #Initialize with sane defaults. Because some of these variables
+	    #are tied to tk_optionMenu, they are global and cannot be tied
+	    #to the ::tk::print namespace. To minimize name collision, we have
+	    #given them similar names to the current namespace. And wherever
+	    #possible, we are using namespaced variables.
+	    
+	    set printcopies 1
+	    set ::tkprint_choosepaper A4
+	    set ::tkprint_color RGB
+	    set ::tkprint_orientation portrait
+
+	    set percentlist {100 90 80 70 60 50 40 30 20 10}
+
+	    #Only load widgets where a variable is set - ignore errors.
+	    labelframe $p.frame.copyframe -text Options -padx 5 -pady 5
+	    pack $p.frame.copyframe -fill x -expand no 
+
+	    frame $p.frame.copyframe.l -padx 5 -pady 5
+	    pack $p.frame.copyframe.l -side top -fill x -expand no
+
+	    label $p.frame.copyframe.l.copylabel -text "Copies:"
+	    spinbox $p.frame.copyframe.l.field -from 1 -to 1000 -textvariable printcopies -width 5
+
+	    pack  $p.frame.copyframe.l.copylabel $p.frame.copyframe.l.field  -side left -fill x -expand  no
+
+	    set printcopies [$p.frame.copyframe.l.field get]
+	    
+	    frame $p.frame.copyframe.r -padx 5 -pady 5
+	    pack $p.frame.copyframe.r -fill x -expand no
+
+	    label $p.frame.copyframe.r.paper -text "Paper:"  
+	    tk_optionMenu $p.frame.copyframe.r.menu ::tkprint_choosepaper {*}$paperlist
+	    
+	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu -side left -fill x -expand no
+
+	    if {[winfo class $w] eq "Canvas"} {
+
+		frame $p.frame.copyframe.z -padx 5 -pady 5
+		pack $p.frame.copyframe.z  -fill x -expand no
+		
+		label $p.frame.copyframe.z.zlabel -text "Scale %:"
+		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber {*}$percentlist
+
+		frame $p.frame.copyframe.orient -padx 5 -pady 5
+		pack $p.frame.copyframe.orient  -fill x -expand no
+
+		label $p.frame.copyframe.orient.text -text "Orientation:" 
+		radiobutton $p.frame.copyframe.orient.v -text "Portrait" -value portrait -variable ::tkprint_printorientation -compound left 
+		radiobutton $p.frame.copyframe.orient.h -text "Landscape"  -value landscape -variable ::tkprint_printorientation -compound left 
+		
+		pack $p.frame.copyframe.orient.text $p.frame.copyframe.orient.v $p.frame.copyframe.orient.h  -side left -fill x -expand no
+
+		frame $p.frame.copyframe.c -padx 5 -pady 5
+		pack $p.frame.copyframe.c  -fill x -expand no 
+
+		label $p.frame.copyframe.c.l -text "Output:" 
+		tk_optionMenu $p.frame.copyframe.c.c ::tkprint_color {*}$colorlist
+		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left -fill x -expand no
+	    }
+
+	    #Build rest of GUI from bottom up
+	    frame $p.frame.buttonframe 
+	    pack $p.frame.buttonframe -fill x -expand no -side bottom
+
+	    button $p.frame.buttonframe.printbutton -text "Print" -command "::tk::print::_runprint $w"
+	    button $p.frame.buttonframe.cancel -text "Cancel" -command {destroy ._print} 
+
+	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel -side right -fill x -expand no
+
+	}
+
+
+	#execute the print command--print the file
+	proc _runprint {w} {
+
+	    variable printlist
+	    variable printcmd
+	    variable chooseprinter
+	    variable printcopies
+	    variable p
+
+
+	    #First, generate print file.
+	    
+	    if {[winfo class $w] eq "Text"} {
+		set txt [$w get 1.0 end]
+		set file /tmp/tk_text.txt
+		set print_txt [open $file  w]
+		puts $print_txt $txt
+		close $print_txt
+	    }
+
+	    if {[winfo class $w] eq "Canvas"} {
+
+		set file /tmp/tk_canvas.ps
+		if {$::tkprint_color eq "RGB"} {
+		    set colormode color
+		} else {
+		    set colormode gray
+		}
+
+		if {$::tkprint_printorientation eq "landscape"} {
+		    set willrotate "1"
+		} else {
+		    set willrotate "0"
+		}
+		set printwidth [expr {$::tkprint_zoomnumber / 100.00} *  [winfo width $w] ]
+		$w postscript -file $file  -colormode $colormode -rotate $willrotate -pagewidth $printwidth
+	    }
+
+	    #Built list of args to pass to print command.
+
+	    set printargs {}
+	    set printcopies [$p.frame.copyframe.l.field get]
+
+	    
+	    if {$printcmd eq "lpr"} {
+		lappend printargs "-P $chooseprinter -# $printcopies"
+	    } else {
+		lappend printargs " -d $chooseprinter -n $printcopies"
+	    }
+	    lappend printargs " -o PageSize=$::tkprint_choosepaper"
+
+	    after 500
+	    set cmd [join "$printcmd  $printargs $file"]
+	    eval exec $cmd
+
+	    after 500
+	    destroy ._print
+
+	}
+    }
+    #end X11 procedures
+
     namespace export canvas text
     namespace ensemble create
 }
@@ -711,6 +916,9 @@ proc ::tk::print::canvas {w} {
     if {[tk windowingsystem] eq "win32"} {
 	::tk::print::_print_widget $w 0 "Tk Print Output"
     }
+    if {[tk windowingsystem] eq "x11"} {
+	::tk::print::_print $w
+    }
 }
 
 
@@ -723,6 +931,9 @@ proc ::tk::print::text {w} {
 	puts $print_txt $txt
 	close $print_txt
 	::tk::print::_print_file $x 1 {Arial 12}
+    }
+     if {[tk windowingsystem] eq "x11"} {
+	::tk::print::_print $w
     }
 }
 

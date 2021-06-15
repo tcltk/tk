@@ -51,6 +51,12 @@ deleted from Apple's System Preferences Notifications section. (There
 is no removal button, so this is done by selecting the application and
 pressing the Delete key.)
 .
+
+If deploying an application using the standalone version of Wish.app, 
+setting the bundle ID in the applications Info.plist file to begin with 
+"com" seems necessary for notifications to work. Using a different prefix 
+for the bundle ID, such as something like "tk.tcl.tkchat," will cause 
+notifications to silently fail.
 .TP
 \fBWindows\fR
 .
