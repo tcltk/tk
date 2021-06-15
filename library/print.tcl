@@ -708,7 +708,6 @@ namespace eval ::tk::print {
 	    } else {
 		set printcmd lp
 	    }
-	    puts "printcmd is $printcmd"
 
 	    #Build list of printers,
 	    set printdata [exec lpstat -a]
@@ -869,7 +868,7 @@ namespace eval ::tk::print {
 		$w postscript -file $file  -colormode $colormode -rotate $willrotate -pagewidth $printwidth
 	    }
 
-	    #Built list of args to pass to print command.
+	    #Build list of args to pass to print command.
 
 	    set printargs {}
 	    set printcopies [$p.frame.copyframe.l.field get]
