@@ -703,12 +703,12 @@ namespace eval ::tk::print {
 	    variable printlist
 	    
 	    #Select print command. We prefer lpr, but will fall back to lp if necessary.
-	    set printcmd {exec which lpr}
-	    if {$printcmd == ""} {
-		set printcmd lp
-	    } else {
+	    if {[file exists "/usr/bin/lpr"]} {
 		set printcmd lpr
+	    } else {
+		set printcmd lp
 	    }
+	    puts "printcmd is $printcmd"
 
 	    #Build list of printers,
 	    set printdata [exec lpstat -a]
@@ -799,6 +799,8 @@ namespace eval ::tk::print {
 		
 		label $p.frame.copyframe.z.zlabel -text "Scale %:"
 		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber {*}$percentlist
+		
+		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry -side left -fill x -expand no
 
 		frame $p.frame.copyframe.orient -padx 5 -pady 5
 		pack $p.frame.copyframe.orient  -fill x -expand no
