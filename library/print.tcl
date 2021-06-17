@@ -686,6 +686,11 @@ namespace eval ::tk::print {
 
     #begin X11 procedures
 
+    # X11 procedures wrap standard Unix shell commands such
+    # as lp/lpr and lpstat for printing. Some output configuration that on
+    # other platforms is managed through the printer driver/dialog
+    # is configured through the canvas postscript command.
+
     if {[tk windowingsystem] eq "x11"} {
 
 	variable printcmd 
@@ -697,7 +702,11 @@ namespace eval ::tk::print {
 	set chooseprinter ""
 	set printlist {}
 
-	#Set the print environtment - print command, and list of printers.
+	# _setprintenv
+	#  Set the print environtment - print command, and list of printers.
+	#  Arguments:
+	#    none.
+	
 	proc _setprintenv {} {
 	    variable printcmd 
 	    variable printlist
@@ -709,14 +718,20 @@ namespace eval ::tk::print {
 		set printcmd lp
 	    }
 
-	    #Build list of printers,
+	    #Build list of printers.
 	    set printdata [exec lpstat -a]
 	    foreach item [split $printdata \n] {
 		lappend printlist [lindex [split $item] 0]
 	    }
 	}
 
-	#Main printer dialog. Select printer, set options, and fire print command.
+	# _print
+	#  Main printer dialog. Select printer, set options, and
+	#  fire print command.
+	# Arguments:
+	#  w - widget with contents to print.
+	#
+	
 	proc _print {w} {
 
 	    variable printlist
@@ -769,7 +784,7 @@ namespace eval ::tk::print {
 
 	    set percentlist {100 90 80 70 60 50 40 30 20 10}
 
-	    #Only load widgets where a variable is set - ignore errors.
+	    #Base widgets to load.
 	    labelframe $p.frame.copyframe -text Options -padx 5 -pady 5
 	    pack $p.frame.copyframe -fill x -expand no 
 
@@ -791,6 +806,7 @@ namespace eval ::tk::print {
 	    
 	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu -side left -fill x -expand no
 
+	    #Widgets with additional options for canvas output.
 	    if {[winfo class $w] eq "Canvas"} {
 
 		frame $p.frame.copyframe.z -padx 5 -pady 5
@@ -818,7 +834,7 @@ namespace eval ::tk::print {
 		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left -fill x -expand no
 	    }
 
-	    #Build rest of GUI from bottom up
+	    #Build rest of GUI.
 	    frame $p.frame.buttonframe 
 	    pack $p.frame.buttonframe -fill x -expand no -side bottom
 
@@ -830,7 +846,11 @@ namespace eval ::tk::print {
 	}
 
 
-	#execute the print command--print the file
+	# _runprint -
+	#   Execute the print command--print the file.
+	# Arguments:
+	#  w - widget with contents to print.
+	#
 	proc _runprint {w} {
 
 	    variable printlist
@@ -845,7 +865,7 @@ namespace eval ::tk::print {
 	    if {[winfo class $w] eq "Text"} {
 		set txt [$w get 1.0 end]
 		set file /tmp/tk_text.txt
-		set print_txt [open $file  w]
+		set print_txt [open $file w]
 		puts $print_txt $txt
 		close $print_txt
 	    }
@@ -864,6 +884,8 @@ namespace eval ::tk::print {
 		} else {
 		    set willrotate "0"
 		}
+
+		#Scale based on size of widget, not size of paper.
 		set printwidth [expr {$::tkprint_zoomnumber / 100.00} *  [winfo width $w] ]
 		$w postscript -file $file  -colormode $colormode -rotate $willrotate -pagewidth $printwidth
 	    }
