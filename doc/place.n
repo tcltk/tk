@@ -197,7 +197,7 @@ If there is no content for \fIwindow\fR then an empty string is returned.
 .TP
 \fBplace slaves \fIwindow\fR
 .
-Synonym for . \fBplace content \fIwindow\fR
+Synonym for \fBplace content \fIwindow\fR.
 .PP
 If the configuration of a window has been retrieved with
 \fBplace info\fR, that configuration can be restored later by

@@ -693,11 +693,11 @@ namespace eval ::tk::print {
 
     if {[tk windowingsystem] eq "x11"} {
 
-	variable printcmd 
+	variable printcmd
 	variable printlist
 	variable choosepaper
 	variable p
-	
+
 	set printmcd ""
 	set chooseprinter ""
 	set printlist {}
@@ -706,11 +706,11 @@ namespace eval ::tk::print {
 	#  Set the print environtment - print command, and list of printers.
 	#  Arguments:
 	#    none.
-	
+
 	proc _setprintenv {} {
-	    variable printcmd 
+	    variable printcmd
 	    variable printlist
-	    
+
 	    #Select print command. We prefer lpr, but will fall back to lp if necessary.
 	    if {[file exists "/usr/bin/lpr"]} {
 		set printcmd lpr
@@ -731,7 +731,7 @@ namespace eval ::tk::print {
 	# Arguments:
 	#  w - widget with contents to print.
 	#
-	
+
 	proc _print {w} {
 
 	    variable printlist
@@ -742,7 +742,7 @@ namespace eval ::tk::print {
 	    variable color
 	    variable p
 
-	    
+
 	    _setprintenv
 
 	    set chooseprinter [lindex $printlist 0]
@@ -750,7 +750,7 @@ namespace eval ::tk::print {
 	    set p ._print
 
 	    catch {destroy $p}
-	    
+
 	    toplevel $p
 	    wm title $p "Print"
 	    wm resizable $p 0 0
@@ -761,11 +761,11 @@ namespace eval ::tk::print {
 	    #The main dialog
 	    frame $p.frame.printframe -padx 5 -pady 5
 	    pack $p.frame.printframe -side top -fill x -expand no
-	    
-	    label $p.frame.printframe.printlabel -text "Printer:" 
+
+	    label $p.frame.printframe.printlabel -text "Printer:"
 	    ttk::combobox $p.frame.printframe.mb -textvariable chooseprinter -state readonly -values [lsort -unique $printlist]
 	    pack $p.frame.printframe.printlabel $p.frame.printframe.mb -side left -fill x -expand no
-	    
+
 	    bind $p.frame.printframe.mb <<ComboboxSelected>>  { set chooseprinter}
 
 	    set paperlist {Letter Legal A4}
@@ -776,7 +776,7 @@ namespace eval ::tk::print {
 	    #to the ::tk::print namespace. To minimize name collision, we have
 	    #given them similar names to the current namespace. And wherever
 	    #possible, we are using namespaced variables.
-	    
+
 	    set printcopies 1
 	    set ::tkprint_choosepaper A4
 	    set ::tkprint_color RGB
@@ -786,7 +786,7 @@ namespace eval ::tk::print {
 
 	    #Base widgets to load.
 	    labelframe $p.frame.copyframe -text Options -padx 5 -pady 5
-	    pack $p.frame.copyframe -fill x -expand no 
+	    pack $p.frame.copyframe -fill x -expand no
 
 	    frame $p.frame.copyframe.l -padx 5 -pady 5
 	    pack $p.frame.copyframe.l -side top -fill x -expand no
@@ -797,13 +797,13 @@ namespace eval ::tk::print {
 	    pack  $p.frame.copyframe.l.copylabel $p.frame.copyframe.l.field  -side left -fill x -expand  no
 
 	    set printcopies [$p.frame.copyframe.l.field get]
-	    
+
 	    frame $p.frame.copyframe.r -padx 5 -pady 5
 	    pack $p.frame.copyframe.r -fill x -expand no
 
-	    label $p.frame.copyframe.r.paper -text "Paper:"  
+	    label $p.frame.copyframe.r.paper -text "Paper:"
 	    tk_optionMenu $p.frame.copyframe.r.menu ::tkprint_choosepaper {*}$paperlist
-	    
+
 	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu -side left -fill x -expand no
 
 	    #Widgets with additional options for canvas output.
@@ -811,35 +811,35 @@ namespace eval ::tk::print {
 
 		frame $p.frame.copyframe.z -padx 5 -pady 5
 		pack $p.frame.copyframe.z  -fill x -expand no
-		
+
 		label $p.frame.copyframe.z.zlabel -text "Scale %:"
 		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber {*}$percentlist
-		
+
 		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry -side left -fill x -expand no
 
 		frame $p.frame.copyframe.orient -padx 5 -pady 5
 		pack $p.frame.copyframe.orient  -fill x -expand no
 
-		label $p.frame.copyframe.orient.text -text "Orientation:" 
-		radiobutton $p.frame.copyframe.orient.v -text "Portrait" -value portrait -variable ::tkprint_printorientation -compound left 
-		radiobutton $p.frame.copyframe.orient.h -text "Landscape"  -value landscape -variable ::tkprint_printorientation -compound left 
-		
+		label $p.frame.copyframe.orient.text -text "Orientation:"
+		radiobutton $p.frame.copyframe.orient.v -text "Portrait" -value portrait -variable ::tkprint_printorientation -compound left
+		radiobutton $p.frame.copyframe.orient.h -text "Landscape"  -value landscape -variable ::tkprint_printorientation -compound left
+
 		pack $p.frame.copyframe.orient.text $p.frame.copyframe.orient.v $p.frame.copyframe.orient.h  -side left -fill x -expand no
 
 		frame $p.frame.copyframe.c -padx 5 -pady 5
-		pack $p.frame.copyframe.c  -fill x -expand no 
+		pack $p.frame.copyframe.c  -fill x -expand no
 
-		label $p.frame.copyframe.c.l -text "Output:" 
+		label $p.frame.copyframe.c.l -text "Output:"
 		tk_optionMenu $p.frame.copyframe.c.c ::tkprint_color {*}$colorlist
 		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left -fill x -expand no
 	    }
 
 	    #Build rest of GUI.
-	    frame $p.frame.buttonframe 
+	    frame $p.frame.buttonframe
 	    pack $p.frame.buttonframe -fill x -expand no -side bottom
 
 	    button $p.frame.buttonframe.printbutton -text "Print" -command "::tk::print::_runprint $w"
-	    button $p.frame.buttonframe.cancel -text "Cancel" -command {destroy ._print} 
+	    button $p.frame.buttonframe.cancel -text "Cancel" -command {destroy ._print}
 
 	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel -side right -fill x -expand no
 
@@ -861,7 +861,7 @@ namespace eval ::tk::print {
 
 
 	    #First, generate print file.
-	    
+
 	    if {[winfo class $w] eq "Text"} {
 		set txt [$w get 1.0 end]
 		set file /tmp/tk_text.txt
@@ -895,7 +895,7 @@ namespace eval ::tk::print {
 	    set printargs {}
 	    set printcopies [$p.frame.copyframe.l.field get]
 
-	    
+
 	    if {$printcmd eq "lpr"} {
 		lappend printargs "-P $chooseprinter -# $printcopies"
 	    } else {
