@@ -311,7 +311,7 @@ to be returned.
 .TP
 \fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?
 .
-Synonym for . \fBgrid content \fIwindow\fR ?\fI\-option value\fR?
+Synonym for \fBgrid content \fIwindow\fR ?\fI\-option value\fR?.
 .SH "RELATIVE PLACEMENT"
 .PP
 The \fBgrid\fR command contains a limited set of capabilities that

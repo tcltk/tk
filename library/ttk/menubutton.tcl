@@ -136,7 +136,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $mb]} {
 		    set y [expr {[winfo vrooty $mb] + [winfo rooty $mb]\
-                           + [winfo reqheight $mb]}]
+			    + [winfo reqheight $mb]}]
 		}
 	    }
 	    below {
