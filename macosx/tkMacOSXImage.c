@@ -619,7 +619,7 @@ int TkpPutRGBAImage(
  *
  *      An alternative to the copy-modify-paste paradigm is to use GPU-based
  *      graphics composition, clipping to the specified rectangle.  That is
- *      the approach that must be followed by display procedures on macOS. 
+ *      the approach that must be followed by display procedures on macOS.
  *
  * Results:
  *	Returns an NSBitmapRep representing the image of the given rectangle of
