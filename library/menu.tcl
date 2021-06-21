@@ -269,8 +269,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	MenuUnpost {}
     }
     if {$::tk_strictMotif} {
-        set Priv(cursor) [$w cget -cursor]
-        $w configure -cursor arrow
+	set Priv(cursor) [$w cget -cursor]
+	$w configure -cursor arrow
     }
     if {[tk windowingsystem] ne "aqua"} {
 	set Priv(relief) [$w cget -relief]
@@ -343,7 +343,7 @@ proc ::tk::MenuUnpost menu {
 	    $menu unpost
 	    set Priv(postedMb) {}
 	    if {$::tk_strictMotif} {
-	        $mb configure -cursor $Priv(cursor)
+		$mb configure -cursor $Priv(cursor)
 	    }
 	    if {[tk windowingsystem] ne "aqua"} {
 		$mb configure -relief $Priv(relief)
@@ -475,7 +475,7 @@ proc ::tk::MbButtonUp w {
 proc ::tk::MenuMotion {menu x y state} {
     variable ::tk::Priv
     if {$menu eq $Priv(window)} {
-        set activeindex [$menu index active]
+	set active [$menu index active]
 	if {[$menu cget -type] eq "menubar"} {
 	    if {[info exists Priv(focus)] && $menu ne $Priv(focus)} {
 		$menu activate @$x,$y
@@ -485,24 +485,25 @@ proc ::tk::MenuMotion {menu x y state} {
 	    $menu activate @$x,$y
 	    GenerateMenuSelect $menu
 	}
-        set index [$menu index @$x,$y]
-        if {[info exists Priv(menuActivated)] \
-                && $index ne "none" \
-                && $index ne $activeindex} {
-            set mode [option get $menu clickToFocus ClickToFocus]
-            if {[string is false $mode]} {
-                set delay [expr {[$menu cget -type] eq "menubar" ? 0 : 50}]
-                if {[$menu type $index] eq "cascade"} {
-                    # Catch these postcascade commands since the menu could be
-                    # destroyed before they run.
-                    set Priv(menuActivatedTimer) \
-                        [after $delay "catch {$menu postcascade active}"]
-                } else {
-                    set Priv(menuDeactivatedTimer) \
-                        [after $delay "catch {$menu postcascade none}"]
-                }
-            }
-        }
+	set index [$menu index @$x,$y]
+	if {[info exists Priv(menuActivated)] \
+		&& $index ne "none" \
+		&& $index >= 0 \
+		&& $index ne $active} {
+	    set mode [option get $menu clickToFocus ClickToFocus]
+	    if {[string is false $mode]} {
+		set delay [expr {[$menu cget -type] eq "menubar" ? 0 : 50}]
+		if {[$menu type $index] eq "cascade"} {
+		    # Catch these postcascade commands since the menu could be
+		    # destroyed before they run.
+		    set Priv(menuActivatedTimer) \
+			[after $delay "catch {$menu postcascade active}"]
+		} else {
+		    set Priv(menuDeactivatedTimer) \
+			[after $delay "catch {$menu postcascade none}"]
+		}
+	    }
+	}
     }
 }
 
@@ -525,13 +526,14 @@ proc ::tk::MenuButtonDown menu {
     variable ::tk::Priv
 
     if {![winfo viewable $menu]} {
-        return
+	return
     }
-    if {[$menu index active] eq "none"} {
-        if {[$menu cget -type] ne "menubar" } {
-            set Priv(window) {}
-        }
-        return
+    set active [$menu index active]
+    if {$active eq "none" || $active < 0} {
+	if {[$menu cget -type] ne "menubar" } {
+	    set Priv(window) {}
+	}
+	return
     }
     $menu postcascade active
     if {$Priv(postedMb) ne "" && [winfo viewable $Priv(postedMb)]} {
@@ -552,7 +554,7 @@ proc ::tk::MenuButtonDown menu {
 	    if {[$menu type active] eq "cascade"} {
 		set Priv(menuActivated) 1
 	    }
-        }
+	}
 
 	# Don't update grab information if the grab window isn't changing.
 	# Otherwise, we'll get an error when we unpost the menus and
@@ -585,7 +587,8 @@ proc ::tk::MenuButtonDown menu {
 proc ::tk::MenuLeave {menu rootx rooty state} {
     variable ::tk::Priv
     set Priv(window) {}
-    if {[$menu index active] eq "none"} {
+    set active [$menu index active]
+    if {$active eq "none" || $active < 0} {
 	return
     }
     if {[$menu type active] eq "cascade" \
@@ -653,7 +656,7 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	}
     } else {
 	set active [$w index active]
-	if {$Priv(popup) eq "" || $active ne "none"} {
+	if {$Priv(popup) eq "" || ($active ne "none" && $active >= 0)} {
 	    MenuUnpost $w
 	}
 	uplevel #0 [list $w invoke active]
@@ -797,7 +800,8 @@ proc ::tk::MenuNextMenu {menu direction} {
 	if {[winfo class $mb] eq "Menubutton" \
 		&& [$mb cget -state] ne "disabled" \
 		&& [$mb cget -menu] ne "" \
-		&& [[$mb cget -menu] index last] ne "none"} {
+		&& [[$mb cget -menu] index last] ne "none" \
+		&& [[$mb cget -menu] index last] >= 0} {
 	    break
 	}
 	if {$mb eq $w} {
@@ -819,13 +823,14 @@ proc ::tk::MenuNextMenu {menu direction} {
 #				-1 means go to the next higher entry.
 
 proc ::tk::MenuNextEntry {menu count} {
-    if {[$menu index last] eq "none"} {
+    set last [$menu index last]
+    if {$last eq "none" || $last < 0} {
 	return
     }
     set length [expr {[$menu index last]+1}]
     set quitAfter $length
     set active [$menu index active]
-    if {$active eq "none"} {
+    if {$active eq "none" || $active < 0} {
 	set i 0
     } else {
 	set i [expr {$active + $count}]
@@ -893,7 +898,7 @@ proc ::tk::MenuFind {w char} {
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
-        if {[winfo toplevel $w] ne [winfo toplevel $child]} {
+	if {[winfo toplevel $w] ne [winfo toplevel $child]} {
 	    continue
 	}
 	if {[winfo class $child] eq "Menu" && \
@@ -919,7 +924,7 @@ proc ::tk::MenuFind {w char} {
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
-        if {[winfo toplevel $w] ne [winfo toplevel $child]} {
+	if {[winfo toplevel $w] ne [winfo toplevel $child]} {
 	    continue
 	}
 	switch -- [winfo class $child] {
@@ -941,7 +946,7 @@ proc ::tk::MenuFind {w char} {
 	    }
 	}
     }
-    return {}
+    return ""
 }
 
 # ::tk::TraverseToMenu --
@@ -1068,7 +1073,8 @@ proc ::tk::MenuFirstEntry menu {
 	return
     }
     tk_menuSetFocus $menu
-    if {[$menu index active] ne "none"} {
+    set active [$menu index active]
+    if {$active ne "none" && $active >= 0} {
 	return
     }
     set last [$menu index last]
@@ -1115,7 +1121,7 @@ proc ::tk::MenuFindName {menu s} {
     }
     set last [$menu index last]
     if {$last eq "none"} {
-	return
+	return ""
     }
     for {set i 0} {$i <= $last} {incr i} {
 	if {![catch {$menu entrycget $i -label} label]} {
@@ -1186,7 +1192,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $button]} {
 		    set y [expr {[winfo vrooty $button] + [winfo rooty $button]\
-                           + [winfo reqheight $button]}]
+			   + [winfo reqheight $button]}]
 		}
 		set entry {}
 	    }
@@ -1340,14 +1346,12 @@ proc ::tk_menuSetFocus {menu} {
 proc ::tk::GenerateMenuSelect {menu} {
     variable ::tk::Priv
 
-    if {$Priv(activeMenu) eq $menu \
-	    && $Priv(activeItem) eq [$menu index active]} {
-	return
+    if {$Priv(activeMenu) ne $menu \
+	    || $Priv(activeItem) ne [$menu index active]} {
+	set Priv(activeMenu) $menu
+	set Priv(activeItem) [$menu index active]
+	event generate $menu <<MenuSelect>>
     }
-
-    set Priv(activeMenu) $menu
-    set Priv(activeItem) [$menu index active]
-    event generate $menu <<MenuSelect>>
 }
 
 # ::tk_popup --
@@ -1369,7 +1373,7 @@ proc ::tk_popup {menu x y {entry {}}} {
     }
     tk::PostOverPoint $menu $x $y $entry
     if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
-        tk::SaveGrabInfo $menu
+	tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
 	set Priv(window) $menu
