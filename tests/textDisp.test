@@ -3334,7 +3334,7 @@ test textDisp-22.7 {TkTextCharBbox, different character sizes} {
 } [list [list [xchar 1] [expr {[yline 3]+$ascentDiff}] $fixedWidth $fixedHeight] \
         [list [xchar 2] [yline 3] [font measure $bigFont "n"] $bigHeight]]
 .t tag remove big 1.0 end
-test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {textfonts} {
+test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert end "12345\n"
@@ -3806,7 +3806,7 @@ test textDisp-25.1 {CharBboxProc procedure, check tab width} {
         [list [expr {[bo]+100+$fixedWidth}] [yline 1] [expr {200-(100+$fixedWidth)}] $fixedHeight] \
 	[list [expr {[bo]+200}] [yline 1] $fixedWidth $fixedHeight]]
 
-.t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 \
+.t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 -pady 0 \
 	-tabs {}
 updateText
 test textDisp-26.1 {AdjustForTab procedure, no tabs} {
@@ -3983,60 +3983,69 @@ test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {
 .t configure -width 20 -bd 2 -highlightthickness 2 -relief sunken -tabs {} \
 	-wrap char
 updateText
-test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {textfonts} {
+test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
     list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]
-} [list [list 60 5 7 $fixedHeight] [list 116 5 7 $fixedHeight] [list 130 5 7 $fixedHeight]]
-test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {textfonts} {
+} [list [list [xchar 8] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar [expr {8+8+1+1}]] [yline 1] $fixedWidth $fixedHeight]]
+test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
     .t configure -tabstyle wordprocessor
     set res [list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]]
     .t configure -tabstyle tabular
     set res
-} [list [list 60 5 7 $fixedHeight] [list 116 5 7 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.2 {SizeOfTab procedure, choosing tabX and alignment} {textfonts} {
+} [list [list [xchar 8] [yline 1] $fixedWidth $fixedHeight] \
+        [list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.2 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcd
     .t tag delete x
     .t tag configure x -tabs 120
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list 131 5 13 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.3 {SizeOfTab procedure, choosing tabX and alignment} {textfonts} {
+} [list [list [expr {[bo]+120+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+120+[xw 1])-[bo]}] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.3 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\t\tbcd
     .t tag delete x
     .t tag configure x -tabs 40
     .t tag add x 1.0 end
     list [.t bbox 1.5] [.t bbox 1.6]
-} [list [list 131 5 13 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.4 {SizeOfTab procedure, choosing tabX and alignment} {textfonts} {
+} [list [list [expr {[bo]+3*40+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+3*40+[xw 1])-[bo]}] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.4 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\t\tbcd
     .t tag delete x
     .t tag configure x -tabs {20 center 70 left}
     .t tag add x 1.0 end
     list [.t bbox 1.5] [.t bbox 1.6]
-} [list [list 131 5 13 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.5 {SizeOfTab procedure, center alignment} {textfonts} {
+} [list [list [expr {[bo]+70+(70-20)+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+70+(70-20)+[xw 1])-[bo]}] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.5 {SizeOfTab procedure, center alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
     .t tag delete x
     .t tag configure x -tabs {120 center}
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
-} [list [list 135 5 9 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.6 {SizeOfTab procedure, center alignment} {textfonts} {
+} [list [list [expr {[bo]+120+round(1.5*$fixedWidth)}] [yline 1] [expr {[winfo width .t]-([bo]+120+round(1.5*$fixedWidth))-[bo]}] $fixedHeight] \
+        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.6 {SizeOfTab procedure, center alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
     .t tag delete x
     .t tag configure x -tabs {150 center}
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
-} [list [list 32 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 39 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts failsOnXQuarz} {
+} [list [list [xchar 4] [yline 2] $fixedWidth $fixedHeight] \
+        [list [xchar 5] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
     set cm [winfo fpixels .t 1c]
     .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
@@ -4047,16 +4056,16 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
 	set tab [expr {$tab + $cm}]
     }
     # Now we've calculated to the end of the tab after 'a', add one
-    # more for 'bb\t' and we're there, with 4 for the border.  Since
+    # more for 'bb\t' and we're there, with some pixels for the border.  Since
     # Tk_GetPixelsFromObj uses the standard 'int(0.5 + float)' rounding,
     # so must we.
-    set tab [expr {4 + int(0.5 + $tab + $cm)}]
+    set tab [expr {[bo] + int(0.5 + $tab + $cm)}]
     updateText
     set res [.t bbox 2.23]
-    lset res 0 [expr {[lindex $res 0] - $tab}]
-    set res
-} [list -28 [expr {$fixedDiff + 18}] 7 $fixedHeight]
-test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts} {
+    set expected [list [expr {[xchar 23]-$tab}] [yline 2] $fixedWidth $fixedHeight]
+    lequal [lset res 0 [expr {[lindex $res 0] - $tab}]] $expected
+} {1}
+test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
     .t configure -tabstyle wordprocessor
     set cm [winfo fpixels .t 1c]
@@ -4068,16 +4077,15 @@ test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potenti
 	set tab [expr {$tab + $cm}]
     }
     # Now we've calculated to the end of the tab after 'a', add one
-    # more for 'bb\t' and we're there, with 4 for the border.  Since
+    # more for 'bb\t' and we're there, with some pixels for the border.  Since
     # Tk_GetPixelsFromObj uses the standard 'int(0.5 + float)' rounding,
     # so must we.
-    set tab [expr {4 + int(0.5 + $tab + $cm)}]
+    set tab [expr {[bo] + int(0.5 + $tab + $cm)}]
     updateText
     set res [.t bbox 2.23]
     .t configure -tabstyle tabular
     lset res 0 [expr {[lindex $res 0] - $tab}]
-    set res
-} [list 0 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+} [list 0 [yline 2] $fixedWidth $fixedHeight]
 test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem} {
     .t delete 1.0 end
     set interpolatetab {1c 2c}
@@ -4098,38 +4106,42 @@ test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem}
 
 .t configure -wrap char -tabs {} -width 20
 updateText
-test textDisp-27.8 {SizeOfTab procedure, right alignment} {textfonts} {
+test textDisp-27.8 {SizeOfTab procedure, right alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\txyzzyabc
     .t tag delete x
-    .t tag configure x -tabs {100 left 140 right}
+    .t tag configure x -tabs "100 left [expr {[.t cget -width]*$fixedWidth}] right"
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
-} [list [list 137 5 7 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.9 {SizeOfTab procedure, left alignment} {textfonts} {
+} [list [list [xcharr 1] [yline 1] $fixedWidth $fixedHeight] \
+        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.9 {SizeOfTab procedure, left alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
     .t tag delete x
     .t tag configure x -tabs {120}
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list 131 5 13 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {textfonts} {
+} [list [list [expr {[bo]+120+$fixedWidth}] [yline 1] [expr {[winfo width .t]-([bo]+120+$fixedWidth)-[bo]}] $fixedHeight] \
+        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t123.4
     .t tag delete x
     .t tag configure x -tabs {120 numeric}
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list 117 5 27 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a space} {textfonts} {
+} [list [list [expr {[bo]+120-$fixedWidth}] [yline 1] [expr {[winfo width .t]-([bo]+120-$fixedWidth)-[bo]}] $fixedHeight] \
+        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a space} {
     .t delete 1.0 end
     .t insert 1.0 abc\tdefghijklmnopqrst
     .t tag delete x
     .t tag configure x -tabs {120}
     .t tag add x 1.0 end
     list [.t bbox 1.5] [.t bbox 1.6]
-} [list [list 131 5 13 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
+} [list [list [expr {[bo]+120+$fixedWidth}] [yline 1] [expr {[winfo width .t]-([bo]+120+$fixedWidth)-[bo]}] $fixedHeight] \
+        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
 
 proc bizarre_scroll args {
     .t2.t delete 5.0 end
