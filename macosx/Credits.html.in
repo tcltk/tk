@@ -5,8 +5,8 @@
 <body style="font-size:120%;font-family:Arial,sans-serif;">
 <p>
 Tcl and Tk are distributed under a modified BSD license:<br>
-<a href="https:www.tcl.tk/software/tcltk/license.html">
-  https:www.tcl.tk/software/tcltk/license.html
+<a href="https://www.tcl-lang.org/software/tcltk/license.html">
+  https://www.tcl-lang.org/software/tcltk/license.html
 </a>
 </p>
 <ul style="list-style-type:none;">
