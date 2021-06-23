@@ -28,10 +28,11 @@
 int _CRT_glob = 0;
 #endif /* __GNUC__ */
 
-#ifdef TK_TEST
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef TK_TEST
 extern Tcl_LibraryInitProc Tktest_Init;
 #endif /* TK_TEST */
 
