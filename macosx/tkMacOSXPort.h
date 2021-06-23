@@ -141,6 +141,12 @@ MODULE_SCOPE int TkpPutRGBAImage(
 		     unsigned int width, unsigned int height);
 
 /*
+ * Inform tkCanvas.c that our XGetImage returns a 32pp pixmap packed as 0xAABBGGRR
+ */
+
+#define TK_XGETIMAGE_USES_ABGR32
+
+/*
  * Used by xcolor.c
  */
 

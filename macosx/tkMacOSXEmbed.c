@@ -1082,6 +1082,9 @@ EmbedWindowDeleted(
     prevPtr = NULL;
     containerPtr = firstContainerPtr;
     while (1) {
+	if (containerPtr == NULL) {
+	    return;
+	}
 	if (containerPtr->embeddedPtr == winPtr) {
 	    /*
 	     * We also have to destroy our parent, to clean up the container.

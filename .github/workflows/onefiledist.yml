@@ -3,7 +3,7 @@ on: [push]
 jobs:
   linux:
     name: Linux
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
     defaults:
       run:
         shell: bash
@@ -67,7 +67,7 @@ jobs:
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
-    runs-on: macos-11.0
+    runs-on: macos-11
     defaults:
       run:
         shell: bash

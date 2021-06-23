@@ -698,6 +698,8 @@ TK_SRC_DIR
 TK_BUILD_STUB_LIB_SPEC
 TK_STUB_LIB_FLAG
 TK_STUB_LIB_FILE
+TK_DLL_FILE_TCL9
+TK_DLL_FILE_TCL8
 TK_DLL_FILE
 TK_LIB_FILE
 TK_PATCH_LEVEL
@@ -2394,7 +2396,7 @@ SHELL=/bin/sh
 TK_VERSION=8.7
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a4"
+TK_PATCH_LEVEL="a6"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -4472,7 +4474,7 @@ printf %s "checking compiler flags... " >&6; }
 	SHLIB_LD_LIBS='${LIBS}'
 	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
 	# mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32 -lwinspool"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -4678,7 +4680,7 @@ printf "%s\n" "   Using 64-bit $MACHINE mode" >&6; }
 	    LINKBIN="link"
 	fi
 
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib"
 
 	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
 	SHLIB_LD_LIBS='${LIBS}'
@@ -5577,7 +5579,7 @@ printf "%s\n" "$result" >&6; }
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for tclsh in Tcl build directory" >&5
 printf %s "checking for tclsh in Tcl build directory... " >&6; }
-    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${EXEEXT}
+    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}\${EXESUFFIX}
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $BUILD_TCLSH" >&5
 printf "%s\n" "$BUILD_TCLSH" >&6; }
 
@@ -5875,6 +5877,8 @@ esac
 TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`"
 
 # X86|AMD64|IA64 for manifest
+
+
 
 
 
