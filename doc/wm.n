@@ -120,7 +120,7 @@ color with some alpha, e.g.
 .PP
 On X11, the following attributes may be set. These are not supported by all
 window managers, and will have no effect under older WMs.
-.\" See http://www.freedesktop.org/Standards/wm-spec
+.\" See https://www.freedesktop.org/wiki/Specifications/wm-spec/
 .TP
 \fB\-type\fR
 .VS 8.6
