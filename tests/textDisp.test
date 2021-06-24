@@ -4347,7 +4347,7 @@ test textDisp-29.3 {miscellaneous: lines wrap but are still too long} -setup {
     destroy .t2
 } -result {1}
 
-test textDisp-30.1 {elidden text joining multiple logical lines} -setup {
+test textDisp-30.1 {elided text joining multiple logical lines} -setup {
     catch {destroy .t2}
 } -body {
     toplevel .t2
@@ -4355,14 +4355,14 @@ test textDisp-30.1 {elidden text joining multiple logical lines} -setup {
     pack .t2.t -side top
     .t2.t delete 1.0 end
     .t2.t insert 1.0 "1111\n2222\n3333"
-    .t2.t tag configure elidden -elide 1 -background red
-    .t2.t tag add elidden 1.2 3.2
+    .t2.t tag configure elided -elide 1 -background red
+    .t2.t tag add elided 1.2 3.2
     updateText
     .t2.t count -update -displaylines 1.0 end
 } -cleanup {
     destroy .t2
 } -result {1}
-test textDisp-30.2 {elidden text joining multiple logical lines} -setup {
+test textDisp-30.2 {elided text joining multiple logical lines} -setup {
     catch {destroy .t2}
 } -body {
     toplevel .t2
@@ -4370,8 +4370,8 @@ test textDisp-30.2 {elidden text joining multiple logical lines} -setup {
     pack .t2.t -side top
     .t2.t delete 1.0 end
     .t2.t insert 1.0 "1111\n2222\n3333"
-    .t2.t tag configure elidden -elide 1 -background red
-    .t2.t tag add elidden 1.2 2.2
+    .t2.t tag configure elided -elide 1 -background red
+    .t2.t tag add elided 1.2 2.2
     updateText
     .t2.t count -update -displaylines 1.0 end
 } -cleanup {
