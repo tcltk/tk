@@ -63,14 +63,11 @@ proc lequal {res expected} {
 }
 
 # Create entries in the option database to be sure that geometry options
-# like border width have predictable values.
-set twbw 2
-set twht 2
-set pad 1
-option add *Text.borderWidth $twbw
-option add *Text.highlightThickness $twht
-option add *Text.padX $pad  ; # same padding in x and y, see proc bo
-option add *Text.padY $pad  ; # same padding in x and y, see proc bo
+# like border width have selected values.
+option add *Text.borderWidth 2
+option add *Text.highlightThickness 2
+option add *Text.padX 1  ; # same padding in x and y, see proc bo
+option add *Text.padY 1  ; # same padding in x and y, see proc bo
 
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
@@ -89,6 +86,7 @@ set fixedAscent [font metrics $fixedFont -ascent]
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
 set bigAscent [font metrics $bigFont -ascent]
+
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 set heightDiff [expr {$bigHeight - $fixedHeight}]
 
