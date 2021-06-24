@@ -2783,7 +2783,7 @@ test textDisp-19.7 {GetYView procedure} {
     updateText
     set x $scrollInfo
 } {0.125 0.75}
-test textDisp-19.8 {GetYView procedure} failsOnUbuntu {
+test textDisp-19.8 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
@@ -4146,8 +4146,9 @@ test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a spac
 proc bizarre_scroll args {
     .t2.t delete 5.0 end
 }
-test textDisp-28.1 {"yview" option with bizarre scroll command} {
+test textDisp-28.1 {"yview" option with bizarre scroll command} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     text .t2.t -width 40 -height 4
     .t2.t insert end "1\n2\n3\n4\n5\n6\n7\n8\n"
@@ -4159,10 +4160,13 @@ test textDisp-28.1 {"yview" option with bizarre scroll command} {
     set result [.t2.t index @0,0]
     updateText
     lappend result [.t2.t index @0,0]
-} {6.0 1.0}
+} -cleanup {
+    destroy .t2
+} -result {6.0 1.0}
 
-test textDisp-29.1 {miscellaneous: lines wrap but are still too long} {textfonts} {
+test textDisp-29.1 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4174,10 +4178,16 @@ test textDisp-29.1 {miscellaneous: lines wrap but are still too long} {textfonts
     frame .t2.t.f -width 300 -height 50 -bd 2 -relief raised
     .t2.t window create 1.1 -window .t2.t.f
     updateText
-    list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list [list 0.0 [expr {20.0*$fixedWidth/300}]] 300x50+[expr {$twbw + $twht + 1}]+[expr {$twbw + $twht + $fixedHeight + 1}] [list [expr {$twbw + $twht + $fixedWidth + 1}] [expr {$twbw + $twht + $fixedHeight + 50 + 1}] $fixedWidth $fixedHeight]]
-test textDisp-29.2 {miscellaneous: lines wrap but are still too long} {textfonts} {
+    set expected [list [list 0.0 [expr {20.0*$fixedWidth/300}]] \
+                       300x50+[bo .t2.t]+[yline 2 .t2.t] \
+	               [list [xchar 1 .t2.t] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
+    lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
+} -cleanup {
+    destroy .t2
+} -result {1}
+test textDisp-29.2 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4191,10 +4201,16 @@ test textDisp-29.2 {miscellaneous: lines wrap but are still too long} {textfonts
     updateText
     .t2.t xview scroll 1 unit
     updateText
-    list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list [list [expr {1.0*$fixedWidth/300}] [expr {21.0*$fixedWidth/300}]] 300x50+[expr {$twbw + $twht + 1 - $fixedWidth}]+[expr {$twbw + $twht + $fixedHeight + 1}] [list [expr {$twbw + $twht + $fixedWidth + 1 - $fixedWidth}] [expr {$twbw + $twht + $fixedHeight + 50 + 1}] $fixedWidth $fixedHeight]]
-test textDisp-29.2.1 {miscellaneous: lines wrap but are still too long} {textfonts} {
+    set expected [list [list [expr {1.0*$fixedWidth/300}] [expr {21.0*$fixedWidth/300}]] \
+                       300x50+[expr {[bo .t2.t]-$fixedWidth}]+[yline 2 .t2.t] \
+	               [list [expr {[bo .t2.t]-$fixedWidth+$fixedWidth}] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
+    lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
+} -cleanup {
+    destroy .t2
+} -result {1}
+test textDisp-29.2.1 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4208,9 +4224,12 @@ test textDisp-29.2.1 {miscellaneous: lines wrap but are still too long} {textfon
     .t2.t xview scroll 5 unit
     updateText
     .t2.t xview
-} [list [expr {5.0/90}] [expr {25.0/90}]]
-test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} {textfonts} {
+} -cleanup {
+    destroy .t2
+} -result [list [expr {5.0/90}] [expr {25.0/90}]]
+test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4224,10 +4243,16 @@ test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} {textfon
     updateText
     .t2.t xview scroll 2 unit
     updateText
-    list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list [list [expr {2.0*$fixedWidth/300}] [expr {22.0*$fixedWidth/300}]] 300x50+[expr {$twbw + $twht + 1 - 2*$fixedWidth}]+[expr {$twbw + $twht + $fixedHeight + 1}] {}]
-test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} {textfonts} {
+    set expected [list [list [expr {2.0*$fixedWidth/300}] [expr {22.0*$fixedWidth/300}]] \
+                       300x50+[expr {[bo .t2.t]-2*$fixedWidth}]+[yline 2 .t2.t] \
+	               {}]
+    lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
+} -cleanup {
+    destroy .t2
+} -result {1}
+test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4241,10 +4266,16 @@ test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} {textfon
     updateText
     .t2.t xview scroll 7 pixels
     updateText
-    list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list [list [expr {7.0/300}] [expr {(20.0*$fixedWidth + 7)/300}]] 300x50+[expr {$twbw + $twht + 1 - 7}]+[expr {$twbw + $twht + $fixedHeight + 1}] [list [expr {$twbw + $twht + $fixedWidth + 1 - 7}] [expr {$twbw + $twht + $fixedHeight + 50 + 1}] $fixedWidth $fixedHeight]]
-test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} {textfonts} {
+    set expected [list [list [expr {7.0/300}] [expr {(20.0*$fixedWidth+7)/300}]] \
+                       300x50+[expr {[bo .t2.t]-7}]+[yline 2 .t2.t] \
+	               [list [expr {[bo .t2.t]+$fixedWidth-7}] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
+    lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
+} -cleanup {
+    destroy .t2
+} -result {1}
+test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4258,10 +4289,16 @@ test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} {textfon
     updateText
     .t2.t xview scroll 17 pixels
     updateText
-    list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list [list [expr {17.0/300}] [expr {(20.0*$fixedWidth + 17)/300}]] 300x50+[expr {$twbw + $twht + 1 - 17}]+[expr {$twbw + $twht + $fixedHeight + 1}] {}]
-test textDisp-29.2.5 {miscellaneous: can show last character} {
+    set expected [list [list [expr {17.0/300}] [expr {(20.0*$fixedWidth+17)/300}]] \
+                       300x50+[expr {[bo .t2.t]-17}]+[yline 2 .t2.t] \
+	               {}]
+    lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
+} -cleanup {
+    destroy .t2
+} -result {1}
+test textDisp-29.2.5 {miscellaneous: can show last character} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 121x141+200+200
     text .t2.t -width 5 -height 5 -font {Arial 10} \
@@ -4281,15 +4318,17 @@ test textDisp-29.2.5 {miscellaneous: can show last character} {
     set iWidth [lindex [.t2.t bbox end-2c] 2]
     .t2.t xview scroll 2 units
     set iWidth2 [lindex [.t2.t bbox end-2c] 2]
-
     if {($iWidth == $iWidth2) && $iWidth >= 2} {
 	set result "correct"
     } else {
 	set result "last character is not completely visible when it should be"
     }
-} {correct}
-test textDisp-29.3 {miscellaneous: lines wrap but are still too long} {textfonts} {
+} -cleanup {
+    destroy .t2
+} -result {correct}
+test textDisp-29.3 {miscellaneous: lines wrap but are still too long} -setup {
     catch {destroy .t2}
+} -body {
     toplevel .t2
     wm geometry .t2 +0+0
     text .t2.t -width 20 -height 10 -font $fixedFont \
@@ -4303,28 +4342,50 @@ test textDisp-29.3 {miscellaneous: lines wrap but are still too long} {textfonts
     updateText
     .t2.t xview scroll 200 units
     updateText
-    list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list [list [expr {16.0/30}] 1.0] 300x50+-155+[expr {$fixedDiff + 18}] {}]
-test textDisp-30.1 {elidden text joining multiple logical lines} {
+    set expected [list [list [expr {16.0/30}] 1.0] \
+                       300x50+[expr {-(300-20*$fixedWidth-[bo .t2.t])}]+[yline 2 .t2.t] \
+	               {}]
+    lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
+} -cleanup {
+    destroy .t2
+} -result {1}
+
+test textDisp-30.1 {elidden text joining multiple logical lines} -setup {
+    catch {destroy .t2}
+} -body {
+    toplevel .t2
+    text .t2.t -width 20 -height 10 -font $fixedFont
+    pack .t2.t -side top
     .t2.t delete 1.0 end
     .t2.t insert 1.0 "1111\n2222\n3333"
     .t2.t tag configure elidden -elide 1 -background red
     .t2.t tag add elidden 1.2 3.2
-    .t2.t count -displaylines 1.0 end
-} {1}
-test textDisp-30.2 {elidden text joining multiple logical lines} {
+    updateText
+    .t2.t count -update -displaylines 1.0 end
+} -cleanup {
+    destroy .t2
+} -result {1}
+test textDisp-30.2 {elidden text joining multiple logical lines} -setup {
+    catch {destroy .t2}
+} -body {
+    toplevel .t2
+    text .t2.t -width 20 -height 10 -font $fixedFont
+    pack .t2.t -side top
     .t2.t delete 1.0 end
     .t2.t insert 1.0 "1111\n2222\n3333"
     .t2.t tag configure elidden -elide 1 -background red
     .t2.t tag add elidden 1.2 2.2
-    .t2.t count -displaylines 1.0 end
-} {2}
+    updateText
+    .t2.t count -update -displaylines 1.0 end
+} -cleanup {
+    destroy .t2
+} -result {2}
 catch {destroy .t2}
 
 .t configure -height 1
 updateText
 
-test textDisp-31.1 {line embedded window height update} failsOnUbuntu {
+test textDisp-31.1 {line embedded window height update} {
     set res {}
     .t delete 1.0 end
     .t insert end "abcd\nefgh\nijkl\nmnop\nqrst\nuvwx\nyx"
@@ -4334,10 +4395,10 @@ test textDisp-31.1 {line embedded window height update} failsOnUbuntu {
     .t.f configure -height 10
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
-    set res
-} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
-
-test textDisp-31.2 {line update index shifting} failsOnUbuntu {
+} [list [expr {100+$fixedHeight*6}] \
+        [expr {100+$fixedHeight*6}] \
+	[expr {$fixedHeight*7}]]
+test textDisp-31.2 {line update index shifting} {
     set res {}
     .t.f configure -height 100
     updateText
@@ -4351,10 +4412,12 @@ test textDisp-31.2 {line update index shifting} failsOnUbuntu {
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
-    set res
-} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
-
-test textDisp-31.3 {line update index shifting} failsOnUbuntu {
+} [list [expr {100+$fixedHeight*6}] \
+        [expr {100+$fixedHeight*8}] \
+	[expr {$fixedHeight*9}] \
+	[expr {$fixedHeight*7}] \
+	[expr {100+$fixedHeight*6}]]
+test textDisp-31.3 {line update index shifting} {
     # Should do exactly the same as the above, as long
     # as we are correctly tagging the correct lines for
     # recalculation.  The 'update' and 'delay' must be
@@ -4376,8 +4439,11 @@ test textDisp-31.3 {line update index shifting} failsOnUbuntu {
     delay
     lappend res [.t count -ypixels 1.0 end]
     set res
-} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
-
+} [list [expr {100+$fixedHeight*6}] \
+        [expr {100+$fixedHeight*8}] \
+	[expr {$fixedHeight*9}] \
+	[expr {$fixedHeight*7}] \
+	[expr {100+$fixedHeight*6}]]
 test textDisp-31.4 {line embedded image height update} {
     set res {}
     image create photo textest -height 100 -width 10
@@ -4389,9 +4455,10 @@ test textDisp-31.4 {line embedded image height update} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
     set res
-} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 6}] [expr {$fixedHeight * 7}]]
-
-test textDisp-31.5 {line update index shifting} failsOnUbuntu {
+} [list [expr {100+$fixedHeight*6}] \
+        [expr {100+$fixedHeight*6}] \
+	[expr {$fixedHeight*7}]]
+test textDisp-31.5 {line update index shifting} {
     set res {}
     textest configure -height 100
     updateText
@@ -4406,9 +4473,12 @@ test textDisp-31.5 {line update index shifting} failsOnUbuntu {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
     set res
-} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
-
-test textDisp-31.6 {line update index shifting} failsOnUbuntu {
+} [list [expr {100+$fixedHeight*6}] \
+        [expr {100+$fixedHeight*8}] \
+	[expr {$fixedHeight*9}] \
+	[expr {$fixedHeight*7}] \
+	[expr {100+$fixedHeight*6}]]
+test textDisp-31.6 {line update index shifting} {
     # Should do exactly the same as the above, as long
     # as we are correctly tagging the correct lines for
     # recalculation.  The 'update' and 'delay' must be
@@ -4429,8 +4499,11 @@ test textDisp-31.6 {line update index shifting} failsOnUbuntu {
     delay
     lappend res [.t count -ypixels 1.0 end]
     set res
-} [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
-
+} [list [expr {100+$fixedHeight*6}] \
+        [expr {100+$fixedHeight*8}] \
+	[expr {$fixedHeight*9}] \
+	[expr {$fixedHeight*7}] \
+	[expr {100+$fixedHeight*6}]]
 test textDisp-31.7 {line update index shifting, elided} {
     # The 'update' and 'delay' must be long enough to ensure all
     # asynchronous updates have been performed.
@@ -4450,7 +4523,12 @@ test textDisp-31.7 {line update index shifting, elided} {
     delay
     lappend res [.t count -ypixels 1.0 end]
     set res
-} [list [expr {$fixedHeight * 1}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 3}] [expr {$fixedHeight * 2}] [expr {$fixedHeight * 1}] [expr {$fixedHeight * 1}]]
+} [list [expr {$fixedHeight*1}] \
+        [expr {$fixedHeight*3}] \
+	[expr {$fixedHeight*3}] \
+	[expr {$fixedHeight*2}] \
+	[expr {$fixedHeight*1}] \
+	[expr {$fixedHeight*1}]]
 
 test textDisp-32.0 {everything elided} {
     # Must not crash
