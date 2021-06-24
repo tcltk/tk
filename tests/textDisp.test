@@ -85,12 +85,6 @@ set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
-set fixedDiff [expr {$fixedHeight - 13}]
-
-set varFont {Times -14}
-set varHeight [font metrics $varFont -linespace]
-set varAscent [font metrics $varFont -ascent]
-set varDiff [expr {$varHeight - 15}]
 
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
