@@ -266,7 +266,7 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
     .t tag raise x
     update idletasks
     lappend x [lindex [.t bbox 1.2] 0]
-} [list 75 55 55]
+} [list [expr {[bo]+70}] [expr {[bo]+50}] [expr {[bo]+50}]]
 .t tag delete x y z
 test textDisp-1.2 {GetStyle procedure, wrapmode} {
     .t configure -wrap char
@@ -739,8 +739,9 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     set x [list [.t bbox 1.0] [.t bbox 2.0] $tk_textRelayout]
     wm overrideredirect . 0
     updateText
-    set x
-} [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
+    set expected [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
+    lequal $x $expected
+} {1}
 catch {destroy .f2}
 .t configure -borderwidth 0 -wrap char
 wm geom . {}
@@ -1930,6 +1931,7 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {
     set x [list [.t bbox 30.50]]
     .t see 30.60
     lappend x [.t bbox 30.60]
+    updateText
     .t see 30.65
     lappend x [.t bbox 30.65]
     .t see 30.90
@@ -1937,10 +1939,10 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {
     # contrary to textDisp-13.7 above there is no yview command in this test
     # therefore take into account that the top line is partially hidden
     set y [expr {[yline 6] + [lindex [.t bbox @0,0] 1] - [bo]}]
-    set expected [list [list [expr {[xchar 10]+1}] $y $fixedWidth $fixedHeight] \
-                       [list [expr {[xchar 19]+2}] $y $fixedWidth $fixedHeight] \
-                       [list [expr {[xchar 19]+2}] $y $fixedWidth $fixedHeight] \
-                       [list [expr {[xchar 10]+1}] $y $fixedWidth $fixedHeight]]
+    set expected [list [list [expr {[bo]+round([winfo width .t]/2-$fixedWidth/2)}] $y $fixedWidth $fixedHeight] \
+                       [list [xcharr 1] $y $fixedWidth $fixedHeight] \
+                       [list [xcharr 1] $y $fixedWidth $fixedHeight] \
+                       [list [expr {[bo]+round([winfo width .t]/2-$fixedWidth/2)}] $y $fixedWidth $fixedHeight]]
     lequal $x $expected
 } {1}
 test textDisp-13.10 {TkTextSeeCmd procedure} {
@@ -3291,10 +3293,9 @@ test textDisp-22.4 {TkTextCharBbox, cut-off lines} {
 test textDisp-22.5 {TkTextCharBbox, cut-off char} {
     wm geometry . {}
     updateText
-    scan [wm geom .] %dx%d oriWidth oriHeight
     .t config -wrap none
     .t yview 10.0
-    wm geom . [expr {$width-95}]x$height
+    wm geom . [expr {$width-(20-7)*$fixedWidth}]x$height
     updateText
     .t bbox 15.6
 } [list [xchar 6] [yline 6] $fixedWidth $fixedHeight]
@@ -3500,9 +3501,14 @@ test textDisp-24.2 {TkTextCharLayoutProc} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
-    wm geom . [expr {$width+1}]x$height
+    # be tolerant about borderwidth et al. - don't let another char fit on the line
+    set wi $width
+    while {$wi+1-$oriWidth >= $fixedWidth} {
+        incr wi -$fixedWidth
+    }
+    wm geom . [expr {$wi+1}]x$height
     updateText
-    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width+1-$oriWidth)}] $fixedHeight] \
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($wi+1-$oriWidth)}] $fixedHeight] \
                        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
@@ -3558,9 +3564,14 @@ test textDisp-24.7 {TkTextCharLayoutProc, line ends with space} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
-    wm geom . [expr {$width+1}]x$height
+    # be tolerant about borderwidth et al. - don't let another char fit on the line
+    set wi $width
+    while {$wi+1-$oriWidth >= $fixedWidth} {
+        incr wi -$fixedWidth
+    }
+    wm geom . [expr {$wi+1}]x$height
     updateText
-    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width+1-$oriWidth)}] $fixedHeight] \
+    set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($wi+1-$oriWidth)}] $fixedHeight] \
                        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
