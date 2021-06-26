@@ -1931,7 +1931,6 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {
     set x [list [.t bbox 30.50]]
     .t see 30.60
     lappend x [.t bbox 30.60]
-    updateText
     .t see 30.65
     lappend x [.t bbox 30.65]
     .t see 30.90
