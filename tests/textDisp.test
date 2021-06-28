@@ -1938,10 +1938,10 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {
     # contrary to textDisp-13.7 above there is no yview command in this test
     # therefore take into account that the top line is partially hidden
     set y [expr {[yline 6] + [lindex [.t bbox @0,0] 1] - [bo]}]
-    set expected [list [list [expr {[bo]+round([winfo width .t]/2-$fixedWidth/2)}] $y $fixedWidth $fixedHeight] \
+    set expected [list [list [expr {[bo]+round([winfo width .t]-2*[bo])/2}] $y $fixedWidth $fixedHeight] \
                        [list [xcharr 1] $y $fixedWidth $fixedHeight] \
                        [list [xcharr 1] $y $fixedWidth $fixedHeight] \
-                       [list [expr {[bo]+round([winfo width .t]/2-$fixedWidth/2)}] $y $fixedWidth $fixedHeight]]
+                       [list [expr {[bo]+round([winfo width .t]-2*[bo])/2}] $y $fixedWidth $fixedHeight]]
     lequal $x $expected
 } {1}
 test textDisp-13.10 {TkTextSeeCmd procedure} {
