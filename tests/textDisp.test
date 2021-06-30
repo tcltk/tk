@@ -55,7 +55,7 @@ proc lequal {res expected} {
         return [list "Lengths differ"  result: $res - expected: $expected]
     }
     for {set i 0} {$i < [llength $res]} {incr i} {
-        if {[lindex $res $i] != [lindex $expected $i]} {
+        if {[lindex $res $i] ne [lindex $expected $i]} {
 	    return [list result: $res - expected: $expected]
 	}
     }
@@ -584,14 +584,18 @@ test textDisp-2.24 {LayoutDLine, tabs, saving from first chunk} {
 test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t delete 1.0 end
     .t tag delete x
-    .t tag configure x -tabs [list 30 60 90 120]
+    # compute a tab width allowing to let 4 tab stops (followed by a single char) on a single line
+    set tw [expr {int(([winfo width .t]-2*[bo]-$fixedWidth)/4)}]
+    .t tag configure x -tabs [list $tw [expr {$tw*2}] [expr {$tw*3}] [expr {$tw*4}]]
     .t insert 1.0 "a\tb\tc\td\te"
     .t mark set dummy1 1.1
     .t mark set dummy2 1.2
     .t tag add x 1.0 end
-    list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
-	     [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]
-} [list [expr {[bo]+30}] [expr {[bo]+60}] [expr {[bo]+90}] [expr {[bo]+120}]]
+    set expected [list [expr {[bo]+$tw}] [expr {[bo]+2*$tw}] [expr {[bo]+3*$tw}] [expr {[bo]+4*$tw}]]
+    set res [list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
+	          [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]]
+    lequal $res $expected
+} {1}
 # Next test is currently constrained to no run on mac (aqua) because on
 # aqua it fails due to wrong implementation of tabs with right justification
 # (the text is not rendered at all). This is a bug.
@@ -1363,16 +1367,16 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
     update idletasks
 } {}
 
-test textDisp-9.1 {TkTextRedrawTag} {
+test textDisp-9.1 {TkTextRedrawTag} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
     updateText
     .t tag add big 2.2 2.4
     updateText
-    list $tk_textRelayout $tk_textRedraw
-} {{2.0 2.18} {2.0 2.18}}
-test textDisp-9.2 {TkTextRedrawTag} {
+   list $tk_textRelayout $tk_textRedraw
+} -match glob -result {{2.0 2.1[78]} {2.0 2.1[78]}}
+test textDisp-9.2 {TkTextRedrawTag} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1380,7 +1384,7 @@ test textDisp-9.2 {TkTextRedrawTag} {
     .t tag add big 1.2 2.4
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{1.0 2.0 2.17} {1.0 2.0 2.17}}
+}  -match glob -result {{1.0 2.0 2.1[67]} {1.0 2.0 2.1[67]}}
 test textDisp-9.3 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1403,8 +1407,9 @@ test textDisp-9.4 {TkTextRedrawTag} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.5 {TkTextRedrawTag} {
-    .t configure -wrap char
+test textDisp-9.5 {TkTextRedrawTag} -setup {
+    .t configure -wrap char -height [expr {[.t cget -height]+10}]
+} -body {
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
     updateText
@@ -1413,7 +1418,10 @@ test textDisp-9.5 {TkTextRedrawTag} {
     .t tag remove big 1.0 end
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{2.0 2.20} {2.0 2.20 eof}}
+} -cleanup {
+    .t configure -height [expr {[.t cget -height]-10}]
+    updateText
+} -result {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.6 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1435,7 +1443,7 @@ test textDisp-9.7 {TkTextRedrawTag} {
     updateText
     set tk_textRedraw
 } {2.0 2.20 eof}
-test textDisp-9.8 {TkTextRedrawTag} {
+test textDisp-9.8 {TkTextRedrawTag} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1444,8 +1452,8 @@ test textDisp-9.8 {TkTextRedrawTag} {
     .t tag add big 2.0 2.5
     updateText
     set tk_textRedraw
-} {2.0 2.17}
-test textDisp-9.9 {TkTextRedrawTag} {
+} -match glob -result {2.0 2.1[67]}
+test textDisp-9.9 {TkTextRedrawTag} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1454,7 +1462,7 @@ test textDisp-9.9 {TkTextRedrawTag} {
     .t tag add big 1.5 2.5
     updateText
     set tk_textRedraw
-} {2.0 2.17}
+} -match glob -result {2.0 2.1[67]}
 test textDisp-9.10 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -2019,27 +2027,27 @@ test textDisp-14.6 {TkTextXviewCmd procedure} {
 test textDisp-14.7 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
-    .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n"
+    .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n" ; # 56 chars on this line
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview moveto .3
     .t xview
-} [list [expr {118.0/392}] [expr {258.0/392}]]
+} [list [expr {round(0.3*(56*$fixedWidth))/(56.0*$fixedWidth)}] [expr {round(0.3*(56*$fixedWidth)+20*$fixedWidth)/(56.0*$fixedWidth)}]]
 test textDisp-14.8 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
-    .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n"
+    .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n" ; # 56 chars on this line
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview moveto -.4
     .t xview
-} [list 0.0 [expr {5.0/14}]]
+} [list 0.0 [expr {20.0/56}]]
 test textDisp-14.9 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
-    .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n"
+    .t insert end "xxxxx xxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxx\n" ; # 56 chars on this line
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview m 1.4
     .t xview
-} [list [expr {9.0/14}] 1.0]
+} [list [expr {(56.0-20)/56}] 1.0]
 test textDisp-14.10 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll a} msg] $msg
 } {1 {wrong # args: should be ".t xview scroll number units|pages|pixels"}}
@@ -2178,11 +2186,11 @@ for {set i 2} {$i <= 200} {incr i} {
 .t insert 153.end { also has largely enough extra text to wrap.}
 updateText
 set totpix [.t count -update -ypixels 1.0 end]
-# check that the wrapping lines wrap exactly 6 times in total,
+# check that the wrapping lines wrap exactly 6 times in total (4 times for line 151, and twice for line 153),
 # this is an assumption of the upcoming tests
 if {[expr {double(($totpix-5*$heightDiff)/$fixedHeight)}] != 206.0} {
-    puts "---> Warning: the font actually used by the tests, which is [font actual [.t cget -font]], \
-is quite different from the requested [.t cget -font]. Some of the upcoming tests will probably fail."
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual [.t cget -font]]\",\
+is too different from the requested \"[.t cget -font]\". Some of the upcoming tests will probably fail."
 }
 test textDisp-16.1 {TkTextYviewCmd procedure} {
     .t yview 21.0
@@ -2235,21 +2243,48 @@ test textDisp-16.13 {TkTextYviewCmd procedure, "moveto" option} {
     .t index @0,0
 } {191.0}
 test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} {
+    # y move to 3/4 of text widget content height
     .t yview moveto .75
-    .t index @0,0
-} {151.60}
+    # target y position is inside line 151, which wraps 4 times
+    # exactly which display line depends on actual font size
+    set ytargetline [expr {150*$fixedHeight+5*$heightDiff}]
+    set expected 151.0
+    while {[expr {$ytargetline+$fixedHeight}] <= [expr {round(0.75*$totpix)}]} {
+        incr ytargetline $fixedHeight
+	set expected [.t index "$expected + 1 display line"]
+    }
+    lequal [.t index @0,0] $expected
+} {1}
 test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
+    # y move to 3/4 of text widget content height plus just one line height minus one pixel
     .t yview moveto .75
     set pixtonextline [expr {-[bo] + [lindex [.t bbox @0,0] 1] + [lindex [.t bbox @0,0] 3]}]
     .t yview moveto [expr {0.75 + ($pixtonextline-1)/double($totpix)}]
-    .t index @0,0
-} {151.60}
+    # target y position is inside line 151, which wraps 4 times
+    # exactly which display line depends on actual font size
+    set ytargetline [expr {150*$fixedHeight+5*$heightDiff}]
+    set expected 151.0
+    while {[expr {$ytargetline+$fixedHeight}] <= [expr {round(0.75*$totpix + ($pixtonextline-1))}]} {
+        incr ytargetline $fixedHeight
+	set expected [.t index "$expected + 1 display line"]
+    }
+    lequal [.t index @0,0] $expected
+} {1}
 test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
+    # y move to 3/4 of text widget content height plus exactly one line height
     .t yview moveto .75
     set pixtonextline [expr {-[bo] + [lindex [.t bbox @0,0] 1] + [lindex [.t bbox @0,0] 3]}]
     .t yview moveto [expr {0.75 + $pixtonextline/double($totpix)}]
-    .t index @0,0
-} {151.80}
+    # target y position is inside line 151, which wraps 4 times
+    # exactly which display line depends on actual font size
+    set ytargetline [expr {150*$fixedHeight+5*$heightDiff}]
+    set expected 151.0
+    while {[expr {$ytargetline+$fixedHeight}] <= [expr {round(0.75*$totpix + $pixtonextline)}]} {
+        incr ytargetline $fixedHeight
+	set expected [.t index "$expected + 1 display line"]
+    }
+    lequal [.t index @0,0] $expected
+} {1}
 test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto .755
     .t index @0,0
@@ -2429,7 +2464,7 @@ test textDisp-16.40 {text count -xpixels} {
       [.t count -xpixels 1.0 "1.0 lineend"] \
       [.t count -xpixels 1.0 "1.0 displaylineend"] \
       [.t count -xpixels 1.0 end]
-} {35 -35 0 42 42 42 0}
+} [list [expr {5*$fixedWidth}] [expr {-5*$fixedWidth}] 0 [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] 0]
 test textDisp-16.41 {text count -xpixels with indices in elided lines} {
     set res {}
     .t delete 1.0 end
@@ -4003,38 +4038,54 @@ test textDisp-27.2 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcd
     .t tag delete x
-    .t tag configure x -tabs 120
+    # compute a tab width such that the first display line is just not large enough
+    # to show the last char 'd', which then wraps on display line 2
+    set tw [expr {(20-2)*$fixedWidth-($fixedWidth-1)}]
+    .t tag configure x -tabs $tw
     .t tag add x 1.0 end
-    list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list [expr {[bo]+120+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+120+[xw 1])-[bo]}] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    set expected [list [list [expr {[bo]+$tw+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+$tw+[xw 1])-[bo]}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.3] [.t bbox 1.4]] $expected
+} {1}
 test textDisp-27.3 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\t\tbcd
     .t tag delete x
-    .t tag configure x -tabs 40
+    # compute a tab width such that the first display line is just not large enough
+    # to show the last char 'd', which then wraps on display line 2
+    set tw [expr {int(ceil(((20-2)*$fixedWidth-($fixedWidth-1))/3.0))}]
+    .t tag configure x -tabs $tw
     .t tag add x 1.0 end
-    list [.t bbox 1.5] [.t bbox 1.6]
-} [list [list [expr {[bo]+3*40+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+3*40+[xw 1])-[bo]}] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    set expected [list [list [expr {[bo]+3*$tw+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+3*$tw+[xw 1])-[bo]}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.5] [.t bbox 1.6]] $expected
+} {1}
 test textDisp-27.4 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\t\tbcd
     .t tag delete x
-    .t tag configure x -tabs {20 center 70 left}
+    # compute a tab width such that the first display line is just not large enough
+    # to show the last char 'd', which then wraps on display line 2
+    set tw [expr {int(ceil(((20-2)*$fixedWidth-($fixedWidth-1) + 20)/2.0))}]
+    .t tag configure x -tabs "20 center $tw left"
     .t tag add x 1.0 end
-    list [.t bbox 1.5] [.t bbox 1.6]
-} [list [list [expr {[bo]+70+(70-20)+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+70+(70-20)+[xw 1])-[bo]}] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    set expected [list [list [expr {[bo]+$tw+($tw-20)+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+$tw+($tw-20)+[xw 1])-[bo]}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.5] [.t bbox 1.6]] $expected
+} {1}
 test textDisp-27.5 {SizeOfTab procedure, center alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
     .t tag delete x
-    .t tag configure x -tabs {120 center}
+    # compute a tab width such that the last y on the first display line is the last displayed char
+    # while 'xyzzyabc' is centered at the tab stop; the 'abc" part of the line wraps on display line 2
+    set tw [expr {[winfo width .t]-2*[bo]-3*$fixedWidth+1}]
+    .t tag configure x -tabs "$tw center"
     .t tag add x 1.0 end
-    list [.t bbox 1.6] [.t bbox 1.7]
-} [list [list [expr {[bo]+120+round(1.5*$fixedWidth)}] [yline 1] [expr {[winfo width .t]-([bo]+120+round(1.5*$fixedWidth))-[bo]}] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    set expected [list [list [expr {[bo]+$tw+round(1.5*$fixedWidth)}] [yline 1] [expr {[winfo width .t]-([bo]+$tw+round(1.5*$fixedWidth))-[bo]}] $fixedHeight] \
+                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.6] [.t bbox 1.7]] $expected
+} {1}
 test textDisp-27.6 {SizeOfTab procedure, center alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
