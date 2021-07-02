@@ -93,6 +93,9 @@ extern "C" {
 #ifndef RC_INVOKED
 
 #if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
