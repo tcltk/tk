@@ -586,6 +586,7 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
     MacSystrayInit(interp);
+    MacPrint_Init(interp);
 
     return TCL_OK;
 }
