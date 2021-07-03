@@ -814,7 +814,7 @@ namespace eval ::tk::print {
 		frame $p.frame.copyframe.z -padx 5 -pady 5
 		pack $p.frame.copyframe.z  -fill x -expand no
 
-		label $p.frame.copyframe.z.zlabel -text [mc Scale %:"]
+		label $p.frame.copyframe.z.zlabel -text [mc "Scale %:"]
 		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber {*}$percentlist
 
 		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry -side left -fill x -expand no
@@ -875,7 +875,7 @@ namespace eval ::tk::print {
 	    if {[winfo class $w] eq "Canvas"} {
 
 		set file /tmp/tk_canvas.ps
-		if {$::tkprint_color eq [mc"RGB"]} {
+		if {$::tkprint_color eq [mc "RGB"]} {
 		    set colormode color
 		} else {
 		    set colormode gray
