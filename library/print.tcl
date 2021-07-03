@@ -861,7 +861,6 @@ namespace eval ::tk::print {
 	    variable printcopies
 	    variable p
 
-
 	    #First, generate print file.
 
 	    if {[winfo class $w] eq "Text"} {
@@ -954,7 +953,6 @@ proc ::tk::print::canvas {w} {
     
 }
 
-
 proc ::tk::print::text {w} {
 
     if {[tk windowingsystem] eq "win32"} {
@@ -965,19 +963,19 @@ proc ::tk::print::text {w} {
 	close $print_txt
 	::tk::print::_print_file $x 1 {Arial 12}
     }
-     if {[tk windowingsystem] eq "x11"} {
+    if {[tk windowingsystem] eq "x11"} {
 	::tk::print::_print $w
-     }
+    }
     if {[tk windowingsystem] eq "aqua"} {
-		set txt [$w get 1.0 end]
-		set file /tmp/tk_text.txt
-		set print_txt [open $file w]
-		puts $print_txt $txt
+	set txt [$w get 1.0 end]
+	set file /tmp/tk_text.txt
+	set print_txt [open $file w]
+	puts $print_txt $txt
 	close $print_txt
 	set printfile /tmp/tk_text.pdf
 	catch {exec /usr/sbin/cupsfilter $file > $printfile}
 	::tk::print::_print $printfile
-	    }
+    }
 }
 
 #Add this command to the tk command ensemble: tk print
