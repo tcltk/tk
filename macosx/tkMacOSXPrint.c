@@ -23,7 +23,7 @@
 /* Forward declarations of functions and variables. */
 NSString * fileName = nil;
 CFStringRef urlFile = NULL;
-int StartPrint(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+int StartPrint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 OSStatus FinishPrint(NSString * file, int buttonValue);
 int MacPrint_Init(Tcl_Interp * interp);
 
@@ -69,9 +69,9 @@ int MacPrint_Init(Tcl_Interp * interp);
  *----------------------------------------------------------------------
  */
 
-int StartPrint(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]) {
+int StartPrint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
 
-  void clientData;
+  (void) clientData;
   NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
   NSPrintPanel * printPanel = [NSPrintPanel printPanel];
   int accepted;
@@ -82,7 +82,7 @@ int StartPrint(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *con
   OSStatus status = noErr;
 
   /* Check for proper number of arguments. */
-  if (objc != 2) {
+  if (objc < 2) {
     Tcl_WrongNumArgs(interp, 1, objv, "file");
     return TCL_ERROR;
   }
@@ -92,8 +92,7 @@ int StartPrint(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *con
   CFRetain(urlFile);
 
   /* Initialize the delegate for the callback from the page panel. */
-  PrintDelegate * printDelegate = [
-    [PrintDelegate alloc] init];
+  PrintDelegate * printDelegate = [[PrintDelegate alloc] init];
 
   status = PMCreateSession( & printSession);
   if (status != noErr) {
@@ -175,7 +174,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
   printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
 
   /*Handle print operation.*/
-  if (buttonValue = NSModalResponseOK) {
+  if (buttonValue == NSModalResponseOK) {
 
     if (urlFile == NULL) {
       NSLog(@ "Could not get file to print.");
