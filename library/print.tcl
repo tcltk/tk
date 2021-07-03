@@ -14,6 +14,8 @@
 
 namespace eval ::tk::print {
 
+    namespace import -force ::tk::msgcat::*
+
     if {[tk windowingsystem] eq "win32"} {
 
 	variable ::tk::print::printer_name
@@ -762,14 +764,14 @@ namespace eval ::tk::print {
 	    frame $p.frame.printframe -padx 5 -pady 5
 	    pack $p.frame.printframe -side top -fill x -expand no
 
-	    label $p.frame.printframe.printlabel -text "Printer:"
+	    label $p.frame.printframe.printlabel -text [mc "Printer:"]
 	    ttk::combobox $p.frame.printframe.mb -textvariable chooseprinter -state readonly -values [lsort -unique $printlist]
 	    pack $p.frame.printframe.printlabel $p.frame.printframe.mb -side left -fill x -expand no
 
 	    bind $p.frame.printframe.mb <<ComboboxSelected>>  { set chooseprinter}
 
-	    set paperlist {Letter Legal A4}
-	    set colorlist {Grayscale RGB}
+	    set paperlist [list [mc Letter] [mc Legal] [mc A4]]
+	    set colorlist [list [mc Grayscale] [mc RGB]]
 
 	    #Initialize with sane defaults. Because some of these variables
 	    #are tied to tk_optionMenu, they are global and cannot be tied
@@ -785,13 +787,13 @@ namespace eval ::tk::print {
 	    set percentlist {100 90 80 70 60 50 40 30 20 10}
 
 	    #Base widgets to load.
-	    labelframe $p.frame.copyframe -text Options -padx 5 -pady 5
+	    labelframe $p.frame.copyframe -text [mc "Options"] -padx 5 -pady 5
 	    pack $p.frame.copyframe -fill x -expand no
 
 	    frame $p.frame.copyframe.l -padx 5 -pady 5
 	    pack $p.frame.copyframe.l -side top -fill x -expand no
 
-	    label $p.frame.copyframe.l.copylabel -text "Copies:"
+	    label $p.frame.copyframe.l.copylabel -text [mc "Copies:"]
 	    spinbox $p.frame.copyframe.l.field -from 1 -to 1000 -textvariable printcopies -width 5
 
 	    pack  $p.frame.copyframe.l.copylabel $p.frame.copyframe.l.field  -side left -fill x -expand  no
@@ -801,7 +803,7 @@ namespace eval ::tk::print {
 	    frame $p.frame.copyframe.r -padx 5 -pady 5
 	    pack $p.frame.copyframe.r -fill x -expand no
 
-	    label $p.frame.copyframe.r.paper -text "Paper:"
+	    label $p.frame.copyframe.r.paper -text [mc "Paper:"]
 	    tk_optionMenu $p.frame.copyframe.r.menu ::tkprint_choosepaper {*}$paperlist
 
 	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu -side left -fill x -expand no
@@ -812,7 +814,7 @@ namespace eval ::tk::print {
 		frame $p.frame.copyframe.z -padx 5 -pady 5
 		pack $p.frame.copyframe.z  -fill x -expand no
 
-		label $p.frame.copyframe.z.zlabel -text "Scale %:"
+		label $p.frame.copyframe.z.zlabel -text [mc"Scale %:"]
 		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber {*}$percentlist
 
 		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry -side left -fill x -expand no
@@ -820,16 +822,16 @@ namespace eval ::tk::print {
 		frame $p.frame.copyframe.orient -padx 5 -pady 5
 		pack $p.frame.copyframe.orient  -fill x -expand no
 
-		label $p.frame.copyframe.orient.text -text "Orientation:"
-		radiobutton $p.frame.copyframe.orient.v -text "Portrait" -value portrait -variable ::tkprint_printorientation -compound left
-		radiobutton $p.frame.copyframe.orient.h -text "Landscape"  -value landscape -variable ::tkprint_printorientation -compound left
+		label $p.frame.copyframe.orient.text -text [mc "Orientation:"]
+		radiobutton $p.frame.copyframe.orient.v -text [mc "Portrait"] -value portrait -variable ::tkprint_printorientation -compound left
+		radiobutton $p.frame.copyframe.orient.h -text [mc "Landscape"]  -value landscape -variable ::tkprint_printorientation -compound left
 
 		pack $p.frame.copyframe.orient.text $p.frame.copyframe.orient.v $p.frame.copyframe.orient.h  -side left -fill x -expand no
 
 		frame $p.frame.copyframe.c -padx 5 -pady 5
 		pack $p.frame.copyframe.c  -fill x -expand no
 
-		label $p.frame.copyframe.c.l -text "Output:"
+		label $p.frame.copyframe.c.l -text [mc "Output:"]
 		tk_optionMenu $p.frame.copyframe.c.c ::tkprint_color {*}$colorlist
 		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left -fill x -expand no
 	    }
@@ -838,8 +840,8 @@ namespace eval ::tk::print {
 	    frame $p.frame.buttonframe
 	    pack $p.frame.buttonframe -fill x -expand no -side bottom
 
-	    button $p.frame.buttonframe.printbutton -text "Print" -command "::tk::print::_runprint $w"
-	    button $p.frame.buttonframe.cancel -text "Cancel" -command {destroy ._print}
+	    button $p.frame.buttonframe.printbutton -text [mc "Print"] -command "::tk::print::_runprint $w"
+	    button $p.frame.buttonframe.cancel -text [mc "Cancel"] -command {destroy ._print}
 
 	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel -side right -fill x -expand no
 
