@@ -75,7 +75,6 @@ int StartPrint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
   NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
   NSPrintPanel * printPanel = [NSPrintPanel printPanel];
   int accepted;
-  NSWindow * windowRef;
   PMPrintSession printSession;
   PMPageFormat pageFormat;
   PMPrintSettings printSettings;
@@ -88,7 +87,7 @@ int StartPrint(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
   }
 
   fileName = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
-  urlFile = (CFStringRef) fileName;
+  urlFile =  (CFStringRef) fileName;
   CFRetain(urlFile);
 
   /* Initialize the delegate for the callback from the page panel. */
@@ -141,7 +140,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
   PMPageFormat pageFormat;
   PMPrintSettings printSettings;
   OSStatus status = noErr;
-  CFStringRef * mimeType = NULL;
+  CFStringRef mimeType = NULL;
 
   /*
    * If value passed here is NSCancelButton, return noErr; 
@@ -183,7 +182,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 
     fileName = file;
 
-    CFURLRef * printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
+    CFURLRef printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
 
     PMPrinter currentPrinter;
     PMDestinationType printDestination;
@@ -211,8 +210,8 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 
     /* Destination is file. Determine how to handle. */
     if (status == noErr && printDestination == kPMDestinationFile) {
-      CFURLRef * outputLocation;
-      status = PMSessionCopyDestinationLocation(printSession, printSettings, & outputLocation);
+      CFURLRef *outputLocation = NULL;
+      status = PMSessionCopyDestinationLocation(printSession, printSettings, &outputLocation);
       if (status == noErr) {
         /*Get the source file and target destination, convert to strings.*/
         CFStringRef sourceFile = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
@@ -225,7 +224,8 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
         if ([pathExtension isEqualToString: @ "pdf"]) {
           NSFileManager * fileManager = [NSFileManager defaultManager];
           if ([fileManager fileExistsAtPath: sourcePath]) {
-            [fileManager copyPath: sourcePath toPath: finalPath handler: nil];
+            NSError *error = nil;
+	    [fileManager copyItemAtPath:sourcePath toPath:finalPath error:&error];
           }
         }
 
@@ -262,12 +262,13 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
     }
 
     /* Destination is preview. Open file in default application for PDF. */
-    if (status == noErr && printDestination == kPMDestinationPreview) {
+    if ((status = noErr) && (printDestination == kPMDestinationPreview)) {
       CFStringRef urlpath = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
       NSString * path = (NSString * ) urlpath;
+      NSURL * url= [NSURL fileURLWithPath:path];
       NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-      [ws openFile: path];
-      status == noErr;
+      [ws openURL: url];
+      status = noErr;
       return status;
     }
 
@@ -276,7 +277,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
      * we do not support it. Display alert.
      */
      
-    if (status == noErr && printDestination != kPMDestinationPreview || kPMDestinationFile || kPMDestinationPrinter) {
+    if ((status == noErr) && (printDestination != kPMDestinationPreview || kPMDestinationFile || kPMDestinationPrinter)) {
 
       NSAlert * alert = [
         [
@@ -287,14 +288,14 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 
       [alert setMessageText: @ "Unsupported Printing Operation"];
       [alert setInformativeText: @ "This printing operation is not supported."];
-      [alert setAlertStyle: NSInformationalAlertStyle];
+      [alert setAlertStyle: NSAlertStyleInformational];
       [alert runModal];
       return status;
     }
   }
 
   /* Return because cancel button was clicked. */
-  if (buttonValue = NSModalResponseCancel) {
+  if (buttonValue == NSModalResponseCancel) {
 
     PMRelease(printSession);
     return status;
@@ -323,3 +324,4 @@ int MacPrint_Init(Tcl_Interp * interp) {
   [pool release];
   return TCL_OK;
 }
+
