@@ -8,46 +8,61 @@
 .TH tk print n "" Tk "Tk Built-in Commands"
 .so man.macros
 .SH NAME
-print \- Print canvas and text widgets using native API's.
+print \- Print canvas and text widgets using native dialogs and APIs.
 .SH SYNOPSIS
-\fBtk print\fR \fIcanvas\fR \fIwindow\fR
-
-\fBtk print\fR \fItext\fR \fIwindow\fR
+\fBtk print canvas\fR \fIwindow\fR
+.sp
+\fBtk print text\fR \fIwindow\fR
 .BE
 .SH DESCRIPTION
 .PP
-The \fBtk print\fR command allows users to print output from
-the \fBcanvas\fR and \fBtext\fR widgets using platform-native API's and
-dialogs.
+The \fBtk print\fR command posts a dialog that allows users to print output
+from the \fBcanvas\fR and \fBtext\fR widgets. The printing will be done using
+platform-native APIs and dialogs where available.
 .PP
-The \fBcanvas\fR widget has long supported PostScript export and both PostScript and text files can be sent directly to a printer on Unix-like systems using the "lp" or "lpr" commands, and the \fBtk print\fR command does not supersede that functionality; it builds on it. The \fBtk print\fR command is a fuller implementation that uses native dialogs on macOS and Windows, and a Tk-based dialog that provides parallel functionality on X11.
+The \fBcanvas\fR widget has long supported PostScript export and both
+PostScript and text files can be sent directly to a printer on Unix-like
+systems using the
+.QW "lp"
+and
+.QW "lpr"
+Unix commands, and the \fBtk print\fR command does not supersede that
+functionality; it builds on it. The \fBtk print\fR command is a fuller
+implementation that uses native dialogs on macOS and Windows, and a Tk-based
+dialog that provides parallel functionality on X11.
+.PP
+Note that the first argument to \fBtk print\fR is the type of widget being
+printed; currently only \fBcanvas\fR and \fBtext\fR widgets may be printed.
 .SH PLATFORM NOTES
 .TP
-.
 \fBmacOS\fR
-.PP
-The Mac implementation uses native print dialogs and relies on the 
-underlying Common Unix Printing System (CUPS) to render text output from 
-the text widget and PostScript output from the canvas widget to the 
-printer, to a PDF file, or a PostScript file. 
+.
+The Mac implementation uses native print dialogs and relies on the underlying
+Common Unix Printing System (CUPS) to render text output from the text widget
+and PostScript output from the canvas widget to the printer, to a PDF file, or
+a PostScript file.
 .TP
 \fBWindows\fR
-.PP
+.
 The Windows implementation is based on the GDI (Graphics Device Interface)
 API. Because there are slight differences in how GDI and Tk's \fBcanvas\fR
-widget display graphics, printed output from the \fBcanvas\fR on Windows
-may not be identical to screen rendering.
+widget display graphics, printed output from the \fBcanvas\fR on Windows may
+not be identical to screen rendering.
 .TP
 \fBX11\fR
-.PP
-The X11 implementation uses a Tk GUI to configure print jobs for sending 
-to a printer via the "lpr" or "lp" commands. While these commands have a 
-large number of parameters for configuring print jobs, printers vary 
-widely in how they support these parameters. As a result, only printer 
-selection and number of copies are configured as arguments to the print 
-command; many aspects of print rendering, such as grayscale or color for 
-the canvas, are instead configured when PostScript is generated.
 .
+The X11 implementation uses a Tk GUI to configure print jobs for sending to a
+printer via the
+.QW "lpr"
+or
+.QW "lp"
+commands. While these commands have a large number of parameters for
+configuring print jobs, printers vary widely in how they support these
+parameters. As a result, only printer selection and number of copies are
+configured as arguments to the print command; many aspects of print rendering,
+such as grayscale or color for the canvas, are instead configured when
+PostScript is generated.
+.SH "SEE ALSO"
+canvas(n), text(n), tk(n)
 .SH KEYWORDS
 print, output, graphics, text, canvas
-
