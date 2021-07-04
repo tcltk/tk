@@ -33,9 +33,7 @@ int MacPrint_Init(Tcl_Interp * interp);
 @interface PrintDelegate: NSObject
 
   - (id) init;
-
--
-(void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode: (int) returnCode contextInfo: (void * ) contextInfo;
+  -(void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode: (int) returnCode contextInfo: (void * ) contextInfo;
 
 @end
 
@@ -47,10 +45,11 @@ int MacPrint_Init(Tcl_Interp * interp);
   }
 
   - (void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode: (int) returnCode contextInfo: (void * ) contextInfo {
-
-    /* Pass returnCode to FinishPrint function to determine how to handle. */
+    /* 
+     * Pass returnCode to FinishPrint function to determine how to 
+     * handle. 
+     */
     FinishPrint(fileName, returnCode);
-
   }
 
 @end
@@ -254,9 +253,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
           strcat(cmd, "\"");
           system(cmd);
         }
-
         return status;
-
       }
     }
 
