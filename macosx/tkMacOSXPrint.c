@@ -3,7 +3,7 @@
  *
  *      This module implements native printing dialogs for macOS.
  *
- * Copyright © 2006-2012 Apple Corp.
+ * Copyright © 2006 Apple Inc.
  * Copyright © 2011-2021 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
