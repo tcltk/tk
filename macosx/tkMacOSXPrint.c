@@ -262,7 +262,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
     }
 
     /* Destination is preview. Open file in default application for PDF. */
-    if ((status = noErr) && (printDestination == kPMDestinationPreview)) {
+    if ((status == noErr) && (printDestination == kPMDestinationPreview)) {
       CFStringRef urlpath = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
       NSString * path = (NSString * ) urlpath;
       NSURL * url= [NSURL fileURLWithPath:path];
