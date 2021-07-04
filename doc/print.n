@@ -10,7 +10,6 @@
 .SH NAME
 print \- Print canvas and text widgets using native API's.
 .SH SYNOPSIS
-
 \fBtk print\fR \fIcanvas\fR \fIwindow\fR
 
 \fBtk print\fR \fItext\fR \fIwindow\fR
@@ -20,9 +19,17 @@ print \- Print canvas and text widgets using native API's.
 The \fBtk print\fR command allows users to print output from
 the \fBcanvas\fR and \fBtext\fR widgets using platform-native API's and
 dialogs.
-.TP
+.PP
 The \fBcanvas\fR widget has long supported PostScript export and both PostScript and text files can be sent directly to a printer on Unix-like systems using the "lp" or "lpr" commands, and the \fBtk print\fR command does not supersede that functionality; it builds on it. The \fBtk print\fR command is a fuller implementation that uses native dialogs on macOS and Windows, and a Tk-based dialog that provides parallel functionality on X11.
 .SH PLATFORM NOTES
+.TP
+.
+\fBmacOS\fR
+.PP
+The Mac implementation uses native print dialogs and relies on the 
+underlying Common Unix Printing System (CUPS) to render text output from 
+the text widget and PostScript output from the canvas widget to the 
+printer, to a PDF file, or a PostScript file. 
 .TP
 \fBWindows\fR
 .PP
@@ -30,6 +37,16 @@ The Windows implementation is based on the GDI (Graphics Device Interface)
 API. Because there are slight differences in how GDI and Tk's \fBcanvas\fR
 widget display graphics, printed output from the \fBcanvas\fR on Windows
 may not be identical to screen rendering.
+.TP
+\fBX11\fR
+.PP
+The X11 implementation uses a Tk GUI to configure print jobs for sending 
+to a printer via the "lpr" or "lp" commands. While these commands have a 
+large number of parameters for configuring print jobs, printers vary 
+widely in how they support these parameters. As a result, only printer 
+selection and number of copies are configured as arguments to the print 
+command; many aspects of print rendering, such as grayscale or color for 
+the canvas, are instead configured when PostScript is generated.
 .
 .SH KEYWORDS
 print, output, graphics, text, canvas
