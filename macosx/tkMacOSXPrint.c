@@ -32,8 +32,7 @@ int MacPrint_Init(Tcl_Interp * interp);
 /* Delegate class for print dialogs. */
 @interface PrintDelegate: NSObject
 
-  -
-  (id) init;
+  - (id) init;
 
 -
 (void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode: (int) returnCode contextInfo: (void * ) contextInfo;
@@ -279,11 +278,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
      
     if ((status == noErr) && (printDestination != kPMDestinationPreview || kPMDestinationFile || kPMDestinationPrinter)) {
 
-      NSAlert * alert = [
-        [
-          [NSAlert alloc] init
-        ] autorelease
-      ];
+      NSAlert * alert = [[[NSAlert alloc] init ] autorelease];
       [alert addButtonWithTitle: @ "OK"];
 
       [alert setMessageText: @ "Unsupported Printing Operation"];
@@ -319,7 +314,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
  */
 int MacPrint_Init(Tcl_Interp * interp) {
 
-   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   Tcl_CreateObjCommand(interp, "::tk::print::_print", StartPrint, (ClientData) NULL, (Tcl_CmdDeleteProc * ) NULL);
   [pool release];
   return TCL_OK;
