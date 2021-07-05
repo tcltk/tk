@@ -950,7 +950,7 @@ proc ::tk::print::canvas {w} {
 	catch {exec /usr/sbin/cupsfilter $file > $printfile}
 	::tk::print::_print $printfile
     }
-    
+
 }
 
 proc ::tk::print::text {w} {
