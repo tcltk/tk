@@ -43,9 +43,9 @@ int MacPrint_Init(Tcl_Interp * interp);
   }
 
   - (void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode: (int) returnCode contextInfo: (void * ) contextInfo {
-    /* 
-     * Pass returnCode to FinishPrint function to determine how to 
-     * handle. 
+    /*
+     * Pass returnCode to FinishPrint function to determine how to
+     * handle.
      */
     FinishPrint(fileName, returnCode);
   }
@@ -140,7 +140,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
     CFStringRef mimeType = NULL;
 
     /*
-     * If value passed here is NSCancelButton, return noErr; 
+     * If value passed here is NSCancelButton, return noErr;
      * otherwise printing will occur regardless of value.
      */
     if (buttonValue == NSModalResponseCancel) {
@@ -217,8 +217,8 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                 NSString * finalPath = (NSString * ) savePath;
                 NSString * pathExtension = [finalPath pathExtension];
 
-                /* 
-		 * Is the target file a PDF? If so, copy print file 
+                /*
+		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
 		 */
                 if ([pathExtension isEqualToString: @ "pdf"]) {
@@ -229,9 +229,9 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                     }
                 }
 
-                /* Is the target file PostScript? If so, run print file 
-                 * through CUPS filter to convert back to PostScript. 
-                 * Using strcat to build up system command is ugly, but 
+                /* Is the target file PostScript? If so, run print file
+                 * through CUPS filter to convert back to PostScript.
+                 * Using strcat to build up system command is ugly, but
                  * it is simpler than NSTask and it works.
                  */
 
@@ -271,7 +271,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
         }
 
         /*
-         * If destination is not printer, file or preview, 
+         * If destination is not printer, file or preview,
          * we do not support it. Display alert.
          */
 
