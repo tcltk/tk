@@ -231,11 +231,11 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 
                 /* Is the target file PostScript? If so, run print file 
                  * through CUPS filter to convert back to PostScript. 
-                 * Using strcat to build up system command is ugly, but it is 
-                 * simpler than NSTask and it works.
+                 * Using strcat to build up system command is ugly, but 
+                 * it is simpler than NSTask and it works.
                  */
 
-                if ([pathExtension isEqualToString: @ "ps"]) {
+              if ([pathExtension isEqualToString: @ "ps"]) {
 
                     char source[5012];
                     char target[5012];
@@ -275,7 +275,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
          * we do not support it. Display alert.
          */
 
-        if ((status == noErr) && (printDestination != kPMDestinationPreview || kPMDestinationFile || kPMDestinationPrinter)) {
+	if (((status == noErr) && (printDestination != kPMDestinationPreview)) || ((status == noErr) && (printDestination != kPMDestinationFile)) || ((status == noErr) &&  (printDestination != kPMDestinationPrinter))) {
 
             NSAlert * alert = [[[NSAlert alloc] init] autorelease];
             [alert addButtonWithTitle: @ "OK"];
