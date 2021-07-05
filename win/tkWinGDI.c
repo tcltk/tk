@@ -138,7 +138,7 @@ static int TkWinGDI (ClientData clientData, Tcl_Interp *interp, int argc, const 
  * add them to this array. The first element is the subcommand
  * name, and the second a standard Tcl command handler.
  */
-struct gdi_command
+static const struct gdi_command
 {
     const char *command_string;
     int (*command) (ClientData, Tcl_Interp *, int, const char **);
