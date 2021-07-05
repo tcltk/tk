@@ -35,11 +35,6 @@ static int TkWinGDI      (ClientData clientData, Tcl_Interp *interp, int argc, c
 /* Main dispatcher for subcommands. */
 static int TkWinGDISubcmd (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
 
-/* Initialize all these API's. */
-int Winprint_Init(Tcl_Interp * interp);
-int Gdi_Init(Tcl_Interp *interp);
-
-
 /* Real functions. */
 static int GdiArc      (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
 static int GdiBitmap   (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
@@ -91,8 +86,8 @@ static void GetDisplaySize (LONG *width, LONG *height);
 static int GdiWordToWeight(const char *str);
 static int GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf, const char *str[], int numargs);
 static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
-int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
-int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int PrintOpenPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
+static int PrintClosePrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 static int PrintOpenDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 static int PrintCloseDoc(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
 static int PrintOpenPage(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[]);
@@ -105,15 +100,10 @@ static const char gdi_usage_message[] = "::tk::print::_gdi [arc|characters|copyb
 static char msgbuf[1024];
 static PRINTDLGW pd;
 static  DOCINFOW di;
-int copies, paper_width, paper_height, dpi_x, dpi_y;
-char *localPrinterName;
-LPCWSTR printerName;
-LPCWSTR driver;
-LPCWSTR output;
-PDEVMODEW returnedDevmode;
-PDEVMODEW localDevmode;
-LPDEVNAMES devnames;
-HDC printDC;
+static WCHAR *localPrinterName = NULL;
+static int copies, paper_width, paper_height, dpi_x, dpi_y;
+static LPDEVNAMES devnames;
+static HDC printDC;
 
 /*
  *----------------------------------------------------------------------
@@ -2198,10 +2188,10 @@ static int GdiCopyBits (
 
     Tk_Window mainWin;
     Tk_Window workwin;
-    Window w;
+    Window wnd;
     HDC src;
     HDC dst;
-    HWND wnd = 0;
+    HWND hwnd = 0;
 
     HANDLE hDib;    /* Handle for device-independent bitmap. */
     LPBITMAPINFOHEADER lpDIBHdr;
@@ -2281,7 +2271,7 @@ static int GdiCopyBits (
 			else
 			    {
 				/* Use strtoul() so octal or hex representations will be parsed. */
-				wnd = (HWND)INT2PTR(strtoul(argv[++k], &strend, 0));
+				hwnd = (HWND)INT2PTR(strtoul(argv[++k], &strend, 0));
 				if ( strend == 0 || strend == argv[k] )
 				    {
 					sprintf(msgbuf, "Can't understand window id %s", argv[k]);
@@ -2388,12 +2378,12 @@ static int GdiCopyBits (
      * Get the MS Window we want to copy.
      * Given the HDC, we can get the "Window".
      */
-    if (wnd == 0 )
+    if (hwnd == 0 )
 	{
 	    if ( Tk_IsTopLevel(workwin) )
 		is_toplevel = 1;
 
-	    if ( (w =    Tk_WindowId(workwin)) == 0 )
+	    if ( (wnd =    Tk_WindowId(workwin)) == 0 )
 		{
 		    Tcl_AppendResult(interp, "Can't get id for Tk window", NULL);
 		    return TCL_ERROR;
@@ -2401,7 +2391,7 @@ static int GdiCopyBits (
 
 	    /* Given the "Window" we can get a Microsoft Windows HWND. */
 
-	    if ( (wnd =  Tk_GetHWND(w)) == 0 )
+	    if ( (hwnd =  Tk_GetHWND(wnd)) == 0 )
 		{
 		    Tcl_AppendResult(interp, "Can't get Windows handle for Tk window", NULL);
 		    return TCL_ERROR;
@@ -2415,14 +2405,14 @@ static int GdiCopyBits (
 	     */
 	    if ( is_toplevel )
 		{
-		    HWND tmpWnd = wnd;
+		    HWND tmpWnd = hwnd;
 		    while ( (tmpWnd = GetParent( tmpWnd ) ) != 0 )
-			wnd = tmpWnd;
+			hwnd = tmpWnd;
 		}
 	}
 
     /* Given the HWND, we can get the window's device context. */
-    if ( (src =  GetWindowDC(wnd)) == 0 )
+    if ( (src =  GetWindowDC(hwnd)) == 0 )
 	{
 	    Tcl_AppendResult(interp, "Can't get device context for Tk window", NULL);
 	    return TCL_ERROR;
@@ -2438,7 +2428,7 @@ static int GdiCopyBits (
     else if ( is_toplevel )
 	{
 	    RECT tl;
-	    GetWindowRect(wnd, &tl);
+	    GetWindowRect(hwnd, &tl);
 	    wid = tl.right - tl.left;
 	    hgt = tl.bottom - tl.top;
 	}
@@ -2447,14 +2437,14 @@ static int GdiCopyBits (
 	    if ( (hgt =  Tk_Height(workwin)) <= 0 )
 		{
 		    Tcl_AppendResult(interp, "Can't get height of Tk window", NULL);
-		    ReleaseDC(wnd,src);
+		    ReleaseDC(hwnd,src);
 		    return TCL_ERROR;
 		}
 
 	    if ( (wid =  Tk_Width(workwin)) <= 0 )
 		{
 		    Tcl_AppendResult(interp, "Can't get width of Tk window", NULL);
-		    ReleaseDC(wnd,src);
+		    ReleaseDC(hwnd,src);
 		    return TCL_ERROR;
 		}
 	}
@@ -2507,20 +2497,20 @@ static int GdiCopyBits (
 	     * c) Client window only
 	     * for the "grab"
 	     */
-	    hDib = CopyToDIB( wnd, wintype );
+	    hDib = CopyToDIB( hwnd, wintype );
 
 	    /* GdiFlush();. */
 
 	    if (!hDib) {
 		Tcl_AppendResult(interp, "Can't create DIB", NULL);
-		ReleaseDC(wnd,src);
+		ReleaseDC(hwnd,src);
 		return TCL_ERROR;
 	    }
 
 	    lpDIBHdr = (LPBITMAPINFOHEADER)GlobalLock(hDib);
 	    if (!lpDIBHdr) {
 		Tcl_AppendResult(interp, "Can't get DIB header", NULL);
-		ReleaseDC(wnd,src);
+		ReleaseDC(hwnd,src);
 		return TCL_ERROR;
 	    }
 
@@ -2537,7 +2527,7 @@ static int GdiCopyBits (
 		    errcode = GetLastError();
 		    GlobalUnlock(hDib);
 		    GlobalFree(hDib);
-		    ReleaseDC(wnd,src);
+		    ReleaseDC(hwnd,src);
 		    sprintf(msgbuf, "StretchDIBits failed with code %ld", errcode);
 		    Tcl_AppendResult(interp, msgbuf, NULL);
 		    return TCL_ERROR;
@@ -2548,7 +2538,7 @@ static int GdiCopyBits (
 	    GlobalFree(hDib);
 	}
 
-    ReleaseDC(wnd,src);
+    ReleaseDC(hwnd,src);
 
     /*
      * The return value should relate to the size in the destination space.
@@ -4870,14 +4860,13 @@ TkGdiMakeBezierCurve(
 
 static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const objv[])
 {
+    LPCWSTR printerName = NULL;
+    PDEVMODEW returnedDevmode = NULL;
+    PDEVMODEW localDevmode = NULL;
     (void) clientData;
     (void) argc;
     (void) objv;
 
-    returnedDevmode = NULL;
-    localDevmode = NULL;
-    localPrinterName = NULL;
-    printerName = NULL;
     copies = 0;
     paper_width = 0;
     paper_height = 0;
@@ -4903,8 +4892,6 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 	returnedDevmode = (PDEVMODEW)GlobalLock(pd.hDevMode);
 	devnames  = (LPDEVNAMES)GlobalLock(pd.hDevNames);
 	printerName = (LPCWSTR)devnames + devnames->wDeviceOffset;
-	driver = (LPCWSTR)devnames + devnames->wDriverOffset;
-	output = (LPCWSTR)devnames + devnames->wOutputOffset;
 	localDevmode = (LPDEVMODEW)HeapAlloc(GetProcessHeap(),
 					    HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
 					    returnedDevmode->dmSize);
@@ -4916,7 +4903,7 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
 		       returnedDevmode->dmSize);
 
 		/* Get values from user-set and built-in properties. */
-		localPrinterName = (char*) localDevmode->dmDeviceName;
+		localPrinterName = localDevmode->dmDeviceName;
 		dpi_y = localDevmode->dmYResolution;
 		dpi_x =  localDevmode->dmPrintQuality;
 		paper_height = (int) localDevmode->dmPaperLength / 0.254;  /*Convert to logical points.*/
@@ -4944,10 +4931,10 @@ static int PrintSelectPrinter(ClientData clientData, Tcl_Interp *interp, int arg
      * so they can be accessed from script level.
      */
 
-    char *varlink1 = Tcl_Alloc(100 * sizeof(char));
-    char **varlink2 =  (char **)Tcl_Alloc(sizeof(char *));
+    WCHAR *varlink1 = (WCHAR *)Tcl_Alloc(100 * sizeof(char));
+    WCHAR **varlink2 =  (WCHAR **)Tcl_Alloc(sizeof(char *));
     *varlink2 = varlink1;
-    strcpy (varlink1, localPrinterName);
+    wcscpy (varlink1, localPrinterName);
 
     Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2, TCL_LINK_STRING | TCL_LINK_READ_ONLY);
     Tcl_LinkVar(interp, "::tk::print::copies", (char *)&copies, TCL_LINK_INT |  TCL_LINK_READ_ONLY);
