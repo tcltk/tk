@@ -923,12 +923,11 @@ static int GdiLine(
 		    /* Arrowhead at end = polypoints[npoly-1].x, polypoints[npoly-1].y. */
 		    POINT ahead[6];
 		    double dx, dy, length;
-		    double backup, sinTheta, cosTheta;
+		    double sinTheta, cosTheta;
 		    double vertX, vertY, temp;
 		    double fracHeight;
 
 		    fracHeight = 2.0 / arrowshape[2];
-		    backup = fracHeight*arrowshape[1] + arrowshape[0]*(1.0 - fracHeight)/2.0;
 
 		    ahead[0].x = ahead[5].x = polypoints[npoly-1].x;
 		    ahead[0].y = ahead[5].y = polypoints[npoly-1].y;
@@ -963,12 +962,11 @@ static int GdiLine(
 		    /* Arrowhead at end = polypoints[0].x, polypoints[0].y. */
 		    POINT ahead[6];
 		    double dx, dy, length;
-		    double backup, sinTheta, cosTheta;
+		    double sinTheta, cosTheta;
 		    double vertX, vertY, temp;
 		    double fracHeight;
 
 		    fracHeight = 2.0 / arrowshape[2];
-		    backup = fracHeight*arrowshape[1] + arrowshape[0]*(1.0 - fracHeight)/2.0;
 
 		    ahead[0].x = ahead[5].x = polypoints[0].x;
 		    ahead[0].y = ahead[5].y = polypoints[0].y;
