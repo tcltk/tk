@@ -228,10 +228,16 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 		 */
                 if ([pathExtension isEqualToString: @ "pdf"]) {
                     NSFileManager * fileManager = [NSFileManager defaultManager];
+		    NSError * error = nil;
+		    /*Make sure no file conflict exists.*/
+		    if ([fileManager fileExistsAtPath: finalPath]) {
+			[fileManager removeItemAtPath: finalPath error: &error];
+		      }
                     if ([fileManager fileExistsAtPath: sourcePath]) {
                         NSError * error = nil;
                         [fileManager copyItemAtPath: sourcePath toPath: finalPath error: & error];
                     }
+		    return status;
                 }
 
                 /* Is the target file PostScript? If so, run print file
