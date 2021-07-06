@@ -240,10 +240,9 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 		    return status;
                 }
 
-                /* Is the target file PostScript? If so, run print file
+                /* 
+                 * Is the target file PostScript? If so, run print file
                  * through CUPS filter to convert back to PostScript.
-                 * Using strcat to build up system command is ugly, but
-                 * it is simpler than NSTask and it works.
                  */
 
               if ([pathExtension isEqualToString: @ "ps"]) {
