@@ -643,7 +643,7 @@ proc showCode w {
 # file -		Name of the original file (implicitly for title)
 
 proc printCode {w file} {
-    tk print text $w
+    tk print $w
 }
 
 # tkAboutDialog --
@@ -656,7 +656,8 @@ proc tkAboutDialog {} {
 "[mc "Copyright © %s" {1996-1997 Sun Microsystems, Inc.}]
 [mc "Copyright © %s" {1997-2000 Ajuba Solutions, Inc.}]
 [mc "Copyright © %s" {2001-2009 Donal K. Fellows}]
-[mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]"
+[mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]
+[mc "Copyright © %s" {2021 Kevin Walzer}]"
 }
 
 # Local Variables:

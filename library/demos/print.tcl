@@ -44,8 +44,8 @@ pack $t -side right -fill both -expand no
 $t insert end $txt
 
 pack [frame $w.f] -side top -fill both -expand no
-pack [button $w.f.b -text "Print Canvas" -command [list tk print canvas $w.m.c]]  -expand no
-pack [button $w.f.x -text "Print Text" -command [list tk print text $w.m.t]]   -expand no
+pack [button $w.f.b -text "Print Canvas" -command [list tk print $w.m.c]]  -expand no
+pack [button $w.f.x -text "Print Text" -command [list tk print $w.m.t]]   -expand no
 
 ## See Code / Dismiss buttons
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x

@@ -10,10 +10,8 @@
 .SH NAME
 print \- Print canvas and text widgets using native dialogs and APIs.
 .SH SYNOPSIS
-\fBtk print canvas\fR \fIwindow\fR
-.sp
-\fBtk print text\fR \fIwindow\fR
-.BE
+\fBtk print \fIwindow\fR
+.
 .SH DESCRIPTION
 .PP
 The \fBtk print\fR command posts a dialog that allows users to print output
@@ -30,9 +28,6 @@ Unix commands, and the \fBtk print\fR command does not supersede that
 functionality; it builds on it. The \fBtk print\fR command is a fuller
 implementation that uses native dialogs on macOS and Windows, and a Tk-based
 dialog that provides parallel functionality on X11.
-.PP
-Note that the first argument to \fBtk print\fR is the type of widget being
-printed; currently only \fBcanvas\fR and \fBtext\fR widgets may be printed.
 .SH PLATFORM NOTES
 .TP
 \fBmacOS\fR
