@@ -18,6 +18,9 @@
 #include <CoreServices/CoreServices.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <tkMacOSXInt.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdio.h>
 
 
 /* Forward declarations of functions and variables. */
@@ -208,6 +211,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
         /* Destination is file. Determine how to handle. */
         if (status == noErr && printDestination == kPMDestinationFile) {
             CFURLRef * outputLocation = NULL;
+	    
             status = PMSessionCopyDestinationLocation(printSession, printSettings, & outputLocation);
             if (status == noErr) {
                 /*Get the source file and target destination, convert to strings.*/
@@ -236,15 +240,11 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                  */
 
               if ([pathExtension isEqualToString: @ "ps"]) {
-
                     char source[5012];
                     char target[5012];
-
                     [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
                     [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
-
-                    /*Add quote marks to address path names with spaces.*/
-                    char cmd[50000];
+		    char cmd[50000];
                     strcpy(cmd, "/usr/sbin/cupsfilter ");
                     strcat(cmd, "\"");
                     strcat(cmd, source);
@@ -253,9 +253,19 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                     strcat(cmd, "\"");
                     strcat(cmd, target);
                     strcat(cmd, "\"");
-                    system(cmd);
-                }
-                return status;
+
+  		    pid_t pid;
+		    char * const paramlist[] = {"/bin/sh", "-c", cmd, NULL};
+		    if ((pid = fork()) == -1) {
+		      status != noErr;
+		      return status;
+		    } else if (pid == 0) {
+		      execv("/bin/sh", paramlist);
+		    }
+		    wait(2);
+		    return status;
+	      }
+	      return status;
             }
         }
 

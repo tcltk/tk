@@ -923,58 +923,52 @@ namespace eval ::tk::print {
 # tk print --
 # This procedure prints the canvas and text widgets using platform-
 # native API's.
-#
-# Subcommands:
-#
-#     canvas - Print the display of a canvas widget.
-#         Arguments:
-#             w: Widget to print.
-#
-#     text - Print the display of a text widget.
-#         Arguments:
-#             w: Widget to print.
+#   Arguments:
+#      w: Widget to print.
 
 
-proc ::tk::print::canvas {w} {
+proc ::tk::print {w} {
 
-    if {[tk windowingsystem] eq "win32"} {
-	::tk::print::_print_widget $w 0 "Tk Print Output"
-    }
-    if {[tk windowingsystem] eq "x11"} {
-	::tk::print::_print $w
-    }
-    if {[tk windowingsystem] eq "aqua"} {
-	set file /tmp/tk_canvas.ps
-	$w postscript -file $file
-	set printfile /tmp/tk_canvas.pdf
-	catch {exec /usr/sbin/cupsfilter $file > $printfile}
-	::tk::print::_print $printfile
+    if {[winfo class $w] eq "Canvas"} {
+
+	if {[tk windowingsystem] eq "win32"} {
+	    ::tk::print::_print_widget $w 0 "Tk Print Output"
+	}
+	if {[tk windowingsystem] eq "x11"} {
+	    ::tk::print::_print $w
+	}
+	if {[tk windowingsystem] eq "aqua"} {
+	    set file /tmp/tk_canvas.ps
+	    $w postscript -file $file
+	    set printfile /tmp/tk_canvas.pdf
+	    catch {exec /usr/sbin/cupsfilter $file > $printfile}
+	    ::tk::print::_print $printfile
+	}
     }
 
-}
+    if {[winfo class $w] eq "Text"} {
 
-proc ::tk::print::text {w} {
-
-    if {[tk windowingsystem] eq "win32"} {
-	set txt [$w get 1.0 end]
-	set x [file join $::env(TEMP) tk_output.txt]
-	set print_txt [open $x  w]
-	puts $print_txt $txt
-	close $print_txt
-	::tk::print::_print_file $x 1 {Arial 12}
-    }
-    if {[tk windowingsystem] eq "x11"} {
-	::tk::print::_print $w
-    }
-    if {[tk windowingsystem] eq "aqua"} {
-	set txt [$w get 1.0 end]
-	set file /tmp/tk_text.txt
-	set print_txt [open $file w]
-	puts $print_txt $txt
-	close $print_txt
-	set printfile /tmp/tk_text.pdf
-	catch {exec /usr/sbin/cupsfilter $file > $printfile}
-	::tk::print::_print $printfile
+	if {[tk windowingsystem] eq "win32"} {
+	    set txt [$w get 1.0 end]
+	    set x [file join $::env(TEMP) tk_output.txt]
+	    set print_txt [open $x  w]
+	    puts $print_txt $txt
+	    close $print_txt
+	    ::tk::print::_print_file $x 1 {Arial 12}
+	}
+	if {[tk windowingsystem] eq "x11"} {
+	    ::tk::print::_print $w
+	}
+	if {[tk windowingsystem] eq "aqua"} {
+	    set txt [$w get 1.0 end]
+	    set file /tmp/tk_text.txt
+	    set print_txt [open $file w]
+	    puts $print_txt $txt
+	    close $print_txt
+	    set printfile /tmp/tk_text.pdf
+	    catch {exec /usr/sbin/cupsfilter $file > $printfile}
+	    ::tk::print::_print $printfile
+	}
     }
 }
 
