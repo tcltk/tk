@@ -844,6 +844,8 @@ namespace eval ::tk::print {
 	    button $p.frame.buttonframe.cancel -text [mc "Cancel"] -command {destroy ._print}
 
 	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel -side right -fill x -expand no
+	    #Center the window as a dialog.
+	    ::tk::PlaceWindow $p
 
 	}
 
