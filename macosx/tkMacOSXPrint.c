@@ -21,41 +21,41 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
-#include<fcntl.h>
-
+#include <fcntl.h>
 
 /* Forward declarations of functions and variables. */
 NSString * fileName = nil;
 CFStringRef urlFile = NULL;
-int StartPrint(ClientData clientData, Tcl_Interp * interp, int objc, Tcl_Obj * const objv[]);
-OSStatus FinishPrint(NSString * file, int buttonValue);
-int MacPrint_Init(Tcl_Interp * interp);
-
+int			StartPrint(ClientData clientData, Tcl_Interp * interp,
+			    int objc, Tcl_Obj * const objv[]);
+OSStatus		FinishPrint(NSString *file, int buttonValue);
+int			MacPrint_Init(Tcl_Interp * interp);
+
 /* Delegate class for print dialogs. */
 @interface PrintDelegate: NSObject
-
-  - (id) init;
-  -(void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode:(int) returnCode contextInfo: (void * ) contextInfo;
-
+    - (id) init;
+    - (void) printPanelDidEnd: (NSPrintPanel *) printPanel
+		   returnCode: (int) returnCode
+		  contextInfo: (void *) contextInfo;
 @end
 
 @implementation PrintDelegate
-
-  - (id) init {
+- (id) init {
     self = [super init];
     return self;
-  }
+}
 
-  - (void) printPanelDidEnd: (NSPrintPanel * ) printPanel returnCode: (int) returnCode contextInfo: (void * ) contextInfo {
+- (void) printPanelDidEnd: (NSPrintPanel *) printPanel
+	       returnCode: (int) returnCode
+	      contextInfo: (void *) contextInfo {
     /*
      * Pass returnCode to FinishPrint function to determine how to
      * handle.
      */
     FinishPrint(fileName, returnCode);
-  }
-
+}
 @end
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -69,9 +69,13 @@ int MacPrint_Init(Tcl_Interp * interp);
  *----------------------------------------------------------------------
  */
 
-int StartPrint(ClientData clientData, Tcl_Interp * interp, int objc, Tcl_Obj *
-    const objv[]) {
-
+int
+StartPrint(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
     (void) clientData;
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
     NSPrintPanel * printPanel = [NSPrintPanel printPanel];
@@ -117,11 +121,13 @@ int StartPrint(ClientData clientData, Tcl_Interp * interp, int objc, Tcl_Obj *
     printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
 
     accepted = [printPanel runModalWithPrintInfo: printInfo];
-    [printDelegate printPanelDidEnd: printPanel returnCode: accepted contextInfo: printInfo];
+    [printDelegate printPanelDidEnd: printPanel
+			 returnCode: accepted
+			contextInfo: printInfo];
 
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -134,8 +140,12 @@ int StartPrint(ClientData clientData, Tcl_Interp * interp, int objc, Tcl_Obj *
  *
  *----------------------------------------------------------------------
  */
-OSStatus FinishPrint(NSString * file, int buttonValue) {
 
+OSStatus
+FinishPrint(
+    NSString *file,
+    int buttonValue)
+{
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
     PMPrintSession printSession;
     PMPageFormat pageFormat;
@@ -211,7 +221,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 
         /* Destination is file. Determine how to handle. */
         if (status == noErr && printDestination == kPMDestinationFile) {
-            CFURLRef * outputLocation = NULL;
+            CFURLRef outputLocation = NULL;
 	    
             status = PMSessionCopyDestinationLocation(printSession, printSettings, & outputLocation);
             if (status == noErr) {
@@ -232,9 +242,9 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 		    /*Make sure no file conflict exists.*/
 		    if ([fileManager fileExistsAtPath: finalPath]) {
 			[fileManager removeItemAtPath: finalPath error: &error];
-		      }
+		    }
                     if ([fileManager fileExistsAtPath: sourcePath]) {
-                        NSError * error = nil;
+                        error = nil;
                         [fileManager copyItemAtPath: sourcePath toPath: finalPath error: & error];
                     }
 		    return status;
@@ -301,15 +311,13 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 
     /* Return because cancel button was clicked. */
     if (buttonValue == NSModalResponseCancel) {
-
         PMRelease(printSession);
         return status;
     }
 
     return status;
-
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -322,11 +330,19 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
  *
  *----------------------------------------------------------------------
  */
-int MacPrint_Init(Tcl_Interp * interp) {
 
+int MacPrint_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     Tcl_CreateObjCommand(interp, "::tk::print::_print", StartPrint, (ClientData) NULL, (Tcl_CmdDeleteProc * ) NULL);
     [pool release];
     return TCL_OK;
 }
-
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
