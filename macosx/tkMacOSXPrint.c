@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+#include<fcntl.h>
 
 
 /* Forward declarations of functions and variables. */
@@ -244,35 +245,28 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                     char target[5012];
                     [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
                     [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
-		    /*
-		     * Add quote marks to address path names with spaces. Redirect stderr 
-		     * to quiet debugging output. 
-		     */
-		    char cmd[50000];
-                    strcpy(cmd, "/usr/sbin/cupsfilter ");
-                    strcat(cmd, "\"");
-                    strcat(cmd, source);
-                    strcat(cmd, "\"");
-                    strcat(cmd, " -m application/postscript > ");
-                    strcat(cmd, "\"");
-                    strcat(cmd, target);
-                    strcat(cmd, "\"");
-		    strcat(cmd, " 2>/dev/null ");
 		   
-		    /*Fork and start new process with command string.*/
+		    /* 
+		     *  Fork and start new process with command string. Thanks to Peter da Silva
+		     *  for assistance.
+		     */
   		    pid_t pid;
-		    char *const  paramlist[] = {"/bin/sh", "-c", cmd, NULL};
 		    if ((pid = fork()) == -1) {
 		      return -1;
 		    } else if (pid == 0) {
-		      execv("/bin/sh", paramlist);
-		      exit(0);
-		    }
+		      /* Redirect output to file and silence debugging output.*/
+		      dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
+		      dup2(open("/dev/null", O_WRONLY), 2);
+		      execl("/usr/sbin/cupsfilter", "cupsfilter", "-m", "application/postscript", source, NULL);
+		      close(1);
+		      close(2);
+		      exit(0);	   
 		    return status;
-	      }
+		    }
 	      return status;
-            }
-        }
+	      }
+	    }
+	}
 
         /* Destination is preview. Open file in default application for PDF. */
         if ((status == noErr) && (printDestination == kPMDestinationPreview)) {
