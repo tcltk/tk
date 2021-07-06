@@ -263,10 +263,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 		      dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
 		      dup2(open("/dev/null", O_WRONLY), 2);
 		      execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, NULL);
-		      close(1);
-		      close(2);
 		      exit(0);	   
-		    return status;
 		    }
 	      return status;
 	      }
