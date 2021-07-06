@@ -257,7 +257,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
 		      /* Redirect output to file and silence debugging output.*/
 		      dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
 		      dup2(open("/dev/null", O_WRONLY), 2);
-		      execl("/usr/sbin/cupsfilter", "cupsfilter", "-m", "application/postscript", source, NULL);
+		      execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, NULL);
 		      close(1);
 		      close(2);
 		      exit(0);	   
