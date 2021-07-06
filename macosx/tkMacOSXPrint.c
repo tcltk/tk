@@ -244,7 +244,10 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                     char target[5012];
                     [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
                     [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
-		    /*Add quote marks to address path names with spaces.*/
+		    /*
+		     * Add quote marks to address path names with spaces. Redirect stderr 
+		     * to quiet debugging output. 
+		     */
 		    char cmd[50000];
                     strcpy(cmd, "/usr/sbin/cupsfilter ");
                     strcat(cmd, "\"");
@@ -254,16 +257,17 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                     strcat(cmd, "\"");
                     strcat(cmd, target);
                     strcat(cmd, "\"");
-
+		    strcat(cmd, " 2>/dev/null ");
+		   
+		    /*Fork and start new process with command string.*/
   		    pid_t pid;
-		    char * const paramlist[] = {"/bin/sh", "-c", cmd, NULL};
+		    char *const  paramlist[] = {"/bin/sh", "-c", cmd, NULL};
 		    if ((pid = fork()) == -1) {
-		      status != noErr;
-		      return status;
+		      return -1;
 		    } else if (pid == 0) {
 		      execv("/bin/sh", paramlist);
+		      exit(0);
 		    }
-		    wait(2);
 		    return status;
 	      }
 	      return status;
