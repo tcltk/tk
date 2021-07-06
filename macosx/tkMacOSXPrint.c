@@ -244,6 +244,7 @@ OSStatus FinishPrint(NSString * file, int buttonValue) {
                     char target[5012];
                     [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
                     [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
+		    /*Add quote marks to address path names with spaces.*/
 		    char cmd[50000];
                     strcpy(cmd, "/usr/sbin/cupsfilter ");
                     strcat(cmd, "\"");
