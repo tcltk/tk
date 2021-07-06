@@ -11,9 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-
 namespace eval ::tk::print {
-
     namespace import -force ::tk::msgcat::*
 
     if {[tk windowingsystem] eq "win32"} {
@@ -42,7 +40,7 @@ namespace eval ::tk::print {
 	    #First, we select the printer.
 	    ::tk::print::_selectprinter
 
-	    if {$::tk::print::printer_name == ""} {
+	    if {$::tk::print::printer_name eq ""} {
 		#they pressed cancel
 		return
 	    }
@@ -50,7 +48,7 @@ namespace eval ::tk::print {
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
-	    set printargs(hDC) [list $::tk::print::printer_name]
+	    set printargs(hDC) $::tk::print::printer_name
 	    set printargs(pw) $::tk::print::paper_width
 	    set printargs(pl) $::tk::print::paper_height
 	    set printargs(lm) 1000
@@ -61,7 +59,6 @@ namespace eval ::tk::print {
 	    set printargs(resy) $::tk::print::dpi_y
 	    set printargs(copies) $::tk::print::copies
 	    set printargs(resolution) [list  $::tk::print::dpi_x $::tk::print::dpi_y]
-
 	}
 
 	# _print_data
@@ -72,23 +69,22 @@ namespace eval ::tk::print {
 	# breaklines - If non-zero, keep newlines in the string as
 	#              newlines in the output.
 	# font -       Font for printing
-
-	proc _print_data { data {breaklines 1 } {font {}} } {
-
+	proc _print_data {data {breaklines 1 } {font ""}} {
 	    variable printargs
 
 	    _set_dc
 
-	    if { [string length $font] == 0 } {
-		eval ::tk::print::_gdi characters  $printargs(hDC) -array printcharwid
+	    if { $font eq "" } {
+		::tk::print::_gdi characters $printargs(hDC) -array printcharwid
 	    } else {
-		eval ::tk::print::_gdi characters $printargs(hDC) -font $font -array printcharwid
+		::tk::print::_gdi characters $printargs(hDC) -font $font \
+		    -array printcharwid
 	    }
-	    set pagewid  [ expr ( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) ]
-	    set pagehgt  [ expr ( $printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy) ]
+	    set pagewid  [expr {( $printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx) }]
+	    set pagehgt  [expr {( $printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy) }]
 	    set totallen [ string length $data ]
 	    set curlen 0
-	    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
+	    set curhgt [expr {$printargs(tm) * $printargs(resy) / 1000 }]
 
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
@@ -100,7 +96,7 @@ namespace eval ::tk::print {
 		    if { $endind != -1 } {
 			set linestring [ string range $linestring 0 $endind ]
 			# handle blank lines....
-			if { $linestring == "" } {
+			if { $linestring eq "" } {
 			    set linestring " "
 			}
 		    }
@@ -110,17 +106,16 @@ namespace eval ::tk::print {
 				printcharwid printargs $curhgt $font]
 		incr curlen [lindex $result 0]
 		incr curhgt [lindex $result 1]
-		if { [expr $curhgt + [lindex $result 1] ] > $pagehgt } {
+		if { $curhgt + [lindex $result 1] > $pagehgt } {
 		    ::tk::print::_closepage
 		    ::tk::print::_openpage
-		    set curhgt [ expr $printargs(tm) * $printargs(resy) / 1000 ]
+		    set curhgt [expr {$printargs(tm) * $printargs(resy) / 1000 }]
 		}
 	    }
 
 	    ::tk::print::_closepage
 	    ::tk::print::_closedoc
 	}
-
 
 	# _print_file
 	# This function prints multiple-page files
@@ -132,14 +127,9 @@ namespace eval ::tk::print {
 	#   filename -   File to open for printing
 	#   breaklines - 1 to break lines as done on input, 0 to ignore newlines
 	#   font -       Optional arguments to supply to the text command
-
-	proc _print_file { filename {breaklines 1 } { font {}} } {
-
-	    variable printargs
-	    array get printargs
-
+	proc _print_file {filename {breaklines 1} {font ""}} {
 	    set fn [open $filename r]
-	    set data [ read $fn ]
+	    set data [read $fn]
 	    close $fn
 	    _print_data $data $breaklines $font
 	}
@@ -154,10 +144,7 @@ namespace eval ::tk::print {
 	#   cdata -         Array of values for character widths
 	#   y -              Y value to begin printing at
 	#   font -           if non-empty specifies a font to draw the line in
-
 	proc _print_page_nextline { string carray parray y font } {
-
-
 	    upvar #0 $carray charwidths
 	    upvar #0 $parray printargs
 
@@ -165,11 +152,13 @@ namespace eval ::tk::print {
 
 	    set endindex 0
 	    set totwidth 0
-	    set maxwidth [ expr ( ( $printargs(pw) - $printargs(rm) ) / 1000 ) * $printargs(resx) ]
+	    set maxwidth [expr {
+		(($printargs(pw) - $printargs(rm)) / 1000) * $printargs(resx)
+	    }]
 	    set maxstring [ string length $string ]
-	    set lm [ expr $printargs(lm) * $printargs(resx) / 1000 ]
+	    set lm [expr {$printargs(lm) * $printargs(resx) / 1000 }]
 
-	    for { set i 0 } { ( $i < $maxstring ) && ( $totwidth < $maxwidth ) } { incr i } {
+	    for {set i 0} {($i < $maxstring) && ($totwidth < $maxwidth)} {incr i} {
 		incr totwidth $charwidths([string index $string $i])
 		# set width($i) $totwidth
 	    }
@@ -178,34 +167,32 @@ namespace eval ::tk::print {
 	    set startindex $endindex
 
 	    if { $i < $maxstring } {
-		# In this case, the whole data string is not used up, and we wish
-		# to break on a  word. Since we have all the partial widths calculated,
-		# this should be easy.
+		# In this case, the whole data string is not used up, and we
+		# wish to break on a word. Since we have all the partial
+		# widths calculated, this should be easy.
 
-		set endindex [ expr [string wordstart $string $endindex] - 1 ]
-		set startindex [ expr $endindex + 1 ]
+		set endindex [expr {[string wordstart $string $endindex] - 1 }]
+		set startindex [expr {$endindex + 1 }]
 
-		# If the line is just too long (no word breaks), print as much as you can....
+		# If the line is just too long (no word breaks), print as much
+		# as you can....
 		if { $endindex <= 1 } {
 		    set endindex $i
 		    set startindex $i
 		}
 	    }
 
-	    if { [string length $font] > 0 } {
+	    set txt [string trim [string range $string 0 $endindex] "\r\n"]
+	    if { $font ne "" } {
 		set result [ ::tk::print::_gdi text $printargs(hDC) $lm $y \
 				 -anchor nw -justify left \
-				 -text [ string trim [ string range $string 0 $endindex ] "\r\n" ] \
-				 -font $font ]
+				 -text $txt -font $font ]
 	    } else {
 		set result [ ::tk::print::_gdi text $printargs(hDC) $lm $y \
-				 -anchor nw -justify left \
-				 -text [string trim [ string range $string 0 $endindex ] "\r\n" ] ]
+				 -anchor nw -justify left -text $txt ]
 	    }
 	    return "$startindex $result"
 	}
-
-
 
 	# These procedures read in the canvas widget, and write all of
 	# its contents out to the Windows printer.
@@ -218,19 +205,14 @@ namespace eval ::tk::print {
 	    variable vtgPrint
 	    variable printargs
 
-	    array get printargs
-
 	    set vtgPrint(printer.bg) white
 	}
 
 	proc _is_win {} {
 	    variable printargs
 
-	    array get printargs
-
 	    return [ info exist tk_patchLevel ]
 	}
-
 
 	# _print_widget
 	# Main procedure for printing a widget.  Currently supports
@@ -240,13 +222,10 @@ namespace eval ::tk::print {
 	#   printer -          Flag whether to use the default printer.
 	#   name  -            App name to pass to printer.
 
-	proc _print_widget { wid {printer default} {name "Tk Print Output"} } {
-
+	proc _print_widget {wid {printer default} {name "Tk Print Output"}} {
 	    variable printargs
 
 	    _set_dc
-
-	    array get printargs
 
 	    ::tk::print::_opendoc
 	    ::tk::print::_openpage
@@ -255,14 +234,14 @@ namespace eval ::tk::print {
 	    # For now, scale so the dimensions of the window are sized to the
 	    # width of the page. Scale evenly.
 
-	    # For normal windows, this may be fine--but for a canvas, one wants the
-	    # canvas dimensions, and not the WINDOW dimensions.
-	    if { [winfo class $wid] == "Canvas" } {
-		set sc [ lindex [ $wid configure -scrollregion ] 4 ]
+	    # For normal windows, this may be fine--but for a canvas, one
+	    # wants the canvas dimensions, and not the WINDOW dimensions.
+	    if { [winfo class $wid] eq "Canvas" } {
+		set sc [ $wid cget -scrollregion ]
 		# if there is no scrollregion, use width and height.
-		if { "$sc" == "" } {
-		    set window_x [ lindex [ $wid configure -width ] 4 ]
-		    set window_y [ lindex [ $wid configure -height ] 4 ]
+		if { $sc eq "" } {
+		    set window_x [ $wid cget -width ]
+		    set window_y [ $wid cget -height ]
 		} else {
 		    set window_x [ lindex $sc 2 ]
 		    set window_y [ lindex $sc 3 ]
@@ -272,18 +251,16 @@ namespace eval ::tk::print {
 		set window_y [ winfo height $wid ]
 	    }
 
-	    set printer_x [ expr ( $printargs(pw) - \
-				       $printargs(lm) - \
-				       $printargs(rm) \
-				       ) * \
-				$printargs(resx)  / 1000.0 ]
-	    set printer_y [ expr ( $printargs(pl) - \
-				       $printargs(tm) - \
-				       $printargs(bm) \
-				       ) * \
-				$printargs(resy) / 1000.0 ]
-	    set factor_x [ expr $window_x / $printer_x ]
-	    set factor_y [ expr $window_y / $printer_y ]
+	    set printer_x [expr {
+		( $printargs(pw) - $printargs(lm) - $printargs(rm) ) *
+		$printargs(resx)  / 1000.0
+	    }]
+	    set printer_y [expr {
+		( $printargs(pl) - $printargs(tm) - $printargs(bm) ) * 
+		$printargs(resy) / 1000.0
+	    }]
+	    set factor_x [expr {$window_x / $printer_x} ]
+	    set factor_y [expr {$window_y / $printer_y} ]
 
 	    if { $factor_x < $factor_y } {
 		set lo $window_y
@@ -293,7 +270,8 @@ namespace eval ::tk::print {
 		set ph $printer_x
 	    }
 
-	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph -offset $printargs(resolution)
+	    ::tk::print::_gdi map $printargs(hDC) -logical $lo -physical $ph \
+		-offset $printargs(resolution)
 
 	    # Handling of canvas widgets.
 	    switch [winfo class $wid] {
@@ -310,20 +288,14 @@ namespace eval ::tk::print {
 	    ::tk::print::_closedoc
 	}
 
-
-
 	#  _print_canvas
 	# Main procedure for writing canvas widget items to printer.
 	# Arguments:
 	#    hdc -              The printer handle.
 	#    cw  -              The canvas widget.
-
-
 	proc _print_canvas {hdc cw} {
 	    variable  vtgPrint
-
 	    variable printargs
-	    array get printargs
 
 	    # Get information about page being printed to
 	    # print_canvas.CalcSizing $cw
@@ -332,7 +304,7 @@ namespace eval ::tk::print {
 	    # Re-write each widget from cw to printer
 	    foreach id [$cw find all] {
 		set type [$cw type $id]
-		if { [ info commands _print_canvas.$type ] == "_print_canvas.$type" } {
+		if { [ info commands _print_canvas.$type ] eq "_print_canvas.$type" } {
 		    _print_canvas.[$cw type $id] $printargs(hDC) $cw $id
 		} else {
 		    puts "Omitting canvas item of type $type since there is no handler registered for it"
@@ -340,9 +312,9 @@ namespace eval ::tk::print {
 	    }
 	}
 
-	# These procedures support the various canvas item types,
-	# reading the information about the item on the real canvas
-	# and then writing a similar item to the printer.
+	# These procedures support the various canvas item types, reading the
+	# information about the item on the real canvas and then writing a
+	# similar item to the printer.
 
 	# _print_canvas.line
 	# Description:
@@ -351,16 +323,14 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.line {hdc cw id} {
 	    variable vtgPrint
-
 	    variable printargs
-	    array get printargs
 
 	    set color [_print_canvas.TransColor [$cw itemcget $id -fill]]
-	    if {[string match $vtgPrint(printer.bg) $color]} {return}
+	    if {[string match $vtgPrint(printer.bg) $color]} {
+		return
+	    }
 
 	    set coords  [$cw coords $id]
 	    set wdth    [$cw itemcget $id -width]
@@ -370,26 +340,25 @@ namespace eval ::tk::print {
 	    set smooth  [$cw itemcget $id -smooth ]
 	    set splinesteps [ $cw itemcget $id -splinesteps ]
 
-	    set cmmd  "::tk::print::_gdi line $printargs(hDC) $coords -fill $color -arrow $arrow -arrowshape [list $arwshp]"
+	    set cmdargs {}
 
 	    if { $wdth > 1 } {
-		set cmmd "$cmmd -width $wdth"
+		lappend cmdargs -width $wdth
+	    }
+	    if { $dash ne "" } {
+		lappend cmdargs -dash $dash
+	    }
+	    if { $smooth ne "" } {
+		lappend cmdargs -smooth $smooth
+	    }
+	    if { $splinesteps ne "" } {
+		lappend cmdargs -splinesteps $splinesteps
 	    }
 
-	    if { $dash != "" } {
-		set cmmd "$cmmd -dash [list $dash]"
-	    }
-
-	    if { $smooth != "" } {
-		set cmmd "$cmmd -smooth $smooth"
-	    }
-
-	    if { $splinesteps != "" } {
-		set cmmd "$cmmd -splinesteps $splinesteps"
-	    }
-
-	    set result [eval $cmmd]
-	    if { $result != "" } {
+	    set result [::tk::print::_gdi line $hdc {*}$coords \
+			    -fill $color -arrow $arrow -arrowshape $arwshp \
+			    {*}$cmdargs]
+	    if { $result ne "" } {
 		puts $result
 	    }
 	}
@@ -400,13 +369,9 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.arc {hdc cw id} {
 	    variable vtgPrint
-
 	    variable printargs
-	    array get printargs
 
 	    set color [_print_canvas.TransColor [$cw itemcget $id -outline]]
 	    if { [string match $vtgPrint(printer.bg) $color] } {
@@ -419,17 +384,18 @@ namespace eval ::tk::print {
 	    set extent  [ $cw itemcget $id -extent ]
 	    set fill    [ $cw itemcget $id -fill ]
 
-	    set cmmd  "::tk::print::_gdi arc $printargs(hDC) $coords -outline $color -style $style -start $start -extent $extent"
+	    set cmdargs {}
 	    if { $wdth > 1 } {
-		set cmmd "$cmmd -width $wdth"
+		lappend cmdargs -width $wdth
 	    }
-	    if { $fill != "" } {
-		set cmmd "$cmmd -fill $fill"
+	    if { $fill ne "" } {
+		lappend cmdargs -fill $fill
 	    }
 
-	    eval $cmmd
+	    ::tk::print::_gdi arc $hdc {*}$coords \
+		-outline $color -style $style -start $start -extent $extent \
+		{*}$cmdargs
 	}
-
 
 	# _print_canvas.polygon
 	#   Prints a polygon item.
@@ -437,20 +403,16 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.polygon {hdc cw id} {
 	    variable vtgPrint
-
 	    variable printargs
-	    array get printargs
 
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
-	    if { ![string length $fcolor] } {
+	    if { $fcolor eq "" } {
 		set fcolor $vtgPrint(printer.bg)
 	    }
 	    set ocolor [_print_canvas.TransColor [$cw itemcget $id -outline]]
-	    if { ![string length $ocolor] } {
+	    if { $ocolor eq "" } {
 		set ocolor $vtgPrint(printer.bg)
 	    }
 	    set coords  [$cw coords $id]
@@ -458,18 +420,16 @@ namespace eval ::tk::print {
 	    set smooth  [$cw itemcget $id -smooth ]
 	    set splinesteps [ $cw itemcget $id -splinesteps ]
 
-
-	    set cmmd "::tk::print::_gdi polygon $printargs(hDC) $coords -width $wdth \
-		-fill $fcolor -outline $ocolor"
-	    if { $smooth != "" } {
-		set cmmd "$cmmd -smooth $smooth"
+	    set cmdargs {}
+	    if { $smooth ne "" } {
+		lappend cmdargs -smooth $smooth
+	    }
+	    if { $splinesteps ne "" } {
+		lappend cmdargs -splinesteps $splinesteps
 	    }
 
-	    if { $splinesteps != "" } {
-		set cmmd "$cmmd -splinesteps $splinesteps"
-	    }
-
-	    eval $cmmd
+	    ::tk::print::_gdi polygon $hdc {*}$coords \
+		-width $wdth -fill $fcolor -outline $ocolor {*}$cmdargs
 	}
 
 	# _print_canvas.oval
@@ -478,26 +438,23 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
 	proc _print_canvas.oval { hdc cw id } {
 	    variable vtgPrint
 
-	    variable printargs
-	    array get printargs
-
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
-	    if {![string length $fcolor]} {set fcolor $vtgPrint(printer.bg)}
+	    if { $fcolor eq "" } {
+		set fcolor $vtgPrint(printer.bg)
+	    }
 	    set ocolor [_print_canvas.TransColor [$cw itemcget $id -outline]]
-	    if {![string length $ocolor]} {set ocolor $vtgPrint(printer.bg)}
+	    if { $ocolor eq "" } {
+		set ocolor $vtgPrint(printer.bg)
+	    }
 	    set coords  [$cw coords $id]
 	    set wdth [$cw itemcget $id -width]
 
-	    set cmmd "::tk::print::_gdi oval $printargs(hDC) $coords -width $wdth \
-		-fill $fcolor -outline $ocolor"
-
-	    eval $cmmd
+	    ::tk::print::_gdi oval $hdc {*}$coords \
+		-width $wdth -fill $fcolor -outline $ocolor
 	}
-
 
 	# _print_canvas.rectangle
 	#   Prints a rectangle item.
@@ -505,25 +462,22 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.rectangle {hdc cw id} {
 	    variable vtgPrint
 
-	    variable printargs
-	    array get printargs
-
 	    set fcolor [_print_canvas.TransColor [$cw itemcget $id -fill]]
-	    if {![string length $fcolor]} {set fcolor $vtgPrint(printer.bg)}
+	    if { $fcolor eq "" } {
+		set fcolor $vtgPrint(printer.bg)
+	    }
 	    set ocolor [_print_canvas.TransColor [$cw itemcget $id -outline]]
-	    if {![string length $ocolor]} {set ocolor $vtgPrint(printer.bg)}
+	    if { $ocolor eq "" } {
+		set ocolor $vtgPrint(printer.bg)
+	    }
 	    set coords  [$cw coords $id]
 	    set wdth [$cw itemcget $id -width]
 
-	    set cmmd "::tk::print::_gdi rectangle $printargs(hDC) $coords -width $wdth \
-		-fill $fcolor -outline $ocolor"
-
-	    eval $cmmd
+	    ::tk::print::_gdi rectangle $hdc {*}$coords \
+		-width $wdth -fill $fcolor -outline $ocolor
 	}
 
 	# _print_canvas.text
@@ -532,46 +486,38 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.text {hdc cw id} {
 	    variable vtgPrint
-
 	    variable printargs
-	    array get printargs
 
 	    set color [_print_canvas.TransColor [$cw itemcget $id -fill]]
-	    #    if {[string match white [string tolower $color]]} {return}
+	    #    if { "white" eq [string tolower $color] } {return}
 	    #    set color black
 	    set txt [$cw itemcget $id -text]
-	    if {![string length $txt]} {return}
+	    if { $txt eq "" } {
+		return
+	    }
 	    set coords [$cw coords $id]
 	    set anchr [$cw itemcget $id -anchor]
 
 	    set bbox [$cw bbox $id]
-	    set wdth [expr [lindex $bbox 2] - [lindex $bbox 0]]
+	    set wdth [expr {[lindex $bbox 2] - [lindex $bbox 0]}]
 
 	    set just [$cw itemcget $id -justify]
 
-	    # Get the canvas font info.
-	    set font [ $cw itemcget $id -font ]
-
-	    # Find the real font info.
-	    set font [font actual $font]
-
-	    # Create a compatible font, suitable for printer name extraction.
-	    set font [ eval font create $font ]
+	    # Get the real canvas font info and create a compatible font,
+	    # suitable for printer name extraction.
+	    set font [font create {*}[font actual [$cw itemcget $id -font]]]
 
 	    # Just get the name and family, or some of the ::tk::print::_gdi
 	    # commands will fail.
-	    set font [list [font configure $font -family]  -[font configure $font -size] ]
+	    set font [list [font configure $font -family] \
+			  -[font configure $font -size] ]
 
-	    set cmmd "::tk::print::_gdi text $printargs(hDC) $coords -fill $color -text [list $txt] \
-		-anchor $anchr -font [ list $font ] \
-		-width $wdth -justify $just"
-	    eval $cmmd
+	    ::tk::print::_gdi text $hdc {*}$coords \
+		-fill $color -text $txt -font $font \
+		-anchor $anchr -width $wdth -justify $just
 	}
-
 
 	# _print_canvas.image
 	# Prints an image item.
@@ -579,16 +525,7 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.image {hdc cw id} {
-
-	    variable vtgPrint
-	    variable option
-
-	    variable printargs
-	    array get printargs
-
 	    # First, we have to get the image name.
 	    set imagename [ $cw itemcget $id -image]
 
@@ -600,8 +537,7 @@ namespace eval ::tk::print {
 	    set anchor [ $cw itemcget $id -anchor ]
 	    set coords [ $cw coords $id ]
 
-	    set cmmd "::tk::print::_gdi photo $printargs(hDC) -destination [list $coords] -photo $imagename "
-	    eval $cmmd
+	    ::tk::print::_gdi photo $hdc -destination $coords -photo $imagename
 	}
 
 	# _print_canvas.bitmap
@@ -610,14 +546,9 @@ namespace eval ::tk::print {
 	#   hdc -              The printer handle.
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
-
-
 	proc _print_canvas.bitmap {hdc cw id} {
 	    variable option
 	    variable vtgPrint
-
-	    variable printargs
-	    array get printargs
 
 	    # First, we have to get the bitmap name.
 	    set imagename [ $cw itemcget $id -image]
@@ -641,23 +572,24 @@ namespace eval ::tk::print {
 		set firstcase 0
 	    }
 	    if { $firstcase > 0 } {
-		set tl [toplevel .tmptop[expr int( rand() * 65535 ) ] -height $hgt -width $wid -background $vtgPrint(canvas.bg) ]
+		set tl [toplevel .tmptop[expr {int( rand() * 65535 )} ] \
+			    -height $hgt -width $wid \
+			    -background $vtgPrint(canvas.bg) ]
 		canvas $tl.canvas -width $wid -height $hgt
 		$tl.canvas create image 0 0 -image $imagename -anchor nw
 		pack $tl.canvas -side left -expand false -fill none
 		tkwait visibility $tl.canvas
 		update
-		set srccoords [list "0 0 [ expr $wid - 1] [expr  $hgt - 1 ]" ]
-		set dstcoords [ list "[lindex $coords 0] [lindex $coords 1] [expr $wid - 1] [expr $hgt - 1]" ]
-		set cmmd "::tk::print::_gdi copybits $printargs(hDC) -window $tl -client -source $srccoords -destination $dstcoords "
-		eval $cmmd
+		set srccoords [list 0 0 [expr {$wid - 1}] [expr {$hgt - 1}]]
+		set dstcoords [list [lindex $coords 0] [lindex $coords 1] [expr {$wid - 1}] [expr {$hgt - 1}]]
+		::tk::print::_gdi copybits $hdc -window $tl -client \
+		    -source $srccoords -destination $dstcoords
 		destroy $tl
 	    } else {
-		set cmmd "::tk::print::_gdi bitmap $printargs(hDC) $coords -anchor $anchor -bitmap $imagename"
-		eval $cmmd
+		::tk::print::_gdi bitmap $hdc {*}$coords \
+		    -anchor $anchor -bitmap $imagename
 	    }
 	}
-
 
 	# These procedures transform attribute setting from the real
 	# canvas to the appropriate setting for printing to paper.
@@ -667,13 +599,9 @@ namespace eval ::tk::print {
 	#   canvas widget to paper.
 	# Arguments:
 	#   color -            The color value to be transformed.
-
-
 	proc _print_canvas.TransColor {color} {
 	    variable vtgPrint
-
 	    variable printargs
-	    array get printargs
 
 	    switch [string toupper $color] {
 		$vtgPrint(canvas.bg)       {return $vtgPrint(printer.bg)}
@@ -688,10 +616,10 @@ namespace eval ::tk::print {
 
     #begin X11 procedures
 
-    # X11 procedures wrap standard Unix shell commands such
-    # as lp/lpr and lpstat for printing. Some output configuration that on
-    # other platforms is managed through the printer driver/dialog
-    # is configured through the canvas postscript command.
+    # X11 procedures wrap standard Unix shell commands such as lp/lpr and
+    # lpstat for printing. Some output configuration that on other platforms
+    # is managed through the printer driver/dialog is configured through the
+    # canvas postscript command.
 
     if {[tk windowingsystem] eq "x11"} {
 
@@ -713,8 +641,9 @@ namespace eval ::tk::print {
 	    variable printcmd
 	    variable printlist
 
-	    #Select print command. We prefer lpr, but will fall back to lp if necessary.
-	    if {[file exists "/usr/bin/lpr"]} {
+	    # Select print command. We prefer lpr, but will fall back to lp if
+	    # necessary.
+	    if {[auto_execok lpr] ne ""} {
 		set printcmd lpr
 	    } else {
 		set printcmd lp
@@ -735,7 +664,6 @@ namespace eval ::tk::print {
 	#
 
 	proc _print {w} {
-
 	    variable printlist
 	    variable printcmd
 	    variable chooseprinter
@@ -743,7 +671,6 @@ namespace eval ::tk::print {
 	    variable choosepaper
 	    variable color
 	    variable p
-
 
 	    _setprintenv
 
@@ -765,10 +692,14 @@ namespace eval ::tk::print {
 	    pack $p.frame.printframe -side top -fill x -expand no
 
 	    label $p.frame.printframe.printlabel -text [mc "Printer:"]
-	    ttk::combobox $p.frame.printframe.mb -textvariable chooseprinter -state readonly -values [lsort -unique $printlist]
-	    pack $p.frame.printframe.printlabel $p.frame.printframe.mb -side left -fill x -expand no
+	    ttk::combobox $p.frame.printframe.mb -textvariable chooseprinter \
+		-state readonly -values [lsort -unique $printlist]
+	    pack $p.frame.printframe.printlabel $p.frame.printframe.mb \
+		-side left -fill x -expand no
 
-	    bind $p.frame.printframe.mb <<ComboboxSelected>>  { set chooseprinter}
+	    bind $p.frame.printframe.mb <<ComboboxSelected>>  {
+		set chooseprinter
+	    }
 
 	    set paperlist [list [mc Letter] [mc Legal] [mc A4]]
 	    set colorlist [list [mc Grayscale] [mc RGB]]
@@ -794,9 +725,11 @@ namespace eval ::tk::print {
 	    pack $p.frame.copyframe.l -side top -fill x -expand no
 
 	    label $p.frame.copyframe.l.copylabel -text [mc "Copies:"]
-	    spinbox $p.frame.copyframe.l.field -from 1 -to 1000 -textvariable printcopies -width 5
+	    spinbox $p.frame.copyframe.l.field -from 1 -to 1000 \
+		-textvariable printcopies -width 5
 
-	    pack  $p.frame.copyframe.l.copylabel $p.frame.copyframe.l.field  -side left -fill x -expand  no
+	    pack  $p.frame.copyframe.l.copylabel $p.frame.copyframe.l.field \
+		-side left -fill x -expand  no
 
 	    set printcopies [$p.frame.copyframe.l.field get]
 
@@ -804,9 +737,11 @@ namespace eval ::tk::print {
 	    pack $p.frame.copyframe.r -fill x -expand no
 
 	    label $p.frame.copyframe.r.paper -text [mc "Paper:"]
-	    tk_optionMenu $p.frame.copyframe.r.menu ::tkprint_choosepaper {*}$paperlist
+	    tk_optionMenu $p.frame.copyframe.r.menu ::tkprint_choosepaper \
+		{*}$paperlist
 
-	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu -side left -fill x -expand no
+	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu \
+		-side left -fill x -expand no
 
 	    #Widgets with additional options for canvas output.
 	    if {[winfo class $w] eq "Canvas"} {
@@ -815,40 +750,51 @@ namespace eval ::tk::print {
 		pack $p.frame.copyframe.z  -fill x -expand no
 
 		label $p.frame.copyframe.z.zlabel -text [mc "Scale %:"]
-		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber {*}$percentlist
+		tk_optionMenu $p.frame.copyframe.z.zentry ::tkprint_zoomnumber \
+		    {*}$percentlist
 
-		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry -side left -fill x -expand no
+		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry \
+		    -side left -fill x -expand no
 
 		frame $p.frame.copyframe.orient -padx 5 -pady 5
 		pack $p.frame.copyframe.orient  -fill x -expand no
 
 		label $p.frame.copyframe.orient.text -text [mc "Orientation:"]
-		radiobutton $p.frame.copyframe.orient.v -text [mc "Portrait"] -value portrait -variable ::tkprint_printorientation -compound left
-		radiobutton $p.frame.copyframe.orient.h -text [mc "Landscape"]  -value landscape -variable ::tkprint_printorientation -compound left
+		radiobutton $p.frame.copyframe.orient.v -text [mc "Portrait"] \
+		    -value portrait -variable ::tkprint_printorientation \
+		    -compound left
+		radiobutton $p.frame.copyframe.orient.h -text [mc "Landscape"] \
+		    -value landscape -variable ::tkprint_printorientation \
+		    -compound left
 
-		pack $p.frame.copyframe.orient.text $p.frame.copyframe.orient.v $p.frame.copyframe.orient.h  -side left -fill x -expand no
+		pack $p.frame.copyframe.orient.text \
+		    $p.frame.copyframe.orient.v $p.frame.copyframe.orient.h \
+		    -side left -fill x -expand no
 
 		frame $p.frame.copyframe.c -padx 5 -pady 5
 		pack $p.frame.copyframe.c  -fill x -expand no
 
 		label $p.frame.copyframe.c.l -text [mc "Output:"]
-		tk_optionMenu $p.frame.copyframe.c.c ::tkprint_color {*}$colorlist
-		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left -fill x -expand no
+		tk_optionMenu $p.frame.copyframe.c.c ::tkprint_color \
+		    {*}$colorlist
+		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left \
+		    -fill x -expand no
 	    }
 
 	    #Build rest of GUI.
 	    frame $p.frame.buttonframe
 	    pack $p.frame.buttonframe -fill x -expand no -side bottom
 
-	    button $p.frame.buttonframe.printbutton -text [mc "Print"] -command "::tk::print::_runprint $w"
-	    button $p.frame.buttonframe.cancel -text [mc "Cancel"] -command {destroy ._print}
+	    button $p.frame.buttonframe.printbutton -text [mc "Print"] \
+		-command "::tk::print::_runprint $w"
+	    button $p.frame.buttonframe.cancel -text [mc "Cancel"] \
+		-command {destroy ._print}
 
-	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel -side right -fill x -expand no
+	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel \
+		-side right -fill x -expand no
 	    #Center the window as a dialog.
 	    ::tk::PlaceWindow $p
-
 	}
-
 
 	# _runprint -
 	#   Execute the print command--print the file.
@@ -874,7 +820,6 @@ namespace eval ::tk::print {
 	    }
 
 	    if {[winfo class $w] eq "Canvas"} {
-
 		set file /tmp/tk_canvas.ps
 		if {$::tkprint_color eq [mc "RGB"]} {
 		    set colormode color
@@ -889,46 +834,59 @@ namespace eval ::tk::print {
 		}
 
 		#Scale based on size of widget, not size of paper.
-		set printwidth [expr {$::tkprint_zoomnumber / 100.00} *  [winfo width $w] ]
-		$w postscript -file $file  -colormode $colormode -rotate $willrotate -pagewidth $printwidth
+		set printwidth [expr {
+		    ($::tkprint_zoomnumber / 100.00) * [winfo width $w]
+		}]
+		$w postscript -file $file  -colormode $colormode \
+		    -rotate $willrotate -pagewidth $printwidth
 	    }
 
 	    #Build list of args to pass to print command.
 
 	    set printargs {}
 	    set printcopies [$p.frame.copyframe.l.field get]
-
-
 	    if {$printcmd eq "lpr"} {
-		lappend printargs "-P $chooseprinter -# $printcopies"
+		lappend printargs -P $chooseprinter -# $printcopies
 	    } else {
-		lappend printargs " -d $chooseprinter -n $printcopies"
+		lappend printargs -d $chooseprinter -n $printcopies
 	    }
-	    lappend printargs " -o PageSize=$::tkprint_choosepaper"
 
 	    after 500
-	    set cmd [join "$printcmd  $printargs $file"]
-	    eval exec $cmd
+	    exec $printcmd {*}$printargs -o PageSize=$::tkprint_choosepaper \
+		$file
 
 	    after 500
 	    destroy ._print
-
 	}
     }
     #end X11 procedures
 
+    #begin macOS Aqua procedures
+    if {[tk windowingsystem] eq "aqua"} {
+	proc makeTempFile {filename contents} {
+	    # TODO: Tcl 8.6 has better ways to make temporary files!
+	    set filename /tmp/$filename
+	    set f [open $filename w]
+	    puts $f $contents
+	    close $f
+	    return $filename
+	}
+
+	proc makePDF {inFilename outFilename} {
+	    catch {exec /usr/sbin/cupsfilter $inFilename > $outFilename}
+	}
+    }
+    #end macOS Aqua procedures
+
     namespace export canvas text
     namespace ensemble create
 }
-
 
 # tk print --
 # This procedure prints the canvas and text widgets using platform-
 # native API's.
 #   Arguments:
 #      w: Widget to print.
-
-
 proc ::tk::print {w} {
 
     if {[winfo class $w] eq "Canvas"} {
@@ -940,10 +898,10 @@ proc ::tk::print {w} {
 	    ::tk::print::_print $w
 	}
 	if {[tk windowingsystem] eq "aqua"} {
-	    set file /tmp/tk_canvas.ps
+	    set file [_make_temp_file tk_canvas.ps ""]
 	    $w postscript -file $file
-	    set printfile /tmp/tk_canvas.pdf
-	    catch {exec /usr/sbin/cupsfilter $file > $printfile}
+	    set printfile [_make_temp_file tk_canvas.pdf ""]
+	    makePDF $file $printfile
 	    ::tk::print::_print $printfile
 	}
     }
@@ -953,7 +911,7 @@ proc ::tk::print {w} {
 	if {[tk windowingsystem] eq "win32"} {
 	    set txt [$w get 1.0 end]
 	    set x [file join $::env(TEMP) tk_output.txt]
-	    set print_txt [open $x  w]
+	    set print_txt [open $x w]
 	    puts $print_txt $txt
 	    close $print_txt
 	    ::tk::print::_print_file $x 1 {Arial 12}
@@ -963,12 +921,9 @@ proc ::tk::print {w} {
 	}
 	if {[tk windowingsystem] eq "aqua"} {
 	    set txt [$w get 1.0 end]
-	    set file /tmp/tk_text.txt
-	    set print_txt [open $file w]
-	    puts $print_txt $txt
-	    close $print_txt
-	    set printfile /tmp/tk_text.pdf
-	    catch {exec /usr/sbin/cupsfilter $file > $printfile}
+	    set file [_make_temp_file tk_text.txt $txt]
+	    set printfile [_make_temp_file tk_text.pdf ""]
+	    makePDF $file $printfile
 	    ::tk::print::_print $printfile
 	}
     }
@@ -979,6 +934,10 @@ proc ::tk::print {w} {
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
 	 {print ::tk::print}]
+
+return
 
-
-
+# Local Variables:
+# mode: tcl
+# fill-column: 78
+# End:
