@@ -14,10 +14,18 @@
 namespace eval ::tk::print {
     namespace import -force ::tk::msgcat::*
 
-    proc makeTempFile {filename contents} {
+    # makeTempFile:
+    #    Create a temporary file and populate its contents
+    # Arguments:
+    #	 filename - base of the name of the file to create
+    #    contents - what to put in the file; defaults to empty
+    # Returns:
+    #    Full filename for created file
+    #
+    proc makeTempFile {filename {contents ""}} {
 	set f [file tempfile filename $filename]
 	try {
-	    puts $f $contents
+	    puts -nonewline $f $contents
 	    return $filename
 	} finally {
 	    close $f
@@ -636,15 +644,11 @@ namespace eval ::tk::print {
     # canvas postscript command.
 
     if {[tk windowingsystem] eq "x11"} {
-
-	variable printcmd
-	variable printlist
+	variable printcmd ""
+	variable printlist {}
 	variable choosepaper
+	variable chooseprinter {}
 	variable p
-
-	set printmcd ""
-	set chooseprinter ""
-	set printlist {}
 
 	# _setprintenv
 	#  Set the print environtment - print command, and list of printers.
@@ -692,7 +696,6 @@ namespace eval ::tk::print {
 	    set chooseprinter [lindex $printlist 0]
 
 	    set p ._print
-
 	    catch {destroy $p}
 
 	    toplevel $p
@@ -829,15 +832,10 @@ namespace eval ::tk::print {
 	    #First, generate print file.
 
 	    if {[winfo class $w] eq "Text"} {
-		set txt [$w get 1.0 end]
-		set file /tmp/tk_text.txt
-		set print_txt [open $file w]
-		puts $print_txt $txt
-		close $print_txt
+		set file [makeTempFile tk_text.txt [$w get 1.0 end]]
 	    }
 
 	    if {[winfo class $w] eq "Canvas"} {
-		set file /tmp/tk_canvas.ps
 		if {$color eq [mc "RGB"]} {
 		    set colormode color
 		} else {
@@ -852,6 +850,7 @@ namespace eval ::tk::print {
 
 		#Scale based on size of widget, not size of paper.
 		set printwidth [expr {$zoomnumber / 100.00 * [winfo width $w]}]
+		set file [makeTempFile tk_canvas.ps]
 		$w postscript -file $file -colormode $colormode \
 		    -rotate $willrotate -pagewidth $printwidth
 	    }
@@ -877,8 +876,31 @@ namespace eval ::tk::print {
 
     #begin macOS Aqua procedures
     if {[tk windowingsystem] eq "aqua"} {
+	# makePDF -
+	#   Convert a file to PDF
+	# Arguments:
+	#   inFilename -  file containing the data to convert; format is
+	#                 autodetected.
+	#   outFilename - base for filename to write to; conventionally should
+	#                 have .pdf as suffix
+	# Returns:
+	#   The full pathname of the generated PDF.
+	#
 	proc makePDF {inFilename outFilename} {
-	    catch {exec /usr/sbin/cupsfilter $inFilename > $outFilename}
+	    set out [::tk::print::makeTempFile $outFilename]
+	    try {
+		exec /usr/sbin/cupsfilter $inFilename > $out
+	    } trap NONE {msg} {
+		# cupsfilter produces a lot of debugging output, which we
+		# don't want.
+		regsub -all -line {^(?:DEBUG|INFO):.*$} $msg "" msg
+		set msg [string trimleft [regsub -all {\n+} $msg "\n"] "\n"]
+		if {$msg ne ""} {
+		    # Lines should be prefixed with WARN or ERROR now
+		    puts $msg
+		}
+	    }
+	    return $out
 	}
     }
     #end macOS Aqua procedures
@@ -893,39 +915,44 @@ namespace eval ::tk::print {
 #   Arguments:
 #      w: Widget to print.
 proc ::tk::print {w} {
-    if {[winfo class $w] eq "Canvas"} {
-	if {[tk windowingsystem] eq "win32"} {
-	    ::tk::print::_print_widget $w 0 "Tk Print Output"
-	} elseif {[tk windowingsystem] eq "x11"} {
-	    ::tk::print::_print $w
-	} elseif {[tk windowingsystem] eq "aqua"} {
-	    set psfile [::tk::print::makeTempFile tk_canvas.ps ""]
+    switch [winfo class $w],[tk windowingsystem] {
+	"Canvas,win32" {
+	    tailcall ::tk::print::_print_widget $w 0 "Tk Print Output"
+	}
+	"Canvas,x11" {
+	    tailcall ::tk::print::_print $w
+	}
+	"Canvas,aqua" {
+	    set psfile [::tk::print::makeTempFile tk_canvas.ps]
 	    try {
 		$w postscript -file $psfile
-		set printfile [::tk::print::makeTempFile tk_canvas.pdf ""]
-		::tk::print::makePDF $psfile $printfile
+		set printfile [::tk::print::makePDF $psfile tk_canvas.pdf]
 		::tk::print::_print $printfile
 	    } finally {
 		file delete $psfile
 	    }
 	}
-    }
 
-    if {[winfo class $w] eq "Text"} {
-	if {[tk windowingsystem] eq "win32"} {
-	    set x [::tk::print::makeTempFile tk_output.txt [$w get 1.0 end]]
-	    ::tk::print::_print_file $x 1 {Arial 12}
-	} elseif {[tk windowingsystem] eq "x11"} {
-	    ::tk::print::_print $w
-	} elseif {[tk windowingsystem] eq "aqua"} {
+	"Text,win32" {
+	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {Arial 12}
+	}
+	"Text,x11" {
+	    tailcall ::tk::print::_print $w
+	}
+	"Text,aqua" {
 	    set txtfile [::tk::print::makeTempFile tk_text.txt [$w get 1.0 end]]
 	    try {
-		set printfile [::tk::print::makeTempFile tk_text.pdf ""]
-		::tk::print::makePDF $txtfile $printfile
+		set printfile [::tk::print::makePDF $txtfile tk_text.pdf]
 		::tk::print::_print $printfile
 	    } finally {
 		file delete $txtfile
 	    }
+	}
+
+	default {
+	    return -code error -errorcode {TK PRINT CLASS_UNSUPPORTED} \
+		"widgets of class [winfo class $w] are not supported on\
+		this platform"
 	}
     }
 }
