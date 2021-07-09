@@ -659,6 +659,16 @@ namespace eval ::tk::print {
 	    variable printcmd
 	    variable printlist
 
+	    #Test for existence of lpstat command to obtain list of printers. Return error
+	    #if not found.
+
+	    catch {exec lpstat -a} msg
+	    set notfound "command not found"
+	    if {[string first $notfound $msg != -1} {
+		error "Unable to obtain list of printers. Please install the CUPS package for your system."
+		return
+	    }
+
 	    # Select print command. We prefer lpr, but will fall back to lp if
 	    # necessary.
 	    if {[auto_execok lpr] ne ""} {
