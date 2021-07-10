@@ -664,7 +664,7 @@ namespace eval ::tk::print {
 
 	    catch {exec lpstat -a} msg
 	    set notfound "command not found"
-	    if {[string first $notfound $msg != -1} {
+	    if {[string first $notfound $msg] != -1} {
 		error "Unable to obtain list of printers. Please install the CUPS package \
 		for your system."
 		return
