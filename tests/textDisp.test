@@ -4160,7 +4160,7 @@ test textDisp-27.8 {SizeOfTab procedure, right alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\txyzzyabc
     .t tag delete x
-    .t tag configure x -tabs "100 left [expr {[.t cget -width]*$fixedWidth}] right"
+    .t tag configure x -tabs "[expr {14.3*$fixedWidth}] left [expr {[.t cget -width]*$fixedWidth}] right"
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list [xcharr 1] [yline 1] $fixedWidth $fixedHeight] \
@@ -4169,28 +4169,28 @@ test textDisp-27.9 {SizeOfTab procedure, left alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
     .t tag delete x
-    .t tag configure x -tabs {120}
+    .t tag configure x -tabs "[expr {17.14*$fixedWidth}]"
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list [expr {[bo]+120+$fixedWidth}] [yline 1] [expr {[winfo width .t]-([bo]+120+$fixedWidth)-[bo]}] $fixedHeight] \
+} [list [list [expr {round([bo]+17.14*$fixedWidth+$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth+$fixedWidth)-[bo]}] $fixedHeight] \
         [list [bo] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t123.4
     .t tag delete x
-    .t tag configure x -tabs {120 numeric}
+    .t tag configure x -tabs "[expr {17.14*$fixedWidth}] numeric"
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list [expr {[bo]+120-$fixedWidth}] [yline 1] [expr {[winfo width .t]-([bo]+120-$fixedWidth)-[bo]}] $fixedHeight] \
+} [list [list [expr {round([bo]+17.14*$fixedWidth-$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth-$fixedWidth)-[bo]}] $fixedHeight] \
         [list [bo] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a space} {
     .t delete 1.0 end
     .t insert 1.0 abc\tdefghijklmnopqrst
     .t tag delete x
-    .t tag configure x -tabs {120}
+    .t tag configure x -tabs "[expr {17.14*$fixedWidth}]"
     .t tag add x 1.0 end
     list [.t bbox 1.5] [.t bbox 1.6]
-} [list [list [expr {[bo]+120+$fixedWidth}] [yline 1] [expr {[winfo width .t]-([bo]+120+$fixedWidth)-[bo]}] $fixedHeight] \
+} [list [list [expr {round([bo]+17.14*$fixedWidth+$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth+$fixedWidth)-[bo]}] $fixedHeight] \
         [list [bo] [yline 2] $fixedWidth $fixedHeight]]
 
 proc bizarre_scroll args {
@@ -4392,7 +4392,7 @@ test textDisp-29.3 {miscellaneous: lines wrap but are still too long} -setup {
     updateText
     .t2.t xview scroll 200 units
     updateText
-    set expected [list [list [expr {16.0/30}] 1.0] \
+    set expected [list [list [expr {double(300-20*$fixedWidth)/300}] 1.0] \
                        300x50+[expr {-(300-20*$fixedWidth-[bo .t2.t])}]+[yline 2 .t2.t] \
 	               {}]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
@@ -4439,7 +4439,7 @@ test textDisp-31.1 {line embedded window height update} {
     set res {}
     .t delete 1.0 end
     .t insert end "abcd\nefgh\nijkl\nmnop\nqrst\nuvwx\nyx"
-    frame .t.f -background red -width 100 -height 100
+    frame .t.f -background red -width 50 -height 100
     .t window create 3.0 -window .t.f
     lappend res [.t count -update -ypixels 1.0 end]
     .t.f configure -height 10
