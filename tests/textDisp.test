@@ -90,6 +90,18 @@ set bigAscent [font metrics $bigFont -ascent]
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 set heightDiff [expr {$bigHeight - $fixedHeight}]
 
+# The tests do work with a fixed-width font of size 10, 12, or 14 pixels,
+# nevertheless warn the user if the actual font size is not 12 pixels
+if {[font metrics [font actual $fixedFont] -fixed] != 1} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+is not a fixed-width font. Many of the upcoming tests will fail."
+}
+if {$fixedHeight < 10 || $fixedHeight > 14} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+is $fixedHeight pixels height while the tests expect between 10 and 14 (inclusive) pixels.\
+Some of the upcoming tests will probably fail."
+}
+
 # Option  -width 20  (characters) below is a fundamental assumption of many
 # upcoming tests when wrapping enters in play
 # Also  -height 10  (lines) is an important assumption
