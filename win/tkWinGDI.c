@@ -1475,7 +1475,7 @@ static int GdiCharWidths(
 	DWORD val = GetLastError();
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "::tk::print::_gdi character failed with code %ld", intstr));
+                "::tk::print::_gdi character failed with code %ld", val));
 	if (made_font) {
 	    SelectObject(hDC, oldfont);
 	    DeleteObject(hfont);
