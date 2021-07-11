@@ -479,13 +479,18 @@ test textDisp-2.19 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Lots of long words, enough to force word wrap\nThen\nmore lines"
-    .t tag configure x -lmargin1 20 -lmargin2 40 -rmargin 15
+    # margins in pixels depend on the font width for more flexibility
+    set lm1 [expr {3*$fixedWidth}]
+    set lm2 [expr {2*$lm1}]
+    set rm [expr {2*$fixedWidth}]
+    .t tag configure x -lmargin1 $lm1 -lmargin2 $lm2 -rmargin $rm
     .t tag add x 1.0 end
-    list [.t bbox 1.0] [.t bbox 1.12] [.t bbox 1.13] [.t bbox 2.0]
-} [list [list [expr {[bo]+20}] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+20+[xw 12]}] [yline 1] [expr {[xe 12]-20}] $fixedHeight] \
-        [list [expr {[bo]+40}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+20}] [yline 6] $fixedWidth $fixedHeight]]
+    set expected [list [list [expr {[bo]+$lm1}] [yline 1] $fixedWidth $fixedHeight] \
+                       [list [expr {[bo]+$lm1+[xw 12]}] [yline 1] [expr {[xe 12]-$lm1}] $fixedHeight] \
+                       [list [expr {[bo]+$lm2}] [yline 2] $fixedWidth $fixedHeight] \
+                       [list [expr {[bo]+$lm1}] [yline 6] $fixedWidth $fixedHeight]]
+    lequal [list [.t bbox 1.0] [.t bbox 1.12] [.t bbox 1.13] [.t bbox 2.0]] $expected
+} {1}
 test textDisp-2.20 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -1375,6 +1380,8 @@ test textDisp-9.1 {TkTextRedrawTag} -body {
     .t tag add big 2.2 2.4
     updateText
    list $tk_textRelayout $tk_textRedraw
+# glob matching is to have some tolerance on actually used font size
+# while still testing what we want to test
 } -match glob -result {{2.0 2.1[78]} {2.0 2.1[78]}}
 test textDisp-9.2 {TkTextRedrawTag} -body {
     .t configure -wrap char
@@ -1384,7 +1391,9 @@ test textDisp-9.2 {TkTextRedrawTag} -body {
     .t tag add big 1.2 2.4
     updateText
     list $tk_textRelayout $tk_textRedraw
-}  -match glob -result {{1.0 2.0 2.1[67]} {1.0 2.0 2.1[67]}}
+# glob matching is to have some tolerance on actually used font size
+# while still testing what we want to test
+}  -match glob -result {{1.0 2.0 2.1[678]} {1.0 2.0 2.1[678]}}
 test textDisp-9.3 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1452,7 +1461,9 @@ test textDisp-9.8 {TkTextRedrawTag} -body {
     .t tag add big 2.0 2.5
     updateText
     set tk_textRedraw
-} -match glob -result {2.0 2.1[67]}
+# glob matching is to have some tolerance on actually used font size
+# while still testing what we want to test
+} -match glob -result {2.0 2.1[678]}
 test textDisp-9.9 {TkTextRedrawTag} -body {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1462,7 +1473,9 @@ test textDisp-9.9 {TkTextRedrawTag} -body {
     .t tag add big 1.5 2.5
     updateText
     set tk_textRedraw
-} -match glob -result {2.0 2.1[67]}
+# glob matching is to have some tolerance on actually used font size
+# while still testing what we want to test
+} -match glob -result {2.0 2.1[678]}
 test textDisp-9.10 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3797,13 +3810,13 @@ test textDisp-24.22 {TkTextCharLayoutProc, word breaks} {
 test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {
     .t configure -wrap word
     .t delete 1.0 end
-    frame .t.f -width 30 -height 20 -bg black
+    frame .t.f -width 50 -height 20 -bg black
     .t insert 1.0 "Sample text xxxxxxx yyyyyyy "
     .t insert end "zzzzzzz qqqqq rrrr ssss tt"
     .t window create end -window .t.f
     .t insert end "u vvvvv"
     .t bbox .t.f
-} [list [xchar 0] [yline 3] 30 20]
+} [list [xchar 0] [yline 3] 50 20]
 catch {destroy .t.f}
 .t configure -width 20
 updateText
@@ -3976,22 +3989,33 @@ test textDisp-26.13 {AdjustForTab procedure, not enough space} {
     .t delete 1.0 end
     .t insert 1.0 "abc\txyz\tqrs\txyz\t0"
     .t tag delete x
-    .t tag configure x -tabs {10 30 center 50 right 120}
+    set t1 [expr {   $fixedWidth+3}]
+    set t2 [expr { 4*$fixedWidth+2}]
+    set t3 [expr { 7*$fixedWidth+1}]
+    set t4 [expr {17*$fixedWidth+1}]
+    .t tag configure x -tabs "$t1 $t2 center $t3 right $t4"
     .t tag add x 1.0 end
-    list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
-	    [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]
-} [list [xchar 4] [xchar 8] [xchar 12] 120]
+    set expected [list [xchar 4] [xchar 8] [xchar 12] $t4]
+    set res [list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
+            [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]]
+    lequal $res $expected
+} {1}
 test textDisp-26.13.2 {AdjustForTab procedure, not enough space} {
     .t delete 1.0 end
     .t insert 1.0 "abc\txyz\tqrs\txyz\t0"
     .t tag delete x
-    .t tag configure x -tabs {10 30 center 50 right 120} -tabstyle wordprocessor
+    set t1 [expr {   $fixedWidth+3}]
+    set t2 [expr { 4*$fixedWidth+2}]
+    set t3 [expr { 7*$fixedWidth+1}]
+    set t4 [expr {17*$fixedWidth+1}]
+    .t tag configure x -tabs "$t1 $t2 center $t3 right $t4" -tabstyle wordprocessor
     .t tag add x 1.0 end
+    set expected [list [xchar 4] [xchar 8] $t4 [expr {$t4+($t4-$t3)}]]
     set res [list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
       [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]]
     .t tag configure x -tabstyle tabular
-    set res
-} [list [xchar 4] [xchar 8] 120 190]
+    lequal $res $expected
+} {1}
 test textDisp-26.14 {AdjustForTab procedure, not enough space} {
     .t delete 1.0 end
     .t insert end "a \tb \tc \td \te \tf \tg\n"
@@ -4090,7 +4114,7 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
     .t tag delete x
-    .t tag configure x -tabs {150 center}
+    .t tag configure x -tabs "[expr {round(21.4*$fixedWidth)}] center"
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list [xchar 4] [yline 2] $fixedWidth $fixedHeight] \
