@@ -27,13 +27,20 @@
 
 #include "tkWinInt.h"
 
+/*
+ * Create a standard "DrawFunc" to make this more workable....
+ */
+#ifdef _MSC_VER
+typedef BOOL (WINAPI *DrawFunc) (
+	HDC, int, int, int, int, int, int, int, int); /* Arc, Chord, Pie. */
+#else
+typedef BOOL WINAPI (*DrawFunc) (
+	HDC, int, int, int, int, int, int, int, int); /* Arc, Chord, Pie. */
+#endif
+
 /* Main dispatcher for commands. */
 static int		TkWinGDI(ClientData clientData, Tcl_Interp *interp,
 			    int argc, const char **argv);
-
-/* Main dispatcher for subcommands. */
-static int		TkWinGDISubcmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, const char **argv);
 
 /* Real functions. */
 static int		GdiArc(ClientData clientData, Tcl_Interp *interp,
@@ -129,43 +136,12 @@ static const char gdi_usage_message[] =
  * Global state.
  */
 
-static char msgbuf[1024];
 static PRINTDLGW pd;
 static DOCINFOW di;
 static WCHAR *localPrinterName = NULL;
 static int copies, paper_width, paper_height, dpi_x, dpi_y;
 static LPDEVNAMES devnames;
 static HDC printDC;
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGDI --
- *
- * 	Top-level routine for the ::tk::print::_gdi command.
- *
- * Results:
- *	It strips off the first word of the command (::tk::print::_gdi) and
- *	sends the result to a subcommand parser.
- *
- *----------------------------------------------------------------------
- */
-
-static int TkWinGDI(
-    ClientData clientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char **argv)
-{
-    if (argc > 1 && strcmp(argv[0], "::tk::print::_gdi") == 0) {
-	argc--;
-	argv++;
-	return TkWinGDISubcmd(clientData, interp, argc, argv);
-    }
-
-    Tcl_AppendResult(interp, gdi_usage_message, NULL);
-    return TCL_ERROR;
-}
 
 /*
  * To make the "subcommands" follow a standard convention, add them to this
@@ -194,27 +170,35 @@ static const struct gdi_command {
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGDISubcmd --
+ * TkWinGDI --
  *
- * 	This is the GDI subcommand dispatcher.
+ * 	Top-level routine for the ::tk::print::_gdi command.
  *
  * Results:
- *	Parses and executes subcommands to ::tk::print::_gdi.
+ *	It strips off the first two words of the command (::tk::print::_gdi
+ *	subcommand) and dispatches to a subcommand implementation.
  *
  *----------------------------------------------------------------------
  */
 
-static int TkWinGDISubcmd(
+static int TkWinGDI(
     ClientData clientData,
     Tcl_Interp *interp,
     int argc,
     const char **argv)
 {
     size_t i;
+    static const size_t numCommands =
+	    sizeof(gdi_commands) / sizeof(struct gdi_command);
 
-    for (i=0; i<sizeof(gdi_commands) / sizeof(struct gdi_command); i++) {
-	if (strcmp(*argv, gdi_commands[i].command_string) == 0) {
-	    return (*gdi_commands[i].command)(clientData, interp, argc-1, argv+1);
+    /* EXACT command name check? REALLY? */
+
+    if (argc > 1 && strcmp(argv[0], "::tk::print::_gdi") == 0) {
+	for (i=0; i<numCommands; i++) {
+	    if (strcmp(argv[1], gdi_commands[i].command_string) == 0) {
+		return (*gdi_commands[i].command)(
+			clientData, interp, argc - 2, argv + 2);
+	    }
 	}
     }
 
@@ -222,15 +206,6 @@ static int TkWinGDISubcmd(
     return TCL_ERROR;
 }
 
-/*
- * Create a standard "DrawFunc" to make this more workable....
- */
-#ifdef _MSC_VER
-typedef BOOL (WINAPI *DrawFunc) (HDC, int, int, int, int, int, int, int, int); /* Arc, Chord, Pie. */
-#else
-typedef BOOL WINAPI (*DrawFunc) (HDC, int, int, int, int, int, int, int, int); /* Arc, Chord, Pie. */
-#endif
-
 /*
  *----------------------------------------------------------------------
  *
@@ -250,6 +225,12 @@ static int GdiArc(
     int argc,
     const char **argv)
 {
+    static const char usage_message[] =
+	"::tk::print::_gdi arc hdc x1 y1 x2 y2 "
+	"-extent angle -start angle -style arcstyle "
+	"-fill color -outline color "
+	"-width dimension -dash dashrule "
+	"-outlinestipple ignored -stipple ignored\n" ;
     int x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
     HDC hDC;
@@ -269,7 +250,7 @@ static int GdiArc(
 
     /* Verrrrrry simple for now.... */
     if (argc < 5) {
-	Tcl_AppendResult(interp, "::tk::print::_gdi", NULL);
+	Tcl_AppendResult(interp, usage_message, NULL);
 	return TCL_ERROR;
     }
 
@@ -305,7 +286,9 @@ static int GdiArc(
 		dolinecolor = 1;
 	    }
 	} else if (strcmp(argv[0], "-outlinestipple") == 0) {
+	    /* ignored */
 	} else if (strcmp(argv[0], "-stipple") == 0) {
+	    /* ignored */
 	} else if (strcmp(argv[0], "-width") == 0) {
 	    width = atoi(argv[1]);
 	} else if (strcmp(argv[0], "-dash") == 0) {
@@ -313,6 +296,10 @@ static int GdiArc(
 		dodash = 1;
 		dashdata = argv[1];
 	    }
+	} else {
+	    /* Don't know that option! */
+	    Tcl_AppendResult(interp, usage_message, NULL);
+	    return TCL_ERROR;
 	}
 	argc -= 2;
 	argv += 2;
@@ -427,7 +414,8 @@ static int GdiImage(
     TCL_UNUSED(int),
     TCL_UNUSED(const char **))
 {
-    static const char usage_message[] = "::tk::print::_gdi image hdc x y -anchor [center|n|e|s|w] -image name\n"
+    static const char usage_message[] =
+	"::tk::print::_gdi image hdc x y -anchor [center|n|e|s|w] -image name\n"
 	"Not implemented yet. Sorry!";
 
     /* Skip this for now..... */
@@ -462,7 +450,8 @@ static int GdiPhoto(
     int argc,
     const char **argv)
 {
-    static const char usage_message[] = "::tk::print::_gdi photo hdc [-destination x y [w [h]]] -photo name\n";
+    static const char usage_message[] =
+	"::tk::print::_gdi photo hdc [-destination x y [w [h]]] -photo name\n";
     HDC dst;
     int dst_x = 0, dst_y = 0, dst_w = 0, dst_h = 0;
     int nx, ny, sll;
@@ -495,8 +484,9 @@ static int GdiPhoto(
      */
 
     if ((GetDeviceCaps(dst, RASTERCAPS) & RC_STRETCHDIB) == 0) {
-	sprintf(msgbuf, "::tk::print::_gdi photo not supported on device context (0x%s)", argv[0]);
-	Tcl_AppendResult(interp, msgbuf, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"::tk::print::_gdi photo not supported on device context (0x%s)",
+		argv[0]));
 	return TCL_ERROR;
     }
 
@@ -505,15 +495,18 @@ static int GdiPhoto(
 	if (strcmp(argv[j], "-destination") == 0) {
 	    double x, y, w, h;
 	    int count = 0;
+	    char dummy;
 
 	    if (j < argc) {
-		count = sscanf(argv[++j], "%lf%lf%lf%lf", &x, &y, &w, &h);
+		count = sscanf(argv[++j], "%lf%lf%lf%lf%c",
+			&x, &y, &w, &h, &dummy);
 	    }
 
-	    if (count < 2) { /* Destination must provide at least 2 arguments. */
-		Tcl_AppendResult(interp,
-			"-destination requires a list of at least 2 numbers\n",
-			usage_message, NULL);
+	    if (count < 2 || count > 4) {
+		/* Destination must provide at least 2 arguments. */
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"-destination requires a list of 2 to 4 numbers\n%s",
+			usage_message));
 		return TCL_ERROR;
 	    }
 
@@ -532,17 +525,17 @@ static int GdiPhoto(
     }
 
     if (photoname == 0) {	/* No photo provided. */
-	Tcl_AppendResult(interp,
-		"No photo name provided to ::tk::print::_gdi photo\n",
-		usage_message, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"No photo name provided to ::tk::print::_gdi photo\n%s",
+		usage_message));
 	return TCL_ERROR;
     }
 
     photo_handle = Tk_FindPhoto(interp, photoname);
     if (photo_handle == 0) {
-	Tcl_AppendResult(interp,
-		"::tk::print::_gdi photo: Photo name ", photoname,
-		" can't be located\n", usage_message, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"::tk::print::_gdi photo: Photo name %s can't be located\n%s",
+		photoname, usage_message));
 	return TCL_ERROR;
     }
     Tk_PhotoGetImage(photo_handle, &img_block);
@@ -551,9 +544,13 @@ static int GdiPhoto(
     ny  = img_block.height;
     sll = ((3*nx + 3) / 4)*4; /* Must be multiple of 4. */
 
-    pbuf = (char *) Tcl_Alloc(sll * ny * sizeof(char));
+    /*
+     * Buffer is potentially large enough that failure to allocate might be
+     * recoverable.
+     */
+
+    pbuf = (char *) Tcl_AttemptAlloc(sll * ny * sizeof(char));
     if (pbuf == 0) { /* Memory allocation failure. */
-	/* TODO: unreachable */
 	Tcl_AppendResult(interp,
 		"::tk::print::_gdi photo failed--out of memory", NULL);
 	return TCL_ERROR;
@@ -603,13 +600,11 @@ static int GdiPhoto(
 
     if (StretchDIBits(dst, dst_x, dst_y, dst_w, dst_h, 0, 0, nx, ny,
 	    pbuf, &bitmapinfo, DIB_RGB_COLORS, SRCCOPY) == (int)GDI_ERROR) {
-	int errcode;
+	int errcode = GetLastError();
 
-	errcode = GetLastError();
-	sprintf(msgbuf,
-		"::tk::print::_gdi photo internal failure: StretchDIBits error code %d",
-		errcode);
-	Tcl_AppendResult(interp, msgbuf, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"::tk::print::_gdi photo internal failure: "
+		"StretchDIBits error code %d", errcode));
 	retval = TCL_ERROR;
     }
 
@@ -622,8 +617,8 @@ static int GdiPhoto(
     Tcl_Free(pbuf);
 
     if (retval == TCL_OK) {
-	sprintf(msgbuf, "%d %d %d %d", dst_x, dst_y, dst_w, dst_h);
-	Tcl_AppendResult(interp, msgbuf, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"%d %d %d %d", dst_x, dst_y, dst_w, dst_h));
     }
 
     return retval;
@@ -655,7 +650,7 @@ int Bezierize(
     int nbpoints = 0;
     POINT* bpoints;
 
-    inPointList = (double *) Tcl_Alloc(2 * sizeof(double) * npoly);
+    inPointList = (double *) Tcl_AttemptAlloc(2 * sizeof(double) * npoly);
     if (inPointList == 0) {
 	/* TODO: unreachable */
         return nbpoints; /* 0. */
@@ -663,14 +658,14 @@ int Bezierize(
 
     for (n=0; n<npoly; n++) {
         inPointList[2*n] = polypoints[n].x;
-        inPointList[2*n+1] = polypoints[n].y;
+        inPointList[2*n + 1] = polypoints[n].y;
     }
 
-    nbpoints = 1+npoly*nStep; /* this is the upper limit. */
-    outPointList = (double *) Tcl_Alloc(2*sizeof(double)*nbpoints);
+    nbpoints = 1 + npoly * nStep; /* this is the upper limit. */
+    outPointList = (double *) Tcl_AttemptAlloc(2 * sizeof(double) * nbpoints);
     if (outPointList == 0) {
 	/* TODO: unreachable */
-        Tcl_Free((void *)inPointList);
+        Tcl_Free((void *) inPointList);
         return 0;
     }
 
@@ -678,7 +673,7 @@ int Bezierize(
 	    NULL, outPointList);
 
     Tcl_Free((void *) inPointList);
-    bpoints = (POINT *) Tcl_Alloc(sizeof(POINT)*nbpoints);
+    bpoints = (POINT *) Tcl_AttemptAlloc(sizeof(POINT)*nbpoints);
     if (bpoints == 0) {
 	/* TODO: unreachable */
         Tcl_Free((void *) outPointList);
@@ -687,9 +682,9 @@ int Bezierize(
 
     for (n=0; n<nbpoints; n++) {
         bpoints[n].x = (long) outPointList[2*n];
-        bpoints[n].y = (long) outPointList[2*n+1];
+        bpoints[n].y = (long) outPointList[2*n + 1];
     }
-    Tcl_Free((void *)outPointList);
+    Tcl_Free((void *) outPointList);
     *bpointptr = *bpoints;
     return nbpoints;
 }
@@ -713,7 +708,8 @@ static int GdiLine(
     int argc,
     const char **argv)
 {
-    static const char usage_message[] = "::tk::print::_gdi line hdc x1 y1 ... xn yn "
+    static const char usage_message[] =
+	"::tk::print::_gdi line hdc x1 y1 ... xn yn "
 	"-arrow [first|last|both|none] -arrowshape {d1 d2 d3} "
 	"-dash dashlist "
 	"-capstyle [butt|projecting|round] -fill color "
@@ -753,8 +749,7 @@ static int GdiLine(
 
     hDC = printDC;
 
-    if ((polypoints = (POINT *)Tcl_Alloc(argc * sizeof(POINT))) == 0) {
-	/* TODO: unreachable */
+    if ((polypoints = (POINT *) Tcl_AttemptAlloc(argc * sizeof(POINT))) == 0) {
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", NULL);
 	return TCL_ERROR;
     }
@@ -801,14 +796,13 @@ static int GdiLine(
 	    } else if (strcmp(*argv, "-arrowshape") == 0) {
 		/* List of 3 numbers--set arrowshape array. */
 		int a1, a2, a3;
+		char dummy;
 
-		if (sscanf(argv[1], "%d%d%d", &a1, &a2, &a3) == 3) {
-		    if (a1 > 0 && a2 > 0 && a3 > 0) {
-			arrowshape[0] = a1;
-			arrowshape[1] = a2;
-			arrowshape[2] = a3;
-		    }
-		    /* Else the numbers are bad. */
+		if (sscanf(argv[1], "%d%d%d%c", &a1, &a2, &a3, &dummy) == 3
+			&& a1 > 0 && a2 > 0 && a3 > 0) {
+		    arrowshape[0] = a1;
+		    arrowshape[1] = a2;
+		    arrowshape[2] = a3;
 		}
 		/* Else the argument was bad. */
 
@@ -1007,7 +1001,8 @@ static int GdiOval(
     int argc,
     const char **argv)
 {
-    static const char usage_message[] = "::tk::print::_gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
+    static const char usage_message[] =
+	"::tk::print::_gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
 	"-stipple bitmap -width linewid";
     int x1, y1, x2, y2;
     HDC hDC;
@@ -1121,7 +1116,8 @@ static int GdiPolygon(
     int argc,
     const char **argv)
 {
-    static const char usage_message[] = "::tk::print::_gdi polygon hdc x1 y1 ... xn yn "
+    static const char usage_message[] =
+	"::tk::print::_gdi polygon hdc x1 y1 ... xn yn "
 	"-fill color -outline color -smooth [true|false|bezier] "
 	"-splinesteps number -stipple bitmap -width linewid";
 
@@ -1151,7 +1147,7 @@ static int GdiPolygon(
 
     hDC = printDC;
 
-    if ((polypoints = (POINT *)Tcl_Alloc(argc * sizeof(POINT))) == 0) {
+    if ((polypoints = (POINT *) Tcl_AttemptAlloc(argc * sizeof(POINT))) == 0) {
 	/* TODO: unreachable */
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", NULL);
 	return TCL_ERROR;
@@ -1477,11 +1473,9 @@ static int GdiCharWidths(
      */
     if (retval == FALSE) {
 	DWORD val = GetLastError();
-	char intstr[12+1];
 
-	sprintf(intstr, "%ld", val);
-	Tcl_AppendResult(interp,
-		"::tk::print::_gdi character failed with code ", intstr, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "::tk::print::_gdi character failed with code %ld", intstr));
 	if (made_font) {
 	    SelectObject(hDC, oldfont);
 	    DeleteObject(hfont);
@@ -1491,15 +1485,14 @@ static int GdiCharWidths(
 
     {
 	int i;
-	char numbuf[11+1];
 	char ind[2];
 	ind[1] = '\0';
 
 	for (i = 0; i < 255; i++) {
-	    /* May need to convert the widths here(?). */
-	    sprintf(numbuf, "%d", widths[i]);
+	    /* TODO: use a bytearray for the index name so NUL works */
 	    ind[0] = i;
-	    Tcl_SetVar2(interp, aryvarname, ind, numbuf, TCL_GLOBAL_ONLY);
+	    Tcl_SetVar2Ex(interp, aryvarname, ind, Tcl_NewIntObj(widths[i]),
+		    TCL_GLOBAL_ONLY);
 	}
     }
     /* Now, remove the font if we created it only for this function. */
@@ -1753,8 +1746,7 @@ int GdiText(
     }
 
     /* In this case, the return value is the height of the text. */
-    sprintf(msgbuf, "%d", retval);
-    Tcl_AppendResult(interp, msgbuf, NULL);
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
     return TCL_OK;
 }
 
@@ -2064,13 +2056,13 @@ static int GdiMap(
      * Note: This should really be in terms that can be used in a
      * ::tk::print::_gdi map command!
      */
-    sprintf(msgbuf, "Transform: \"(%ld, %ld) -> (%ld, %ld)\" "
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "Transform: \"(%ld, %ld) -> (%ld, %ld)\" "
 	    "Origin: \"(%ld, %ld)\" "
 	    "MappingMode: \"%s\"",
 	    vextent.cx, vextent.cy, wextent.cx, wextent.cy,
 	    vorigin.x, vorigin.y,
-	    GdiModeToName(mapmode));
-    Tcl_AppendResult(interp, msgbuf, NULL);
+	    GdiModeToName(mapmode)));
     return TCL_OK;
 }
 
@@ -2122,6 +2114,7 @@ static int GdiCopyBits(
     int hgt, wid;
     char *strend;
     long errcode;
+    int k;
 
     /* Variables to remember what we saw in the arguments. */
     int do_window = 0;
@@ -2163,91 +2156,91 @@ static int GdiCopyBits(
      * error.
      */
     if ((GetDeviceCaps(dst, RASTERCAPS) & RC_BITBLT) == 0) {
-	printf(msgbuf, "Can't do bitmap operations on device context\n");
-	Tcl_AppendResult(interp, msgbuf, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Can't do bitmap operations on device context\n"));
 	return TCL_ERROR;
     }
 
     /* Loop through the remaining arguments. */
-    {
-	int k;
-	for (k=1; k<argc; k++) {
-	    if (strcmp(argv[k], "-window") == 0) {
-		if (argv[k+1] && argv[k+1][0] == '.') {
-		    do_window = 1;
-		    workwin = Tk_NameToWindow(interp, window_spec = argv[++k], mainWin);
-		    if (workwin == NULL) {
-			sprintf(msgbuf, "Can't find window %s in this application", window_spec);
-			Tcl_AppendResult(interp, msgbuf, NULL);
-			return TCL_ERROR;
-		    }
-		} else {
-		    /* Use strtoul() so octal or hex representations will be parsed. */
-		    hwnd = (HWND)INT2PTR(strtoul(argv[++k], &strend, 0));
-		    if (strend == 0 || strend == argv[k]) {
-			sprintf(msgbuf, "Can't understand window id %s", argv[k]);
-			Tcl_AppendResult(interp, msgbuf, NULL);
-			return TCL_ERROR;
-		    }
-		}
-	    } else if (strcmp(argv[k], "-screen") == 0) {
-		do_screen = 1;
-		wintype = PTScreen;
-	    } else if (strcmp(argv[k], "-client") == 0) {
-		wintype = PTClient;
-	    } else if (strcmp(argv[k], "-source") == 0) {
-		float a, b, c, d;
-		int count;
-		count = sscanf(argv[++k], "%f%f%f%f", &a, &b, &c, &d);
-		if (count < 2) { /* Can't make heads or tails of it.... */
-		    Tcl_AppendResult(interp, usage_message, NULL);
+    for (k=1; k<argc; k++) {
+	if (strcmp(argv[k], "-window") == 0) {
+	    if (argv[k+1] && argv[k+1][0] == '.') {
+		do_window = 1;
+		workwin = Tk_NameToWindow(interp, window_spec = argv[++k], mainWin);
+		if (workwin == NULL) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "Can't find window %s in this application",
+			    window_spec));
 		    return TCL_ERROR;
 		}
-		src_x = (int)a;
-		src_y = (int)b;
-		if (count == 4) {
-		    src_w = (int)c;
-		    src_h = (int)d;
-		}
-	    } else if (strcmp(argv[k], "-destination") == 0) {
-		float a, b, c, d;
-		int count;
-
-		count = sscanf(argv[++k], "%f%f%f%f", &a, &b, &c, &d);
-		if (count < 2) { /* Can't make heads or tails of it.... */
-		    Tcl_AppendResult(interp, usage_message, NULL);
+	    } else {
+		/* Use strtoul() so octal or hex representations will be
+		 * parsed. */
+		hwnd = (HWND) INT2PTR(strtoul(argv[++k], &strend, 0));
+		if (strend == 0 || strend == argv[k]) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "Can't understand window id %s", argv[k]));
 		    return TCL_ERROR;
 		}
-		dst_x = (int)a;
-		dst_y = (int)b;
-		if (count == 3) {
-		    dst_w = (int)c;
-		    dst_h = -1;
-		} else if (count == 4) {
-		    dst_w = (int)c;
-		    dst_h = (int)d;
-		}
-	    } else if (strcmp(argv[k], "-scale") == 0) {
-		if (argv[++k]) {
-		    scale = strtod(argv[k], &strend);
-		    if (strend == 0 || strend == argv[k]) {
-			sprintf(msgbuf, "Can't understand scale specification %s", argv[k]);
-			Tcl_AppendResult(interp, msgbuf, NULL);
-			return TCL_ERROR;
-		    }
-		    if (scale <= 0.01 || scale >= 100.0) {
-			sprintf(msgbuf, "Unreasonable scale specification %s", argv[k]);
-			Tcl_AppendResult(interp, msgbuf, NULL);
-			return TCL_ERROR;
-		    }
-		    do_scale = 1;
-		}
-	    } else if (strcmp(argv[k], "-noprint") == 0
-		    || strncmp(argv[k], "-calc", 5) == 0) {
-		/* This option suggested by Pascal Bouvier to get sizes without
-		 * printing. */
-		do_print = 0;
 	    }
+	} else if (strcmp(argv[k], "-screen") == 0) {
+	    do_screen = 1;
+	    wintype = PTScreen;
+	} else if (strcmp(argv[k], "-client") == 0) {
+	    wintype = PTClient;
+	} else if (strcmp(argv[k], "-source") == 0) {
+	    float a, b, c, d;
+	    int count = sscanf(argv[++k], "%f%f%f%f", &a, &b, &c, &d);
+
+	    if (count < 2) { /* Can't make heads or tails of it.... */
+		Tcl_AppendResult(interp, usage_message, NULL);
+		return TCL_ERROR;
+	    }
+	    src_x = (int)a;
+	    src_y = (int)b;
+	    if (count == 4) {
+		src_w = (int)c;
+		src_h = (int)d;
+	    }
+	} else if (strcmp(argv[k], "-destination") == 0) {
+	    float a, b, c, d;
+	    int count;
+
+	    count = sscanf(argv[++k], "%f%f%f%f", &a, &b, &c, &d);
+	    if (count < 2) { /* Can't make heads or tails of it.... */
+		Tcl_AppendResult(interp, usage_message, NULL);
+		return TCL_ERROR;
+	    }
+	    dst_x = (int)a;
+	    dst_y = (int)b;
+	    if (count == 3) {
+		dst_w = (int)c;
+		dst_h = -1;
+	    } else if (count == 4) {
+		dst_w = (int)c;
+		dst_h = (int)d;
+	    }
+	} else if (strcmp(argv[k], "-scale") == 0) {
+	    if (argv[++k]) {
+		scale = strtod(argv[k], &strend);
+		if (strend == 0 || strend == argv[k]) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "Can't understand scale specification %s",
+			    argv[k]));
+		    return TCL_ERROR;
+		}
+		if (scale <= 0.01 || scale >= 100.0) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "Unreasonable scale specification %s", argv[k]));
+		    return TCL_ERROR;
+		}
+		do_scale = 1;
+	    }
+	} else if (strcmp(argv[k], "-noprint") == 0
+		|| strncmp(argv[k], "-calc", 5) == 0) {
+	    /* This option suggested by Pascal Bouvier to get sizes without
+	     * printing. */
+	    do_print = 0;
 	}
     }
 
@@ -2408,8 +2401,8 @@ static int GdiCopyBits(
 	    GlobalUnlock(hDib);
 	    GlobalFree(hDib);
 	    ReleaseDC(hwnd,src);
-	    sprintf(msgbuf, "StretchDIBits failed with code %ld", errcode);
-	    Tcl_AppendResult(interp, msgbuf, NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "StretchDIBits failed with code %ld", errcode));
 	    return TCL_ERROR;
 	}
 
@@ -2424,9 +2417,8 @@ static int GdiCopyBits(
      * The return value should relate to the size in the destination space.
      * At least the height should be returned (for page layout purposes).
      */
-    sprintf(msgbuf, "%d %d %d %d", dst_x, dst_y, dst_w, dst_h);
-    Tcl_AppendResult(interp, msgbuf, NULL);
-
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "%d %d %d %d", dst_x, dst_y, dst_w, dst_h));
     return TCL_OK;
 }
 
@@ -2786,13 +2778,11 @@ static int GdiMakePen(
 	const char *cp;
 	size_t i;
 	char *dup = (char *)Tcl_Alloc(strlen(dashstyledata) + 1);
-	if (dup) {
-	    /* TODO: always reachable */
-	    strcpy(dup, dashstyledata);
-	}
+	strcpy(dup, dashstyledata);
 	/* DEBUG. */
-	Tcl_AppendResult(interp,"DEBUG: Found a dash spec of |",
-		dashstyledata, "|\n", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"DEBUG: Found a dash spec of |%s|\n",
+		dashstyledata));
 
 	/* Parse the dash spec. */
 	if (isdigit(dashstyledata[0])) {
@@ -2974,16 +2964,16 @@ static const SystemColorEntry sysColors[] = {
     {"ButtonText",		COLOR_BTNTEXT},
     {"CaptionText",		COLOR_CAPTIONTEXT},
     {"DisabledText",		COLOR_GRAYTEXT},
-    {"GrayText",			COLOR_GRAYTEXT},
+    {"GrayText",		COLOR_GRAYTEXT},
     {"Highlight",		COLOR_HIGHLIGHT},
     {"HighlightText",		COLOR_HIGHLIGHTTEXT},
     {"InactiveBorder",		COLOR_INACTIVEBORDER},
     {"InactiveCaption",		COLOR_INACTIVECAPTION},
     {"InactiveCaptionText",	COLOR_INACTIVECAPTIONTEXT},
     {"InfoBackground",		COLOR_INFOBK},
-    {"InfoText",			COLOR_INFOTEXT},
+    {"InfoText",		COLOR_INFOTEXT},
     {"Menu",			COLOR_MENU},
-    {"MenuText",			COLOR_MENUTEXT},
+    {"MenuText",		COLOR_MENUTEXT},
     {"Scrollbar",		COLOR_SCROLLBAR},
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},
@@ -3806,6 +3796,7 @@ static int GdiParseColor(
     const char *name,
     unsigned long *color)
 {
+    /* TODO: replace with XParseColor, used by rest of Tk */
     if (name[0] == '#') {
 	char fmt[40];
 	int i;
