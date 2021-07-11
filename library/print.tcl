@@ -701,6 +701,7 @@ namespace eval ::tk::print {
 	    variable choosepaper
 	    variable color
 	    variable p
+	    variable zoomnumber
 
 	    _setprintenv
 
