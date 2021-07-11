@@ -90,15 +90,20 @@ set bigAscent [font metrics $bigFont -ascent]
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 set heightDiff [expr {$bigHeight - $fixedHeight}]
 
-# The tests do work with a fixed-width font of size 10, 12, or 14 pixels,
-# nevertheless warn the user if the actual font size is not 12 pixels
+# On Windows at least, the tests do work with {Courier -10}, {Courier -12} or {Courier -14} as fixedFont.
+# Warn the user if the actual font size is too different from what was requested.
 if {[font metrics [font actual $fixedFont] -fixed] != 1} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
 is not a fixed-width font. Many of the upcoming tests will fail."
 }
-if {$fixedHeight < 10 || $fixedHeight > 14} {
+if {$fixedHeight < 12 || $fixedHeight > 17} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
-is $fixedHeight pixels height while the tests expect between 10 and 14 (inclusive) pixels.\
+is $fixedHeight pixels height while the tests expect between 12 and 17 (inclusive) pixels.\
+Some of the upcoming tests will probably fail."
+}
+if {$fixedWidth < 6 || $fixedWidth > 8} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+is $fixedWidth pixels in width while the tests expect between 6 and 8 (inclusive) pixels.\
 Some of the upcoming tests will probably fail."
 }
 
