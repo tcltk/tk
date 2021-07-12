@@ -750,7 +750,7 @@ namespace eval ::tk::print {
 	    frame $p.frame.copyframe.l -padx 5 -pady 5
 	    pack $p.frame.copyframe.l -side top -fill x -expand no
 
-	    label $p.frame.copyframe.l.copylabel -text [mc "Copies:"]
+	    label $p.frame.copyframe.l.copylabel -text [mc "Copies"]
 	    spinbox $p.frame.copyframe.l.field -from 1 -to 1000 \
 		-textvariable [namespace which -variable printcopies] -width 5
 
@@ -762,7 +762,7 @@ namespace eval ::tk::print {
 	    frame $p.frame.copyframe.r -padx 5 -pady 5
 	    pack $p.frame.copyframe.r -fill x -expand no
 
-	    label $p.frame.copyframe.r.paper -text [mc "Paper:"]
+	    label $p.frame.copyframe.r.paper -text [mc "Paper"]
 	    tk_optionMenu $p.frame.copyframe.r.menu \
 		[namespace which -variable choosepaper] \
 		{*}$paperlist
@@ -776,7 +776,7 @@ namespace eval ::tk::print {
 		frame $p.frame.copyframe.z -padx 5 -pady 5
 		pack $p.frame.copyframe.z  -fill x -expand no
 
-		label $p.frame.copyframe.z.zlabel -text [mc "Scale %:"]
+		label $p.frame.copyframe.z.zlabel -text [mc "Scale"]
 		tk_optionMenu $p.frame.copyframe.z.zentry \
 		    [namespace which -variable zoomnumber] \
 		    {*}$percentlist
@@ -787,7 +787,7 @@ namespace eval ::tk::print {
 		frame $p.frame.copyframe.orient -padx 5 -pady 5
 		pack $p.frame.copyframe.orient  -fill x -expand no
 
-		label $p.frame.copyframe.orient.text -text [mc "Orientation:"]
+		label $p.frame.copyframe.orient.text -text [mc "Orientation"]
 		radiobutton $p.frame.copyframe.orient.v -text [mc "Portrait"] \
 		    -value portrait -compound left \
 		    -variable [namespace which -variable printorientation]
@@ -802,7 +802,7 @@ namespace eval ::tk::print {
 		frame $p.frame.copyframe.c -padx 5 -pady 5
 		pack $p.frame.copyframe.c  -fill x -expand no
 
-		label $p.frame.copyframe.c.l -text [mc "Output:"]
+		label $p.frame.copyframe.c.l -text [mc "Output"]
 		tk_optionMenu $p.frame.copyframe.c.c \
 		    [namespace which -variable color] \
 		    {*}$colorlist
