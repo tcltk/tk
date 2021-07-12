@@ -721,7 +721,7 @@ namespace eval ::tk::print {
 	    frame $p.frame.printframe -padx 5 -pady 5
 	    pack $p.frame.printframe -side top -fill x -expand no
 
-	    label $p.frame.printframe.printlabel -text [mc "Printer:"]
+	    label $p.frame.printframe.printlabel -text [mc "Printer"]
 	    ttk::combobox $p.frame.printframe.mb \
 		-textvariable [namespace which -variable chooseprinter] \
 		-state readonly -values [lsort -unique $printlist]
