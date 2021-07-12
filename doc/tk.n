@@ -116,12 +116,12 @@ accommodate the new scaling factor.
 The \fBtk sysnotify\fP  command creates a platform-specific system
 notification alert. Its intent is to provide a brief, unobtrusive
 notification to the user by popping up a window that briefly appears in a
-corner of the screen. For more details see the  see the \fBsysnotify\fR manual page.
+corner of the screen. For more details see the \fBsysnotify\fR manual page.
 .TP
 \fBtk systray create\fP \fIsubcommand...\fP
 .
 The \fBtk systray\fP command creates an icon in the platform-specific
-tray. For more details see the  see the \fBsystray\fR manual page.
+tray. For more details see the \fBsystray\fR manual page.
 .TP
 \fBtk useinputmethods \fR?\fB\-displayof \fIwindow\fR? ?\fIboolean\fR?
 .
