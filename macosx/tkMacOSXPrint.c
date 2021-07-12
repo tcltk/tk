@@ -231,14 +231,15 @@ FinishPrint(
                 NSString * sourcePath = (NSString * ) sourceFile;
                 NSString * finalPath = (NSString * ) savePath;
                 NSString * pathExtension = [finalPath pathExtension];
-
+                NSFileManager * fileManager = [NSFileManager defaultManager];
+		NSError * error = nil;
+		
                 /*
 		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
 		 */
                 if ([pathExtension isEqualToString: @ "pdf"]) {
-                    NSFileManager * fileManager = [NSFileManager defaultManager];
-		    NSError * error = nil;
+  
 		    /*Make sure no file conflict exists.*/
 		    if ([fileManager fileExistsAtPath: finalPath]) {
 			[fileManager removeItemAtPath: finalPath error: &error];
@@ -260,6 +261,10 @@ FinishPrint(
                     char target[5012];
                     [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
                     [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
+		    /*Make sure no file conflict exists.*/
+		    if ([fileManager fileExistsAtPath: finalPath]) {
+			[fileManager removeItemAtPath: finalPath error: &error];
+		    }
 		   
 		    /* 
 		     *  Fork and start new process with command string. Thanks to Peter da Silva

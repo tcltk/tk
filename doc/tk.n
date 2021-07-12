@@ -111,6 +111,12 @@ is undefined whether existing widgets will resize themselves dynamically to
 accommodate the new scaling factor.
 .RE
 .TP
+\fBtk print \fIwindow\fR
+.
+The \fBtk print\fR command posts a dialog that allows users to print output
+from the \fBcanvas\fR and \fBtext\fR widgets. The printing will be done using
+platform-native APIs and dialogs where available.
+.TP
 \fBtk sysnotify \fP \fItitle\fP? \fImessage\fP?
 .
 The \fBtk sysnotify\fP  command creates a platform-specific system
@@ -139,9 +145,9 @@ Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
 or \fBaqua\fR (Mac OS X Aqua).
 .SH "SEE ALSO"
-busy(n), fontchooser(n), send(n), sysnotify(n), systray(n), winfo(n)
+busy(n), fontchooser(n), print(n), send(n), sysnotify(n), systray(n), winfo(n)
 .SH KEYWORDS
-application name, send, sysnotify, systray
+application name, print, send, sysnotify, systray
 '\" Local Variables:
 '\" mode: nroff
 '\" End:
