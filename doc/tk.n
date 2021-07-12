@@ -86,6 +86,13 @@ error if tried.
 Controls the Tk font selection dialog. For more details see the
 \fBfontchooser\fR manual page.
 .TP
+\fBtk print \fIwindow\fR
+.
+The \fBtk print\fR command posts a dialog that allows users to print output
+from the \fBcanvas\fR and \fBtext\fR widgets. The printing will be done using
+platform-native APIs and dialogs where available. For more details see the
+\fBprint\fR manual page.
+.TP
 \fBtk scaling \fR?\fB\-displayof \fIwindow\fR? ?\fInumber\fR?
 .
 Sets and queries the current scaling factor used by Tk to convert between
@@ -110,12 +117,6 @@ after the scaling factor is changed will use the new scaling factor, but it
 is undefined whether existing widgets will resize themselves dynamically to
 accommodate the new scaling factor.
 .RE
-.TP
-\fBtk print \fIwindow\fR
-.
-The \fBtk print\fR command posts a dialog that allows users to print output
-from the \fBcanvas\fR and \fBtext\fR widgets. The printing will be done using
-platform-native APIs and dialogs where available.
 .TP
 \fBtk sysnotify \fP \fItitle\fP? \fImessage\fP?
 .
