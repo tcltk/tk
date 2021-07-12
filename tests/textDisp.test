@@ -1052,7 +1052,7 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
 # Next test is currently constrained to to no run on mac (aqua) because on
 # aqua its result is  {1.0 9.0 10.0} {1.0 9.0 10.0}  despite the rendering on
-# screen is correct. This seems top be a logging bug.
+# screen is correct. This seems to be a logging bug.
 test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
     .t configure -wrap char
     frame .f2 -bg red
@@ -1070,7 +1070,7 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
 # Next test is currently constrained to to no run on mac (aqua) because on
 # aqua its result is  {1.0 9.0 10.0} {1.0 9.0 10.0}  despite the rendering on
-# screen is correct. This seems top be a logging bug.
+# screen is correct. This seems to be a logging bug.
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqua} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
@@ -1147,7 +1147,7 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua}
 
 # The following group of tests is currently constrained to to no run on mac (aqua)
 # because on aqua the obtained logging results are different from the expected results,
-# despite the rendering on screen is correct. This seems top be a logging bug.
+# despite the rendering on screen is correct. This seems to be a logging bug.
 
 .t configure -bd 2 -relief raised -wrap char
 .t delete 1.0 end
@@ -2401,8 +2401,8 @@ test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     updateText
     # The man page does not say it but the code does: scrolling 1 page actually uses the
     # window height minus two lines, so that there's some overlap between adjacent pages.
-    # Note: it's abit tricky but we only need to subtract one [bo] from [winfo height .t]
-    # here because the origin of @x,y coordinates is at borderewidth start, not at text area start.
+    # Note: it's a bit tricky but we only need to subtract one [bo] from [winfo height .t] here
+    # because the origin of @x,y coordinates is at borderwidth start, not at text area start.
     set expected [.t index @0,[expr {[winfo height .t]-[bo]-2*$fixedHeight}]]
     .t yview scroll 1 page
     lequal [.t index @0,0] $expected
@@ -3605,7 +3605,7 @@ test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible}
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 0\n1\n
-    # set text widget width to ([bo] pixels) less than 1-char width
+    # set text widget width to 1-char width minus [bo] pixels
     # note: windows refuses to shrink enough therefore the constraint
     set wi [expr {[winfo width .f]+[bo]+[xw 1]}]
     wm geom . ${wi}x$height
