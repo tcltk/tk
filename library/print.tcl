@@ -60,6 +60,9 @@ namespace eval ::tk::print {
 	    variable dpi_y
 	    variable copies
 
+        set printer_name ""
+		puts "selecting prnter"
+		
 	    #First, we select the printer.
 	    _selectprinter
 
@@ -94,8 +97,13 @@ namespace eval ::tk::print {
 	# font -       Font for printing
 	proc _print_data {data {breaklines 1} {font ""}} {
 	    variable printargs
-
+		variable printer_name
+		
+	    set printer_name ""
 	    _set_dc
+		if {$printer_name eq ""} {
+			return
+		}
 
 	    if {$font eq ""} {
 		_gdi characters $printargs(hDC) -array printcharwid
@@ -246,9 +254,14 @@ namespace eval ::tk::print {
 
 	proc _print_widget {wid {printer default} {name "Tk Print Output"}} {
 	    variable printargs
+		variable printer_name
 
-	    _set_dc
-
+	    set printer_name ""	
+	    _set_dc	
+		if {$printer_name eq ""} {
+			return
+		}
+		
 	    _opendoc
 	    _openpage
 
@@ -667,6 +680,11 @@ namespace eval ::tk::print {
 	    if {[string first $notfound $msg] != -1} {
 		error "Unable to obtain list of printers. Please install the CUPS package \
 		for your system."
+		return
+	    }
+		set notfound "No destinations added"
+		if {[string first $notfound $msg] != -1} {
+		error "Please check or update your CUPS installation."
 		return
 	    }
 
