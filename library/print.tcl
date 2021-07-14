@@ -61,7 +61,6 @@ namespace eval ::tk::print {
 	    variable copies
 
         set printer_name ""
-		puts "selecting prnter"
 		
 	    #First, we select the printer.
 	    _selectprinter
