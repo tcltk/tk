@@ -4793,10 +4793,10 @@ static int PrintSelectPrinter(
      * script level.
      */
 
-    WCHAR *varlink1 = (WCHAR *) Tcl_Alloc(100 * sizeof(char));
-    WCHAR **varlink2 = (WCHAR **) Tcl_Alloc(sizeof(char *));
+    char *varlink1 = (char *) Tcl_Alloc(100 * sizeof(char));
+    char **varlink2 = (char **) Tcl_Alloc(sizeof(char *));
     *varlink2 = varlink1;
-    wcscpy(varlink1, localPrinterName);
+    WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
 
     Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
 	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
