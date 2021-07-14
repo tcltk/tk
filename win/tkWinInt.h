@@ -227,13 +227,6 @@ MODULE_SCOPE  int       WinIcoInit (Tcl_Interp* interp);
 MODULE_SCOPE  int       Winprint_Init(Tcl_Interp* interp);
 
 /*
- * The following is implemented in tkWinGDI.c
- */
-
-
-MODULE_SCOPE  int 		Gdi_Init(Tcl_Interp* interp);
-
-/*
  * The following is implemented in tkWinSysTray.c
  */
 
