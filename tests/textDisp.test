@@ -2767,7 +2767,6 @@ test textDisp-18.8 {GetXView procedure} {
     (horizontal scrolling command executed by text)}}
 catch {rename bgerror {}}
 catch {rename bogus {}}
-.t configure -xscrollcommand {} -yscrollcommand scroll
 
 .t configure -xscrollcommand {} -yscrollcommand scroll
 test textDisp-19.1 {GetYView procedure} {
@@ -3840,6 +3839,9 @@ test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {
 catch {destroy .t.f}
 .t configure -width 20
 updateText
+# Next test is currently constrained to no run on mac (aqua) because on
+# aqua it fails due to wrong implementation of tabs with right justification
+# (the text is not rendered at all). This is a bug.
 test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} notAqua {
     .t delete 1.0 end
     .t tag configure x -justify center
