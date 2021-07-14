@@ -17,8 +17,18 @@ if {[tk windowingsystem] == "aqua"} {
     proc updateText {} {
 	update idletasks
     }
+    proc delay {} {
+	update idletasks
+	after 100
+	update idletasks
+    }
 } else {
     proc updateText {} {
+	update
+    }
+    proc delay {} {
+	update
+	after 100
 	update
     }
 }
@@ -68,15 +78,7 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-# On macOS the font "Courier New" has different metrics than "Courier",
-# and this causes tests 20.1 - 20.5 to fail.  So we use "Courier" as the
-# fixed font for testing on Aqua.
-
-if {[tk windowingsystem] eq "aqua"} {
-   set fixedFont {Courier -12}
-} else {
-  set fixedFont {"Courier New" -12}
-}
+set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
@@ -468,12 +470,12 @@ test textDisp-2.16 {LayoutDLine, justification} {
 test textDisp-2.17 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
-    .t insert 1.0 "Lots of long words, enough to force word wrap\nThen\nmore lines"
+    .t insert 1.0 "Lots of very long words, enough to force word wrap\nThen\nmore lines"
     .t tag configure x -justify center
-    .t tag add x 1.20
-    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
+    .t tag add x 1.18
+    list [.t bbox 1.0] [.t bbox 1.18] [.t bbox 1.35] [.t bbox 2.0]
 } [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
-        [list [bo] [yline 2] $fixedWidth $fixedHeight] \
+        [list [expr {[bo]+[xe 17]/2}] [yline 2] $fixedWidth $fixedHeight] \
         [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
         [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.18 {LayoutDLine, justification} {
@@ -1082,6 +1084,8 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
 # Next test is currently constrained to to no run on mac (aqua) because on
 # aqua its result is  {1.0 9.0 10.0} {1.0 9.0 10.0}  despite the rendering on
 # screen is correct. This seems to be a logging bug.
+# In the following test, the revised version redraws line 3.0, but the legacy code does not.
+# The legacy code seems to be right at first sight when observing the picture. See [d2331df5a6].
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqua} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
@@ -1098,7 +1102,6 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqu
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-# <TODO>: The revised version redraws line 3.0, but the legacy code does not. Bug?
 } {{1.0 9.0 10.0} {1.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
 .t configure -bd 0
 test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
@@ -1438,7 +1441,7 @@ test textDisp-9.3 {TkTextRedrawTag} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.4 {TkTextRedrawTag} -body {
+test textDisp-9.4 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1448,7 +1451,7 @@ test textDisp-9.4 {TkTextRedrawTag} -body {
     .t tag remove big 1.0 end
     updateText
     list $tk_textRelayout $tk_textRedraw
-} -result {{2.0 2.20} {2.0 2.20 eof}}
+} {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.5 {TkTextRedrawTag} -setup {
     .t configure -wrap char -height [expr {[.t cget -height]+10}]
 } -body {
@@ -1515,11 +1518,11 @@ test textDisp-9.10 {TkTextRedrawTag} {
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
     .t tag add big 1.0 2.0
     updateText
-    set tk_textRedraw none
+    set tk_textRedraw {none}
     .t tag add big 1.3 1.5
     updateText
     set tk_textRedraw
-} none
+} {none}
 test textDisp-9.11 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1530,11 +1533,11 @@ test textDisp-9.11 {TkTextRedrawTag} {
     .t tag add big 1.0 2.0
     updateText
     set tk_textRedraw
-    # The revised implementation is recognizing that the prior "tag add"
+    # The implementation is recognizing that the prior "tag add"
     # operation is not changing anything, so it won't do any redraw,
     # thus the result is "none".
 } {none}
-test textDisp-9.12 {TkTextRedrawTag} -body {
+test textDisp-9.12 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 5} {incr i} {
@@ -1546,7 +1549,7 @@ test textDisp-9.12 {TkTextRedrawTag} -body {
     .t tag add hidden 3.11 4.6
     updateText
     list $tk_textRelayout $tk_textRedraw
-} -result {2.0 {2.0 eof}}
+} {2.0 {2.0 eof}}
 test textDisp-9.13 {TkTextRedrawTag} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -1652,7 +1655,6 @@ test textDisp-11.5 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {30.0 {}}
-# sometime the result is {30.0 {borders 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0}}
 test textDisp-11.6 {TkTextSetYView} {
     .t yview 30.0
     updateText
@@ -2174,13 +2176,13 @@ test textDisp-15.3 {ScrollByLines procedure, scrolling backwards} {
     .t index @0,0
 } {49.0}
 test textDisp-15.4 {ScrollByLines procedure, scrolling backwards} {
-    .t yview 50.21
+    .t yview 50.20
     updateText
     .t yview scroll -2 units
     .t index @0,0
 } {49.0}
 test textDisp-15.5 {ScrollByLines procedure, scrolling backwards} {
-    .t yview 50.41
+    .t yview 50.40
     updateText
     .t yview scroll -2 units
     .t index @0,0
@@ -2206,7 +2208,7 @@ test textDisp-15.8 {Scrolling near end of window} {
     frame .tf.f -relief sunken -borderwidth 2
     pack .tf.f -padx 10 -pady 10
 
-    text .tf.f.t -font {"Courier New" 9} -height $textheight \
+    text .tf.f.t -font {Courier 9} -height $textheight \
       -width $textwidth -yscrollcommand ".tf.f.sb set"
     scrollbar .tf.f.sb -command ".tf.f.t yview"
     pack .tf.f.t -side left -expand 1 -fill both
@@ -2247,12 +2249,12 @@ if {[expr {double(($totpix-5*$heightDiff)/$fixedHeight)}] != 206.0} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual [.t cget -font]]\",\
 is too different from the requested \"[.t cget -font]\". Some of the upcoming tests will probably fail."
 }
-test textDisp-16.1 {TkTextYviewCmd procedure} -body {
+test textDisp-16.1 {TkTextYviewCmd procedure} {
     .t yview 21.0
     set x [.t yview]
     .t yview 1.0
     list [expr {int([lindex $x 0]*100)}] [expr {int([lindex $x 1]*100)}]
-} -result {9 14}
+} {9 14}
 test textDisp-16.2 {TkTextYviewCmd procedure} {
     list [catch {.t yview 2 3} msg] $msg
 } {1 {bad option "2": must be moveto or scroll}}
@@ -2400,6 +2402,7 @@ test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -set
     .t configure -height 1
     updateText
     .t yview 50.0
+    updateText
     .t yview scroll -1 pages
     set x [.t index @0,0]
     .t configure -height 10
@@ -2913,8 +2916,8 @@ test textDisp-19.10.1 {Widget manipulation causes height miscount} {
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
     }
-    .t insert end "\nThis last line is wrapping around four "
-    .t insert end "times with a bit left on the last line."
+    .t insert end "\nThis last line wraps around four "
+    .t insert end "times with a little bit left on the last line."
     .t yview insert
     updateText
     .t count -update -ypixels 1.0 end
@@ -2927,8 +2930,8 @@ test textDisp-19.11 {GetYView procedure} {
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
     }
-    .t insert end "\nThis last line is wrapping around four "
-    .t insert end "times with a bit left on the last line."
+    .t insert end "\nThis last line wraps around four "
+    .t insert end "times with a little bit left on the last line."
     .t yview insert
     updateText
     .t count -update -ypixels 1.0 end
@@ -2950,7 +2953,7 @@ test textDisp-19.11.5.1 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 16.5
 } {0}
 test textDisp-19.11.6 {TextWidgetCmd procedure, "count -displaylines"} {
-    .t count -displaylines 16.0 16.20
+    .t count -displaylines 16.0 16.24
 } {1}
 test textDisp-19.11.7 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 16.40
@@ -3003,13 +3006,13 @@ test textDisp-19.11.17 {TextWidgetCmd procedure, "index +displaylines"} {
       [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
       [.t index "13.0 +2d lines"] [.t index "13.1 +3d lines"] \
       [.t index "13.0 +4d lines"]
-} {15.5 16.0 15.0 16.0 16.18 16.39}
+} {15.5 16.0 15.0 16.0 16.21 16.39}
 test textDisp-19.11.18 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "14.0"
     list [.t index "15.5 -2d lines"] \
       [.t index "16.0 -2d lines"] [.t index "15.0 -2d lines"] \
-      [.t index "16.0 -3d lines"] [.t index "16.20 -4d lines"] \
+      [.t index "16.0 -3d lines"] [.t index "16.23 -4d lines"] \
       [.t index "16.42 -5d lines"]
 } {11.5 14.0 11.0 11.0 11.2 11.3}
 test textDisp-19.11.19 {TextWidgetCmd procedure, "count -displaylines"} {
@@ -3024,14 +3027,14 @@ test textDisp-19.11.20 {TextWidgetCmd procedure, "index +displaylines"} {
       [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
       [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
       [.t index "13.0 +4d lines"]
-} {16.44 16.56 16.39 16.56 16.73 17.0}
+} {16.44 16.57 16.39 16.57 16.74 17.0}
 test textDisp-19.11.21 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "16.0 +1displaylines"
     list [.t index "16.44 -2d lines"] \
-      [.t index "16.56 -3d lines"] [.t index "16.39 -2d lines"] \
-      [.t index "16.59 -4d lines"] [.t index "16.75 -4d lines"] \
-      [.t index "17.7 -5d lines"]
+      [.t index "16.57 -3d lines"] [.t index "16.39 -2d lines"] \
+      [.t index "16.60 -4d lines"] [.t index "16.76 -4d lines"] \
+      [.t index "17.0 -5d lines"]
 } {11.5 11.0 11.0 10.3 11.2 11.0}
 test textDisp-19.11.22 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
@@ -3043,12 +3046,12 @@ test textDisp-19.11.22 {TextWidgetCmd procedure, "index +displaylines"} {
 test textDisp-19.11.23 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.3" "16.0 +1displaylines"
-    list [.t index "11.3 +1d lines"] [.t index "11.7 +2d lines"] \
-      [.t index "12.3 +1d lines"] \
-      [.t index "12.3 +2d lines"] [.t index "11.5 +2d lines"] \
+    list [.t index "11.5 +1d lines"] [.t index "11.5 +2d lines"] \
+      [.t index "12.0 +1d lines"] \
+      [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
       [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
       [.t index "13.0 +4d lines"]
-} {16.18 16.41 16.37 16.55 16.39 16.55 16.76 17.0}
+} {16.23 16.44 16.39 16.57 16.39 16.60 16.77 17.0}
 .t tag remove elide 1.0 end
 test textDisp-19.11.24 {TextWidgetCmd procedure, "index +/-displaylines"} {
     list [.t index "11.5 + -1 display lines"] \
@@ -3096,8 +3099,8 @@ test textDisp-19.14 {GetYView procedure} {
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
     }
-    .t insert end "\nThis last line is wrapping around four "
-    .t insert end "times with a bit left on the last line."
+    .t insert end "\nThis last line wraps around four "
+    .t insert end "times with a little bit left on the last line."
     # Need to update so everything is calculated.
     updateText
     .t count -update -ypixels 1.0 end
@@ -3117,8 +3120,8 @@ test textDisp-19.15 {GetYView procedure} {
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
     }
-    .t insert end "\nThis last line is wrapping around four "
-    .t insert end "times with a bit left on the last line."
+    .t insert end "\nThis last line wraps around four "
+    .t insert end "times with a bit little left on the last line."
     updateText
     .t configure -yscrollcommand scrollError
     proc bgerror args {
@@ -3145,8 +3148,8 @@ test textDisp-19.16 {count -ypixels} {
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
     }
-    .t insert end "\nThis last line is wrapping around four "
-    .t insert end "times with a bit left on the last line."
+    .t insert end "\nThis last line wraps around four "
+    .t insert end "times with a little bit left on the last line."
     # Need to update so everything is calculated.
     updateText
     .t count -update -ypixels 1.0 end
@@ -3230,7 +3233,6 @@ test textDisp-19.19 {count -ypixels with indices in elided lines} {
     updateText
     set res [list [.t count -ypixels 5.0 11.0] [.t count -ypixels 5.0 11.20]]
 } [list [expr {1 * $fixedHeight}] [expr {2 * $fixedHeight}]]
-
 .t delete 1.0 end
 .t insert end "Line 1"
 for {set i 2} {$i <= 200} {incr i} {
@@ -3327,7 +3329,7 @@ set res [.tt.u count -displaylines 3.10 2.173]
 destroy .tt
 unset message
 set res
-} -1
+} {-1}
 
 .t delete 1.0 end
 .t insert end "Line 1"
@@ -3795,14 +3797,14 @@ test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
 test textDisp-24.18 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
     .t delete 1.0 end
-    .t insert 1.0 "xThis is a line that wraps around"
+    .t insert 1.0 "xxThis is a line that wraps around"
     wm geom . {}
     updateText
     list [.t bbox 1.15] [.t bbox 1.16] [.t bbox 1.17] [.t bbox 1.21]
 } [list [list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 16] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 17] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+        [list [xchar 16] [yline 1] [xe 16] $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 4] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-24.19 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -4556,12 +4558,12 @@ test textDisp-31.3 {line update index shifting} {
     .t insert 1.0 "abc\n"
     .t insert 1.0 "abc\n"
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     .t.f configure -height 100
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100+$fixedHeight*6}] \
@@ -4616,12 +4618,12 @@ test textDisp-31.6 {line update index shifting} {
     .t insert 1.0 "abc\n"
     .t insert 1.0 "abc\n"
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     textest configure -height 100
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100+$fixedHeight*6}] \
@@ -4641,11 +4643,11 @@ test textDisp-31.7 {line update index shifting, elided} {
     .t tag configure elide -elide 1
     .t tag add elide 1.3 2.1
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     .t delete 1.0 3.0
     lappend res [.t count -ypixels 1.0 end]
-    update ; after 1000 ; update
+    delay
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {$fixedHeight*1}] \
@@ -4676,7 +4678,7 @@ test textDisp-32.1 {everything elided} {
     updateText
     destroy .tt
 } {}
-test textDisp-32.2 {elide and tags} -body {
+test textDisp-32.2 {elide and tags} {
     pack [text .tt -height 30 -width 100 -bd 0 \
       -highlightthickness 0 -padx 0]
     .tt insert end \
@@ -4752,7 +4754,7 @@ test textDisp-32.2 {elide and tags} -body {
       [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
     destroy .tt
     set res
-} -result {{1.0 20 20} {1.29 0 0} {1.0 0 0} {1.29 0 20}\
+} {{1.0 20 20} {1.29 0 0} {1.0 0 0} {1.29 0 20}\
   {1.0 20 20} {1.29 0 20} {1.0 20 20}}
 test textDisp-32.3 "NULL undisplayProc problems: #1791052" -setup {
     set img [image create photo -data {
@@ -4785,6 +4787,7 @@ test textDisp-32.3 "NULL undisplayProc problems: #1791052" -setup {
 
 test textDisp-33.0 {one line longer than fits in the widget} {
     pack [text .tt -wrap char]
+    updateText
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt see 1.0
@@ -4793,6 +4796,7 @@ test textDisp-33.0 {one line longer than fits in the widget} {
 test textDisp-33.1 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
+    updateText
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt yview "1.0 +1 displaylines"
@@ -4892,7 +4896,7 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
     set negative
 } -cleanup {
     destroy .t1
-} -result 0
+} -result {0}
 
 test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -setup {
     pack [text .t1] -fill both -expand y -side left
@@ -4938,8 +4942,3 @@ option clear
 # cleanup
 cleanupTests
 return
-
-# Local Variables:
-# mode: tcl
-# End:
-# vi:set ts=8 sw=4:
