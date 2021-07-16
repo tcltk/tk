@@ -24,7 +24,7 @@ of Tcl scripts related to Tk.  These scripts include an initialization
 file that is normally processed whenever a Tk application starts up,
 plus other files containing procedures that implement default behaviors
 for widgets.
-The initial value of \fBtcl_library\fR is set when Tk is added to
+The initial value of \fBtk_library\fR is set when Tk is added to
 an interpreter;  this is done by searching several different directories
 until one is found that contains an appropriate Tk startup script.
 If the \fBTK_LIBRARY\fR environment variable exists, then
