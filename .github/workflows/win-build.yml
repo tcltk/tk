@@ -25,8 +25,8 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-5-branch
           path: tcl
-      - name: Install MSYS2, Make
-        run: choco install -y msys2 make
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
       - name: Prepare
         run: |
           touch tkStubInit.c
