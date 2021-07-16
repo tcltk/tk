@@ -153,11 +153,15 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        shell: bash
+        shell: msys2 {0}
     env:
       CC: gcc
       CFGOPT: --disable-symbols --disable-shared
     steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+      - name: Install Zip
+        run: choco install -y zip
       - name: Checkout Tk
         uses: actions/checkout@v2
         with:
@@ -168,8 +172,6 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-branch
           path: tcl
-      - name: Install MSYS2, Make, Zip
-        run: choco install -y msys2 make zip
       - name: Setup Environment
         run: |
           mkdir -p install/combined
