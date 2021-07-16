@@ -98,7 +98,6 @@ namespace eval ::tk::print {
 	    variable printargs
 		variable printer_name
 		
-	    set printer_name ""
 	    _set_dc
 		if {$printer_name eq ""} {
 			return
@@ -255,7 +254,6 @@ namespace eval ::tk::print {
 	    variable printargs
 		variable printer_name
 
-	    set printer_name ""	
 	    _set_dc	
 		if {$printer_name eq ""} {
 			return
