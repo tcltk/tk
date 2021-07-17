@@ -87,7 +87,7 @@ jobs:
     runs-on: windows-2019
     defaults:
       run:
-        shell: msys2 {0}
+        shell: bash
         working-directory: win
     strategy:
       matrix:
