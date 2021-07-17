@@ -1079,7 +1079,8 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqu
     place .f2 -in .t -relx 0.2 -rely 0.5 -relwidth 0.5 -relheight 0.5
     .t configure -bd 2 -relief raised
     .t delete 1.0 end
-    .t insert 1.0 "Line 1 is so long that it wraps around, a couple of times"
+    # Line 1 must wrap exactly twice to get the expected result
+    .t insert 1.0 "Line 1 is so long that it occupies 3 display lines"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
     }
