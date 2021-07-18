@@ -4831,7 +4831,6 @@ test textDisp-33.3 {one line longer than fits in the widget} {
 test textDisp-33.4 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
-    set tk_textHeightCalc ""
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     set idx [.tt index "1.0 + 1 displaylines"]
@@ -4929,7 +4928,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -setup {
    .t1 tag add elide 1.3 2.0
    .t1 yview insert
    updateText
-   # wish8.7 now is crashing
+   # wish panicks with the legacy text widget
    .t1 yview scroll -1 pixels
 } -cleanup {
     destroy .t1
