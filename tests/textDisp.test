@@ -1456,7 +1456,7 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
 #  {} {borders 1.0 2.0 2.18 3.0 4.0 eof}
 # This seems to be a logging bug (which does not show up with the legacy code!?)
 # or an emanation of [d2331df5a6].
-test textDisp-9.1 {TkTextRedrawTag} -constraint {notAqua} -body {
+test textDisp-9.1 {TkTextRedrawTag} -constraints {notAqua} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
