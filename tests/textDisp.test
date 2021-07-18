@@ -3775,10 +3775,11 @@ test textDisp-24.18 {TkTextCharLayoutProc, -wrap word} {
     .t insert 1.0 "xxThis is a line that wraps around"
     wm geom . {}
     updateText
-    list [.t bbox 1.15] [.t bbox 1.16] [.t bbox 1.17]
+    list [.t bbox 1.15] [.t bbox 1.16] [.t bbox 1.17] [.t bbox 1.21]
 } [list [list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
         [list [xchar 16] [yline 1] [xe 16] $fixedHeight] \
-	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 4] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-24.19 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -4853,7 +4854,6 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
     set result {}
 } -body {
     .t1 insert end $txt
-    .t1 debug 1
     set ge [winfo geometry .]
     scan $ge "%dx%d+%d+%d" width height left top
     updateText
@@ -4875,6 +4875,11 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
 
 test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -setup {
     pack [text .t1] -fill both -expand y -side left
+    # We don't want debug for this test case, because it takes some hours
+    # if valgrind check is fully enabled. In this test case only the scrollbar
+    # behavior is relevant, all other involved functions (insert, see, ...) are
+    # already tested with debug mode in other test cases.
+    .t debug off
     .t insert end "[string repeat a\nb\nc\n 500000]THE END\n"
     set res {}
 } -body {
@@ -4886,6 +4891,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
 } -cleanup {
+    .t debug on ;# re-enable debugging
     destroy .t1
 } -result {1 1}
 
