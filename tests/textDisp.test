@@ -674,11 +674,7 @@ test textDisp-3.1 {different character sizes} {
 	[list [bo] [expr {[bo]+2*$bigHeight+2*$fixedHeight}] [xw 5] $fixedHeight $fixedAscent]]
 .t configure -wrap char
 
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the last item of the result list is  {}  despite the rendering on
-# screen is correct. This seems to be a logging bug (which does not show up
-# with the legacy code!?) or an emanation of [d2331df5a6].
-test textDisp-4.1 {UpdateDisplayInfo, basic} {notAqua} {
+test textDisp-4.1 {UpdateDisplayInfo, basic} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2\nLine 3\n"
     updateText
@@ -693,11 +689,7 @@ test textDisp-4.1 {UpdateDisplayInfo, basic} {notAqua} {
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
 	2.0]
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is missing the leading  2.0 2.20
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {notAqua} {
+test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     updateText
@@ -823,11 +815,7 @@ test textDisp-4.9 {UpdateDisplayInfo, filling in extra vertical space} {
     list [.t bbox 7.0] [.t bbox 12.0]
 } [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 7] $fixedWidth $fixedHeight]]
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  6.0 {} {borders 6.0 6.20 6.40 7.0 8.0 9.0 10.0 11.0 12.0 13.0}
-# despite the rendering on screen is correct. This seems to be a logging bug
-# (which does not show up with the legacy code!?) or an emanation of [d2331df5a6].
-test textDisp-4.10 {UpdateDisplayInfo, filling in extra vertical space} {notAqua} {
+test textDisp-4.10 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\nLine 6 is such a long line that it wraps around.\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview end
@@ -1258,12 +1246,7 @@ test textDisp-7.8 {TkTextRedrawRegion} {notAqua} {
 } {{} {borders 4.0 5.0 6.0 7.0 eof}}
 .t configure -bd 0
 
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua (at GitHub) the first two items of the result list are
-#  {} {borders 1.0 2.0 2.18 2.38 3.0 4.0 5.0 6.0 7.0 8.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-8.1 {TkTextChanged: redisplay whole lines} {notAqua} {
+test textDisp-8.1 {TkTextChanged: redisplay whole lines} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is so long that it wraps around, two times"
@@ -1298,11 +1281,7 @@ test textDisp-8.3 {TkTextChanged} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  {} {borders 1.0 1.20 1.40 2.0 3.0 4.0 5.0 6.0 7.0 8.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-8.4 {TkTextChanged} {notAqua} {
+test textDisp-8.4 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1313,11 +1292,7 @@ test textDisp-8.4 {TkTextChanged} {notAqua} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  {} {borders 1.0 1.20 1.40 2.0 3.0 4.0 5.0 6.0 7.0 8.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-8.5 {TkTextChanged} {notAqua} {
+test textDisp-8.5 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1328,11 +1303,7 @@ test textDisp-8.5 {TkTextChanged} {notAqua} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  {} {borders 1.0 1.20 1.40 2.0 3.0 4.0 5.0 6.0 7.0 8.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-8.6 {TkTextChanged} {notAqua} {
+test textDisp-8.6 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1343,11 +1314,7 @@ test textDisp-8.6 {TkTextChanged} {notAqua} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  {} {borders 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-8.7 {TkTextChanged} {notAqua} {
+test textDisp-8.7 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1358,12 +1325,7 @@ test textDisp-8.7 {TkTextChanged} {notAqua} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 9.0 10.0}}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua (at GitHub) the result list is
-#  {} {borders 1.0 1.20 1.40 2.0 3.0 4.0 5.0 6.0 7.0 8.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-8.8 {TkTextChanged} {notAqua} {
+test textDisp-8.8 {TkTextChanged} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1410,11 +1372,7 @@ test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-s
     .t configure -yscrollcommand ""
     set scrollInfo
 } {0.0 0.625}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  {5.0 9.0} {borders 1.0 2.0 3.0 4.0 5.0 9.0 10.0 11.0 12.0 13.0} {5.0 12.0} {3.0 5.0} 3.0
-# despite the rendering on screen is correct. This seems to be a logging bug
-# (which does not show up with the legacy code!?) or an emanation of [d2331df5a6].
-test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past and new lines} {notAqua} {
+test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past and new lines} {
     .t delete 1.0 end
     .t configure -wrap none
     for {set i 1} {$i < 25} {incr i} {
@@ -1449,11 +1407,6 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
     update idletasks
 } {}
 
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua (at GitHub) the result list is
-#  {} {borders 1.0 2.0 2.18 3.0 4.0 eof}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
 test textDisp-9.1 {TkTextRedrawTag} -constraints {notAqua} -body {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1672,36 +1625,21 @@ test textDisp-11.1 {TkTextSetYView} {
     updateText
     .t index @0,0
 } {30.0}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua (at GitHub) the result list is
-#  32.0 {borders 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0 40.0 41.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-11.2 {TkTextSetYView} {notAqua} {
+test textDisp-11.2 {TkTextSetYView} {
     .t yview 30.0
     updateText
     .t yview 32.0
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua (at GitHub) the result list is
-#  28.0 {borders 28.0 29.0 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-11.3 {TkTextSetYView} {notAqua} {
+test textDisp-11.3 {TkTextSetYView} {
     .t yview 30.0
     updateText
     .t yview 28.0
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua (at GitHub) the result list is
-#  31.0 {borders 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0 40.0}
-# This seems to be a logging bug (which does not show up with the legacy code!?)
-# or an emanation of [d2331df5a6].
-test textDisp-11.4 {TkTextSetYView} {notAqua} {
+test textDisp-11.4 {TkTextSetYView} {
     .t yview 30.0
     updateText
     .t yview 31.4
@@ -1778,11 +1716,7 @@ test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
     list [.t index @0,0] $tk_textRedraw
 } {2.0 10.20}
 .t delete 10.0 11.0
-# Next test is currently constrained to to no run on mac (aqua) because on
-# aqua the result is  1.0 {borders 1.0 2.0 3.0 4.0 5.0}
-# despite the rendering on screen is correct. This seems to be a logging bug
-# (which does not show up with the legacy code!?) or an emanation of [d2331df5a6].
-test textDisp-11.13 {TkTestSetYView, partially visible last line} {notAqua} {
+test textDisp-11.13 {TkTestSetYView, partially visible last line} {
     catch {destroy .top}
     toplevel .top
     wm geometry .top +0+0
