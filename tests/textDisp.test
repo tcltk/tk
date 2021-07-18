@@ -4792,21 +4792,16 @@ test textDisp-33.2 {one line longer than fits in the widget} {
 test textDisp-33.3 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
-    .tt debug 1
     set tk_textHeightCalc ""
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
-    .tt count -update -ypixels 1.0 end
-    updateText
+    .tt sync
     # Each line should have been recalculated just once
-    .tt debug 0
     expr {[llength $tk_textHeightCalc] == [.tt count -displaylines 1.0 end]}
 } {1}
 test textDisp-33.4 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
-    .tt debug 1
-    set tk_textHeightCalc ""
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     set idx [.tt index "1.0 + 1 displaylines"]
@@ -4817,7 +4812,6 @@ test textDisp-33.4 {one line longer than fits in the widget} {
 	set result "ok"
     }
     set idx [.tt index "1.0 + 1 displaylines"]
-    .tt debug 0
     set result
 } {ok}
 destroy .tt
@@ -4894,6 +4888,22 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     .t debug on ;# re-enable debugging
     destroy .t1
 } -result {1 1}
+
+test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -setup {
+   text .t1 -font $fixedFont -width 20 -height 3 -wrap word
+   pack .t1
+   .t1 delete 1.0 end
+   .t1 tag configure elide -elide 1
+   .t1 insert end "Line 1\nThis line is wrapping around two times."
+} -body {
+   .t1 tag add elide 1.3 2.0
+   .t1 yview insert
+   updateText
+   # wish now panics: "CalculateDisplayLineHeight called with bad indexPtr"
+   .t1 yview scroll -1 pixels
+} -cleanup {
+    destroy .t1
+} -result {}
 
 deleteWindows
 option clear
