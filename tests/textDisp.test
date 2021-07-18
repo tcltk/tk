@@ -1096,8 +1096,6 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
 # Next test is currently constrained to to no run on mac (aqua) because on
 # aqua its result is  {1.0 9.0 10.0} {1.0 9.0 10.0}  despite the rendering on
 # screen is correct. This seems to be a logging bug.
-# In the following test, the revised version redraws line 3.0, but the legacy code does not.
-# The legacy code seems to be right at first sight when observing the picture. See [d2331df5a6].
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqua} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
@@ -1115,7 +1113,7 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqu
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{1.0 9.0 10.0} {1.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
+} {{1.0 9.0 10.0} {1.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
 .t configure -bd 0
 test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
     .t configure -wrap char
