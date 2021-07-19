@@ -162,7 +162,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          install: git mingw-w64-x86_64-toolchain zip
+          install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
         uses: actions/checkout@v2
         with:
