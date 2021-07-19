@@ -4744,12 +4744,6 @@ static int PrintSelectPrinter(
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
 	
-	/* Handle user cancellation. */
-	if (PrintDlgW(&pd) == 0){
-		Tcl_AppendResult(interp, "User cancelled", NULL);
-		return TCL_OK;
-	}
-	
     if (PrintDlgW(&pd) == TRUE) {
 		
 	/*Get document info.*/
