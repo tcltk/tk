@@ -848,7 +848,11 @@ XCopyArea(
     }
 
     if (!TkMacOSXSetupDrawingContext(dst, gc, &dc)) {
+
+#ifdef DEBUG_SETUP_CONTEXT
 	TkMacOSXDbgMsg("Failed to setup drawing context.");
+#endif
+
 	return BadDrawable;
     }
 
