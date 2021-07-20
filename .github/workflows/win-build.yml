@@ -87,7 +87,7 @@ jobs:
     runs-on: windows-2019
     defaults:
       run:
-        shell: bash
+        shell: msys2 {0}
         working-directory: win
     strategy:
       matrix:
@@ -98,6 +98,9 @@ jobs:
     steps:
       - name: Install MSYS2
         uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain make
       - name: Checkout
         uses: actions/checkout@v2
       - name: Checkout
