@@ -3977,8 +3977,8 @@ test text-18.6 {InsertChars procedure, inserting on top visible line} -setup {
     .t insert insert "aid of their party.\n"
     .t insert insert "Now is the time for all great men.\n"
     .t see end
-    update idletasks
     .t insert 1.56 "Short\n"
+    update idletasks
     .t index @0,0
 } -cleanup {
     destroy .t
