@@ -78,7 +78,7 @@ static int		TkGdiMakeBezierCurve(Tk_Canvas, double *, int, int,
  * Helper functions.
  */
 static int		GdiMakeLogFont(Tcl_Interp *interp, const char *str,
-			    LOGFONTW *lf, HDC hDC);
+			    LOGFONT *lf, HDC hDC);
 static int		GdiMakePen(Tcl_Interp *interp, int width,
 			    int dashstyle, const char *dashstyledata,
 			    int capstyle, int joinstyle,
@@ -106,7 +106,7 @@ static int		PalEntriesOnDevice(HDC hDC);
 static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
-static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
+static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONT *lf,
 			    const char *str[], int numargs);
 static int		PrintSelectPrinter(ClientData clientData,
 			    Tcl_Interp *interp, int argc,
@@ -136,9 +136,9 @@ static const char gdi_usage_message[] =
  * Global state.
  */
 
-static PRINTDLGW pd;
-static DOCINFOW di;
-static WCHAR *localPrinterName = NULL;
+static PRINTDLG pd;
+static DOCINFO di;
+static const char *localPrinterName = NULL;
 static int copies, paper_width, paper_height, dpi_x, dpi_y;
 static LPDEVNAMES devnames;
 static HDC printDC;
@@ -1421,7 +1421,7 @@ static int GdiCharWidths(
      */
 
     HDC hDC;
-    LOGFONTW lf;
+    LOGFONT lf;
     HFONT hfont, oldfont;
     int made_font = 0;
     const char *aryvarname = "GdiCharWidths";
@@ -1444,7 +1444,7 @@ static int GdiCharWidths(
 	    argc--;
 	    argv++;
 	    if (GdiMakeLogFont(interp, argv[0], &lf, hDC)) {
-		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
+		if ((hfont = CreateFontIndirect(&lf)) != NULL) {
 		    made_font = 1;
 		    oldfont = SelectObject(hDC, hfont);
 		}
@@ -1462,8 +1462,8 @@ static int GdiCharWidths(
     }
 
     /* Now, get the widths using the correct function for font type. */
-    if ((retval = GetCharWidth32W(hDC, 0, 255, widths)) == FALSE) {
-	retval = GetCharWidthW(hDC, 0, 255, widths);
+    if ((retval = GetCharWidth32(hDC, 0, 255, widths)) == FALSE) {
+	retval = GetCharWidth(hDC, 0, 255, widths);
     }
 
     /*
@@ -1539,7 +1539,7 @@ int GdiText(
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
     Tk_Anchor anchor = 0;
-    LOGFONTW lf;
+    LOGFONT lf;
     HFONT hfont, oldfont;
     int made_font = 0;
     int retval;
@@ -1601,7 +1601,7 @@ int GdiText(
 	    argc--;
 	    argv++;
 	    if (GdiMakeLogFont(interp, argv[0], &lf, hDC)) {
-		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
+		if ((hfont = CreateFontIndirect(&lf)) != NULL) {
 		    made_font = 1;
 		    oldfont = SelectObject(hDC, hfont);
 		}
@@ -2503,7 +2503,7 @@ static int DIBNumColors(
 
 static int GdiParseFontWords(
     TCL_UNUSED(Tcl_Interp *),
-    LOGFONTW *lf,
+    LOGFONT *lf,
     const char *str[],
     int numargs)
 {
@@ -2600,7 +2600,7 @@ static int GdiWordToWeight(
 static int GdiMakeLogFont(
     Tcl_Interp *interp,
     const char *str,
-    LOGFONTW *lf,
+    LOGFONT *lf,
     HDC hDC)
 {
     const char **list;
@@ -2622,12 +2622,7 @@ static int GdiMakeLogFont(
 
     /* Now we have the font structure broken into name, size, weight. */
     if (count >= 1) {
-	Tcl_DString ds;
-
-	Tcl_DStringInit(&ds);
-	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(list[0], -1, &ds),
-		sizeof(lf->lfFaceName) - 1);
-	Tcl_DStringFree(&ds);
+	strncpy(lf->lfFaceName, list[0], sizeof(lf->lfFaceName) - 1);
     } else {
 	return 0;
     }
@@ -4004,7 +3999,7 @@ static void GetDisplaySize(
 {
     HDC hDC;
 
-    hDC = CreateDCW(L"DISPLAY", 0, 0, 0);
+    hDC = CreateDC("DISPLAY", 0, 0, 0);
     *width = GetDeviceCaps(hDC, HORZRES);
     *height = GetDeviceCaps(hDC, VERTRES);
     DeleteDC(hDC);
@@ -4043,7 +4038,7 @@ static HBITMAP CopyScreenToBitmap(
      * DC.
      */
 
-    hScrDC = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+    hScrDC = CreateDC("DISPLAY", NULL, NULL, NULL);
     hMemDC = CreateCompatibleDC(hScrDC);
 
     /* Get points of rectangle to grab. */
@@ -4136,7 +4131,7 @@ static HANDLE BitmapToDIB(
 
     /* Fill in BITMAP structure, return NULL if it didn't work. */
 
-    if (!GetObjectW(hBitmap, sizeof(bm), (LPWSTR)&bm)) {
+    if (!GetObject(hBitmap, sizeof(bm), (LPSTR)&bm)) {
         return NULL;
     }
 
@@ -4762,9 +4757,9 @@ static int PrintSelectPrinter(
     int argc,
     Tcl_Obj *const objv[])
 {
-    LPCWSTR printerName = NULL;
-    PDEVMODEW returnedDevmode = NULL;
-    PDEVMODEW localDevmode = NULL;
+    LPCSTR printerName = NULL;
+    PDEVMODE returnedDevmode = NULL;
+    PDEVMODE localDevmode = NULL;
     (void) clientData;
     (void) argc;
     (void) objv;
@@ -4783,23 +4778,23 @@ static int PrintSelectPrinter(
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
 	
 	/* Handle user cancellation. */
-	if (PrintDlgW(&pd) == 0){
+	if (PrintDlg(&pd) == 0){
 		Tcl_AppendResult(interp, "User cancelled", NULL);
 		return TCL_OK;
 	}
 	
-    if (PrintDlgW(&pd) == TRUE) {
+    if (PrintDlg(&pd) == TRUE) {
 		
 	/*Get document info.*/
 	ZeroMemory(&di, sizeof(di));
 	di.cbSize = sizeof(di);
-	di.lpszDocName = L"Tk Print Output";
+	di.lpszDocName = "Tk Print Output";
 
 	/* Copy print attributes to local structure. */
-	returnedDevmode = (PDEVMODEW) GlobalLock(pd.hDevMode);
+	returnedDevmode = (PDEVMODE) GlobalLock(pd.hDevMode);
 	devnames = (LPDEVNAMES) GlobalLock(pd.hDevNames);
-	printerName = (LPCWSTR) devnames + devnames->wDeviceOffset;
-	localDevmode = (LPDEVMODEW) HeapAlloc(GetProcessHeap(),
+	printerName = (LPCSTR) devnames + devnames->wDeviceOffset;
+	localDevmode = (LPDEVMODE) HeapAlloc(GetProcessHeap(),
 		HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
 		returnedDevmode->dmSize);
 
@@ -4808,7 +4803,7 @@ static int PrintSelectPrinter(
 		    returnedDevmode->dmSize);
 
 	    /* Get values from user-set and built-in properties. */
-	    localPrinterName = localDevmode->dmDeviceName;
+	    localPrinterName = (LPCSTR)localDevmode->dmDeviceName;
 	    dpi_y = localDevmode->dmYResolution;
 	    dpi_x = localDevmode->dmPrintQuality;
 	    /* Convert height and width to logical points. */
@@ -4816,7 +4811,7 @@ static int PrintSelectPrinter(
 	    paper_width = (int) localDevmode->dmPaperWidth / 0.254;
 	    copies = pd.nCopies;
 	    /* Set device context here for all GDI printing operations. */
-	    printDC = CreateDCW(L"WINSPOOL", printerName, NULL, localDevmode);
+	    printDC = CreateDC("WINSPOOL", printerName, NULL, localDevmode);
 	} else {
 	    localDevmode = NULL;
 	}
@@ -4834,7 +4829,7 @@ static int PrintSelectPrinter(
     char *varlink1 = (char *) Tcl_Alloc(100 * sizeof(char));
     char **varlink2 = (char **) Tcl_Alloc(sizeof(char *));
     *varlink2 = varlink1;
-    WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
+    strcpy (varlink1, localPrinterName);		
 
     Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
 	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
@@ -4871,8 +4866,6 @@ int PrintOpenPrinter(
     int argc,
     Tcl_Obj *const objv[])
 {
-    Tcl_DString ds;
-
     if (argc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "printer");
 	return TCL_ERROR;
@@ -4883,22 +4876,18 @@ int PrintOpenPrinter(
 	return TCL_ERROR;
     }
 
-    const char *printer = Tcl_GetString(objv[1]);
+    char *printer = Tcl_GetString(objv[1]);
 
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
     }
 
-    Tcl_DStringInit(&ds);
-    if ((OpenPrinterW(Tcl_UtfToWCharDString(printer, -1, &ds),
-	    (LPHANDLE)&printDC, NULL)) == FALSE) {
+    if ((OpenPrinter(printer, (LPHANDLE)&printDC, NULL)) == FALSE) {
 	Tcl_AppendResult(interp, "unable to open printer", NULL);
-	Tcl_DStringFree(&ds);
 	return TCL_ERROR;
     }
 
-    Tcl_DStringFree(&ds);
     return TCL_OK;
 }
 
@@ -4968,7 +4957,7 @@ int PrintOpenDoc(
     /*
      * Start printing.
      */
-    output = StartDocW(printDC, &di);
+    output = StartDoc(printDC, &di);
     if (output <= 0) {
 	Tcl_AppendResult(interp, "unable to start document", NULL);
 	return TCL_ERROR;
