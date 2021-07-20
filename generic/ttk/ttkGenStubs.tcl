@@ -689,7 +689,7 @@ proc genStubs::makeInit {name decl index} {
 #			have the interface name, the declaration,  and
 #			the index appended.
 #	guardProc	The proc to invoke to add guards.  It will have
-#		        the slot status and text appended.
+#			the slot status and text appended.
 #	textVar		The variable to use for output.
 #	skipString	The string to emit if a slot is skipped.  This
 #			string will be subst'ed in the loop so "$i" can
