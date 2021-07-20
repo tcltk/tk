@@ -1138,6 +1138,7 @@ test textDisp-8.3 {TkTextChanged} {
     }
     updateText
     .t insert 2.0 xx
+    updateText
     list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
 test textDisp-8.4 {TkTextChanged} {
@@ -1405,8 +1406,8 @@ test textDisp-9.13 {TkTextRedrawTag} {
     }
     .t tag add hidden 2.8 2.17
     .t tag add hidden 6.8 7.17
-    updateText
     .t tag configure hidden -background red
+    updateText
     .t tag configure hidden -elide true
     .t tag configure hidden -elide false
     updateText
@@ -1442,6 +1443,7 @@ test textDisp-10.1 {TkTextRelayoutWindow} {
     updateText
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
+    updateText
     .t configure -bg black
     updateText
     list $tk_textRelayout $tk_textRedraw
@@ -1474,6 +1476,7 @@ test textDisp-11.1 {TkTextSetYView} {
     .t index @0,0
 } {30.0}
 test textDisp-11.2 {TkTextSetYView} {
+    updateText
     .t yview 30.0
     updateText
     .t yview 32.0
@@ -1504,9 +1507,9 @@ test textDisp-11.5 {TkTextSetYView} {
 } {30.0 {}}
 # sometime the result is {30.0 {borders 30.0 31.0 32.0 33.0 34.0 35.0 36.0 37.0 38.0 39.0}}
 test textDisp-11.6 {TkTextSetYView} {
-    .t yview 30.0
     updateText
     set tk_textRedraw {}
+    .t yview 30.0
     .t yview -pickplace 28.0
     updateText
     list [.t index @0,0] $tk_textRedraw
