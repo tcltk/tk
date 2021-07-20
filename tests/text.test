@@ -3937,44 +3937,47 @@ test text-18.3 {InsertChars procedure} -body {
 }
 test text-18.4 {InsertChars procedure, inserting on top visible line} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t ; update idletasks
+    pack .t
 } -body {
     .t configure -width 20 -height 4 -wrap word
+    update idletasks
     .t insert insert "Now is the time for all great men to come to the "
     .t insert insert "aid of their party.\n"
     .t insert insert "Now is the time for all great men.\n"
     .t see end
-    update
     .t insert 1.0 "Short\n"
+    update idletasks
     .t index @0,0
 } -cleanup {
     destroy .t
 } -result {2.56}
 test text-18.5 {InsertChars procedure, inserting on top visible line} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t ; update idletasks
+    pack .t
 } -body {
     .t configure -width 20 -height 4 -wrap word
+    update idletasks
     .t insert insert "Now is the time for all great men to come to the "
     .t insert insert "aid of their party.\n"
     .t insert insert "Now is the time for all great men.\n"
     .t see end
-    update
     .t insert 1.55 "Short\n"
+    update idletasks
     .t index @0,0
 } -cleanup {
     destroy .t
 } -result {2.0}
 test text-18.6 {InsertChars procedure, inserting on top visible line} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t ; update idletasks
+    pack .t
 } -body {
     .t configure -width 20 -height 4 -wrap word
+    update idletasks
     .t insert insert "Now is the time for all great men to come to the "
     .t insert insert "aid of their party.\n"
     .t insert insert "Now is the time for all great men.\n"
     .t see end
-    update
+    update idletasks
     .t insert 1.56 "Short\n"
     .t index @0,0
 } -cleanup {
@@ -3982,15 +3985,16 @@ test text-18.6 {InsertChars procedure, inserting on top visible line} -setup {
 } -result {1.56}
 test text-18.7 {InsertChars procedure, inserting on top visible line} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t ; update idletasks
+    pack .t
 } -body {
     .t configure -width 20 -height 4 -wrap word
+    update idletasks
     .t insert insert "Now is the time for all great men to come to the "
     .t insert insert "aid of their party.\n"
     .t insert insert "Now is the time for all great men.\n"
     .t see end
-    update
     .t insert 1.57 "Short\n"
+    update idletasks
     .t index @0,0
 } -cleanup {
     destroy .t
