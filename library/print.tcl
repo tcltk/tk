@@ -63,14 +63,10 @@ namespace eval ::tk::print {
 	    #First, we select the printer.
 	    _selectprinter
 
-	    if {$printer_name eq ""} {
-		#they pressed cancel
-		return
-	    }
-
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
+        if {[info exists printer_name] && $printer_name ne ""} {
 	    set printargs(hDC) $printer_name
 	    set printargs(pw) $paper_width
 	    set printargs(pl) $paper_height
@@ -82,6 +78,7 @@ namespace eval ::tk::print {
 	    set printargs(resy) $dpi_y
 	    set printargs(copies) $copies
 	    set printargs(resolution) [list $dpi_x $dpi_y]
+		}
 	}
 
 	# _print_data
