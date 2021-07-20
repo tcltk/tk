@@ -1530,8 +1530,7 @@ int GdiText(
 	"-fill color -font fontname "
 	"-justify [left|right|center] "
 	"-stipple bitmap -text string -width linelen "
-	"-single -backfill"
-	"-encoding [input encoding] -unicode";
+	"-single -backfill";
 
     HDC hDC;
     int x, y;
@@ -1548,12 +1547,8 @@ int GdiText(
     int bgmode;
     COLORREF textcolor = 0;
     int usesingle = 0;
-    const char *encoding_name = "utf-8";
 
-    TCHAR *ostring;
     Tcl_DString tds;
-    Tcl_Encoding encoding = NULL;
-    int tds_len;
 
     if (argc < 4) {
 	Tcl_AppendResult(interp, usage_message, NULL);
@@ -1630,24 +1625,10 @@ int GdiText(
 	    usesingle = 1;
 	} else if (strcmp(argv[0], "-backfill") == 0) {
 	    dobgmode = 1;
-	} else if (strcmp(argv[0], "-encoding") == 0) {
-	    argc--;
-	    argv++;
-	    if (argc > 0) {
-		encoding_name = argv[0];
-	    }
 	}
 
 	argc--;
 	argv++;
-    }
-
-    /* Handle the encoding, if present. */
-    if (encoding_name != 0) {
-	Tcl_Encoding tmp_encoding = Tcl_GetEncoding(interp,encoding_name);
-	if (tmp_encoding != NULL) {
-	    encoding = tmp_encoding;
-	}
     }
 
     if (string == 0) {
@@ -1662,18 +1643,12 @@ int GdiText(
 	format_flags &= ~DT_WORDBREAK;
     }
 
-    /* Calculate the rectangle. */
-    Tcl_DStringInit(&tds);
-    Tcl_UtfToExternalDString(encoding, string, -1, &tds);
-    ostring = Tcl_DStringValue(&tds);
-    tds_len = Tcl_DStringLength(&tds);
-
-    /* Just for fun, let's try translating ostring to Unicode. */
-    Tcl_UniChar *ustring;
+    /* Just for fun, let's try translating string to Unicode. */
+    WCHAR *wstring;
     Tcl_DString tds2;
     Tcl_DStringInit(&tds2);
-    ustring = Tcl_UtfToUniCharDString(ostring, tds_len, &tds2);
-    DrawTextW(hDC, (LPWSTR)ustring, Tcl_DStringLength(&tds2)/2, &sizerect,
+    wstring = Tcl_UtfToWCharDString(string, -1, &tds2);
+    DrawTextW(hDC, wstring, Tcl_DStringLength(&tds2)/2, &sizerect,
 	    format_flags | DT_CALCRECT);
     Tcl_DStringFree(&tds2);
 
@@ -1729,8 +1704,8 @@ int GdiText(
 
     /* Print the text. */
     Tcl_DStringInit(&tds2);
-    ustring = Tcl_UtfToUniCharDString(ostring, tds_len, &tds2);
-    retval = DrawTextW(hDC, (LPWSTR) ustring,
+    wstring = Tcl_UtfToWCharDString(string, -1, &tds2);
+    retval = DrawTextW(hDC, wstring,
 	    Tcl_DStringLength(&tds2)/2, &sizerect, format_flags);
     Tcl_DStringFree(&tds2);
     Tcl_DStringFree(&tds);
