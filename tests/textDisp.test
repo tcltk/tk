@@ -666,6 +666,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
+    updateText
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 1.0
@@ -883,6 +884,7 @@ test textDisp-5.2 {DisplayDLine, line resizes during display} {
 } [list 30 30]
 
 .t configure -wrap char
+updateText
 test textDisp-6.1 {scrolling in DisplayText, scroll up} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
@@ -921,6 +923,7 @@ test textDisp-6.3 {scrolling in DisplayText, multiple scrolls} {
 test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     .t configure -wrap char
     .t delete 1.0 end
+    updateText
     .t insert 1.0 "Line 1"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
 	.t insert end "\nLine $i"
@@ -1135,7 +1138,6 @@ test textDisp-8.3 {TkTextChanged} {
     }
     updateText
     .t insert 2.0 xx
-    updateText
     list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
 test textDisp-8.4 {TkTextChanged} {
@@ -1396,15 +1398,16 @@ test textDisp-9.12 {TkTextRedrawTag} -constraints textfonts -body {
 } -result {2.0 {2.0 eof}}
 test textDisp-9.13 {TkTextRedrawTag} {
     .t configure -wrap none
+    updateText
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
         .t insert end "Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 2.8 2.17
     .t tag add hidden 6.8 7.17
+    updateText
     .t tag configure hidden -background red
     .t tag configure hidden -elide true
-    updateText
     .t tag configure hidden -elide false
     updateText
     list $tk_textRelayout $tk_textRedraw
@@ -1436,9 +1439,9 @@ test textDisp-9.14 {TkTextRedrawTag} {
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
     .t configure -wrap char
+    updateText
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
-    updateText
     .t configure -bg black
     updateText
     list $tk_textRelayout $tk_textRedraw
