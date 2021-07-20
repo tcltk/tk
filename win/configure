@@ -5237,7 +5237,7 @@ echo "${ECHO_T}$result" >&6
 
     echo "$as_me:$LINENO: checking for tclsh in Tcl build directory" >&5
 echo $ECHO_N "checking for tclsh in Tcl build directory... $ECHO_C" >&6
-    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${TCL_DBGX}${EXEEXT}
+    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}\${EXESUFFIX}
     echo "$as_me:$LINENO: result: $BUILD_TCLSH" >&5
 echo "${ECHO_T}$BUILD_TCLSH" >&6
 

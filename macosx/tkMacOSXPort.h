@@ -49,6 +49,9 @@
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -71,6 +74,19 @@
 #	define SELECT_MASK void
 #   else
 #	define SELECT_MASK int
+#   endif
+#endif
+
+/*
+ * Used to tag functions that are only to be visible within the module being
+ * built and not outside it (where this is supported by the linker).
+ */
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
 #   endif
 #endif
 
