@@ -94,9 +94,10 @@ namespace eval ::tk::print {
 		variable printer_name
 		
 	    _set_dc
-		if {![info exists printer_name]} {
-			return
-		}
+	    
+	    if {![info exists printer_name]} {
+		return
+	    }
 
 	    if {$font eq ""} {
 		_gdi characters $printargs(hDC) -array printcharwid
@@ -249,10 +250,11 @@ namespace eval ::tk::print {
 	    variable printargs
 		variable printer_name
 
-	    _set_dc	
-		if {![info exists printer_name]} {
-			return
-		}
+	    _set_dc
+	    
+	    if {![info exists printer_name]} {
+		return
+	    }
 		
 	    _opendoc
 	    _openpage
