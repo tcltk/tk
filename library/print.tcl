@@ -94,7 +94,7 @@ namespace eval ::tk::print {
 		variable printer_name
 		
 	    _set_dc
-		if {$printer_name eq ""} {
+		if {![info exists printer_name]} {
 			return
 		}
 
@@ -250,7 +250,7 @@ namespace eval ::tk::print {
 		variable printer_name
 
 	    _set_dc	
-		if {$printer_name eq ""} {
+		if {![info exists printer_name]} {
 			return
 		}
 		
