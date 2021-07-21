@@ -91,7 +91,7 @@ namespace eval ::tk::print {
 	# font -       Font for printing
 	proc _print_data {data {breaklines 1} {font ""}} {
 	    variable printargs
-		variable printer_name
+	    variable printer_name
 		
 	    _set_dc
 	    
@@ -248,7 +248,7 @@ namespace eval ::tk::print {
 
 	proc _print_widget {wid {printer default} {name "Tk Print Output"}} {
 	    variable printargs
-		variable printer_name
+	    variable printer_name
 
 	    _set_dc
 	    
