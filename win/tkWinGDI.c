@@ -12,8 +12,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Remove deprecation warnings. */
-#define _CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
 #include <stdlib.h>
@@ -4747,24 +4745,25 @@ static int PrintSelectPrinter(
      * Store print properties and link variables so they can be accessed from
      * script level.
      */
+    if (localPrinterName != NULL) {
+        char* varlink1 = (char*)Tcl_Alloc(100 * sizeof(char));
+        char** varlink2 = (char**)Tcl_Alloc(sizeof(char*));
+        *varlink2 = varlink1;
+        strcpy(varlink1, localPrinterName);
 
-    char *varlink1 = (char *) Tcl_Alloc(100 * sizeof(char));
-    char **varlink2 = (char **) Tcl_Alloc(sizeof(char *));
-    *varlink2 = varlink1;
-    strcpy (varlink1, localPrinterName);
-
-    Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
-	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
-    Tcl_LinkVar(interp, "::tk::print::copies", (char *)&copies,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-    Tcl_LinkVar(interp, "::tk::print::dpi_x", (char *)&dpi_x,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-    Tcl_LinkVar(interp, "::tk::print::dpi_y", (char *)&dpi_y,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-    Tcl_LinkVar(interp, "::tk::print::paper_width", (char *)&paper_width,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-    Tcl_LinkVar(interp, "::tk::print::paper_height", (char *)&paper_height,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
+        Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
+            TCL_LINK_STRING | TCL_LINK_READ_ONLY);
+        Tcl_LinkVar(interp, "::tk::print::copies", (char*)&copies,
+            TCL_LINK_INT | TCL_LINK_READ_ONLY);
+        Tcl_LinkVar(interp, "::tk::print::dpi_x", (char*)&dpi_x,
+            TCL_LINK_INT | TCL_LINK_READ_ONLY);
+        Tcl_LinkVar(interp, "::tk::print::dpi_y", (char*)&dpi_y,
+            TCL_LINK_INT | TCL_LINK_READ_ONLY);
+        Tcl_LinkVar(interp, "::tk::print::paper_width", (char*)&paper_width,
+            TCL_LINK_INT | TCL_LINK_READ_ONLY);
+        Tcl_LinkVar(interp, "::tk::print::paper_height", (char*)&paper_height,
+            TCL_LINK_INT | TCL_LINK_READ_ONLY);
+    }
 
     return TCL_OK;
 }
