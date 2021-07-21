@@ -1502,8 +1502,7 @@ int GdiText(
     int bgmode;
     COLORREF textcolor = 0;
     int usesingle = 0;
-    TCHAR *ostring;
-    int tds_len;  
+    WCHAR *wstring;
     Tcl_DString tds;
 
     if (argc < 4) {
@@ -1599,25 +1598,11 @@ int GdiText(
 	format_flags &= ~DT_WORDBREAK;
     }
 
- 
-   #if 0 
-   /* Just for fun, let's try translating string to Unicode. */
-    WCHAR *wstring;
-    Tcl_DString tds2;
-    Tcl_DStringInit(&tds2);
-    wstring = Tcl_UtfToWCharDString(string, -1, &tds2);
-    DrawTextW(hDC, wstring, Tcl_DStringLength(&tds2)/2, &sizerect,
-	    format_flags | DT_CALCRECT);
-    Tcl_DStringFree(&tds2);
-    #endif
-	
-    /*This prints without crashing.*/
     Tcl_DStringInit(&tds);
-  //  Tcl_UtfToExternalDString(encoding, string, -1, &tds);
-    Tcl_DStringAppend(&tds, string, -1);
-    ostring = Tcl_DStringValue(&tds);
-    tds_len = Tcl_DStringLength(&tds);
-    DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags | DT_CALCRECT);	
+    /* Just for fun, let's try translating string to Unicode. */
+    wstring = Tcl_UtfToWCharDString(string, -1, &tds);
+    DrawTextW(hDC, wstring, Tcl_DStringLength(&tds)/2, &sizerect,
+	    format_flags | DT_CALCRECT);
 
     /* Adjust the rectangle according to the anchor. */
     x = y = 0;
@@ -1670,15 +1655,8 @@ int GdiText(
     }
 
     /* Print the text. */
-    #if 0
-    Tcl_DStringInit(&tds2);
-    wstring = Tcl_UtfToWCharDString(string, -1, &tds2);
     retval = DrawTextW(hDC, wstring,
-	    Tcl_DStringLength(&tds2)/2, &sizerect, format_flags);
-    Tcl_DStringFree(&tds2);
-    Tcl_DStringFree(&tds);
-    #endif
-    retval = DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags );
+	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags);
     Tcl_DStringFree(&tds);
 
     /* Get the color set back. */
@@ -4390,7 +4368,7 @@ int Winprint_Init(
 	    (ClientData) NULL, (Tcl_NamespaceDeleteProc *) NULL);
     for (i=0; i<numCommands; i++) {
 	char buffer[100];
-	
+
 	sprintf(buffer, "%s::%s", gdiName, gdi_commands[i].command_string);
 	Tcl_CreateCommand(interp, buffer, gdi_commands[i].command,
 		(ClientData) 0, (Tcl_CmdDeleteProc *) 0);
@@ -4705,17 +4683,14 @@ TkGdiMakeBezierCurve(
  */
 
 static int PrintSelectPrinter(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj* const*))
 {
     LPCSTR printerName = NULL;
     PDEVMODE returnedDevmode = NULL;
     PDEVMODE localDevmode = NULL;
-    (void) clientData;
-    (void) argc;
-    (void) objv;
 
     copies = 0;
     paper_width = 0;
@@ -4729,9 +4704,9 @@ static int PrintSelectPrinter(
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
-	
+
     if (PrintDlg(&pd) == TRUE) {
-		
+
 	/*Get document info.*/
 	ZeroMemory(&di, sizeof(di));
 	di.cbSize = sizeof(di);
@@ -4763,7 +4738,7 @@ static int PrintSelectPrinter(
 	    localDevmode = NULL;
 	}
     }
-	
+
     if (pd.hDevMode != NULL) {
 	GlobalFree(pd.hDevMode);
     }
@@ -4776,7 +4751,7 @@ static int PrintSelectPrinter(
     char *varlink1 = (char *) Tcl_Alloc(100 * sizeof(char));
     char **varlink2 = (char **) Tcl_Alloc(sizeof(char *));
     *varlink2 = varlink1;
-    strcpy (varlink1, localPrinterName);		
+    strcpy (varlink1, localPrinterName);
 
     Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
 	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
@@ -4852,15 +4827,11 @@ int PrintOpenPrinter(
  */
 
 int PrintClosePrinter(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
-    (void) clientData;
-    (void) argc;
-    (void) objv;
-
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
@@ -4884,16 +4855,11 @@ int PrintClosePrinter(
  */
 
 int PrintOpenDoc(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
-
-    (void) clientData;
-    (void) argc;
-    (void) objv;
-
     int output = 0;
 
     if (printDC == NULL) {
@@ -4927,15 +4893,11 @@ int PrintOpenDoc(
  */
 
 int PrintCloseDoc(
-    ClientData clientData,
+    TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
-    int argc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
-    (void) clientData;
-    (void) argc;
-    (void) objv;
-
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
@@ -4963,15 +4925,11 @@ int PrintCloseDoc(
  */
 
 int PrintOpenPage(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
-    (void) clientData;
-    (void) argc;
-    (void) objv;
-
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
@@ -5000,15 +4958,11 @@ int PrintOpenPage(
  */
 
 int PrintClosePage(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
-    (void) clientData;
-    (void) argc;
-    (void) objv;
-
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", NULL);
 	return TCL_ERROR;
