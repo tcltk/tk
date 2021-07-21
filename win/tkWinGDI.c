@@ -1502,8 +1502,8 @@ int GdiText(
     int bgmode;
     COLORREF textcolor = 0;
     int usesingle = 0;
-	TCHAR *ostring;
-	int tds_len;  
+    TCHAR *ostring;
+    int tds_len;  
     Tcl_DString tds;
 
     if (argc < 4) {
@@ -1600,24 +1600,24 @@ int GdiText(
     }
 
  
-	#if 0 
+   #if 0 
    /* Just for fun, let's try translating string to Unicode. */
-	WCHAR *wstring;
+    WCHAR *wstring;
     Tcl_DString tds2;
     Tcl_DStringInit(&tds2);
     wstring = Tcl_UtfToWCharDString(string, -1, &tds2);
     DrawTextW(hDC, wstring, Tcl_DStringLength(&tds2)/2, &sizerect,
 	    format_flags | DT_CALCRECT);
     Tcl_DStringFree(&tds2);
-	#endif
+    #endif
 	
-	/*This prints without crashing.*/
-	Tcl_DStringInit(&tds);
+    /*This prints without crashing.*/
+    Tcl_DStringInit(&tds);
   //  Tcl_UtfToExternalDString(encoding, string, -1, &tds);
-	Tcl_DStringAppend(&tds, string, -1);
+    Tcl_DStringAppend(&tds, string, -1);
     ostring = Tcl_DStringValue(&tds);
     tds_len = Tcl_DStringLength(&tds);
-	DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags | DT_CALCRECT);	
+    DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags | DT_CALCRECT);	
 
     /* Adjust the rectangle according to the anchor. */
     x = y = 0;
@@ -1670,15 +1670,15 @@ int GdiText(
     }
 
     /* Print the text. */
-	#if 0
+    #if 0
     Tcl_DStringInit(&tds2);
     wstring = Tcl_UtfToWCharDString(string, -1, &tds2);
     retval = DrawTextW(hDC, wstring,
 	    Tcl_DStringLength(&tds2)/2, &sizerect, format_flags);
     Tcl_DStringFree(&tds2);
     Tcl_DStringFree(&tds);
-	#endif
-	retval = DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags );
+    #endif
+    retval = DrawText (hDC, ostring, Tcl_DStringLength(&tds), &sizerect, format_flags );
     Tcl_DStringFree(&tds);
 
     /* Get the color set back. */
