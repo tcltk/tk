@@ -239,7 +239,7 @@ FinishPrint(
 		 * to output location.
 		 */
                 if ([pathExtension isEqualToString: @ "pdf"]) {
-  
+
 		    /*Make sure no file conflict exists.*/
 		    if ([fileManager fileExistsAtPath: finalPath]) {
 			[fileManager removeItemAtPath: finalPath error: &error];
@@ -251,7 +251,7 @@ FinishPrint(
 		    return status;
                 }
 
-                /* 
+                /*
                  * Is the target file PostScript? If so, run print file
                  * through CUPS filter to convert back to PostScript.
                  */
