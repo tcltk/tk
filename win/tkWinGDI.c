@@ -72,7 +72,7 @@ static int		TkGdiMakeBezierCurve(Tk_Canvas, double *, int, int,
  * Helper functions.
  */
 static int		GdiMakeLogFont(Tcl_Interp *interp, const char *str,
-			    LOGFONT *lf, HDC hDC);
+			    LOGFONTW *lf, HDC hDC);
 static int		GdiMakePen(Tcl_Interp *interp, int width,
 			    int dashstyle, const char *dashstyledata,
 			    int capstyle, int joinstyle,
@@ -100,7 +100,7 @@ static int		PalEntriesOnDevice(HDC hDC);
 static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
-static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONT *lf,
+static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    const char *str[], int numargs);
 static int		PrintSelectPrinter(ClientData clientData,
 			    Tcl_Interp *interp, int argc,
@@ -1374,7 +1374,7 @@ static int GdiCharWidths(
      */
 
     HDC hDC;
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hfont, oldfont;
     int made_font = 0;
     const char *aryvarname = "GdiCharWidths";
@@ -1397,7 +1397,7 @@ static int GdiCharWidths(
 	    argc--;
 	    argv++;
 	    if (GdiMakeLogFont(interp, argv[0], &lf, hDC)) {
-		if ((hfont = CreateFontIndirect(&lf)) != NULL) {
+		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
 		    made_font = 1;
 		    oldfont = SelectObject(hDC, hfont);
 		}
@@ -1491,7 +1491,7 @@ int GdiText(
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
     Tk_Anchor anchor = 0;
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hfont, oldfont;
     int made_font = 0;
     int retval;
@@ -1549,7 +1549,7 @@ int GdiText(
 	    argc--;
 	    argv++;
 	    if (GdiMakeLogFont(interp, argv[0], &lf, hDC)) {
-		if ((hfont = CreateFontIndirect(&lf)) != NULL) {
+		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
 		    made_font = 1;
 		    oldfont = SelectObject(hDC, hfont);
 		}
@@ -2427,7 +2427,7 @@ static int DIBNumColors(
 
 static int GdiParseFontWords(
     TCL_UNUSED(Tcl_Interp *),
-    LOGFONT *lf,
+    LOGFONTW *lf,
     const char *str[],
     int numargs)
 {
@@ -2524,7 +2524,7 @@ static int GdiWordToWeight(
 static int GdiMakeLogFont(
     Tcl_Interp *interp,
     const char *str,
-    LOGFONT *lf,
+    LOGFONTW *lf,
     HDC hDC)
 {
     const char **list;
@@ -2546,7 +2546,12 @@ static int GdiMakeLogFont(
 
     /* Now we have the font structure broken into name, size, weight. */
     if (count >= 1) {
-	strncpy(lf->lfFaceName, list[0], sizeof(lf->lfFaceName) - 1);
+	Tcl_DString ds;
+
+	Tcl_DStringInit(&ds);
+	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(list[0], -1, &ds),
+		sizeof(lf->lfFaceName) - 1);
+	Tcl_DStringFree(&ds);
     } else {
 	return 0;
     }
@@ -3962,7 +3967,7 @@ static HBITMAP CopyScreenToBitmap(
      * DC.
      */
 
-    hScrDC = CreateDC("DISPLAY", NULL, NULL, NULL);
+    hScrDC = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
     hMemDC = CreateCompatibleDC(hScrDC);
 
     /* Get points of rectangle to grab. */
