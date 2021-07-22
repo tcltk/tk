@@ -4799,6 +4799,7 @@ test textDisp-33.1 {one line longer than fits in the widget} {
     .tt insert 1.0 [string repeat "more wrap + " 300]
     updateText
     .tt yview "1.0 +1 displaylines"
+    updateText
     if {[lindex [.tt yview] 0] > 0.1} {
 	set result "window should be scrolled to the top"
     } else {
