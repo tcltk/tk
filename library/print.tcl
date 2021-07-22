@@ -92,9 +92,9 @@ namespace eval ::tk::print {
 	proc _print_data {data {breaklines 1} {font ""}} {
 	    variable printargs
 	    variable printer_name
-		
+
 	    _set_dc
-	    
+
 	    if {![info exists printer_name]} {
 		return
 	    }
@@ -251,11 +251,11 @@ namespace eval ::tk::print {
 	    variable printer_name
 
 	    _set_dc
-	    
+
 	    if {![info exists printer_name]} {
 		return
 	    }
-		
+
 	    _opendoc
 	    _openpage
 
@@ -285,7 +285,7 @@ namespace eval ::tk::print {
 		$printargs(resx)  / 1000.0
 	    }]
 	    set printer_y [expr {
-		( $printargs(pl) - $printargs(tm) - $printargs(bm) ) * 
+		( $printargs(pl) - $printargs(tm) - $printargs(bm) ) *
 		$printargs(resy) / 1000.0
 	    }]
 	    set factor_x [expr {$window_x / $printer_x}]

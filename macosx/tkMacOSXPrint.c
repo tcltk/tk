@@ -222,7 +222,7 @@ FinishPrint(
         /* Destination is file. Determine how to handle. */
         if (status == noErr && printDestination == kPMDestinationFile) {
             CFURLRef outputLocation = NULL;
-	    
+
             status = PMSessionCopyDestinationLocation(printSession, printSettings, & outputLocation);
             if (status == noErr) {
                 /*Get the source file and target destination, convert to strings.*/
@@ -233,7 +233,7 @@ FinishPrint(
                 NSString * pathExtension = [finalPath pathExtension];
                 NSFileManager * fileManager = [NSFileManager defaultManager];
 		NSError * error = nil;
-		
+
                 /*
 		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
@@ -265,8 +265,8 @@ FinishPrint(
 		    if ([fileManager fileExistsAtPath: finalPath]) {
 			[fileManager removeItemAtPath: finalPath error: &error];
 		    }
-		   
-		    /* 
+
+		    /*
 		     *  Fork and start new process with command string. Thanks to Peter da Silva
 		     *  for assistance.
 		     */
@@ -278,7 +278,7 @@ FinishPrint(
 		      dup2(open(target, O_RDWR | O_CREAT, 0777), 1);
 		      dup2(open("/dev/null", O_WRONLY), 2);
 		      execl("/usr/sbin/cupsfilter", "/usr/sbin/cupsfilter", "-m", "application/postscript", source, NULL);
-		      exit(0);	   
+		      exit(0);
 		    }
 	      return status;
 	      }
