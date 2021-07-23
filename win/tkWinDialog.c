@@ -3151,7 +3151,7 @@ HookProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    CHOOSEFONT *pcf = (CHOOSEFONT *) lParam;
+    CHOOSEFONTW *pcf = (CHOOSEFONTW *) lParam;
     HWND hwndCtrl;
     static HookData *phd = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -3463,10 +3463,10 @@ FontchooserShowCmd(
 
     Tk_MakeWindowExist(parent);
 
-    ZeroMemory(&cf, sizeof(CHOOSEFONT));
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&cf, sizeof(CHOOSEFONTW));
+    ZeroMemory(&lf, sizeof(LOGFONTW));
     lf.lfCharSet = DEFAULT_CHARSET;
-    cf.lStructSize = sizeof(CHOOSEFONT);
+    cf.lStructSize = sizeof(CHOOSEFONTW);
     cf.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));
     cf.lpLogFont = &lf;
     cf.nFontType = SCREEN_FONTTYPE;
