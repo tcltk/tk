@@ -782,7 +782,7 @@ Tk_ChooseColorObjCmd(
     }
 
     parent			= tkwin;
-    chooseColor.lStructSize	= sizeof(CHOOSECOLOR);
+    chooseColor.lStructSize	= sizeof(CHOOSECOLORW);
     chooseColor.hwndOwner	= NULL;
     chooseColor.hInstance	= NULL;
     chooseColor.rgbResult	= oldColor;
@@ -908,7 +908,7 @@ ColorDlgHookProc(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *title;
-    CHOOSECOLOR *ccPtr;
+    CHOOSECOLORW *ccPtr;
     (void)wParam;
 
     if (WM_INITDIALOG == uMsg) {
@@ -917,7 +917,7 @@ ColorDlgHookProc(
 	 * Set the title string of the dialog.
 	 */
 
-	ccPtr = (CHOOSECOLOR *) lParam;
+	ccPtr = (CHOOSECOLORW *) lParam;
 	title = (const char *) ccPtr->lCustData;
 
 	if ((title != NULL) && (title[0] != '\0')) {
