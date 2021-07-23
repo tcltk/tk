@@ -2550,7 +2550,7 @@ static int GdiMakeLogFont(
 
 	Tcl_DStringInit(&ds);
 	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(list[0], -1, &ds),
-		sizeof(lf->lfFaceName) - 1);
+		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
     } else {
 	return 0;
