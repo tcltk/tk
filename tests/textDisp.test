@@ -78,7 +78,7 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {Courier -14}
+set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
