@@ -1204,7 +1204,7 @@ test textDisp-7.4 {TkTextRedrawRegion} {notAqua} {
 } {{} {borders 1.0 1.20}}
 # This test does not pass on any platform at this point with the revised
 # implementation (see [94547cbef7]), therefore the 'knownBug' constraint.
-test textDisp-7.5 {TkTextRedrawRegion} {notAqua knownBug} {
+test textDisp-7.5 {TkTextRedrawRegion} {knownBug} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 1.0 -relheight 0.2 \
 	    -anchor s -bordermode ignore
@@ -1224,7 +1224,7 @@ test textDisp-7.6 {TkTextRedrawRegion} {notAqua} {
 } {{} {borders 3.0 4.0 5.0}}
 # This test does not pass on any platform at this point with the revised
 # implementation (see [94547cbef7]), therefore the 'knownBug' constraint.
-test textDisp-7.7 {TkTextRedrawRegion} {notAqua knownBug} {
+test textDisp-7.7 {TkTextRedrawRegion} {knownBug} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 1.0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor e -bordermode ignore
