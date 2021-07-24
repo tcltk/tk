@@ -624,7 +624,7 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
 # (the text is not rendered at all). This is a bug.
 # Moreover, this test does not pass on any platform at this point with the revised
 # implementation (see [a34b49f8c6]), therefore the 'knownBug' constraint.
-test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {notAqua knownBug} {
+test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {knownBug} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60 90 120] -justify right
@@ -3870,7 +3870,7 @@ updateText
 # (the text is not rendered at all). This is a bug.
 # Moreover, this test does not pass on any platform at this point with the revised
 # implementation (see [a34b49f8c6]), therefore the 'knownBug' constraint.
-test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {notAqua knownBug} {
+test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {knownBug} {
     .t delete 1.0 end
     .t tag configure x -justify center
     .t insert 1.0 aa\tbb\tcc\tdd\t
