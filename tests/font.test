@@ -729,7 +729,7 @@ foreach p {
 	    ZapfDingbats ZapfDingbats ZapfDingbats ZapfDingbats}
 } {
     set values [lassign $p testName family]
-    test $testName {Tk_PostscriptFontName procedure: exhaustive} unix {
+    test $testName {Tk_PostscriptFontName procedure: exhaustive} {unix failsOnQuarz} {
 	set x {}
 	set j 0
 	foreach slant {roman italic} {
