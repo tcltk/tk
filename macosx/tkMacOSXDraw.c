@@ -1181,7 +1181,7 @@ TkScrollWindow(
 
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
- 	    ChkErr(HIShapeDifference, dmgRgn, extraRgn,
+ 	    ChkErr(HIShapeUnion, dmgRgn, extraRgn,
 		    (HIMutableShapeRef) dmgRgn);
 	    result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
