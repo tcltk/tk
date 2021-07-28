@@ -75,10 +75,3 @@ jobs:
           }
         env:
           MAC_CI: 1
-      - name: Carry out trial installation
-        run: |
-          sudo make install || {
-            cat config.log
-            echo "::error::Failure during Install"
-            exit 1
-          }
