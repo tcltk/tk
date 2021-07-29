@@ -1143,7 +1143,7 @@ TkScrollWindow(
     MacDrawable *macDraw = (MacDrawable *)drawable;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     CGRect srcRect, dstRect;
-    HIShapeRef dmgRgn = NULL, extraRgn = NULL;
+    HIShapeRef dmgRgn = NULL, extraRgn = NULL, unionRgn = NULL, intersectRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
 
@@ -1182,7 +1182,11 @@ TkScrollWindow(
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
  	    ChkErr(HIShapeUnion, dmgRgn, extraRgn,
-		    (HIMutableShapeRef) dmgRgn);
+		    (HIMutableShapeRef) unionRgn);
+	    ChkErr(HIShapeIntersect, dmgRgn, extraRgn,
+		(HIMutableShapeRef) intersectRgn);
+	    ChkErr(HIShapeDifference, unionRgn, intersectRgn,
+		(HIMutableShapeRef) dmgRgn);
 	    result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
 	    /*
