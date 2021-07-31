@@ -1144,7 +1144,7 @@ TkScrollWindow(
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     HIShapeRef srcRgn, dstRgn;
     HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
-    NSRect bounds, scrollSrc, scrollDst;
+    NSRect bounds, viewSrcRect, srcRect, dstRect;
     int result = 0;
 
     if (view) {
@@ -1154,29 +1154,31 @@ TkScrollWindow(
 	 */
 
   	bounds = [view bounds];
- 	scrollSrc = NSMakeRect(macDraw->xOff + x,
+ 	viewSrcRect = NSMakeRect(macDraw->xOff + x,
 		bounds.size.height - height - (macDraw->yOff + y),
 		width, height);
- 	scrollDst = NSOffsetRect(scrollSrc, dx, -dy);
-
-	/*
-	 * Compute the damage.
-	 */
-
-	srcRgn = HIShapeCreateWithRect(&scrollSrc);
-	dstRgn = HIShapeCreateWithRect(&scrollDst);
-	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
-	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
 	/*
 	 * Scroll the rectangle.
 	 */
 
-	[view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
+	[view scrollRect:viewSrcRect by:NSMakeSize(dx, -dy)];
+
+	/*
+	 * Compute the damage region, using Tk coordinates (origin at top left).
+	 */
+
+	srcRect = CGRectMake(x, y, width, height);
+	dstRect = CGRectOffset(srcRect, dx, dy);
+	srcRgn = HIShapeCreateWithRect(&srcRect);
+	dstRgn = HIShapeCreateWithRect(&dstRect);
+	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
+	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
+
     }
 
     /*
-     * Convert dmgRgn to Tk coordinates and store the result.
+     * Convert the HIShape dmgRgn into a TkRegion and store it.
      */
 
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
