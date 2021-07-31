@@ -1143,7 +1143,7 @@ TkScrollWindow(
     MacDrawable *macDraw = (MacDrawable *)drawable;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     CGRect srcRect, dstRect;
-    HIShapeRef dmgRgn = NULL, extraRgn = NULL, unionRgn = NULL, intersectRgn = NULL;
+    HIShapeRef dmgRgn = NULL, extraRgn = NULL, intRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
 
@@ -1167,9 +1167,9 @@ TkScrollWindow(
  	scrollDst = NSIntersectionRect(scrollDst, visRect);
  	if (!NSIsEmptyRect(scrollSrc) && !NSIsEmptyRect(scrollDst)) {
   	    /*
-  	     * Mark the difference between source and destination as damaged.
-	     * This region is described in NSView coordinates (y=0 at the
-	     * bottom) and converted to Tk coordinates later.
+  	     * Mark the symmetric difference between source and destination as
+	     * damaged. This region is described in NSView coordinates (y=0 at
+	     * the bottom) and converted to Tk coordinates later.
   	     */
 
 	    srcRect = CGRectMake(x, y, width, height);
@@ -1181,12 +1181,10 @@ TkScrollWindow(
 
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
- 	    ChkErr(HIShapeUnion, dmgRgn, extraRgn,
-		    (HIMutableShapeRef) unionRgn);
-	    ChkErr(HIShapeIntersect, dmgRgn, extraRgn,
-		(HIMutableShapeRef) intersectRgn);
-	    ChkErr(HIShapeDifference, unionRgn, intersectRgn,
-		(HIMutableShapeRef) dmgRgn);
+  	    intRgn = HIShapeCreateMutableWithRect(&srcRect);
+ 	    ChkErr(HIShapeUnion, dmgRgn, extraRgn, (HIMutableShapeRef) dmgRgn);
+	    ChkErr(HIShapeIntersect, intRgn, extraRgn, (HIMutableShapeRef) intRgn);
+	    ChkErr(HIShapeDifference, dmgRgn, intRgn, (HIMutableShapeRef) dmgRgn);
 	    result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
 	    /*
@@ -1196,6 +1194,9 @@ TkScrollWindow(
 	    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
 	    if (extraRgn) {
 		CFRelease(extraRgn);
+	    }
+	    if (intRgn) {
+		CFRelease(intRgn);
 	    }
 
  	    /*
