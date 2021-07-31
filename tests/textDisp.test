@@ -619,7 +619,7 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
 	          [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]]
     lequal $res $expected
 } {1}
-# Next test is currently constrained to no run on mac (aqua) because on
+# Next test is currently constrained to not run on mac (aqua) because on
 # aqua it fails due to wrong implementation of tabs with right justification
 # (the text is not rendered at all). This is a bug.
 test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {notAqua} {
@@ -3841,7 +3841,7 @@ test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {
 catch {destroy .t.f}
 .t configure -width 20
 updateText
-# Next test is currently constrained to no run on mac (aqua) because on
+# Next test is currently constrained to not run on mac (aqua) because on
 # aqua it fails due to wrong implementation of tabs with right justification
 # (the text is not rendered at all). This is a bug.
 test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} notAqua {
