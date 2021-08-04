@@ -400,7 +400,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
     AEInfo->retryCount = 0;
     ProcessAppleEvent((ClientData)AEInfo);
-    
+
 }
 
 @end
@@ -541,8 +541,8 @@ TkMacOSXInitAppleEvents(
 	    forEventClass:kInternetEventClass andEventID:kAEGetURL];
 
 	/*
-	 * We do not load our sdef dynamically but this event handler 
-         * is required to silence error messages from inline execution 
+	 * We do not load our sdef dynamically but this event handler
+         * is required to silence error messages from inline execution
          * of AppleScript at the Objective-C level.
 	 */
 	[aeManager setEventHandler:NSApp
