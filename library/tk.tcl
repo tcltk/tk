@@ -699,6 +699,11 @@ if {[tk windowingsystem] eq "aqua"} {
 	uplevel #0 $script
     	eval $script
     }
+    #This procedure is required to silence warnings generated
+    #by inline AppleScript execution.
+    proc ::tk::mac::GetDynamicSdef {} {
+         puts ""
+     }
 }
 
 if {[info commands ::tk::endOfWord] eq ""} {
