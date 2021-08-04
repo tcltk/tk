@@ -897,7 +897,8 @@ RecomputeWidgets(
 {
     Tk_ClassWorldChangedProc *proc =
 	    Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
-
+    TkWindow *tkwinPtr;
+    
     if (proc != NULL) {
 	proc(winPtr->instanceData);
     }
@@ -921,9 +922,16 @@ RecomputeWidgets(
      * of the code below.
      */
 
-    for (winPtr=winPtr->childList ; winPtr!=NULL ; winPtr=winPtr->nextPtr) {
-	RecomputeWidgets(winPtr);
+    for (tkwinPtr=winPtr->childList ; tkwinPtr!=NULL ; tkwinPtr=tkwinPtr->nextPtr) {
+	RecomputeWidgets(tkwinPtr);
     }
+    
+    /* 
+     * Broadcast font change virtually for mega-widget layout managers.
+     * Do this after the font change has been propagated to core widgets. 
+    */
+    TkSendVirtualEvent((Tk_Window)winPtr, "TkWorldChanged",
+		       Tcl_NewStringObj("FontChanged",-1));
 }
 
 /*
