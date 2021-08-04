@@ -7952,7 +7952,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2021-01-08 (bug)[822330] Prevent buffer overflow in SVG image.
 
-2021-01-28 (bug)[237971] 'end' argument to [$canvas insert] 
+2021-01-28 (bug)[237971] 'end' argument to [$canvas insert]
 
 2021-02-25 (bug)[be9cad] crash in [tkwait]
 
