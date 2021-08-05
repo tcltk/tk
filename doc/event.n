@@ -345,12 +345,12 @@ The legacy widgets ignore this event.
 .TP
 \fB<<TkWorldChanged>>\fR
 .
-For font changes, this event is sent to widgets holding a reference to
-a modified font. The user_data field (%d) will have the value
-"FontChanged".  For other system wide changes, this event will be sent
-to widgets potentially effected by the change, and the user_data field
-will indicate the cause of the change.  NOTE: all tk and ttk widgets
-already handle this event internally.
+This event is sent to all widgets when a font is changed, for example,
+by the use of [font configure].  The user_data field (%d) will have the
+value "FontChanged".  For other system wide changes, this event will
+be sent to all widgets, and the user_data field will indicate the
+cause of the change.  NOTE: all tk and ttk widgets already handle this
+event internally.
 .TP
 \fB<<TraverseIn>>\fR
 This is sent to a widget when the focus enters the widget because of a
