@@ -741,7 +741,7 @@ namespace eval ::tk::print {
 		-side left -fill x -expand no
 
 	    bind $p.frame.printframe.mb <<ComboboxSelected>>  {
-		set chooseprinter
+		set chooseprinter [$p.frame.printframe.mb get]
 	    }
 
 	    set paperlist [list [mc Letter] [mc Legal] [mc A4]]
