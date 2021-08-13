@@ -4200,7 +4200,7 @@ WmIconphotoCmd(
 	}
     }
     for (i = startObj; i < objc; i++) {
-s	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use \"%s\" as iconphoto: not a photo image",
