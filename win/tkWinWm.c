@@ -4159,6 +4159,11 @@ WmIconphotoCmd(
     unsigned size;
     (void)tkwin;
 
+    if ((objc == 3) && (base_icon == NULL)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
+	return TCL_OK;
+    }
+
     if ((objc == 3) && (base_icon !=NULL)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));
 	return TCL_OK;
