@@ -347,6 +347,11 @@ static int initialized;		/* Flag indicating whether module has been
 TCL_DECLARE_MUTEX(winWmMutex)
 
 /*
+ *  The following stores the name of the "wm iconphoto" image.
+ */
+char *base_icon = NULL;
+
+/*
  * Forward declarations for functions defined in this file:
  */
 
@@ -4154,10 +4159,26 @@ WmIconphotoCmd(
     unsigned size;
     (void)tkwin;
 
-    if (objc < 4) {
+    if ((objc == 3) && (base_icon !=NULL)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));
+	return TCL_OK;
+    }
+
+    if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
+    }
+
+     /*
+      * Get icon name. We only use the first icon name.
+      */
+
+    char *icon;
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	icon = Tcl_GetString(objv[4]);
+    } else {
+	icon = Tcl_GetString(objv[3]);
     }
 
     /*
@@ -4174,7 +4195,7 @@ WmIconphotoCmd(
 	}
     }
     for (i = startObj; i < objc; i++) {
-	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+s	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use \"%s\" as iconphoto: not a photo image",
@@ -4228,6 +4249,8 @@ WmIconphotoCmd(
 	DecrIconRefCount(titlebaricon);
 	return TCL_ERROR;
     }
+    base_icon = icon;
+    
     return TCL_OK;
 }
 

@@ -335,6 +335,11 @@ typedef struct WaitRestrictInfo {
 } WaitRestrictInfo;
 
 /*
+ *  The following stores the name of the "wm iconphoto" image.
+ */
+char *base_icon = NULL;
+
+/*
  * Forward declarations for functions defined in this file:
  */
 
@@ -2387,7 +2392,12 @@ WmIconphotoCmd(
     int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
     unsigned long *iconPropertyData;
 
-    if (objc < 4) {
+    if ((objc == 3) && (base_icon !=NULL)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));
+	return TCL_OK;
+    }
+
+    if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
@@ -2399,6 +2409,17 @@ WmIconphotoCmd(
 		    "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
+    }
+
+     /*
+      * Get icon name. We only use the first icon name.
+      */
+
+    char *icon;
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	icon = Tcl_GetString(objv[4]);
+    } else {
+	icon = Tcl_GetString(objv[3]);
     }
 
     /*
@@ -2503,6 +2524,8 @@ WmIconphotoCmd(
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	UpdatePhotoIcon(winPtr);
     }
+
+    base_icon = icon;
     return TCL_OK;
 }
 
