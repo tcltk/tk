@@ -497,6 +497,7 @@ if {$::tk_library ne ""} {
     }
     namespace eval ::tk {
 	SourceLibFile icons
+	SourceLibFile iconbadges
 	SourceLibFile button
 	SourceLibFile entry
 	SourceLibFile listbox

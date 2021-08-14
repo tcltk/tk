@@ -1,4 +1,4 @@
-# iconsbadges.tcl --
+# iconbadges.tcl --
 #
 #	Notification badges for Tk applications.
 #
@@ -439,3 +439,31 @@ image create photo ::tk::icons::!-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     Z1OOAAAAAElFTkSuQmCC
 }
 
+
+# ::tk::icons::IconBadge --
+# This procedure creates an icon with an overlay badge on systems that
+# do not have a native icon/badge API. 
+#
+# Arguments:
+# badgenumber - number to draw over the icon
+
+proc ::tk::icons::IconBadge {badgenumber} {
+
+    set badge ""
+    
+    if {![info exists base_icon]} {
+	set base_icon [wm iconphoto .]
+    }
+
+    wm iconphoto . $base_icon
+
+    if {[expr $badgenumber > 20] == 1} {
+	set badge ::tk::icons::20plus-badge
+    } else {
+	set badge ::tk::icons::$badgenumber-badge
+    }
+    set dest [image create photo]
+    $dest copy $base_icon
+    $dest copy $badge -from 0 0 18 18 -to 18 0
+    wm iconphoto . $dest
+}
