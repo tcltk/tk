@@ -421,7 +421,7 @@ static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);			    
+			    Tcl_Obj *const objv[]); 
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -2147,12 +2147,13 @@ WmGroupCmd(
 static int
 WmIconbadgeCmd(
     TCL_UNUSED(Tk_Window),		/* Main window of the application. */
-    TkWindow *winPtr,		/* Toplevel to work with */
+    TkWindow *tkWin,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-
+	(void) tkWin;
+	
 	if (objc < 4) {
 		Tcl_WrongNumArgs(interp, 2, objv,
 			"window ? badge?");
@@ -2162,12 +2163,12 @@ WmIconbadgeCmd(
 	char cmd[4096];
 	sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}", Tcl_GetString(objv[2]), Tcl_GetString(objv[3]));
 	if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
-		//Tcl_GetStringResult(interp); 
+		Tcl_SetResult(interp,"Unable to set icon badge",TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 
 
-return TCL_OK;
+	return TCL_OK;
 }
 /*
  *----------------------------------------------------------------------
