@@ -194,6 +194,7 @@ image create photo ::tk::icons::!-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
 # Arguments:
 # badgenumber - number to draw over the icon
 
+if {[tk windowingsystem] eq "x11"} {
 proc ::tk::icons::IconBadge {win badgenumber} {
 
     variable ::tk::icons::base_icon
@@ -232,4 +233,5 @@ proc ::tk::icons::IconBadge {win badgenumber} {
     overlay copy $badge -from 0 0 18 18 -to 18 0
     wm iconphoto $win overlay
 
+}
 }
