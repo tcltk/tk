@@ -399,6 +399,8 @@ addFormattedText {
     @@demo bitmap	The built-in bitmaps
     @@demo dialog1	A dialog box with a local grab
     @@demo dialog2	A dialog box with a global grab
+    @@new
+    @@demo windowicons  Window icons and badges
 }
 
 ##############################################################################
