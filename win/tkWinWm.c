@@ -437,6 +437,9 @@ static int		WmGridCmd(Tk_Window tkwin,
 static int		WmGroupCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+static int		WmIconbadgeCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);				
 static int		WmIconbitmapCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -2618,7 +2621,7 @@ Tk_WmObjCmd(
     static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget", "frame",
-	"geometry", "grid", "group", "iconbitmap",
+	"geometry", "grid", "group", "iconbadge", "iconbitmap",
 	"iconify", "iconmask", "iconname",
 	"iconphoto", "iconposition",
 	"iconwindow", "manage", "maxsize", "minsize", "overrideredirect",
@@ -2630,7 +2633,7 @@ Tk_WmObjCmd(
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET,
 	WMOPT_FRAME,
-	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
+	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBADGE, WMOPT_ICONBITMAP,
 	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
 	WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE,
@@ -2723,6 +2726,8 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
+	case WMOPT_ICONBADGE:
+	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONIFY:
@@ -3810,6 +3815,82 @@ WmGroupCmd(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconbadgeCmd --
+ *
+ *	This function is invoked to process the "wm iconbadge" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconbadgeCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    HWND hwnd;
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int width, height;
+    HICON overlayicon;
+    (void)tkwin;
+    unsigned int badgenumber = NULL;
+    char *badgestring = NULL;
+	char *photoname = NULL;
+
+	/* Establish a COM interface to the ITaskBarList3 API. */
+    ITaskBarList3 *ptbl;
+    HRESULT hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&ptbl);
+
+	if (objc < 4) {
+		Tcl_WrongNumArgs(interp, 2, objv,"window ? badge?");
+		return TCL_ERROR;
+ 	}
+
+	badgestring = Tcl_GetString(objv[3]);
+	sprintf(photoname, "::tk::icons::{%s}-badge", badgestring);
+	badgenumber = (unsigned int) badgestring;
+	if (badgenumber >  9)
+		photoname = "::tk::icons::9plus-badge";
+
+	/* Get image, convert to icon. */
+	photo = Tk_FindPhoto(interp, photoname);
+	if (photo == NULL) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+             "image \"%s\" doesn't exist", photoname)));
+        return TCL_ERROR;
+     }
+	Tk_PhotoGetSize(photo, &width, &height);
+	Tk_PhotoGetImage(photo, &block);
+
+	overlayicon = CreateIcoFromPhoto(width, height, block);
+	if (overlayicon == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "failed to create an iconphoto with image \"%s\"",
+		    photoname));
+	    return TCL_ERROR;
+	}
+
+	/* Place overlay icon on taskbar icon. */
+	hwnd = Tk_GetHWND(winPtr->window);
+	ptbl->SetOverlayIcon(hwnd, overlayicon, badgestring);
+	DestroyIcon(overlayicon);
+
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *
