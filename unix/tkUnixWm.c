@@ -2161,7 +2161,9 @@ WmIconbadgeCmd(
 	}
 	
 	char cmd[4096];
-	sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}", Tcl_GetString(objv[2]), Tcl_GetString(objv[3]));
+	sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}",
+		Tcl_GetString(objv[2]),
+		Tcl_GetString(objv[3]));
 	if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
 		Tcl_SetResult(interp,"Unable to set icon badge",TCL_VOLATILE);
 		return TCL_ERROR;

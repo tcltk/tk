@@ -195,43 +195,41 @@ image create photo ::tk::icons::!-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
 # badgenumber - number to draw over the icon
 
 if {[tk windowingsystem] eq "x11"} {
-proc ::tk::icons::IconBadge {win badgenumber} {
+    proc ::tk::icons::IconBadge {win badgenumber} {
 
-    variable ::tk::icons::base_icon
+	variable ::tk::icons::base_icon
 
-    set badge ""
- 
-    image create photo overlay
-  
-    if {$::tk::icons::base_icon eq ""} {
-	return -code error "You must set the value of ::tk::icons::base_icon\
-        	to a Tk photo before setting an icon badge"
+	set badge ""
+	
+	image create photo overlay
+	
+	if {$::tk::icons::base_icon eq ""} {
+	    return -code error "You must set the value of \"::tk::icons::base_icon\" to a Tk photo before setting an icon badge"
+	}
+
+	if {[wm iconphoto $win] eq ""} {
+	    return -code error "You must set a Tk image as a window icon via the \"wm iconphoto\" command before setting an icon badge"
+	}
+
+	if {$badgenumber eq ""} {
+	    wm iconphoto $win  $::tk::icons::base_icon 
+	    return
+	}
+
+	update idletasks
+
+	wm iconphoto $win $::tk::icons::base_icon 
+
+	if {[expr $badgenumber > 9] == 1} {
+	    set badge ::tk::icons::9plus-badge
+	} else {
+	    set badge ::tk::icons::$badgenumber-badge
+	}
+
+	update idletasks
+	overlay copy $::tk::icons::base_icon 
+	overlay copy $badge -from 0 0 18 18 -to 18 0
+	wm iconphoto $win overlay
+
     }
-
-    if {[wm iconphoto $win] eq ""} {
-        return -code error "You must set a Tk image as a window icon via the wm\ iconphoto command before setting an icon badge"
-}
-
-
-    if {$badgenumber eq ""} {
-        wm iconphoto $win  $::tk::icons::base_icon 
-	return
-    }
-
-    update idletasks
-
-    wm iconphoto $win $::tk::icons::base_icon 
-
-    if {[expr $badgenumber > 9] == 1} {
-	set badge ::tk::icons::9plus-badge
-    } else {
-	set badge ::tk::icons::$badgenumber-badge
-    }
-
-    update idletasks
-    overlay copy $::tk::icons::base_icon 
-    overlay copy $badge -from 0 0 18 18 -to 18 0
-    wm iconphoto $win overlay
-
-}
 }
