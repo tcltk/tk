@@ -194,7 +194,7 @@ image create photo ::tk::icons::!-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
 # Arguments:
 # badgenumber - number to draw over the icon
 
-proc ::tk::icons::IconBadge {badgenumber} {
+proc ::tk::icons::IconBadge {win badgenumber} {
 
     variable ::tk::icons::base_icon
 
@@ -203,19 +203,23 @@ proc ::tk::icons::IconBadge {badgenumber} {
     image create photo overlay
   
     if {$::tk::icons::base_icon eq ""} {
-	error "You must set the value of ::tk::icons::base_icon\
+	return -code error "You must set the value of ::tk::icons::base_icon\
         	to a Tk photo before setting an icon badge"
     }
 
+    if {[wm iconphoto $win] eq ""} {
+        return -code error "You must set a Tk image as a window icon via the wm\ iconphoto command before setting an icon badge"
+}
+
 
     if {$badgenumber eq ""} {
-        wm iconphoto .  $::tk::icons::base_icon 
+        wm iconphoto $win  $::tk::icons::base_icon 
 	return
     }
 
     update idletasks
 
-    wm iconphoto . $::tk::icons::base_icon 
+    wm iconphoto $win $::tk::icons::base_icon 
 
     if {[expr $badgenumber > 9] == 1} {
 	set badge ::tk::icons::9plus-badge
@@ -226,6 +230,6 @@ proc ::tk::icons::IconBadge {badgenumber} {
     update idletasks
     overlay copy $::tk::icons::base_icon 
     overlay copy $badge -from 0 0 18 18 -to 18 0
-    wm iconphoto . overlay
+    wm iconphoto $win overlay
 
 }
