@@ -71,3 +71,21 @@ namespace eval ::tk {
     ::msgcat::mcset it "retry" "riprova"
     ::msgcat::mcset it "yes" "sì"
 }
+#localization of print terms by Kevin Walzer via Microsoft Translator
+namespace eval ::tk {
+	::msgcat::mcset  it "Print" "Stampare"
+	::msgcat::mcset  it "Printer" "Stampante"
+	::msgcat::mcset  it "Letter " "Lettera"
+	::msgcat::mcset  it "Legal " "Legale"
+	::msgcat::mcset  it "A4" "A4"
+	::msgcat::mcset  it "Grayscale" "Scala Di Grigi"
+	::msgcat::mcset  it "RGB" "Rgb"
+	::msgcat::mcset  it "Options" "Opzioni"
+	::msgcat::mcset  it "Copies" "Copie"
+	::msgcat::mcset  it "Paper" "Carta"
+	::msgcat::mcset  it "Scale" "Scala"
+	::msgcat::mcset  it "Orientation" "Orientamento"
+	::msgcat::mcset  it "Portrait" "Ritratto"
+	::msgcat::mcset  it "Landscape" "Paesaggio"
+	::msgcat::mcset  it "Output" "Prodotto"
+}
