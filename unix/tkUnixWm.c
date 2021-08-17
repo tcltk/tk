@@ -2152,25 +2152,23 @@ WmIconbadgeCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-	(void) tkWin;
+    (void) tkWin;
 	
-	if (objc < 4) {
-		Tcl_WrongNumArgs(interp, 2, objv,
-			"window ? badge?");
-		return TCL_ERROR;
-	}
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv,
+			 "window ? badge?");
+	return TCL_ERROR;
+    }
 	
-	char cmd[4096];
-	sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}",
-		Tcl_GetString(objv[2]),
-		Tcl_GetString(objv[3]));
-	if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
-		Tcl_SetResult(interp,"Unable to set icon badge",TCL_VOLATILE);
-		return TCL_ERROR;
-	}
-
-
-	return TCL_OK;
+    char cmd[4096];
+    sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}",
+	    Tcl_GetString(objv[2]),
+	    Tcl_GetString(objv[3]));
+    if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
+	Tcl_SetResult(interp,"Unable to set icon badge",TCL_VOLATILE);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
 }
 /*
  *----------------------------------------------------------------------
