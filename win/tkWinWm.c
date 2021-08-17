@@ -3840,55 +3840,57 @@ WmIconbadgeCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    HWND hwnd;
-    Tk_PhotoHandle photo;
-    Tk_PhotoImageBlock block;
-    int width, height;
-    HICON overlayicon;
-    (void)tkwin;
-    unsigned int badgenumber = NULL;
-    char *badgestring = NULL;
-	char *photoname = NULL;
+	HWND hwnd;
+	Tk_PhotoHandle photo;
+	Tk_PhotoImageBlock block;
+	int width, height;
+	HICON overlayicon;
+	(void) tkwin;
+	unsigned int badgenumber = NULL;
+	char * badgestring = NULL;
+	char * photoname = NULL;
 
 	/* Establish a COM interface to the ITaskBarList3 API. */
-    ITaskBarList3 *ptbl;
-    HRESULT hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&ptbl);
+	ITaskBarList3 * ptbl;
+	HRESULT hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS( & ptbl);
 
 	if (objc < 4) {
-		Tcl_WrongNumArgs(interp, 2, objv,"window ? badge?");
-		return TCL_ERROR;
- 	}
+	  Tcl_WrongNumArgs(interp, 2, objv, "window ? badge?");
+	  return TCL_ERROR;
+	}
 
-	badgestring = Tcl_GetString(objv[3]);
-	sprintf(photoname, "::tk::icons::{%s}-badge", badgestring);
+	badgestring = Tcl_GetString(objv[3]); 
+	sprintf(photoname, "::tk::icons::{%s}-badge", badgestring); 
 	badgenumber = (unsigned int) badgestring;
-	if (badgenumber >  9)
-		photoname = "::tk::icons::9plus-badge";
+	if {(badgenumber > 9)} {
+	  photoname = "::tk::icons::9plus-badge";
+	}
 
 	/* Get image, convert to icon. */
 	photo = Tk_FindPhoto(interp, photoname);
 	if (photo == NULL) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-             "image \"%s\" doesn't exist", photoname)));
-        return TCL_ERROR;
-     }
-	Tk_PhotoGetSize(photo, &width, &height);
-	Tk_PhotoGetImage(photo, &block);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"image \"%s\" doesn't exist", photoname)));
+		return TCL_ERROR;
+	}
+	
+	Tk_PhotoGetSize(photo, & width, & height);
+  	Tk_PhotoGetImage(photo, & block);
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create an iconphoto with image \"%s\"",
-		    photoname));
-	    return TCL_ERROR;
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+					   "failed to create an iconphoto with image \"%s\"",
+					   photoname));
+		return TCL_ERROR;
 	}
 
-	/* Place overlay icon on taskbar icon. */
-	hwnd = Tk_GetHWND(winPtr->window);
-	ptbl->SetOverlayIcon(hwnd, overlayicon, badgestring);
-	DestroyIcon(overlayicon);
+  	/* Place overlay icon on taskbar icon. */
+  	hwnd = Tk_GetHWND(winPtr -> window);
+  	ptbl -> SetOverlayIcon(hwnd, overlayicon, badgestring);
+  	DestroyIcon(overlayicon);
 
-    return TCL_OK;
+  	return TCL_OK;
 }
 
 /*
