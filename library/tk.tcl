@@ -503,6 +503,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow
+	SourceLibFile print
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
