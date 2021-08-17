@@ -18,8 +18,10 @@ The \fBtk sysnotify\fR command creates a platform-specific system notification a
 .SH EXAMPLE
 .PP
 Here is an example of the \fBtk sysnotify\fR code:
+.PP
 .CS
-     tk sysnotify "Alert" "This is just a test of the Tk System Notification Code."
+tk sysnotify "Alert" \e
+      "This is just a test of the Tk System Notification Code."
 .CE
 .SH PLATFORM NOTES
 .PP
@@ -28,17 +30,27 @@ API's. The X11 version has a conditional dependency on libnotify, and
 falls back to a Tcl-only implementation if libnotify is not installed. On
 each platform the notification includes a platform-specific default image to
 accompany the text.
-.
 .TP
 \fBmacOS\fR
 .
 The macOS version will request permission from the user to authorize
-notifications. This must be activated in Apple's System Preferences Notifications section.
+notifications. This must be activated in Apple's System Preferences
+Notifications section.
+.RS
+.PP
+If deploying an application using the standalone version of Wish.app,
+setting the bundle ID in the applications Info.plist file to begin with
+.QW \fBcom\fR
+seems necessary for notifications to work. Using a different prefix
+for the bundle ID, such as something like
+.QW \fBtk.tcl.tkchat\fR ,
+will cause notifications to silently fail.
+.RE
 .TP
 \fBWindows\fR
 .
-The image is taken from the systray i.e. a sysnotify can only be
-called when a systray was installed.
+The image is taken from the system tray, i.e., \fBsysnotify\fR can only be
+called when a \fBsystray\fR was installed.
 .
 .SH KEYWORDS
 notify, alert

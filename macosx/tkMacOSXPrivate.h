@@ -298,6 +298,7 @@ MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
+MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 
 
 #pragma mark Private Objective-C Classes
