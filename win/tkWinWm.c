@@ -3851,15 +3851,17 @@ WmIconbadgeCmd(
 	Tk_PhotoImageBlock block;
 	int width, height;
 	HICON overlayicon;
-	(void) tkwin;
+	(void) winPtr;
 	int badgenumber;
 	char * badgestring = NULL;
 	char  photoname[4096];
 	LPCWSTR string;  
 
-	/* Establish a COM interface to the ITaskBarList3 API. */
+	/* Establish a COM interface to the ITaskbarList3 API. */
 	ITaskbarList3 *ptbl;
 	HRESULT hr;
+	Tk_Window badgewindow;
+	Window win;
 
 	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl); 
 	if (hr == S_OK) {
@@ -3875,7 +3877,9 @@ WmIconbadgeCmd(
 	  return TCL_ERROR;
 	}
 
-  	hwnd = Tk_GetHWND(winPtr -> window);
+	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+    win = Tk_WindowId(badgewindow);
+	hwnd = Tk_GetHWND(win);
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
 	
@@ -3901,7 +3905,7 @@ WmIconbadgeCmd(
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-		Tcl_SetResult(interp, "Failed to create icon photo", TCL_VOLATILE);
+		Tcl_SetResult(interp, "Failed to create overlay icon", TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 
