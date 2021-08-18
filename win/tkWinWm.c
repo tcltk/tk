@@ -3854,7 +3854,8 @@ WmIconbadgeCmd(
 	(void) tkwin;
 	int badgenumber;
 	char * badgestring = NULL;
-	char * photoname = NULL;
+	char  photoname[4096];
+	LPCWSTR string;  
 
 	/* Establish a COM interface to the ITaskBarList3 API. */
 	ITaskbarList3 *ptbl;
@@ -3864,7 +3865,7 @@ WmIconbadgeCmd(
 	if (hr == S_OK) {
 		ptbl->lpVtbl->HrInit(ptbl);
 	} else {
-		Tcl_SetResult(interp, "Error: unable to initialize taskbar icon", TCL_VOLATILE);
+		Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 		
@@ -3874,31 +3875,38 @@ WmIconbadgeCmd(
 	  return TCL_ERROR;
 	}
 
+  	hwnd = Tk_GetHWND(winPtr -> window);
 	badgestring = Tcl_GetString(objv[3]); 
-	sprintf(photoname, "::tk::icons::{%s}-badge", badgestring); 
+	string = L"Alert";
+	
 	badgenumber = atoi(badgestring);
-	if (badgenumber > 9)
-	  photoname = "::tk::icons::9plus-badge";
-
-	/* Get image, convert to icon. */
-	photo = Tk_FindPhoto(interp, photoname);
-	if (photo == NULL) {
-		Tcl_SetResult(interp, "Error: image doesn't exist", TCL_VOLATILE);
-		return TCL_ERROR;
+	if (badgenumber > 9) {
+		strcpy(photoname, "::tk::icons::9plus-badge");
+	} else {
+		strcpy(photoname , "::tk::icons::");
+		strcat(photoname, badgestring);
+		strcat(photoname, "-badge");
 	}
 	
-	Tk_PhotoGetSize(photo, & width, & height);
-  	Tk_PhotoGetImage(photo, & block);
+	/* Get image. If NULL, remove badge icon. */
+	photo = Tk_FindPhoto(interp, photoname);
+	if (photo == NULL) {
+		ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+		return TCL_OK;
+	}
+	
+	/* We have found the image. Convert to icon. */
+	Tk_PhotoGetSize(photo, &width, &height);
+  	Tk_PhotoGetImage(photo, &block);
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-		Tcl_SetResult(interp, "Error: failed to create icon photo", TCL_VOLATILE);
+		Tcl_SetResult(interp, "Failed to create icon photo", TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 
-  	/* Place overlay icon on taskbar icon. */
-  	hwnd = Tk_GetHWND(winPtr -> window);
-  	ptbl -> lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, NULL);
+  	/* Place overlay icon on taskbar icon. */ 
+  	ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
   	DestroyIcon(overlayicon);
 
   	return TCL_OK;

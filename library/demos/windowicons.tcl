@@ -21,10 +21,10 @@ iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6
 
 set ::tk::icons::base_icon icon
 
-pack [button $w.i -text "Set Window Icon to Globe" -image $::tk::icons::base_icon -compound top -command {wm iconphoto $w $::tk::icons::base_icon }]
-pack [button $w.b -text "Set Badge to 3" -command {wm iconbadge $w 3}]
-pack [button $w.e -text "Set Badge to 11" -command {wm iconbadge $w 11}]
-pack [button $w.f -text "Reset Badge" -command {wm iconbadge $w ""}]
+pack [button $w.i -text "Set Window Icon to Globe" -image $::tk::icons::base_icon -compound top -command {wm iconphoto . $::tk::icons::base_icon }]
+pack [button $w.b -text "Set Badge to 3" -command {wm iconbadge . 3}]
+pack [button $w.e -text "Set Badge to 11" -command {wm iconbadge . 11}]
+pack [button $w.f -text "Reset Badge" -command {wm iconbadge . ""}]
 
 ## See Code / Dismiss buttons
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
