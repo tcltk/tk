@@ -13,9 +13,15 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include <windows.h>
+#include <wtypes.h>
+#include <shobjidl.h>
+#include <shlguid.h>
+#include <shellapi.h>
 #include "tkWinInt.h"
 #include "tkWinIco.h"
-#include <shellapi.h>
+
+
 
 /*
  * These next two defines are only valid on Win2K/XP+.
@@ -3846,14 +3852,23 @@ WmIconbadgeCmd(
 	int width, height;
 	HICON overlayicon;
 	(void) tkwin;
-	unsigned int badgenumber = NULL;
+	int badgenumber;
 	char * badgestring = NULL;
 	char * photoname = NULL;
 
 	/* Establish a COM interface to the ITaskBarList3 API. */
-	ITaskBarList3 * ptbl;
-	HRESULT hr = CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS( & ptbl);
+	ITaskbarList3 *ptbl;
+	HRESULT hr;
 
+	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl); 
+	if (hr == S_OK) {
+		ptbl->lpVtbl->HrInit(ptbl);
+	} else {
+		Tcl_SetResult(interp, "Error: unable to initialize taskbar icon", TCL_VOLATILE);
+		return TCL_ERROR;
+	}
+		
+	
 	if (objc < 4) {
 	  Tcl_WrongNumArgs(interp, 2, objv, "window ? badge?");
 	  return TCL_ERROR;
@@ -3861,16 +3876,14 @@ WmIconbadgeCmd(
 
 	badgestring = Tcl_GetString(objv[3]); 
 	sprintf(photoname, "::tk::icons::{%s}-badge", badgestring); 
-	badgenumber = (unsigned int) badgestring;
-	if {(badgenumber > 9)} {
+	badgenumber = atoi(badgestring);
+	if (badgenumber > 9)
 	  photoname = "::tk::icons::9plus-badge";
-	}
 
 	/* Get image, convert to icon. */
 	photo = Tk_FindPhoto(interp, photoname);
 	if (photo == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"image \"%s\" doesn't exist", photoname)));
+		Tcl_SetResult(interp, "Error: image doesn't exist", TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 	
@@ -3879,15 +3892,13 @@ WmIconbadgeCmd(
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-					   "failed to create an iconphoto with image \"%s\"",
-					   photoname));
+		Tcl_SetResult(interp, "Error: failed to create icon photo", TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 
   	/* Place overlay icon on taskbar icon. */
   	hwnd = Tk_GetHWND(winPtr -> window);
-  	ptbl -> SetOverlayIcon(hwnd, overlayicon, badgestring);
+  	ptbl -> lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, NULL);
   	DestroyIcon(overlayicon);
 
   	return TCL_OK;
@@ -4342,6 +4353,8 @@ WmIconphotoCmd(
     return TCL_OK;
 }
 
+
+
 /*
  *----------------------------------------------------------------------
  *
