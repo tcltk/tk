@@ -2193,26 +2193,26 @@ UpdateWrapper(
     /* This is necessary to initialize the system for overlay icons. */
     if (TaskbarButtonCreatedMessageId == WM_NULL) {
 	
-	/* Compute the value for the TaskbarButtonCreated message. */
-	TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+		/* Compute the value for the TaskbarButtonCreated message. */
+		TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
-	/*
-	 * In case the application is run elevated, allow the
-	 * TaskbarButtonCreated message through.
-	 */
+		/*
+		* In case the application is run elevated, allow the
+		* TaskbarButtonCreated message through.
+		*/
 
-	ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
+		ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
 	
-	/* Create the ITaskbarList3 instance for overlay icons.*/
-	HRESULT hr;
-	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
-	if (hr == S_OK) {
-		ptbl->lpVtbl->HrInit(ptbl);
-	} else {
-		printf("Unable to initialize ITaskbarList3 API");
-		ptbl->lpVtbl->Release(NULL);
-		ptbl = NULL;
-	}
+		/* Create the ITaskbarList3 instance for overlay icons.*/
+		HRESULT hr;
+		hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
+			if (hr == S_OK) {
+			ptbl->lpVtbl->HrInit(ptbl);
+		} else {
+			printf("Unable to initialize ITaskbarList3 API");
+			ptbl->lpVtbl->Release(NULL);
+			ptbl = NULL;
+		}
     }
 }
 
@@ -3889,7 +3889,6 @@ WmIconbadgeCmd(
 	Tk_PhotoImageBlock block;
 	int width, height;
 	HICON overlayicon;
-//	(void) tkwin;
 	(void) winPtr;
 	int badgenumber;
 	char * badgestring = NULL;
@@ -3898,19 +3897,16 @@ WmIconbadgeCmd(
 	HRESULT hr;
 	Tk_Window badgewindow;
 	Window win;
-	Display *dispPtr; 
 
 	if (objc < 4) {
 	  Tcl_WrongNumArgs(interp, 2, objv, "window ? badge?");
 	  return TCL_ERROR;
 	}
 	
-	dispPtr=Tk_Display(tkwin);
 
 	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     win = Tk_WindowId(badgewindow);
   	hwnd = Tk_GetHWND(win);
-	printf("win is %s\n", Tk_PathName(Tk_HWNDToWindow(hwnd)));
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
 	
