@@ -134,6 +134,10 @@ _tWinMain(
     (void)lpszCmdLine;
     (void)nCmdShow;
 
+
+    /* Load COM library for icon overlay. */
+    CoInitialize(NULL);
+
     /*
      * Create the console channels and install them as the standard channels.
      * All I/O will be discarded until Tk_CreateConsoleWindow is called to
@@ -178,6 +182,8 @@ _tWinMain(
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
+    /* COM library cleanup. */
+    CoUninitialize();
     return 0;			/* Needed only to prevent compiler warning. */
 }
 
