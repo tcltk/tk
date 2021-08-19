@@ -742,7 +742,7 @@ TaskbarHandlerProc(
 
     switch (message) {
     case WM_CREATE:
-        msgTaskbarCreated = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+        msgTaskbarCreated = RegisterWindowMessage(TEXT("TaskbarCreated"));
         break;
 
     case ICON_MESSAGE:

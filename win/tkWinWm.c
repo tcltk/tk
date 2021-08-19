@@ -357,6 +357,16 @@ TCL_DECLARE_MUTEX(winWmMutex)
  */
 char *base_icon = NULL;
 
+/* 
+ * The following records the "TaskbarButtonCreated" message ID 
+ * for overlay icons.
+ */
+
+UINT TaskbarButtonCreatedMessageId = NULL;
+
+/* Reference to taskbarlist API for overlay icons. */ 
+ITaskbarList3 *ptbl;
+
 /*
  * Forward declarations for functions defined in this file:
  */
@@ -2179,6 +2189,29 @@ UpdateWrapper(
     } else if (focusHWND) {
 	SetFocus(focusHWND);
     }
+
+    /* This is necessary to initialize the system for overlay icons. */
+    if (TaskbarButtonCreatedMessageId == WM_NULL) {
+	
+	/* Compute the value for the TaskbarButtonCreated message. */
+	TaskbarButtonCreatedMessageId = RegisterWindowMessage(L"TaskbarButtonCreated");
+
+	/*
+	 * In case the application is run elevated, allow the
+	 * TaskbarButtonCreated message through.
+	 */
+
+	ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
+	/* Create the ITaskbarList3 instance for overlay icons.*/
+	HRESULT hr;
+	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
+	if (hr == S_OK) {
+	    ptbl->lpVtbl->HrInit(ptbl);
+	} else {
+	    Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
+	    return TCL_ERROR;
+	}
+    }
 }
 
 /*
@@ -3860,15 +3893,6 @@ WmIconbadgeCmd(
 	char * badgestring = NULL;
 	char  photoname[4096];
 	LPCWSTR string;
-	ITaskbarList3 *ptbl;
-
-	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
-	if (hr == S_OK) {
-	    ptbl->lpVtbl->HrInit(ptbl);
-	} else {
-	    Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
-	    return TCL_ERROR;
-	}
 		
 	if (objc < 4) {
 	  Tcl_WrongNumArgs(interp, 2, objv, "window ? badge?");
