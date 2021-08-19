@@ -19,6 +19,8 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <tchar.h>
+#include <shobjidl.h>
+#include <shlobj.h>
 #if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
 #   define Tcl_LibraryInitProc Tcl_PackageInitProc
 #   define Tcl_StaticLibrary Tcl_StaticPackage
@@ -182,8 +184,7 @@ _tWinMain(
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
-    /* COM library cleanup. */
-    CoUninitialize();
+ 
     return 0;			/* Needed only to prevent compiler warning. */
 }
 

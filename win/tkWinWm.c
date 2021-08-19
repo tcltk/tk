@@ -1731,6 +1731,9 @@ TkWinWmCleanup(
 	return;
     }
     tsdPtr->initialized = 0;
+	
+	/* COM library cleanup. */
+    CoUninitialize();
 
     UnregisterClassW(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
 }
