@@ -3858,17 +3858,13 @@ WmIconbadgeCmd(
 	char  photoname[4096];
 	LPCWSTR string;
 	ITaskbarList3 *ptbl;
-	UINT TaskbarButtonCreatedMessageId;
 
-	/* Establish a COM interface to the ITaskBarList3 API. */
-	hr = CoInitialize(0);
-	TaskbarButtonCreatedMessageId = RegisterWindowMessage("TaskbarButtonCreated");
+	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
 	if (hr == S_OK) {
-	CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl); 
-	ptbl->lpVtbl->HrInit(ptbl);
+	    ptbl->lpVtbl->HrInit(ptbl);
 	} else {
-	Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
-	return TCL_ERROR;
+	    Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
+	    return TCL_ERROR;
 	}
 		
 	if (objc < 4) {
@@ -3876,24 +3872,24 @@ WmIconbadgeCmd(
 	  return TCL_ERROR;
 	}
 
-  	hwnd = Tk_GetHWND(winPtr -> window);
+  	hwnd = Tk_GetHWND(winPtr->window);
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
 	
 	badgenumber = atoi(badgestring);
 	if (badgenumber > 9) {
-		strcpy(photoname, "::tk::icons::9plus-badge");
+	    strcpy(photoname, "::tk::icons::9plus-badge");
 	} else {
-		strcpy(photoname , "::tk::icons::");
-		strcat(photoname, badgestring);
-		strcat(photoname, "-badge");
+	    strcpy(photoname, "::tk::icons::");
+	    strcat(photoname, badgestring);
+	    strcat(photoname, "-badge");
 	}
 	
 	/* Get image. If NULL, remove badge icon. */
 	photo = Tk_FindPhoto(interp, photoname);
 	if (photo == NULL) {
-		ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
-		return TCL_OK;
+	    ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+	    return TCL_OK;
 	}
 	
 	/* We have found the image. Convert to icon. */
@@ -3902,8 +3898,8 @@ WmIconbadgeCmd(
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-		Tcl_SetResult(interp, "Failed to create icon photo", TCL_VOLATILE);
-		return TCL_ERROR;
+	    Tcl_SetResult(interp, "Failed to create icon photo", TCL_VOLATILE);
+	    return TCL_ERROR;
 	}
 
   	/* Place overlay icon on taskbar icon. */ 
