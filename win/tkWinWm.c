@@ -3847,39 +3847,36 @@ WmIconbadgeCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
 	HWND hwnd;
+	HRESULT hr;
 	Tk_PhotoHandle photo;
 	Tk_PhotoImageBlock block;
 	int width, height;
 	HICON overlayicon;
-	(void) winPtr;
+	(void) tkwin;
 	int badgenumber;
 	char * badgestring = NULL;
 	char  photoname[4096];
-	LPCWSTR string;  
-
-	/* Establish a COM interface to the ITaskbarList3 API. */
+	LPCWSTR string;
 	ITaskbarList3 *ptbl;
-	HRESULT hr;
-	Tk_Window badgewindow;
-	Window win;
+	UINT TaskbarButtonCreatedMessageId;
 
-	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl); 
+	/* Establish a COM interface to the ITaskBarList3 API. */
+	hr = CoInitialize(0);
+	TaskbarButtonCreatedMessageId = RegisterWindowMessage("TaskbarButtonCreated");
 	if (hr == S_OK) {
-		ptbl->lpVtbl->HrInit(ptbl);
+	CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl); 
+	ptbl->lpVtbl->HrInit(ptbl);
 	} else {
-		Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
-		return TCL_ERROR;
+	Tcl_SetResult(interp, "Unable to initialize taskbar icon", TCL_VOLATILE);
+	return TCL_ERROR;
 	}
 		
-	
 	if (objc < 4) {
 	  Tcl_WrongNumArgs(interp, 2, objv, "window ? badge?");
 	  return TCL_ERROR;
 	}
 
-	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-    win = Tk_WindowId(badgewindow);
-	hwnd = Tk_GetHWND(win);
+  	hwnd = Tk_GetHWND(winPtr -> window);
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
 	
@@ -3905,7 +3902,7 @@ WmIconbadgeCmd(
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-		Tcl_SetResult(interp, "Failed to create overlay icon", TCL_VOLATILE);
+		Tcl_SetResult(interp, "Failed to create icon photo", TCL_VOLATILE);
 		return TCL_ERROR;
 	}
 
