@@ -3907,6 +3907,7 @@ WmIconbadgeCmd(
 	  return TCL_ERROR;
 	}
 	
+	/* Parse args and determine image. */
 	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     win = Tk_WindowId(badgewindow);
   	hwnd = Tk_GetHWND(win);
