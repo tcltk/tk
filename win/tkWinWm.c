@@ -2193,30 +2193,30 @@ UpdateWrapper(
     /* This is necessary to initialize the system for overlay icons. */
     if (TaskbarButtonCreatedMessageId == WM_NULL) {
 	
-		/* Compute the value for the TaskbarButtonCreated message. */
-		TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+	/* Compute the value for the TaskbarButtonCreated message. */
+	TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
-		/*
-		* In case the application is run elevated, allow the
-		* TaskbarButtonCreated message through.
-		*/
+	/*
+	 * In case the application is run elevated, allow the
+	 * TaskbarButtonCreated message through.
+	 */
 
-		ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
+	ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
 		
-		/* Load COM library for icon overlay. */
-		CoInitialize(NULL);
+	/* Load COM library for icon overlay. */
+	CoInitialize(NULL);
 	
-		/* Create the ITaskbarList3 instance for overlay icons.*/
-		HRESULT hr;
+	/* Create the ITaskbarList3 instance for overlay icons.*/
+	HRESULT hr;
 		
-		hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
-			if (hr == S_OK) {
-			ptbl->lpVtbl->HrInit(ptbl);
-		} else {
-			printf("Unable to initialize ITaskbarList3 API");
-			ptbl->lpVtbl->Release(NULL);
-			ptbl = NULL;
-		}
+	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
+	if (hr == S_OK) {
+	    ptbl->lpVtbl->HrInit(ptbl);
+	} else {
+	    printf("Unable to initialize ITaskbarList3 API");
+	    ptbl->lpVtbl->Release(NULL);
+	    ptbl = NULL;
+	}
     }
 }
 
@@ -3907,7 +3907,6 @@ WmIconbadgeCmd(
 	  return TCL_ERROR;
 	}
 	
-
 	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     win = Tk_WindowId(badgewindow);
   	hwnd = Tk_GetHWND(win);
@@ -3926,7 +3925,7 @@ WmIconbadgeCmd(
 	/* Get image. If NULL, remove badge icon. */
 	photo = Tk_FindPhoto(interp, photoname);
 	if (photo == NULL) {
-		ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+	    ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
 	    return TCL_OK;
 	}
 	
@@ -3943,7 +3942,7 @@ WmIconbadgeCmd(
   	/* Place overlay icon on taskbar icon. */ 
   	hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
 	if (hr != S_OK) {
-		Tcl_SetResult(interp, "Failed to display overlay icon", TCL_VOLATILE);
+	    Tcl_SetResult(interp, "Failed to display overlay icon", TCL_VOLATILE);
 	    return TCL_ERROR;
 	}
   	DestroyIcon(overlayicon);
