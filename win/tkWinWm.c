@@ -2202,9 +2202,13 @@ UpdateWrapper(
 		*/
 
 		ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
+		
+		/* Load COM library for icon overlay. */
+		CoInitialize(NULL);
 	
 		/* Create the ITaskbarList3 instance for overlay icons.*/
 		HRESULT hr;
+		
 		hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
 			if (hr == S_OK) {
 			ptbl->lpVtbl->HrInit(ptbl);
@@ -3922,7 +3926,7 @@ WmIconbadgeCmd(
 	/* Get image. If NULL, remove badge icon. */
 	photo = Tk_FindPhoto(interp, photoname);
 	if (photo == NULL) {
-	    ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+		ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
 	    return TCL_OK;
 	}
 	
