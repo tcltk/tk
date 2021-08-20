@@ -3909,7 +3909,7 @@ WmIconbadgeCmd(
 	
 	/* Parse args and determine image. */
 	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-    win = Tk_WindowId(badgewindow);
+	win = Tk_WindowId(badgewindow);
   	hwnd = Tk_GetHWND(win);
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
