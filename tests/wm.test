@@ -736,7 +736,7 @@ test wm-group-2.1 {setting and reading values} -setup {
 test wm-iconbadge-1.1 {usage} -returnCodes error -body {
     wm iconbadge
 } -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-iconbadge-1.2 {usage} -returnCodes error -body {
+test wm-iconbadge-1.2 {usage} -body {
     set ::tk::icons::base_icon icon; wm iconbadge . 14
 } 
 
