@@ -3897,17 +3897,17 @@ WmIconbadgeCmd(
 	LPCWSTR string;
 	HRESULT hr;
 	Tk_Window badgewindow;
-	Window win;
+	WmInfo *wmPtr;
 
 	if (objc < 4) {
 	  Tcl_WrongNumArgs(interp, 2, objv, "window ? badge?");
 	  return TCL_ERROR;
 	}
 	
-	/* Parse args and determine image. */
+	/* Parse args, get native wrapper window, and determine image. */
 	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-	win = Tk_WindowId(badgewindow);
-  	hwnd = Tk_GetHWND(win);
+    wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
+    hwnd = wmPtr->wrapper;
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
 	
