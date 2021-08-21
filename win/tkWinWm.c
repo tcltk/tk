@@ -3906,8 +3906,8 @@ WmIconbadgeCmd(
 	
 	/* Parse args, get native wrapper window, and determine image. */
 	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-    wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
-    hwnd = wmPtr->wrapper;
+	wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
+	hwnd = wmPtr->wrapper;
 	badgestring = Tcl_GetString(objv[3]); 
 	string = L"Alert";
 	
