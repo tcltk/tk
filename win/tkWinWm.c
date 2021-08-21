@@ -20,9 +20,6 @@
 #include <shellapi.h>
 #include "tkWinInt.h"
 #include "tkWinIco.h"
-
-
-
 /*
  * These next two defines are only valid on Win2K/XP+.
  */
@@ -1861,8 +1858,9 @@ UpdateWrapper(
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
     HICON hBigIcon = NULL;
+    HRESULT hr;
     Tcl_DString titleString;
-    int *childStateInfo = NULL;
+    int *childStateInfo = NULL;    
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -2190,34 +2188,37 @@ UpdateWrapper(
 	SetFocus(focusHWND);
     }
 
-    /* This is necessary to initialize the system for overlay icons. */
-    if (TaskbarButtonCreatedMessageId == WM_NULL) {
+    /* 
+     *Initialize hooks for overlay icon. 
+     * Start with TaskbarButtonCreated message.
+     */
 	
-	/* Compute the value for the TaskbarButtonCreated message. */
-	TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+     TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
-	/*
-	 * In case the application is run elevated, allow the
-	 * TaskbarButtonCreated message through.
-	 */
+     if (TaskbarButtonCreatedMessageId == 0) {
+	 Tcl_SetResult(interp, "Unable to register taskbar for icon overlay", TCL_VOLATILE);
+	 return TCL_ERROR;
+     }
 
-	ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
+     /*
+      * In case the application is run elevated, allow the
+      * TaskbarButtonCreated message through.
+      */
+
+     ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
 		
-	/* Load COM library for icon overlay. */
-	CoInitialize(NULL);
-	
-	/* Create the ITaskbarList3 instance for overlay icons.*/
-	HRESULT hr;
-		
-	hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
-	if (hr == S_OK) {
-	    ptbl->lpVtbl->HrInit(ptbl);
-	} else {
-	    printf("Unable to initialize ITaskbarList3 API");
-	    ptbl->lpVtbl->Release(NULL);
-	    ptbl = NULL;
-	}
-    }
+     /* Load COM library for icon overlay. */
+     hr = CoInitialize(0);
+     if (SUCCEEDED(hr)) {
+	 hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
+	 if (SUCCEEDED(hr)) {
+	     ptbl->lpVtbl->Release(ptbl);
+	 } else {
+	     printf("Unable to initialize ITaskbarList3 API");
+	     ptbl->lpVtbl->Release(NULL);
+	     ptbl = NULL;
+	 }
+     }
 }
 
 /*
