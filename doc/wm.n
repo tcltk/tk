@@ -411,13 +411,13 @@ string if \fIwindow\fR is not part of any group.
 .
 Sets a badge for the icon of the \fIwindow\fR. The badge can be a number, 
 for instance the number of new or unread messages, or
-an exclamation point denoting attention needed. For this command to work, 
-the variable \fB::tk::icons::base_icon\fR must be set to the image that is 
-being used for the window icon, and the window's iconphoto must actually 
-be set via the \fBwm iconphoto\fR command. 
+an exclamation point denoting attention needed. 
 .RS
 .PP
-On Windows and X, the iconphoto images work best at 32x32 or a similar dimension, as 
+On X11, for this command to work, 
+the variable \fB::tk::icons::base_icon\fR must be set to the image that is 
+being used for the window icon, and the window's iconphoto must actually 
+be set via the \fBwm iconphoto\fR command. On Windows and X11, the iconphoto images work best at 32x32 or a similar dimension, as 
 the badge images are provided by Tk and drawn to overlay the icon images 
 using native (Windows) API's or Tk rendering. On macOS, the icon badge is 
 rendered by a system API and is not provided by Tk. The icon image itself 
