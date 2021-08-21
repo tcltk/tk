@@ -2189,16 +2189,11 @@ UpdateWrapper(
     }
 
     /* 
-     *Initialize hooks for overlay icon. 
+     * Initialize hooks for overlay icon. 
      * Start with TaskbarButtonCreated message.
      */
 	
      TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
-
-     if (TaskbarButtonCreatedMessageId == 0) {
-	 Tcl_SetResult(interp, "Unable to register taskbar for icon overlay", TCL_VOLATILE);
-	 return TCL_ERROR;
-     }
 
      /*
       * In case the application is run elevated, allow the
@@ -2210,6 +2205,7 @@ UpdateWrapper(
      /* Load COM library for icon overlay. */
      hr = CoInitialize(0);
      if (SUCCEEDED(hr)) {
+		
 	 hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
 	 if (SUCCEEDED(hr)) {
 	     ptbl->lpVtbl->Release(ptbl);
