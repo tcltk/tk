@@ -411,7 +411,9 @@ string if \fIwindow\fR is not part of any group.
 .
 Sets a badge for the icon of the \fIwindow\fR. The badge can be a number, 
 for instance the number of new or unread messages, or
-an exclamation point denoting attention needed. 
+an exclamation point denoting attention needed. If the badge is an empty 
+string, the badge image is removed from the application icon. Managing 
+these changes through bindings, such as <FocusIn>, is the responsibility of the developer. 
 .RS
 .PP
 On X11, for this command to work, 
