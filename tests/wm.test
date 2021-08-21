@@ -737,7 +737,7 @@ test wm-iconbadge-1.1 {usage} -returnCodes error -body {
     wm iconbadge
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 test wm-iconbadge-1.2 {usage} -body {
-    set ::tk::icons::base_icon icon; wm iconbadge . 14
+    set ::tk::icons::base_icon icon; wm iconphoto . $::tk::icons::base_icon;  wm iconbadge . 14
 } 
 
 ### wm iconbitmap ###
