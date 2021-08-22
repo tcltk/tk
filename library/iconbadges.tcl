@@ -220,13 +220,43 @@ if {[tk windowingsystem] eq "x11"} {
 
 	wm iconphoto $win $::tk::icons::base_icon 
 
-	if {[expr $badgenumber > 9] == 1} {
-	    set badge ::tk::icons::9plus-badge
-	} else if {$badgenumber eq "!"} {
-	    set badge ::tk::icons::!-badge
-	} else {
-	    set badge ::tk::icons::$badgenumber-badge
-	}
+	switch $badgenumber {
+	    ! {
+		set badge ::tk::icons::!-badge
+	    }
+	    1 {
+		set badge ::tk::icons::$badgenumber-badge
+	    } 
+	    2 {
+		set badge ::tk::icons::$badgenumber-badge 
+	    }
+	    3 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+	    4 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+	    5 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+	    6 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+	    7 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+	    8 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+	    9 {
+		set badge ::tk::icons::$badgenumber-badge
+	    }
+
+	    default {
+		set badge ::tk::icons::9plus-badge
+	    }
+
+        }
 
 	update idletasks
 	overlay copy $::tk::icons::base_icon 
