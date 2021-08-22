@@ -222,6 +222,8 @@ if {[tk windowingsystem] eq "x11"} {
 
 	if {[expr $badgenumber > 9] == 1} {
 	    set badge ::tk::icons::9plus-badge
+	} else if {$badgenumber eq "!"} {
+	    set badge ::tk::icons::!-badge
 	} else {
 	    set badge ::tk::icons::$badgenumber-badge
 	}
