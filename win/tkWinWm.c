@@ -2207,9 +2207,7 @@ UpdateWrapper(
      if (SUCCEEDED(hr)) {
 		
 	 hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
-	 if (SUCCEEDED(hr)) {
-	     ptbl->lpVtbl->Release(ptbl);
-	 } else {
+	 if (FAILED(hr)) {
 	     printf("Unable to initialize ITaskbarList3 API");
 	     ptbl->lpVtbl->Release(NULL);
 	     ptbl = NULL;
