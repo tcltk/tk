@@ -3931,14 +3931,14 @@ WmIconbadgeCmd(
 
 	overlayicon = CreateIcoFromPhoto(width, height, block);
 	if (overlayicon == NULL) {
-	    Tcl_SetResult(interp, "Failed to create overlay icon", TCL_VOLATILE);
+	    Tcl_SetResult(interp, "Failed to create badge icon", TCL_VOLATILE);
 	    return TCL_ERROR;
 	}
 
   	/* Place overlay icon on taskbar icon. */ 
   	hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
 	if (hr != S_OK) {
-	    Tcl_SetResult(interp, "Failed to display overlay icon", TCL_VOLATILE);
+	    Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
 	    return TCL_ERROR;
 	}
   	DestroyIcon(overlayicon);
