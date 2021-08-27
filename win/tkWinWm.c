@@ -4288,7 +4288,7 @@ WmIconphotoCmd(
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, width, height, startObj = 3;
+    int i, width, height, startObj = 3, isDefault = 0;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
@@ -4309,6 +4309,15 @@ WmIconphotoCmd(
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
+    }
+	
+	if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+		isDefault = 1;
+		if (objc == 4) {
+			Tcl_WrongNumArgs(interp, 2, objv,
+		    "window ?-default? image1 ?image2 ...?");
+			return TCL_ERROR;
+		}
     }
 
      /*
