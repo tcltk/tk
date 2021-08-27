@@ -880,8 +880,8 @@ test wm-iconphoto-1.1 {usage} -returnCodes error -body {
     wm iconphoto
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 test wm-iconphoto-1.2 {usage} -returnCodes error -body {
-    wm iconphoto {}
-} -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
+    wm iconphoto .
+} -result {}
 test wm-iconphoto-1.3 {usage} -returnCodes error -body {
     wm iconphoto . notanimage
 } -result {can't use "notanimage" as iconphoto: not a photo image}
