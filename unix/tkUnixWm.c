@@ -2440,6 +2440,12 @@ WmIconphotoCmd(
     int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
     unsigned long *iconPropertyData;
 
+
+    if (strcmp(Tcl_GetString(objv[1]), "iconphoto") != 0) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"",  -1));
+	return TCL_ERROR;
+    }
+
     if ((objc == 3) && (base_icon == NULL)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
 	return TCL_OK;
