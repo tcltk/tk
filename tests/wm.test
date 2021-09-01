@@ -879,7 +879,7 @@ test wm-iconname-2.1 {setting and reading values} -setup {
 test wm-iconphoto-1.1 {usage} -returnCodes error -body {
     wm iconphoto
 } -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-iconphoto-1.2 -constraints aquaOrWin32 {usage} -body {
+test wm-iconphoto-1.2 {usage} -constraints aquaOrWin32 -body {
     wm iconphoto .
 } -result $::tk::icons::base_icon
 test wm-iconphoto-1.3 {usage} -returnCodes error -body {
