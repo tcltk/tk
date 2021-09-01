@@ -737,8 +737,13 @@ test wm-iconbadge-1.1 {usage} -returnCodes error -body {
     wm iconbadge
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 test wm-iconbadge-1.2 {usage} -body {
-    set ::tk::icons::base_icon icon; wm iconphoto . $::tk::icons::base_icon;  wm iconbadge . 14
-} 
+    toplevel .top
+    set ::tk::icons::base_icon icon
+    wm iconphoto .top $::tk::icons::base_icon
+    wm iconbadge .top 14
+} -cleanup {
+    destroy .top
+}
 
 ### wm iconbitmap ###
 test wm-iconbitmap-1.1 {usage} -returnCodes error -body {
@@ -879,9 +884,9 @@ test wm-iconname-2.1 {setting and reading values} -setup {
 test wm-iconphoto-1.1 {usage} -returnCodes error -body {
     wm iconphoto
 } -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-iconphoto-1.2 {usage} -constraints aquaOrWin32 -body {
+test wm-iconphoto-1.2 {usage} -body {
     wm iconphoto .
-} -result $::tk::icons::base_icon
+} -result {icon}
 test wm-iconphoto-1.3 {usage} -returnCodes error -body {
     wm iconphoto . notanimage
 } -result {can't use "notanimage" as iconphoto: not a photo image}
