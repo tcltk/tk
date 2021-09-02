@@ -211,10 +211,6 @@ if {[tk windowingsystem] eq "x11"} {
 
 	variable ::tk::icons::base_icon
 
-	set badge ""
-	
-	image create photo overlay
-	
 	if {$::tk::icons::base_icon eq ""} {
 	    return -code error "You must set the value of \"::tk::icons::base_icon\" to a Tk photo before setting an icon badge"
 	}
@@ -228,6 +224,10 @@ if {[tk windowingsystem] eq "x11"} {
 	    return
 	}
 
+	set badge ""
+	
+	image create photo overlay
+	
 	update idletasks
 
 	wm iconphoto $win $::tk::icons::base_icon 
