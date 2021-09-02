@@ -228,8 +228,6 @@ if {[tk windowingsystem] eq "x11"} {
 	
 	image create photo overlay
 	
-	update idletasks
-
 	wm iconphoto $win $::tk::icons::base_icon 
 
 	switch -glob -- $badgenumber {
@@ -245,7 +243,6 @@ if {[tk windowingsystem] eq "x11"} {
 
         }
 
-	update idletasks
 	overlay copy $::tk::icons::base_icon 
 	overlay copy $badge -from 0 0 18 18 -to 18 0
 	wm iconphoto $win overlay
