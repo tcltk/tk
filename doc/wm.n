@@ -407,7 +407,7 @@ specified then the command returns an empty string;  otherwise it
 returns the path name of \fIwindow\fR's current group leader, or an empty
 string if \fIwindow\fR is not part of any group.
 .TP
-\fBwm iconbadge \fIwindow\fR ?\fIbadge\fR?
+\fBwm iconbadge \fIwindow\fR \fIbadge\fR
 .
 Sets a badge for the icon of the \fIwindow\fR. The badge can be a number, 
 for instance the number of new or unread messages, or
