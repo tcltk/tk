@@ -885,7 +885,7 @@ test wm-iconphoto-1.1 {usage} -returnCodes error -body {
     wm iconphoto
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 test wm-iconphoto-1.2 {usage} -body {
-    wm iconphoto .
+    wm iconphoto . icon
 } -result {icon}
 test wm-iconphoto-1.3 {usage} -returnCodes error -body {
     wm iconphoto . notanimage
@@ -901,8 +901,8 @@ test wm-iconphoto-1.5.2 {usage} -constraints x11 -body {
     wm iconphoto . -default [image create photo -file {}]
 } -result {}
 test wm-iconphoto-1.6  {usage} -body {
-    wm iconphoto . icon
-} -result {}
+    wm iconphoto .
+} -result {icon}
 
 # All other iconphoto tests are platform specific
 
