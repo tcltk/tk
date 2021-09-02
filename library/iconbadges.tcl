@@ -7,11 +7,6 @@
 
 namespace eval ::tk::icons {}
 
-variable ::tk::icons::base_icon
-
-set ::tk::icons::base_icon ""
-
-
 image create photo ::tk::icons::1-badge -data {
     iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
@@ -207,6 +202,11 @@ image create photo ::tk::icons::!-badge -data {
 # badgenumber - badge number to draw over the window icon
 
 if {[tk windowingsystem] eq "x11"} {
+
+    variable ::tk::icons::base_icon
+
+    set ::tk::icons::base_icon ""
+
     proc ::tk::icons::IconBadge {win badgenumber} {
 
 	variable ::tk::icons::base_icon
