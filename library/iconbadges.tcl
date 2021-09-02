@@ -224,8 +224,6 @@ if {[tk windowingsystem] eq "x11"} {
 	    return
 	}
 
-	set badge ""
-	
 	image create photo overlay
 	
 	wm iconphoto $win $::tk::icons::base_icon 
