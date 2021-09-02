@@ -12,7 +12,8 @@ variable ::tk::icons::base_icon
 set ::tk::icons::base_icon ""
 
 
-image create photo ::tk::icons::1-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::1-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     kFBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/HBz/V1f/Rkb/BQX/Dw//oKD/////y8v/Bgb/Pz//ra3/+/v/
@@ -25,7 +26,8 @@ image create photo ::tk::icons::1-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     MDIxLTA4LTEwVDA4OjM1OjE0LTA0OjAw0aX6GwAAACV0RVh0ZGF0ZTptb2RpZnkA
     MjAyMS0wOC0xMFQwODozNToxNC0wNDowMKD4QqcAAAAASUVORK5CYII=
 }
-image create photo ::tk::icons::2-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::2-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     21BMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/Cwv/ODj/UlL/UFD/MjL/CAj/ExP/oKD/8fH//v7//f3/7u7/
@@ -41,7 +43,8 @@ image create photo ::tk::icons::2-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     RVh0ZGF0ZTptb2RpZnkAMjAyMS0wOC0xMFQwODozNToxNC0wNDowMKD4QqcAAAAA
     SUVORK5CYII=
 }
-image create photo ::tk::icons::3-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::3-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     +VBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/CQn/NTX/UlL/Tk7/Kir/BAT/ERH/mZn/8PD/+Pj/+vr/5ub/
@@ -57,7 +60,8 @@ image create photo ::tk::icons::3-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     dGUAMjAyMS0wOC0xMFQwODozNToxNC0wNDowMNGl+hsAAAAldEVYdGRhdGU6bW9k
     aWZ5ADIwMjEtMDgtMTBUMDg6MzU6MTQtMDQ6MDCg+EKnAAAAAElFTkSuQmCC
 }
-image create photo ::tk::icons::4-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::4-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     1VBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/AgL/OTn/W1v/ODj/QED/4uL/////oaH/AQH/KSn/zs7/oqL/
@@ -72,7 +76,8 @@ image create photo ::tk::icons::4-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     cmVhdGUAMjAyMS0wOC0xMFQwODozNToxNS0wNDowMHfS8a8AAAAldEVYdGRhdGU6
     bW9kaWZ5ADIwMjEtMDgtMTBUMDg6MzU6MTUtMDQ6MDAGj0kTAAAAAElFTkSuQmCC
 }
-image create photo ::tk::icons::5-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::5-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     7VBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/ICD/MjL/Li7/CQn/Bgb/q6v/8/P/8vL/9PT/4uL/FRX/0tL/
@@ -88,7 +93,8 @@ image create photo ::tk::icons::5-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     LTEwVDA4OjM1OjE1LTA0OjAwd9LxrwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMS0w
     OC0xMFQwODozNToxNS0wNDowMAaPSRMAAAAASUVORK5CYII=
 }
-image create photo ::tk::icons::6-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::6-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     9lBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/AQH/ICD/S0v/UlL/NDT/CAj/WVn/2dn/+Pj/+fn/8PD/jY3/
@@ -104,7 +110,8 @@ image create photo ::tk::icons::6-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     dGUAMjAyMS0wOC0xMFQwODozNToxNS0wNDowMHfS8a8AAAAldEVYdGRhdGU6bW9k
     aWZ5ADIwMjEtMDgtMTBUMDg6MzU6MTUtMDQ6MDAGj0kTAAAAAElFTkSuQmCC
 }
-image create photo ::tk::icons::7-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::7-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     xlBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/Hh7/Njb/NTX/Ghr/i4v/9/f/8/P/8vL/8fH/9PT/eHj/fHz/
@@ -119,7 +126,8 @@ image create photo ::tk::icons::7-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     ODozNToxNS0wNDowMHfS8a8AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDgtMTBU
     MDg6MzU6MTUtMDQ6MDAGj0kTAAAAAElFTkSuQmCC
 }
-image create photo ::tk::icons::8-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::8-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     6lBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/Bwf/MjL/UVH/TU3/Kir/BAT/DAz/j4//7e3/+Pj/5+f/eXn/
@@ -135,7 +143,8 @@ image create photo ::tk::icons::8-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     MFQwODozNToxNS0wNDowMHfS8a8AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDgt
     MTBUMDg6MzU6MTUtMDQ6MDAGj0kTAAAAAElFTkSuQmCC
 }
-image create photo ::tk::icons::9-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::9-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     8FBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/DAz/OTn/U1P/R0f/HBz/AQH/Fhb/oqL/8/P/+fn/+Pj/1NT/
@@ -152,7 +161,8 @@ image create photo ::tk::icons::9-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
     MDIxLTA4LTEwVDA4OjM1OjE1LTA0OjAwBo9JEwAAAABJRU5ErkJggg==
 }
 
-image create photo ::tk::icons::9plus-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::9plus-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAB
     OFBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/ERH/AAD/NDT/AQH/AAD/AAD/Cgr/Nzf/U1P/SUn/Hx//AQH/mJj/8fH/+fn/
@@ -171,7 +181,8 @@ image create photo ::tk::icons::9plus-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIA
     OusyAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIxLTA4LTEwVDA4OjM1OjE2LTA0OjAw
     N2dTjgAAAABJRU5ErkJggg==
 }
-image create photo ::tk::icons::!-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
+image create photo ::tk::icons::!-badge -data {
+    iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAAABGdBTUEAALGPC/xh
     BQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA
     olBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/
     AAD/AAD/AAD/AAD/Fhb/QED/Pj7/ExP/VVX/9PT/8PD/SUn/WFj//v7/+fn/S0v/
@@ -192,7 +203,8 @@ image create photo ::tk::icons::!-badge -data { iVBORw0KGgoAAAANSUhEUgAAABIAAAAS
 # do not have a native icon/badge API. 
 #
 # Arguments:
-# badgenumber - number to draw over the icon
+# win - window name
+# badgenumber - badge number to draw over the window icon
 
 if {[tk windowingsystem] eq "x11"} {
     proc ::tk::icons::IconBadge {win badgenumber} {
@@ -212,7 +224,7 @@ if {[tk windowingsystem] eq "x11"} {
 	}
 
 	if {$badgenumber eq ""} {
-	    wm iconphoto $win  $::tk::icons::base_icon 
+	    wm iconphoto $win $::tk::icons::base_icon
 	    return
 	}
 
@@ -220,38 +232,13 @@ if {[tk windowingsystem] eq "x11"} {
 
 	wm iconphoto $win $::tk::icons::base_icon 
 
-	switch $badgenumber {
+	switch -glob -- $badgenumber {
 	    ! {
 		set badge ::tk::icons::!-badge
 	    }
-	    1 {
+	    [1-9] {
 		set badge ::tk::icons::$badgenumber-badge
 	    } 
-	    2 {
-		set badge ::tk::icons::$badgenumber-badge 
-	    }
-	    3 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-	    4 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-	    5 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-	    6 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-	    7 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-	    8 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-	    9 {
-		set badge ::tk::icons::$badgenumber-badge
-	    }
-
 	    default {
 		set badge ::tk::icons::9plus-badge
 	    }
