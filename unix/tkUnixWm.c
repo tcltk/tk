@@ -2156,7 +2156,7 @@ WmIconbadgeCmd(
 	
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-			 "window ? badge?");
+			 "window badge");
 	return TCL_ERROR;
     }
 	
