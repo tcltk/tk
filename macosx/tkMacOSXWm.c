@@ -195,6 +195,7 @@ static int tkMacOSXWmAttrNotifyVal = 0;
 /*
  *  The following stores the name of the "wm iconphoto" image.
  */
+
 char *base_icon = NULL;
 
 /*
@@ -1287,7 +1288,7 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
-	case WMOPT_ICONBADGE:
+    case WMOPT_ICONBADGE:
 	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
@@ -2372,17 +2373,20 @@ WmIconbadgeCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-  
+    (void) winPtr;
+    NSString *label;
+
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,"window badge");
 	return TCL_ERROR;
     }
 
-    (void) winPtr;
-    NSString *label;
     label = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
 
-    /* Set the icon badge on the Dock icon. */
+    /*
+     * Set the icon badge on the Dock icon.
+     */
+
     NSDockTile *dockicon = [NSApp dockTile];
     [dockicon setBadgeLabel: label];
     return TCL_OK;
@@ -2689,7 +2693,6 @@ WmIconphotoCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
 	return TCL_OK;
     }
-
 
     if ((objc == 3) && (base_icon !=NULL)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));

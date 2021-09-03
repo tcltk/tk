@@ -337,6 +337,7 @@ typedef struct WaitRestrictInfo {
 /*
  *  The following stores the name of the "wm iconphoto" image.
  */
+
 char *base_icon = NULL;
 
 /*
@@ -2146,21 +2147,20 @@ WmGroupCmd(
 
 static int
 WmIconbadgeCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *tkWin,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     (void) tkWin;
-	
+    char cmd[4096];
+
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2, objv,
-			 "window badge");
+	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
 	return TCL_ERROR;
     }
-	
-    char cmd[4096];
+
     sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}",
 	    Tcl_GetString(objv[2]),
 	    Tcl_GetString(objv[3]));
@@ -2439,7 +2439,7 @@ WmIconphotoCmd(
     Tk_PhotoImageBlock block;
     int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
     unsigned long *iconPropertyData;
-
+    char *icon;
 
     if (strcmp(Tcl_GetString(objv[1]), "iconphoto") != 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"",  -1));
@@ -2450,7 +2450,6 @@ WmIconphotoCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
 	return TCL_OK;
     }
-
 
     if ((objc == 3) && (base_icon !=NULL)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));
@@ -2475,7 +2474,6 @@ WmIconphotoCmd(
       * Get icon name. We only use the first icon name.
       */
 
-    char *icon;
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
     } else {
