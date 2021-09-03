@@ -419,8 +419,7 @@ of the developer.
 .PP
 On X11, for this command to work, 
 the variable \fB::tk::icons::base_icon($window)\fR must be set to the image that is
-being used for the window icon of $window, and the window's iconphoto must actually
-be set via the \fBwm iconphoto\fR command. On Windows and X11, the iconphoto
+being used for the window icon of $window. On Windows and X11, the iconphoto
 images work best at 32x32 or a similar dimension, as
 the badge images are provided by Tk and drawn to overlay the icon images
 using native (Windows) API's or Tk rendering. On macOS, the icon badge is
