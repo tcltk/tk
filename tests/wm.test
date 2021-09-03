@@ -793,7 +793,7 @@ test wm-group-2.1 {setting and reading values} -setup {
     lappend result [wm group .t]
 } -result [list {} . {}]
 
-###wm iconbadge ###
+### wm iconbadge ###
 test wm-iconbadge-1.1 {usage} -returnCodes error -body {
     wm iconbadge
 } -result {wrong # args: should be "wm option window ?arg ...?"}
