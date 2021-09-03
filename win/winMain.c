@@ -181,7 +181,6 @@ _tWinMain(
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
- 
     return 0;			/* Needed only to prevent compiler warning. */
 }
 

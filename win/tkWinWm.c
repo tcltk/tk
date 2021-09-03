@@ -1739,7 +1739,10 @@ TkWinWmCleanup(
     }
     tsdPtr->initialized = 0;
 	
-	/* COM library cleanup. */
+    /*
+     * COM library cleanup.
+     */
+
     CoUninitialize();
 
     UnregisterClassW(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
@@ -1860,7 +1863,7 @@ UpdateWrapper(
     HICON hBigIcon = NULL;
     HRESULT hr;
     Tcl_DString titleString;
-    int *childStateInfo = NULL;    
+    int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -2202,10 +2205,12 @@ UpdateWrapper(
 
      ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
 		
-     /* Load COM library for icon overlay. */
+     /*
+      * Load COM library for icon overlay.
+      */
+
      hr = CoInitialize(0);
      if (SUCCEEDED(hr)) {
-		
 	 hr = CoCreateInstance(&CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, &ptbl);
 	 if (FAILED(hr)) {
 	     printf("Unable to initialize ITaskbarList3 API");
@@ -2769,7 +2774,7 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
-	case WMOPT_ICONBADGE:
+    case WMOPT_ICONBADGE:
 	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
@@ -3883,67 +3888,79 @@ WmIconbadgeCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-	HWND hwnd;
-	Tk_PhotoHandle photo;
-	Tk_PhotoImageBlock block;
-	int width, height;
-	HICON overlayicon;
-	(void) winPtr;
-	int badgenumber;
-	char * badgestring = NULL;
-	char  photoname[4096];
-	LPCWSTR string;
-	HRESULT hr;
-	Tk_Window badgewindow;
-	WmInfo *wmPtr;
+    HWND hwnd;
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int width, height;
+    HICON overlayicon;
+    (void) winPtr;
+    int badgenumber;
+    char * badgestring = NULL;
+    char  photoname[4096];
+    LPCWSTR string;
+    HRESULT hr;
+    Tk_Window badgewindow;
+    WmInfo *wmPtr;
 
-	if (objc < 4) {
-	  Tcl_WrongNumArgs(interp, 2, objv, "window badge");
-	  return TCL_ERROR;
-	}
-	
-	/* Parse args, get native wrapper window, and determine image. */
-	badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-	wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
-	hwnd = wmPtr->wrapper;
-	badgestring = Tcl_GetString(objv[3]); 
-	string = L"Alert";
-	
-	badgenumber = atoi(badgestring);
-	if (badgenumber > 9) {
-	    strcpy(photoname, "::tk::icons::9plus-badge");
-	} else {
-	    strcpy(photoname, "::tk::icons::");
-	    strcat(photoname, badgestring);
-	    strcat(photoname, "-badge");
-	}
-	
-	/* Get image. If NULL, remove badge icon. */
-	photo = Tk_FindPhoto(interp, photoname);
-	if (photo == NULL) {
-	    ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
-	    return TCL_OK;
-	}
-	
-	/* We have found the image. Convert to icon. */
-	Tk_PhotoGetSize(photo, &width, &height);
-  	Tk_PhotoGetImage(photo, &block);
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
+	return TCL_ERROR;
+    }
 
-	overlayicon = CreateIcoFromPhoto(width, height, block);
-	if (overlayicon == NULL) {
-	    Tcl_SetResult(interp, "Failed to create badge icon", TCL_VOLATILE);
-	    return TCL_ERROR;
-	}
+    /*
+     * Parse args, get native wrapper window, and determine image.
+     */
 
-  	/* Place overlay icon on taskbar icon. */ 
-  	hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
-	if (hr != S_OK) {
-	    Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
-	    return TCL_ERROR;
-	}
-  	DestroyIcon(overlayicon);
+    badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+    wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
+    hwnd = wmPtr->wrapper;
+    badgestring = Tcl_GetString(objv[3]); 
+    string = L"Alert";
 
-  	return TCL_OK;
+    badgenumber = atoi(badgestring);
+    if (badgenumber > 9) {
+	strcpy(photoname, "::tk::icons::9plus-badge");
+    } else {
+	strcpy(photoname, "::tk::icons::");
+	strcat(photoname, badgestring);
+	strcat(photoname, "-badge");
+    }
+
+    /*
+     * Get image. If NULL, remove badge icon.
+     */
+
+    photo = Tk_FindPhoto(interp, photoname);
+    if (photo == NULL) {
+	ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+	return TCL_OK;
+    }
+	
+    /*
+     * We have found the image. Convert to icon.
+     */
+
+    Tk_PhotoGetSize(photo, &width, &height);
+    Tk_PhotoGetImage(photo, &block);
+
+    overlayicon = CreateIcoFromPhoto(width, height, block);
+    if (overlayicon == NULL) {
+	Tcl_SetResult(interp, "Failed to create badge icon", TCL_VOLATILE);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Place overlay icon on taskbar icon.
+     */
+
+    hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
+    if (hr != S_OK) {
+	Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
+	return TCL_ERROR;
+    }
+    DestroyIcon(overlayicon);
+
+    return TCL_OK;
 }
 
 /*
@@ -4293,13 +4310,14 @@ WmIconphotoCmd(
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
     unsigned size;
+    char* icon;
     (void)tkwin;
 
     if (strcmp(Tcl_GetString(objv[1]), "iconphoto") != 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"",  -1));
 	return TCL_ERROR;
     }
-		
+
     if ((objc == 3) && (strcmp(Tcl_GetString(objv[1]), "iconphoto") == 0) && base_icon == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
 	return TCL_OK;
@@ -4311,25 +4329,22 @@ WmIconphotoCmd(
     }
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image1 ?image2 ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
 	
-	if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-		isDefault = 1;
-		if (objc == 4) {
-			Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image1 ?image2 ...?");
-			return TCL_ERROR;
-		}
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	isDefault = 1;
+	if (objc == 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-default? image1 ?image2 ...?");
+	    return TCL_ERROR;
+	}
     }
 
-     /*
-      * Get icon name. We only use the first icon name.
-      */
+    /*
+     * Get icon name. We only use the first icon name.
+     */
 
-    char *icon;
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
     } else {
