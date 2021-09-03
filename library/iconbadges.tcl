@@ -211,12 +211,6 @@ if {[tk windowingsystem] eq "x11"} {
 	    return -code error "You must set the value of \"::tk::icons::base_icon(\$win)\" to a Tk photo before setting an icon badge"
 	}
 
-if 0 {
-	if {[wm iconphoto $win] eq ""} {
-	    return -code error "You must set a Tk image as a window icon via the \"wm iconphoto\" command before setting an icon badge"
-	}
-}
-
 	wm iconphoto $win $::tk::icons::base_icon($win)
 
 	if {$badgenumber eq ""} {
