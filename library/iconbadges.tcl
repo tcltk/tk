@@ -215,15 +215,14 @@ if {[tk windowingsystem] eq "x11"} {
 	    return -code error "You must set a Tk image as a window icon via the \"wm iconphoto\" command before setting an icon badge"
 	}
 
+	wm iconphoto $win $::tk::icons::base_icon 
+
 	if {$badgenumber eq ""} {
-	    wm iconphoto $win $::tk::icons::base_icon
 	    return
 	}
 
 	image create photo overlay
 	
-	wm iconphoto $win $::tk::icons::base_icon 
-
 	switch -glob -- $badgenumber {
 	    ! {
 		set badge ::tk::icons::!-badge
