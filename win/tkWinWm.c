@@ -4314,7 +4314,7 @@ WmIconphotoCmd(
     (void)tkwin;
 
     if (strcmp(Tcl_GetString(objv[1]), "iconphoto") != 0) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"",  -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"", -1));
 	return TCL_ERROR;
     }
 
