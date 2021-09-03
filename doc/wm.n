@@ -487,7 +487,7 @@ or an empty string if no icon name has been specified (in this
 case the window manager will normally display the window's title,
 as specified with the \fBwm title\fR command).
 .TP
-\fBwm iconphoto \fIwindow\fR ?\fB\-default\fR? \fIimage1\fR ?\fIimage2 ...\fR?
+\fBwm iconphoto \fIwindow\fR ??\fB\-default\fR? \fIimage1\fR ?\fIimage2 ...\fR??
 .
 Sets the titlebar icon for \fIwindow\fR based on the named photo images.
 If \fB\-default\fR is specified, this is applied to all future created
