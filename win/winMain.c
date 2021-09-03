@@ -134,7 +134,6 @@ _tWinMain(
     (void)lpszCmdLine;
     (void)nCmdShow;
 
-
     /*
      * Create the console channels and install them as the standard channels.
      * All I/O will be discarded until Tk_CreateConsoleWindow is called to
