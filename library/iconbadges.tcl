@@ -207,15 +207,17 @@ if {[tk windowingsystem] eq "x11"} {
 
 	variable ::tk::icons::base_icon
 
-	if {$::tk::icons::base_icon eq ""} {
-	    return -code error "You must set the value of \"::tk::icons::base_icon\" to a Tk photo before setting an icon badge"
+	if {![info exists ::tk::icons::base_icon($win)]} {
+	    return -code error "You must set the value of \"::tk::icons::base_icon(\$win)\" to a Tk photo before setting an icon badge"
 	}
 
+if 0 {
 	if {[wm iconphoto $win] eq ""} {
 	    return -code error "You must set a Tk image as a window icon via the \"wm iconphoto\" command before setting an icon badge"
 	}
+}
 
-	wm iconphoto $win $::tk::icons::base_icon 
+	wm iconphoto $win $::tk::icons::base_icon($win)
 
 	if {$badgenumber eq ""} {
 	    return
@@ -236,7 +238,7 @@ if {[tk windowingsystem] eq "x11"} {
 
         }
 
-	overlay copy $::tk::icons::base_icon 
+	overlay copy $::tk::icons::base_icon($win)
 	overlay copy $badge -from 0 0 18 18 -to 18 0
 	wm iconphoto $win overlay
 

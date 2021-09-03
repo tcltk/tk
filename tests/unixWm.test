@@ -2539,7 +2539,7 @@ test unixWm-60.5 {wm attributes - bad attribute} -constraints unix -body {
 
 test unixWm-61.1 {Tk_WmCmd procedure, "iconphoto" option} unix {
     list [catch {wm iconph .} msg] $msg
-} {1 {Argument should be "iconphoto"}}
+} {1 {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}}
 test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} unix {
     destroy .t
     toplevel .t
