@@ -195,11 +195,6 @@ image create photo ::tk::icons::!-badge -data {
 
 if {[tk windowingsystem] eq "x11"} {
 
-    variable ::tk::icons::base_icon
-
-    set ::tk::icons::base_icon ""
-
-
     # ::tk::icons::IconBadge --
     # This procedure creates an icon with an overlay badge on systems that
     # do not have a native icon/badge API. 
