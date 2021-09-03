@@ -349,11 +349,6 @@ static int initialized;		/* Flag indicating whether module has been
 
 TCL_DECLARE_MUTEX(winWmMutex)
 
-/*
- *  The following stores the name of the "wm iconphoto" image.
- */
-char *base_icon = NULL;
-
 /* 
  * The following records the "TaskbarButtonCreated" message ID 
  * for overlay icons.
@@ -4310,47 +4305,14 @@ WmIconphotoCmd(
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
     unsigned size;
-    char* icon;
     (void)tkwin;
 
-    if (strcmp(Tcl_GetString(objv[1]), "iconphoto") != 0) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"", -1));
-	return TCL_ERROR;
-    }
-
-    if ((objc == 3) && (strcmp(Tcl_GetString(objv[1]), "iconphoto") == 0) && base_icon == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
-	return TCL_OK;
-    }
-
-    if ((objc == 3) && (base_icon != NULL)) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));
-	return TCL_OK;
-    }
-
-    if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window ?-default? image1 ?image2 ...?");
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv,
+		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
 	
-    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-	isDefault = 1;
-	if (objc == 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window ?-default? image1 ?image2 ...?");
-	    return TCL_ERROR;
-	}
-    }
-
-    /*
-     * Get icon name. We only use the first icon name.
-     */
-
-    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-	icon = Tcl_GetString(objv[4]);
-    } else {
-	icon = Tcl_GetString(objv[3]);
-    }
-
     /*
      * Iterate over all images to validate their existence.
      */
@@ -4419,8 +4381,6 @@ WmIconphotoCmd(
 	DecrIconRefCount(titlebaricon);
 	return TCL_ERROR;
     }
-    base_icon = icon;
-    
     return TCL_OK;
 }
 
