@@ -55,6 +55,7 @@ typedef struct {
     HHOOK hMsgBoxHook;		/* Hook proc for tk_messageBox and the */
     HICON hSmallIcon;		/* icons used by a parent to be used in */
     HICON hBigIcon;		/* the message box */
+    HWND hWndParent;		/* Parent window of tk_messageBox or NULL */
     int   newFileDialogsState;
 #define FDLG_STATE_INIT 0       /* Uninitialized */
 #define FDLG_STATE_USE_NEW 1    /* Use the new dialogs */
@@ -2796,7 +2797,7 @@ Tk_MessageBoxObjCmd(
     HWND hWnd;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
     int defaultBtn, icon, type;
-    int i, oldMode, winCode;
+    int i, oldMode, winCode, parentGiven = 0;
     UINT flags;
     static const char *const optionStrings[] = {
 	"-default",	"-detail",	"-icon",	"-message",
@@ -2867,6 +2868,7 @@ Tk_MessageBoxObjCmd(
 	    if (parent == NULL) {
 		return TCL_ERROR;
 	    }
+	    parentGiven = 1;
 	    break;
 
 	case MSG_TITLE:
@@ -2937,6 +2939,7 @@ Tk_MessageBoxObjCmd(
 
     tsdPtr->hSmallIcon = TkWinGetIcon(parent, ICON_SMALL);
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
+    tsdPtr->hWndParent = parentGiven ? hWnd : NULL;
     tsdPtr->hMsgBoxHook = SetWindowsHookExW(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
     src = Tcl_GetString(tmpObj);
@@ -2996,6 +2999,28 @@ MsgBoxCBTProc(
 	    SendMessageW(hwnd, WM_SETICON, ICON_SMALL,
 		    (LPARAM) tsdPtr->hSmallIcon);
 	    SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM) tsdPtr->hBigIcon);
+	}
+    } else if (nCode == HCBT_ACTIVATE) {
+	/*
+	 * Try to center message box in parent window, if one was
+	 * specified in tk_messageBox command.
+	 */
+
+	HWND hwndParent, hwnd = (HWND) wParam;
+	RECT rp, r;
+
+	if (tsdPtr->hWndParent != NULL) {
+	    hwndParent = tsdPtr->hWndParent;
+	    tsdPtr->hWndParent = NULL;
+	    if (GetWindowRect(hwndParent, &rp)) {
+		rp.left = (rp.left + rp.right) / 2;
+		rp.top = (rp.top + rp.bottom) / 2;
+		GetWindowRect(hwnd, &r);
+		rp.left -= (r.right - r.left) / 2;
+		rp.top -= (r.bottom - r.top) / 2;
+		SetWindowPos(hwnd, HWND_TOP, rp.left, rp.top,
+			r.right - r.left, r.bottom - r.top, 0);
+	    }
 	}
     }
 
