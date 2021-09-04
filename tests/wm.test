@@ -807,7 +807,7 @@ test wm-iconbadge-1.2 {usage} -returnCodes error -body {
     unset ::tk::icons::base_icon(.f)
 } -result {window ".f" isn't a top-level window}
 test wm-iconbadge-1.3 {::tk::icons::base_icon($win) must be set on X11} -constraints x11 -returnCodes error -body {
-    unset ::tk::icons::base_icon(.)
+    unset -nocomplain ::tk::icons::base_icon(.)
     wm iconbadge . !
 } -result {Unable to set iconbadge. You must set the value of ::tk::icons::base_icon(.) to a Tk photo before setting an icon badge}
 test wm-iconbadge-1.4 {usage} -body {
