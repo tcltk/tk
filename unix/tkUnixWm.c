@@ -335,12 +335,6 @@ typedef struct WaitRestrictInfo {
 } WaitRestrictInfo;
 
 /*
- *  The following stores the name of the "wm iconphoto" image.
- */
-
-char *base_icon = NULL;
-
-/*
  * Forward declarations for functions defined in this file:
  */
 
@@ -2439,24 +2433,8 @@ WmIconphotoCmd(
     Tk_PhotoImageBlock block;
     int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
     unsigned long *iconPropertyData;
-    char *icon;
 
-    if (strcmp(Tcl_GetString(objv[1]), "iconphoto") != 0) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("Argument should be \"iconphoto\"", -1));
-	return TCL_ERROR;
-    }
-
-    if ((objc == 3) && (base_icon == NULL)) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
-	return TCL_OK;
-    }
-
-    if ((objc == 3) && (base_icon != NULL)) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(base_icon, -1));
-	return TCL_OK;
-    }
-
-    if (objc < 3) {
+    if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
@@ -2468,16 +2446,6 @@ WmIconphotoCmd(
 		    "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
-    }
-
-     /*
-      * Get icon name. We only use the first icon name.
-      */
-
-    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-	icon = Tcl_GetString(objv[4]);
-    } else {
-	icon = Tcl_GetString(objv[3]);
     }
 
     /*
@@ -2582,8 +2550,6 @@ WmIconphotoCmd(
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	UpdatePhotoIcon(winPtr);
     }
-
-    base_icon = icon;
     return TCL_OK;
 }
 

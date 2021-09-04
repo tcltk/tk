@@ -799,8 +799,8 @@ test wm-iconbadge-1.1 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 test wm-iconbadge-1.2 {usage} -body {
     toplevel .top
-    set ::tk::icons::base_icon icon
-    wm iconphoto .top $::tk::icons::base_icon
+    set ::tk::icons::base_icon(.top) icon
+    wm iconphoto .top $::tk::icons::base_icon(.top)
     wm iconbadge .top 14
 } -cleanup {
     destroy .top
@@ -945,23 +945,20 @@ test wm-iconname-2.1 {setting and reading values} -setup {
 test wm-iconphoto-1.1 {usage} -returnCodes error -body {
     wm iconphoto
 } -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-iconphoto-1.2 {usage} -body {
-    wm iconphoto . icon
-} -result {}
-test wm-iconphoto-1.3  {usage} -body {
+test wm-iconphoto-1.2 {usage} -returnCodes error -body {
     wm iconphoto .
-} -result {icon}
-test wm-iconphoto-1.4 {usage} -returnCodes error -body {
+} -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
+test wm-iconphoto-1.3 {usage} -returnCodes error -body {
     wm iconphoto . notanimage
 } -result {can't use "notanimage" as iconphoto: not a photo image}
-test wm-iconphoto-1.5 {usage} -returnCodes error -body {
+test wm-iconphoto-1.4 {usage} -returnCodes error -body {
     # we currently have no return info
     wm iconphoto . -default
 } -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
-test wm-iconphoto-1.6.1 {usage} -constraints aquaOrWin32 -returnCodes error -body {
+test wm-iconphoto-1.5.1 {usage} -constraints aquaOrWin32 -returnCodes error -body {
     wm iconphoto . -default [image create photo -file {}]
 } -match {glob} -result {failed to create an iconphoto with image *}
-test wm-iconphoto-1.6.2 {usage} -constraints x11 -body {
+test wm-iconphoto-1.5.2 {usage} -constraints x11 -body {
     wm iconphoto . -default [image create photo -file {}]
 } -result {}
 
