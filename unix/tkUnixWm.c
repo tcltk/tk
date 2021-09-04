@@ -2159,7 +2159,7 @@ WmIconbadgeCmd(
 	    Tcl_GetString(objv[2]),
 	    Tcl_GetString(objv[3]));
     if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
-	Tcl_SetResult(interp,"You must set the value of \"::tk::icons::base_icon($win)\" to a Tk photo before setting an icon badge",TCL_VOLATILE);
+	Tcl_SetResult(interp,"Unable to set icon badge",TCL_VOLATILE);
 	return TCL_ERROR;
     }
     return TCL_OK;
