@@ -809,12 +809,12 @@ test wm-iconbadge-1.2 {usage} -returnCodes error -body {
 test wm-iconbadge-1.3 {::tk::icons::base_icon($win) must be set on X11} -constraints x11 -returnCodes error -body {
     unset -nocomplain ::tk::icons::base_icon(.)
     wm iconbadge . !
-} -result {Unable to set icon badge}
+} -result {::tk::icons::base_icon($win) must be set on X11}
 test wm-iconbadge-1.4 {other failure mode than ::tk::icons::base_icon($win)} -returnCodes error -body {
     catch {image delete book}
     set ::tk::icons::base_icon(.) book
     wm iconbadge . 27
-} -result {Unable to set icon badge}
+} -result {can't use "book" as iconphoto: not a photo image}
 test wm-iconbadge-1.5 {unknown badge} -returnCodes error -body {
     image create photo book -data {
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
@@ -826,7 +826,7 @@ test wm-iconbadge-1.5 {unknown badge} -returnCodes error -body {
     wm iconbadge . unknown
 } -cleanup {
     image delete book
-} -result {Unable to set icon badge}
+} -result {can't use "unknown" as iconphoto: not a photo image}
 test wm-iconbadge-1.6 {usage} -body {
     image create photo book -data {
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
