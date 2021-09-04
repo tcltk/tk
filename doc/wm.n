@@ -431,7 +431,7 @@ The icon badge is intended for display in the Dock (macOS),
 taskbar (Windows) or app panel (X11). On macOS and Windows, the last badge 
 called will be displayed in the Dock/taskbar, regardless of how many 
 different icon badges may be assigned to different windows. Taskbar/panel 
-display behavioron X11 will depend on the window manager and/or desktop 
+display behavior on X11 will depend on the window manager and/or desktop 
 environment.
 .RE
 .TP
