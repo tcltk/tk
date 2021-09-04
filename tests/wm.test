@@ -793,18 +793,42 @@ test wm-group-2.1 {setting and reading values} -setup {
     lappend result [wm group .t]
 } -result [list {} . {}]
 
+
 ### wm iconbadge ###
 test wm-iconbadge-1.1 {usage} -returnCodes error -body {
     wm iconbadge
 } -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-iconbadge-1.2 {usage} -body {
+test wm-iconbadge-1.2 {usage} -returnCodes error -body {
+    frame .f
+    set ::tk::icons::base_icon(.f) icon
+    wm iconbadge .f icon
+} -cleanup {
+    destroy .f
+    unset ::tk::icons::base_icon(.f)
+} -result {window ".f" isn't a top-level window}
+test wm-iconbadge-1.3 {::tk::icons::base_icon($win) must be set on X11} -constraints x11 -returnCodes error -body {
+    unset ::tk::icons::base_icon(.)
+    wm iconbadge . !
+} -result {Unable to set iconbadge. You must set the value of ::tk::icons::base_icon(.) to a Tk photo before setting an icon badge}
+test wm-iconbadge-1.4 {usage} -body {
+    image create photo book -data {
+        R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
+        wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
+        QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
+        0yv+DVSEUuFxIAOw==
+    }
     toplevel .top
     set ::tk::icons::base_icon(.top) icon
     wm iconphoto .top $::tk::icons::base_icon(.top)
     wm iconbadge .top 14
+    set ::tk::icons::base_icon(.) book
+    wm iconphoto . $::tk::icons::base_icon(.)
+    wm iconbadge . !
 } -cleanup {
     destroy .top
-}
+    wm iconbadge . ""
+} -result {}
+
 
 ### wm iconbitmap ###
 test wm-iconbitmap-1.1 {usage} -returnCodes error -body {
