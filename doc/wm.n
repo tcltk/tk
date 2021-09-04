@@ -432,7 +432,8 @@ displayed in the Dock, regardless of how many different icon badges may be
 assigned to different windows. On Windows, the taskbar display depends on
 whether the taskbar buttons are combined or not (this is an OS setting
 available to the user): if combined the behavior is the same as on macOS,
-otherwise each button in the taskbar shows the badge it was assigned. App
+otherwise each button in the taskbar shows the badge it was assigned. 
+Badge display on macOS is configured in the system preferences. App
 panel display behavior on X11 will depend on the window manager and/or
 desktop environment.
 .RE
