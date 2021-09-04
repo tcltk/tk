@@ -828,6 +828,11 @@ test wm-iconbadge-1.4 {usage} -body {
     destroy .top
     wm iconbadge . ""
 } -result {}
+test wm-iconbadge-1.5 {usage, no need to call iconphoto on aqua or win32} -constraints aquaOrWin32 -body {
+    wm iconbadge . 3
+} -cleanup {
+    wm iconbadge . ""
+} -result {}
 
 
 ### wm iconbitmap ###
