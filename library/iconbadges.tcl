@@ -208,7 +208,7 @@ if {[tk windowingsystem] eq "x11"} {
 	variable ::tk::icons::base_icon
 
 	if {![info exists ::tk::icons::base_icon($win)]} {
-	    puts "You must set the value of \"::tk::icons::base_icon($win)\" to a Tk photo before setting an icon badge"
+	    puts "Unable to set icon badge"
 	    return -code error
 	}
 
