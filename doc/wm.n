@@ -425,7 +425,6 @@ the badge images are provided by Tk and drawn to overlay the icon images
 using native (Windows) API's or Tk rendering. On macOS, the icon badge is
 rendered by a system API and is not provided by Tk. The icon image itself
 should be higher-resolution, preferably 512 pixels, to avoid being blurry.
-.RS
 .PP
 The icon badge is intended for display in the Dock (macOS), taskbar
 (Windows) or app panel (X11). On macOS, the last badge called will be
