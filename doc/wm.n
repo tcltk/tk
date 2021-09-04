@@ -413,17 +413,29 @@ Sets a badge for the icon of the \fIwindow\fR. The badge can be a number,
 for instance the number of new or unread messages, or
 an exclamation point denoting attention needed. If the badge is an empty
 string, the badge image is removed from the application icon. Managing 
-these changes through bindings, such as <FocusIn>, is the responsibility of the developer.
+these changes through bindings, such as <FocusIn>, is the responsibility
+of the developer.
 .RS
 .PP
 On X11, for this command to work, 
-the variable \fB::tk::icons::base_icon\fR must be set to the image that is
-being used for the window icon, and the window's iconphoto must actually
-be set via the \fBwm iconphoto\fR command. On Windows and X11, the iconphoto images work best at 32x32 or a similar dimension, as
+the variable \fB::tk::icons::base_icon($window)\fR must be set to the image that is
+being used for the window icon of $window. On Windows and X11, the iconphoto
+images work best at 32x32 or a similar dimension, as
 the badge images are provided by Tk and drawn to overlay the icon images
 using native (Windows) API's or Tk rendering. On macOS, the icon badge is
 rendered by a system API and is not provided by Tk. The icon image itself
 should be higher-resolution, preferably 512 pixels, to avoid being blurry.
+.RS
+.PP
+The icon badge is intended for display in the Dock (macOS), taskbar
+(Windows) or app panel (X11). On macOS, the last badge called will be
+displayed in the Dock, regardless of how many different icon badges may be
+assigned to different windows. On Windows, the taskbar display depends on
+whether the taskbar buttons are combined or not (this is an OS setting
+available to the user): if combined the behavior is the same as on macOS,
+otherwise each button in the taskbar shows the badge it was assigned. App
+panel display behavior on X11 will depend on the window manager and/or
+desktop environment.
 .RE
 .TP
 \fBwm iconbitmap \fIwindow\fR ?\fIbitmap\fR?
@@ -487,7 +499,7 @@ or an empty string if no icon name has been specified (in this
 case the window manager will normally display the window's title,
 as specified with the \fBwm title\fR command).
 .TP
-\fBwm iconphoto \fIwindow\fR ??\fB\-default\fR? \fIimage1\fR ?\fIimage2 ...\fR??
+\fBwm iconphoto \fIwindow\fR ?\fB\-default\fR? \fIimage1\fR ?\fIimage2 ...\fR?
 .
 Sets the titlebar icon for \fIwindow\fR based on the named photo images.
 If \fB\-default\fR is specified, this is applied to all future created
@@ -495,15 +507,12 @@ toplevels as well.  The data in the images is taken as a snapshot at the
 time of invocation.  If the images are later changed, this is not
 reflected to the titlebar icons.  Multiple images are accepted to allow
 different images sizes (e.g., 16x16 and 32x32) to be provided. The window
-manager may scale provided icons to an appropriate size. If this command
-is called without an image argument, the current image set for the
-titlebar icon is returned.
+manager may scale provided icons to an appropriate size.
 .RS
 .PP
 On Windows, the images are packed into a Windows icon structure.
 This will override an ico specified to \fBwm iconbitmap\fR, and
-vice versa. This command sets the taskbar icon as the designated icon on
-Windows.
+vice versa. This command sets the taskbar icon for the window.
 .PP
 On X, the images are arranged into the _NET_WM_ICON X property, which
 most modern window managers support.  A \fBwm iconbitmap\fR may exist

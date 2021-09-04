@@ -431,7 +431,7 @@ test winWm-7.4 {UpdateWrapper must maintain focus} -constraints win -setup {
 
 test winWm-8.1 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -body {
     wm iconph .
-} -returnCodes error -result {Argument should be "iconphoto"}
+} -returnCodes error -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
 test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -setup {
     destroy .t
 } -body {
