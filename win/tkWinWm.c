@@ -3909,15 +3909,10 @@ WmIconbadgeCmd(
     badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
     hwnd = wmPtr->wrapper;
-    if (Tcl_GetIntFromObj(interp, objv[3], &badgenumber) != TCL_OK) {
+    if (Tcl_GetIntFromObj(interp, objv[3], &badgenumber) != TCL_OK ||
+	    badgenumber <= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
-	Tcl_SetErrorCode(interp, "TK", "WM", "ICONBADGE", "OPTION", NULL);
-	return TCL_ERROR;
-    }
-    if (badgenumber <= 0) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "can't use \"%d\" as icon badge", badgenumber));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONBADGE", "OPTION", NULL);
 	return TCL_ERROR;
     }
