@@ -3890,7 +3890,7 @@ WmIconbadgeCmd(
     HICON overlayicon;
     (void) winPtr;
     int badgenumber;
-    char * badgestring = NULL;
+    char *badgestring = NULL;
     char  photoname[4096];
     LPCWSTR string;
     HRESULT hr;
@@ -3909,10 +3909,19 @@ WmIconbadgeCmd(
     badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
     hwnd = wmPtr->wrapper;
-    badgestring = Tcl_GetString(objv[3]); 
-    string = L"Alert";
+    if (Tcl_GetIntFromObj(interp, objv[3], &badgenumber) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONBADGE", "OPTION", NULL);
+	return TCL_ERROR;
+    }
+    if (badgenumber <= 0) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "can't use \"%d\" as icon badge", badgenumber));
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONBADGE", "OPTION", NULL);
+	return TCL_ERROR;
+    }
 
-    badgenumber = atoi(badgestring);
     if (badgenumber > 9) {
 	strcpy(photoname, "::tk::icons::9plus-badge");
     } else {
@@ -3948,6 +3957,7 @@ WmIconbadgeCmd(
      * Place overlay icon on taskbar icon.
      */
 
+    string = L"Alert";
     hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
     if (hr != S_OK) {
 	Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
