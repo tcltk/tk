@@ -795,23 +795,31 @@ test wm-group-2.1 {setting and reading values} -setup {
 
 
 ### wm iconbadge ###
-test wm-iconbadge-1.1 {usage} -returnCodes error -body {
+test wm-iconbadge-1.1 {usage} -body {
     wm iconbadge
-} -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-iconbadge-1.2 {usage} -returnCodes error -body {
+} -returnCodes error -result {wrong # args: should be "wm option window ?arg ...?"}
+test wm-iconbadge-1.2 {usage} -body {
     frame .f
     set ::tk::icons::base_icon(.f) icon
     wm iconbadge .f icon
 } -cleanup {
     destroy .f
     unset ::tk::icons::base_icon(.f)
-} -result {window ".f" isn't a top-level window}
-test wm-iconbadge-1.3 {other failure mode than ::tk::icons::base_icon($win)} -returnCodes error -body {
+} -returnCodes error -result {window ".f" isn't a top-level window}
+test wm-iconbadge-1.3 {::tk::icons::base_icon($win) must be set on X11} -constraints {
+    x11
+} -setup {
+    unset -nocomplain ::tk::icons::base_icon(.)
+} -body {
+    wm iconbadge . !
+} -returnCodes error -result {::tk::icons::base_icon(.) must be set on X11}
+test wm-iconbadge-1.4 {::tk::icons::base_icon($win) must be a Tk photo} -setup {
     catch {image delete book}
+} -body {
     set ::tk::icons::base_icon(.) book
     wm iconbadge . 27
-} -result {can't use "book" as iconphoto: not a photo image}
-test wm-iconbadge-1.4 {unknown badge} -returnCodes error -body {
+} -returnCodes error -result {can't use "book" as iconphoto: not a photo image}
+test wm-iconbadge-1.5 {illegal badge number} -body {
     image create photo book -data {
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
         wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
@@ -819,13 +827,38 @@ test wm-iconbadge-1.4 {unknown badge} -returnCodes error -body {
         0yv+DVSEUuFxIAOw==
     }
     set ::tk::icons::base_icon(.) book
-    wm iconbadge . notknown
+    wm iconbadge . illegal
 } -cleanup {
     image delete book
-} -result {can't use "notknown" as iconphoto: not a photo image}
-test wm-iconbadge-1.5 {usage, no need to call iconphoto on aqua or win32} -constraints aquaOrWin32 -body {
-    wm iconbadge . 3
+} -returnCodes error -result {can't use "illegal" as icon badge}
+test wm-iconbadge-1.6 {non-integer badge number} -body {
+    image create photo book -data {
+        R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
+        wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
+        QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
+        0yv+DVSEUuFxIAOw==
+    }
+    set ::tk::icons::base_icon(.) book
+    wm iconbadge . 3.2
 } -cleanup {
+    image delete book
+} -returnCodes error -result {can't use "3.2" as icon badge}
+test wm-iconbadge-1.7 {negative or zero badge number} -body {
+    image create photo book -data {
+        R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
+        wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
+        QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
+        0yv+DVSEUuFxIAOw==
+    }
+    set ::tk::icons::base_icon(.) book
+    wm iconbadge . 0
+} -cleanup {
+    image delete book
+} -returnCodes error -result {can't use "0" as icon badge}
+test wm-iconbadge-1.8 {usage, no need to call iconphoto on aqua or win32} -constraints {
+    aquaOrWin32
+} -body {
+    wm iconbadge . 3
     wm iconbadge . ""
 } -result {}
 
