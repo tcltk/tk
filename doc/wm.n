@@ -409,8 +409,8 @@ string if \fIwindow\fR is not part of any group.
 .TP
 \fBwm iconbadge \fIwindow\fR \fIbadge\fR
 .
-Sets a badge for the icon of the \fIwindow\fR. The badge can be a number,
-for instance the number of new or unread messages, or
+Sets a badge for the icon of the \fIwindow\fR. The badge can be a positive
+integer number, for instance the number of new or unread messages, or
 an exclamation point denoting attention needed. If the badge is an empty
 string, the badge image is removed from the application icon. Managing 
 these changes through bindings, such as <FocusIn>, is the responsibility

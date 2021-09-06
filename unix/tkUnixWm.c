@@ -2159,8 +2159,6 @@ WmIconbadgeCmd(
 	    Tcl_GetString(objv[2]),
 	    Tcl_GetString(objv[3]));
     if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
-	char *msg = Tcl_GetStringResult(interp);
-	Tcl_SetResult(interp,msg, TCL_VOLATILE);
 	return TCL_ERROR;
     }
     return TCL_OK;
