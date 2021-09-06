@@ -188,6 +188,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinDraw.obj \
 	$(TMP_DIR)\tkWinEmbed.obj \
 	$(TMP_DIR)\tkWinFont.obj \
+	$(TMP_DIR)\tkWinGDI.obj \
 	$(TMP_DIR)\tkWinIco.obj \
 	$(TMP_DIR)\tkWinImage.obj \
 	$(TMP_DIR)\tkWinInit.obj \
