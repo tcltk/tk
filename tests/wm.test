@@ -823,7 +823,7 @@ test wm-iconbadge-1.4 {unknown badge} -returnCodes error -body {
 } -cleanup {
     image delete book
 } -result {can't use "notknown" as iconphoto: not a photo image}
-test wm-iconbadge-1. {usage, no need to call iconphoto on aqua or win32} -constraints aquaOrWin32 -body {
+test wm-iconbadge-1.5 {usage, no need to call iconphoto on aqua or win32} -constraints aquaOrWin32 -body {
     wm iconbadge . 3
 } -cleanup {
     wm iconbadge . ""
