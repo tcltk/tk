@@ -3890,8 +3890,8 @@ WmIconbadgeCmd(
     HICON overlayicon;
     (void) winPtr;
     int badgenumber;
-    char * badgestring = NULL;
-    char  photoname[4096];
+    char *badgestring = NULL;
+    char photoname[4096];
     LPCWSTR string;
     HRESULT hr;
     Tk_Window badgewindow;
@@ -3909,8 +3909,7 @@ WmIconbadgeCmd(
     badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
     hwnd = wmPtr->wrapper;
-    badgestring = Tcl_GetString(objv[3]); 
-    string = L"Alert";
+    badgestring = Tcl_GetString(objv[3]);
 
     badgenumber = atoi(badgestring);
     if (badgenumber > 9) {
@@ -3924,24 +3923,24 @@ WmIconbadgeCmd(
     /*
      * If badgestring is empty string, remove icon.
      */
-	
-    if (strcmp("", badgestring)==0) {
+
+    if (strcmp("", badgestring) == 0) {
 	ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
 	return TCL_OK;
     }
-	
+
     /*
      * If photo does not exist, return error. This means we do not have
      * to test for decimal or negative values; no photo for such values
      * is present.
      */
-    
-     photo = Tk_FindPhoto(interp, photoname);
-     if (photo == NULL) {
-	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-						"can't use \"%s\" as icon badge", badgestring));
-	 return TCL_ERROR;
-     }
+
+    photo = Tk_FindPhoto(interp, photoname);
+    if (photo == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use \"%s\" as icon badge", badgestring));
+	return TCL_ERROR;
+    }
 	
     /*
      * We have found the image. Convert to icon.
@@ -3960,6 +3959,7 @@ WmIconbadgeCmd(
      * Place overlay icon on taskbar icon.
      */
 
+    string = L"Alert";
     hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
     if (hr != S_OK) {
 	Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
