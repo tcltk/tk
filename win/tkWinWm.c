@@ -3925,20 +3925,22 @@ WmIconbadgeCmd(
      * if badgestring is empty string, remove icon.
      */
 	
-	if (strcmp("", badgestring)==0) {
-		ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
-		return TCL_OK;
+    if (strcmp("", badgestring)==0) {
+	ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+	return TCL_OK;
 	}
 	
-	/*
-	 * If photo does not exist, return error.
-	*/	 
-    photo = Tk_FindPhoto(interp, photoname);
-    if (photo == NULL) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-					 "can't use \"%s\" as icon badge", badgestring));
-	return TCL_ERROR;
-    }
+    /*
+     * If photo does not exist, return error. This means we do not have
+     * to test for decimal or negative values; no photo for such values
+     * is present.
+     */	 
+     photo = Tk_FindPhoto(interp, photoname);
+     if (photo == NULL) {
+	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+						"can't use \"%s\" as icon badge", badgestring));
+	 return TCL_ERROR;
+     }
 	
     /*
      * We have found the image. Convert to icon.
