@@ -2374,14 +2374,14 @@ WmIconbadgeCmd(
 	Tcl_WrongNumArgs(interp, 2, objv,"window badge");
 	return TCL_ERROR;
     }
- 
+
     label = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
 
     int number = [label intValue];
     NSDockTile *dockicon = [NSApp dockTile];
 
     /*
-     * First, check that the label is not a decimal. If it is, 
+     * First, check that the label is not a decimal. If it is,
      * return an error.
      */
 
@@ -2392,11 +2392,11 @@ WmIconbadgeCmd(
     }
 
     /*
-     * Next, check that label is an int, empty string, or exclamation 
+     * Next, check that label is an int, empty string, or exclamation
      * point. If so, set the icon badge on the Dock icon. Otherwise,
      * return an error.
      */
-    
+
     NSArray *array = @[@"", @"!"];
     if ([array containsObject: label]) {
 	[dockicon setBadgeLabel:label];
