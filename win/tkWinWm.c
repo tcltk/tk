@@ -3922,7 +3922,7 @@ WmIconbadgeCmd(
     }
 
     /*
-     * if badgestring is empty string, remove icon.
+     * If badgestring is empty string, remove icon.
      */
 	
     if (strcmp("", badgestring)==0) {
