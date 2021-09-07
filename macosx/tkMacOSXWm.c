@@ -2387,7 +2387,7 @@ WmIconbadgeCmd(
 
     if ([label containsString:@"."]) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-					       "can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
+		"can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
 	return TCL_ERROR;
     }
 
@@ -2399,13 +2399,13 @@ WmIconbadgeCmd(
     
     NSArray *array = @[@"", @"!"];
     if ([array containsObject: label]) {
-	[dockicon setBadgeLabel: label];
+	[dockicon setBadgeLabel:label];
     } else if (number > 0) {
 	NSString *str = [@(number) stringValue];
 	[dockicon setBadgeLabel:str];
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-					       "can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
+		"can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
 	return TCL_ERROR;
     }
     return TCL_OK;
