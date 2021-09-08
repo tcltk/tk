@@ -861,6 +861,8 @@ test wm-iconbadge-1.8 {usage, no need to call iconphoto on aqua or win32} -const
     aquaOrWin32
 } -body {
     wm iconbadge . 3
+    wm iconbadge . 5000
+    wm iconbadge . !
     wm iconbadge . ""
 } -result {}
 
