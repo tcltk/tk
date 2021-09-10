@@ -2793,8 +2793,8 @@ Tk_MessageBoxObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window)clientData, parent;
-    HWND hWnd;
+    Tk_Window tkwin = (Tk_Window)clientData, parent=NULL;
+    HWND hWnd = NULL;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
     int defaultBtn, icon, type;
     int i, oldMode, winCode, parentGiven = 0;
@@ -2883,12 +2883,35 @@ Tk_MessageBoxObjCmd(
 	    break;
 	}
     }
+    
+    /*
+     * Handle parent window. Find the toplevel, if -parent option is given.
+     * Otherwise use the Window name ".".
+     * The parent window has the following functionalities:
+     * - place the box centered above it
+     * - take the icon for the box
+     * - define it as parent on the windows level (block, blink on click)
+     * For placement, check if parent windows is currently visible, as
+     * otherwise, the message box is positioned off screen.
+     */
 
-    while (!Tk_IsTopLevel(parent)) {
-	parent = Tk_Parent(parent);
+    if (parentGiven) {
+	while (!Tk_IsTopLevel(parent)) {
+	    parent = Tk_Parent(parent);
+	}
+    } else {
+	parent = Tk_NameToWindow(interp, ".", tkwin);
+	if (parent != NULL) {
+	    parentGiven = 1;
+	}
     }
-    Tk_MakeWindowExist(parent);
-    hWnd = Tk_GetHWND(Tk_WindowId(parent));
+    if (parentGiven) {
+	Tk_MakeWindowExist(parent);
+	if (!Tk_IsMapped(parent)) {
+	    parentGiven = 0;
+	}
+	hWnd = Tk_GetHWND(Tk_WindowId(parent));
+    }
 
     flags = 0;
     if (defaultBtn >= 0) {
