@@ -14455,6 +14455,7 @@ TkBTreeNextDisplayLine(
 	}
     }
 
+    printf("TkBTreeNextDisplayLine returns GetLastDisplayLine()\n"); fflush(stdout);
     return GetLastDisplayLine(textPtr, displayLineNo);
 }
 
@@ -14603,6 +14604,7 @@ TkBTreePrevDisplayLine(
 	}
     }
 
+    printf("TkBTreePrevDisplayLine returns GetFirstDisplayLine()\n"); fflush(stdout);
     return GetFirstDisplayLine(textPtr, displayLineNo);
 }
 
