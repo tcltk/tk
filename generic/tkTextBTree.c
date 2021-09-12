@@ -14455,7 +14455,10 @@ TkBTreeNextDisplayLine(
 	}
     }
 
-    printf("TkBTreeNextDisplayLine returns GetLastDisplayLine()\n"); fflush(stdout);
+    /*
+     * We should never reach this return point.
+     */
+
     return GetLastDisplayLine(textPtr, displayLineNo);
 }
 
@@ -14604,7 +14607,10 @@ TkBTreePrevDisplayLine(
 	}
     }
 
-    printf("TkBTreePrevDisplayLine returns GetFirstDisplayLine()\n"); fflush(stdout);
+    /*
+     * We should never reach this return point.
+     */
+
     return GetFirstDisplayLine(textPtr, displayLineNo);
 }
 
