@@ -59,6 +59,7 @@ static const char launchURLProc[] = "::tk::mac::LaunchURL";
 static const char printDocProc[] = "::tk::mac::PrintDocument";
 static const char scriptFileProc[] = "::tk::mac::DoScriptFile";
 static const char scriptTextProc[] = "::tk::mac::DoScriptText";
+static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
 #pragma mark TKApplication(TKHLEvents)
 
@@ -386,6 +387,22 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     ProcessAppleEvent((ClientData)AEInfo);
 }
 
+- (void)handleGetSDEFEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+     AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+    Tcl_DString *sdefCommand = &AEInfo->command;
+    (void)replyEvent;
+
+    Tcl_DStringInit(sdefCommand);
+    Tcl_DStringAppend(sdefCommand, getSdefProc, -1);
+    AEInfo->interp = _eventInterp;
+    AEInfo->procedure =  getSdefProc;
+    AEInfo->replyEvent = nil;
+    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
+
+}
+
 @end
 
 #pragma mark -
@@ -522,6 +539,15 @@ TkMacOSXInitAppleEvents(
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleURLEvent:withReplyEvent:)
 	    forEventClass:kInternetEventClass andEventID:kAEGetURL];
+
+	/*
+	 * We do not load our sdef dynamically but this event handler
+         * is required to silence error messages from inline execution
+         * of AppleScript at the Objective-C level.
+	 */
+	[aeManager setEventHandler:NSApp
+	    andSelector:@selector(handleGetSDEFEvent:withReplyEvent:)
+	    forEventClass:'ascr' andEventID:'gsdf'];
 
     }
 }

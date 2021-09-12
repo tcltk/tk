@@ -502,6 +502,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow
+	SourceLibFile print
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
@@ -699,6 +700,11 @@ if {[tk windowingsystem] eq "aqua"} {
 	uplevel #0 $script
     	eval $script
     }
+    #This procedure is required to silence warnings generated
+    #by inline AppleScript execution.
+    proc ::tk::mac::GetDynamicSdef {} {
+         puts ""
+     }
 }
 
 # Create a dictionary to store the starting index of the IME marked
