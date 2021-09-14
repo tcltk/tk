@@ -63,6 +63,10 @@ default value is an empty string.
 .
 Makes \fIwindow\fR the logical parent of the message box. The message
 box is displayed on top of its parent window.
+Defaults to the window \fI"."\fR.
+.
+On the windows platform, the following applies: The message box is centered on the parents toplevel (not on the parents widget), the parents toplevel icon is used for the message box and the parents toplevel flashes, if it is clicked while the message box is open.
+
 .TP
 \fB\-title\fR \fItitleString\fR
 .
@@ -115,6 +119,13 @@ switch \-\- $answer {
             \-type ok}
 }
 .CE
+.PP
+.SH "Platform specific remarks"
+.PP
+.SS "Windows"
+.PP
+A native widget is used, so no tk fonts or ttk styles are respected.
+.PP
 .SH KEYWORDS
 message box
 '\" Local Variables:
