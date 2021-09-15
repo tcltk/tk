@@ -2793,11 +2793,11 @@ Tk_MessageBoxObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window)clientData, parent=NULL;
+    Tk_Window tkwin = (Tk_Window)clientData, parent;
     HWND hWnd = NULL;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
     int defaultBtn, icon, type;
-    int i, oldMode, winCode, parentGiven = 0;
+    int i, oldMode, winCode;
     UINT flags;
     static const char *const optionStrings[] = {
 	"-default",	"-detail",	"-icon",	"-message",
@@ -2868,7 +2868,6 @@ Tk_MessageBoxObjCmd(
 	    if (parent == NULL) {
 		return TCL_ERROR;
 	    }
-	    parentGiven = 1;
 	    break;
 
 	case MSG_TITLE:
@@ -2885,33 +2884,18 @@ Tk_MessageBoxObjCmd(
     }
     
     /*
-     * Handle parent window. Find the toplevel, if -parent option is given.
-     * Otherwise use the Window name ".".
+     * Handle parent window. Find the toplevel.
      * The parent window has the following functionalities:
      * - place the box centered above it
      * - take the icon for the box
      * - define it as parent on the windows level (block, blink on click)
-     * For placement, check if parent windows is currently visible, as
-     * otherwise, the message box is positioned off screen.
      */
 
-    if (parentGiven) {
-	while (!Tk_IsTopLevel(parent)) {
-	    parent = Tk_Parent(parent);
-	}
-    } else {
-	parent = Tk_NameToWindow(interp, ".", tkwin);
-	if (parent != NULL) {
-	    parentGiven = 1;
-	}
+    while (!Tk_IsTopLevel(parent)) {
+	parent = Tk_Parent(parent);
     }
-    if (parentGiven) {
-	Tk_MakeWindowExist(parent);
-	if (!Tk_IsMapped(parent)) {
-	    parentGiven = 0;
-	}
-	hWnd = Tk_GetHWND(Tk_WindowId(parent));
-    }
+    Tk_MakeWindowExist(parent);
+    hWnd = Tk_GetHWND(Tk_WindowId(parent));
 
     flags = 0;
     if (defaultBtn >= 0) {
@@ -2962,7 +2946,17 @@ Tk_MessageBoxObjCmd(
 
     tsdPtr->hSmallIcon = TkWinGetIcon(parent, ICON_SMALL);
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
-    tsdPtr->hWndParent = parentGiven ? hWnd : NULL;
+
+    /*
+     * For placement, check if parent windows is currently not iconified, as
+     * otherwise, the message box is positioned off screen.
+     */
+
+    if (Tk_IsMapped(parent)) {
+	tsdPtr->hWndParent = hWnd;
+    } else {
+	tsdPtr->hWndParent = NULL;
+    }
     tsdPtr->hMsgBoxHook = SetWindowsHookExW(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
     src = Tcl_GetString(tmpObj);
@@ -3025,8 +3019,7 @@ MsgBoxCBTProc(
 	}
     } else if (nCode == HCBT_ACTIVATE) {
 	/*
-	 * Try to center message box in parent window, if one was
-	 * specified in tk_messageBox command.
+	 * Center message box on parent window.
 	 */
 
 	HWND hwndParent, hwnd = (HWND) wParam;
