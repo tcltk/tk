@@ -3072,9 +3072,6 @@ WmAttributesCmd(
     }
     for (i = 3; i < objc; i += 2) {
 	string = Tcl_GetStringFromObj(objv[i], &length);
-	if ((length < 2) || (string[0] != '-')) {
-	    goto configArgs;
-	}
 	if (strncmp(string, "-disabled", length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
@@ -3107,6 +3104,12 @@ WmAttributesCmd(
 		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "TOPMOST", NULL);
 		return TCL_ERROR;
 	    }
+	} else if (i == 3) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad attribute \"%s\": must be -alpha, -transparentcolor, -disabled, -fullscreen, -toolwindow, or -topmost",
+		    string));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", NULL);
+	    return TCL_ERROR;
 	} else {
 	    goto configArgs;
 	}
