@@ -129,7 +129,7 @@ A native widget is used, so no tk fonts or ttk styles are respected.
 The message box is centered on the parents toplevel (which includes or is identical to the widget specified by \fB\-parent\fR).
 The parents toplevel icon is used for the message box.
 The parents toplevel flashes, if it is clicked while the message box is open.
-The message box is not centered on the parent, if the parent is iconified or withdrawn.
+The message box is centered on the main screen, if the parent is iconified or withdrawn.
 .PP
 .SS "MAC-OS"
 .PP
