@@ -21,6 +21,7 @@ the buttons in the message window is identified by a unique symbolic
 name (see the \fB\-type\fR options).  After the message window is
 popped up, \fBtk_messageBox\fR waits for the user to select one of the
 buttons. Then it returns the symbolic name of the selected button.
+Events are processed while the message box is open.
 .PP
 The following option-value pairs are supported:
 .TP
@@ -64,9 +65,8 @@ default value is an empty string.
 Makes \fIwindow\fR the logical parent of the message box. The message
 box is displayed on top of its parent window.
 Defaults to the window \fI"."\fR.
+It is an error if the parent window does not exist, but the parents toplevel may be in iconified or withdrawn state.
 .
-On the windows platform, the following applies: The message box is centered on the parents toplevel (not on the parents widget), the parents toplevel icon is used for the message box and the parents toplevel flashes, if it is clicked while the message box is open.
-
 .TP
 \fB\-title\fR \fItitleString\fR
 .
@@ -125,6 +125,18 @@ switch \-\- $answer {
 .SS "Windows"
 .PP
 A native widget is used, so no tk fonts or ttk styles are respected.
+.PP
+The message box is centered on the parents toplevel (which includes or is identical to the widget specified by \fB\-parent\fR).
+The parents toplevel icon is used for the message box.
+The parents toplevel flashes, if it is clicked while the message box is open.
+The message box is not centered on the parent, if the parent is iconified or withdrawn.
+.PP
+.SS "MAC-OS"
+.PP
+A native widget is used, so no tk fonts or ttk styles are respected.
+.PP
+If no parent is specified, it is centered on the screen.
+If a parent is specified, it appears as a modal dialog above that window.
 .PP
 .SH KEYWORDS
 message box
