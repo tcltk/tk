@@ -7842,3 +7842,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2020-12-24 (bug)[6157a8] Aqua: file dialog -filetypes (davis,culler)
 
 - Released 8.6.11, Dec 31, 2020 - https://core.tcl-lang.org/tk/ for details
+
+2021-09-15 (bug)[0b9e8d] win: tk_messageBox centered on parent (werner)
