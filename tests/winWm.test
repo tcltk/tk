@@ -284,7 +284,7 @@ test winWm-6.3 {wm attributes} -constraints win -setup {
     wm attributes .t -foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {bad attribute "-foo": must be -alpha, -transparentcolor, -disabled, -fullscreen, -toolwindow, or -topmost}
+} -returnCodes error -result {bad attribute "-foo": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 
 test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
