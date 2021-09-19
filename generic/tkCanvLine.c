@@ -1011,7 +1011,7 @@ LineInsert(
     if ((length > 3) && (state != TK_STATE_HIDDEN)) {
 	/*
 	 * This is some optimizing code that will result that only the part of
-	 * the polygon that changed (and the objects that are overlapping with
+	 * the line that changed (and the objects that are overlapping with
 	 * that part) need to be redrawn. A special flag is set that instructs
 	 * the general canvas code not to redraw the whole object. If this
 	 * flag is not set, the canvas will do the redrawing, otherwise I have
@@ -1033,6 +1033,18 @@ LineInsert(
 		objc += 2;
 	    }
 	    if (beforeThis+objc+2 < length) {
+		objc += 2;
+	    }
+	    /*
+	     * Smoothed lines use splines defined differently at the two line
+	     * ends and elsewhere in the line (see TkMakeBezierCurve()). Include
+	     * the first and/or last splines if needed.
+	     */
+	    if (beforeThis == 2) {
+		beforeThis -= 2;
+		objc += 2;
+	    }
+	    if (beforeThis + objc == length - 2) {
 		objc += 2;
 	    }
 	}
