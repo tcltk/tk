@@ -817,9 +817,12 @@ GetButtonNumber(
 static Time
 CurrentTimeInMilliSecs(void)
 {
-    Tcl_Time now;
-    Tcl_GetTime(&now);
-    return ((Time) now.sec)*1000 + ((Time) now.usec)/1000;
+    struct {
+	Tcl_Time now;
+	Tcl_Time dummy; /* Spare, in case Tcl_Time has 32-bit fields */
+    } t;
+    Tcl_GetTime(&t.now);
+    return ((Time) t.now.sec)*1000 + ((Time) t.now.usec)/1000;
 }
 
 static Info
