@@ -1206,6 +1206,17 @@ LineDeleteCoords(
 	if (last1 < length-2) {
 	    last1 += 2;
 	}
+	/*
+	 * Smoothed lines use splines defined differently at the two line
+	 * ends and elsewhere in the line (see TkMakeBezierCurve()). Include
+	 * the first and/or last splines if needed.
+	 */
+	if (first1 == 2) {
+	    first1 -= 2;
+	}
+	if (last1 == length - 2) {
+	    last1 += 2;
+	}
     }
 
     if ((first1 >= 2) || (last1 < length-2)) {
