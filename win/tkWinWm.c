@@ -349,14 +349,14 @@ static int initialized;		/* Flag indicating whether module has been
 
 TCL_DECLARE_MUTEX(winWmMutex)
 
-/* 
- * The following records the "TaskbarButtonCreated" message ID 
+/*
+ * The following records the "TaskbarButtonCreated" message ID
  * for overlay icons.
  */
 
 static UINT TaskbarButtonCreatedMessageId = WM_NULL;
 
-/* Reference to taskbarlist API for overlay icons. */ 
+/* Reference to taskbarlist API for overlay icons. */
 ITaskbarList3 *ptbl;
 
 /*
@@ -447,7 +447,7 @@ static int		WmGroupCmd(Tk_Window tkwin,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbadgeCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);				
+			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -1733,7 +1733,7 @@ TkWinWmCleanup(
 	return;
     }
     tsdPtr->initialized = 0;
-	
+
     /*
      * COM library cleanup.
      */
@@ -2186,11 +2186,11 @@ UpdateWrapper(
 	SetFocus(focusHWND);
     }
 
-    /* 
-     * Initialize hooks for overlay icon. 
+    /*
+     * Initialize hooks for overlay icon.
      * Start with TaskbarButtonCreated message.
      */
-	
+
      TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
 
      /*
@@ -2199,7 +2199,7 @@ UpdateWrapper(
       */
 
      ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
-		
+
      /*
       * Load COM library for icon overlay.
       */
@@ -2965,9 +2965,6 @@ WmAttributesCmd(
     }
     for (i = 3; i < objc; i += 2) {
 	string = Tcl_GetStringFromObj(objv[i], &length);
-	if ((length < 2) || (string[0] != '-')) {
-	    goto configArgs;
-	}
 	if (strncmp(string, "-disabled", length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
@@ -3000,6 +2997,12 @@ WmAttributesCmd(
 		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "TOPMOST", NULL);
 		return TCL_ERROR;
 	    }
+	} else if (i == 3) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad attribute \"%s\": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
+		    string));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", NULL);
+	    return TCL_ERROR;
 	} else {
 	    goto configArgs;
 	}
@@ -3941,7 +3944,7 @@ WmIconbadgeCmd(
 		"can't use \"%s\" as icon badge", badgestring));
 	return TCL_ERROR;
     }
-	
+
     /*
      * We have found the image. Convert to icon.
      */
