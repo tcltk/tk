@@ -792,11 +792,21 @@ GetButtonNumber(
 static Time
 CurrentTimeInMilliSecs(void)
 {
-    struct {
+    union {
 	Tcl_Time now;
-	Tcl_Time dummy; /* Spare, in case Tcl_Time has 32-bit fields */
+	struct {
+	    Tcl_WideInt sec; /* reserve stack space enough for 64-bit fields */
+	    Tcl_WideInt usec;
+	} lnow;
     } t;
+    t.lnow.usec = -1; /* Invalid usec value, so we can see if Tcl_GetTime overwrites it */
     Tcl_GetTime(&t.now);
+#ifdef _WIN64
+    if (t.lnow.usec != -1) {
+	/* Win64 Tk loaded in Cygwin-64: Tcl_GetTime() returns 64-bit fields */
+	return ((Time) t.lnow.sec)*1000 + ((Time) t.lnow.usec)/1000;
+    }
+#endif
     return ((Time) t.now.sec)*1000 + ((Time) t.now.usec)/1000;
 }
 
@@ -949,6 +959,7 @@ FreePatSeqEntry(
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
+
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
     return next;
@@ -1624,7 +1635,7 @@ Tk_CreateBinding(
     ClientData object,		/* Token for object with which binding is associated. */
     const char *eventString,	/* String describing event sequence that triggers binding. */
     const char *script,		/* Contains Tcl script to execute when binding triggers. */
-    int append)		/* 0 means replace any existing binding for eventString;
+    int append)			/* 0 means replace any existing binding for eventString;
     				 * 1 means append to that binding. If the existing binding is
 				 * for a callback function and not a Tcl command string, the
 				 * existing binding will always be replaced. */
@@ -4613,7 +4624,7 @@ FindSequence(
     				 * associated. For virtual event table, NULL. */
     const char *eventString,	/* String description of pattern to match on. See user
     				 * documentation for details. */
-    int create,		/* 0 means don't create the entry if it doesn't already exist.
+    int create,			/* 0 means don't create the entry if it doesn't already exist.
     				 * 1 means create. */
     int allowVirtual,		/* 0 means that virtual events are not allowed in the sequence.
     				 * 1 otherwise. */
