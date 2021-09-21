@@ -834,6 +834,18 @@ test textIndex-19.13 {Display lines} {
     destroy .txt .sbar
 } {}
 
+test textIndex-19.14 {Display lines with elided lines} {
+    catch {destroy .t}
+    pack [text .t]
+    for {set n 1} {$n <= 1000} {incr n} {
+	.t insert end "Line $n\n"
+    }
+    .t tag configure Elided -elide 1
+    .t tag add Elided 6.0 951.0
+    update
+    set res [.t index "951.0 + 1 displaylines"]
+} {952.0}
+
 proc text_test_word {startend chars start} {
     destroy .t
     text .t
