@@ -817,11 +817,21 @@ GetButtonNumber(
 static Time
 CurrentTimeInMilliSecs(void)
 {
-    struct {
+    union {
 	Tcl_Time now;
-	Tcl_Time dummy; /* Spare, in case Tcl_Time has 32-bit fields */
+	struct {
+	    long long sec; /* reserve stack space enough for 64-bit fields */
+	    long long usec;
+	} lnow;
     } t;
+    t.lnow.usec = -1; /* Invalid usec value, so we can see if Tcl_GetTime overwrites it */
     Tcl_GetTime(&t.now);
+#ifdef __WIN64
+    if (t.lnow.usec != -1) {
+	/* Win64 Tk loaded in Cygwin-64: Tcl_GetTime() returns 64-bit fields */
+	return ((Time) t.lnow.sec)*1000 + ((Time) t.lnow.usec)/1000;
+    }
+#endif
     return ((Time) t.now.sec)*1000 + ((Time) t.now.usec)/1000;
 }
 
