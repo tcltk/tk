@@ -197,7 +197,7 @@ if {[tk windowingsystem] eq "x11"} {
 
     # ::tk::icons::IconBadge --
     # This procedure creates an icon with an overlay badge on systems that
-    # do not have a native icon/badge API. 
+    # do not have a native icon/badge API.
     #
     # Arguments:
     # win - window name
@@ -219,7 +219,7 @@ if {[tk windowingsystem] eq "x11"} {
 	    return -code error "can't use \"$::tk::icons::base_icon($win)\" as iconphoto: not a photo image"
 	}
 
-	if {!([string is integer $badgenumber] && $badgenumber > 0) 
+	if {!([string is integer $badgenumber] && $badgenumber > 0)
 	        && [string match $badgenumber "!"] == 0
 	        && $badgenumber ne ""} {
 	    return -code error "can't use \"$badgenumber\" as icon badge"
@@ -232,14 +232,14 @@ if {[tk windowingsystem] eq "x11"} {
 	}
 
 	image create photo overlay
-	
+
 	switch -glob -- $badgenumber {
 	    ! {
 		set badge ::tk::icons::!-badge
 	    }
 	    [1-9] {
 		set badge ::tk::icons::$badgenumber-badge
-	    } 
+	    }
 	    default {
 		set badge ::tk::icons::9plus-badge
 	    }
