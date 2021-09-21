@@ -280,12 +280,11 @@ test winWm-6.2 {wm attributes} -constraints win -setup {
 test winWm-6.3 {wm attributes} -constraints win -setup {
     destroy .t
 } -body {
-    # This isn't quite the correct error message yet, but it works.
     toplevel .t
     wm attributes .t -foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
+} -returnCodes error -result {bad attribute "-foo": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 
 test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
