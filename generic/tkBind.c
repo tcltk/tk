@@ -826,7 +826,7 @@ CurrentTimeInMilliSecs(void)
     } t;
     t.lnow.usec = -1; /* Invalid usec value, so we can see if Tcl_GetTime overwrites it */
     Tcl_GetTime(&t.now);
-#ifdef __WIN64
+#ifdef _WIN64
     if (t.lnow.usec != -1) {
 	/* Win64 Tk loaded in Cygwin-64: Tcl_GetTime() returns 64-bit fields */
 	return ((Time) t.lnow.sec)*1000 + ((Time) t.lnow.usec)/1000;
