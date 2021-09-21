@@ -2504,7 +2504,7 @@ if {[tk windowingsystem] == "aqua"} {
 			 -titlepath {} -topmost 0 -transparent 0\
 			 -type unsupported}
 } else {
-    set result_60_1 {-alpha 1.0 -topmost 0 -zoomed 0 -fullscreen 0 -type {}}
+    set result_60_1 {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
 }
 test unixWm-60.1 {wm attributes - test} -constraints unix -body {
     destroy .t
