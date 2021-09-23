@@ -817,6 +817,11 @@ GetButtonNumber(
 static Time
 CurrentTimeInMilliSecs(void)
 {
+#if TCL_MAJOR_VERSION > 8
+    Tcl_Time now;
+    Tcl_GetTime(&now);
+    return (Time)(now/1000);
+#else
     union {
 	Tcl_Time now;
 	struct {
@@ -833,6 +838,7 @@ CurrentTimeInMilliSecs(void)
     }
 #endif
     return ((Time) t.now.sec)*1000 + ((Time) t.now.usec)/1000;
+#endif
 }
 
 static Info
