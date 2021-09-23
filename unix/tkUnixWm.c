@@ -5260,7 +5260,11 @@ WaitForEvent(
     prevProc = Tk_RestrictEvents(WaitRestrictProc, &info, &prevArg);
 
     Tcl_GetTime(&timeout);
+#if TCL_MAJOR_VERSION > 8
+    timeout += 2000000;
+#else
     timeout.sec += 2;
+#endif
 
     while (!info.foundEvent) {
 	if (!TkUnixDoOneXEvent(&timeout)) {

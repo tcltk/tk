@@ -1155,7 +1155,11 @@ Tk_SendObjCmd(
 
     prevProc = Tk_RestrictEvents(SendRestrictProc, NULL, &prevArg);
     Tcl_GetTime(&timeout);
+#if TCL_MAJOR_VERSION > 8
+    timeout += 2000000;
+#else
     timeout.sec += 2;
+#endif
     while (!pending.gotResponse) {
 	if (!TkUnixDoOneXEvent(&timeout)) {
 	    /*
@@ -1180,7 +1184,11 @@ Tk_SendObjCmd(
 		pending.gotResponse = 1;
 	    } else {
 		Tcl_GetTime(&timeout);
+#if TCL_MAJOR_VERSION > 8
+		timeout += 2000000;
+#else
 		timeout.sec += 2;
+#endif
 	    }
 	}
     }

@@ -302,7 +302,11 @@ DisplaySetupProc(
     int flags)
 {
     TkDisplay *dispPtr;
+#if TCL_MAJOR_VERSION > 8
+    static Tcl_Time blockTime = 0;
+#else
     static Tcl_Time blockTime = { 0, 0 };
+#endif
     (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
@@ -558,6 +562,20 @@ TkUnixDoOneXEvent(
 
     if (timePtr) {
 	Tcl_GetTime(&now);
+#if TCL_MAJOR_VERSION > 8
+	blockTime.tv_sec = *timePtr / 1000000;
+	blockTime.tv_usec = (*timePtr % 1000000) - now;
+	if (blockTime.tv_usec < 0) {
+	    now += 1000000;
+	    blockTime.tv_usec += 1000000;
+	}
+	if (blockTime.tv_sec < now / 1000000) {
+	    blockTime.tv_sec = 0;
+	    blockTime.tv_usec = 0;
+	} else {
+	    blockTime.tv_sec -= now / 1000000;
+	}
+#else
 	blockTime.tv_sec = timePtr->sec;
 	blockTime.tv_usec = timePtr->usec - now.usec;
 	if (blockTime.tv_usec < 0) {
@@ -570,6 +588,7 @@ TkUnixDoOneXEvent(
 	} else {
 	    blockTime.tv_sec -= now.sec;
 	}
+#endif
 	timeoutPtr = &blockTime;
     } else {
 	timeoutPtr = NULL;
@@ -631,8 +650,12 @@ TkUnixDoOneXEvent(
 
     if (timePtr) {
 	Tcl_GetTime(&now);
+#if TCL_MAJOR_VERSION > 8
+	if (now > *timePtr) {
+#else
 	if ((now.sec > timePtr->sec) || ((now.sec == timePtr->sec)
 		&& (now.usec > timePtr->usec))) {
+#endif
 	    return 0;
 	}
     }
