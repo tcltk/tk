@@ -161,6 +161,19 @@ bind TEntry <<TkAccentBackspace>> {
     ttk::entry::Backspace %W
 }
 
+## EndIMEMarkedText -- Handle the end of input method selection.
+#
+proc ::ttk::entry::EndIMEMarkedText {w} {
+    variable ::tk::Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w selection range $mark insert
+}
+
 ### Clipboard procedures.
 #
 
