@@ -6559,7 +6559,11 @@ TkpGetMS(void)
     Tcl_Time now;
 
     Tcl_GetTime(&now);
+#if TCL_MAJOR_VERSION > 8
+    return now / 1000;
+#else
     return (long) now.sec * 1000 + now.usec / 1000;
+#endif
 }
 
 /*

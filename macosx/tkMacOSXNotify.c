@@ -449,7 +449,11 @@ Heartbeat(
     }
 }
 
+#if TCL_MAJOR_VERSION > 8
+static const Tcl_Time zeroBlockTime = 0;
+#else
 static const Tcl_Time zeroBlockTime = { 0, 0 };
+#endif
 
 static void
 TkMacOSXEventsSetupProc(
