@@ -497,10 +497,12 @@ proc ::tk::MenuMotion {menu x y state} {
 		    # Catch these postcascade commands since the menu could be
 		    # destroyed before they run.
 		    set Priv(menuActivatedTimer) \
-			[after $delay "catch {$menu postcascade active}"]
+			[after $delay [list catch [list \
+			    $menu postcascade active]]]
 		} else {
 		    set Priv(menuDeactivatedTimer) \
-			[after $delay "catch {$menu postcascade none}"]
+			[after $delay [list catch [list
+			    $menu postcascade none]]]
 		}
 	    }
 	}

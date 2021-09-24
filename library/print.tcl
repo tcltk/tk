@@ -676,8 +676,8 @@ namespace eval ::tk::print {
 		for your system."
 		return
 	    }
-		set notfound "No destinations added"
-		if {[string first $notfound $msg] != -1} {
+	    set notfound "No destinations added"
+	    if {[string first $notfound $msg] != -1} {
 		error "Please check or update your CUPS installation."
 		return
 	    }
