@@ -1020,34 +1020,39 @@ LineInsert(
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
 
-	if (beforeThis > 0) {
+	/* Include point at left of the left insert position */
+	beforeThis -= 2;
+	objc += 2;
+
+	/* Include point at right of the right insert position */
+	objc += 2;
+
+	if (linePtr->smooth) {
+	    /* Include a second point at left of the left insert position */
 	    beforeThis -= 2;
 	    objc += 2;
-	}
-	if (beforeThis+objc < length) {
+
+	    /* Include a second point at right of the right insert position */
 	    objc += 2;
-	}
-	if (linePtr->smooth) {
-	    if (beforeThis > 0) {
-		beforeThis -= 2;
-		objc += 2;
-	    }
-	    if (beforeThis+objc+2 < length) {
-		objc += 2;
-	    }
+
 	    /*
-	     * Smoothed lines use splines defined differently at the two line
-	     * ends and elsewhere in the line (see TkMakeBezierCurve()). Include
-	     * the first and/or last splines if needed.
+	     * If the insert position is the first or last point of the line,
+	     * add a third point.
 	     */
-	    if (beforeThis == 2) {
-		beforeThis -= 2;
+	    if (beforeThis == -4) {
 		objc += 2;
 	    }
-	    if (beforeThis + objc == length - 2) {
-		objc += 2;
+	    if (beforeThis + 4 == length - (objc - 8)) {
+		beforeThis -= 2;
 	    }
 	}
+	if (beforeThis < 0) {
+	    beforeThis = 0;
+	}
+	if (beforeThis + objc > length) {
+	    objc = length - beforeThis;
+	}
+
 	itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
 	itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
 	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 1)) {
@@ -1193,30 +1198,36 @@ LineDeleteCoords(
     }
     first1 = first;
     last1 = last;
-    if (first1 > 0) {
-	first1 -= 2;
-    }
-    if (last1 < length-2) {
-	last1 += 2;
-    }
+
+    /* Include point at left of the left delete position */
+    first1 -= 2;
+
+    /* Include point at right of the right delete position */
+    last1 += 2;
+
     if (linePtr->smooth) {
-	if (first1 > 0) {
-	    first1 -= 2;
-	}
-	if (last1 < length-2) {
-	    last1 += 2;
-	}
+	/* Include a second point at left of the left delete position */
+	first1 -= 2;
+
+	/* Include a second point at right of the right delete position */
+	last1 += 2;
+
 	/*
-	 * Smoothed lines use splines defined differently at the two line
-	 * ends and elsewhere in the line (see TkMakeBezierCurve()). Include
-	 * the first and/or last splines if needed.
+	 * If the delete position is the first or last point of the line,
+	 * add a third point.
 	 */
-	if (first1 == 2) {
-	    first1 -= 2;
-	}
-	if (last1 == length - 2) {
+	if (first1 == -4) {
 	    last1 += 2;
 	}
+	if (last1 - 4 == length) {
+	    first1 -= 2;
+	}
+    }
+    if (first1 < 0) {
+	first1 = 0;
+    }
+    if (last1 > length) {
+	last1 = length;
     }
 
     if ((first1 >= 2) || (last1 < length-2)) {
