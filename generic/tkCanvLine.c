@@ -1212,8 +1212,6 @@ LineDeleteCoords(
     }
     first1 = first;
     last1 = last;
-    *Include one point at left of the left insert position, and one
-	* point at right of the right insert position.
 
     /*
      * Include one point at left of the left delete position, and one
