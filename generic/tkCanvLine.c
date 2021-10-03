@@ -977,6 +977,12 @@ LineInsert(
     if (beforeThis > length) {
 	beforeThis = length;
     }
+
+    /*
+     * With arrows, the end points of the line are adjusted so that a thick
+     * line doesn't stick out past the arrowheads (see ConfigureArrows).
+     */
+
     if (linePtr->firstArrowPtr != NULL) {
 	linePtr->coordPtr[0] = linePtr->firstArrowPtr[0];
 	linePtr->coordPtr[1] = linePtr->firstArrowPtr[1];
@@ -1020,25 +1026,27 @@ LineInsert(
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
 
-	/* Include point at left of the left insert position */
-	beforeThis -= 2;
-	objc += 2;
+	/*
+	 * Include one point at left of the left insert position, and one
+	 * point at right of the right insert position.
+	 */
 
-	/* Include point at right of the right insert position */
-	objc += 2;
+	beforeThis -= 2;
+	objc += 4;
 
 	if (linePtr->smooth) {
-	    /* Include a second point at left of the left insert position */
-	    beforeThis -= 2;
-	    objc += 2;
+	    /*
+	     * When smoothing, a second point must be included at each side.
+	     */
 
-	    /* Include a second point at right of the right insert position */
-	    objc += 2;
+	    beforeThis -= 2;
+	    objc += 4;
 
 	    /*
 	     * If the insert position is the first or last point of the line,
-	     * add a third point.
+	     * include a third point.
 	     */
+
 	    if (beforeThis == -4) {
 		objc += 2;
 	    }
@@ -1188,6 +1196,12 @@ LineDeleteCoords(
     if (first > last) {
 	return;
     }
+
+    /*
+     * With arrows, the end points of the line are adjusted so that a thick
+     * line doesn't stick out past the arrowheads (see ConfigureArrows).
+     */
+
     if (linePtr->firstArrowPtr != NULL) {
 	linePtr->coordPtr[0] = linePtr->firstArrowPtr[0];
 	linePtr->coordPtr[1] = linePtr->firstArrowPtr[1];
@@ -1198,24 +1212,30 @@ LineDeleteCoords(
     }
     first1 = first;
     last1 = last;
+    *Include one point at left of the left insert position, and one
+	* point at right of the right insert position.
 
-    /* Include point at left of the left delete position */
+    /*
+     * Include one point at left of the left delete position, and one
+     * point at right of the right insert position.
+     */
+
     first1 -= 2;
-
-    /* Include point at right of the right delete position */
     last1 += 2;
 
     if (linePtr->smooth) {
-	/* Include a second point at left of the left delete position */
-	first1 -= 2;
+	/*
+	 * When smoothing, a second point must be included at each side.
+	 */
 
-	/* Include a second point at right of the right delete position */
+	first1 -= 2;
 	last1 += 2;
 
 	/*
 	 * If the delete position is the first or last point of the line,
-	 * add a third point.
+	 * include a third point.
 	 */
+
 	if (first1 == -4) {
 	    last1 += 2;
 	}
