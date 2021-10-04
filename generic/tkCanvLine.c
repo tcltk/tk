@@ -1237,15 +1237,15 @@ LineDeleteCoords(
 	if (first1 == -4) {
 	    last1 += 2;
 	}
-	if (last1 - 4 == length) {
+	if (last1 - 4 == length - 2) {
 	    first1 -= 2;
 	}
     }
     if (first1 < 0) {
 	first1 = 0;
     }
-    if (last1 > length) {
-	last1 = length;
+    if (last1 >= length) {
+	last1 = length - 2;
     }
 
     if ((first1 >= 2) || (last1 < length-2)) {
