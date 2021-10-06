@@ -13,12 +13,12 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWinInt.h"
 #include <windows.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
 #include <shellapi.h>
-#include "tkWinInt.h"
 #include "tkWinIco.h"
 /*
  * These next two defines are only valid on Win2K/XP+.
