@@ -1184,7 +1184,7 @@ LineDeleteCoords(
 	state = Canvas(canvas)->canvas_state;
     }
 
-    first &= -2;
+    first &= -2;	/* If odd, make it even. */
     last &= -2;
 
     if (first < 0) {
@@ -1215,7 +1215,7 @@ LineDeleteCoords(
 
     /*
      * Include one point at left of the left delete position, and one
-     * point at right of the right insert position.
+     * point at right of the right delete position.
      */
 
     first1 -= 2;
