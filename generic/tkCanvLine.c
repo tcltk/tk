@@ -1256,6 +1256,8 @@ LineDeleteCoords(
 	 * the general canvas code not to redraw the whole object. If this
 	 * flag is set, the redrawing has to be done here, otherwise the
 	 * general Canvas code will take care of it.
+	 * Justification of the optimization code can be found in Tk ticket
+	 * [5fb8145997].
 	 */
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
