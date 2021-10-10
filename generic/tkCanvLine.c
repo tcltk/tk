@@ -1063,7 +1063,7 @@ LineInsert(
 
 	itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
 	itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 1)) {
+	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
 	    /*
 	     * Include old first arrow.
 	     */
@@ -1073,7 +1073,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
+	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length - 2)) {
 	    /*
 	     * Include old last arrow.
 	     */
@@ -1083,8 +1083,8 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	coordPtr = linePtr->coordPtr + beforeThis + 2;
-	for (i=2; i<objc; i+=2) {
+	coordPtr = linePtr->coordPtr + beforeThis;
+	for (i=0; i<objc; i+=2) {
 	    TkIncludePoint(itemPtr, coordPtr);
 	    coordPtr += 2;
 	}
@@ -1105,7 +1105,7 @@ LineInsert(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis > 2)) {
+	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1115,7 +1115,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc < length-2)) {
+	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length-2)) {
 	    /*
 	     * Include new right arrow.
 	     */
@@ -1191,7 +1191,7 @@ LineDeleteCoords(
 	first = 0;
     }
     if (last >= length) {
-	last = length-2;
+	last = length - 2;
     }
     if (first > last) {
 	return;
@@ -1271,7 +1271,7 @@ LineDeleteCoords(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length-2)) {
+	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length - 2)) {
 	    /*
 	     * Include old last arrow.
 	     */
@@ -1308,7 +1308,7 @@ LineDeleteCoords(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && (first1 < 4)) {
+	if ((linePtr->firstArrowPtr != NULL) && (first1 < 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1318,7 +1318,7 @@ LineDeleteCoords(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (last1 > length-4)) {
+	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length - 2)) {
 	    /*
 	     * Include new right arrow.
 	     */
