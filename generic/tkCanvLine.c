@@ -1075,7 +1075,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length - 2)) {
+	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 	    /*
 	     * Include old last arrow.
 	     */
@@ -1117,7 +1117,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length-2)) {
+	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 	    /*
 	     * Include new right arrow.
 	     */
