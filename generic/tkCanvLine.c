@@ -957,7 +957,7 @@ LineInsert(
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int length, objc, i;
+    int length, oriNumPoints, objc, nbInsPoints, i;
     double *newCoordPtr, *coordPtr;
     Tk_State state = itemPtr->state;
     Tcl_Obj **objv;
@@ -970,7 +970,9 @@ LineInsert(
 	    || !objc || objc&1) {
 	return;
     }
+    oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
+    nbInsPoints = (int) objc / 2;
     if (beforeThis < 0) {
 	beforeThis = 0;
     }
@@ -1022,7 +1024,7 @@ LineInsert(
 	 * the general canvas code not to redraw the whole object. If this
 	 * flag is not set, the canvas will do the redrawing, otherwise I have
 	 * to do it here.
-	 * Justification of the optimization code can be found in Tk ticket
+	 * Rationale for the optimization code can be found in Tk ticket
 	 * [5fb8145997].
 	 */
 
@@ -1037,60 +1039,92 @@ LineInsert(
 	objc += 4;
 
 	if (linePtr->smooth) {
-	    /*
-	     * When smoothing, a second point must be included at each side.
-	     */
 
-	    beforeThis -= 2;
-	    objc += 4;
+	    if (!strcmp(linePtr->smooth->name, "true")) {
+		/*
+		 * Quadratic Bezier splines. A second point must be included at
+		 * each side of the insert position.
+		 */
 
-	    /*
-	     * If the insert position is the first or last point of the line,
-	     * include a third point.
-	     */
-
-	    if (beforeThis == -4) {
-		objc += 2;
-	    }
-	    if (beforeThis + 4 == length - (objc - 8)) {
 		beforeThis -= 2;
+		objc += 4;
+
+		/*
+		 * Moreover, if the insert position is the first or last point
+		 * of the line, include a third point.
+		 */
+
+		if (beforeThis == -4) {
+		    objc += 2;
+		}
+		if (beforeThis + 4 == length - (objc - 8)) {
+		    beforeThis -= 2;
+		}
+
+	    } else if (!strcmp(linePtr->smooth->name, "raw")) {
+		/*
+		 * Cubic Bezier splines. See details in ticket [5fb8145997].
+		 */
+
+		if (((oriNumPoints - 1) % 3) || (nbInsPoints % 3)) {
+		    /*
+		     * No optimization for "degenerate" lines or when inserting
+		     * something else than a multiple of 3 points.
+		     */
+
+		    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+		} else {
+		    beforeThis -= beforeThis % 6;
+		    objc += 4;
+		}
+
+	    } else {
+		/*
+		 * Custom smoothing method. No optimization is possible.
+		 */
+
+		itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    }
 	}
-	if (beforeThis < 0) {
-	    beforeThis = 0;
-	}
-	if (beforeThis + objc > length) {
-	    objc = length - beforeThis;
-	}
 
-	itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
-	itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
-	    /*
-	     * Include old first arrow.
-	     */
+	if (itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW) {
+	    if (beforeThis < 0) {
+		beforeThis = 0;
+	    }
+	    if (beforeThis + objc > length) {
+		objc = length - beforeThis;
+	    }
 
-	    for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
-		    i++, coordPtr += 2) {
+	    itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
+	    itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
+	    if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
+		/*
+		 * Include old first arrow.
+		 */
+
+		for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
+			i++, coordPtr += 2) {
+		    TkIncludePoint(itemPtr, coordPtr);
+		}
+	    }
+	    if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
+		/*
+		 * Include old last arrow.
+		 */
+
+		for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
+			i++, coordPtr += 2) {
+		    TkIncludePoint(itemPtr, coordPtr);
+		}
+	    }
+	    coordPtr = linePtr->coordPtr + beforeThis;
+	    for (i=0; i<objc; i+=2) {
 		TkIncludePoint(itemPtr, coordPtr);
+		coordPtr += 2;
 	    }
-	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
-	    /*
-	     * Include old last arrow.
-	     */
-
-	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
-		    i++, coordPtr += 2) {
-		TkIncludePoint(itemPtr, coordPtr);
-	    }
-	}
-	coordPtr = linePtr->coordPtr + beforeThis;
-	for (i=0; i<objc; i+=2) {
-	    TkIncludePoint(itemPtr, coordPtr);
-	    coordPtr += 2;
 	}
     }
+
     if (linePtr->firstArrowPtr != NULL) {
 	ckfree(linePtr->firstArrowPtr);
 	linePtr->firstArrowPtr = NULL;
@@ -1177,7 +1211,9 @@ LineDeleteCoords(
     int last)			/* Index of last character to delete. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int count, i, first1, last1;
+    int count, i, first1, last1, nbDelPoints;
+    int oriNumPoints = linePtr->numPoints;
+    int canOptimize = 1;
     int length = 2*linePtr->numPoints;
     double *coordPtr;
     Tk_State state = itemPtr->state;
@@ -1214,6 +1250,7 @@ LineDeleteCoords(
     }
     first1 = first;
     last1 = last;
+    nbDelPoints = (int) ((last - first) / 2) + 1;
 
     /*
      * Include one point at left of the left delete position, and one
@@ -1224,25 +1261,55 @@ LineDeleteCoords(
     last1 += 2;
 
     if (linePtr->smooth) {
-	/*
-	 * When smoothing, a second point must be included at each side.
-	 */
 
-	first1 -= 2;
-	last1 += 2;
+	if (!strcmp(linePtr->smooth->name, "true")) {
+	    /*
+	     * Quadratic Bezier splines. A second point must be included at
+	     * each side of the delete position.
+	     */
 
-	/*
-	 * If the delete position is the first or last point of the line,
-	 * include a third point.
-	 */
-
-	if (first1 == -4) {
-	    last1 += 2;
-	}
-	if (last1 - 4 == length - 2) {
 	    first1 -= 2;
+	    last1 += 2;
+
+	    /*
+	     * If the delete position is the first or last point of the line,
+	     * include a third point.
+	     */
+
+	    if (first1 == -4) {
+		last1 += 2;
+	    }
+	    if (last1 - 4 == length - 2) {
+		first1 -= 2;
+	    }
+
+	} else if (!strcmp(linePtr->smooth->name, "raw")) {
+	    /*
+	     * Cubic Bezier splines. See details in ticket [5fb8145997].
+	     */
+
+	    if (((oriNumPoints - 1) % 3) || (nbDelPoints % 3)) {
+		/*
+		 * No optimization for "degenerate" lines or when deleting
+		 * something else than a multiple of 3 points.
+		 */
+
+		canOptimize = 0;
+	    }
+	    else {
+		first1 -= first1 % 6;
+		last1 = last + 6 - last % 6;
+	    }
+
+	} else {
+	    /*
+	     * Custom smoothing method. No optimization is possible.
+	     */
+
+	    canOptimize = 0;
 	}
     }
+
     if (first1 < 0) {
 	first1 = 0;
     }
@@ -1250,7 +1317,7 @@ LineDeleteCoords(
 	last1 = length - 2;
     }
 
-    if ((first1 >= 2) || (last1 < length-2)) {
+    if (canOptimize && ((first1 >= 2) || (last1 < length-2))) {
 	/*
 	 * This is some optimizing code that will result that only the part of
 	 * the line that changed (and the objects that are overlapping with
@@ -1258,7 +1325,7 @@ LineDeleteCoords(
 	 * the general canvas code not to redraw the whole object. If this
 	 * flag is set, the redrawing has to be done here, otherwise the
 	 * general Canvas code will take care of it.
-	 * Justification of the optimization code can be found in Tk ticket
+	 * Rationale for the optimization code can be found in Tk ticket
 	 * [5fb8145997].
 	 */
 
