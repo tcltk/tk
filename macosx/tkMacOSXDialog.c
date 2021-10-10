@@ -352,6 +352,7 @@ static NSInteger showOpenSavePanel(
     NSInteger modalReturnCode;
 
     if (parent && ![parent attachedSheet]) {
+	int osVersion = [NSApp macOSVersion]; 
 	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSModalResponse returnCode) {
 	    [NSApp tkFilePanelDidEnd:panel
@@ -364,10 +365,15 @@ static NSInteger showOpenSavePanel(
 	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or later
 	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
 	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
-	 * completion handler to run when the panel is closed.
+	 * completion handler to run when the panel is closed. Apple apparently
+	 * decided to go back to using runModalForWindow with the release of
+	 * macOS 12.0.  The warnings do not appear in that OS, and using
+	 * runModal produces an error dialog that says "The open file operation
+	 * failed to connect to the open and save panel service." along with an
+	 * assertion error.
 	 */
 
-	if ([NSApp macOSVersion] > 101400) {
+	if ( osVersion >= 101400 && osVersion < 120000) {
 	    modalReturnCode = [panel runModal];
 	} else {
 	    modalReturnCode = [NSApp runModalForWindow:panel];
