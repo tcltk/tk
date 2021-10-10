@@ -972,7 +972,7 @@ LineInsert(
     }
     oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
-    nbInsPoints = (int) objc / 2;
+    nbInsPoints = objc / 2;
     if (beforeThis < 0) {
 	beforeThis = 0;
     }
@@ -1250,7 +1250,7 @@ LineDeleteCoords(
     }
     first1 = first;
     last1 = last;
-    nbDelPoints = (int) ((last - first) / 2) + 1;
+    nbDelPoints = (last - first) / 2 + 1;
 
     /*
      * Include one point at left of the left delete position, and one

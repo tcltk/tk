@@ -1034,7 +1034,7 @@ PolygonInsert(
     }
     oriNumPoints = polyPtr->numPoints - polyPtr->autoClosed;
     length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
-    nbInsPoints = (int)objc / 2;
+    nbInsPoints = objc / 2;
     while (beforeThis > length) {
 	beforeThis -= length;
     }
