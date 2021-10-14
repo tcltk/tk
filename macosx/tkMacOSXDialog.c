@@ -352,7 +352,7 @@ static NSInteger showOpenSavePanel(
     NSInteger modalReturnCode;
 
     if (parent && ![parent attachedSheet]) {
-	int osVersion = [NSApp macOSVersion]; 
+	int osVersion = [NSApp macOSVersion];
 	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSModalResponse returnCode) {
 	    [NSApp tkFilePanelDidEnd:panel
