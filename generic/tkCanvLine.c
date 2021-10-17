@@ -1059,6 +1059,7 @@ LineInsert(
 		}
 		if (beforeThis + 4 == length - (objc - 8)) {
 		    beforeThis -= 2;
+		    objc += 2;
 		}
 
 	    } else if (!strcmp(linePtr->smooth->name, "raw")) {
