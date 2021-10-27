@@ -117,7 +117,7 @@ namespace eval ::tk::print {
 		set linestring [string range $data $curlen end]
 		if {$breaklines} {
 		    set endind [string first "\n" $linestring]
-		    if {$endind != -1} {
+		    if {$endind >= 0} {
 			set linestring [string range $linestring 0 $endind]
 			# handle blank lines....
 			if {$linestring eq ""} {
@@ -671,13 +671,13 @@ namespace eval ::tk::print {
 
 	    catch {exec lpstat -a} msg
 	    set notfound "command not found"
-	    if {[string first $notfound $msg] != -1} {
+	    if {[string first $notfound $msg] >= 0} {
 		error "Unable to obtain list of printers. Please install the CUPS package \
 		for your system."
 		return
 	    }
-		set notfound "No destinations added"
-		if {[string first $notfound $msg] != -1} {
+	    set notfound "No destinations added"
+	    if {[string first $notfound $msg] >= 0} {
 		error "Please check or update your CUPS installation."
 		return
 	    }
