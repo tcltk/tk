@@ -362,7 +362,7 @@ static NSInteger showOpenSavePanel(
 
 	/*
 	 * The sheet has been prepared, so now we have to run it as a modal
-	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or later
+	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or 11.0
 	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
 	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
 	 * completion handler to run when the panel is closed. Apple apparently
@@ -370,7 +370,12 @@ static NSInteger showOpenSavePanel(
 	 * macOS 12.0.  The warnings do not appear in that OS, and using
 	 * runModal produces an error dialog that says "The open file operation
 	 * failed to connect to the open and save panel service." along with an
-	 * assertion error.
+	 * assertion error.  Unfortunately, 10.12 introduced other bugs.  When
+	 * displaying the panel as a sheet it is first shown as a separate
+	 * window for an instant and then attached to the parent as a sheet.
+	 * Also, the filename input field is not focused when the dialog opens,
+	 * either as a sheet or a separate window.  No workaround is currently
+	 * known for these.
 	 */
 
 	if ( osVersion > 101400 && osVersion < 120000) {
@@ -393,7 +398,6 @@ static NSInteger showOpenSavePanel(
 	[NSApp tkFilePanelDidEnd:panel
 		      returnCode:modalReturnCode
 		     contextInfo:callbackInfo ];
-	[panel close];
     }
     return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
@@ -688,9 +692,10 @@ Tk_GetOpenFileObjCmd(
     NSString *directory = nil, *filename = nil;
     NSString *message = nil, *title = nil;
     NSWindow *parent;
-    openpanel =  [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
+
+    openpanel =  [NSOpenPanel openPanel];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
@@ -754,7 +759,6 @@ Tk_GetOpenFileObjCmd(
 	}
     }
     if (title) {
-	[openpanel setTitle:title];
 
 	/*
 	 * From OSX 10.11, the title string is silently ignored in the open
@@ -771,6 +775,8 @@ Tk_GetOpenFileObjCmd(
 	    } else {
 		message = title;
 	    }
+	} else {
+	    [openpanel setTitle:title];
 	}
     }
 
@@ -961,10 +967,10 @@ Tk_GetSaveFileObjCmd(
     NSString *directory = nil, *filename = nil, *defaultType = nil;
     NSString *message = nil, *title = nil;
     NSWindow *parent;
-    savepanel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
 
+    savepanel = [NSSavePanel savePanel];
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
 		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
@@ -1037,25 +1043,26 @@ Tk_GetSaveFileObjCmd(
     }
 
     if (title) {
-	[savepanel setTitle:title];
 
 	/*
 	 * From OSX 10.11, the title string is silently ignored, if the save
 	 * panel is a sheet.  Prepend the title to the message in this case.
-	 * NOTE: should be conditional on OSX version, but -mmacosx-version-min
-	 * does not revert this behaviour.
 	 */
 
-	if (haveParentOption) {
-	    if (message) {
-		NSString *fullmessage =
-		    [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
-		[message release];
-		[title release];
-		message = fullmessage;
-	    } else {
-		message = title;
+	if ([NSApp macOSVersion] > 101000) {
+	    if (haveParentOption) {
+		if (message) {
+		    NSString *fullmessage =
+			[[NSString alloc] initWithFormat:@"%@\n%@",title,message];
+		    [message release];
+		    [title release];
+		    message = fullmessage;
+		} else {
+		    message = title;
+		}
 	    }
+	} else {
+		[savepanel setTitle:title];
 	}
     }
 
