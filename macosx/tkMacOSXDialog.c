@@ -373,7 +373,7 @@ static NSInteger showOpenSavePanel(
 	 * assertion error.
 	 */
 
-	if ( osVersion >= 101400 && osVersion < 120000) {
+	if ( osVersion > 101400 && osVersion < 120000) {
 	    modalReturnCode = [panel runModal];
 	} else {
 	    modalReturnCode = [NSApp runModalForWindow:panel];
