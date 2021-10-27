@@ -350,9 +350,9 @@ static NSInteger showOpenSavePanel(
     FilePanelCallbackInfo *callbackInfo)
 {
     NSInteger modalReturnCode;
+    int osVersion = [NSApp macOSVersion];
 
     if (parent && ![parent attachedSheet]) {
-	int osVersion = [NSApp macOSVersion];
 	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSModalResponse returnCode) {
 	    [NSApp tkFilePanelDidEnd:panel
@@ -385,20 +385,15 @@ static NSInteger showOpenSavePanel(
 	 * at all on macOS 10.14 and earlier.
 	 */
 
-	if ([NSApp macOSVersion] > 101400) {
-	    [panel beginWithCompletionHandler:^(NSModalResponse returnCode) {
-		    [NSApp tkFilePanelDidEnd:panel
-			          returnCode:returnCode
-			         contextInfo:callbackInfo ];
-	    }];
+	if ( osVersion > 101400 && osVersion < 120000) {
 	    modalReturnCode = [panel runModal];
 	} else {
-	    modalReturnCode = [panel runModal];
-	    [NSApp tkFilePanelDidEnd:panel
-		   	  returnCode:modalReturnCode
-		         contextInfo:callbackInfo ];
-	    [panel close];
+	    modalReturnCode = [NSApp runModalForWindow:panel];
 	}
+	[NSApp tkFilePanelDidEnd:panel
+		      returnCode:modalReturnCode
+		     contextInfo:callbackInfo ];
+	[panel close];
     }
     return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
