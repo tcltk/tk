@@ -2,7 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <tkWinInt.h>
+#include "tkWinInt.h"
 #include "ttk/ttkTheme.h"
 
 #if !defined(WM_THEMECHANGED)
