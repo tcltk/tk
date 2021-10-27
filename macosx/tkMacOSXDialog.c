@@ -355,11 +355,20 @@ static NSInteger showOpenSavePanel(
     if (parent && ![parent attachedSheet]) {
 
 	/*
-	 * On most version of macOS the completion handler does not get
-	 * run at all.  So we ignore it.
+	 * A completion handler is not needed except on macOS 10.15, where we
+	 * have to start the sheet differently.
 	 */
-	
-	[parent beginSheet: panel completionHandler:nil];
+
+	if (osVersion >= 101500 && osVersion < 110000 ) {
+	    [panel beginSheetModalForWindow:parent
+			  completionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+				  returnCode:returnCode
+				 contextInfo:callbackInfo ];
+		}];
+	} else {
+	    [parent beginSheet: panel completionHandler:nil];
+	}
 
     }
     /*
@@ -372,9 +381,12 @@ static NSInteger showOpenSavePanel(
     } else {
 	modalReturnCode = [NSApp runModalForWindow:panel];
     }
-    [NSApp tkFilePanelDidEnd:panel
-		  returnCode:modalReturnCode
-		 contextInfo:callbackInfo ];
+
+    if (osVersion < 101500 || osVersion >= 110000 ) {
+	[NSApp tkFilePanelDidEnd:panel
+		      returnCode:modalReturnCode
+		     contextInfo:callbackInfo ];
+    }
     return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
 
