@@ -353,52 +353,28 @@ static NSInteger showOpenSavePanel(
     int osVersion = [NSApp macOSVersion];
 
     if (parent && ![parent attachedSheet]) {
-	[panel beginSheetModalForWindow:parent
-	       completionHandler:^(NSModalResponse returnCode) {
-	    [NSApp tkFilePanelDidEnd:panel
-		       returnCode:returnCode
-		       contextInfo:callbackInfo ];
-	    }];
 
 	/*
-	 * The sheet has been prepared, so now we have to run it as a modal
-	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or 11.0
-	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
-	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
-	 * completion handler to run when the panel is closed. Apple apparently
-	 * decided to go back to using runModalForWindow with the release of
-	 * macOS 12.0.  The warnings do not appear in that OS, and using
-	 * runModal produces an error dialog that says "The open file operation
-	 * failed to connect to the open and save panel service." along with an
-	 * assertion error.  Unfortunately, 10.12 introduced other bugs.  When
-	 * displaying the panel as a sheet it is first shown as a separate
-	 * window for an instant and then attached to the parent as a sheet.
-	 * Also, the filename input field is not focused when the dialog opens,
-	 * either as a sheet or a separate window.  No workaround is currently
-	 * known for these.
+	 * On most version of macOS the completion handler does not get
+	 * run at all.  So we ignore it.
 	 */
+	
+	[parent beginSheet: panel completionHandler:nil];
 
-	if ( osVersion > 101400 && osVersion < 120000) {
-	    modalReturnCode = [panel runModal];
-	} else {
-	    modalReturnCode = [NSApp runModalForWindow:panel];
-	}
-    } else {
-
-	/*
-	 * For the standalone file dialog, completion handlers do not work
-	 * at all on macOS 10.14 and earlier.
-	 */
-
-	if ( osVersion > 101400 && osVersion < 120000) {
-	    modalReturnCode = [panel runModal];
-	} else {
-	    modalReturnCode = [NSApp runModalForWindow:panel];
-	}
-	[NSApp tkFilePanelDidEnd:panel
-		      returnCode:modalReturnCode
-		     contextInfo:callbackInfo ];
     }
+    /*
+     * On macOS 10.15 and higher, calling runModalForWindow generates
+     * warnings on stderr.
+     */
+    
+    if ( osVersion > 101400) {
+	modalReturnCode = [panel runModal];
+    } else {
+	modalReturnCode = [NSApp runModalForWindow:panel];
+    }
+    [NSApp tkFilePanelDidEnd:panel
+		  returnCode:modalReturnCode
+		 contextInfo:callbackInfo ];
     return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }
 
@@ -970,7 +946,10 @@ Tk_GetSaveFileObjCmd(
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
 
-    savepanel = [NSSavePanel savePanel];
+    if (savepanel == nil) {
+	savepanel = [NSSavePanel savePanel];
+	[savepanel setDelegate:NSApp];
+    }
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
 		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
