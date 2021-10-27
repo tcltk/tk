@@ -7842,3 +7842,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2020-12-24 (bug)[6157a8] Aqua: file dialog -filetypes (davis,culler)
 
 - Released 8.6.11, Dec 31, 2020 - https://core.tcl-lang.org/tk/ for details
+
+TODO
+
+- Released 8.6.12, Nov ??, 2021 - https://core.tcl-lang.org/tk/ for details
