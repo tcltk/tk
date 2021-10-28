@@ -350,39 +350,38 @@ static NSInteger showOpenSavePanel(
     FilePanelCallbackInfo *callbackInfo)
 {
     NSInteger modalReturnCode;
-    int osVersion = [NSApp macOSVersion];
+    int OSVersion = [NSApp macOSVersion];
+
+    /*
+     * Use a sheet if -parent is specified (unless there is already a sheet).
+     */
 
     if (parent && ![parent attachedSheet]) {
-
-	/*
-	 * A completion handler is not needed except on macOS 10.15, where we
-	 * have to start the sheet differently.
-	 */
-
-	if (osVersion >= 101500 && osVersion < 110000 ) {
+	if (OSVersion < 101500) {
 	    [panel beginSheetModalForWindow:parent
 			  completionHandler:^(NSModalResponse returnCode) {
 		    [NSApp tkFilePanelDidEnd:panel
 				  returnCode:returnCode
 				 contextInfo:callbackInfo ];
 		}];
+	    modalReturnCode = [NSApp runModalForWindow:panel];
+	} else if (OSVersion < 110000) {
+	    [panel beginSheetModalForWindow:parent
+			  completionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+				  returnCode:returnCode
+				 contextInfo:callbackInfo ];
+		}];
+	    modalReturnCode = [panel runModal];
 	} else {
 	    [parent beginSheet: panel completionHandler:nil];
+	    modalReturnCode = [panel runModal];
+	    [NSApp tkFilePanelDidEnd:panel
+			  returnCode:modalReturnCode
+			 contextInfo:callbackInfo ];
 	}
-
-    }
-    /*
-     * On macOS 10.15 and higher, calling runModalForWindow generates
-     * warnings on stderr.
-     */
-    
-    if ( osVersion > 101400) {
-	modalReturnCode = [panel runModal];
     } else {
-	modalReturnCode = [NSApp runModalForWindow:panel];
-    }
-
-    if (osVersion < 101500 || osVersion >= 110000 ) {
+	modalReturnCode = [panel runModal];
 	[NSApp tkFilePanelDidEnd:panel
 		      returnCode:modalReturnCode
 		     contextInfo:callbackInfo ];
@@ -680,10 +679,9 @@ Tk_GetOpenFileObjCmd(
     NSString *directory = nil, *filename = nil;
     NSString *message = nil, *title = nil;
     NSWindow *parent;
+    openpanel =  [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
-
-    openpanel =  [NSOpenPanel openPanel];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
@@ -747,6 +745,7 @@ Tk_GetOpenFileObjCmd(
 	}
     }
     if (title) {
+	[openpanel setTitle:title];
 
 	/*
 	 * From OSX 10.11, the title string is silently ignored in the open
@@ -763,8 +762,6 @@ Tk_GetOpenFileObjCmd(
 	    } else {
 		message = title;
 	    }
-	} else {
-	    [openpanel setTitle:title];
 	}
     }
 
@@ -955,13 +952,10 @@ Tk_GetSaveFileObjCmd(
     NSString *directory = nil, *filename = nil, *defaultType = nil;
     NSString *message = nil, *title = nil;
     NSWindow *parent;
+    savepanel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
 
-    if (savepanel == nil) {
-	savepanel = [NSSavePanel savePanel];
-	[savepanel setDelegate:NSApp];
-    }
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
 		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
@@ -1034,26 +1028,25 @@ Tk_GetSaveFileObjCmd(
     }
 
     if (title) {
+	[savepanel setTitle:title];
 
 	/*
 	 * From OSX 10.11, the title string is silently ignored, if the save
 	 * panel is a sheet.  Prepend the title to the message in this case.
+	 * NOTE: should be conditional on OSX version, but -mmacosx-version-min
+	 * does not revert this behaviour.
 	 */
 
-	if ([NSApp macOSVersion] > 101000) {
-	    if (haveParentOption) {
-		if (message) {
-		    NSString *fullmessage =
-			[[NSString alloc] initWithFormat:@"%@\n%@",title,message];
-		    [message release];
-		    [title release];
-		    message = fullmessage;
-		} else {
-		    message = title;
-		}
+	if (haveParentOption) {
+	    if (message) {
+		NSString *fullmessage =
+		    [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
+		[message release];
+		[title release];
+		message = fullmessage;
+	    } else {
+		message = title;
 	    }
-	} else {
-		[savepanel setTitle:title];
 	}
     }
 
