@@ -53,6 +53,10 @@ typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+TCL_DECLARE_MUTEX(xftMutex);
+#define LOCK Tcl_MutexLock(&xftMutex)
+#define UNLOCK Tcl_MutexUnlock(&xftMutex)
 
 /*
  *-------------------------------------------------------------------------
@@ -131,7 +135,9 @@ GetFont(
 	if (angle != 0.0) {
 	    FcPatternAddMatrix(pat, FC_MATRIX, &mat);
 	}
+	LOCK;
 	ftFont = XftFontOpenPattern(fontPtr->display, pat);
+	UNLOCK;
 	if (!ftFont) {
 	    /*
 	     * The previous call to XftFontOpenPattern() should not fail, but
@@ -140,11 +146,13 @@ GetFont(
 	     * fallback:
 	     */
 
+	    LOCK;
 	    ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
 		    FC_FAMILY, FcTypeString, "sans",
 		    FC_SIZE, FcTypeDouble, 12.0,
 		    FC_MATRIX, FcTypeMatrix, &mat,
 		    NULL);
+	    UNLOCK;
 	}
 	if (!ftFont) {
 	    /*
@@ -159,7 +167,9 @@ GetFont(
 	    fontPtr->faces[i].ft0Font = ftFont;
 	} else {
 	    if (fontPtr->faces[i].ftFont) {
+		LOCK;
 		XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+		UNLOCK;
 	    }
 	    fontPtr->faces[i].ftFont = ftFont;
 	    fontPtr->faces[i].angle = angle;
@@ -418,10 +428,14 @@ FinishedWithFont(
 
     for (i = 0; i < fontPtr->nfaces; i++) {
 	if (fontPtr->faces[i].ftFont) {
+	    LOCK;
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+	    UNLOCK;
 	}
 	if (fontPtr->faces[i].ft0Font) {
+	    LOCK;
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ft0Font);
+	    UNLOCK;
 	}
 	if (fontPtr->faces[i].charset) {
 	    FcCharSetDestroy(fontPtr->faces[i].charset);
@@ -760,7 +774,9 @@ Tk_MeasureChars(
 	ftFont = GetFont(fontPtr, c, 0.0);
 
 	if (!errorFlag) {
+	    LOCK;
 	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	    UNLOCK;
 	} else {
 	    extents.xOff = 0;
 	    errorFlag = 0;
@@ -971,8 +987,10 @@ Tk_DrawChars(
 	ftFont = GetFont(fontPtr, c, 0.0);
 	if (ftFont) {
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
+	    LOCK;
 	    XftGlyphExtents(fontPtr->display, ftFont, &specs[nspec].glyph, 1,
 		    &metrics);
+	    UNLOCK;
 
 	    /*
 	     * Draw glyph only when it fits entirely into 16 bit coords.
@@ -985,8 +1003,10 @@ Tk_DrawChars(
 		specs[nspec].x = x;
 		specs[nspec].y = y;
 		if (++nspec == NUM_SPEC) {
+		    LOCK;
 		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			    specs, nspec);
+		    UNLOCK;
 		    nspec = 0;
 		}
 	    }
@@ -995,7 +1015,9 @@ Tk_DrawChars(
 	}
     }
     if (nspec) {
+	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+	UNLOCK;
     }
 
   doUnderlineStrikeout:
@@ -1122,8 +1144,11 @@ TkDrawAngledChars(
 		 * this information... but we'll be ready when it does!
 		 */
 
+		LOCK;
 		XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
 			nglyph, &metrics);
+		UNLOCK;
+
 		/*
 		 * Draw glyph only when it fits entirely into 16 bit coords.
 		 */
@@ -1146,8 +1171,10 @@ TkDrawAngledChars(
                      * a very small barely readable font)
 		     */
 
+		    LOCK;
 		    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 			    originX, originY, glyphs, nglyph);
+		    UNLOCK;
 		}
 	    }
 	    originX = ROUND16(x);
@@ -1157,8 +1184,10 @@ TkDrawAngledChars(
 	glyphs[nglyph++] = XftCharIndex(fontPtr->display, ftFont, c);
     }
     if (nglyph) {
+	LOCK;
 	XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
 		nglyph, &metrics);
+	UNLOCK;
 
 	/*
 	 * Draw glyph only when it fits entirely into 16 bit coords.
@@ -1167,8 +1196,10 @@ TkDrawAngledChars(
 	if (x >= minCoord && y >= minCoord &&
 	    x <= maxCoord - metrics.width &&
 	    y <= maxCoord - metrics.height) {
+	    LOCK;
 	    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 		    originX, originY, glyphs, nglyph);
+	    UNLOCK;
 	}
     }
 #else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
@@ -1216,8 +1247,10 @@ TkDrawAngledChars(
 	ft0Font = GetFont(fontPtr, c, 0.0);
 	if (ftFont && ft0Font) {
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
+	    LOCK;
 	    XftGlyphExtents(fontPtr->display, ft0Font, &specs[nspec].glyph, 1,
 		    &metrics);
+	    UNLOCK;
 
 	    /*
 	     * Draw glyph only when it fits entirely into 16 bit coords.
@@ -1230,8 +1263,10 @@ TkDrawAngledChars(
 		specs[nspec].x = ROUND16(x);
 		specs[nspec].y = ROUND16(y);
 		if (++nspec == NUM_SPEC) {
+		    LOCK;
 		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			    specs, nspec);
+		    UNLOCK;
 		    nspec = 0;
 		}
 	    }
@@ -1240,7 +1275,9 @@ TkDrawAngledChars(
 	}
     }
     if (nspec) {
+	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+	UNLOCK;
     }
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 

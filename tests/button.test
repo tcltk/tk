@@ -2414,7 +2414,7 @@ test button-1.244 {configuration option: "underline" for label} -setup {
     .l configure -underline 3p
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 test button-1.245 {configuration option: "underline" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2433,7 +2433,7 @@ test button-1.246 {configuration option: "underline" for button} -setup {
     .b configure -underline 3p
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 test button-1.247 {configuration option: "underline" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2452,7 +2452,7 @@ test button-1.248 {configuration option: "underline" for checkbutton} -setup {
     .c configure -underline 3p
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 test button-1.249 {configuration option: "underline" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2471,7 +2471,7 @@ test button-1.250 {configuration option: "underline" for radiobutton} -setup {
     .r configure -underline 3p
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 
 test button-1.251 {configuration option: "tristatevalue" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
