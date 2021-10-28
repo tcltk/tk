@@ -898,6 +898,7 @@ RecomputeWidgets(
 {
     Tk_ClassWorldChangedProc *proc =
 	    Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
+    TkWindow *tkwinPtr;
 
     if (proc != NULL) {
 	proc(winPtr->instanceData);
@@ -913,18 +914,25 @@ RecomputeWidgets(
      *
      * However, the additional overhead of the recursive calls may become a
      * performance problem if typical usage alters such that -font'ed widgets
-     * appear high in the heirarchy, causing deep recursion. This could happen
-     * with text widgets, or more likely with the (not yet existant) labeled
-     * frame widget. With these widgets it is possible, even likely, that a
-     * -font'ed widget (text or labeled frame) will not be a leaf node, but
+     * appear high in the hierarchy, causing deep recursion. This could happen
+     * with text widgets, or more likely with the labelframe
+     * widget. With these widgets it is possible, even likely, that a
+     * -font'ed widget (text or labelframe) will not be a leaf node, but
      * will instead have many descendants. If this is ever found to cause a
      * performance problem, it may be worth investigating an iterative version
      * of the code below.
      */
 
-    for (winPtr=winPtr->childList ; winPtr!=NULL ; winPtr=winPtr->nextPtr) {
-	RecomputeWidgets(winPtr);
+    for (tkwinPtr=winPtr->childList ; tkwinPtr!=NULL ; tkwinPtr=tkwinPtr->nextPtr) {
+	RecomputeWidgets(tkwinPtr);
     }
+
+    /*
+     * Broadcast font change virtually for mega-widget layout managers.
+     * Do this after the font change has been propagated to core widgets.
+    */
+    Tk_SendVirtualEvent((Tk_Window)winPtr, "TkWorldChanged",
+			Tcl_NewStringObj("FontChanged",-1));
 }
 
 /*
@@ -2471,7 +2479,7 @@ Tk_UnderlineTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2498,7 +2506,7 @@ TkUnderlineAngledTextLayout(
 				 * which to draw (pixels). */
     double angle,
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2726,7 +2734,7 @@ Tk_CharBbox(
     Tk_TextLayout layout,	/* Layout information, from a previous call to
 				 * Tk_ComputeTextLayout(). */
     int index,			/* The index of the character whose bbox is
-				 * desired. */
+				 * desired. Negative means count backwards. */
     int *xPtr, int *yPtr,	/* Filled with the upper-left hand corner, in
 				 * pixels, of the bounding box for the
 				 * character specified by index, if
@@ -2744,7 +2752,12 @@ Tk_CharBbox(
     const char *end;
 
     if (index < 0) {
-	return 0;
+	for (i = 0; i < layoutPtr->numChunks; i++) {
+	    index += (chunkPtr + i)->numChars;
+	}
+	if (index < 0) {
+	    return 0;
+	}
     }
 
     tkfont = layoutPtr->tkfont;
