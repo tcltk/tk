@@ -50,7 +50,6 @@ typedef struct PixelRep {
 typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
-    const Tcl_ObjType *endTypePtr;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -190,11 +189,6 @@ GetTypeCache(void)
 	/* Smart initialization of doubleTypePtr/intTypePtr without
 	 * hash-table lookup or creating complete Tcl_Obj's */
 	Tcl_Obj obj;
-	obj.bytes = (char *)"end";
-	obj.length = 3;
-	obj.typePtr = NULL;
-	Tcl_GetIntForIndex(NULL, &obj, TCL_INDEX_NONE, (TkSizeT *)&obj.internalRep.doubleValue);
-	tsdPtr->endTypePtr = obj.typePtr;
 	obj.bytes = (char *)"0.0";
 	obj.length = 3;
 	obj.typePtr = NULL;
@@ -214,9 +208,8 @@ GetTypeCache(void)
  *
  * TkGetIntForIndex --
  *
- *	Almost the same as Tcl_GetIntForIndex, but it return an int, and it is
- *	more restricted. For example it only accepts "end", not "end-1", and
- *	only "2", not "1+1"
+ *	Almost the same as Tcl_GetIntForIndex, but it return an int. Accepts
+ *	"" (empty string) as well.
  *
  * Results:
  *	The return value is a standard Tcl object result.
@@ -234,24 +227,22 @@ TkGetIntForIndex(
     int lastOK,
     TkSizeT *indexPtr)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
+    if (indexObj == NULL) {
+	*indexPtr = TCL_INDEX_NONE;
+	return TCL_OK;
+    }
     if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr) != TCL_OK) {
-	return TCL_ERROR;
-    }
-    if (indexObj->typePtr == tsdPtr->endTypePtr) {
-	/* check for "end", but not "end-??" or "end+??" */
-	return (*indexPtr == (end + lastOK)) ? TCL_OK :  TCL_ERROR;
-    }
-    if (indexObj->typePtr != tsdPtr->intTypePtr) {
-	/* Neither do we accept "??-??" or "??+??" */
+	const char *value = Tcl_GetString(indexObj);
+	if (!*value) {
+	    *indexPtr = TCL_INDEX_NONE;
+	    return TCL_OK;
+	}
 	return TCL_ERROR;
     }
 #if TCL_MAJOR_VERSION < 9
-    if ((*indexPtr < -1) || (end < -1)) {
+    if (*indexPtr < -1) {
 	*indexPtr = TCL_INDEX_NONE;
-    } else
+    } else if (end >= -1)
 #endif
     if ((*indexPtr + 1) > (end + 1)) {
 	*indexPtr = end + 1;
