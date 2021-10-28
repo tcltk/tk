@@ -2426,7 +2426,7 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
 		    -width 1 -joinstyle round -smooth true -fill {} -outline blue]
     pack $c -fill both -expand 1 -side top
     tkwait visibility $c
-    
+
     # Lamda test functions
     set circle_text {{w user_data text circ} {
 	if {[winfo class $w] ne "Canvas"} {
@@ -2493,7 +2493,7 @@ test font-47.3 {Bug 3049518 - Label} -body {
 	}
 	return $img
     }}
-    
+
     set testWorldChanged {{w user_data} {
 	global make-img
 	if {$user_data ne "FontChanged"} {
