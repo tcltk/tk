@@ -15,7 +15,7 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
-#include <tkWinInt.h>
+#include "tkWinInt.h"
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
