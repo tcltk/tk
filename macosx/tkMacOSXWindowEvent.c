@@ -162,6 +162,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
+	return;
+    }
     [(TKWindow *)[notification object] tkLayoutChanged];
 }
 
@@ -170,6 +173,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
+	return;
+    }
     [(TKWindow *)[notification object] tkLayoutChanged];
 }
 
