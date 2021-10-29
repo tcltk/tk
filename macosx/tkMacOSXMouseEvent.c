@@ -181,20 +181,18 @@ enum {
      */
 
     capture = TkMacOSXGetCapture();
-    if (capture) {
+    if (eventWindow) {
+	    winPtr = TkMacOSXGetTkWindow(eventWindow);
+    } else if (capture) {
 	winPtr = (TkWindow *) capture;
 	eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	if (!eventWindow) {
 	    return theEvent;
 	}
-    } else {
-	if (eventWindow) {
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
-	if (!winPtr) {
-	    eventWindow = [NSApp mainWindow];
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
+    }
+    if (!winPtr) {
+	eventWindow = [NSApp mainWindow];
+	winPtr = TkMacOSXGetTkWindow(eventWindow);
     }
     if (!winPtr) {
 
@@ -238,25 +236,24 @@ enum {
     }
 
     /*
-     * Use the local coordinates to find the target Tk window which should
-     * receive this event.  Also the local coordinates are converted into the
-     * coordinates of the target window.  (The converted local coordinates are
-     * only needed for scrollwheel events.)
-     *
-     * If a local grab is in effect and the target window is not a child of the
-     * grab window, then the event is discarded.
+     * Use the local coordinates to find the Tk window which should receive
+     * this event.  Also convert local into the coordinates of that window.
+     * (The converted local coordinates are only needed for scrollwheel
+     * events.)
+     */
+
+    target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
+
+    /*
+     * Ignore the event if a local grab is in effect and the Tk window is
+     * not in the grabber's subtree.
      */
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
-    if (grabWinPtr &&                            /* A grab is in effect      */
-	!winPtr->dispPtr->grabFlags &&           /* and it is a local grab   */
+    if (grabWinPtr && /* There is a grab in effect ... */
+	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
-	Tk_Window tkwin2, toplevel = tkwin;
-	if (Tk_IsTopLevel(grabWinPtr)) {
-	    target = Tk_TopCoordsToWindow(grabWinPtr, global.x, global.y, &win_x, &win_y);
-	} else {
-	    target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
-	}
+	Tk_Window tkwin2;
 	if (!target) {
 	    return theEvent;
 	}
@@ -270,13 +267,6 @@ enum {
 	if (tkwin2 != (Tk_Window)grabWinPtr) {
 	    return theEvent;
 	}
-    } else {
-
-	/* 
-	 *There is no local grab, so we just need to find the target window.
-	 */
-	
-	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
 
     /*
