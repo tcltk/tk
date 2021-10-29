@@ -243,17 +243,20 @@ enum {
      * coordinates of the target window.  (The converted local coordinates are
      * only needed for scrollwheel events.)
      *
-     * If a local grab is in effect and the target window is not
-     * in the grabber's subtree then the event is discarded.
+     * If a local grab is in effect and the target window is not a child of the
+     * grab window, then the event is discarded.
      */
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
     if (grabWinPtr &&                            /* A grab is in effect      */
 	!winPtr->dispPtr->grabFlags &&           /* and it is a local grab   */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
-	Tk_Window tkwin2;
-	
-	target = Tk_TopCoordsToWindow(grabWinPtr, local.x, local.y, &win_x, &win_y);
+	Tk_Window tkwin2, toplevel = tkwin;
+	if (Tk_IsTopLevel(grabWinPtr)) {
+	    target = Tk_TopCoordsToWindow(grabWinPtr, global.x, global.y, &win_x, &win_y);
+	} else {
+	    target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
+	}
 	if (!target) {
 	    return theEvent;
 	}
