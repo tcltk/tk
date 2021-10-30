@@ -63,7 +63,10 @@
  */
 
 static CGFloat darkButtonFace[4] = {
-    112.0 / 255, 113.0 / 255, 115.0 / 255, 1.0
+    90.0 / 255, 86.0 / 255, 95.0 / 255, 1.0
+};
+static CGFloat darkPressedButtonFace[4] = {
+    114.0 / 255, 110.0 / 255, 118.0 / 255, 1.0
 };
 static CGFloat darkPressedBevelFace[4] = {
     135.0 / 255, 136.0 / 255, 138.0 / 255, 1.0
@@ -720,8 +723,15 @@ static void DrawDarkButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
-	GradientFillRoundedRectangle(context, bounds, 4,
+	if ([NSApp macOSVersion] < 120000) {
+	    GradientFillRoundedRectangle(context, bounds, 4,
 	    pressedPushButtonGradient, 2);
+	} else {
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+		components: darkPressedButtonFace
+		count: 4];
+	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+	}
     } else if (kind == kThemePushButton &&
 	       (state & TTK_STATE_ALTERNATE) &&
 	       !(state & TTK_STATE_BACKGROUND)) {
