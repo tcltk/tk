@@ -765,7 +765,7 @@ TkMacOSXDrawButton(
 	 * Using a ttk::button would be a much better choice, however.
 	 */
 
-	if ([NSApp macOSVersion] < 110000) {
+	if ([NSApp macOSVersion] < 101500) {
 	    if (TkMacOSXInDarkMode(butPtr->tkwin) &&
 		mbPtr->drawinfo.state != kThemeStatePressed &&
 		!(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
