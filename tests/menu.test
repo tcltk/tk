@@ -1850,14 +1850,6 @@ test menu-3.70 {MenuWidgetCmd procedure, "xposition" option} -setup {
 } -cleanup {
     destroy .m1
 } -result {}
-test menu-3.71 {MenuWidgetCmd procedure, "index end" option, bug [f3cd942e9e]} -setup {
-    destroy .m1
-} -body {
-    menu .m1
-    .m1 index "end"
-} -cleanup {
-    destroy .m1
-} -result none
 
 
 test menu-4.1 {TkInvokeMenu: disabled} -setup {
