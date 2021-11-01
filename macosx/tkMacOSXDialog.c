@@ -365,7 +365,7 @@ static NSInteger showOpenSavePanel(
 				 contextInfo:callbackInfo ];
 		}];
 	    modalReturnCode = [NSApp runModalForWindow:panel];
-	} else if (OSVersion < 101600) {
+	} else if (OSVersion < 110000) {
 	    [panel beginSheetModalForWindow:parent
 			  completionHandler:^(NSModalResponse returnCode) {
 		    [NSApp tkFilePanelDidEnd:panel
