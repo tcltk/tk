@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -189,6 +190,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     int minorVersion, majorVersion;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
     majorVersion = 10;
@@ -198,6 +200,24 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     majorVersion = systemVersion.majorVersion;
     minorVersion = systemVersion.minorVersion;
 #endif
+
+    if (majorVersion == 10 && minorVersion == 16) {
+
+	/*
+	 * If a program compiled with a macOS 10.XX SDK is run on macOS 11.0 or
+	 * later then it will report majorVersion 10 and minorVersion 16, no
+	 * matter what the actual OS version of the host may be. And of course
+	 * Apple never released macOS 10.16. To work around this we guess the
+	 * OS version from the kernel release number, as reported by uname.
+	 */  
+
+	struct utsname name;
+	char *endptr;
+	if (uname(&name) == 0) {
+	    majorVersion = strtol(name.release, &endptr, 10) - 9;
+	    minorVersion = 0;
+	}
+    }
     [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
 
     /*
