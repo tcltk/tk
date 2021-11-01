@@ -331,7 +331,7 @@ GetRGBA(
 			      colorUsingColorSpace:sRGB];
 #endif
 	} else if (entry->index == selectedTabTextIndex) {
-	    if (OSVersion > 100600 && OSVersion < 101600) {
+	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
