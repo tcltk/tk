@@ -379,6 +379,7 @@ static NSInteger showOpenSavePanel(
 	    [NSApp tkFilePanelDidEnd:panel
 			  returnCode:modalReturnCode
 			 contextInfo:callbackInfo ];
+	    [parent endSheet:panel];
 	}
     } else {
 	modalReturnCode = [panel runModal];
