@@ -24,6 +24,7 @@ static int numSystemColors;
 static int rgbColorIndex;
 static int controlAccentIndex;
 static int selectedTabTextIndex;
+static int pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -67,7 +68,8 @@ void initColorTable()
 	    if (![NSColor respondsToSelector:colorSelector]) {
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
-		} else if (![colorName isEqualToString:@"selectedTabTextColor"]) {
+		} else if (   ![colorName isEqualToString:@"selectedTabTextColor"]
+			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
 		    continue;
@@ -147,6 +149,9 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "SelectedTabTextColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     selectedTabTextIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "PressedButtonTextColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    pressedButtonTextIndex = entry->index;
     [pool drain];
 }
 
@@ -278,6 +283,7 @@ GetRGBA(
     CGFloat *rgba)
 {
     NSColor *bgColor, *color = nil;
+    int OSVersion = [NSApp macOSVersion];
 
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
@@ -325,11 +331,16 @@ GetRGBA(
 			      colorUsingColorSpace:sRGB];
 #endif
 	} else if (entry->index == selectedTabTextIndex) {
-	    int OSVersion = [NSApp macOSVersion];
 	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
+	    }
+	} else if (entry->index == pressedButtonTextIndex) {
+	    if (OSVersion < 120000) {
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
+	    } else {
+		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
 	    }
 	} else {
 	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];

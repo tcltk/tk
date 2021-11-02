@@ -209,7 +209,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 	 * matter what the actual OS version of the host may be. And of course
 	 * Apple never released macOS 10.16. To work around this we guess the
 	 * OS version from the kernel release number, as reported by uname.
-	 */  
+	 */
 
 	struct utsname name;
 	char *endptr;
