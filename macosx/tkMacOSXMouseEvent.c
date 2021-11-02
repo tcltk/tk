@@ -191,20 +191,18 @@ enum {
      */
 
     capture = TkpGetCapture();
-    if (capture) {
+    if (eventWindow) {
+	    winPtr = TkMacOSXGetTkWindow(eventWindow);
+    } else if (capture) {
 	winPtr = (TkWindow *) capture;
 	eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	if (!eventWindow) {
 	    return theEvent;
 	}
-    } else {
-	if (eventWindow) {
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
-	if (!winPtr) {
-	    eventWindow = [NSApp mainWindow];
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
+    }
+    if (!winPtr) {
+	eventWindow = [NSApp mainWindow];
+	winPtr = TkMacOSXGetTkWindow(eventWindow);
     }
     if (!winPtr) {
 
