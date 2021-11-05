@@ -1136,10 +1136,7 @@ PolygonInsert(
 
 		    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 		} else {
-		    if (beforeThis < 0) {
-			beforeThis += length;
-		    }
-		    beforeThis -= beforeThis % 6;
+		    beforeThis -= abs(beforeThis) % 6;
 		    objc += 4;
 		}
 
