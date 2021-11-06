@@ -19,7 +19,7 @@ namespace eval ::tk::fontchooser {
     set S(under) 0
     set S(first) 1
     set S(-parent) .
-	set S(-title) {}
+    set S(-title) {}
     set S(-command) ""
     set S(-font) TkDefaultFont
 }
@@ -27,17 +27,17 @@ namespace eval ::tk::fontchooser {
 proc ::tk::fontchooser::Canonical {} {
     variable S
 	
-	set S(styles) [list \
-		[::msgcat::mc Regular] \
-		[::msgcat::mc Italic] \
-		[::msgcat::mc Bold] \
-		[::msgcat::mc {Bold Italic}] \
+    set S(styles) [list \
+            [::msgcat::mc Regular] \
+            [::msgcat::mc Italic] \
+            [::msgcat::mc Bold] \
+            [::msgcat::mc {Bold Italic}] \
     ]
-	foreach style $S(styles) {lappend S(styles,lcase) [string tolower $style]}
+    foreach style $S(styles) {lappend S(styles,lcase) [string tolower $style]}
     set S(sizes,lcase) $S(sizes)
     set S(sampletext) [::msgcat::mc "AaBbYyZz01"]
-	
-	# Canonical versions of font families, styles, etc. for easier searching
+
+    # Canonical versions of font families, styles, etc. for easier searching
     set S(fonts,lcase) {}
     foreach font $S(fonts) {lappend S(fonts,lcase) [string tolower $font]}
     set S(styles,lcase) {}
@@ -47,7 +47,7 @@ proc ::tk::fontchooser::Canonical {} {
 proc ::tk::fontchooser::Setup {} {
     variable S
 
-	Canonical
+    Canonical
 
     ::ttk::style layout FontchooserFrame {
         Entry.field -sticky news -border true -children {
@@ -69,16 +69,16 @@ proc ::tk::fontchooser::Setup {} {
 proc ::tk::fontchooser::Show {} {
     variable S 
 
-	Canonical
-	
+    Canonical
+
     if {![winfo exists $S(W)]} {
         Create
         wm transient $S(W) [winfo toplevel $S(-parent)]
         tk::PlaceWindow $S(W) widget $S(-parent)
-		if {[string trim $S(-title)] eq ""} {
-			wm title $S(W) [::msgcat::mc "Font"]
-		} else {
-			wm title $S(W) $S(-title)
+        if {[string trim $S(-title)] eq ""} {
+            wm title $S(W) [::msgcat::mc "Font"]
+        } else {
+            wm title $S(W) $S(-title)
         }
     }
     set S(fonts) [lsort -dictionary -unique [font families]]
@@ -125,7 +125,7 @@ proc ::tk::fontchooser::Configure {args} {
             -command, -font, -parent, -title or -visible"
     }
     set cache [dict create -parent $S(-parent) -title $S(-title) \
-                   -font $S(-font) -command $S(-command)]
+            -font $S(-font) -command $S(-command)]
     set r [tclParseConfigSpec [namespace which -variable S] $specs DONTSETDEFAULTS $args]
     if {![winfo exists $S(-parent)]} {
         set code [list TK LOOKUP WINDOW $S(-parent)]
@@ -134,25 +134,25 @@ proc ::tk::fontchooser::Configure {args} {
         return -code error -errorcode $code $err
     }
 
-	if {[winfo exists $S(W)]} {
-		if {{-font} in $args} {
-			Init $S(-font)
-			event generate $S(-parent) <<TkFontchooserFontChanged>>
-		}
+    if {[winfo exists $S(W)]} {
+        if {{-font} in $args} {
+            Init $S(-font)
+            event generate $S(-parent) <<TkFontchooserFontChanged>>
+        }
 
-		if {[string trim $S(-title)] eq {}} {
-			wm title $S(W) [::msgcat::mc Font]
-		} else {
-			wm title $S(W) $S(-title)
-		}
-		if {$S(-command) eq {}} {
-			$S(W).ok configure -state disabled
-			$S(W).apply configure -state $S(nstate)
-		} else {
-			$S(W).ok configure -state $S(nstate)
-			$S(W).apply configure -state $S(nstate)
-		}
-	}
+        if {[string trim $S(-title)] eq {}} {
+            wm title $S(W) [::msgcat::mc Font]
+        } else {
+            wm title $S(W) $S(-title)
+        }
+        if {$S(-command) eq {}} {
+            $S(W).ok configure -state disabled
+            $S(W).apply configure -state $S(nstate)
+        } else {
+            $S(W).ok configure -state $S(nstate)
+            $S(W).apply configure -state $S(nstate)
+        }
+    }
     return $r
 }
 
@@ -348,7 +348,7 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
     variable S
 
     if {$S(first) || $defaultFont ne ""} {
-		Canonical
+        Canonical
         if {$defaultFont eq ""} {
             set defaultFont [[entry .___e] cget -font]
             destroy .___e
@@ -428,13 +428,13 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
         $S(W).l${var}s see $n
     }
     if {!$bad} {Update}
-	if {$S(-command) eq {}} {
-		$S(W).ok configure -state disabled
-		$S(W).apply configure -state $S(nstate)
-	} else {
-		$S(W).ok configure -state $S(nstate)
-		$S(W).apply configure -state $S(nstate)
-	}
+    if {$S(-command) eq {}} {
+        $S(W).ok configure -state disabled
+        $S(W).apply configure -state $S(nstate)
+    } else {
+        $S(W).ok configure -state $S(nstate)
+        $S(W).apply configure -state $S(nstate)
+    }
 }
 
 # ::tk::fontchooser::Update --
