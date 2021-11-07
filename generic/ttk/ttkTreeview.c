@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * ttk::treeview widget implementation.
  */
@@ -3295,8 +3295,8 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "heading", 	TreeviewHeadingCommand,0 },
     { "identify",  	TreeviewIdentifyCommand,0 },
     { "index",  	TreeviewIndexCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
     { "insert", 	TreeviewInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
     { "item", 		TreeviewItemCommand,0 },
     { "move", 		TreeviewMoveCommand,0 },
     { "next", 		TreeviewNextCommand,0 },
@@ -3306,6 +3306,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "selection" ,	TreeviewSelectionCommand,0 },
     { "set",  		TreeviewSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "tag",    	0,TreeviewTagCommands },
     { "xview",  	TreeviewXViewCommand,0 },
     { "yview",  	TreeviewYViewCommand,0 },

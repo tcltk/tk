@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * "classic" theme; implements the classic Motif-like Tk look.
  *

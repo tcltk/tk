@@ -4,8 +4,8 @@
  *	This module implements the image protocol, which allows lots of
  *	different kinds of images to be used in lots of different widgets.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -361,8 +361,6 @@ Tk_ImageObjCmd(
 	objc -= firstOption;
 	args = (Tcl_Obj **) objv;
 	if (oldimage) {
-	    int i;
-
 	    args = (Tcl_Obj **)ckalloc((objc+1) * sizeof(Tcl_Obj *));
 	    for (i = 0; i < objc; i++) {
 		args[i] = (Tcl_Obj *) Tcl_GetString(objv[i]);

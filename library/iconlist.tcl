@@ -3,8 +3,8 @@
 #	Implements the icon-list megawidget used in the "Tk" standard file
 #	selection dialog boxes.
 #
-# Copyright (c) 1994-1998 Sun Microsystems, Inc.
-# Copyright (c) 2009 Donal K. Fellows
+# Copyright © 1994-1998 Sun Microsystems, Inc.
+# Copyright © 2009 Donal K. Fellows
 #
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -26,7 +26,7 @@
 #	<path> selection includes <item>
 #	<path> selection set <first> ?<last>?
 
-package require Tk
+package require tk
 
 ::tk::Megawidget create ::tk::IconList ::tk::FocusableWidget {
     variable w canvas sbar accel accelCB fill font index \
@@ -446,18 +446,9 @@ package require Tk
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	if {[tk windowingsystem] eq "aqua"} {
-	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel [expr {40 * (%D)}]}]
-	    bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel [expr {400 * (%D)}]}]
-	} else {
-	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
-	}
-	if {[tk windowingsystem] eq "x11"} {
-	    bind $canvas <Shift-Button-4>	[namespace code {my MouseWheel 120}]
-	    bind $canvas <Shift-Button-5>	[namespace code {my MouseWheel -120}]
-	    bind $canvas <Button-6>		[namespace code {my MouseWheel 120}]
-	    bind $canvas <Button-7>		[namespace code {my MouseWheel -120}]
-	}
+	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
+	bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel %D -12}]
+
 
 	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
 	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]
@@ -505,21 +496,11 @@ package require Tk
     # ----------------------------------------------------------------------
 
     # Event handlers
-    method MouseWheel {amount} {
+    method MouseWheel {amount {factor -120.0}} {
 	if {$noScroll || $::tk_strictMotif} {
 	    return
 	}
-	# We must make sure that positive and negative movements are rounded
-	# equally to integers, avoiding the problem that
-	#     (int)1/120 = 0,
-	# but
-	#     (int)-1/120 = -1
-	# The following code ensure equal +/- behaviour.
-	if {$amount > 0} {
-	    $canvas xview scroll [expr {(-119-$amount) / 120}] units
-	} else {
-	    $canvas xview scroll [expr {-($amount / 120)}] units
-	}
+	$canvas xview scroll [expr {$amount/$factor}] units
     }
     method Btn1 {x y} {
 	focus $canvas

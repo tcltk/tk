@@ -4,9 +4,9 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1995-1997 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -215,7 +215,7 @@ proc ::tk::ConsoleSource {} {
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
     if {$filename ne ""} {
-    	set cmd [list source $filename]
+    	set cmd [list source -encoding utf-8 $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
 	}
@@ -454,23 +454,16 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_Transpose>>		<Control-t>
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
-	<<Console_FontSizeIncr>>	<Control-plus>
+	<<Console_FontSizeIncr>>	<Control-+>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeDecr>>	<Command-minus>
     } {
 	event add $ev $key
 	bind Console $key {}
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	foreach {ev key} {
-	    <<Console_FontSizeIncr>>	<Command-plus>
-	    <<Console_FontSizeDecr>>	<Command-minus>
-	} {
-	    event add $ev $key
-	    bind Console $key {}
-	}
-	if {$::tk::console::useFontchooser} {
-	    bind Console <Command-t> [list ::tk::console::FontchooserToggle]
-	}
+    if {$::tk::console::useFontchooser} {
+	bind Console <Command-t> [list ::tk::console::FontchooserToggle]
     }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {
@@ -592,12 +585,10 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <F9> {
 	eval destroy [winfo child .]
-	source [file join $tk_library console.tcl]
+	source -encoding utf-8 [file join $tk_library console.tcl]
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	bind Console <Command-q> {
-	    exit
-	}
+    bind Console <Command-q> {
+	exit
     }
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }

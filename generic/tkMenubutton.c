@@ -4,8 +4,8 @@
  *	This module implements button-like widgets that are used to invoke
  *	pull-down menus.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -144,9 +144,8 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_MENUBUTTON_TEXT_VARIABLE, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, textVarName), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	DEF_MENUBUTTON_UNDERLINE, TCL_INDEX_NONE, offsetof(TkMenuButton, underline),
-	 0, 0, 0},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(TkMenuButton, underline), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
 	DEF_MENUBUTTON_WIDTH, TCL_INDEX_NONE, offsetof(TkMenuButton, widthString),
 	0, 0, 0},
@@ -261,7 +260,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->optionTable = optionTable;
     mbPtr->menuName = NULL;
     mbPtr->text = NULL;
-    mbPtr->underline = -1;
+    mbPtr->underline = INT_MIN;
     mbPtr->textVarName = NULL;
     mbPtr->bitmap = None;
     mbPtr->imageString = NULL;

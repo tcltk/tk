@@ -17,7 +17,7 @@ positionWindow $w
 
 ttk::label $w.msg -wraplength 4i -text "This is a demonstration of how to do\
 	a toolbar that is styled correctly and which can be torn off. The\
-	buttons are configured to be \u201Ctoolbar style\u201D buttons by\
+	buttons are configured to be “toolbar style” buttons by\
 	telling them that they are to use the Toolbutton style. At the left\
 	end of the toolbar is a simple marker that the cursor changes to a\
 	movement icon over; drag that away from the toolbar to tear off the\

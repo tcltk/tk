@@ -5,9 +5,9 @@
  *	displays a background and a collection of graphical objects such as
  *	rectangles, lines, and texts.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -16,11 +16,10 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 #include "default.h"
-#ifdef TK_NO_DOUBLE_BUFFERING
+#include "tkPort.h"
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
-#endif /* TK_NO_DOUBLE_BUFFERING */
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
@@ -839,8 +838,8 @@ CanvasWidgetCmd(
     TagSearch *searchPtr = NULL;/* Allocated by first TagSearchScan, freed by
 				 * TagSearchDestroy */
 
-    int index;
-    static const char *const optionStrings[] = {
+    int idx;
+    static const char *const canvasOptionStrings[] = {
 	"addtag",	"bbox",		"bind",		"canvasx",
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
@@ -852,7 +851,7 @@ CanvasWidgetCmd(
 	"scan",		"select",	"type",		"xview",
 	"yview",	NULL
     };
-    enum options {
+    enum canvasOptionStringsEnum {
 	CANV_ADDTAG,	CANV_BBOX,	CANV_BIND,	CANV_CANVASX,
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
@@ -869,14 +868,14 @@ CanvasWidgetCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], canvasOptionStrings, "option", 0,
+	    &idx) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(canvasPtr);
 
     result = TCL_OK;
-    switch ((enum options) index) {
+    switch ((enum canvasOptionStringsEnum)idx) {
     case CANV_ADDTAG:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tag searchCommand ?arg ...?");
@@ -1247,7 +1246,6 @@ CanvasWidgetCmd(
     case CANV_CREATE: {
 	Tk_ItemType *typePtr;
 	Tk_ItemType *matchPtr = NULL;
-	Tk_Item *itemPtr;
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
@@ -1258,7 +1256,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	arg = TkGetStringFromObj(objv[2], &length);
+	arg = Tcl_GetStringFromObj(objv[2], &length);
 	c = arg[0];
 
 	/*
@@ -1663,7 +1661,6 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_LOWER: {
-	Tk_Item *itemPtr;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?belowThis?");
@@ -1927,10 +1924,10 @@ CanvasWidgetCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x y ?dragGain?");
 	    result = TCL_ERROR;
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
-		"scan option", 0, &index) != TCL_OK) {
+		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 5+index)) {
-	    Tcl_WrongNumArgs(interp, 3, objv, index?"x y ?gain?":"x y");
+	} else if ((objc != 5) && (objc != 5+idx)) {
+	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y ?gain?":"x y");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)){
@@ -1938,7 +1935,7 @@ CanvasWidgetCmd(
 	} else if ((objc == 6) &&
 		(Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK)) {
 	    result = TCL_ERROR;
-	} else if (!index) {
+	} else if (!idx) {
 	    canvasPtr->scanX = x;
 	    canvasPtr->scanXOrigin = canvasPtr->xOrigin;
 	    canvasPtr->scanY = y;
@@ -2810,10 +2807,19 @@ DrawCanvas(
     blockPtr.height = cHeight;
     blockPtr.pixelSize = 4;
     blockPtr.pitch = blockPtr.pixelSize * blockPtr.width;
+
+#ifdef TK_XGETIMAGE_USES_ABGR32
+    blockPtr.offset[0] = 1;
+    blockPtr.offset[1] = 2;
+    blockPtr.offset[2] = 3;
+    blockPtr.offset[3] = 0;
+#else
     blockPtr.offset[0] = 0;
     blockPtr.offset[1] = 1;
     blockPtr.offset[2] = 2;
     blockPtr.offset[3] = 3;
+#endif
+
     blockPtr.pixelPtr = (unsigned char *)ckalloc(blockPtr.pixelSize * blockPtr.height * blockPtr.width);
 
     /*
@@ -2850,7 +2856,7 @@ DrawCanvas(
 
         for(x = 0; x < blockPtr.width; ++x) {
             unsigned int pixel = 0;
-
+	    int pixel_offset = blockPtr.pitch * y + blockPtr.pixelSize * x;
             switch (ximagePtr->bits_per_pixel) {
 
                 /*
@@ -2903,21 +2909,45 @@ DrawCanvas(
              */
 
 #ifdef _WIN32
-#define   R_OFFSET 2
-#define   B_OFFSET 0
+#define   R_OFFSET blockPtr.offset[2]
+#define   G_OFFSET blockPtr.offset[1]
+#define   B_OFFSET blockPtr.offset[0]
+#define   A_OFFSET blockPtr.offset[3]
 #else
-#define   R_OFFSET 0
-#define   B_OFFSET 2
+#define   R_OFFSET blockPtr.offset[0]
+#define   G_OFFSET blockPtr.offset[1]
+#define   B_OFFSET blockPtr.offset[2]
+#define   A_OFFSET blockPtr.offset[3]
 #endif
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] =
+#ifdef TK_XGETIMAGE_USES_ABGR32
+#define COPY_PIXEL (ximagePtr->bits_per_pixel == 32)
+#else
+#define COPY_PIXEL 0
+#endif
+
+	    if (COPY_PIXEL) {
+		/*
+		 * This platform packs pixels in RGBA byte order, as expected
+		 * by Tk_PhotoPutBlock() so we can just copy the pixel as an int.
+		 */
+		*((unsigned int *) (blockPtr.pixelPtr + pixel_offset)) = pixel;
+	    } else {
+		blockPtr.pixelPtr[pixel_offset + R_OFFSET] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] =
+		blockPtr.pixelPtr[pixel_offset + G_OFFSET] =
                     (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + B_OFFSET] =
+		blockPtr.pixelPtr[pixel_offset + B_OFFSET] =
                     (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +3] = 0xFF;
+		blockPtr.pixelPtr[pixel_offset + A_OFFSET] = 0xFF;
+	    }
 
 #ifdef DEBUG_DRAWCANVAS
+	    fprintf(stderr, "Converted pixel %x to %hhx %hhx %hhx %hhx \n",
+		    pixel,
+		    blockPtr.pixelPtr[pixel_offset + 0],
+		    blockPtr.pixelPtr[pixel_offset + 1],
+		    blockPtr.pixelPtr[pixel_offset + 2],
+		    blockPtr.pixelPtr[pixel_offset + 3]);
             {
 		int ix;
                 if (x > 0)
@@ -3006,6 +3036,10 @@ DisplayCanvas(
     Tk_Item *itemPtr;
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
+#ifdef MAC_OSX_TK
+    TkWindow *winPtr;
+    MacDrawable *macWin;
+#endif
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3020,8 +3054,8 @@ DisplayCanvas(
      * If drawing is disabled, all we need to do is
      * clear the REDRAW_PENDING flag.
      */
-    TkWindow *winPtr = (TkWindow *)(canvasPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
+    winPtr = (TkWindow *)(canvasPtr->tkwin);
+    macWin = winPtr->privatePtr;
     if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
 	canvasPtr->flags &= ~REDRAW_PENDING;
 	return;
@@ -3763,7 +3797,7 @@ TagSearchScan(
 	 */
 
 	searchPtr->rewritebufferAllocated = 100;
-	searchPtr->rewritebuffer =(char *) ckalloc(searchPtr->rewritebufferAllocated);
+	searchPtr->rewritebuffer = (char *)ckalloc(searchPtr->rewritebufferAllocated);
     }
     TagSearchExprInit(&searchPtr->expr);
 
@@ -4596,7 +4630,7 @@ DoItem(
 	Tk_Uid *newTagPtr;
 
 	itemPtr->tagSpace += 5;
-	newTagPtr = (Tk_Uid*)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
+	newTagPtr = (Tk_Uid *)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
 	memcpy((void *) newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {

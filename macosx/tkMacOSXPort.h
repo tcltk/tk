@@ -35,16 +35,10 @@
 #ifndef _TCL
 #   include <tcl.h>
 #endif
-#if TIME_WITH_SYS_TIME
-#   include <sys/time.h>
-#   include <time.h>
-#else
-#   if HAVE_SYS_TIME_H
+#if HAVE_SYS_TIME_H
 #	include <sys/time.h>
-#   else
-#	include <time.h>
-#   endif
 #endif
+#include <time.h>
 #if HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
@@ -74,6 +68,19 @@
 #	define SELECT_MASK void
 #   else
 #	define SELECT_MASK int
+#   endif
+#endif
+
+/*
+ * Used to tag functions that are only to be visible within the module being
+ * built and not outside it (where this is supported by the linker).
+ */
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
 #   endif
 #endif
 
@@ -126,11 +133,22 @@
 #define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
- * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
- * alpha channel directly into a window.
+ * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to render RGBA
+ * images directly into a window.
  */
 
-#define TKPUTIMAGE_CAN_BLEND
+#define TK_CAN_RENDER_RGBA
+
+MODULE_SCOPE int TkpPutRGBAImage(
+		     Display* display, Drawable drawable, GC gc,XImage* image,
+		     int src_x, int src_y, int dest_x, int dest_y,
+		     unsigned int width, unsigned int height);
+
+/*
+ * Inform tkCanvas.c that our XGetImage returns a 32pp pixmap packed as 0xAABBGGRR
+ */
+
+#define TK_XGETIMAGE_USES_ABGR32
 
 /*
  * Used by xcolor.c
@@ -147,5 +165,13 @@ MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long gre
 MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
 
 #define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
+
+/*
+ * Used by tkAppInit
+ */
+
+#define USE_CUSTOM_EXIT_PROC
+EXTERN int TkpWantsExitProc(void);
+EXTERN TCL_NORETURN void TkpExitProc(void *);
 
 #endif /* _TKMACPORT */

@@ -4,7 +4,7 @@
  *	This file contains a collection of utility functions used by the
  *	implementations of various canvas item types.
  *
- * Copyright (c) 1994 Sun Microsystems, Inc.
+ * Copyright © 1994 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -774,7 +774,7 @@ TkSmoothParseProc(
     }
 
     /*
-     * Backward compatability hack.
+     * Backward compatibility hack.
      */
 
     if (strncmp(value, "bezier", length) == 0) {

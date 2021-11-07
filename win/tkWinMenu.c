@@ -4,8 +4,8 @@
  *	This module implements the Windows platform-specific features of
  *	menus.
  *
- * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -511,7 +511,7 @@ GetEntryText(
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
-	int ch;
+	Tcl_UniChar ch = 0;
 
 	/*
 	 * We have to construct the string with an ampersand preceeding the
@@ -528,16 +528,17 @@ GetEntryText(
 	    if (*p == '&') {
 		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	}
+	ch = 0;
 	if (mePtr->accelLength > 0) {
 	    Tcl_DStringAppend(&itemString, "\t", 1);
 	    for (p = accel, i = 0; *p != '\0'; i++, p = next) {
 		if (*p == '&') {
 		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
-		next = p + TkUtfToUniChar(p, &ch);
+		next = p + Tcl_UtfToUniChar(p, &ch);
 		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
 	}
@@ -1276,7 +1277,7 @@ TkWinHandleMenuEvent(
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
-		    const char *src = TkGetStringFromObj(labelPtr, &len);
+		    const char *src = Tcl_GetStringFromObj(labelPtr, &len);
 
 		    Tcl_DStringFree(&ds);
 		    Tcl_DStringInit(&ds);
@@ -2330,13 +2331,13 @@ TkpInitializeMenuBindings(
 	    "<KeyRelease-Alt_R>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
-	    "<Alt-KeyPress>", "tk::WinMenuKey %W %N", 0);
+	    "<Alt-Key>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<Alt-KeyRelease>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
-	    "<KeyPress-F10>", "tk::WinMenuKey %W %N", 0);
+	    "<Key-F10>", "tk::WinMenuKey %W %N", 0);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<KeyRelease-F10>", "tk::WinMenuKey %W %N", 0);

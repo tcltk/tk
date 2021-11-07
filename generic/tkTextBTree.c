@@ -5,8 +5,8 @@
  *	for Tk's text widget and implements character and toggle segment
  *	types.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1727,6 +1727,26 @@ TkBTreeFindPixelLine(
 	}
 	pixels -= linePtr->pixels[2 * pixelReference];
     }
+
+    /*
+     * Check for any start/end offset for this text widget.
+     */
+
+    if (textPtr->start != NULL) {
+	int lineBoundary = TkBTreeLinesTo(NULL, textPtr->start);
+
+	if (TkBTreeLinesTo(NULL, linePtr) < lineBoundary) {
+	    linePtr = TkBTreeFindLine(tree, NULL, lineBoundary);
+	}
+    }
+    if (textPtr->end != NULL) {
+	int lineBoundary = TkBTreeLinesTo(NULL, textPtr->end);
+
+	if (TkBTreeLinesTo(NULL, linePtr) > lineBoundary) {
+	    linePtr = TkBTreeFindLine(tree, NULL, lineBoundary);
+	}
+    }
+
     if (pixelOffset != NULL && linePtr != NULL) {
 	*pixelOffset = pixels;
     }
@@ -4169,7 +4189,7 @@ Rebalance(
 	    Node *otherPtr;
 	    Node *halfwayNodePtr = NULL;       /* Initialization needed only */
 	    TkTextLine *halfwayLinePtr = NULL; /* to prevent cc warnings. */
-	    int totalChildren, firstChildren, i;
+	    int totalChildren, firstChildren;
 
 	    /*
 	     * Too few children for this node. If this is the root then, it's
@@ -4230,8 +4250,6 @@ Rebalance(
 		otherPtr->children.linePtr = NULL;
 	    }
 	    if (nodePtr->level == 0) {
-		TkTextLine *linePtr;
-
 		for (linePtr = nodePtr->children.linePtr, i = 1;
 			linePtr->nextPtr != NULL;
 			linePtr = linePtr->nextPtr, i++) {
@@ -4246,8 +4264,6 @@ Rebalance(
 		    i++;
 		}
 	    } else {
-		Node *childPtr;
-
 		for (childPtr = nodePtr->children.nodePtr, i = 1;
 			childPtr->nextPtr != NULL;
 			childPtr = childPtr->nextPtr, i++) {

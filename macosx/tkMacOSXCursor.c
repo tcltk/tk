@@ -3,9 +3,9 @@
  *
  *	This file contains Macintosh specific cursor related routines.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -262,7 +262,7 @@ FindCursorByName(
 		break;
 	    case IMAGEBITMAP: {
 		unsigned char *bitmap = (unsigned char *)(cursorNames[idx].id1);
-		NSBitmapImageRep *bitmapImageRep = NULL;
+		NSBitmapImageRep *bitmapImageRep = nil;
 		CGImageRef img = NULL, mask = NULL, maskedImg = NULL;
 		static const CGFloat decodeWB[] = {1, 0};
 		CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(
@@ -366,14 +366,13 @@ FindCursorByName(
 TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
+    TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
     Tk_Uid string)		/* Description of cursor. See manual entry
 				 * for details on legal syntax. */
 {
     TkMacOSXCursor *macCursorPtr = NULL;
     const char **argv = NULL;
     int argc;
-    (void)tkwin;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -421,24 +420,16 @@ TkGetCursorByName(
 
 TkCursor *
 TkCreateCursorFromData(
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
-    const char *source,		/* Bitmap data for cursor shape. */
-    const char *mask,		/* Bitmap data for cursor mask. */
-    int width, int height,	/* Dimensions of cursor. */
-    int xHot, int yHot,		/* Location of hot-spot in cursor. */
-    XColor fgColor,		/* Foreground color for cursor. */
-    XColor bgColor)		/* Background color for cursor. */
+    TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
+    TCL_UNUSED(const char *),		/* Bitmap data for cursor shape. */
+    TCL_UNUSED(const char *),		/* Bitmap data for cursor mask. */
+    TCL_UNUSED(int),	/* Dimensions of cursor. */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),		/* Location of hot-spot in cursor. */
+    TCL_UNUSED(int),
+    TCL_UNUSED(XColor),		/* Foreground color for cursor. */
+    TCL_UNUSED(XColor))		/* Background color for cursor. */
 {
-    (void)tkwin;
-    (void)source;
-    (void)mask;
-    (void)width;
-    (void)height;
-    (void)xHot;
-    (void)yHot;
-    (void)fgColor;
-    (void)bgColor;
-
     return NULL;
 }
 
@@ -466,7 +457,7 @@ TkpFreeCursor(
     TkMacOSXCursor *macCursorPtr = (TkMacOSXCursor *) cursorPtr;
 
     [macCursorPtr->macCursor release];
-    macCursorPtr->macCursor = NULL;
+    macCursorPtr->macCursor = nil;
     if (macCursorPtr == gCurrentCursor) {
 	gCurrentCursor = NULL;
     }
@@ -545,7 +536,7 @@ TkpSetCursor(
 {
     int cursorChanged = 1;
 
-    if (cursor == None) {
+    if (cursor == NULL) {
 	/*
 	 * This is a little tricky. We can't really tell whether
 	 * gCurrentCursor is NULL because it was NULL last time around or

@@ -6,8 +6,8 @@
  *	of other widgets, placing a movable "sash" between them, which can be
  *	used to alter the relative sizes of adjacent widgets.
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Ajuba Solutions.
+ * Copyright © 1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -604,7 +604,6 @@ PanedWindowWidgetObjCmd(
 	break;
 
     case PW_FORGET: {
-	int i;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "widget ?widget ...?");

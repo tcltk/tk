@@ -3,9 +3,9 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998 by Scriptics Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -306,9 +306,7 @@ bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-Key> {# nothing}
-}
+bind Text <Command-Key> {# nothing}
 
 # Additional emacs-like bindings:
 
@@ -397,18 +395,32 @@ bind Text <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Text <<TkEndIMEMarkedText>> {
-    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
-	bell
-    } else {
-	%W tag add IMEmarkedtext $mark insert
-	%W tag configure IMEmarkedtext -underline on
-    }
+    ::tk::TextEndIMEMarkedText %W
 }
 bind Text <<TkClearIMEMarkedText>> {
     %W delete IMEmarkedtext.first IMEmarkedtext.last
 }
 bind Text <<TkAccentBackspace>> {
     %W delete insert-1c
+}
+
+# ::tk::TextEndIMEMarkedText --
+#
+# Handles input method text marking in a text widget.
+#
+# Arguments:
+# w -	The text widget
+
+proc ::tk::TextEndIMEMarkedText {w} {
+    variable Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w tag add IMEmarkedtext $mark insert
+    $w tag configure IMEmarkedtext -underline on
 }
 
 # Macintosh only bindings:
@@ -429,107 +441,29 @@ bind Text <Control-h> {
 	%W see insert
     }
 }
-if {[tk windowingsystem] ne "aqua"} {
-    bind Text <Button-2> {
-        if {!$tk_strictMotif} {
-        tk::TextScanMark %W %x %y
-        }
+bind Text <Button-2> {
+    if {!$tk_strictMotif} {
+	tk::TextScanMark %W %x %y
     }
-    bind Text <B2-Motion> {
-        if {!$tk_strictMotif} {
-        tk::TextScanDrag %W %x %y
-        }
-    }
-} else {
-    bind Text <Button-3> {
-        if {!$tk_strictMotif} {
-        tk::TextScanMark %W %x %y
-        }
-    }
-    bind Text <B3-Motion> {
-        if {!$tk_strictMotif} {
-        tk::TextScanDrag %W %x %y
-        }
+}
+bind Text <B2-Motion> {
+    if {!$tk_strictMotif} {
+	tk::TextScanDrag %W %x %y
     }
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows and MacOS X.
-# However, someone could use the "event generate" command to produce one
-# on other platforms.  We must be careful not to round -ve values of %D
-# down to zero.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <MouseWheel> {
-        %W yview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Option-MouseWheel> {
-        %W yview scroll [expr {-150 * (%D)}] pixels
-    }
-    bind Text <Shift-MouseWheel> {
-        %W xview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-150 * (%D)}] pixels
-    }
-} else {
-    # We must make sure that positive and negative movements are rounded
-    # equally to integers, avoiding the problem that
-    #     (int)1/3 = 0,
-    # but
-    #     (int)-1/3 = -1
-    # The following code ensure equal +/- behaviour.
-    bind Text <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W yview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
-    bind Text <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W xview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
+bind Text <MouseWheel> {
+    tk::MouseWheel %W y %D -4.0 pixels
 }
-
-if {[tk windowingsystem] eq "x11"} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Text <Button-4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -50 pixels
-	}
-    }
-    bind Text <Button-5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 50 pixels
-	}
-    }
-    bind Text <Shift-Button-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Shift-Button-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
-    bind Text <Button-6> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Button-7> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
+bind Text <Option-MouseWheel> {
+    tk::MouseWheel %W y %D -1.2 pixels
+}
+bind Text <Shift-MouseWheel> {
+    tk::MouseWheel %W x %D -4.0 pixels
+}
+bind Text <Shift-Option-MouseWheel> {
+    tk::MouseWheel %W x %D -1.2 pixels
 }
 
 # ::tk::TextClosestGap --

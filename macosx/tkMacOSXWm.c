@@ -5,11 +5,11 @@
  *	application and the window manager. Among other things, it implements
  *	the "wm" command and passes geometry information to the window manager.
  *
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017-2019 Marc Culler.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -241,6 +241,9 @@ static int		WmGridCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -1191,7 +1194,7 @@ Tk_WmObjCmd(
     static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget",
-	"frame", "geometry", "grid", "group",
+	"frame", "geometry", "grid", "group", "iconbadge",
 	"iconbitmap", "iconify", "iconmask", "iconname",
 	"iconphoto", "iconposition", "iconwindow",
 	"manage", "maxsize", "minsize", "overrideredirect",
@@ -1201,7 +1204,7 @@ Tk_WmObjCmd(
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET,
-	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,
+	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,  WMOPT_ICONBADGE,
 	WMOPT_ICONBITMAP, WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION, WMOPT_ICONWINDOW,
 	WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
@@ -1279,6 +1282,8 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_ICONBADGE:
+	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONIFY:
@@ -1482,7 +1487,7 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_TITLEPATH: {
-	const char *path = Tcl_FSGetNativePath(value);
+	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
 
 	if (path && *path) {
@@ -1636,7 +1641,7 @@ WmAttributesCmd(
 	    Tcl_ListObjAppendElement(NULL, result,
 		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
 	    Tcl_ListObjAppendElement(NULL, result,
-		    WmGetAttribute(winPtr, macWindow, attribute));
+		    WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
 	}
 	Tcl_SetObjResult(interp, result);
     } else if (objc == 4) {	/* wm attributes $win -attribute */
@@ -1644,7 +1649,7 @@ WmAttributesCmd(
 		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, attribute));
+	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
     } else if ((objc - 3) % 2 == 0) {	/* wm attributes $win -att value... */
 	int i;
 
@@ -1653,7 +1658,7 @@ WmAttributesCmd(
 		    sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (WmSetAttribute(winPtr, macWindow, interp, attribute, objv[i+1])
+	    if (WmSetAttribute(winPtr, macWindow, interp, (WmAttribute)attribute, objv[i+1])
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1803,7 +1808,7 @@ WmColormapwindowsCmd(
     wmPtr->cmapCount = windowObjc;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 
@@ -1942,6 +1947,8 @@ WmDeiconifyCmd(
 	}
     }
 
+    [[win contentView] setNeedsDisplay:YES];
+    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
@@ -2332,6 +2339,74 @@ WmGroupCmd(
 	wmPtr->hints.flags |= WindowGroupHint;
 	wmPtr->leaderName = (char *)ckalloc(length + 1);
 	strcpy(wmPtr->leaderName, argv3);
+    }
+    return TCL_OK;
+}
+
+ /*----------------------------------------------------------------------
+ *
+ * WmIconbadgeCmd --
+ *
+ *	This procedure is invoked to process the "wm iconbadge" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconbadgeCmd(
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    (void) winPtr;
+    NSString *label;
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv,"window badge");
+	return TCL_ERROR;
+    }
+
+    label = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
+
+    int number = [label intValue];
+    NSDockTile *dockicon = [NSApp dockTile];
+
+    /*
+     * First, check that the label is not a decimal. If it is,
+     * return an error.
+     */
+
+    if ([label containsString:@"."]) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
+	return TCL_ERROR;
+    }
+
+    /*
+     * Next, check that label is an int, empty string, or exclamation
+     * point. If so, set the icon badge on the Dock icon. Otherwise,
+     * return an error.
+     */
+
+    NSArray *array = @[@"", @"!"];
+    if ([array containsObject: label]) {
+	[dockicon setBadgeLabel:label];
+    } else if (number > 0) {
+	NSString *str = [@(number) stringValue];
+	[dockicon setBadgeLabel:str];
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use \"%s\" as icon badge", Tcl_GetString(objv[3])));
+	return TCL_ERROR;
     }
     return TCL_OK;
 }
@@ -2868,9 +2943,9 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
-    TkWindow *winPtr,           /* Toplevel or Frame to work with */
-    Tcl_Interp *interp,		/* Current interpreter. */
+    TCL_UNUSED(Tk_Window),	        /* Main window of the application. */
+    TkWindow *winPtr,           	/* Toplevel or Frame to work with */
+    Tcl_Interp *interp,			/* Current interpreter. */
     TCL_UNUSED(int),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
@@ -2888,6 +2963,18 @@ WmManageCmd(
 	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", NULL);
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * Draw the managed widget at the top left corner of its toplevel.
+	 * See [4a40c6cace].
+	 */
+
+	if (macWin) {
+	    winPtr->changes.x -= macWin->xOff;
+	    winPtr->changes.y -= macWin->yOff;
+	    XMoveWindow(winPtr->display, winPtr->window, 0, 0);
+	}
+
 	TkFocusSplit(winPtr);
 	Tk_UnmapWindow(frameWin);
 	if (wmPtr == NULL) {
@@ -3724,6 +3811,7 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &container) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	RemoveTransient(winPtr);
 	containerPtr = (TkWindow*) container;
 	while (!Tk_TopWinHierarchy(containerPtr)) {
             /*
@@ -4118,7 +4206,7 @@ TopLevelEventProc(
     ClientData clientData,	/* Window for which event occurred. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
 
     winPtr->wmInfoPtr->flags |= WM_VROOT_OFFSET_STALE;
     if (eventPtr->type == DestroyNotify) {
@@ -4204,7 +4292,7 @@ static void
 UpdateGeometryInfo(
     ClientData clientData)	/* Pointer to the window's record. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, min, max;
 
@@ -5184,7 +5272,7 @@ TkWmAddToColormapWindows(
     topPtr->wmInfoPtr->cmapCount = count+1;
 
     /*
-     * On the Macintosh all of this is just an excercise in compatability as
+     * On the Macintosh all of this is just an excercise in compatibility as
      * we don't support colormaps. If we did they would be installed here.
      */
 }
@@ -5504,12 +5592,15 @@ Tk_MacOSXGetTkWindow(
     void *w)
 {
     Window window = None;
-    TkDisplay *dispPtr = TkGetDisplayList();
     if ([(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
 	window = [(TKWindow *)w tkWindow];
     }
-    return (window != None ?
-	    Tk_IdToWindow(dispPtr->display, window) : NULL);
+    if (window) {
+	TkDisplay *dispPtr = TkGetDisplayList();
+	return Tk_IdToWindow(dispPtr->display, window);
+    } else {
+	return NULL;
+    }
 }
 
 /*
@@ -5562,8 +5653,8 @@ TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
-    NSWindow *window = whichWindow;
-    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+    NSWindow *window = (NSWindow *)whichWindow;
+    TkWindow *winPtr = (TkWindow *)TkMacOSXGetTkWindow(window);
     WmInfo *wmPtr;
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -5620,7 +5711,7 @@ TkUnsupported1ObjCmd(
     enum SubCmds {
 	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE, TKMWS_ISDARK
     };
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
     int index;
 
@@ -5913,7 +6004,14 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -5992,6 +6090,13 @@ WmWinAppearance(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
     static const char *const appearanceStrings[] = {
 	"aqua", "darkaqua", "auto", NULL
@@ -6233,6 +6338,7 @@ TkMacOSXMakeRealWindowExist(
     	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
     	ApplyContainerOverrideChanges(winPtr, NULL);
     }
+    [window display];
 }
 
 /*
@@ -6271,8 +6377,7 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view setTkNeedsDisplay:YES];
-	[view setTkDirtyRect:bounds];
+	[view addTkDirtyRect:bounds];
     }
 }
 
@@ -6405,6 +6510,19 @@ TkpWmSetState(
 
     macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
+    /*
+     * Make sure windows are updated before the state change.  As an exception,
+     * do not process idle tasks before withdrawing a window.  The purpose of
+     * this is to support the common paradigm of immediately withdrawing the
+     * root window.  Processing idle tasks before changing the state causes the
+     * root to briefly flash on the screen, which users of this paradigm find
+     * annoying.  Not processing the events does not guarantee that the window
+     * will not appear but makes it more likely.
+     */
+
+    if (state != WithdrawnState) {
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+    }
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == IconicState) {
@@ -6425,8 +6543,9 @@ TkpWmSetState(
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+
     /*
-     * Make sure windows are updated after the state change.
+     * Make sure windows are updated after the state change too.
      */
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
@@ -6679,7 +6798,7 @@ TkWmStackorderToplevel(
 	for (NSWindow *w in backToFront) {
 	    hPtr = Tcl_FindHashEntry(&table, (char*) w);
 	    if (hPtr != NULL) {
-		childWinPtr = Tcl_GetHashValue(hPtr);
+		childWinPtr = (TkWindow *)Tcl_GetHashValue(hPtr);
 		*windowPtr++ = childWinPtr;
 	    }
 	}
@@ -6839,7 +6958,7 @@ ApplyWindowAttributeFlagChanges(
 	     * after 10.10.
 	     */
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101000)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101100
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
 		/*
 		 * Exclude overrideredirect, transient, and "help"-styled
@@ -6861,11 +6980,10 @@ ApplyWindowAttributeFlagChanges(
 		     * window. To work around this we make the max size equal
 		     * to the screen size.  (For 10.11 and up, only)
 		     */
-		    if ([NSApp macOSVersion] > 101000) {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED > 101000)
+
+		    if ([NSApp macOSVersion] >= 101100) {
 			NSSize screenSize = [[macWindow screen] frame].size;
 			[macWindow setMaxFullScreenContentSize:screenSize];
-#endif
 		    }
 		}
 	    }
@@ -7005,7 +7123,7 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	if (wmPtr->container != None) {
+	if (wmPtr->container != NULL) {
 	    TkWindow *containerWinPtr = (TkWindow *)wmPtr->container;
 
 	    if (containerWinPtr && (containerWinPtr->window != None)

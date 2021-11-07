@@ -1,11 +1,11 @@
-/* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
+/* winTheme.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sf.net>
  */
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <tkWinInt.h>
+#include "tkWinInt.h"
 
 #ifndef DFCS_HOT	/* Windows 98/Me, Windows 2000/XP only */
 #define DFCS_HOT 0

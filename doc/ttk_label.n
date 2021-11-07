@@ -42,9 +42,10 @@ the text is split into lines such that no line is longer
 than the specified value.
 .SH "WIDGET COMMAND"
 .PP
-Supports the standard widget commands
-\fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
-see \fIttk::widget(n)\fR.
+Label widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
 .SH "STYLING OPTIONS"
 .PP
 The class name for a \fBttk::label\fP is \fBTLabel\fP.

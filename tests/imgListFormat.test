@@ -2,7 +2,7 @@
 # ("list format") implementend in the file tkImgListFormat.c.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 2017 Simon Bachmann
+# Copyright © 2017 Simon Bachmann
 # All rights reserved.
 #
 # Author: Simon Bachmann (simonbachmann@bluewin.ch)

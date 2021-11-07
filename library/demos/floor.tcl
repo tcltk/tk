@@ -1359,7 +1359,7 @@ $c bind floor2 <Button-1> "floorDisplay $c 2"
 $c bind floor3 <Button-1> "floorDisplay $c 3"
 $c bind room <Enter> "newRoom $c"
 $c bind room <Leave> {set currentRoom ""}
-if {[tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 8.7-]} {
     bind $c <Button-3> "$c scan mark %x %y"
     bind $c <B3-Motion> "$c scan dragto %x %y"
 } else {

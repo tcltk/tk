@@ -5,8 +5,8 @@
  *	inside text widgets. It also implements the "window" widget command
  *	for texts.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -160,7 +160,6 @@ TkTextWindowCmd(
     switch ((enum windOptions) optionIndex) {
     case WIND_CGET: {
 	TkTextIndex index;
-	TkTextSegment *ewPtr;
 	Tcl_Obj *objPtr;
 	TkTextEmbWindowClient *client;
 
@@ -201,7 +200,6 @@ TkTextWindowCmd(
     }
     case WIND_CONFIGURE: {
 	TkTextIndex index;
-	TkTextSegment *ewPtr;
 
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index ?-option value ...?");
@@ -1322,9 +1320,9 @@ EmbWinDelayedUnmap(
  *	index corresponding to the window's position in the text.
  *
  * Results:
- *	The return value is 1 if there is an embedded window by the given name
- *	in the text widget, 0 otherwise. If the window exists, *indexPtr is
- *	filled in with its index.
+ *	The return value is TCL_OK if there is an embedded window by the given
+ *	name in the text widget, TCL_ERROR otherwise. If the window exists,
+ *	*indexPtr is filled in with its index.
  *
  * Side effects:
  *	None.
@@ -1342,19 +1340,30 @@ TkTextWindowIndex(
     TkTextSegment *ewPtr;
 
     if (textPtr == NULL) {
-	return 0;
+	return TCL_ERROR;
     }
 
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->windowTable, name);
     if (hPtr == NULL) {
-	return 0;
+	return TCL_ERROR;
     }
 
     ewPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = ewPtr->body.ew.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(ewPtr, indexPtr->linePtr);
-    return 1;
+
+    /*
+     * If indexPtr refers to somewhere outside the -startline/-endline
+     * range limits of the widget, error out since the window indeed is not
+     * reachable from this text widget (it may be reachable from a peer).
+     */
+
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    return TCL_OK;
 }
 
 /*

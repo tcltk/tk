@@ -51,45 +51,26 @@ Whenever the scale is manipulated interactively, the variable will be modified
 to reflect the scale's new value.
 .SH "WIDGET COMMAND"
 .PP
-.TP
-\fIpathName \fBcget \fIoption\fR
-.
-Returns the current value of the specified \fIoption\fR; see
-\fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBconfigure \fR?\fIoption\fR? ?\fIvalue option value ...\fR?
-.
-Modify or query widget options; see \fIttk::widget(n)\fR.
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+scale widgets support the following additional commands:
 .TP
 \fIpathName \fBget \fR?\fIx y\fR?
-.
 Get the current value of the \fB\-value\fR option, or the value corresponding
 to the coordinates \fIx,y\fR if they are specified. \fIX\fR and \fIy\fR are
 pixel coordinates relative to the scale widget origin.
 .TP
-\fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fR, \fIy\fR.
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-.
-Test the widget state; see \fIttk::widget(n)\fR.
-.TP
 \fIpathName \fBset \fIvalue\fR
-.
 Set the value of the widget (i.e. the \fB\-value\fR option) to \fIvalue\fR.
 The value will be clipped to the range given by the \fB\-from\fR and
 \fB\-to\fR options. Note that setting the linked variable (i.e. the variable
 named in the \fB\-variable\fR option) does not cause such clipping.
-.TP
-\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-.
-Modify or query the widget state; see \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 .TP
 \fIpathName \fBcoords \fR?\fIvalue\fR?
-.
 Get the coordinates corresponding to \fIvalue\fR, or the coordinates
 corresponding to the current value of the \fB\-value\fR option if \fIvalue\fR
 is omitted.
@@ -99,7 +80,7 @@ The class name for a \fBttk::scale\fP is \fBTScale\fP.
 .PP
 Dynamic states: \fBactive\fP.
 .PP
-\fBTProgressbar\fP styling options configurable with \fBttk::style\fP
+\fBTScale\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
 \fB\-background\fP \fIcolor\fP

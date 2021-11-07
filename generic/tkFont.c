@@ -4,8 +4,8 @@
  *	This file maintains a database of fonts for the Tk toolkit. It also
  *	provides several utility functions for measuring and displaying text.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -733,7 +733,7 @@ Tk_FontObjCmd(
 	if (tkfont == NULL) {
 	    return TCL_ERROR;
 	}
-	string = TkGetStringFromObj(objv[3 + skip], &length);
+	string = Tcl_GetStringFromObj(objv[3 + skip], &length);
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		Tk_TextWidth(tkfont, string, length)));
 	Tk_FreeFont(tkfont);
@@ -898,6 +898,7 @@ RecomputeWidgets(
 {
     Tk_ClassWorldChangedProc *proc =
 	    Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
+    TkWindow *tkwinPtr;
 
     if (proc != NULL) {
 	proc(winPtr->instanceData);
@@ -913,18 +914,25 @@ RecomputeWidgets(
      *
      * However, the additional overhead of the recursive calls may become a
      * performance problem if typical usage alters such that -font'ed widgets
-     * appear high in the heirarchy, causing deep recursion. This could happen
-     * with text widgets, or more likely with the (not yet existant) labeled
-     * frame widget. With these widgets it is possible, even likely, that a
-     * -font'ed widget (text or labeled frame) will not be a leaf node, but
+     * appear high in the hierarchy, causing deep recursion. This could happen
+     * with text widgets, or more likely with the labelframe
+     * widget. With these widgets it is possible, even likely, that a
+     * -font'ed widget (text or labelframe) will not be a leaf node, but
      * will instead have many descendants. If this is ever found to cause a
      * performance problem, it may be worth investigating an iterative version
      * of the code below.
      */
 
-    for (winPtr=winPtr->childList ; winPtr!=NULL ; winPtr=winPtr->nextPtr) {
-	RecomputeWidgets(winPtr);
+    for (tkwinPtr=winPtr->childList ; tkwinPtr!=NULL ; tkwinPtr=tkwinPtr->nextPtr) {
+	RecomputeWidgets(tkwinPtr);
     }
+
+    /*
+     * Broadcast font change virtually for mega-widget layout managers.
+     * Do this after the font change has been propagated to core widgets.
+    */
+    Tk_SendVirtualEvent((Tk_Window)winPtr, "TkWorldChanged",
+			Tcl_NewStringObj("FontChanged",-1));
 }
 
 /*
@@ -2332,7 +2340,7 @@ Tk_DrawTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
-#if TK_DRAW_IN_CONTEXT
+#ifdef TK_DRAW_IN_CONTEXT
 	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
 		    chunkPtr->start, chunkPtr->numBytes,
 		    firstByte - chunkPtr->start, lastByte - firstByte,
@@ -2402,7 +2410,7 @@ TkDrawAngledTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
-#if TK_DRAW_IN_CONTEXT
+#ifdef TK_DRAW_IN_CONTEXT
 	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
@@ -2471,7 +2479,7 @@ Tk_UnderlineTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2498,7 +2506,7 @@ TkUnderlineAngledTextLayout(
 				 * which to draw (pixels). */
     double angle,
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2726,7 +2734,7 @@ Tk_CharBbox(
     Tk_TextLayout layout,	/* Layout information, from a previous call to
 				 * Tk_ComputeTextLayout(). */
     int index,			/* The index of the character whose bbox is
-				 * desired. */
+				 * desired. Negative means count backwards. */
     int *xPtr, int *yPtr,	/* Filled with the upper-left hand corner, in
 				 * pixels, of the bounding box for the
 				 * character specified by index, if
@@ -2744,7 +2752,12 @@ Tk_CharBbox(
     const char *end;
 
     if (index < 0) {
-	return 0;
+	for (i = 0; i < layoutPtr->numChunks; i++) {
+	    index += (chunkPtr + i)->numChars;
+	}
+	if (index < 0) {
+	    return 0;
+	}
     }
 
     tkfont = layoutPtr->tkfont;
@@ -3344,7 +3357,7 @@ Tk_TextLayoutToPostscript(
 	    sprintf(uindex, "%04X", ch);		/* endianness? */
 	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
 	    if (glyphname) {
-		ps = TkGetStringFromObj(psObj, &len);
+		ps = Tcl_GetStringFromObj(psObj, &len);
 		if (ps[len-1] == '(') {
 		    /*
 		     * In-place edit. Ewww!

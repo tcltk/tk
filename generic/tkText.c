@@ -6,9 +6,9 @@
  *	command interfaces to text widgets. The B-tree representation of text
  *	and its actual display are implemented elsewhere.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1999 by Scriptics Corporation.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -701,7 +701,7 @@ TextWidgetObjCmd(
 {
     TkText *textPtr = (TkText *)clientData;
     int result = TCL_OK;
-    int index;
+    int idx;
 
     static const char *const optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
@@ -724,12 +724,12 @@ TextWidgetObjCmd(
     }
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	    sizeof(char *), "option", 0, &idx) != TCL_OK) {
 	return TCL_ERROR;
     }
     textPtr->refCount++;
 
-    switch ((enum options) index) {
+    switch ((enum options) idx) {
     case TEXT_BBOX: {
 	int x, y, width, height;
 	const TkTextIndex *indexPtr;
@@ -865,7 +865,7 @@ TextWidgetObjCmd(
 	for (i = 2; i < objc-2; i++) {
 	    int value;
 	    TkSizeT length;
-	    const char *option = TkGetStringFromObj(objv[i], &length);
+	    const char *option = Tcl_GetStringFromObj(objv[i], &length);
 	    char c;
 
 	    if (length < 2 || option[0] != '-') {
@@ -1275,12 +1275,12 @@ TextWidgetObjCmd(
 
 	i = 2;
 	if (objc > 3) {
-	    name = TkGetStringFromObj(objv[i], &length);
+	    name = Tcl_GetStringFromObj(objv[i], &length);
 	    if (length > 1 && name[0] == '-') {
 		if (strncmp("-displaychars", name, length) == 0) {
 		    i++;
 		    visible = 1;
-		    name = TkGetStringFromObj(objv[i], &length);
+		    name = Tcl_GetStringFromObj(objv[i], &length);
 		}
 		if ((i < objc-1) && (length == 2) && !strcmp("--", name)) {
 		    i++;
@@ -2636,7 +2636,7 @@ InsertChars(
     int *lineAndByteIndex;
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
-    const char *string = TkGetStringFromObj(stringPtr, &length);
+    const char *string = Tcl_GetStringFromObj(stringPtr, &length);
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -3173,7 +3173,7 @@ DeleteIndexRange(
     line2 = TkBTreeLinesTo(textPtr, index2.linePtr);
     if (line2 == TkBTreeNumLines(sharedTextPtr->tree, textPtr)) {
 	TkTextTag **arrayPtr;
-	int arraySize, i;
+	int arraySize;
 	TkTextIndex oldIndex2;
 
 	oldIndex2 = index2;
@@ -3346,7 +3346,7 @@ DeleteIndexRange(
 		    TkTextSetYView(tPtr, &indexTmp, 0);
 		}
 	    } else {
-		TkTextMakeByteIndex(sharedTextPtr->tree, tPtr, line,
+		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line,
 			byteIndex, &indexTmp);
 		/*
 		 * line may be before -startline of tPtr and must be
@@ -3355,20 +3355,12 @@ DeleteIndexRange(
 		 * would be displayed.
 		 * There is no need to worry about -endline however,
 		 * because the view will only be reset if the deletion
-		 * involves the TOP line of the screen
+		 * involves the TOP line of the screen. That said,
+		 * the following call adjusts to both.
 		 */
 
-		if (tPtr->start != NULL) {
-		    int start;
-		    TkTextIndex indexStart;
+		TkTextIndexAdjustToStartEnd(tPtr, &indexTmp, 0);
 
-		    start = TkBTreeLinesTo(NULL, tPtr->start);
-		    TkTextMakeByteIndex(sharedTextPtr->tree, NULL, start,
-			    0, &indexStart);
-		    if (TkTextIndexCmp(&indexTmp, &indexStart) < 0) {
-			indexTmp = indexStart;
-		    }
-		}
 		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
 	}
@@ -4759,7 +4751,7 @@ TextDumpCmd(
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	str = TkGetStringFromObj(objv[arg], &length);
+	str = Tcl_GetStringFromObj(objv[arg], &length);
 	if (strncmp(str, "end", length) == 0) {
 	    atEnd = 1;
 	}
@@ -5828,7 +5820,7 @@ SearchCore(
 	 * it has dual purpose.
 	 */
 
-	pattern = TkGetStringFromObj(patObj, &matchLength);
+	pattern = Tcl_GetStringFromObj(patObj, &matchLength);
 	nl = strchr(pattern, '\n');
 
 	/*

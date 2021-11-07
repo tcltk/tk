@@ -3,7 +3,7 @@
  *
  *	This file implements the Unix specific portion of the button widgets.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -326,10 +326,8 @@ TkpDrawCheckIndicator(
 
 TkButton *
 TkpCreateButton(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    (void)tkwin;
-
     return (TkButton *)ckalloc(sizeof(UnixButton));
 }
 
@@ -807,8 +805,6 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (butPtr->highlightWidth > 0) {
-	GC gc;
-
 	if (butPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
 	} else {

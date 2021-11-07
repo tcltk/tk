@@ -87,7 +87,7 @@ typedef struct {
 
 static SystemColorDatum systemColorData[] = {
 {"Pixel",				rgbColor, 0, NULL, 0, NULL },
-{"Transparent",				clearColor,   0, NULL, 0, NULL },
+{"Transparent",			       	clearColor,   0, NULL, 0, NULL },
 
 {"Highlight",				HIBrush,  kThemeBrushPrimaryHighlightColor, NULL, 0, NULL },
 {"HighlightSecondary",		    	HIBrush,  kThemeBrushSecondaryHighlightColor, NULL, 0, NULL },
@@ -175,8 +175,10 @@ static SystemColorDatum systemColorData[] = {
 {"WindowBackgroundColor7",	    ttkBackground, 7, NULL, 0, NULL },
 /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
 {"SecondaryLabelColor",		    ttkBackground, 14, NULL, 0, NULL },
-/* Color to use for notebook tab labels -- depends on OS version. */
+/* Color to use for notebook tab label text -- depends on OS version. */
 {"SelectedTabTextColor",	    semantic, 0, "textColor", 0, NULL },
+/* Color to use for selected button labels -- depends on OS version. */
+{"PressedButtonTextColor",	    semantic, 0, "textColor", 0, NULL },
 /* Semantic colors that we simulate on older systems which don't supoort them. */
 {"SelectedMenuItemTextColor",       semantic, 0, "selectedMenuItemTextColor", 0, NULL },
 {"ControlAccentColor",		    semantic, 0, "controlAccentColor", 0, NULL },
@@ -184,7 +186,8 @@ static SystemColorDatum systemColorData[] = {
 {"LinkColor",			    semantic, 0, "blueColor", 0, NULL },
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
-{NULL,				    0, 0, NULL, 0, NULL }
+{"UnemphasizedSelectedTextBackgroundColor", semantic, 0, "grayColor", 0, NULL },
+{NULL,				    rgbColor, 0, NULL, 0, NULL }
 };
 
 #endif

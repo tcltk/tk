@@ -6,7 +6,7 @@
  *	interfaces are not guaranteed to remain the same between
  *	versions.  Use at your own risk.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  * All rights reserved.
  */
 
@@ -804,7 +804,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 
 #if !defined(_WIN32) && !defined(__CYGWIN__)
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
+	sprintf((buf), "%#lx", (unsigned long) (w))
 #endif
 
 #undef TkMacOSXSetUpClippingRgn

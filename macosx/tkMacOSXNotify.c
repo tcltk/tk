@@ -4,19 +4,46 @@
  *	This file contains the implementation of a tcl event source
  *	for the AppKit event loop.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2015 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <tclInt.h>
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
+#if TCL_MAJOR_VERSION < 9
+#undef Tcl_MacOSXNotifierAddRunLoopMode
+#ifdef USE_TCL_STUBS
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*  Little hack to eliminate the need for "tclInt.h" here:
+    Just copy a small portion of TclIntPlatStubs, just
+    enough to make it work. See [600b72bfbc] */
+typedef struct TclIntPlatStubs {
+    int magic;
+    void *hooks;
+    void (*dummy[19]) (void); /* dummy entries 0-18, not used */
+    void (*tclMacOSXNotifierAddRunLoopMode) (const void *runLoopMode); /* 19 */
+} TclIntPlatStubs;
+extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#ifdef __cplusplus
+}
+#endif
+#define Tcl_MacOSXNotifierAddRunLoopMode \
+	(tclIntPlatStubsPtr->tclMacOSXNotifierAddRunLoopMode) /* 19 */
+#elif TCL_MINOR_VERSION < 7
+    extern void TclMacOSXNotifierAddRunLoopMode(const void *runLoopMode);
+#   define Tcl_MacOSXNotifierAddRunLoopMode TclMacOSXNotifierAddRunLoopMode
+#else
+    extern void Tcl_MacOSXNotifierAddRunLoopMode(const void *runLoopMode);
+#endif
+#endif
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */
@@ -25,7 +52,7 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-#define TSD_INIT() ThreadSpecificData *tsdPtr = \
+#define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 static void TkMacOSXNotifyExitHandler(ClientData clientData);
@@ -156,7 +183,7 @@ void DebugPrintQueue(void)
      * this block should be removed.
      */
 
-# if MAC_OSX_VERSION_MAX_ALLOWED >= 101500
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
     if ([theEvent type] == NSAppKitDefined) {
 	static Bool aWindowIsMoving = NO;
 	switch([theEvent subtype]) {
@@ -269,8 +296,8 @@ Tk_MacOSXSetupTkNotifier(void)
 	    Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
 		    TkMacOSXEventsCheckProc, NULL);
 	    TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
-	    TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
-	    TclMacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
+	    Tcl_MacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
+	    Tcl_MacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
 	}
     }
 }
@@ -316,8 +343,9 @@ TkMacOSXNotifyExitHandler(
  *       for all views that need display before it returns.  We call it with
  *       deQueue=NO so that it will not change anything on the AppKit event
  *       queue, because we only want the side effect that it runs drawRect. The
- *       only time when any NSViews have the needsDisplay property set to YES
- *       is during execution of this function.
+ *       only times when any NSViews have the needsDisplay property set to YES
+ *       are during execution of this function or in the addDirtyRect method
+ *       of TKContentView.
  *
  *       The reason for running this function as an idle task is to try to
  *       arrange that all widgets will be fully configured before they are
@@ -334,7 +362,7 @@ TkMacOSXNotifyExitHandler(
  *	None.
  *
  * Side effects:
- *	Parts of windows my get redrawn.
+ *	Parts of windows may get redrawn.
  *
  *----------------------------------------------------------------------
  */
@@ -353,7 +381,8 @@ TkMacOSXDrawAllViews(
 		if (dirtyCount) {
 		   continue;
 		}
-		[view setNeedsDisplayInRect:[view tkDirtyRect]];
+		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
+		[view setNeedsDisplay:YES];
 	    }
 	} else {
 	    [window displayIfNeeded];
@@ -445,7 +474,7 @@ TkMacOSXEventsSetupProc(
 	 *
  	 * If we have any events waiting or if there is any drawing to be done
 	 * we want Tcl_WaitForEvent to return immediately.  So we set the block
-	 * time to 0 and stop the heatbeat.
+	 * time to 0 and stop the heartbeat.
   	 */
 
 	NSEvent *currentEvent =

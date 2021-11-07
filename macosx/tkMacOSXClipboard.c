@@ -3,9 +3,9 @@
  *
  *	This file manages the clipboard for the Tk toolkit.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -137,13 +137,7 @@ TkSelGetSelection(
 	    string = [pb stringForType:type];
 	}
 	if (string) {
-	    if (target == dispPtr->utf8Atom) {
-		result = proc(clientData, interp, string.UTF8String);
-	    } else if (target == XA_STRING) {
-		const char *latin1 = [string
-		    cStringUsingEncoding:NSISOLatin1StringEncoding];
-		result = proc(clientData, interp, latin1);
-	    }
+	    result = proc(clientData, interp, string.UTF8String);
 	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(

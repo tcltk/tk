@@ -1,4 +1,4 @@
-# Copyright (C) 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
+# Copyright © 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
 #
 #	Calculate a Knight's tour of a chessboard.
 #
@@ -205,10 +205,10 @@ proc CreateGUI {} {
     }
     if {[tk windowingsystem] ne "x11"} {
         catch {eval font create KnightFont -size -24}
-        $c create text 0 0 -font KnightFont -text "\u265e" \
+        $c create text 0 0 -font KnightFont -text "♞" \
             -anchor nw -tags knight -fill black -activefill "#600000"
     } else {
-        # On X11 we cannot reliably tell if the \u265e glyph is available
+        # On X11 we cannot reliably tell if the ♞ glyph is available
         # so just use a polygon
         set pts {
             2 25   24 25  21 19   20 8   14 0   10 0   0 13   0 16

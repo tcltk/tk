@@ -1,8 +1,8 @@
 /*
  *	Image specifications and image element factory.
  *
- * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
- * Copyright (C) 2004 Joe English
+ * Copyright © 2004 Pat Thoyts <patthoyts@users.sf.net>
+ * Copyright © 2004 Joe English
  *
  * An imageSpec is a multi-element list; the first element
  * is the name of the default image to use, the remainder of the
@@ -263,7 +263,7 @@ typedef struct {		/* ClientData for image elements */
     Ttk_Padding border;		/* Fixed border region */
     Ttk_Padding padding;	/* Internal padding */
 
-#if TILE_07_COMPAT
+#ifdef TILE_07_COMPAT
     Ttk_ResourceCache cache;	/* Resource cache for images */
     Ttk_StateMap imageMap;	/* State-based lookup table for images */
 #endif
@@ -273,7 +273,7 @@ static void FreeImageData(void *clientData)
 {
     ImageData *imageData = (ImageData *)clientData;
     if (imageData->imageSpec)	{ TtkFreeImageSpec(imageData->imageSpec); }
-#if TILE_07_COMPAT
+#ifdef TILE_07_COMPAT
     if (imageData->imageMap)	{ Tcl_DecrRefCount(imageData->imageMap); }
 #endif
     ckfree(clientData);
@@ -311,7 +311,7 @@ static void ImageElementDraw(
     Ttk_Box src, dst;
     (void)elementRecord;
 
-#if TILE_07_COMPAT
+#ifdef TILE_07_COMPAT
     if (imageData->imageMap) {
 	Tcl_Obj *imageObj = Ttk_StateMapLookup(NULL,imageData->imageMap,state);
 	if (imageObj) {
@@ -383,7 +383,7 @@ Ttk_CreateImageElement(
     imageData->minWidth = imageData->minHeight = -1;
     imageData->sticky = TTK_FILL_BOTH;
     imageData->border = imageData->padding = Ttk_UniformPadding(0);
-#if TILE_07_COMPAT
+#ifdef TILE_07_COMPAT
     imageData->cache = Ttk_GetResourceCache(interp);
     imageData->imageMap = 0;
 #endif
@@ -398,7 +398,7 @@ Ttk_CreateImageElement(
 	    goto error;
 	}
 
-#if TILE_07_COMPAT
+#ifdef TILE_07_COMPAT
 	if (!strcmp("-map", Tcl_GetString(objv[i]))) {
 	    imageData->imageMap = objv[i+1];
 	    Tcl_IncrRefCount(imageData->imageMap);

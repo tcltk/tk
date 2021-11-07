@@ -4,10 +4,10 @@
  *	This file contains functions that draw to windows. Many of thees
  *	functions emulate Xlib functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009 Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2014-2020 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2014-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -27,6 +27,7 @@
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_DRAWING
 #define TK_MAC_DEBUG_IMAGE_DRAWING
+#define TK_MAC_DEBUG_CG
 #endif
 */
 
@@ -513,7 +514,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon.
+ *	Draws a filled polygon using the even-odd fill algorithm,
  *
  * Results:
  *	None.
@@ -531,7 +532,7 @@ XFillPolygon(
     GC gc,			/* Use this GC. */
     XPoint *points,		/* Array of points. */
     int npoints,		/* Number of points. */
-    TCL_UNUSED(int),	/* Shape to draw. */
+    TCL_UNUSED(int),		/* Shape to draw. */
     int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *)d;
@@ -1242,6 +1243,12 @@ TkMacOSXSetupDrawingContext(
     Bool canDraw = true;
     TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
+    CGFloat drawingHeight;
+
+#ifdef TK_MAC_DEBUG_CG
+    fprintf(stderr, "TkMacOSXSetupDrawingContext: %s\n",
+	    macDraw->winPtr ? Tk_PathName(macDraw->winPtr) : "None");
+#endif
 
     /*
      * If the drawable is not a pixmap, get the associated NSView.
@@ -1273,14 +1280,10 @@ TkMacOSXSetupDrawingContext(
      */
 
     dc.context = TkMacOSXGetCGContextForDrawable(d);
-    if (dc.context) {
-	dc.portBounds = CGContextGetClipBoundingBox(dc.context);
-    } else {
+    if (!dc.context) {
 	NSRect drawingBounds, currentBounds;
-
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
-	dc.portBounds = NSRectToCGRect([view bounds]);
 	if (dc.clipRgn) {
 	    CGRect clipBounds;
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
@@ -1322,7 +1325,7 @@ TkMacOSXSetupDrawingContext(
 	 * will get redrawn in the next call to its drawRect method.
 	 */
 
-	currentBounds = CGContextGetClipBoundingBox(dc.context);
+	currentBounds = NSRectFromCGRect(CGContextGetClipBoundingBox(dc.context));
 	if (!NSContainsRect(currentBounds, drawingBounds)) {
 	    [view addTkDirtyRect:drawingBounds];
 	}
@@ -1332,18 +1335,24 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    CGAffineTransform t = {
-	.a = 1, .b = 0,
-	.c = 0, .d = -1,
-	.tx = 0,
-	.ty = dc.portBounds.size.height
-    };
+#ifdef TK_MAC_DEBUG_CG
+    fprintf(stderr, "TkMacOSXSetupDrawingContext: pushing GState for %s\n",
+	    macDraw->winPtr ? Tk_PathName(macDraw->winPtr) : "None");
+#endif
 
-    dc.portBounds.origin.x += macDraw->xOff;
-    dc.portBounds.origin.y += macDraw->yOff;
     CGContextSaveGState(dc.context);
     CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-    CGContextConcatCTM(dc.context, t);
+    { /* Restricted scope for t needed for C++ */
+	drawingHeight = view ? [view bounds].size.height :
+	    CGContextGetClipBoundingBox(dc.context).size.height;
+	CGAffineTransform t = {
+	    .a = 1, .b = 0,
+	    .c = 0, .d = -1,
+	    .tx = 0,
+	    .ty = drawingHeight
+	};
+	CGContextConcatCTM(dc.context, t);
+    }
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
@@ -1354,13 +1363,39 @@ TkMacOSXSetupDrawingContext(
 	CGContextRestoreGState(dc.context);
 #endif /* TK_MAC_DEBUG_DRAWING */
 
-	CGRect r;
-	CGRect b = CGRectApplyAffineTransform(
-	    CGContextGetClipBoundingBox(dc.context), t);
-	if (!HIShapeIsRectangular(dc.clipRgn) ||
-	    !CGRectContainsRect(*HIShapeGetBounds(dc.clipRgn, &r), b)) {
+	if (!HIShapeIsRectangular(dc.clipRgn)) {
+
+	    /*
+	     * We expect the clipping path dc.clipRgn to consist of the
+	     * bounding rectangle of the drawable window, together with
+	     * disjoint smaller rectangles inside of it which bound its
+	     * geometric children.  In that case the even-odd rule will
+	     * clip to the region inside the large rectangle and outside
+	     * of the smaller rectangles.
+	     */
+
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
+
+#ifdef TK_MAC_DEBUG_CG
+	    fprintf(stderr, "Setting complex clip for %s to:\n",
+		    macDraw->winPtr ? Tk_PathName(macDraw->winPtr) : "None");
+	    TkMacOSXPrintRectsInRegion(dc.clipRgn);
+#endif
+
 	    CGContextEOClip(dc.context);
+	} else {
+	    CGRect r;
+	    HIShapeGetBounds(dc.clipRgn, &r);
+
+#ifdef TK_MAC_DEBUG_CG
+	    fprintf(stderr, "Current clip BBox is %s\n",
+		    NSStringFromRect(CGContextGetClipBoundingBox(GET_CGCONTEXT)).UTF8String);
+	    fprintf(stderr, "Setting clip for %s to rect %s:\n",
+		    macDraw->winPtr ? Tk_PathName(macDraw->winPtr) : "None",
+		    NSStringFromRect(r).UTF8String);
+#endif
+
+	    CGContextClipToRect(dc.context, r);
 	}
     }
     if (gc) {
@@ -1380,8 +1415,8 @@ TkMacOSXSetupDrawingContext(
 
 	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
 	if (view) {
-	    CGContextSetPatternPhase(dc.context, CGSizeMake(
-	        dc.portBounds.size.width, dc.portBounds.size.height));
+	    CGSize size = NSSizeToCGSize([view bounds].size);
+	    CGContextSetPatternPhase(dc.context, size);
 	}
 	if (gc->function != GXcopy) {
 	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
@@ -1421,13 +1456,9 @@ TkMacOSXSetupDrawingContext(
 end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    if (!canDraw && win != NULL) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
-
-	if (winPtr) {
-	    fprintf(stderr, "Cannot draw in %s - postponing.\n",
-		    Tk_PathName(winPtr));
-	}
+    if (!canDraw && macDraw->winPtr != NULL) {
+	fprintf(stderr, "Cannot draw in %s - postponing.\n",
+		Tk_PathName(macDraw->winPtr));
     }
 #endif
 
@@ -1462,13 +1493,21 @@ TkMacOSXRestoreDrawingContext(
     if (dcPtr->context) {
 	CGContextSynchronize(dcPtr->context);
 	CGContextRestoreGState(dcPtr->context);
+
+#ifdef TK_MAC_DEBUG_CG
+	fprintf(stderr, "TkMacOSXRestoreDrawingContext: popped GState\n");
+#endif
+
     }
     if (dcPtr->clipRgn) {
 	CFRelease(dcPtr->clipRgn);
+	dcPtr->clipRgn = NULL;
     }
+
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
-#endif /* TK_MAC_DEBUG */
+#endif
+
 }
 
 /*

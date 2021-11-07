@@ -7,9 +7,9 @@
  *	other application). Currently only Toplevel embedding within the same
  *	Tk application is allowed on the Macintosh.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -704,7 +704,7 @@ EmbeddedEventProc(
     ClientData clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	EmbedWindowDeleted(winPtr);
@@ -739,7 +739,7 @@ ContainerEventProc(
     ClientData clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     Container *containerPtr;
     Tk_ErrorHandler errHandler;
 
@@ -847,7 +847,7 @@ EmbedStructureProc(
     ClientData clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
-    Container *containerPtr = clientData;
+    Container *containerPtr = (Container *)clientData;
     Tk_ErrorHandler errHandler;
 
     if (eventPtr->type == ConfigureNotify) {
@@ -856,7 +856,7 @@ EmbedStructureProc(
          * Send a ConfigureNotify  to the embedded application.
          */
 
-        if (containerPtr->embeddedPtr != None) {
+        if (containerPtr->embeddedPtr != NULL) {
             TkDoConfigureNotify(containerPtr->embeddedPtr);
         }
 	if (containerPtr->embedded != None) {
@@ -901,7 +901,7 @@ EmbedActivateProc(
     ClientData clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
-    Container *containerPtr = clientData;
+    Container *containerPtr = (Container *)clientData;
 
     if (containerPtr->embeddedPtr != NULL) {
 	if (eventPtr->type == ActivateNotify) {
@@ -936,7 +936,7 @@ EmbedFocusProc(
     ClientData clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
-    Container *containerPtr = clientData;
+    Container *containerPtr = (Container *)clientData;
     Display *display;
     XEvent event;
 
@@ -1082,6 +1082,9 @@ EmbedWindowDeleted(
     prevPtr = NULL;
     containerPtr = firstContainerPtr;
     while (1) {
+	if (containerPtr == NULL) {
+	    return;
+	}
 	if (containerPtr->embeddedPtr == winPtr) {
 	    /*
 	     * We also have to destroy our parent, to clean up the container.

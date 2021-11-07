@@ -4,8 +4,8 @@
  *	This file contains the functions that implement marks for text
  *	widgets.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -133,7 +133,7 @@ TkTextMarkCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "markName ?gravity?");
 	    return TCL_ERROR;
 	}
-	str = TkGetStringFromObj(objv[3], &length);
+	str = Tcl_GetStringFromObj(objv[3], &length);
 	if (length == 6 && !strcmp(str, "insert")) {
 	    markPtr = textPtr->insertMarkPtr;
 	} else if (length == 7 && !strcmp(str, "current")) {
@@ -160,7 +160,7 @@ TkTextMarkCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
 	    return TCL_OK;
 	}
-	str = TkGetStringFromObj(objv[4],&length);
+	str = Tcl_GetStringFromObj(objv[4],&length);
 	c = str[0];
 	if ((c == 'l') && (strncmp(str, "left", length) == 0)) {
 	    newTypePtr = &tkTextLeftMarkType;
@@ -434,8 +434,6 @@ TkTextMarkNameToIndex(
     TkTextIndex *indexPtr)	/* Index information gets stored here. */
 {
     TkTextSegment *segPtr;
-    TkTextIndex index;
-    int start, end;
 
     if (textPtr == NULL) {
         return TCL_ERROR;
@@ -456,28 +454,17 @@ TkTextMarkNameToIndex(
     }
     TkTextMarkSegToIndex(textPtr, segPtr, indexPtr);
 
-    /* If indexPtr refers to somewhere outside the -startline/-endline
+    /*
+     * If indexPtr refers to somewhere outside the -startline/-endline
      * range limits of the widget, error out since the mark indeed is not
      * reachable from this text widget (it may be reachable from a peer)
      * (bug 1630271).
      */
 
-    if (textPtr->start != NULL) {
-	start = TkBTreeLinesTo(NULL, textPtr->start);
-	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-		&index);
-	if (TkTextIndexCmp(indexPtr, &index) < 0) {
-	    return TCL_ERROR;
-	}
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+	return TCL_ERROR;
     }
-    if (textPtr->end != NULL) {
-	end = TkBTreeLinesTo(NULL, textPtr->end);
-	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
-		&index);
-	if (TkTextIndexCmp(indexPtr, &index) > 0) {
-	    return TCL_ERROR;
-	}
-    }
+
     return TCL_OK;
 }
 

@@ -5,8 +5,8 @@
  *	equivalent to functions in Xlib (and even invoke them) but also
  *	maintain the local Tk_Window structure.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -93,6 +93,7 @@ static const XSetWindowAttributes defAtts= {
 #define PASSMAINWINDOW 2
 #define WINMACONLY 4
 #define USEINITPROC 8
+#define SAVEUPDATECMD 16 /* better only be one of these! */
 
 typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
 typedef struct {
@@ -126,7 +127,7 @@ static const TkCmd commands[] = {
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
     {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
-    {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE},
+    {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE|SAVEUPDATECMD},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"wm",		Tk_WmObjCmd,		PASSMAINWINDOW},
 
@@ -334,9 +335,9 @@ CreateTopLevelWindow(
 	 * Create built-in photo image formats.
 	 */
 
-        Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
-	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
-	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
+	Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtGIF);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
 	Tk_CreatePhotoImageFormat(&tkImgFmtSVGnano);
     }
@@ -876,6 +877,7 @@ TkCreateMainWindow(
     Tcl_InitHashTable(&mainPtr->imageTable, TCL_STRING_KEYS);
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
+    mainPtr->tclUpdateObjProc = NULL;
     if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
@@ -915,12 +917,14 @@ TkCreateMainWindow(
 
     isSafe = Tcl_IsSafe(interp);
     for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
+	Tcl_CmdInfo cmdInfo;
+
 	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
-	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
+	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->tcl_CreateFileHandler) {
 	    /*
 	     * We are running on Cygwin, so don't use the win32 dialogs.
 	     */
@@ -933,6 +937,11 @@ TkCreateMainWindow(
 	    clientData = tkwin;
 	} else {
 	    clientData = NULL;
+	}
+	if ((cmdPtr->flags & SAVEUPDATECMD) &&
+	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
+	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
+	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -1268,7 +1277,7 @@ Tk_DestroyWindow(
 
     /*
      * Some cleanup needs to be done immediately, rather than later, because
-     * it needs information that will be destoyed before we get to the main
+     * it needs information that will be destroyed before we get to the main
      * cleanup point. For example, TkFocusDeadWindow needs to access the
      * parentPtr field from a window, but if a Destroy event handler deletes
      * the window's parent this field will be NULL before the main cleanup
@@ -1496,10 +1505,20 @@ Tk_DestroyWindow(
 	     */
 
 	    if ((winPtr->mainPtr->interp != NULL) &&
-		    !Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
+		!Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-		    Tcl_CreateObjCommand(winPtr->mainPtr->interp, cmdPtr->name,
-			    TkDeadAppObjCmd, NULL, NULL);
+		    if ((cmdPtr->flags & SAVEUPDATECMD) &&
+			winPtr->mainPtr->tclUpdateObjProc != NULL) {
+			/* Restore Tcl's version of [update] */
+			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+					     cmdPtr->name,
+					     winPtr->mainPtr->tclUpdateObjProc,
+					     NULL, NULL);
+		    } else {
+			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+					     cmdPtr->name, TkDeadAppObjCmd,
+					     NULL, NULL);
+		    }
 		}
 		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
 			TkDeadAppObjCmd, NULL, NULL);
@@ -3201,7 +3220,7 @@ Initialize(
 
     {
 	TkSizeT numBytes;
-	const char *bytes = TkGetStringFromObj(nameObj, &numBytes);
+	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
 
@@ -3283,10 +3302,14 @@ Initialize(
     }
 
     /*
-     * Provide Tk and its stub table.
+     * Provide "tk" and its stub table.
      */
 
-    code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
+#ifndef TK_NO_DEPRECATED
+    Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
+	    (ClientData) &tkStubs);
+#endif
+    code = Tcl_PkgProvideEx(interp, "tk", TK_PATCH_LEVEL,
 	    (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
@@ -3381,7 +3404,7 @@ Tk_PkgInitStubsCheck(
     const char * version,
     int exact)
 {
-    const char *actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0, NULL);
+    const char *actualVersion = Tcl_PkgRequireEx(interp, "tk", version, 0, NULL);
 
     if (exact && actualVersion) {
 	const char *p = version;
@@ -3393,11 +3416,11 @@ Tk_PkgInitStubsCheck(
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
 		/* Construct error message */
-		Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
+		Tcl_PkgPresentEx(interp, "tk", version, 1, NULL);
 		return NULL;
 	    }
 	} else {
-	    return Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
+	    return Tcl_PkgPresentEx(interp, "tk", version, 1, NULL);
 	}
     }
     return actualVersion;

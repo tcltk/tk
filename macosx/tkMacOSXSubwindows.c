@@ -3,9 +3,9 @@
  *
  *	Implements subwindows for the macintosh version of Tk.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -14,6 +14,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXWm.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -104,7 +105,7 @@ XDestroyWindow(
     macWin->view = nil;
 
     /*
-     * Delay deletion of a toplevel data structure untill all children have
+     * Delay deletion of a toplevel data structure until all children have
      * been deleted.
      */
 
@@ -357,15 +358,19 @@ XResizeWindow(
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
+	TKWindow *w = (TKWindow *)macWin->winPtr->wmInfoPtr->window;
 
 	if (w) {
-	    NSRect r = [w contentRectForFrameRect:[w frame]];
+	    if ([w styleMask] & NSFullScreenWindowMask) {
+		[w tkLayoutChanged];
+	    } else {
+		NSRect r = [w contentRectForFrameRect:[w frame]];
 
-	    r.origin.y += r.size.height - height;
-	    r.size.width = width;
-	    r.size.height = height;
-	    [w setFrame:[w frameRectForContentRect:r] display:YES];
+		r.origin.y += r.size.height - height;
+		r.size.width = width;
+		r.size.height = height;
+		[w setFrame:[w frameRectForContentRect:r] display:NO];
+	    }
 	}
     } else {
 	MoveResizeWindow(macWin);
@@ -421,7 +426,7 @@ XMoveResizeWindow(
 		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
 	    	    Width, Height);
 
-	    [w setFrame:[w frameRectForContentRect:r] display:YES];
+	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
     } else {
 	MoveResizeWindow(macWin);
@@ -968,7 +973,7 @@ InvalViewRect(
     void *ref)
 {
     static CGAffineTransform t;
-    TKContentView *view = ref;
+    TKContentView *view = (TKContentView *)ref;
     NSRect dirtyRect;
 
     if (!view) {
@@ -1430,12 +1435,16 @@ Tk_FreePixmap(
 
     display->request++;
     if (macPix->context) {
-	char *data = CGBitmapContextGetData(macPix->context);
+	char *data = (char *)CGBitmapContextGetData(macPix->context);
 
 	if (data) {
 	    ckfree(data);
 	}
-	CFRelease(macPix->context);
+	/*
+	 * Releasing the context here causes a crash in the 8.7 regression
+	 * tests, but not in 8.6.
+	 *	CFRelease(macPix->context);
+	 */
     }
     ckfree(macPix);
 }

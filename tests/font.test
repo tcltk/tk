@@ -2,8 +2,8 @@
 # plus the procedures in tkFont.c.  It is organized in the
 # standard white-box fashion for Tcl tests.
 #
-# Copyright (c) 1996-1998 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996-1998 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -14,7 +14,7 @@ tcltest::loadTestedCommands
 # Some tests require support for 4-byte UTF-8 sequences
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
 testConstraint utfcompat [expr {([string length "\U10000"] == 2) && [package vsatisfies [package provide Tcl] 8]}]
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 set defaultfontlist [font names]
@@ -151,16 +151,16 @@ test font-4.11 {font command: bad option} -body {
     font actual xyz -style
 } -returnCodes error -result {bad option "-style": must be -family, -size, -weight, -slant, -underline, or -overstrike}
 test font-4.12 {font command: actual} -body {
-    font actual {-family times} -- \ud800
+    font actual {-family times} -- \uD800
 } -match glob -result {*}
 test font-4.13 {font command: actual} -body {
-    font actual {-family times} -- \udc00
+    font actual {-family times} -- \uDC00
 } -match glob -result {*}
 test font-4.14 {font command: actual} -constraints {utfcompat win} -body {
     font actual {-family times} -family -- \uD800\uDC00
 } -result {times}
 test font-4.15 {font command: actual} -body {
-    font actual {-family times} -- \udc00\ud800
+    font actual {-family times} -- \uDC00\uD800
 } -returnCodes 1 -match glob -result {expected a single character but got "*"}
 test font-4.16 {font command: actual} -constraints {fullutf win} -body {
     font actual {-family times} -family -- \U10000
@@ -523,16 +523,16 @@ test font-12.2 {UpdateDependantFonts procedure: pings the widgets} -setup {
     destroy .t.f
     catch {font delete xyz}
     pack [label .t.f]
-    update
+    update idletasks
 } -body {
     font create xyz -family times -size 20
     .t.f config -font xyz -text "abcd" -padx 0 -bd 0 -highlightthickness 0
     set a1 [font measure xyz "abcd"]
-    update
+    update idletasks
     set b1 [winfo reqwidth .t.f]
     font configure xyz -family helvetica -size 20
     set a2 [font measure xyz "abcd"]
-    update
+    update idletasks
     set b2 [winfo reqwidth .t.f]
     expr {$a1==$b1 && $a2==$b2}
 } -cleanup {
@@ -1683,14 +1683,14 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
-    .t.f config -text "foo" -underline -1
+    .t.f config -text "foo" -underline {}
 } -result {}
 test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 10
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -underline -1
+    .t.f config -wrap -1 -underline {}
 } -result {}
 destroy .t.f
 
@@ -1765,7 +1765,7 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-29.1 {Tk_CharBBox procedure: index < 0} -body {
-    .t.f config -text "000" -underline -1
+    .t.f config -text "000" -underline {}
 } -result {}
 test font-29.2 {Tk_CharBBox procedure: loop} -body {
     .t.f config -text "000\t000\t000\t000" -underline 9
@@ -2340,7 +2340,7 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntuNoXft -setup {
+test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5
@@ -2364,7 +2364,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
 } -result {times}
-test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed} -body {
+test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed failsOnUbuntu} -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
         # avoid test failure on systems that have a real "times new roman" font
         set res 1
@@ -2407,6 +2407,147 @@ test font-47.1 {Bug f214b8ad5b} -body {
     interp delete one
     interp delete two
 } -result {}
+
+test font-47.2 {Bug 3049518 - Canvas} -body {
+    if {"MyFont" ni [font names]} {
+	font create MyFont -family "Liberation Sans" -size 13
+    }
+    set text Hello!
+    destroy .t.c
+    set c [canvas .t.c]
+    set textid [$c create text 20 20 -font MyFont -text $text -anchor nw]
+    set twidth [font measure MyFont $text]
+    set theight [font metrics MyFont -linespace]
+    set circid [$c create polygon \
+		    15                    15 \
+		    [expr {15 + $twidth}] 15 \
+		    [expr {15 + $twidth}] [expr {15 + $theight}] \
+		    15                    [expr {15 + $theight}] \
+		    -width 1 -joinstyle round -smooth true -fill {} -outline blue]
+    pack $c -fill both -expand 1 -side top
+    tkwait visibility $c
+
+    # Lamda test functions
+    set circle_text {{w user_data text circ} {
+	if {[winfo class $w] ne "Canvas"} {
+	    puts "Wrong widget type: $w"
+	    return
+	}
+	if {$user_data ne "FontChanged"} {
+	    return
+	}
+	lappend ::results called-$w
+	lassign [$w bbox $text] x0 y0 x1 y1
+	set offset 5
+	set coord [lmap expr {
+			      $x0-5 $y0-5   $x1+5 $y0-5
+			      $x1+5 $y1+5   $x0-5 $y1+5
+			  } {expr $expr}]
+	if {[catch {$w coord $circ $coord} err]} {
+	    puts Error:$err
+	}
+    }}
+    set waitfor {{tag {time 333}} {after $time incr ::wait4; vwait ::wait4}}
+    set enclosed {{can id} {$can find enclosed {*}[$can bbox $id]}}
+
+    set results {}
+    apply $circle_text $c FontChanged $textid $circid
+    bind $c <<TkWorldChanged>> [list apply $circle_text %W %d $textid $circid]
+    apply $waitfor 1
+
+    # Begin test:
+    set results {}
+    lappend results [apply $enclosed $c $circid]
+    font configure MyFont -size 26
+    apply $waitfor 2
+    lappend results [apply $enclosed $c $circid]
+    font configure MyFont -size 9
+    apply $waitfor 3
+    lappend results [apply $enclosed $c $circid]
+    apply $waitfor 4
+    font configure MyFont -size 12
+    apply $waitfor 5
+    lappend results [apply $enclosed $c $circid]
+} -cleanup {
+    destroy $c
+    unset -nocomplain ::results
+} -result {{1 2} called-.t.c {1 2} called-.t.c {1 2} called-.t.c {1 2}}
+
+test font-47.3 {Bug 3049518 - Label} -body {
+    if {"MyFont" ni [font names]} {
+	font create MyFont -family "Liberation Sans" -size 13
+    }
+    set text "Label Test"
+    destroy .t.l
+
+    set make-img {{size} {
+	set img [image create photo -width $size -height $size]
+	$img blank
+	set max [expr {$size - 1}]
+	for {set x 0} {$x < $size} {incr x} {
+	    $img put red -to $x $x
+	    $img put black -to 0 $x
+	    $img put black -to $x 0
+	    $img put black -to $max $x
+	    $img put black -to $x $max
+	}
+	return $img
+    }}
+
+    set testWorldChanged {{w user_data} {
+	global make-img
+	if {$user_data ne "FontChanged"} {
+	    return
+	}
+	if {![winfo exists $w] || [winfo class $w] ne "Label"} {
+	    return
+	}
+	if {[$w cget -image] ne ""} {
+	    image delete [$w cget -image]
+	}
+	set size [font metrics [$w cget -font] -linespace]
+	set img [apply ${make-img} $size]
+	$w configure -image $img
+    }}
+
+    set waitfor {{tag {time 500}} {
+	after $time incr ::wait4
+	vwait ::wait4
+    }}
+
+    set check {{w} {
+	global results
+	set f [$w cget -font]
+	set i [$w cget -image]
+	set fs [font metrics $f -linespace]
+	set ish [image height $i]
+	set isw [image width $i]
+	lappend results [list [expr {$fs == $ish ? 1 : [list $fs $ish]}] [expr {$fs == $isw ? 1 : [list $fs $isw]}]]
+    }}
+
+    set size [font metrics MyFont -linespace]
+    set img [apply ${make-img} $size]
+    set l [label .t.l -compound left -image $img -text $text -font MyFont]
+    pack $l -side top -fill both -expand 1
+    bind $l <<TkWorldChanged>> [list apply $testWorldChanged %W %d]
+    set ::results {}
+
+    apply $waitfor 0
+    apply $check $l
+    font configure MyFont -size 26
+    apply $waitfor 1
+    apply $check $l
+    font configure MyFont -size 9
+    apply $waitfor 2
+    apply $check $l
+    font configure MyFont -size 13
+    apply $waitfor 3
+    apply $check $l
+    set results
+} -cleanup {
+    destroy $l
+    unset -nocomplain ::results
+} -result {{1 1} {1 1} {1 1} {1 1}}
 
 # cleanup
 cleanupTests

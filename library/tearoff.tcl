@@ -2,8 +2,8 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -135,7 +135,7 @@ proc ::tk::MenuDup {src dst type} {
     }
     eval $cmd
     set last [$src index last]
-    if {$last eq "none"} {
+    if {$last < 0} {
 	return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {

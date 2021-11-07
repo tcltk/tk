@@ -13,7 +13,7 @@
  * In other words the Send methods takes a string and evaluates this in the
  * Tcl interpreter. The result is returned as another string.
  *
- * Copyright (C) 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -432,7 +432,7 @@ Async(
 
 static HRESULT
 Send(
-    TkWinSendCom *obj,
+    TkWinSendCom *comobj,
     VARIANT vCmd,
     VARIANT *pvResult,
     EXCEPINFO *pExcepInfo,
@@ -441,7 +441,7 @@ Send(
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
-    Tcl_Interp *interp = obj->interp;
+    Tcl_Interp *interp = comobj->interp;
     Tcl_Obj *scriptPtr;
     Tcl_DString ds;
     (void)puArgErr;

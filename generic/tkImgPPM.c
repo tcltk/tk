@@ -3,8 +3,8 @@
  *
  *	A photo image file handler for PPM (Portable PixMap) files.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -94,18 +94,15 @@ static int		ReadPPMStringHeader(Tcl_Obj *dataObj, int *widthPtr,
 static int
 FileMatchPPM(
     Tcl_Channel chan,		/* The image file, open for reading. */
-    const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format string, or NULL. */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw PPM
 				 * file. */
-    Tcl_Interp *interp)		/* unused */
+    TCL_UNUSED(Tcl_Interp *))		/* unused */
 {
     int dummy;
-    (void)fileName;
-    (void)format;
-    (void)interp;
 
     return ReadPPMFileHeader(chan, widthPtr, heightPtr, &dummy);
 }
@@ -134,7 +131,7 @@ FileReadPPM(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format string, or NULL. */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -148,7 +145,6 @@ FileReadPPM(
     size_t nBytes, count;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
-    (void)format;
 
     type = ReadPPMFileHeader(chan, &fileWidth, &fileHeight, &maxIntensity);
     if (type == 0) {
@@ -205,7 +201,7 @@ FileReadPPM(
     }
 
     if (srcY > 0) {
-	Tcl_Seek(chan, (Tcl_WideInt)(srcY * block.pitch), SEEK_CUR);
+	Tcl_Seek(chan, (long long)srcY * block.pitch, SEEK_CUR);
     }
 
     nLines = (MAX_MEMORY + block.pitch - 1) / block.pitch;
@@ -286,7 +282,7 @@ static int
 FileWritePPM(
     Tcl_Interp *interp,
     const char *fileName,
-    Tcl_Obj *format,
+    TCL_UNUSED(Tcl_Obj *),
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
@@ -294,7 +290,6 @@ FileWritePPM(
     size_t nBytes;
     unsigned char *pixelPtr, *pixLinePtr;
     char header[16 + TCL_INTEGER_SPACE * 2];
-    (void)format;
 
     chan = Tcl_OpenFileChannel(interp, fileName, "w", 0666);
     if (chan == NULL) {
@@ -375,14 +370,13 @@ FileWritePPM(
 static int
 StringWritePPM(
     Tcl_Interp *interp,
-    Tcl_Obj *format,
+    TCL_UNUSED(Tcl_Obj *),
     Tk_PhotoImageBlock *blockPtr)
 {
     int w, h, size, greenOffset, blueOffset;
     unsigned char *pixLinePtr, *byteArray;
     char header[16 + TCL_INTEGER_SPACE * 2];
     Tcl_Obj *byteArrayObj;
-    (void)format;
 
     sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
 
@@ -452,16 +446,14 @@ StringWritePPM(
 static int
 StringMatchPPM(
     Tcl_Obj *dataObj,		/* The image data. */
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format string, or NULL. */
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw PPM
 				 * file. */
-    Tcl_Interp *interp)		/* unused */
+    TCL_UNUSED(Tcl_Interp *))		/* unused */
 {
     int dummy;
-    (void)format;
-    (void)interp;
 
     return ReadPPMStringHeader(dataObj, widthPtr, heightPtr,
 	    &dummy, NULL, NULL);
@@ -489,7 +481,7 @@ static int
 StringReadPPM(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *dataObj,		/* The image data. */
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),		/* User-specified format string, or NULL. */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -502,7 +494,6 @@ StringReadPPM(
     int nLines, nBytes, h, type, count, dataSize, bytesPerChannel = 1;
     unsigned char *pixelPtr, *dataBuffer;
     Tk_PhotoImageBlock block;
-    (void)format;
 
     type = ReadPPMStringHeader(dataObj, &fileWidth, &fileHeight,
 	    &maxIntensity, &dataBuffer, &dataSize);
@@ -611,7 +602,6 @@ StringReadPPM(
 		*p = (((int) *dataBuffer) * 255)/maxIntensity;
 	    }
 	} else {
-	    unsigned char *p;
 	    unsigned int value;
 
 	    for (p = pixelPtr,count=nBytes; count > 1; count-=2, p += 2) {
@@ -777,7 +767,7 @@ ReadPPMStringHeader(
     TkSizeT dataSize;
     unsigned char *dataBuffer;
 
-    dataBuffer = TkGetByteArrayFromObj(dataPtr, &dataSize);
+    dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
 
     /*
      * Read 4 space-separated fields from the string, ignoring comments (any

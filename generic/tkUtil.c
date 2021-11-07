@@ -4,8 +4,8 @@
  *	This file contains miscellaneous utility functions that are used by
  *	the rest of Tk, such as a function for drawing a focus highlight.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -664,6 +664,7 @@ Tk_GetScrollInfo(
 	return TK_SCROLL_MOVETO;
     } else if ((c == 's')
 	    && (strncmp(argv[2], "scroll", length) == 0)) {
+	double d;
 	if (argc != 5) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
@@ -671,9 +672,10 @@ Tk_GetScrollInfo(
 	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
-	if (Tcl_GetInt(interp, argv[3], intPtr) != TCL_OK) {
+	if (Tcl_GetDouble(interp, argv[3], &d) != TCL_OK) {
 	    return TK_SCROLL_ERROR;
 	}
+	*intPtr = (d > 0) ? ceil(d) : floor(d);
 	length = strlen(argv[4]);
 	c = argv[4][0];
 	if ((c == 'p') && (strncmp(argv[4], "pages", length) == 0)) {
@@ -729,7 +731,7 @@ Tk_GetScrollInfoObj(
 				 * scroll, if any. */
 {
     TkSizeT length;
-    const char *arg = TkGetStringFromObj(objv[2], &length);
+    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
 
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
@@ -744,15 +746,20 @@ Tk_GetScrollInfoObj(
 	}
 	return TK_SCROLL_MOVETO;
     } else if (ArgPfxEq("scroll")) {
+	double d;
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number pages|units");
 	    return TK_SCROLL_ERROR;
 	}
-	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
 	    return TK_SCROLL_ERROR;
 	}
+	*intPtr = (d >= 0) ? ceil(d) : floor(d);
+	if (dblPtr) {
+	    *dblPtr = d;
+	}
 
-	arg = TkGetStringFromObj(objv[4], &length);
+	arg = Tcl_GetStringFromObj(objv[4], &length);
 	if (ArgPfxEq("pages")) {
 	    return TK_SCROLL_PAGES;
 	} else if (ArgPfxEq("units")) {
@@ -1185,11 +1192,13 @@ Tk_SendVirtualEvent(
     event.general.xany.display = Tk_Display(target);
     event.virt.name = Tk_GetUid(eventName);
     event.virt.user_data = detail;
+    if (detail) Tcl_IncrRefCount(detail); // Event code will DecrRefCount
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
-#if TCL_UTF_MAX <= 4
+/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
+#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
 /*
  *---------------------------------------------------------------------------
  *
@@ -1218,15 +1227,10 @@ TkUtfToUniChar(
     Tcl_UniChar uniChar = 0;
 
     size_t len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((sizeof(Tcl_UniChar) == 2)
-	    && ((uniChar & 0xFC00) == 0xD800)
-#if TCL_MAJOR_VERSION > 8
-	    && (len == 1)
-#endif
-	) {
+    if ((uniChar & 0xFC00) == 0xD800) {
 	Tcl_UniChar low = uniChar;
-	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
-	 * or when a high surrogate character is detected in UTF-8 form */
+	/* This can only happen if sizeof(Tcl_UniChar)== 2 and src points
+	 * to a character > U+FFFF  */
 	size_t len2 = Tcl_UtfToUniChar(src+len, &low);
 	if ((low & 0xFC00) == 0xDC00) {
 	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
@@ -1258,7 +1262,7 @@ TkUtfToUniChar(
 
 size_t TkUniCharToUtf(int ch, char *buf)
 {
-    if ((sizeof(Tcl_UniChar) == 2) && (((unsigned)(ch - 0x10000) <= 0xFFFFF))) {
+    if ((unsigned)(ch - 0x10000) <= 0xFFFFF) {
 	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
 	 * version and/or TCL_UTF_MAX build value */
 	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
@@ -1266,58 +1270,7 @@ size_t TkUniCharToUtf(int ch, char *buf)
     }
     return Tcl_UniCharToUtf(ch, buf);
 }
-/*
- *---------------------------------------------------------------------------
- *
- * TkUtfPrev --
- *
- *	Almost the same as Tcl_UtfPrev.
- *	This function is capable of jumping over a upper/lower surrogate pair.
- *	So, might jump back up to 6 bytes.
- *
- * Results:
- *	pointer to the first byte of the current UTF-8 character. A surrogate
- *	pair is also handled as being a single entity.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-const char *
-TkUtfPrev(
-    const char *src,	/* The UTF-8 string. */
-    const char *start)		/* Start position of string */
-{
-    const char *p = Tcl_UtfPrev(src, start);
-    const char *first = Tcl_UtfPrev(p, start);
-    int ch;
-
-#if TCL_UTF_MAX == 3
-    if ((src - start > 3) && ((src[-1] & 0xC0) == 0x80) && ((src[-2] & 0xC0) == 0x80)
-	    && ((src[-3] & 0xC0) == 0x80) && (UCHAR(src[-4]) >= 0xF0)) {
-	return src - 4;
-    }
 #endif
-
-    return (first + TkUtfToUniChar(first, &ch) >= src) ? first : p ;
-}
-
-#endif
-
-#if TCL_MAJOR_VERSION > 8
-unsigned char *
-TkGetByteArrayFromObj(
-	Tcl_Obj *objPtr,
-	size_t *lengthPtr
-) {
-    unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, NULL);
-    *lengthPtr = *(size_t *) objPtr->internalRep.twoPtrValue.ptr1;
-    return result;
-}
-#endif /* TCL_MAJOR_VERSION > 8 */
-
 /*
  * Local Variables:
  * mode: c

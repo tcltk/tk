@@ -4,8 +4,8 @@
  *	This file maintains a database of read-only graphics contexts for the
  *	Tk toolkit, in order to allow GC's to be shared.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

@@ -5,8 +5,8 @@
  * 	collection of data buffers that will be supplied on demand to
  * 	requesting applications.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -454,7 +454,7 @@ Tk_ClipboardObjCmd(
 	TkSizeT length;
 
 	for (i = 2; i < objc - 1; i++) {
-	    string = TkGetStringFromObj(objv[i], &length);
+	    string = Tcl_GetStringFromObj(objv[i], &length);
 	    if (string[0] != '-') {
 		break;
 	    }
@@ -709,7 +709,13 @@ ClipboardGetProc(
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    Tcl_DStringAppend((Tcl_DString *)clientData, portion, -1);
+    Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
+    Tcl_DString ds;
+
+    Tcl_ExternalToUtfDString(utf8, portion, -1, &ds);
+    Tcl_DStringAppend((Tcl_DString *) clientData, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
+    Tcl_FreeEncoding(utf8);
     return TCL_OK;
 }
 

@@ -5,8 +5,8 @@
  *	toolkit. The widgets implemented include buttons, checkbuttons,
  *	radiobuttons, and labels.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -104,8 +104,13 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, TCL_INDEX_NONE, offsetof(TkButton, tkfont), 0, 0, 0},
+#ifdef DEF_LABEL_FG
+    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
+	DEF_LABEL_FG, -1, Tk_Offset(TkButton, normalFg), 0, 0, 0},
+#else
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_BUTTON_FG, TCL_INDEX_NONE, offsetof(TkButton, normalFg), 0, 0, 0},
+#endif
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, offsetof(TkButton, heightPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -143,8 +148,8 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_BUTTON_TEXT_VARIABLE, offsetof(TkButton, textVarNamePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	DEF_BUTTON_UNDERLINE, TCL_INDEX_NONE, offsetof(TkButton, underline), 0, 0, 0},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(TkButton, underline), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
 	DEF_BUTTON_WIDTH, offsetof(TkButton, widthPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
@@ -244,8 +249,8 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_BUTTON_TEXT_VARIABLE, offsetof(TkButton, textVarNamePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	DEF_BUTTON_UNDERLINE, TCL_INDEX_NONE, offsetof(TkButton, underline), 0, 0, 0},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(TkButton, underline), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
 	DEF_BUTTON_WIDTH, offsetof(TkButton, widthPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
@@ -354,8 +359,8 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tristatevalue", "tristateValue", "TristateValue",
 	DEF_BUTTON_TRISTATE_VALUE, offsetof(TkButton, tristateValuePtr), TCL_INDEX_NONE, 0, 0, 0},
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	DEF_BUTTON_UNDERLINE, TCL_INDEX_NONE, offsetof(TkButton, underline), 0, 0, 0},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(TkButton, underline), 0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
 	DEF_CHECKBUTTON_VARIABLE, offsetof(TkButton, selVarNamePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -464,8 +469,8 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tristatevalue", "tristateValue", "TristateValue",
 	DEF_BUTTON_TRISTATE_VALUE, offsetof(TkButton, tristateValuePtr), TCL_INDEX_NONE, 0, 0, 0},
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	DEF_BUTTON_UNDERLINE, TCL_INDEX_NONE, offsetof(TkButton, underline), 0, 0, 0},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(TkButton, underline), 0},
     {TK_OPTION_STRING, "-value", "value", "Value",
 	DEF_BUTTON_VALUE, offsetof(TkButton, onValuePtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
@@ -687,7 +692,7 @@ ButtonCreate(
     butPtr->type = type;
     butPtr->optionTable = optionTable;
     butPtr->textPtr = NULL;
-    butPtr->underline = -1;
+    butPtr->underline = INT_MIN;
     butPtr->textVarNamePtr = NULL;
     butPtr->bitmap = None;
     butPtr->imagePtr = NULL;
