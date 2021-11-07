@@ -5,10 +5,10 @@
  *	images are stored in full color (32 bits per pixel including alpha
  *	channel) and displayed using dithering if necessary.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002-2008 Donal K. Fellows
- * Copyright (c) 2003 ActiveState Corporation.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2002-2008 Donal K. Fellows
+ * Copyright © 2003 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -38,13 +38,13 @@ extern int		_XInitImageFuncPtrs(XImage *image);
  * Forward declarations
  */
 
-#ifndef TKPUTIMAGE_CAN_BLEND
+#ifndef TK_CAN_RENDER_RGBA
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 			    int xOffset, int yOffset, int width, int height);
 #endif
 static int		IsValidPalette(PhotoInstance *instancePtr,
 			    const char *palette);
-static int		CountBits(pixel mask);
+static int		CountBits(unsigned mask);
 static void		GetColorTable(PhotoInstance *instancePtr);
 static void		FreeColorTable(ColorTable *colorPtr, int force);
 static void		AllocateColors(ColorTable *colorPtr);
@@ -416,7 +416,7 @@ TkImgPhotoGet(
  *
  *----------------------------------------------------------------------
  */
-#ifndef TKPUTIMAGE_CAN_BLEND
+#ifndef TK_CAN_RENDER_RGBA
 #ifndef _WIN32
 #define GetRValue(rgb)	(UCHAR(((rgb) & red_mask) >> red_shift))
 #define GetGValue(rgb)	(UCHAR(((rgb) & green_mask) >> green_shift))
@@ -582,7 +582,7 @@ BlendComplexAlpha(
     }
 #undef ALPHA_BLEND
 }
-#endif /* TKPUTIMAGE_CAN_BLEND */
+#endif /* TK_CAN_RENDER_RGBA */
 
 /*
  *----------------------------------------------------------------------
@@ -614,7 +614,7 @@ TkImgPhotoDisplay(
 				 * to imageX and imageY. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;
-#ifndef TKPUTIMAGE_CAN_BLEND
+#ifndef TK_CAN_RENDER_RGBA
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
 
@@ -627,9 +627,10 @@ TkImgPhotoDisplay(
 	return;
     }
 
-#ifdef TKPUTIMAGE_CAN_BLEND
+#ifdef TK_CAN_RENDER_RGBA
+
     /*
-     * If TkPutImage can handle RGBA Ximages directly there is
+     * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
      * no need to call XGetImage or to do the Porter-Duff compositing by hand.
      */
 
@@ -638,11 +639,12 @@ TkImgPhotoDisplay(
 				 (unsigned int)instancePtr->width,
 				 (unsigned int)instancePtr->height,
 				 0, (unsigned int)(4 * instancePtr->width));
-    TkPutImage(NULL, 0, display, drawable, instancePtr->gc,
+    TkpPutRGBAImage(display, drawable, instancePtr->gc,
 	       photo, imageX, imageY, drawableX, drawableY,
 	       (unsigned int) width, (unsigned int) height);
     photo->data = NULL;
     XDestroyImage(photo);
+
 #else
 
     if ((instancePtr->modelPtr->flags & COMPLEX_ALPHA)
@@ -999,7 +1001,7 @@ IsValidPalette(
 
 static int
 CountBits(
-    pixel mask)			/* Value to count the 1 bits in. */
+    unsigned mask)			/* Value to count the 1 bits in. */
 {
     int n;
 
@@ -1649,7 +1651,7 @@ TkImgDitherInstance(
     int bitsPerPixel, bytesPerLine, lineLength;
     unsigned char *srcLinePtr;
     schar *errLinePtr;
-    pixel firstBit, word, mask;
+    unsigned firstBit, word, mask;
 
     /*
      * Turn dithering off in certain cases where it is not needed (TrueColor,
@@ -1722,7 +1724,7 @@ TkImgDitherInstance(
 	    unsigned char *srcPtr = srcLinePtr;
 	    schar *errPtr = errLinePtr;
 	    unsigned char *destBytePtr = dstLinePtr;
-	    pixel *destLongPtr = (pixel *) dstLinePtr;
+	    unsigned *destLongPtr = (unsigned *) dstLinePtr;
 
 	    if (colorPtr->flags & COLOR_WINDOW) {
 		/*
@@ -1813,7 +1815,7 @@ TkImgDitherInstance(
 			 * sizes.
 			 */
 
-		    case NBBY * sizeof(pixel):
+		    case NBBY * sizeof(unsigned):
 			*destLongPtr++ = i;
 			break;
 #endif
@@ -1875,7 +1877,7 @@ TkImgDitherInstance(
 			 * sizes.
 			 */
 
-		    case NBBY * sizeof(pixel):
+		    case NBBY * sizeof(unsigned):
 			*destLongPtr++ = i;
 			break;
 #endif

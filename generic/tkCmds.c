@@ -4,9 +4,9 @@
  *	This file contains a collection of Tk-related Tcl commands that didn't
  *	fit in any particular file of the toolkit.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Scriptics Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1113,14 +1113,16 @@ Tk_TkwaitObjCmd(
 static char *
 WaitVariableProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
-    TCL_UNUSED(Tcl_Interp *),		/* Interpreter containing variable. */
-    TCL_UNUSED(const char *),		/* Name of variable. */
+    Tcl_Interp *interp,		/* Interpreter containing variable. */
+    const char *name1,		/* Name of variable. */
     TCL_UNUSED(const char *),		/* Second part of variable name. */
     TCL_UNUSED(int))			/* Information about what happened. */
 {
     int *donePtr = (int *)clientData;
 
     *donePtr = 1;
+    Tcl_UntraceVar(interp, name1, TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    WaitVariableProc, clientData);
     return NULL;
 }
 
@@ -1862,7 +1864,7 @@ TkGetDisplayOf(
     if (objc < 1) {
 	return 0;
     }
-    string = TkGetStringFromObj(objv[0], &length);
+    string = Tcl_GetStringFromObj(objv[0], &length);
     if ((length >= 2) &&
 	    (strncmp(string, "-displayof", length) == 0)) {
         if (objc < 2) {

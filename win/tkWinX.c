@@ -3,9 +3,9 @@
  *
  *	This file contains Windows emulation procedures for X routines.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright (c) 1994 Software Research Associates, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 1994 Software Research Associates, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -80,10 +80,9 @@ typedef struct {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
-    DWORD vWheelTickPrev;	/* For high resolution wheels (vertical). */
-    DWORD hWheelTickPrev;	/* For high resolution wheels (horizontal). */
-    short vWheelAcc;		/* For high resolution wheels (vertical). */
-    short hWheelAcc;		/* For high resolution wheels (horizontal). */
+    DWORD wheelTickPrev;	/* For high resolution wheels. */
+    int vWheelAcc;		/* For high resolution wheels (vertical). */
+    int hWheelAcc;		/* For high resolution wheels (horizontal). */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -128,13 +127,7 @@ TkGetServerInfo(
     (void)tkwin;
 
     if (!buffer[0]) {
-	HMODULE handle = GetModuleHandleW(L"NTDLL");
-	int(__stdcall *getversion)(void *) = (int(__stdcall *)(void *))
-		(void *)GetProcAddress(handle, "RtlGetVersion");
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	if (!getversion || getversion(&os)) {
-	    GetVersionExW(&os);
-	}
+	GetVersionExW(&os);
 	/* Write the first character last, preventing multi-thread issues. */
 	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
@@ -527,7 +520,6 @@ TkpOpenDisplay(
     Display *display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    DWORD initialWheelTick;
 
     if (tsdPtr->winDisplay != NULL) {
 	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
@@ -544,9 +536,7 @@ TkpOpenDisplay(
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
-    initialWheelTick = GetTickCount();
-    tsdPtr->vWheelTickPrev = initialWheelTick;
-    tsdPtr->hWheelTickPrev = initialWheelTick;
+    tsdPtr->wheelTickPrev = GetTickCount();
     tsdPtr->vWheelAcc = 0;
     tsdPtr->hWheelAcc = 0;
 
@@ -1147,14 +1137,15 @@ GenerateXEvent(
 	     */
 
 	    DWORD wheelTick = GetTickCount();
+	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
+	    int intDelta;
 
-	    if (wheelTick - tsdPtr->vWheelTickPrev < 1500) {
-		tsdPtr->vWheelAcc += (short) HIWORD(wParam);
-	    } else {
-		tsdPtr->vWheelAcc = (short) HIWORD(wParam);
+	    tsdPtr->wheelTickPrev = wheelTick;
+	    if (timeout) {
+		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
 	    }
-	    tsdPtr->vWheelTickPrev = wheelTick;
-	    if (abs(tsdPtr->vWheelAcc) < WHEEL_DELTA) {
+	    tsdPtr->vWheelAcc += (short) HIWORD(wParam);
+	    if (!tsdPtr->vWheelAcc || (!timeout && abs(tsdPtr->vWheelAcc) < WHEEL_DELTA * 6 / 10)) {
 		return;
 	    }
 
@@ -1166,11 +1157,17 @@ GenerateXEvent(
 	     * TkpGetString. [Bug 1118340].
 	     */
 
+	    intDelta = (abs(tsdPtr->vWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
+	    if (intDelta == 0) {
+		intDelta = (tsdPtr->vWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
+	    } else if (tsdPtr->vWheelAcc < 0) {
+		intDelta = -intDelta;
+	    }
 	    event.x.type = MouseWheelEvent;
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
-	    event.x.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
-	    tsdPtr->vWheelAcc = tsdPtr->vWheelAcc % WHEEL_DELTA;
+	    event.x.xkey.keycode = intDelta;
+	    tsdPtr->vWheelAcc -= intDelta;
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
@@ -1179,14 +1176,15 @@ GenerateXEvent(
 	     */
 
 	    DWORD wheelTick = GetTickCount();
+	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
+	    int intDelta;
 
-	    if (wheelTick - tsdPtr->hWheelTickPrev < 1500) {
-		tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
-	    } else {
-		tsdPtr->hWheelAcc = -((short) HIWORD(wParam));
+	    tsdPtr->wheelTickPrev = wheelTick;
+	    if (timeout) {
+		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
 	    }
-	    tsdPtr->hWheelTickPrev = wheelTick;
-	    if (abs(tsdPtr->hWheelAcc) < WHEEL_DELTA) {
+	    tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
+	    if (!tsdPtr->hWheelAcc || (!timeout && abs(tsdPtr->hWheelAcc) < WHEEL_DELTA * 6 / 10)) {
 		return;
 	    }
 
@@ -1198,12 +1196,18 @@ GenerateXEvent(
 	     * TkpGetString. [Bug 1118340].
 	     */
 
+	    intDelta =  (abs(tsdPtr->hWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
+	    if (intDelta == 0) {
+		intDelta = (tsdPtr->hWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
+	    } else if (tsdPtr->hWheelAcc < 0) {
+		intDelta = -intDelta;
+	    }
 	    event.x.type = MouseWheelEvent;
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
 	    event.x.xkey.state |= ShiftMask;
-	    event.x.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
-	    tsdPtr->hWheelAcc = tsdPtr->hWheelAcc % WHEEL_DELTA;
+	    event.x.xkey.keycode = intDelta;
+	    tsdPtr->hWheelAcc -= intDelta;
 	    break;
 	}
 	case WM_SYSKEYDOWN:
@@ -1746,11 +1750,11 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
-    case Button4:
+    case Button8:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
 	break;
-    case Button5:
+    case Button9:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
 	break;

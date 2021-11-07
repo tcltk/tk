@@ -4,8 +4,8 @@
  *	This file contains generic Tk code for geometry management (stuff
  *	that's used by all geometry managers).
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -426,7 +426,6 @@ Tk_MaintainGeometry(
 
     ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
 
-    ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
     if (container == Tk_Parent(window)) {
 	/*
 	 * If the window is a direct descendant of the container, don't bother
@@ -574,7 +573,6 @@ Tk_UnmaintainGeometry(
 
     ((TkWindow *)window)->maintainerPtr = NULL;
 
-    ((TkWindow *)window)->maintainerPtr = NULL;
     if (container == Tk_Parent(window)) {
 	/*
 	 * If the window is a direct descendant of the container,

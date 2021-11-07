@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * Tk alternate theme, intended to match the MSUE and Gtk's (old) default theme
  */

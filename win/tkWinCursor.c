@@ -3,7 +3,7 @@
  *
  *	This file contains Win32 specific cursor related routines.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,7 +39,7 @@ typedef struct {
  * resource identifier.
  */
 
-static struct CursorName {
+static const struct CursorName {
     const char *name;
     LPCTSTR id;
 } cursorNames[] = {
@@ -96,7 +96,7 @@ TkGetCursorByName(
     Tk_Uid string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
-    struct CursorName *namePtr;
+    const struct CursorName *namePtr;
     TkWinCursor *cursorPtr;
     int argc;
     const char **argv = NULL;
@@ -104,7 +104,7 @@ TkGetCursorByName(
 
     /*
      * All cursor names are valid lists of one element (for
-     * Unix-compatability), even unadorned system cursor names.
+     * Unix-compatibility), even unadorned system cursor names.
      */
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {

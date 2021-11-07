@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkTextDisp.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -11,7 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # Platform specific procedure for updating the text widget.
 
@@ -605,7 +606,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {textfonts} {
     list [.t bbox 2.0] [.t bbox 2.25] [.t bbox 3.0] $tk_textRelayout
 } [list [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] {1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     wm geom . 103x$height
@@ -616,7 +617,7 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {textfonts} {
     updateText
     list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk_textRelayout
 } [list [list 5 [expr {$fixedDiff + 18}] 1 $fixedHeight] {} [list 5 [expr {2*$fixedDiff + 31}] 1 $fixedHeight] {1.0 2.0 3.0}]
-if {$tcl_platform(platform) == "windows"} {
+if {[tk windowingsystem] == "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
@@ -627,7 +628,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     frame .f2 -width 20 -height 100
@@ -659,7 +660,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     .t delete 1.0 end
@@ -673,7 +674,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     updateText
     set x
 } {8.0 {16.0 17.0 15.0 14.0 13.0 12.0 11.0 10.0 9.0 8.0} {8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0}}
-test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} {
+test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} failsOnXQuarz {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 16.0
@@ -736,7 +737,7 @@ test textDisp-4.13 {UpdateDisplayInfo, special handling for top/bottom lines} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{11.0 12.0 13.0} {4.0 10.0 11.0 12.0 13.0}}
-test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
+test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} failsOnXQuarz {
     .t tag remove x 1.0 end
     .t yview 1.0
     updateText
@@ -869,7 +870,7 @@ test textDisp-5.2 {DisplayDLine, line resizes during display} {
 } [list 30 30]
 
 .t configure -wrap char
-test textDisp-6.1 {scrolling in DisplayText, scroll up} {
+test textDisp-6.1 {scrolling in DisplayText, scroll up} failsOnXQuarz {
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1157,7 +1158,7 @@ test textDisp-8.6 {TkTextChanged} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 1.20 1.40} {1.0 1.20 1.40}}
-test textDisp-8.7 {TkTextChanged} {
+test textDisp-8.7 {TkTextChanged} failsOnXQuarz {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1179,7 +1180,7 @@ test textDisp-8.8 {TkTextChanged} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {2.0 2.0}
-test textDisp-8.9 {TkTextChanged} {
+test textDisp-8.9 {TkTextChanged} failsOnXQuarz {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
@@ -1290,7 +1291,7 @@ test textDisp-9.4 {TkTextRedrawTag} failsOnUbuntu {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.5 {TkTextRedrawTag} failsOnUbuntu {
+test textDisp-9.5 {TkTextRedrawTag} {failsOnUbuntu failsOnXQuarz} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1452,7 +1453,7 @@ test textDisp-11.1 {TkTextSetYView} {
     updateText
     .t index @0,0
 } {30.0}
-test textDisp-11.2 {TkTextSetYView} {
+test textDisp-11.2 {TkTextSetYView} failsOnXQuarz {
     .t yview 30.0
     updateText
     .t yview 32.0
@@ -1466,7 +1467,7 @@ test textDisp-11.3 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
-test textDisp-11.4 {TkTextSetYView} {
+test textDisp-11.4 {TkTextSetYView} failsOnXQuarz {
     .t yview 30.0
     updateText
     .t yview 31.4
@@ -1497,7 +1498,7 @@ test textDisp-11.7 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {21.0 {21.0 22.0 23.0 24.0 25.0 26.0 27.0 28.0 29.0}}
-test textDisp-11.8 {TkTextSetYView} {
+test textDisp-11.8 {TkTextSetYView} failsOnXQuarz {
     .t yview 30.0
     updateText
     set tk_textRedraw {}
@@ -1505,7 +1506,7 @@ test textDisp-11.8 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
-test textDisp-11.9 {TkTextSetYView} {
+test textDisp-11.9 {TkTextSetYView} failsOnXQuarz {
     .t yview 30.0
     updateText
     set tk_textRedraw {}
@@ -1529,7 +1530,7 @@ test textDisp-11.11 {TkTextSetYView} {
     updateText
     list [.t index @0,0] $tk_textRedraw
 } {191.0 {191.0 192.0 193.0 194.0 195.0 196.0}}
-test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
+test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} failsOnXQuarz {
     .t insert 10.0 "Long line with enough text to wrap\n"
     .t yview 1.0
     updateText
@@ -1667,6 +1668,21 @@ test textDisp-11.21 {TkTextSetYView, window height smaller than the line height}
     .top.t see 1.0
     .top.t index @0,[expr {$lineheight - 2}]
 } {1.0}
+test textDisp-11.22 {TkTextSetYView, peer has -startline} {
+    .top.t delete 1.0 end
+    for {set i 1} {$i <= 50} {incr i} {
+        .top.t insert end "Line $i\n"
+    }
+    pack [.top.t peer create .top.p] -side left
+    pack [scrollbar .top.sb -command {.top.p yview}] -side left -fill y
+    .top.p configure -startline 5 -endline 35 -yscrollcommand {.top.sb set}
+    updateText
+    .top.p yview moveto 0
+    updateText
+    set res [.top.p get @0,0 "@0,0 lineend"]
+    destroy .top.p
+    set res
+} {Line 5}
 
 .t configure -wrap word
 .t delete 50.0 51.0
@@ -1902,7 +1918,7 @@ test textDisp-14.11 {TkTextXviewCmd procedure} {
 } {1 {wrong # args: should be ".t xview scroll number pages|pixels|units"}}
 test textDisp-14.12 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll gorp units} msg] $msg
-} {1 {expected integer but got "gorp"}}
+} {1 {expected floating-point number but got "gorp"}}
 test textDisp-14.13 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
@@ -2121,11 +2137,11 @@ test textDisp-16.20 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll a b c} msg] $msg
 } {1 {wrong # args: should be ".t yview scroll number pages|pixels|units"}}
 test textDisp-16.21 {TkTextYviewCmd procedure, "scroll" option} {
-    list [catch {.t yview scroll badInt bogus} msg] $msg
+    list [catch {.t yview scroll bogus bogus} msg] $msg
 } {1 {bad argument "bogus": must be pages, pixels, or units}}
 test textDisp-16.21.2 {TkTextYviewCmd procedure, "scroll" option} {
-    list [catch {.t yview scroll badInt units} msg] $msg
-} {1 {expected integer but got "badInt"}}
+    list [catch {.t yview scroll bogus units} msg] $msg
+} {1 {expected floating-point number but got "bogus"}}
 test textDisp-16.22 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview 50.0
     updateText
@@ -2359,45 +2375,61 @@ test textDisp-17.5 {TkTextScanCmd procedure} {
 test textDisp-17.6 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0
+    updateText
     .t scan mark 40 60
     .t scan dragto 35 55
+    updateText
     .t index @0,0
 } {4.7}
 test textDisp-17.7 {TkTextScanCmd procedure} {textfonts} {
     .t yview 10.0
     .t xview moveto 0
+    updateText
     .t xview scroll 20 units
+    updateText
     .t scan mark -10 60
     .t scan dragto -5 65
+    updateText
     .t index @0,0
     set x [.t index @0,0]
     .t scan dragto 0 [expr {70 + $fixedDiff}]
+    updateText
     list $x [.t index @0,0]
 } {6.12 2.5}
 test textDisp-17.8 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0
+    updateText
     .t scan mark 0 60
     .t scan dragto 30 100
+    updateText
     .t scan dragto 25 95
+    updateText
     .t index @0,0
 } {4.7}
 test textDisp-17.9 {TkTextScanCmd procedure} {textfonts} {
     .t yview end
     .t xview moveto 0
+    updateText
     .t xview scroll 100 units
+    updateText
     .t scan mark 90 60
     .t scan dragto 10 0
+    updateText
     .t scan dragto 14 5
+    updateText
     .t index @0,0
-} {18.44}
+} {14.44}
 .t configure -wrap word
 test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
     .t yview 10.0
+    updateText
     .t scan mark -10 60
     .t scan dragto -5 65
+    updateText
     set x [.t index @0,0]
     .t scan dragto 0 [expr {70 + $fixedDiff}]
+    updateText
     list $x [.t index @0,0]
 } {9.0 8.0}
 .t configure -xscrollcommand scroll -yscrollcommand {}
@@ -2869,7 +2901,7 @@ test textDisp-19.16 {count -ypixels} {
       [.t count -ypixels 16.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"]
 } [list [expr {260 + 20 * $fixedDiff}] [expr {260 + 20 * $fixedDiff}] $fixedHeight [expr {2*$fixedHeight}] $fixedHeight [expr {3*$fixedHeight}]]
-test textDisp-19.17 {count -ypixels with indices in elided lines} failsOnUbuntu {
+test textDisp-19.17 {count -ypixels with indices in elided lines} {failsOnUbuntu failsOnXQuarz} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
@@ -2896,7 +2928,7 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} failsOnUbuntu 
     .t yview 35.0
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {4 * $fixedHeight}] [expr {3 * $fixedHeight}] 0 0 0 0 0 0 [expr {5 * $fixedHeight}] [expr {- 5 * $fixedHeight}] [expr {2 * $fixedHeight}] [expr {3 * $fixedHeight}] [expr {5 * $fixedHeight}]]
-test textDisp-19.18 {count -ypixels with indices in elided lines} failsOnUbuntu {
+test textDisp-19.18 {count -ypixels with indices in elided lines} {failsOnUbuntu failsOnXQuarz} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
@@ -3323,7 +3355,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {textfonts} {
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 7 $fixedHeight] [list 143 3 3 $fixedHeight]]
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {textfonts} {
-    if {$tcl_platform(platform) == "windows"} {
+    if {[tk windowingsystem] == "win32"} {
 	wm overrideredirect . 1
     }
     .t configure -wrap char
@@ -3333,7 +3365,7 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {textfonts} {
     updateText
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
 } [list [list 3 3 1 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 1 $fixedHeight] [list 3 [expr {2*$fixedDiff + 29}] 1 $fixedHeight]]
-if {$tcl_platform(platform) == "windows"} {
+if {[tk windowingsystem] == "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {textfonts} {
@@ -3413,7 +3445,7 @@ test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {textfonts} {
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.10]
 } [list [list 45 3 7 $fixedHeight] [list 94 3 7 $fixedHeight]]
-test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -constraints {textfonts} -setup {
+test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -constraints {textfonts failsOnXQuarz} -setup {
     text .tt -tabs {40 right} -wrap none -font $fixedFont
     pack .tt
 } -body {
@@ -3659,7 +3691,7 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {textfonts} {
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list 32 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 39 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
-test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts} {
+test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts failsOnXQuarz} {
     .t delete 1.0 end
     set cm [winfo fpixels .t 1c]
     .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40

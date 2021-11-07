@@ -3,15 +3,15 @@
 # Initialization script normally executed in the interpreter for each Tk-based
 # application.  Arranges class bindings for widgets.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
 #
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.7a4
+package require -exact tk  8.7a6
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -366,19 +366,20 @@ if {![llength [info command tk_chooseDirectory]]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
+event add <<ContextMenu>>	<Button-3>
+event add <<PasteSelection>>	<ButtonRelease-2>
+
 switch -exact -- [tk windowingsystem] {
     "x11" {
 	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
 	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-Z> <Control-Lock-z>
-	event add <<ContextMenu>>	<Button-3>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
-	event add <<SelectAll>>		<Control-slash>
+	event add <<SelectAll>>		<Control-/>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
@@ -422,12 +423,10 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
   	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-y> <Control-Lock-Y>
-	event add <<ContextMenu>>	<Button-3>
 
-	event add <<SelectAll>>		<Control-slash> <Control-a> <Control-Lock-A>
+	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
@@ -455,12 +454,10 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X>
 	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C>
 	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V>
-	event add <<PasteSelection>>	<ButtonRelease-3>
 	event add <<Clear>>		<Clear>
-	event add <<ContextMenu>>	<Button-2>
 
 	# Official bindings
-	# See http://support.apple.com/kb/HT1343
+	# See https://support.apple.com/en-us/HT201236
 	event add <<SelectAll>>		<Command-a>
 	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
 	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
@@ -496,18 +493,21 @@ switch -exact -- [tk windowingsystem] {
 
 if {$::tk_library ne ""} {
     proc ::tk::SourceLibFile {file} {
-        namespace eval :: [list source [file join $::tk_library $file.tcl]]
+        namespace eval :: [list source -encoding utf-8 [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
 	SourceLibFile icons
+	SourceLibFile iconbadges
 	SourceLibFile button
 	SourceLibFile entry
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow
+	SourceLibFile print
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
+	SourceLibFile systray
 	SourceLibFile text
     }
 }
@@ -536,6 +536,13 @@ proc ::tk::CancelRepeat {} {
     set Priv(afterId) {}
 }
 
+## ::tk::MouseWheel $w $dir $amount $factor $units
+
+proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
+    $w ${dir}view scroll [expr {$amount/$factor}] $units
+}
+
+
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
 # It sends a <<TraverseOut>> virtual event to the previous focus window,
@@ -688,12 +695,17 @@ if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-    	source $file
+    	source -encoding utf-8 $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
     	eval $script
     }
+    #This procedure is required to silence warnings generated
+    #by inline AppleScript execution.
+    proc ::tk::mac::GetDynamicSdef {} {
+         puts ""
+     }
 }
 
 # Create a dictionary to store the starting index of the IME marked
@@ -703,7 +715,7 @@ set ::tk::Priv(IMETextMark) [dict create]
 
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
-    uplevel \#0 [list source $::ttk::library/ttk.tcl]
+    uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
 }
 
 # Local Variables:

@@ -4,7 +4,7 @@
  *	Declarations for the file filter processing routines needed by the
  *	file selection dialogs.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

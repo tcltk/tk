@@ -6,16 +6,20 @@
  *	the "wm" command and passes geometry information to the window
  *	manager.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkWinInt.h"
+#include <windows.h>
+#include <wtypes.h>
+#include <shobjidl.h>
+#include <shlguid.h>
 #include <shellapi.h>
-
+#include "tkWinIco.h"
 /*
  * These next two defines are only valid on Win2K/XP+.
  */
@@ -77,58 +81,6 @@ typedef struct TkWmStackorderToplevelPair {
     TkWindow **windowPtr;
 } TkWmStackorderToplevelPair;
 
-/*
- * This structure represents the contents of a icon, in terms of its image.
- * The HICON is an internal Windows format. Most of these icon-specific
- * structures originated with the Winico extension. We stripped out unused
- * parts of that code, and integrated the code more naturally with Tcl.
- */
-
-typedef struct {
-    UINT Width, Height, Colors;	/* Width, Height and bpp */
-    LPBYTE lpBits;		/* Ptr to DIB bits */
-    DWORD dwNumBytes;		/* How many bytes? */
-    LPBITMAPINFO lpbi;		/* Ptr to header */
-    LPBYTE lpXOR;		/* Ptr to XOR image bits */
-    LPBYTE lpAND;		/* Ptr to AND image bits */
-    HICON hIcon;		/* DAS ICON */
-} ICONIMAGE, *LPICONIMAGE;
-
-/*
- * This structure is how we represent a block of the above items. We will
- * reallocate these structures according to how many images they need to
- * contain.
- */
-
-typedef struct {
-    int nNumImages;		/* How many images? */
-    ICONIMAGE IconImages[1];	/* Image entries */
-} BlockOfIconImages, *BlockOfIconImagesPtr;
-
-/*
- * These two structures are used to read in icons from an 'icon directory'
- * (i.e. the contents of a .icr file, say). We only use these structures
- * temporarily, since we copy the information we want into a
- * BlockOfIconImages.
- */
-
-typedef struct {
-    BYTE bWidth;		/* Width of the image */
-    BYTE bHeight;		/* Height of the image (times 2) */
-    BYTE bColorCount;		/* Number of colors in image (0 if >=8bpp) */
-    BYTE bReserved;		/* Reserved */
-    WORD wPlanes;		/* Color Planes */
-    WORD wBitCount;		/* Bits per pixel */
-    DWORD dwBytesInRes;		/* How many bytes in this resource? */
-    DWORD dwImageOffset;	/* Where in the file is this image */
-} ICONDIRENTRY, *LPICONDIRENTRY;
-
-typedef struct {
-    WORD idReserved;		/* Reserved */
-    WORD idType;		/* Resource type (1 for icons) */
-    WORD idCount;		/* How many images? */
-    ICONDIRENTRY idEntries[1];	/* The entries for each image */
-} ICONDIR, *LPICONDIR;
 
 /*
  * A pointer to one of these strucutures is associated with each toplevel.
@@ -358,7 +310,7 @@ typedef struct TkWmInfo {
  * of top-level windows.
  */
 
-static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
+static void		TopLevelReqProc(void *dummy, Tk_Window tkwin);
 static void		RemapWindows(TkWindow *winPtr, HWND parentHWND);
 
 static const Tk_GeomMgr wmMgrType = {
@@ -398,6 +350,16 @@ static int initialized;		/* Flag indicating whether module has been
 TCL_DECLARE_MUTEX(winWmMutex)
 
 /*
+ * The following records the "TaskbarButtonCreated" message ID
+ * for overlay icons.
+ */
+
+static UINT TaskbarButtonCreatedMessageId = WM_NULL;
+
+/* Reference to taskbarlist API for overlay icons. */
+ITaskbarList3 *ptbl;
+
+/*
  * Forward declarations for functions defined in this file:
  */
 
@@ -423,22 +385,22 @@ static void		TkWmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *table);
 static LRESULT CALLBACK	TopLevelProc(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
-static void		TopLevelEventProc(ClientData clientData,
+static void		TopLevelEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
-static void		UpdateGeometryInfo(ClientData clientData);
+static void		TopLevelReqProc(void *dummy, Tk_Window tkwin);
+static void		UpdateGeometryInfo(void *clientData);
 static void		UpdateWrapper(TkWindow *winPtr);
 static LRESULT CALLBACK	WmProc(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
-static void		WmWaitVisibilityOrMapProc(ClientData clientData,
+static void		WmWaitVisibilityOrMapProc(void *clientData,
 			    XEvent *eventPtr);
 static BlockOfIconImagesPtr ReadIconOrCursorFromFile(Tcl_Interp *interp,
 			    Tcl_Obj* fileName, BOOL isIcon);
 static WinIconPtr	ReadIconFromFile(Tcl_Interp *interp,
 			    Tcl_Obj *fileName);
+static BOOL		AdjustIconImagePointers(LPICONIMAGE lpImage);
 static WinIconPtr	GetIconFromPixmap(Display *dsPtr, Pixmap pixmap);
 static int		ReadICOHeader(Tcl_Channel channel);
-static BOOL		AdjustIconImagePointers(LPICONIMAGE lpImage);
 static HICON		MakeIconOrCursorFromResource(LPICONIMAGE lpIcon,
 			    BOOL isIcon);
 static HICON		GetIcon(WinIconPtr titlebaricon, int icon_size);
@@ -481,6 +443,9 @@ static int		WmGridCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmGroupCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconbadgeCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin,
@@ -544,187 +509,6 @@ static int		WmWithdrawCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
-
-/*
- * Used in BytesPerLine
- */
-
-#define WIDTHBYTES(bits)	((((bits) + 31)>>5)<<2)
-
-/*
- *----------------------------------------------------------------------
- *
- * DIBNumColors --
- *
- *	Calculates the number of entries in the color table, given by LPSTR
- *	lpbi - pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	WORD - Number of entries in the color table.
- *
- *----------------------------------------------------------------------
- */
-
-static WORD
-DIBNumColors(
-    LPSTR lpbi)
-{
-    WORD wBitCount;
-    DWORD dwClrUsed;
-
-    dwClrUsed = ((LPBITMAPINFOHEADER) lpbi)->biClrUsed;
-
-    if (dwClrUsed) {
-	return (WORD) dwClrUsed;
-    }
-
-    wBitCount = ((LPBITMAPINFOHEADER) lpbi)->biBitCount;
-
-    switch (wBitCount) {
-    case 1:
-	return 2;
-    case 4:
-	return 16;
-    case 8:
-	return 256;
-    default:
-	return 0;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PaletteSize --
- *
- *	Calculates the number of bytes in the color table, as given by LPSTR
- *	lpbi - pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	Number of bytes in the color table
- *
- *----------------------------------------------------------------------
- */
-static WORD
-PaletteSize(
-    LPSTR lpbi)
-{
-    return (WORD) (DIBNumColors(lpbi) * sizeof(RGBQUAD));
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FindDIBits --
- *
- *	Locate the image bits in a CF_DIB format DIB, as given by LPSTR lpbi -
- *	pointer to the CF_DIB memory block. Used by titlebar icon code.
- *
- * Results:
- *	pointer to the image bits
- *
- * Side effects: None
- *
- *
- *----------------------------------------------------------------------
- */
-
-static LPSTR
-FindDIBBits(
-    LPSTR lpbi)
-{
-    return lpbi + *((LPDWORD) lpbi) + PaletteSize(lpbi);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * BytesPerLine --
- *
- *	Calculates the number of bytes in one scan line, as given by
- *	LPBITMAPINFOHEADER lpBMIH - pointer to the BITMAPINFOHEADER that
- *	begins the CF_DIB block. Used by titlebar icon code.
- *
- * Results:
- *	number of bytes in one scan line (DWORD aligned)
- *
- *----------------------------------------------------------------------
- */
-
-static DWORD
-BytesPerLine(
-    LPBITMAPINFOHEADER lpBMIH)
-{
-    return WIDTHBYTES(lpBMIH->biWidth * lpBMIH->biPlanes * lpBMIH->biBitCount);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * AdjustIconImagePointers --
- *
- *	Adjusts internal pointers in icon resource struct, as given by
- *	LPICONIMAGE lpImage - the resource to handle. Used by titlebar icon
- *	code.
- *
- * Results:
- *	BOOL - TRUE for success, FALSE for failure
- *
- *----------------------------------------------------------------------
- */
-
-static BOOL
-AdjustIconImagePointers(
-    LPICONIMAGE lpImage)
-{
-    /*
-     * Sanity check.
-     */
-
-    if (lpImage == NULL) {
-	return FALSE;
-    }
-
-    /*
-     * BITMAPINFO is at beginning of bits.
-     */
-
-    lpImage->lpbi = (LPBITMAPINFO) lpImage->lpBits;
-
-    /*
-     * Width - simple enough.
-     */
-
-    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
-
-    /*
-     * Icons are stored in funky format where height is doubled so account for
-     * that.
-     */
-
-    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
-
-    /*
-     * How many colors?
-     */
-
-    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes
-	    * lpImage->lpbi->bmiHeader.biBitCount;
-
-    /*
-     * XOR bits follow the header and color table.
-     */
-
-    lpImage->lpXOR = (LPBYTE) FindDIBBits((LPSTR) lpImage->lpbi);
-
-    /*
-     * AND bits follow the XOR bits.
-     */
-
-    lpImage->lpAND = lpImage->lpXOR +
-	    lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
-    return TRUE;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1298,6 +1082,75 @@ ReadIconFromFile(
     return titlebaricon;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AdjustIconImagePointers --
+ *
+ *	Adjusts internal pointers in icon resource struct, as given by
+ *	LPICONIMAGE lpImage - the resource to handle. Used by titlebar icon
+ *	code.
+ *
+ * Results:
+ *	BOOL - TRUE for success, FALSE for failure
+ *
+ *----------------------------------------------------------------------
+ */
+
+static BOOL
+AdjustIconImagePointers(
+    LPICONIMAGE lpImage)
+{
+    /*
+     * Sanity check.
+     */
+
+    if (lpImage == NULL) {
+	return FALSE;
+    }
+
+    /*
+     * BITMAPINFO is at beginning of bits.
+     */
+
+    lpImage->lpbi = (LPBITMAPINFO) lpImage->lpBits;
+
+    /*
+     * Width - simple enough.
+     */
+
+    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
+
+    /*
+     * Icons are stored in funky format where height is doubled so account for
+     * that.
+     */
+
+    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
+
+    /*
+     * How many colors?
+     */
+
+    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes
+	    * lpImage->lpbi->bmiHeader.biBitCount;
+
+    /*
+     * XOR bits follow the header and color table.
+     */
+
+    lpImage->lpXOR = (LPBYTE) FindDIBBits((LPSTR) lpImage->lpbi);
+
+    /*
+     * AND bits follow the XOR bits.
+     */
+
+    lpImage->lpAND = lpImage->lpXOR +
+	    lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
+    return TRUE;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1881,6 +1734,12 @@ TkWinWmCleanup(
     }
     tsdPtr->initialized = 0;
 
+    /*
+     * COM library cleanup.
+     */
+
+    CoUninitialize();
+
     UnregisterClassW(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
 }
 
@@ -1997,6 +1856,7 @@ UpdateWrapper(
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
     HICON hBigIcon = NULL;
+    HRESULT hr;
     Tcl_DString titleString;
     int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -2324,6 +2184,35 @@ UpdateWrapper(
 	SetActiveWindow(wmPtr->wrapper);
     } else if (focusHWND) {
 	SetFocus(focusHWND);
+    }
+
+    /*
+     * Initialize hooks for overlay icon.
+     * Start with TaskbarButtonCreated message.
+     */
+
+    TaskbarButtonCreatedMessageId = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+
+    /*
+     * In case the application is run elevated, allow the
+     * TaskbarButtonCreated message through.
+     */
+
+    ChangeWindowMessageFilter(TaskbarButtonCreatedMessageId, MSGFLT_ADD);
+
+    /*
+     * Load COM library for icon overlay.
+     */
+
+    hr = CoInitialize(0);
+    if (SUCCEEDED(hr)) {
+	hr = CoCreateInstance(&CLSID_TaskbarList, NULL,
+		CLSCTX_INPROC_SERVER, &IID_ITaskbarList3, (void **) &ptbl);
+	if (FAILED(hr)) {
+	    printf("Unable to initialize ITaskbarList3 API");
+	    ptbl->lpVtbl->Release(NULL);
+	    ptbl = NULL;
+	}
     }
 }
 
@@ -2740,10 +2629,8 @@ TkWmDeadWindow(
 
 void
 TkWmSetClass(
-    TkWindow *winPtr)		/* Newly-created top-level window. */
+    TCL_UNUSED(TkWindow *))	/* Newly-created top-level window. */
 {
-    (void)winPtr;
-
     /* Do nothing */
     return;
 }
@@ -2767,7 +2654,7 @@ TkWmSetClass(
 
 int
 Tk_WmObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2776,7 +2663,7 @@ Tk_WmObjCmd(
     static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget", "frame",
-	"geometry", "grid", "group", "iconbitmap",
+	"geometry", "grid", "group", "iconbadge", "iconbitmap",
 	"iconify", "iconmask", "iconname",
 	"iconphoto", "iconposition",
 	"iconwindow", "manage", "maxsize", "minsize", "overrideredirect",
@@ -2788,7 +2675,7 @@ Tk_WmObjCmd(
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET,
 	WMOPT_FRAME,
-	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
+	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBADGE, WMOPT_ICONBITMAP,
 	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
 	WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE,
@@ -2809,7 +2696,7 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
 
-    argv1 = TkGetStringFromObj(objv[1], &length);
+    argv1 = Tcl_GetStringFromObj(objv[1], &length);
     if ((argv1[0] == 't') && !strncmp(argv1, "tracing", length)
 	    && (length >= 3)) {
 	int wmTracing;
@@ -2881,6 +2768,8 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_ICONBADGE:
+	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONIFY:
@@ -2946,7 +2835,7 @@ Tk_WmObjCmd(
 
 static int
 WmAspectCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -2954,7 +2843,6 @@ WmAspectCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int numer1, denom1, numer2, denom2;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 7)) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -3074,10 +2962,7 @@ WmAttributesCmd(
 	return TCL_OK;
     }
     for (i = 3; i < objc; i += 2) {
-	string = TkGetStringFromObj(objv[i], &length);
-	if ((length < 2) || (string[0] != '-')) {
-	    goto configArgs;
-	}
+	string = Tcl_GetStringFromObj(objv[i], &length);
 	if (strncmp(string, "-disabled", length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
@@ -3110,6 +2995,12 @@ WmAttributesCmd(
 		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "TOPMOST", NULL);
 		return TCL_ERROR;
 	    }
+	} else if (i == 3) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad attribute \"%s\": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
+		    string));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", NULL);
+	    return TCL_ERROR;
 	} else {
 	    goto configArgs;
 	}
@@ -3142,7 +3033,7 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    const char *crefstr = TkGetStringFromObj(objv[i+1], &length);
+		    const char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
 
 		    if (length == 0) {
 			/* reset to no transparent color */
@@ -3313,7 +3204,7 @@ WmAttributesCmd(
 
 static int
 WmClientCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3322,7 +3213,6 @@ WmClientCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
     TkSizeT length;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name?");
@@ -3335,7 +3225,7 @@ WmClientCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = TkGetStringFromObj(objv[3], &length);
+    argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
 	    ckfree(wmPtr->clientMachine);
@@ -3478,7 +3368,7 @@ WmColormapwindowsCmd(
 
 static int
 WmCommandCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3488,7 +3378,6 @@ WmCommandCmd(
     const char *argv3;
     int cmdArgc;
     const char **cmdArgv;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?value?");
@@ -3548,14 +3437,13 @@ WmCommandCmd(
 
 static int
 WmDeiconifyCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    (void)tkwin;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -3601,7 +3489,7 @@ WmDeiconifyCmd(
 
 static int
 WmFocusmodelCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3615,7 +3503,6 @@ WmFocusmodelCmd(
 	OPT_ACTIVE, OPT_PASSIVE
     };
     int index;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?active|passive?");
@@ -3658,17 +3545,13 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel or Frame to work with */
-    Tcl_Interp *dummy,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
+    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    TCL_UNUSED(int),		/* Number of arguments. */
+    TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
-    (void)tkwin;
-    (void)dummy;
-    (void)objc;
-    (void)objv;
 
     if (Tk_IsTopLevel(frameWin)) {
 	Tk_UnmapWindow(frameWin);
@@ -3676,10 +3559,10 @@ WmForgetCmd(
 	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
 	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
 
-        /*
-         * Make sure wm no longer manages this window
-         */
-        Tk_ManageGeometry(frameWin, NULL, NULL);
+	/*
+	 * Make sure wm no longer manages this window
+	 */
+	Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	TkWmDeadWindow(winPtr);
 	/* flags (above) must be cleared before calling */
@@ -3710,7 +3593,7 @@ WmForgetCmd(
 
 static int
 WmFrameCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3719,7 +3602,6 @@ WmFrameCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     HWND hwnd;
     char buf[TCL_INTEGER_SPACE];
-    (void)tkwin;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -3756,7 +3638,7 @@ WmFrameCmd(
 
 static int
 WmGeometryCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3766,7 +3648,6 @@ WmGeometryCmd(
     char xSign, ySign;
     int width, height;
     const char *argv3;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newGeometry?");
@@ -3825,7 +3706,7 @@ WmGeometryCmd(
 
 static int
 WmGridCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3833,7 +3714,6 @@ WmGridCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int reqWidth, reqHeight, widthInc, heightInc;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 7)) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -3945,7 +3825,7 @@ WmGroupCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = TkGetStringFromObj(objv[3], &length);
+    argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (*argv3 == '\0') {
 	wmPtr->hints.flags &= ~WindowGroupHint;
 	if (wmPtr->leaderName != NULL) {
@@ -3971,6 +3851,117 @@ WmGroupCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * WmIconbadgeCmd --
+ *
+ *	This function is invoked to process the "wm iconbadge" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconbadgeCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(TkWindow *),	/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    HWND hwnd;
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int width, height;
+    HICON overlayicon;
+    int badgenumber;
+    char *badgestring = NULL;
+    char photoname[4096];
+    LPCWSTR string;
+    HRESULT hr;
+    Tk_Window badgewindow;
+    WmInfo *wmPtr;
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
+	return TCL_ERROR;
+    }
+
+    /*
+     * Parse args, get native wrapper window, and determine image.
+     */
+
+    badgewindow = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+    wmPtr = ((TkWindow *) badgewindow)->wmInfoPtr;
+    hwnd = wmPtr->wrapper;
+    badgestring = Tcl_GetString(objv[3]);
+
+    badgenumber = atoi(badgestring);
+    if (badgenumber > 9) {
+	strcpy(photoname, "::tk::icons::9plus-badge");
+    } else {
+	strcpy(photoname, "::tk::icons::");
+	strcat(photoname, badgestring);
+	strcat(photoname, "-badge");
+    }
+
+    /*
+     * If badgestring is empty string, remove icon.
+     */
+
+    if (strcmp("", badgestring) == 0) {
+	ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, NULL, NULL);
+	return TCL_OK;
+    }
+
+    /*
+     * If photo does not exist, return error. This means we do not have
+     * to test for decimal or negative values; no photo for such values
+     * is present.
+     */
+
+    photo = Tk_FindPhoto(interp, photoname);
+    if (photo == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use \"%s\" as icon badge", badgestring));
+	return TCL_ERROR;
+    }
+
+    /*
+     * We have found the image. Convert to icon.
+     */
+
+    Tk_PhotoGetSize(photo, &width, &height);
+    Tk_PhotoGetImage(photo, &block);
+
+    overlayicon = CreateIcoFromPhoto(width, height, block);
+    if (overlayicon == NULL) {
+	Tcl_SetResult(interp, "Failed to create badge icon", TCL_VOLATILE);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Place overlay icon on taskbar icon.
+     */
+
+    string = L"Alert";
+    hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
+    if (hr != S_OK) {
+	Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
+	return TCL_ERROR;
+    }
+    DestroyIcon(overlayicon);
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WmIconbitmapCmd --
  *
  *	This function is invoked to process the "wm iconbitmap" Tcl command.
@@ -3987,7 +3978,7 @@ WmGroupCmd(
 
 static int
 WmIconbitmapCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3996,7 +3987,6 @@ WmIconbitmapCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     const char *string;
-    (void)tkwin;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?-default? ?image?");
@@ -4124,14 +4114,13 @@ WmIconbitmapCmd(
 
 static int
 WmIconifyCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    (void)tkwin;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -4249,7 +4238,7 @@ WmIconmaskCmd(
 
 static int
 WmIconnameCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4258,7 +4247,6 @@ WmIconnameCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
     TkSizeT length;
-    (void)tkwin;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newName?");
@@ -4272,7 +4260,7 @@ WmIconnameCmd(
 	if (wmPtr->iconName != NULL) {
 	    ckfree(wmPtr->iconName);
 	}
-	argv3 = TkGetStringFromObj(objv[3], &length);
+	argv3 = Tcl_GetStringFromObj(objv[3], &length);
 	wmPtr->iconName = (char *)ckalloc(length + 1);
 	memcpy(wmPtr->iconName, argv3, length + 1);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -4301,7 +4289,7 @@ WmIconnameCmd(
 
 static int
 WmIconphotoCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4310,16 +4298,11 @@ WmIconphotoCmd(
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, width, height, idx, bufferSize, startObj = 3;
-    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
-    union {unsigned char *ptr; void *voidPtr;} bgraMask;
+    int i, width, height, startObj = 3;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
     unsigned size;
-    BITMAPINFO bmInfo;
-    ICONINFO iconInfo;
-    (void)tkwin;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -4363,95 +4346,16 @@ WmIconphotoCmd(
     }
     ZeroMemory(lpIR, size);
 
-    lpIR->nNumImages = objc - startObj;
-
     for (i = startObj; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	Tk_PhotoGetSize(photo, &width, &height);
 	Tk_PhotoGetImage(photo, &block);
 
-	/*
-	 * Don't use CreateIcon to create the icon, as it requires color
-	 * bitmap data in device-dependent format. Instead we use
-	 * CreateIconIndirect which takes device-independent bitmaps and
-	 * converts them as required. Initialise icon info structure.
-	 */
-
-	ZeroMemory(&iconInfo, sizeof(iconInfo));
-	iconInfo.fIcon = TRUE;
-
-	/*
-	 * Create device-independent color bitmap.
-	 */
-
-	ZeroMemory(&bmInfo, sizeof bmInfo);
-	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmInfo.bmiHeader.biWidth = width;
-	bmInfo.bmiHeader.biHeight = -height;
-	bmInfo.bmiHeader.biPlanes = 1;
-	bmInfo.bmiHeader.biBitCount = 32;
-	bmInfo.bmiHeader.biCompression = BI_RGB;
-
-	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-		&bgraPixel.voidPtr, NULL, 0);
-	if (!iconInfo.hbmColor) {
-	    ckfree(lpIR);
+	hIcon = CreateIcoFromPhoto(width, height, block);
+	if (hIcon == NULL) {
+	    FreeIconBlock(lpIR);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an iconphoto with image \"%s\"",
-		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Convert the photo image data into BGRA format (RGBQUAD).
-	 */
-
-	bufferSize = height * width * 4;
-	for (idx = 0 ; idx < bufferSize ; idx += 4) {
-	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
-	    bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
-	    bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
-	    bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
-	}
-
-	/*
-	 * Create a dummy mask bitmap. The contents of this don't appear to
-	 * matter, as CreateIconIndirect will setup the icon mask based on the
-	 * alpha channel in our color bitmap.
-	 */
-
-	bmInfo.bmiHeader.biBitCount = 1;
-
-	iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-		&bgraMask.voidPtr, NULL, 0);
-	if (!iconInfo.hbmMask) {
-	    DeleteObject(iconInfo.hbmColor);
-	    ckfree(lpIR);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create mask bitmap for \"%s\"",
-		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "MASK", NULL);
-	    return TCL_ERROR;
-	}
-
-	ZeroMemory(bgraMask.ptr, width*height/8);
-
-	/*
-	 * Create an icon from the bitmaps.
-	 */
-
-	hIcon = CreateIconIndirect(&iconInfo);
-	DeleteObject(iconInfo.hbmColor);
-	DeleteObject(iconInfo.hbmMask);
-	if (hIcon == NULL) {
-	    /*
-	     * XXX should free up created icons.
-	     */
-
-	    ckfree(lpIR);
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create icon for \"%s\"",
 		    Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "ICON", NULL);
 	    return TCL_ERROR;
@@ -4460,6 +4364,7 @@ WmIconphotoCmd(
 	lpIR->IconImages[i-startObj].Height = height;
 	lpIR->IconImages[i-startObj].Colors = 4;
 	lpIR->IconImages[i-startObj].hIcon = hIcon;
+	lpIR->nNumImages++;
     }
 
     titlebaricon = (WinIconPtr)ckalloc(sizeof(WinIconInstance));
@@ -4476,6 +4381,8 @@ WmIconphotoCmd(
     return TCL_OK;
 }
 
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4495,7 +4402,7 @@ WmIconphotoCmd(
 
 static int
 WmIconpositionCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4503,7 +4410,6 @@ WmIconpositionCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?x y?");
@@ -4662,17 +4568,14 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel or Frame to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
+    TCL_UNUSED(int),		/* Number of arguments. */
+    TCL_UNUSED(Tcl_Obj *const *)) /* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    (void)tkwin;
-    (void)objc;
-    (void)objv;
 
     if (!Tk_IsTopLevel(frameWin)) {
 	if (!Tk_IsManageable(frameWin)) {
@@ -4719,7 +4622,7 @@ WmManageCmd(
 
 static int
 WmMaxsizeCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4727,7 +4630,6 @@ WmMaxsizeCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?width height?");
@@ -4771,7 +4673,7 @@ WmMaxsizeCmd(
 
 static int
 WmMinsizeCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4779,7 +4681,6 @@ WmMinsizeCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?width height?");
@@ -4823,7 +4724,7 @@ WmMinsizeCmd(
 
 static int
 WmOverrideredirectCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4832,7 +4733,6 @@ WmOverrideredirectCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int boolean, curValue;
     XSetWindowAttributes atts;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -4896,7 +4796,7 @@ WmOverrideredirectCmd(
 
 static int
 WmPositionfromCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4910,7 +4810,6 @@ WmPositionfromCmd(
 	OPT_PROGRAM, OPT_USER
     };
     int index;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?user/program?");
@@ -4965,7 +4864,7 @@ WmPositionfromCmd(
 
 static int
 WmProtocolCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -4977,7 +4876,6 @@ WmProtocolCmd(
     const char *cmd;
     TkSizeT cmdLength;
     Tcl_Obj *resultObj;
-    (void)tkwin;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name? ?command?");
@@ -5031,7 +4929,7 @@ WmProtocolCmd(
 	    break;
 	}
     }
-    cmd = TkGetStringFromObj(objv[4], &cmdLength);
+    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
 	protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
@@ -5062,7 +4960,7 @@ WmProtocolCmd(
 
 static int
 WmResizableCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -5070,7 +4968,6 @@ WmResizableCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?width height?");
@@ -5125,7 +5022,7 @@ WmResizableCmd(
 
 static int
 WmSizefromCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -5139,7 +5036,6 @@ WmSizefromCmd(
 	OPT_PROGRAM, OPT_USER
     };
     int index;
-    (void)tkwin;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?user|program?");
@@ -5323,7 +5219,7 @@ WmStackorderCmd(
 
 static int
 WmStateCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -5337,7 +5233,6 @@ WmStateCmd(
 	OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN, OPT_ZOOMED
     };
     int index;
-    (void)tkwin;
 
     if ((objc < 3) || (objc > 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?state?");
@@ -5464,7 +5359,7 @@ WmStateCmd(
 
 static int
 WmTitleCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -5474,7 +5369,6 @@ WmTitleCmd(
     const char *argv3;
     TkSizeT length;
     HWND wrapper;
-    (void)tkwin;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newTitle?");
@@ -5507,7 +5401,7 @@ WmTitleCmd(
 	if (wmPtr->title != NULL) {
 	    ckfree(wmPtr->title);
 	}
-	argv3 = TkGetStringFromObj(objv[3], &length);
+	argv3 = Tcl_GetStringFromObj(objv[3], &length);
 	wmPtr->title = (char *)ckalloc(length + 1);
 	memcpy(wmPtr->title, argv3, length + 1);
 
@@ -5670,14 +5564,13 @@ WmTransientCmd(
 
 static int
 WmWithdrawCmd(
-    Tk_Window tkwin,		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    (void)tkwin;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -5724,7 +5617,7 @@ WmUpdateGeom(
 
 static void
 WmWaitVisibilityOrMapProc(
-    ClientData clientData,	/* Pointer to window. */
+    void *clientData,	/* Pointer to window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -5941,7 +5834,7 @@ Tk_UnsetGrid(
 
 static void
 TopLevelEventProc(
-    ClientData clientData,	/* Window for which event occurred. */
+    void *clientData,	/* Window for which event occurred. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -5986,12 +5879,11 @@ TopLevelEventProc(
 
 static void
 TopLevelReqProc(
-    ClientData dummy,		/* Not used. */
+    TCL_UNUSED(void *),		/* Not used. */
     Tk_Window tkwin)		/* Information about window. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     WmInfo *wmPtr;
-    (void)dummy;
 
     wmPtr = winPtr->wmInfoPtr;
     if (wmPtr) {
@@ -6029,7 +5921,7 @@ TopLevelReqProc(
 
 static void
 UpdateGeometryInfo(
-    ClientData clientData)	/* Pointer to the window's record. */
+    void *clientData)	/* Pointer to the window's record. */
 {
     int x, y;			/* Position of border on desktop. */
     int width, height;		/* Size of client area. */
@@ -6538,15 +6430,13 @@ Tk_CoordsToWindow(
 
 void
 Tk_GetVRootGeometry(
-    Tk_Window tkwin,		/* Window whose virtual root is to be
+    TCL_UNUSED(Tk_Window),/* Window whose virtual root is to be
 				 * queried. */
     int *xPtr, int *yPtr,	/* Store x and y offsets of virtual root
 				 * here. */
     int *widthPtr, int *heightPtr)
 				/* Store dimensions of virtual root here. */
 {
-    (void)tkwin;
-
     *xPtr = GetSystemMetrics(SM_XVIRTUALSCREEN);
     *yPtr = GetSystemMetrics(SM_YVIRTUALSCREEN);
     *widthPtr = GetSystemMetrics(SM_CXVIRTUALSCREEN);

@@ -4,8 +4,8 @@
  *	This file manages the selection for the Tk toolkit, translating
  *	between the standard X ICCCM conventions and Tcl commands.
  *
- * Copyright (c) 1990-1993 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1993 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -900,7 +900,7 @@ Tk_SelectionObjCmd(
 	} else {
 	    format = XA_STRING;
 	}
-	string = TkGetStringFromObj(objs[1], &cmdLength);
+	string = Tcl_GetStringFromObj(objs[1], &cmdLength);
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
@@ -1191,7 +1191,7 @@ TkSelInit(
      * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us to
      * support older X servers that didn't have UTF8_STRING yet. This is
      * necessary on Unix systems. For more information, see:
-     *	  http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
+     *	  https://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
      */
 
 #if !defined(_WIN32)
@@ -1399,12 +1399,12 @@ HandleTclCommand(
 		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
 		cmdInfoPtr->buffer[0] = '\0';
 	    } else {
-		int ch;
+		Tcl_UniChar ch = 0;
 		p = string;
 		string += count;
 		numChars = 0;
 		while (p < string) {
-		    p += TkUtfToUniChar(p, &ch);
+		    p += Tcl_UtfToUniChar(p, &ch);
 		    numChars++;
 		}
 		cmdInfoPtr->charOffset += numChars;

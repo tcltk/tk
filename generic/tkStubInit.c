@@ -3,7 +3,7 @@
  *
  *	This file contains the initializers for the Tk stub vectors.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1339,6 +1339,7 @@ const TkStubs tkStubs = {
     Tk_NewWindowObj, /* 277 */
     Tk_SendVirtualEvent, /* 278 */
     Tk_FontGetDescription, /* 279 */
+    Tk_CreatePhotoImageFormatVersion3 /* 280 */
 };
 
 /* !END!: Do not edit above this line. */

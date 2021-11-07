@@ -7,7 +7,7 @@
  *	build a widget; it isn't included in the normal wish, but it is
  *	included in "tktest".
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

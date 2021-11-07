@@ -3,8 +3,8 @@
  *
  *	This file implements text items for canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -53,7 +53,7 @@ typedef struct TextItem {
     int width;			/* Width of lines for word-wrap, pixels. Zero
 				 * means no word-wrap. */
     int underline;		/* Index of character to put underline beneath
-				 * or -1 for no underlining. */
+				 * or INT_MIN for no underlining. */
     double angle;		/* What angle, in degrees, to draw the text
 				 * at. */
 
@@ -93,6 +93,95 @@ static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
 };
 
+static int
+UnderlineParseProc(
+    ClientData dummy,	/* Not used.*/
+    Tcl_Interp *interp,		/* Used for reporting errors. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    const char *value,		/* Value of option. */
+    char *widgRec,		/* Pointer to record for item. */
+    TkSizeT offset)			/* Offset into item (ignored). */
+{
+    int *underlinePtr = (int *) (widgRec + offset);
+    Tcl_Obj obj;
+    int code;
+    TkSizeT underline;
+    (void)dummy;
+    (void)tkwin;
+
+    if (value == NULL || *value == 0) {
+	*underlinePtr = INT_MIN; /* No underline */
+	return TCL_OK;
+    }
+
+    obj.refCount = 1;
+    obj.bytes = (char *)value;
+    obj.length = strlen(value);
+    obj.typePtr = NULL;
+    code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
+    if (code == TCL_OK) {
+	if (underline == TCL_INDEX_NONE) {
+	    underline = INT_MIN;
+	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
+		underline++;
+	} else if (underline >= INT_MAX) {
+	    underline = INT_MAX;
+	}
+	*underlinePtr = underline;
+
+    } else {
+	Tcl_AppendResult(interp, "bad index \"", value,
+		"\": must be integer?[+-]integer? or end?[+-]integer?", NULL);
+    }
+	return code;
+}
+
+const char *
+UnderlinePrintProc(
+    ClientData dummy,	/* Ignored. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    char *widgRec,		/* Pointer to record for item. */
+    TkSizeT offset,			/* Pointer to record for item. */
+    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+				 * information about how to reclaim storage
+				 * for return string. */
+{
+    int underline = *(int *)(widgRec + offset);
+    char *p;
+    (void)dummy;
+    (void)tkwin;
+
+    if (underline == INT_MIN) {
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
+	p = (char *)"-1";
+#else
+	p = (char *)"";
+#endif
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    } else if (underline == INT_MAX) {
+	p = (char *)"end+1";
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    } else if (underline == -1) {
+	p = (char *)"end";
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    }
+    p = (char *)ckalloc(32);
+    if (underline < 0) {
+	sprintf(p, "end%d", underline);
+    } else {
+	sprintf(p, "%d", underline);
+    }
+    *freeProcPtr = TCL_DYNAMIC;
+    return p;
+}
+
+static const Tk_CustomOption underlineOption = {
+    UnderlineParseProc, UnderlinePrintProc, NULL
+};
+
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
 	NULL, offsetof(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
@@ -123,8 +212,8 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
 	"", offsetof(TextItem, text), 0, NULL},
-    {TK_CONFIG_INT, "-underline", NULL, NULL,
-	"-1", offsetof(TextItem, underline), 0, NULL},
+    {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, NULL,
+	offsetof(TextItem, underline), TK_CONFIG_NULL_OK, &underlineOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
 	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
@@ -264,7 +353,7 @@ CreateText(
     textPtr->disabledStipple = None;
     textPtr->text	= NULL;
     textPtr->width	= 0;
-    textPtr->underline	= -1;
+    textPtr->underline	= INT_MIN;
     textPtr->angle	= 0.0;
 
     textPtr->numChars	= 0;
@@ -1020,7 +1109,7 @@ TextInsert(
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
-    string = TkGetStringFromObj(obj, &byteCount);
+    string = Tcl_GetStringFromObj(obj, &byteCount);
 
     text = textPtr->text;
 
@@ -1375,7 +1464,7 @@ TranslateText(
 static int
 GetTextIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
@@ -1388,7 +1477,6 @@ GetTextIndex(
     int c;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string;
-    (void)canvas;
 
     if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
@@ -1400,7 +1488,7 @@ GetTextIndex(
 	return TCL_OK;
     }
 
-    string = TkGetStringFromObj(obj, &length);
+    string = Tcl_GetStringFromObj(obj, &length);
     c = string[0];
 
     if ((c == 'i')
@@ -1426,7 +1514,7 @@ GetTextIndex(
 	*indexPtr = textInfoPtr->selectLast;
     } else if (c == '@') {
 	int x, y;
-	double tmp, c = textPtr->cosine, s = textPtr->sine;
+	double tmp, cs = textPtr->cosine, s = textPtr->sine;
 	char *end;
 	const char *p;
 
@@ -1445,7 +1533,7 @@ GetTextIndex(
 	x -= (int) textPtr->drawOrigin[0];
 	y -= (int) textPtr->drawOrigin[1];
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
-		(int) (x*c - y*s), (int) (y*c + x*s));
+		(int) (x*cs - y*s), (int) (y*cs + x*s));
     } else {
 	/*
 	 * Some of the paths here leave messages in the interp's result, so we
@@ -1478,14 +1566,13 @@ GetTextIndex(
 
 static void
 SetTextCursor(
-    Tk_Canvas canvas,		/* Record describing canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Record describing canvas widget. */
     Tk_Item *itemPtr,		/* Text item in which cursor position is to be
 				 * set. */
     TkSizeT index)			/* Character index of character just before
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    (void)canvas;
 
     if (index == TCL_INDEX_NONE) {
 	textPtr->insertPos = 0;
@@ -1518,7 +1605,7 @@ SetTextCursor(
 
 static TkSizeT
 GetSelText(
-    Tk_Canvas canvas,		/* Canvas containing selection. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing selection. */
     Tk_Item *itemPtr,		/* Text item containing selection. */
     TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
@@ -1532,7 +1619,6 @@ GetSelText(
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    (void)canvas;
 
     if (((int)textInfoPtr->selectFirst < 0) ||
 	    (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1)) {

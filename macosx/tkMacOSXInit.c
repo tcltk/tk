@@ -4,10 +4,10 @@
  *	This file contains Mac OS X -specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -41,6 +42,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
 @synthesize needsToDraw = _needsToDraw;
+@synthesize isSigned = _isSigned;
 @end
 
 /*
@@ -104,27 +106,49 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
 
-    /*
-     * Construct the menu bar.
-     */
-    _defaultMainMenu = nil;
-    [self _setupMenus];
+    if ([NSApp macOSVersion] >= 110000) {
 
-    /*
-     * Initialize event processing.
-     */
+   /*
+    * Initialize Apple Event processing. Apple's docs (see
+    * https://developer.apple.com/documentation/appkit/nsapplication)
+    * recommend doing this here, although historically we have
+    * done this in applicationWillFinishLaunching. In response to
+    * bug 7bb246b072.
+    */
+
     TkMacOSXInitAppleEvents(_eventInterp);
+
+    }
+}
+
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    (void)notification;
+
+   if ([NSApp macOSVersion] < 110000) {
+
+   /*
+    * Initialize Apple Event processing on macOS versions
+    * older than Big Sur (11).
+    */
+
+    TkMacOSXInitAppleEvents(_eventInterp);
+
+    }
+
 
     /*
      * Initialize the graphics context.
      */
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
-}
 
--(void)applicationDidFinishLaunching:(NSNotification *)notification
-{
-    (void)notification;
+    /*
+     * Construct the menu bar.
+     */
+
+    _defaultMainMenu = nil;
+    [self _setupMenus];
 
     /*
      * It is not safe to force activation of the NSApp until this method is
@@ -166,6 +190,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     int minorVersion, majorVersion;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
     majorVersion = 10;
@@ -175,6 +200,24 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     majorVersion = systemVersion.majorVersion;
     minorVersion = systemVersion.minorVersion;
 #endif
+
+    if (majorVersion == 10 && minorVersion == 16) {
+
+	/*
+	 * If a program compiled with a macOS 10.XX SDK is run on macOS 11.0 or
+	 * later then it will report majorVersion 10 and minorVersion 16, no
+	 * matter what the actual OS version of the host may be. And of course
+	 * Apple never released macOS 10.16. To work around this we guess the
+	 * OS version from the kernel release number, as reported by uname.
+	 */
+
+	struct utsname name;
+	char *endptr;
+	if (uname(&name) == 0) {
+	    majorVersion = strtol(name.release, &endptr, 10) - 9;
+	    minorVersion = 0;
+	}
+    }
     [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
 
     /*
@@ -201,6 +244,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 	if (path) {
 	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
 	    if (image) {
+		[image setName:@"NSApplicationIcon"];
 		[NSApp setApplicationIconImage:image];
 		[image release];
 	    }
@@ -270,6 +314,80 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
  *----------------------------------------------------------------------
  */
 
+/*
+ * Helper function which closes the shared NSFontPanel and NSColorPanel.
+ */
+
+static void closePanels(
+    void)
+{
+    if ([NSFontPanel sharedFontPanelExists]) {
+	[[NSFontPanel sharedFontPanel] orderOut:nil];
+    }
+    if ([NSColorPanel sharedColorPanelExists]) {
+        [[NSColorPanel sharedColorPanel] orderOut:nil];
+    }
+}
+
+/*
+ * This custom exit procedure is called by Tcl_Exit in place of the exit
+ * function from the C runtime.  It calls the terminate method of the
+ * NSApplication class (superTerminate for a TKApplication).  The purpose of
+ * doing this is to ensure that the NSFontPanel and the NSColorPanel are closed
+ * before the process exits, and that the application state is recorded
+ * correctly for all termination scenarios.
+ *
+ * TkpWantsExitProc tells Tcl_AppInit whether to install our custom exit proc,
+ * which terminates the process by calling [NSApplication terminate].  This
+ * does not work correctly if the process is part of an exec pipeline, so it is
+ * only done if the process was launched by the launcher or if both stdin and
+ * stdout are ttys.  To disable using the custom exit proc altogether, undefine
+ * USE_CUSTOM_EXIT_PROC.
+ */
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+static Bool doCleanupFromExit = NO;
+
+int TkpWantsExitProc(void) {
+    return doCleanupFromExit == YES;
+}
+
+TCL_NORETURN void TkpExitProc(
+    void *clientdata)
+{
+    Bool doCleanup = doCleanupFromExit;
+    if (doCleanupFromExit) {
+	doCleanupFromExit = NO; /* prevent possible recursive call. */
+	closePanels();
+    }
+
+    /*
+     * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
+     */
+
+    Tcl_Finalize();
+    if (doCleanup == YES) {
+	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
+    }
+    exit((long)clientdata); /* Convince the compiler that we don't return. */
+}
+#endif
+
+/*
+ * This signal handler is installed for the SIGINT, SIGHUP and SIGTERM signals
+ * so that normal finalization occurs when a Tk app is killed by one of these
+ * signals (e.g when ^C is pressed while running Wish in the shell).  It calls
+ * Tcl_Exit instead of the C runtime exit function called by the default handler.
+ * This is consistent with the Tcl_Exit manual page, which says that Tcl_Exit
+ * should always be called instead of exit.  When Tk is killed by a signal we
+ * return exit status 1.
+ */
+
+static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
+
+    Tcl_Exit(1);
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -298,6 +416,7 @@ TkpInit(
 	initialized = 1;
 
 #ifdef TK_FRAMEWORK
+
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
 	 * framework scripts directory.
@@ -382,6 +501,11 @@ TkpInit(
 		Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 			    TCL_GLOBAL_ONLY);
 	    }
+
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
+
 	    shouldOpenConsole = YES;
 	}
 	if (shouldOpenConsole) {
@@ -404,6 +528,9 @@ TkpInit(
 	    FILE *null = fopen("/dev/null", "w");
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
+#if defined(USE_CUSTOM_EXIT_PROC)
+	    doCleanupFromExit = YES;
+#endif
 	}
 
 	/*
@@ -439,6 +566,24 @@ TkpInit(
 		break;
 	    }
 	}
+
+# if defined(USE_CUSTOM_EXIT_PROC)
+
+	if ((isatty(0) && isatty(1))) {
+	    doCleanupFromExit = YES;
+	}
+
+# endif
+
+	/*
+	 * Install a signal handler for SIGINT, SIGHUP and SIGTERM which uses
+	 * Tcl_Exit instead of exit so that normal cleanup takes place if a TK
+	 * application is killed with one of these signals.
+	 */
+
+	signal(SIGINT, TkMacOSXSignalHandler);
+	signal(SIGHUP, TkMacOSXSignalHandler);
+	signal(SIGTERM, TkMacOSXSignalHandler);
     }
 
     /*
@@ -460,6 +605,8 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
+    MacSystrayInit(interp);
+    MacPrint_Init(interp);
 
     return TCL_OK;
 }

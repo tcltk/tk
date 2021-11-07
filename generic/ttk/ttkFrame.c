@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004 Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
  */
@@ -48,11 +48,12 @@ static const Tk_OptionSpec FrameOptionSpecs[] = {
 };
 
 static const Ttk_Ensemble FrameCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",   	TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -234,7 +235,7 @@ static Ttk_Side LabelAnchorSide(Ttk_PositionSpec flags)
 typedef struct {
     Tcl_Obj 	*labelAnchorObj;
     Tcl_Obj	*textObj;
-    Tcl_Obj 	*underlineObj;
+    int	underline;
     Tk_Window	labelWidget;
 
     Ttk_Manager	*mgr;
@@ -257,9 +258,8 @@ static const Tk_OptionSpec LabelframeOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Labelframe,label.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", offsetof(Labelframe,label.underlineObj), TCL_INDEX_NONE,
-	0,0,0 },
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(Labelframe, label.underline), 0},
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
 	TCL_INDEX_NONE, offsetof(Labelframe,label.labelWidget),
 	TK_OPTION_NULL_OK,0,LABELWIDGET_CHANGED|GEOMETRY_CHANGED },

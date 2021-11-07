@@ -5,8 +5,8 @@
 #	This file is used to generate the tkDecls.h, tkPlatDecls.h,
 #	tkStub.c, and tkPlatStub.c files.
 #
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1089,6 +1089,12 @@ declare 278 {
 }
 declare 279 {
     Tcl_Obj *Tk_FontGetDescription(Tk_Font tkfont)
+}
+
+# TIP#529
+declare 280 {
+    void Tk_CreatePhotoImageFormatVersion3(
+	    const Tk_PhotoImageFormatVersion3 *formatPtr)
 }
 
 # Define the platform specific public Tk interface.  These functions are

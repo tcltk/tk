@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004 Joe English
  */
 
 #include "tkInt.h"
@@ -44,7 +44,7 @@ typedef struct
     Tcl_Obj *textObj;
     Tcl_Obj *imageObj;
     Tcl_Obj *compoundObj;
-    Tcl_Obj *underlineObj;
+    int underline;
 
 } Tab;
 
@@ -67,8 +67,8 @@ static const Tk_OptionSpec TabOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
-	offsetof(Tab,underlineObj), TCL_INDEX_NONE, 0, 0, GEOMETRY_CHANGED },
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(Tab, underline), GEOMETRY_CHANGED},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
@@ -290,7 +290,7 @@ static void ActivateTab(Notebook *nb, TkSizeT index)
 static Ttk_State TabState(Notebook *nb, TkSizeT index)
 {
     Ttk_State state = nb->core.state;
-    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
+    Tab *itab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
     TkSizeT i = 0;
 
     if (index == nb->notebook.currentIndex) {
@@ -322,7 +322,7 @@ static Ttk_State TabState(Notebook *nb, TkSizeT index)
 	}
 	break;
     }
-    if (tab->state == TAB_STATE_DISABLED) {
+    if (itab->state == TAB_STATE_DISABLED) {
 	state |= TTK_STATE_DISABLED;
     }
 
@@ -1106,7 +1106,9 @@ static int NotebookIdentifyCommand(
 	    }
 	    break;
 	case IDENTIFY_TAB:
+#if !defined TK_NO_DEPRECATED && (TCL_MAJOR_VERSION < 9)
 	    if (tabIndex != TCL_INDEX_NONE)
+#endif
 	    Tcl_SetObjResult(interp, TkNewIndexObj(tabIndex));
 	    break;
     }
@@ -1132,7 +1134,9 @@ static int NotebookIndexCommand(
 
     status = FindTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	if (index != TCL_INDEX_NONE)
+#endif
 	Tcl_SetObjResult(interp, TkNewIndexObj(index));
     }
 
@@ -1242,8 +1246,8 @@ static int NotebookTabCommand(
  */
 static const Ttk_Ensemble NotebookCommands[] = {
     { "add",    	NotebookAddCommand,0 },
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "forget",		NotebookForgetCommand,0 },
     { "hide",		NotebookHideCommand,0 },
     { "identify",	NotebookIdentifyCommand,0 },
@@ -1252,6 +1256,7 @@ static const Ttk_Ensemble NotebookCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "select",		NotebookSelectCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { "tab",   		NotebookTabCommand,0 },
     { "tabs",   	NotebookTabsCommand,0 },
     { 0,0,0 }

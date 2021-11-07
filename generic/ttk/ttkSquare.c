@@ -1,4 +1,4 @@
-/* square.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+/* square.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * Minimal sample ttk widget.
  */
@@ -129,11 +129,12 @@ SquareDoLayout(void *clientData)
  */
 
 static const Ttk_Ensemble SquareCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
@@ -198,12 +199,15 @@ static const Ttk_ElementOptionSpec SquareElementOptions[] =
  */
 
 static void SquareElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
     SquareElement *square = (SquareElement *)elementRecord;
     int borderWidth = 0;
-    (void)dummy;
 
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
@@ -216,14 +220,16 @@ static void SquareElementSize(
  */
 
 static void SquareElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(unsigned int))
 {
     SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
-    (void)dummy;
-    (void)state;
 
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);

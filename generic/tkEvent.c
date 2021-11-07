@@ -4,10 +4,10 @@
  *	This file provides basic low-level facilities for managing X events in
  *	Tk.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 Ajuba Solutions.
- * Copyright (c) 2004 George Peter Staplin
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Ajuba Solutions.
+ * Copyright © 2004 George Peter Staplin
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -515,7 +515,10 @@ RefreshKeyboardMappingIfNeeded(
  *
  * Tk_GetButtonMask --
  *
- *	Return the proper Button${n}Mask for the button.
+ *	Return the proper Button${n}Mask for the button. Don't care about
+ *	Button4 - Button7, because those are not actually buttons: Those
+ *	are used for the horizontal or vertical mouse wheels. Button4Mask
+ *	and higher is actually used for Button 8 and higher.
  *
  * Results:
  *	A button mask.
@@ -527,8 +530,8 @@ RefreshKeyboardMappingIfNeeded(
  */
 
 static const unsigned buttonMasks[] = {
-    0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask,
-    Button6Mask, Button7Mask, Button8Mask, Button9Mask
+    0, Button1Mask, Button2Mask, Button3Mask, 0, 0, 0, 0, Button4Mask, \
+	    Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
 unsigned
@@ -1136,6 +1139,23 @@ Tk_HandleEvent(
     Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+    if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
+	if (eventPtr->type == ButtonRelease) {
+	    return;
+	} else if (eventPtr->type == ButtonPress) {
+	    int but = eventPtr->xbutton.button;
+	    eventPtr->type = MouseWheelEvent;
+	    eventPtr->xany.send_event = -1;
+	    eventPtr->xkey.keycode = (but & 1) ? -120 : 120;
+	    if (but > Button5) {
+		eventPtr->xkey.state |= ShiftMask;
+	    }
+	}
+    }
+#endif
 
     /*
      * If the generic handler processed this event we are done and can return.

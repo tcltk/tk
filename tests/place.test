@@ -1,8 +1,8 @@
 # This file is a Tcl script to test out the "place" command.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -13,7 +13,8 @@ tcltest::loadTestedCommands
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(TRAVIS_OS_NAME)] || ![string match linux $::env(TRAVIS_OS_NAME)]}]
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
@@ -260,7 +261,7 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] ne "aqua"} {
     proc placeUpdate {} {
 	update
     }
@@ -269,7 +270,7 @@ if {[tk windowingsystem] == "win32"} {
     }
 }
 
-test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints failsOnUbuntu -setup {
+test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
 } -body {
@@ -285,7 +286,7 @@ test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints 
     placeUpdate
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
-test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints failsOnUbuntu -setup {
+test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
     update idletasks
@@ -506,16 +507,17 @@ test place-14.1 {memory leak testing} -constraints memory -setup {
     frame .f
     frame .f.f
     stress {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        place forget .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	place forget .f.f
     } {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        pack .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	pack .f.f
+	update; # Needed because of TIP #518, handle <<NoManagedChild>> event.
     } {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        destroy .f
-        frame .f
-        frame .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	destroy .f
+	frame .f
+	frame .f.f
     }
 } -cleanup {
     destroy .f

@@ -4,11 +4,11 @@
 #	were provided by the Tango Desktop project which provides a
 #	unified set of high quality icons licensed under the
 #	Creative Commons Attribution Share-Alike license
-#	(http://creativecommons.org/licenses/by-sa/3.0/)
+#	(https://creativecommons.org/licenses/by-sa/3.0/)
 #
 #	See http://tango.freedesktop.org/Tango_Desktop_Project
 #
-# Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
+# Copyright © 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 
 namespace eval ::tk::icons {}
 

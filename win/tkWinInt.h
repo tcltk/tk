@@ -5,7 +5,7 @@
  *	Windows-specific parts of Tk, but aren't used by the rest of Tk.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -213,6 +213,24 @@ MODULE_SCOPE void		TkWinPointerEvent(HWND hwnd, int x, int y);
  */
 
 MODULE_SCOPE void		TkSetCursorPos(int x, int y);
+
+/*
+ * The following is implemented in tkWinSysTray.c
+ */
+
+MODULE_SCOPE  int       WinIcoInit (Tcl_Interp* interp);
+
+/*
+ * The following is implemented in tkWinGDI.c
+ */
+
+MODULE_SCOPE  int       Winprint_Init(Tcl_Interp* interp);
+
+/*
+ * The following is implemented in tkWinSysTray.c
+ */
+
+MODULE_SCOPE  int       WinIcoInit (Tcl_Interp* interp);
 
 /*
  * Common routines used in Windows implementation

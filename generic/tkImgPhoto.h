@@ -3,10 +3,10 @@
  *
  *	Declarations for images of type "photo" for Tk.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002-2008 Donal K. Fellows
- * Copyright (c) 2003 ActiveState Corporation.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2002-2008 Donal K. Fellows
+ * Copyright © 2003 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -48,13 +48,6 @@ typedef struct PhotoModel	PhotoModel;
 	typedef short schar;
 #   endif
 #endif
-
-/*
- * An unsigned 32-bit integral type, used for pixel values. We use int rather
- * than long here to accommodate those systems where longs are 64 bits.
- */
-
-typedef unsigned int pixel;
 
 /*
  * The maximum number of pixels to transmit to the server in a single
@@ -110,10 +103,10 @@ struct ColorTable {
     XVisualInfo	visualInfo;	/* Information about the visual for windows
 				 * using this color table. */
 
-    pixel redValues[256];	/* Maps 8-bit values of red intensity to a
+    unsigned redValues[256];	/* Maps 8-bit values of red intensity to a
 				 * pixel value or index in pixelMap. */
-    pixel greenValues[256];	/* Ditto for green intensity. */
-    pixel blueValues[256];	/* Ditto for blue intensity. */
+    unsigned greenValues[256];	/* Ditto for green intensity. */
+    unsigned blueValues[256];	/* Ditto for blue intensity. */
     unsigned long *pixelMap;	/* Actual pixel values allocated. */
 
     unsigned char colorQuant[3][256];
@@ -166,6 +159,8 @@ struct PhotoModel {
     Tcl_Obj *dataString;	/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
 				 * or string value. */
+    Tcl_Obj *metadata;		/* User-specified metadata dict or read from
+				 * image file */
     unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly dithered
 				 * pixel in image. */

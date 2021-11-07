@@ -4,8 +4,8 @@
  *	This file implements functions that decode & handle mouse events on
  *	MacOS X.
  *
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,6 +24,13 @@ typedef struct {
     Point global;
     Point local;
 } MouseEventData;
+
+typedef struct {
+    uint64_t wheelTickPrev;	/* For high resolution wheels. */
+    double vWheelAcc;		/* For high resolution wheels (vertical). */
+    double hWheelAcc;		/* For high resolution wheels (horizontal). */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
@@ -89,6 +96,9 @@ enum {
     }
 
     button = [theEvent buttonNumber] + Button1;
+    if ((button & -2) == Button2) {
+	button ^= 1; /* Swap buttons 2/3 */
+    }
     switch (eventType) {
     case NSRightMouseUp:
     case NSOtherMouseUp:
@@ -114,6 +124,17 @@ enum {
 	}
     case NSLeftMouseUp:
     case NSLeftMouseDown:
+
+	/*
+	 * Ignore mouse button events which arrive while the app is inactive.
+	 * These events will be resent after activation, causing duplicate
+	 * actions when an app is activated by a bound mouse event. See ticket
+	 * [7bda9882cb].
+	 */
+
+	if (! [NSApp isActive]) {
+	    return theEvent;
+	}
     case NSMouseMoved:
     case NSScrollWheel:
 #if 0
@@ -170,20 +191,18 @@ enum {
      */
 
     capture = TkpGetCapture();
-    if (capture) {
+    if (eventWindow) {
+	    winPtr = TkMacOSXGetTkWindow(eventWindow);
+    } else if (capture) {
 	winPtr = (TkWindow *) capture;
 	eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	if (!eventWindow) {
 	    return theEvent;
 	}
-    } else {
-	if (eventWindow) {
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
-	if (!winPtr) {
-	    eventWindow = [NSApp mainWindow];
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
+    }
+    if (!winPtr) {
+	eventWindow = [NSApp mainWindow];
+	winPtr = TkMacOSXGetTkWindow(eventWindow);
     }
     if (!winPtr) {
 
@@ -305,8 +324,9 @@ enum {
 	Tk_UpdatePointer(target, global.x, global.y, state);
     } else {
 	CGFloat delta;
-	int coarseDelta;
 	XEvent xEvent;
+	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
@@ -321,23 +341,43 @@ enum {
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
 
+#define WHEEL_DELTA 120
+#define WHEEL_DELAY 300000000
+	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
+	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
+	if (timeout) {
+	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
+	}
+	tsdPtr->wheelTickPrev = wheelTick;
 	delta = [theEvent deltaY];
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		    (signbit(delta) ? -1 : 1) : lround(delta);
-	    xEvent.xbutton.state = state;
-	    xEvent.xkey.keycode = coarseDelta;
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    delta = (tsdPtr->vWheelAcc += delta);
+	    if (timeout && fabs(delta) < 1.0) {
+		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	    }
+	    if (fabs(delta) >= 0.6) {
+		int intDelta = round(delta);
+		xEvent.xbutton.state = state;
+		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
+		tsdPtr->vWheelAcc -= intDelta;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
 	}
 	delta = [theEvent deltaX];
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		    (signbit(delta) ? -1 : 1) : lround(delta);
-	    xEvent.xbutton.state = state | ShiftMask;
-	    xEvent.xkey.keycode = coarseDelta;
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    delta = (tsdPtr->hWheelAcc += delta);
+	    if (timeout && fabs(delta) < 1.0) {
+		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	    }
+	    if (fabs(delta) >= 0.6) {
+	    int intDelta = round(delta);
+		xEvent.xbutton.state = state | ShiftMask;
+		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
+		tsdPtr->hWheelAcc -= intDelta;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
 	}
     }
     return theEvent;
@@ -405,8 +445,15 @@ ButtonModifiers2State(
      * Tk on OSX supports at most 9 buttons.
      */
 
-    state = (buttonState & 0x7F) * Button1Mask;
-    /* Handle buttons 8/9 */
+    state = (buttonState & 0x079) * Button1Mask;
+	/* Handle swapped buttons 2/3 */
+	if (buttonState & 0x02) {
+	    state |= Button3Mask;
+	}
+	if (buttonState & 0x04) {
+	    state |= Button2Mask;
+	}
+	/* Handle buttons 8/9 */
     state |= (buttonState & 0x180) * (Button8Mask >> 7);
 
     if (keyModifiers & alphaLock) {
@@ -618,7 +665,7 @@ GenerateButtonEvent(
     int dummy;
     TkDisplay *dispPtr;
 
-#if UNUSED
+#ifdef UNUSED
 
     /*
      * ButtonDown events will always occur in the front window. ButtonUp
@@ -681,6 +728,12 @@ TkpWarpPointer(
     }
 
     CGWarpMouseCursorPosition(pt);
+
+    if (dispPtr->warpWindow) {
+        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+    } else {
+        TkGenerateButtonEventForXPointer(None);
+    }
 }
 
 /*

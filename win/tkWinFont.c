@@ -4,9 +4,9 @@
  *	Contains the Windows implementation of the platform-independent font
  *	package interface.
  *
- * Copyright (c) 1994 Software Research Associates, Inc.
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1994 Software Research Associates, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1495,7 +1495,7 @@ MultiFontTextOut(
 		familyPtr = lastSubFontPtr->familyPtr;
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			(int) (p - source), &runString);
-		familyPtr->textOutProc(hdc, x-((double)tm.tmOverhang/2), y,
+		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 		familyPtr->getTextExtentPoint32Proc(hdc,
@@ -1517,7 +1517,7 @@ MultiFontTextOut(
 	familyPtr = lastSubFontPtr->familyPtr;
  	Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		(int) (p - source), &runString);
-	familyPtr->textOutProc(hdc, x-((double)tm.tmOverhang/2), y,
+	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 		(WCHAR *)Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
@@ -2732,7 +2732,7 @@ LoadFontRanges(
 				 * range information. */
     int *symbolPtr)
  {
-    int n, i, swapped, offset, cbData, segCount;
+    int n, i, j, k, swapped, offset, cbData, segCount;
     DWORD cmapKey;
     USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;
@@ -2808,9 +2808,9 @@ LoadFontRanges(
 		offset += cbData + sizeof(USHORT);
 		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, cbData);
 		if (swapped) {
-		    for (i = 0; i < segCount; i++) {
-			SwapShort(&endCount[i]);
-			SwapShort(&startCount[i]);
+		    for (j = 0; j < segCount; j++) {
+			SwapShort(&endCount[j]);
+			SwapShort(&startCount[j]);
 		    }
 		}
 		if (*symbolPtr != 0) {
@@ -2826,11 +2826,11 @@ LoadFontRanges(
 		     * 8-bit characters [note Bug: 2406]
 		     */
 
-		    for (i = 0; i < segCount; i++) {
-			if (((startCount[i] & 0xff00) == 0xf000)
-				&& ((endCount[i] & 0xff00) == 0xf000)) {
-			    startCount[i] &= 0xff;
-			    endCount[i] &= 0xff;
+		    for (k = 0; k < segCount; k++) {
+			if (((startCount[k] & 0xff00) == 0xf000)
+				&& ((endCount[k] & 0xff00) == 0xf000)) {
+			    startCount[k] &= 0xff;
+			    endCount[k] &= 0xff;
 			}
 		    }
 		}

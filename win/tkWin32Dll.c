@@ -3,7 +3,7 @@
  *
  *	This file contains a stub dll entry point.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -120,11 +120,11 @@ DllMain(
     case DLL_PROCESS_DETACH:
 	/*
 	 * Protect the call to TkFinalize in an SEH block. We can't be
-	 * guarenteed Tk is always being unloaded from a stable condition.
+	 * guaranteed Tk is always being unloaded from a stable condition.
 	 */
 
 #ifdef HAVE_NO_SEH
-#   ifdef __WIN64
+#   ifdef _WIN64
 	__asm__ __volatile__ (
 
 	    /*
@@ -135,7 +135,7 @@ DllMain(
 	    "leaq	%[registration], %%rdx"		"\n\t"
 	    "movq	%%gs:0,		%%rax"		"\n\t"
 	    "movq	%%rax,		0x0(%%rdx)"	"\n\t" /* link */
-	    "leaq	1f,		%%rax"		"\n\t"
+	    "leaq	1f(%%rip),	%%rax"		"\n\t"
 	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
 	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* rbp */
 	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* rsp */

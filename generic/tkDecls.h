@@ -3,7 +3,7 @@
  *
  *	Declarations of functions in the platform independent public Tcl API.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -893,6 +893,9 @@ EXTERN void		Tk_SendVirtualEvent(Tk_Window tkwin,
 				const char *eventName, Tcl_Obj *detail);
 /* 279 */
 EXTERN Tcl_Obj *	Tk_FontGetDescription(Tk_Font tkfont);
+/* 280 */
+EXTERN void		Tk_CreatePhotoImageFormatVersion3(
+				const Tk_PhotoImageFormatVersion3 *formatPtr);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1185,6 +1188,8 @@ typedef struct TkStubs {
     Tcl_Obj * (*tk_NewWindowObj) (Tk_Window tkwin); /* 277 */
     void (*tk_SendVirtualEvent) (Tk_Window tkwin, const char *eventName, Tcl_Obj *detail); /* 278 */
     Tcl_Obj * (*tk_FontGetDescription) (Tk_Font tkfont); /* 279 */
+    void (*tk_CreatePhotoImageFormatVersion3) (
+	    const Tk_PhotoImageFormatVersion3 *formatPtr);  /* 280 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1757,6 +1762,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_SendVirtualEvent) /* 278 */
 #define Tk_FontGetDescription \
 	(tkStubsPtr->tk_FontGetDescription) /* 279 */
+#define Tk_CreatePhotoImageFormatVersion3 \
+	(tkStubsPtr->tk_CreatePhotoImageFormatVersion3) /* 280 */
 
 #endif /* defined(USE_TK_STUBS) */
 
@@ -1795,5 +1802,7 @@ extern const TkStubs *tkStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */
