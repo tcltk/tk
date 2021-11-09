@@ -188,6 +188,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
+	winPtr->wmInfoPtr->hints.initial_state = IconicState;
 	Tk_UnmapWindow((Tk_Window)winPtr);
     }
 }
