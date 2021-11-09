@@ -13,6 +13,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "xbytes.h"
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
@@ -68,7 +69,7 @@ typedef struct RGBA32pixel_t {
 /*
  * ARGB32 0xAARRGGBB (Byte order is ARGB on big-endian systems.)
  * This is used by Aqua Tk for XImages and by NSBitmapImageReps whose
- * bitmapFormat property is NSBitmapFormatAlphaFirst.
+ * bitmapFormat property is NSAlphaFirstBitmapFormat.
  */
 
 typedef struct ARGB32pixel_t {
@@ -775,7 +776,7 @@ XGetImage(
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
 	bitmap = (char *)ckalloc(size);
-	if ((bitmap_fmt != 0 && bitmap_fmt != NSBitmapFormatAlphaFirst)
+	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
 	    || [bitmapRep samplesPerPixel] != 4
 	    || [bitmapRep isPlanar] != 0
 	    || bytes_per_row < 4 * width
@@ -802,7 +803,7 @@ XGetImage(
 		    flipped.rgba.blue = pixel.argb.blue;
 		    flipped.rgba.alpha = pixel.argb.alpha;
 		    *((pixel32 *)(bitmap + m)) = flipped;
-		} else { // bitmap_fmt = NSBitmapFormatAlphaFirst
+		} else { // bitmap_fmt = NSAlphaFirstBitmapFormat
 		    *((pixel32 *)(bitmap + m)) = pixel;
 		}
 	    }
