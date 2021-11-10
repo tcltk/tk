@@ -314,7 +314,7 @@ XUnmapWindow(
 		 * noted in tkMacOSXWm.c this does not happen, in spite of
 		 * Apple's claims to the contrary.
 		 */
-		
+
 		for (NSWindow *w in [NSApp orderedWindows]) {
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
@@ -332,14 +332,11 @@ XUnmapWindow(
 			break;
 		    }
 		}
-		NSWindow *top = [[NSApp windows] firstObject];
-		if (top) {
-		    [top makeKeyAndOrderFront:NSApp];
-		}
 	    }
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
     } else {
+
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
 	 * to draw in the space from which this subwindow was removed and then

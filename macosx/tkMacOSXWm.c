@@ -2827,7 +2827,7 @@ WmIconwindowCmd(
 	     */
 
 	    TkpWmSetState(oldIcon, WithdrawnState);
-	    [win orderOut:nil];
+	    [win orderOut:NSApp];
     	    [win setExcludedFromWindowsMenu:YES];
 	    wmPtr3->iconFor = NULL;
 	}
@@ -6464,6 +6464,7 @@ TkpWmSetState(
     }
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
+	[macWin orderOut:NSApp];
     } else if (state == IconicState) {
 
 	/*
