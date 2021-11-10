@@ -151,7 +151,7 @@ TkpGetString(
  */
 
 KeySym
-XKeycodeToKeysym(
+XKeycodeToKeysym_(
     Display *display,
     unsigned int keycode,
     int index)
