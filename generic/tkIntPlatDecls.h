@@ -795,7 +795,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkGenerateActivateEvents_
 #undef TkpPrintWindowId
 
-#if (TCL_MAJOR_VERSION < 8) && defined(MAC_OSX_TK)
+#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK)
 #   undef TkpCmapStressed
 #   define TkpCmapStressed(w,c) 0
 #   undef TkpSync

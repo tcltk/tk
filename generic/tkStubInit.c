@@ -125,7 +125,6 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #endif
 
 #ifdef _WIN32
-
 int
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 {
@@ -142,6 +141,8 @@ TkpSync(Display *display)
     /* dummy implementation, no need to do anything */
 }
 
+#endif
+#ifdef _WIN32
 void
 TkCreateXEventSource(void)
 {
@@ -698,7 +699,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XCreateGlyphCursor, /* 8 */
     XGContextFromGC, /* 9 */
     XListHosts, /* 10 */
-    XKeycodeToKeysym, /* 11 */
+    XKeycodeToKeysym_, /* 11 */
     XStringToKeysym, /* 12 */
     XRootWindow, /* 13 */
     XSetErrorHandler, /* 14 */
@@ -856,7 +857,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XKeysymToString, /* 5 */
     XCreateColormap, /* 6 */
     XGContextFromGC, /* 7 */
-    XKeycodeToKeysym, /* 8 */
+    XKeycodeToKeysym_, /* 8 */
     XStringToKeysym, /* 9 */
     XRootWindow, /* 10 */
     XSetErrorHandler, /* 11 */
@@ -1339,7 +1340,7 @@ const TkStubs tkStubs = {
     Tk_NewWindowObj, /* 277 */
     Tk_SendVirtualEvent, /* 278 */
     Tk_FontGetDescription, /* 279 */
-    Tk_CreatePhotoImageFormatVersion3 /* 280 */
+    Tk_CreatePhotoImageFormatVersion3, /* 280 */
 };
 
 /* !END!: Do not edit above this line. */

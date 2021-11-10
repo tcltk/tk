@@ -462,7 +462,7 @@ XkbKeycodeToKeysym(
 }
 
 KeySym
-XKeycodeToKeysym(
+XKeycodeToKeysym_(
     TCL_UNUSED(Display *),
     unsigned int keycode,
     int index)

@@ -90,7 +90,7 @@ EXTERN GContext		XGContextFromGC(GC g);
 /* 10 */
 EXTERN XHostAddress *	XListHosts(Display *d, int *i, Bool *b);
 /* 11 */
-EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
+EXTERN KeySym		XKeycodeToKeysym_(Display *d, unsigned int k, int i);
 /* 12 */
 EXTERN KeySym		XStringToKeysym(_Xconst char *c);
 /* 13 */
@@ -497,7 +497,7 @@ EXTERN Colormap		XCreateColormap(Display *d, Window w, Visual *v,
 /* 7 */
 EXTERN GContext		XGContextFromGC(GC g);
 /* 8 */
-EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
+EXTERN KeySym		XKeycodeToKeysym_(Display *d, unsigned int k, int i);
 /* 9 */
 EXTERN KeySym		XStringToKeysym(_Xconst char *c);
 /* 10 */
@@ -913,7 +913,7 @@ typedef struct TkIntXlibStubs {
     Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 8 */
     GContext (*xGContextFromGC) (GC g); /* 9 */
     XHostAddress * (*xListHosts) (Display *d, int *i, Bool *b); /* 10 */
-    KeySym (*xKeycodeToKeysym) (Display *d, unsigned int k, int i); /* 11 */
+    KeySym (*xKeycodeToKeysym_) (Display *d, unsigned int k, int i); /* 11 */
     KeySym (*xStringToKeysym) (_Xconst char *c); /* 12 */
     Window (*xRootWindow) (Display *d, int i); /* 13 */
     XErrorHandler (*xSetErrorHandler) (XErrorHandler x); /* 14 */
@@ -1071,7 +1071,7 @@ typedef struct TkIntXlibStubs {
     char * (*xKeysymToString) (KeySym k); /* 5 */
     Colormap (*xCreateColormap) (Display *d, Window w, Visual *v, int i); /* 6 */
     GContext (*xGContextFromGC) (GC g); /* 7 */
-    KeySym (*xKeycodeToKeysym) (Display *d, unsigned int k, int i); /* 8 */
+    KeySym (*xKeycodeToKeysym_) (Display *d, unsigned int k, int i); /* 8 */
     KeySym (*xStringToKeysym) (_Xconst char *c); /* 9 */
     Window (*xRootWindow) (Display *d, int i); /* 10 */
     XErrorHandler (*xSetErrorHandler) (XErrorHandler x); /* 11 */
@@ -1260,8 +1260,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xGContextFromGC) /* 9 */
 #define XListHosts \
 	(tkIntXlibStubsPtr->xListHosts) /* 10 */
-#define XKeycodeToKeysym \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym) /* 11 */
+#define XKeycodeToKeysym_ \
+	(tkIntXlibStubsPtr->xKeycodeToKeysym_) /* 11 */
 #define XStringToKeysym \
 	(tkIntXlibStubsPtr->xStringToKeysym) /* 12 */
 #define XRootWindow \
@@ -1559,8 +1559,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xCreateColormap) /* 6 */
 #define XGContextFromGC \
 	(tkIntXlibStubsPtr->xGContextFromGC) /* 7 */
-#define XKeycodeToKeysym \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym) /* 8 */
+#define XKeycodeToKeysym_ \
+	(tkIntXlibStubsPtr->xKeycodeToKeysym_) /* 8 */
 #define XStringToKeysym \
 	(tkIntXlibStubsPtr->xStringToKeysym) /* 9 */
 #define XRootWindow \

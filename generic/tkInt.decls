@@ -1104,7 +1104,7 @@ declare 10 win {
 }
 # second parameter was of type KeyCode
 declare 11 win {
-    KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
+    KeySym XKeycodeToKeysym_(Display *d, unsigned int k, int i)
 }
 declare 12 win {
     KeySym XStringToKeysym(_Xconst char *c)
@@ -1600,7 +1600,7 @@ declare 7 macosx {
 }
 # second parameter was of type KeyCode
 declare 8 macosx {
-    KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
+    KeySym XKeycodeToKeysym_(Display *d, unsigned int k, int i)
 }
 declare 9 macosx {
     KeySym XStringToKeysym(_Xconst char *c)
