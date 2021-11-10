@@ -337,7 +337,7 @@ static void RefocusGrabWindow(void *data) {
 	    continue;
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
-	    [win orderOut:nil];
+	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
