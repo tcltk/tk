@@ -305,6 +305,7 @@ XUnmapWindow(
 	if (!Tk_IsEmbedded(winPtr) &&
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
+	    [win orderOut:NSApp];
 	    if ([win isKeyWindow]) {
 
 		/*
