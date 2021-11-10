@@ -6464,7 +6464,6 @@ TkpWmSetState(
     }
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
-	[macWin orderOut:NSApp];
     } else if (state == IconicState) {
 
 	/*
