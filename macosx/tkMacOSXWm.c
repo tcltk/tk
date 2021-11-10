@@ -2827,7 +2827,7 @@ WmIconwindowCmd(
 	     */
 
 	    TkpWmSetState(oldIcon, WithdrawnState);
-	    [win orderOut:nil];
+	    [win orderOut:NSApp];
     	    [win setExcludedFromWindowsMenu:YES];
 	    wmPtr3->iconFor = NULL;
 	}
