@@ -7842,3 +7842,64 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2020-12-24 (bug)[6157a8] Aqua: file dialog -filetypes (davis,culler)
 
 - Released 8.6.11, Dec 31, 2020 - https://core.tcl-lang.org/tk/ for details
+
+2021-01-04 (bug)[19fb7a] Mac: [tk_messageBox] use proper icons (ericwb,culler)
+
+2021-01-11 (bug)[7beaed] ttk::bindMouseWheel syntax error (nemethi)
+
+2021-01-15 (new) support 4 new keycodes: CodeInput, SingleCandidate,
+	MultipleCandidate, PreviousCandidate (nijtmans)
+
+2021-01-18 (new) Portable keycodes: OE, oe, Ydiaeresis (nijtmans)
+
+2021-01-27 (bug)[bdcab8] Mac crash on non-BMP menu label (nab,culler)
+
+2021-02-07 (bug)[9e1312] <Enter> to parent after child destroyed (leunissen)
+
+2021-02-10 (bug)[d3cd4c] more robust notebook processing (nemethi)
+
+2021-02-25 (bug)[234ee4] crash in [clipboard get] invalid encoding (nijtmans)
+
+2021-02-25 (bug)[be9cad] Poor trace housekeeping -> tkwait segfault (michael)
+
+2021-03-02 (bug)[1626ed] Mac: crash with dead key as menu accelerator (culler)
+
+2021-03-22 (bug)[9b6065] restore Tcl [update], see window-2.12 (leunissen)
+
+2021-04-07 (bug)[58222c] Mac: entry and spinbox bg colors (chavez,culler)
+
+2021-04-18 (bug)[34db75,ea876b] cursor motion in peer text (vogel)
+
+2021-04-26 (bug)[c97464] memleak in TkpDrawAngledChars (nab,culler)
+
+2021-04-29 Mac: explicit backing CALayer to fix rendering issues (culler)
+
+2021-05-02 Mac: respect key repeat system setting (culler)
+
+2021-05-10 (bug)[171ba7] crash when grab and focus are not coordinated (culler)
+
+2021-05-24 crash due to failed transient record housekeeping (culler)
+
+2021-05-25 (bug)[7bda98] Mac: <Double-1> bindings fire twice on app activation
+
+2021-06-03 (bug)[4401d3] Mac: improved support of pixel formats (chavez,culler)
+
+2021-06-03 (bug)[8ecc3e] Mac: window exposed by Mission Control (chavez,culler)
+
+2021-06-04 (bug)[099109] segfault reusing a container toplevel (culler)
+
+2021-06-22 (bug)[4efbfe] static package init order in wish (werner)
+
+2021-09-21 (bug)[033886] Win: hang in font loading (e-paine,vogel)
+
+2021-10-14 (bug)[8ebed3] multi-thread safety in Xft use (werner)
+
+2021-10-22 (new)[TIP 608] New virtual event <<TkWorldChanged>> (griffin)
+
+2021-10-27 (bug) file dialog compatibility with Mac OS 12 (culler)
+
+2021-10-29 (bug) Mac: stop crash when non-Tk windows go full screen (werner)
+
+2021-10-30 (bug)[6ea0b3] Mac: grab from menu makes dead window (culler)
+
+- Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details

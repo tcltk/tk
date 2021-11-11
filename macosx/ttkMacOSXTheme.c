@@ -36,10 +36,13 @@
  * Macros for handling drawing contexts.
  */
 
-#define BEGIN_DRAWING(d) {	   \
-	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {return;}
-#define END_DRAWING \
+#define BEGIN_DRAWING(d) {				    \
+    TkMacOSXDrawingContext dc;				    \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, &dc)) {	    \
+	return;						    \
+    }							    \
+
+#define END_DRAWING				\
     TkMacOSXRestoreDrawingContext(&dc);}
 
 #define HIOrientation kHIThemeOrientationNormal
@@ -60,7 +63,10 @@
  */
 
 static CGFloat darkButtonFace[4] = {
-    112.0 / 255, 113.0 / 255, 115.0 / 255, 1.0
+    90.0 / 255, 86.0 / 255, 95.0 / 255, 1.0
+};
+static CGFloat darkPressedButtonFace[4] = {
+    114.0 / 255, 110.0 / 255, 118.0 / 255, 1.0
 };
 static CGFloat darkPressedBevelFace[4] = {
     135.0 / 255, 136.0 / 255, 138.0 / 255, 1.0
@@ -73,6 +79,12 @@ static CGFloat darkDisabledButtonFace[4] = {
 };
 static CGFloat darkInactiveSelectedTab[4] = {
     159.0 / 255, 160.0 / 255, 161.0 / 255, 1.0
+};
+static CGFloat darkSelectedTab[4] = {
+    97.0 / 255, 94.0 / 255, 102.0 / 255, 1.0
+};
+static CGFloat darkTab[4] = {
+    44.0 / 255, 41.0 / 255, 50.0 / 255, 1.0
 };
 static CGFloat darkFocusRing[4] = {
     38.0 / 255, 113.0 / 255, 159.0 / 255, 1.0
@@ -717,8 +729,15 @@ static void DrawDarkButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
-	GradientFillRoundedRectangle(context, bounds, 4,
+	if ([NSApp macOSVersion] < 120000) {
+	    GradientFillRoundedRectangle(context, bounds, 4,
 	    pressedPushButtonGradient, 2);
+	} else {
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+		components: darkPressedButtonFace
+		count: 4];
+	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+	}
     } else if (kind == kThemePushButton &&
 	       (state & TTK_STATE_ALTERNATE) &&
 	       !(state & TTK_STATE_BACKGROUND)) {
@@ -993,6 +1012,7 @@ static void DrawDarkTab(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *faceColor, *stroke;
     CGRect originalBounds = bounds;
+    int OSVersion = [NSApp macOSVersion];
 
     CGContextSetLineWidth(context, 1.0);
     CGContextClipToRect(context, bounds);
@@ -1002,13 +1022,14 @@ static void DrawDarkTab(
      * clipped off.
      */
 
-    if (!(state & TTK_STATE_FIRST_TAB)) {
-	bounds.origin.x -= 10;
-	bounds.size.width += 10;
-    }
-
-    if (!(state & TTK_STATE_LAST_TAB)) {
-	bounds.size.width += 10;
+    if (OSVersion < 110000 || !(state & TTK_STATE_SELECTED)) {
+	if (!(state & TTK_STATE_FIRST_TAB)) {
+	    bounds.origin.x -= 10;
+	    bounds.size.width += 10;
+	}
+	if (!(state & TTK_STATE_LAST_TAB)) {
+	    bounds.size.width += 10;
+	}
     }
 
     /*
@@ -1020,13 +1041,25 @@ static void DrawDarkTab(
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_SELECTED)) {
 	if (state & TTK_STATE_DISABLED) {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkDisabledButtonFace
-		count: 4];
+	    if (OSVersion < 110000) {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkDisabledButtonFace
+						   count: 4];
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkTab
+						   count: 4];
+	    }
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkButtonFace
-		count: 4];
+	    if (OSVersion < 110000) {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkButtonFace
+						   count: 4];
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkTab
+						   count: 4];
+	    }
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -1053,21 +1086,34 @@ static void DrawDarkTab(
     } else {
 
         /*
-         * This is the selected tab; paint it blue.  If it is first, cover up
-         * the separator line drawn by the second one.  (The selected tab is
-         * always drawn last.)
+         * This is the selected tab.  If it is first, cover up the separator
+         * line drawn by the second one.  (The selected tab is always drawn
+         * last.)
          */
 
 	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
 	    bounds.size.width += 1;
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    GradientFillRoundedRectangle(context, bounds, 4,
-		darkSelectedGradient, 2);
+	    if (OSVersion < 110000) {
+		GradientFillRoundedRectangle(context, bounds, 4,
+					     darkSelectedGradient, 2);
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkSelectedTab
+						   count: 4];
+		SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+	    }
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkInactiveSelectedTab
-		count: 4];
+	    if (OSVersion < 110000) {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkInactiveSelectedTab
+						   count: 4];
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkSelectedTab
+						   count: 4];
+	    } 
 	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 	}
 	HighlightButtonBorder(context, bounds);
@@ -1379,7 +1425,7 @@ static void ButtonElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     const HIThemeButtonDrawInfo info =
 	computeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
@@ -1425,7 +1471,7 @@ static void ButtonElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
 
@@ -1769,7 +1815,7 @@ static void EntryElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    EntryElement *e = elementRecord;
+    EntryElement *e = (EntryElement *)elementRecord;
     Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
     CGRect bounds = BoxToRect(d, inner);
     NSColor *background;
@@ -2142,8 +2188,8 @@ static void TrackElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    TrackElementData *data = clientData;
-    TrackElement *elem = elementRecord;
+    TrackElementData *data = (TrackElementData *)clientData;
+    TrackElement *elem = (TrackElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
     CGRect bounds;
@@ -2288,7 +2334,7 @@ static void PbarElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    PbarElement *pbar = elementRecord;
+    PbarElement *pbar = (PbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL, phase = 0, kind;
 
     /*
@@ -2387,7 +2433,7 @@ static void TroughElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
@@ -2428,7 +2474,7 @@ static void TroughElementDraw(
     Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
@@ -2470,7 +2516,7 @@ static void ThumbElementSize(
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *))
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2491,7 +2537,7 @@ static void ThumbElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ScrollbarElement *scrollbar = elementRecord;
+    ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2906,7 +2952,7 @@ static void FieldElementDraw(
     Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    FieldElement *e = elementRecord;
+    FieldElement *e = (FieldElement *)elementRecord;
     Tk_3DBorder backgroundPtr =
 	Tk_Get3DBorderFromObj(tkwin, e->backgroundObj);
 
@@ -2998,7 +3044,7 @@ static void TreeHeaderElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     const HIThemeButtonDrawInfo info = {
 	.version = 0,

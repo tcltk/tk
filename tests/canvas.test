@@ -730,6 +730,22 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
     set id [.c create rect 0 0 1cm 1cm]
     expr {[lindex [.c coords $id] 2]>1}
 } -result {1}
+test canvas-15.20 {bug [237971ce]} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create line {0 0 50 50 100 50}]
+    .c insert $id end {200 200}
+    .c coords $id
+} -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
+test canvas-15.21 {bug [237971ce]} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create poly {0 0 50 50 100 50}]
+    .c insert $id end {200 200}
+    .c coords $id
+} -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
 destroy .c
 
 test canvas-16.1 {arc coords check} -setup {

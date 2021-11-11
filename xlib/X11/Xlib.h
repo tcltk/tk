@@ -330,9 +330,6 @@ typedef struct _XImage {
     unsigned long green_mask;
     unsigned long blue_mask;
     XPointer obdata;		/* hook for the object routines to hang on */
-#if defined(MAC_OSX_TK)
-    int pixelpower;		/* No longer used. */
-#endif
     struct funcs {		/* image manipulation routines */
 	struct _XImage *(*create_image)();
 #if NeedFunctionPrototypes

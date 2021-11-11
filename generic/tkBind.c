@@ -793,6 +793,7 @@ static Time
 CurrentTimeInMilliSecs(void)
 {
     Tcl_Time now;
+
     Tcl_GetTime(&now);
     return ((Time) now.sec)*1000 + ((Time) now.usec)/1000;
 }
@@ -946,6 +947,7 @@ FreePatSeqEntry(
     PSEntry *entry)
 {
     PSEntry *next = PSList_Next(entry);
+
     PSModMaskArr_Free(&entry->lastModMaskArr);
     ckfree(entry);
     return next;
@@ -1621,7 +1623,7 @@ Tk_CreateBinding(
     ClientData object,		/* Token for object with which binding is associated. */
     const char *eventString,	/* String describing event sequence that triggers binding. */
     const char *script,		/* Contains Tcl script to execute when binding triggers. */
-    int append)		/* 0 means replace any existing binding for eventString;
+    int append)			/* 0 means replace any existing binding for eventString;
     				 * 1 means append to that binding. If the existing binding is
 				 * for a callback function and not a Tcl command string, the
 				 * existing binding will always be replaced. */
@@ -4490,13 +4492,13 @@ NameToWindow(
  *
  * DoWarp --
  *
- *	Perform Warping of X pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer. Executed as an idle handler only.
  *
  * Results:
  *	None
  *
  * Side effects:
- *	X Pointer will move to a new location.
+ *	Mouse pointer moves to a new location.
  *
  *-------------------------------------------------------------------------
  */
@@ -4505,7 +4507,7 @@ static void
 DoWarp(
     ClientData clientData)
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
 
     assert(clientData);
 
@@ -4610,7 +4612,7 @@ FindSequence(
     				 * associated. For virtual event table, NULL. */
     const char *eventString,	/* String description of pattern to match on. See user
     				 * documentation for details. */
-    int create,		/* 0 means don't create the entry if it doesn't already exist.
+    int create,			/* 0 means don't create the entry if it doesn't already exist.
     				 * 1 means create. */
     int allowVirtual,		/* 0 means that virtual events are not allowed in the sequence.
     				 * 1 otherwise. */

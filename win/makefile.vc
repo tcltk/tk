@@ -455,7 +455,7 @@ $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -469,6 +469,7 @@ genstubs:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR)\ttk $(GENERICDIR)\ttk\ttk.decls
 !endif
 
 
@@ -651,12 +652,12 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {[catch {package present Tcl 8.6.0}]} { return }
+if {![package vsatisfies [package provide Tcl] 8.6.0]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll] Tk]
+    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]
 } else {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk]
+    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)]]
 }
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"

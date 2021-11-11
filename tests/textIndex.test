@@ -834,6 +834,18 @@ test textIndex-19.13 {Display lines} {
     destroy .txt .sbar
 } {}
 
+test textIndex-19.14 {Display lines with elided lines} {
+    catch {destroy .t}
+    pack [text .t]
+    for {set n 1} {$n <= 1000} {incr n} {
+	.t insert end "Line $n\n"
+    }
+    .t tag configure Elided -elide 1
+    .t tag add Elided 6.0 951.0
+    update
+    set res [.t index "951.0 + 1 displaylines"]
+} {952.0}
+
 proc text_test_word {startend chars start} {
     destroy .t
     text .t
@@ -963,6 +975,43 @@ test textIndex-25.1 {IndexCountBytesOrdered, bug [3f1f79abcf]} {
     focus -force .t2   ; # to see the cursor blink
     destroy .t2
 } {}
+
+test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline in peers, bug [34db75c0ac]} {
+    set res {}
+    pack [text .t2]
+    .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
+    pack [.t2 peer create .p2 -startline 2 -endline 3]
+    lappend res [.p2 index "end"]
+    lappend res [.p2 index "end lineend"]
+    lappend res [.p2 index "end display lineend"]
+    destroy .t2 .p2
+    set res
+} {2.0 2.0 2.0}
+test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outside peer -starline/-endline, bug [34db75c0ac]} {
+    set res {}
+    pack [text .t2]
+    .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
+    pack [.t2 peer create .p2 -startline 2 -endline 3]
+    .p2 configure -startline 3 -endline {}
+    .t2 mark set mymark 1.0
+    catch {.p2 index mymark} msg
+    lappend res [.t2 index mymark] $msg
+    image create photo redsquare -width 5 -height 5
+    redsquare put red -to 0 0 4 4
+    .t2 image create 1.0 -image redsquare
+    catch {.p2 index redsquare} msg
+    lappend res [.t2 index redsquare] $msg
+    frame .f -width 10 -height 10 -bg blue
+    .t2 window create 1.2 -window .f
+    catch {.p2 index .f} msg
+    lappend res [.t2 index .f] $msg
+    .t2 tag add mytag 1.3
+    catch {.p2 index mytag.first} msg
+    lappend res [.t2 index mytag.first] $msg
+    destroy .t2 .p2
+    set res
+} {1.0 {bad text index "mymark"} 1.0 {bad text index "redsquare"} 1.2\
+   {bad text index ".f"} 1.3 {text doesn't contain any characters tagged with "mytag"}}
 
 # cleanup
 rename textimage {}

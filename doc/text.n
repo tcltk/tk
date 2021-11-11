@@ -1350,7 +1350,7 @@ are empty strings.
 \fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
-command depends on the \fIoption\fR argument that follows the \fBtag\fR
+command depends on the \fIoption\fR argument that follows the \fBimage\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
@@ -2031,7 +2031,7 @@ In the descriptions below,
 is dependent on the value of
 the \fBtcl_wordchars\fR variable.  See \fBtclvars\fR(n).
 .IP [1]
-Clicking mouse button 1 positions the insertion cursor just before the
+Clicking mouse button 1 positions the insertion cursor at the closest edge of the
 character underneath the mouse cursor, sets the input focus to this widget,
 and clears any selection in the widget. Dragging with mouse button 1 strokes
 out a selection between the insertion cursor and the character under the

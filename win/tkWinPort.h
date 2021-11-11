@@ -21,6 +21,7 @@
  *---------------------------------------------------------------------------
  */
 
+#include <stdio.h>
 #include <wchar.h>
 #include <io.h>
 #include <stdlib.h>
@@ -64,6 +65,9 @@
     typedef _TCHAR TCHAR;
 #endif
 
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>

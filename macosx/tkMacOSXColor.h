@@ -241,8 +241,10 @@ static SystemColorDatum systemColorData[] = {
 {"WindowBackgroundColor7",	    ttkBackground, 7, NULL, 0, NULL },
 /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
 {"SecondaryLabelColor",		    ttkBackground, 14, NULL, 0, NULL },
-/* Color to use for notebook tab labels -- depends on OS version. */
+/* Color to use for notebook tab label text -- depends on OS version. */
 {"SelectedTabTextColor",	    semantic, 0, "textColor", 0, NULL },
+/* Color to use for selected button labels -- depends on OS version. */
+{"PressedButtonTextColor",	    semantic, 0, "textColor", 0, NULL },
 /* Semantic colors that we simulate on older systems which don't supoort them. */
 {"ControlAccentColor",		    semantic, 0, "controlAccentColor", 0, NULL },
 {"LabelColor",                      semantic, 0, "blackColor", 0, NULL },
@@ -250,7 +252,7 @@ static SystemColorDatum systemColorData[] = {
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
 {"UnemphasizedSelectedTextBackgroundColor", semantic, 0, "grayColor", 0, NULL },
-{NULL,				    0, 0, NULL, 0, NULL }
+{NULL,				    rgbColor, 0, NULL, 0, NULL }
 };
 
 #endif

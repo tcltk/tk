@@ -162,6 +162,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
+	return;
+    }
     [(TKWindow *)[notification object] tkLayoutChanged];
 }
 
@@ -170,6 +173,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
+	return;
+    }
     [(TKWindow *)[notification object] tkLayoutChanged];
 }
 
@@ -291,6 +297,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 }
 @end
 
+
+/*
+ * Idle task which forces focus to a particular window.
+ */
+
+static void RefocusGrabWindow(void *data) {
+    TkWindow *winPtr = (TkWindow *) data;
+    TkpChangeFocus(winPtr, 1);
+}
+
 #pragma mark TKApplication(TKApplicationEvent)
 
 @implementation TKApplication(TKApplicationEvent)
@@ -308,6 +324,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      * When the application is activated with Command-Tab it will create a
      * zombie window for every Tk window which has been withdrawn.  So iterate
      * through the list of windows and order out any withdrawn window.
+     * If one of the windows is the grab window for its display we focus
+     * it.  This is done as at idle, in case the app was reactivated by
+     * clicking a different window.  In that case we need to wait until the
+     * mouse event has been processed before focusing the grab window.
      */
 
     for (NSWindow *win in [NSApp windows]) {
@@ -317,6 +337,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:nil];
+	}
+	if (winPtr->dispPtr->grabWinPtr == winPtr) {
+	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
+	} else {
+	    [[self keyWindow] orderFront: self];
 	}
     }
 }
@@ -915,11 +940,59 @@ ConfigureRestrictProc(
 
 @implementation TKContentView(TKWindowEvent)
 
+- (id)initWithFrame:(NSRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+	/*
+	 * The layer must exist before we set wantsLayer to YES.
+	 */
+
+	self.layer = [CALayer layer];
+	self.wantsLayer = YES;
+	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
+	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
+	    kCAGravityTopLeft : kCAGravityBottomLeft;
+
+	/*
+	 * Nothing gets drawn at all if the layer does not have a delegate.
+	 * Currently, we do not implement any methods of the delegate, however.
+	 */
+
+	self.layer.delegate = (id) self;
+    }
+    return self;
+}
+
+/*
+ * We will just use drawRect.
+ */
+
+- (BOOL) wantsUpdateLayer
+{
+    return NO;
+}
+
+- (void) viewDidChangeBackingProperties
+{
+
+    /*
+     * Make sure that the layer uses a contentScale that matches the
+     * backing scale factor of the screen.  This avoids blurry text whe
+     * the view is on a Retina display, as well as incorrect size when
+     * the view is on a normal display.
+     */
+
+    self.layer.contentsScale = self.window.screen.backingScaleFactor;
+}
+
 - (void) addTkDirtyRect: (NSRect) rect
 {
     _tkNeedsDisplay = YES;
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
     [NSApp setNeedsToDraw:YES];
+    [self setNeedsDisplay:YES];
+    [[self layer] setNeedsDisplay];
 }
 
 - (void) clearTkDirtyRect

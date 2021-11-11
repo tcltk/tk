@@ -5,7 +5,7 @@
  *	functions.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2017 Marc Culler
  *
@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -103,17 +104,37 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
+
+    if ([NSApp macOSVersion] >= 110000) {
+
+   /*
+    * Initialize Apple Event processing. Apple's docs (see
+    * https://developer.apple.com/documentation/appkit/nsapplication)
+    * recommend doing this here, although historically we have
+    * done this in applicationWillFinishLaunching. In response to
+    * bug 7bb246b072.
+    */
+
+    TkMacOSXInitAppleEvents(_eventInterp);
+
+    }
 }
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     (void)notification;
 
+   if ([NSApp macOSVersion] < 110000) {
+
    /*
-    * Initialize event processing.
+    * Initialize Apple Event processing on macOS versions
+    * older than Big Sur (11).
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
+
+    }
+
 
     /*
      * Initialize the graphics context.
@@ -168,6 +189,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     int minorVersion, majorVersion;
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
     majorVersion = 10;
@@ -177,6 +199,24 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     majorVersion = systemVersion.majorVersion;
     minorVersion = systemVersion.minorVersion;
 #endif
+
+    if (majorVersion == 10 && minorVersion == 16) {
+
+	/*
+	 * If a program compiled with a macOS 10.XX SDK is run on macOS 11.0 or
+	 * later then it will report majorVersion 10 and minorVersion 16, no
+	 * matter what the actual OS version of the host may be. And of course
+	 * Apple never released macOS 10.16. To work around this we guess the
+	 * OS version from the kernel release number, as reported by uname.
+	 */  
+
+	struct utsname name;
+	char *endptr;
+	if (uname(&name) == 0) {
+	    majorVersion = strtol(name.release, &endptr, 10) - 9;
+	    minorVersion = 0;
+	}
+    }
     [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
 
     /*

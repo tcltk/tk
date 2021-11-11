@@ -134,22 +134,22 @@ ClipboardAppHandler(
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
-    TkDisplay *dispPtr = clientData;
-    size_t length;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
+    int length;
     const char *p;
 
     p = dispPtr->clipboardAppPtr->winPtr->nameUid;
     length = strlen(p);
-    length -= offset;
-    if (length <= 0) {
+    if (length <= offset) {
 	return 0;
     }
-    if (length > (size_t) maxBytes) {
+    length -= offset;
+    if (length > maxBytes) {
 	length = maxBytes;
     }
     memcpy(buffer, p, length);
     buffer[length] = 0;
-    return (int)length;
+    return length;
 }
 
 /*
@@ -708,7 +708,13 @@ ClipboardGetProc(
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
+    Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
+    Tcl_DString ds;
+
+    Tcl_ExternalToUtfDString(utf8, portion, -1, &ds);
+    Tcl_DStringAppend((Tcl_DString *) clientData, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
+    Tcl_FreeEncoding(utf8);
     return TCL_OK;
 }
 

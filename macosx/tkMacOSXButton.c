@@ -181,8 +181,8 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    MacButton *macButtonPtr = clientData;
-    TkButton *butPtr = clientData;
+    MacButton *macButtonPtr = (MacButton *)clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
@@ -765,10 +765,12 @@ TkMacOSXDrawButton(
 	 * Using a ttk::button would be a much better choice, however.
 	 */
 
-	if (TkMacOSXInDarkMode(butPtr->tkwin) &&
-	    mbPtr->drawinfo.state != kThemeStatePressed &&
-	    !(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
-	    hiinfo.state = kThemeStateInactive;
+	if ([NSApp macOSVersion] < 101500) {
+	    if (TkMacOSXInDarkMode(butPtr->tkwin) &&
+		mbPtr->drawinfo.state != kThemeStatePressed &&
+		!(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
+		hiinfo.state = kThemeStateInactive;
+	    }
 	}
 	HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
 		kHIThemeOrientationNormal, &contHIRec);
@@ -901,8 +903,8 @@ ButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkButton *buttonPtr = clientData;
-    MacButton *mbPtr = clientData;
+    TkButton *buttonPtr = (TkButton *)clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     if (eventPtr->type == ActivateNotify
 	    || eventPtr->type == DeactivateNotify) {
@@ -957,7 +959,7 @@ TkMacOSXComputeButtonParams(
         *btnkind = kThemePushButton;
     }
 
-    if ((butPtr->image == None) && (butPtr->bitmap == None)) {
+    if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
         switch (butPtr->type) {
 	case TYPE_BUTTON:
 	    *btnkind = kThemePushButton;
@@ -1174,7 +1176,7 @@ TkMacOSXComputeButtonDrawParams(
 static void
 PulseDefaultButtonProc(ClientData clientData)
 {
-    MacButton *mbPtr = clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     TkpDisplayButton(clientData);
     /*
