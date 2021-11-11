@@ -1482,7 +1482,7 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_TITLEPATH: {
-	const char *path = Tcl_FSGetNativePath(value);
+	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
 
 	if (path && *path) {
@@ -1636,7 +1636,7 @@ WmAttributesCmd(
 	    Tcl_ListObjAppendElement(NULL, result,
 		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
 	    Tcl_ListObjAppendElement(NULL, result,
-		    WmGetAttribute(winPtr, macWindow, attribute));
+		    WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
 	}
 	Tcl_SetObjResult(interp, result);
     } else if (objc == 4) {	/* wm attributes $win -attribute */
@@ -1644,7 +1644,7 @@ WmAttributesCmd(
 		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, attribute));
+	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
     } else if ((objc - 3) % 2 == 0) {	/* wm attributes $win -att value... */
 	int i;
 
@@ -1653,7 +1653,7 @@ WmAttributesCmd(
 		    sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (WmSetAttribute(winPtr, macWindow, interp, attribute, objv[i+1])
+	    if (WmSetAttribute(winPtr, macWindow, interp, (WmAttribute)attribute, objv[i+1])
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1942,6 +1942,8 @@ WmDeiconifyCmd(
 	}
     }
 
+    [[win contentView] setNeedsDisplay:YES];
+    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
@@ -3734,6 +3736,7 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &container) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	RemoveTransient(winPtr);
 	containerPtr = (TkWindow*) container;
 	while (!Tk_TopWinHierarchy(containerPtr)) {
             /*
@@ -4128,7 +4131,7 @@ TopLevelEventProc(
     ClientData clientData,	/* Window for which event occurred. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
 
     winPtr->wmInfoPtr->flags |= WM_VROOT_OFFSET_STALE;
     if (eventPtr->type == DestroyNotify) {
@@ -4214,7 +4217,7 @@ static void
 UpdateGeometryInfo(
     ClientData clientData)	/* Pointer to the window's record. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, min, max;
 
@@ -5535,12 +5538,15 @@ Tk_MacOSXGetTkWindow(
     void *w)
 {
     Window window = None;
-    TkDisplay *dispPtr = TkGetDisplayList();
     if ([(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
 	window = [(TKWindow *)w tkWindow];
     }
-    return (window != None ?
-	    Tk_IdToWindow(dispPtr->display, window) : NULL);
+    if (window) {
+	TkDisplay *dispPtr = TkGetDisplayList();
+	return Tk_IdToWindow(dispPtr->display, window);
+    } else {
+	return NULL;
+    }
 }
 
 /*
@@ -5593,8 +5599,8 @@ TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
-    NSWindow *window = whichWindow;
-    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+    NSWindow *window = (NSWindow *)whichWindow;
+    TkWindow *winPtr = (TkWindow *)TkMacOSXGetTkWindow(window);
     WmInfo *wmPtr;
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -5651,7 +5657,7 @@ TkUnsupported1ObjCmd(
     enum SubCmds {
 	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE, TKMWS_ISDARK
     };
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
     int index;
 
@@ -6271,6 +6277,7 @@ TkMacOSXMakeRealWindowExist(
     	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
     	ApplyContainerOverrideChanges(winPtr, NULL);
     }
+    [window display];
 }
 
 /*
@@ -6309,8 +6316,7 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view setTkNeedsDisplay:YES];
-	[view setTkDirtyRect:bounds];
+	[view addTkDirtyRect:bounds];
     }
 }
 
@@ -6443,6 +6449,19 @@ TkpWmSetState(
 
     macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
+    /*
+     * Make sure windows are updated before the state change.  As an exception,
+     * do not process idle tasks before withdrawing a window.  The purpose of
+     * this is to support the common paradigm of immediately withdrawing the
+     * root window.  Processing idle tasks before changing the state causes the
+     * root to briefly flash on the screen, which users of this paradigm find
+     * annoying.  Not processing the events does not guarantee that the window
+     * will not appear but makes it more likely.
+     */
+
+    if (state != WithdrawnState) {
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+    }
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window)winPtr);
     } else if (state == IconicState) {
@@ -6463,8 +6482,9 @@ TkpWmSetState(
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
+
     /*
-     * Make sure windows are updated after the state change.
+     * Make sure windows are updated after the state change too.
      */
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
@@ -6717,7 +6737,7 @@ TkWmStackorderToplevel(
 	for (NSWindow *w in backToFront) {
 	    hPtr = Tcl_FindHashEntry(&table, (char*) w);
 	    if (hPtr != NULL) {
-		childWinPtr = Tcl_GetHashValue(hPtr);
+		childWinPtr = (TkWindow *)Tcl_GetHashValue(hPtr);
 		*windowPtr++ = childWinPtr;
 	    }
 	}
@@ -7042,7 +7062,7 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	if (wmPtr->container != None) {
+	if (wmPtr->container != NULL) {
 	    TkWindow *containerWinPtr = (TkWindow *)wmPtr->container;
 
 	    if (containerWinPtr && (containerWinPtr->window != None)

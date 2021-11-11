@@ -114,6 +114,17 @@ enum {
 	}
     case NSLeftMouseUp:
     case NSLeftMouseDown:
+
+	/*
+	 * Ignore mouse button events which arrive while the app is inactive.
+	 * These events will be resent after activation, causing duplicate
+	 * actions when an app is activated by a bound mouse event. See ticket
+	 * [7bda9882cb].
+	 */
+
+	if (! [NSApp isActive]) {
+	    return theEvent;
+	}
     case NSMouseMoved:
     case NSScrollWheel:
 #if 0
@@ -170,20 +181,18 @@ enum {
      */
 
     capture = TkMacOSXGetCapture();
-    if (capture) {
+    if (eventWindow) {
+	    winPtr = TkMacOSXGetTkWindow(eventWindow);
+    } else if (capture) {
 	winPtr = (TkWindow *) capture;
 	eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 	if (!eventWindow) {
 	    return theEvent;
 	}
-    } else {
-	if (eventWindow) {
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
-	if (!winPtr) {
-	    eventWindow = [NSApp mainWindow];
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
+    }
+    if (!winPtr) {
+	eventWindow = [NSApp mainWindow];
+	winPtr = TkMacOSXGetTkWindow(eventWindow);
     }
     if (!winPtr) {
 
@@ -676,6 +685,12 @@ TkpWarpPointer(
     }
 
     CGWarpMouseCursorPosition(pt);
+
+    if (dispPtr->warpWindow) {
+        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+    } else {
+        TkGenerateButtonEventForXPointer(None);
+    }
 }
 
 /*

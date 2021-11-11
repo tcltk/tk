@@ -246,7 +246,7 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    TkScrollbar *scrollPtr = clientData;
+    TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -456,10 +456,10 @@ TkpDestroyScrollbar(
 {
     MacScrollbar *macScrollPtr = (MacScrollbar *) scrollPtr;
 
-    if (macScrollPtr->troughGC != None) {
+    if (macScrollPtr->troughGC != NULL) {
 	Tk_FreeGC(scrollPtr->display, macScrollPtr->troughGC);
     }
-    if (macScrollPtr->copyGC != None) {
+    if (macScrollPtr->copyGC != NULL) {
 	Tk_FreeGC(scrollPtr->display, macScrollPtr->copyGC);
     }
 }
@@ -769,7 +769,7 @@ ScrollbarEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScrollbar *scrollPtr = clientData;
+    TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
 
     switch (eventPtr->type) {
     case UnmapNotify:
@@ -783,10 +783,10 @@ ScrollbarEventProc(
     case ButtonRelease:
     case EnterNotify:
     case LeaveNotify:
-    	ScrollbarEvent(clientData, eventPtr);
+    	ScrollbarEvent(scrollPtr, eventPtr);
 	break;
     default:
-	TkScrollbarEventProc(clientData, eventPtr);
+	TkScrollbarEventProc(scrollPtr, eventPtr);
     }
 }
 
