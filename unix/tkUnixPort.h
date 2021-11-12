@@ -144,9 +144,6 @@
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
-#ifndef __CYGWIN__
-#define TkSetPixmapColormap(p,c) {}
-#endif
 
 /*
  * Used by tkWindow.c
