@@ -122,7 +122,6 @@
  */
 
 #define TkpFreeColor(tkColPtr)
-#define TkSetPixmapColormap(p,c) {}
 
 /*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.
