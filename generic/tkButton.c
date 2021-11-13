@@ -104,13 +104,8 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, TCL_INDEX_NONE, offsetof(TkButton, tkfont), 0, 0, 0},
-#ifdef DEF_LABEL_FG
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_LABEL_FG, -1, Tk_Offset(TkButton, normalFg), 0, 0, 0},
-#else
-    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_BUTTON_FG, TCL_INDEX_NONE, offsetof(TkButton, normalFg), 0, 0, 0},
-#endif
+	DEF_LABEL_FG, TCL_INDEX_NONE, offsetof(TkButton, normalFg), 0, 0, 0},
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, offsetof(TkButton, heightPtr), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",

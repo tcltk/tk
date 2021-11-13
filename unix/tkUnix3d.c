@@ -13,7 +13,9 @@
 #include "tkInt.h"
 #include "tk3d.h"
 
-#if !(defined(_WIN32) || defined(MAC_OSX_TK))
+#if defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"
+#else
 #include "tkUnixInt.h"
 #endif
 

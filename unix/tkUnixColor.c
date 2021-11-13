@@ -423,6 +423,7 @@ DeleteStressedCmap(
  *----------------------------------------------------------------------
  */
 
+#undef TkpCmapStressed
 int
 TkpCmapStressed(
     Tk_Window tkwin,		/* Window that identifies the display
