@@ -1842,7 +1842,7 @@ DelayedMotionProc(
 void
 TkCreateExitHandler(
     Tcl_ExitProc *proc,		/* Function to invoke. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
 
