@@ -765,10 +765,12 @@ TkMacOSXDrawButton(
 	 * Using a ttk::button would be a much better choice, however.
 	 */
 
-	if (TkMacOSXInDarkMode(butPtr->tkwin) &&
-	    mbPtr->drawinfo.state != kThemeStatePressed &&
-	    !(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
-	    hiinfo.state = kThemeStateInactive;
+	if ([NSApp macOSVersion] < 101500) {
+	    if (TkMacOSXInDarkMode(butPtr->tkwin) &&
+		mbPtr->drawinfo.state != kThemeStatePressed &&
+		!(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
+		hiinfo.state = kThemeStateInactive;
+	    }
 	}
 	HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
 		kHIThemeOrientationNormal, &contHIRec);

@@ -406,7 +406,7 @@ Tk_MenuObjCmd(
 {
     Tk_Window tkwin = clientData;
     Tk_Window newWin;
-    register TkMenu *menuPtr;
+    TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
     int i, index, toplevel;
     const char *windowName;
@@ -617,8 +617,8 @@ MenuWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    register TkMenu *menuPtr = clientData;
-    register TkMenuEntry *mePtr;
+    TkMenu *menuPtr = clientData;
+    TkMenuEntry *mePtr;
     int result = TCL_OK;
     int option;
     ThreadSpecificData *tsdPtr =
@@ -1385,7 +1385,7 @@ static void
 DestroyMenuEntry(
     void *memPtr)		/* Pointer to entry to be freed. */
 {
-    register TkMenuEntry *mePtr = memPtr;
+    TkMenuEntry *mePtr = memPtr;
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (menuPtr->postedCascade == mePtr) {
@@ -1519,7 +1519,7 @@ MenuWorldChanged(
 static int
 ConfigureMenu(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkMenu *menuPtr,	/* Information about widget; may or may not
+    TkMenu *menuPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
@@ -1901,7 +1901,7 @@ PostProcessEntry(
 
 static int
 ConfigureMenuEntry(
-    register TkMenuEntry *mePtr,/* Information about menu entry; may or may
+    TkMenuEntry *mePtr,/* Information about menu entry; may or may
 				 * not already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
@@ -2589,11 +2589,11 @@ MenuVarProc(
 
 int
 TkActivateMenuEntry(
-    register TkMenu *menuPtr,	/* Menu in which to activate. */
+    TkMenu *menuPtr,	/* Menu in which to activate. */
     int index)			/* Index of entry to activate, or -1 to
 				 * deactivate all entries. */
 {
-    register TkMenuEntry *mePtr;
+    TkMenuEntry *mePtr;
     int result = TCL_OK;
 
     if (menuPtr->active >= 0) {

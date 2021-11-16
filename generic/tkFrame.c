@@ -741,7 +741,7 @@ FrameWidgetObjCmd(
     enum options {
 	FRAME_CGET, FRAME_CONFIGURE
     };
-    register Frame *framePtr = clientData;
+    Frame *framePtr = clientData;
     int result = TCL_OK, index;
     int c, i, length;
     Tcl_Obj *objPtr;
@@ -859,8 +859,8 @@ static void
 DestroyFrame(
     void *memPtr)		/* Info about frame widget. */
 {
-    register Frame *framePtr = memPtr;
-    register Labelframe *labelframePtr = memPtr;
+    Frame *framePtr = memPtr;
+    Labelframe *labelframePtr = memPtr;
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Tk_FreeTextLayout(labelframePtr->textLayout);
@@ -896,7 +896,7 @@ static void
 DestroyFramePartly(
     Frame *framePtr)		/* Info about frame widget. */
 {
-    register Labelframe *labelframePtr = (Labelframe *) framePtr;
+    Labelframe *labelframePtr = (Labelframe *) framePtr;
 
     if (framePtr->type == TYPE_LABELFRAME && labelframePtr->labelWin != NULL) {
 	Tk_DeleteEventHandler(labelframePtr->labelWin, StructureNotifyMask,
@@ -936,7 +936,7 @@ DestroyFramePartly(
 static int
 ConfigureFrame(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register Frame *framePtr,	/* Information about widget; may or may not
+    Frame *framePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Arguments. */
@@ -1263,7 +1263,7 @@ FrameWorldChanged(
 
 static void
 ComputeFrameGeometry(
-    register Frame *framePtr)	/* Information about widget. */
+    Frame *framePtr)	/* Information about widget. */
 {
     int otherWidth, otherHeight, otherWidthT, otherHeightT, padding;
     int maxWidth, maxHeight;
@@ -1412,8 +1412,8 @@ static void
 DisplayFrame(
     ClientData clientData)	/* Information about widget. */
 {
-    register Frame *framePtr = clientData;
-    register Tk_Window tkwin = framePtr->tkwin;
+    Frame *framePtr = clientData;
+    Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
     TkRegion clipRegion = NULL;
@@ -1635,9 +1635,9 @@ DisplayFrame(
 static void
 FrameEventProc(
     ClientData clientData,	/* Information about window. */
-    register XEvent *eventPtr)	/* Information about event. */
+    XEvent *eventPtr)	/* Information about event. */
 {
-    register Frame *framePtr = clientData;
+    Frame *framePtr = clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;

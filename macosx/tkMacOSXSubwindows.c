@@ -303,12 +303,41 @@ XUnmapWindow(
     display->request++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
-		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
-	    [win orderOut:nil];
+	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
+	    [win orderOut:NSApp];
+	    if ([win isKeyWindow]) {
+
+		/*
+		 * If we are unmapping the key window then we need to make sure
+		 * that a new key window is assigned, if possible.  This is
+		 * supposed to happen when a key window is ordered out, but as
+		 * noted in tkMacOSXWm.c this does not happen, in spite of
+		 * Apple's claims to the contrary.
+		 */
+
+		for (NSWindow *w in [NSApp orderedWindows]) {
+		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
+		    WmInfo *wmInfoPtr;
+
+		    BOOL isOnScreen;
+
+		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
+			continue;
+		    }
+		    wmInfoPtr = winPtr2->wmInfoPtr;
+		    isOnScreen = (wmInfoPtr->hints.initial_state != IconicState &&
+				  wmInfoPtr->hints.initial_state != WithdrawnState);
+		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
+			[w makeKeyAndOrderFront:NSApp];
+			break;
+		    }
+		}
+	    }
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
     } else {
+
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
 	 * to draw in the space from which this subwindow was removed and then
