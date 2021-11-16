@@ -319,7 +319,7 @@ XUnmapWindow(
 		for (NSWindow *w in [NSApp orderedWindows]) {
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
-		    
+
 		    BOOL isOnScreen;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {

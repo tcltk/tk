@@ -1113,7 +1113,7 @@ static void DrawDarkTab(
 		faceColor = [NSColor colorWithColorSpace: deviceRGB
 					      components: darkSelectedTab
 						   count: 4];
-	    } 
+	    }
 	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 	}
 	HighlightButtonBorder(context, bounds);
