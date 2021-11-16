@@ -2763,9 +2763,9 @@ GetScreenFont(
     FontAttributes *wantPtr,	/* Contains desired actual pixel-size if the
 				 * best font was scalable. */
     char **nameList,		/* Array of XLFDs. */
-    int bestIdx[2],		/* Indices into above array for XLFD of best
+    int bestIdx[],		/* Indices into above array for XLFD of best
 				 * bitmapped and best scalable font. */
-    unsigned bestScore[2])	/* Scores of best bitmapped and best scalable
+    unsigned bestScore[])	/* Scores of best bitmapped and best scalable
 				 * font. XLFD corresponding to lowest score
 				 * will be constructed. */
 {

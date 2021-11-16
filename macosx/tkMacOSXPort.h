@@ -49,6 +49,9 @@
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -71,6 +74,19 @@
 #	define SELECT_MASK void
 #   else
 #	define SELECT_MASK int
+#   endif
+#endif
+
+/*
+ * Used to tag functions that are only to be visible within the module being
+ * built and not outside it (where this is supported by the linker).
+ */
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
 #   endif
 #endif
 
@@ -163,11 +179,16 @@
 #define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
- * Inform tkImgPhInstance.c that our tkPutImage can render an image with an
- * alpha channel directly into a window.
+ * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to render RGBA
+ * images directly into a window.
  */
 
-#define TKPUTIMAGE_CAN_BLEND
+#define TK_CAN_RENDER_RGBA
+
+MODULE_SCOPE int TkpPutRGBAImage(
+		     Display* display, Drawable drawable, GC gc,XImage* image,
+		     int src_x, int src_y, int dest_x, int dest_y,
+		     unsigned int width, unsigned int height);
 
 /*
  * Used by xcolor.c
