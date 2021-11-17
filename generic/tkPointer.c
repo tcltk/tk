@@ -495,7 +495,7 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	if (Tk_IsTopLevel(winPtr)) {
+	if (Tk_TopWinHierarchy(winPtr)) {
 	    tsdPtr->lastWinPtr = NULL;
 	} else {
 	    tsdPtr->lastWinPtr = TkGetContainer(winPtr);
