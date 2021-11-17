@@ -495,7 +495,11 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
+	if (Tk_IsTopLevel(winPtr)) {
+	    tsdPtr->lastWinPtr = NULL;
+	} else {
+	    tsdPtr->lastWinPtr = TkGetContainer(winPtr);
+	}
     }
     if (winPtr == tsdPtr->grabWinPtr) {
 	tsdPtr->grabWinPtr = NULL;
