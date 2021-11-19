@@ -1188,8 +1188,7 @@ typedef struct TkStubs {
     Tcl_Obj * (*tk_NewWindowObj) (Tk_Window tkwin); /* 277 */
     void (*tk_SendVirtualEvent) (Tk_Window tkwin, const char *eventName, Tcl_Obj *detail); /* 278 */
     Tcl_Obj * (*tk_FontGetDescription) (Tk_Font tkfont); /* 279 */
-    void (*tk_CreatePhotoImageFormatVersion3) (
-	    const Tk_PhotoImageFormatVersion3 *formatPtr);  /* 280 */
+    void (*tk_CreatePhotoImageFormatVersion3) (const Tk_PhotoImageFormatVersion3 *formatPtr); /* 280 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;

@@ -451,7 +451,7 @@ information on the format of this list).
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the numerical index corresponding to \fIindex\fR, or
-\fB{}\fR if \fIindex\fR was specified as \fB{} or \fBnone\fR\fR.
+\fB{}\fR if \fIindex\fR was specified as \fB{}\fR or \fBnone\fR.
 .TP
 \fIpathName \fBinsert \fIindex type \fR?\fIoption value option value ...\fR?
 .
