@@ -42,6 +42,10 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
 @synthesize needsToDraw = _needsToDraw;
+@synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
+@synthesize tkPointerWindow = _tkPointerWindow;
+@synthesize tkEventTarget = _tkEventTarget;
+@synthesize tkButtonState = _tkButtonState;
 @end
 
 /*

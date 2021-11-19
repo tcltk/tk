@@ -29,8 +29,6 @@ static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
 static int		GenerateButtonEvent(MouseEventData *medPtr);
-static unsigned int	ButtonModifiers2State(UInt32 buttonState,
-			    UInt32 keyModifiers);
 
 #pragma mark TKApplication(TKMouseEvent)
 
@@ -49,21 +47,21 @@ enum {
  */
 
 @implementation TKApplication(TKMouseEvent)
+
 - (NSEvent *) tkProcessMouseEvent: (NSEvent *) theEvent
 {
     NSWindow *eventWindow = [theEvent window];
     NSEventType eventType = [theEvent type];
-    NSRect viewFrame = [[eventWindow contentView] frame];
+    TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
-    TkWindow *winPtr = NULL, *grabWinPtr;
+    NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
+    TkWindow *winPtr = NULL, *grabWinPtr, *tempWinPtr;
+    static NSWindow *pointerWin = NULL;
     Tk_Window tkwin = None, capture, target;
     NSPoint local, global;
     NSInteger button;
-    Bool inTitleBar = NO;
     int win_x, win_y;
     unsigned int buttonState = 0;
-    static int validPresses = 0, ignoredPresses = 0;
-
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -72,20 +70,12 @@ enum {
      * If this event is not for a Tk toplevel, it should just be passed up the
      * responder chain.  However, there is an exception for synthesized events,
      * which are used in testing.  Those events are recognized by having their
-     * both the windowNumber and the eventNumber set to -1.
+     * windowNumber and eventNumber both set to -1.
      */
 
     if (eventWindow && ![eventWindow isMemberOfClass:[TKWindow class]]) {
 	if ([theEvent windowNumber] != -1 || [theEvent eventNumber] != -1)
 	    return theEvent;
-    }
-
-    /*
-     * Check if the event is located in the titlebar.
-     */
-
-    if (eventWindow) {
-	inTitleBar = viewFrame.size.height < location.y;
     }
 
     button = [theEvent buttonNumber] + Button1;
@@ -99,19 +89,35 @@ enum {
     case NSOtherMouseDragged:
     case NSRightMouseDown:
     case NSOtherMouseDown:
-	buttonState |= TkGetButtonMask(button);
+	if (NSPointInRect(viewLocation, [contentView bounds])) {
+	    buttonState |= TkGetButtonMask(button);
+	}
 	break;
     case NSMouseEntered:
-	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
-	    !inTitleBar) {
-	    [(TKWindow *)eventWindow setMouseInResizeArea:YES];
+	tempWinPtr = TkMacOSXGetTkWindow(eventWindow);
+	if (NSPointInRect(viewLocation, [contentView bounds])) {
+	    pointerWin = eventWindow;
+	    [NSApp setTkPointerWindow:TkMacOSXGetTkWindow(pointerWin)];
+	    [NSApp setTkLiveResizeEnded:NO];
+	} else {
+	    return theEvent;
+	}
+	if (![eventWindow isKeyWindow]) {
+	    return theEvent;
 	}
 	break;
     case NSMouseExited:
-	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)]) {
-	    [(TKWindow *)eventWindow setMouseInResizeArea:NO];
-	    break;
+	tempWinPtr = TkMacOSXGetTkWindow(eventWindow);
+	if (!NSPointInRect(viewLocation, [contentView bounds])) {
+	    pointerWin = nil;
+	    [NSApp setTkPointerWindow:nil];
+	} else {
+	    return theEvent;
 	}
+	if (![eventWindow isKeyWindow]) {
+	    return theEvent;
+	}
+	break;
     case NSLeftMouseUp:
     case NSLeftMouseDown:
 
@@ -126,6 +132,9 @@ enum {
 	    return theEvent;
 	}
     case NSMouseMoved:
+	if (eventWindow != [NSApp keyWindow]) {
+	    return theEvent;
+	}
     case NSScrollWheel:
 #if 0
     case NSCursorUpdate:
@@ -138,41 +147,29 @@ enum {
     }
 
     /*
-     * Update the button state.  We ignore left button presses that start a
-     * resize or occur in the title bar.  See tickets [d72abe6b54] and
-     * [39cbacb9e8].
+     * Update the button state.  We ignore left button presses that occur
+     * outside of the ContentView. We also ignore the first left button press
+     * after a live resize ends. (Apple sends the button press event that
+     * started the resize after the resize ends.  It should not be seen by Tk.)
+     * See tickets [d72abe6b54] and [39cbacb9e8].
      */
 
     if (eventType == NSLeftMouseDown) {
-	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
-	    [(TKWindow *) eventWindow mouseInResizeArea]) {
+	NSRect bounds = [contentView bounds];
+	NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
+	bounds = NSInsetRect(bounds, 2.0, 2.0);
 
-	    /*
-	     * When the left button is pressed in the resize area, we receive
-	     * NSMouseDown, but when it is released we do not receive
-	     * NSMouseUp.  So ignore the event and clear the button state but
-	     * do not change the ignoredPresses count.
-	     */
-
-	    buttonState &= ~TkGetButtonMask(Button1);
+	if (!NSPointInRect(viewLocation, bounds)) {
 	    return theEvent;
 	}
-	if (inTitleBar) {
-	    ignoredPresses++;
+	if (NSPointInRect(viewLocation, grip)) {
 	    return theEvent;
 	}
-	validPresses++;
+	if ([NSApp tkLiveResizeEnded]) {
+	    [NSApp setTkLiveResizeEnded:NO];
+	    return theEvent;
+	}
 	buttonState |= TkGetButtonMask(Button1);
-    }
-    if (eventType == NSLeftMouseUp) {
-	if (ignoredPresses > 0) {
-	    ignoredPresses--;
-	} else if (validPresses > 0) {
-	    validPresses--;
-	}
-	if (validPresses == 0) {
-	    buttonState &= ~TkGetButtonMask(Button1);
-	}
     }
 
     /*
@@ -270,7 +267,7 @@ enum {
     }
 
     /*
-     *  Generate an XEvent for this mouse event.
+     *  Translate the current button state into Tk's format.
      */
 
     unsigned int state = buttonState;
@@ -297,21 +294,24 @@ enum {
     if (modifiers & NSFunctionKeyMask) {
 	state |= Mod4Mask;
     }
-
+    [NSApp setTkButtonState: state];
     if (eventType != NSScrollWheel) {
-
-	/*
-	 * For normal mouse events, Tk_UpdatePointer will send the appropriate
-	 * XEvents using its cached state information.  Unfortunately, it will
-	 * also recompute the local coordinates.
-	 */
-
-#ifdef TK_MAC_DEBUG_EVENTS
-	TKLog(@"UpdatePointer %p x %.1f y %.1f %d",
-		target, global.x, global.y, state);
-#endif
-
-	Tk_UpdatePointer(target, global.x, global.y, state);
+	TkWindow *tkPointerWindow = [NSApp tkPointerWindow];
+	if (eventType == NSMouseEntered || eventType == NSMouseExited ) {
+	    if (tkPointerWindow == NULL || tkPointerWindow != [NSApp tkEventTarget]) {
+		Tk_UpdatePointer(None, global.x, global.y, state);
+	    } else if (tkPointerWindow == [NSApp tkEventTarget]) {
+		Tk_UpdatePointer((Tk_Window)[NSApp tkEventTarget], global.x, global.y, state);
+	    }
+	} else if (eventType == NSMouseMoved || NSLeftMouseDragged) {
+	    if (tkPointerWindow == NULL || tkPointerWindow != winPtr) {
+		Tk_UpdatePointer(None, global.x, global.y, state);
+	    } else {
+		Tk_UpdatePointer(target, global.x, global.y, state);
+	    }
+	} else {
+	    Tk_UpdatePointer(target, global.x, global.y, state);
+	}
     } else {
 	CGFloat delta;
 	int coarseDelta;
@@ -375,70 +375,7 @@ enum {
 unsigned int
 TkMacOSXButtonKeyState(void)
 {
-    UInt32 buttonState = 0, keyModifiers;
-    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
-
-    buttonState = isFrontProcess ? GetCurrentEventButtonState() :
-	    GetCurrentButtonState();
-    keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
-	    GetCurrentKeyModifiers();
-
-    return ButtonModifiers2State(buttonState, keyModifiers);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ButtonModifiers2State --
- *
- *	Converts Carbon mouse button state and modifier values into a Tk
- *	button/modifier state.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static unsigned int
-ButtonModifiers2State(
-    UInt32 buttonState,
-    UInt32 keyModifiers)
-{
-    unsigned int state;
-
-    /*
-     * Tk on OSX supports at most 5 buttons.
-     */
-
-    state = (buttonState & 0x1F) * Button1Mask;
-
-    if (keyModifiers & alphaLock) {
-	state |= LockMask;
-    }
-    if (keyModifiers & shiftKey) {
-	state |= ShiftMask;
-    }
-    if (keyModifiers & controlKey) {
-	state |= ControlMask;
-    }
-    if (keyModifiers & cmdKey) {
-	state |= Mod1Mask;		/* command key */
-    }
-    if (keyModifiers & optionKey) {
-	state |= Mod2Mask;		/* option key */
-    }
-    if (keyModifiers & kEventKeyModifierNumLockMask) {
-	state |= Mod3Mask;
-    }
-    if (keyModifiers & kEventKeyModifierFnMask) {
-	state |= Mod4Mask;
-    }
-
-    return state;
+    return [NSApp tkButtonState];
 }
 
 /*
