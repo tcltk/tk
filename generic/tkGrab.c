@@ -16,6 +16,8 @@
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
+#else
+#include "tkMacOSXInt.h"
 #endif
 
 /*
