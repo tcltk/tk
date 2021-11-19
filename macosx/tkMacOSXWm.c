@@ -362,7 +362,6 @@ static void             RemoveTransient(TkWindow *winPtr);
 @end
 
 @implementation TKWindow: NSWindow
-@synthesize mouseInResizeArea = _mouseInResizeArea;
 @synthesize tkWindow = _tkWindow;
 @end
 

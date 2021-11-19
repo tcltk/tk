@@ -97,6 +97,7 @@ typedef NSInteger NSModalResponse;
 #define NSBorderlessWindowMask NSWindowStyleMaskBorderless
 #define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
 #define NSAlphaFirstBitmapFormat NSBitmapFormatAlphaFirst
+#define NSLeftMouseDownMask NSEventMaskLeftMouseDown
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
