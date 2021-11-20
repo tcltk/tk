@@ -55,7 +55,7 @@ enum {
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
-    TkWindow *winPtr = NULL, *grabWinPtr, *tempWinPtr;
+    TkWindow *winPtr = NULL, *grabWinPtr;
     static NSWindow *pointerWin = NULL;
     Tk_Window tkwin = None, capture, target;
     NSPoint local, global;
@@ -63,6 +63,7 @@ enum {
     int win_x, win_y;
     unsigned int buttonState = 0;
     Bool isTestingEvent = NO;
+    Bool isMotionEvent = NO;
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -90,6 +91,7 @@ enum {
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+	isMotionEvent = YES;
     case NSRightMouseDown:
     case NSOtherMouseDown:
 	buttonState |= TkGetButtonMask(button);
@@ -134,6 +136,7 @@ enum {
 	if (eventWindow != [NSApp keyWindow]) {
 	    return theEvent;
 	}
+	isMotionEvent = YES;
 	break;
     case NSScrollWheel:
 #if 0
@@ -304,9 +307,10 @@ enum {
 	    } else if (tkPointerWindow == [NSApp tkEventTarget]) {
 		Tk_UpdatePointer((Tk_Window)[NSApp tkEventTarget], global.x, global.y, state);
 	    }
-	} else if (eventType == NSMouseMoved || eventType == NSLeftMouseDragged) {
+	} else if (isMotionEvent) {
 	    if (tkPointerWindow == NULL || tkPointerWindow != winPtr) {
 		Tk_UpdatePointer(None, global.x, global.y, state);
+		//Tk_UpdatePointer([NSApp tkEventTarget], global.x, global.y, state);
 	    } else {
 		Tk_UpdatePointer(target, global.x, global.y, state);
 	    }
