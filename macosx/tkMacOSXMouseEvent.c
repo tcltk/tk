@@ -62,6 +62,7 @@ enum {
     NSInteger button;
     int win_x, win_y;
     unsigned int buttonState = 0;
+    Bool isTestingEvent = NO;
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -70,14 +71,16 @@ enum {
      * If this event is not for a Tk toplevel, it should just be passed up the
      * responder chain.  However, there is an exception for synthesized events,
      * which are used in testing.  Those events are recognized by having their
-     * windowNumber and eventNumber both set to -1.
+     * timestamp set to 0.
      */
 
-    if (eventWindow && ![eventWindow isMemberOfClass:[TKWindow class]]) {
-	if ([theEvent windowNumber] != -1 || [theEvent eventNumber] != -1)
+    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
+	if ([theEvent timestamp] != 0) {
 	    return theEvent;
+	} else {
+	    isTestingEvent = YES;
+	}
     }
-
     button = [theEvent buttonNumber] + Button1;
     switch (eventType) {
     case NSRightMouseUp:
@@ -127,14 +130,15 @@ enum {
 	 * actions when an app is activated by a bound mouse event. See ticket
 	 * [7bda9882cb].
 	 */
-
 	if (! [NSApp isActive]) {
 	    return theEvent;
 	}
+	break;
     case NSMouseMoved:
 	if (eventWindow != [NSApp keyWindow]) {
 	    return theEvent;
 	}
+	break;
     case NSScrollWheel:
 #if 0
     case NSCursorUpdate:
@@ -155,19 +159,20 @@ enum {
      */
 
     if (eventType == NSLeftMouseDown) {
-	NSRect bounds = [contentView bounds];
-	NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
-	bounds = NSInsetRect(bounds, 2.0, 2.0);
-
-	if (!NSPointInRect(viewLocation, bounds)) {
-	    return theEvent;
-	}
-	if (NSPointInRect(viewLocation, grip)) {
-	    return theEvent;
-	}
-	if ([NSApp tkLiveResizeEnded]) {
-	    [NSApp setTkLiveResizeEnded:NO];
-	    return theEvent;
+	if (!isTestingEvent) {
+	    NSRect bounds = [contentView bounds];
+	    NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
+	    bounds = NSInsetRect(bounds, 2.0, 2.0);
+	    if (!NSPointInRect(viewLocation, bounds)) {
+		return theEvent;
+	    }
+	    if (NSPointInRect(viewLocation, grip)) {
+		return theEvent;
+	    }
+	    if ([NSApp tkLiveResizeEnded]) {
+		[NSApp setTkLiveResizeEnded:NO];
+		return theEvent;
+	    }
 	}
 	buttonState |= TkGetButtonMask(Button1);
     }
@@ -303,7 +308,7 @@ enum {
 	    } else if (tkPointerWindow == [NSApp tkEventTarget]) {
 		Tk_UpdatePointer((Tk_Window)[NSApp tkEventTarget], global.x, global.y, state);
 	    }
-	} else if (eventType == NSMouseMoved || NSLeftMouseDragged) {
+	} else if (eventType == NSMouseMoved || eventType == NSLeftMouseDragged) {
 	    if (tkPointerWindow == NULL || tkPointerWindow != winPtr) {
 		Tk_UpdatePointer(None, global.x, global.y, state);
 	    } else {
