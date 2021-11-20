@@ -35,10 +35,9 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
-			    cbPtr->buffer length:cbPtr->length
-			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
-
+		    NSString *s = [[TKNSString alloc]
+				      initWithTclUtfBytes:cbPtr->buffer
+						   length:cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}
@@ -137,12 +136,14 @@ TkSelGetSelection(
 	if (type) {
 	    string = [pb stringForType:type];
 	}
-	result = proc(clientData, interp, string ? [string UTF8String] : "");
+	if (string) {
+	    result = proc(clientData, interp, string.UTF8String);
+	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%s selection doesn't exist or form \"%s\" not defined",
-		Tk_GetAtomName(tkwin, selection),
-		Tk_GetAtomName(tkwin, target)));
+	     "%s selection doesn't exist or form \"%s\" not defined",
+	     Tk_GetAtomName(tkwin, selection),
+	     Tk_GetAtomName(tkwin, target)));
 	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     }
     return result;
@@ -170,7 +171,7 @@ XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
     Window owner,		/* Window to be the owner. */
-    Time time)			/* The current time? */
+    TCL_UNUSED(Time))			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
 
@@ -230,8 +231,8 @@ TkMacOSXSelDeadWindow(
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
-    TkClipboardTarget *targetPtr)
+    TCL_UNUSED(TkWindow *),		/* Window associated with clipboard. */
+    TCL_UNUSED(TkClipboardTarget *))
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
@@ -259,7 +260,7 @@ TkSelUpdateClipboard(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
@@ -287,7 +288,7 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
 }
 

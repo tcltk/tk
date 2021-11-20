@@ -19,6 +19,10 @@
 #define NSFullScreenWindowMask (1 << 14)
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+typedef NSInteger NSModalResponse;
+#endif
+
 /*
  * Let's raise a glass for the project manager who improves our lives by
  * generating deprecation warnings about pointless changes of the names
@@ -79,22 +83,8 @@
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical
 #define NSCenterTextAlignment NSTextAlignmentCenter
-#define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
-#define NSCommandKeyMask NSEventModifierFlagCommand
-#define NSShiftKeyMask NSEventModifierFlagShift
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSAlternateKeyMask NSEventModifierFlagOption
-#define NSControlKeyMask NSEventModifierFlagControl
-#define NSNumericPadKeyMask NSEventModifierFlagNumericPad
-#define NSFunctionKeyMask NSEventModifierFlagFunction
-#define NSKeyUp NSEventTypeKeyUp
-#define NSKeyDown NSEventTypeKeyDown
-#define NSFlagsChanged NSEventTypeFlagsChanged
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSShiftKeyMask NSEventModifierFlagShift
 #define NSAnyEventMask NSEventMaskAny
 #define NSApplicationDefinedMask NSEventMaskApplicationDefined
-#define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel
 #define NSDocModalWindowMask NSWindowStyleMaskDocModalWindow
@@ -106,16 +96,25 @@
 #define NSMiniaturizableWindowMask NSWindowStyleMaskMiniaturizable
 #define NSBorderlessWindowMask NSWindowStyleMaskBorderless
 #define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
+#define NSAlphaFirstBitmapFormat NSBitmapFormatAlphaFirst
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
 #define NSStringPboardType NSPasteboardTypeString
 #define NSOnState NSControlStateValueOn
 #define NSOffState NSControlStateValueOff
-// Now we are also changing names of methods!
-#define graphicsContextWithGraphicsPort graphicsContextWithCGContext
 #endif
 
-
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 110000
+#define NSWindowStyleMaskTexturedBackground 0
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#define GET_NSCONTEXT(context, flip) [NSGraphicsContext		\
+	    graphicsContextWithGraphicsPort:context flipped:flip]
+#else
+#define GET_NSCONTEXT(context, flip) [NSGraphicsContext		\
+	    graphicsContextWithCGContext:context flipped:NO]
+#endif
+
+#endif

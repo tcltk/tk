@@ -63,9 +63,9 @@ typedef struct mFile {
  * Most data in a GIF image is binary and is treated as such. However, a few
  * key bits are stashed in ASCII. If we try to compare those pieces to the
  * char they represent, it will fail on any non-ASCII (eg, EBCDIC) system. To
- * accomodate these systems, we test against the numeric value of the ASCII
+ * accommodate these systems, we test against the numeric value of the ASCII
  * characters instead of the characters themselves. This is encoding
- * independant.
+ * independent.
  */
 
 static const char GIF87a[] = {			/* ASCII GIF87a */
@@ -1035,13 +1035,13 @@ ReadImage(
 {
     unsigned char initialCodeSize;
     int xpos = 0, ypos = 0, pass = 0, i, count;
-    register unsigned char *pixelPtr;
+    unsigned char *pixelPtr;
     static const int interlaceStep[] = { 8, 8, 4, 2 };
     static const int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char append[(1 << MAX_LWZ_BITS)];
     unsigned char stack[(1 << MAX_LWZ_BITS)*2];
-    register unsigned char *top;
+    unsigned char *top;
     int codeSize, clearCode, inCode, endCode, oldCode, maxCode;
     int code, firstCode, v;
 
@@ -1425,7 +1425,7 @@ Mread(
     size_t numChunks,		/* number of chunks */
     MFile *handle)		/* mmdecode "file" handle */
 {
-    register int i, c;
+    int i, c;
     int count = chunkSize * numChunks;
 
     for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
@@ -2157,9 +2157,9 @@ ClearHashTable(			/* Reset code table. */
     GIFState_t *statePtr,
     int hSize)
 {
-    register int *hashTablePtr = statePtr->hashTable + hSize;
-    register long i;
-    register long m1 = -1;
+    int *hashTablePtr = statePtr->hashTable + hSize;
+    long i;
+    long m1 = -1;
 
     i = hSize - 16;
     do {			/* might use Sys V memset(3) here */

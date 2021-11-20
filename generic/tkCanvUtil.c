@@ -12,7 +12,6 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
-#include <assert.h>
 
 /*
  * Structures defined only in this file.
@@ -29,14 +28,15 @@ const Tk_SmoothMethod tkBezierSmoothMethod = {
     "true",
     TkMakeBezierCurve,
     (void (*) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr,
-	    int numPoints, int numSteps)) TkMakeBezierPostscript,
+	    int numPoints, int numSteps))(void *)TkMakeBezierPostscript,
 };
 static const Tk_SmoothMethod tkRawSmoothMethod = {
     "raw",
     TkMakeRawCurve,
     (void (*) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr,
-	    int numPoints, int numSteps)) TkMakeRawCurvePostscript,
+	    int numPoints, int numSteps))(void *)TkMakeRawCurvePostscript,
 };
+
 
 /*
  * Function forward-declarations.
@@ -332,7 +332,7 @@ Tk_CanvasSetOffset(
 				 * redisplaying the canvas. */
     Tk_TSOffset *offset)	/* Offset (may be NULL pointer)*/
 {
-    register TkCanvas *canvasPtr = Canvas(canvas);
+    TkCanvas *canvasPtr = Canvas(canvas);
     int flags = 0;
     int x = - canvasPtr->drawableXOrigin;
     int y = - canvasPtr->drawableYOrigin;
@@ -406,7 +406,7 @@ Tk_CanvasTagsParseProc(
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item (ignored). */
 {
-    register Tk_Item *itemPtr = (Tk_Item *) widgRec;
+    Tk_Item *itemPtr = (Tk_Item *) widgRec;
     int argc, i;
     const char **argv;
     Tk_Uid *newPtr;
@@ -474,7 +474,7 @@ Tk_CanvasTagsPrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Tk_Item *itemPtr = (Tk_Item *) widgRec;
+    Tk_Item *itemPtr = (Tk_Item *) widgRec;
 
     if (itemPtr->numTags == 0) {
 	*freeProcPtr = NULL;
@@ -733,7 +733,7 @@ TkSmoothParseProc(
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
 {
-    register const Tk_SmoothMethod **smoothPtr =
+    const Tk_SmoothMethod **smoothPtr =
 	    (const Tk_SmoothMethod **) (widgRec + offset);
     const Tk_SmoothMethod *smooth = NULL;
     int b;
@@ -756,7 +756,7 @@ TkSmoothParseProc(
     }
 
     /*
-     * Backward compatability hack.
+     * Backward compatibility hack.
      */
 
     if (strncmp(value, "bezier", length) == 0) {
@@ -826,7 +826,7 @@ TkSmoothPrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register const Tk_SmoothMethod *smoothPtr =
+    const Tk_SmoothMethod *smoothPtr =
 	    * (Tk_SmoothMethod **) (widgRec + offset);
 
     return smoothPtr ? smoothPtr->name : "0";

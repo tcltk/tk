@@ -217,7 +217,7 @@ Tk_MenubuttonObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register TkMenuButton *mbPtr;
+    TkMenuButton *mbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
 
@@ -347,7 +347,7 @@ MenuButtonWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = clientData;
     int result, index;
     Tcl_Obj *objPtr;
 
@@ -422,7 +422,7 @@ static void
 DestroyMenuButton(
     char *memPtr)		/* Info about button widget. */
 {
-    register TkMenuButton *mbPtr = (TkMenuButton *) memPtr;
+    TkMenuButton *mbPtr = (TkMenuButton *) memPtr;
     TkpDestroyMenuButton(mbPtr);
 
     if (mbPtr->flags & REDRAW_PENDING) {
@@ -490,7 +490,7 @@ DestroyMenuButton(
 static int
 ConfigureMenuButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkMenuButton *mbPtr,
+    TkMenuButton *mbPtr,
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
@@ -877,22 +877,9 @@ MenuButtonTextVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = clientData;
     const char *value;
     unsigned len;
-
-    /*
-     * See ticket [5d991b82].
-     */
-
-    if (mbPtr->textVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    MenuButtonTextVarProc, clientData);
-	}
-	return NULL;
-    }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -900,7 +887,27 @@ MenuButtonTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && mbPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        mbPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        MenuButtonTextVarProc, probe);
+                if (probe == (ClientData)mbPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
 		    TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
@@ -957,7 +964,7 @@ MenuButtonImageProc(
 				 * 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = clientData;
 
     if (mbPtr->tkwin != NULL) {
 	TkpComputeMenuButtonGeometry(mbPtr);

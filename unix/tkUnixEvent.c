@@ -15,7 +15,7 @@
 #ifdef HAVE_XKBKEYCODETOKEYSYM
 #  include <X11/XKBlib.h>
 #else
-#  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(NULL))
+#  define XkbOpenDisplay(D,V,E,M,m,R) (((void)D),((void)V),((void)E),((void)M),((void)m),((void)R),(NULL))
 #endif
 
 /*
@@ -23,7 +23,7 @@
  * the current thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -166,7 +166,7 @@ TkpOpenDisplay(
     if (display == NULL) {
 	/*fprintf(stderr,"event=%d error=%d major=%d minor=%d reason=%d\nDisabling xkb\n",
 	event, error, major, minor, reason);*/
-	display  = XOpenDisplay(displayNameStr);
+	display = XOpenDisplay(displayNameStr);
     } else {
 	use_xkb = TK_DISPLAY_USE_XKB;
 	/*fprintf(stderr, "Using xkb %d.%d\n", major, minor);*/
@@ -186,6 +186,25 @@ TkpOpenDisplay(
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 	    DisplayFileProc, dispPtr);
+
+    /*
+     * Observed weird WidthMMOfScreen() in X on Wayland on a
+     * Fedora 30/i386 running in a VM. Fallback to 75 dpi,
+     * otherwise many other strange things may happen later.
+     * See: [https://core.tcl-lang.org/tk/tktview?name=a01b6f7227]
+     */
+    if (WidthMMOfScreen(DefaultScreenOfDisplay(display)) <= 0) {
+	int mm;
+
+	mm = WidthOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0);
+	WidthMMOfScreen(DefaultScreenOfDisplay(display)) = mm;
+    }
+    if (HeightMMOfScreen(DefaultScreenOfDisplay(display)) <= 0) {
+	int mm;
+
+	mm = HeightOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0);
+	HeightMMOfScreen(DefaultScreenOfDisplay(display)) = mm;
+    }
 
     /*
      * Key map info must be available immediately, because of "send event".
@@ -341,9 +360,6 @@ TransferXEventsToTcl(
 	int type;
 	XEvent x;
 	TkKeyEvent k;
-#ifdef GenericEvent
-	xGenericEvent xge;
-#endif
     } event;
     Window w;
     TkDisplay *dispPtr = NULL;
@@ -361,12 +377,9 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
-#ifdef GenericEvent
-	if (event.type == GenericEvent) {
-	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)",
-		    event.xge.extension, event.xge.evtype);
+	if (event.type > MappingNotify) {
+	    continue;
 	}
-#endif
 	w = None;
 	if (event.type == KeyPress || event.type == KeyRelease) {
 	    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
@@ -495,9 +508,9 @@ DisplayFileProc(
 	 * nice (?!) message.
 	 */
 
-	void (*oldHandler)();
+	void (*oldHandler)(int);
 
-	oldHandler = (void (*)()) signal(SIGPIPE, SIG_IGN);
+	oldHandler = (void (*)(int)) signal(SIGPIPE, SIG_IGN);
 	XNoOp(display);
 	XFlush(display);
 	(void) signal(SIGPIPE, oldHandler);

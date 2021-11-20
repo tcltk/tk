@@ -78,8 +78,9 @@ TkSelGetSelection(
 	    CloseClipboard();
 	    goto error;
 	}
-	data = GlobalLock(handle);
-	Tcl_WinTCharToUtf((TCHAR *)data, -1, &ds);
+	data = (char *)GlobalLock(handle);
+	Tcl_DStringInit(&ds);
+	Tcl_WCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -100,7 +101,7 @@ TkSelGetSelection(
 
 	    Tcl_DStringInit(&ds);
 	    Tcl_DStringAppend(&ds, "cp######", -1);
-	    data = GlobalLock(handle);
+	    data = (char *)GlobalLock(handle);
 
 	    /*
 	     * Even though the documentation claims that GetLocaleInfo expects
@@ -130,7 +131,7 @@ TkSelGetSelection(
 	    CloseClipboard();
 	    goto error;
 	}
-	data = GlobalLock(handle);
+	data = (char *)GlobalLock(handle);
 	Tcl_ExternalToUtfDString(encoding, data, -1, &ds);
 	GlobalUnlock(handle);
 	if (encoding) {
@@ -157,7 +158,8 @@ TkSelGetSelection(
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
 		len = wcslen(fname);
-		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
+		Tcl_DStringInit(&dsTmp);
+		Tcl_WCharToUtfDString(fname, len, &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
@@ -232,6 +234,8 @@ XSetSelectionOwner(
 {
     HWND hwnd = owner ? TkWinGetHWND(owner) : NULL;
     Tk_Window tkwin;
+    (void)display;
+    (void)time;
 
     /*
      * This is a gross hack because the Tk_InternAtom interface is broken. It
@@ -281,6 +285,7 @@ TkWinClipboardRender(
     char *buffer, *p, *rawText, *endPtr;
     int length;
     Tcl_DString ds;
+    (void)format;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -312,7 +317,7 @@ TkWinClipboardRender(
      * Copy the data and change EOL characters.
      */
 
-    buffer = rawText = ckalloc(length + 1);
+    buffer = rawText = (char *)ckalloc(length + 1);
     if (targetPtr != NULL) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -327,43 +332,21 @@ TkWinClipboardRender(
     }
     *buffer = '\0';
 
-    /*
-     * Depending on the platform, turn the data into Unicode or the system
-     * encoding before placing it on the clipboard.
-     */
-
-#ifdef UNICODE
-	Tcl_DStringInit(&ds);
-	Tcl_WinUtfToTChar(rawText, -1, &ds);
-	ckfree(rawText);
-	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 2);
-	if (!handle) {
-	    Tcl_DStringFree(&ds);
-	    return;
-	}
-	buffer = GlobalLock(handle);
-	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 2);
-	GlobalUnlock(handle);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToWCharDString(rawText, -1, &ds);
+    ckfree(rawText);
+    handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
+	    Tcl_DStringLength(&ds) + 2);
+    if (!handle) {
 	Tcl_DStringFree(&ds);
-	SetClipboardData(CF_UNICODETEXT, handle);
-#else
-	Tcl_UtfToExternalDString(NULL, rawText, -1, &ds);
-	ckfree(rawText);
-	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	if (!handle) {
-	    Tcl_DStringFree(&ds);
-	    return;
-	}
-	buffer = GlobalLock(handle);
-	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	GlobalUnlock(handle);
-	Tcl_DStringFree(&ds);
-	SetClipboardData(CF_TEXT, handle);
-#endif
+	return;
+    }
+    buffer = (char *)GlobalLock(handle);
+    memcpy(buffer, Tcl_DStringValue(&ds),
+	    Tcl_DStringLength(&ds) + 2);
+    GlobalUnlock(handle);
+    Tcl_DStringFree(&ds);
+    SetClipboardData(CF_UNICODETEXT, handle);
 }
 
 /*
@@ -389,6 +372,8 @@ TkSelUpdateClipboard(
     TkClipboardTarget *targetPtr)
 {
     HWND hwnd = TkWinGetHWND(winPtr->window);
+    (void)targetPtr;
+
     UpdateClipboard(hwnd);
 }
 
@@ -441,7 +426,7 @@ UpdateClipboard(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
@@ -468,8 +453,9 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
+    (void)eventPtr;
 }
 
 /*

@@ -16,7 +16,7 @@
 #include "tkButton.h"
 #include "default.h"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int defaultsInitialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -105,7 +105,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_BUTTON_FONT, -1, Tk_Offset(TkButton, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_BUTTON_FG, -1, Tk_Offset(TkButton, normalFg), 0, 0, 0},
+	DEF_LABEL_FG, -1, Tk_Offset(TkButton, normalFg), 0, 0, 0},
     {TK_OPTION_STRING, "-height", "height", "Height",
 	DEF_BUTTON_HEIGHT, Tk_Offset(TkButton, heightPtr), -1, 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -878,7 +878,7 @@ ButtonWidgetObjCmd(
 		 */
 
 		Tcl_CancelIdleCall(TkpDisplayButton, butPtr);
-		XFlush(butPtr->display);
+		(void)XFlush(butPtr->display);
 		#ifndef MAC_OSX_TK
 		/*
 		 * On the mac you can not sleep in a display proc, and the
@@ -1036,7 +1036,7 @@ DestroyButton(
 static int
 ConfigureButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkButton *butPtr,	/* Information about widget;  may or may
+    TkButton *butPtr,	/* Information about widget;  may or may
 				 * not already have values for some fields. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -1612,22 +1612,9 @@ ButtonVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = clientData;
     const char *value;
     Tcl_Obj *valuePtr;
-
-    /*
-     * See ticket [5d991b82].
-     */
-
-    if (butPtr->selVarNamePtr == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    ButtonVarProc, clientData);
-	}
-	return NULL;
-    }
 
     /*
      * If the variable is being unset, then just re-establish the trace unless
@@ -1636,7 +1623,27 @@ ButtonVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (!Tcl_InterpDeleted(interp)) {
+	    ClientData probe = NULL;
+
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(butPtr->selVarNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ButtonVarProc, probe);
+		if (probe == (ClientData)butPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * selVarNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		goto redisplay;
+	    }
 	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
 		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonVarProc, clientData);
@@ -1711,8 +1718,8 @@ static char *
 ButtonTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     TkButton *butPtr = clientData;
@@ -1723,25 +1730,39 @@ ButtonTextVarProc(
     }
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (butPtr->textVarNamePtr == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    ButtonTextVarProc, clientData);
-	}
- 	return NULL;
-     }
-
-    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (!Tcl_InterpDeleted(interp) && butPtr->textVarNamePtr != NULL) {
+
+	    /*
+	     * An unset trace on some variable brought us here, but is it
+	     * the variable we have stored in butPtr->textVarNamePtr ?
+	     */
+
+	    ClientData probe = NULL;
+
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(butPtr->textVarNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ButtonTextVarProc, probe);
+		if (probe == (ClientData)butPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * textVarNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former textvariable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
+
 	    Tcl_ObjSetVar2(interp, butPtr->textVarNamePtr, NULL,
 		    butPtr->textPtr, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
@@ -1796,7 +1817,7 @@ ButtonImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = clientData;
 
     if (butPtr->tkwin != NULL) {
 	TkpComputeButtonGeometry(butPtr);
@@ -1834,7 +1855,7 @@ ButtonSelectImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = clientData;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {
@@ -1881,7 +1902,7 @@ ButtonTristateImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = clientData;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {

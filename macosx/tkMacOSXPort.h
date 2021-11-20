@@ -1,7 +1,7 @@
 /*
  * tkMacOSXPort.h --
  *
- *	This file is included by all of the Tk C files. It contains
+ *	This file is included by all of the Tk C files.  It contains
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
@@ -17,13 +17,15 @@
 #define _TKMACPORT
 
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <math.h>
 #include <pwd.h>
-#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -47,6 +49,9 @@
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -69,6 +74,19 @@
 #	define SELECT_MASK void
 #   else
 #	define SELECT_MASK int
+#   endif
+#endif
+
+/*
+ * Used to tag functions that are only to be visible within the module being
+ * built and not outside it (where this is supported by the linker).
+ */
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
 #   endif
 #endif
 
@@ -110,12 +128,19 @@
  * no-op functions on the Macintosh.
  */
 
-#define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XGrabServer(display)
-#define XNoOp(display) {display->request++;}
-#define XUngrabServer(display)
-#define XSynchronize(display, bool) {display->request++;}
+#undef XFlush
+#define XFlush(display) (0)
+#undef XFree
+#define XFree(data) (((data) != NULL) ? (ckfree(data),0) : 0)
+#undef XGrabServer
+#define XGrabServer(display) (0)
+#undef XNoOp
+#define XNoOp(display) (display->request++,0)
+#undef XUngrabServer
+#define XUngrabServer(display) (0)
+#undef XSynchronize
+#define XSynchronize(display, onoff) (display->request++,NULL)
+#undef XVisualIDFromVisual
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
@@ -126,6 +151,17 @@
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)
+
+/*
+ * TkMacOSXGetCapture is a legacy function used on the Mac. When fixing
+ * [943d5ebe51], TkpGetCapture was added to the Windows port. Both
+ * are actually the same feature and should bear the same name. However,
+ * in order to avoid potential backwards incompatibilities, renaming
+ * TkMacOSXGetCapture into TkpGetCapture in *PlatDecls.h shall not be
+ * done in a patch release, therefore use a define here.
+ */
+
+#define TkpGetCapture TkMacOSXGetCapture
 
 /*
  * This macro stores a representation of the window handle in a string.
@@ -139,29 +175,43 @@
  */
 
 #define TK_NO_DOUBLE_BUFFERING 1
+#define TK_HAS_DYNAMIC_COLORS 1
+#define TK_DYNAMIC_COLORMAP 0x0fffffff
 
 /*
- * Magic pixel code values for system colors.
- *
- * NOTE: values must be kept in sync with indices into the
- *	 systemColorMap array in tkMacOSXColor.c !
+ * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to render RGBA
+ * images directly into a window.
  */
 
-#define TRANSPARENT_PIXEL		30
-#define APPEARANCE_PIXEL		52
-#define PIXEL_MAGIC ((unsigned char) 0x69)
+#define TK_CAN_RENDER_RGBA
+
+MODULE_SCOPE int TkpPutRGBAImage(
+		     Display* display, Drawable drawable, GC gc,XImage* image,
+		     int src_x, int src_y, int dest_x, int dest_y,
+		     unsigned int width, unsigned int height);
 
 /*
- * The following macro returns the pixel value that corresponds to the
- * 16-bit RGB values in the given XColor structure.
- * The format is: (PIXEL_MAGIC <<< 24) | (R << 16) | (G << 8) | B
- * where each of R, G and B is the high order byte of a 16-bit component.
+ * Used by xcolor.c
  */
 
-#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
+MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
+					    unsigned long blue);
+#define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
 
+/*
+ * Used by tkWindow.c
+ */
+
+MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
+
+#define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
+
+/*
+ * Used by tkAppInit
+ */
+
+#define USE_CUSTOM_EXIT_PROC
+EXTERN int TkpWantsExitProc(void);
+EXTERN TCL_NORETURN void TkpExitProc(void *);
 
 #endif /* _TKMACPORT */
