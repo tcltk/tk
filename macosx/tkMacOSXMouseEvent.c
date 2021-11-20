@@ -92,12 +92,9 @@ enum {
     case NSOtherMouseDragged:
     case NSRightMouseDown:
     case NSOtherMouseDown:
-	if (NSPointInRect(viewLocation, [contentView bounds])) {
-	    buttonState |= TkGetButtonMask(button);
-	}
+	buttonState |= TkGetButtonMask(button);
 	break;
     case NSMouseEntered:
-	tempWinPtr = TkMacOSXGetTkWindow(eventWindow);
 	if (NSPointInRect(viewLocation, [contentView bounds])) {
 	    pointerWin = eventWindow;
 	    [NSApp setTkPointerWindow:TkMacOSXGetTkWindow(pointerWin)];
@@ -110,7 +107,6 @@ enum {
 	}
 	break;
     case NSMouseExited:
-	tempWinPtr = TkMacOSXGetTkWindow(eventWindow);
 	if (!NSPointInRect(viewLocation, [contentView bounds])) {
 	    pointerWin = nil;
 	    [NSApp setTkPointerWindow:nil];
