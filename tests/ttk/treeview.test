@@ -485,6 +485,45 @@ test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
     set res
 } -result {1 1}
 
+test treeview-8.8 "No <<TreeviewSelect>> when setting the selection to the empty string" -body {
+    .tv selection set {}
+    bind .tv <<TreeviewSelect>> {set res 1}
+    set res 0
+    .tv selection set ""
+    update
+    set res
+} -result {0}
+
+test treeview-8.9 "No <<TreeviewSelect>> when removing an empty selection" -body {
+    .tv selection set {}
+    bind .tv <<TreeviewSelect>> {set res 1}
+    set res 0
+    .tv selection remove ""
+    update
+    set res
+} -result {0}
+
+test treeview-8.10 "No <<TreeviewSelect>> when selecting already selected items" -body {
+    .tv selection set {}
+    .tv insert "" end -id myItem1 -text FirstItem
+    .tv insert "" end -id myItem2 -text SecondItem
+    .tv selection add myItem2
+    bind .tv <<TreeviewSelect>> {set res 1}
+    set res 0
+    .tv selection add myItem2
+    update
+    set res
+} -result {0}
+
+test treeview-8.11 "No <<TreeviewSelect>> when toggling an empty selection" -body {
+    .tv selection set {}
+    bind .tv <<TreeviewSelect>> {set res 1}
+    set res 0
+    .tv selection toggle ""
+    update
+    set res
+} -result {0}
+
 ### NEED: more tests for see/yview/scrolling
 
 proc scrollcallback {args} {
