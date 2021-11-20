@@ -330,9 +330,6 @@ typedef struct _XImage {
     unsigned long green_mask;
     unsigned long blue_mask;
     XPointer obdata;		/* hook for the object routines to hang on */
-#if defined(MAC_OSX_TK)
-    int pixelpower;		/* n such that pixels are 2^n x 2^n blocks*/
-#endif
     struct funcs {		/* image manipulation routines */
 	struct _XImage *(*create_image)();
 #if NeedFunctionPrototypes
@@ -530,7 +527,7 @@ typedef struct _XDisplay {
 #endif
 #ifndef _XEVENT_
 
-#define XMaxTransChars 4
+#define XMaxTransChars 7
 
 /*
  * Definitions of specific events.
@@ -541,7 +538,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window it is reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -549,9 +546,6 @@ typedef struct {
 	unsigned int state;	/* key or button mask */
 	unsigned int keycode;	/* detail */
 	Bool same_screen;	/* same screen flag */
-        char trans_chars[XMaxTransChars];
-				/* translated characters */
-	int nbytes;
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;
@@ -562,7 +556,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window it is reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -580,7 +574,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -597,7 +591,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -959,7 +953,7 @@ typedef union _XEvent {
 	XMappingEvent xmapping;
 	XErrorEvent xerror;
 	XKeymapEvent xkeymap;
-	long pad[24];
+	XID pad[24];
 } XEvent;
 #endif
 

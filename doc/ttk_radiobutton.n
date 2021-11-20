@@ -77,6 +77,8 @@ are:
 .PP
 \fB\-background\fP \fIcolor\fP
 .br
+\fB\-compound\fP \fIcompound\fP
+.br
 \fB\-foreground\fP \fIcolor\fP
 .br
 \fB\-indicatorbackground\fP \fIcolor\fP

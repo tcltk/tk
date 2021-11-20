@@ -92,7 +92,7 @@ TkpDrawEntryBorderAndFocus(
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
     int oldWidth = 0;
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
     const HIThemeFrameDrawInfo info = {
 	.version = 0,
 	.kind = kHIThemeFrameTextFieldSquare,
@@ -124,16 +124,17 @@ TkpDrawEntryBorderAndFocus(
 	int incDecWidth;
 
 	/*
-	 * Temporarily change the width of the widget so that the same code can
-	 * be used for drawing the Entry portion of the Spinbox as is used to
-	 * draw an ordinary Entry.  The width must be restored before
-	 * returning.
+	 * If native spinbox buttons are going to be drawn, then temporarily
+	 * change the width of the widget so that the same code can be used
+	 * for drawing the Entry portion of the Spinbox as is used to draw
+	 * an ordinary Entry.  The width must be restored before returning.
 	 */
 
 	oldWidth = Tk_Width(tkwin);
-	ComputeIncDecParameters(Tk_Height(tkwin) - 2 * MAC_OSX_FOCUS_WIDTH,
-		&incDecWidth);
-	Tk_Width(tkwin) -= incDecWidth + 1;
+	if (ComputeIncDecParameters(Tk_Height(tkwin) - 2 * MAC_OSX_FOCUS_WIDTH,
+		&incDecWidth) != 0) {
+	    Tk_Width(tkwin) -= incDecWidth + 1;
+	}
     }
 
    /*
@@ -154,7 +155,7 @@ TkpDrawEntryBorderAndFocus(
     bounds.origin.y = macDraw->yOff + MAC_OSX_FOCUS_WIDTH;
     bounds.size.width = Tk_Width(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     bounds.size.height = Tk_Height(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
-    if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, NULL, &dc)) {
 
 	/*
 	 * No graphics context is available.  If the widget is a Spinbox, we
@@ -186,10 +187,10 @@ TkpDrawEntryBorderAndFocus(
  *	have to implement it.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	1 if it has drawn the buttons, 0 if not.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	May draw the buttons into pixmap.
  *
  *--------------------------------------------------------------
  */
@@ -207,7 +208,7 @@ TkpDrawSpinboxButtons(
     TkMacOSXDrawingContext dc;
     XRectangle rects[1];
     GC bgGC;
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *)d;
     HIThemeButtonDrawInfo info = {
 	.version = 0,
 	.adornment = kThemeAdornmentNone,
@@ -258,13 +259,13 @@ TkpDrawSpinboxButtons(
      */
 
     bgGC = Tk_GCForColor(sbPtr->entry.highlightBgColorPtr, d);
-    rects[0].x = bounds.origin.x;
+    rects[0].x = Tk_Width(tkwin) - incDecWidth - 1;
     rects[0].y = 0;
-    rects[0].width = Tk_Width(tkwin);
+    rects[0].width = incDecWidth + 1;
     rects[0].height = Tk_Height(tkwin);
     XFillRectangles(Tk_Display(tkwin), d, bgGC, rects, 1);
 
-    if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(d, NULL, &dc)) {
 	return 0;
     }
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);

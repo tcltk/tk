@@ -126,6 +126,7 @@ PutPixel(
 	 */
 
 	destPtr[3] = 0;
+	/* FALLTHRU */
     case 24:
 	/*
 	 * Pixel is triplet: 0xBBGGRR.

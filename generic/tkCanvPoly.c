@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each polygon item.
@@ -112,8 +113,9 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(PolygonItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
+    /* Remark: Default for -fill should be NULL, see [2860519]. Will be fixed in Tk 8.7 */
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+ 	DEF_CANVITEM_OUTLINE, Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
 	"round", Tk_Offset(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
@@ -374,7 +376,7 @@ PolygonCoords(
 	 * another point to close the polygon.
 	 */
 
-	polyPtr->coordPtr = ckalloc(sizeof(double) * (objc+2));
+	polyPtr->coordPtr = (double *)ckalloc(sizeof(double) * (objc+2));
 	polyPtr->pointsAllocated = numPoints+1;
     }
     for (i = objc-1; i >= 0; i--) {
@@ -562,7 +564,7 @@ ConfigurePolygon(
 
 static void
 DeletePolygon(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
@@ -823,7 +825,7 @@ TkFillPolygon(
     if (numPoints <= MAX_STATIC_POINTS) {
 	pointPtr = staticPoints;
     } else {
-	pointPtr = ckalloc(numPoints * sizeof(XPoint));
+	pointPtr = (XPoint *)ckalloc(numPoints * sizeof(XPoint));
     }
 
     for (i=0, pPtr=pointPtr ; i<numPoints; i+=1, coordPtr+=2, pPtr++) {
@@ -872,9 +874,10 @@ DisplayPolygon(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y, int width, int height)
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
+    TCL_UNUSED(int),	/* Describes region of canvas that must be */
+    TCL_UNUSED(int),	/* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     Tk_State state = itemPtr->state;
@@ -969,7 +972,7 @@ DisplayPolygon(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    pointPtr = staticPoints;
 	} else {
-	    pointPtr = ckalloc(numPoints * sizeof(XPoint));
+	    pointPtr = (XPoint *)ckalloc(numPoints * sizeof(XPoint));
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, pointPtr, NULL);
@@ -996,7 +999,7 @@ DisplayPolygon(
  *
  * PolygonInsert --
  *
- *	Insert coords into a polugon item at a given index.
+ *	Insert coords into a polygon item at a given index.
  *
  * Results:
  *	None.
@@ -1036,7 +1039,7 @@ PolygonInsert(
     while (beforeThis < 0) {
 	beforeThis += length;
     }
-    newCoordPtr = ckalloc(sizeof(double) * (length + 2 + objc));
+    newCoordPtr = (double *)ckalloc(sizeof(double) * (length + 2 + objc));
     for (i=0; i<beforeThis; i++) {
 	newCoordPtr[i] = polyPtr->coordPtr[i];
     }
@@ -1238,7 +1241,6 @@ PolygonDeleteCoords(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 PolygonToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1286,7 +1288,7 @@ PolygonToPoint(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    polyPoints = staticSpace;
 	} else {
-	    polyPoints = ckalloc(2 * numPoints * sizeof(double));
+	    polyPoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, NULL, polyPoints);
@@ -1428,7 +1430,6 @@ PolygonToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 PolygonToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1495,7 +1496,7 @@ PolygonToArea(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    polyPoints = staticSpace;
 	} else {
-	    polyPoints = ckalloc(2 * numPoints * sizeof(double));
+	    polyPoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, NULL, polyPoints);
@@ -1665,7 +1666,7 @@ ScalePolygon(
 static int
 GetPolygonIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
@@ -1795,7 +1796,7 @@ PolygonToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))	/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {

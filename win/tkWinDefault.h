@@ -59,6 +59,7 @@
 #define DEF_BUTTON_DEFAULT		"disabled"
 #define DEF_BUTTON_DISABLED_FG_COLOR	DISABLED
 #define DEF_BUTTON_DISABLED_FG_MONO	""
+#define DEF_LABEL_FG			NORMAL_FG
 #define DEF_BUTTON_FG			NORMAL_FG
 #define DEF_CHKRAD_FG			TEXT_FG
 #define DEF_BUTTON_FONT			"TkDefaultFont"
@@ -516,6 +517,14 @@
  */
 
 #define DEF_CANVTEXT_FONT		"TkDefaultFont"
+
+/*
+ * Defaults for canvas items
+ * (arcs, bitmaps, lines, polygons, rectangles, and ovals):
+ */
+
+#define DEF_CANVBMAP_FG			NORMAL_FG
+#define DEF_CANVITEM_OUTLINE		NORMAL_FG
 
 /*
  * Defaults for toplevels (most of the defaults for frames also apply

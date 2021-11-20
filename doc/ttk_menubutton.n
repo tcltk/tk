@@ -58,6 +58,8 @@ are:
 .br
 \fB\-background\fP \fIcolor\fP
 .br
+\fB\-compound\fP \fIcompound\fP
+.br
 \fB\-foreground\fP \fIcolor\fP
 .br
 \fB\-font\fP \fIfont\fP

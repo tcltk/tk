@@ -13,7 +13,7 @@
 #include "tkInt.h"
 #include "tkMenu.h"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int postCommandGeneration;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -67,7 +67,7 @@ PreprocessMenu(
     do {
 	finished = 1;
 	for (index = 0; index < menuPtr->numEntries; index++) {
-	    register TkMenuEntry *entryPtr = menuPtr->entries[index];
+	    TkMenuEntry *entryPtr = menuPtr->entries[index];
 
 	    if ((entryPtr->type == CASCADE_ENTRY)
 		    && (entryPtr->namePtr != NULL)
