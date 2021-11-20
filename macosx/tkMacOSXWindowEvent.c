@@ -989,6 +989,9 @@ ConfigureRestrictProc(
 	trackingArea = [[NSTrackingArea alloc]
 			   initWithRect:[self bounds]
 				options:(NSTrackingMouseEnteredAndExited |
+					 NSTrackingMouseMoved |
+					 NSTrackingEnabledDuringMouseDrag |
+					 NSTrackingInVisibleRect |
 					 NSTrackingActiveAlways)
 				  owner:self
 			       userInfo:nil];
@@ -1366,14 +1369,18 @@ static const char *const accentNames[] = {
     return [super validRequestorForSendType:sendType returnType:returnType];
 }
 
-- (void)updateTrackingAreas {
+- (void)XXXupdateTrackingAreas {
+    printf("Call to updateTrackingAreas\n");
     [self removeTrackingArea:trackingArea];
     [trackingArea release];
     trackingArea = [[NSTrackingArea alloc]
 		       initWithRect:[self bounds]
-			    options: (NSTrackingMouseEnteredAndExited |
-				      NSTrackingActiveAlways)
-			      owner:self
+			    options:(NSTrackingMouseEnteredAndExited |
+				     NSTrackingMouseMoved |
+				     NSTrackingEnabledDuringMouseDrag |
+				     NSTrackingInVisibleRect |
+				     NSTrackingActiveAlways)
+			      owner:NSApp
 			   userInfo:nil];
     [self addTrackingArea:trackingArea];
 
