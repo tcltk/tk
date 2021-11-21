@@ -460,69 +460,102 @@ test treeview-8.5 "Selection - bad operation" -body {
     .tv selection badop foo
 } -returnCodes error -match glob -result {bad selection operation "badop": must be *}
 
-test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
-    .tv selection set {}
-    bind .tv <<TreeviewSelect>> {set res 1}
-    set res 0
-    .tv selection add newnode.n1
-    update
-    set res
-} -result {1}
-
-test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
-    .tv selection set {}
-    .tv insert "" end -id selectedDoomed -text DeadItem
-    .tv insert "" end -id doomed -text AlsoDead
-    .tv selection add selectedDoomed
-    update
-    bind .tv <<TreeviewSelect>> {lappend res 1}
-    set res 0
-    .tv delete doomed
-    update
-    set res [expr {$res == 0}]
-    .tv delete selectedDoomed
-    update
-    set res
-} -result {1 1}
-
-test treeview-8.8 "No <<TreeviewSelect>> when setting the selection to the empty string" -body {
-    .tv selection set {}
-    bind .tv <<TreeviewSelect>> {set res 1}
-    set res 0
-    .tv selection set ""
-    update
-    set res
-} -result {0}
-
-test treeview-8.9 "No <<TreeviewSelect>> when removing an empty selection" -body {
-    .tv selection set {}
-    bind .tv <<TreeviewSelect>> {set res 1}
-    set res 0
-    .tv selection remove ""
-    update
-    set res
-} -result {0}
-
-test treeview-8.10 "No <<TreeviewSelect>> when selecting already selected items" -body {
-    .tv selection set {}
+test treeview-8.7 "<<TreeviewSelect>> when deleting items" -body {
+    .tv delete [.tv children {}]
     .tv insert "" end -id myItem1 -text FirstItem
     .tv insert "" end -id myItem2 -text SecondItem
-    .tv selection add myItem2
-    bind .tv <<TreeviewSelect>> {set res 1}
-    set res 0
-    .tv selection add myItem2
+    .tv selection add myItem1
+    update
+    bind .tv <<TreeviewSelect>> {lappend res $val}
+    set res {}
+    set val 1
+    .tv delete myItem2  ; # no <<TreeviewSelect>> (selection unchanged)
+    update
+    set val 2
+    .tv delete myItem1  ; # <<TreeviewSelect>> triggers
     update
     set res
-} -result {0}
+} -result {2}
 
-test treeview-8.11 "No <<TreeviewSelect>> when toggling an empty selection" -body {
-    .tv selection set {}
-    bind .tv <<TreeviewSelect>> {set res 1}
-    set res 0
-    .tv selection toggle ""
+test treeview-8.8 "<<TreeviewSelect>> when setting the selection" -body {
+    .tv delete [.tv children {}]
+    .tv insert "" end -id myItem1 -text FirstItem
+    update
+    bind .tv <<TreeviewSelect>> {lappend res $val}
+    set res {}
+    set val 1
+    .tv selection set ""       ; # no <<TreeviewSelect>> (selection unchanged)
+    update
+    set val 2
+    .tv selection set myItem1  ; # <<TreeviewSelect>> triggers
+    update
+    set val 3
+    .tv selection set myItem1  ; # no <<TreeviewSelect>> (already selected)
     update
     set res
-} -result {0}
+} -result {2}
+
+test treeview-8.9 "<<TreeviewSelect>> when removing items from the selection" -body {
+    .tv delete [.tv children {}]
+    .tv insert "" end -id myItem1 -text FirstItem
+    .tv selection set myItem1
+    update
+    bind .tv <<TreeviewSelect>> {lappend res $val}
+    set res {}
+    set val 1
+    .tv selection remove ""       ; # no <<TreeviewSelect>> (selection unchanged)
+    update
+    set val 2
+    .tv selection remove myItem1  ; # <<TreeviewSelect>> triggers
+    update
+    set val 3
+    .tv selection remove myItem1  ; # no <<TreeviewSelect>> (selection unchanged)
+    update
+    set res
+} -result {2}
+
+test treeview-8.10 "<<TreeviewSelect>> when adding items in the selection" -body {
+    .tv delete [.tv children {}]
+    .tv insert "" end -id myItem1 -text FirstItem
+    .tv insert "" end -id myItem2 -text SecondItem
+    .tv insert "" end -id myItem3 -text ThirdItem
+    update
+    bind .tv <<TreeviewSelect>> {lappend res $val}
+    set res {}
+    set val 1
+    .tv selection add myItem2  ; # <<TreeviewSelect>> triggers
+    update
+    set val 2
+    .tv selection add myItem2  ; # no <<TreeviewSelect>> (selection unchanged)
+    update
+    set val 3
+    .tv selection add myItem3  ; # <<TreeviewSelect>> triggers
+    update
+    set res
+} -result {1 3}
+
+test treeview-8.11 "<<TreeviewSelect>> when toggling" -body {
+    .tv delete [.tv children {}]
+    .tv insert "" end -id myItem1 -text FirstItem
+    .tv insert "" end -id myItem2 -text SecondItem
+    .tv insert "" end -id myItem3 -text ThirdItem
+    update
+    bind .tv <<TreeviewSelect>> {lappend res $val}
+    set res {}
+    set val 1
+    .tv selection toggle ""  ; # no <<TreeviewSelect>> (selection unchanged)
+    update
+    set val 2
+    .tv selection toggle {myItem1 myItem3}  ; # <<TreeviewSelect>> triggers
+    update
+    set val 3
+    .tv selection toggle {myItem3 myItem2}  ; # <<TreeviewSelect>> triggers
+    update
+    set val 4
+    .tv selection toggle {myItem3 myItem2}  ; # <<TreeviewSelect>> triggers
+    update
+    set res
+} -result {2 3 4}
 
 ### NEED: more tests for see/yview/scrolling
 
