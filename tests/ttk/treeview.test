@@ -480,6 +480,7 @@ test treeview-8.7 "<<TreeviewSelect>> when deleting items" -body {
 test treeview-8.8 "<<TreeviewSelect>> when setting the selection" -body {
     .tv delete [.tv children {}]
     .tv insert "" end -id myItem1 -text FirstItem
+    .tv insert "" end -id myItem2 -text SecondItem
     update
     bind .tv <<TreeviewSelect>> {lappend res $val}
     set res {}
@@ -492,8 +493,14 @@ test treeview-8.8 "<<TreeviewSelect>> when setting the selection" -body {
     set val 3
     .tv selection set myItem1  ; # no <<TreeviewSelect>> (already selected)
     update
+    set val 4
+    .tv selection set {myItem1 myItem2}  ; # <<TreeviewSelect>> triggers
+    update
+    set val 5
+    .tv selection set {myItem2}  ; # <<TreeviewSelect>> triggers
+    update
     set res
-} -result {2}
+} -result {2 4 5}
 
 test treeview-8.9 "<<TreeviewSelect>> when removing items from the selection" -body {
     .tv delete [.tv children {}]
