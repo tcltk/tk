@@ -1369,22 +1369,6 @@ static const char *const accentNames[] = {
     return [super validRequestorForSendType:sendType returnType:returnType];
 }
 
-- (void)XXXupdateTrackingAreas {
-    printf("Call to updateTrackingAreas\n");
-    [self removeTrackingArea:trackingArea];
-    [trackingArea release];
-    trackingArea = [[NSTrackingArea alloc]
-		       initWithRect:[self bounds]
-			    options:(NSTrackingMouseEnteredAndExited |
-				     NSTrackingMouseMoved |
-				     NSTrackingEnabledDuringMouseDrag |
-				     NSTrackingInVisibleRect |
-				     NSTrackingActiveAlways)
-			      owner:NSApp
-			   userInfo:nil];
-    [self addTrackingArea:trackingArea];
-
-}
 @end
 
 /*
