@@ -114,6 +114,7 @@ enum {
 	}
 	if (eventType == NSLeftMouseDragged ||
 	    eventType == NSMouseMoved) {
+	    eventWindow = [NSApp keyWindow];
 	    isMotionEvent = YES;
 	}
 	if (!isTestingEvent && !isMotionEvent) {
@@ -224,7 +225,11 @@ enum {
 	    return theEvent;
 	}
     } else {
-	winPtr = [NSApp tkEventTarget];
+	if (isDragging) {
+	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
+	} else {
+	    winPtr = [NSApp tkEventTarget];
+	}
     }
     if (!winPtr) {
 
@@ -235,12 +240,13 @@ enum {
 #ifdef TK_MAC_DEBUG_EVENTS
 	TkMacOSXDbgMsg("Event received with no Tk window.");
 #endif
+
 	return theEvent;
     }
     tkwin = (Tk_Window) winPtr;
 
     /*
-     * Compute the mouse position in local (window) and global (screen)
+     * Compute the mouse position in local (toplevel) and global (screen)
      * coordinates.  These are Tk coordinates, meaning that the local origin is
      * at the top left corner of the containing toplevel and the global origin
      * is at top left corner of the primary screen.
@@ -262,29 +268,49 @@ enum {
 	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
 	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
 	}
-    } else {
-	if (winPtr && winPtr->wmInfoPtr) {
-	    local.x -= winPtr->wmInfoPtr->xInParent;
-	    local.y -= winPtr->wmInfoPtr->yInParent;
-	} else {
-	    return theEvent;
-	}
+    }
+    else {
+    	if (winPtr && winPtr->wmInfoPtr) {
+    	    local.x -= winPtr->wmInfoPtr->xInParent;
+    	    local.y -= winPtr->wmInfoPtr->yInParent;
+    	} else {
+    	    return theEvent;
+    	}
     }
 
     /*
      * Use the local coordinates to find the Tk window which should receive
      * this event.  Also convert local into the coordinates of that window.
-     * (The converted local coordinates are only needed for scrollwheel
-     * events.)
+     * (The converted local coordinates are used for XEvents that we generate,
+     * namely ScrollWheel events and B1-Motion events when the mouse is
+     * outside of the focused toplevel.
      */
 
     if (isDragging) {
+	TkWindow *w = (TkWindow *) dragTarget;
+
+	/*
+	 * Compute the pointer position in the coordinate system of the
+	 * drag target, for use in the Motion XEvent that we will send.
+	 */
+
+	win_x = global.x;
+	win_y = global.y;
+	for (; w != NULL; w = w->parentPtr) {
+	    win_x -= Tk_X(w);
+	    win_y -= Tk_Y(w);
+	}
 	target = dragTarget;
     } else {
+
+	/*
+	 * Find the highest Tk window containing the pointer.  The coordinates
+	 * win_x and win_y will be used if we have to send a ScrollWheel event.
+	 */
+
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
-    //printf("target is %s\n", target ? Tk_PathName(target) : "None");
-    
+
     /*
      * Ignore the event if a local grab is in effect and the Tk window is
      * not in the grabber's subtree.
@@ -350,7 +376,6 @@ enum {
 	     */
 
 	    state |= TkGetButtonMask(Button1);
-	    target = dragTarget;
 	}
 	if (eventType == NSMouseEntered) {
 	    Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
@@ -379,8 +404,8 @@ enum {
 		xEvent.xany.send_event = false;
 		xEvent.xany.display = Tk_Display(target);
 		xEvent.xany.window = Tk_WindowId(target);
-		xEvent.xmotion.x = local.x;
-		xEvent.xmotion.y = local.y;
+		xEvent.xmotion.x = win_x;
+		xEvent.xmotion.y = win_y;
 		xEvent.xmotion.x_root = global.x;
 		xEvent.xmotion.y_root = global.y;
 		xEvent.xmotion.state = state;
