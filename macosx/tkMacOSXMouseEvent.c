@@ -46,6 +46,33 @@ enum {
  * belong to the application.
  */
 
+/* The basic job of tkProcessMouseEvent is to generate a call to
+ * TkUpdatePointer.  That function receives a Tk_Window which (ignoring cases
+ * when a grab is in effect) should be the highest window within the focused
+ * toplevel that contains the pointer, as well as the pointer location in
+ * screen coordinates and the current button state.  Tk maintains a cache of
+ * these three values.  A change in any of these values causes TkUpdatePointer
+ * to generate, respectively, Enter/Leave events, or Motion events, or
+ * button Press/Release events. The Tk_Window value is allowed to be None,
+ * which indicates that the pointer is not in the focused toplevel.
+ *
+ * Enter or Leave events for toplevel windows are generated when the Tk_Window
+ * value changes to or from None.  This is problematic on macOS due to the fact
+ * that TkUpdatePointer does not generate Motion events when the Tk_Window
+ * value is None.  A consequence of this is that TkUpdatePointer will either
+ * fail to generate correct Enter/Leave events for toplevels or else be unable
+ * to generate Motion events when the pointer is outside of the focus window.
+ * It is important to be able to generate such events because otherwise a
+ * scrollbar on the edge of a toplevel becomes unusable.  Any time that the
+ * pointer wanders out of the window during a scroll, the scroll will stop.
+ * That is an extremely annoying and unexpected behavior.  Much of the code in
+ * this module, including the trickiest parts, is devoted to working around
+ * this problem.  The other tricky parts are related to transcribing Apple's
+ * NSMouseEntered, NSMouseExited, and NSLeftMouseDragged events into a form
+ * that makes sense to Tk.
+ */
+
+
 @implementation TKApplication(TKMouseEvent)
 
 - (NSEvent *) tkProcessMouseEvent: (NSEvent *) theEvent

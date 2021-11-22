@@ -195,7 +195,6 @@ XMapWindow(
 
 	    NSPoint viewLocation = [view convertPoint:mouse fromView:nil];
 	    if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
-		printf("Calling Tk_UpdatePointer from XMapWindow\n");
 		Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
 	    }
 	} else {
