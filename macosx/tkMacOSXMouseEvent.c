@@ -214,7 +214,8 @@ enum {
     }
 
     /*
-     * Redirect events if capture is set.      * 
+     * Find the toplevel window for the event.  If a capture has been
+     * set this may involve redirecting the event.
      */
 
     capture = TkMacOSXGetCapture(); 
@@ -234,7 +235,8 @@ enum {
     if (!winPtr) {
 
 	/*
-	 * We couldn't find a Tk window for this event.  We have to ignore it.
+	 * If we couldn't find a toplevel for this event we have to ignore it.
+	 * (But this should never happen.)
 	 */
 
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -279,21 +281,15 @@ enum {
     }
 
     /*
-     * Use the local coordinates to find the Tk window which should receive
-     * this event.  Also convert local into the coordinates of that window.
-     * (The converted local coordinates are used for XEvents that we generate,
-     * namely ScrollWheel events and B1-Motion events when the mouse is
-     * outside of the focused toplevel.
+     * Use the toplevel coordinates to decide which Tk window should receive
+     * this event.  Also convert the toplevel coordinates into the coordinate
+     * system of that window.  These converted coordinates are needed for
+     * XEvents that we generate, namely ScrollWheel events and Motion events
+     * when the mouse is outside of the focused toplevel.
      */
 
     if (isDragging) {
 	TkWindow *w = (TkWindow *) dragTarget;
-
-	/*
-	 * Compute the pointer position in the coordinate system of the
-	 * drag target, for use in the Motion XEvent that we will send.
-	 */
-
 	win_x = global.x;
 	win_y = global.y;
 	for (; w != NULL; w = w->parentPtr) {
@@ -302,12 +298,6 @@ enum {
 	}
 	target = dragTarget;
     } else {
-
-	/*
-	 * Find the highest Tk window containing the pointer.  The coordinates
-	 * win_x and win_y will be used if we have to send a ScrollWheel event.
-	 */
-
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
 
@@ -365,6 +355,13 @@ enum {
 	state |= Mod4Mask;
     }
     [NSApp setTkButtonState:state];
+
+    /*
+     * Send XEvents.  We do this here for Motion events outside of the focused
+     * toplevel and for MouseWheel events.  In other cases the XEvents will be
+     * sent when we call TkUpdatePointer.
+     */
+
     if (eventType != NSScrollWheel) {
 	if (isDragging) {
 	    
@@ -392,18 +389,13 @@ enum {
 	    if ([NSApp tkPointerWindow]) {
 		Tk_UpdatePointer(target, global.x, global.y, state);
 	    } else {
-
-		/* 
-		 * TkUpdatePointer will not generate Motion events when the
-		 * pointer is outside of the key window.  So we send them here.
-		 */
-
 		static XEvent xEvent = {0};
 
 		xEvent.type = MotionNotify;
 		xEvent.xany.send_event = false;
 		xEvent.xany.display = Tk_Display(target);
 		xEvent.xany.window = Tk_WindowId(target);
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		xEvent.xmotion.x = win_x;
 		xEvent.xmotion.y = win_y;
 		xEvent.xmotion.x_root = global.x;
@@ -418,10 +410,6 @@ enum {
 	CGFloat delta;
 	int coarseDelta;
 	static XEvent xEvent = {0};
-
-	/*
-	 * XUpdatePointer also will not generate scroll wheel events.
-	 */
 
 	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
