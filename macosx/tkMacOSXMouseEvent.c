@@ -140,16 +140,14 @@ enum {
 	buttonState |= TkGetButtonMask(button);
 	break;
     case NSMouseEntered:
-	if (![eventWindow isKeyWindow] ||
-	    !NSPointInRect(viewLocation, [contentView bounds])) {
+	if (![eventWindow isKeyWindow] || isOutside) {
 	    return theEvent;
 	}
 	[NSApp setTkLiveResizeEnded:NO];
 	[NSApp setTkPointerWindow:[NSApp tkEventTarget]];
 	break;
     case NSMouseExited:
-	if (![eventWindow isKeyWindow] ||
-	    NSPointInRect(viewLocation, [contentView bounds])) {
+	if (![eventWindow isKeyWindow] || !isOutside) {
 	    return theEvent;
 	}
 	[NSApp setTkPointerWindow:nil];
@@ -159,13 +157,14 @@ enum {
     case NSLeftMouseDown:
 
 	/*
-	 * Ignore mouse button events which arrive while the app is inactive.
-	 * These events will be resent after activation, causing duplicate
-	 * actions when an app is activated by a bound mouse event. See ticket
-	 * [7bda9882cb].
+	 * Ignore left mouse button events which arrive while the app is
+	 * inactive.  These events will be resent after activation, causing
+	 * duplicate actions when an app is activated by a bound mouse event
+	 * (see ticket [7bda9882cb].  Also, ignore left mouse button events in
+	 * the titlebar (see tickets [d72abe6b54] and [39cbacb9e8]).
 	 */
 
-	if (! [NSApp isActive]) {
+	if (![NSApp isActive] || isOutside) {
 	    return theEvent;
 	}
 	break;
