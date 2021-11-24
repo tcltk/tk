@@ -371,7 +371,7 @@ XUnmapWindow(
     if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
     }
-    Tk_UpdatePointer(None, x, y, state);
+    Tk_UpdatePointer(NULL, x, y, state);
     return Success;
 }
 

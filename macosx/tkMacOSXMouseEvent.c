@@ -53,13 +53,13 @@ enum {
  * screen coordinates and the current button state.  Tk maintains a cache of
  * these three values.  A change in any of these values causes TkUpdatePointer
  * to generate, respectively, Enter/Leave events, or Motion events, or
- * button Press/Release events. The Tk_Window value is allowed to be None,
+ * button Press/Release events. The Tk_Window value is allowed to be NULL,
  * which indicates that the pointer is not in the focused toplevel.
  *
  * Enter or Leave events for toplevel windows are generated when the Tk_Window
- * value changes to or from None.  This is problematic on macOS due to the fact
+ * value changes to or from NULL.  This is problematic on macOS due to the fact
  * that TkUpdatePointer does not generate Motion events when the Tk_Window
- * value is None.  A consequence of this is that TkUpdatePointer will either
+ * value is NULL.  A consequence of this is that TkUpdatePointer will either
  * fail to generate correct Enter/Leave events for toplevels or else be unable
  * to generate Motion events when the pointer is outside of the focus window.
  * It is important to be able to generate such events because otherwise a
@@ -69,7 +69,7 @@ enum {
  * this module, including the trickiest parts, is devoted to working around
  * this problem.  The other tricky parts are related to transcribing Apple's
  * NSMouseEntered, NSMouseExited, and NSLeftMouseDragged events into a form
- * that makes sense to Tk.
+ * that makes sense to Tk. 
  */
 
 
@@ -83,8 +83,8 @@ enum {
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr;
-    Tk_Window tkwin = None, capture;
-    static Tk_Window target = None, dragTarget = None;
+    Tk_Window tkwin = NULL, capture;
+    static Tk_Window target = NULL, dragTarget = NULL;
     NSPoint local, global;
     NSInteger button;
     int win_x, win_y;
@@ -381,7 +381,7 @@ enum {
 		Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
 				 global.x, global.y, state);
 	    } else {
-		Tk_UpdatePointer(None, global.x, global.y, state);
+		Tk_UpdatePointer(NULL, global.x, global.y, state);
 	    }
 	} else if (eventType == NSMouseMoved ||
 		   eventType == NSLeftMouseDragged) {
