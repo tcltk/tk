@@ -625,6 +625,15 @@ $(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) w
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
 	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
 
+$(TOP_DIR)/manifest.uuid:
+	printf "git-" >$(TOP_DIR)/manifest.uuid
+	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
+
+tkUuid.h:	$(TOP_DIR)/manifest.uuid
+	echo "#define TK_VERSION_UUID \\" >$@
+	cat $(TOP_DIR)/manifest.uuid >>$@
+	echo "" >>$@
+
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
 
