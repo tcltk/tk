@@ -66,7 +66,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	 */
 
 	[NSApp setTkEventTarget: winPtr];
-	
+
 	/*
 	 * Call Tk_UpdatePointer if the pointer is in the window.
 	 */

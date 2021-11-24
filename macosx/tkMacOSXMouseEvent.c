@@ -69,7 +69,7 @@ enum {
  * this module, including the trickiest parts, is devoted to working around
  * this problem.  The other tricky parts are related to transcribing Apple's
  * NSMouseEntered, NSMouseExited, and NSLeftMouseDragged events into a form
- * that makes sense to Tk. 
+ * that makes sense to Tk.
  */
 
 
@@ -93,7 +93,7 @@ enum {
     Bool isMotionEvent = NO;
     Bool isOutside = NO;
     static Bool isDragging = NO;
-    
+
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -217,7 +217,7 @@ enum {
      * set this may involve redirecting the event.
      */
 
-    capture = TkMacOSXGetCapture(); 
+    capture = TkMacOSXGetCapture();
     if (capture) {
 	winPtr = (TkWindow *) capture;
 	eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -363,7 +363,7 @@ enum {
 
     if (eventType != NSScrollWheel) {
 	if (isDragging) {
-	    
+
 	    /*
 	     * When dragging the mouse into the resize area Apple shows the
 	     * left button to be up, which confuses TkUpdatePointer.  So
