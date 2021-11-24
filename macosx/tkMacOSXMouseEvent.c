@@ -388,7 +388,7 @@ enum {
 	    if ([NSApp tkPointerWindow]) {
 		Tk_UpdatePointer(target, global.x, global.y, state);
 	    } else {
-		static XEvent xEvent = {0};
+		XEvent xEvent = {0};
 
 		xEvent.type = MotionNotify;
 		xEvent.xany.send_event = false;
@@ -408,7 +408,7 @@ enum {
     } else {
 	CGFloat delta;
 	int coarseDelta;
-	static XEvent xEvent = {0};
+	XEvent xEvent = {0};
 
 	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
