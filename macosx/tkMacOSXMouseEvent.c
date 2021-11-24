@@ -398,7 +398,7 @@ enum {
 	    if ([NSApp tkPointerWindow]) {
 		Tk_UpdatePointer(target, global.x, global.y, state);
 	    } else {
-		static XEvent xEvent = {0};
+		XEvent xEvent = {0};
 
 		xEvent.type = MotionNotify;
 		xEvent.xany.send_event = false;
@@ -417,7 +417,9 @@ enum {
 	}
     } else {
 	CGFloat delta;
-	static XEvent xEvent = {0};
+	XEvent xEvent = {0};
+	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
@@ -430,8 +432,6 @@ enum {
 
 #define WHEEL_DELTA 120
 #define WHEEL_DELAY 300000000
-	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
 	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
 	if (timeout) {
