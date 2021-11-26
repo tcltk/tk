@@ -1277,6 +1277,8 @@ static const char *const accentNames[] = {
 			change:(NSDictionary *)change
 		       context:(void *)context
 {
+    (void) change;
+    (void) context;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
 	if (@available(macOS 10.14, *)) {
