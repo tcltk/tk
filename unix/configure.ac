@@ -592,7 +592,6 @@ if test "`uname -s`" = "Darwin" ; then
     if test "${SHARED_BUILD}" = "0"; then
 	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
     fi
-    EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
