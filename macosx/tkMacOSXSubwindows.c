@@ -148,6 +148,8 @@ XMapWindow(
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     static Bool initialized = NO;
+    NSPoint mouse = [NSEvent mouseLocation];
+    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -184,6 +186,16 @@ XMapWindow(
 		} else {
 		    [win orderFrontRegardless];
 		}
+	    }
+
+	    /*
+	     * Call Tk_UpdatePointer to tell Tk whether the pointer is in the
+	     * new window.
+	     */
+
+	    NSPoint viewLocation = [view convertPoint:mouse fromView:nil];
+	    if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
+		Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
 	    }
 	} else {
 	    TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
@@ -296,6 +308,9 @@ XUnmapWindow(
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
+    NSPoint mouse = [NSEvent mouseLocation];
+    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
+    int state = TkMacOSXButtonKeyState();
 
     if (!window) {
 	return BadWindow;
@@ -356,6 +371,7 @@ XUnmapWindow(
     if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
     }
+    Tk_UpdatePointer(NULL, x, y, state);
     return Success;
 }
 

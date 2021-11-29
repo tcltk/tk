@@ -647,14 +647,9 @@ CreateCGImageFromDrawableRect(
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
-    CGRect image_rect = CGRectMake(x, y, width, height);
     CGImageRef cg_image = NULL, result = NULL;
-    unsigned char *imageData = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	if (cg_context) {
-	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	}
     } else {
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
 	if (view == nil) {
@@ -666,9 +661,8 @@ CreateCGImageFromDrawableRect(
         NSUInteger bytesPerPixel = 4,
 	    bytesPerRow = bytesPerPixel * view_width,
 	    bitsPerComponent = 8;
-        imageData = ckalloc(view_height * bytesPerRow);
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	cg_context = CGBitmapContextCreate(imageData, view_width, view_height,
+	cg_context = CGBitmapContextCreate(NULL, view_width, view_height,
 			 bitsPerComponent, bytesPerRow, colorSpace,
 			 kCGImageAlphaPremultipliedLast |
 			 kCGBitmapByteOrder32Big);
@@ -680,10 +674,11 @@ CreateCGImageFromDrawableRect(
 	CGContextRelease(cg_context);
     }
     if (cg_image) {
-	result = CGImageCreateWithImageInRect(cg_image, image_rect);
+	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
+				 width, height);
+	result = CGImageCreateWithImageInRect(cg_image, rect);
 	CGImageRelease(cg_image);
     }
-    ckfree(imageData);
     return result;
 }
 
