@@ -656,6 +656,7 @@ CreateCGImageFromDrawableRect(
 	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
 	}
     } else {
+	image_rect = CGRectOffset(image_rect, mac_drawable->xOff, mac_drawable->yOff);
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
 	if (view == nil) {
 	    TkMacOSXDbgMsg("Invalid source drawable");
