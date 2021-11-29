@@ -674,7 +674,7 @@ CreateCGImageFromDrawableRect(
 	CGContextRelease(cg_context);
     }
     if (cg_image) {
-	CGRect rect = CGRectMake(x + mac_drawable->xOff, y+ mac_drawable->yOff,
+	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
 	result = CGImageCreateWithImageInRect(cg_image, rect);
 	CGImageRelease(cg_image);
