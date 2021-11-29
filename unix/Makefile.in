@@ -1032,8 +1032,8 @@ tkUtil.o: $(GENERIC_DIR)/tkUtil.c
 tkVisual.o: $(GENERIC_DIR)/tkVisual.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkVisual.c
 
-tkWindow.o: $(GENERIC_DIR)/tkWindow.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkWindow.c
+tkWindow.o: $(GENERIC_DIR)/tkWindow.c tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. $(GENERIC_DIR)/tkWindow.c
 
 tkButton.o: $(GENERIC_DIR)/tkButton.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkButton.c
