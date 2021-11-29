@@ -647,15 +647,10 @@ CreateCGImageFromDrawableRect(
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
-    CGRect image_rect = CGRectMake(x, y, width, height);
     CGImageRef cg_image = NULL, result = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	if (cg_context) {
-	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	}
     } else {
-	image_rect = CGRectOffset(image_rect, mac_drawable->xOff, mac_drawable->yOff);
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
 	if (view == nil) {
 	    TkMacOSXDbgMsg("Invalid source drawable");
@@ -679,7 +674,9 @@ CreateCGImageFromDrawableRect(
 	CGContextRelease(cg_context);
     }
     if (cg_image) {
-	result = CGImageCreateWithImageInRect(cg_image, image_rect);
+	CGRect rect = CGRectMake(x + mac_drawable->xOff, y+ mac_drawable->yOff,
+				 width, height);
+	result = CGImageCreateWithImageInRect(cg_image, rect);
 	CGImageRelease(cg_image);
     }
     return result;
