@@ -86,7 +86,6 @@ typedef NSInteger NSModalResponse;
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical
 #define NSCenterTextAlignment NSTextAlignmentCenter
-#define NSAnyEventMask NSEventMaskAny
 #define NSApplicationDefinedMask NSEventMaskApplicationDefined
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel
@@ -99,6 +98,11 @@ typedef NSInteger NSModalResponse;
 #define NSMiniaturizableWindowMask NSWindowStyleMaskMiniaturizable
 #define NSBorderlessWindowMask NSWindowStyleMaskBorderless
 #define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
+#define NSAlphaFirstBitmapFormat NSBitmapFormatAlphaFirst
+#define NSAnyEventMask NSEventMaskAny
+#define NSLeftMouseDownMask NSEventMaskLeftMouseDown
+#define NSMouseMovedMask NSEventMaskMouseMoved
+#define NSLeftMouseDraggedMask NSEventMaskLeftMouseDragged
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400

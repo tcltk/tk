@@ -73,7 +73,7 @@ proc ttk::clickToFocus {w} {
 #
 proc ttk::takesFocus {w} {
     if {![winfo viewable $w]} {
-    	return 0
+	return 0
     } elseif {[catch {$w cget -takefocus} takefocus]} {
 	return [GuessTakeFocus $w]
     } else {
@@ -144,7 +144,7 @@ proc ttk::SaveGrab {w} {
 
     set grabbed [grab current $w]
     if {[winfo exists $grabbed]} {
-    	switch [grab status $grabbed] {
+	switch [grab status $grabbed] {
 	    global { set restoreGrab [list grab -global $grabbed] }
 	    local  { set restoreGrab [list grab $grabbed] }
 	    none   { ;# grab window is really in a different interp }
@@ -153,7 +153,7 @@ proc ttk::SaveGrab {w} {
 
     set focus [focus]
     if {$focus ne ""} {
-    	set restoreFocus [list focus -force $focus]
+	set restoreFocus [list focus -force $focus]
     }
 
     set Grab($w) [list $restoreGrab $restoreFocus]

@@ -219,7 +219,7 @@ proc ttk::menubutton::TransferGrab {mb} {
 
 	set menu [$mb cget -menu]
 	foreach {x y entry} [PostPosition $mb $menu] { break }
-    	tk_popup $menu [winfo rootx $menu] [winfo rooty $menu]
+	tk_popup $menu [winfo rootx $menu] [winfo rooty $menu]
     }
 }
 

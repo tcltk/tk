@@ -215,7 +215,7 @@ proc ::tk::ConsoleSource {} {
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
     if {$filename ne ""} {
-    	set cmd [list source -encoding utf-8 $filename]
+	set cmd [list source -encoding utf-8 $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
 	}
@@ -273,22 +273,22 @@ proc ::tk::ConsoleHistory {cmd} {
     variable HistNum
 
     switch $cmd {
-    	prev {
+	prev {
 	    incr HistNum -1
 	    if {$HistNum == 0} {
 		set cmd {history event [expr {[history nextid] -1}]}
 	    } else {
 		set cmd "history event $HistNum"
 	    }
-    	    if {[catch {consoleinterp eval $cmd} cmd]} {
-    	    	incr HistNum
-    	    	return
-    	    }
+	    if {[catch {consoleinterp eval $cmd} cmd]} {
+		incr HistNum
+		return
+	    }
 	    .console delete promptEnd end
-    	    .console insert promptEnd $cmd {input stdin}
+	    .console insert promptEnd $cmd {input stdin}
 	    .console see end
-    	}
-    	next {
+	}
+	next {
 	    incr HistNum
 	    if {$HistNum == 0} {
 		set cmd {history event [expr {[history nextid] -1}]}
@@ -304,10 +304,10 @@ proc ::tk::ConsoleHistory {cmd} {
 	    .console delete promptEnd end
 	    .console insert promptEnd $cmd {input stdin}
 	    .console see end
-    	}
-    	reset {
-    	    set HistNum 1
-    	}
+	}
+	reset {
+	    set HistNum 1
+	}
     }
 }
 
@@ -324,19 +324,19 @@ proc ::tk::ConsolePrompt {{partial normal}} {
     if {$partial eq "normal"} {
 	set temp [$w index "end - 1 char"]
 	$w mark set output end
-    	if {[consoleinterp eval "info exists tcl_prompt1"]} {
-    	    consoleinterp eval "eval \[set tcl_prompt1\]"
-    	} else {
-    	    puts -nonewline [EvalAttached $::tk::console::defaultPrompt]
-    	}
+	if {[consoleinterp eval "info exists tcl_prompt1"]} {
+	    consoleinterp eval "eval \[set tcl_prompt1\]"
+	} else {
+	    puts -nonewline [EvalAttached $::tk::console::defaultPrompt]
+	}
     } else {
 	set temp [$w index output]
 	$w mark set output end
-    	if {[consoleinterp eval "info exists tcl_prompt2"]} {
-    	    consoleinterp eval "eval \[set tcl_prompt2\]"
-    	} else {
+	if {[consoleinterp eval "info exists tcl_prompt2"]} {
+	    consoleinterp eval "eval \[set tcl_prompt2\]"
+	} else {
 	    puts -nonewline "> "
-    	}
+	}
     }
     flush stdout
     $w mark set output $temp
