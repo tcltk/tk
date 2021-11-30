@@ -96,14 +96,14 @@ test labelframe-4.3 "Re-add nonchild content" -body {
 test labelframe-4.4 "Re-manage nonchild content" -body {
     pack .cb -side right
     list [update; winfo viewable .cb] \
-    	[winfo manager .cb] \
+	[winfo manager .cb] \
 	[.lf cget -labelwidget]
 } -result [list 1 pack {}]
 
 test labelframe-4.5 "Re-add nonchild content" -body {
     .lf configure -labelwidget .cb
     list [update; winfo viewable .cb] \
-    	[winfo manager .cb] \
+	[winfo manager .cb] \
 	[.lf cget -labelwidget]
 } -result [list 1 labelframe .cb]
 
