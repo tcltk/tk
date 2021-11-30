@@ -6,9 +6,9 @@
  * Copyright (c) 2004 Joe English
  * Copyright (c) 2005 Neil Madden
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
- * Copyright 2009 Kevin Walzer/WordTech Communications LLC.
- * Copyright 2019 Marc Culler
+ * Copyright (c) 2008-2009 Apple Inc.
+ * Copyright (c) 2009 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -2083,9 +2083,9 @@ typedef struct {
 
 static Ttk_ElementOptionSpec EntryElementOptions[] = {
     {"-background", TK_OPTION_BORDER,
-     Tk_Offset(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
+     offsetof(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
-     Tk_Offset(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
+     offsetof(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 
@@ -2298,7 +2298,7 @@ static void SpinButtonElementSize(
     TCL_UNUSED(Tk_Window),    /* tkwin */
     int *minWidth,
     int *minHeight,
-    TCL_UNUSED(Ttk_Padding*)) /* PaddingPtr */
+    TCL_UNUSED(Ttk_Padding *)) /* PaddingPtr */
 {
     SInt32 s;
 
@@ -2411,7 +2411,7 @@ static Ttk_StateTable ThemeTrackEnableTable[] = {
     {kThemeTrackDisabled, TTK_STATE_DISABLED, 0},
     {kThemeTrackActive, TTK_STATE_BACKGROUND, 0},
     {kThemeTrackActive, 0, 0}
-    /* { kThemeTrackNothingToScroll, ?, ? , 0}, */
+    /* { kThemeTrackNothingToScroll, ?, ? }, */
 };
 
 typedef struct {        /* TrackElement client data */
@@ -2445,7 +2445,7 @@ static void TrackElementSize(
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
 {
-    TrackElementData *data = clientData;
+    TrackElementData *data = (TrackElementData *)clientData;
     SInt32 size = 24;   /* reasonable default ... */
 
     ChkErr(GetThemeMetric, data->thicknessMetric, &size);
@@ -2462,11 +2462,11 @@ static void TrackElementDraw(
 {
     TrackElementData *data = (TrackElementData *)clientData;
     TrackElement *elem = (TrackElement *)elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, fraction, max;
     CGRect bounds = BoxToRect(d, b);
 
-    Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, elem->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
@@ -2567,15 +2567,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec PbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
-     Tk_Offset(PbarElement, orientObj), "horizontal"},
+     offsetof(PbarElement, orientObj), "horizontal"},
     {"-value", TK_OPTION_DOUBLE,
-     Tk_Offset(PbarElement, valueObj), "0"},
+     offsetof(PbarElement, valueObj), "0"},
     {"-maximum", TK_OPTION_DOUBLE,
-     Tk_Offset(PbarElement, maximumObj), "100"},
+     offsetof(PbarElement, maximumObj), "100"},
     {"-phase", TK_OPTION_INT,
-     Tk_Offset(PbarElement, phaseObj), "0"},
+     offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
-     Tk_Offset(PbarElement, modeObj), "determinate"},
+     offsetof(PbarElement, modeObj), "determinate"},
     {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void PbarElementSize(
@@ -2601,13 +2601,14 @@ static void PbarElementDraw(
     Ttk_State state)
 {
     PbarElement *pbar = (PbarElement *)elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL, phase;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
+    int phase;
     double value = 0, maximum = 100, factor;
     CGRect bounds = BoxToRect(d, b);
     int isIndeterminate = !strcmp("indeterminate",
 				  Tcl_GetString(pbar->modeObj));
 
-    Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
@@ -2667,7 +2668,7 @@ typedef struct
 
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
-     Tk_Offset(ScrollbarElement, orientObj), "horizontal"},
+     offsetof(ScrollbarElement, orientObj), "horizontal"},
     {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 static void TroughElementSize(
@@ -2679,10 +2680,10 @@ static void TroughElementSize(
     Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	*minHeight = thickness;
@@ -2706,11 +2707,11 @@ static void TroughElementDraw(
     TCL_UNUSED(Ttk_State)) /* state */
 {
     ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
     GrayColor bgGray;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	bounds = CGRectInset(bounds, 0, 1);
     } else {
@@ -2744,9 +2745,9 @@ static void ThumbElementSize(
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
 {
     ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_VERTICAL) {
 	*minHeight = 18;
 	*minWidth = 8;
@@ -2765,9 +2766,9 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
-    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
 
     /*
      * In order to make ttk scrollbars work correctly it is necessary to be
@@ -3064,6 +3065,7 @@ static void FillElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
+
     if ([NSApp macOSVersion] > 100800) {
 	CGColorRef bgColor;
 	BEGIN_DRAWING(d)
@@ -3153,7 +3155,7 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
  * +++ Field elements --
  *
  *      Used for the Treeview widget. This is like the BackgroundElement
- *      except that the fieldbackground color is configureable.
+ *      except that the fieldbackground color is configurable.
  */
 
 typedef struct {
@@ -3162,7 +3164,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
-     Tk_Offset(FieldElement, backgroundObj), "white"},
+     offsetof(FieldElement, backgroundObj), "white"},
     {NULL, TK_OPTION_BOOLEAN, 0, NULL}
 };
 

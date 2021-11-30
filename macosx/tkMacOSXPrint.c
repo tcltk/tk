@@ -48,10 +48,14 @@ int			MacPrint_Init(Tcl_Interp * interp);
 - (void) printPanelDidEnd: (NSPrintPanel *) printPanel
 	       returnCode: (int) returnCode
 	      contextInfo: (void *) contextInfo {
+    (void) printPanel;
+    (void) contextInfo;
+
     /*
      * Pass returnCode to FinishPrint function to determine how to
      * handle.
      */
+
     FinishPrint(fileName, returnCode);
 }
 @end

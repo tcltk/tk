@@ -37,7 +37,7 @@ proc ::tk_optionMenu {w varName firstValue args} {
     menu $w.menu -tearoff 0
     $w.menu add radiobutton -label $firstValue -variable $varName
     foreach i $args {
-    	$w.menu add radiobutton -label $i -variable $varName
+	$w.menu add radiobutton -label $i -variable $varName
     }
     return $w.menu
 }

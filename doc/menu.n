@@ -375,7 +375,7 @@ The following widget commands are possible for menu widgets:
 Change the state of the entry indicated by \fIindex\fR to \fBactive\fR
 and redisplay it using its active colors.
 Any previously-active entry is deactivated.  If \fIindex\fR
-is specified as \fBnone\fR or \fB{}\fR, or if the specified entry is
+is specified as \fB{}\fR or \fBnone\fR, or if the specified entry is
 disabled, then the menu ends up with no active entry.
 Returns an empty string.
 .TP
@@ -451,7 +451,7 @@ information on the format of this list).
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the numerical index corresponding to \fIindex\fR, or
-\fBnone\fR if \fIindex\fR was specified as \fBnone\fR or  \fB{}\fR.
+\fB{}\fR if \fIindex\fR was specified as \fB{}\fR or \fBnone\fR.
 .TP
 \fIpathName \fBinsert \fIindex type \fR?\fIoption value option value ...\fR?
 .

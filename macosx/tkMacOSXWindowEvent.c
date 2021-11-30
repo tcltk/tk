@@ -52,13 +52,33 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
-    BOOL activate = [[notification name]
-	    isEqualToString:NSWindowDidBecomeKeyNotification];
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    NSString *name = [notification name];
+    Bool flag = [name isEqualToString:NSWindowDidBecomeKeyNotification];
+    if (winPtr && flag) {
+	NSPoint location = [NSEvent mouseLocation];
+	int x = location.x;
+	int y = floor(TkMacOSXZeroScreenHeight() - location.y);
+	/*
+	 * The Tk event target persists when there is no key window but
+	 * gets reset when a new window becomes the key window.
+	 */
 
+	[NSApp setTkEventTarget: winPtr];
+
+	/*
+	 * Call Tk_UpdatePointer if the pointer is in the window.
+	 */
+
+	NSView *view = [w contentView];
+	NSPoint viewLocation = [view convertPoint:location fromView:nil];
+	if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
+	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+	}
+    }
     if (winPtr && Tk_IsMapped(winPtr)) {
-	GenerateActivateEvents(winPtr, activate);
+	GenerateActivateEvents(winPtr, flag);
     }
 }
 
@@ -162,6 +182,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
+	return;
+    }
     [(TKWindow *)[notification object] tkLayoutChanged];
 }
 
@@ -170,6 +193,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
+    if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
+	return;
+    }
     [(TKWindow *)[notification object] tkLayoutChanged];
 }
 
@@ -182,6 +208,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
+	winPtr->wmInfoPtr->hints.initial_state = IconicState;
 	Tk_UnmapWindow((Tk_Window)winPtr);
     }
 }
@@ -233,17 +260,22 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (void) windowLiveResize: (NSNotification *) notification
+{
+    NSString *name = [notification name];
+    if ([name isEqualToString:NSWindowWillStartLiveResizeNotification]) {
+	// printf("Starting live resize.\n");
+    } else if ([name isEqualToString:NSWindowDidEndLiveResizeNotification]) {
+	[self setTkLiveResizeEnded:YES];
+	// printf("Ending live resize\n");
+    }
+}
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 
 - (void) windowDragStart: (NSNotification *) notification
 {
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
-}
-
-- (void) windowLiveResize: (NSNotification *) notification
-{
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
-    //BOOL start = [[notification name] isEqualToString:NSWindowWillStartLiveResizeNotification];
 }
 
 - (void) windowUnmapped: (NSNotification *) notification
@@ -274,6 +306,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+    observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
+    observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
@@ -282,8 +316,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
-    observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
-    observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
 #endif
 #undef observe
@@ -330,7 +362,7 @@ static void RefocusGrabWindow(void *data) {
 	    continue;
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
-	    [win orderOut:nil];
+	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
@@ -954,6 +986,16 @@ ConfigureRestrictProc(
 	 */
 
 	self.layer.delegate = (id) self;
+	trackingArea = [[NSTrackingArea alloc]
+			   initWithRect:[self bounds]
+				options:(NSTrackingMouseEnteredAndExited |
+					 NSTrackingMouseMoved |
+					 NSTrackingEnabledDuringMouseDrag |
+					 NSTrackingInVisibleRect |
+					 NSTrackingActiveAlways)
+				  owner:self
+			       userInfo:nil];
+        [self addTrackingArea:trackingArea];
     }
     return self;
 }
@@ -1235,6 +1277,8 @@ static const char *const accentNames[] = {
 			change:(NSDictionary *)change
 		       context:(void *)context
 {
+    (void) change;
+    (void) context;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
 	if (@available(macOS 10.14, *)) {
