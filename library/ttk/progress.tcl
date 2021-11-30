@@ -13,13 +13,13 @@ proc ttk::progressbar::Autoincrement {pb steptime stepsize} {
     variable Timers
 
     if {![winfo exists $pb]} {
-    	# widget has been destroyed -- cancel timer
+	# widget has been destroyed -- cancel timer
 	unset -nocomplain Timers($pb)
 	return
     }
 
     set Timers($pb) [after $steptime \
-    	[list ttk::progressbar::Autoincrement $pb $steptime $stepsize] ]
+	[list ttk::progressbar::Autoincrement $pb $steptime $stepsize] ]
 
     $pb step $stepsize
 }

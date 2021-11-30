@@ -91,7 +91,7 @@ namespace eval ttk::theme::vista {
 	    -selectforeground [list !focus SystemWindowText] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
-	    	{readonly focus}	SystemHighlightText \
+		{readonly focus}	SystemHighlightText \
 	    ] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
