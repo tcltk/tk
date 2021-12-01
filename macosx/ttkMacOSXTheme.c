@@ -208,11 +208,11 @@ static inline CGRect BoxToRect(
  */
 
 static GrayPalette LookupGrayPalette(
-    ButtonDesign *design,
+    const ButtonDesign *design,
     unsigned int state,
     int isDark)
 {
-    PaletteStateTable *entry = design->palettes;
+    const PaletteStateTable *entry = design->palettes;
     while ((state & entry->onBits) != entry->onBits ||
            (~state & entry->offBits) != entry->offBits)
     {
@@ -455,7 +455,7 @@ static void FillBorder(
 static void DrawFocusRing(
     CGContextRef context,
     CGRect bounds,
-    ButtonDesign *design)
+    const ButtonDesign *design)
 {
     CGColorRef highlightColor;
     CGFloat highlight[4] = {1.0, 1.0, 1.0, 0.2};
@@ -485,7 +485,7 @@ static void DrawFocusRing(
 static void DrawGrayButton(
     CGContextRef context,
     CGRect bounds,
-    ButtonDesign *design,
+    const ButtonDesign *design,
     unsigned int state,
     Tk_Window tkwin)
 {
@@ -531,7 +531,7 @@ static void DrawGrayButton(
 static void DrawAccentedButton(
     CGContextRef context,
     CGRect bounds,
-    ButtonDesign *design,
+    const ButtonDesign *design,
     int state,
     int isDark)
 {
@@ -579,7 +579,7 @@ static void DrawAccentedButton(
 static void DrawAccentedSegment(
     CGContextRef context,
     CGRect bounds,
-    ButtonDesign *design,
+    const ButtonDesign *design,
     unsigned int state,
     Tk_Window tkwin)
 {
@@ -636,7 +636,7 @@ static void DrawAccentedSegment(
 static void DrawEntry(
     CGContextRef context,
     CGRect bounds,
-    ButtonDesign *design,
+    const ButtonDesign *design,
     int state,
     Tk_Window tkwin)
 {
@@ -1334,8 +1334,10 @@ static void DrawButton(
 	    DrawAccentedButton(context, bounds, &incdecDesign, 0, isDark);
 	    CGContextRestoreGState(context);
 	}
-	CGFloat inset = (bounds.size.width - 5) / 2;
-	DrawUpDownArrows(context, bounds, inset, 5, 3, state, drawState);
+	{
+	    CGFloat inset = (bounds.size.width - 5) / 2;
+	    DrawUpDownArrows(context, bounds, inset, 5, 3, state, drawState);
+	}
 	break;
     default:
 	break;
@@ -1470,6 +1472,7 @@ DrawTab(
 {
     CGRect originalBounds = bounds;
     CGColorRef strokeColor;
+    int OSVersion = [NSApp macOSVersion];
 
     /*
      * Extend the bounds to one or both sides so the rounded part will be
@@ -1478,14 +1481,15 @@ DrawTab(
      */
 
     CGContextClipToRect(context, bounds);
-    if (!(state & TTK_STATE_FIRST_TAB)) {
-	bounds.origin.x -= 10;
-	bounds.size.width += 10;
+    if (OSVersion < 110000 || !(state & TTK_STATE_SELECTED)) {
+	if (!(state & TTK_STATE_FIRST_TAB)) {
+	    bounds.origin.x -= 10;
+	    bounds.size.width += 10;
+	}
+	if (!(state & TTK_STATE_LAST_TAB)) {
+	    bounds.size.width += 10;
+	}
     }
-    if (!(state & TTK_STATE_LAST_TAB)) {
-	bounds.size.width += 10;
-    }
-
     /*
      * Fill the tab face with the appropriate color or gradient.  Use a solid
      * color if the tab is not selected, otherwise use the accent color with
@@ -1514,11 +1518,11 @@ DrawTab(
 	}
     } else {
 
-        /*
-         * This is the selected tab; paint it with the current accent color.
+	/*
+	 * This is the selected tab; paint it with the current accent color.
 	 * If it is first, cover up the separator line drawn by the second one.
 	 * (The selected tab is always drawn last.)
-         */
+	 */
 
 	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
 	    bounds.size.width += 1;
@@ -1638,7 +1642,7 @@ static void ButtonElementMinSize(
     int *minWidth,
     int *minHeight)
 {
-    ThemeButtonParams *params = clientData;
+    ThemeButtonParams *params = (ThemeButtonParams *)clientData;
 
     if (params->heightMetric != NoThemeMetric) {
 	ChkErr(GetThemeMetric, params->heightMetric, minHeight);
@@ -1850,7 +1854,7 @@ static Ttk_ElementSpec ButtonElementSpec = {
  */
 
 /* Tab position logic, c.f. ttkNotebook.c TabState() */
-static Ttk_StateTable TabStyleTable[] = {
+static const Ttk_StateTable TabStyleTable[] = {
     {kThemeTabFrontInactive, TTK_STATE_SELECTED | TTK_STATE_BACKGROUND, 0},
     {kThemeTabNonFrontInactive, TTK_STATE_BACKGROUND, 0},
     {kThemeTabFrontUnavailable, TTK_STATE_DISABLED | TTK_STATE_SELECTED, 0},
@@ -1859,13 +1863,13 @@ static Ttk_StateTable TabStyleTable[] = {
     {kThemeTabNonFrontPressed, TTK_STATE_PRESSED, 0},
     {kThemeTabNonFront, 0, 0}
 };
-static Ttk_StateTable TabAdornmentTable[] = {
+static const Ttk_StateTable TabAdornmentTable[] = {
     {kHIThemeTabAdornmentNone, TTK_STATE_FIRST_TAB | TTK_STATE_LAST_TAB, 0},
     {kHIThemeTabAdornmentTrailingSeparator, TTK_STATE_FIRST_TAB, 0},
     {kHIThemeTabAdornmentNone, TTK_STATE_LAST_TAB, 0},
     {kHIThemeTabAdornmentTrailingSeparator, 0, 0},
 };
-static Ttk_StateTable TabPositionTable[] = {
+static const Ttk_StateTable TabPositionTable[] = {
     {kHIThemeTabPositionOnly, TTK_STATE_FIRST_TAB | TTK_STATE_LAST_TAB, 0},
     {kHIThemeTabPositionFirst, TTK_STATE_FIRST_TAB, 0},
     {kHIThemeTabPositionLast, TTK_STATE_LAST_TAB, 0},
@@ -2109,7 +2113,7 @@ static void EntryElementDraw(
     Ttk_State state)
 {
     EntryElement *e = (EntryElement *)elementRecord;
-    ThemeFrameParams *params = clientData;
+    ThemeFrameParams *params = (ThemeFrameParams *)clientData;
     HIThemeFrameKind kind = params ? params->kind :
 	kHIThemeFrameTextFieldSquare;
     CGRect bounds = BoxToRect(d, b);
@@ -2407,7 +2411,7 @@ static Ttk_ElementSpec SpinButtonDownElementSpec = {
  * inactive.  So we shouldn't either.
  */
 
-static Ttk_StateTable ThemeTrackEnableTable[] = {
+static const Ttk_StateTable ThemeTrackEnableTable[] = {
     {kThemeTrackDisabled, TTK_STATE_DISABLED, 0},
     {kThemeTrackActive, TTK_STATE_BACKGROUND, 0},
     {kThemeTrackActive, 0, 0}
@@ -3201,13 +3205,13 @@ static Ttk_ElementSpec FieldElementSpec = {
  *    buttons, so we draw them from scratch.
  */
 
-static Ttk_StateTable TreeHeaderValueTable[] = {
+static const Ttk_StateTable TreeHeaderValueTable[] = {
     {kThemeButtonOn, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
 };
 
-static Ttk_StateTable TreeHeaderAdornmentTable[] = {
+static const Ttk_StateTable TreeHeaderAdornmentTable[] = {
     {kThemeAdornmentHeaderButtonSortUp,
      TTK_STATE_ALTERNATE | TTK_TREEVIEW_STATE_SORTARROW, 0},
     {kThemeAdornmentDefault,
@@ -3309,7 +3313,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
 
 #define TTK_TREEVIEW_STATE_OPEN         TTK_STATE_USER1
 #define TTK_TREEVIEW_STATE_LEAF         TTK_STATE_USER2
-static Ttk_StateTable DisclosureValueTable[] = {
+static const Ttk_StateTable DisclosureValueTable[] = {
     {kThemeDisclosureDown, TTK_TREEVIEW_STATE_OPEN, 0},
     {kThemeDisclosureRight, 0, 0},
 };

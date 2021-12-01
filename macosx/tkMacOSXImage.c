@@ -1210,6 +1210,7 @@ TkNSImageConfigureMaster(
     Tcl_Obj *objPtr;
     static Tcl_Obj *asOption = NULL;
     int sourceInterpretation;
+    NSString *source;
 
     if (asOption == NULL) {
 	asOption = Tcl_NewStringObj("-as", -1);
@@ -1238,7 +1239,7 @@ TkNSImageConfigureMaster(
 	goto errorExit;
     }
 
-    NSString *source = [[NSString alloc] initWithUTF8String: masterPtr->source];
+    source = [[NSString alloc] initWithUTF8String: masterPtr->source];
     switch (sourceInterpretation) {
     case NAME_SOURCE:
 	newImage = [[NSImage imageNamed:source] copy];
@@ -1331,7 +1332,7 @@ TkNSImageObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    TkNSImageMaster *masterPtr = clientData;
+    TkNSImageMaster *masterPtr = (TkNSImageMaster *)clientData;
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
     static const char *const options[] = {"cget", "configure", NULL};
     enum {CGET, CONFIGURE};
@@ -1424,10 +1425,10 @@ TkNSImageCreate(
     TkNSImageMaster *masterPtr;
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
 
-    masterPtr = ckalloc(sizeof(TkNSImageMaster));
+    masterPtr = (TkNSImageMaster *)ckalloc(sizeof(TkNSImageMaster));
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
-    masterPtr->imageName = ckalloc(strlen(name) + 1);
+    masterPtr->imageName = (char *)ckalloc(strlen(name) + 1);
     strcpy(masterPtr->imageName, name);
     masterPtr->flags = 0;
     masterPtr->instancePtr = NULL;
@@ -1477,7 +1478,7 @@ TkNSImageGet(
     TkNSImageMaster *masterPtr = (TkNSImageMaster *) clientData;
     TkNSImageInstance *instPtr;
 
-    instPtr = ckalloc(sizeof(TkNSImageInstance));
+    instPtr = (TkNSImageInstance *)ckalloc(sizeof(TkNSImageInstance));
     instPtr->masterPtr = masterPtr;
     return instPtr;
 }
