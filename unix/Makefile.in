@@ -1139,8 +1139,8 @@ tkUtil.o: $(GENERIC_DIR)/tkUtil.c
 tkVisual.o: $(GENERIC_DIR)/tkVisual.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkVisual.c
 
-tkWindow.o: $(GENERIC_DIR)/tkWindow.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkWindow.c
+tkWindow.o: $(GENERIC_DIR)/tkWindow.c tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. $(GENERIC_DIR)/tkWindow.c
 
 tkButton.o: $(GENERIC_DIR)/tkButton.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkButton.c
@@ -1717,18 +1717,15 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	$(DIST_INSTALL_DATA) $(TTK_DIR)/*.[ch] $(TTK_DIR)/ttk.decls \
 		$(DISTDIR)/generic/ttk
 	$(INSTALL_DATA_DIR) $(DISTDIR)/win
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/*.in $(DISTDIR)/win
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/configure.ac \
-		$(TOP_DIR)/win/tkConfig.sh.in \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
+		$(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat \
+		$(TOP_DIR)/win/*.vc $(TOP_DIR)/win/README \
+		$(TOP_DIR)/license.terms \
 		$(DISTDIR)/win
 	$(DIST_INSTALL_SCRIPT) $(TOP_DIR)/win/configure $(DISTDIR)/win
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/*.vc $(DISTDIR)/win
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/README $(DISTDIR)/win
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/win
 	$(INSTALL_DATA_DIR) $(DISTDIR)/win/rc
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/wish.exe.manifest.in $(DISTDIR)/win/
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/rc/*.{rc,cur,ico,bmp} $(DISTDIR)/win/rc
 	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx
 	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
