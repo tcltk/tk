@@ -113,7 +113,8 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]], [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
+    [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
