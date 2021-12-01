@@ -1866,7 +1866,7 @@ test unixWm-50.3 {
         set y [winfo rooty .x]
     }
     set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
-	       	     [child eval {winfo containing $x [expr $y + 50]}]]
+	[child eval {winfo containing $x [expr $y + 50]}]]
     interp delete child
     set x [winfo rootx .t]
     set y [winfo rooty .t]
