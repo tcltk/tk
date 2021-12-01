@@ -336,7 +336,6 @@ VISIBILITY_HIDDEN
     Bool _tkLiveResizeEnded;
 
 #ifdef __i386__
-
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
     int _macOSVersion;  /* 10000 * major + 100*minor */

@@ -134,17 +134,10 @@ typedef struct ButtonDesign {
 } ButtonDesign;
 
 /*
- * Declaration of the lookup function.
- */
-
-static GrayPalette LookupGrayPalette(ButtonDesign *design, unsigned int state,
-				     int isDark);
-
-/*
  * The data.
  */
 
-static ButtonDesign pushbuttonDesign = {
+static const ButtonDesign pushbuttonDesign = {
   .radius = 4.0,
   .palettes = {
     {
@@ -164,7 +157,7 @@ static ButtonDesign pushbuttonDesign = {
   }
 };
 
-static ButtonDesign helpDesign = {
+static const ButtonDesign helpDesign = {
   .radius = 11,
   .palettes = {
     {
@@ -184,7 +177,7 @@ static ButtonDesign helpDesign = {
   }
 };
 
-static ButtonDesign inlineDesign = {
+static const ButtonDesign inlineDesign = {
   .radius = 8.0,
   .palettes = {
     {
@@ -204,7 +197,7 @@ static ButtonDesign inlineDesign = {
   }
 };
 
-static ButtonDesign roundedrectDesign = {
+static const ButtonDesign roundedrectDesign = {
   .radius = 3.0,
   .palettes = {
     {
@@ -235,7 +228,7 @@ static ButtonDesign roundedrectDesign = {
   }
 };
 
-static ButtonDesign popupDesign = {
+static const ButtonDesign popupDesign = {
   .radius = 4.0,
   .palettes = {
     {
@@ -251,7 +244,7 @@ static ButtonDesign popupDesign = {
   }
 };
 
-static ButtonDesign checkDesign = {
+static const ButtonDesign checkDesign = {
   .radius = 4.0,
   .palettes = {
     {
@@ -267,7 +260,7 @@ static ButtonDesign checkDesign = {
   }
 };
 
-static ButtonDesign radioDesign = {
+static const ButtonDesign radioDesign = {
   .radius = 8.0,
   .palettes = {
     {
@@ -283,7 +276,7 @@ static ButtonDesign radioDesign = {
   }
 };
 
-static ButtonDesign recessedDesign = {
+static const ButtonDesign recessedDesign = {
   .radius = 4.0,
   .palettes = {
     {
@@ -309,7 +302,7 @@ static ButtonDesign recessedDesign = {
   }
 };
 
-static ButtonDesign incdecDesign = {
+static const ButtonDesign incdecDesign = {
   .radius = 5.0,
   .palettes = {
     {
@@ -325,7 +318,7 @@ static ButtonDesign incdecDesign = {
   }
 };
 
-static ButtonDesign bevelDesign = {
+static const ButtonDesign bevelDesign = {
   .radius = 4.0,
   .palettes = {
     {
@@ -351,7 +344,7 @@ static ButtonDesign bevelDesign = {
   }
 };
 
-static ButtonDesign tabDesign = {
+static const ButtonDesign tabDesign = {
   .radius = 4.0,
   .palettes = {
 
@@ -379,7 +372,7 @@ static ButtonDesign tabDesign = {
   }
 };
 
-static ButtonDesign entryDesign = {
+static const ButtonDesign entryDesign = {
   .radius = 0.0,
   .palettes = {
     {
@@ -390,7 +383,7 @@ static ButtonDesign entryDesign = {
   }
 };
 
-static ButtonDesign searchDesign = {
+static const ButtonDesign searchDesign = {
   .radius = 3.5,
   .palettes = {
     {
@@ -401,7 +394,7 @@ static ButtonDesign searchDesign = {
   }
 };
 
-static ButtonDesign comboDesign = {
+static const ButtonDesign comboDesign = {
   .radius = 4.0,
   .palettes = {
     {
@@ -412,7 +405,7 @@ static ButtonDesign comboDesign = {
   }
 };
 
-static ButtonDesign sliderDesign = {
+static const ButtonDesign sliderDesign = {
   .radius = 8.0,
   .palettes = {
     {
@@ -433,7 +426,7 @@ static ButtonDesign sliderDesign = {
  * Table mapping Tk states to Appearance manager ThemeStates
  */
 
-static Ttk_StateTable ThemeStateTable[] = {
+static const Ttk_StateTable ThemeStateTable[] = {
     {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeStateUnavailable, TTK_STATE_DISABLED, 0},
     {kThemeStatePressed, TTK_STATE_PRESSED, 0},
@@ -457,14 +450,14 @@ static Ttk_StateTable ThemeStateTable[] = {
  * Translation between Ttk and HIToolbox.
  */
 
-static Ttk_StateTable ButtonValueTable[] = {
+static const Ttk_StateTable ButtonValueTable[] = {
     {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
 };
 
-static Ttk_StateTable ButtonAdornmentTable[] = {
+static const Ttk_StateTable ButtonAdornmentTable[] = {
     {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeAdornmentDefault | kThemeAdornmentFocus,
      TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0},
