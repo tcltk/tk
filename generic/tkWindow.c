@@ -96,7 +96,7 @@ static const XSetWindowAttributes defAtts= {
 #define USEINITPROC 8
 #define SAVEUPDATECMD 16 /* better only be one of these! */
 
-typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
+typedef int (TkInitProc)(Tcl_Interp *interp, void *clientData);
 typedef struct {
     const char *name;		/* Name of command. */
     Tcl_ObjCmdProc *objProc;	/* Command's object- (or string-) based
@@ -208,7 +208,7 @@ static const TkCmd commands[] = {
 static Tk_Window	CreateTopLevelWindow(Tcl_Interp *interp,
 			    Tk_Window parent, const char *name,
 			    const char *screenName, unsigned int flags);
-static void		DeleteWindowsExitProc(ClientData clientData);
+static void		DeleteWindowsExitProc(void *clientData);
 static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
 static int		Initialize(Tcl_Interp *interp);
@@ -838,7 +838,7 @@ TkCreateMainWindow(
     TkMainInfo *mainPtr;
     TkWindow *winPtr;
     const TkCmd *cmdPtr;
-    ClientData clientData;
+    void *clientData;
     Tcl_CmdInfo info;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -962,8 +962,8 @@ TkCreateMainWindow(
     }
     if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
 	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc,
-		TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
+		info.objProc, (void *)
+		(TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
 #if defined(MAC_OSX_TK)
 		".aqua"
 #endif
@@ -1026,7 +1026,7 @@ TkCreateMainWindow(
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
 #endif
-		, NULL);
+		), NULL);
     }
 
     /*
@@ -2343,7 +2343,7 @@ void
 Tk_SetClassProcs(
     Tk_Window tkwin,		/* Token for window to modify. */
     const Tk_ClassProcs *procs,	/* Class procs structure. */
-    ClientData instanceData)	/* Data to be passed to class functions. */
+    void *instanceData)	/* Data to be passed to class functions. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -2832,7 +2832,7 @@ Tk_AlwaysShowSelection(
 
 static void
 DeleteWindowsExitProc(
-    ClientData clientData)	/* tsdPtr when handler was created. */
+    void *clientData)	/* tsdPtr when handler was created. */
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
@@ -3095,12 +3095,10 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 static int
 CopyValue(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Obj *objPtr,
     void *dstPtr)
 {
-    (void)dummy;
-
     *(Tcl_Obj **)dstPtr = objPtr;
     return 1;
 }
@@ -3382,10 +3380,10 @@ Initialize(
 
 #ifndef TK_NO_DEPRECATED
     Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
-	    (ClientData) &tkStubs);
+	    (void *)&tkStubs);
 #endif
     code = Tcl_PkgProvideEx(interp, "tk", TK_PATCH_LEVEL,
-	    (ClientData) &tkStubs);
+	    (void *)&tkStubs);
     if (code != TCL_OK) {
 	goto done;
     }
