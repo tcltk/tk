@@ -19,6 +19,7 @@
 #elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
 #endif
+#include "tkUuid.h"
 
 /*
  * Type used to keep track of Window objects that were only partially
@@ -817,6 +818,11 @@ NameWindow(
  *----------------------------------------------------------------------
  */
 
+#ifndef STRINGIFY
+#  define STRINGIFY(x) STRINGIFY1(x)
+#  define STRINGIFY1(x) #x
+#endif
+
 Tk_Window
 TkCreateMainWindow(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
@@ -833,6 +839,7 @@ TkCreateMainWindow(
     TkWindow *winPtr;
     const TkCmd *cmdPtr;
     ClientData clientData;
+    Tcl_CmdInfo info;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -952,6 +959,74 @@ TkCreateMainWindow(
 	if (isSafe && !(cmdPtr->flags & ISSAFE)) {
 	    Tcl_HideCommand(interp, cmdPtr->name, cmdPtr->name);
 	}
+    }
+    if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
+	Tcl_CreateObjCommand(interp, "::tk::build-info",
+		info.objProc,
+		TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
+#if defined(MAC_OSX_TK)
+		".aqua"
+#endif
+#if defined(__clang__) && defined(__clang_major__)
+		".clang-" STRINGIFY(__clang_major__)
+#if __clang_minor__ < 10
+		"0"
+#endif
+		STRINGIFY(__clang_minor__)
+#endif
+#if defined(__cplusplus) && !defined(__OBJC__)
+		".cplusplus"
+#endif
+#ifndef NDEBUG
+		".debug"
+#endif
+#if !defined(__clang__) && !defined(__INTEL_COMPILER) && defined(__GNUC__)
+		".gcc-" STRINGIFY(__GNUC__)
+#if __GNUC_MINOR__ < 10
+		"0"
+#endif
+		STRINGIFY(__GNUC_MINOR__)
+#endif
+#ifdef __INTEL_COMPILER
+		".icc-" STRINGIFY(__INTEL_COMPILER)
+#endif
+#ifdef TCL_MEM_DEBUG
+		".memdebug"
+#endif
+#if defined(_MSC_VER)
+		".msvc-" STRINGIFY(_MSC_VER)
+#endif
+#ifdef USE_NMAKE
+		".nmake"
+#endif
+#ifndef TCL_CFG_OPTIMIZED
+		".no-optimize"
+#endif
+#ifdef __OBJC__
+		".objective-c"
+#if defined(__cplusplus)
+		"plusplus"
+#endif
+#endif
+#ifdef TCL_CFG_PROFILED
+		".profile"
+#endif
+#ifdef PURIFY
+		".purify"
+#endif
+#ifdef STATIC_BUILD
+		".static"
+#endif
+#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+		".utf-16"
+#endif
+#if defined(_WIN32)
+		".win32"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+		".x11"
+#endif
+		, NULL);
     }
 
     /*
