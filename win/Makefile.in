@@ -794,11 +794,13 @@ tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
 		@DEPARG@ $(CC_OBJNAME)
 
 
+tkWindow.$(OBJEXT): ${GENERIC_DIR}/tkWindow.c configure Makefile tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
+
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
 tkMain.$(OBJEXT): configure Makefile
 tkMain2.$(OBJEXT): configure Makefile
-tkWindow.$(OBJEXT): configure Makefile
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.
