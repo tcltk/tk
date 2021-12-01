@@ -990,6 +990,7 @@ TkCreateMainWindow(
 #ifdef __INTEL_COMPILER
 		".icc-" STRINGIFY(__INTEL_COMPILER)
 #endif
+		".mac-styles"
 #ifdef TCL_MEM_DEBUG
 		".memdebug"
 #endif
