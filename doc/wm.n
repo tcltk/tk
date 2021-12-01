@@ -670,6 +670,10 @@ If a \fBWM_DELETE_WINDOW\fR message arrives when you have not defined
 a handler, then Tk handles the message by destroying the window for
 which it was received.
 .RE
+.RS
+.PP
+On the Windows platform, the protocol handler \fBWM_SAVE_YOURSELF\fR is called on user logout or system restart.
+.RE
 .TP
 \fBwm resizable \fIwindow\fR ?\fIwidth height\fR?
 .
