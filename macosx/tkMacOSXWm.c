@@ -362,7 +362,6 @@ static void             RemoveTransient(TkWindow *winPtr);
 @end
 
 @implementation TKWindow: NSWindow
-@synthesize mouseInResizeArea = _mouseInResizeArea;
 @synthesize tkWindow = _tkWindow;
 @end
 
@@ -2827,7 +2826,7 @@ WmIconwindowCmd(
 	     */
 
 	    TkpWmSetState(oldIcon, WithdrawnState);
-	    [win orderOut:nil];
+	    [win orderOut:NSApp];
     	    [win setExcludedFromWindowsMenu:YES];
 	    wmPtr3->iconFor = NULL;
 	}
@@ -6244,7 +6243,7 @@ TkMacOSXMakeRealWindowExist(
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
-    [window setAcceptsMouseMovedEvents:YES];
+    [window setAcceptsMouseMovedEvents:NO];
     [window setReleasedWhenClosed:NO];
     if (styleMask & NSUtilityWindowMask) {
 	[(TKPanel*)window setFloatingPanel:YES];
