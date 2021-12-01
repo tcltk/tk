@@ -344,9 +344,9 @@ proc ttk::entry::ExtendTo {w index} {
 
     # Figure out selection anchor:
     if {![$w selection present]} {
-    	set anchor $insert
+	set anchor $insert
     } else {
-    	set selfirst [$w index sel.first]
+	set selfirst [$w index sel.first]
 	set sellast  [$w index sel.last]
 
 	if {   ($index < $selfirst)
@@ -362,7 +362,7 @@ proc ttk::entry::ExtendTo {w index} {
     if {$anchor < $index} {
 	$w selection range $anchor $index
     } else {
-    	$w selection range $index $anchor
+	$w selection range $index $anchor
     }
 
     $w icursor $index
@@ -422,8 +422,8 @@ proc ttk::entry::Select {w x mode} {
     set cur [ClosestGap $w $x]
 
     switch -- $mode {
-    	word	{ WordSelect $w $cur $cur }
-    	line	{ LineSelect $w $cur $cur }
+	word	{ WordSelect $w $cur $cur }
+	line	{ LineSelect $w $cur $cur }
 	char	{ # no-op }
     }
 
@@ -571,7 +571,7 @@ proc ttk::entry::ScanDrag {w x} {
     $w xview $left
 
     if {$left != [set newLeft [$w index @0]]} {
-    	# We've scanned past one end of the entry;
+	# We've scanned past one end of the entry;
 	# reset the mark so that the text will start dragging again
 	# as soon as the mouse reverses direction.
 	#
@@ -628,7 +628,7 @@ proc ttk::entry::Insert {w s} {
 #
 proc ttk::entry::Backspace {w} {
     if {[PendingDelete $w]} {
-    	See $w
+	See $w
 	return
     }
     set x [expr {[$w index insert] - 1}]

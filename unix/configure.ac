@@ -211,7 +211,8 @@ fi
 if test "`uname -s`" = "Darwin" ; then
     AC_MSG_CHECKING([whether to use Aqua])
     AC_ARG_ENABLE(aqua,
-	AS_HELP_STRING([--enable-aqua=yes|no],[use Aqua windowingsystem on Mac OS X (default: no)]),
+	AS_HELP_STRING([--enable-aqua=yes|no],
+	    [use Aqua windowingsystem on Mac OS X (default: no)]),
 	[tk_aqua=$enableval], [tk_aqua=no])
     if test $tk_aqua = yes -o $tk_aqua = cocoa; then
 	tk_aqua=yes
@@ -237,7 +238,8 @@ if test "`uname -s`" = "Darwin" ; then
 		done
 		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
 		LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <X11/Xlib.h>]], [[XrmInitialize();]])],[tcl_cv_lib_x11_64=yes],[tcl_cv_lib_x11_64=no])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <X11/Xlib.h>]], [[XrmInitialize();]])],
+		[tcl_cv_lib_x11_64=yes],[tcl_cv_lib_x11_64=no])
 		for v in CFLAGS CPPFLAGS LDFLAGS; do
 		    eval $v'="$hold_'$v'"'
 		done])
@@ -256,7 +258,8 @@ if test "`uname -s`" = "Darwin" ; then
 	AC_CACHE_CHECK([if ld accepts -weak-l flag], tcl_cv_ld_weak_l, [
 	    hold_ldflags=$LDFLAGS
 	    LDFLAGS="$LDFLAGS -Wl,-weak-lm"
-	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[double f = sin(1.0);]])],[tcl_cv_ld_weak_l=yes],[tcl_cv_ld_weak_l=no])
+	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[double f = sin(1.0);]])],
+	    [tcl_cv_ld_weak_l=yes],[tcl_cv_ld_weak_l=no])
 	    LDFLAGS=$hold_ldflags])
     fi
     AC_CHECK_HEADERS(AvailabilityMacros.h)
@@ -272,7 +275,8 @@ if test "`uname -s`" = "Darwin" ; then
 		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
 		    #endif
 		    int rand(void) __attribute__((weak_import));
-		]], [[rand();]])],[tcl_cv_cc_weak_import=yes],[tcl_cv_cc_weak_import=no])
+		]], [[rand();]])],
+		[tcl_cv_cc_weak_import=yes],[tcl_cv_cc_weak_import=no])
 	    CFLAGS=$hold_cflags])
 	if test $tcl_cv_cc_weak_import = yes; then
 	    AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
@@ -408,7 +412,8 @@ fi
 if test $tk_aqua = no; then
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
-	AS_HELP_STRING([--enable-xft],[use freetype/fontconfig/xft (default: on)]),
+	AS_HELP_STRING([--enable-xft],
+	    [use freetype/fontconfig/xft (default: on)]),
 	[enable_xft=$enableval], [enable_xft="default"])
     XFT_CFLAGS=""
     XFT_LIBS=""
@@ -503,7 +508,8 @@ if test $tk_aqua = no; then
     xss_lib_found=no
     AC_MSG_CHECKING([whether to try to use XScreenSaver])
     AC_ARG_ENABLE(xss,
-	AS_HELP_STRING([--enable-xss],[use XScreenSaver for activity timer (default: on)]),
+	AS_HELP_STRING([--enable-xss],
+	    [use XScreenSaver for activity timer (default: on)]),
 	[enable_xss=$enableval], [enable_xss=yes])
     if test "$enable_xss" = "no" ; then
 	AC_MSG_RESULT([$enable_xss])
@@ -592,7 +598,6 @@ if test "`uname -s`" = "Darwin" ; then
     if test "${SHARED_BUILD}" = "0"; then
 	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
     fi
-    EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
