@@ -232,9 +232,10 @@ enum {
 		   eventWindow != [NSApp keyWindow]) {
 		
 		/*
-		 * This click will change the focus.  The Button-1 event should
-		 * be sent to the toplevel which will be receiving focus rather
-		 * than to the current focus window.  So reset tkEventTarget.
+		 * This click might change the focus.  If so, the Button-1
+		 * event should be sent to the toplevel which will be receiving
+		 * focus rather than to the current focus window.  So reset
+		 * tkEventTarget.
 		 */
 
 		TkWindow *newFocus = NULL;
