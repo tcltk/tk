@@ -130,6 +130,9 @@ enum {
 	buttonState &= ~TkGetButtonMask(button);
 	break;
     case NSLeftMouseDragged:
+	if (isOutside) {
+	    return theEvent;
+	}
 	isDragging = YES;
 	dragTarget = target;
     case NSRightMouseDragged:
@@ -228,18 +231,21 @@ enum {
 	if (isDragging) {
 	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
 	} else {
-	    if (eventType == NSLeftMouseDown &&
-		   eventWindow != [NSApp keyWindow]) {
+	    if (eventWindow != [NSApp keyWindow] &&
+		(eventType == NSLeftMouseDown || isDragging )) {
 		
 		/*
-		 * This click might change the focus.  If so, the Button-1
+		 * This click might change the focus.  If so, the Tk event
 		 * event should be sent to the toplevel which will be receiving
 		 * focus rather than to the current focus window.  So reset
-		 * tkEventTarget.
+		 * tkEventTarget.  Also, if this is a drag event with the
+		 * pointer not in the contentView of the new window, ignore
+		 * it.
 		 */
 
 		TkWindow *newFocus = NULL;
-		for (NSWindow *w in [NSApp orderedWindows]) {
+		NSWindow *w;
+		for (w in [NSApp orderedWindows]) {
 		    if (NSPointInRect([NSEvent mouseLocation], [w frame])) {
 			newFocus = TkMacOSXGetTkWindow(w);
 			break;
@@ -247,6 +253,11 @@ enum {
 		}
 		if (newFocus) {
 		    [NSApp setTkEventTarget: newFocus];
+		}
+		if (isDragging) {
+		    if (!NSPointInRect(location, [[w contentView] bounds]))
+			dragTarget = (Tk_Window) newFocus;
+		    return theEvent;
 		}
 	    }
 	    winPtr = [NSApp tkEventTarget];
