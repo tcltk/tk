@@ -93,6 +93,7 @@ enum {
     Bool isMotionEvent = NO;
     Bool isOutside = NO;
     static Bool isDragging = NO;
+    static Bool ignoreDrags = NO;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
@@ -131,8 +132,12 @@ enum {
 	break;
     case NSLeftMouseDragged:
 	if (isOutside) {
+	    ignoreDrags = YES;
+	}
+	if (ignoreDrags) {
 	    return theEvent;
 	}
+	ignoreDrags = NO;
 	isDragging = YES;
 	dragTarget = target;
     case NSRightMouseDragged:
@@ -157,46 +162,29 @@ enum {
 	break;
     case NSLeftMouseUp:
 	isDragging = NO;
+	if (ignoreDrags) {
+	    ignoreDrags = NO;
+	    return theEvent;
+	}
+	break;
     case NSLeftMouseDown:
 
 	/*
 	 * Ignore left mouse button events which arrive while the app is
 	 * inactive.  These events will be resent after activation, causing
 	 * duplicate actions when an app is activated by a bound mouse event
-	 * (see ticket [7bda9882cb].  Also, ignore left mouse button events in
-	 * the titlebar (see tickets [d72abe6b54] and [39cbacb9e8]).
+	 * (see ticket [7bda9882cb]).  Ignore left mouse button events which
+	 * are outside of the contentView of the NSWindow (see tickets
+	 * [d72abe6b54] and [39cbacb9e8]).  Ignore the first left button press
+	 * after a live resize ends. (Apple sends the button press event that
+	 * started the resize after the resize ends.  It should not be seen by
+	 * Tk.)  See tickets [d72abe6b54] and [39cbacb9e8].  In other cases,
+	 * update the button state.
 	 */
 
 	if (![NSApp isActive] || isOutside) {
 	    return theEvent;
 	}
-	break;
-    case NSMouseMoved:
-	if (eventWindow && eventWindow != [NSApp keyWindow]) {
-	    return theEvent;
-	}
-	isMotionEvent = YES;
-	break;
-    case NSScrollWheel:
-#if 0
-    case NSCursorUpdate:
-    case NSTabletPoint:
-    case NSTabletProximity:
-#endif
-	break;
-    default: /* This type of event is ignored. */
-	return theEvent;
-    }
-
-    /*
-     * Update the button state.  We ignore left button presses that occur
-     * outside of the ContentView. We also ignore the first left button press
-     * after a live resize ends. (Apple sends the button press event that
-     * started the resize after the resize ends.  It should not be seen by Tk.)
-     * See tickets [d72abe6b54] and [39cbacb9e8].
-     */
-
-    if (eventType == NSLeftMouseDown) {
 	if (!isTestingEvent) {
 	    NSRect bounds = [contentView bounds];
 	    NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
@@ -213,6 +201,22 @@ enum {
 	    }
 	}
 	buttonState |= TkGetButtonMask(Button1);
+	break;
+    case NSMouseMoved:
+	if (eventWindow && eventWindow != [NSApp keyWindow]) {
+	    return theEvent;
+	}
+	isMotionEvent = YES;
+	break;
+    case NSScrollWheel:
+#if 0
+    case NSCursorUpdate:
+    case NSTabletPoint:
+    case NSTabletProximity:
+#endif
+	break;
+    default: /* This type of event is ignored. */
+	return theEvent;
     }
 
     /*
