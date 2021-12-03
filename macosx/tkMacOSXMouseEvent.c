@@ -161,6 +161,7 @@ enum {
 	break;
     case NSLeftMouseUp:
 	isDragging = NO;
+	dragTarget = NULL;
 	if (ignoreDrags) {
 	    ignoreDrags = NO;
 	    return theEvent;
@@ -256,11 +257,12 @@ enum {
 		}
 		if (newFocus) {
 		    [NSApp setTkEventTarget: newFocus];
+		    [NSApp setTkPointerWindow: newFocus];
 		}
 		if (isDragging) {
-		    if (!NSPointInRect(location, [[w contentView] bounds]))
-			dragTarget = (Tk_Window) newFocus;
-		    return theEvent;
+		    if (!NSPointInRect(location, [[w contentView] bounds])) {
+			return theEvent;
+		    }
 		}
 	    }
 	    winPtr = [NSApp tkEventTarget];
