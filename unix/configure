@@ -1338,7 +1338,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".11"
+TK_PATCH_LEVEL=".12"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -5202,7 +5202,7 @@ fi
 fi
 
 	    ;;
-	Linux*|GNU*|NetBSD-Debian)
+	Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_SUFFIX=".so"
 
@@ -5216,6 +5216,20 @@ fi
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
 	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
+
+	    case $system in
+	    DragonFly-*|FreeBSD-*)
+		if test "${TCL_THREADS}" = "1"; then
+
+		    # The -pthread needs to go in the LDFLAGS, not LIBS
+		    LIBS=`echo $LIBS | sed s/-pthread//`
+		    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+		    LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
+fi
+
+	    ;;
+            esac
+
 	    if test $doRpath = yes; then
 
 		CC_SEARCH_FLAGS='"-Wl,-rpath,${LIB_RUNTIME_DIR}"'
@@ -5403,37 +5417,6 @@ fi
 
 fi
 
-	    ;;
-	DragonFly-*|FreeBSD-*)
-	    # This configuration from FreeBSD Ports.
-	    SHLIB_LD="${CC} -shared"
-	    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,-soname,\$@"
-	    SHLIB_SUFFIX=".so"
-	    DL_OBJS="tclLoadDl.o"
-	    DL_LIBS=""
-	    if test $doRpath = yes; then
-
-		CC_SEARCH_FLAGS='"-Wl,-rpath,${LIB_RUNTIME_DIR}"'
-		LD_SEARCH_FLAGS='"-Wl,-rpath,${LIB_RUNTIME_DIR}"'
-fi
-
-	    if test "${TCL_THREADS}" = "1"; then
-
-		# The -pthread needs to go in the LDFLAGS, not LIBS
-		LIBS=`echo $LIBS | sed s/-pthread//`
-		CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-		LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
-fi
-
-	    case $system in
-	    FreeBSD-3.*)
-		# Version numbers are dot-stripped by system policy.
-		TCL_TRIM_DOTS=`echo ${VERSION} | tr -d .`
-		UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.a'
-		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.so'
-		TCL_LIB_VERSIONS_OK=nodots
-		;;
-	    esac
 	    ;;
 	Darwin-*)
 	    CFLAGS_OPTIMIZE="-Os"
