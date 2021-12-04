@@ -87,6 +87,7 @@ enum {
     static Tk_Window target = NULL, dragTarget = NULL;
     NSPoint local, global;
     NSInteger button;
+    TkWindow *newFocus = NULL;
     int win_x, win_y;
     unsigned int buttonState = 0;
     Bool isTestingEvent = NO;
@@ -94,6 +95,7 @@ enum {
     Bool isOutside = NO;
     static Bool isDragging = NO;
     static Bool ignoreDrags = NO;
+    static Bool ignoreUpDown = NO;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
@@ -162,6 +164,12 @@ enum {
     case NSLeftMouseUp:
 	isDragging = NO;
 	dragTarget = NULL;
+	if ([theEvent clickCount] == 2) {
+	    ignoreUpDown = NO;
+	}
+	if (ignoreUpDown) {
+	    return theEvent;
+	}
 	if (ignoreDrags) {
 	    ignoreDrags = NO;
 	    return theEvent;
@@ -170,20 +178,23 @@ enum {
     case NSLeftMouseDown:
 
 	/*
-	 * Ignore left mouse button events which arrive while the app is
-	 * inactive.  These events will be resent after activation, causing
-	 * duplicate actions when an app is activated by a bound mouse event
-	 * (see ticket [7bda9882cb]).  Ignore left mouse button events which
-	 * are outside of the contentView of the NSWindow (see tickets
-	 * [d72abe6b54] and [39cbacb9e8]).  Ignore the first left button press
-	 * after a live resize ends. (Apple sends the button press event that
-	 * started the resize after the resize ends.  It should not be seen by
-	 * Tk.)  See tickets [d72abe6b54] and [39cbacb9e8].  In other cases,
-	 * update the button state.
+	 * Ignore left mouse button events which are in an NSWindow but outside
+	 * of its contentView (see tickets [d72abe6b54] and [39cbacb9e8]).
+	 * Ignore the first left button press after a live resize ends. (Apple
+	 * sends the button press event that started the resize after the
+	 * resize ends.  It should not be seen by Tk.  See tickets [d72abe6b54]
+	 * and [39cbacb9e8]).  Ignore button press events when ignoreUpDown is
+	 * set.  These are extraneous events which appear when double-clicking
+	 * in a window without focus, causing duplicate Double-1 events (see
+	 * ticket [7bda9882cb].
 	 */
 
-	if (![NSApp isActive] || isOutside) {
-	    return theEvent;
+	if ([theEvent clickCount] == 2) {
+	    if (ignoreUpDown == YES) {
+		return theEvent;
+	    } else {
+		ignoreUpDown = YES;
+	    }
 	}
 	if (!isTestingEvent) {
 	    NSRect bounds = [contentView bounds];
@@ -198,6 +209,31 @@ enum {
 	    if ([NSApp tkLiveResizeEnded]) {
 		[NSApp setTkLiveResizeEnded:NO];
 		return theEvent;
+	    }
+	}
+
+	/*
+	 * If this click will change the focus, the Tk event event should
+	 * be sent to the toplevel which will be receiving focus rather than to
+	 * the current focus window.  So reset tkEventTarget.
+	 */
+
+	if (eventWindow != [NSApp keyWindow]) {
+	    NSWindow *w;
+		
+	    if (eventWindow && isOutside) {
+		return theEvent;
+	    }
+	    for (w in [NSApp orderedWindows]) {
+		if (NSPointInRect([NSEvent mouseLocation], [w frame])) {
+		    newFocus = TkMacOSXGetTkWindow(w);
+		    break;
+		}
+	    }
+	    if (newFocus) {
+		[NSApp setTkEventTarget: newFocus];
+		[NSApp setTkPointerWindow: newFocus];
+		target = (Tk_Window) newFocus;
 	    }
 	}
 	buttonState |= TkGetButtonMask(Button1);
@@ -235,36 +271,6 @@ enum {
 	if (isDragging) {
 	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
 	} else {
-	    if (eventWindow != [NSApp keyWindow] &&
-		(eventType == NSLeftMouseDown || isDragging )) {
-		
-		/*
-		 * This click might change the focus.  If so, the Tk event
-		 * event should be sent to the toplevel which will be receiving
-		 * focus rather than to the current focus window.  So reset
-		 * tkEventTarget.  Also, if this is a drag event with the
-		 * pointer not in the contentView of the new window, ignore
-		 * it.
-		 */
-
-		TkWindow *newFocus = NULL;
-		NSWindow *w;
-		for (w in [NSApp orderedWindows]) {
-		    if (NSPointInRect([NSEvent mouseLocation], [w frame])) {
-			newFocus = TkMacOSXGetTkWindow(w);
-			break;
-		    }
-		}
-		if (newFocus) {
-		    [NSApp setTkEventTarget: newFocus];
-		    [NSApp setTkPointerWindow: newFocus];
-		}
-		if (isDragging) {
-		    if (!NSPointInRect(location, [[w contentView] bounds])) {
-			return theEvent;
-		    }
-		}
-	    }
 	    winPtr = [NSApp tkEventTarget];
 	}
     }
@@ -368,7 +374,6 @@ enum {
 
     unsigned int state = buttonState;
     NSUInteger modifiers = [theEvent modifierFlags];
-
     if (modifiers & NSAlphaShiftKeyMask) {
 	state |= LockMask;
     }
