@@ -2920,8 +2920,28 @@ TkTextBindProc(
     if (!(textPtr->flags & DESTROYED)) {
 	const TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
 
-	if (sharedTextPtr->tagBindingTable && !TkTextTagSetIsEmpty(textPtr->curTagInfoPtr)) {
-	    TagBindEvent(textPtr, eventPtr, textPtr->curTagInfoPtr, sharedTextPtr->tagEpoch);
+	if (sharedTextPtr->tagBindingTable) {
+	    if (!TkTextTagSetIsEmpty(textPtr->curTagInfoPtr)) {
+		/*
+		 * The mouse is inside the text widget, the 'current' mark was updated.
+		 */
+
+		TagBindEvent(textPtr, eventPtr, textPtr->curTagInfoPtr, sharedTextPtr->tagEpoch);
+	    } else if ((eventPtr->type == KeyPress) || (eventPtr->type == KeyRelease)) {
+		 /*
+		  * Key events fire independently of the 'current' mark and use the
+		  * 'insert' mark.
+		  */
+
+		TkTextIndex index;
+		TkTextTagSet *insertTags;
+
+		TkTextMarkNameToIndex(textPtr, "insert", &index);
+		insertTags = TkTextIndexGetContentSegment(&index, NULL)->tagInfoPtr;
+		if (!TkTextTagSetIsEmpty(insertTags)) {
+		    TagBindEvent(textPtr, eventPtr, insertTags, sharedTextPtr->tagEpoch);
+		}
+	    }
 	    if (textPtr->flags & DESTROYED) {
 		TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 		return;
