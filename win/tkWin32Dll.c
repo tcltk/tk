@@ -119,11 +119,11 @@ DllMain(
     case DLL_PROCESS_DETACH:
 	/*
 	 * Protect the call to TkFinalize in an SEH block. We can't be
-	 * guarenteed Tk is always being unloaded from a stable condition.
+	 * guaranteed Tk is always being unloaded from a stable condition.
 	 */
 
 #ifdef HAVE_NO_SEH
-#   ifdef __WIN64
+#   ifdef _WIN64
 	__asm__ __volatile__ (
 
 	    /*
