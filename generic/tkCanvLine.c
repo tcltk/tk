@@ -1154,7 +1154,7 @@ LineInsert(
 	}
 	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 	    /*
-	     * Include new right arrow.
+	     * Include new last arrow.
 	     */
 
 	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
@@ -1392,7 +1392,7 @@ LineDeleteCoords(
 	}
 	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length - 2)) {
 	    /*
-	     * Include new right arrow.
+	     * Include new last arrow.
 	     */
 
 	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
