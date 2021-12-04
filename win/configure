@@ -5503,6 +5503,7 @@ TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`
 
 
                               ac_config_files="$ac_config_files Makefile tkConfig.sh wish.exe.manifest"
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
