@@ -617,7 +617,7 @@ A \fIwindow manager protocol\fR is a class of messages sent from a window
 manager to a Tk application outside of the normal event processing system. The
 main example is the \fBWM_DELETE_WINDOW\fR protocol; these messages are sent
 when the user clicks the close widget in the title bar of a window.  Handlers
-for window manager protocols are installed with the \fBwm_protocol\fR
+for window manager protocols are installed with the \fBwm protocol\fR
 command. As a rule, if no handler has been installed for a protocol by the
 \fBwm protocol\fR command then all messages of that protocol are ignored. The
 \fBWM_DELETE_WINDOW\fR protocol is an exception to this rule. At start-up Tk
@@ -643,12 +643,13 @@ window manager sends a message of that protocol to the Tk application.  In
 this case the \fBwm protocol\fR command returns an empty string.  If
 \fIname\fR is specified but \fIcommand\fR is not, then the current handler for
 \fIname\fR is returned, or an empty string if there is no handler defined for
-\fIname\fR.  If \fIcommand\fR is specified as an empty string then the atom
-for \fIname\fR is removed from the \fBWM_PROTOCOLS\fR property of \fIwindow\fR
-and the handler is destroyed; an empty string is returned.  Lastly, if neither
-\fIname\fR nor \fIcommand\fR is specified, the \fBwm protocol\fR command
-returns a list of all of the protocols for which handlers are currently
-defined for \fIwindow\fR.
+\fIname\fR (as a special case, the default handler for \fBWM_DELETE_WINDOW\fR
+is not returned).  If \fIcommand\fR is specified as an empty string then the
+atom for \fIname\fR is removed from the \fBWM_PROTOCOLS\fR property of
+\fIwindow\fR and the handler is destroyed; an empty string is returned.
+Lastly, if neither \fIname\fR nor \fIcommand\fR is specified, the
+\fBwm protocol\fR command returns a list of all of the protocols for which
+handlers are currently defined for \fIwindow\fR.
 .RE
 .TP
 \fBwm resizable \fIwindow\fR ?\fIwidth height\fR?
