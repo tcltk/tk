@@ -22,6 +22,8 @@ namespace eval ::tk::fontchooser {
     set S(-title) {}
     set S(-command) ""
     set S(-font) TkDefaultFont
+    
+    set S(bad) [list ]
 }
 
 proc ::tk::fontchooser::Canonical {} {
@@ -145,13 +147,8 @@ proc ::tk::fontchooser::Configure {args} {
         } else {
             wm title $S(W) $S(-title)
         }
-        if {$S(-command) eq {}} {
-            $S(W).ok configure -state disabled
-            $S(W).apply configure -state $S(nstate)
-        } else {
-            $S(W).ok configure -state $S(nstate)
-            $S(W).apply configure -state $S(nstate)
-        }
+        $S(W).ok configure -state $S(nstate)
+        $S(W).apply configure -state $S(nstate)
     }
     return $r
 }
@@ -185,7 +182,7 @@ proc ::tk::fontchooser::Create {} {
         ttk::entry $S(W).estyle -width 10 \
             -textvariable [namespace which -variable S](style)
         ttk::entry $S(W).esize -textvariable [namespace which -variable S](size) \
-            -width 3 -validate key -validatecommand {string is double %P}
+            -width 3 -validate key -validatecommand {regexp -- {^-*[0-9]*$} %P}
 
         ttk_slistbox $S(W).lfonts -height 7 -exportselection 0 \
             -selectmode browse -activestyle none \
@@ -293,6 +290,10 @@ proc ::tk::fontchooser::Create {} {
             write [namespace code [list Tracer]]
         trace add variable [namespace which -variable S](font) \
             write [namespace code [list Tracer]]
+        trace add variable [namespace which -variable S](strike) \
+            write [namespace code [list Tracer]]
+        trace add variable [namespace which -variable S](under) \
+            write [namespace code [list Tracer]]
     } else {
         Init $S(-font)
     }
@@ -316,9 +317,14 @@ proc ::tk::fontchooser::Done {ok} {
     trace vdelete S(size) w [namespace code [list Tracer]]
     trace vdelete S(style) w [namespace code [list Tracer]]
     trace vdelete S(font) w [namespace code [list Tracer]]
+    trace vdelete S(strike) w [namespace code [list Tracer]]
+    trace vdelete S(under) w [namespace code [list Tracer]]
     destroy $S(W)
-    if {$ok && $S(-command) ne ""} {
-        uplevel #0 $S(-command) [list $S(result)]
+    if {$ok} {
+		if {$S(-command) ne ""} {
+            uplevel #0 $S(-command) [list $S(result)]
+        }
+        event generate $S(-parent) <<TkFontchooserFontChanged>>
     }
 }
 
@@ -353,7 +359,9 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
             set defaultFont [[entry .___e] cget -font]
             destroy .___e
         }
-        array set F [font actual $defaultFont]
+		# We loose pixel size with 'font actual'
+        #array set F [font actual $defaultFont]
+		array set F [actual $defaultFont]  
         set S(font) $F(-family)
         set S(size) $F(-size)
         set S(strike) $F(-overstrike)
@@ -366,12 +374,57 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         } elseif {$F(-slant) eq "italic"} {
             set S(style) [::msgcat::mc "Italic"]
         }
-
         set S(first) 0
     }
+}
 
-    Tracer a b c
-    Update
+# Try to work around the issue that 'font actual' changes 
+# pixel size (negative size) to points (positive size).
+# At least on Linux this makes a difference
+proc ::tk::fontchooser::actual {defaultFont} {
+    set F(-family) {}
+    set F(-size) 10
+    set F(-weight) normal
+    set F(-slant) roman
+    set F(-overstrike) 0
+    set F(-underline) 0
+    if {$defaultFont in [font names]} {
+        set defaultFont [font configure $defaultFont]
+    }
+    if {[lindex $defaultFont 0] in [list -family -size -weight -slant -underline -overstrike]} {
+        # Font looks like it is given as FONT OPTIONS
+        array set F $defaultFont
+    } elseif {[llength $defaultFont] >= 2} {
+        set F(-family) [lindex $defaultFont 0]
+        set F(-size) [lindex $defaultFont 1]
+        foreach el [lrange $defaultFont 2 end] {
+            switch -exact -- {
+                normal -
+                bold {
+                    set F(-weight) $el
+                }
+                roman -
+                italic {
+                    set F(-slant) $el
+                }
+                underline {
+                    set F(-underline) 1
+                }
+                overstrike {
+                    set F(-overstrike) 1
+                }
+                default {
+                    error "Wrong font style '$el'! Should be one of normal, bold, roman, italic, underline or overstrike."
+                }
+            }
+        }
+    } else {
+        # We will loose pixel size
+        array set F [font actual $defaultFont]
+    }
+    # Assure we have a real font name
+    set F(-family) [dict get [font actual [list serif -14 normal roman underline overstrike italic]] -family]
+    return [array get F]
 }
 
 # ::tk::fontchooser::Click --
@@ -383,7 +436,6 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
 #
 proc ::tk::fontchooser::Click {who} {
     variable S
-
     if {$who eq "font"} {
         set S(font) [$S(W).lfonts get [$S(W).lfonts curselection]]
     } elseif {$who eq "style"} {
@@ -391,7 +443,6 @@ proc ::tk::fontchooser::Click {who} {
     } elseif {$who eq "size"} {
         set S(size) [$S(W).lsizes get [$S(W).lsizes curselection]]
     }
-    Update
 }
 
 # ::tk::fontchooser::Tracer --
@@ -403,38 +454,43 @@ proc ::tk::fontchooser::Click {who} {
 #
 proc ::tk::fontchooser::Tracer {var1 var2 op} {
     variable S
-
-    set bad 0
-    set S(nstate) normal
-    # Make selection in each listbox
-    foreach var {font style size} {
-        set value [string tolower $S($var)]
-        $S(W).l${var}s selection clear 0 end
-        set n [lsearch -exact $S(${var}s,lcase) $value]
-        $S(W).l${var}s selection set $n
+    # We don't need to process strike and under
+    if {$var2 ni [list strike under]} {
+        # Make selection in listbox
+        set value [string tolower $S($var2)]
+        $S(W).l${var2}s selection clear 0 end
+        set n [lsearch -exact $S(${var2}s,lcase) $value]
+        $S(W).l${var2}s selection set $n
         if {$n >= 0} {
-            set S($var) [lindex $S(${var}s) $n]
-            $S(W).e$var icursor end
-            $S(W).e$var selection clear
-        } else {                                ;# No match, try prefix
-            # Size is weird: valid numbers are legal but don't display
-            # unless in the font size list
-            set n [lsearch -glob $S(${var}s,lcase) "$value*"]
-            set bad 1
-            if {$var ne "size" || ! [string is double -strict $value]} {
-                set S(nstate) disabled
+            set S($var2) [lindex $S(${var2}s) $n]
+            $S(W).e$var2 icursor end
+            $S(W).e$var2 selection clear
+            if {[set i [lsearch $S(bad) $var2]] >= 0} {
+                set S(bad) [lreplace $S(bad) $i $i]
+            }
+        } else {
+            # No match, try prefix
+            set n [lsearch -glob $S(${var2}s,lcase) "$value*"]
+            if {$var2 ne "size" || !([regexp -- {^(-[0-9]+|[0-9]+)$} $value] && $value >= -4096 && $value <= 4096)} {
+                 if {[lsearch $S(bad) $var2] < 0} {
+                     lappend S(bad) $var2
+                 }
+            } else {
+                if {[set i [lsearch $S(bad) $var2]] >= 0} {
+                    set S(bad) [lreplace $S(bad) $i $i]
+                }
             }
         }
-        $S(W).l${var}s see $n
+        $S(W).l${var2}s see $n
     }
-    if {!$bad} {Update}
-    if {$S(-command) eq {}} {
-        $S(W).ok configure -state disabled
-        $S(W).apply configure -state $S(nstate)
+	if {[llength $S(bad)] == 0} {
+        set S(nstate) normal
+        Update
     } else {
-        $S(W).ok configure -state $S(nstate)
-        $S(W).apply configure -state $S(nstate)
+        set S(nstate) disabled
     }
+    $S(W).ok configure -state $S(nstate)
+    $S(W).apply configure -state $S(nstate)
 }
 
 # ::tk::fontchooser::Update --
@@ -452,6 +508,7 @@ proc ::tk::fontchooser::Update {} {
     if {$S(under)} {lappend S(result) underline}
 
     $S(sample) configure -font $S(result)
+    set S(-font) $S(result)
 }
 
 # ::tk::fontchooser::Visibility --
