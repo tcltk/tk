@@ -410,7 +410,7 @@ enum {
     /*
      * Send XEvents.  We do this here for Motion events outside of the focused
      * toplevel and for MouseWheel events.  In other cases the XEvents will be
-     * sent when we call TkUpdatePointer.
+     * sent when we call Tk_UpdatePointer.
      */
 
     if (eventType != NSScrollWheel) {
@@ -418,7 +418,7 @@ enum {
 
 	    /*
 	     * When dragging the mouse into the resize area Apple shows the
-	     * left button to be up, which confuses TkUpdatePointer.  So
+	     * left button to be up, which confuses Tk_UpdatePointer.  So
 	     * we make sure that the button state appears the way that Tk
 	     * expects.
 	     */
