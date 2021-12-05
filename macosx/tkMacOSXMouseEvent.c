@@ -301,7 +301,7 @@ enum {
     global.x = floor(global.x);
     global.y = floor(TkMacOSXZeroScreenHeight() - global.y);
     local.x = floor(local.x);
-    local.y = floor([eventWindow frame].size.height - local.y);
+    local.y = floor(eventWindow.frame.size.height - local.y);
     if (Tk_IsEmbedded(winPtr)) {
 	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
 	if (Tk_IsTopLevel(contPtr)) {
@@ -337,6 +337,16 @@ enum {
 	for (; w != NULL; w = w->parentPtr) {
 	    win_x -= Tk_X(w);
 	    win_y -= Tk_Y(w);
+	    if (Tk_IsTopLevel(w)) {
+
+		/*
+		 * Adjust for the titlebar.
+		 */
+
+		win_y -= (eventWindow.frame.size.height -
+			  contentView.bounds.size.height);
+		break;
+	    }
 	}
 	target = dragTarget;
     } else {
