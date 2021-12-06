@@ -1560,8 +1560,12 @@ ConfigureMenu(
 	 */
 
 	if (menuListPtr->menuType == UNKNOWN_TYPE) {
-	    Tcl_GetIndexFromObjStruct(NULL, menuListPtr->menuTypePtr,
-		    menuTypeStrings, sizeof(char *), NULL, 0, &menuListPtr->menuType);
+	    if (menuListPtr->menuTypePtr) {
+		Tcl_GetIndexFromObjStruct(NULL, menuListPtr->menuTypePtr,
+			menuTypeStrings, sizeof(char *), NULL, 0, &menuListPtr->menuType);
+	    } else {
+		menuListPtr->menuType = MAIN_MENU;
+	    }
 
 	    /*
 	     * Configure the new window to be either a pop-up menu or a
