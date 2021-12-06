@@ -96,6 +96,7 @@ enum {
     static Bool isDragging = NO;
     static Bool ignoreDrags = NO;
     static Bool ignoreUpDown = NO;
+    static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
@@ -186,13 +187,20 @@ enum {
 	 * and [39cbacb9e8]).  Ignore button press events when ignoreUpDown is
 	 * set.  These are extraneous events which appear when double-clicking
 	 * in a window without focus, causing duplicate Double-1 events (see
-	 * ticket [7bda9882cb].
+	 * ticket [7bda9882cb].  To deal with this, when a LeftMouseDown event
+	 * with clickCount 2 is received we ignore subsequent LeftMouseUp and
+	 * LeftMouseDown events until the matching LeftMouseUp with click count
+	 * 2 is received.
 	 */
 
+	if ([theEvent timestamp] - timestamp > 1) {
+	    ignoreUpDown = NO;
+	}
 	if ([theEvent clickCount] == 2) {
 	    if (ignoreUpDown == YES) {
 		return theEvent;
 	    } else {
+		timestamp = [theEvent timestamp];
 		ignoreUpDown = YES;
 	    }
 	}
