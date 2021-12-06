@@ -187,15 +187,20 @@ enum {
 	 * and [39cbacb9e8]).  Ignore button press events when ignoreUpDown is
 	 * set.  These are extraneous events which appear when double-clicking
 	 * in a window without focus, causing duplicate Double-1 events (see
-	 * ticket [7bda9882cb].  To deal with this, when a LeftMouseDown event
-	 * with clickCount 2 is received we ignore subsequent LeftMouseUp and
-	 * LeftMouseDown events until the matching LeftMouseUp with click count
-	 * 2 is received.
+	 * ticket [7bda9882cb]).  When a LeftMouseDown event with clickCount 2
+	 * is received we set the ignoreUpDown flag and we clear it when the
+	 * matching LeftMouseUp with click count 2 is received.
+	 */
+
+	/*
+	 * Make sure we don't ignore LeftMouseUp and LeftMouseDown forever.
+	 * Currently tkBind.c sets NEARBY_MS to 500 (the Windows default).
 	 */
 
 	if ([theEvent timestamp] - timestamp > 1) {
 	    ignoreUpDown = NO;
 	}
+
 	if ([theEvent clickCount] == 2) {
 	    if (ignoreUpDown == YES) {
 		return theEvent;
