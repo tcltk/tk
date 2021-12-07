@@ -2383,7 +2383,7 @@ ToggleComplexAlphaIfNeeded(
     size_t len = (size_t)MAX(mPtr->userWidth, mPtr->width) *
 	    (size_t)MAX(mPtr->userHeight, mPtr->height) * 4;
     unsigned char *c = mPtr->pix32;
-    unsigned char *end = c + len;
+    unsigned char *end;
 
     /*
      * Set the COMPLEX_ALPHA flag if we have an image with partially
@@ -2394,6 +2394,7 @@ ToggleComplexAlphaIfNeeded(
     if (c == NULL) {
 	return 0;
     }
+    end = c + len;
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
