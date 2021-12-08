@@ -520,6 +520,7 @@ static const TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
 #endif /* MACOSX */
+    TkUnusedStubEntry, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
