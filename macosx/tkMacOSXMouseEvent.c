@@ -233,7 +233,7 @@ enum {
 
 	if (eventWindow != [NSApp keyWindow]) {
 	    NSWindow *w;
-		
+
 	    if (eventWindow && isOutside) {
 		return theEvent;
 	    }
