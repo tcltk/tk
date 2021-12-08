@@ -631,15 +631,19 @@ ImgPhotoCmd(
 	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
 	 */
 
-	block.pixelPtr += options.fromX * block.pixelSize
-		+ options.fromY * block.pitch;
-	block.width = options.fromX2 - options.fromX;
-	block.height = options.fromY2 - options.fromY;
-	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
-		&block, options.toX, options.toY, options.toX2 - options.toX,
-		options.toY2 - options.toY, options.zoomX, options.zoomY,
-		options.subsampleX, options.subsampleY,
-		options.compositingRule);
+	if (block.pixelPtr) {
+	    block.pixelPtr += options.fromX * block.pixelSize
+		    + options.fromY * block.pitch;
+	    block.width = options.fromX2 - options.fromX;
+	    block.height = options.fromY2 - options.fromY;
+	    result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
+		    &block, options.toX, options.toY, options.toX2 - options.toX,
+		    options.toY2 - options.toY, options.zoomX, options.zoomY,
+		    options.subsampleX, options.subsampleY,
+		    options.compositingRule);
+	} else {
+	    result = TCL_OK;
+	}
 
 	/*
 	 * Set the destination image size if the -shrink option was specified.
@@ -660,8 +664,10 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 	}
-	Tk_ImageChanged(modelPtr->tkMaster, 0, 0, 0, 0,
-		modelPtr->width, modelPtr->height);
+	if (block.pixelPtr || (options.options & OPT_SHRINK)) {
+	    Tk_ImageChanged(modelPtr->tkMaster, 0, 0, 0, 0,
+		    modelPtr->width, modelPtr->height);
+	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}
