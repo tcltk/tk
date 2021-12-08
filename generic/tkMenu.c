@@ -305,7 +305,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TITLE,	 offsetof(TkMenu, titlePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-type", "type", "Type",
-	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK,
+	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE, 0,
 	(ClientData) menuTypeStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
