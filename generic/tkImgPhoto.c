@@ -712,15 +712,19 @@ ImgPhotoCmd(
 	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
 	 */
 
-	block.pixelPtr += options.fromX * block.pixelSize
-		+ options.fromY * block.pitch;
-	block.width = options.fromX2 - options.fromX;
-	block.height = options.fromY2 - options.fromY;
-	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
-		&block, options.toX, options.toY, options.toX2 - options.toX,
-		options.toY2 - options.toY, options.zoomX, options.zoomY,
-		options.subsampleX, options.subsampleY,
-		options.compositingRule);
+	if (block.pixelPtr) {
+	    block.pixelPtr += options.fromX * block.pixelSize
+		    + options.fromY * block.pitch;
+	    block.width = options.fromX2 - options.fromX;
+	    block.height = options.fromY2 - options.fromY;
+	    result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
+		    &block, options.toX, options.toY, options.toX2 - options.toX,
+		    options.toY2 - options.toY, options.zoomX, options.zoomY,
+		    options.subsampleX, options.subsampleY,
+		    options.compositingRule);
+	} else {
+	    result = TCL_OK;
+	}
 
 	/*
 	 * Set the destination image size if the -shrink option was specified.
@@ -741,8 +745,10 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 	}
-	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
-		modelPtr->width, modelPtr->height);
+	if (block.pixelPtr || (options.options & OPT_SHRINK)) {
+	    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
+		    modelPtr->width, modelPtr->height);
+	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}
@@ -2383,7 +2389,7 @@ ToggleComplexAlphaIfNeeded(
     size_t len = (size_t)MAX(mPtr->userWidth, mPtr->width) *
 	    (size_t)MAX(mPtr->userHeight, mPtr->height) * 4;
     unsigned char *c = mPtr->pix32;
-    unsigned char *end = c + len;
+    unsigned char *end;
 
     /*
      * Set the COMPLEX_ALPHA flag if we have an image with partially
@@ -2394,6 +2400,7 @@ ToggleComplexAlphaIfNeeded(
     if (c == NULL) {
 	return 0;
     }
+    end = c + len;
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
