@@ -89,9 +89,9 @@ enum {
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
-    TkWindow *winPtr = NULL, *grabWinPtr;
+    TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
     Tk_Window tkwin = NULL, capture;
-    static Tk_Window target = NULL, scrollTarget = NULL, dragTarget = NULL;
+    static Tk_Window target = NULL, dragTarget = NULL;
     NSPoint local, global;
     NSInteger button;
     TkWindow *newFocus = NULL;
@@ -268,6 +268,12 @@ enum {
 	isMotionEvent = YES;
 	break;
     case NSScrollWheel:
+
+	/*
+	 * Scroll wheel events are sent to the window containing the
+	 * pointer, if there is one.  See TIP #171.
+	 */
+	
 	scrollTarget = TkMacOSXGetTkWindow(eventWindow);
 #if 0
     case NSCursorUpdate:
