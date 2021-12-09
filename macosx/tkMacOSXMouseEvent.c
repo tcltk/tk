@@ -435,7 +435,6 @@ enum {
      * sent when we call Tk_UpdatePointer.
      */
 
-    Tk_UpdatePointer(target, global.x, global.y, state);
     if (eventType != NSScrollWheel) {
 	if (isDragging) {
 
@@ -476,7 +475,16 @@ enum {
 		xEvent.xmotion.y_root = global.y;
 		xEvent.xmotion.state = state;
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+
+		/*
+		 * TkUpdatePointer must not be called in this case.  Doing so
+		 * will break scrollbars; dragging will stop when the mouse
+		 * leaves the window.
+		 */
+
 	    }
+	} else {
+	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
 	CGFloat delta;
