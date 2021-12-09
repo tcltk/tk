@@ -82,7 +82,7 @@ enum {
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
-    TkWindow *winPtr = NULL, *grabWinPtr;
+    TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
     Tk_Window tkwin = NULL, capture;
     static Tk_Window target = NULL, dragTarget = NULL;
     NSPoint local, global;
@@ -258,6 +258,13 @@ enum {
 	isMotionEvent = YES;
 	break;
     case NSScrollWheel:
+
+	/*
+	 * Scroll wheel events are sent to the window containing the
+	 * pointer, if there is one.  See TIP #171.
+	 */
+	
+	scrollTarget = TkMacOSXGetTkWindow(eventWindow);
 #if 0
     case NSCursorUpdate:
     case NSTabletPoint:
@@ -283,6 +290,8 @@ enum {
     } else {
 	if (isDragging) {
 	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
+	} else if (eventType == NSScrollWheel) {
+	    winPtr = scrollTarget;
 	} else {
 	    winPtr = [NSApp tkEventTarget];
 	}
@@ -426,6 +435,7 @@ enum {
      * sent when we call Tk_UpdatePointer.
      */
 
+    Tk_UpdatePointer(target, global.x, global.y, state);
     if (eventType != NSScrollWheel) {
 	if (isDragging) {
 
@@ -467,8 +477,6 @@ enum {
 		xEvent.xmotion.state = state;
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	} else {
-	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
 	CGFloat delta;
