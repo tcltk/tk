@@ -260,8 +260,11 @@ enum {
     case NSScrollWheel:
 
 	/*
-	 * Scroll wheel events are sent to the window containing the
-	 * pointer, if there is one.  See TIP #171.
+	 * Scroll wheel events are sent to the window containing the pointer,
+	 * or ignored if no window contains the pointer.  See TIP #171.  Note,
+	 * however, that TIP #171 proposed sending scroll wheel events to the
+	 * focus window when no window contains the pointer.  That proposal was
+	 * ultimately rejected.
 	 */
 	
 	scrollTarget = TkMacOSXGetTkWindow(eventWindow);
