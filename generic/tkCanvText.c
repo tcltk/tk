@@ -1734,9 +1734,7 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;
     switch (textPtr->anchor) {
-    case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;
     case TK_ANCHOR_NE:	   x = 2; y = 0; break;
     case TK_ANCHOR_E:	   x = 2; y = 1; break;
@@ -1745,11 +1743,12 @@ TextToPostscript(
     case TK_ANCHOR_SW:	   x = 0; y = 2; break;
     case TK_ANCHOR_W:	   x = 0; y = 1; break;
     case TK_ANCHOR_CENTER: x = 1; y = 1; break;
+    default:               x = 0; y = 0; break;
     }
     switch (textPtr->justify) {
-    case TK_JUSTIFY_LEFT:   justify = "0";   break;
     case TK_JUSTIFY_CENTER: justify = "0.5"; break;
     case TK_JUSTIFY_RIGHT:  justify = "1";   break;
+    default:                justify = "0";   break;
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);
