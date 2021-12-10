@@ -153,7 +153,7 @@ typedef struct StyleValues {
     int spacing3;		/* Spacing below last dline in text line. */
     TkTextTabArray *tabArrayPtr;/* Locations and types of tab stops (may be
 				 * NULL). */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
     XColor *underlineColor;	/* Foreground color for underline underneath
@@ -965,7 +965,8 @@ GetStyle(
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
 	    tabPrio = tagPtr->priority;
 	}
-	if ((tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE)
+	if (((tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
+		|| (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR))
 		&& (tagPtr->priority > tabStylePrio)) {
 	    styleValues.tabStyle = tagPtr->tabStyle;
 	    tabStylePrio = tagPtr->priority;
@@ -985,7 +986,9 @@ GetStyle(
 	    styleValues.elide = tagPtr->elide;
 	    elidePrio = tagPtr->priority;
 	}
-	if ((tagPtr->wrapMode != TEXT_WRAPMODE_NULL)
+	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+		|| (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		|| (tagPtr->wrapMode == TEXT_WRAPMODE_WORD))
 		&& (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
@@ -1170,7 +1173,7 @@ LayoutDLine(
 				 * chunk. */
     TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
 				 * the first character on line. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int tabSize;		/* Number of pixels consumed by current tab
 				 * stop. */
     TkTextDispChunk *lastCharChunkPtr;

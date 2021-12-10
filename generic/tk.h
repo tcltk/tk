@@ -557,6 +557,7 @@ typedef enum {
  */
 
 typedef enum {
+	TK_JUSTIFY_NULL = -1,
     TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER
 } Tk_Justify;
 
