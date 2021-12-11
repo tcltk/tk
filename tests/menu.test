@@ -3958,6 +3958,14 @@ test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over 
     destroy .top.mb.m .top.m .top
 } -result 0
 
+test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
+    catch {destroy .m}
+} -body {
+    menu .m -type {}
+} -cleanup {
+    destroy .m
+} -returnCodes error -result {ambiguous type "": must be normal, tearoff, or menubar}
+
 
 # cleanup
 imageFinish
