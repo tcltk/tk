@@ -196,7 +196,9 @@ Tk_FocusObjCmd(
 	if (newPtr == NULL) {
 	    return TCL_ERROR;
 	}
+printf("Tk_FocusObjCmd: Calling TkSetFocusWin\n");fflush(stdout);
 	TkSetFocusWin(newPtr, 1);
+printf("Tk_FocusObjCmd: Returned from TkSetFocusWin\n");fflush(stdout);
 	break;
     case 2:			/* -lastfor */
 	windowName = Tcl_GetString(objv[2]);
@@ -592,6 +594,7 @@ TkSetFocusWin(
 	    break;
 	}
     }
+printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 
     /*
      * If any ancestor of the new focus window isn't mapped, then we can't set
