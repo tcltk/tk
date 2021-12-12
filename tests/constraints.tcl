@@ -126,15 +126,25 @@ namespace eval tk {
 
 	namespace export fixfocus
 	proc fixfocus {} {
+puts "fixfocus: 1"
             catch {destroy .focus}
+puts "fixfocus: 2"
             toplevel .focus
+puts "fixfocus: 3"
             wm geometry .focus +0+0
+puts "fixfocus: 4"
             entry .focus.e
+puts "fixfocus: 5"
             .focus.e insert 0 "fixfocus"
+puts "fixfocus: 6"
             pack .focus.e
+puts "fixfocus: 7"
             update
+puts "fixfocus: 8"
             focus -force .focus.e
+puts "fixfocus: 9"
             destroy .focus
+puts "fixfocus: 10"
 	}
 
 
