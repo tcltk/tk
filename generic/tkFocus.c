@@ -617,6 +617,7 @@ printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 	displayFocusPtr->forceFocus = force;
 	return;
     }
+printf("TkSetFocusWin: Here 1\n");fflush(stdout);
 
     for (tlFocusPtr = winPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 	    tlFocusPtr = tlFocusPtr->nextPtr) {
@@ -624,12 +625,14 @@ printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 	    break;
 	}
     }
+printf("TkSetFocusWin: Here 2\n");fflush(stdout);
     if (tlFocusPtr == NULL) {
 	tlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
 	tlFocusPtr->topLevelPtr = topLevelPtr;
 	tlFocusPtr->nextPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tlFocusPtr;
     }
+printf("TkSetFocusWin: Here 3\n");fflush(stdout);
     tlFocusPtr->focusWinPtr = winPtr;
 
     if (topLevelPtr->flags & TK_EMBEDDED &&
@@ -642,6 +645,7 @@ printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 	 * contaiuner.
 	 */
 
+printf("TkSetFocusWin: Here 4a\n");fflush(stdout);
 	TkpClaimFocus(topLevelPtr, force);
     } else if ((displayFocusPtr->focusWinPtr != NULL) || force) {
 
@@ -651,6 +655,7 @@ printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 	 * application.
 	 */
 
+printf("TkSetFocusWin: Here 4b\n");fflush(stdout);
     	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
