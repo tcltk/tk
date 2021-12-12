@@ -1018,6 +1018,7 @@ FindDisplayFocusInfo(
     DisplayFocusInfo *displayFocusPtr;
 
 printf("FindDisplayFocusInfo: Entering, mainPtr = %p, dispPtr = %p\n", mainPtr, dispPtr);fflush(stdout);
+printf("FindDisplayFocusInfo:           mainPtr->displayFocusPtr = %p\n", mainPtr->displayFocusPtr);fflush(stdout);
     for (displayFocusPtr = mainPtr->displayFocusPtr;
 	    displayFocusPtr != NULL;
 	    displayFocusPtr = displayFocusPtr->nextPtr) {
