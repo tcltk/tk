@@ -665,7 +665,9 @@ printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 	 * window manager's focus to a new toplevel.
 	 */
 
+printf("TkSetFocusWin: Entering platform-specific code\n");fflush(stdout);
 	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
+printf("TkSetFocusWin: Returning from platform-specific code\n");fflush(stdout);
 	if (serial != 0) {
 	    displayFocusPtr->focusSerial = serial;
 	}
