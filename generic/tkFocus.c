@@ -1017,6 +1017,7 @@ FindDisplayFocusInfo(
 {
     DisplayFocusInfo *displayFocusPtr;
 
+printf("FindDisplayFocusInfo: Entering, mainPtr = %p, dispPtr = %p\n", mainPtr, dispPtr);fflush(stdout);
     for (displayFocusPtr = mainPtr->displayFocusPtr;
 	    displayFocusPtr != NULL;
 	    displayFocusPtr = displayFocusPtr->nextPtr) {
@@ -1024,6 +1025,7 @@ FindDisplayFocusInfo(
 	    return displayFocusPtr;
 	}
     }
+printf("FindDisplayFocusInfo: Here 1\n");fflush(stdout);
 
     /*
      * The record doesn't exist yet. Make a new one.
@@ -1037,6 +1039,7 @@ FindDisplayFocusInfo(
     displayFocusPtr->focusSerial = 0;
     displayFocusPtr->nextPtr = mainPtr->displayFocusPtr;
     mainPtr->displayFocusPtr = displayFocusPtr;
+printf("FindDisplayFocusInfo: Leaving\n");fflush(stdout);
     return displayFocusPtr;
 }
 
