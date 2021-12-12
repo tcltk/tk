@@ -266,7 +266,7 @@ enum {
 	 * focus window when no window contains the pointer.  That proposal was
 	 * ultimately rejected.
 	 */
-	
+
 	scrollTarget = TkMacOSXGetTkWindow(eventWindow);
 #if 0
     case NSCursorUpdate:

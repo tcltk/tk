@@ -567,6 +567,7 @@ TestobjconfigObjCmd(
 	    Tcl_Obj *doublePtr;
 	    Tcl_Obj *stringPtr;
 	    Tcl_Obj *stringTablePtr;
+	    Tcl_Obj *stringTablePtr2;
 	    Tcl_Obj *colorPtr;
 	    Tcl_Obj *fontPtr;
 	    Tcl_Obj *bitmapPtr;
@@ -584,6 +585,9 @@ TestobjconfigObjCmd(
 	static const char *const stringTable[] = {
 	    "one", "two", "three", "four", NULL
 	};
+	static const char *const stringTable2[] = {
+	    "one", "two", NULL
+	};
 	static const Tk_OptionSpec typesSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
 		Tk_Offset(TypesRecord, booleanPtr), -1, 0, 0, 0x1},
@@ -597,7 +601,11 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable",
 		"one", Tk_Offset(TypesRecord, stringTablePtr), -1,
-		TK_CONFIG_NULL_OK, stringTable, 0x10},
+		0, stringTable, 0x10},
+	    {TK_OPTION_STRING_TABLE,
+		"-stringtable2", "StringTable2", "stringTable2",
+		"two", Tk_Offset(TypesRecord, stringTablePtr2), -1,
+		0, stringTable2, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
 		"red", Tk_Offset(TypesRecord, colorPtr), -1,
 		TK_CONFIG_NULL_OK, "black", 0x20},
@@ -662,6 +670,7 @@ TestobjconfigObjCmd(
 	recordPtr->pixelPtr = NULL;
 	recordPtr->mmPtr = NULL;
 	recordPtr->stringTablePtr = NULL;
+	recordPtr->stringTablePtr2 = NULL;
 	recordPtr->customPtr = NULL;
 	result = Tk_InitOptions(interp, (char *) recordPtr, optionTable,
 		tkwin);
