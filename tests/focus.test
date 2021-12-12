@@ -5,12 +5,15 @@
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
+puts "Entering focus.test file"
 
 package require tcltest 2.2
+puts "argv: $argv"
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+puts "Setting testConstraint"
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
@@ -51,13 +54,16 @@ proc focusClear {} {
 }
 
 
+puts "past procs"
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
 pack .b
 
+puts "button .b packed"
 # Make sure the window manager knows who has focus
 catch {fixfocus}
 
+puts "fixfocus executed"
 # cleanupbg will be after 4.3 test
 setupbg
 update
@@ -71,15 +77,18 @@ bind all <KeyPress> {
     append focusInfo "press %W %K"
 }
 focusSetup
+puts "focusSetup executed"
 if {[testConstraint altDisplay]} {
     focusSetupAlt
 }
 
+puts "now the first test"
 
 test focus-1.1 {Tk_FocusCmd procedure} -constraints unix -body {
     focusClear
     focus
 } -result {}
+puts "now the second test"
 test focus-1.2 {Tk_FocusCmd procedure} -constraints {
 	unix altDisplay
 } -body {
