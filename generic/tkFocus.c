@@ -659,10 +659,14 @@ printf("TkSetFocusWin: Here 4b\n");fflush(stdout);
     	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
+printf("TkSetFocusWin: Here 4b1\n");fflush(stdout);
 		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
 		    focusPtr->mainPtr, focusPtr->dispPtr);
+printf("TkSetFocusWin: Here 4b2\n");fflush(stdout);
 		displayFocusPtr2->focusWinPtr = NULL;
+printf("TkSetFocusWin: Here 4b3\n");fflush(stdout);
 	    }
+printf("TkSetFocusWin: Here 4b4\n");fflush(stdout);
     	}
 
 	/*
