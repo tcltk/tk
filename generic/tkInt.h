@@ -373,9 +373,9 @@ typedef struct TkDisplay {
      * and ttkMacOSXTheme.c:
      */
 
-#define TkGetContainer(tkwin) (tkwin ? (Tk_TopWinHierarchy((TkWindow *)tkwin) ? NULL : \
+#define TkGetContainer(tkwin) (Tk_TopWinHierarchy((TkWindow *)tkwin) ? NULL : \
 	(((TkWindow *)tkwin)->maintainerPtr != NULL ? \
-	 ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)) : NULL)
+	 ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr))
 
     /*
      * Information used by tkGet.c only:
