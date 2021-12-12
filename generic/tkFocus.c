@@ -196,9 +196,9 @@ Tk_FocusObjCmd(
 	if (newPtr == NULL) {
 	    return TCL_ERROR;
 	}
-printf("Tk_FocusObjCmd: Calling TkSetFocusWin\n");fflush(stdout);
+//printf("Tk_FocusObjCmd: Calling TkSetFocusWin\n");fflush(stdout);
 	TkSetFocusWin(newPtr, 1);
-printf("Tk_FocusObjCmd: Returned from TkSetFocusWin\n");fflush(stdout);
+//printf("Tk_FocusObjCmd: Returned from TkSetFocusWin\n");fflush(stdout);
 	break;
     case 2:			/* -lastfor */
 	windowName = Tcl_GetString(objv[2]);
@@ -594,7 +594,7 @@ TkSetFocusWin(
 	    break;
 	}
     }
-printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
+//printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 
     /*
      * If any ancestor of the new focus window isn't mapped, then we can't set
@@ -617,7 +617,7 @@ printf("TkSetFocusWin: allMapped = %d\n", allMapped);fflush(stdout);
 	displayFocusPtr->forceFocus = force;
 	return;
     }
-printf("TkSetFocusWin: Here 1\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 1\n");fflush(stdout);
 
     for (tlFocusPtr = winPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 	    tlFocusPtr = tlFocusPtr->nextPtr) {
@@ -625,14 +625,14 @@ printf("TkSetFocusWin: Here 1\n");fflush(stdout);
 	    break;
 	}
     }
-printf("TkSetFocusWin: Here 2\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 2\n");fflush(stdout);
     if (tlFocusPtr == NULL) {
 	tlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
 	tlFocusPtr->topLevelPtr = topLevelPtr;
 	tlFocusPtr->nextPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tlFocusPtr;
     }
-printf("TkSetFocusWin: Here 3\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 3\n");fflush(stdout);
     tlFocusPtr->focusWinPtr = winPtr;
 
     if (topLevelPtr->flags & TK_EMBEDDED &&
@@ -645,7 +645,7 @@ printf("TkSetFocusWin: Here 3\n");fflush(stdout);
 	 * contaiuner.
 	 */
 
-printf("TkSetFocusWin: Here 4a\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 4a\n");fflush(stdout);
 	TkpClaimFocus(topLevelPtr, force);
     } else if ((displayFocusPtr->focusWinPtr != NULL) || force) {
 
@@ -655,7 +655,7 @@ printf("TkSetFocusWin: Here 4a\n");fflush(stdout);
 	 * application.
 	 */
 
-printf("TkSetFocusWin: Here 4b\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 4b\n");fflush(stdout);
     	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 printf("TkSetFocusWin: winPtr = %p\n", winPtr);fflush(stdout);
@@ -665,11 +665,11 @@ printf("TkSetFocusWin: focusPtr = winPtr->dispPtr->focusPtr = %p\n", focusPtr);f
 printf("TkSetFocusWin: Here 4b1\n");fflush(stdout);
 		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
 		    focusPtr->mainPtr, focusPtr->dispPtr);
-printf("TkSetFocusWin: Here 4b2\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 4b2\n");fflush(stdout);
 		displayFocusPtr2->focusWinPtr = NULL;
-printf("TkSetFocusWin: Here 4b3\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 4b3\n");fflush(stdout);
 	    }
-printf("TkSetFocusWin: Here 4b4\n");fflush(stdout);
+//printf("TkSetFocusWin: Here 4b4\n");fflush(stdout);
     	}
 
 	/*
@@ -677,9 +677,9 @@ printf("TkSetFocusWin: Here 4b4\n");fflush(stdout);
 	 * window manager's focus to a new toplevel.
 	 */
 
-printf("TkSetFocusWin: Entering platform-specific code\n");fflush(stdout);
+//printf("TkSetFocusWin: Entering platform-specific code\n");fflush(stdout);
 	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
-printf("TkSetFocusWin: Returning from platform-specific code\n");fflush(stdout);
+//printf("TkSetFocusWin: Returning from platform-specific code\n");fflush(stdout);
 	if (serial != 0) {
 	    displayFocusPtr->focusSerial = serial;
 	}
@@ -1025,12 +1025,12 @@ printf("FindDisplayFocusInfo:           mainPtr->displayFocusPtr = %p\n", mainPt
     for (displayFocusPtr = mainPtr->displayFocusPtr;
 	    displayFocusPtr != NULL;
 	    displayFocusPtr = displayFocusPtr->nextPtr) {
-printf("FindDisplayFocusInfo: looping, displayFocusPtr = %p\n", displayFocusPtr);fflush(stdout);
+//printf("FindDisplayFocusInfo: looping, displayFocusPtr = %p\n", displayFocusPtr);fflush(stdout);
 	if (displayFocusPtr->dispPtr == dispPtr) {
 	    return displayFocusPtr;
 	}
     }
-printf("FindDisplayFocusInfo: Here 1\n");fflush(stdout);
+//printf("FindDisplayFocusInfo: Here 1\n");fflush(stdout);
 
     /*
      * The record doesn't exist yet. Make a new one.
@@ -1044,7 +1044,7 @@ printf("FindDisplayFocusInfo: Here 1\n");fflush(stdout);
     displayFocusPtr->focusSerial = 0;
     displayFocusPtr->nextPtr = mainPtr->displayFocusPtr;
     mainPtr->displayFocusPtr = displayFocusPtr;
-printf("FindDisplayFocusInfo: Leaving\n");fflush(stdout);
+//printf("FindDisplayFocusInfo: Leaving\n");fflush(stdout);
     return displayFocusPtr;
 }
 
