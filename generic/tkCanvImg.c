@@ -491,7 +491,7 @@ ComputeImageBbox(
 	break;
     case TK_ANCHOR_NW:
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x -= width/2;
 	y -= height/2;
 	break;
@@ -747,7 +747,7 @@ ImageToPostscript(
     case TK_ANCHOR_S:	   x -= width/2.0;			break;
     case TK_ANCHOR_SW:						break;
     case TK_ANCHOR_W:			   y -= height/2.0;	break;
-    case TK_ANCHOR_CENTER: x -= width/2.0; y -= height/2.0;	break;
+    default: x -= width/2.0; y -= height/2.0;	break;
     }
 
     if (!prepass) {

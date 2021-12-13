@@ -826,12 +826,10 @@ ArrangePacking(
 	    x = frameX + borderLeft;
 	    y = frameY + borderTop;
 	    break;
-	case TK_ANCHOR_CENTER:
+	default:
 	    x = frameX + (borderLeft + frameWidth - width - borderRight)/2;
 	    y = frameY + (borderTop + frameHeight - height - borderBtm)/2;
 	    break;
-	default:
-	    Tcl_Panic("bad frame factor in ArrangePacking");
 	}
 	width -= contentPtr->doubleBw;
 	height -= contentPtr->doubleBw;
