@@ -939,12 +939,11 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     _pause 200
     set res
 } -cleanup {
-    deleteWindows
+    deleteWindows ; # destroy all children of ".", this already includes .top1
     if {$iconified} {
         wm deiconify .
         update
     }
-    destroy .top1
 } -result {.top1}
 
 # cleanup
