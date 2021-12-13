@@ -610,7 +610,7 @@ TestobjconfigObjCmd(
 		0, stringTable, 0x10},
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable2", "StringTable2", "stringTable2",
-		"two", offsetof(TypesRecord, stringTablePtr2), -1,
+		"two", offsetof(TypesRecord, stringTablePtr2), TCL_INDEX_NONE,
 		0, stringTable2, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
 		"red", offsetof(TypesRecord, colorPtr), TCL_INDEX_NONE,
@@ -949,7 +949,7 @@ TestobjconfigObjCmd(
 	recordPtr->relief = TK_RELIEF_FLAT;
 	recordPtr->cursor = NULL;
 	recordPtr->justify = TK_JUSTIFY_LEFT;
-	recordPtr->anchor = TK_ANCHOR_N;
+	recordPtr->anchor = TK_ANCHOR_CENTER;
 	recordPtr->pixels = 0;
 	recordPtr->mm = 0.0;
 	recordPtr->tkwin = NULL;
