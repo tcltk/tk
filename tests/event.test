@@ -894,7 +894,6 @@ test event-9 {no <Enter> event is generated for the container window when its
 
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
-    set savedFocus [focus]
 } -body {
     wm geometry . 200x200+300+300
     wm deiconify .
@@ -904,9 +903,8 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     wm deiconify .top2
     raise .top2
     _pause 400
-    focus -force .top2
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
-    controlPointerWarpTiming
+    _pause 100
     bind . <Enter> {lappend res %W}
     set res [list ]
     destroy .top2
@@ -914,11 +912,9 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     set res
 } -cleanup {
     deleteWindows
-    focus -force $savedFocus
 } -result {.}
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
-    set savedFocus [focus]
     if {[winfo ismapped .]} {
         wm iconify .
         update
@@ -935,9 +931,8 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     wm deiconify .top2
     raise .top2
     _pause 400
-    focus -force .top2
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
-    controlPointerWarpTiming
+    _pause 100
     bind .top1 <Enter> {lappend res %W}
     set res [list ]
     destroy .top2
@@ -950,7 +945,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
         update
     }
     destroy .top1
-    focus -force $savedFocus
 } -result {.top1}
 
 # cleanup
