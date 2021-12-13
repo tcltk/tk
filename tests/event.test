@@ -912,6 +912,7 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     set res
 } -cleanup {
     deleteWindows
+    bind . <Enter> $EnterBind
 } -result {.}
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
@@ -920,7 +921,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
         update
         set iconified true
     }
-    bind . <Enter> $EnterBind
 } -body {
     toplevel .top1
     wm geometry .top1 200x200+300+300
