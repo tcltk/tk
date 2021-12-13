@@ -610,7 +610,7 @@ TestobjconfigObjCmd(
 		0, stringTable, 0x10},
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable2", "StringTable2", "stringTable2",
-		"two", Tk_Offset(TypesRecord, stringTablePtr2), -1,
+		"two", offsetof(TypesRecord, stringTablePtr2), -1,
 		0, stringTable2, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
 		"red", offsetof(TypesRecord, colorPtr), TCL_INDEX_NONE,
