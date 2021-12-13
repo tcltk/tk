@@ -949,7 +949,7 @@ TestobjconfigObjCmd(
 	recordPtr->relief = TK_RELIEF_FLAT;
 	recordPtr->cursor = NULL;
 	recordPtr->justify = TK_JUSTIFY_LEFT;
-	recordPtr->anchor = TK_ANCHOR_N;
+	recordPtr->anchor = TK_ANCHOR_CENTER;
 	recordPtr->pixels = 0;
 	recordPtr->mm = 0.0;
 	recordPtr->tkwin = NULL;

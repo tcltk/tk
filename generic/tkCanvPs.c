@@ -285,15 +285,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_SW:
 	deltaX = 0;
 	break;
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	deltaX = -psInfo.width/2;
-	break;
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
 	deltaX = -psInfo.width;
+	break;
+    default:
+	deltaX = -psInfo.width/2;
 	break;
     }
     switch (psInfo.pageAnchor) {
@@ -302,15 +300,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_NE:
 	deltaY = - psInfo.height;
 	break;
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	deltaY = -psInfo.height/2;
-	break;
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
 	deltaY = 0;
+	break;
+    default:
+	deltaY = -psInfo.height/2;
 	break;
     }
 

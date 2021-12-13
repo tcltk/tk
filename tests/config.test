@@ -1443,11 +1443,11 @@ test config-8.18 {Tk_RestoreSavedOptions - anchor internal form} -constraints {
     testobjconfig
 } -body {
     testobjconfig internal .a
-    catch {.a csave -anchor center -color bogus}
+    catch {.a csave -anchor n -color bogus}
     .a cget -anchor
 } -cleanup {
     killTables
-} -result {n}
+} -result {center}
 test config-8.19 {Tk_RestoreSavedOptions - window internal form} -constraints {
     testobjconfig
 } -body {
