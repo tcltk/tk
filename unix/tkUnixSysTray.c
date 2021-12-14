@@ -671,21 +671,21 @@ DockToManager(
 static const
 Tk_OptionSpec IconOptionSpec[] = {
     {TK_OPTION_STRING,"-image","image","Image",
-        (char *) NULL, -1, offsetof(DockIcon, imageString),
-        TK_OPTION_NULL_OK, NULL,
-        ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
+	NULL, TCL_INDEX_NONE, offsetof(DockIcon, imageString),
+	TK_OPTION_NULL_OK, NULL,
+	ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_STRING,"-class","class","Class",
-        "TrayIcon", -1, offsetof(DockIcon, classString),
-        0, NULL, ICON_CONF_CLASS},
+	"TrayIcon", TCL_INDEX_NONE, offsetof(DockIcon, classString),
+	0, NULL, ICON_CONF_CLASS},
     {TK_OPTION_BOOLEAN,"-docked","docked","Docked",
-        "1", -1, offsetof(DockIcon, docked), 0, NULL,
-        ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
+	"1", TCL_INDEX_NONE, offsetof(DockIcon, docked), 0, NULL,
+	ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-shape","shape","Shape",
-        "0", -1, offsetof(DockIcon, useShapeExt), 0, NULL,
-        ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
+	"0", TCL_INDEX_NONE, offsetof(DockIcon, useShapeExt), 0, NULL,
+	ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-visible","visible","Visible",
-        "1", -1, offsetof(DockIcon, visible), 0, NULL,
-        ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
+	"1", TCL_INDEX_NONE, offsetof(DockIcon, visible), 0, NULL,
+	ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

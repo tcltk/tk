@@ -595,8 +595,8 @@ TestobjconfigObjCmd(
 	    "one", "two", NULL
 	};
 	static const Tk_OptionSpec typesSpecs[] = {
-	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		offsetof(TypesRecord, booleanPtr), TCL_INDEX_NONE, 0, 0, 0x1},
+	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", NULL,
+		offsetof(TypesRecord, booleanPtr), TCL_INDEX_NONE, TK_CONFIG_NULL_OK, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "7",
 		offsetof(TypesRecord, integerPtr), TCL_INDEX_NONE, 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
@@ -873,7 +873,7 @@ TestobjconfigObjCmd(
 	};
 	static const Tk_OptionSpec internalSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		TCL_INDEX_NONE, offsetof(InternalRecord, boolean), 0, 0, 0x1},
+		TCL_INDEX_NONE, offsetof(InternalRecord, boolean), TK_CONFIG_NULL_OK, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "148962237",
 		TCL_INDEX_NONE, offsetof(InternalRecord, integer), 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",

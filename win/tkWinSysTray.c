@@ -391,7 +391,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-        "\" doesn't exist", (char *) NULL);
+        "\" doesn't exist", NULL);
     return NULL;
 }
 
