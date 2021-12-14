@@ -294,7 +294,7 @@ test menubutton-1.54 {configuration options} -body {
 } -result 5
 test menubutton-1.55 {configuration options} -body {
     .mb configure -underline 3p
-} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test menubutton-1.56 {configuration options} -body {
     .mb configure -width 402
     .mb cget -width
