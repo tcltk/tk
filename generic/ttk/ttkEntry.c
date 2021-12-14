@@ -1396,10 +1396,10 @@ EntryIndex(
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
 	} else if (idx > entryPtr->entry.numChars) {
-    	    idx = entryPtr->entry.numChars;
-    	}
-    	*indexPtr = idx;
-    	return TCL_OK;
+	    idx = entryPtr->entry.numChars;
+	}
+	*indexPtr = idx;
+	return TCL_OK;
     }
 
     string = Tcl_GetStringFromObj(indexObj, &length);
