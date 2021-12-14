@@ -131,7 +131,7 @@ UnderlineParseProc(
 
     } else {
 	Tcl_AppendResult(interp, "bad index \"", value,
-		"\": must be integer?[+-]integer? or end?[+-]integer?", NULL);
+		"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
     }
 	return code;
 }
