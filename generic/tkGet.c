@@ -35,7 +35,7 @@ static void		FreeUidThreadExitProc(ClientData clientData);
  * used by Tk_GetAnchorFromObj and Tk_GetJustifyFromObj.
  */
 
-static const char *const anchorStrings[] = {
+const char *const tkAnchorStrings[] = {
     "n", "ne", "e", "se", "s", "sw", "w", "nw", "center", NULL
 };
 const char *const tkJustifyStrings[] = {
@@ -71,7 +71,7 @@ Tk_GetAnchorFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObj(interp, objPtr, anchorStrings, "anchor", 0,
+    code = Tcl_GetIndexFromObj(interp, objPtr, tkAnchorStrings, "anchor", 0,
 	    &index);
     if (code == TCL_OK) {
 	*anchorPtr = (Tk_Anchor) index;
@@ -190,6 +190,7 @@ Tk_NameOfAnchor(
     case TK_ANCHOR_W: return "w";
     case TK_ANCHOR_NW: return "nw";
     case TK_ANCHOR_CENTER: return "center";
+    case TK_ANCHOR_NULL: return "";
     }
     return "unknown anchor position";
 }

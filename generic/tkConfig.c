@@ -614,7 +614,10 @@ DoObjConfig(
     case TK_OPTION_BOOLEAN: {
 	int newBool;
 
-	if (Tcl_GetBooleanFromObj(interp, valuePtr, &newBool) != TCL_OK) {
+	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    valuePtr = NULL;
+	    newBool = -1;
+	} else if (Tcl_GetBooleanFromObj(interp, valuePtr, &newBool) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -641,7 +644,7 @@ DoObjConfig(
 	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
-			"\": must be integer?[+-]integer? or end?[+-]integer?", NULL);
+			"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -810,10 +813,9 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newRelief = TK_RELIEF_NULL;
-	} else {
-	    if (Tk_GetReliefFromObj(interp, valuePtr, &newRelief) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkReliefStrings,
+		"relief", (nullOK ? TCL_INDEX_NULL_OK : 0), &newRelief) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
@@ -842,9 +844,17 @@ DoObjConfig(
     }
     case TK_OPTION_JUSTIFY: {
 	Tk_Justify newJustify;
+	int index;
 
-	if (Tk_GetJustifyFromObj(interp, valuePtr, &newJustify) != TCL_OK) {
+	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    valuePtr = NULL;
+	    newJustify = TK_JUSTIFY_NULL;
+	} else {
+	    if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
+		    "justification", (nullOK ? TCL_INDEX_NULL_OK : 0), &index) != TCL_OK) {
 	    return TCL_ERROR;
+	    }
+	    newJustify = (Tk_Justify) index;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Justify *) oldInternalPtr) = *((Tk_Justify *) internalPtr);
@@ -854,9 +864,17 @@ DoObjConfig(
     }
     case TK_OPTION_ANCHOR: {
 	Tk_Anchor newAnchor;
+	int index;
 
-	if (Tk_GetAnchorFromObj(interp, valuePtr, &newAnchor) != TCL_OK) {
+	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    valuePtr = NULL;
+	    newAnchor = TK_ANCHOR_NULL;
+	} else {
+	    if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
+		    "anchor", (nullOK ? TCL_INDEX_NULL_OK : 0), &index) != TCL_OK) {
 	    return TCL_ERROR;
+	    }
+	    newAnchor = (Tk_Anchor) index;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Anchor *) oldInternalPtr) = *((Tk_Anchor *) internalPtr);
