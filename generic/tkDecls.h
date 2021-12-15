@@ -1750,6 +1750,8 @@ extern const TkStubs *tkStubsPtr;
     EXTERN void Tk_MainExW(int argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #endif
+#undef Tk_FreeStyleFromObj
+#define Tk_FreeStyleFromObj(objPtr) ((void)(objPtr))
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
