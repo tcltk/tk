@@ -3264,8 +3264,8 @@ Tk_PhotoPutBlock(
     sourceBlock = *blockPtr;
     memToFree = NULL;
     if (modelPtr->pix32 && (sourceBlock.pixelPtr >= modelPtr->pix32)
-	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width)
-	    * modelPtr->height * 4) {
+	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width
+	    * modelPtr->height * 4)) {
 	/*
 	 * Fix 5c51be6411: avoid reading
 	 *
@@ -3710,8 +3710,8 @@ Tk_PhotoPutZoomedBlock(
     sourceBlock = *blockPtr;
     memToFree = NULL;
     if (modelPtr->pix32 && (sourceBlock.pixelPtr >= modelPtr->pix32)
-	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width)
-	    * modelPtr->height * 4) {
+	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width
+	    * modelPtr->height * 4)) {
 	/*
 	 * Fix 5c51be6411: avoid reading
 	 *
