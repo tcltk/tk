@@ -843,42 +843,34 @@ DoObjConfig(
 	break;
     }
     case TK_OPTION_JUSTIFY: {
-	Tk_Justify newJustify;
-	int index;
+	int newJustify;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newJustify = TK_JUSTIFY_NULL;
-	} else {
-	    if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
-		    "justification", (nullOK ? TCL_INDEX_NULL_OK : 0), &index) != TCL_OK) {
+	    newJustify = -1;
+	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
+		"justification", (nullOK ? TCL_INDEX_NULL_OK : 0), &newJustify) != TCL_OK) {
 	    return TCL_ERROR;
-	    }
-	    newJustify = (Tk_Justify) index;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Justify *) oldInternalPtr) = *((Tk_Justify *) internalPtr);
-	    *((Tk_Justify *) internalPtr) = newJustify;
+	    *((Tk_Justify *) internalPtr) = (Tk_Justify)newJustify;
 	}
 	break;
     }
     case TK_OPTION_ANCHOR: {
-	Tk_Anchor newAnchor;
-	int index;
+	int newAnchor;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newAnchor = TK_ANCHOR_NULL;
-	} else {
-	    if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
-		    "anchor", (nullOK ? TCL_INDEX_NULL_OK : 0), &index) != TCL_OK) {
+	    newAnchor = -1;
+	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
+		"anchor", (nullOK ? TCL_INDEX_NULL_OK : 0), &newAnchor) != TCL_OK) {
 	    return TCL_ERROR;
-	    }
-	    newAnchor = (Tk_Anchor) index;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Anchor *) oldInternalPtr) = *((Tk_Anchor *) internalPtr);
-	    *((Tk_Anchor *) internalPtr) = newAnchor;
+	    *((Tk_Anchor *) internalPtr) = (Tk_Anchor)newAnchor;
 	}
 	break;
     }
@@ -888,11 +880,9 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPixels = 0;
-	} else {
-	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
-		    &newPixels) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	} else if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
+		&newPixels) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
@@ -906,11 +896,9 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newWin = NULL;
-	} else {
-	    if (TkGetWindowFromObj(interp, tkwin, valuePtr,
-		    &newWin) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	} else if (TkGetWindowFromObj(interp, tkwin, valuePtr,
+		&newWin) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Window *) oldInternalPtr) = *((Tk_Window *) internalPtr);
