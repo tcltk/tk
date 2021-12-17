@@ -1010,7 +1010,7 @@ RecomputePlacement(
 	    break;
 	case TK_ANCHOR_NW:
 	    break;
-	case TK_ANCHOR_CENTER:
+	default:
 	    x -= width/2;
 	    y -= height/2;
 	    break;
