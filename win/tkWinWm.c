@@ -3940,7 +3940,7 @@ WmIconbadgeCmd(
 
     overlayicon = CreateIcoFromPhoto(width, height, block);
     if (overlayicon == NULL) {
-	Tcl_SetResult(interp, "Failed to create badge icon", TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Failed to create badge icon", -1));
 	return TCL_ERROR;
     }
 
@@ -3951,7 +3951,7 @@ WmIconbadgeCmd(
     string = L"Alert";
     hr = ptbl->lpVtbl->SetOverlayIcon(ptbl, hwnd, overlayicon, string);
     if (hr != S_OK) {
-	Tcl_SetResult(interp, "Failed to display badge icon", TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Failed to create badge icon", -1));
 	return TCL_ERROR;
     }
     DestroyIcon(overlayicon);
