@@ -83,9 +83,9 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
-	 TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
-         GEOMETRY_CHANGED },
+	NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
+	GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Base,base.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
@@ -94,8 +94,8 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
      * Compatibility/legacy options
      */
     {TK_OPTION_STRING, "-state", "state", "State",
-	 "normal", offsetof(Base,base.stateObj), TCL_INDEX_NONE,
-	 0,0,STATE_CHANGED },
+	"normal", offsetof(Base,base.stateObj), TCL_INDEX_NONE,
+	0,0,STATE_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };

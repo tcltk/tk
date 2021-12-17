@@ -1731,6 +1731,7 @@ TextToPostscript(
     }
 
     switch (textPtr->anchor) {
+    case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;
     case TK_ANCHOR_NE:	   x = 2; y = 0; break;
     case TK_ANCHOR_E:	   x = 2; y = 1; break;
@@ -1738,7 +1739,6 @@ TextToPostscript(
     case TK_ANCHOR_S:	   x = 1; y = 2; break;
     case TK_ANCHOR_SW:	   x = 0; y = 2; break;
     case TK_ANCHOR_W:	   x = 0; y = 1; break;
-    case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     default: x = 1; y = 1; break;
     }
     switch (textPtr->justify) {
