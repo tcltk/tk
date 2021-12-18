@@ -106,7 +106,7 @@ proc SendButtonPress {parent btn type} {
 
 if {$tcl_platform(platform) == "unix"} {
 #    set modes "0 1"
-set modes 1
+set modes 0
 } else {
     set modes 1
 }
