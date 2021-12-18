@@ -892,6 +892,7 @@ test event-9 {no <Enter> event is generated for the container window when its
     }
 } -result {.top .top.f}
 
+if {0} {
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
     set savedFocus [focus]
@@ -917,7 +918,7 @@ controlPointerWarpTiming
     bind . <Enter> $EnterBind
     focus -force $savedFocus
 } -result {.}
-if {0} {
+}
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
     set savedFocus [focus]
@@ -952,7 +953,6 @@ controlPointerWarpTiming
     }
     focus -force $savedFocus
 } -result {.top1}
-}
 
 # cleanup
 update
