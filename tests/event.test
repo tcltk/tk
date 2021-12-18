@@ -917,6 +917,7 @@ controlPointerWarpTiming
     bind . <Enter> $EnterBind
     focus -force $savedFocus
 } -result {.}
+if {0} {
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
     set savedFocus [focus]
@@ -951,6 +952,7 @@ controlPointerWarpTiming
     }
     focus -force $savedFocus
 } -result {.top1}
+}
 
 # cleanup
 update
