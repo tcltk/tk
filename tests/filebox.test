@@ -91,7 +91,7 @@ proc SendButtonPress {parent btn type} {
 	PressButton $button
     } else {
 	event generate $w <Enter>
-	focus $w
+#	focus $w
 	event generate $button <Enter>
 	event generate $w <KeyPress> -keysym Return
     }
