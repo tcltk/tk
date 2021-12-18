@@ -292,7 +292,19 @@ enum {
 	}
     } else {
 	if (isDragging) {
-	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
+
+	    /*
+	     * The dragTarget window can be destroyed during a mouse drag by
+	     * pressing Cmd-W without releasing the mouse button.  This can
+	     * lead to a crash.  See [6be8b0b48c].
+	     */
+
+	    TkWindow *dragPtr = (TkWindow *) dragTarget;
+	    if(dragPtr == NULL || dragPtr->flags & TK_ALREADY_DEAD) {
+		target = (TkWindow *) TkMacOSXGetTkWindow([NSApp keyWindow]);
+		return theEvent;
+	    }
+	    winPtr = TkMacOSXGetHostToplevel(dragPtr)->winPtr;
 	} else if (eventType == NSScrollWheel) {
 	    winPtr = scrollTarget;
 	} else {
