@@ -13,7 +13,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-puts "Setting testConstraint"
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
@@ -54,7 +53,6 @@ proc focusClear {} {
 }
 
 
-puts "past procs"
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
 pack .b
