@@ -173,15 +173,15 @@ set tk_strictMotif $mode
         } $res
     }
 
+    set fileName "12x 455"
+    set fileDir [pwd]
+    set pathName [file join [pwd] $fileName]
+
 if 0 {
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
-
-    set fileName "12x 455"
-    set fileDir [pwd]
-    set pathName [file join [pwd] $fileName]
 
     test filebox-5.2-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent ok
