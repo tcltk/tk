@@ -9,16 +9,11 @@ proc ToPressButton {parent btn} {
 }
 
 proc SendButtonPress {parent btn} {
-    if {$parent == "."} {
-	set w .__tk_filedialog
-    } else {
-	set w $parent.__tk_filedialog
-    }
-    upvar ::tk::dialog::file::__tk_filedialog data
 
-    set button $data($btn\Btn)
+    set button $::tk::dialog::file::__tk_filedialog($btn\Btn)
     if ![winfo ismapped $button] {
-	update
+puts "button was not mapped, updating"
+        update
     }
 
     event generate $button <Enter>
@@ -50,16 +45,16 @@ set tk_strictMotif 1
     set parent .
 
     ToPressButton $parent cancel
-    tk_getOpenFile -parent $parent -filetypes $filters(1)
+    tk_getOpenFile -parent $parent -filetypes $filters(2)
 		    
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
 
 set tk_strictMotif $tk_strictMotif_old
 
-#puts "now fixfocus"
-#fixfocus
-#puts "returned from fixfocus"
+puts "now fixfocus, will crash"
+fixfocus
+puts "returned from fixfocus, didn't crash!"
 
 # cleanup
 removeFile filebox.tmp
