@@ -74,7 +74,6 @@ proc EnterFileByKey {parent fileName fileDir} {
 }
 
 proc SendButtonPress {parent btn type} {
-    global tk_strictMotif
     if {$parent == "."} {
 	set w .__tk_filedialog
     } else {
