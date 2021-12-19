@@ -23,8 +23,11 @@ proc PressButton {btn} {
 }
 
 proc SendButtonPress {parent btn type} {
-    set w .__tk_filedialog
-
+    if {$parent == "."} {
+	set w .__tk_filedialog
+    } else {
+	set w $parent.__tk_filedialog
+    }
     upvar ::tk::dialog::file::__tk_filedialog data
 
     set button $data($btn\Btn)
@@ -74,11 +77,13 @@ set tk_strictMotif 1
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
 
-        test filebox-3.5-1 "tk_getOpenFile command" {
+        test filebox-3.5-1 "tk_getOpenFile command" nonUnixUserInteraction {
 	    catch {unset tv}
 	    catch {unset typeName}
 	    ToPressButton $parent ok
-	    set choice [tk_getOpenFile -parent $parent \
+	    set choice [tk_getOpenFile -title "Press Ok" \
+		    -filetypes $filters(2) -parent $parent \
+		    -initialfile $fileName -initialdir $fileDir \
 		    -typevariable tv]
 	    if {[info exists tv]} {
 		set typeName $tv
@@ -88,9 +93,9 @@ set tk_strictMotif 1
 	    set typeName
         } "Text files"
 
-    test filebox-5.1-1 "tk_getSaveFile command" {
+    test filebox-5.1-1 "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
-	tk_getSaveFile -parent $parent
+	tk_getSaveFile -title "Press Cancel" -parent $parent
     } ""
 
 set tk_strictMotif $tk_strictMotif_old
