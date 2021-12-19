@@ -10,21 +10,6 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-if 0 {
-test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
-    # MacOS type that is too long
-
-    set res [list [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0\0\0\0}}}} msg] $msg]
-    regsub -all "\0" $res {\\0}
-} {1 {bad Macintosh file type "\0\0\0\0\0"}}
-test fileDialog-0.2 {GetFileName: file types: MakeFilter() fails} {
-    # MacOS type that is too short, but looks ok in utf (4 bytes).
-
-    set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0}}}} msg]
-    regsub -all "\0" $msg {\\0} msg
-    list $x $msg
-} {1 {bad Macintosh file type "\0\0"}}
-}
 
 set tk_strictMotif_old $tk_strictMotif
 
@@ -106,12 +91,7 @@ proc SendButtonPress {parent btn type} {
 #
 #----------------------------------------------------------------------
 
-if {$tcl_platform(platform) == "unix"} {
-#    set modes "0 1"
-set modes 1
-} else {
-    set modes 1
-}
+set mode 1
 
 set unknownOptionsMsg(tk_getOpenFile,notAqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
 set unknownOptionsMsg(tk_getOpenFile,aqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -message, -multiple, -parent, -title, -typevariable, or -command}
@@ -142,66 +122,9 @@ array set filters {
     }
 }
 
-foreach mode $modes {
-    #
-    # Test both the motif version and the "tk" version of the file dialog
-    # box on Unix.
-    #
-    # Note that this means that test names are unusually complex.
-    #
-
     set addedExtensions {}
-    if {$tcl_platform(platform) == "unix"} {
-	set tk_strictMotif $mode
-	# Extension adding is only done when using the non-motif file
-	# box with an extension-less filename
-	if {!$mode} {
-	    set addedExtensions {NONE {} .txt .txt}
-	}
-    }
+set tk_strictMotif $mode
 
-if 0 {
-    test filebox-1.1.1-$mode "tk_getOpenFile command" -constraints notAqua -body {
-	tk_getOpenFile -foo
-    } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,notAqua)
-    test filebox-1.1.2-$mode "tk_getOpenFile command" -constraints aqua -body {
-	tk_getOpenFile -foo
-    } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,aqua)
-
-    catch {tk_getOpenFile -foo 1} msg
-    regsub -all ,      $msg "" options
-    regsub \"-foo\" $options "" options
-
-    foreach option $options {
-        if {[string index $option 0] eq "-"} {
-	    test filebox-1.2-$mode$option "tk_getOpenFile command" -body {
-		tk_getOpenFile $option
-	    } -returnCodes error -result "value for \"$option\" missing"
-        }
-    }
-
-    test filebox-1.3.1-$mode "tk_getOpenFile command" -constraints notAqua -body {
-        tk_getOpenFile -foo bar
-    } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,notAqua)
-    test filebox-1.3.2-$mode "tk_getOpenFile command" -constraints aqua -body {
-        tk_getOpenFile -foo bar
-    } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,aqua)
-    test filebox-1.4-$mode "tk_getOpenFile command" -body {
-        tk_getOpenFile -initialdir
-    } -returnCodes error -result {value for "-initialdir" missing}
-    test filebox-1.5-$mode "tk_getOpenFile command" -body {
-        tk_getOpenFile -parent foo.bar
-    } -returnCodes error -result {bad window path name "foo.bar"}
-    test filebox-1.6-$mode "tk_getOpenFile command" -body {
-        tk_getOpenFile -filetypes {Foo}
-    } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
-
-}
-    set isNative [expr {
-	[info commands ::tk::MotifFDialog] eq ""   &&
-	[info commands ::tk::dialog::file::] eq ""
-    }]
-puts "isNative: $isNative  (now setting to 0)"
 set isNative 0
 
     set parent .
@@ -211,13 +134,7 @@ set isNative 0
     set verylongstring $verylongstring$verylongstring
     set verylongstring $verylongstring$verylongstring
     set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
 
-    set color #404040
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         ToPressButton $parent cancel
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -339,26 +256,6 @@ set isNative 0
 	tk_getSaveFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 
-    set isNative [expr {
-	[info commands ::tk::MotifFDialog] eq "" &&
-	[info commands ::tk::dialog::file::] eq ""
-    }]
-puts "isNative: $isNative"
-
-    set parent .
-
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-
-    set color #404040
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -411,86 +308,6 @@ puts "isNative: $isNative"
 	destroy .t1
 	destroy .t2
     }
-
-if 0 {
-    foreach x [lsort -integer [array names filters]] {
-	test filebox-6.$x-$mode "tk_getSaveFile command" nonUnixUserInteraction {
-	    ToPressButton $parent ok
-	    set choice [tk_getSaveFile -title "Press Ok" \
-		    -filetypes $filters($x) -parent $parent \
-		    -initialfile $fileName -initialdir $fileDir]
-	} $pathName[lindex $addedExtensions $x]
-    }
-
-    if {!$mode} {
-
-	test filebox-7.1-$mode "tk_getOpenFile - directory not readable" \
-	    -constraints nonUnixUserInteraction \
-	    -setup {
-		rename ::tk_messageBox ::saved_messageBox
-		set ::gotmessage {}
-		proc tk_messageBox args {
-		    set ::gotmessage $args
-		}
-		toplevel .t1
-		file mkdir [file join $fileDir NOTREADABLE]
-		file attributes [file join $fileDir NOTREADABLE] \
-		    -permissions 300
-	    } \
-	    -cleanup {
-		rename ::tk_messageBox {}
-		rename ::saved_messageBox ::tk_messageBox
-		unset ::gotmessage
-		destroy .t1
-		file delete -force [file join $fileDir NOTREADABLE]
-	    } \
-	    -body {
-		ToEnterFileByKey .t1 NOTREADABLE $fileDir
-		ToPressButton .t1 ok
-		ToPressButton .t1 cancel
-		tk_getOpenFile -parent .t1 \
-		    -title "Please select the NOTREADABLE directory" \
-		    -initialdir $fileDir
-		set gotmessage
-	    } \
-	    -match glob \
-	    -result "*NOTREADABLE*"
-
-	test filebox-7.2-$mode "tk_getOpenFile - bad file name" \
-	    -constraints nonUnixUserInteraction \
-	    -setup {
-		rename ::tk_messageBox ::saved_messageBox
-		set ::gotmessage {}
-		proc tk_messageBox args {
-		    set ::gotmessage $args
-		}
-		toplevel .t1
-	    } \
-	    -cleanup {
-		rename ::tk_messageBox {}
-		rename ::saved_messageBox ::tk_messageBox
-		unset ::gotmessage
-		destroy .t1
-	    } \
-	    -body {
-		ToEnterFileByKey .t1 RUBBISH $fileDir
-		ToPressButton .t1 ok
-		ToPressButton .t1 cancel
-		tk_getOpenFile -parent .t1 \
-		    -title "Please enter RUBBISH as a file name" \
-		    -initialdir $fileDir
-		set gotmessage
-	    } \
-	    -match glob \
-	    -result "*RUBBISH*"
-    }
-}
-
-    # The rest of the tests need to be executed on Unix only.
-    # They test whether the dialog box widgets were implemented correctly.
-    # These tests are not
-    # needed on the other platforms because they use native file dialogs.
-}
 
 set tk_strictMotif $tk_strictMotif_old
 
