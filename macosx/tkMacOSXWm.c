@@ -363,6 +363,7 @@ static void             RemoveTransient(TkWindow *winPtr);
 
 @implementation TKWindow: NSWindow
 @synthesize tkWindow = _tkWindow;
+@synthesize isDead = _isDead;
 @end
 
 #pragma mark TKWindow(TKWm)
@@ -1057,6 +1058,7 @@ TkWmDeadWindow(
      */
 
     deadNSWindow = (TKWindow *)wmPtr->window;
+    [deadNSWindow setIsDead:YES];
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
