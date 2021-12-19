@@ -24,6 +24,7 @@ proc SendButtonPress {parent btn} {
     event generate $button <Enter>
     event generate $button <1> -x 5 -y 5
     event generate $button <ButtonRelease-1> -x 5 -y 5
+event generate $button <Leave>
 }
 
 array set filters {
