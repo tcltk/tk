@@ -210,7 +210,6 @@ foreach mode $modes {
     # set verylongstring $verylongstring$verylongstring
     # set verylongstring $verylongstring$verylongstring
 
-    set color #404040
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         ToPressButton $parent cancel
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -337,20 +336,6 @@ foreach mode $modes {
 	[info commands ::tk::dialog::file::] eq ""
     }]
 
-    set parent .
-
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-
-    set color #404040
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
