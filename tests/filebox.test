@@ -176,7 +176,6 @@ if 0 {
     set fileDir [pwd]
     set pathName [file join [pwd] $fileName]
 
-if 0 {
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -192,6 +191,7 @@ if 0 {
 	set choice [tk_getSaveFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir $fileDir]
     } $pathName
+if 0 {
     test filebox-5.4-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent ok
 	set choice [tk_getSaveFile -title "Enter \"$fileName\" and press Ok" \
@@ -202,7 +202,6 @@ if 0 {
 	set choice [tk_getSaveFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir /badpath -initialfile $fileName]
     } $pathName
-}
 
     test filebox-5.6-$mode "tk_getSaveFile command" -setup {
 	toplevel .t1; toplevel .t2
@@ -226,6 +225,7 @@ if 0 {
 	destroy .t1
 	destroy .t2
     }
+}
 
 set tk_strictMotif $tk_strictMotif_old
 
