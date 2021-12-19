@@ -24,7 +24,6 @@ proc SendButtonPress {parent btn} {
     event generate $button <Enter>
     event generate $button <1> -x 5 -y 5
     event generate $button <ButtonRelease-1> -x 5 -y 5
-event generate $button <Leave>
 }
 
 array set filters {
@@ -51,7 +50,7 @@ set tk_strictMotif 1
     set parent .
 
     ToPressButton $parent cancel
-    tk_getOpenFile -parent $parent -filetypes $filters(2)
+    tk_getOpenFile -parent $parent -filetypes $filters(1)
 		    
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
