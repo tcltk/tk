@@ -200,6 +200,8 @@ if 0 {
 	[info commands ::tk::MotifFDialog] eq ""   &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
+}
+set isNative 0
 
     set parent .
 
@@ -270,8 +272,8 @@ if 0 {
         destroy .t1
         destroy .t2
     }
-}
 
+if 0 {
     foreach x [lsort -integer [array names filters]] {
         test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
@@ -341,6 +343,8 @@ if 0 {
 	[info commands ::tk::MotifFDialog] eq "" &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
+}
+set isNative 0
 
     set parent .
 
