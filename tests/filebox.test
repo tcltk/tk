@@ -45,13 +45,6 @@ proc SendButtonPress {parent btn type} {
     }
 }
 
-set mode 1
-
-set unknownOptionsMsg(tk_getOpenFile,notAqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
-set unknownOptionsMsg(tk_getOpenFile,aqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -message, -multiple, -parent, -title, -typevariable, or -command}
-set unknownOptionsMsg(tk_getSaveFile,notAqua) {bad option "-foo": must be -confirmoverwrite, -defaultextension, -filetypes, -initialdir, -initialfile, -parent, -title, or -typevariable}
-set unknownOptionsMsg(tk_getSaveFile,aqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -message, -parent, -title, -typevariable, -command, or -confirmoverwrite}
-
 set tmpFile "filebox.tmp"
 makeFile {
     # this file can be empty!
@@ -76,17 +69,17 @@ array set filters {
     }
 }
 
-    set addedExtensions {}
-set tk_strictMotif $mode
+set tk_strictMotif 1
 
     set parent .
 
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
+ToPressButton $parent ok
+tk_getOpenFile -parent $parent
 
+ToPressButton $parent cancel
+tk_getSaveFile -parent $parent
+
+if 0 {
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
@@ -107,10 +100,11 @@ set tk_strictMotif $mode
 	    set typeName
         } "Text files"
 
-    test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
+    test filebox-5.1-1 "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel" -parent $parent
     } ""
+}
 
 set tk_strictMotif $tk_strictMotif_old
 
