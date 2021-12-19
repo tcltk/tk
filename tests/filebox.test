@@ -221,7 +221,6 @@ if 0 {
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
-if 0 {
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
@@ -481,7 +480,6 @@ if 0 {
 	    -match glob \
 	    -result "*RUBBISH*"
     }
-}
 
     # The rest of the tests need to be executed on Unix only.
     # They test whether the dialog box widgets were implemented correctly.
