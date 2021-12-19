@@ -173,6 +173,7 @@ set tk_strictMotif $mode
         } $res
     }
 
+if 0 {
     test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
 	tk_getSaveFile -foo
     } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,notAqua)
@@ -201,6 +202,7 @@ set tk_strictMotif $mode
     test filebox-4.6-$mode "tk_getSaveFile command" -body {
 	tk_getSaveFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
+}
 
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
