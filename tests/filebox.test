@@ -10,27 +10,14 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-
 set tk_strictMotif_old $tk_strictMotif
 
-#----------------------------------------------------------------------
-#
-# Procedures needed by this test file
-#
-#----------------------------------------------------------------------
-
 proc ToPressButton {parent btn} {
-    global isNative
-    if {!$isNative} {
 	after 100 SendButtonPress $parent $btn mouse
-    }
 }
 
 proc ToEnterFileByKey {parent fileName fileDir} {
-    global isNative
-    if {!$isNative} {
 	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
-    }
 }
 
 proc PressButton {btn} {
@@ -84,13 +71,6 @@ proc SendButtonPress {parent btn type} {
     }
 }
 
-
-#----------------------------------------------------------------------
-#
-# The test suite proper
-#
-#----------------------------------------------------------------------
-
 set mode 1
 
 set unknownOptionsMsg(tk_getOpenFile,notAqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
@@ -125,8 +105,6 @@ array set filters {
     set addedExtensions {}
 set tk_strictMotif $mode
 
-set isNative 0
-
     set parent .
 
     set verylongstring longstring:
@@ -139,34 +117,6 @@ set isNative 0
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
 
-if 0 {
-    test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToPressButton $parent cancel
-        tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
-    } ""
-
-    test filebox-2.2-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToPressButton $parent ok
-        set choice [tk_getOpenFile -title "Press Ok" \
-		-parent $parent -initialfile $fileName -initialdir $fileDir]
-    } $pathName
-    test filebox-2.3-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToEnterFileByKey $parent $fileName $fileDir
-        set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
-		-parent $parent -initialdir $fileDir]
-    } $pathName
-    test filebox-2.4-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        cd $fileDir
-        ToPressButton $parent ok
-        set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
-		-parent $parent -initialdir . -initialfile $fileName]
-    } $pathName
-    test filebox-2.5-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToPressButton $parent ok
-        set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
-		-parent $parent -initialdir /badpath -initialfile $fileName]
-    } $pathName
-}
     test filebox-2.6-$mode "tk_getOpenFile command" -setup {
         toplevel .t1; toplevel .t2
         wm geometry .t1 +0+0
@@ -226,9 +176,6 @@ if 0 {
     test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
 	tk_getSaveFile -foo
     } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,notAqua)
-    test filebox-4.1.2-$mode "tk_getSaveFile command" -constraints aqua -body {
-	tk_getSaveFile -foo
-    } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,aqua)
 
     catch {tk_getSaveFile -foo 1} msg
     regsub -all ,      $msg "" options
@@ -245,9 +192,6 @@ if 0 {
     test filebox-4.3.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
 	tk_getSaveFile -foo bar
     } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,notAqua)
-    test filebox-4.3.2-$mode "tk_getSaveFile command" -constraints aqua -body {
-	tk_getSaveFile -foo bar
-    } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,aqua)
     test filebox-4.4-$mode "tk_getSaveFile command" -body {
 	tk_getSaveFile -initialdir
     } -returnCodes error -result {value for "-initialdir" missing}
