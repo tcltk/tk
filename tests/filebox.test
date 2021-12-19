@@ -270,6 +270,7 @@ if 0 {
         destroy .t1
         destroy .t2
     }
+}
 
     foreach x [lsort -integer [array names filters]] {
         test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
@@ -300,7 +301,6 @@ if 0 {
 	    set typeName
         } $res
     }
-}
 
     test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
 	tk_getSaveFile -foo
