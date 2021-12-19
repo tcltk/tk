@@ -10,6 +10,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+if 0 {
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
     # MacOS type that is too long
 
@@ -23,6 +24,7 @@ test fileDialog-0.2 {GetFileName: file types: MakeFilter() fails} {
     regsub -all "\0" $msg {\\0} msg
     list $x $msg
 } {1 {bad Macintosh file type "\0\0"}}
+}
 
 set tk_strictMotif_old $tk_strictMotif
 
@@ -106,7 +108,7 @@ proc SendButtonPress {parent btn type} {
 
 if {$tcl_platform(platform) == "unix"} {
 #    set modes "0 1"
-set modes 0
+set modes 1
 } else {
     set modes 1
 }
@@ -158,6 +160,7 @@ foreach mode $modes {
 	}
     }
 
+if 0 {
     test filebox-1.1.1-$mode "tk_getOpenFile command" -constraints notAqua -body {
 	tk_getOpenFile -foo
     } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,notAqua)
@@ -192,6 +195,7 @@ foreach mode $modes {
     test filebox-1.6-$mode "tk_getOpenFile command" -body {
         tk_getOpenFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
+}
 
     set isNative [expr {
 	[info commands ::tk::MotifFDialog] eq ""   &&
@@ -217,6 +221,7 @@ foreach mode $modes {
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
+if 0 {
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
@@ -476,6 +481,7 @@ foreach mode $modes {
 	    -match glob \
 	    -result "*RUBBISH*"
     }
+}
 
     # The rest of the tests need to be executed on Unix only.
     # They test whether the dialog box widgets were implemented correctly.
