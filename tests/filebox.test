@@ -273,7 +273,6 @@ set isNative 0
         destroy .t2
     }
 
-if 0 {
     foreach x [lsort -integer [array names filters]] {
         test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
@@ -304,6 +303,7 @@ if 0 {
         } $res
     }
 
+if 0 {
     test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
 	tk_getSaveFile -foo
     } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,notAqua)
