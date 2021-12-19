@@ -195,12 +195,13 @@ if 0 {
     test filebox-1.6-$mode "tk_getOpenFile command" -body {
         tk_getOpenFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
-}
 
     set isNative [expr {
 	[info commands ::tk::MotifFDialog] eq ""   &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
+}
+set isNative 0
 
     set parent .
 
@@ -221,6 +222,7 @@ if 0 {
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
+if 0 {
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
@@ -480,6 +482,7 @@ if 0 {
 	    -match glob \
 	    -result "*RUBBISH*"
     }
+}
 
     # The rest of the tests need to be executed on Unix only.
     # They test whether the dialog box widgets were implemented correctly.
