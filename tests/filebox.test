@@ -16,35 +16,10 @@ proc ToPressButton {parent btn} {
 	after 100 SendButtonPress $parent $btn mouse
 }
 
-proc ToEnterFileByKey {parent fileName fileDir} {
-	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
-}
-
 proc PressButton {btn} {
     event generate $btn <Enter>
     event generate $btn <1> -x 5 -y 5
     event generate $btn <ButtonRelease-1> -x 5 -y 5
-}
-
-proc EnterFileByKey {parent fileName fileDir} {
-    global tk_strictMotif
-    if {$parent == "."} {
-	set w .__tk_filedialog
-    } else {
-	set w $parent.__tk_filedialog
-    }
-    upvar ::tk::dialog::file::__tk_filedialog data
-
-    if {$tk_strictMotif} {
-	$data(sEnt) delete 0 end
-	$data(sEnt) insert 0 [file join $fileDir $fileName]
-    } else {
-	$data(ent) delete 0 end
-	$data(ent) insert 0 $fileName
-    }
-
-    update
-    SendButtonPress $parent ok mouse
 }
 
 proc SendButtonPress {parent btn type} {
