@@ -135,15 +135,15 @@ set isNative 0
     set verylongstring $verylongstring$verylongstring
     set verylongstring $verylongstring$verylongstring
 
+    set fileName $tmpFile
+    set fileDir [tcltest::temporaryDirectory]
+    set pathName [file join $fileDir $fileName]
+
 if 0 {
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         ToPressButton $parent cancel
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
-
-    set fileName $tmpFile
-    set fileDir [tcltest::temporaryDirectory]
-    set pathName [file join $fileDir $fileName]
 
     test filebox-2.2-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         ToPressButton $parent ok
