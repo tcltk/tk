@@ -5,16 +5,10 @@ tcltest::loadTestedCommands
 set tk_strictMotif_old $tk_strictMotif
 
 proc ToPressButton {parent btn} {
-	after 100 SendButtonPress $parent $btn mouse
+	after 100 SendButtonPress $parent $btn
 }
 
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
-}
-
-proc SendButtonPress {parent btn type} {
+proc SendButtonPress {parent btn} {
     if {$parent == "."} {
 	set w .__tk_filedialog
     } else {
@@ -27,14 +21,9 @@ proc SendButtonPress {parent btn type} {
 	update
     }
 
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-#	focus $w
-	event generate $button <Enter>
-	event generate $w <KeyPress> -keysym Return
-    }
+    event generate $button <Enter>
+    event generate $button <1> -x 5 -y 5
+    event generate $button <ButtonRelease-1> -x 5 -y 5
 }
 
 array set filters {
@@ -59,11 +48,12 @@ array set filters {
 set tk_strictMotif 1
 
     set parent .
-	    ToPressButton $parent cancel
-	    tk_getOpenFile -parent $parent -filetypes $filters(2)
+
+    ToPressButton $parent cancel
+    tk_getOpenFile -parent $parent -filetypes $filters(2)
 		    
-	ToPressButton $parent cancel
-	tk_getSaveFile -parent $parent
+    ToPressButton $parent cancel
+    tk_getSaveFile -parent $parent
 
 set tk_strictMotif $tk_strictMotif_old
 
