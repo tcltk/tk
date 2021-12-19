@@ -28,10 +28,6 @@ array set filters {
 	{"Text files"		{}		TEXT}
 	{"Tcl Scripts"		{.tcl}		TEXT}
 	{"C Source Files"	{.c .h}		}
-	{"All Source Files"	{.tcl .c .h}	}
-	{"Image Files"		{.gif}		}
-	{"Image Files"		{.jpeg .jpg}	}
-	{"Image Files"		""		{GIFF JPEG}}
 	{"All files"		*}
     }
     3 {
@@ -45,7 +41,7 @@ set tk_strictMotif 1
     set parent .
 
     ToPressButton $parent cancel
-    tk_getOpenFile -parent $parent -filetypes $filters(3)
+    tk_getOpenFile -parent $parent -filetypes $filters(2)
 		    
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
