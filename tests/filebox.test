@@ -200,8 +200,6 @@ if 0 {
 	[info commands ::tk::MotifFDialog] eq ""   &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
-}
-set isNative 0
 
     set parent .
 
@@ -342,6 +340,8 @@ set isNative 0
 	[info commands ::tk::MotifFDialog] eq "" &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
+}
+set isNative 0
 
     set parent .
 
@@ -410,6 +410,7 @@ set isNative 0
 	destroy .t2
     }
 
+if 0 {
     foreach x [lsort -integer [array names filters]] {
 	test filebox-6.$x-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
@@ -419,7 +420,6 @@ set isNative 0
 	} $pathName[lindex $addedExtensions $x]
     }
 
-if 0 {
     if {!$mode} {
 
 	test filebox-7.1-$mode "tk_getOpenFile - directory not readable" \
