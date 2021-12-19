@@ -300,6 +300,7 @@ if 0 {
 	    set typeName
         } $res
     }
+}
 
     test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
 	tk_getSaveFile -foo
@@ -340,8 +341,6 @@ if 0 {
 	[info commands ::tk::MotifFDialog] eq "" &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
-}
-set isNative 0
 
     set parent .
 
