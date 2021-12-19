@@ -155,7 +155,6 @@ if 0 {
         set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir $fileDir]
     } $pathName
-}
     test filebox-2.4-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         cd $fileDir
         ToPressButton $parent ok
@@ -167,6 +166,7 @@ if 0 {
         set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir /badpath -initialfile $fileName]
     } $pathName
+}
     test filebox-2.6-$mode "tk_getOpenFile command" -setup {
         toplevel .t1; toplevel .t2
         wm geometry .t1 +0+0
