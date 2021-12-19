@@ -196,11 +196,12 @@ if 0 {
         tk_getOpenFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 
+}
     set isNative [expr {
 	[info commands ::tk::MotifFDialog] eq ""   &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
-}
+puts "isNative: $isNative  (now setting to 0)"
 set isNative 0
 
     set parent .
@@ -273,7 +274,6 @@ set isNative 0
         destroy .t2
     }
 
-if 0 {
     foreach x [lsort -integer [array names filters]] {
         test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
@@ -343,8 +343,7 @@ if 0 {
 	[info commands ::tk::MotifFDialog] eq "" &&
 	[info commands ::tk::dialog::file::] eq ""
     }]
-}
-set isNative 0
+puts "isNative: $isNative"
 
     set parent .
 
