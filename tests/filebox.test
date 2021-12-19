@@ -37,11 +37,6 @@ proc SendButtonPress {parent btn type} {
     }
 }
 
-set tmpFile "filebox.tmp"
-makeFile {
-    # this file can be empty!
-} $tmpFile
-
 array set filters {
     1 {}
     2 {
@@ -64,9 +59,6 @@ array set filters {
 set tk_strictMotif 1
 
     set parent .
-
-    set fileName $tmpFile
-
 	    ToPressButton $parent cancel
 	    tk_getOpenFile -parent $parent -filetypes $filters(2)
 		    
