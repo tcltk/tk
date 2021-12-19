@@ -135,6 +135,7 @@ set isNative 0
     set verylongstring $verylongstring$verylongstring
     set verylongstring $verylongstring$verylongstring
 
+if 0 {
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         ToPressButton $parent cancel
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -154,6 +155,7 @@ set isNative 0
         set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir $fileDir]
     } $pathName
+}
     test filebox-2.4-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         cd $fileDir
         ToPressButton $parent ok
