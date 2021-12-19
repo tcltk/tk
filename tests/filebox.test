@@ -143,6 +143,7 @@ set tk_strictMotif $mode
         destroy .t2
     }
 
+if 0 {
     foreach x [lsort -integer [array names filters]] {
         test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
@@ -172,36 +173,6 @@ set tk_strictMotif $mode
 	    set typeName
         } $res
     }
-
-if 0 {
-    test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
-	tk_getSaveFile -foo
-    } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,notAqua)
-
-    catch {tk_getSaveFile -foo 1} msg
-    regsub -all ,      $msg "" options
-    regsub \"-foo\" $options "" options
-
-    foreach option $options {
-	if {[string index $option 0] eq "-"} {
-	    test filebox-4.2-$mode$option "tk_getSaveFile command" -body {
-		tk_getSaveFile $option
-	    } -returnCodes error -result "value for \"$option\" missing"
-	}
-    }
-
-    test filebox-4.3.1-$mode "tk_getSaveFile command" -constraints notAqua -body {
-	tk_getSaveFile -foo bar
-    } -returnCodes error -result $unknownOptionsMsg(tk_getSaveFile,notAqua)
-    test filebox-4.4-$mode "tk_getSaveFile command" -body {
-	tk_getSaveFile -initialdir
-    } -returnCodes error -result {value for "-initialdir" missing}
-    test filebox-4.5-$mode "tk_getSaveFile command" -body {
-	tk_getSaveFile -parent foo.bar
-    } -returnCodes error -result {bad window path name "foo.bar"}
-    test filebox-4.6-$mode "tk_getSaveFile command" -body {
-	tk_getSaveFile -filetypes {Foo}
-    } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 }
 
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
