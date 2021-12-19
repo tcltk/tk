@@ -92,34 +92,6 @@ set tk_strictMotif $mode
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
 
-if 0 {
-    test filebox-2.6-$mode "tk_getOpenFile command" -setup {
-        toplevel .t1; toplevel .t2
-        wm geometry .t1 +0+0
-        wm geometry .t2 +0+0
-    } -constraints nonUnixUserInteraction -body {
-        set choice {}
-        ToPressButton .t1 ok
-        lappend choice [tk_getOpenFile \
-		-title "Enter \"$fileName\" and press Ok" \
-		-parent .t1 -initialdir $fileDir \
-		-initialfile $fileName]
-        ToPressButton .t2 ok
-        lappend choice [tk_getOpenFile \
-		-title "Enter \"$fileName\" and press Ok" \
-		-parent .t2 -initialdir $fileDir \
-		-initialfile $fileName]
-        ToPressButton .t1 ok
-        lappend choice [tk_getOpenFile \
-		-title "Enter \"$fileName\" and press Ok" \
-		-parent .t1 -initialdir $fileDir \
-		-initialfile $fileName]
-    } -result [list $pathName $pathName $pathName] -cleanup {
-        destroy .t1
-        destroy .t2
-    }
-}
-
         test filebox-3.5-1 "tk_getOpenFile command" nonUnixUserInteraction {
 	    catch {unset tv}
 	    catch {unset typeName}
@@ -136,11 +108,12 @@ if 0 {
 	    set typeName
         } "Text files"
 
-
+if 0 {
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
+}
 
 set tk_strictMotif $tk_strictMotif_old
 
