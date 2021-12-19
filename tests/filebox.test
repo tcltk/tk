@@ -66,11 +66,10 @@ set tk_strictMotif 1
     set parent .
 
     set fileName $tmpFile
-    set fileDir [tcltest::temporaryDirectory]
 
 	    ToPressButton $parent cancel
 	    tk_getOpenFile -parent $parent \
-		    -filetypes $filters(2) -parent $parent \
+		    -parent $parent \
 		    -initialfile $fileName
 		    
 	ToPressButton $parent cancel
