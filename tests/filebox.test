@@ -280,9 +280,6 @@ foreach mode $modes {
 	    catch {unset tv}
 	    catch {unset typeName}
 	    ToPressButton $parent ok
-	    if {[info exists tv]} {
-	    } else {
-	    }
 	    set choice [tk_getOpenFile -title "Press Ok" \
 		    -filetypes $filters($x) -parent $parent \
 		    -initialfile $fileName -initialdir $fileDir \
