@@ -118,14 +118,13 @@ set tk_strictMotif $mode
         destroy .t2
     }
 
-    foreach {x res} [list 1 "-unset-" 2 "Text files"] {
-	set t [expr {$x + [llength [array names filters]]}]
-        test filebox-3.$t-$mode "tk_getOpenFile command" nonUnixUserInteraction {
+if {0} {
+        test filebox-3.4-1 "tk_getOpenFile command" nonUnixUserInteraction {
 	    catch {unset tv}
 	    catch {unset typeName}
 	    ToPressButton $parent ok
 	    set choice [tk_getOpenFile -title "Press Ok" \
-		    -filetypes $filters($x) -parent $parent \
+		    -filetypes $filters(1) -parent $parent \
 		    -initialfile $fileName -initialdir $fileDir \
 		    -typevariable tv]
 	    if {[info exists tv]} {
@@ -134,8 +133,24 @@ set tk_strictMotif $mode
 		set typeName "-unset-"
 	    }
 	    set typeName
-        } $res
-    }
+        } "-unset-"
+}
+        test filebox-3.5-1 "tk_getOpenFile command" nonUnixUserInteraction {
+	    catch {unset tv}
+	    catch {unset typeName}
+	    ToPressButton $parent ok
+	    set choice [tk_getOpenFile -title "Press Ok" \
+		    -filetypes $filters(2) -parent $parent \
+		    -initialfile $fileName -initialdir $fileDir \
+		    -typevariable tv]
+	    if {[info exists tv]} {
+		set typeName $tv
+	    } else {
+		set typeName "-unset-"
+	    }
+	    set typeName
+        } "Text files"
+
 
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
