@@ -1,11 +1,3 @@
-# This file is a Tcl script to test out Tk's "tk_getOpenFile" and
-# "tk_getSaveFile" commands. It is organized in the standard fashion
-# for Tcl tests.
-#
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
-# All rights reserved.
-
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
@@ -75,7 +67,6 @@ set tk_strictMotif 1
 
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
-    set pathName [file join $fileDir $fileName]
 
 	    ToPressButton $parent ok
 	    set choice [tk_getOpenFile -title "Press Ok" \
@@ -85,31 +76,12 @@ set tk_strictMotif 1
 
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel" -parent $parent
-
-if 0 {
-        test filebox-3.5-1 "tk_getOpenFile command" nonUnixUserInteraction {
-	    catch {unset tv}
-	    catch {unset typeName}
-	    ToPressButton $parent ok
-	    set choice [tk_getOpenFile -title "Press Ok" \
-		    -filetypes $filters(2) -parent $parent \
-		    -initialfile $fileName -initialdir $fileDir \
-		    -typevariable tv]
-	    if {[info exists tv]} {
-		set typeName $tv
-	    } else {
-		set typeName "-unset-"
-	    }
-	    set typeName
-        } "Text files"
-
-    test filebox-5.1-1 "tk_getSaveFile command" nonUnixUserInteraction {
-	ToPressButton $parent cancel
-	tk_getSaveFile -title "Press Cancel" -parent $parent
-    } ""
-}
 
 set tk_strictMotif $tk_strictMotif_old
+
+puts "now fixfocus"
+fixfocus
+puts "returned from fixfocus"
 
 # cleanup
 removeFile filebox.tmp
