@@ -343,7 +343,6 @@ set isNative 0
 	[info commands ::tk::dialog::file::] eq ""
     }]
 
-if 0 {
     set parent .
 
     set verylongstring longstring:
@@ -411,6 +410,7 @@ if 0 {
 	destroy .t2
     }
 
+if 0 {
     foreach x [lsort -integer [array names filters]] {
 	test filebox-6.$x-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
