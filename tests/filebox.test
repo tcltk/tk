@@ -222,7 +222,6 @@ set isNative 0
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
-if 0 {
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
@@ -274,6 +273,7 @@ if 0 {
         destroy .t2
     }
 
+if 0 {
     foreach x [lsort -integer [array names filters]] {
         test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
