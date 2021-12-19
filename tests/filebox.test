@@ -76,9 +76,9 @@ set tk_strictMotif 1
 
 set tk_strictMotif $tk_strictMotif_old
 
-puts "now fixfocus"
-fixfocus
-puts "returned from fixfocus"
+#puts "now fixfocus"
+#fixfocus
+#puts "returned from fixfocus"
 
 # cleanup
 removeFile filebox.tmp
