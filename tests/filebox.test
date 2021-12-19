@@ -186,12 +186,13 @@ if 0 {
 	set choice [tk_getSaveFile -title "Press Ok" \
 		-parent $parent -initialfile $fileName -initialdir $fileDir]
     } $pathName
+if 0 {
     test filebox-5.3-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToEnterFileByKey $parent $fileName $fileDir
 	set choice [tk_getSaveFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir $fileDir]
     } $pathName
-if 0 {
+
     test filebox-5.4-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent ok
 	set choice [tk_getSaveFile -title "Enter \"$fileName\" and press Ok" \
