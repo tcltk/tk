@@ -71,7 +71,7 @@ set tk_strictMotif 1
 	    ToPressButton $parent cancel
 	    tk_getOpenFile -parent $parent \
 		    -filetypes $filters(2) -parent $parent \
-		    -initialfile $fileName -initialdir $fileDir \
+		    -initialfile $fileName
 		    
 	ToPressButton $parent cancel
 	tk_getSaveFile -parent $parent
