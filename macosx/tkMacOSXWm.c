@@ -1058,7 +1058,9 @@ TkWmDeadWindow(
      */
 
     deadNSWindow = (TKWindow *)wmPtr->window;
-    [deadNSWindow setIsDead:YES];
+    if ([deadNSWindow respondsToSelector:@selector(setIsDead)]) {
+	[deadNSWindow setIsDead:YES];
+    }
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
@@ -1107,6 +1109,7 @@ TkWmDeadWindow(
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
 		[w makeKeyAndOrderFront:NSApp];
+		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(w)];
 		break;
 	    }
 	}
@@ -6646,6 +6649,7 @@ TkpChangeFocus(
     	}
 	if (win && [win canBecomeKeyWindow]) {
 	    [win makeKeyAndOrderFront:NSApp];
+	    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 	}
     }
 
