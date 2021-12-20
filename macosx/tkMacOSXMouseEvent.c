@@ -83,8 +83,7 @@ enum {
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
-    Tk_Window tkwin = NULL, capture;
-    static Tk_Window target = NULL, dragTarget = NULL;
+    Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
     NSInteger button;
     TkWindow *newFocus = NULL;
@@ -93,7 +92,6 @@ enum {
     Bool isTestingEvent = NO;
     Bool isMotionEvent = NO;
     Bool isOutside = NO;
-    static Bool isDragging = NO;
     static Bool ignoreDrags = NO;
     static Bool ignoreUpDown = NO;
     static NSTimeInterval timestamp = 0;
@@ -134,14 +132,14 @@ enum {
 	buttonState &= ~TkGetButtonMask(button);
 	break;
     case NSLeftMouseDragged:
-	if (isOutside && !isDragging) {
+	if (isOutside && ![NSApp tkDragTarget]) {
 	    ignoreDrags = YES;
 	}
 	if (ignoreDrags) {
 	    return theEvent;
 	}
-	isDragging = YES;
-	dragTarget = target;
+	[NSApp setTkDragTarget: [NSApp tkEventTarget]];
+	break;
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
 	isMotionEvent = YES;
@@ -163,8 +161,7 @@ enum {
 	[NSApp setTkPointerWindow:nil];
 	break;
     case NSLeftMouseUp:
-	isDragging = NO;
-	dragTarget = NULL;
+	[NSApp setTkDragTarget: nil];
 	if ([theEvent clickCount] == 2) {
 	    ignoreUpDown = NO;
 	}
@@ -200,7 +197,6 @@ enum {
 	if ([theEvent timestamp] - timestamp > 1) {
 	    ignoreUpDown = NO;
 	}
-
 	if ([theEvent clickCount] == 2) {
 	    if (ignoreUpDown == YES) {
 		return theEvent;
@@ -291,8 +287,19 @@ enum {
 	    return theEvent;
 	}
     } else {
-	if (isDragging) {
-	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
+	if ([NSApp tkDragTarget]) {
+	    TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
+	    TKWindow *dragWindow = nil;
+	    if (dragPtr) {
+	    	dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
+	    	    dragPtr->window);
+	    }
+	    if (!dragWindow) {
+	    	[NSApp setTkDragTarget: nil];
+		target = NULL;
+	    	return theEvent;
+	    }
+	    winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
 	} else if (eventType == NSScrollWheel) {
 	    winPtr = scrollTarget;
 	} else {
@@ -355,8 +362,8 @@ enum {
      * when the mouse is outside of the focused toplevel.
      */
 
-    if (isDragging) {
-	TkWindow *w = (TkWindow *) dragTarget;
+    if ([NSApp tkDragTarget]) {
+	TkWindow *w = (TkWindow *) [NSApp tkDragTarget];
 	win_x = global.x;
 	win_y = global.y;
 	for (; w != NULL; w = w->parentPtr) {
@@ -373,7 +380,7 @@ enum {
 		break;
 	    }
 	}
-	target = dragTarget;
+	target = (Tk_Window) [NSApp tkDragTarget];
     } else {
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
@@ -439,7 +446,7 @@ enum {
      */
 
     if (eventType != NSScrollWheel) {
-	if (isDragging) {
+	if ([NSApp tkDragTarget]) {
 
 	    /*
 	     * When dragging the mouse into the resize area Apple shows the
@@ -454,7 +461,7 @@ enum {
 	    Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
 				 global.x, global.y, state);
 	} else if (eventType == NSMouseExited) {
-	    if (isDragging) {
+	    if ([NSApp tkDragTarget]) {
 		Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
 				 global.x, global.y, state);
 	    } else {
