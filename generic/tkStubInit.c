@@ -46,6 +46,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XGrabServer
 #undef XFree
 #undef XFlush
+#undef Tk_FreeStyleFromObj
 #define TkUnusedStubEntry 0
 
 #define TkpCmapStressed_ TkpCmapStressed
