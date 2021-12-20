@@ -1060,18 +1060,20 @@ TkWmDeadWindow(
     if (winPtr == [NSApp tkDragTarget]) {
 	[NSApp setTkDragTarget:nil];
     }
-    if (winPtr == [NSApp tkEventTarget]) {
-	[NSApp setTkEventTarget:nil];
-    }
     if (winPtr == [NSApp tkPointerWindow]) {
 	NSWindow *w;
+	NSPoint mouse = [NSEvent mouseLocation];
 	[NSApp setTkPointerWindow:nil];
 	for (w in [NSApp orderedWindows]) {
 	    if (w == deadNSWindow) {
 		continue;
 	    }
-	    if (NSPointInRect([NSEvent mouseLocation], [w frame])) {
-		[NSApp setTkPointerWindow:TkMacOSXGetTkWindow(w)];
+	    if (NSPointInRect(mouse, [w frame])) {
+		TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
+		int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
+		[NSApp setTkPointerWindow:winPtr2];
+		Tk_UpdatePointer((Tk_Window) winPtr2, x, y,
+				 [NSApp tkButtonState]);
 		break;
 	    }
 	}
