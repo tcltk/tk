@@ -1396,10 +1396,10 @@ EntryIndex(
 	if (idx == TCL_INDEX_NONE) {
 	    idx = 0;
 	} else if (idx > entryPtr->entry.numChars) {
-    	    idx = entryPtr->entry.numChars;
-    	}
-    	*indexPtr = idx;
-    	return TCL_OK;
+	    idx = entryPtr->entry.numChars;
+	}
+	*indexPtr = idx;
+	return TCL_OK;
     }
 
     string = Tcl_GetStringFromObj(indexObj, &length);
@@ -1876,7 +1876,7 @@ static int ComboboxCurrentCommand(
 	TkSizeT idx;
 
 	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, 0, &idx)) {
-	    if (idx == TCL_INDEX_NONE || idx > (TkSizeT)nValues) {
+	    if (idx == TCL_INDEX_NONE || idx >= (TkSizeT)nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
@@ -1885,7 +1885,7 @@ static int ComboboxCurrentCommand(
 	    currentIndex = idx;
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "Incorrect index %s", Tcl_GetString(objv[2])));
+		    "bad index \"%s\"", Tcl_GetString(objv[2])));
 	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
 	    return TCL_ERROR;
 	}

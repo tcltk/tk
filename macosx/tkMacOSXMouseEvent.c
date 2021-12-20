@@ -89,7 +89,7 @@ enum {
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
-    TkWindow *winPtr = NULL, *grabWinPtr;
+    TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
     Tk_Window tkwin = NULL, capture;
     static Tk_Window target = NULL, dragTarget = NULL;
     NSPoint local, global;
@@ -268,6 +268,16 @@ enum {
 	isMotionEvent = YES;
 	break;
     case NSScrollWheel:
+
+	/*
+	 * Scroll wheel events are sent to the window containing the pointer,
+	 * or ignored if no window contains the pointer.  See TIP #171.  Note,
+	 * however, that TIP #171 proposed sending scroll wheel events to the
+	 * focus window when no window contains the pointer.  That proposal was
+	 * ultimately rejected.
+	 */
+
+	scrollTarget = TkMacOSXGetTkWindow(eventWindow);
 #if 0
     case NSCursorUpdate:
     case NSTabletPoint:
@@ -293,6 +303,8 @@ enum {
     } else {
 	if (isDragging) {
 	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
+	} else if (eventType == NSScrollWheel) {
+	    winPtr = scrollTarget;
 	} else {
 	    winPtr = [NSApp tkEventTarget];
 	}
@@ -476,6 +488,13 @@ enum {
 		xEvent.xmotion.y_root = global.y;
 		xEvent.xmotion.state = state;
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+
+		/*
+		 * TkUpdatePointer must not be called in this case.  Doing so
+		 * will break scrollbars; dragging will stop when the mouse
+		 * leaves the window.
+		 */
+
 	    }
 	} else {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
