@@ -657,9 +657,6 @@ ImgPhotoCmd(
 	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
-	    if (options.background) {
-		Tk_FreeColor(options.background);
-	    }
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
@@ -736,9 +733,6 @@ ImgPhotoCmd(
 	if (options.options & OPT_SHRINK) {
 	    if (ImgPhotoSetSize(modelPtr, options.toX2,
 		    options.toY2) != TCL_OK) {
-		if (options.background) {
-		    Tk_FreeColor(options.background);
-		}
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
@@ -748,9 +742,6 @@ ImgPhotoCmd(
 	if (block.pixelPtr || (options.options & OPT_SHRINK)) {
 	    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
 		    modelPtr->width, modelPtr->height);
-	}
-	if (options.background) {
-	    Tk_FreeColor(options.background);
 	}
 	return result;
 
@@ -781,6 +772,9 @@ ImgPhotoCmd(
 	}
 	if ((options.name == NULL) || (index < objc)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...?");
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > modelPtr->width)
@@ -790,6 +784,9 @@ ImgPhotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside image", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -913,21 +910,21 @@ ImgPhotoCmd(
 	if (data) {
 	    ckfree(data);
 	}
-        if (freeObj != NULL) {
-            Tcl_DecrRefCount(freeObj);
-        }
+	if (freeObj != NULL) {
+	    Tcl_DecrRefCount(freeObj);
+	}
 	return result;
 
       dataErrorExit:
-        if (options.background) {
+	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}
 	if (data) {
 	    ckfree(data);
 	}
-        if (freeObj != NULL) {
-            Tcl_DecrRefCount(freeObj);
-        }
+	if (freeObj != NULL) {
+	    Tcl_DecrRefCount(freeObj);
+	}
 	return TCL_ERROR;
     }
 
@@ -1444,6 +1441,9 @@ readCleanup:
 	}
 	if ((options.name == NULL) || (index < objc)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > modelPtr->width)
@@ -1453,6 +1453,9 @@ readCleanup:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside image", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -1561,6 +1564,9 @@ readCleanup:
 	    }
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
 		    fmtString, NULL);
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -2140,7 +2146,6 @@ ImgPhotoConfigureModel(
     if ((modelPtr->fileString != NULL)
 	    && ((modelPtr->fileString != oldFileString)
 	    || (modelPtr->format != oldFormat))) {
-
 	/*
 	 * Prevent file system access in a safe interpreter.
 	 */
@@ -3258,9 +3263,9 @@ Tk_PhotoPutBlock(
      */
     sourceBlock = *blockPtr;
     memToFree = NULL;
-    if (sourceBlock.pixelPtr >= modelPtr->pix32
-	    && sourceBlock.pixelPtr <= modelPtr->pix32 + modelPtr->width
-	    * modelPtr->height * 4) {
+    if (modelPtr->pix32 && (sourceBlock.pixelPtr >= modelPtr->pix32)
+	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width
+	    * modelPtr->height * 4)) {
 	/*
 	 * Fix 5c51be6411: avoid reading
 	 *
@@ -3704,9 +3709,9 @@ Tk_PhotoPutZoomedBlock(
      */
     sourceBlock = *blockPtr;
     memToFree = NULL;
-    if (sourceBlock.pixelPtr >= modelPtr->pix32
-	    && sourceBlock.pixelPtr <= modelPtr->pix32 + modelPtr->width
-	    * modelPtr->height * 4) {
+    if (modelPtr->pix32 && (sourceBlock.pixelPtr >= modelPtr->pix32)
+	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width
+	    * modelPtr->height * 4)) {
 	/*
 	 * Fix 5c51be6411: avoid reading
 	 *

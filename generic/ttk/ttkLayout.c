@@ -220,8 +220,7 @@ static Ttk_Sticky AnchorToSticky(Tk_Anchor anchor)
 	case TK_ANCHOR_SW:	return TTK_STICK_S | TTK_STICK_W;
 	case TK_ANCHOR_W:	return TTK_STICK_W;
 	case TK_ANCHOR_NW:	return TTK_STICK_N | TTK_STICK_W;
-	default:
-	case TK_ANCHOR_CENTER:	return 0;
+	default:	return 0;
     }
 }
 
