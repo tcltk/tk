@@ -1051,16 +1051,42 @@ TkWmDeadWindow(
 	ckfree(transientPtr);
     }
 
+    deadNSWindow = (TKWindow *)wmPtr->window;
+    if ([deadNSWindow respondsToSelector:@selector(setIsDead)]) {
+	[deadNSWindow setIsDead:YES];
+    }
+
+    /*
+     * Remove references to the Tk window from the mouse event processing
+     * state which is recorded in the NSApplication object.
+     */
+
+    if (winPtr == [NSApp tkDragTarget]) {
+	[NSApp setTkDragTarget:nil];
+    }
+    if (winPtr == [NSApp tkEventTarget]) {
+	[NSApp setTkEventTarget:nil];
+    }
+    if (winPtr == [NSApp tkPointerWindow]) {
+	NSWindow *w;
+	[NSApp setTkPointerWindow:nil];
+	for (w in [NSApp orderedWindows]) {
+	    if (w == deadNSWindow) {
+		continue;
+	    }
+	    if (NSPointInRect([NSEvent mouseLocation], [w frame])) {
+		[NSApp setTkPointerWindow:TkMacOSXGetTkWindow(w)];
+		break;
+	    }
+	}
+    }
+
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
      * data structures.  If the NSWindow is a child, disassociate it from
      * the parent.  Then close and release the NSWindow.
      */
 
-    deadNSWindow = (TKWindow *)wmPtr->window;
-    if ([deadNSWindow respondsToSelector:@selector(setIsDead)]) {
-	[deadNSWindow setIsDead:YES];
-    }
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];

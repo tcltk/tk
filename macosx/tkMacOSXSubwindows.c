@@ -89,6 +89,16 @@ XDestroyWindow(
 	}
 	ckfree(macWin);
 	return Success;
+    } else {
+	TkWindow *winPtr = macWin->winPtr;
+	if (winPtr == [NSApp tkDragTarget]) {
+	    [NSApp setTkDragTarget:nil];
+	    printf("Clearing DragTarget\n");
+	}
+	if (winPtr == [NSApp tkEventTarget]) {
+	    printf("Clearing EventTarget\n");
+	    [NSApp setTkEventTarget:nil];
+	}
     }
     if (macWin->visRgn) {
 	CFRelease(macWin->visRgn);
