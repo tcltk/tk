@@ -35,11 +35,11 @@
 #ifndef _TCL
 #   include <tcl.h>
 #endif
-#if HAVE_SYS_TIME_H
+#ifdef HAVE_SYS_TIME_H
 #	include <sys/time.h>
 #endif
 #include <time.h>
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
 #include <unistd.h>

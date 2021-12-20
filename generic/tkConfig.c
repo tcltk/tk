@@ -641,7 +641,7 @@ DoObjConfig(
 	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
-			"\": must be integer?[+-]integer? or end?[+-]integer?", NULL);
+			"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -700,14 +700,14 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-            newValue = -1;
-        } else {
+	    newValue = -1;
+	} else {
 	    if (Tcl_GetIndexFromObjStruct(interp, valuePtr,
 		    optionPtr->specPtr->clientData, sizeof(char *),
 		    optionPtr->specPtr->optionName+1, 0, &newValue) != TCL_OK) {
-	        return TCL_ERROR;
+		return TCL_ERROR;
 	    }
-        }
+	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
 	    *((int *) internalPtr) = newValue;
@@ -810,10 +810,9 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newRelief = TK_RELIEF_NULL;
-	} else {
-	    if (Tk_GetReliefFromObj(interp, valuePtr, &newRelief) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkReliefStrings,
+		"relief", 0, &newRelief) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
@@ -841,26 +840,28 @@ DoObjConfig(
 	break;
     }
     case TK_OPTION_JUSTIFY: {
-	Tk_Justify newJustify;
+	int newJustify;
 
-	if (Tk_GetJustifyFromObj(interp, valuePtr, &newJustify) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
+		"justification", 0, &newJustify) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Justify *) oldInternalPtr) = *((Tk_Justify *) internalPtr);
-	    *((Tk_Justify *) internalPtr) = newJustify;
+	    *((Tk_Justify *) internalPtr) = (Tk_Justify)newJustify;
 	}
 	break;
     }
     case TK_OPTION_ANCHOR: {
-	Tk_Anchor newAnchor;
+	int newAnchor;
 
-	if (Tk_GetAnchorFromObj(interp, valuePtr, &newAnchor) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
+		"anchor", 0, &newAnchor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Anchor *) oldInternalPtr) = *((Tk_Anchor *) internalPtr);
-	    *((Tk_Anchor *) internalPtr) = newAnchor;
+	    *((Tk_Anchor *) internalPtr) = (Tk_Anchor)newAnchor;
 	}
 	break;
     }
@@ -870,11 +871,9 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPixels = 0;
-	} else {
-	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
-		    &newPixels) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	} else if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
+		&newPixels) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
@@ -888,11 +887,9 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newWin = NULL;
-	} else {
-	    if (TkGetWindowFromObj(interp, tkwin, valuePtr,
-		    &newWin) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	} else if (TkGetWindowFromObj(interp, tkwin, valuePtr,
+		&newWin) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
 	    *((Tk_Window *) oldInternalPtr) = *((Tk_Window *) internalPtr);
