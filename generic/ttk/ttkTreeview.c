@@ -198,8 +198,8 @@ static const Tk_OptionSpec TagOptionSpecs[] = {
 	NULL, offsetof(DisplayItem,imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
+	"center", offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
+	0, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(DisplayItem,backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
