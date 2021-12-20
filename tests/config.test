@@ -1591,7 +1591,7 @@ test config-10.3 {Tk_GetOptionInfo - all items} -constraints {
     .foo configure
 } -cleanup {
     destroy .foo
-} -result {{-boolean boolean Boolean {} {}} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-stringtable2 StringTable2 stringTable2 two two} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief {} {}} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor center center} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}	
+} -result {{-boolean boolean Boolean {} {}} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-stringtable2 StringTable2 stringTable2 two two} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief {} {}} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor center center} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}
 test config-10.4 {Tk_GetOptionInfo - chaining through tables} -constraints testobjconfig -body {
     testobjconfig chain2 .foo -one asdf -three xyzzy
     .foo configure
