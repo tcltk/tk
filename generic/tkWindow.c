@@ -981,6 +981,7 @@ TkCreateMainWindow(
 #if defined(__cplusplus) && !defined(__OBJC__)
 		".cplusplus"
 #endif
+		".cygwin"
 #ifndef NDEBUG
 		".debug"
 #endif
