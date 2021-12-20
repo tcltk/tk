@@ -122,14 +122,6 @@ enum {
 	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
 	}
-    } else if ([(TKWindow *) eventWindow isDead]) {
-	if ([eventWindow isKeyWindow]) {
-	    [eventWindow resignKey];
-	}
-	[NSApp setTkDragTarget: nil];
-	target = TkMacOSXGetTkWindow([NSApp keyWindow]);
-	[NSApp setTkEventTarget: target];
-	[NSApp setTkDragTarget: nil];
     } else if (!NSPointInRect(viewLocation, [contentView bounds])) {
 	isOutside = YES;
     }
