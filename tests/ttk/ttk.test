@@ -447,7 +447,7 @@ test ttk-9.9 "default for -justify" -body {
 test ttk-9.10 "default for -anchor" -body {
     ttk::label .tl
     .tl cget -anchor
-} -cleanup { destroy .tl } -result "center"
+} -cleanup { destroy .tl } -result "w"
 
 #
 # Frame widget tests:
