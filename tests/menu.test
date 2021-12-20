@@ -1199,11 +1199,11 @@ test menu-2.223 {entry configuration options 0 -underline 3p tearoff} -body {
 
 test menu-2.224 {entry configuration options 1 -underline 3p command} -body {
     .m1 entryconfigure 1 -underline 3p
-} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 test menu-2.225 {entry configuration options 2 -underline 3p cascade} -body {
     .m1 entryconfigure 2 -underline 3p
-} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 test menu-2.226 {entry configuration options 3 -underline 3p separator} -body {
     .m1 entryconfigure 3 -underline 3p
@@ -1211,11 +1211,11 @@ test menu-2.226 {entry configuration options 3 -underline 3p separator} -body {
 
 test menu-2.227 {entry configuration options 4 -underline 3p checkbutton} -body {
     .m1 entryconfigure 4 -underline 3p
-} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 test menu-2.228 {entry configuration options 5 -underline 3p radiobutton} -body {
     .m1 entryconfigure 5 -underline 3p
-} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 deleteWindows
 if {[testConstraint hasEarthPhoto]} {
@@ -3973,6 +3973,14 @@ test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over 
 } -cleanup {
     destroy .top.mb.m .top.m .top
 } -result 0
+
+test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
+    catch {destroy .m}
+} -body {
+    menu .m -type {}
+} -cleanup {
+    destroy .m
+} -returnCodes error -result {ambiguous type "": must be normal, tearoff, or menubar}
 
 
 # cleanup

@@ -125,9 +125,7 @@
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE flag). This allows to use the internal
- * INDEX_TEMP_TABLE flag of Tcl. However this is rather ugly and not robust
- * since nothing prevents Tcl from changing the value of its internal flags!
+ * (TCL_INDEX_TEMP_TABLE).
  */
 
 #if !defined(TCL_INDEX_TEMP_TABLE)
@@ -971,6 +969,14 @@ typedef struct TkWindow {
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
+
+/*
+ * String tables:
+ */
+
+MODULE_SCOPE const char *const tkAnchorStrings[];
+MODULE_SCOPE const char *const tkReliefStrings[];
+MODULE_SCOPE const char *const tkJustifyStrings[];
 
 /*
  * Real definition of some events. Note that these events come from outside

@@ -2005,8 +2005,12 @@ FillStyle(
     if (tagPtr->langPtr)                { stylePtr->lang = tagPtr->lang; }
     if (tagPtr->hyphenRulesPtr)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
 
-    if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE) { stylePtr->tabStyle = tagPtr->tabStyle; }
-    if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)    { stylePtr->wrapMode = tagPtr->wrapMode; }
+    if (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
+	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR) { stylePtr->tabStyle = tagPtr->tabStyle; }
+    if (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR
+	    || tagPtr->wrapMode == TEXT_WRAPMODE_NONE
+		|| tagPtr->wrapMode == TEXT_WRAPMODE_WORD
+		|| tagPtr->wrapMode == TEXT_WRAPMODE_CODEPOINT)    { stylePtr->wrapMode = tagPtr->wrapMode; }
 
     if (tagPtr->attrs.borderWidthPtr && Tcl_GetString(tagPtr->attrs.borderWidthPtr)[0] != '\0') {
 	stylePtr->borderWidth = tagPtr->attrs.borderWidth;
@@ -13900,9 +13904,6 @@ ComputeBreakIndex(
     switch (wrapMode) {
     case TEXT_WRAPMODE_NONE:
 	break;
-    case TEXT_WRAPMODE_CHAR:
-    case TEXT_WRAPMODE_NULL:
-	return chunkPtr->numBytes;
     case TEXT_WRAPMODE_WORD:
     case TEXT_WRAPMODE_CODEPOINT: {
 	TkTextSegment *nextPtr;
@@ -13991,6 +13992,8 @@ ComputeBreakIndex(
 	}
 	break;
     }
+    default:
+	return chunkPtr->numBytes;
     }
 
     return -1;
