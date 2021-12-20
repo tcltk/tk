@@ -333,7 +333,9 @@ nor \fIclientData\fR.
 \fBTK_OPTION_ANCHOR\fR
 The value must be a standard anchor position such as \fBne\fR or
 \fBcenter\fR.  The internal form is a Tk_Anchor value like the ones
-returned by \fBTk_GetAnchorFromObj\fR.
+returned by \fBTk_GetAnchorFromObj\fR.  This option type supports the \fBTK_OPTION_NULL_OK\fR
+flag; if the empty string is specified as the value for the option,
+the integer relief value is set to \fBTK_ANCHOR_NULL\fR.
 .TP
 \fBTK_OPTION_BITMAP\fR
 The value must be a standard Tk bitmap name. The internal form is a
@@ -404,7 +406,9 @@ form is a C \fBint\fR value.
 \fBTK_OPTION_JUSTIFY\fR
 The value must be a standard justification value such as \fBleft\fR.
 The internal form is a Tk_Justify like the values returned by
-\fBTk_GetJustifyFromObj\fR.
+\fBTk_GetJustifyFromObj\fR.  This option type supports the \fBTK_OPTION_NULL_OK\fR
+flag; if the empty string is specified as the value for the option,
+the integer relief value is set to \fBTK_JUSTIFY_NULL\fR.
 .TP
 \fBTK_OPTION_PIXELS\fR
 The value must specify a screen distance such as \fB2i\fR or \fB6.4\fR.
