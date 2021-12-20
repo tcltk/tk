@@ -458,11 +458,9 @@ VISIBILITY_HIDDEN
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     Window _tkWindow;
-    Bool _isDead;
 #endif
 }
 @property Window tkWindow;
-@property Bool isDead;
 @end
 
 @interface TKWindow(TKWm)

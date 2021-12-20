@@ -363,7 +363,6 @@ static void             RemoveTransient(TkWindow *winPtr);
 
 @implementation TKWindow: NSWindow
 @synthesize tkWindow = _tkWindow;
-@synthesize isDead = _isDead;
 @end
 
 #pragma mark TKWindow(TKWm)
@@ -1052,9 +1051,6 @@ TkWmDeadWindow(
     }
 
     deadNSWindow = (TKWindow *)wmPtr->window;
-    if ([deadNSWindow respondsToSelector:@selector(setIsDead)]) {
-	[deadNSWindow setIsDead:YES];
-    }
 
     /*
      * Remove references to the Tk window from the mouse event processing
