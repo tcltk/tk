@@ -346,6 +346,11 @@ VISIBILITY_HIDDEN
 @property Bool isDrawing;
 @property Bool needsToDraw;
 @property Bool tkLiveResizeEnded;
+
+/*
+ * Persistent state variables used by processMouseEvent.
+ */
+
 @property TkWindow *tkPointerWindow;
 @property TkWindow *tkEventTarget;
 @property TkWindow *tkDragTarget;
