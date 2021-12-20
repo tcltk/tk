@@ -6,8 +6,8 @@
  *	widgets. (Well, strictly, each TkTextLine and B-tree node caches its
  *	last observed pixel height, but that information originates here).
  *
- * Copyright  © 1992-1994 The Regents of the University of California.
- * Copyright  © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -440,7 +440,7 @@ typedef struct TextDInfo {
  * points to one of the following structures:
  */
 
-#if !defined(TK_LAYOUT_WITH_BASE_CHUNKS)
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
 
 typedef struct CharInfo {
     int numBytes;		/* Number of bytes to display. */
@@ -7770,7 +7770,7 @@ TkTextCharLayoutProc(
     chunkPtr->width = nextX - chunkPtr->x;
     chunkPtr->breakIndex = -1;
 
-#if !defined(TK_LAYOUT_WITH_BASE_CHUNKS)
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     ciPtr = (CharInfo *)ckalloc(offsetof(CharInfo, chars) + 1 + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
@@ -7886,7 +7886,7 @@ CharChunkMeasureChars(
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-#if !defined(TK_LAYOUT_WITH_BASE_CHUNKS)
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chars == NULL) {
 	chars = ciPtr->chars;
 	charsLen = ciPtr->numBytes;
@@ -9020,7 +9020,7 @@ IsSameFGStyle(
 	return 1;
     }
 
-#if !defined(TK_DRAW_IN_CONTEXT)
+#ifndef TK_DRAW_IN_CONTEXT
     if (
 #ifdef MAC_OSX_TK
 	    !TkMacOSXCompareColors(style1->fgGC->foreground,
