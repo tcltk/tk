@@ -46,6 +46,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XGrabServer
 #undef XFree
 #undef XFlush
+#undef Tk_FreeStyleFromObj
 #define TkUnusedStubEntry 0
 
 #define TkpCmapStressed_ TkpCmapStressed
@@ -520,6 +521,7 @@ static const TkIntStubs tkIntStubs = {
 #ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
 #endif /* MACOSX */
+    TkUnusedStubEntry, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
