@@ -35,10 +35,10 @@ static void		FreeUidThreadExitProc(ClientData clientData);
  * used by Tk_GetAnchorFromObj and Tk_GetJustifyFromObj.
  */
 
-static const char *const anchorStrings[] = {
+const char *const tkAnchorStrings[] = {
     "n", "ne", "e", "se", "s", "sw", "w", "nw", "center", NULL
 };
-static const char *const justifyStrings[] = {
+const char *const tkJustifyStrings[] = {
     "left", "right", "center", NULL
 };
 
@@ -71,7 +71,7 @@ Tk_GetAnchorFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObj(interp, objPtr, anchorStrings, "anchor", 0,
+    code = Tcl_GetIndexFromObj(interp, objPtr, tkAnchorStrings, "anchor", 0,
 	    &index);
     if (code == TCL_OK) {
 	*anchorPtr = (Tk_Anchor) index;
@@ -385,7 +385,7 @@ Tk_GetJustifyFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObj(interp, objPtr, justifyStrings,
+    code = Tcl_GetIndexFromObj(interp, objPtr, tkJustifyStrings,
 	    "justification", 0, &index);
     if (code == TCL_OK) {
 	*justifyPtr = (Tk_Justify) index;
@@ -471,6 +471,7 @@ Tk_NameOfJustify(
     case TK_JUSTIFY_LEFT: return "left";
     case TK_JUSTIFY_RIGHT: return "right";
     case TK_JUSTIFY_CENTER: return "center";
+    default: break;
     }
     return "unknown justification style";
 }

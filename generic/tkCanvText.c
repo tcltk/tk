@@ -131,7 +131,7 @@ UnderlineParseProc(
 
     } else {
 	Tcl_AppendResult(interp, "bad index \"", value,
-		"\": must be integer?[+-]integer? or end?[+-]integer?", NULL);
+		"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
     }
 	return code;
 }
@@ -755,21 +755,19 @@ ComputeTextBbox(
     case TK_ANCHOR_NE:
 	break;
 
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	topY -= height / 2;
-	for (i=0 ; i<4 ; i++) {
-	    dy[i] = -height / 2;
-	}
-	break;
-
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
 	topY -= height;
 	for (i=0 ; i<4 ; i++) {
 	    dy[i] = -height;
+	}
+	break;
+
+    default:
+	topY -= height / 2;
+	for (i=0 ; i<4 ; i++) {
+	    dy[i] = -height / 2;
 	}
 	break;
     }
@@ -779,21 +777,19 @@ ComputeTextBbox(
     case TK_ANCHOR_SW:
 	break;
 
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	leftX -= width / 2;
-	for (i=0 ; i<4 ; i++) {
-	    dx[i] = -width / 2;
-	}
-	break;
-
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
 	leftX -= width;
 	for (i=0 ; i<4 ; i++) {
 	    dx[i] = -width;
+	}
+	break;
+
+    default:
+	leftX -= width / 2;
+	for (i=0 ; i<4 ; i++) {
+	    dx[i] = -width / 2;
 	}
 	break;
     }
@@ -1734,7 +1730,6 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;
     switch (textPtr->anchor) {
     case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;
@@ -1744,12 +1739,12 @@ TextToPostscript(
     case TK_ANCHOR_S:	   x = 1; y = 2; break;
     case TK_ANCHOR_SW:	   x = 0; y = 2; break;
     case TK_ANCHOR_W:	   x = 0; y = 1; break;
-    case TK_ANCHOR_CENTER: x = 1; y = 1; break;
+    default: x = 1; y = 1; break;
     }
     switch (textPtr->justify) {
-    case TK_JUSTIFY_LEFT:   justify = "0";   break;
     case TK_JUSTIFY_CENTER: justify = "0.5"; break;
     case TK_JUSTIFY_RIGHT:  justify = "1";   break;
+    default:                justify = "0";   break;
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);

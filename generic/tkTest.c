@@ -573,6 +573,7 @@ TestobjconfigObjCmd(
 	    Tcl_Obj *doublePtr;
 	    Tcl_Obj *stringPtr;
 	    Tcl_Obj *stringTablePtr;
+	    Tcl_Obj *stringTablePtr2;
 	    Tcl_Obj *colorPtr;
 	    Tcl_Obj *fontPtr;
 	    Tcl_Obj *bitmapPtr;
@@ -590,6 +591,9 @@ TestobjconfigObjCmd(
 	static const char *const stringTable[] = {
 	    "one", "two", "three", "four", NULL
 	};
+	static const char *const stringTable2[] = {
+	    "one", "two", NULL
+	};
 	static const Tk_OptionSpec typesSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
 		offsetof(TypesRecord, booleanPtr), TCL_INDEX_NONE, 0, 0, 0x1},
@@ -603,7 +607,11 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable",
 		"one", offsetof(TypesRecord, stringTablePtr), TCL_INDEX_NONE,
-		TK_CONFIG_NULL_OK, stringTable, 0x10},
+		0, stringTable, 0x10},
+	    {TK_OPTION_STRING_TABLE,
+		"-stringtable2", "StringTable2", "stringTable2",
+		"two", offsetof(TypesRecord, stringTablePtr2), TCL_INDEX_NONE,
+		0, stringTable2, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
 		"red", offsetof(TypesRecord, colorPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, "black", 0x20},
@@ -616,7 +624,7 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_BORDER, "-border", "border", "Border",
 		"blue", offsetof(TypesRecord, borderPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, "white", 0x100},
-	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", "raised",
+	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", NULL,
 		offsetof(TypesRecord, reliefPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x200},
 	    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", "xterm",
@@ -625,9 +633,9 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_JUSTIFY, "-justify", NULL, NULL, "left",
 		offsetof(TypesRecord, justifyPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x800},
-	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", NULL,
+	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", "center",
 		offsetof(TypesRecord, anchorPtr), TCL_INDEX_NONE,
-		TK_CONFIG_NULL_OK, 0, 0x1000},
+		0, 0, 0x1000},
 	    {TK_OPTION_PIXELS, "-pixel", "pixel", "Pixel",
 		"1", offsetof(TypesRecord, pixelPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x2000},
@@ -668,6 +676,7 @@ TestobjconfigObjCmd(
 	recordPtr->pixelPtr = NULL;
 	recordPtr->mmPtr = NULL;
 	recordPtr->stringTablePtr = NULL;
+	recordPtr->stringTablePtr2 = NULL;
 	recordPtr->customPtr = NULL;
 	result = Tk_InitOptions(interp, recordPtr, optionTable,
 		tkwin);
@@ -888,7 +897,7 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_BORDER, "-border", "border", "Border", "blue",
 		TCL_INDEX_NONE, offsetof(InternalRecord, border),
 		TK_CONFIG_NULL_OK, "white", 0x100},
-	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", "raised",
+	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", NULL,
 		TCL_INDEX_NONE, offsetof(InternalRecord, relief),
 		TK_CONFIG_NULL_OK, 0, 0x200},
 	    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", "xterm",
@@ -897,9 +906,9 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_JUSTIFY, "-justify", NULL, NULL, "left",
 		TCL_INDEX_NONE, offsetof(InternalRecord, justify),
 		TK_CONFIG_NULL_OK, 0, 0x800},
-	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", NULL,
+	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", "center",
 		TCL_INDEX_NONE, offsetof(InternalRecord, anchor),
-		TK_CONFIG_NULL_OK, 0, 0x1000},
+		0, 0, 0x1000},
 	    {TK_OPTION_PIXELS, "-pixel", "pixel", "Pixel", "1",
 		TCL_INDEX_NONE, offsetof(InternalRecord, pixels),
 		TK_CONFIG_NULL_OK, 0, 0x2000},
@@ -940,7 +949,7 @@ TestobjconfigObjCmd(
 	recordPtr->relief = TK_RELIEF_FLAT;
 	recordPtr->cursor = NULL;
 	recordPtr->justify = TK_JUSTIFY_LEFT;
-	recordPtr->anchor = TK_ANCHOR_N;
+	recordPtr->anchor = TK_ANCHOR_CENTER;
 	recordPtr->pixels = 0;
 	recordPtr->mm = 0.0;
 	recordPtr->tkwin = NULL;
