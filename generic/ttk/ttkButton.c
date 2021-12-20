@@ -255,7 +255,7 @@ static Tk_OptionSpec LabelOptionSpecs[] =
 	NULL, Tk_Offset(Label,label.reliefObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	"center", Tk_Offset(Label,label.anchorObj), -1,
+	"w", Tk_Offset(Label,label.anchorObj), -1,
 	0, 0, GEOMETRY_CHANGED},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", Tk_Offset(Label, label.justifyObj), -1,
