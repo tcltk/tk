@@ -83,8 +83,8 @@ enum {
     NSPoint location = [theEvent locationInWindow];
     NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
-    Tk_Window tkwin = NULL, capture;
-    static Tk_Window target = NULL, dragTarget = NULL;
+    Tk_Window tkwin = NULL, capture, target;
+    static Tk_Window dragTarget = NULL;
     NSPoint local, global;
     NSInteger button;
     TkWindow *newFocus = NULL;
@@ -130,8 +130,8 @@ enum {
 	}
 	dragTarget = NULL;
 	target = TkMacOSXGetTkWindow([NSApp keyWindow]);
-	isDragging = NO;
 	[NSApp setTkEventTarget: target];
+	isDragging = NO;
     } else if (!NSPointInRect(viewLocation, [contentView bounds])) {
 	isOutside = YES;
     }
@@ -149,7 +149,7 @@ enum {
 	    return theEvent;
 	}
 	isDragging = YES;
-	dragTarget = target;
+	dragTarget = [NSApp tkEventTarget];
 	break;
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
