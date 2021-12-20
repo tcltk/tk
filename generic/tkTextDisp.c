@@ -6,8 +6,8 @@
  *	widgets. (Well, strictly, each TkTextLine and B-tree node caches its
  *	last observed pixel height, but that information originates here).
  *
- * Copyright  © 1992-1994 The Regents of the University of California.
- * Copyright  © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -153,7 +153,7 @@ typedef struct StyleValues {
     int spacing3;		/* Spacing below last dline in text line. */
     TkTextTabArray *tabArrayPtr;/* Locations and types of tab stops (may be
 				 * NULL). */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
     XColor *underlineColor;	/* Foreground color for underline underneath
@@ -440,7 +440,7 @@ typedef struct TextDInfo {
  * points to one of the following structures:
  */
 
-#if !defined(TK_LAYOUT_WITH_BASE_CHUNKS)
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
 
 typedef struct CharInfo {
     int numBytes;		/* Number of bytes to display. */
@@ -965,7 +965,8 @@ GetStyle(
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
 	    tabPrio = tagPtr->priority;
 	}
-	if ((tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE)
+	if (((tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
+		|| (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR))
 		&& (tagPtr->priority > tabStylePrio)) {
 	    styleValues.tabStyle = tagPtr->tabStyle;
 	    tabStylePrio = tagPtr->priority;
@@ -985,7 +986,9 @@ GetStyle(
 	    styleValues.elide = tagPtr->elide;
 	    elidePrio = tagPtr->priority;
 	}
-	if ((tagPtr->wrapMode != TEXT_WRAPMODE_NULL)
+	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+		|| (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		|| (tagPtr->wrapMode == TEXT_WRAPMODE_WORD))
 		&& (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
@@ -1170,7 +1173,7 @@ LayoutDLine(
 				 * chunk. */
     TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
 				 * the first character on line. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int tabSize;		/* Number of pixels consumed by current tab
 				 * stop. */
     TkTextDispChunk *lastCharChunkPtr;
@@ -7767,7 +7770,7 @@ TkTextCharLayoutProc(
     chunkPtr->width = nextX - chunkPtr->x;
     chunkPtr->breakIndex = -1;
 
-#if !defined(TK_LAYOUT_WITH_BASE_CHUNKS)
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     ciPtr = (CharInfo *)ckalloc(offsetof(CharInfo, chars) + 1 + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
@@ -7883,7 +7886,7 @@ CharChunkMeasureChars(
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-#if !defined(TK_LAYOUT_WITH_BASE_CHUNKS)
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chars == NULL) {
 	chars = ciPtr->chars;
 	charsLen = ciPtr->numBytes;
@@ -9017,7 +9020,7 @@ IsSameFGStyle(
 	return 1;
     }
 
-#if !defined(TK_DRAW_IN_CONTEXT)
+#ifndef TK_DRAW_IN_CONTEXT
     if (
 #ifdef MAC_OSX_TK
 	    !TkMacOSXCompareColors(style1->fgGC->foreground,
