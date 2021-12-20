@@ -46,6 +46,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkPointerWindow = _tkPointerWindow;
 @synthesize tkEventTarget = _tkEventTarget;
+@synthesize tkDragTarget = _tkDragTarget;
 @synthesize tkButtonState = _tkButtonState;
 @end
 
