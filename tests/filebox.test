@@ -26,11 +26,11 @@ array set filters {
     2 {
 	{"Text files"		{.txt .doc}	}
 	{"Text files"		{}		TEXT}
+	{"All files"		*}
     }
     3 {
 	{"Text files"		{.txt .doc}	TEXT}
 	{"Foo"			{""}		TEXT}
-	{"All files"		*}
     }
 }
 
