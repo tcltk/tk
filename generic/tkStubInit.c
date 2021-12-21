@@ -61,6 +61,16 @@ static int TkWinGetPlatformId(void) {
 #   define TkWinGetPlatformId 0
 #endif
 
+#if defined(TK_NO_DEPRECATED) || (TCL_MAJOR_VERSION > 8)
+#   define TkSetWindowMenuBar 0
+#   define TkpDrawHighlightBorder 0
+#   define TkpUseWindow 0
+#   define TkpSetMainMenubar 0
+#   define TkpGetOtherWindow 0
+#   define TkpGetSystemDefault 0
+#   define TkpMakeContainer 0
+#endif
+
 static int
 doNothing(void)
 {

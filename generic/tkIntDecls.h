@@ -1213,13 +1213,15 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TkpGetSystemDefault
 #undef TkpMakeContainer
 
-#define TkSetWindowMenuBar Tk_SetWindowMenuBar
-#define TkpDrawHighlightBorder Tk_DrawHighlightBorder
-#define TkpUseWindow Tk_UseWindow
-#define TkpSetMainMenubar Tk_SetMainMenubar
-#define TkpGetOtherWindow ((TkWindow *(*)(TkWindow *))(void *)Tk_GetOtherWindow)
-#define TkpGetSystemDefault Tk_GetSystemDefault
-#define TkpMakeContainer Tk_MakeContainer
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION == 8)
+#   define TkSetWindowMenuBar Tk_SetWindowMenuBar
+#   define TkpDrawHighlightBorder Tk_DrawHighlightBorder
+#   define TkpUseWindow Tk_UseWindow
+#   define TkpSetMainMenubar Tk_SetMainMenubar
+#   define TkpGetOtherWindow ((TkWindow *(*)(TkWindow *))(void *)Tk_GetOtherWindow)
+#   define TkpGetSystemDefault Tk_GetSystemDefault
+#   define TkpMakeContainer Tk_MakeContainer
+#endif
 
 #if !defined(MAC_OSX_TK)
 #   undef TkpWillDrawWidget
