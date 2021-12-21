@@ -30,6 +30,7 @@ array set filters {
     3 {
 	{"Text files"		{.txt .doc}	TEXT}
 	{"Foo"			{""}		TEXT}
+	{"All files"		*}
     }
 }
 
