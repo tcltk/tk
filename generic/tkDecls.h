@@ -896,6 +896,34 @@ EXTERN Tcl_Obj *	Tk_FontGetDescription(Tk_Font tkfont);
 /* 280 */
 EXTERN void		Tk_CreatePhotoImageFormatVersion3(
 				const Tk_PhotoImageFormatVersion3 *formatPtr);
+/* 281 */
+EXTERN void		Tk_DrawHighlightBorder(Tk_Window tkwin, GC fgGC,
+				GC bgGC, int highlightWidth,
+				Drawable drawable);
+/* 282 */
+EXTERN void		Tk_SetMainMenubar(Tcl_Interp *interp,
+				Tk_Window tkwin, const char *menuName);
+/* 283 */
+EXTERN void		Tk_SetWindowMenuBar(Tcl_Interp *interp,
+				Tk_Window tkwin, const char *oldMenuName,
+				const char *menuName);
+/* 284 */
+EXTERN void		Tk_ClipDrawableToRect(Display *display, Drawable d,
+				int x, int y, int width, int height);
+/* 285 */
+EXTERN Tcl_Obj *	Tk_GetSystemDefault(Tk_Window tkwin,
+				const char *dbName, const char *className);
+/* 286 */
+EXTERN int		Tk_UseWindow(Tcl_Interp *interp, Tk_Window tkwin,
+				const char *string);
+/* 287 */
+EXTERN void		Tk_MakeContainer(Tk_Window tkwin);
+/* 288 */
+EXTERN Tk_Window	Tk_GetOtherWindow(Tk_Window winPtr);
+/* 289 */
+EXTERN void		Tk_Get3BorderColors(Tk_3DBorder *borderPtr,
+				XColor *bgColorPtr, XColor *darkColorPtr,
+				XColor *lightColorPtr);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1189,6 +1217,15 @@ typedef struct TkStubs {
     void (*tk_SendVirtualEvent) (Tk_Window tkwin, const char *eventName, Tcl_Obj *detail); /* 278 */
     Tcl_Obj * (*tk_FontGetDescription) (Tk_Font tkfont); /* 279 */
     void (*tk_CreatePhotoImageFormatVersion3) (const Tk_PhotoImageFormatVersion3 *formatPtr); /* 280 */
+    void (*tk_DrawHighlightBorder) (Tk_Window tkwin, GC fgGC, GC bgGC, int highlightWidth, Drawable drawable); /* 281 */
+    void (*tk_SetMainMenubar) (Tcl_Interp *interp, Tk_Window tkwin, const char *menuName); /* 282 */
+    void (*tk_SetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 283 */
+    void (*tk_ClipDrawableToRect) (Display *display, Drawable d, int x, int y, int width, int height); /* 284 */
+    Tcl_Obj * (*tk_GetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 285 */
+    int (*tk_UseWindow) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 286 */
+    void (*tk_MakeContainer) (Tk_Window tkwin); /* 287 */
+    Tk_Window (*tk_GetOtherWindow) (Tk_Window winPtr); /* 288 */
+    void (*tk_Get3BorderColors) (Tk_3DBorder *borderPtr, XColor *bgColorPtr, XColor *darkColorPtr, XColor *lightColorPtr); /* 289 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1763,6 +1800,24 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_FontGetDescription) /* 279 */
 #define Tk_CreatePhotoImageFormatVersion3 \
 	(tkStubsPtr->tk_CreatePhotoImageFormatVersion3) /* 280 */
+#define Tk_DrawHighlightBorder \
+	(tkStubsPtr->tk_DrawHighlightBorder) /* 281 */
+#define Tk_SetMainMenubar \
+	(tkStubsPtr->tk_SetMainMenubar) /* 282 */
+#define Tk_SetWindowMenuBar \
+	(tkStubsPtr->tk_SetWindowMenuBar) /* 283 */
+#define Tk_ClipDrawableToRect \
+	(tkStubsPtr->tk_ClipDrawableToRect) /* 284 */
+#define Tk_GetSystemDefault \
+	(tkStubsPtr->tk_GetSystemDefault) /* 285 */
+#define Tk_UseWindow \
+	(tkStubsPtr->tk_UseWindow) /* 286 */
+#define Tk_MakeContainer \
+	(tkStubsPtr->tk_MakeContainer) /* 287 */
+#define Tk_GetOtherWindow \
+	(tkStubsPtr->tk_GetOtherWindow) /* 288 */
+#define Tk_Get3BorderColors \
+	(tkStubsPtr->tk_Get3BorderColors) /* 289 */
 
 #endif /* defined(USE_TK_STUBS) */
 
@@ -1781,6 +1836,10 @@ extern const TkStubs *tkStubsPtr;
 #define Tk_GetStyleFromObj(obj) Tk_AllocStyleFromObj(NULL, obj)
 #define Tk_FreeStyleFromObj(obj) /* no-op */
 #define Tk_GetImageMasterData Tk_GetImageModelData
+
+#ifndef MAC_OSX_TK
+#   undef Tk_ClipDrawableToRect
+#endif
 
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW

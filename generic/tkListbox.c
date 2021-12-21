@@ -2192,10 +2192,10 @@ DisplayListbox(
 	bgGC = Tk_GCForColor(listPtr->highlightBgColorPtr, pixmap);
 	if (listPtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(listPtr->highlightColorPtr, pixmap);
-	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
 		    listPtr->highlightWidth, pixmap);
 	} else {
-	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
 		    listPtr->highlightWidth, pixmap);
 	}
     }

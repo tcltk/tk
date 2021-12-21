@@ -290,7 +290,7 @@ TkpSetWindowMenuBar(
  */
 
 void
-TkpSetMainMenubar(
+Tk_SetMainMenubar(
     TCL_UNUSED(Tcl_Interp *),
     TCL_UNUSED(Tk_Window),
     TCL_UNUSED(const char *))

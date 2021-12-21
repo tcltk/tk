@@ -308,7 +308,7 @@ declare 83 {
 #    void TkSetClassProcs(Tk_Window tkwin,
 #	    TkClassProcs *procs, ClientData instanceData)
 #}
-declare 85 {
+declare 85 {deprecated {renamed to Tk_SetWindowMenuBar}} {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
 	    const char *oldMenuName, const char *menuName)
 }
