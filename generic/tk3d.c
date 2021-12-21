@@ -1387,6 +1387,40 @@ TkDebugBorder(
     }
     return resultPtr;
 }
+
+/*
+ *--------------------------------------------------------------
+ *
+ * Tk_Get3BorderColors --
+ *
+ *	Given a Tk_3DBorder determine its 3 colors.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+Tk_Get3BorderColors(
+    Tk_3DBorder * borderPtr,
+    XColor * bgColorPtr,
+    XColor * darkColorPtr,
+    XColor * lightColorPtr)
+{
+    if (bgColorPtr) {
+	*bgColorPtr = *((TkBorder *)borderPtr)->bgColorPtr;
+    }
+    if (darkColorPtr) {
+	*darkColorPtr = *((TkBorder *) borderPtr)->darkColorPtr;
+    }
+    if (lightColorPtr) {
+	*lightColorPtr = *((TkBorder *) borderPtr)->lightColorPtr;
+    }
+}
 
 /*
  * Local Variables:

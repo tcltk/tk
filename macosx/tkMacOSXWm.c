@@ -4447,7 +4447,7 @@ UpdateGeometryInfo(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+	Tk_Window contWinPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	/*
 	 * TODO: Here we should handle out of process embedding.
@@ -4464,7 +4464,7 @@ UpdateGeometryInfo(
 
 	    wmPtr->x = wmPtr->y = 0;
 	    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
-	    Tk_GeometryRequest((Tk_Window)contWinPtr, width, height);
+	    Tk_GeometryRequest(contWinPtr, width, height);
 	}
 	return;
     }
@@ -4737,7 +4737,7 @@ Tk_GetRootCoords(
 		break;
 	    }
 
-	    otherPtr = TkpGetOtherWindow(winPtr);
+	    otherPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (otherPtr == NULL) {
 		break;
 	    }
@@ -4820,7 +4820,7 @@ Tk_CoordsToWindow(
 	 */
 
 	if (Tk_IsContainer(winPtr)) {
-	    childPtr = TkpGetOtherWindow(winPtr);
+	    childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (childPtr != NULL) {
 		if (Tk_IsMapped(childPtr)) {
 		    tmpx = x - childPtr->changes.x;
@@ -4916,7 +4916,7 @@ Tk_TopCoordsToWindow(
 	 */
 
 	if (Tk_IsContainer(winPtr)) {
-	    childPtr = TkpGetOtherWindow(winPtr);
+	    childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (childPtr != NULL) {
 		if (Tk_IsMapped(childPtr) &&
 			x > childPtr->changes.x &&
@@ -6266,7 +6266,7 @@ TkMacOSXMakeRealWindowExist(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	if (contWinPtr != NULL) {
 	    TkMacOSXMakeRealWindowExist(

@@ -84,7 +84,7 @@ TkpMakeWindow(
 
     /*
      * If this window is marked as embedded then the window structure should
-     * have already been created in the TkpUseWindow function.
+     * have already been created in the Tk_UseWindow function.
      */
 
     if (Tk_IsEmbedded(winPtr)) {
@@ -178,7 +178,7 @@ TkpScanWindowId(
 /*
  *----------------------------------------------------------------------
  *
- * TkpUseWindow --
+ * Tk_UseWindow --
  *
  *	This procedure causes a Tk window to use a given X window as its
  *	parent window, rather than the root window for the screen. It is
@@ -198,7 +198,7 @@ TkpScanWindowId(
  */
 
 int
-TkpUseWindow(
+Tk_UseWindow(
     Tcl_Interp *interp,		/* If not NULL, used for error reporting if
 				 * string is bogus. */
     Tk_Window tkwin,		/* Tk window that does not yet have an
@@ -322,7 +322,7 @@ TkpUseWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeContainer --
+ * Tk_MakeContainer --
  *
  *	This procedure is called to indicate that a particular window will be
  *	a container for an embedded application. This changes certain aspects
@@ -339,7 +339,7 @@ TkpUseWindow(
  */
 
 void
-TkpMakeContainer(
+Tk_MakeContainer(
     Tk_Window tkwin)		/* Token for a window that is about to become
 				 * a container. */
 {
@@ -440,7 +440,7 @@ TkMacOSXGetHostToplevel(
     if (!Tk_IsEmbedded(topWinPtr)) {
 	return winPtr->privatePtr->toplevel;
     }
-    contWinPtr = TkpGetOtherWindow(topWinPtr);
+    contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)topWinPtr);
 
     /*
      * TODO: Here we should handle out of process embedding.
@@ -637,7 +637,7 @@ TkpRedirectKeyEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetOtherWindow --
+ * Tk_GetOtherWindow --
  *
  *	If both the container and embedded window are in the same process,
  *	this procedure will return either one, given the other.
@@ -653,28 +653,28 @@ TkpRedirectKeyEvent(
  *----------------------------------------------------------------------
  */
 
-TkWindow *
-TkpGetOtherWindow(
-    TkWindow *winPtr)		/* Tk's structure for a container or embedded
+Tk_Window
+Tk_GetOtherWindow(
+    Tk_Window winPtr)		/* Tk's structure for a container or embedded
 				 * window. */
 {
     Container *containerPtr;
 
     /*
-     * TkpGetOtherWindow returns NULL if both windows are not in the same
+     * Tk_GetOtherWindow returns NULL if both windows are not in the same
      * process...
      */
 
-    if (!(winPtr->flags & TK_BOTH_HALVES)) {
+    if (!(((TkWindow *)winPtr)->flags & TK_BOTH_HALVES)) {
 	return NULL;
     }
 
     for (containerPtr = firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
-	if (containerPtr->embeddedPtr == winPtr) {
-	    return containerPtr->parentPtr;
-	} else if (containerPtr->parentPtr == winPtr) {
-	    return containerPtr->embeddedPtr;
+	if ((Tk_Window)containerPtr->embeddedPtr == winPtr) {
+	    return (Tk_Window)containerPtr->parentPtr;
+	} else if ((Tk_Window)containerPtr->parentPtr == winPtr) {
+	    return (Tk_Window)containerPtr->embeddedPtr;
 	}
     }
     return NULL;

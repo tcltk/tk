@@ -71,7 +71,7 @@ static void		EmbedWindowDeleted(TkWindow *winPtr);
 /*
  *----------------------------------------------------------------------
  *
- * TkpUseWindow --
+ * Tk_UseWindow --
  *
  *	This function causes a Tk window to use a given X window as its parent
  *	window, rather than the root window for the screen. It is invoked by
@@ -91,7 +91,7 @@ static void		EmbedWindowDeleted(TkWindow *winPtr);
  */
 
 int
-TkpUseWindow(
+Tk_UseWindow(
     Tcl_Interp *interp,		/* If not NULL, used for error reporting if
 				 * string is bogus. */
     Tk_Window tkwin,		/* Tk window that does not yet have an
@@ -250,7 +250,7 @@ TkpMakeWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeContainer --
+ * Tk_MakeContainer --
  *
  *	This function is called to indicate that a particular window will be a
  *	container for an embedded application. This changes certain aspects of
@@ -266,7 +266,7 @@ TkpMakeWindow(
  */
 
 void
-TkpMakeContainer(
+Tk_MakeContainer(
     Tk_Window tkwin)		/* Token for a window that is about to become
 				 * a container. */
 {
@@ -691,7 +691,7 @@ EmbedSendConfigure(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetOtherWindow --
+ * Tk_GetOtherWindow --
  *
  *	If both the container and embedded window are in the same process,
  *	this function will return either one, given the other.
@@ -707,9 +707,9 @@ EmbedSendConfigure(
  *----------------------------------------------------------------------
  */
 
-TkWindow *
-TkpGetOtherWindow(
-    TkWindow *winPtr)		/* Tk's structure for a container or embedded
+Tk_Window
+Tk_GetOtherWindow(
+    Tk_Window winPtr)		/* Tk's structure for a container or embedded
 				 * window. */
 {
     Container *containerPtr;
@@ -719,10 +719,10 @@ TkpGetOtherWindow(
     for (containerPtr = tsdPtr->firstContainerPtr;
             containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
-	if (containerPtr->embeddedPtr == winPtr) {
-	    return containerPtr->parentPtr;
-	} else if (containerPtr->parentPtr == winPtr) {
-	    return containerPtr->embeddedPtr;
+	if ((Tk_Window)containerPtr->embeddedPtr == winPtr) {
+	    return (Tk_Window)containerPtr->parentPtr;
+	} else if ((Tk_Window)containerPtr->parentPtr == winPtr) {
+	    return (Tk_Window)containerPtr->embeddedPtr;
 	}
     }
     return NULL;
