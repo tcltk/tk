@@ -26,6 +26,7 @@ array set filters {
     2 {
 	{"Text files"		{.txt .doc}	}
 	{"Text files"		{}		TEXT}
+	{"Tcl Scripts"		{.tcl}		TEXT}
 	{"C Source Files"	{.c .h}		}
 	{"All files"		*}
     }
