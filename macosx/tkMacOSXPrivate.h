@@ -336,6 +336,7 @@ VISIBILITY_HIDDEN
     Bool _tkLiveResizeEnded;
     TkWindow *_tkPointerWindow;
     TkWindow *_tkEventTarget;
+    TkWindow *_tkDragTarget;
     unsigned int _tkButtonState;
 #endif
 
@@ -345,8 +346,14 @@ VISIBILITY_HIDDEN
 @property Bool isDrawing;
 @property Bool needsToDraw;
 @property Bool tkLiveResizeEnded;
+
+/*
+ * Persistent state variables used by processMouseEvent.
+ */
+
 @property TkWindow *tkPointerWindow;
 @property TkWindow *tkEventTarget;
+@property TkWindow *tkDragTarget;
 @property unsigned int tkButtonState;
 
 @end

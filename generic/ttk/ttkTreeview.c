@@ -195,8 +195,8 @@ static Tk_OptionSpec TagOptionSpecs[] = {
 	NULL, Tk_Offset(DisplayItem,imageObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, Tk_Offset(DisplayItem,anchorObj), -1,
-	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
+	"center", Tk_Offset(DisplayItem,anchorObj), -1,
+	0, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, Tk_Offset(DisplayItem,backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
