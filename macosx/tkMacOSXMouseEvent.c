@@ -54,19 +54,19 @@ enum {
  */
 
 /* The basic job of tkProcessMouseEvent is to generate a call to
- * TkUpdatePointer.  That function receives a Tk_Window which (ignoring cases
+ * Tk_UpdatePointer.  That function receives a Tk_Window which (ignoring cases
  * when a grab is in effect) should be the highest window within the focused
  * toplevel that contains the pointer, as well as the pointer location in
  * screen coordinates and the current button state.  Tk maintains a cache of
- * these three values.  A change in any of these values causes TkUpdatePointer
+ * these three values.  A change in any of these values causes Tk_UpdatePointer
  * to generate, respectively, Enter/Leave events, or Motion events, or
  * button Press/Release events. The Tk_Window value is allowed to be NULL,
  * which indicates that the pointer is not in the focused toplevel.
  *
  * Enter or Leave events for toplevel windows are generated when the Tk_Window
  * value changes to or from NULL.  This is problematic on macOS due to the fact
- * that TkUpdatePointer does not generate Motion events when the Tk_Window
- * value is NULL.  A consequence of this is that TkUpdatePointer will either
+ * that Tk_UpdatePointer does not generate Motion events when the Tk_Window
+ * value is NULL.  A consequence of this is that Tk_UpdatePointer will either
  * fail to generate correct Enter/Leave events for toplevels or else be unable
  * to generate Motion events when the pointer is outside of the focus window.
  * It is important to be able to generate such events because otherwise a
@@ -182,8 +182,27 @@ enum {
 	    ignoreDrags = NO;
 	    return theEvent;
 	}
+	buttonState &= ~Tk_GetButtonMask(Button1);
 	break;
     case NSLeftMouseDown:
+
+	/*
+	 * There are situations where Apple does not send NSLeftMouseUp events
+	 * even though the mouse button has been released.  One of these is
+	 * whenever a menu is posted on the screen.  This causes Tk to have an
+	 * inaccurate idea of the current button state and to behave strangely.
+	 * (See ticket[a132b5507e].)  As a work-around we watch for NSButtonDown
+	 * events that arrive when Tk thinks the button is already down and
+	 * we attempt to correct Tk's cached button state by insering a call to
+	 * Tk_UpdatePointer showing the button as up.
+	 */
+
+	if ([NSApp tkButtonState] & Tk_GetButtonMask(Button1)) {
+	    int fakeState = [NSApp tkButtonState] & ~Tk_GetButtonMask(Button1);
+	    int x = location.x;
+	    int y = floor(TkMacOSXZeroScreenHeight() - location.y);
+	    Tk_UpdatePointer((Tk_Window) [NSApp tkEventTarget], x, y, fakeState);
+	}
 
 	/*
 	 * Ignore left mouse button events which are in an NSWindow but outside
@@ -497,7 +516,7 @@ enum {
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 
 		/*
-		 * TkUpdatePointer must not be called in this case.  Doing so
+		 * Tk_UpdatePointer must not be called in this case.  Doing so
 		 * will break scrollbars; dragging will stop when the mouse
 		 * leaves the window.
 		 */
