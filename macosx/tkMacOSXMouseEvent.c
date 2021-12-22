@@ -189,7 +189,6 @@ enum {
 
 	if ([NSApp tkButtonState] & TkGetButtonMask(Button1)) {
 	    int fakeState = [NSApp tkButtonState] & ~TkGetButtonMask(Button1);
-	    NSPoint location = [NSEvent mouseLocation];
 	    int x = location.x;
 	    int y = floor(TkMacOSXZeroScreenHeight() - location.y);
 	    Tk_UpdatePointer((Tk_Window) [NSApp tkEventTarget], x, y, fakeState);
