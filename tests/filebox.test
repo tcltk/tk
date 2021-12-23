@@ -21,18 +21,11 @@ puts "button was not mapped, updating"
     event generate $button <ButtonRelease-1> -x 5 -y 5
 }
 
-array set filters {
-    1 {}
-    2 {
+set filter {
 	{"Text files"		{.txt .doc}	}
 	{"Tcl Scripts"		{.tcl}		TEXT}
 	{"C Source Files"	{.c .h}		}
 	{"All files"		*}
-    }
-    3 {
-	{"Text files"		{.txt .doc}	TEXT}
-	{"Foo"			{""}		TEXT}
-    }
 }
 
 set tk_strictMotif 1
@@ -40,7 +33,7 @@ set tk_strictMotif 1
     set parent .
 
     ToPressButton $parent cancel
-    tk_getOpenFile -parent $parent -filetypes $filters(2)
+    tk_getOpenFile -parent $parent -filetypes $filter
 		    
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
