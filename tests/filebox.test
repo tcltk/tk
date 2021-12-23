@@ -24,6 +24,7 @@ puts "button was not mapped, updating"
 set filter {
 	{"Text files"		{.txt .doc}	}
 	{"Tcl Scripts"		{.tcl}		TEXT}
+	{"C Source Files"	{.c .h}		}
 }
 
 set tk_strictMotif 1
