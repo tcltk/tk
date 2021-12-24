@@ -99,6 +99,7 @@ enum {
     Bool isTestingEvent = NO;
     Bool isMotionEvent = NO;
     Bool isOutside = NO;
+    Bool firstDrag = NO;
     static Bool ignoreDrags = NO;
     static Bool ignoreUpDown = NO;
     static NSTimeInterval timestamp = 0;
@@ -142,13 +143,19 @@ enum {
 	buttonState &= ~Tk_GetButtonMask(button);
 	break;
     case NSLeftMouseDragged:
-	if (isOutside && ![NSApp tkDragTarget]) {
-	    ignoreDrags = YES;
+	if (![NSApp tkDragTarget]) {
+	    if (isOutside) {
+		ignoreDrags = YES;
+	    } else {
+		firstDrag = YES;
+	    }
 	}
 	if (ignoreDrags) {
 	    return theEvent;
 	}
-	[NSApp setTkDragTarget: [NSApp tkEventTarget]];
+	if (![NSApp tkDragTarget]) {
+	    [NSApp setTkDragTarget: [NSApp tkEventTarget]];
+	}
 	break;
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
@@ -392,21 +399,16 @@ enum {
      */
 
     if ([NSApp tkDragTarget]) {
-	TkWindow *w = (TkWindow *) [NSApp tkDragTarget];
-	win_x = global.x;
-	win_y = global.y;
-	for (; w != NULL; w = w->parentPtr) {
-	    win_x -= Tk_X(w);
-	    win_y -= Tk_Y(w);
-	    if (Tk_IsTopLevel(w)) {
-
-		/*
-		 * Adjust for the titlebar.
-		 */
-
-		win_y -= (eventWindow.frame.size.height -
-			  contentView.bounds.size.height);
-		break;
+	Tk_Window dragTarget = [NSApp tkDragTarget];
+	Tk_Window dragWidget = NULL;
+	int x, y;
+	Tk_GetRootCoords(dragTarget, &x, &y);
+	win_x = global.x - x;
+	win_y = global.y - y;
+	if (firstDrag) {
+	    dragWidget = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &x, &y);
+	    if (dragWidget) {
+		[NSApp setTkDragTarget: (TkWindow *) dragWidget];
 	    }
 	}
 	target = (Tk_Window) [NSApp tkDragTarget];
@@ -491,8 +493,8 @@ enum {
 				 global.x, global.y, state);
 	} else if (eventType == NSMouseExited) {
 	    if ([NSApp tkDragTarget]) {
-		Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
-				 global.x, global.y, state);
+	    	Tk_UpdatePointer((Tk_Window) [NSApp tkDragTarget],
+	    			 global.x, global.y, state);
 	    } else {
 		Tk_UpdatePointer(NULL, global.x, global.y, state);
 	    }
