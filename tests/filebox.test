@@ -26,7 +26,6 @@ set filter {
 	{"Text files"		{}		}
 	{"Tcl Scripts"		{.tcl}		}
 	{"C Source Files"	{.c .h}		}
-	{"All files"		*}
 }
 
 set tk_strictMotif 1
