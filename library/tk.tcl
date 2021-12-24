@@ -175,6 +175,7 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 puts "::tk::RestoreFocusGrab in with index: $index and $destroy"
     if {[info exists ::tk::FocusGrab($index)]} {
 	foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
+puts "    unsetting ::tk::FocusGrab($index), whose value is $::tk::FocusGrab($index)"
 	unset ::tk::FocusGrab($index)
     } else {
 	set oldGrab ""
