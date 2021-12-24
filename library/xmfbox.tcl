@@ -53,7 +53,7 @@ proc ::tk::MotifFDialog {type args} {
 
     vwait ::tk::Priv(selectFilePath)
     set result $Priv(selectFilePath)
-    ::tk::RestoreFocusGrab $w $data(sEnt) destroy
+    ::tk::RestoreFocusGrab $w $data(sEnt) withdraw
 
     return $result
 }
