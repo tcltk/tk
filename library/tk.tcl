@@ -142,6 +142,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 #
 proc ::tk::SetFocusGrab {grab {focus {}}} {
     set index "$grab,$focus"
+puts "::tk::SetFocusGrab in with index: $index"
     upvar ::tk::FocusGrab($index) data
 
     lappend data [focus]
@@ -150,12 +151,14 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
     if {[winfo exists $oldGrab]} {
 	lappend data [grab status $oldGrab]
     }
+puts "    data: $data"
     # The "grab" command will fail if another application
     # already holds the grab.  So catch it.
     catch {grab $grab}
     if {[winfo exists $focus]} {
 	focus $focus
     }
+puts "::tk::SetFocusGrab out"
 }
 
 # ::tk::RestoreFocusGrab --
@@ -169,12 +172,14 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
 #
 proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
     set index "$grab,$focus"
+puts "::tk::RestoreFocusGrab in with index: $index and $destroy"
     if {[info exists ::tk::FocusGrab($index)]} {
 	foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
 	unset ::tk::FocusGrab($index)
     } else {
 	set oldGrab ""
     }
+puts "    oldGrab: !!$oldGrab!!"
 
     catch {focus $oldFocus}
     grab release $grab
@@ -184,12 +189,14 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 	destroy $grab
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
-	if {$oldStatus eq "global"} {
+puts "    regrabbing !!$oldGrab!!"
+        if {$oldStatus eq "global"} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
 	}
     }
+puts "::tk::RestoreFocusGrab out"
 }
 
 # ::tk::GetSelection --
