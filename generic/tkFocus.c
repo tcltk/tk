@@ -661,7 +661,7 @@ TkSetFocusWin(
 printf("TkSetFocusWin: winPtr = %p\n", winPtr);fflush(stdout);
 printf("TkSetFocusWin: winPtr->dispPtr = %p\n", winPtr->dispPtr);fflush(stdout);
 printf("TkSetFocusWin: focusPtr = winPtr->dispPtr->focusPtr = %p\n", focusPtr);fflush(stdout);
-	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr && (focusPtr->flags & TK_MAPPED)) {
+	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr && !(focusPtr->flags & TK_ALREADY_DEAD)) {
 printf("TkSetFocusWin: Here 4b1\n");fflush(stdout);
 		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
 		    focusPtr->mainPtr, focusPtr->dispPtr);
@@ -1020,8 +1020,8 @@ FindDisplayFocusInfo(
 {
     DisplayFocusInfo *displayFocusPtr;
 
-printf("FindDisplayFocusInfo: Entering, mainPtr = %p, dispPtr = %p\n", mainPtr, dispPtr);fflush(stdout);
-printf("FindDisplayFocusInfo:           mainPtr->displayFocusPtr = %p\n", mainPtr->displayFocusPtr);fflush(stdout);
+//printf("FindDisplayFocusInfo: Entering, mainPtr = %p, dispPtr = %p\n", mainPtr, dispPtr);fflush(stdout);
+//printf("FindDisplayFocusInfo:           mainPtr->displayFocusPtr = %p\n", mainPtr->displayFocusPtr);fflush(stdout);
     for (displayFocusPtr = mainPtr->displayFocusPtr;
 	    displayFocusPtr != NULL;
 	    displayFocusPtr = displayFocusPtr->nextPtr) {
