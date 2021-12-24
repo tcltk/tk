@@ -389,7 +389,7 @@ enum {
      */
 
     if ([NSApp tkDragTarget]) {
-	Tk_Window dragTarget = [NSApp tkDragTarget];
+	Tk_Window dragTarget = (Tk_Window) [NSApp tkDragTarget];
 	Tk_Window dragWidget = NULL;
 	int x, y;
 	Tk_GetRootCoords(dragTarget, &x, &y);
