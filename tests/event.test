@@ -917,7 +917,8 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
 } -result {.}
 }
 
-memory validate on
+memory trace on
+memory tag event-9.2
 
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
@@ -950,6 +951,9 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
         update
     }
 } -result {.top1}
+
+memory tag after_event-9.2
+memory active stdout
 
 # cleanup
 update
