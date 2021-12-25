@@ -916,6 +916,9 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     bind . <Enter> $EnterBind
 } -result {.}
 }
+
+memory validate on
+
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
     if {[winfo ismapped .]} {
