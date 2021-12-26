@@ -185,9 +185,13 @@ puts "    oldGrab: !!$oldGrab!!"
     catch {focus $oldFocus}
     grab release $grab
     if {$destroy eq "withdraw"} {
+puts "        call  wm withdraw $grab"
 	wm withdraw $grab
+puts "        returned from call  wm withdraw $grab"
     } else {
+puts "        call  wm destroy $grab"
 	destroy $grab
+puts "        returned from call  wm destroy $grab"
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
 puts "    regrabbing !!$oldGrab!!"
