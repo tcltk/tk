@@ -33,11 +33,15 @@ set tk_strictMotif 1
 
     set parent .
 
+puts "Calling tk_getOpenFile -parent $parent -filetypes $filter"
     ToPressButton $parent cancel
     tk_getOpenFile -parent $parent -filetypes $filter
-		    
+puts "Events call for closure of the tk_getOpenFile dialog"
+
+puts "Calling tk_getSaveFile -parent $parent"
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
+puts "Events call for closure of the tk_getSaveFile dialog"
 
 set tk_strictMotif $tk_strictMotif_old
 
