@@ -301,36 +301,26 @@ enum {
     }
 
     /*
-     * Find the toplevel window for the event.  If a capture has been
-     * set this may involve redirecting the event.
+     * Find the toplevel window for the event.
      */
 
-    capture = TkMacOSXGetCapture();
-    if (capture) {
-	winPtr = (TkWindow *) capture;
-	eventWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-	if (!eventWindow) {
+    if ([NSApp tkDragTarget]) {
+	TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
+	TKWindow *dragWindow = nil;
+	if (dragPtr) {
+	    dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
+			    dragPtr->window);
+	}
+	if (!dragWindow) {
+	    [NSApp setTkDragTarget: nil];
+	    target = NULL;
 	    return theEvent;
 	}
+	winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
+    } else if (eventType == NSScrollWheel) {
+	winPtr = scrollTarget;
     } else {
-	if ([NSApp tkDragTarget]) {
-	    TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
-	    TKWindow *dragWindow = nil;
-	    if (dragPtr) {
-	    	dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
-	    	    dragPtr->window);
-	    }
-	    if (!dragWindow) {
-	    	[NSApp setTkDragTarget: nil];
-		target = NULL;
-	    	return theEvent;
-	    }
-	    winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
-	} else if (eventType == NSScrollWheel) {
-	    winPtr = scrollTarget;
-	} else {
-	    winPtr = [NSApp tkEventTarget];
-	}
+	winPtr = [NSApp tkEventTarget];
     }
     if (!winPtr) {
 
@@ -415,18 +405,16 @@ enum {
     if (grabWinPtr && /* There is a grab in effect ... */
 	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
-	Tk_Window tkwin2;
+	Tk_Window w;
 	if (!target) {
 	    return theEvent;
 	}
-	for (tkwin2 = target;
-	     !Tk_IsTopLevel(tkwin2);
-	     tkwin2 = Tk_Parent(tkwin2)) {
-	    if (tkwin2 == (Tk_Window)grabWinPtr) {
+	for (w = target; !Tk_IsTopLevel(w); w = Tk_Parent(w)) {
+	    if (w == (Tk_Window)grabWinPtr) {
 		break;
 	    }
 	}
-	if (tkwin2 != (Tk_Window)grabWinPtr) {
+	if (w != (Tk_Window)grabWinPtr) {
 	    return theEvent;
 	}
     }
@@ -548,6 +536,26 @@ enum {
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	}
+    }
+
+    /*
+     * If button events are being captured, and the target is not in the
+     * subtree below the capturing window, then the NSEvent should not be sent
+     * up the responder chain.  This avoids, for example, beeps when clicking
+     * the mouse button outside of a posted combobox.  See ticket [eb26d4ec8e].
+     */
+
+    capture = TkMacOSXGetCapture();
+    if (capture && eventType == NSLeftMouseDown) {
+	Tk_Window w;
+	for (w = target; w != NULL;  w = Tk_Parent(w)) {
+	    if (w == capture) {
+		break;
+	    }
+	}
+	if (w != capture) {
+	    return nil;
 	}
     }
     return theEvent;
