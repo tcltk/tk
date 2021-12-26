@@ -1327,6 +1327,7 @@ Tk_DestroyWindow(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+printf("Tk_DestroyWindow, destroying %s\n", Tk_PathName(tkwin));fflush(stdout);
     if (winPtr->flags & TK_ALREADY_DEAD) {
 	/*
 	 * A destroy event binding caused the window to be destroyed again.
@@ -1626,7 +1627,9 @@ Tk_DestroyWindow(
 	    if (winPtr->flags & TK_EMBEDDED) {
 		XSync(winPtr->display, False);
 	    }
+printf("Tk_DestroyWindow, now freeing winPtr->mainPtr which had value %p\n", winPtr->mainPtr);fflush(stdout);
 	    ckfree(winPtr->mainPtr);
+printf("Tk_DestroyWindow, now freed winPtr->mainPtr\n");fflush(stdout);
 
 	    /*
 	     * If no other applications are using the display, close the
