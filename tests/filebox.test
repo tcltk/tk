@@ -22,7 +22,6 @@ puts "button was not mapped, updating"
 }
 
 set filter {
-	{"C Source Files"	{.c .h}		}
 	{"All files"		*}
 }
 
