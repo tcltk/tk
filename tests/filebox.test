@@ -5,15 +5,16 @@ tcltest::loadTestedCommands
 set tk_strictMotif_old $tk_strictMotif
 
 proc ToPressButton {parent btn} {
-	after 100 SendButtonPress $parent $btn
+    after 100 SendButtonPress $parent $btn
 }
 
 proc SendButtonPress {parent btn} {
 
     set button $::tk::dialog::file::__tk_filedialog($btn\Btn)
+    update idletasks
     if ![winfo ismapped $button] {
-puts "button was not mapped, updating"
-        update
+        puts "button was not mapped, waiting"
+	tkwait visibility $::tk::dialog::file::__tk_filedialog($btn\Btn)
     }
 
     event generate $button <Enter>
@@ -30,14 +31,15 @@ set filter {
 }
 
 set tk_strictMotif 1
+set parent .
 
-    set parent .
-
+focus -force $parent
 puts "Calling tk_getOpenFile -parent $parent -filetypes $filter"
     ToPressButton $parent cancel
     tk_getOpenFile -parent $parent -filetypes $filter
 puts "Events call for closure of the tk_getOpenFile dialog"
 
+focus -force $parent
 puts "Calling tk_getSaveFile -parent $parent"
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
