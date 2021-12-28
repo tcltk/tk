@@ -7389,6 +7389,7 @@ TkpWmSetState(
     if (state == WithdrawnState) {
 	wmPtr->hints.initial_state = WithdrawnState;
 	wmPtr->withdrawn = 1;
+while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {};
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
 printf("TkpWmSetState: %s has WM_NEVER_MAPPED\n", Tk_PathName(wmPtr->winPtr));fflush(stdout);
 	    return 1;
