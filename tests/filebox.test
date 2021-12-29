@@ -33,13 +33,13 @@ set filter {
 set tk_strictMotif 1
 set parent .
 
-#focus -force $parent
+focus -force $parent
 puts "Calling tk_getOpenFile -parent $parent -filetypes $filter"
     ToPressButton $parent cancel
     tk_getOpenFile -parent $parent -filetypes $filter
 puts "Events call for closure of the tk_getOpenFile dialog"
 
-#focus -force $parent
+focus -force $parent
 puts "Calling tk_getSaveFile -parent $parent"
     ToPressButton $parent cancel
     tk_getSaveFile -parent $parent
