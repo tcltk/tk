@@ -211,6 +211,7 @@ TkpOpenDisplay(
      */
     TkpInitKeymapInfo(dispPtr);
 
+dispPtr->focusDebug = 1;
     return dispPtr;
 }
 
