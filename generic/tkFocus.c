@@ -657,7 +657,6 @@ TkSetFocusWin(
 
 //printf("TkSetFocusWin: Here 4b\n");fflush(stdout);
     	if (force) {
-if (0) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 printf("TkSetFocusWin: winPtr = %p (%s)\n", winPtr, Tk_PathName(winPtr));fflush(stdout);
 printf("TkSetFocusWin: winPtr->flags = %x\n", winPtr->flags);fflush(stdout);
@@ -676,8 +675,8 @@ printf("TkSetFocusWin: Here 4b1\n");fflush(stdout);
 //printf("TkSetFocusWin: Here 4b3\n");fflush(stdout);
 	    }
 //printf("TkSetFocusWin: Here 4b4\n");fflush(stdout);
-}
 
+if (0) {
 	    DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
 	    TkWindow *focusWinPtr = displayFocusPtr2->focusWinPtr;
 printf("TkSetFocusWin: winPtr = %p (%s)\n", winPtr, Tk_PathName(winPtr));fflush(stdout);
@@ -692,6 +691,7 @@ printf("TkSetFocusWin: focusWinPtr = %p (%s)\n", focusWinPtr, Tk_PathName(focusW
 printf("TkSetFocusWin: Here 4b5\n");fflush(stdout);
 		focusWinPtr = NULL;
 	    }
+}
 
     	}
 
