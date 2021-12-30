@@ -685,7 +685,7 @@ printf("TkSetFocusWin: winPtr->flags = %x\n", winPtr->flags);fflush(stdout);
 printf("TkSetFocusWin: winPtr->dispPtr = %p\n", winPtr->dispPtr);fflush(stdout);
 printf("TkSetFocusWin: focusWinPtr = %p\n", focusWinPtr);fflush(stdout);
 if (focusWinPtr) {
-printf("TkSetFocusWin: focusWinPtr->flags = %x\n", focufocusWinPtrsPtr->flags);fflush(stdout);
+printf("TkSetFocusWin: focusWinPtr->flags = %x\n", focusWinPtr->flags);fflush(stdout);
 printf("TkSetFocusWin: focusWinPtr = %p (%s)\n", focusWinPtr, Tk_PathName(focusWinPtr));fflush(stdout);
 }
 	    if (focusWinPtr && focusWinPtr->mainPtr != winPtr->mainPtr) {
