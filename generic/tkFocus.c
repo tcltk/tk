@@ -462,6 +462,7 @@ TkFocusFilterEvent(
 	if (dispPtr->focusPtr == displayFocusPtr->focusWinPtr) {
 	    dispPtr->focusPtr = NULL;
 	}
+dispPtr->focusPtr = NULL;
 	displayFocusPtr->focusWinPtr = NULL;
     } else if (eventPtr->type == EnterNotify) {
 	/*
