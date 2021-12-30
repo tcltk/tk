@@ -925,6 +925,7 @@ TkFocusDeadWindow(
     if (displayFocusPtr->focusWinPtr == winPtr) {
 	DEBUG(dispPtr, ("focus cleared after %s died\n", winPtr->pathName));
 	displayFocusPtr->focusWinPtr = NULL;
+	dispPtr->focusPtr = NULL;
     }
 
     if (displayFocusPtr->focusOnMapPtr == winPtr) {
