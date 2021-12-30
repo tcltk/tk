@@ -1639,7 +1639,7 @@ Tk_DestroyWindow(
 	    }
 //printf("  Tk_DestroyWindow, now freeing winPtr->mainPtr which had value %p\n", winPtr->mainPtr);fflush(stdout);
 	    ckfree(winPtr->mainPtr);
-	    winPtr->mainPtr = NULL;
+//	    winPtr->mainPtr = NULL;
 //printf("  Tk_DestroyWindow, now freed winPtr->mainPtr\n");fflush(stdout);
 
 	    /*
