@@ -1327,13 +1327,13 @@ Tk_DestroyWindow(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-printf("Tk_DestroyWindow, destroying %s\n", Tk_PathName(tkwin));fflush(stdout);
+//printf("Tk_DestroyWindow, destroying %s\n", Tk_PathName(tkwin));fflush(stdout);
     if (winPtr->flags & TK_ALREADY_DEAD) {
 	/*
 	 * A destroy event binding caused the window to be destroyed again.
 	 * Ignore the request.
 	 */
-printf("  Tk_DestroyWindow, already dead, return now\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, already dead, return now\n");fflush(stdout);
 
 	return;
     }
@@ -1367,7 +1367,7 @@ printf("  Tk_DestroyWindow, already dead, return now\n");fflush(stdout);
 
     if (!(halfdeadPtr->flags & HD_FOCUS)) {
 	halfdeadPtr->flags |= HD_FOCUS;
-printf("  Tk_DestroyWindow, calling TkFocusDeadWindow now\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, calling TkFocusDeadWindow now\n");fflush(stdout);
 	TkFocusDeadWindow(winPtr);
     }
 
@@ -1388,7 +1388,7 @@ printf("  Tk_DestroyWindow, calling TkFocusDeadWindow now\n");fflush(stdout);
     if (!(halfdeadPtr->flags & HD_MAIN_WIN) &&
 	    winPtr->mainPtr != NULL && winPtr->mainPtr->winPtr == winPtr) {
 	halfdeadPtr->flags |= HD_MAIN_WIN;
-printf("  Tk_DestroyWindow, destroying a main window\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, destroying a main window\n");fflush(stdout);
 	dispPtr->refCount--;
 	if (tsdPtr->mainWindowList == winPtr->mainPtr) {
 	    tsdPtr->mainWindowList = winPtr->mainPtr->nextPtr;
@@ -1419,7 +1419,7 @@ printf("  Tk_DestroyWindow, destroying a main window\n");fflush(stdout);
 	TkWindow *childPtr = winPtr->childList;
 
 	childPtr->flags |= TK_DONT_DESTROY_WINDOW;
-printf("  Tk_DestroyWindow, recursive destroy call\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, recursive destroy call\n");fflush(stdout);
 	Tk_DestroyWindow((Tk_Window) childPtr);
 	if (winPtr->childList == childPtr) {
 	    /*
@@ -1429,7 +1429,7 @@ printf("  Tk_DestroyWindow, recursive destroy call\n");fflush(stdout);
 	     * window's parent.
 	     */
 
-printf("  Tk_DestroyWindow, we're here (strange condition)\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, we're here (strange condition)\n");fflush(stdout);
 	    winPtr->childList = childPtr->nextPtr;
 	    childPtr->parentPtr = NULL;
 	}
@@ -1447,11 +1447,11 @@ printf("  Tk_DestroyWindow, we're here (strange condition)\n");fflush(stdout);
 	 */
 
 	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
-printf("  Tk_DestroyWindow, container for an embedded application - TkpGetOtherWindow returned %p\n", childPtr);fflush(stdout);
+//printf("  Tk_DestroyWindow, container for an embedded application - TkpGetOtherWindow returned %p\n", childPtr);fflush(stdout);
 
 	if (childPtr != NULL) {
 	    childPtr->flags |= TK_DONT_DESTROY_WINDOW;
-printf("  Tk_DestroyWindow, recursive destroy call for embedded app\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, recursive destroy call for embedded app\n");fflush(stdout);
 	    Tk_DestroyWindow((Tk_Window) childPtr);
 	}
     }
@@ -1514,10 +1514,10 @@ printf("  Tk_DestroyWindow, recursive destroy call for embedded app\n");fflush(s
      */
 
     if (winPtr->flags & TK_WIN_MANAGED) {
-printf("  Tk_DestroyWindow, calling TkWmDeadWindow now\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, calling TkWmDeadWindow now\n");fflush(stdout);
 	TkWmDeadWindow(winPtr);
     } else if (winPtr->flags & TK_WM_COLORMAP_WINDOW) {
-printf("  Tk_DestroyWindow, calling TkWmRemoveFromColormapWindows now\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, calling TkWmRemoveFromColormapWindows now\n");fflush(stdout);
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
@@ -1581,7 +1581,7 @@ printf("  Tk_DestroyWindow, calling TkWmRemoveFromColormapWindows now\n");fflush
 
 	    winPtr->mainPtr->deletionEpoch++;
 	}
-printf("  Tk_DestroyWindow, winPtr->mainPtr->refCount is %d\n", winPtr->mainPtr->refCount);fflush(stdout);
+//printf("  Tk_DestroyWindow, winPtr->mainPtr->refCount is %d\n", winPtr->mainPtr->refCount);fflush(stdout);
 	if (winPtr->mainPtr->refCount-- <= 1) {
 	    const TkCmd *cmdPtr;
 
@@ -1637,10 +1637,10 @@ printf("  Tk_DestroyWindow, winPtr->mainPtr->refCount is %d\n", winPtr->mainPtr-
 	    if (winPtr->flags & TK_EMBEDDED) {
 		XSync(winPtr->display, False);
 	    }
-printf("  Tk_DestroyWindow, now freeing winPtr->mainPtr which had value %p\n", winPtr->mainPtr);fflush(stdout);
+//printf("  Tk_DestroyWindow, now freeing winPtr->mainPtr which had value %p\n", winPtr->mainPtr);fflush(stdout);
 	    ckfree(winPtr->mainPtr);
 	    winPtr->mainPtr = NULL;
-printf("  Tk_DestroyWindow, now freed winPtr->mainPtr\n");fflush(stdout);
+//printf("  Tk_DestroyWindow, now freed winPtr->mainPtr\n");fflush(stdout);
 
 	    /*
 	     * If no other applications are using the display, close the
