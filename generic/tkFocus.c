@@ -462,7 +462,6 @@ TkFocusFilterEvent(
 	if (dispPtr->focusPtr == displayFocusPtr->focusWinPtr) {
 	    dispPtr->focusPtr = NULL;
 	}
-dispPtr->focusPtr = NULL;
 	displayFocusPtr->focusWinPtr = NULL;
     } else if (eventPtr->type == EnterNotify) {
 	/*
@@ -658,6 +657,7 @@ TkSetFocusWin(
 
 //printf("TkSetFocusWin: Here 4b\n");fflush(stdout);
     	if (force) {
+if (0) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 printf("TkSetFocusWin: winPtr = %p (%s)\n", winPtr, Tk_PathName(winPtr));fflush(stdout);
 printf("TkSetFocusWin: winPtr->flags = %x\n", winPtr->flags);fflush(stdout);
@@ -676,6 +676,23 @@ printf("TkSetFocusWin: Here 4b1\n");fflush(stdout);
 //printf("TkSetFocusWin: Here 4b3\n");fflush(stdout);
 	    }
 //printf("TkSetFocusWin: Here 4b4\n");fflush(stdout);
+}
+
+	    DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
+	    TkWindow *focusWinPtr = displayFocusPtr2->focusWinPtr;
+printf("TkSetFocusWin: winPtr = %p (%s)\n", winPtr, Tk_PathName(winPtr));fflush(stdout);
+printf("TkSetFocusWin: winPtr->flags = %x\n", winPtr->flags);fflush(stdout);
+printf("TkSetFocusWin: winPtr->dispPtr = %p\n", winPtr->dispPtr);fflush(stdout);
+printf("TkSetFocusWin: focusWinPtr = %p\n", focusWinPtr);fflush(stdout);
+if (focusWinPtr) {
+printf("TkSetFocusWin: focusWinPtr->flags = %x\n", focufocusWinPtrsPtr->flags);fflush(stdout);
+printf("TkSetFocusWin: focusWinPtr = %p (%s)\n", focusWinPtr, Tk_PathName(focusWinPtr));fflush(stdout);
+}
+	    if (focusWinPtr && focusWinPtr->mainPtr != winPtr->mainPtr) {
+printf("TkSetFocusWin: Here 4b5\n");fflush(stdout);
+		focusWinPtr = NULL;
+	    }
+
     	}
 
 	/*
