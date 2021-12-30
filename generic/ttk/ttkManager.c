@@ -314,13 +314,14 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     TkSizeT index = Ttk_ContentIndex(mgr, window);
-    int reqWidth = Tk_ReqWidth(window);
-    int reqHeight= Tk_ReqHeight(window);
 
-    if (mgr->managerSpec->ContentRequest(
-		mgr->managerData, index, reqWidth, reqHeight))
-    {
-	ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
+    if (index >= 0) {
+	int reqWidth = Tk_ReqWidth(window);
+	int reqHeight= Tk_ReqHeight(window);
+	if (mgr->managerSpec->ContentRequest(
+	    mgr->managerData, index, reqWidth, reqHeight)) {
+	    ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
+	}
     }
 }
 
