@@ -856,10 +856,14 @@ TkFocusDeadWindow(
 
 printf("TkFocusDeadWindow entered with winPtr = %p which is %s\n", winPtr, Tk_PathName(winPtr));fflush(stdout);
 printf("               winPtr->dispPtr->focusPtr is %p", winPtr->dispPtr->focusPtr);fflush(stdout);
-if (winPtr->dispPtr->focusPtr) {
-  printf(" which is %s\n", Tk_PathName(winPtr->dispPtr->focusPtr));fflush(stdout);
+if (winPtr->dispPtr->focusPtr == 0x61616161) {
+  printf("focusPtr has STOMP value\n");
 } else {
-  printf("\n");fflush(stdout);
+  if (winPtr->dispPtr->focusPtr) {
+    printf(" which is %s\n", Tk_PathName(winPtr->dispPtr->focusPtr));fflush(stdout);
+  } else {
+    printf("\n");fflush(stdout);
+  }
 }
     /*
      * Certain special windows like those used for send and clipboard have no
