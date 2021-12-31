@@ -854,12 +854,14 @@ TkFocusDeadWindow(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
+printf("TkFocusDeadWindow entered with %s\n", Tk_PathName(winPtr));fflush(stdout);
     /*
      * Certain special windows like those used for send and clipboard have no
      * mainPtr.
      */
 
     if (winPtr->mainPtr == NULL) {
+printf("TkFocusDeadWindow: early return since mainPtr is NULL\n");fflush(stdout);
 	return;
     }
 
