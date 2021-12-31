@@ -91,7 +91,7 @@ jobs:
               echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic TESTFLAGS="-file \"event.test filebox.test focus.test unixEmbed.test\" -verbose be"; exit $? ) | tee out-classic.txt || {
+          ( runXvfb :0; make test-classic TESTFLAGS="-file \"event.test filebox.test focus.test unixEmbed.test\" -verbose beps"; exit $? ) | tee out-classic.txt || {
             echo "::error::Failure during Test (classic)"
             exit 1
           }
