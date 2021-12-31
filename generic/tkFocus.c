@@ -813,6 +813,7 @@ TkFocusDeadWindow(
     ToplevelFocusInfo *tlFocusPtr, *prevPtr;
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
+    int noMatch = 1;
 
     /*
      * Certain special windows like those used for send and clipboard have no
@@ -856,6 +857,7 @@ TkFocusDeadWindow(
 		prevPtr->nextPtr = tlFocusPtr->nextPtr;
 	    }
 	    ckfree(tlFocusPtr);
+	    noMatch = 0;
 	    break;
 	} else if (winPtr == tlFocusPtr->focusWinPtr) {
 	    /*
@@ -873,6 +875,7 @@ TkFocusDeadWindow(
 		displayFocusPtr->focusWinPtr = tlFocusPtr->topLevelPtr;
 		dispPtr->focusPtr = tlFocusPtr->topLevelPtr;
 	    }
+	    noMatch = 0;
 	    break;
 	}
     }
@@ -889,6 +892,15 @@ TkFocusDeadWindow(
 
     if (displayFocusPtr->focusOnMapPtr == winPtr) {
 	displayFocusPtr->focusOnMapPtr = NULL;
+    }
+
+    /*
+     * It may happen that the search above for focus records that refer
+     * to this window did not find any match. In such a case, when the
+     * dead window had the focus, release it.
+     */
+    if (noMatch && (dispPtr->focusPtr == winPtr)) {
+	dispPtr->focusPtr = NULL;
     }
 }
 
