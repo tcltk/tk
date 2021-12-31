@@ -854,7 +854,7 @@ TkFocusDeadWindow(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
-printf("TkFocusDeadWindow entered with winPtr pathname being %s\n", Tk_PathName(winPtr));fflush(stdout);
+printf("TkFocusDeadWindow entered with winPtr = %p which is %s\n", winPtr, Tk_PathName(winPtr));fflush(stdout);
 printf("               winPtr->dispPtr->focusPtr is %p", winPtr->dispPtr->focusPtr);fflush(stdout);
 if (winPtr->dispPtr->focusPtr) {
   printf(" which is %s\n", Tk_PathName(winPtr->dispPtr->focusPtr));fflush(stdout);
