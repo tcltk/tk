@@ -1,7 +1,8 @@
 name: Windows
-on: [push]
-  branches-ignore:
-    - 'fvogelnew1-patch-1'
+on:
+  push:
+    branches-ignore:
+      - 'fvogelnew1-patch-1'
 env:
   ERROR_ON_FAILURES: 1
 jobs:
