@@ -949,7 +949,7 @@ if (0) {
     if (displayFocusPtr->focusOnMapPtr == winPtr) {
 	displayFocusPtr->focusOnMapPtr = NULL;
     }
-if winPtr == dispPtr->focusPtr) {
+if (winPtr == dispPtr->focusPtr) {
 printf("  TkFocusDeadWindow: The deleted window is dispPtr->focusPtr, now resetting this pointer to NULL\n");fflush(stdout);
   dispPtr->focusPtr = NULL;
 }
