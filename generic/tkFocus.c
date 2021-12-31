@@ -854,8 +854,8 @@ TkFocusDeadWindow(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
-printf("TkFocusDeadWindow entered with winPtr being %s\n", Tk_PathName(winPtr));fflush(stdout);
-printf("               winPtr->dispPtr->focusPtr is %s\n", Tk_PathName(winPtr->dispPtr->focusPtr));fflush(stdout);
+printf("TkFocusDeadWindow entered with winPtr pathname being %s\n", Tk_PathName(winPtr));fflush(stdout);
+printf("               winPtr->dispPtr->focusPtr is %p\n", winPtr->dispPtr->focusPtr);fflush(stdout);
     /*
      * Certain special windows like those used for send and clipboard have no
      * mainPtr.
