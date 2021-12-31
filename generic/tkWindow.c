@@ -1624,6 +1624,7 @@ Tk_DestroyWindow(
 	    TkBindFree(winPtr->mainPtr);
 	    TkDeleteAllImages(winPtr->mainPtr);
 	    TkFontPkgFree(winPtr->mainPtr);
+printf("Tk_DestroyWindow, calling TkFocusFree for %s\n", Tk_PathName(winPtr));fflush(stdout);
 	    TkFocusFree(winPtr->mainPtr);
 	    TkStylePkgFree(winPtr->mainPtr);
 
