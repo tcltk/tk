@@ -895,6 +895,7 @@ printf("  TkFocusDeadWindow: early return since mainPtr is NULL\n");fflush(stdou
 printf("  TkFocusDeadWindow: The top-level window is the one being deleted\n");fflush(stdout);
 
 	    if (dispPtr->implicitWinPtr == winPtr) {
+printf("    TkFocusDeadWindow: dispPtr->implicitWinPtr == winPtr\n");fflush(stdout);
 		DEBUG(dispPtr, ("releasing focus to root after %s died\n",
 			tlFocusPtr->topLevelPtr->pathName));
 		dispPtr->implicitWinPtr = NULL;
@@ -902,6 +903,7 @@ printf("  TkFocusDeadWindow: The top-level window is the one being deleted\n");f
 		dispPtr->focusPtr = NULL;
 	    }
 	    if (displayFocusPtr->focusWinPtr == tlFocusPtr->focusWinPtr) {
+printf("    TkFocusDeadWindow: displayFocusPtr->focusWinPtr == tlFocusPtr->focusWinPtr\n");fflush(stdout);
 		displayFocusPtr->focusWinPtr = NULL;
 		dispPtr->focusPtr = NULL;
 	    }
@@ -910,6 +912,7 @@ printf("  TkFocusDeadWindow: The top-level window is the one being deleted\n");f
 	    } else {
 		prevPtr->nextPtr = tlFocusPtr->nextPtr;
 	    }
+printf("    TkFocusDeadWindow: calling ckfree(tlFocusPtr), then break from the tlFocusPtr loop\n");fflush(stdout);
 	    ckfree(tlFocusPtr);
 	    break;
 	} else if (winPtr == tlFocusPtr->focusWinPtr) {
