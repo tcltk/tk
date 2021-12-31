@@ -873,7 +873,7 @@ if (0) {
      */
 
     if (winPtr->mainPtr == NULL) {
-printf("TkFocusDeadWindow: early return since mainPtr is NULL\n");fflush(stdout);
+printf("  TkFocusDeadWindow: early return since mainPtr is NULL\n");fflush(stdout);
 	return;
     }
 
@@ -892,6 +892,7 @@ printf("TkFocusDeadWindow: early return since mainPtr is NULL\n");fflush(stdout)
 	     * record and release the focus back to PointerRoot if we acquired
 	     * it implicitly.
 	     */
+printf("  TkFocusDeadWindow: The top-level window is the one being deleted\n");fflush(stdout);
 
 	    if (dispPtr->implicitWinPtr == winPtr) {
 		DEBUG(dispPtr, ("releasing focus to root after %s died\n",
@@ -916,6 +917,7 @@ printf("TkFocusDeadWindow: early return since mainPtr is NULL\n");fflush(stdout)
 	     * The deleted window had the focus for its top-level: move the
 	     * focus to the top-level itself.
 	     */
+printf("  TkFocusDeadWindow: The deleted window had the focus for its top-level\n");fflush(stdout);
 
 	    tlFocusPtr->focusWinPtr = tlFocusPtr->topLevelPtr;
 	    if ((displayFocusPtr->focusWinPtr == winPtr)
