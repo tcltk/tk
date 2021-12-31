@@ -21,15 +21,11 @@ proc SendButtonPress {parent btn} {
 }
 
 set filter {
-	{"Text files"		{.txt .doc}	}
-	{"Text files"		{}		}
-	{"Tcl Scripts"		{.tcl}		}
-	{"C Source Files"	{.c .h}		}
-	{"All Source Files"	{.tcl .c .h}	}
-	{"Image Files"		{.gif}		}
-	{"Image Files"		{.jpeg .jpg}	}
-	{"Image Files"		""		}
-	{"All files"		*}
+    {"Text files"		{.txt .doc}	}
+    {"Text files"		{}		}
+    {"Tcl Scripts"		{.tcl}		}
+    {"C Source Files"	{.c .h}		}
+    {"All files"		*}
     }
 
 set tk_strictMotif 1
