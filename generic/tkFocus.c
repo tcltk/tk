@@ -946,6 +946,9 @@ printf("  TkFocusDeadWindow: The deleted window had the focus for its top-level\
     if (displayFocusPtr->focusOnMapPtr == winPtr) {
 	displayFocusPtr->focusOnMapPtr = NULL;
     }
+if (winPtr == dispPtr->focusPtr) {
+  dispPtr->focusPtr = NULL;
+}
 }
 
 /*
