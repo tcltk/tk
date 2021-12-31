@@ -183,7 +183,7 @@ proc _get_selection {widget} {
 }
 
 # Begining of the actual tests
-
+if 0 {
 test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} -setup {
 	deleteWindows
     set x {}
@@ -914,6 +914,7 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     deleteWindows
     bind . <Enter> $EnterBind
 } -result {.}
+}
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
     if {[winfo ismapped .]} {
