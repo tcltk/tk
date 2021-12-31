@@ -1,5 +1,8 @@
 name: Linux
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - 'fvogelnew1-patch-1'
 defaults:
   run:
     shell: bash
