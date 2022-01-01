@@ -61,6 +61,11 @@ attempt to allocate a new color on that window failed and this
 application has not freed any colors in the colormap since the
 failed allocation.
 .TP
+\fBwinfo container \fIwindow\fR
+Returns the path name of \fIwindow\fR's container (i.e. the window
+containing \fIwindow\fR).  If \fIwindow\fR is a toplevel window or
+if it isn't managed by any geometry manager, an empty string is returned.
+.TP
 \fBwinfo containing \fR?\fB\-displayof \fIwindow\fR? \fIrootX rootY\fR
 Returns the path name for the window containing the point given
 by \fIrootX\fR and \fIrootY\fR.
