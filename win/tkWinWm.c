@@ -5580,7 +5580,7 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 	for (w = containerPtr; w != NULL && w->wmInfoPtr != NULL;
-	     w = (TkWindow *)w->wmInfoPtr->containerPtr) {
+	    w = (TkWindow *)w->wmInfoPtr->containerPtr) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "setting \"%s\" as master creates a transient/master cycle",
@@ -8297,7 +8297,7 @@ ActivateWindow(
     /*
      * If the toplevel is in the middle of a move or size operation then
      * we must delay handling of this event to avoid stealing the focus
-     * while the window manage is in control.
+     * while the window manager is in control.
      */
 
     if (eventPtr->flagPtr && *eventPtr->flagPtr) {
@@ -8365,7 +8365,7 @@ TkWinSetForegroundWindow(
  *
  * TkpWinToplevelWithdraw --
  *
- *	This function is to be used by a window manage to withdraw a toplevel
+ *	This function is to be used by a window manager to withdraw a toplevel
  *	window.
  *
  * Results:
@@ -8392,7 +8392,7 @@ TkpWinToplevelWithDraw(
  *
  * TkpWinToplevelIconify --
  *
- *	This function is to be used by a window manage to iconify a toplevel
+ *	This function is to be used by a window manager to iconify a toplevel
  *	window.
  *
  * Results:
@@ -8416,7 +8416,7 @@ TkpWinToplevelIconify(
  *
  * TkpWinToplevelDeiconify --
  *
- *	This function is to be used by a window manage to deiconify a toplevel
+ *	This function is to be used by a window manager to deiconify a toplevel
  *	window.
  *
  * Results:
@@ -8483,7 +8483,7 @@ TkpWinToplevelDeiconify(
  *
  * TkpWinGeometryIsControlledByWm --
  *
- *	This function is to be used by a window manage to see if wm has
+ *	This function is to be used by a window manager to see if wm has
  *	canceled geometry control.
  *
  * Results:
