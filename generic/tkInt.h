@@ -368,8 +368,7 @@ typedef struct TkDisplay {
 				 * by that container. */
     int geomInit;
 
-#define TkGetContainer(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
-    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+#define TkGetContainer(tkwin) ((TkWindow *)tkwin)->maintainerPtr
 
     /*
      * Information used by tkGet.c only:
@@ -870,8 +869,8 @@ typedef struct TkWindow {
     char *geomMgrName;          /* Records the name of the geometry manager. */
     struct TkWindow *maintainerPtr;
 				/* The geometry container for this window. The
-				 * value is NULL if the window has no container or
-				 * if its container is its parent. */
+				 * value is NULL if the window has no
+				 * container. */
 } TkWindow;
 
 /*

@@ -3367,9 +3367,7 @@ ConfigureContent(
 		return TCL_ERROR;
 	    }
 	}
-	if (containerPtr->tkwin != Tk_Parent(content)) {
-	    ((TkWindow *)content)->maintainerPtr = (TkWindow *)containerPtr->tkwin;
-	}
+	((TkWindow *)content)->maintainerPtr = (TkWindow *)containerPtr->tkwin;
 
 	Tk_ManageGeometry(content, &gridMgrType, contentPtr);
 
