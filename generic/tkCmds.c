@@ -1290,15 +1290,15 @@ Tk_WinfoObjCmd(
     };
     static const char *const optionStrings[] = {
 	"cells",	"children",	"class",	"colormapfull",
-	"depth",	"geometry",	"height",	"id",
-	"ismapped",	"manager",	"name",		"parent",
-	"pointerx",	"pointery",	"pointerxy",	"reqheight",
-	"reqwidth",	"rootx",	"rooty",	"screen",
-	"screencells",	"screendepth",	"screenheight",	"screenwidth",
-	"screenmmheight","screenmmwidth","screenvisual","server",
-	"toplevel",	"viewable",	"visual",	"visualid",
-	"vrootheight",	"vrootwidth",	"vrootx",	"vrooty",
-	"width",	"x",		"y",
+	"container",	"depth",	"geometry",	"height",
+	"id",		"ismapped",	"manager",	"name",
+	"parent",	"pointerx",	"pointery",	"pointerxy",
+	"reqheight",	"reqwidth",	"rootx",	"rooty",
+	"screen",	"screencells",	"screendepth",	"screenheight",
+	"screenwidth",	"screenmmheight","screenmmwidth","screenvisual",
+	"server",	"toplevel",	"viewable",	"visual",
+	"visualid",	"vrootheight",	"vrootwidth",	"vrootx",
+	"vrooty",	"width",	"x",		"y",
 
 	"atom",		"atomname",	"containing",	"interps",
 	"pathname",
@@ -1310,15 +1310,15 @@ Tk_WinfoObjCmd(
     };
     enum options {
 	WIN_CELLS,	WIN_CHILDREN,	WIN_CLASS,	WIN_COLORMAPFULL,
-	WIN_DEPTH,	WIN_GEOMETRY,	WIN_HEIGHT,	WIN_ID,
-	WIN_ISMAPPED,	WIN_MANAGER,	WIN_NAME,	WIN_PARENT,
-	WIN_POINTERX,	WIN_POINTERY,	WIN_POINTERXY,	WIN_REQHEIGHT,
-	WIN_REQWIDTH,	WIN_ROOTX,	WIN_ROOTY,	WIN_SCREEN,
-	WIN_SCREENCELLS,WIN_SCREENDEPTH,WIN_SCREENHEIGHT,WIN_SCREENWIDTH,
-	WIN_SCREENMMHEIGHT,WIN_SCREENMMWIDTH,WIN_SCREENVISUAL,WIN_SERVER,
-	WIN_TOPLEVEL,	WIN_VIEWABLE,	WIN_VISUAL,	WIN_VISUALID,
-	WIN_VROOTHEIGHT,WIN_VROOTWIDTH,	WIN_VROOTX,	WIN_VROOTY,
-	WIN_WIDTH,	WIN_X,		WIN_Y,
+	WIN_CONTAINER,	WIN_DEPTH,WIN_GEOMETRY,	WIN_HEIGHT,
+	WIN_ID,		WIN_ISMAPPED,	WIN_MANAGER,	WIN_NAME,
+	WIN_PARENT,	WIN_POINTERX,	WIN_POINTERY,	WIN_POINTERXY,
+	WIN_REQHEIGHT,	WIN_REQWIDTH,	WIN_ROOTX,	WIN_ROOTY,
+	WIN_SCREEN,	WIN_SCREENCELLS,WIN_SCREENDEPTH,WIN_SCREENHEIGHT,
+	WIN_SCREENWIDTH,WIN_SCREENMMHEIGHT,WIN_SCREENMMWIDTH,WIN_SCREENVISUAL,
+	WIN_SERVER,	WIN_TOPLEVEL,	WIN_VIEWABLE,	WIN_VISUAL,
+	WIN_VISUALID,	WIN_VROOTHEIGHT,WIN_VROOTWIDTH,	WIN_VROOTX,
+	WIN_VROOTY,	WIN_WIDTH,	WIN_X,		WIN_Y,
 
 	WIN_ATOM,	WIN_ATOMNAME,	WIN_CONTAINING,	WIN_INTERPS,
 	WIN_PATHNAME,
@@ -1373,6 +1373,12 @@ Tk_WinfoObjCmd(
     case WIN_COLORMAPFULL:
 	Tcl_SetObjResult(interp,
 		Tcl_NewBooleanObj(TkpCmapStressed(tkwin,Tk_Colormap(tkwin))));
+	break;
+    case WIN_CONTAINER:
+	winPtr = TkGetContainer(winPtr);
+	if (winPtr != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->pathName, -1));
+	}
 	break;
     case WIN_DEPTH:
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_Depth(tkwin)));

@@ -14,6 +14,12 @@ tcltest::loadTestedCommands
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
+proc twait {duration} {
+    set ::_twait 1
+    after $duration {unset ::_twait}
+    vwait ::_twait
+}
+
 # eatColors --
 # Creates a toplevel window and allocates enough colors in it to
 # use up all the slots in the colormap.
@@ -484,6 +490,42 @@ test winfo-14.4 {mapped at idle time} -setup {
 } -cleanup {
     destroy .t
 } -result 1
+
+test winfo-container-1 {regular toplevel has no container window} -body {
+    winfo container .
+} -result {}
+
+test winfo-container-2 {unmanaged window has no container window} -body {
+    frame .f; # not packed
+    twait 200
+    winfo container .f
+} -cleanup {
+    destroy .f
+} -result {}
+
+test winfo-container-3 {container window is parent} -body {
+    wm deiconify .
+    pack propagate . 0
+    pack [frame .f -bg green -width 50 -height 50]
+    twait 200
+    winfo container .f
+} -cleanup {
+    destroy .f
+    twait 200
+} -result {.}
+
+test winfo-container-4 {container window is not parent} -body {
+    wm deiconify .
+    pack propagate . 0
+    pack [frame .f -bg green -width 50 -height 50]
+    pack propagate .f 0
+    pack [frame .g -bg yellow -width 20 -height 20] -in .f
+    twait 400
+    winfo container .g
+} -cleanup {
+    destroy .f .g
+    twait 200
+} -result {.f}
 
 deleteWindows
 # cleanup
