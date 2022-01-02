@@ -823,7 +823,7 @@ typedef struct Tk_FakeWin {
     int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
     char *dummy21;		/* geomMgrName */
-    Tk_Window dummy22;		/* maintainerPtr */
+    Tk_Window dummy22;		/* containerPtr */
 } Tk_FakeWin;
 
 /*
