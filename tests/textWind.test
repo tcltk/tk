@@ -1547,7 +1547,7 @@ test textWind-17.10 {peer widget window configuration} -setup {
     .t insert 1.0 "Some sample text"
     toplevel .tt
     pack [.t peer create .tt.t]
-    update idletasks
+    update
     .t window create 1.2 -window [frame .t.f -width 10 -height 20 -bg blue]
     update idletasks
     # There should be a window in the main widget but not in the peer.
