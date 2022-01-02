@@ -424,7 +424,7 @@ Tk_MaintainGeometry(
     Tk_Window ancestor, parent;
     TkDisplay *dispPtr = ((TkWindow *) container)->dispPtr;
 
-    ((TkWindow *)window)->maintainerPtr = (TkWindow *)container;
+    ((TkWindow *)window)->containerPtr = (TkWindow *)container;
 
     if (container == Tk_Parent(window)) {
 	/*
@@ -571,7 +571,7 @@ Tk_UnmaintainGeometry(
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) window)->dispPtr;
 
-    ((TkWindow *)window)->maintainerPtr = NULL;
+    ((TkWindow *)window)->containerPtr = NULL;
 
     if (container == Tk_Parent(window)) {
 	/*
