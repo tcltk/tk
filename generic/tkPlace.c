@@ -711,7 +711,7 @@ ConfigureContent(
 		goto error;
 	    }
 	}
-	((TkWindow *)contentPtr->tkwin)->containerPtr = (TkWindow *)win;
+	((TkWindow *)contentPtr->tkwin)->maintainerPtr = (TkWindow *)win;
 
 	if ((contentPtr->containerPtr != NULL)
 		&& (contentPtr->containerPtr->tkwin == win)) {
