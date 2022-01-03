@@ -368,7 +368,7 @@ typedef struct TkDisplay {
 				 * by that container. */
     int geomInit;
 
-#define TkGetContainer(tkwin) ((TkWindow *)tkwin)->containerPtr
+#define TkGetContainer(tkwin) ((TkWindow *)tkwin)->maintainerPtr
 
     /*
      * Information used by tkGet.c only:
@@ -867,7 +867,7 @@ typedef struct TkWindow {
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
     char *geomMgrName;          /* Records the name of the geometry manager. */
-    struct TkWindow *containerPtr;
+    struct TkWindow *maintainerPtr;
 				/* The geometry container for this window. The
 				 * value is NULL if the window has no
 				 * container. */

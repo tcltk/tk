@@ -1813,7 +1813,7 @@ ConfigureContent(
 		return TCL_ERROR;
 	    }
 	}
-	((TkWindow *)content)->containerPtr = (TkWindow *)containerPtr->tkwin;
+	((TkWindow *)content)->maintainerPtr = (TkWindow *)containerPtr->tkwin;
 
 	/*
 	 * Unpack the content if it's currently packed, then position it after
