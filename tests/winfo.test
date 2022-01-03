@@ -490,7 +490,15 @@ test winfo-container-1 {regular toplevel has no container window} -body {
     winfo container .
 } -result {}
 
-test winfo-container-2 {unmanaged window has no container window} -body {
+test winfo-container-2 {regular toplevel has no container window} -setup {
+    toplevel .top
+} -body {
+    winfo container .top
+} -cleanup {
+    destroy .top
+} -result {}
+
+test winfo-container-3 {unmanaged window has no container window} -body {
     frame .f; # not packed
     update
     winfo container .f
@@ -498,7 +506,7 @@ test winfo-container-2 {unmanaged window has no container window} -body {
     destroy .f
 } -result {}
 
-test winfo-container-3 {container window is parent} -body {
+test winfo-container-4 {container window is parent} -body {
     wm deiconify .
     pack propagate . 0
     pack [frame .f -bg green -width 50 -height 50]
@@ -508,7 +516,7 @@ test winfo-container-3 {container window is parent} -body {
     destroy .f
 } -result {.}
 
-test winfo-container-4 {container window is not parent} -body {
+test winfo-container-5 {container window is not parent} -body {
     wm deiconify .
     pack propagate . 0
     pack [frame .f -bg green -width 50 -height 50]
@@ -519,6 +527,45 @@ test winfo-container-4 {container window is not parent} -body {
 } -cleanup {
     destroy .f .g
 } -result {.f}
+
+test winfo-container-6 {container window for an embedded window in a text widget} -setup {
+    text .t
+} -body {
+    .t insert end "This is the first line"
+    frame .f -width 3 -height 3 -bg red
+    .t window create 2.2 -window .f
+    update
+    winfo container .f
+} -cleanup {
+    destroy .t
+} -result {.t}
+
+test winfo-container-7 {container window for a pane of a panedwindow} -setup {
+    panedwindow .p
+} -body {
+    .p add [button .b]
+    winfo container .b
+} -cleanup {
+    destroy .p .b
+} -result {.p}
+
+test winfo-container-8 {container window for an embedded window in a canvas widget} -setup {
+    canvas .c -width 250 -height 200
+} -body {
+    frame .f -width 80 -height 50 -bg red
+    .c create window 300 400 -window .f
+    winfo container .f
+} -cleanup {
+    destroy .c
+} -result {.c}
+
+test winfo-container-9 {container window for a ttk button} -setup {
+    ttk::button .b
+} -body {
+    winfo container .b
+} -cleanup {
+    destroy .b
+} -result {.}
 
 deleteWindows
 # cleanup

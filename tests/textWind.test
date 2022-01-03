@@ -64,12 +64,12 @@ test textWind-1.1 {basic tests of options} -setup {
     .t window create 2.2 -window .f
     update
     list [winfo ismapped .f] [winfo geom .f] [.t bbox .f] \
-        [.t window configure .f -window] [winfo container .f]
+        [.t window configure .f -window]
 } -result [list \
     1 \
     3x3+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight+(($fixedHeight-3)/2)}] \
     [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight+(($fixedHeight-3)/2)}] 3 3] \
-    {-window {} {} {} .f} .t]
+    {-window {} {} {} .f}]
 
 test textWind-1.2 {basic tests of options} -setup {
     .t delete 1.0 end
