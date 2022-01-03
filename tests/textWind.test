@@ -821,7 +821,7 @@ test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -const
         concat .t2
     }
     set msg {}
-    updateText
+    update idletasks ; after 100 ; update
     lappend msg [.t bbox 1.5]
 } -cleanup {
     rename bgerror {}
