@@ -969,14 +969,14 @@ test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     place forget .t
     pack .t
 # Make sure the Text is mapped before we start
-    updateText
+    update
 } -body {
     .t insert 1.0 "Some sample text"
     pack forget .t
     place .t -x 30 -y 50
     frame .f -width 30 -height 20 -bg $color
     .t window create 1.12 -window .f
-    updateText
+    update
     winfo geom .f
 } -cleanup {
     destroy .f
@@ -989,14 +989,14 @@ test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     place forget .t
     pack .t
 # Make sure the Text is mapped before we start
-    updateText
+    update
 } -body {
     .t insert 1.0 "Some sample text"
     pack forget .t
     place .t -x 30 -y 50
     frame .t.f -width 30 -height 20 -bg $color
     .t window create 1.12 -window .t.f
-    updateText
+    update
     winfo geom .t.f
 } -cleanup {
     destroy .t.f
@@ -1010,17 +1010,17 @@ test textWind-11.3 {EmbWinDisplayProc procedure, configuration optimization} -se
     place forget .t
     pack .t
 # Make sure the Text is mapped before we start
-    updateText
+    update
 } -body {
     .t insert 1.0 "Some sample text"
     frame .f -width 30 -height 20 -bg $color
     .t window create 1.12 -window .f
-    updateText
+    update
     bind .f <Configure> {set x ".f configured"}
     set x {no configures}
     .t delete 1.0
     .t insert 1.0 "X"
-    updateText
+    update
     return $x
 } -cleanup {
     destroy .f
