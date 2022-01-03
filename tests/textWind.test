@@ -13,6 +13,18 @@ tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
+# Platform specific procedure for updating the text widget.
+
+if {[tk windowingsystem] == "aqua"} {
+    proc updateText {} {
+	update idletasks
+    }
+} else {
+    proc updateText {} {
+	update
+    }
+}
+
 deleteWindows
 
 set fixedFont {"Courier" -12}
@@ -809,7 +821,7 @@ test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -const
         concat .t2
     }
     set msg {}
-    update
+    updateText
     lappend msg [.t bbox 1.5]
 } -cleanup {
     rename bgerror {}
