@@ -1036,8 +1036,12 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->spacing2String
 	    || tagPtr->spacing3String
 	    || tagPtr->tabStringPtr
-	    || tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE
-	    || tagPtr->wrapMode != TEXT_WRAPMODE_NULL) {
+	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
+	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR
+		|| tagPtr->wrapMode == TEXT_WRAPMODE_CHAR
+		|| tagPtr->wrapMode == TEXT_WRAPMODE_NONE
+		|| tagPtr->wrapMode == TEXT_WRAPMODE_WORD
+		|| tagPtr->wrapMode == TEXT_WRAPMODE_CODEPOINT) {
 	tagPtr->affectsDisplay = 1;
 	tagPtr->affectsDisplayGeometry = 1;
     } else if (tagPtr->attrs.border
@@ -2920,8 +2924,28 @@ TkTextBindProc(
     if (!(textPtr->flags & DESTROYED)) {
 	const TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
 
-	if (sharedTextPtr->tagBindingTable && !TkTextTagSetIsEmpty(textPtr->curTagInfoPtr)) {
-	    TagBindEvent(textPtr, eventPtr, textPtr->curTagInfoPtr, sharedTextPtr->tagEpoch);
+	if (sharedTextPtr->tagBindingTable) {
+	    if (!TkTextTagSetIsEmpty(textPtr->curTagInfoPtr)) {
+		/*
+		 * The mouse is inside the text widget, the 'current' mark was updated.
+		 */
+
+		TagBindEvent(textPtr, eventPtr, textPtr->curTagInfoPtr, sharedTextPtr->tagEpoch);
+	    } else if ((eventPtr->type == KeyPress) || (eventPtr->type == KeyRelease)) {
+		 /*
+		  * Key events fire independently of the 'current' mark and use the
+		  * 'insert' mark.
+		  */
+
+		TkTextIndex index;
+		TkTextTagSet *insertTags;
+
+		TkTextMarkNameToIndex(textPtr, "insert", &index);
+		insertTags = TkTextIndexGetContentSegment(&index, NULL)->tagInfoPtr;
+		if (!TkTextTagSetIsEmpty(insertTags)) {
+		    TagBindEvent(textPtr, eventPtr, insertTags, sharedTextPtr->tagEpoch);
+		}
+	    }
 	    if (textPtr->flags & DESTROYED) {
 		TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 		return;

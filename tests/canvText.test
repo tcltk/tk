@@ -66,7 +66,7 @@ test canvText-1.12 {configuration options: good value for "underline"} -body {
 } -result {0 0}
 test canvasText-1.13 {configuration options: bad value for "underline"} -body {
     .c itemconfigure test -underline xyz
-} -returnCodes error -result {expected integer but got "xyz"}
+} -returnCodes error -result {bad index "xyz": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test canvText-1.14 {configuration options: good value for "width"} -body {
     .c itemconfigure test -width 6
     list [lindex [.c itemconfigure test -width] 4] [.c itemcget test -width]
@@ -756,7 +756,7 @@ test canvText-14.1 {GetTextIndex procedure} -setup {
     list [.c index test end] [.c index test insert] \
 	[.c index test sel.first] [.c index test sel.last] \
 	[.c index test @0,0] \
-	[.c index test -1] [.c index test 10] [.c index test 100]
+	[.c index test {}] [.c index test 10] [.c index test 100]
 } -cleanup {
     .c delete test
 } -result {15 12 5 8 0 0 10 15}

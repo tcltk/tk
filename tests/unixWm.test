@@ -902,7 +902,7 @@ test unixWm-24.3 {Tk_WmCmd procedure, "iconmask" option} unix {
 
 test unixWm-25.1 {Tk_WmCmd procedure, "iconname" option} unix {
     list [catch {wm icon .t} msg] $msg
-} {1 {ambiguous option "icon": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
+} {1 {ambiguous option "icon": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 test unixWm-25.2 {Tk_WmCmd procedure, "iconname" option} unix {
     list [catch {wm iconname .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm iconname window ?newName?"}}
@@ -1351,7 +1351,7 @@ test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
 
 test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} unix {
     list [catch {wm unknown .t} msg] $msg
-} {1 {bad option "unknown": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
+} {1 {bad option "unknown": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 
 destroy .t .icon
 
@@ -1866,7 +1866,7 @@ test unixWm-50.3 {
         set y [winfo rooty .x]
     }
     set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
-	       	     [child eval {winfo containing $x [expr $y + 50]}]]
+	[child eval {winfo containing $x [expr $y + 50]}]]
     interp delete child
     set x [winfo rootx .t]
     set y [winfo rooty .t]
@@ -2504,7 +2504,7 @@ if {[tk windowingsystem] == "aqua"} {
 			 -titlepath {} -topmost 0 -transparent 0\
 			 -type unsupported}
 } else {
-    set result_60_1 {-alpha 1.0 -topmost 0 -zoomed 0 -fullscreen 0 -type {}}
+    set result_60_1 {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
 }
 test unixWm-60.1 {wm attributes - test} -constraints unix -body {
     destroy .t

@@ -307,6 +307,7 @@ TK_OBJS = \
 	tkWinDraw.$(OBJEXT) \
 	tkWinEmbed.$(OBJEXT) \
 	tkWinFont.$(OBJEXT) \
+	tkWinGDI.$(OBJEXT) \
 	tkWinIco.$(OBJEXT) \
 	tkWinImage.$(OBJEXT) \
 	tkWinInit.$(OBJEXT) \
@@ -692,6 +693,15 @@ $(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) w
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
 	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
 
+$(TOP_DIR)/manifest.uuid:
+	printf "git-" >$(TOP_DIR)/manifest.uuid
+	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
+
+tkUuid.h:	$(TOP_DIR)/manifest.uuid
+	echo "#define TK_VERSION_UUID \\" >$@
+	cat $(TOP_DIR)/manifest.uuid >>$@
+	echo "" >>$@
+
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
 
@@ -789,11 +799,13 @@ tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
 		@DEPARG@ $(CC_OBJNAME)
 
 
+tkWindow.$(OBJEXT): ${GENERIC_DIR}/tkWindow.c configure Makefile tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
+
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
 tkMain.$(OBJEXT): configure Makefile
 tkMain2.$(OBJEXT): configure Makefile
-tkWindow.$(OBJEXT): configure Makefile
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.

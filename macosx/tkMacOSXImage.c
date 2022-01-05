@@ -13,6 +13,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "xbytes.h"
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
@@ -68,7 +69,7 @@ typedef struct RGBA32pixel_t {
 /*
  * ARGB32 0xAARRGGBB (Byte order is ARGB on big-endian systems.)
  * This is used by Aqua Tk for XImages and by NSBitmapImageReps whose
- * bitmapFormat property is NSBitmapFormatAlphaFirst.
+ * bitmapFormat property is NSAlphaFirstBitmapFormat.
  */
 
 typedef struct ARGB32pixel_t {
@@ -631,14 +632,9 @@ CreateCGImageFromDrawableRect(
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
-    CGRect image_rect = CGRectMake(x, y, width, height);
     CGImageRef cg_image = NULL, result = NULL;
-    unsigned char *imageData = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
-	if (cg_context) {
-	    cg_image = CGBitmapContextCreateImage((CGContextRef) cg_context);
-	}
     } else {
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
 	if (view == nil) {
@@ -650,9 +646,8 @@ CreateCGImageFromDrawableRect(
         NSUInteger bytesPerPixel = 4,
 	    bytesPerRow = bytesPerPixel * view_width,
 	    bitsPerComponent = 8;
-        imageData = ckalloc(view_height * bytesPerRow);
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	cg_context = CGBitmapContextCreate(imageData, view_width, view_height,
+	cg_context = CGBitmapContextCreate(NULL, view_width, view_height,
 			 bitsPerComponent, bytesPerRow, colorSpace,
 			 kCGImageAlphaPremultipliedLast |
 			 kCGBitmapByteOrder32Big);
@@ -664,10 +659,11 @@ CreateCGImageFromDrawableRect(
 	CGContextRelease(cg_context);
     }
     if (cg_image) {
-	result = CGImageCreateWithImageInRect(cg_image, image_rect);
+	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
+				 width, height);
+	result = CGImageCreateWithImageInRect(cg_image, rect);
 	CGImageRelease(cg_image);
     }
-    ckfree(imageData);
     return result;
 }
 
@@ -760,7 +756,7 @@ XGetImage(
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
 	bitmap = (char *)ckalloc(size);
-	if ((bitmap_fmt != 0 && bitmap_fmt != NSBitmapFormatAlphaFirst)
+	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
 	    || [bitmapRep samplesPerPixel] != 4
 	    || [bitmapRep isPlanar] != 0
 	    || bytes_per_row < 4 * width
@@ -787,7 +783,7 @@ XGetImage(
 		    flipped.rgba.blue = pixel.argb.blue;
 		    flipped.rgba.alpha = pixel.argb.alpha;
 		    *((pixel32 *)(bitmap + m)) = flipped;
-		} else { // bitmap_fmt = NSBitmapFormatAlphaFirst
+		} else { // bitmap_fmt = NSAlphaFirstBitmapFormat
 		    *((pixel32 *)(bitmap + m)) = pixel;
 		}
 	    }
