@@ -136,7 +136,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $mb]} {
 		    set y [expr {[winfo vrooty $mb] + [winfo rooty $mb]\
-			    + [winfo reqheight $mb]}]
+                           + [winfo reqheight $mb]}]
 		}
 	    }
 	    below {
@@ -215,7 +215,7 @@ proc ttk::menubutton::TransferGrab {mb} {
 
 	set menu [$mb cget -menu]
 	foreach {x y entry} [PostPosition $mb $menu] { break }
-    	tk_popup $menu [winfo rootx $menu] [winfo rooty $menu]
+	tk_popup $menu [winfo rootx $menu] [winfo rooty $menu]
     }
 }
 
@@ -226,7 +226,7 @@ proc ttk::menubutton::TransferGrab {mb} {
 #
 proc ttk::menubutton::FindMenuEntry {menu s} {
     set last [$menu index last]
-    if {$last eq "none" || $last < 0} {
+    if {$last < 0} {
 	return ""
     }
     for {set i 0} {$i <= $last} {incr i} {

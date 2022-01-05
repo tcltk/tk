@@ -28,7 +28,7 @@ test scrollbar-swapout-2 "... regardless of whether -style ..." \
     coreScrollbar
 } -body {
     ttk::style layout Vertical.Custom.TScrollbar \
-    	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
+	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
     ttk::scrollbar .sb -command "yadda" -style Custom.TScrollbar
     list [winfo class .sb] [.sb cget -command] [.sb cget -style]
 } -result [list TScrollbar yadda Custom.TScrollbar] -cleanup {

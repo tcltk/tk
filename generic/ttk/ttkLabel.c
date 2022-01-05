@@ -30,7 +30,7 @@ typedef struct {
     Tcl_Obj	*anchorObj;
     Tcl_Obj	*justifyObj;
     Tcl_Obj	*wrapLengthObj;
-    Tcl_Obj     *embossedObj;
+    Tcl_Obj	*embossedObj;
 
     /*
      * Computed resources:
@@ -53,8 +53,12 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
 	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TextElement,foregroundObj), "black" },
-    { "-underline", TK_OPTION_INT,
+    { "-underline", TK_OPTION_INDEX,
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	offsetof(TextElement,underlineObj), "-1"},
+#else
+	offsetof(TextElement,underlineObj), NULL},
+#endif
     { "-width", TK_OPTION_INT,
 	offsetof(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
@@ -126,7 +130,7 @@ static void TextCleanup(TextElement *text)
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
-    int underline = -1;
+    TkSizeT underline = TCL_INDEX_NONE;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
@@ -170,14 +174,19 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
 	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
-    Tcl_GetIntFromObj(NULL, text->underlineObj, &underline);
-    if (underline >= 0) {
-	if (text->embossed) {
-	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
-		text->textLayout, b.x+1, b.y+1, underline);
+    if (text->underlineObj != NULL) {
+	TkGetIntForIndex(text->underlineObj, TCL_INDEX_END, 0, &underline);
+	if (underline != TCL_INDEX_NONE) {
+	    if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
+		underline++;
+	    }
+	    if (text->embossed) {
+		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
+			text->textLayout, b.x+1, b.y+1, underline);
+	    }
+	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc1,
+		    text->textLayout, b.x, b.y, underline);
 	}
-	Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc1,
-	    text->textLayout, b.x, b.y, underline);
     }
 
     if (clipRegion != NULL) {
@@ -463,8 +472,12 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
 	offsetof(LabelElement,text.fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(LabelElement,text.foregroundObj), "black" },
-    { "-underline", TK_OPTION_INT,
+    { "-underline", TK_OPTION_INDEX,
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	offsetof(LabelElement,text.underlineObj), "-1"},
+#else
+	offsetof(LabelElement,text.underlineObj), NULL},
+#endif
     { "-width", TK_OPTION_INT,
 	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,

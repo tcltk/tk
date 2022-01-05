@@ -2924,7 +2924,7 @@ DrawCanvas(
 #else
 #define COPY_PIXEL 0
 #endif
-	    
+
 	    if (COPY_PIXEL) {
 		/*
 		 * This platform packs pixels in RGBA byte order, as expected

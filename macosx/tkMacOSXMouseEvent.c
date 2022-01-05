@@ -36,8 +36,6 @@ static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
 static int		GenerateButtonEvent(MouseEventData *medPtr);
-static unsigned int	ButtonModifiers2State(UInt32 buttonState,
-			    UInt32 keyModifiers);
 
 #pragma mark TKApplication(TKMouseEvent)
 
@@ -47,54 +45,95 @@ enum {
 
 /*
  * In OS X 10.6 an NSEvent of type NSMouseMoved would always have a non-Nil
- * window attribute pointing to the active window.  As of 10.8 this behavior
- * had changed.  The new behavior was that if the mouse were ever moved outside
- * of a window, all subsequent NSMouseMoved NSEvents would have a Nil window
+ * window attribute pointing to the key window.  As of 10.8 this behavior had
+ * changed.  The new behavior was that if the mouse were ever moved outside of
+ * a window, all subsequent NSMouseMoved NSEvents would have a Nil window
  * attribute until the mouse returned to the window.  In 11.1 it changed again.
  * The window attribute can be non-nil, but referencing a window which does not
  * belong to the application.
  */
 
+/* The basic job of tkProcessMouseEvent is to generate a call to
+ * TkUpdatePointer.  That function receives a Tk_Window which (ignoring cases
+ * when a grab is in effect) should be the highest window within the focused
+ * toplevel that contains the pointer, as well as the pointer location in
+ * screen coordinates and the current button state.  Tk maintains a cache of
+ * these three values.  A change in any of these values causes TkUpdatePointer
+ * to generate, respectively, Enter/Leave events, or Motion events, or
+ * button Press/Release events. The Tk_Window value is allowed to be NULL,
+ * which indicates that the pointer is not in the focused toplevel.
+ *
+ * Enter or Leave events for toplevel windows are generated when the Tk_Window
+ * value changes to or from NULL.  This is problematic on macOS due to the fact
+ * that TkUpdatePointer does not generate Motion events when the Tk_Window
+ * value is NULL.  A consequence of this is that TkUpdatePointer will either
+ * fail to generate correct Enter/Leave events for toplevels or else be unable
+ * to generate Motion events when the pointer is outside of the focus window.
+ * It is important to be able to generate such events because otherwise a
+ * scrollbar on the edge of a toplevel becomes unusable.  Any time that the
+ * pointer wanders out of the window during a scroll, the scroll will stop.
+ * That is an extremely annoying and unexpected behavior.  Much of the code in
+ * this module, including the trickiest parts, is devoted to working around
+ * this problem.  The other tricky parts are related to transcribing Apple's
+ * NSMouseEntered, NSMouseExited, and NSLeftMouseDragged events into a form
+ * that makes sense to Tk.
+ */
+
+
 @implementation TKApplication(TKMouseEvent)
+
 - (NSEvent *) tkProcessMouseEvent: (NSEvent *) theEvent
 {
     NSWindow *eventWindow = [theEvent window];
     NSEventType eventType = [theEvent type];
-    NSRect viewFrame = [[eventWindow contentView] frame];
+    TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
-    TkWindow *winPtr = NULL, *grabWinPtr;
-    Tk_Window tkwin = NULL, capture, target;
+    NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
+    TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
+    Tk_Window tkwin = NULL, capture;
+    static Tk_Window target = NULL, dragTarget = NULL;
     NSPoint local, global;
     NSInteger button;
-    Bool inTitleBar = NO;
+    TkWindow *newFocus = NULL;
     int win_x, win_y;
     unsigned int buttonState = 0;
-    static int validPresses = 0, ignoredPresses = 0;
+    Bool isTestingEvent = NO;
+    Bool isMotionEvent = NO;
+    Bool isOutside = NO;
+    static Bool isDragging = NO;
+    static Bool ignoreDrags = NO;
+    static Bool ignoreUpDown = NO;
+    static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
 
     /*
-     * If this event is not for a Tk toplevel, it should just be passed up the
-     * responder chain.  However, there is an exception for synthesized events,
-     * which are used in testing.  Those events are recognized by having their
-     * both the windowNumber and the eventNumber set to -1.
+     * If this event is not for a Tk toplevel, it should normally just be
+     * passed up the responder chain.  However, there is are two exceptions.
+     * One is for synthesized events, which are used in testing.  Those events
+     * are recognized by having their timestamp set to 0.  The other is for
+     * motion events sent by the local event monitor, which will have their
+     * window attribute set to nil.
      */
 
-    if (eventWindow && ![eventWindow isMemberOfClass:[TKWindow class]]) {
-	if ([theEvent windowNumber] != -1 || [theEvent eventNumber] != -1)
+    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
+	if ([theEvent timestamp] == 0) {
+	    isTestingEvent = YES;
+	    eventWindow = [NSApp keyWindow];
+	}
+	if (eventType == NSLeftMouseDragged ||
+	    eventType == NSMouseMoved) {
+	    eventWindow = [NSApp keyWindow];
+	    isMotionEvent = YES;
+	}
+	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
+	}
+    } else if (!NSPointInRect(viewLocation, [contentView bounds])) {
+	isOutside = YES;
     }
-
-    /*
-     * Check if the event is located in the titlebar.
-     */
-
-    if (eventWindow) {
-	inTitleBar = viewFrame.size.height < location.y;
-    }
-
     button = [theEvent buttonNumber] + Button1;
     if ((button & -2) == Button2) {
 	button ^= 1; /* Swap buttons 2/3 */
@@ -105,38 +144,140 @@ enum {
 	buttonState &= ~Tk_GetButtonMask(button);
 	break;
     case NSLeftMouseDragged:
+	if (isOutside && !isDragging) {
+	    ignoreDrags = YES;
+	}
+	if (ignoreDrags) {
+	    return theEvent;
+	}
+	isDragging = YES;
+	dragTarget = target;
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
+	isMotionEvent = YES;
     case NSRightMouseDown:
     case NSOtherMouseDown:
 	buttonState |= Tk_GetButtonMask(button);
 	break;
     case NSMouseEntered:
-	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
-	    !inTitleBar) {
-	    [(TKWindow *)eventWindow setMouseInResizeArea:YES];
+	if (![eventWindow isKeyWindow] || isOutside) {
+	    return theEvent;
 	}
+	[NSApp setTkLiveResizeEnded:NO];
+	[NSApp setTkPointerWindow:[NSApp tkEventTarget]];
 	break;
     case NSMouseExited:
-	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)]) {
-	    [(TKWindow *)eventWindow setMouseInResizeArea:NO];
-	    break;
+	if (![eventWindow isKeyWindow] || !isOutside) {
+	    return theEvent;
 	}
+	[NSApp setTkPointerWindow:nil];
+	break;
     case NSLeftMouseUp:
+	isDragging = NO;
+	dragTarget = NULL;
+	if ([theEvent clickCount] == 2) {
+	    ignoreUpDown = NO;
+	}
+	if (ignoreUpDown) {
+	    return theEvent;
+	}
+	if (ignoreDrags) {
+	    ignoreDrags = NO;
+	    return theEvent;
+	}
+	break;
     case NSLeftMouseDown:
 
 	/*
-	 * Ignore mouse button events which arrive while the app is inactive.
-	 * These events will be resent after activation, causing duplicate
-	 * actions when an app is activated by a bound mouse event. See ticket
-	 * [7bda9882cb].
+	 * Ignore left mouse button events which are in an NSWindow but outside
+	 * of its contentView (see tickets [d72abe6b54] and [39cbacb9e8]).
+	 * Ignore the first left button press after a live resize ends. (Apple
+	 * sends the button press event that started the resize after the
+	 * resize ends.  It should not be seen by Tk.  See tickets [d72abe6b54]
+	 * and [39cbacb9e8]).  Ignore button press events when ignoreUpDown is
+	 * set.  These are extraneous events which appear when double-clicking
+	 * in a window without focus, causing duplicate Double-1 events (see
+	 * ticket [7bda9882cb]).  When a LeftMouseDown event with clickCount 2
+	 * is received we set the ignoreUpDown flag and we clear it when the
+	 * matching LeftMouseUp with click count 2 is received.
 	 */
 
-	if (! [NSApp isActive]) {
+	/*
+	 * Make sure we don't ignore LeftMouseUp and LeftMouseDown forever.
+	 * Currently tkBind.c sets NEARBY_MS to 500 (the Windows default).
+	 */
+
+	if ([theEvent timestamp] - timestamp > 1) {
+	    ignoreUpDown = NO;
+	}
+
+	if ([theEvent clickCount] == 2) {
+	    if (ignoreUpDown == YES) {
+		return theEvent;
+	    } else {
+		timestamp = [theEvent timestamp];
+		ignoreUpDown = YES;
+	    }
+	}
+	if (!isTestingEvent) {
+	    NSRect bounds = [contentView bounds];
+	    NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
+	    bounds = NSInsetRect(bounds, 2.0, 2.0);
+	    if (!NSPointInRect(viewLocation, bounds)) {
+		return theEvent;
+	    }
+	    if (NSPointInRect(viewLocation, grip)) {
+		return theEvent;
+	    }
+	    if ([NSApp tkLiveResizeEnded]) {
+		[NSApp setTkLiveResizeEnded:NO];
+		return theEvent;
+	    }
+	}
+
+	/*
+	 * If this click will change the focus, the Tk event event should
+	 * be sent to the toplevel which will be receiving focus rather than to
+	 * the current focus window.  So reset tkEventTarget.
+	 */
+
+	if (eventWindow != [NSApp keyWindow]) {
+	    NSWindow *w;
+
+	    if (eventWindow && isOutside) {
+		return theEvent;
+	    }
+	    for (w in [NSApp orderedWindows]) {
+		if (NSPointInRect([NSEvent mouseLocation], [w frame])) {
+		    newFocus = TkMacOSXGetTkWindow(w);
+		    break;
+		}
+	    }
+	    if (newFocus) {
+		[NSApp setTkEventTarget: newFocus];
+		[NSApp setTkPointerWindow: newFocus];
+		target = (Tk_Window) newFocus;
+	    }
+	}
+	buttonState |= Tk_GetButtonMask(Button1);
+	break;
+    case NSMouseMoved:
+	if (eventWindow && eventWindow != [NSApp keyWindow]) {
 	    return theEvent;
 	}
-    case NSMouseMoved:
+	isMotionEvent = YES;
+	break;
     case NSScrollWheel:
+
+	/*
+	 * Scroll wheel events are sent to the window containing the pointer,
+	 * or ignored if no window contains the pointer.  See TIP #171.  Note,
+	 * however, that TIP #171 proposed sending scroll wheel events to the
+	 * focus window when no window contains the pointer.  That proposal was
+	 * ultimately rejected.
+	 */
+
+	scrollTarget = TkMacOSXGetTkWindow(eventWindow);
 #if 0
     case NSCursorUpdate:
     case NSTabletPoint:
@@ -148,46 +289,8 @@ enum {
     }
 
     /*
-     * Update the button state.  We ignore left button presses that start a
-     * resize or occur in the title bar.  See tickets [d72abe6b54] and
-     * [39cbacb9e8].
-     */
-
-    if (eventType == NSLeftMouseDown) {
-	if ([eventWindow respondsToSelector:@selector(mouseInResizeArea)] &&
-	    [(TKWindow *) eventWindow mouseInResizeArea]) {
-
-	    /*
-	     * When the left button is pressed in the resize area, we receive
-	     * NSMouseDown, but when it is released we do not receive
-	     * NSMouseUp.  So ignore the event and clear the button state but
-	     * do not change the ignoredPresses count.
-	     */
-
-	    buttonState &= ~Tk_GetButtonMask(Button1);
-	    return theEvent;
-	}
-	if (inTitleBar) {
-	    ignoredPresses++;
-	    return theEvent;
-	}
-	validPresses++;
-	buttonState |= Tk_GetButtonMask(Button1);
-    }
-    if (eventType == NSLeftMouseUp) {
-	if (ignoredPresses > 0) {
-	    ignoredPresses--;
-	} else if (validPresses > 0) {
-	    validPresses--;
-	}
-	if (validPresses == 0) {
-	    buttonState &= ~Tk_GetButtonMask(Button1);
-	}
-    }
-
-    /*
-     * Find an appropriate NSWindow to attach to this event, and its
-     * associated Tk window.
+     * Find the toplevel window for the event.  If a capture has been
+     * set this may involve redirecting the event.
      */
 
     capture = TkpGetCapture();
@@ -198,29 +301,31 @@ enum {
 	    return theEvent;
 	}
     } else {
-	if (eventWindow) {
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
-	}
-	if (!winPtr) {
-	    eventWindow = [NSApp mainWindow];
-	    winPtr = TkMacOSXGetTkWindow(eventWindow);
+	if (isDragging) {
+	    winPtr = TkMacOSXGetHostToplevel((TkWindow *)dragTarget)->winPtr;
+	} else if (eventType == NSScrollWheel) {
+	    winPtr = scrollTarget;
+	} else {
+	    winPtr = [NSApp tkEventTarget];
 	}
     }
     if (!winPtr) {
 
 	/*
-	 * We couldn't find a Tk window for this event.  We have to ignore it.
+	 * If we couldn't find a toplevel for this event we have to ignore it.
+	 * (But this should never happen.)
 	 */
 
 #ifdef TK_MAC_DEBUG_EVENTS
 	TkMacOSXDbgMsg("Event received with no Tk window.");
 #endif
+
 	return theEvent;
     }
     tkwin = (Tk_Window) winPtr;
 
     /*
-     * Compute the mouse position in local (window) and global (screen)
+     * Compute the mouse position in local (toplevel) and global (screen)
      * coordinates.  These are Tk coordinates, meaning that the local origin is
      * at the top left corner of the containing toplevel and the global origin
      * is at top left corner of the primary screen.
@@ -231,7 +336,7 @@ enum {
     global.x = floor(global.x);
     global.y = floor(TkMacOSXZeroScreenHeight() - global.y);
     local.x = floor(local.x);
-    local.y = floor([eventWindow frame].size.height - local.y);
+    local.y = floor(eventWindow.frame.size.height - local.y);
     if (Tk_IsEmbedded(winPtr)) {
 	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
 	if (Tk_IsTopLevel(contPtr)) {
@@ -242,19 +347,46 @@ enum {
 	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
 	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
 	}
-    } else {
-	local.x -= winPtr->wmInfoPtr->xInParent;
-	local.y -= winPtr->wmInfoPtr->yInParent;
+    }
+    else {
+    	if (winPtr && winPtr->wmInfoPtr) {
+    	    local.x -= winPtr->wmInfoPtr->xInParent;
+    	    local.y -= winPtr->wmInfoPtr->yInParent;
+    	} else {
+    	    return theEvent;
+    	}
     }
 
     /*
-     * Use the local coordinates to find the Tk window which should receive
-     * this event.  Also convert local into the coordinates of that window.
-     * (The converted local coordinates are only needed for scrollwheel
-     * events.)
+     * Use the toplevel coordinates to decide which Tk window should receive
+     * this event.  Also convert the toplevel coordinates into the coordinate
+     * system of that window.  These converted coordinates are needed for
+     * XEvents that we generate, namely ScrollWheel events and Motion events
+     * when the mouse is outside of the focused toplevel.
      */
 
-    target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
+    if (isDragging) {
+	TkWindow *w = (TkWindow *) dragTarget;
+	win_x = global.x;
+	win_y = global.y;
+	for (; w != NULL; w = w->parentPtr) {
+	    win_x -= Tk_X(w);
+	    win_y -= Tk_Y(w);
+	    if (Tk_IsTopLevel(w)) {
+
+		/*
+		 * Adjust for the titlebar.
+		 */
+
+		win_y -= (eventWindow.frame.size.height -
+			  contentView.bounds.size.height);
+		break;
+	    }
+	}
+	target = dragTarget;
+    } else {
+	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
+    }
 
     /*
      * Ignore the event if a local grab is in effect and the Tk window is
@@ -282,12 +414,11 @@ enum {
     }
 
     /*
-     *  Generate an XEvent for this mouse event.
+     *  Translate the current button state into Tk's format.
      */
 
     unsigned int state = buttonState;
     NSUInteger modifiers = [theEvent modifierFlags];
-
     if (modifiers & NSAlphaShiftKeyMask) {
 	state |= LockMask;
     }
@@ -309,30 +440,70 @@ enum {
     if (modifiers & NSFunctionKeyMask) {
 	state |= Mod4Mask;
     }
+    [NSApp setTkButtonState:state];
+
+    /*
+     * Send XEvents.  We do this here for Motion events outside of the focused
+     * toplevel and for MouseWheel events.  In other cases the XEvents will be
+     * sent when we call Tk_UpdatePointer.
+     */
 
     if (eventType != NSScrollWheel) {
+	if (isDragging) {
 
-	/*
-	 * For normal mouse events, Tk_UpdatePointer will send the appropriate
-	 * XEvents using its cached state information.  Unfortunately, it will
-	 * also recompute the local coordinates.
-	 */
+	    /*
+	     * When dragging the mouse into the resize area Apple shows the
+	     * left button to be up, which confuses Tk_UpdatePointer.  So
+	     * we make sure that the button state appears the way that Tk
+	     * expects.
+	     */
 
-#ifdef TK_MAC_DEBUG_EVENTS
-	TKLog(@"UpdatePointer %p x %.1f y %.1f %d",
-		target, global.x, global.y, state);
-#endif
+	    state |= Tk_GetButtonMask(Button1);
+	}
+	if (eventType == NSMouseEntered) {
+	    Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
+				 global.x, global.y, state);
+	} else if (eventType == NSMouseExited) {
+	    if (isDragging) {
+		Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
+				 global.x, global.y, state);
+	    } else {
+		Tk_UpdatePointer(NULL, global.x, global.y, state);
+	    }
+	} else if (eventType == NSMouseMoved ||
+		   eventType == NSLeftMouseDragged) {
+	    if ([NSApp tkPointerWindow]) {
+		Tk_UpdatePointer(target, global.x, global.y, state);
+	    } else {
+		XEvent xEvent = {0};
 
-	Tk_UpdatePointer(target, global.x, global.y, state);
+		xEvent.type = MotionNotify;
+		xEvent.xany.send_event = false;
+		xEvent.xany.display = Tk_Display(target);
+		xEvent.xany.window = Tk_WindowId(target);
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		xEvent.xmotion.x = win_x;
+		xEvent.xmotion.y = win_y;
+		xEvent.xmotion.x_root = global.x;
+		xEvent.xmotion.y_root = global.y;
+		xEvent.xmotion.state = state;
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+
+		/*
+		 * TkUpdatePointer must not be called in this case.  Doing so
+		 * will break scrollbars; dragging will stop when the mouse
+		 * leaves the window.
+		 */
+
+	    }
+	} else {
+	    Tk_UpdatePointer(target, global.x, global.y, state);
+	}
     } else {
 	CGFloat delta;
-	XEvent xEvent;
+	XEvent xEvent = {0};
 	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-	/*
-	 * For scroll wheel events we need to send the XEvent here.
-	 */
 
 	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
@@ -408,79 +579,7 @@ enum {
 unsigned int
 TkMacOSXButtonKeyState(void)
 {
-    UInt32 buttonState = 0, keyModifiers;
-    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
-
-    buttonState = isFrontProcess ? GetCurrentEventButtonState() :
-	    GetCurrentButtonState();
-    keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
-	    GetCurrentKeyModifiers();
-
-    return ButtonModifiers2State(buttonState, keyModifiers);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ButtonModifiers2State --
- *
- *	Converts Carbon mouse button state and modifier values into a Tk
- *	button/modifier state.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static unsigned int
-ButtonModifiers2State(
-    UInt32 buttonState,
-    UInt32 keyModifiers)
-{
-    unsigned int state;
-
-    /*
-     * Tk on OSX supports at most 9 buttons.
-     */
-
-    state = (buttonState & 0x079) * Button1Mask;
-	/* Handle swapped buttons 2/3 */
-	if (buttonState & 0x02) {
-	    state |= Button3Mask;
-	}
-	if (buttonState & 0x04) {
-	    state |= Button2Mask;
-	}
-	/* Handle buttons 8/9 */
-    state |= (buttonState & 0x180) * (Button8Mask >> 7);
-
-    if (keyModifiers & alphaLock) {
-	state |= LockMask;
-    }
-    if (keyModifiers & shiftKey) {
-	state |= ShiftMask;
-    }
-    if (keyModifiers & controlKey) {
-	state |= ControlMask;
-    }
-    if (keyModifiers & cmdKey) {
-	state |= Mod1Mask;		/* command key */
-    }
-    if (keyModifiers & optionKey) {
-	state |= Mod2Mask;		/* option key */
-    }
-    if (keyModifiers & kEventKeyModifierNumLockMask) {
-	state |= Mod3Mask;
-    }
-    if (keyModifiers & kEventKeyModifierFnMask) {
-	state |= Mod4Mask;
-    }
-
-    return state;
+    return [NSApp tkButtonState];
 }
 
 /*

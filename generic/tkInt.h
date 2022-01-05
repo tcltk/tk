@@ -125,9 +125,7 @@
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE flag). This allows to use the internal
- * INDEX_TEMP_TABLE flag of Tcl. However this is rather ugly and not robust
- * since nothing prevents Tcl from changing the value of its internal flags!
+ * (TCL_INDEX_TEMP_TABLE).
  */
 
 #if !defined(TCL_INDEX_TEMP_TABLE)
@@ -973,6 +971,14 @@ typedef struct TkWindow {
 } TkWindow;
 
 /*
+ * String tables:
+ */
+
+MODULE_SCOPE const char *const tkAnchorStrings[];
+MODULE_SCOPE const char *const tkReliefStrings[];
+MODULE_SCOPE const char *const tkJustifyStrings[];
+
+/*
  * Real definition of some events. Note that these events come from outside
  * but have internally generated pieces added to them.
  */
@@ -1011,6 +1017,9 @@ typedef struct {
 /* See TIP #537 */
 #ifndef TCL_INDEX_NONE
 #   define TCL_INDEX_NONE (-1)
+#endif
+#ifndef TCL_INDEX_END
+#   define TCL_INDEX_END ((TkSizeT)-2)
 #endif
 
 /*
@@ -1384,7 +1393,7 @@ MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window 
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
-			    ClientData clientData);
+			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
@@ -1454,8 +1463,14 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
 
-#define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
-#define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
+#   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
+#   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
+#else
+#   define TkNewIndexObj(value) (((TkSizeT)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
+#   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
+#endif
+
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

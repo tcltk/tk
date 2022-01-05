@@ -81,7 +81,7 @@ test entry-2.1 "Create entry before scrollbar" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-    	-expand false -fill x
+	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
 test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints {failsOnUbuntu failsOnXQuarz} -body {
@@ -91,7 +91,7 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constra
     catch {update} ; # error triggers because the -xscrollcommand callback
                      # errors out: invalid command name ".tsb"
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-    	-expand false -fill x
+	-expand false -fill x
     update ; # no error
     set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
 } -result 1 -cleanup {destroy .te .tsb}
@@ -316,7 +316,7 @@ test entry-8.2a "Followup to test 8.2" -body {
 test entry-9.1 "Index range invariants" -setup {
     # See bug#1721532 for discussion
     proc entry-9.1-trace {n1 n2 op} {
-    	set ::V NO!
+	set ::V NO!
     }
     variable V
     trace add variable V write entry-9.1-trace

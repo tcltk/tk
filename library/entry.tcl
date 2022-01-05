@@ -276,17 +276,30 @@ bind Entry <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Entry <<TkEndIMEMarkedText>> {
-    if {[catch {dict get $::tk::Priv(IMETextMark) "%W"} mark]} {
-	bell
-    } else {
-	%W selection range $mark insert
-    }
+    ::tk::EntryEndIMEMarkedText %W
 }
 bind Entry <<TkClearIMEMarkedText>> {
     %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
 }
 bind Entry <<TkAccentBackspace>> {
     tk::EntryBackspace %W
+}
+
+# ::tk::EntryEndIMEMarkedText --
+# Handles input method text marking in an entry
+#
+# Arguments:
+# w -		The entry window.
+
+proc ::tk::EntryEndIMEMarkedText {w} {
+    variable Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w selection range $mark insert
 }
 
 # A few additional bindings of my own.

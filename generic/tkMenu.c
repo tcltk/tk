@@ -160,7 +160,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	DEF_MENU_ENTRY_STATE,
 	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
 	(ClientData) menuStateStrings, 0},
-    {TK_OPTION_INT, "-underline", NULL, NULL,
+    {TK_OPTION_INDEX, "-underline", NULL, NULL,
 	TK_OPTION_UNDERLINE_DEF(TkMenuEntry, underline), 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
@@ -305,7 +305,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TITLE,	 offsetof(TkMenu, titlePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-type", "type", "Type",
-	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK,
+	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE, 0,
 	(ClientData) menuTypeStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
@@ -843,9 +843,11 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	if (index == TCL_INDEX_NONE) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewObj());
 	} else
+#endif
 	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
@@ -2128,7 +2130,7 @@ GetMenuIndex(
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
 	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
 	if (*indexPtr != TCL_INDEX_NONE || Tcl_GetString(objPtr)[0] != '-') {
-	    if (*indexPtr >= menuPtr->numEntries) {
+	    if (*indexPtr + 1 >= menuPtr->numEntries + 1) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	    }
 	    return TCL_OK;
@@ -2147,10 +2149,16 @@ GetMenuIndex(
 	goto success;
     }
 
+    if (string[0] == 0) {
+	*indexPtr = TCL_INDEX_NONE;
+	goto success;
+    }
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
 	*indexPtr = TCL_INDEX_NONE;
 	goto success;
     }
+#endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
@@ -2276,7 +2284,7 @@ MenuNewEntry(
     mePtr->menuPtr = menuPtr;
     mePtr->labelPtr = NULL;
     mePtr->labelLength = 0;
-    mePtr->underline = -1;
+    mePtr->underline = INT_MIN;
     mePtr->bitmapPtr = NULL;
     mePtr->imagePtr = NULL;
     mePtr->image = NULL;

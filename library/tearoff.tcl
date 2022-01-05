@@ -31,10 +31,10 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     # away when the toplevel goes away.
 
     if {$x == 0} {
-    	set x [winfo rootx $w]
+	set x [winfo rootx $w]
     }
     if {$y == 0} {
-    	set y [winfo rooty $w]
+	set y [winfo rooty $w]
 	if {[tk windowingsystem] eq "aqua"} {
 	    # Shift by height of tearoff entry minus height of window titlebar
 	    catch {incr y [expr {[$w yposition 1] - 16}]}
@@ -66,24 +66,24 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 
     set parent [winfo parent $w]
     if {[$menu cget -title] ne ""} {
-    	wm title $menu [$menu cget -title]
+	wm title $menu [$menu cget -title]
     } else {
-    	switch -- [winfo class $parent] {
+	switch -- [winfo class $parent] {
 	    Menubutton {
-	    	wm title $menu [$parent cget -text]
+		wm title $menu [$parent cget -text]
 	    }
 	    Menu {
-	    	wm title $menu [$parent entrycget active -label]
+		wm title $menu [$parent entrycget active -label]
 	    }
 	}
     }
 
     if {[tk windowingsystem] eq "win32"} {
-	# [Bug 3181181]: Find the toplevel window for the menu
-	set parent [winfo toplevel $parent]
-	while {[winfo class $parent] eq "Menu"} {
-	    set parent [winfo toplevel [winfo parent $parent]]
-	}
+        # [Bug 3181181]: Find the toplevel window for the menu
+        set parent [winfo toplevel $parent]
+        while {[winfo class $parent] eq "Menu"} {
+            set parent [winfo toplevel [winfo parent $parent]]
+        }
 	wm transient $menu [winfo toplevel $parent]
 	wm attributes $menu -toolwindow 1
     }
@@ -135,7 +135,7 @@ proc ::tk::MenuDup {src dst type} {
     }
     eval $cmd
     set last [$src index last]
-    if {$last eq "none" || $last < 0} {
+    if {$last < 0} {
 	return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {

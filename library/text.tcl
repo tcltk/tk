@@ -418,18 +418,32 @@ bind Text <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Text <<TkEndIMEMarkedText>> {
-    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
-	bell
-    } else {
-	%W tag add IMEmarkedtext $mark insert
-	%W tag configure IMEmarkedtext -underline on
-    }
+    ::tk::TextEndIMEMarkedText %W
 }
 bind Text <<TkClearIMEMarkedText>> {
     %W delete IMEmarkedtext.first IMEmarkedtext.last
 }
 bind Text <<TkAccentBackspace>> {
     %W delete insert-1c
+}
+
+# ::tk::TextEndIMEMarkedText --
+#
+# Handles input method text marking in a text widget.
+#
+# Arguments:
+# w -	The text widget
+
+proc ::tk::TextEndIMEMarkedText {w} {
+    variable Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w tag add IMEmarkedtext $mark insert
+    $w tag configure IMEmarkedtext -underline on
 }
 
 # Macintosh only bindings:

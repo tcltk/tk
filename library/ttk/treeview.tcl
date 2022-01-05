@@ -83,9 +83,9 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	left {
 	    if {[$w item $focus -open] && [llength [$w children $focus]]} {
-	    	CloseItem $w $focus
+		CloseItem $w $focus
 	    } else {
-	    	set focus [$w parent $focus]
+		set focus [$w parent $focus]
 	    }
 	}
 	right {
@@ -238,9 +238,9 @@ proc ttk::treeview::heading.drag {w x y} {
     if {   [$w identify region $x $y] eq "heading"
         && [$w identify column $x $y] eq $State(heading)
     } {
-    	$w heading $State(heading) state pressed
+	$w heading $State(heading) state pressed
     } else {
-    	$w heading $State(heading) state !pressed
+	$w heading $State(heading) state !pressed
     }
 }
 
@@ -287,7 +287,7 @@ proc ttk::treeview::select.extend.extended {w item} {
     if {[set anchor [$w focus]] ne ""} {
 	$w selection set [between $w $anchor $item]
     } else {
-    	BrowseTo $w $item
+	BrowseTo $w $item
     }
 }
 
@@ -319,10 +319,10 @@ proc ttk::treeview::ScanBetween {tv item1 item2 item} {
     variable selectingBetween
 
     if {$item eq $item1 || $item eq $item2} {
-    	lappend between $item
+	lappend between $item
 	set selectingBetween [expr {!$selectingBetween}]
     } elseif {$selectingBetween} {
-    	lappend between $item
+	lappend between $item
     }
     foreach child [$tv children $item] {
 	ScanBetween $tv $item1 $item2 $child
@@ -368,7 +368,7 @@ proc ttk::treeview::Toggle {w item} {
 proc ttk::treeview::ToggleFocus {w} {
     set item [$w focus]
     if {$item ne ""} {
-    	Toggle $w $item
+	Toggle $w $item
     }
 }
 

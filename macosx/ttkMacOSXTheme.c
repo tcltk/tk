@@ -63,7 +63,10 @@
  */
 
 static CGFloat darkButtonFace[4] = {
-    112.0 / 255, 113.0 / 255, 115.0 / 255, 1.0
+    90.0 / 255, 86.0 / 255, 95.0 / 255, 1.0
+};
+static CGFloat darkPressedButtonFace[4] = {
+    114.0 / 255, 110.0 / 255, 118.0 / 255, 1.0
 };
 static CGFloat darkPressedBevelFace[4] = {
     135.0 / 255, 136.0 / 255, 138.0 / 255, 1.0
@@ -76,6 +79,12 @@ static CGFloat darkDisabledButtonFace[4] = {
 };
 static CGFloat darkInactiveSelectedTab[4] = {
     159.0 / 255, 160.0 / 255, 161.0 / 255, 1.0
+};
+static CGFloat darkSelectedTab[4] = {
+    97.0 / 255, 94.0 / 255, 102.0 / 255, 1.0
+};
+static CGFloat darkTab[4] = {
+    44.0 / 255, 41.0 / 255, 50.0 / 255, 1.0
 };
 static CGFloat darkFocusRing[4] = {
     38.0 / 255, 113.0 / 255, 159.0 / 255, 1.0
@@ -720,8 +729,15 @@ static void DrawDarkButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
-	GradientFillRoundedRectangle(context, bounds, 4,
+	if ([NSApp macOSVersion] < 120000) {
+	    GradientFillRoundedRectangle(context, bounds, 4,
 	    pressedPushButtonGradient, 2);
+	} else {
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+		components: darkPressedButtonFace
+		count: 4];
+	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+	}
     } else if (kind == kThemePushButton &&
 	       (state & TTK_STATE_ALTERNATE) &&
 	       !(state & TTK_STATE_BACKGROUND)) {
@@ -996,6 +1012,7 @@ static void DrawDarkTab(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *faceColor, *stroke;
     CGRect originalBounds = bounds;
+    int OSVersion = [NSApp macOSVersion];
 
     CGContextSetLineWidth(context, 1.0);
     CGContextClipToRect(context, bounds);
@@ -1005,13 +1022,14 @@ static void DrawDarkTab(
      * clipped off.
      */
 
-    if (!(state & TTK_STATE_FIRST_TAB)) {
-	bounds.origin.x -= 10;
-	bounds.size.width += 10;
-    }
-
-    if (!(state & TTK_STATE_LAST_TAB)) {
-	bounds.size.width += 10;
+    if (OSVersion < 110000 || !(state & TTK_STATE_SELECTED)) {
+	if (!(state & TTK_STATE_FIRST_TAB)) {
+	    bounds.origin.x -= 10;
+	    bounds.size.width += 10;
+	}
+	if (!(state & TTK_STATE_LAST_TAB)) {
+	    bounds.size.width += 10;
+	}
     }
 
     /*
@@ -1023,13 +1041,25 @@ static void DrawDarkTab(
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_SELECTED)) {
 	if (state & TTK_STATE_DISABLED) {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkDisabledButtonFace
-		count: 4];
+	    if (OSVersion < 110000) {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkDisabledButtonFace
+						   count: 4];
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkTab
+						   count: 4];
+	    }
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkButtonFace
-		count: 4];
+	    if (OSVersion < 110000) {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkButtonFace
+						   count: 4];
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkTab
+						   count: 4];
+	    }
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -1056,21 +1086,34 @@ static void DrawDarkTab(
     } else {
 
         /*
-         * This is the selected tab; paint it blue.  If it is first, cover up
-         * the separator line drawn by the second one.  (The selected tab is
-         * always drawn last.)
+         * This is the selected tab.  If it is first, cover up the separator
+         * line drawn by the second one.  (The selected tab is always drawn
+         * last.)
          */
 
 	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
 	    bounds.size.width += 1;
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    GradientFillRoundedRectangle(context, bounds, 4,
-		darkSelectedGradient, 2);
+	    if (OSVersion < 110000) {
+		GradientFillRoundedRectangle(context, bounds, 4,
+					     darkSelectedGradient, 2);
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkSelectedTab
+						   count: 4];
+		SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+	    }
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkInactiveSelectedTab
-		count: 4];
+	    if (OSVersion < 110000) {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkInactiveSelectedTab
+						   count: 4];
+	    } else {
+		faceColor = [NSColor colorWithColorSpace: deviceRGB
+					      components: darkSelectedTab
+						   count: 4];
+	    }
 	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 	}
 	HighlightButtonBorder(context, bounds);

@@ -136,7 +136,7 @@ namespace eval ttk::theme::clam {
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
-    	ttk::style configure TLabelframe \
+	ttk::style configure TLabelframe \
 	    -labeloutside true -labelmargins {0 0 0 4} \
 	    -borderwidth 2 -relief raised
 

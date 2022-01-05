@@ -19,7 +19,7 @@
  * by Tk_GetReliefFromObj.
  */
 
-static const char *const reliefStrings[] = {
+const char *const tkReliefStrings[] = {
     "flat", "groove", "raised", "ridge", "solid", "sunken", NULL
 };
 
@@ -623,7 +623,7 @@ Tk_GetReliefFromObj(
 				 * from. */
     int *resultPtr)		/* Where to place the answer. */
 {
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, reliefStrings,
+    return Tcl_GetIndexFromObjStruct(interp, objPtr, tkReliefStrings,
 	    sizeof(char *), "relief", 0, resultPtr);
 }
 

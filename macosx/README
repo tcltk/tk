@@ -685,7 +685,7 @@ conditional code which is only used for macOS.
 
 The 10.14 release added support for system appearance changes,
 including a "Dark Mode" that renders all window frames and menus in
-dark colors. Tk 8.6.11 provides three virtual events <<LightAqua>>,
+dark colors. Tk 8.6 provides three virtual events <<LightAqua>>,
 <<DarkAqua>> and <<AppearanceChanged>>, to allow you to update your Tk
 app's appearance when the system appearance changes.  These events are
 generated in [NSView effectiveAppearanceChanged], which is called by

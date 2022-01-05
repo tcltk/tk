@@ -156,7 +156,7 @@ proc checkorder {winlist} {
     set pos -1
     set positions [list]
     foreach win $winlist {
-    	lappend positions [set nextpos [winfo y $win]]
+	lappend positions [set nextpos [winfo y $win]]
 	if {$nextpos <= $pos} {
 	    error "window $win out of order ($positions)"
 	}
@@ -203,7 +203,7 @@ proc sashpositions {pw} {
     set positions [list]
     set npanes [llength [winfo children $pw]]
     for {set i 0} {$i < $npanes - 1} {incr i} {
-    	lappend positions [$pw sashpos $i]
+	lappend positions [$pw sashpos $i]
     }
     return $positions
 }

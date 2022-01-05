@@ -53,7 +53,7 @@ typedef struct TextItem {
     int width;			/* Width of lines for word-wrap, pixels. Zero
 				 * means no word-wrap. */
     int underline;		/* Index of character to put underline beneath
-				 * or -1 for no underlining. */
+				 * or INT_MIN for no underlining. */
     double angle;		/* What angle, in degrees, to draw the text
 				 * at. */
 
@@ -93,6 +93,95 @@ static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
 };
 
+static int
+UnderlineParseProc(
+    ClientData dummy,	/* Not used.*/
+    Tcl_Interp *interp,		/* Used for reporting errors. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    const char *value,		/* Value of option. */
+    char *widgRec,		/* Pointer to record for item. */
+    TkSizeT offset)			/* Offset into item (ignored). */
+{
+    int *underlinePtr = (int *) (widgRec + offset);
+    Tcl_Obj obj;
+    int code;
+    TkSizeT underline;
+    (void)dummy;
+    (void)tkwin;
+
+    if (value == NULL || *value == 0) {
+	*underlinePtr = INT_MIN; /* No underline */
+	return TCL_OK;
+    }
+
+    obj.refCount = 1;
+    obj.bytes = (char *)value;
+    obj.length = strlen(value);
+    obj.typePtr = NULL;
+    code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
+    if (code == TCL_OK) {
+	if (underline == TCL_INDEX_NONE) {
+	    underline = INT_MIN;
+	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
+		underline++;
+	} else if (underline >= INT_MAX) {
+	    underline = INT_MAX;
+	}
+	*underlinePtr = underline;
+
+    } else {
+	Tcl_AppendResult(interp, "bad index \"", value,
+		"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
+    }
+	return code;
+}
+
+const char *
+UnderlinePrintProc(
+    ClientData dummy,	/* Ignored. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    char *widgRec,		/* Pointer to record for item. */
+    TkSizeT offset,			/* Pointer to record for item. */
+    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+				 * information about how to reclaim storage
+				 * for return string. */
+{
+    int underline = *(int *)(widgRec + offset);
+    char *p;
+    (void)dummy;
+    (void)tkwin;
+
+    if (underline == INT_MIN) {
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
+	p = (char *)"-1";
+#else
+	p = (char *)"";
+#endif
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    } else if (underline == INT_MAX) {
+	p = (char *)"end+1";
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    } else if (underline == -1) {
+	p = (char *)"end";
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    }
+    p = (char *)ckalloc(32);
+    if (underline < 0) {
+	sprintf(p, "end%d", underline);
+    } else {
+	sprintf(p, "%d", underline);
+    }
+    *freeProcPtr = TCL_DYNAMIC;
+    return p;
+}
+
+static const Tk_CustomOption underlineOption = {
+    UnderlineParseProc, UnderlinePrintProc, NULL
+};
+
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
 	NULL, offsetof(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
@@ -123,8 +212,8 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
 	"", offsetof(TextItem, text), 0, NULL},
-    {TK_CONFIG_INT, "-underline", NULL, NULL,
-	"-1", offsetof(TextItem, underline), 0, NULL},
+    {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, NULL,
+	offsetof(TextItem, underline), TK_CONFIG_NULL_OK, &underlineOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
 	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
@@ -264,7 +353,7 @@ CreateText(
     textPtr->disabledStipple = None;
     textPtr->text	= NULL;
     textPtr->width	= 0;
-    textPtr->underline	= -1;
+    textPtr->underline	= INT_MIN;
     textPtr->angle	= 0.0;
 
     textPtr->numChars	= 0;
@@ -666,21 +755,19 @@ ComputeTextBbox(
     case TK_ANCHOR_NE:
 	break;
 
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	topY -= height / 2;
-	for (i=0 ; i<4 ; i++) {
-	    dy[i] = -height / 2;
-	}
-	break;
-
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
 	topY -= height;
 	for (i=0 ; i<4 ; i++) {
 	    dy[i] = -height;
+	}
+	break;
+
+    default:
+	topY -= height / 2;
+	for (i=0 ; i<4 ; i++) {
+	    dy[i] = -height / 2;
 	}
 	break;
     }
@@ -690,21 +777,19 @@ ComputeTextBbox(
     case TK_ANCHOR_SW:
 	break;
 
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	leftX -= width / 2;
-	for (i=0 ; i<4 ; i++) {
-	    dx[i] = -width / 2;
-	}
-	break;
-
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
 	leftX -= width;
 	for (i=0 ; i<4 ; i++) {
 	    dx[i] = -width;
+	}
+	break;
+
+    default:
+	leftX -= width / 2;
+	for (i=0 ; i<4 ; i++) {
+	    dx[i] = -width / 2;
 	}
 	break;
     }
@@ -1645,7 +1730,6 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;
     switch (textPtr->anchor) {
     case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;
@@ -1655,12 +1739,12 @@ TextToPostscript(
     case TK_ANCHOR_S:	   x = 1; y = 2; break;
     case TK_ANCHOR_SW:	   x = 0; y = 2; break;
     case TK_ANCHOR_W:	   x = 0; y = 1; break;
-    case TK_ANCHOR_CENTER: x = 1; y = 1; break;
+    default: x = 1; y = 1; break;
     }
     switch (textPtr->justify) {
-    case TK_JUSTIFY_LEFT:   justify = "0";   break;
     case TK_JUSTIFY_CENTER: justify = "0.5"; break;
     case TK_JUSTIFY_RIGHT:  justify = "1";   break;
+    default:                justify = "0";   break;
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);

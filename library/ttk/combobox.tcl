@@ -316,7 +316,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	aqua {
 	    $w configure -relief solid -borderwidth 0
 	    tk::unsupported::MacWindowStyle style $w \
-	    	help {noActivates hideOnSuspend}
+		help {noActivates hideOnSuspend}
 	    wm resizable $w 0 0
 	}
     }
@@ -344,7 +344,7 @@ proc ttk::combobox::ConfigureListbox {cb} {
     set height [llength $values]
     if {$height > [$cb cget -height]} {
 	set height [$cb cget -height]
-    	grid $popdown.sb
+	grid $popdown.sb
         grid configure $popdown.l -padx {1 0}
     } else {
 	grid remove $popdown.sb
@@ -369,7 +369,7 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     }
     set postoffset [ttk::style lookup $style -postoffset {} {0 0 0 0}]
     foreach var {x y w h} delta $postoffset {
-    	incr $var $delta
+	incr $var $delta
     }
 
     set H [winfo reqheight $popdown]
