@@ -127,7 +127,7 @@ test spinbox-1.8.2 "option -validate" -setup {
     .sb cget -validate
 } -cleanup {
     destroy .sb
-} -result {none}
+} -result none
 
 test spinbox-1.8.3 "option -validate" -setup {
     ttk::spinbox .sb -from 0 -to 100

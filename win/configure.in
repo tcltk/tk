@@ -15,7 +15,7 @@ SHELL=/bin/sh
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".11"
+TK_PATCH_LEVEL=".12"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -113,9 +113,8 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_TRY_LINK([#include <stdlib.h>],
-	    [_strtoi64(0,0,0)],
-	    tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
+    [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
@@ -344,7 +343,8 @@ AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(RES)
 
-AC_OUTPUT(Makefile tkConfig.sh wish.exe.manifest)
+AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
+AC_OUTPUT
 
 dnl Local Variables:
 dnl mode: autoconf
