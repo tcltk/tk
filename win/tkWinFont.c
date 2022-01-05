@@ -2748,7 +2748,7 @@ LoadFontRanges(
 				 * range information. */
     int *symbolPtr)
  {
-    int n, i, swapped, offset, cbData, segCount;
+    int n, i, j, k, swapped, offset, cbData, segCount;
     DWORD cmapKey;
     USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;
@@ -2824,9 +2824,9 @@ LoadFontRanges(
 		offset += cbData + sizeof(USHORT);
 		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, cbData);
 		if (swapped) {
-		    for (i = 0; i < segCount; i++) {
-			SwapShort(&endCount[i]);
-			SwapShort(&startCount[i]);
+		    for (j = 0; j < segCount; j++) {
+			SwapShort(&endCount[j]);
+			SwapShort(&startCount[j]);
 		    }
 		}
 		if (*symbolPtr != 0) {
@@ -2842,11 +2842,11 @@ LoadFontRanges(
 		     * 8-bit characters [note Bug: 2406]
 		     */
 
-		    for (i = 0; i < segCount; i++) {
-			if (((startCount[i] & 0xff00) == 0xf000)
-				&& ((endCount[i] & 0xff00) == 0xf000)) {
-			    startCount[i] &= 0xff;
-			    endCount[i] &= 0xff;
+		    for (k = 0; k < segCount; k++) {
+			if (((startCount[k] & 0xff00) == 0xf000)
+				&& ((endCount[k] & 0xff00) == 0xf000)) {
+			    startCount[k] &= 0xff;
+			    endCount[k] &= 0xff;
 			}
 		    }
 		}
