@@ -1003,6 +1003,9 @@ TkCreateMainWindow(
 #ifdef USE_NMAKE
 		".nmake"
 #endif
+#ifdef TK_NO_DEPRECATED
+		".no-deprecate"
+#endif
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
 #endif
