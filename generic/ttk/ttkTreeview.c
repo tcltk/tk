@@ -534,7 +534,7 @@ static TreeColumn *GetColumn(
     if (TkGetIntForIndex(columnIDObj, tv->tree.nColumns - 1, 1, &columnIndex) == TCL_OK) {
 	if (columnIndex == TCL_INDEX_NONE || columnIndex >= tv->tree.nColumns) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "Column index %s out of bounds",
+		    "Column index \"%s\" out of bounds",
 		    Tcl_GetString(columnIDObj)));
 	    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLBOUND", NULL);
 	    return NULL;

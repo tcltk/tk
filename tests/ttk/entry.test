@@ -9,6 +9,7 @@ loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
 variable scrollInfo
 proc scroll args {
@@ -67,7 +68,7 @@ test entry-1.7 "Deletion - insert cursor in the middle " -body {
     .e index insert
 } -result 0
 
-test entry-1.8 "Index is between 0 and end" -body {
+test entry-1.8 "Index is between 0 and end" -constraints nodeprecated -body {
     .e delete 0 end
     .e insert end abcde
     set res [list [.e index -1] [.e index -4] [.e index 999]]
