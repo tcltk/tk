@@ -1028,6 +1028,9 @@ TkCreateMainWindow(
 #endif
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
+#if !defined(HAVE_XFT)
+		".no-xft"
+#endif
 #endif
 		), NULL);
     }
