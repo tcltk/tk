@@ -1577,7 +1577,7 @@ test textWind-17.10 {peer widget window configuration} -setup {
     # in .t, because the green window inserted in the peer is not visible from .t, therefore
     # the embedded window found at index 1.2 in .t is the one originally at 1.2 in .t, i.e.
     # the blue one
-    .t window configure 1.2 -create {destroy %W.f ; frame %W.f -width 50 -height 7 -bg red}
+    .t window configure 1.2 -create {destroy %W.f ; update ; frame %W.f -width 50 -height 7 -bg red}
     updateText
     # The main widget .t still has a window named .t.f at 1.2. This is NOT the blue
     # frame but the red frame from the -create script, which bears the same name.
