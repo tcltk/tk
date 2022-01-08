@@ -14,21 +14,25 @@
 #ifndef _WINPORT
 #define _WINPORT
 
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xutil.h>
+/*
+ *---------------------------------------------------------------------------
+ * The following sets of #includes and #ifdefs are required to get Tcl to
+ * compile under the windows compilers.
+ *---------------------------------------------------------------------------
+ */
 
-#include <malloc.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <io.h>
+#include <stdlib.h>
+#include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <malloc.h>
 #include <ctype.h>
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <fcntl.h>
-#include <io.h>
 
 /*
  * Need to block out this include for building extensions with MetroWerks
@@ -61,6 +65,14 @@
     typedef _TCHAR TCHAR;
 #endif
 
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
+#include <X11/Xlib.h>
+#include <X11/cursorfont.h>
+#include <X11/keysym.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
 
 #ifndef __GNUC__
 #    define strncasecmp _strnicmp
@@ -80,6 +92,21 @@
 #define REDO_KEYSYM_LOOKUP
 
 /*
+ * See ticket [916c1095438eae56]: GetVersionExW triggers warnings
+ */
+#if defined(_MSC_VER)
+#   pragma warning(disable:4146)
+#   pragma warning(disable:4267)
+#   pragma warning(disable:4244)
+#   pragma warning(disable:4311)
+#   pragma warning(disable:4312)
+#   pragma warning(disable:4996)
+#if !defined(_WIN64)
+#   pragma warning(disable:4305)
+#endif
+#endif
+
+/*
  * The following macro checks to see whether there is buffered
  * input data available for a stdio FILE.
  */
@@ -91,14 +118,6 @@
 #endif /* _MSC_VER */
 
 /*
- * The following stubs implement various calls that don't do anything
- * under Windows.
- */
-
-#define TkFreeWindowId(dispPtr,w)
-#define TkInitXId(dispPtr)
-
-/*
  * The following Tk functions are implemented as macros under Windows.
  */
 
@@ -106,7 +125,13 @@
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 
 /*
- * These calls implement native bitmaps which are not currently 
+ * Used by tkWindow.c
+ */
+
+#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
+
+/*
+ * These calls implement native bitmaps which are not currently
  * supported under Windows.  The macros eliminate the calls.
  */
 

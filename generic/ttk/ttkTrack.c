@@ -23,7 +23,7 @@
  * TODO: Handle "chords" properly (e.g., <B1-ButtonPress-2>)
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -173,7 +173,7 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 
 void TtkTrackElementState(WidgetCore *corePtr)
 {
-    ElementStateTracker *es = (ElementStateTracker*)ckalloc(sizeof(*es));
+    ElementStateTracker *es = ckalloc(sizeof(*es));
     es->corePtr = corePtr;
     es->tracking = 0;
     es->activeElement = es->pressedElement = 0;

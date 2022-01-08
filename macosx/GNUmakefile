@@ -25,6 +25,7 @@ EXTRA_CONFIGURE_ARGS	?=
 EXTRA_MAKE_ARGS		?=
 
 INSTALL_PATH		?= /Library/Frameworks
+TCL_INSTALL_PATH	?= ${INSTALL_PATH}/Tcl.framework
 APPLICATION_INSTALL_PATH ?= /Applications/Utilities
 PREFIX			?= /usr/local
 BINDIR			?= ${PREFIX}/bin
@@ -35,13 +36,19 @@ MANDIR			?= ${PREFIX}/man
 TCL_BUILD_DIR		?= ${BUILD_DIR}/tcl/${BUILD_STYLE}
 # location of installed tcl, only used if tcl in TCL_BUILD_DIR can't be found
 TCL_FRAMEWORK_DIR	?= /Library/Frameworks
-TCLSH_DIR		?= ${PREFIX}
+TCLSH_DIR		?= ${PREFIX}/bin
 
 # set to non-empty value to install manpages in addition to html help:
 INSTALL_MANPAGES	?=
 
 # set to non-empty value to build TkX11 instead of TkAqua:
 TK_X11			?=
+
+# Checks and overrides for subframework builds
+ifeq (${SUBFRAMEWORK}_${TK_X11},1_)
+override BUILD_DIR = ${DESTDIR}/build
+override INSTALL_PATH = /Frameworks
+endif
 
 #-------------------------------------------------------------------------------------------------------
 # meta targets
@@ -107,7 +114,7 @@ TCL_VERSION		:= ${VERSION}
 wish			:= wish
 WISH			= wish${VERSION}
 
-BUILD_TARGET		:= all tktest
+BUILD_TARGET		:= binaries libraries tktest
 INSTALL_TARGET		:= install
 
 ifneq ($(wildcard $(subst ${space},\ ,${TCL_BUILD_DIR})/tclConfig.sh),)
@@ -115,7 +122,7 @@ TCL_DIR			:= ${TCL_BUILD_DIR}
 TCL_FRAMEWORK_DIR	:= ${TCL_BUILD_DIR}/..
 MAKE_VARS		:=
 else
-TCL_DIR			:= ${TCL_FRAMEWORK_DIR}/Tcl.framework
+TCL_DIR			:= ${TCL_INSTALL_PATH}
 TCL_EXE			:= ${TCLSH_DIR}/tclsh${TCL_VERSION}
 MAKE_VARS		:= TCL_EXE
 export DYLD_FRAMEWORK_PATH := ${TCL_FRAMEWORK_DIR}
@@ -132,7 +139,7 @@ wish			:= ${wish}-X11
 override EMBEDDED_BUILD :=
 endif
 
-INSTALL_TARGETS		= install-binaries install-headers install-libraries
+INSTALL_TARGETS		= install-binaries install-libraries install-headers
 ifeq (${EMBEDDED_BUILD},)
 INSTALL_TARGETS		+= install-private-headers install-demos
 endif
@@ -210,8 +217,14 @@ install-${PROJECT}: build-${PROJECT}
 ifeq (${EMBEDDED_BUILD}_${INSTALL_ROOT},1_)
 	@echo "Cannot install-embedded with empty INSTALL_ROOT !" && false
 endif
+ifeq (${SUBFRAMEWORK}_${DYLIB_INSTALL_DIR},1_)
+	@echo "Cannot install subframework with empty DYLIB_INSTALL_DIR !" && false
+endif
 ifeq (${EMBEDDED_BUILD},1)
 	@rm -rf "${INSTALL_ROOT}/${LIBDIR}/Tk.framework"
+endif
+ifeq (${SUBFRAMEWORK},1)
+	@rm -rf "${INSTALL_ROOT}/Frameworks/Tk.framework"
 endif
 	${DO_MAKE}
 ifeq (${EMBEDDED_BUILD}_${TK_X11},1_)
@@ -225,26 +238,10 @@ ifeq (${EMBEDDED_BUILD},1)
 	@rm -f "${INSTALL_ROOT}${BINDIR}/${WISH}" && \
 	rmdir -p "${INSTALL_ROOT}${BINDIR}" 2>&- || true
 else
-# redo prebinding (when not building for Mac OS X 10.4 or later only)
-	@if [ "`echo "$${MACOSX_DEPLOYMENT_TARGET}" | \
-	awk -F '10\\.' '{print int($$2)}'`" -lt 4 -a "`echo "$${CFLAGS}" | \
-	awk -F '-mmacosx-version-min=10\\.' '{print int($$2)}'`" -lt 4 ]; \
-	then cd ${INSTALL_ROOT}/; \
-	if [ ! -d usr/lib ]; then mkdir -p usr && ln -fs /usr/lib usr/ && RM_USRLIB=1; fi; \
-	if [ -n "${TK_X11}" -a ! -d usr/X11R6 ]; then mkdir -p usr && ln -fs /usr/X11R6 usr/ && RM_USRX11=1; fi; \
-	if [ ! -d System ]; then ln -fs /System . && RM_SYSTEM=1; fi; \
-	if [ ! -d "./${LIBDIR}/Tcl.framework" ]; then ln -fs "${TCL_FRAMEWORK_DIR}/Tcl.framework" "./${LIBDIR}"; RM_TCL=1; fi; \
-	redo_prebinding -r . "./${TK_FMWK_DIR}/${PRODUCT_NAME}"; \
-	if [ -z "${TK_X11}" ]; then redo_prebinding -r . "./${TK_FMWK_DIR}/Resources/Wish.app/Contents/MacOS/Wish"; \
-	else redo_prebinding -r . "./${BINDIR}/${WISH}"; fi; \
-	if [ -n "$${RM_USRLIB:-}" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi; \
-	if [ -n "$${RM_USRX11:-}" ]; then rm -f usr/X11R6; rmdir -p usr 2>&-; fi; \
-	if [ -n "$${RM_SYSTEM:-}" ]; then rm -f System; fi; \
-	if [ -n "$${RM_TCL:-}" ]; then rm -f "./${LIBDIR}/Tcl.framework"; fi; fi
 # install wish symbolic link
 	@ln -fs ${WISH} "${INSTALL_ROOT}${BINDIR}/${wish}"
-endif
-endif
+endif # embedded
+endif # install
 ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 # keep copy of debug library around, so that
 # Deployment build can be installed on top
@@ -252,8 +249,9 @@ ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 # the debug library
 	@cd "${INSTALL_ROOT}${LIBDIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}" && \
 	ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"
-endif
+endif # Development, not embedded
 ifeq (${TK_X11},)
+ifeq (${SUBFRAMEWORK},)
 ifeq (${EMBEDDED_BUILD},)
 # install Wish.app link in APPLICATION_INSTALL_PATH and setup 'Wish Shell' compatibility links
 	@cd "${TOP_DIR}" && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && rm -rf "./${APP_DIR}/Wish.app" && \
@@ -287,9 +285,10 @@ else
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
 ifeq (${INSTALL_BUILD},1)
 	@cd "${TOP_DIR}" && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
-endif
-endif
-endif
+endif # install not subframework
+endif # embedded
+endif # not subframework
+endif # not X11
 
 clean-${PROJECT}: %-${PROJECT}:
 	${DO_MAKE}

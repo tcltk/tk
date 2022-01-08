@@ -111,8 +111,8 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --
- *	Add one or the other of these to each OptionSpecs table 
- *	to indicate whether the widget should take focus 
+ *	Add one or the other of these to each OptionSpecs table
+ *	to indicate whether the widget should take focus
  *	during keyboard traversal.
  */
 #define WIDGET_TAKEFOCUS_TRUE \
@@ -195,7 +195,8 @@ MODULE_SCOPE void TtkFreeScrollHandle(ScrollHandle);
 MODULE_SCOPE int TtkScrollviewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle);
 
-MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst);
+MODULE_SCOPE void TtkUpdateScrollInfo(ScrollHandle h);
+MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst, int updateScrollInfo);
 MODULE_SCOPE void TtkScrolled(ScrollHandle, int first, int last, int total);
 MODULE_SCOPE void TtkScrollbarUpdateRequired(ScrollHandle);
 
@@ -260,7 +261,7 @@ MODULE_SCOPE int TtkGetLabelAnchorFromObj(
  * Platform-specific initialization.
  */
 
-#if defined(__WIN32__)
+#ifdef _WIN32
 #define Ttk_PlatformInit Ttk_WinPlatformInit
 MODULE_SCOPE int Ttk_PlatformInit(Tcl_Interp *);
 #elif defined(MAC_OSX_TK)

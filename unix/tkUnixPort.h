@@ -17,37 +17,20 @@
 
 #define __UNIX__ 1
 
-/*
- * Macro to use instead of "void" for arguments that must have
- * type "void *" in ANSI C;  maps them to type "char *" in
- * non-ANSI systems.  This macro may be used in some of the include
- * files below, which is why it is defined here.
- */
-
-#ifndef VOID
-#   ifdef __STDC__
-#       define VOID void
-#   else
-#       define VOID char
-#   endif
-#endif
-
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#ifndef NO_LIMITS_H
-#   include <limits.h>
-#else
-#   include "../compat/limits.h"
-#endif
-#include <math.h>
 #include <pwd.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
+#include <string.h>
+#include <limits.h>
 #ifdef NO_STDLIB_H
 #   include "../compat/stdlib.h"
 #else
 #   include <stdlib.h>
 #endif
-#include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -57,23 +40,26 @@
 #ifndef _TCL
 #   include <tcl.h>
 #endif
-#if TIME_WITH_SYS_TIME
+#ifdef TIME_WITH_SYS_TIME
 #   include <sys/time.h>
 #   include <time.h>
 #else
-#   if HAVE_SYS_TIME_H
-#       include <sys/time.h>
+#   ifdef HAVE_SYS_TIME_H
+#	include <sys/time.h>
 #   else
-#       include <time.h>
+#	include <time.h>
 #   endif
 #endif
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
 #ifndef NO_UNISTD_H
 #   include <unistd.h>
 #else
 #   include "../compat/unistd.h"
+#endif
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
@@ -205,18 +191,13 @@
 
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
+	sprintf((buf), "0x%08lx", (unsigned long) (w))
 #endif
 
 /*
- * The following declaration is used to get access to a private Tcl interface
- * that is needed for portability reasons.
- *
- * Disabled for now to determined whether we really still need this.
-
-#ifndef _TCLINT
-#include <tclInt.h>
-#endif
+ * Used by tkWindow.c
  */
+
+#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
 
 #endif /* _UNIXPORT */

@@ -7,7 +7,7 @@
 
 #include <tkWinInt.h>
 
-#ifndef DFCS_HOT	/* Windows 98/Me, Windows 200/XP only */
+#ifndef DFCS_HOT	/* Windows 98/Me, Windows 2000/XP only */
 #define DFCS_HOT 0
 #endif
 
@@ -490,7 +490,7 @@ static void TroughClientDataDeleteProc(void *clientData)
 
 static TroughClientData *TroughClientDataInit(Tcl_Interp *interp)
 {
-    TroughClientData *cd = (TroughClientData*)ckalloc(sizeof(*cd));
+    TroughClientData *cd = ckalloc(sizeof(*cd));
     cd->PatternBitmap = CreateBitmap(8, 8, 1, 1, Pattern);
     cd->PatternBrush  = CreatePatternBrush(cd->PatternBitmap);
     Ttk_RegisterCleanup(interp, cd, TroughClientDataDeleteProc);
@@ -686,8 +686,8 @@ TTK_LAYOUT("TButton",
 TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
-	TTK_GROUP("Combobox.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_GROUP("Combobox.focus", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
+	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Combobox.focus", TTK_FILL_BOTH,
 		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
 
 TTK_END_LAYOUT_TABLE

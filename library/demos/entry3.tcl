@@ -102,7 +102,7 @@ foreach {chars digit} {abc 2 def 3 ghi 4 jkl 5 mno 6 pqrs 7 tuv 8 wxyz 9} {
 
 proc validatePhoneChange {W vmode idx char} {
     global phoneNumberMap entry3content
-    if {$idx == -1} {return 1}
+    if {$idx < 0} {return 1}
     after idle [list $W configure -validate $vmode -invcmd bell]
     if {
 	!($idx<3 || $idx==6 || $idx==7 || $idx==11 || $idx>15) &&
@@ -169,8 +169,8 @@ bind $w.l3.e <FocusIn> {
 	after idle {%W selection clear}
     }
 }
-bind $w.l3.e <Left>  {phoneSkipLeft  %W}
-bind $w.l3.e <Right> {phoneSkipRight %W}
+bind $w.l3.e <<PrevChar>> {phoneSkipLeft  %W}
+bind $w.l3.e <<NextChar>> {phoneSkipRight %W}
 pack $w.l3.e -fill x -expand 1 -padx 1m -pady 1m
 
 labelframe $w.l4 -text "Password Entry"

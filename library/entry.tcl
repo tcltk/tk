@@ -46,7 +46,6 @@ bind Entry <<Copy>> {
     }
 }
 bind Entry <<Paste>> {
-    global tcl_platform
     catch {
 	if {[tk windowingsystem] ne "x11"} {
 	    catch {
@@ -59,7 +58,7 @@ bind Entry <<Paste>> {
 }
 bind Entry <<Clear>> {
     # ignore if there is no selection
-    catch { %W delete sel.first sel.last }
+    catch {%W delete sel.first sel.last}
 }
 bind Entry <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
@@ -69,13 +68,13 @@ bind Entry <<PasteSelection>> {
 }
 
 bind Entry <<TraverseIn>> {
-    %W selection range 0 end 
-    %W icursor end 
+    %W selection range 0 end
+    %W icursor end
 }
 
 # Standard Motif bindings:
 
-bind Entry <1> {
+bind Entry <Button-1> {
     tk::EntryButton1 %W %x
     %W selection clear
 }
@@ -83,25 +82,25 @@ bind Entry <B1-Motion> {
     set tk::Priv(x) %x
     tk::EntryMouseSelect %W %x
 }
-bind Entry <Double-1> {
+bind Entry <Double-Button-1> {
     set tk::Priv(selectMode) word
     tk::EntryMouseSelect %W %x
     catch {%W icursor sel.last}
 }
-bind Entry <Triple-1> {
+bind Entry <Triple-Button-1> {
     set tk::Priv(selectMode) line
     tk::EntryMouseSelect %W %x
     catch {%W icursor sel.last}
 }
-bind Entry <Shift-1> {
+bind Entry <Shift-Button-1> {
     set tk::Priv(selectMode) char
     %W selection adjust @%x
 }
-bind Entry <Double-Shift-1>	{
+bind Entry <Double-Shift-Button-1>	{
     set tk::Priv(selectMode) word
     tk::EntryMouseSelect %W %x
 }
-bind Entry <Triple-Shift-1>	{
+bind Entry <Triple-Shift-Button-1>	{
     set tk::Priv(selectMode) line
     tk::EntryMouseSelect %W %x
 }
@@ -115,49 +114,49 @@ bind Entry <B1-Enter> {
 bind Entry <ButtonRelease-1> {
     tk::CancelRepeat
 }
-bind Entry <Control-1> {
+bind Entry <Control-Button-1> {
     %W icursor @%x
 }
 
-bind Entry <Left> {
-    tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
+bind Entry <<PrevChar>> {
+    tk::EntrySetCursor %W [expr {[%W index insert]-1}]
 }
-bind Entry <Right> {
-    tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
+bind Entry <<NextChar>> {
+    tk::EntrySetCursor %W [expr {[%W index insert]+1}]
 }
-bind Entry <Shift-Left> {
-    tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
+bind Entry <<SelectPrevChar>> {
+    tk::EntryKeySelect %W [expr {[%W index insert]-1}]
     tk::EntrySeeInsert %W
 }
-bind Entry <Shift-Right> {
-    tk::EntryKeySelect %W [expr {[%W index insert] + 1}]
+bind Entry <<SelectNextChar>> {
+    tk::EntryKeySelect %W [expr {[%W index insert]+1}]
     tk::EntrySeeInsert %W
 }
-bind Entry <Control-Left> {
+bind Entry <<PrevWord>> {
     tk::EntrySetCursor %W [tk::EntryPreviousWord %W insert]
 }
-bind Entry <Control-Right> {
+bind Entry <<NextWord>> {
     tk::EntrySetCursor %W [tk::EntryNextWord %W insert]
 }
-bind Entry <Shift-Control-Left> {
+bind Entry <<SelectPrevWord>> {
     tk::EntryKeySelect %W [tk::EntryPreviousWord %W insert]
     tk::EntrySeeInsert %W
 }
-bind Entry <Shift-Control-Right> {
+bind Entry <<SelectNextWord>> {
     tk::EntryKeySelect %W [tk::EntryNextWord %W insert]
     tk::EntrySeeInsert %W
 }
-bind Entry <Home> {
+bind Entry <<LineStart>> {
     tk::EntrySetCursor %W 0
 }
-bind Entry <Shift-Home> {
+bind Entry <<SelectLineStart>> {
     tk::EntryKeySelect %W 0
     tk::EntrySeeInsert %W
 }
-bind Entry <End> {
+bind Entry <<LineEnd>> {
     tk::EntrySetCursor %W end
 }
-bind Entry <Shift-End> {
+bind Entry <<SelectLineEnd>> {
     tk::EntryKeySelect %W end
     tk::EntrySeeInsert %W
 }
@@ -185,32 +184,37 @@ bind Entry <Control-Shift-space> {
 bind Entry <Shift-Select> {
     %W selection adjust insert
 }
-bind Entry <Control-slash> {
+bind Entry <<SelectAll>> {
     %W selection range 0 end
 }
-bind Entry <Control-backslash> {
+bind Entry <<SelectNone>> {
     %W selection clear
 }
-bind Entry <KeyPress> {
+bind Entry <Key> {
     tk::CancelRepeat
     tk::EntryInsert %W %A
 }
 
 # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
-# <KeyPress> class binding will also fire and insert the character,
+# <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
 
-bind Entry <Alt-KeyPress> {# nothing}
-bind Entry <Meta-KeyPress> {# nothing}
-bind Entry <Control-KeyPress> {# nothing}
+bind Entry <Alt-Key> {# nothing}
+bind Entry <Meta-Key> {# nothing}
+bind Entry <Control-Key> {# nothing}
 bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
 bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
+bind Entry <Prior> {# nothing}
+bind Entry <Next> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
-    bind Entry <Command-KeyPress> {# nothing}
+    bind Entry <Command-Key> {# nothing}
 }
+# Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
+bind Entry <<NextLine>> {# nothing}
+bind Entry <<PrevLine>> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
@@ -222,29 +226,9 @@ if {[tk windowingsystem] ne "win32"} {
 
 # Additional emacs-like bindings:
 
-bind Entry <Control-a> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W 0
-    }
-}
-bind Entry <Control-b> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
-    }
-}
 bind Entry <Control-d> {
     if {!$tk_strictMotif} {
 	%W delete insert
-    }
-}
-bind Entry <Control-e> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W end
-    }
-}
-bind Entry <Control-f> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
     }
 }
 bind Entry <Control-h> {
@@ -288,16 +272,48 @@ bind Entry <Meta-Delete> {
     }
 }
 
-# A few additional bindings of my own.
+# Bindings for IME text input and accents.
 
-bind Entry <2> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanMark %W %x
+bind Entry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Entry <<TkEndIMEMarkedText>> {
+    if {[catch {dict get $::tk::Priv(IMETextMark) "%W"} mark]} {
+	bell
+    } else {
+	%W selection range $mark insert
     }
 }
-bind Entry <B2-Motion> {
-    if {!$tk_strictMotif} {
-	::tk::EntryScanDrag %W %x
+bind Entry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+bind Entry <<TkAccentBackspace>> {
+    tk::EntryBackspace %W
+}
+
+# A few additional bindings of my own.
+
+if {[tk windowingsystem] ne "aqua"} {
+    bind Entry <Button-2> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
+    }
+    bind Entry <B2-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
+    }
+} else {
+    bind Entry <Button-3> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanMark %W %x
+        }
+    }
+    bind Entry <B3-Motion> {
+        if {!$tk_strictMotif} {
+        ::tk::EntryScanDrag %W %x
+        }
     }
 }
 
@@ -373,12 +389,18 @@ proc ::tk::EntryMouseSelect {w x} {
 	    }
 	}
 	word {
-	    if {$cur < [$w index anchor]} {
+	    if {$cur < $anchor} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
-	    } else {
+		set after [tcl_wordBreakAfter [$w get] $anchor-1]
+	    } elseif {$cur > $anchor} {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+		set after [tcl_wordBreakAfter [$w get] $cur-1]
+	    } else {
+		if {[$w index @$Priv(pressX)] < $anchor} {
+		      incr anchor -1
+		}
+		set before [tcl_wordBreakBefore [$w get] $anchor]
+		set after [tcl_wordBreakAfter [$w get] $anchor]
 	    }
 	    if {$before < 0} {
 		set before 0
@@ -496,9 +518,9 @@ proc ::tk::EntryBackspace w {
     if {[$w selection present]} {
 	$w delete sel.first sel.last
     } else {
-	set x [expr {[$w index insert] - 1}]
-	if {$x >= 0} {
-	    $w delete $x
+	set x [$w index insert]
+	if {$x > 0} {
+	    $w delete [expr {$x-1}]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -553,12 +575,12 @@ proc ::tk::EntryTranspose w {
     if {$i < [$w index end]} {
 	incr i
     }
-    set first [expr {$i-2}]
-    if {$first < 0} {
+    if {$i < 2} {
 	return
     }
+    set first [expr {$i-2}]
     set data [$w get]
-    set new [string index $data [expr {$i-1}]][string index $data $first]
+    set new [string index $data $i-1][string index $data $first]
     $w delete $first $i
     $w insert insert $new
     EntrySeeInsert $w
@@ -638,7 +660,7 @@ proc ::tk::EntryScanMark {w x} {
 proc ::tk::EntryScanDrag {w x} {
     # Make sure these exist, as some weird situations can trigger the
     # motion binding without the initial press.  [Bug #220269]
-    if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
+    if {![info exists ::tk::Priv(x)]} {set ::tk::Priv(x) $x}
     # allow for a delta
     if {abs($x-$::tk::Priv(x)) > 2} {
 	set ::tk::Priv(mouseMoved) 1
@@ -655,7 +677,7 @@ proc ::tk::EntryScanDrag {w x} {
 
 proc ::tk::EntryGetSelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]

@@ -100,7 +100,6 @@ TkWinSendCom_CreateInstance(
 	ISupportErrorInfo_Release,
 	ISupportErrorInfo_InterfaceSupportsErrorInfo,
     };
-    HRESULT hr = S_OK;
     TkWinSendCom *obj = NULL;
 
     /*
@@ -111,21 +110,19 @@ TkWinSendCom_CreateInstance(
     obj = (TkWinSendCom *) CoTaskMemAlloc(sizeof(TkWinSendCom));
     if (obj == NULL) {
 	*ppv = NULL;
-	hr = E_OUTOFMEMORY;
-    } else {
-	obj->lpVtbl = &vtbl;
-	obj->lpVtbl2 = &vtbl2;
-	obj->refcount = 0;
-	obj->interp = interp;
-
-	/*
-	 * lock the interp? Tcl_AddRef/Retain?
-	 */
-
-	hr = obj->lpVtbl->QueryInterface((IDispatch*)obj, riid, ppv);
+	return E_OUTOFMEMORY;
     }
 
-    return hr;
+    obj->lpVtbl = &vtbl;
+    obj->lpVtbl2 = &vtbl2;
+    obj->refcount = 0;
+    obj->interp = interp;
+
+    /*
+     * lock the interp? Tcl_AddRef/Retain?
+     */
+
+    return obj->lpVtbl->QueryInterface((IDispatch *) obj, riid, ppv);
 }
 
 /*
@@ -147,7 +144,7 @@ static void
 TkWinSendCom_Destroy(
     LPDISPATCH pdisp)
 {
-    CoTaskMemFree((void*)pdisp);
+    CoTaskMemFree((void *) pdisp);
 }
 
 /*
@@ -169,17 +166,17 @@ WinSendCom_QueryInterface(
     void **ppvObject)
 {
     HRESULT hr = E_NOINTERFACE;
-    TkWinSendCom *this = (TkWinSendCom*)This;
+    TkWinSendCom *sendCom = (TkWinSendCom *) This;
     *ppvObject = NULL;
 
     if (memcmp(riid, &IID_IUnknown, sizeof(IID)) == 0
 	    || memcmp(riid, &IID_IDispatch, sizeof(IID)) == 0) {
-	*ppvObject = (void**)this;
-	this->lpVtbl->AddRef(This);
+	*ppvObject = (void **) sendCom;
+	sendCom->lpVtbl->AddRef(This);
 	hr = S_OK;
     } else if (memcmp(riid, &IID_ISupportErrorInfo, sizeof(IID)) == 0) {
-	*ppvObject = (void**)(this + 1);
-	this->lpVtbl2->AddRef((ISupportErrorInfo*)(this + 1));
+	*ppvObject = (void **) (sendCom + 1);
+	sendCom->lpVtbl2->AddRef((ISupportErrorInfo *) (sendCom + 1));
 	hr = S_OK;
     }
     return hr;
@@ -189,9 +186,9 @@ static STDMETHODIMP_(ULONG)
 WinSendCom_AddRef(
     IDispatch *This)
 {
-    TkWinSendCom *this = (TkWinSendCom*)This;
+    TkWinSendCom *sendCom = (TkWinSendCom*)This;
 
-    return InterlockedIncrement(&this->refcount);
+    return InterlockedIncrement(&sendCom->refcount);
 }
 
 static STDMETHODIMP_(ULONG)
@@ -199,9 +196,9 @@ WinSendCom_Release(
     IDispatch *This)
 {
     long r = 0;
-    TkWinSendCom *this = (TkWinSendCom*)This;
+    TkWinSendCom *sendCom = (TkWinSendCom*)This;
 
-    if ((r = InterlockedDecrement(&this->refcount)) == 0) {
+    if ((r = InterlockedDecrement(&sendCom->refcount)) == 0) {
 	TkWinSendCom_Destroy(This);
     }
     return r;
@@ -213,6 +210,7 @@ WinSendCom_GetTypeInfoCount(
     UINT *pctinfo)
 {
     HRESULT hr = E_POINTER;
+    (void)This;
 
     if (pctinfo != NULL) {
 	*pctinfo = 0;
@@ -229,6 +227,9 @@ WinSendCom_GetTypeInfo(
     ITypeInfo **ppTI)
 {
     HRESULT hr = E_POINTER;
+    (void)This;
+    (void)iTInfo;
+    (void)lcid;
 
     if (ppTI) {
 	*ppTI = NULL;
@@ -247,6 +248,10 @@ WinSendCom_GetIDsOfNames(
     DISPID *rgDispId)
 {
     HRESULT hr = E_POINTER;
+    (void)This;
+    (void)riid;
+    (void)cNames;
+    (void)lcid;
 
     if (rgDispId) {
 	hr = DISP_E_UNKNOWNNAME;
@@ -272,7 +277,9 @@ WinSendCom_Invoke(
     UINT *puArgErr)
 {
     HRESULT hr = DISP_E_MEMBERNOTFOUND;
-    TkWinSendCom *this = (TkWinSendCom*)This;
+    TkWinSendCom *sendCom = (TkWinSendCom*)This;
+    (void)riid;
+    (void)lcid;
 
     switch (dispidMember) {
     case TKWINSENDCOM_DISPID_SEND:
@@ -280,7 +287,7 @@ WinSendCom_Invoke(
 	    if (pDispParams->cArgs != 1) {
 		hr = DISP_E_BADPARAMCOUNT;
 	    } else {
-		hr = Send(this, pDispParams->rgvarg[0], pvarResult,
+		hr = Send(sendCom, pDispParams->rgvarg[0], pvarResult,
 			pExcepInfo, puArgErr);
 	    }
 	}
@@ -291,7 +298,7 @@ WinSendCom_Invoke(
 	    if (pDispParams->cArgs != 1) {
 		hr = DISP_E_BADPARAMCOUNT;
 	    } else {
-		hr = Async(this, pDispParams->rgvarg[0], pExcepInfo, puArgErr);
+		hr = Async(sendCom, pDispParams->rgvarg[0], pExcepInfo, puArgErr);
 	    }
 	}
 	break;
@@ -316,27 +323,27 @@ ISupportErrorInfo_QueryInterface(
     REFIID riid,
     void **ppvObject)
 {
-    TkWinSendCom *this = (TkWinSendCom*)(This - 1);
+    TkWinSendCom *sendCom = (TkWinSendCom *)(This - 1);
 
-    return this->lpVtbl->QueryInterface((IDispatch*)this, riid, ppvObject);
+    return sendCom->lpVtbl->QueryInterface((IDispatch *) sendCom, riid, ppvObject);
 }
 
 static STDMETHODIMP_(ULONG)
 ISupportErrorInfo_AddRef(
     ISupportErrorInfo *This)
 {
-    TkWinSendCom *this = (TkWinSendCom*)(This - 1);
+    TkWinSendCom *sendCom = (TkWinSendCom *)(This - 1);
 
-    return InterlockedIncrement(&this->refcount);
+    return InterlockedIncrement(&sendCom->refcount);
 }
 
 static STDMETHODIMP_(ULONG)
 ISupportErrorInfo_Release(
     ISupportErrorInfo *This)
 {
-    TkWinSendCom *this = (TkWinSendCom*)(This - 1);
+    TkWinSendCom *sendCom = (TkWinSendCom *)(This - 1);
 
-    return this->lpVtbl->Release((IDispatch*)this);
+    return sendCom->lpVtbl->Release((IDispatch *) sendCom);
 }
 
 static STDMETHODIMP
@@ -344,7 +351,10 @@ ISupportErrorInfo_InterfaceSupportsErrorInfo(
     ISupportErrorInfo *This,
     REFIID riid)
 {
-    /*TkWinSendCom *this = (TkWinSendCom*)(This - 1);*/
+    (void)This;
+    (void)riid;
+
+    /*TkWinSendCom *sendCom = (TkWinSendCom*)(This - 1);*/
     return S_OK; /* or S_FALSE */
 }
 
@@ -373,27 +383,31 @@ Async(
 {
     HRESULT hr = S_OK;
     VARIANT vCmd;
+    Tcl_DString ds;
+    (void)puArgErr;
 
     VariantInit(&vCmd);
 
     hr = VariantChangeType(&vCmd, &Cmd, 0, VT_BSTR);
     if (FAILED(hr)) {
-	Tcl_SetStringObj(Tcl_GetObjResult(obj->interp),
-		"invalid args: Async(command)", -1);
-	SetExcepInfo(obj->interp, pExcepInfo);
+	Tcl_SetObjResult(obj->interp, Tcl_NewStringObj(
+		"invalid args: Async(command)", -1));
+	TkWinSend_SetExcepInfo(obj->interp, pExcepInfo);
 	hr = DISP_E_EXCEPTION;
     }
 
-    if (SUCCEEDED(hr)) {
-	if (obj->interp) {
-	    Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(vCmd.bstrVal,
-		    (int)SysStringLen(vCmd.bstrVal));
-	    TkWinSend_QueueCommand(obj->interp, scriptPtr);
-	}
+    if (SUCCEEDED(hr) && obj->interp) {
+	Tcl_Obj *scriptPtr;
+
+	Tcl_DStringInit(&ds);
+	Tcl_WCharToUtfDString(vCmd.bstrVal, SysStringLen(vCmd.bstrVal), &ds);
+	scriptPtr =
+		Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+	Tcl_DStringFree(&ds);
+	TkWinSend_QueueCommand(obj->interp, scriptPtr);
     }
 
     VariantClear(&vCmd);
-
     return hr;
 }
 
@@ -427,29 +441,47 @@ Send(
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
+    Tcl_Interp *interp = obj->interp;
+    Tcl_Obj *scriptPtr;
+    Tcl_DString ds;
+    (void)puArgErr;
 
+    if (interp == NULL) {
+	return S_OK;
+    }
     VariantInit(&v);
     hr = VariantChangeType(&v, &vCmd, 0, VT_BSTR);
-    if (SUCCEEDED(hr)) {
-	if (obj->interp) {
-	    Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(v.bstrVal,
-		    (int)SysStringLen(v.bstrVal));
-
-	    result = Tcl_EvalObjEx(obj->interp, scriptPtr,
-		    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
-	    if (pvResult) {
-		VariantInit(pvResult);
-		pvResult->vt = VT_BSTR;
-		pvResult->bstrVal = SysAllocString(
-			Tcl_GetUnicode(Tcl_GetObjResult(obj->interp)));
-	    }
-	    if (result == TCL_ERROR) {
-		hr = DISP_E_EXCEPTION;
-		SetExcepInfo(obj->interp, pExcepInfo);
-	    }
-	}
-	VariantClear(&v);
+    if (!SUCCEEDED(hr)) {
+	return hr;
     }
+
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(v.bstrVal, SysStringLen(v.bstrVal), &ds);
+    scriptPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
+    Tcl_Preserve(interp);
+    Tcl_IncrRefCount(scriptPtr);
+    result = Tcl_EvalObjEx(interp, scriptPtr,
+	    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(scriptPtr);
+    if (pvResult != NULL) {
+	Tcl_Obj *obj;
+	const char *src;
+
+	VariantInit(pvResult);
+	pvResult->vt = VT_BSTR;
+	obj = Tcl_GetObjResult(interp);
+	src = Tcl_GetString(obj);
+	Tcl_DStringInit(&ds);
+	pvResult->bstrVal = SysAllocString(Tcl_UtfToWCharDString(src, obj->length, &ds));
+	Tcl_DStringFree(&ds);
+    }
+    if (result == TCL_ERROR) {
+	hr = DISP_E_EXCEPTION;
+	TkWinSend_SetExcepInfo(interp, pExcepInfo);
+    }
+    Tcl_Release(interp);
+    VariantClear(&v);
     return hr;
 }
 

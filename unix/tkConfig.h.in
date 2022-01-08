@@ -4,11 +4,8 @@
     #ifndef _TKCONFIG
     #define _TKCONFIG
 
-/* Is pthread_attr_get_np() declared in <pthread.h>? */
-#undef ATTRGETNP_NOT_DECLARED
-
-/* Is pthread_getattr_np declared in <pthread.h>? */
-#undef GETATTRNP_NOT_DECLARED
+/* Define if building universal (internal helper macro) */
+#undef AC_APPLE_UNIVERSAL_BUILD
 
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
@@ -19,6 +16,12 @@
 /* Do we have access to Darwin CoreFoundation.framework? */
 #undef HAVE_COREFOUNDATION
 
+/* Is 'DIR64' in <sys/types.h>? */
+#undef HAVE_DIR64
+
+/* Compiler support for module scope symbols */
+#undef HAVE_HIDDEN
+
 /* Do we have the intptr_t type? */
 #undef HAVE_INTPTR_T
 
@@ -28,14 +31,8 @@
 /* Define to 1 if you have the `Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
-/* Do we have <limits.h>? */
-#undef HAVE_LIMITS_H
-
 /* Define to 1 if you have the `lseek64' function. */
 #undef HAVE_LSEEK64
-
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
 
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
@@ -43,23 +40,17 @@
 /* Define to 1 if you have the `pthread_atfork' function. */
 #undef HAVE_PTHREAD_ATFORK
 
-/* Do we want a BSD-like thread-attribute interface? */
-#undef HAVE_PTHREAD_ATTR_GET_NP
-
 /* Define to 1 if you have the `pthread_attr_setstacksize' function. */
 #undef HAVE_PTHREAD_ATTR_SETSTACKSIZE
-
-/* Do we want a Linux-like thread-attribute interface? */
-#undef HAVE_PTHREAD_GETATTR_NP
-
-/* Define to 1 if you have the `pthread_get_stacksize_np' function. */
-#undef HAVE_PTHREAD_GET_STACKSIZE_NP
 
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -115,7 +106,7 @@
 /* Are we building TkAqua? */
 #undef MAC_OSX_TK
 
-/* Compiler support for module scope symbols */
+/* No Compiler support for module scope symbols */
 #undef MODULE_SCOPE
 
 /* Is no debugging enabled? */
@@ -126,9 +117,6 @@
 
 /* Do we have fd_set? */
 #undef NO_FD_SET
-
-/* Do we have <limits.h>? */
-#undef NO_LIMITS_H
 
 /* Do we have <stdlib.h>? */
 #undef NO_STDLIB_H
@@ -145,13 +133,18 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
 /* Is this a static build? */
 #undef STATIC_BUILD
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Is this a 64-bit build? */
@@ -181,7 +174,8 @@
 /* What type should be used to define wide integers? */
 #undef TCL_WIDE_INT_TYPE
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. This
+   macro is obsolete. */
 #undef TIME_WITH_SYS_TIME
 
 /* Is Tk built as a framework? */
@@ -193,9 +187,20 @@
 /* Do we want to use the threaded memory allocator? */
 #undef USE_THREAD_ALLOC
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-#undef WORDS_BIGENDIAN
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
+
+/* Is XKeycodeToKeysym deprecated? */
+#undef XKEYCODETOKEYSYM_IS_DEPRECATED
 
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
@@ -227,7 +232,8 @@
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+/* Define to 1 if type `char' is unsigned and your compiler does not
+   predefine this macro.  */
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
@@ -235,20 +241,23 @@
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef gid_t
 
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
+
 /* Signed integer type wide enough to hold a pointer. */
 #undef intptr_t
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef mode_t
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define as a signed integer type capable of holding a process identifier. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
-
-/* Do we want to use the strtod() in compat? */
-#undef strtod
 
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef uid_t
@@ -260,6 +269,7 @@
     /* Undef unused package specific autoheader defines so that we can
      * include both tclConfig.h and tkConfig.h at the same time: */
     /* override */ #undef PACKAGE_NAME
-    /* override */ #undef PACKAGE_STRING
     /* override */ #undef PACKAGE_TARNAME
+    /* override */ #undef PACKAGE_VERSION
+    /* override */ #undef PACKAGE_STRING
     #endif /* _TKCONFIG */
