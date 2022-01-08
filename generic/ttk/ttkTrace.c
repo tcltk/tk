@@ -3,11 +3,11 @@
  *
  * Simplified interface to Tcl_TraceVariable.
  *
- * PROBLEM: Can't distinguish "variable does not exist" (which is OK) 
+ * PROBLEM: Can't distinguish "variable does not exist" (which is OK)
  * from other errors (which are not).
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -30,11 +30,13 @@ VarTraceProc(
     const char *name2,		/* (unused) */
     int flags)			/* Information about what happened. */
 {
-    Ttk_TraceHandle *tracePtr = clientData;
+    Ttk_TraceHandle *tracePtr = (Ttk_TraceHandle *)clientData;
     const char *name, *value;
     Tcl_Obj *valuePtr;
+    (void)name1;
+    (void)name2;
 
-    if (flags & TCL_INTERP_DESTROYED) {
+    if (Tcl_InterpDeleted(interp)) {
 	return NULL;
     }
 
@@ -51,10 +53,10 @@ VarTraceProc(
 	 */
 	if (tracePtr->interp == NULL) {
 	    Tcl_DecrRefCount(tracePtr->varnameObj);
-	    ckfree((ClientData)tracePtr);
+	    ckfree(tracePtr);
 	    return NULL;
 	}
-	Tcl_TraceVar(interp, name,
+	Tcl_TraceVar2(interp, name, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, clientData);
 	tracePtr->callback(tracePtr->clientData, NULL);
@@ -85,7 +87,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
     Ttk_TraceProc callback,
     void *clientData)
 {
-    Ttk_TraceHandle *h = (Ttk_TraceHandle*)ckalloc(sizeof(*h));
+    Ttk_TraceHandle *h = (Ttk_TraceHandle *)ckalloc(sizeof(*h));
     int status;
 
     h->interp = interp;
@@ -94,13 +96,13 @@ Ttk_TraceHandle *Ttk_TraceVariable(
     h->clientData = clientData;
     h->callback = callback;
 
-    status = Tcl_TraceVar(interp, Tcl_GetString(varnameObj),
-	    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-	    VarTraceProc, (ClientData)h);
+    status = Tcl_TraceVar2(interp, Tcl_GetString(varnameObj),
+	    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    VarTraceProc, h);
 
     if (status != TCL_OK) {
 	Tcl_DecrRefCount(h->varnameObj);
-	ckfree((ClientData)h);
+	ckfree(h);
 	return NULL;
     }
 
@@ -137,7 +139,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	 */
 	while ((cd = Tcl_VarTraceInfo(h->interp, Tcl_GetString(h->varnameObj),
 		TCL_GLOBAL_ONLY, VarTraceProc, cd)) != NULL) {
-	    if (cd == (ClientData) h) {
+	    if (cd == h) {
 		break;
 	    }
 	}
@@ -150,11 +152,11 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	    h->interp = NULL;
 	    return;
 	}
-	Tcl_UntraceVar(h->interp, Tcl_GetString(h->varnameObj),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		VarTraceProc, (ClientData)h);
+	Tcl_UntraceVar2(h->interp, Tcl_GetString(h->varnameObj),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		VarTraceProc, h);
 	Tcl_DecrRefCount(h->varnameObj);
-	ckfree((ClientData)h);
+	ckfree(h);
     }
 }
 

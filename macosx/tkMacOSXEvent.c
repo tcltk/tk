@@ -14,6 +14,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 #pragma mark TKApplication(TKEvent)
 
@@ -23,7 +24,8 @@ enum {
 
 @implementation TKApplication(TKEvent)
 /* TODO: replace by +[addLocalMonitorForEventsMatchingMask ? */
-- (NSEvent *)tkProcessEvent:(NSEvent *)theEvent {
+- (NSEvent *) tkProcessEvent: (NSEvent *) theEvent
+{
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -87,7 +89,6 @@ enum {
 	}
     case NSCursorUpdate:
         break;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
     case NSEventTypeGesture:
     case NSEventTypeMagnify:
     case NSEventTypeRotate:
@@ -96,7 +97,6 @@ enum {
     case NSEventTypeEndGesture:
         break;
 #endif
-#endif
 
     default:
 	break; /* return theEvent */
@@ -104,42 +104,8 @@ enum {
     return processedEvent;
 }
 @end
-
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXFlushWindows --
- *
- *	This routine flushes all the visible windows of the application. It is
- *	called by XSync().
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Flushes all visible Cocoa windows
- *
- *----------------------------------------------------------------------
- */
-MODULE_SCOPE void
-TkMacOSXFlushWindows(void)
-{
-    /* This can be called from outside the Appkit event loop,
-     * so it needs its own AutoreleasePool.
-     */
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    NSArray *macWindows = [NSApp orderedWindows];
 
-    for (NSWindow *w in macWindows) {
-	if (TkMacOSXGetXWindow(w)) {
-	    [w flushWindow];
-	}
-    }
-    [pool drain];
-}
-
 /*
  * Local Variables:
  * mode: objc

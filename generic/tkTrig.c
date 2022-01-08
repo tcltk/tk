@@ -12,7 +12,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <stdio.h>
 #include "tkInt.h"
 #include "tkCanvas.h"
 
@@ -20,9 +19,6 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #undef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#ifndef PI
-#   define PI 3.14159265358979323846
-#endif /* PI */
 
 /*
  *--------------------------------------------------------------
@@ -43,9 +39,9 @@
 
 double
 TkLineToPoint(
-    double end1Ptr[2],		/* Coordinates of first end-point of line. */
-    double end2Ptr[2],		/* Coordinates of second end-point of line. */
-    double pointPtr[2])		/* Points to coords for point. */
+    double end1Ptr[],		/* Coordinates of first end-point of line. */
+    double end2Ptr[],		/* Coordinates of second end-point of line. */
+    double pointPtr[])		/* Points to coords for point. */
 {
     double x, y;
 
@@ -147,11 +143,11 @@ TkLineToPoint(
 
 int
 TkLineToArea(
-    double end1Ptr[2],		/* X and y coordinates for one endpoint of
+    double end1Ptr[],		/* X and y coordinates for one endpoint of
 				 * line. */
-    double end2Ptr[2],		/* X and y coordinates for other endpoint of
+    double end2Ptr[],		/* X and y coordinates for other endpoint of
 				 * line. */
-    double rectPtr[4])		/* Points to coords for rectangle, in the
+    double rectPtr[])		/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 must be no larger
 				 * than x2, and y1 no larger than y2. */
 {
@@ -444,7 +440,7 @@ TkPolygonToPoint(
 				 * intersect a ray extending vertically
 				 * upwards from the point to infinity. */
     int count;
-    register double *pPtr;
+    double *pPtr;
 
     /*
      * Iterate through all of the edges in the polygon, updating bestDist and
@@ -592,7 +588,7 @@ TkPolygonToArea(
 				 * polygon: x0, y0, x1, y1, ... The polygon
 				 * may be self-intersecting. */
     int numPoints,		/* Total number of points at *polyPtr. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
+    double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
 {
@@ -600,7 +596,7 @@ TkPolygonToArea(
 				 * outside, 1 means inside, won't ever be
 				 * 0). */
     int count;
-    register double *pPtr;
+    double *pPtr;
 
     /*
      * Iterate over all of the edges of the polygon and test them against the
@@ -659,14 +655,14 @@ TkPolygonToArea(
 	/* ARGSUSED */
 double
 TkOvalToPoint(
-    double ovalPtr[4],		/* Pointer to array of four coordinates (x1,
+    double ovalPtr[],		/* Pointer to array of four coordinates (x1,
 				 * y1, x2, y2) defining oval's bounding
 				 * box. */
     double width,		/* Width of outline for oval. */
     int filled,			/* Non-zero means oval should be treated as
 				 * filled; zero means only consider
 				 * outline. */
-    double pointPtr[2])		/* Coordinates of point. */
+    double pointPtr[])		/* Coordinates of point. */
 {
     double xDelta, yDelta, scaledDistance, distToOutline, distToCenter;
     double xDiam, yDiam;
@@ -755,11 +751,11 @@ TkOvalToPoint(
 
 int
 TkOvalToArea(
-    register double *ovalPtr,	/* Points to coordinates definining the
+    double *ovalPtr,	/* Points to coordinates defining the
 				 * bounding rectangle for the oval: x1, y1,
 				 * x2, y2. X1 must be less than x2 and y1 less
 				 * than y2. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
+    double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
 {
@@ -874,7 +870,7 @@ TkOvalToArea(
 	/* ARGSUSED */
 void
 TkIncludePoint(
-    register Tk_Item *itemPtr,	/* Item whose bounding box is being
+    Tk_Item *itemPtr,	/* Item whose bounding box is being
 				 * calculated. */
     double *pointPtr)		/* Address of two doubles giving x and y
 				 * coordinates of point. */
@@ -923,7 +919,7 @@ TkBezierScreenPoints(
     double control[],		/* Array of coordinates for four control
 				 * points: x0, y0, x1, y1, ... x3 y3. */
     int numSteps,		/* Number of curve points to generate. */
-    register XPoint *xPointPtr)	/* Where to put new points. */
+    XPoint *xPointPtr)	/* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;
@@ -969,7 +965,7 @@ TkBezierPoints(
     double control[],		/* Array of coordinates for four control
 				 * points: x0, y0, x1, y1, ... x3 y3. */
     int numSteps,		/* Number of curve points to generate. */
-    register double *coordPtr)	/* Where to put new points. */
+    double *coordPtr)	/* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;
@@ -1379,7 +1375,7 @@ TkMakeBezierPostscript(
     int closed, i;
     int numCoords = numPoints*2;
     double control[8];
-    char buffer[200];
+    Tcl_Obj *psObj;
 
     /*
      * If the curve is a closed one then generate a special spline that spans
@@ -1398,7 +1394,9 @@ TkMakeBezierPostscript(
 	control[5] = 0.833*pointPtr[1] + 0.167*pointPtr[3];
 	control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
 	control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
-	sprintf(buffer, "%.15g %.15g moveto\n%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+	psObj = Tcl_ObjPrintf(
+		"%.15g %.15g moveto\n"
+		"%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
 		control[0], Tk_CanvasPsY(canvas, control[1]),
 		control[2], Tk_CanvasPsY(canvas, control[3]),
 		control[4], Tk_CanvasPsY(canvas, control[5]),
@@ -1407,10 +1405,9 @@ TkMakeBezierPostscript(
 	closed = 0;
 	control[6] = pointPtr[0];
 	control[7] = pointPtr[1];
-	sprintf(buffer, "%.15g %.15g moveto\n",
+	psObj = Tcl_ObjPrintf("%.15g %.15g moveto\n",
 		control[6], Tk_CanvasPsY(canvas, control[7]));
     }
-    Tcl_AppendResult(interp, buffer, NULL);
 
     /*
      * Cycle through all the remaining points in the curve, generating a curve
@@ -1436,12 +1433,15 @@ TkMakeBezierPostscript(
 	control[4] = 0.333*control[6] + 0.667*pointPtr[0];
 	control[5] = 0.333*control[7] + 0.667*pointPtr[1];
 
-	sprintf(buffer, "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+	Tcl_AppendPrintfToObj(psObj,
+		"%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
 		control[2], Tk_CanvasPsY(canvas, control[3]),
 		control[4], Tk_CanvasPsY(canvas, control[5]),
 		control[6], Tk_CanvasPsY(canvas, control[7]));
-	Tcl_AppendResult(interp, buffer, NULL);
     }
+
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
+    Tcl_DecrRefCount(psObj);
 }
 
 /*
@@ -1476,15 +1476,14 @@ TkMakeRawCurvePostscript(
 {
     int i;
     double *segPtr;
-    char buffer[200];
+    Tcl_Obj *psObj;
 
     /*
      * Put the first point into the path.
      */
 
-    sprintf(buffer, "%.15g %.15g moveto\n",
+    psObj = Tcl_ObjPrintf("%.15g %.15g moveto\n",
 	    pointPtr[0], Tk_CanvasPsY(canvas, pointPtr[1]));
-    Tcl_AppendResult(interp, buffer, NULL);
 
     /*
      * Loop through all the remaining points in the curve, generating a
@@ -1499,19 +1498,19 @@ TkMakeRawCurvePostscript(
 	     * neighbouring knots, so this segment is just a straight line.
 	     */
 
-	    sprintf(buffer, "%.15g %.15g lineto\n",
+	    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g lineto\n",
 		    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
 	} else {
 	    /*
 	     * This is a generic Bezier curve segment.
 	     */
 
-	    sprintf(buffer, "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+	    Tcl_AppendPrintfToObj(psObj,
+		    "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
 		    segPtr[2], Tk_CanvasPsY(canvas, segPtr[3]),
 		    segPtr[4], Tk_CanvasPsY(canvas, segPtr[5]),
 		    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
 	}
-	Tcl_AppendResult(interp, buffer, NULL);
     }
 
     /*
@@ -1536,20 +1535,23 @@ TkMakeRawCurvePostscript(
 	     * Straight line.
 	     */
 
-	    sprintf(buffer, "%.15g %.15g lineto\n",
+	    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g lineto\n",
 		    control[6], Tk_CanvasPsY(canvas, control[7]));
 	} else {
 	    /*
 	     * Bezier curve segment.
 	     */
 
-	    sprintf(buffer, "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+	    Tcl_AppendPrintfToObj(psObj,
+		    "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
 		    control[2], Tk_CanvasPsY(canvas, control[3]),
 		    control[4], Tk_CanvasPsY(canvas, control[5]),
 		    control[6], Tk_CanvasPsY(canvas, control[7]));
 	}
-	Tcl_AppendResult(interp, buffer, NULL);
     }
+
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
+    Tcl_DecrRefCount(psObj);
 }
 
 /*

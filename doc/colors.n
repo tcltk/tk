@@ -205,7 +205,7 @@ goldenrod1	255	193 	37
 goldenrod2	238	180 	34
 goldenrod3	205	155 	29
 goldenrod4	139	105 	20
-gray	190	190 	190
+gray	128	128	128
 gray0	0	0 	0
 gray1	3	3 	3
 gray2	5	5 	5
@@ -307,14 +307,14 @@ gray97	247	247 	247
 gray98	250	250 	250
 gray99	252	252 	252
 gray100	255	255 	255
-green	0	255 	0
+green	0	128 	0
 green yellow	173	255 	47
 green1	0	255 	0
 green2	0	238 	0
 green3	0	205 	0
 green4	0	139 	0
 GreenYellow	173	255 	47
-grey	190	190 	190
+grey	128	128	128
 grey0	0	0 	0
 grey1	3	3 	3
 grey2	5	5 	5
@@ -534,7 +534,7 @@ magenta1	255	0 	255
 magenta2	238	0 	238
 magenta3	205	0 	205
 magenta4	139	0 	139
-maroon	176	48 	96
+maroon	128	0 	0
 maroon1	255	52 	179
 maroon2	238	48 	167
 maroon3	205	41 	144
@@ -651,7 +651,7 @@ plum3	205	150 	205
 plum4	139	102 	139
 powder blue	176	224 	230
 PowderBlue	176	224 	230
-purple	160	32 	240
+purple	128	0 	128
 purple1	155	48 	255
 purple2	145	44 	238
 purple3	125	38 	205
@@ -784,29 +784,23 @@ YellowGreen	154	205 	50
 .TP
 \fBMac OS X\fR
 .
-On Mac OS X, the following additional system colors are available
-(note that the actual color values depend on the currently active OS theme,
-and typically many of these will in fact be patterns rather than pure colors):
+On macOS, the following additional system colors are available.  This
+first group contains all of the HIBrush colors available in the
+HIToolbox library. Note that on macOS 10.14 (Mojave) and later these
+colors are unlikely to match the color actually used for the purpose
+suggested by the color name.
 .RS
 .DS
 systemActiveAreaFill
-systemAlertActiveText
 systemAlertBackgroundActive
 systemAlertBackgroundInactive
-systemAlertInactiveText
 systemAlternatePrimaryHighlightColor
 systemAppleGuideCoachmark
 systemBevelActiveDark
 systemBevelActiveLight
-systemBevelButtonActiveText
-systemBevelButtonInactiveText
-systemBevelButtonPressedText
-systemBevelButtonStickyActiveText
-systemBevelButtonStickyInactiveText
 systemBevelInactiveDark
 systemBevelInactiveLight
 systemBlack
-systemBlackText
 systemButtonActiveDarkHighlight
 systemButtonActiveDarkShadow
 systemButtonActiveLightHighlight
@@ -826,15 +820,10 @@ systemButtonPressedDarkHighlight
 systemButtonPressedDarkShadow
 systemButtonPressedLightHighlight
 systemButtonPressedLightShadow
-systemButtonText
 systemChasingArrows
-systemDialogActiveText
 systemDialogBackgroundActive
 systemDialogBackgroundInactive
-systemDialogInactiveText
 systemDocumentWindowBackground
-systemDocumentWindowTitleActiveText
-systemDocumentWindowTitleInactiveText
 systemDragHilite
 systemDrawerBackground
 systemFinderWindowBackground
@@ -842,90 +831,87 @@ systemFocusHighlight
 systemHighlight
 systemHighlightAlternate
 systemHighlightSecondary
-systemHighlightText
 systemIconLabelBackground
 systemIconLabelBackgroundSelected
-systemIconLabelSelectedText
-systemIconLabelText
 systemListViewBackground
 systemListViewColumnDivider
 systemListViewEvenRowBackground
 systemListViewOddRowBackground
 systemListViewSeparator
 systemListViewSortColumnBackground
-systemListViewText
-systemListViewWindowHeaderBackground
 systemMenu
 systemMenuActive
-systemMenuActiveText
 systemMenuBackground
 systemMenuBackgroundSelected
-systemMenuDisabled
-systemMenuItemActiveText
-systemMenuItemDisabledText
-systemMenuItemSelectedText
-systemMenuText
-systemMetalBackground
-systemModelessDialogActiveText
 systemModelessDialogBackgroundActive
 systemModelessDialogBackgroundInactive
-systemModelessDialogInactiveText
 systemMovableModalBackground
-systemMovableModalWindowTitleActiveText
-systemMovableModalWindowTitleInactiveText
-systemNotificationText
 systemNotificationWindowBackground
-systemPlacardActiveText
-systemPlacardBackground
-systemPlacardInactiveText
-systemPlacardPressedText
 systemPopupArrowActive
 systemPopupArrowInactive
 systemPopupArrowPressed
-systemPopupButtonActiveText
-systemPopupButtonInactiveText
-systemPopupButtonPressedText
-systemPopupLabelActiveText
-systemPopupLabelInactiveText
-systemPopupWindowTitleActiveText
-systemPopupWindowTitleInactiveText
 systemPrimaryHighlightColor
-systemPushButtonActiveText
-systemPushButtonInactiveText
-systemPushButtonPressedText
-systemRootMenuActiveText
-systemRootMenuDisabledText
-systemRootMenuSelectedText
 systemScrollBarDelimiterActive
 systemScrollBarDelimiterInactive
-systemSecondaryGroupBoxBackground
 systemSecondaryHighlightColor
+systemSelectedTabTextColor
 systemSheetBackground
 systemSheetBackgroundOpaque
 systemSheetBackgroundTransparent
 systemStaticAreaFill
-systemSystemDetailText
-systemTabFrontActiveText
-systemTabFrontInactiveText
-systemTabNonFrontActiveText
-systemTabNonFrontInactiveText
-systemTabNonFrontPressedText
-systemTabPaneBackground
 systemToolbarBackground
 systemTransparent
 systemUtilityWindowBackgroundActive
 systemUtilityWindowBackgroundInactive
-systemUtilityWindowTitleActiveText
-systemUtilityWindowTitleInactiveText
 systemWhite
-systemWhiteText
 systemWindowBody
-systemWindowHeaderActiveText
-systemWindowHeaderBackground
-systemWindowHeaderInactiveText
+.DE
+.RE
+.
+Tk supports all of the NSColors in the macOS System ColorList.  The
+convention for naming these colors is that the Tk name is generated by
+capitalizing the macOS name and adding the prefix "system".  On OSX
+10.14 (Mojave) and later many of these "semantic" colors will appear
+differently depending on whether the NSWindow in which they are used has
+the Aqua or DarkAqua appearance.  The System ColorList differs between
+releases of macOS and some colors, such as systemLinkColor and
+systemControlAccentColor, are simulated on older systems which did not
+provide them.  All of the colors below are available on all supported
+macOS releases, but newer systems will support additional colors.
+.RS
+.DS
+systemControlAccentColor
+systemControlTextColor
+systemDisabledControlTextColor
+systemLabelColor
+systemLinkColor
+systemPlaceholderTextColor
+systemSelectedTextBackgroundColor
+systemSelectedTextColor
+systemSeparatorColor
+systemTextBackgroundColor
+systemTextColor
+.DE
+.RE
+.
+The numbered systemWindowBackgroundColors below
+are used in the \fBttk::notebook\fR and \fBttk::labelframe\fR widgets
+to provide a contrasting background.  Each numbered color constrasts
+with its predecessor.
+.RS
+.DS
+systemWindowBackgroundColor
+systemWindowBackgroundColor1
+systemWindowBackgroundColor2
+systemWindowBackgroundColor3
+systemWindowBackgroundColor4
+systemWindowBackgroundColor5
+systemWindowBackgroundColor6
+systemWindowBackgroundColor7
 .DE
 .RE
 .TP
+
 \fBWindows\fR
 .
 On Windows, the following additional system colors are available
@@ -933,19 +919,19 @@ On Windows, the following additional system colors are available
 .RS
 .DS
 .ta 6c
-3dDarkShadow	Highlight
-3dLight	HighlightText
-ActiveBorder	InactiveBorder
-ActiveCaption	InactiveCaption
-AppWorkspace	InactiveCaptionText
-Background	InfoBackground
-ButtonFace	InfoText
-ButtonHighlight	Menu
-ButtonShadow	MenuText
-ButtonText	Scrollbar
-CaptionText	Window
-DisabledText	WindowFrame
-GrayText	WindowText
+system3dDarkShadow	systemHighlight
+system3dLight	systemHighlightText
+systemActiveBorder	systemInactiveBorder
+systemActiveCaption	systemInactiveCaption
+systemAppWorkspace	systemInactiveCaptionText
+systemBackground	systemInfoBackground
+systemButtonFace	systemInfoText
+systemButtonHighlight	systemMenu
+systemButtonShadow	systemMenuText
+systemButtonText	systemScrollbar
+systemCaptionText	systemWindow
+systemDisabledText	systemWindowFrame
+systemGrayText	systemWindowText
 .DE
 .RE
 .SH "SEE ALSO"

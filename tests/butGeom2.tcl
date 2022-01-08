@@ -8,7 +8,7 @@ wm iconname .t "Button Geometry"
 wm geom .t +0+0
 wm minsize .t 1 1
 
-label .t.l -text {This screen exercises the color options for various flavors of buttons.  Select display options below, and they will be applied to the appropiate button widgets.} -wraplength 5i
+label .t.l -text {This screen exercises the color options for various flavors of buttons.  Select display options below, and they will be applied to the appropriate button widgets.} -wraplength 5i
 pack .t.l -side top -fill both
 
 button .t.quit -text Quit -command {destroy .t}
@@ -35,7 +35,7 @@ pack .t.anchorLabel .t.control.left.f -in .t.control.left -side top -anchor w
 foreach opt {activebackground activeforeground background disabledforeground foreground highlightbackground highlightcolor } {
     #button .t.color-$opt -text $opt -command "config -$opt \[tk_chooseColor]"
     menubutton .t.color-$opt -text $opt -menu .t.color-$opt.m -indicatoron 1 \
-        -relief raised -bd 2 
+        -relief raised -bd 2
     menu .t.color-$opt.m -tearoff 0
     .t.color-$opt.m add command -label Red -command "config -$opt red"
     .t.color-$opt.m add command -label Green -command "config -$opt green"

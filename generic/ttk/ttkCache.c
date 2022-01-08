@@ -28,8 +28,7 @@
  * but this will be a transient effect.
  */
 
-#include <stdio.h>	/* for sprintf */
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 
 struct Ttk_ResourceCache_ {
@@ -49,7 +48,7 @@ struct Ttk_ResourceCache_ {
  */
 Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
 {
-    Ttk_ResourceCache cache = (Ttk_ResourceCache)ckalloc(sizeof(*cache));
+    Ttk_ResourceCache cache = ckalloc(sizeof(*cache));
 
     cache->tkwin = NULL;	/* initialized later */
     cache->interp = interp;
@@ -160,7 +159,7 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
     }
     Tcl_DeleteHashTable(&cache->namedColors);
 
-    ckfree((ClientData)cache);
+    ckfree(cache);
 }
 
 /*
@@ -270,7 +269,7 @@ static Tcl_Obj *Ttk_Use(
     } else {
 	Tcl_DecrRefCount(cacheObj);
 	Tcl_SetHashValue(entryPtr, NULL);
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, TCL_ERROR);
 	return NULL;
     }
 }
@@ -341,7 +340,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
     Tcl_SetHashValue(entryPtr, image);
 
     if (!image) {
-	Tcl_BackgroundError(cache->interp);
+	Tcl_BackgroundException(cache->interp, TCL_ERROR);
     }
 
     return image;

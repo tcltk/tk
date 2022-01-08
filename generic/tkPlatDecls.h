@@ -23,6 +23,10 @@
  * in the generic/tk.decls script.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* !BEGIN!: Do not edit below this line. */
 
 #ifdef __cplusplus
@@ -33,43 +37,23 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
-#ifndef Tk_AttachHWND_TCL_DECLARED
-#define Tk_AttachHWND_TCL_DECLARED
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN Window		Tk_AttachHWND(Tk_Window tkwin, HWND hwnd);
-#endif
-#ifndef Tk_GetHINSTANCE_TCL_DECLARED
-#define Tk_GetHINSTANCE_TCL_DECLARED
 /* 1 */
 EXTERN HINSTANCE	Tk_GetHINSTANCE(void);
-#endif
-#ifndef Tk_GetHWND_TCL_DECLARED
-#define Tk_GetHWND_TCL_DECLARED
 /* 2 */
 EXTERN HWND		Tk_GetHWND(Window window);
-#endif
-#ifndef Tk_HWNDToWindow_TCL_DECLARED
-#define Tk_HWNDToWindow_TCL_DECLARED
 /* 3 */
 EXTERN Tk_Window	Tk_HWNDToWindow(HWND hwnd);
-#endif
-#ifndef Tk_PointerEvent_TCL_DECLARED
-#define Tk_PointerEvent_TCL_DECLARED
 /* 4 */
 EXTERN void		Tk_PointerEvent(HWND hwnd, int x, int y);
-#endif
-#ifndef Tk_TranslateWinEvent_TCL_DECLARED
-#define Tk_TranslateWinEvent_TCL_DECLARED
 /* 5 */
 EXTERN int		Tk_TranslateWinEvent(HWND hwnd, UINT message,
 				WPARAM wParam, LPARAM lParam,
 				LRESULT *result);
-#endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-#ifndef Tk_MacOSXSetEmbedHandler_TCL_DECLARED
-#define Tk_MacOSXSetEmbedHandler_TCL_DECLARED
 /* 0 */
 EXTERN void		Tk_MacOSXSetEmbedHandler(
 				Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
@@ -77,65 +61,45 @@ EXTERN void		Tk_MacOSXSetEmbedHandler(
 				Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
 				Tk_MacOSXEmbedGetClipProc *getClipProc,
 				Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc);
-#endif
-#ifndef Tk_MacOSXTurnOffMenus_TCL_DECLARED
-#define Tk_MacOSXTurnOffMenus_TCL_DECLARED
 /* 1 */
 EXTERN void		Tk_MacOSXTurnOffMenus(void);
-#endif
-#ifndef Tk_MacOSXTkOwnsCursor_TCL_DECLARED
-#define Tk_MacOSXTkOwnsCursor_TCL_DECLARED
 /* 2 */
 EXTERN void		Tk_MacOSXTkOwnsCursor(int tkOwnsIt);
-#endif
-#ifndef TkMacOSXInitMenus_TCL_DECLARED
-#define TkMacOSXInitMenus_TCL_DECLARED
 /* 3 */
 EXTERN void		TkMacOSXInitMenus(Tcl_Interp *interp);
-#endif
-#ifndef TkMacOSXInitAppleEvents_TCL_DECLARED
-#define TkMacOSXInitAppleEvents_TCL_DECLARED
 /* 4 */
 EXTERN void		TkMacOSXInitAppleEvents(Tcl_Interp *interp);
-#endif
-#ifndef TkGenWMConfigureEvent_TCL_DECLARED
-#define TkGenWMConfigureEvent_TCL_DECLARED
 /* 5 */
 EXTERN void		TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
 				int width, int height, int flags);
-#endif
-#ifndef TkMacOSXInvalClipRgns_TCL_DECLARED
-#define TkMacOSXInvalClipRgns_TCL_DECLARED
 /* 6 */
 EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
-#endif
-#ifndef TkMacOSXGetDrawablePort_TCL_DECLARED
-#define TkMacOSXGetDrawablePort_TCL_DECLARED
 /* 7 */
-EXTERN VOID *		TkMacOSXGetDrawablePort(Drawable drawable);
-#endif
-#ifndef TkMacOSXGetRootControl_TCL_DECLARED
-#define TkMacOSXGetRootControl_TCL_DECLARED
+EXTERN void *		TkMacOSXGetDrawablePort(Drawable drawable);
 /* 8 */
-EXTERN VOID *		TkMacOSXGetRootControl(Drawable drawable);
-#endif
-#ifndef Tk_MacOSXSetupTkNotifier_TCL_DECLARED
-#define Tk_MacOSXSetupTkNotifier_TCL_DECLARED
+EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
 /* 9 */
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
-#endif
-#ifndef Tk_MacOSXIsAppInFront_TCL_DECLARED
-#define Tk_MacOSXIsAppInFront_TCL_DECLARED
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront(void);
-#endif
+/* 11 */
+EXTERN Tk_Window	Tk_MacOSXGetTkWindow(void *w);
+/* 12 */
+EXTERN void *		Tk_MacOSXGetCGContextForDrawable(Drawable drawable);
+/* 13 */
+EXTERN void *		Tk_MacOSXGetNSWindowForDrawable(Drawable drawable);
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
+/* 16 */
+EXTERN void		TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y,
+				int width, int height, int flags);
 #endif /* AQUA */
 
 typedef struct TkPlatStubs {
     int magic;
-    struct TkPlatStubHooks *hooks;
+    void *hooks;
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, HWND hwnd); /* 0 */
     HINSTANCE (*tk_GetHINSTANCE) (void); /* 1 */
     HWND (*tk_GetHWND) (Window window); /* 2 */
@@ -151,103 +115,92 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
-    VOID * (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */
-    VOID * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
+    void * (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */
+    void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
+    Tk_Window (*tk_MacOSXGetTkWindow) (void *w); /* 11 */
+    void * (*tk_MacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
+    void * (*tk_MacOSXGetNSWindowForDrawable) (Drawable drawable); /* 13 */
+    void (*reserved14)(void);
+    void (*reserved15)(void);
+    void (*tkGenWMConfigureEvent_) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
 #endif /* AQUA */
 } TkPlatStubs;
 
-extern TkPlatStubs *tkPlatStubsPtr;
+extern const TkPlatStubs *tkPlatStubsPtr;
 
 #ifdef __cplusplus
 }
 #endif
 
-#if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+#if defined(USE_TK_STUBS)
 
 /*
  * Inline function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
-#ifndef Tk_AttachHWND
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define Tk_AttachHWND \
 	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
-#endif
-#ifndef Tk_GetHINSTANCE
 #define Tk_GetHINSTANCE \
 	(tkPlatStubsPtr->tk_GetHINSTANCE) /* 1 */
-#endif
-#ifndef Tk_GetHWND
 #define Tk_GetHWND \
 	(tkPlatStubsPtr->tk_GetHWND) /* 2 */
-#endif
-#ifndef Tk_HWNDToWindow
 #define Tk_HWNDToWindow \
 	(tkPlatStubsPtr->tk_HWNDToWindow) /* 3 */
-#endif
-#ifndef Tk_PointerEvent
 #define Tk_PointerEvent \
 	(tkPlatStubsPtr->tk_PointerEvent) /* 4 */
-#endif
-#ifndef Tk_TranslateWinEvent
 #define Tk_TranslateWinEvent \
 	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
-#endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-#ifndef Tk_MacOSXSetEmbedHandler
 #define Tk_MacOSXSetEmbedHandler \
 	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler) /* 0 */
-#endif
-#ifndef Tk_MacOSXTurnOffMenus
 #define Tk_MacOSXTurnOffMenus \
 	(tkPlatStubsPtr->tk_MacOSXTurnOffMenus) /* 1 */
-#endif
-#ifndef Tk_MacOSXTkOwnsCursor
 #define Tk_MacOSXTkOwnsCursor \
 	(tkPlatStubsPtr->tk_MacOSXTkOwnsCursor) /* 2 */
-#endif
-#ifndef TkMacOSXInitMenus
 #define TkMacOSXInitMenus \
 	(tkPlatStubsPtr->tkMacOSXInitMenus) /* 3 */
-#endif
-#ifndef TkMacOSXInitAppleEvents
 #define TkMacOSXInitAppleEvents \
 	(tkPlatStubsPtr->tkMacOSXInitAppleEvents) /* 4 */
-#endif
-#ifndef TkGenWMConfigureEvent
 #define TkGenWMConfigureEvent \
 	(tkPlatStubsPtr->tkGenWMConfigureEvent) /* 5 */
-#endif
-#ifndef TkMacOSXInvalClipRgns
 #define TkMacOSXInvalClipRgns \
 	(tkPlatStubsPtr->tkMacOSXInvalClipRgns) /* 6 */
-#endif
-#ifndef TkMacOSXGetDrawablePort
 #define TkMacOSXGetDrawablePort \
 	(tkPlatStubsPtr->tkMacOSXGetDrawablePort) /* 7 */
-#endif
-#ifndef TkMacOSXGetRootControl
 #define TkMacOSXGetRootControl \
 	(tkPlatStubsPtr->tkMacOSXGetRootControl) /* 8 */
-#endif
-#ifndef Tk_MacOSXSetupTkNotifier
 #define Tk_MacOSXSetupTkNotifier \
 	(tkPlatStubsPtr->tk_MacOSXSetupTkNotifier) /* 9 */
-#endif
-#ifndef Tk_MacOSXIsAppInFront
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
-#endif
+#define Tk_MacOSXGetTkWindow \
+	(tkPlatStubsPtr->tk_MacOSXGetTkWindow) /* 11 */
+#define Tk_MacOSXGetCGContextForDrawable \
+	(tkPlatStubsPtr->tk_MacOSXGetCGContextForDrawable) /* 12 */
+#define Tk_MacOSXGetNSWindowForDrawable \
+	(tkPlatStubsPtr->tk_MacOSXGetNSWindowForDrawable) /* 13 */
+/* Slot 14 is reserved */
+/* Slot 15 is reserved */
+#define TkGenWMConfigureEvent_ \
+	(tkPlatStubsPtr->tkGenWMConfigureEvent_) /* 16 */
 #endif /* AQUA */
 
-#endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
+#endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
 
+#ifdef __cplusplus
+}
+#endif
+
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkGenWMConfigureEvent_
+#define Tk_MacOSXGetNSViewForDrawable TkMacOSXGetRootControl
 
 #endif /* _TKPLATDECLS */
