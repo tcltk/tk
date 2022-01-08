@@ -159,7 +159,7 @@ If \fIwindow\fR has no content then an empty string is returned.
 .TP
 \fBpack content \fIwindow\fR
 .
-Synonym for . \fBpack slaves \fIwindow\fR
+Synonym for \fBpack slaves \fIwindow\fR.
 .VE "TIP 581"
 .SH "THE PACKER ALGORITHM"
 .PP

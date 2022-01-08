@@ -75,10 +75,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	6
 #define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	11
+#define TK_RELEASE_SERIAL	12
 
 #define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.11"
+#define TK_PATCH_LEVEL		"8.6.12"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -93,6 +93,9 @@ extern "C" {
 #ifndef RC_INVOKED
 
 #if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>

@@ -1186,6 +1186,7 @@ TkSendVirtualEvent(
     event.general.xany.display = Tk_Display(target);
     event.virt.name = Tk_GetUid(eventName);
     event.virt.user_data = detail;
+    if (detail) Tcl_IncrRefCount(detail); // Event code will DecrRefCount
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }

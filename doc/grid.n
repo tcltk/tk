@@ -296,7 +296,7 @@ to be returned.
 .TP
 \fBgrid content \fIwindow\fR ?\fI\-option value\fR?
 .
-Synonym for . \fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?
+Synonym for \fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?.
 .VE "TIP 581"
 .SH "RELATIVE PLACEMENT"
 .PP

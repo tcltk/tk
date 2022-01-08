@@ -87,7 +87,7 @@ jobs:
     runs-on: windows-2019
     defaults:
       run:
-        shell: bash
+        shell: msys2 {0}
         working-directory: win
     strategy:
       matrix:
@@ -95,8 +95,12 @@ jobs:
           - "no"
           - "mem"
           - "all"
-    # Using powershell means we need to explicitly stop on failure
     steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain make
       - name: Checkout
         uses: actions/checkout@v2
       - name: Checkout
@@ -105,8 +109,6 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-6-branch
           path: tcl
-      - name: Install MSYS2, Make
-        run: choco install -y msys2 make
       - name: Prepare
         run: |
           touch tkStubInit.c

@@ -128,18 +128,14 @@ test wm-attributes-1.1 {usage} -returnCodes error -body {
     wm attributes
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 test wm-attributes-1.2.1 {usage} -constraints win -returnCodes error -body {
-    # This is the wrong error to output - unix has it right, but it's
-    # not critical.
     wm attributes . _
-} -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
+} -result {bad attribute "_": must be -alpha, -transparentcolor, -disabled, -fullscreen, -toolwindow, or -topmost}
 test wm-attributes-1.2.2 {usage} -constraints win -returnCodes error -body {
     wm attributes . -alpha 1.0 -disabled
 } -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
 test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
-    # This is the wrong error to output - unix has it right, but it's
-    # not critical.
     wm attributes . -to
-} -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
+} -result {bad attribute "-to": must be -alpha, -transparentcolor, -disabled, -fullscreen, -toolwindow, or -topmost}
 test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -topmost, -zoomed, -fullscreen, or -type}

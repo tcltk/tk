@@ -1041,7 +1041,7 @@ MODULE_SCOPE const char *const tkWebColors[20];
 #endif
 
 /*
- * Support for Clang Static Analyzer <http://clang-analyzer.llvm.org>
+ * Support for Clang Static Analyzer <https://clang-analyzer.llvm.org/>
  */
 
 #if defined(PURIFY) && defined(__clang__)
