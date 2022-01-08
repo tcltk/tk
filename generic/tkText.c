@@ -8,7 +8,7 @@
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1999 by Scriptics Corporation.
+ * Copyright (c) 1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -2284,7 +2284,11 @@ ConfigureText(
 	    || (textPtr->selTagPtr->spacing2String != NULL)
 	    || (textPtr->selTagPtr->spacing3String != NULL)
 	    || (textPtr->selTagPtr->tabStringPtr != NULL)
-	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
+	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
+	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
+	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
     }
