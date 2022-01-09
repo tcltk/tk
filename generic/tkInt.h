@@ -148,6 +148,12 @@
 #   define TCL_LL_MODIFIER	"ll"
 #endif
 
+#if TCL_MAJOR_VERSION > 8
+#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
+#else
+#   define TKSIZET_MODIFIER ""
+#endif
+
 /*
  * Opaque type declarations:
  */

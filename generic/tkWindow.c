@@ -999,6 +999,9 @@ TkCreateMainWindow(
 #ifdef USE_NMAKE
 		".nmake"
 #endif
+#ifdef TK_NO_DEPRECATED
+		".no-deprecate"
+#endif
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
 #endif
@@ -1025,6 +1028,9 @@ TkCreateMainWindow(
 #endif
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
+#if !defined(HAVE_XFT)
+		".no-xft"
+#endif
 #endif
 		), NULL);
     }

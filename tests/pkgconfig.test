@@ -18,24 +18,22 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
-
-test pkgconfig-1.1 {query keys} -constraints {nonwin nodeprecated} -body {
+test pkgconfig-1.1 {query keys} -constraints {nonwin} -body {
     lsort [::tk::pkgconfig list]
 } -match glob -result [list \
-    64bit bindir,install bindir,runtime debug demodir,install \
+    *bindir,install bindir,runtime *demodir,install \
     demodir,runtime*docdir,install docdir,runtime fontsystem \
     includedir,install includedir,runtime \
-    libdir,install libdir,runtime mem_debug optimized profiled \
-    scriptdir,install scriptdir,runtime threaded \
+    libdir,install libdir,runtime*\
+    scriptdir,install scriptdir,runtime*\
 ]
 test pkgconfig-1.2 {query keys multiple times} {
     string compare [::tk::pkgconfig list] [::tk::pkgconfig list]
 } 0
 test pkgconfig-1.3 {query value multiple times} {
     string compare \
-	    [::tk::pkgconfig get 64bit] \
-	    [::tk::pkgconfig get 64bit]
+	    [::tk::pkgconfig get fontsystem] \
+	    [::tk::pkgconfig get fontsystem]
 } 0
 
 

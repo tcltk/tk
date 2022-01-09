@@ -13,7 +13,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 tk useinputmethods 0
 
-testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
 testConstraint failsOnWindows [expr {![info exists ::env(CI)] || [tk windowingsystem] ne "win32"}]
 
@@ -6012,7 +6011,7 @@ test bind-28.9 {keysym names, Ð} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-Ð>
-test bind-28.10 {keysym names, Ø} -constraints nodeprecated -body {
+test bind-28.10 {keysym names, Ø} -constraints deprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Ø> foo
     bind .t.f
@@ -6026,7 +6025,7 @@ test bind-28.11 {keysym names, gcedilla} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-gcedilla>
-test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body {
+test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -constraints deprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Greek_IOTAdiaeresis> foo
     bind .t.f
