@@ -13,7 +13,6 @@ tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
 
 proc scroll args {
     global scrollInfo
@@ -318,7 +317,7 @@ destroy .t
 test scrollbar-3.43 {ScrollbarWidgetCmd procedure, "get" option} {
     list [catch {.s get a} msg] $msg
 } {1 {wrong # args: should be ".s get"}}
-test scrollbar-3.44 {ScrollbarWidgetCmd procedure, "get" option} nodeprecated {
+test scrollbar-3.44 {ScrollbarWidgetCmd procedure, "get" option} deprecated {
     .s set 100 10 13 14
     .s get
 } {100 10 13 14}
@@ -403,27 +402,27 @@ test scrollbar-3.63 {ScrollbarWidgetCmd procedure, "set" option} {
     }
     set result
 } {0.4 0.4}
-test scrollbar-3.64 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.64 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     list [catch {.s set abc def ghi jkl} msg] $msg
 } {1 {expected integer but got "abc"}}
-test scrollbar-3.65 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.65 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     list [catch {.s set 1 def ghi jkl} msg] $msg
 } {1 {expected integer but got "def"}}
-test scrollbar-3.66 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.66 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     list [catch {.s set 1 2 ghi jkl} msg] $msg
 } {1 {expected integer but got "ghi"}}
-test scrollbar-3.67 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.67 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     list [catch {.s set 1 2 3 jkl} msg] $msg
 } {1 {expected integer but got "jkl"}}
-test scrollbar-3.68 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.68 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     .s set -10 50 20 30
     .s get
 } {0 50 0 0}
-test scrollbar-3.69 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.69 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     .s set 100 -10 20 30
     .s get
 } {100 0 20 30}
-test scrollbar-3.70 {ScrollbarWidgetCmd procedure, "set" option} nodeprecated {
+test scrollbar-3.70 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
     .s set 100 50 30 20
     .s get
 } {100 50 30 30}
