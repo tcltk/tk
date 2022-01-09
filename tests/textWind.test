@@ -1568,7 +1568,7 @@ test textWind-17.10 {peer widget window configuration} -setup {
 }  -result {{-window {} {} {} .t.f} {-window {} {} {} {}} {-window {} {} {} .t.f}\
 {-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
 
-test textWind-18.1 {embedded window deletion triggered by a script bound to <Map>} -setup {
+test textWind-18.1 {embedded window deletion triggered by a script bound to <Map>} -constraints knownBug -setup {
     catch {destroy .t .f .f2}
 } -body {
     pack [text .t]

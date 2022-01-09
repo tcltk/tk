@@ -67,7 +67,7 @@ test entry-1.7 "Deletion - insert cursor in the middle " -body {
     .e index insert
 } -result 0
 
-test entry-1.8 "Index is between 0 and end" -body {
+test entry-1.8 "Index is between 0 and end" -constraints deprecated -body {
     .e delete 0 end
     .e insert end abcde
     set res [list [.e index -1] [.e index -4] [.e index 999]]
