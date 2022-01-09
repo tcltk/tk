@@ -398,7 +398,7 @@ proc ::tk::fontchooser::actual {defaultFont} {
         set F(-family) [lindex $defaultFont 0]
         set F(-size) [lindex $defaultFont 1]
         foreach el [lrange $defaultFont 2 end] {
-            switch -exact -- {
+            switch -exact $el -- {
                 normal -
                 bold {
                     set F(-weight) $el
