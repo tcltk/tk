@@ -1360,13 +1360,13 @@ test textTag-15.4 {TkTextBindProc, key event with mouse outside the widget} -set
 } -body {
     set res {}
     .t tag add tag1 1.0 end
-    .t tag bind tag1 <KeyPress> {lappend res %K}
+    .t tag bind tag1 <Key> {lappend res %K}
     .t mark set insert 1.2
     update
     event generate .t <Motion> -warp 1 -x -50 -y -50
     controlPointerWarpTiming
     focus -force .t
-    event generate .t <KeyPress> -keysym a
+    event generate .t <Key> -keysym a
     set res
 } -cleanup {
     .t tag delete tag1

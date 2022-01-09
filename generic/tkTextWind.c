@@ -1708,6 +1708,10 @@ EmbWinDisplayProc(
 
     /*
      * Mark the window as displayed so that it won't get unmapped.
+     * <TODO>: Tk_MaintainGeometry/Tk_MapWindow may run event handlers,
+     *         in particular for the <Map> event. If the bound script
+     *         deletes the embedded window or the text widget we will
+     *         soon crash.
      */
 
     client->displayed = 1;
