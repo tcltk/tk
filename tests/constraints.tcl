@@ -256,6 +256,7 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
 }]
+testConstraint deprecated [expr {![package vsatisfies [package provide Tcl] 8.7-] || ![::tk::build-info no-deprecate]}]
 
 # constraints for testing facilities defined in the tktest executable...
 testConstraint testImageType [expr {"test" in [image types]}]
