@@ -981,7 +981,9 @@ TkCreateMainWindow(
 #if defined(__cplusplus) && !defined(__OBJC__)
 		".cplusplus"
 #endif
+#ifdef __CYGWIN__
 		".cygwin"
+#endif
 #ifndef NDEBUG
 		".debug"
 #endif
@@ -1003,6 +1005,9 @@ TkCreateMainWindow(
 #endif
 #ifdef USE_NMAKE
 		".nmake"
+#endif
+#ifdef TK_NO_DEPRECATED
+		".no-deprecate"
 #endif
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
@@ -1030,6 +1035,9 @@ TkCreateMainWindow(
 #endif
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
+#if !defined(HAVE_XFT)
+		".no-xft"
+#endif
 #endif
 		), NULL);
     }
