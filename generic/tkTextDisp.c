@@ -18,6 +18,8 @@
 
 #ifdef _WIN32
 #include "tkWinInt.h"
+#elif defined(__CYGWIN__)
+#include "tkUnixInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
