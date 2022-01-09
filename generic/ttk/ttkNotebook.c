@@ -899,7 +899,7 @@ static int NotebookAddCommand(
 {
     Notebook *nb = (Notebook *)recordPtr;
     Tk_Window window;
-    int index;
+    TkSizeT index;
     Tab *tab;
 
     if (objc <= 2 || objc % 2 != 1) {
@@ -913,7 +913,7 @@ static int NotebookAddCommand(
     }
     index = Ttk_ContentIndex(nb->notebook.mgr, window);
 
-    if (index < 0) { /* New tab */
+    if (index == TCL_INDEX_NONE) { /* New tab */
 	return AddTab(interp, nb, Ttk_NumberContent(nb->notebook.mgr), window, objc-3,objv+3);
     }
 
