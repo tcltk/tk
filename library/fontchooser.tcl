@@ -369,9 +369,7 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
             set defaultFont [[entry .___e] cget -font]
             destroy .___e
         }
-        # We loose pixel size with 'font actual'
-        #array set F [font actual $defaultFont]
-        array set F [actual $defaultFont]  
+        array set F [font actual $defaultFont]
         set S(font) $F(-family)
         set S(style) [::msgcat::mc "Regular"]
         set S(size) $F(-size)
@@ -386,55 +384,6 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         }
         set S(first) 0
     }
-}
-
-# Try to work around the issue that 'font actual' changes 
-# pixel size (negative size) to points (positive size).
-# At least on Linux this makes a difference
-proc ::tk::fontchooser::actual {defaultFont} {
-    set F(-family) {}
-    set F(-size) 10
-    set F(-weight) normal
-    set F(-slant) roman
-    set F(-overstrike) 0
-    set F(-underline) 0
-    if {$defaultFont in [font names]} {
-        set defaultFont [font configure $defaultFont]
-    }
-    if {[lindex $defaultFont 0] in [list -family -size -weight -slant -underline -overstrike]} {
-        # Font looks like it is given as FONT OPTIONS
-        array set F $defaultFont
-    } elseif {[llength $defaultFont] >= 2} {
-        set F(-family) [lindex $defaultFont 0]
-        set F(-size) [lindex $defaultFont 1]
-        foreach el [lrange $defaultFont 2 end] {
-            switch -exact -- $el {
-                normal -
-                bold {
-                    set F(-weight) $el
-                }
-                roman -
-                italic {
-                    set F(-slant) $el
-                }
-                underline {
-                    set F(-underline) 1
-                }
-                overstrike {
-                    set F(-overstrike) 1
-                }
-                default {
-                    error "Wrong font style '$el'! Should be one of normal, bold, roman, italic, underline or overstrike."
-                }
-            }
-        }
-    } else {
-        # We will loose pixel size
-        array set F [font actual $defaultFont]
-    }
-    # Assure we have a real font name
-    set F(-family) [dict get [font actual [list serif -14 normal roman underline overstrike italic]] -family]
-    return [array get F]
 }
 
 # ::tk::fontchooser::Click --
