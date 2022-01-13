@@ -13,7 +13,12 @@ namespace eval ::tk::fontchooser {
 
     set S(W) .__tk__fontchooser
     set S(fonts) [lsort -dictionary -unique [font families]]
-
+    set S(styles) [list \
+            [::msgcat::mc Regular] \
+            [::msgcat::mc Italic] \
+            [::msgcat::mc Bold] \
+            [::msgcat::mc {Bold Italic}] \
+    ]
     set S(sizes) {8 9 10 11 12 14 16 18 20 22 24 26 28 36 48 72}
     set S(strike) 0
     set S(under) 0
@@ -22,28 +27,27 @@ namespace eval ::tk::fontchooser {
     set S(-title) {}
     set S(-command) ""
     set S(-font) TkDefaultFont
-
     set S(bad) [list ]
 }
 
 proc ::tk::fontchooser::Canonical {} {
     variable S
 
-    set S(styles) [list \
-            [::msgcat::mc Regular] \
-            [::msgcat::mc Italic] \
-            [::msgcat::mc Bold] \
-            [::msgcat::mc {Bold Italic}] \
-    ]
-    foreach style $S(styles) {lappend S(styles,lcase) [string tolower $style]}
+    foreach style $S(styles) {
+        lappend S(styles,lcase) [string tolower $style]
+    }
     set S(sizes,lcase) $S(sizes)
     set S(sampletext) [::msgcat::mc "AaBbYyZz01"]
 
     # Canonical versions of font families, styles, etc. for easier searching
     set S(fonts,lcase) {}
-    foreach font $S(fonts) {lappend S(fonts,lcase) [string tolower $font]}
+    foreach font $S(fonts) {
+        lappend S(fonts,lcase) [string tolower $font]
+    }
     set S(styles,lcase) {}
-    foreach style $S(styles) {lappend S(styles,lcase) [string tolower $style]}
+    foreach style $S(styles) {
+        lappend S(styles,lcase) [string tolower $style]
+    }
 }
 
 proc ::tk::fontchooser::Setup {} {
@@ -85,7 +89,9 @@ proc ::tk::fontchooser::Show {} {
     }
     set S(fonts) [lsort -dictionary -unique [font families]]
     set S(fonts,lcase) {}
-    foreach font $S(fonts) { lappend S(fonts,lcase) [string tolower $font]}
+    foreach font $S(fonts) {
+        lappend S(fonts,lcase) [string tolower $font]
+    }
     wm deiconify $S(W)
 }
 
@@ -165,7 +171,9 @@ proc ::tk::fontchooser::Create {} {
     # Now build the dialog
     if {![winfo exists $S(W)]} {
         toplevel $S(W) -class TkFontDialog
-        if {[package provide tcltest] ne {}} {set ::tk_dialog $S(W)}
+        if {[package provide tcltest] ne {}} {
+            set ::tk_dialog $S(W)
+        }
         wm withdraw $S(W)
         wm title $S(W) $S(-title)
         wm transient $S(W) [winfo toplevel $S(-parent)]
@@ -227,7 +235,9 @@ proc ::tk::fontchooser::Create {} {
         set minsize(sizes) \
                 [expr {[font measure TkDefaultFont "-99"] + $scroll_width}]
         set min [expr {$minsize(gap) * 4}]
-        foreach {what width} [array get minsize] {incr min $width}
+        foreach {what width} [array get minsize] {
+            incr min $width
+        }
         wm minsize $S(W) $min 260
 
         bind $S(W) <Return> [namespace code [list Done 1]]
@@ -363,10 +373,10 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         #array set F [font actual $defaultFont]
         array set F [actual $defaultFont]  
         set S(font) $F(-family)
+        set S(style) [::msgcat::mc "Regular"]
         set S(size) $F(-size)
         set S(strike) $F(-overstrike)
         set S(under) $F(-underline)
-        set S(style) [::msgcat::mc "Regular"]
         if {$F(-weight) eq "bold" && $F(-slant) eq "italic"} {
             set S(style) [::msgcat::mc "Bold Italic"]
         } elseif {$F(-weight) eq "bold"} {
@@ -501,11 +511,21 @@ proc ::tk::fontchooser::Update {} {
     variable S
 
     set S(result) [list $S(font) $S(size)]
-    if {$S(style) eq [::msgcat::mc "Bold"]} {lappend S(result) bold}
-    if {$S(style) eq [::msgcat::mc "Italic"]} {lappend S(result) italic}
-    if {$S(style) eq [::msgcat::mc "Bold Italic"]} {lappend S(result) bold italic}
-    if {$S(strike)} {lappend S(result) overstrike}
-    if {$S(under)} {lappend S(result) underline}
+    if {$S(style) eq [::msgcat::mc "Bold"]} {
+        lappend S(result) bold
+    }
+    if {$S(style) eq [::msgcat::mc "Italic"]} {
+        lappend S(result) italic
+    }
+    if {$S(style) eq [::msgcat::mc "Bold Italic"]} {
+        lappend S(result) bold italic
+    }
+    if {$S(strike)} {
+        lappend S(result) overstrike
+    }
+    if {$S(under)} {
+        lappend S(result) underline
+    }
 
     $S(sample) configure -font $S(result)
     set S(-font) $S(result)
