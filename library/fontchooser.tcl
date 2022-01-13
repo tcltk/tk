@@ -304,9 +304,9 @@ proc ::tk::fontchooser::Create {} {
                 write [namespace code [list Tracer]]
         trace add variable [namespace which -variable S](under) \
                 write [namespace code [list Tracer]]
-    } else {
-        Init $S(-font)
     }
+
+    Init $S(-font)
 
     return
 }
