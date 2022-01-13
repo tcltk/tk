@@ -542,7 +542,7 @@ proc ::tk::fontchooser::Visibility {w visible} {
     }
 }
 
-# ::tk::fontchooser::ttk_listbox --
+# ::tk::fontchooser::ttk_slistbox --
 #
 #	Create a properly themed scrolled listbox.
 #	This is exactly right on XP but may need adjusting on other platforms.
