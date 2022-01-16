@@ -106,7 +106,7 @@ jobs:
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
         # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" --disable-xft || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
