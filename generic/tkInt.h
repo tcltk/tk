@@ -148,6 +148,12 @@
 #   define TCL_LL_MODIFIER	"ll"
 #endif
 
+#if TCL_MAJOR_VERSION > 8
+#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
+#else
+#   define TKSIZET_MODIFIER ""
+#endif
+
 /*
  * Opaque type declarations:
  */
@@ -389,8 +395,14 @@ typedef struct TkDisplay {
 				 * by that container. */
     int geomInit;
 
-#define TkGetContainer(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
-    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+    /*
+     * Information used by tkGrid.c, tkPack.c, tkPlace.c, tkPointer.c,
+     * and ttkMacOSXTheme.c:
+     */
+
+#define TkGetContainer(tkwin) (Tk_TopWinHierarchy((TkWindow *)tkwin) ? NULL : \
+	(((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+	 ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr))
 
     /*
      * Information used by tkGet.c only:

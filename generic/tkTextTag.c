@@ -70,7 +70,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor),
-        TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
@@ -97,7 +97,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor),
-        TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode),
 	TK_OPTION_NULL_OK, wrapStrings, 0},
@@ -526,8 +526,11 @@ TkTextTagCmd(
 		    || (tagPtr->spacing2String != NULL)
 		    || (tagPtr->spacing3String != NULL)
 		    || (tagPtr->tabStringPtr != NULL)
-		    || (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE)
-		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
+		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
+		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
 		tagPtr->affectsDisplay = 1;
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
