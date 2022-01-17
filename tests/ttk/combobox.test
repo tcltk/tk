@@ -53,7 +53,12 @@ test combobox-2.5 "current -- set to end index" -body {
 test combobox-2.6 "current -- set to unknown index" -body {
     .cb configure -values [list a b c d e]
     .cb current notanindex
-} -returnCodes error -result {Incorrect index notanindex}
+} -returnCodes error -result {bad index "notanindex"}
+
+test combobox-2.7 {current -- set to 0 index when empty [bug 924835c36d]} -body {
+    .cb configure -values {}
+    .cb current 0
+} -returnCodes error -result {index "0" out of range}
 
 test combobox-2.end "Cleanup" -body { destroy .cb }
 
