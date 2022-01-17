@@ -80,10 +80,10 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
 	"", offsetof(TreeItem,textObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_INT, "-height", "height", "Height",
-	"1", -1, offsetof(TreeItem,height),
+	"1", TCL_INDEX_NONE, offsetof(TreeItem,height),
 	0,0,0 },
     {TK_OPTION_BOOLEAN, "-hidden", "hidden", "Hidden",
-	"0", -1, offsetof(TreeItem,hidden),
+	"0", TCL_INDEX_NONE, offsetof(TreeItem,hidden),
 	0,0,0 },
     {TK_OPTION_STRING, "-image", "image", "Image",
 	NULL, offsetof(TreeItem,imageObj), TCL_INDEX_NONE,
@@ -118,7 +118,7 @@ static TreeItem *NewItem(void)
     item->entryPtr = 0;
     item->parent = item->children = item->next = item->prev = NULL;
 
-    item->state = 0ul; 
+    item->state = 0ul;
     item->textObj = NULL;
     item->imageObj = NULL;
     item->valuesObj = NULL;
@@ -521,7 +521,7 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
 	0, (void *)SelectModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
-	"item", offsetof(Treeview,tree.selectTypeObj), -1,
+	"item", offsetof(Treeview,tree.selectTypeObj), TCL_INDEX_NONE,
 	0,(ClientData)SelectTypeStrings,0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
@@ -531,13 +531,13 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 	NULL, offsetof(Treeview,tree.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-titlecolumns", "titlecolumns", "Titlecolumns",
-	DEF_TITLECOLUMNS, -1, offsetof(Treeview,tree.nTitleColumns),
+	DEF_TITLECOLUMNS, TCL_INDEX_NONE, offsetof(Treeview,tree.nTitleColumns),
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_INT, "-titleitems", "titleitems", "Titleitems",
-	DEF_TITLEITEMS, -1, offsetof(Treeview,tree.nTitleItems),
+	DEF_TITLEITEMS, TCL_INDEX_NONE, offsetof(Treeview,tree.nTitleItems),
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_BOOLEAN, "-striped", "striped", "Striped",
-	DEF_STRIPED, -1, offsetof(Treeview,tree.striped),
+	DEF_STRIPED, TCL_INDEX_NONE, offsetof(Treeview,tree.striped),
 	0,0,GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -566,15 +566,18 @@ static void foreachHashEntry(Tcl_HashTable *ht, HashEntryIterator func)
     }
 }
 
+static void CellSelectionClearCB(void *clientData)
+{
+    TreeItem *item = (TreeItem *) clientData;
+    if (item->selObj != NULL) {
+	Tcl_DecrRefCount(item->selObj);
+	item->selObj = NULL;
+    }
+}
+
 static void CellSelectionClear(Treeview *tv)
 {
-    TreeItem *item;
-    for (item = tv->tree.root; item; item = NextPreorder(item)) {
-	if (item->selObj != NULL) {
-	    Tcl_DecrRefCount(item->selObj);
-	    item->selObj = NULL;
-	}
-    }
+    foreachHashEntry(&tv->tree.items, CellSelectionClearCB);
 }
 
 /* + unshareObj(objPtr) --
@@ -2188,7 +2191,7 @@ static void DrawCells(
  * 	Draw an item (row background, tree label, and cells).
  */
 static void DrawItem(
-	Treeview *tv, TreeItem *item, Drawable d, int depth)
+    Treeview *tv, TreeItem *item, Drawable d, int depth)
 {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
