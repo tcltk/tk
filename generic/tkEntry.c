@@ -711,7 +711,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, TCL_INDEX_NONE));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, -1));
 	break;
 
     case COMMAND_ICURSOR:
@@ -1263,7 +1263,7 @@ ConfigureEntry(
 		    Tcl_Obj *newObjPtr;
 		    int nelems;
 
-		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, TCL_INDEX_NONE);
+		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, -1);
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
 			    != TCL_OK) {
 			valuesChanged = -1;

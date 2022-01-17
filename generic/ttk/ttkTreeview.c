@@ -240,8 +240,8 @@ static const Tk_OptionSpec DisplayOptionSpecs[] = {
 	NULL, offsetof(DisplayItem,textObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
+	"center", offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
+	0, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     /* From here down are the tags options. The index in TagOptionSpecs
      * below should be kept in synch with this position.
      */
@@ -4231,7 +4231,7 @@ static int TreeviewCtagRemoveCommand(
 	}
 	ckfree(cells);
     } else {
-	TreeItem *item = tv->tree.root;
+	item = tv->tree.root;
 	while (item) {
             RemoveTagFromCellsAtItem(item, tag);
 	    item = NextPreorder(item);

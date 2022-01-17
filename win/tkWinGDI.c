@@ -1628,7 +1628,7 @@ int GdiText(
     case TK_ANCHOR_SW:
 	y = (sizerect.bottom - sizerect.top);
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x = (sizerect.right - sizerect.left) / 2;
 	y = (sizerect.bottom - sizerect.top) / 2;
 	break;
