@@ -981,6 +981,7 @@ TkWmDeadWindow(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
     TKWindow *deadNSWindow;
+    TkWindow *dragTarget = [NSApp tkDragTarget];
 
     if (wmPtr == NULL) {
 	return;
@@ -1053,13 +1054,41 @@ TkWmDeadWindow(
 	ckfree(transientPtr);
     }
 
+    deadNSWindow = (TKWindow *)wmPtr->window;
+
+    /*
+     * Remove references to the Tk window from the mouse event processing
+     * state which is recorded in the NSApplication object.
+     */
+
+    if (dragTarget && winPtr == TkMacOSXGetHostToplevel(dragTarget)->winPtr) {
+	[NSApp setTkDragTarget:nil];
+    }
+    if (winPtr == [NSApp tkPointerWindow]) {
+	NSWindow *w;
+	NSPoint mouse = [NSEvent mouseLocation];
+	[NSApp setTkPointerWindow:nil];
+	for (w in [NSApp orderedWindows]) {
+	    if (w == deadNSWindow) {
+		continue;
+	    }
+	    if (NSPointInRect(mouse, [w frame])) {
+		TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
+		int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
+		[NSApp setTkPointerWindow:winPtr2];
+		Tk_UpdatePointer((Tk_Window) winPtr2, x, y,
+				 [NSApp tkButtonState]);
+		break;
+	    }
+	}
+    }
+
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
      * data structures.  If the NSWindow is a child, disassociate it from
      * the parent.  Then close and release the NSWindow.
      */
 
-    deadNSWindow = (TKWindow *)wmPtr->window;
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
@@ -1108,6 +1137,7 @@ TkWmDeadWindow(
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
 		[w makeKeyAndOrderFront:NSApp];
+		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(w)];
 		break;
 	    }
 	}
@@ -3844,7 +3874,7 @@ WmTransientCmd(
 	}
 
 	for (w = containerPtr; w != NULL && w->wmInfoPtr != NULL;
-		w = (TkWindow *)w->wmInfoPtr->container) {
+	    w = (TkWindow *)w->wmInfoPtr->container) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't set \"%s\" as container: would cause management loop",
@@ -6705,6 +6735,7 @@ TkpChangeFocus(
     	}
 	if (win && [win canBecomeKeyWindow]) {
 	    [win makeKeyAndOrderFront:NSApp];
+	    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 	}
     }
 

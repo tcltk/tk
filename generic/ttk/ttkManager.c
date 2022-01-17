@@ -314,13 +314,14 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     TkSizeT index = Ttk_ContentIndex(mgr, window);
-    int reqWidth = Tk_ReqWidth(window);
-    int reqHeight= Tk_ReqHeight(window);
 
-    if (mgr->managerSpec->ContentRequest(
-		mgr->managerData, index, reqWidth, reqHeight))
-    {
-	ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
+    if (index != TCL_INDEX_NONE) {
+	int reqWidth = Tk_ReqWidth(window);
+	int reqHeight= Tk_ReqHeight(window);
+	if (mgr->managerSpec->ContentRequest(
+	    mgr->managerData, index, reqWidth, reqHeight)) {
+	    ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
+	}
     }
 }
 
@@ -329,7 +330,7 @@ void Ttk_LostContentProc(ClientData clientData, Tk_Window window)
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     TkSizeT index = Ttk_ContentIndex(mgr, window);
 
-    /* ASSERT: index >= 0 */
+    /* ASSERT: index != TCL_INDEX_NONE */
     RemoveContent(mgr, index);
 }
 
@@ -422,7 +423,7 @@ Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, TkSizeT index)
  */
 
 /* ++ Ttk_ContentIndex --
- * 	Returns the index of specified content window, -1 if not found.
+ * 	Returns the index of specified content window, TCL_INDEX_NONE if not found.
  */
 TkSizeT Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
 {

@@ -77,10 +77,10 @@ test config-1.5 {Tk_CreateOptionTable - default initialization} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .a
-    .a cget -relief
+    .a cget -anchor
 } -cleanup {
     killTables
-} -result raised
+} -result center
 test config-1.6 {Tk_CreateOptionTable - chained tables} -constraints {
     testobjconfig
 } -body {
@@ -179,7 +179,7 @@ test config-3.5 {Tk_InitOptions - no initial value} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .a
-    .a cget -anchor
+    .a cget -relief
 } -cleanup {
     killTables
 } -result {}
@@ -1408,15 +1408,15 @@ test config-8.14 {Tk_RestoreSavedOptions - border internal form} -constraints {
 } -cleanup {
     killTables
 } -result blue
-test config-8.15 {Tk_RestoreSavedOptions - relief internal form} -constraints {
+test config-8.15 {Tk_RestoreSavedOptions - anchor internal form} -constraints {
     testobjconfig
 } -body {
     testobjconfig internal .a
-    catch {.a csave -relief sunken -color bogus}
-    .a cget -relief
+    catch {.a csave -anchor e -color bogus}
+    .a cget -anchor
 } -cleanup {
     killTables
-} -result raised
+} -result center
 test config-8.16 {Tk_RestoreSavedOptions - cursor internal form} -constraints {
     testobjconfig
 } -body {
@@ -1566,11 +1566,11 @@ if {[testConstraint testobjconfig]} {
 
 test config-10.1 {Tk_GetOptionInfo - one item} -constraints testobjconfig -body {
     testobjconfig alltypes .foo
-    .foo configure -relief groove
-    .foo configure -relief
+    .foo configure -anchor e
+    .foo configure -anchor
 } -cleanup {
     destroy .foo
-} -result {-relief relief Relief raised groove}
+} -result {-anchor anchor Anchor center e}
 test config-10.2 {Tk_GetOptionInfo - one item, synonym} -constraints {
     testobjconfig
 } -body {
@@ -1587,7 +1587,7 @@ test config-10.3 {Tk_GetOptionInfo - all items} -constraints {
     .foo configure
 } -cleanup {
     destroy .foo
-} -result {{-boolean boolean Boolean 1 1} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-stringtable2 StringTable2 stringTable2 two two} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief raised raised} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor {} {}} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}
+} -result {{-boolean boolean Boolean 1 1} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-stringtable2 StringTable2 stringTable2 two two} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief {} {}} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor center center} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}
 test config-10.4 {Tk_GetOptionInfo - chaining through tables} -constraints testobjconfig -body {
     testobjconfig chain2 .foo -one asdf -three xyzzy
     .foo configure
@@ -1613,8 +1613,8 @@ test config-11.2 {GetConfigList - null database names} -constraints {
 test config-11.3 {GetConfigList - null default and current value} -constraints {
     testobjconfig
 } -body {
-    .a configure -anchor
-} -result {-anchor anchor Anchor {} {}}
+    .a configure -relief
+} -result {-relief relief Relief {} {}}
 if {[testConstraint testobjconfig]} {
     killTables
 }
