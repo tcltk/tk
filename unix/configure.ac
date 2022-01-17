@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.7
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a4"
+TK_PATCH_LEVEL="a6"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -211,7 +211,8 @@ fi
 if test "`uname -s`" = "Darwin" ; then
     AC_MSG_CHECKING([whether to use Aqua])
     AC_ARG_ENABLE(aqua,
-	AS_HELP_STRING([--enable-aqua=yes|no],[use Aqua windowingsystem on Mac OS X (default: no)]),
+	AS_HELP_STRING([--enable-aqua=yes|no],
+	    [use Aqua windowingsystem on Mac OS X (default: no)]),
 	[tk_aqua=$enableval], [tk_aqua=no])
     if test $tk_aqua = yes -o $tk_aqua = cocoa; then
 	tk_aqua=yes
@@ -237,7 +238,8 @@ if test "`uname -s`" = "Darwin" ; then
 		done
 		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
 		LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <X11/Xlib.h>]], [[XrmInitialize();]])],[tcl_cv_lib_x11_64=yes],[tcl_cv_lib_x11_64=no])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <X11/Xlib.h>]], [[XrmInitialize();]])],
+		[tcl_cv_lib_x11_64=yes],[tcl_cv_lib_x11_64=no])
 		for v in CFLAGS CPPFLAGS LDFLAGS; do
 		    eval $v'="$hold_'$v'"'
 		done])
@@ -256,7 +258,8 @@ if test "`uname -s`" = "Darwin" ; then
 	AC_CACHE_CHECK([if ld accepts -weak-l flag], tcl_cv_ld_weak_l, [
 	    hold_ldflags=$LDFLAGS
 	    LDFLAGS="$LDFLAGS -Wl,-weak-lm"
-	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[double f = sin(1.0);]])],[tcl_cv_ld_weak_l=yes],[tcl_cv_ld_weak_l=no])
+	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]], [[double f = sin(1.0);]])],
+	    [tcl_cv_ld_weak_l=yes],[tcl_cv_ld_weak_l=no])
 	    LDFLAGS=$hold_ldflags])
     fi
     AC_CHECK_HEADERS(AvailabilityMacros.h)
@@ -272,7 +275,8 @@ if test "`uname -s`" = "Darwin" ; then
 		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
 		    #endif
 		    int rand(void) __attribute__((weak_import));
-		]], [[rand();]])],[tcl_cv_cc_weak_import=yes],[tcl_cv_cc_weak_import=no])
+		]], [[rand();]])],
+		[tcl_cv_cc_weak_import=yes],[tcl_cv_cc_weak_import=no])
 	    CFLAGS=$hold_cflags])
 	if test $tcl_cv_cc_weak_import = yes; then
 	    AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
@@ -303,7 +307,7 @@ fi
 
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework Security"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security"
     if test -d /System/Library/Frameworks/UserNotifications.framework; then
         LIBS="$LIBS -framework UserNotifications"
     fi
@@ -408,7 +412,8 @@ fi
 if test $tk_aqua = no; then
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
-	AS_HELP_STRING([--enable-xft],[use freetype/fontconfig/xft (default: on)]),
+	AS_HELP_STRING([--enable-xft],
+	    [use freetype/fontconfig/xft (default: on)]),
 	[enable_xft=$enableval], [enable_xft="default"])
     XFT_CFLAGS=""
     XFT_LIBS=""
@@ -503,7 +508,8 @@ if test $tk_aqua = no; then
     xss_lib_found=no
     AC_MSG_CHECKING([whether to try to use XScreenSaver])
     AC_ARG_ENABLE(xss,
-	AS_HELP_STRING([--enable-xss],[use XScreenSaver for activity timer (default: on)]),
+	AS_HELP_STRING([--enable-xss],
+	    [use XScreenSaver for activity timer (default: on)]),
 	[enable_xss=$enableval], [enable_xss=yes])
     if test "$enable_xss" = "no" ; then
 	AC_MSG_RESULT([$enable_xss])
@@ -551,7 +557,13 @@ AC_C_CHAR_UNSIGNED
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
+eval "TK_LIB_FILE_TCL8=libtk${LIB_SUFFIX}"
+if test ${TCL_MAJOR_VERSION} = 8 ; then
 eval "TK_LIB_FILE=libtk${LIB_SUFFIX}"
+else
+eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
+fi
+eval "TK_LIB_FILE_TCL9=libtcl9tk${LIB_SUFFIX}"
 
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
 # since on some platforms TK_LIB_FILE contains shell escapes.
@@ -586,7 +598,6 @@ if test "`uname -s`" = "Darwin" ; then
     if test "${SHARED_BUILD}" = "0"; then
 	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
     fi
-    EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
@@ -609,7 +620,13 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
         # override libdir default
         libdir="/Library/Frameworks"
     fi
-    TK_LIB_FILE="Tk"
+    if test ${TCL_MAJOR_VERSION} = 8 ; then
+	TK_LIB_FILE="Tk"
+    else
+	TK_LIB_FILE="Tk"
+    fi
+    TK_LIB_FILE_TCL8="Tk"
+    TK_LIB_FILE_TCL9="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
@@ -648,14 +665,18 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
+    TK_LIB_FLAG="-l"
+    if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+	TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
+    fi
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
-	TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+	TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
     else
 	if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-	    TK_LIB_FLAG="-ltk${TK_VERSION}"
+	    TK_LIB_FLAG="${TK_LIB_FLAG}tk${TK_VERSION}"
 	else
-	    TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+	    TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	fi
 	TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
     fi
@@ -678,7 +699,7 @@ if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"; then
     #
     SC_ZIPFS_SUPPORT
 	ZIPFS_BUILD=1
-	TK_ZIP_FILE=libtk_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
 else
 	ZIPFS_BUILD=0
 	TK_ZIP_FILE=
@@ -689,11 +710,11 @@ if test "${ZIPFS_BUILD}" = 1; then
     if test "${SHARED_BUILD}" = 0; then
        ZIPFS_BUILD=2;
        AC_DEFINE(ZIPFS_BUILD, 2, [Are we building with zipfs enabled?])
-       INSTALL_LIBRARIES=install-libraries-zipfs-static
+       INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
      else
        AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])\
-       INSTALL_LIBRARIES=install-libraries-zipfs-shared
+       INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
     fi
 else
@@ -753,6 +774,8 @@ AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_YEAR)
 
 AC_SUBST(TK_LIB_FILE)
+AC_SUBST(TK_LIB_FILE_TCL8)
+AC_SUBST(TK_LIB_FILE_TCL9)
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_STUB_LIB_FILE)

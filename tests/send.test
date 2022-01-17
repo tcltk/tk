@@ -16,6 +16,7 @@ tcltest::loadTestedCommands
 
 testConstraint xhost [llength [auto_execok xhost]]
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # Compute a script that will load Tk into a child interpreter.
 
@@ -297,7 +298,7 @@ test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver te
 "if 1 {open bogus_file_name}"
     invoked from within
 "send t_s_1 {if 1 {open bogus_file_name}}"} {POSIX ENOENT {no such file or directory}}}
-test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnUbuntu} {
+test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnUbuntu failsOnXQuarz} {
     testsend prop root InterpRegistry "10234 bogus\n"
     set result [list [catch {send bogus bogus command} msg] $msg]
     winfo interps

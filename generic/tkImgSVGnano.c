@@ -353,7 +353,7 @@ StringReadSVG(
     NSVGimage *nsvgImage = GetCachedSVG(interp, dataObj, formatObj, &ropts);
 
     if (nsvgImage == NULL) {
-        data = Tcl_GetStringFromObj(dataObj, &length);
+	data = Tcl_GetStringFromObj(dataObj, &length);
 	nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
 			    &ropts);
     }
@@ -579,6 +579,7 @@ RasterizeSVG(
     unsigned char *imgData;
     Tk_PhotoImageBlock svgblock;
     double scale;
+    Tcl_WideUInt wh;
     (void)srcX;
     (void)srcY;
 
@@ -593,8 +594,8 @@ RasterizeSVG(
     }
 
     /* Tk Ticket [822330269b] Check potential int overflow in following ckalloc */
-    unsigned long long wh = (unsigned long long)w * (unsigned long long)h;
-    if ( wh > INT_MAX / 4) {
+    wh = (Tcl_WideUInt)w * (Tcl_WideUInt)h;
+    if ( w < 0 || h < 0 || wh > INT_MAX / 4) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("image size overflow", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "IMAGE_SIZE_OVERFLOW", NULL);
 	goto cleanRAST;

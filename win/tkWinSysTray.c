@@ -1162,17 +1162,6 @@ WinIcoInit(
     IcoInterpInfo *icoInterpPtr;
     Tk_Window mainWindow;
 
-#ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
-        return TCL_ERROR;
-    }
-#endif
-#ifdef USE_TK_STUBS
-    if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
-        return TCL_ERROR;
-    }
-#endif
-
     mainWindow = Tk_MainWindow(interp);
     if (mainWindow == NULL) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("main window has been destroyed", -1));

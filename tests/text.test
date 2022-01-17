@@ -7492,10 +7492,10 @@ test text-32.3 {peer widget -start, -endline and deletion (bug 1630262)} -setup 
     .pt delete 2.0 3.0
     # moreover -startline shall be correct
     # (was wrong before fixing bug 1630262)
-    lappend res [.t cget -start] [.pt cget -start]
+    lappend res [.t cget -start] [.pt cget -start] [.t get @0,0 "@0,0 lineend"]
 } -cleanup {
     destroy .pt
-} -result {4 3}
+} -result {4 3 {Line 5}}
 
 test text-32.4 {peer widget -start, -endline and deletion (bug 1630262)} -setup {
     destroy .t .pt

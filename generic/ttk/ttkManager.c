@@ -452,7 +452,7 @@ int Ttk_GetContentIndexFromObj(
     /* Try interpreting as an integer first:
      */
     if (TkGetIntForIndex(objPtr, mgr->nContent - 1, 1, &index) == TCL_OK) {
-	if (index + 1 > mgr->nContent + 1) {
+	if (index == TCL_INDEX_NONE || index > mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Managed window index %d out of bounds", (int)index));
 	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", NULL);

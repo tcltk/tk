@@ -120,7 +120,7 @@ color with some alpha, e.g.
 .PP
 On X11, the following attributes may be set. These are not supported by all
 window managers, and will have no effect under older WMs.
-.\" See http://www.freedesktop.org/Standards/wm-spec
+.\" See https://www.freedesktop.org/wiki/Specifications/wm-spec/
 .TP
 \fB\-type\fR
 .VS 8.6
@@ -407,6 +407,37 @@ specified then the command returns an empty string;  otherwise it
 returns the path name of \fIwindow\fR's current group leader, or an empty
 string if \fIwindow\fR is not part of any group.
 .TP
+\fBwm iconbadge \fIwindow\fR \fIbadge\fR
+.
+Sets a badge for the icon of the \fIwindow\fR. The badge can be a positive
+integer number, for instance the number of new or unread messages, or
+an exclamation point denoting attention needed. If the badge is an empty
+string, the badge image is removed from the application icon. Managing
+these changes through bindings, such as <FocusIn>, is the responsibility
+of the developer.
+.RS
+.PP
+On X11, for this command to work,
+the variable \fB::tk::icons::base_icon($window)\fR must be set to the image that is
+being used for the window icon of $window. On Windows and X11, the iconphoto
+images work best at 32x32 or a similar dimension, as
+the badge images are provided by Tk and drawn to overlay the icon images
+using native (Windows) API's or Tk rendering. On macOS, the icon badge is
+rendered by a system API and is not provided by Tk. The icon image itself
+should be higher-resolution, preferably 512 pixels, to avoid being blurry.
+.PP
+The icon badge is intended for display in the Dock (macOS), taskbar
+(Windows) or app panel (X11). On macOS, the last badge called will be
+displayed in the Dock, regardless of how many different icon badges may be
+assigned to different windows. On Windows, the taskbar display depends on
+whether the taskbar buttons are combined or not (this is an OS setting
+available to the user): if combined the behavior is the same as on macOS,
+otherwise each button in the taskbar shows the badge it was assigned.
+Badge display on macOS is configured in the system preferences. App
+panel display behavior on X11 will depend on the window manager and/or
+desktop environment.
+.RE
+.TP
 \fBwm iconbitmap \fIwindow\fR ?\fIbitmap\fR?
 .
 If \fIbitmap\fR is specified, then it names a bitmap in the standard
@@ -481,12 +512,13 @@ manager may scale provided icons to an appropriate size.
 .PP
 On Windows, the images are packed into a Windows icon structure.
 This will override an ico specified to \fBwm iconbitmap\fR, and
-vice versa.
+vice versa. This command sets the taskbar icon for the window.
 .PP
 On X, the images are arranged into the _NET_WM_ICON X property, which
 most modern window managers support.  A \fBwm iconbitmap\fR may exist
 simultaneously.  It is recommended to use not more than 2 icons, placing
-the larger icon first.
+the larger icon first. This command also sets the panel icon for the
+application if the window manager or desktop environment supports it.
 .PP
 On Macintosh, the first image called is loaded into an OSX-native icon
 format, and becomes the application icon in dialogs, the Dock, and
@@ -637,6 +669,10 @@ you have not asked for one with \fBwm protocol\fR.
 If a \fBWM_DELETE_WINDOW\fR message arrives when you have not defined
 a handler, then Tk handles the message by destroying the window for
 which it was received.
+.RE
+.RS
+.PP
+On the Windows platform, the protocol handler \fBWM_SAVE_YOURSELF\fR is called on user logout or system restart.
 .RE
 .TP
 \fBwm resizable \fIwindow\fR ?\fIwidth height\fR?

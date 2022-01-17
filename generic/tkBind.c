@@ -818,6 +818,7 @@ static Time
 CurrentTimeInMilliSecs(void)
 {
     Tcl_Time now;
+
     Tcl_GetTime(&now);
     return ((Time) now.sec)*1000 + ((Time) now.usec)/1000;
 }

@@ -1481,11 +1481,31 @@ TkTextBindProc(
 	}
 	TkTextPickCurrent(textPtr, eventPtr);
     }
-    if ((textPtr->numCurTags > 0)
-	    && (textPtr->sharedTextPtr->bindingTable != NULL)
+
+    if ((textPtr->sharedTextPtr->bindingTable != NULL)
 	    && (textPtr->tkwin != NULL) && !(textPtr->flags & DESTROYED)) {
-	TagBindEvent(textPtr, eventPtr, textPtr->numCurTags,
+	if (textPtr->numCurTags > 0) {
+	    /*
+	     * The mouse is inside the text widget, the 'current' mark was updated.
+	     */
+
+	    TagBindEvent(textPtr, eventPtr, textPtr->numCurTags,
 		textPtr->curTagArrayPtr);
+	} else if ((eventPtr->type == KeyPress) || (eventPtr->type == KeyRelease)) {
+	    /*
+	     * Key events fire independently of the 'current' mark and use the
+	     * 'insert' mark.
+	     */
+
+	    TkTextIndex index;
+	    TkTextTag** tagArrayPtr;
+	    int numTags;
+
+	    TkTextMarkNameToIndex(textPtr, "insert", &index);
+	    tagArrayPtr = TkBTreeGetTags(&index, textPtr, &numTags);
+	    SortTags(numTags, tagArrayPtr);
+	    TagBindEvent(textPtr, eventPtr, numTags, tagArrayPtr);
+	}
     }
     if (repick) {
 	unsigned int oldState;

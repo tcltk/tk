@@ -33,24 +33,27 @@ proc makeToplevels {} {
     }
 }
 
-# On macOS windows are not allowed to overlap the menubar at the top
-# of the screen.  So tests which move a window and then check whether
-# it got moved to the requested location should use a y coordinate
-# larger than the height of the menubar (normally 23 pixels).
+# On macOS windows are not allowed to overlap the menubar at the top of the
+# screen or the dock.  So tests which move a window and then check whether it
+# got moved to the requested location should use a y coordinate larger than the
+# height of the menubar (normally 23 pixels) and an x coordinate larger than the
+# width of the dock, if it happens to be on the left.
 
 if {[tk windowingsystem] eq "aqua"} {
     set mb [expr [menubarheight] + 1]
+    set X  100
     set Y0 $mb
     set Y2 [expr $mb + 2]
     set Y5 [expr $mb + 5]
 } else {
+    set X  20
     set Y0 0
     set Y2 2
     set Y5 5
 }
 
 set i 1
-foreach geom "+$Y0+80 +80+$Y0 +0+$Y0" {
+foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
     destroy .t
     test unixWm-1.$i {initial window position} unix {
 	toplevel .t -width 200 -height 150
@@ -104,7 +107,7 @@ foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
 }
 
 set i 1
-foreach geom "+20+80 +100+40 +0+$Y0" {
+foreach geom "+$X+80 +$X+40 +$X+$Y0" {
     test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
 	update idletasks
@@ -188,27 +191,27 @@ test unixWm-5.7 {compounded state changes} {unix nonPortable} {
 
 destroy .t
 toplevel .t -width 200 -height 100
-wm geom .t +10+$Y0
+wm geom .t +100+$Y0
 wm minsize .t 1 1
 update
 test unixWm-6.1 {size changes} unix {
     .t config -width 180 -height 150
     update
     wm geom .t
-} 180x150+10+$Y0
+} 180x150+100+$Y0
 test unixWm-6.2 {size changes} unix {
     wm geom .t 250x60
     .t config -width 170 -height 140
     update
     wm geom .t
-} 250x60+10+$Y0
+} 250x60+100+$Y0
 test unixWm-6.3 {size changes} unix {
     wm geom .t 250x60
     .t config -width 170 -height 140
     wm geom .t {}
     update
     wm geom .t
-} 170x140+10+$Y0
+} 170x140+100+$Y0
 test unixWm-6.4 {size changes} {unix nonPortable userInteraction} {
     wm minsize .t 1 1
     update
@@ -290,7 +293,7 @@ test unixWm-8.3 {icon windows} unix {
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t b c} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
-test unixWm-8.4 {icon windows} {unix failsOnUbuntu} {
+test unixWm-8.4 {icon windows} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -635,7 +638,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     set result
 } {1 {can't deiconify .icon: it is an icon for .t}}
-test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu} {
+test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu failsOnXQuarz} {
     wm iconify .t
     set result {}
     lappend result [winfo ismapped .t] [wm state .t]
@@ -854,7 +857,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is an icon for ".t"}}
-test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu} {
+test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -865,7 +868,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu} {
     destroy .t2
     set result
 } 0
-test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu} {
+test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -899,7 +902,7 @@ test unixWm-24.3 {Tk_WmCmd procedure, "iconmask" option} unix {
 
 test unixWm-25.1 {Tk_WmCmd procedure, "iconname" option} unix {
     list [catch {wm icon .t} msg] $msg
-} {1 {ambiguous option "icon": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
+} {1 {ambiguous option "icon": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 test unixWm-25.2 {Tk_WmCmd procedure, "iconname" option} unix {
     list [catch {wm iconname .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm iconname window ?newName?"}}
@@ -1348,7 +1351,7 @@ test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
 
 test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} unix {
     list [catch {wm unknown .t} msg] $msg
-} {1 {bad option "unknown": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
+} {1 {bad option "unknown": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 
 destroy .t .icon
 
@@ -1364,14 +1367,14 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
 test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} unix {
     destroy .t
     toplevel .t
-    wm geometry .t 200x100+0+$Y0
+    wm geometry .t 200x100+100+$Y0
     listbox .t.l -height 20 -width 20
     pack .t.l -fill both -expand 1
     update
     .t.l configure -setgrid 1
     update
     wm geometry .t
-} "20x20+0+$Y0"
+} "20x20+100+$Y0"
 
 test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} unix {
     destroy .t
@@ -1436,7 +1439,7 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
 
-test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu} {
+test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1863,7 +1866,7 @@ test unixWm-50.3 {
         set y [winfo rooty .x]
     }
     set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
-	       	     [child eval {winfo containing $x [expr $y + 50]}]]
+	[child eval {winfo containing $x [expr $y + 50]}]]
     interp delete child
     set x [winfo rootx .t]
     set y [winfo rooty .t]
@@ -1960,7 +1963,7 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing [expr $x + 350] $y] \
 	    [winfo containing [expr $x + 450] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu} {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t
     destroy .t2
     toplevel .t -width 200 -height 200 -bg green
@@ -2501,7 +2504,7 @@ if {[tk windowingsystem] == "aqua"} {
 			 -titlepath {} -topmost 0 -transparent 0\
 			 -type unsupported}
 } else {
-    set result_60_1 {-alpha 1.0 -topmost 0 -zoomed 0 -fullscreen 0 -type {}}
+    set result_60_1 {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
 }
 test unixWm-60.1 {wm attributes - test} -constraints unix -body {
     destroy .t

@@ -1151,7 +1151,7 @@ Tk_HandleEvent(
 	    eventPtr->xany.send_event = -1;
 	    eventPtr->xkey.keycode = (but & 1) ? -120 : 120;
 	    if (but > Button5) {
-		eventPtr->xkey.state ^= ShiftMask;
+		eventPtr->xkey.state |= ShiftMask;
 	    }
 	}
     }
@@ -1842,7 +1842,7 @@ DelayedMotionProc(
 void
 TkCreateExitHandler(
     Tcl_ExitProc *proc,		/* Function to invoke. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
 

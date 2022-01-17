@@ -3195,7 +3195,7 @@ static int TreeviewDeleteCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items, *delq;
-    int i, selItemDeleted = 0;
+    int i, selChange = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -3223,7 +3223,7 @@ static int TreeviewDeleteCommand(
     delq = 0;
     for (i = 0; items[i]; ++i) {
         if (items[i]->state & TTK_STATE_SELECTED || items[i]->selObj != NULL) {
-            selItemDeleted = 1;
+            selChange = 1;
         }
 	delq = DeleteItems(items[i], delq);
     }
@@ -3241,7 +3241,7 @@ static int TreeviewDeleteCommand(
     }
 
     ckfree(items);
-    if (selItemDeleted) {
+    if (selChange) {
         Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     }
     tv->tree.rowPosNeedsUpdate = 1;
@@ -3484,7 +3484,7 @@ static int TreeviewSelectionCommand(
     };
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, i;
+    int selop, i, selChange = 0;
     TreeItem *item, **items;
 
     if (objc == 2) {
@@ -3515,29 +3515,60 @@ static int TreeviewSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
-	    for (item = tv->tree.root; item; item = NextPreorder(item)) {
+	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
+		int inSetList = 0;
+
+		for (i=0; items[i]; ++i) {
+		    if (item == items[i]) {
+			inSetList = 1;
+			if (!(item->state & TTK_STATE_SELECTED)) {
+			    /* Item newly selected */
+			    selChange = 1;
+			}
+			break;
+		    }
+		}
+		if (!inSetList && (item->state & TTK_STATE_SELECTED)) {
+		    /* Item newly deselected */
+		    selChange = 1;
+		}
+		if (selChange) break;
+	    }
+	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
 		item->state &= ~TTK_STATE_SELECTED;
 	    }
-	    /*FALLTHRU*/
-	case SELECTION_ADD:
-	    for (i = 0; items[i]; ++i) {
+	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
 	    }
 	    break;
+	case SELECTION_ADD:
+	    for (i=0; items[i]; ++i) {
+		if (!(items[i]->state & TTK_STATE_SELECTED)) {
+		    items[i]->state |= TTK_STATE_SELECTED;
+		    selChange = 1;
+		}
+	    }
+	    break;
 	case SELECTION_REMOVE:
-	    for (i = 0; items[i]; ++i) {
-		items[i]->state &= ~TTK_STATE_SELECTED;
+	    for (i=0; items[i]; ++i) {
+		if (items[i]->state & TTK_STATE_SELECTED) {
+		    items[i]->state &= ~TTK_STATE_SELECTED;
+		    selChange = 1;
+		}
 	    }
 	    break;
 	case SELECTION_TOGGLE:
-	    for (i = 0; items[i]; ++i) {
+	    for (i=0; items[i]; ++i) {
 		items[i]->state ^= TTK_STATE_SELECTED;
+		selChange = 1;
 	    }
 	    break;
     }
 
     ckfree(items);
-    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
+    if (selChange) {
+	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
+    }
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;

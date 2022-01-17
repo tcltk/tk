@@ -1727,6 +1727,26 @@ TkBTreeFindPixelLine(
 	}
 	pixels -= linePtr->pixels[2 * pixelReference];
     }
+
+    /*
+     * Check for any start/end offset for this text widget.
+     */
+
+    if (textPtr->start != NULL) {
+	int lineBoundary = TkBTreeLinesTo(NULL, textPtr->start);
+
+	if (TkBTreeLinesTo(NULL, linePtr) < lineBoundary) {
+	    linePtr = TkBTreeFindLine(tree, NULL, lineBoundary);
+	}
+    }
+    if (textPtr->end != NULL) {
+	int lineBoundary = TkBTreeLinesTo(NULL, textPtr->end);
+
+	if (TkBTreeLinesTo(NULL, linePtr) > lineBoundary) {
+	    linePtr = TkBTreeFindLine(tree, NULL, lineBoundary);
+	}
+    }
+
     if (pixelOffset != NULL && linePtr != NULL) {
 	*pixelOffset = pixels;
     }

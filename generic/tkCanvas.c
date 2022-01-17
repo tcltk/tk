@@ -16,11 +16,10 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 #include "default.h"
-#ifdef TK_NO_DOUBLE_BUFFERING
+#include "tkPort.h"
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
-#endif /* TK_NO_DOUBLE_BUFFERING */
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
@@ -2808,10 +2807,19 @@ DrawCanvas(
     blockPtr.height = cHeight;
     blockPtr.pixelSize = 4;
     blockPtr.pitch = blockPtr.pixelSize * blockPtr.width;
+
+#ifdef TK_XGETIMAGE_USES_ABGR32
+    blockPtr.offset[0] = 1;
+    blockPtr.offset[1] = 2;
+    blockPtr.offset[2] = 3;
+    blockPtr.offset[3] = 0;
+#else
     blockPtr.offset[0] = 0;
     blockPtr.offset[1] = 1;
     blockPtr.offset[2] = 2;
     blockPtr.offset[3] = 3;
+#endif
+
     blockPtr.pixelPtr = (unsigned char *)ckalloc(blockPtr.pixelSize * blockPtr.height * blockPtr.width);
 
     /*
@@ -2848,7 +2856,7 @@ DrawCanvas(
 
         for(x = 0; x < blockPtr.width; ++x) {
             unsigned int pixel = 0;
-
+	    int pixel_offset = blockPtr.pitch * y + blockPtr.pixelSize * x;
             switch (ximagePtr->bits_per_pixel) {
 
                 /*
@@ -2901,21 +2909,45 @@ DrawCanvas(
              */
 
 #ifdef _WIN32
-#define   R_OFFSET 2
-#define   B_OFFSET 0
+#define   R_OFFSET blockPtr.offset[2]
+#define   G_OFFSET blockPtr.offset[1]
+#define   B_OFFSET blockPtr.offset[0]
+#define   A_OFFSET blockPtr.offset[3]
 #else
-#define   R_OFFSET 0
-#define   B_OFFSET 2
+#define   R_OFFSET blockPtr.offset[0]
+#define   G_OFFSET blockPtr.offset[1]
+#define   B_OFFSET blockPtr.offset[2]
+#define   A_OFFSET blockPtr.offset[3]
 #endif
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] =
+#ifdef TK_XGETIMAGE_USES_ABGR32
+#define COPY_PIXEL (ximagePtr->bits_per_pixel == 32)
+#else
+#define COPY_PIXEL 0
+#endif
+
+	    if (COPY_PIXEL) {
+		/*
+		 * This platform packs pixels in RGBA byte order, as expected
+		 * by Tk_PhotoPutBlock() so we can just copy the pixel as an int.
+		 */
+		*((unsigned int *) (blockPtr.pixelPtr + pixel_offset)) = pixel;
+	    } else {
+		blockPtr.pixelPtr[pixel_offset + R_OFFSET] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] =
+		blockPtr.pixelPtr[pixel_offset + G_OFFSET] =
                     (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + B_OFFSET] =
+		blockPtr.pixelPtr[pixel_offset + B_OFFSET] =
                     (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +3] = 0xFF;
+		blockPtr.pixelPtr[pixel_offset + A_OFFSET] = 0xFF;
+	    }
 
 #ifdef DEBUG_DRAWCANVAS
+	    fprintf(stderr, "Converted pixel %x to %hhx %hhx %hhx %hhx \n",
+		    pixel,
+		    blockPtr.pixelPtr[pixel_offset + 0],
+		    blockPtr.pixelPtr[pixel_offset + 1],
+		    blockPtr.pixelPtr[pixel_offset + 2],
+		    blockPtr.pixelPtr[pixel_offset + 3]);
             {
 		int ix;
                 if (x > 0)

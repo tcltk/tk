@@ -8,6 +8,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 variable scrollInfo
 proc scroll args {
@@ -66,6 +67,12 @@ test entry-1.7 "Deletion - insert cursor in the middle " -body {
     .e index insert
 } -result 0
 
+test entry-1.8 "Index is between 0 and end" -body {
+    .e delete 0 end
+    .e insert end abcde
+    set res [list [.e index -1] [.e index -4] [.e index 999]]
+} -result {0 0 5}
+
 test entry-1.done "Cleanup" -body { destroy .e }
 
 # Scrollbar tests.
@@ -74,19 +81,19 @@ test entry-2.1 "Create entry before scrollbar" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-    	-expand false -fill x
+	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
-test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints failsOnUbuntu -body {
+test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints {failsOnUbuntu failsOnXQuarz} -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     .te insert end [string repeat "abc" 50]
     catch {update} ; # error triggers because the -xscrollcommand callback
                      # errors out: invalid command name ".tsb"
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-    	-expand false -fill x
+	-expand false -fill x
     update ; # no error
-    lappend res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
+    set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
 } -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
@@ -309,7 +316,7 @@ test entry-8.2a "Followup to test 8.2" -body {
 test entry-9.1 "Index range invariants" -setup {
     # See bug#1721532 for discussion
     proc entry-9.1-trace {n1 n2 op} {
-    	set ::V NO!
+	set ::V NO!
     }
     variable V
     trace add variable V write entry-9.1-trace

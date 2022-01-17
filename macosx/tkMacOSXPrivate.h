@@ -29,6 +29,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 #undef Cursor
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -206,7 +207,6 @@ typedef struct TkMacOSXDrawingContext {
     CGContextRef context;
     NSView *view;
     HIShapeRef clipRgn;
-    CGRect portBounds;
 } TkMacOSXDrawingContext;
 
 /*
@@ -234,7 +234,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
 			    const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 			    HIShapeRef inShape2, HIMutableShapeRef outResult);
-
+MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
+MODULE_SCOPE void       TkMacOSXPrintRectsInRegion(HIShapeRef shape);
 /*
  * Prototypes of TkAqua internal procs.
  */
@@ -297,6 +298,7 @@ MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
+MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 
 
 #pragma mark Private Objective-C Classes
@@ -329,6 +331,7 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
+    Bool _tkLiveResizeEnded;
 
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
@@ -337,6 +340,10 @@ VISIBILITY_HIDDEN
     Bool _isDrawing;
     Bool _needsToDraw;
     Bool _isSigned;
+    Bool _tkLiveResizeEnded;
+    TkWindow *_tkPointerWindow;
+    TkWindow *_tkEventTarget;
+    unsigned int _tkButtonState;
 #endif
 
 }
@@ -345,6 +352,10 @@ VISIBILITY_HIDDEN
 @property Bool isDrawing;
 @property Bool needsToDraw;
 @property Bool isSigned;
+@property Bool tkLiveResizeEnded;
+@property TkWindow *tkPointerWindow;
+@property TkWindow *tkEventTarget;
+@property unsigned int tkButtonState;
 
 @end
 @interface TKApplication(TKInit)
@@ -419,6 +430,7 @@ VISIBILITY_HIDDEN
     NSString *privateWorkingText;
     Bool _tkNeedsDisplay;
     NSRect _tkDirtyRect;
+    NSTrackingArea *trackingArea;
 }
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
@@ -446,11 +458,9 @@ VISIBILITY_HIDDEN
 {
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
-    Bool _mouseInResizeArea;
     Window _tkWindow;
 #endif
 }
-@property Bool mouseInResizeArea;
 @property Window tkWindow;
 @end
 

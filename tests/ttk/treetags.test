@@ -62,7 +62,7 @@ test treetags-1.3 "tag has - test" -body {
     $tv insert {} end -id item2 -text "Item 2" -tags tag2
     set result [list]
     foreach item {item1 item2} {
-    	foreach tag {tag1 tag2 tag3} {
+	foreach tag {tag1 tag2 tag3} {
 	    lappend result $item $tag [$tv tag has $tag $item]
 	}
     }
@@ -248,7 +248,7 @@ test treetags-3.4 "stomp tags in tag binding procedure" -body {
     set result [list]
     $tv tag bind rm1 <<Remove>> { lappend ::result rm1 [%W focus] <<Remove>> }
     $tv tag bind rm2 <<Remove>> {
-    	lappend ::result rm2 [%W focus] <<Remove>>
+	lappend ::result rm2 [%W focus] <<Remove>>
 	%W item [%W focus] -tags {tag1}
     }
     $tv tag bind rm3 <<Remove>> { lappend ::result rm3 [%W focus] <<Remove>> }
